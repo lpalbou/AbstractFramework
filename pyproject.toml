@@ -1,0 +1,155 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abstractframework"
+version = "0.1.0"
+description = "A unified ecosystem for AI-powered applications and intelligent systems"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Laurent-Philippe Albou", email = "contact@abstractcore.ai"}
+]
+maintainers = [
+    {name = "Laurent-Philippe Albou", email = "contact@abstractcore.ai"}
+]
+keywords = [
+    "ai", "llm", "agents", "memory", "swarm", "artificial-intelligence",
+    "machine-learning", "nlp", "chatbot", "framework", "ecosystem"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+# Individual component dependencies
+core = ["abstractcore[all]>=2.4.0"]
+memory = ["abstractmemory>=0.1.0"]  # When available
+agent = ["abstractagent>=0.1.0"]    # When available
+swarm = ["abstractswarm>=0.1.0"]    # When available
+
+# Convenience bundles
+available = ["abstractcore[all]>=2.4.0"]  # Currently available components
+all = [
+    "abstractcore[all]>=2.4.0",
+    # "abstractmemory>=0.1.0",  # Uncomment when available
+    # "abstractagent>=0.1.0",   # Uncomment when available
+    # "abstractswarm>=0.1.0",   # Uncomment when available
+]
+
+# Development dependencies
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+
+# Documentation dependencies
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocstrings[python]>=0.20.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/lpalbou/AbstractFramework"
+Documentation = "https://github.com/lpalbou/AbstractFramework"
+Repository = "https://github.com/lpalbou/AbstractFramework"
+"Bug Tracker" = "https://github.com/lpalbou/AbstractFramework/issues"
+Changelog = "https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md"
+"AbstractCore" = "https://github.com/lpalbou/AbstractCore"
+
+[tool.setuptools]
+packages = ["abstractframework"]
+
+[tool.setuptools.package-dir]
+abstractframework = "."
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["abstractframework"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["abstractframework"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
