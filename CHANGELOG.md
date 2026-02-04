@@ -2,37 +2,51 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
 
-## [0.1.0] - 2025-10-18
+### Changed
+
+- Rewrote gateway docs to match the implemented ecosystem (current package names, quickstarts, and commands).
+- Updated installer script (`scripts/install.sh`) to use the correct browser UI entrypoint (`npx abstractobserver`).
+- Fixed `abstractframework` convenience re-export to expose `abstractcore.create_llm` reliably.
+
+## [0.1.0] - 2026-02-04
 
 ### Added
-- Initial placeholder release for AbstractFramework
-- Comprehensive README.md with project vision and component descriptions
-- Package structure with `__init__.py` containing:
-  - Component availability detection
-  - Placeholder functions for future unified API
-  - Version information utilities
-  - Status reporting functionality
-- PyPI publishing configuration in `pyproject.toml`
-- MIT License matching AbstractCore
-- Standard Python `.gitignore`
-- Project documentation structure
 
-### Components Status
-- ✅ **AbstractCore**: Available (v2.4.1) - Unified LLM provider interface
-- 🚧 **AbstractMemory**: In development - Advanced memory systems
-- 🚧 **AbstractAgent**: Planned - Intelligent agent framework
-- 🚧 **AbstractSwarm**: Planned - Multi-agent coordination
+- Initial release of AbstractFramework as an **Agentic OS** — an open-source operating system for AI agents
+- Positioned as a complete, end-to-end infrastructure with no black boxes and no external dependencies
+- Comprehensive documentation:
+  - `README.md` - Main entry point and overview
+  - `docs/getting-started.md` - Installation and setup guide
+  - `docs/architecture.md` - System design and components
+  - `docs/configuration.md` - Environment variables reference
+  - `docs/faq.md` - Frequently asked questions
+- Installation script (`scripts/install.sh`)
+- Meta-package with optional dependencies:
+  - `abstractframework[all]` - Full installation
+  - `abstractframework[backend]` - Backend services only
+  - Individual component extras
 
-### Notes
-- This is a placeholder release to reserve the PyPI name "abstractframework"
-- Currently only provides project structure and documentation
-- AbstractCore is fully functional and can be installed separately
-- Future releases will add actual functionality as components become available
+### Components
 
-[Unreleased]: https://github.com/lpalbou/AbstractFramework/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/lpalbou/AbstractFramework/releases/tag/v0.1.0
+Python packages (PyPI):
+- abstractcore - LLM abstraction layer
+- abstractruntime - Durable execution engine
+- abstractagent - Agent framework
+- abstractflow - Workflow orchestration
+- abstractcode - AI coding assistant backend
+- abstractgateway - HTTP API gateway
+- abstractmemory - Temporal triple store (KG substrate)
+- abstractsemantics - Semantics registry + KG assertion schema helpers
+- abstractvoice - Speech-to-text & TTS
+- abstractvision - Image & video processing
+- abstractassistant - High-level assistant API
+
+JavaScript packages (npm):
+- abstractobserver - Gateway-only observability UI (Web/PWA)
+- @abstractframework/ui-kit - Shared UI components
+- @abstractframework/panel-chat - Chat panel components
+- @abstractframework/monitor-flow - Flow monitoring components
+- @abstractframework/monitor-gpu - GPU monitoring widget
+- @abstractframework/monitor-active-memory - Memory explorer components

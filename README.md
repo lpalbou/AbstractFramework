@@ -1,162 +1,142 @@
 # AbstractFramework
 
-**A unified ecosystem for AI-powered applications and intelligent systems.**
+Durable agents and workflows — an open-source ecosystem for building long-running, restart-safe AI systems.
 
-AbstractFramework is an umbrella project that brings together a comprehensive suite of tools and libraries for building sophisticated AI applications. Each component is designed to work seamlessly together while maintaining independence and modularity.
+AbstractFramework is intentionally **modular**: each component is a standalone project (its own package, docs, and releases).
+This repository is the ecosystem **gateway**: it helps you pick the right building blocks and get to a first working setup quickly.
 
-## 🏗️ Framework Components
+## Start Here
 
-### 📚 [AbstractCore](https://github.com/lpalbou/AbstractCore) ✅ **Available**
-*Unified Python library for interaction with multiple Large Language Model (LLM) providers.*
+- [Getting started](docs/getting-started.md) — pick a path and run something
+- [Architecture](docs/architecture.md) — how the stack fits together (libraries + hosts + deployment)
+- [Configuration](docs/configuration.md) — common configuration knobs (providers, gateway, clients)
+- [FAQ](docs/faq.md) — common questions and gotchas
 
-**Write once, run everywhere.**
+## The Two Peers Everything Builds On
 
-- **Provider Agnostic**: Works with OpenAI, Anthropic, Ollama, and more
-- **Tool Calling**: Universal function calling across providers  
-- **Structured Output**: Type-safe Pydantic integration
-- **Embeddings & RAG**: Built-in vector embeddings for semantic search
-- **Session Management**: Persistent conversations and analytics
-- **Server Mode**: Optional OpenAI-compatible API server
+- **AbstractRuntime** — durable workflow runtime (**pause → checkpoint → resume**) with an append-only execution ledger.
+- **AbstractCore** — unified LLM interface (providers, tool calling, structured output, media handling, optional HTTP server).
+
+On top of those peers you can compose:
+- **AbstractAgent** — ReAct / CodeAct / MemAct patterns (ready-made agent workflows)
+- **AbstractFlow** — VisualFlow portable workflows + `.flow` bundling + a reference web editor
+- **AbstractGateway** — deployable HTTP/SSE run gateway (replay-first ledger + durable command inbox)
+- **Host apps** — AbstractCode (terminal), AbstractAssistant (tray), AbstractObserver (web/PWA)
+
+## Install (Python)
+
+`abstractframework` on PyPI is a **meta-package**:
+
+```bash
+pip install abstractframework
+```
+
+That installs the lightweight `abstractcore` base (provider SDKs and other heavy features are behind extras).
+
+Common bundles (zsh: keep the quotes):
+
+```bash
+pip install "abstractframework[all]"      # full Python ecosystem (large)
+pip install "abstractframework[backend]"  # core+runtime+agent+flow+gateway+memory+semantics
+pip install "abstractframework[code]"     # terminal TUI host (AbstractCode)
+pip install "abstractframework[gateway]"  # deployable run gateway (HTTP)
+```
+
+For a smaller footprint, install provider-specific AbstractCore extras directly:
+
+```bash
+pip install "abstractcore[openai]"        # or: anthropic, tools, media, tokens, server, ...
+```
+
+## Quickstarts (Pick One)
+
+### 1) Library: unified LLM API (AbstractCore)
 
 ```python
 from abstractcore import create_llm
 
-# Works with any provider
-llm = create_llm("anthropic", model="claude-3-5-haiku-latest")
-response = llm.generate("What is the capital of France?")
-print(response.content)
+llm = create_llm("ollama", model="qwen3:4b-instruct")
+print(llm.generate("Give me 3 bullets on durable workflows.").content)
 ```
 
-### 🧠 AbstractMemory 🚧 **Coming Soon**
-*Advanced memory systems for AI agents and applications.*
-
-- **Persistent Memory**: Long-term storage and retrieval
-- **Contextual Memory**: Semantic understanding and associations
-- **Memory Hierarchies**: Short-term, working, and long-term memory
-- **Memory Compression**: Efficient storage of large contexts
-- **Cross-Session Continuity**: Maintain context across interactions
-
-### 🤖 AbstractAgent 🚧 **Coming Soon**
-*Intelligent agent framework with reasoning and tool use capabilities.*
-
-- **Autonomous Reasoning**: Multi-step problem solving
-- **Tool Integration**: Seamless integration with external tools
-- **Goal-Oriented Behavior**: Task planning and execution
-- **Learning Capabilities**: Adaptive behavior from experience
-- **Safety Mechanisms**: Built-in guardrails and monitoring
-
-### 🐝 AbstractSwarm 🚧 **Coming Soon**
-*Multi-agent coordination and swarm intelligence systems.*
-
-- **Agent Orchestration**: Coordinate multiple specialized agents
-- **Distributed Processing**: Scale across multiple nodes
-- **Emergent Behavior**: Complex behaviors from simple interactions
-- **Communication Protocols**: Inter-agent messaging and coordination
-- **Collective Intelligence**: Leverage swarm problem-solving
-
-## 🚀 Quick Start
-
-### Installation
+### 2) Local agent in the terminal (AbstractCode)
 
 ```bash
-# Install the full framework (when all components are available)
-pip install abstractframework[all]
-
-# Or install individual components
-pip install abstractcore[all]  # Available now
-pip install abstractmemory     # Coming soon
-pip install abstractagent      # Coming soon  
-pip install abstractswarm      # Coming soon
+pip install abstractcode
+abstractcode --provider ollama --model qwen3:1.7b-q4_K_M
 ```
 
-### Basic Usage
+Inside the app run `/help`. Tool execution is approval-gated by default.
 
-```python
-import abstractframework as af
+### 3) Deploy a run gateway + observe in the browser (AbstractGateway + AbstractObserver)
 
-# Create an intelligent agent with memory and LLM capabilities
-agent = af.create_agent(
-    llm_provider="openai",
-    model="gpt-4o-mini",
-    memory_type="persistent",
-    tools=["web_search", "calculator", "file_system"]
-)
+```bash
+pip install "abstractgateway[http]"
+export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"   # *.flow bundles (or upload later)
+export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
-# Have a conversation with persistent memory
-response = agent.chat("Remember that I prefer Python over JavaScript")
-print(response)
-
-# The agent remembers across sessions
-response = agent.chat("What programming language do I prefer?")
-print(response)  # "You prefer Python over JavaScript"
+abstractgateway serve --host 127.0.0.1 --port 8080
+npx abstractobserver
 ```
 
-## 🎯 Use Cases
+Open `http://localhost:3001`, set Gateway URL to `http://127.0.0.1:8080`, paste the token, and connect.
 
-### 1. **Intelligent Applications**
-Build AI-powered applications with persistent memory, reasoning capabilities, and multi-provider LLM support.
+## Ecosystem Index
 
-### 2. **Research & Development**
-Experiment with different AI architectures, memory systems, and agent behaviors in a unified framework.
+### Core libraries (Python)
 
-### 3. **Enterprise AI Systems**
-Deploy scalable AI solutions with swarm intelligence, distributed processing, and robust memory management.
+| Project | Purpose | Start here |
+|---|---|---|
+| [AbstractCore](https://github.com/lpalbou/abstractcore) | Unified LLM API: providers + tools + structured output + media + optional HTTP server | [docs/getting-started.md](https://github.com/lpalbou/abstractcore/blob/main/docs/getting-started.md) |
+| [AbstractRuntime](https://github.com/lpalbou/abstractruntime) | Durable runtime: effects + waits + ledger + stores + bundles | [docs/getting-started.md](https://github.com/lpalbou/abstractruntime/blob/main/docs/getting-started.md) |
 
-### 4. **Educational Projects**
-Learn AI concepts through hands-on experimentation with agents, memory systems, and LLM interactions.
+### Composition libraries (Python)
 
-## 🏛️ Architecture Philosophy
+| Project | Purpose | Start here |
+|---|---|---|
+| [AbstractAgent](https://github.com/lpalbou/abstractagent) | ReAct / CodeAct / MemAct patterns on Runtime + Core | [docs/getting-started.md](https://github.com/lpalbou/abstractagent/blob/main/docs/getting-started.md) |
+| [AbstractFlow](https://github.com/lpalbou/abstractflow) | VisualFlow portable workflows + `.flow` bundling + reference editor | [docs/getting-started.md](https://github.com/lpalbou/abstractflow/blob/main/docs/getting-started.md) |
 
-AbstractFramework follows key design principles:
+### Hosts (Python)
 
-- **🔧 Modularity**: Each component works independently and together
-- **🔄 Interoperability**: Seamless integration between components
-- **📈 Scalability**: From single agents to distributed swarms
-- **🛡️ Robustness**: Production-ready with comprehensive error handling
-- **🎨 Flexibility**: Adapt to diverse use cases and requirements
-- **📚 Simplicity**: Clean APIs that hide complexity without limiting power
+| Project | Purpose | Start here |
+|---|---|---|
+| [AbstractCode](https://github.com/lpalbou/abstractcode) | Durable terminal TUI for agentic coding (local runs + gateway client) | [docs/getting-started.md](https://github.com/lpalbou/abstractcode/blob/main/docs/getting-started.md) |
+| [AbstractGateway](https://github.com/lpalbou/AbstractGateway) | Deployable HTTP/SSE run gateway (replay-first ledger + durable commands) | [docs/getting-started.md](https://github.com/lpalbou/AbstractGateway/blob/main/docs/getting-started.md) |
+| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | Tray UI + CLI local agent host (optional voice) | [docs/getting-started.md](https://github.com/lpalbou/AbstractAssistant/blob/main/docs/getting-started.md) |
 
-## 📊 Project Status
+### Observability + UI (JavaScript)
 
-| Component | Status | Version | Documentation |
-|-----------|--------|---------|---------------|
-| AbstractCore | ✅ **Available** | 2.4.1 | [Complete](https://github.com/lpalbou/AbstractCore) |
-| AbstractMemory | 🚧 **In Development** | - | Coming Soon |
-| AbstractAgent | 🚧 **Planned** | - | Coming Soon |
-| AbstractSwarm | 🚧 **Planned** | - | Coming Soon |
+| Package | Purpose | Start here |
+|---|---|---|
+| [AbstractObserver (npm: `abstractobserver`)](https://github.com/lpalbou/AbstractObserver) | Gateway-only observability UI (Web/PWA) | [README](https://github.com/lpalbou/AbstractObserver#readme) |
+| [AbstractUIC](https://github.com/lpalbou/AbstractUIC) | UI building blocks (`@abstractframework/*`) used by thin clients | [docs/getting-started.md](https://github.com/lpalbou/AbstractUIC/blob/main/docs/getting-started.md) |
 
-## 🤝 Contributing
+### Data, memory, semantics (Python)
 
-We welcome contributions to any component of the AbstractFramework ecosystem!
+| Project | Purpose | Start here |
+|---|---|---|
+| [AbstractMemory](https://github.com/lpalbou/AbstractMemory) | Temporal, provenance-aware triple assertions + deterministic queries | [docs/getting-started.md](https://github.com/lpalbou/AbstractMemory/blob/main/docs/getting-started.md) |
+| [AbstractSemantics](https://github.com/lpalbou/AbstractSemantics) | Semantics registry (predicates/entity types) + JSON Schema helpers | [docs/getting-started.md](https://github.com/lpalbou/AbstractSemantics/blob/main/docs/getting-started.md) |
 
-- **AbstractCore**: [Contributing Guide](https://github.com/lpalbou/AbstractCore/blob/main/CONTRIBUTING.md)
-- **Other Components**: Contributing guides will be available as components are released
+### Modalities (Python)
 
-## 📄 License
+| Project | Purpose | Start here |
+|---|---|---|
+| [AbstractVoice](https://github.com/lpalbou/abstractvoice) | Voice I/O (TTS/STT) + AbstractCore capability plugin | [docs/getting-started.md](https://github.com/lpalbou/abstractvoice/blob/main/docs/getting-started.md) |
+| [AbstractVision](https://github.com/lpalbou/abstractvision) | Generative vision outputs (images; optional video) + AbstractCore integration | [docs/getting-started.md](https://github.com/lpalbou/abstractvision/blob/main/docs/getting-started.md) |
 
-MIT License - see LICENSE file for details.
+### Planned / placeholders
 
-All components of AbstractFramework are released under the MIT License to ensure maximum compatibility and adoption.
+These repos exist but are not primary entry points today:
 
-## 🔗 Links
+- [AbstractAI](https://github.com/lpalbou/abstractai) — intelligent model selection/routing (planned)
+- [AbstractReasoner](https://github.com/lpalbou/AbstractReasoner) — semantic reasoning on top of AbstractMemory (placeholder)
+- [abstractagi](https://github.com/lpalbou/abstractagi), [abstractaudio](https://github.com/lpalbou/abstractaudio), [abstractbrain](https://github.com/lpalbou/abstractbrain), [abstractendpoint](https://github.com/lpalbou/abstractendpoint), [abstractintelligence](https://github.com/lpalbou/abstractintelligence), [abstractmind](https://github.com/lpalbou/abstractmind), [abstractmusic](https://github.com/lpalbou/abstractmusic), [abstractserve](https://github.com/lpalbou/abstractserve), [abstractservice](https://github.com/lpalbou/abstractservice), [abstractsignal](https://github.com/lpalbou/abstractsignal), [abstractskills](https://github.com/lpalbou/abstractskills)
 
-- **AbstractCore Repository**: https://github.com/lpalbou/AbstractCore
-- **Documentation**: Coming soon
-- **Community Discussions**: Coming soon
-- **Issue Tracker**: Coming soon
+## License
 
-## 🌟 Vision
-
-AbstractFramework aims to democratize AI development by providing:
-
-1. **Unified Interfaces**: Consistent APIs across all AI capabilities
-2. **Production Ready**: Enterprise-grade reliability and performance  
-3. **Research Friendly**: Easy experimentation and prototyping
-4. **Community Driven**: Open source with active community involvement
-5. **Future Proof**: Designed to evolve with AI advancements
-
----
-
-**AbstractFramework** - *Building the future of AI applications, one component at a time.*
-
-> **Note**: This is currently a placeholder project. AbstractCore is fully functional and available. Other components are in various stages of development. Star this repository to stay updated on releases!
+MIT (see `LICENSE`).

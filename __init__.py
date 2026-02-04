@@ -1,201 +1,95 @@
 """
-AbstractFramework - A unified ecosystem for AI-powered applications and intelligent systems.
+AbstractFramework (meta-package)
 
-This is the main entry point for the AbstractFramework ecosystem, which includes:
-- AbstractCore: Unified LLM provider interface
-- AbstractMemory: Advanced memory systems (coming soon)
-- AbstractAgent: Intelligent agent framework (coming soon)  
-- AbstractSwarm: Multi-agent coordination (coming soon)
+This package is a lightweight **gateway/index** for the AbstractFramework ecosystem.
+It exists to:
 
-Example:
-    >>> import abstractframework as af
-    >>> # When all components are available:
-    >>> agent = af.create_agent(llm_provider="openai", model="gpt-4o-mini")
-    >>> response = agent.chat("Hello, world!")
+1) provide convenient install bundles via extras (e.g. `pip install "abstractframework[all]"`)
+2) offer a small helper to inspect which Abstract* Python packages are installed
+
+Most functionality lives in the component projects (each has its own repository, docs, and release cadence).
+Start here:
+  - https://github.com/lpalbou/AbstractFramework#readme
+  - https://github.com/lpalbou/AbstractFramework/blob/main/docs/getting-started.md
 """
+
+from __future__ import annotations
 
 __version__ = "0.1.0"
 __author__ = "Laurent-Philippe Albou"
-__email__ = "lpalbou@gmail.com"
-__description__ = "A unified ecosystem for AI-powered applications and intelligent systems"
-__url__ = "https://github.com/lpalbou/AbstractFramework"
+__license__ = "MIT"
 
-# Component availability flags
-ABSTRACTCORE_AVAILABLE = False
-ABSTRACTMEMORY_AVAILABLE = False
-ABSTRACTAGENT_AVAILABLE = False
-ABSTRACTSWARM_AVAILABLE = False
-
-# Try to import available components
+# Convenience re-exports (AbstractCore is a base dependency of this meta-package).
+# Keep this import lightweight: do not import optional tool/media deps here.
 try:
-    import abstractcore
-    ABSTRACTCORE_AVAILABLE = True
-    __all__ = ["abstractcore"]
-except ImportError:
+    from abstractcore import GenerateResponse, create_llm  # type: ignore
+
+    __all__ = ["create_llm", "GenerateResponse"]
+except Exception:  # pragma: no cover
     __all__ = []
 
-try:
-    import abstractmemory
-    ABSTRACTMEMORY_AVAILABLE = True
-    __all__.append("abstractmemory")
-except ImportError:
-    pass
 
-try:
-    import abstractagent
-    ABSTRACTAGENT_AVAILABLE = True
-    __all__.append("abstractagent")
-except ImportError:
-    pass
+def get_installed_packages() -> dict[str, str]:
+    """Return a dict of installed AbstractFramework Python packages and versions."""
 
-try:
-    import abstractswarm
-    ABSTRACTSWARM_AVAILABLE = True
-    __all__.append("abstractswarm")
-except ImportError:
-    pass
+    packages: dict[str, str] = {}
 
-
-def get_available_components():
-    """
-    Get a list of currently available AbstractFramework components.
-    
-    Returns:
-        dict: Dictionary mapping component names to their availability status
-    """
-    return {
-        "abstractcore": ABSTRACTCORE_AVAILABLE,
-        "abstractmemory": ABSTRACTMEMORY_AVAILABLE,
-        "abstractagent": ABSTRACTAGENT_AVAILABLE,
-        "abstractswarm": ABSTRACTSWARM_AVAILABLE,
-    }
-
-
-def get_version_info():
-    """
-    Get version information for AbstractFramework and its components.
-    
-    Returns:
-        dict: Dictionary with version information for each component
-    """
-    versions = {"abstractframework": __version__}
-    
-    if ABSTRACTCORE_AVAILABLE:
+    def _maybe_add(import_name: str) -> None:
         try:
-            versions["abstractcore"] = abstractcore.__version__
-        except AttributeError:
-            versions["abstractcore"] = "unknown"
-    
-    if ABSTRACTMEMORY_AVAILABLE:
-        try:
-            versions["abstractmemory"] = abstractmemory.__version__
-        except AttributeError:
-            versions["abstractmemory"] = "unknown"
-    
-    if ABSTRACTAGENT_AVAILABLE:
-        try:
-            versions["abstractagent"] = abstractagent.__version__
-        except AttributeError:
-            versions["abstractagent"] = "unknown"
-    
-    if ABSTRACTSWARM_AVAILABLE:
-        try:
-            versions["abstractswarm"] = abstractswarm.__version__
-        except AttributeError:
-            versions["abstractswarm"] = "unknown"
-    
-    return versions
+            mod = __import__(import_name)
+            packages[import_name] = getattr(mod, "__version__", "installed")
+        except Exception:
+            return
+
+    for name in [
+        "abstractcore",
+        "abstractruntime",
+        "abstractagent",
+        "abstractflow",
+        "abstractcode",
+        "abstractgateway",
+        "abstractmemory",
+        "abstractsemantics",
+        "abstractvoice",
+        "abstractvision",
+        "abstractassistant",
+    ]:
+        _maybe_add(name)
+
+    return packages
 
 
-# Placeholder functions for future unified API
-def create_agent(*args, **kwargs):
-    """
-    Create an intelligent agent (placeholder - requires AbstractAgent).
-    
-    This function will be available when AbstractAgent is released.
-    Currently raises NotImplementedError.
-    
-    Raises:
-        NotImplementedError: AbstractAgent is not yet available
-    """
-    if not ABSTRACTAGENT_AVAILABLE:
-        raise NotImplementedError(
-            "AbstractAgent is not yet available. "
-            "This function will be implemented when AbstractAgent is released. "
-            "For now, use AbstractCore directly: pip install abstractcore[all]"
-        )
-    
-    # Future implementation will delegate to AbstractAgent
-    return abstractagent.create_agent(*args, **kwargs)
+def print_status() -> None:
+    """Print installation status of the main AbstractFramework Python packages."""
 
+    installed = get_installed_packages()
+    all_packages = [
+        "abstractcore",
+        "abstractruntime",
+        "abstractagent",
+        "abstractflow",
+        "abstractcode",
+        "abstractgateway",
+        "abstractmemory",
+        "abstractsemantics",
+        "abstractvoice",
+        "abstractvision",
+        "abstractassistant",
+    ]
 
-def create_swarm(*args, **kwargs):
-    """
-    Create a multi-agent swarm (placeholder - requires AbstractSwarm).
-    
-    This function will be available when AbstractSwarm is released.
-    Currently raises NotImplementedError.
-    
-    Raises:
-        NotImplementedError: AbstractSwarm is not yet available
-    """
-    if not ABSTRACTSWARM_AVAILABLE:
-        raise NotImplementedError(
-            "AbstractSwarm is not yet available. "
-            "This function will be implemented when AbstractSwarm is released."
-        )
-    
-    # Future implementation will delegate to AbstractSwarm
-    return abstractswarm.create_swarm(*args, **kwargs)
+    print("AbstractFramework installation status")
+    print("=" * 40)
 
+    for pkg in all_packages:
+        if pkg in installed:
+            print(f"  ✓ {pkg}: {installed[pkg]}")
+        else:
+            print(f"  ✗ {pkg}: not installed")
 
-def create_memory(*args, **kwargs):
-    """
-    Create a memory system (placeholder - requires AbstractMemory).
-    
-    This function will be available when AbstractMemory is released.
-    Currently raises NotImplementedError.
-    
-    Raises:
-        NotImplementedError: AbstractMemory is not yet available
-    """
-    if not ABSTRACTMEMORY_AVAILABLE:
-        raise NotImplementedError(
-            "AbstractMemory is not yet available. "
-            "This function will be implemented when AbstractMemory is released."
-        )
-    
-    # Future implementation will delegate to AbstractMemory
-    return abstractmemory.create_memory(*args, **kwargs)
+    print("")
+    print(f"Installed: {len(installed)}/{len(all_packages)} packages")
 
-
-# Convenience function to check framework status
-def status():
-    """
-    Print the current status of AbstractFramework components.
-    """
-    print("AbstractFramework Status:")
-    print(f"  Version: {__version__}")
-    print("\nComponent Availability:")
-    
-    components = get_available_components()
-    for component, available in components.items():
-        status_icon = "✅" if available else "❌"
-        status_text = "Available" if available else "Not Available"
-        print(f"  {status_icon} {component}: {status_text}")
-    
-    if ABSTRACTCORE_AVAILABLE:
-        print(f"\nTo get started with AbstractCore:")
-        print(f"  from abstractcore import create_llm")
-        print(f"  llm = create_llm('openai', model='gpt-4o-mini')")
-        print(f"  response = llm.generate('Hello, world!')")
-    else:
-        print(f"\nTo install AbstractCore:")
-        print(f"  pip install abstractcore[all]")
-    
-    print(f"\nFor more information: {__url__}")
-
-
-# Make status available at package level
-__all__.extend(["get_available_components", "get_version_info", "status", 
-                "create_agent", "create_swarm", "create_memory"])
+    if len(installed) < len(all_packages):
+        print("")
+        print('To install the full Python bundle:')
+        print('  pip install "abstractframework[all]"')
