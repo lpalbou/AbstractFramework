@@ -19,6 +19,7 @@ AbstractFramework is modular — you can use a single package or compose several
 | macOS menu bar assistant | [Path 9](#path-9-macos-assistant) | `abstractassistant` |
 | Visual workflow editor (browser) | [Path 10](#path-10-flow-editor) | `@abstractframework/flow` |
 | Browser-based coding assistant | [Path 11](#path-11-code-web-ui) | `@abstractframework/code` |
+| Create a specialized agent | [Path 12](#path-12-specialized-agent) | `abstractflow` + clients |
 
 ## Prerequisites
 
@@ -457,6 +458,72 @@ npx @abstractframework/code
 Open http://localhost:3002 in your browser. Configure the gateway URL in the UI settings, then start coding.
 
 **Next**: See [AbstractCode web docs](https://github.com/lpalbou/abstractcode/blob/main/docs/web.md).
+
+---
+
+## Path 12: Specialized Agent
+
+Create a specialized agent that runs in any client (terminal, browser, custom apps).
+
+### Why?
+
+Instead of writing agent logic in code, you:
+1. Author a visual workflow with the Flow Editor
+2. Declare an interface contract (`abstractcode.agent.v1`)
+3. Run it in any compatible client — no client-specific code needed
+
+Use cases: code reviewers, deep researchers, data analysts, custom assistants.
+
+### Step 1: Author in the Flow Editor
+
+```bash
+npx @abstractframework/flow
+```
+
+Open http://localhost:3003 and create a workflow with:
+- **On Flow Start** node (outputs: `provider`, `model`, `prompt`)
+- Your agent logic (LLM nodes, tool nodes, conditionals, loops)
+- **On Flow End** node (inputs: `response`, `success`, `meta`)
+
+Set `interfaces: ["abstractcode.agent.v1"]` in the workflow properties.
+
+### Step 2: Export as a Bundle
+
+In the editor, export your workflow as a `.flow` bundle.
+
+### Step 3: Run Anywhere
+
+**Terminal (AbstractCode):**
+
+```bash
+abstractcode --workflow /path/to/my-agent.flow
+```
+
+**Install for easy access:**
+
+```bash
+abstractcode workflow install /path/to/my-agent.flow
+abstractcode --workflow my-agent
+```
+
+**Deploy to Gateway:**
+
+Copy your `.flow` bundle to `ABSTRACTGATEWAY_FLOWS_DIR`. It will appear in:
+- Observer's workflow picker
+- Code Web UI's workflow picker
+- Gateway's `/api/gateway/bundles` discovery endpoint
+
+**Custom app:**
+
+```python
+from abstractcode.workflow_agent import WorkflowAgent
+
+agent = WorkflowAgent(flow_ref="/path/to/my-agent.flow")
+state = agent.run_to_completion(prompt="Analyze this code...")
+print(state.output["response"])
+```
+
+**Next**: See [AbstractFlow docs](https://github.com/lpalbou/abstractflow/blob/main/docs/getting-started.md) and [Interface contracts](https://github.com/lpalbou/abstractflow/blob/main/docs/visualflow.md).
 
 ---
 

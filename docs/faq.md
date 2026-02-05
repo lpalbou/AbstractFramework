@@ -60,6 +60,137 @@ It depends on what you're building:
 
 ---
 
+## How Does AbstractFramework Compare?
+
+### What makes AbstractFramework different?
+
+AbstractFramework optimizes for a different axis than most agent frameworks:
+
+| What we optimize for | What most frameworks optimize for |
+|----------------------|-----------------------------------|
+| **Durability** — runs survive crashes, resume exactly | Quick prototyping, minimal boilerplate |
+| **Replayability** — reconstruct any state from history | Stateless request/response patterns |
+| **Provenance** — know what happened, when, and why | Black-box convenience |
+| **Network-safe thin clients** — UIs attach/detach freely | Tightly-coupled UIs |
+| **Visual authoring** on the same durable semantics | Code-first only |
+
+This makes AbstractFramework closer to **Temporal/Step Functions** adapted for LLM/tool loops, rather than "yet another agent SDK."
+
+### Honest comparison with other frameworks
+
+| Axis | AbstractFramework | LangChain | LlamaIndex | PydanticAI | Letta |
+|------|-------------------|-----------|------------|------------|-------|
+| **Durable pause/resume** | Strong | — | — | — | Partial |
+| **Replay-first control plane** | Strong | — | — | — | Partial |
+| **Append-only ledger** | Strong | — | — | — | Partial |
+| **Visual authoring** | Yes | Partial | Partial | — | — |
+| **Tool approvals as primitive** | Strong | Partial | Partial | Partial | Partial |
+| **RAG/connectors ecosystem** | Early | Strong | Strong | — | Partial |
+| **Typed minimal API** | — | Partial | Partial | Strong | — |
+| **Long-term memory product** | Early | — | Partial | — | Strong |
+| **Ecosystem integrations** | Growing | Strong | Strong | Growing | Growing |
+
+**Where we're ahead:**
+- Durable orchestration, replay, and auditability as core primitives
+- Tool execution boundaries with first-class approval flows
+- Visual workflows that compile to the same durable runtime
+
+**Where others are ahead:**
+- **LangChain/LlamaIndex**: Massive ecosystem of connectors, integrations, and community
+- **PydanticAI**: Minimal typed API with less boilerplate for simple cases
+- **Letta**: More mature long-term memory product today
+
+### When should I use AbstractFramework?
+
+**Good fit:**
+- Workflows that must survive restarts (long-running, scheduled)
+- Systems requiring audit trails and time-travel debugging
+- Human-in-the-loop approvals as a first-class concern
+- Multi-device architectures (orchestrator + remote tools)
+- Visual workflow authoring for non-developers
+
+**Consider alternatives when:**
+- You need a quick prototype with minimal code (→ PydanticAI)
+- You need extensive RAG connectors today (→ LlamaIndex)
+- You need maximum ecosystem integrations (→ LangChain)
+
+### Can I use AbstractFramework with LangChain/LlamaIndex?
+
+Yes. The recommended approach is to use AbstractFramework for orchestration and durability, while integrating other frameworks as tools or subflows:
+
+- Use LlamaIndex retrievers as tools within an AbstractAgent
+- Wrap LangChain chains as tool executors
+- Let AbstractRuntime handle durability while external libraries handle specific capabilities
+
+This gives you the best of both worlds: durable orchestration + ecosystem components.
+
+---
+
+## Creating & Running Specialized Agents
+
+### How do I create a specialized agent that runs everywhere?
+
+Use AbstractFlow to author a visual workflow, then declare an **interface contract**:
+
+1. **Create your flow** in the visual editor (`npx @abstractframework/flow`)
+2. Add `On Flow Start` and `On Flow End` nodes with the required pins
+3. Declare the interface: `interfaces: ["abstractcode.agent.v1"]`
+4. Export as a `.flow` bundle
+
+The same flow now runs in:
+- **AbstractCode** (terminal): `abstractcode --workflow my-agent.flow`
+- **AbstractObserver** (browser): Select from the workflow picker
+- **Code Web UI** (browser): Select from the workflow picker
+- **Custom apps**: Via Gateway bundle discovery API
+
+### What's the `abstractcode.agent.v1` interface?
+
+It's a standard I/O contract for chat-like agents:
+
+**On Flow Start outputs:**
+- `provider`, `model` — LLM configuration
+- `prompt` — User input
+- `tools` — Available tools (optional)
+- `context`, `memory` — Context/memory state (optional)
+
+**On Flow End inputs:**
+- `response` — Agent response (required)
+- `success` — Boolean success flag (required)
+- `meta` — Metadata object (required)
+
+Any flow implementing this interface can be run as an agent in compatible clients.
+
+### Can I run flows from other clients?
+
+Yes. The Gateway provides **bundle discovery**:
+
+```bash
+# List available flows from a gateway
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8080/api/gateway/bundles
+```
+
+Clients can query this endpoint to show available workflows in dropdowns/pickers.
+
+### What's the workflow registry?
+
+AbstractCode maintains a local registry of installed workflow bundles:
+
+```bash
+# Install a bundle
+abstractcode workflow install /path/to/my-agent.flow
+
+# List installed workflows
+abstractcode workflow list
+
+# Run an installed workflow
+abstractcode --workflow my-agent
+```
+
+Bundles can also be deployed to a Gateway for remote access.
+
+---
+
 ## Architecture & Concepts
 
 ### What's the difference between AbstractRuntime, AbstractAgent, and AbstractFlow?
@@ -128,8 +259,30 @@ Use a gateway when you want:
 - **Multiple clients** — several UIs attached to the same runs
 - **Durable inbox** — pause/resume/cancel/schedule commands over HTTP
 - **Replay-first observability** — HTTP/SSE access to run history
+- **Scheduled workflows** — cron-style execution of automated agents
+- **Bundle discovery** — expose workflows to thin clients via API
+- **History bundles** — export reproducible run snapshots
 
 Local hosts like AbstractCode and AbstractAssistant run everything in one process without needing a gateway.
+
+### What can the Gateway do?
+
+Key capabilities:
+
+| Capability | Endpoint | Description |
+|------------|----------|-------------|
+| **Bundle discovery** | `GET /bundles` | List available workflow bundles |
+| **Start runs** | `POST /runs/start` | Launch a workflow |
+| **Schedule runs** | `POST /runs/schedule` | Cron-style scheduled execution |
+| **Ledger replay** | `GET /runs/{id}/ledger` | Replay execution history |
+| **Ledger streaming** | `GET /runs/{id}/ledger/stream` | Real-time SSE updates |
+| **History bundles** | `GET /runs/{id}/history_bundle` | Export reproducible snapshots |
+| **Provider discovery** | `GET /discovery/providers` | List available LLM providers |
+| **Tool discovery** | `GET /discovery/tools` | List available tools |
+| **Capabilities** | `GET /discovery/capabilities` | Voice/vision plugin status |
+| **KG query** | `POST /kg/query` | Query the knowledge graph |
+
+See the [Gateway API docs](https://github.com/lpalbou/abstractgateway/blob/main/docs/api.md) for the full API surface.
 
 ### Where is data stored?
 

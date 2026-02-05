@@ -7,20 +7,35 @@ Every operation is logged. Workflows survive crashes. UIs can render by replayin
 ## The Big Picture
 
 ```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                      Thin Clients (Browser UIs)                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │  Observer   │  │ Flow Editor │  │  Code Web   │  │  Your App   │        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘        │
+└─────────┼────────────────┼────────────────┼────────────────┼───────────────┘
+          │                │    HTTP/SSE    │                │
+          └────────────────┴────────┬───────┴────────────────┘
+                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Host Applications                                  │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐            │
-│  │AbstractCode│  │ Abstract   │  │ Abstract   │  │  Your App  │            │
-│  │ (terminal) │  │ Assistant  │  │  Observer  │  │            │            │
-│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘            │
-└────────┼───────────────┼───────────────┼───────────────┼───────────────────┘
-         │               │               │               │
-         ▼               ▼               ▼               ▼
+│                        AbstractGateway (Control Plane)                      │
+│  Bundle discovery · Run control · Ledger streaming · Command inbox          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+          ┌─────────────────────────┼─────────────────────────┐
+          │                         │                         │
+          ▼                         ▼                         ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  AbstractCode   │    │   Abstract      │    │   Your Host     │
+│   (terminal)    │    │   Assistant     │    │                 │
+└────────┬────────┘    └────────┬────────┘    └────────┬────────┘
+         │                      │                      │
+         └──────────────────────┼──────────────────────┘
+                                ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          Composition Layer                                   │
 │  ┌──────────────────────────┐  ┌──────────────────────────┐                 │
 │  │      AbstractAgent       │  │      AbstractFlow        │                 │
-│  │  ReAct · CodeAct · MemAct│  │  Visual workflows (.flow)│                 │
+│  │  ReAct · CodeAct · MemAct│  │  Visual authoring + .flow│                 │
 │  └────────────┬─────────────┘  └────────────┬─────────────┘                 │
 └───────────────┼─────────────────────────────┼───────────────────────────────┘
                 │                             │
@@ -47,51 +62,73 @@ Every operation is logged. Workflows survive crashes. UIs can render by replayin
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Key insight:** Runtime and Core are peers, not layers. You can use Runtime without Core (pure workflows), or Core without Runtime (simple LLM apps). When combined, Runtime mediates LLM/tool effects through Core.
+**Key insights:**
+- **Gateway on top**: Thin clients connect to the Gateway, which owns bundle discovery and run control
+- **Local hosts**: AbstractCode and AbstractAssistant can run in-process OR connect to a remote Gateway
+- **Runtime and Core are peers**: Use Runtime without Core (pure workflows), or Core without Runtime (simple LLM apps)
 
 ## Package Dependency Graph
 
 ```
-                    ┌──────────────────┐
-                    │   Applications   │
-                    └────────┬─────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-        ▼                    ▼                    ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│ AbstractCode │    │ Abstract     │    │ Abstract     │
-│              │    │ Assistant    │    │ Gateway      │
-└──────┬───────┘    └──────┬───────┘    └──────┬───────┘
-       │                   │                   │
-       └───────────┬───────┴───────────────────┘
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         Thin Clients (Browser UIs)                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │  Observer   │  │ Flow Editor │  │  Code Web   │  │  Your App   │        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘        │
+└─────────┼────────────────┼────────────────┼────────────────┼───────────────┘
+          │                │                │                │
+          │           HTTP / SSE            │                │
+          └────────────────┼────────────────┘                │
+                           ▼                                 │
+┌─────────────────────────────────────────────────┐          │
+│              AbstractGateway                    │          │
+│  ────────────────────────────────────────────── │          │
+│  • Bundle discovery (.flow)                     │          │
+│  • Run control plane (start/resume/cancel)      │          │
+│  • Ledger streaming (SSE)                       │          │
+│  • Command inbox                                │          │
+└────────────────────────┬────────────────────────┘          │
+                         │                                   │
+                         ▼                                   │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Local Hosts (In-Process)                            │
+│  ┌──────────────┐  ┌──────────────┐                                         │
+│  │ AbstractCode │  │ Abstract     │  ◄── Can also connect to Gateway        │
+│  │  (terminal)  │  │ Assistant    │      for remote workflows               │
+│  └──────┬───────┘  └──────┬───────┘                                         │
+└─────────┼─────────────────┼─────────────────────────────────────────────────┘
+          │                 │
+          └────────┬────────┘
                    │
                    ▼
-           ┌──────────────┐
-           │ AbstractAgent│ ◄── abstractagent
-           └──────┬───────┘
-                  │
-       ┌──────────┴──────────┐
-       │                     │
-       ▼                     ▼
-┌──────────────┐      ┌──────────────┐
-│AbstractRuntime│      │ AbstractCore │
-└──────────────┘      └──────────────┘
-       │                     │
-       │              ┌──────┴──────┐
-       │              │             │
-       ▼              ▼             ▼
-┌──────────────┐ ┌──────────┐ ┌──────────┐
-│AbstractMemory│ │ Abstract │ │ Abstract │
-│              │ │  Voice   │ │  Vision  │
-└──────────────┘ └──────────┘ └──────────┘
-       │
-       ▼
-┌──────────────┐
-│Abstract      │
-│ Semantics    │
-└──────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Composition Layer                                   │
+│  ┌──────────────────────────────┐  ┌──────────────────────────────────────┐ │
+│  │        AbstractAgent         │  │           AbstractFlow               │ │
+│  │  ReAct · CodeAct · MemAct    │  │  Visual authoring + .flow bundles    │ │
+│  └──────────────┬───────────────┘  └──────────────┬───────────────────────┘ │
+└─────────────────┼──────────────────────────────────┼────────────────────────┘
+                  │                                  │
+                  └────────────┬─────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Foundation (Two Peers)                              │
+│  ┌──────────────────────────┐      ┌──────────────────────────┐             │
+│  │     AbstractRuntime      │      │      AbstractCore        │             │
+│  │  Durable kernel + ledger │      │  LLM API + tool schemas  │             │
+│  └──────────────────────────┘      └──────────────────────────┘             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                  │                                  │
+                  │                    ┌─────────────┴─────────────┐
+                  ▼                    ▼                           ▼
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
+│   AbstractMemory     │  │    AbstractVoice     │  │   AbstractVision     │
+│   + AbstractSemantics│  │    (TTS/STT)         │  │   (Image gen)        │
+└──────────────────────┘  └──────────────────────┘  └──────────────────────┘
 ```
+
+**Key insight:** The Gateway sits **on top of** the Runtime, providing bundle discovery and run control for thin clients. Local hosts (AbstractCode, AbstractAssistant) can run in-process or connect to a remote Gateway.
 
 ## Core Concepts
 
@@ -151,14 +188,44 @@ Agent: "I need to read a file"
 
 This is why AbstractCode and AbstractAssistant can survive restarts — tool execution happens at a durable boundary.
 
-### Bundles
+### Flows & Bundles
 
-A **bundle** (`.flow` file) is a portable workflow package containing:
+A **flow** is a specialized agent authored with AbstractFlow. Unlike simple agent loops, flows enable:
+- **Deterministic execution** — The same inputs produce the same execution path
+- **Recursive composition** — Flows can invoke subflows (nested workflows)
+- **Multi-state coordination** — Complex state machines with branching, loops, and parallel paths
+- **Multi-agent orchestration** — Multiple agent patterns coordinated within a single workflow
+
+A **bundle** (`.flow` file) is the portable distribution unit:
 - VisualFlow JSON (the workflow graph)
-- Manifest (metadata, entry points)
-- Dependencies (subflows)
+- Manifest (metadata, entry points, interface declarations)
+- Subflows (dependencies)
 
-Bundles are how you distribute and deploy workflows.
+The Gateway discovers bundles and exposes them to thin clients. This is how you deploy and share workflows.
+
+### Interface Contracts (Run Anywhere)
+
+Flows can implement **interface contracts** that define standard I/O patterns. This lets the same flow run in any compatible client:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Interface: abstractcode.agent.v1                                           │
+│  ───────────────────────────────────────────────────────────────────────── │
+│  On Flow Start (outputs):  provider, model, prompt, tools, context, ...    │
+│  On Flow End (inputs):     response, success, meta, scratchpad             │
+└─────────────────────────────────────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Runs in:                                                                    │
+│  • AbstractCode (terminal) — /workflow command                              │
+│  • AbstractObserver (browser) — workflow picker                              │
+│  • Code Web UI (browser) — workflow picker                                   │
+│  • Custom apps — via Gateway bundle discovery                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why this matters:** You author a specialized agent once in the visual editor (e.g., a "deep researcher" or "code reviewer") and it automatically works in every client that supports the interface. No client-specific code needed.
 
 ## Gateway Architecture
 
