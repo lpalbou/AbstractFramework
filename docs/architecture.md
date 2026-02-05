@@ -32,7 +32,7 @@ Every operation is logged. Workflows survive crashes. UIs can render by replayin
          └──────────────────────┼──────────────────────┘
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          Composition Layer                                   │
+│                          Composition Layer                                  │
 │  ┌──────────────────────────┐  ┌──────────────────────────┐                 │
 │  │      AbstractAgent       │  │      AbstractFlow        │                 │
 │  │  ReAct · CodeAct · MemAct│  │  Visual authoring + .flow│                 │
