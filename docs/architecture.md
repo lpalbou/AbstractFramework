@@ -6,6 +6,12 @@ Every operation is logged. Workflows survive crashes. UIs can render by replayin
 
 ## The Big Picture
 
+AbstractFramework supports two deployment patterns: **Gateway-first (recommended)** and **Local in-process (alternative)**.
+
+### The Gateway Path (recommended)
+
+Unified execution of specialized agents across all thin clients, for both remote and local deployments.
+
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                      Thin Clients (Browser UIs)                            │
@@ -18,117 +24,74 @@ Every operation is logged. Workflows survive crashes. UIs can render by replayin
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        AbstractGateway (Control Plane)                      │
-│  Bundle discovery · Run control · Ledger streaming · Command inbox          │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  • Bundle discovery — expose .flow specialized agents to all clients        │
+│  • Run control — start/pause/resume/cancel/schedule                         │
+│  • Ledger streaming — real-time SSE updates                                 │
+│  • Unified execution — same workflow runs identically everywhere            │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
-          ┌─────────────────────────┼─────────────────────────┐
-          │                         │                         │
-          ▼                         ▼                         ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  AbstractCode   │    │   Abstract      │    │   Your Host     │
-│   (terminal)    │    │   Assistant     │    │                 │
-└────────┬────────┘    └────────┬────────┘    └────────┬────────┘
-         │                      │                      │
-         └──────────────────────┼──────────────────────┘
-                                ▼
+                                    ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          Composition Layer                                  │
-│  ┌──────────────────────────┐  ┌──────────────────────────┐                 │
-│  │      AbstractAgent       │  │      AbstractFlow        │                 │
-│  │  ReAct · CodeAct · MemAct│  │  Visual authoring + .flow│                 │
-│  └────────────┬─────────────┘  └────────────┬─────────────┘                 │
-└───────────────┼─────────────────────────────┼───────────────────────────────┘
-                │                             │
-                ▼                             ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Foundation (Two Peers)                              │
-│  ┌──────────────────────────┐  ┌──────────────────────────┐                 │
-│  │     AbstractRuntime      │  │      AbstractCore        │                 │
-│  │  ──────────────────────  │  │  ──────────────────────  │                 │
-│  │  • Durable execution     │  │  • Unified LLM API       │                 │
-│  │  • Append-only ledger    │  │  • Tool calling          │                 │
-│  │  • Effects & waits       │  │  • Structured output     │                 │
-│  │  • Checkpoint & replay   │  │  • Multi-provider        │                 │
-│  └──────────────────────────┘  └──────────────────────────┘                 │
+│                      Shared Foundation (see below)                          │
 └─────────────────────────────────────────────────────────────────────────────┘
-                │                             │
-                ▼                             ▼
+```
+
+### The Local Path (alternative)
+
+In-process execution without a gateway, simpler, but limited to local deployments and without access to the abstractions of the gateway.
+```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Memory & Modalities                                  │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────┐  ┌────────────┐    │
-│  │ AbstractMemory │  │AbstractSemantic│  │ Abstract   │  │ Abstract   │    │
-│  │ Temporal KG    │  │ Schema registry│  │   Voice    │  │   Vision   │    │
-│  └────────────────┘  └────────────────┘  └────────────┘  └────────────┘    │
+│                      Local Host Applications                                │
+│  ┌───────────────────┐    ┌──────────────────-─┐                            │
+│  │   AbstractCode    │    │  AbstractAssistant │  ◄── Run runtime directly  │
+│  │    (terminal)     │    │   (macOS tray)     │      (may migrate to GW)   │
+│  └─────────┬─────────┘    └─────────┬─────────-┘                            │
+└────────────┼────────────────────────┼───────────────────────────────────────┘
+             │                        │
+             └───────────-────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Shared Foundation (see below)                          │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Key insights:**
-- **Gateway on top**: Thin clients connect to the Gateway, which owns bundle discovery and run control
-- **Local hosts**: AbstractCode and AbstractAssistant can run in-process OR connect to a remote Gateway
-- **Runtime and Core are peers**: Use Runtime without Core (pure workflows), or Core without Runtime (simple LLM apps)
+- **Gateway path is recommended**: It provides unified bundle discovery and execution of specialized agents across all thin clients
+- **Local path is an alternative**: AbstractCode and AbstractAssistant run the runtime in-process — simpler for local dev, but lacks unified workflow discovery
+- **Both paths use the same libraries**: The execution semantics are identical; only the host differs
 
-## Package Dependency Graph
+### Shared Foundation
+
+Both deployment paths converge on the same foundation: **AbstractRuntime** and **AbstractCore** are peers, while **Voice**/**Vision** are optional **AbstractCore capability plugins**. Memory and semantics are separate components that can be used by workflows via runtime effects/tooling.
 
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                         Thin Clients (Browser UIs)                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
-│  │  Observer   │  │ Flow Editor │  │  Code Web   │  │  Your App   │        │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘        │
-└─────────┼────────────────┼────────────────┼────────────────┼───────────────┘
-          │                │                │                │
-          │           HTTP / SSE            │                │
-          └────────────────┼────────────────┘                │
-                           ▼                                 │
-┌─────────────────────────────────────────────────┐          │
-│              AbstractGateway                    │          │
-│  ────────────────────────────────────────────── │          │
-│  • Bundle discovery (.flow)                     │          │
-│  • Run control plane (start/resume/cancel)      │          │
-│  • Ledger streaming (SSE)                       │          │
-│  • Command inbox                                │          │
-└────────────────────────┬────────────────────────┘          │
-                         │                                   │
-                         ▼                                   │
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Local Hosts (In-Process)                            │
-│  ┌──────────────┐  ┌──────────────┐                                         │
-│  │ AbstractCode │  │ Abstract     │  ◄── Can also connect to Gateway        │
-│  │  (terminal)  │  │ Assistant    │      for remote workflows               │
-│  └──────┬───────┘  └──────┬───────┘                                         │
-└─────────┼─────────────────┼─────────────────────────────────────────────────┘
-          │                 │
-          └────────┬────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Composition Layer                                   │
-│  ┌──────────────────────────────┐  ┌──────────────────────────────────────┐ │
-│  │        AbstractAgent         │  │           AbstractFlow               │ │
-│  │  ReAct · CodeAct · MemAct    │  │  Visual authoring + .flow bundles    │ │
-│  └──────────────┬───────────────┘  └──────────────┬───────────────────────┘ │
-└─────────────────┼──────────────────────────────────┼────────────────────────┘
-                  │                                  │
-                  └────────────┬─────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Foundation (Two Peers)                              │
-│  ┌──────────────────────────┐      ┌──────────────────────────┐             │
-│  │     AbstractRuntime      │      │      AbstractCore        │             │
-│  │  Durable kernel + ledger │      │  LLM API + tool schemas  │             │
-│  └──────────────────────────┘      └──────────────────────────┘             │
+│  Composition: AbstractAgent (ReAct/CodeAct/MemAct) + AbstractFlow (.flow)   │
 └─────────────────────────────────────────────────────────────────────────────┘
-                  │                                  │
-                  │                    ┌─────────────┴─────────────┐
-                  ▼                    ▼                           ▼
-┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
-│   AbstractMemory     │  │    AbstractVoice     │  │   AbstractVision     │
-│   + AbstractSemantics│  │    (TTS/STT)         │  │   (Image gen)        │
-└──────────────────────┘  └──────────────────────┘  └──────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Foundation (Two Peers)                               │
+│                                                                             │
+│  ┌──────────────────────────────┐    ┌──────────────────────────────────┐   │
+│  │       AbstractRuntime        │    │         AbstractCore             │   │
+│  │   Durable kernel + ledger    │    │    LLM API + tool schemas        │   │
+│  └──────────────────────────────┘    │  ┌────────────┐ ┌─────────────┐  │   │
+│                                      │  │   Voice    │ │   Vision    │  │   │
+│                                      │  │  (TTS/STT) │ │ (Image gen) │  │   │
+│                                      │  └────────────┘ └─────────────┘  │   │
+│                                      │ capability plugins (optional)    │   │
+│                                      └──────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            Memory & Knowledge                               │
+│         AbstractMemory (temporal triples) + AbstractSemantics (KG)          │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
-
-**Key insight:** The Gateway sits **on top of** the Runtime, providing bundle discovery and run control for thin clients. Local hosts (AbstractCode, AbstractAssistant) can run in-process or connect to a remote Gateway.
 
 ## Core Concepts
 
@@ -139,7 +102,7 @@ A **run** is a durable workflow instance. Every run has a **ledger** — an appe
 ```
 Run: agent_task_abc123
 ┌─────────────────────────────────────────────────────────┐
-│ Ledger                                                   │
+│ Ledger                                                  │
 ├──────┬──────────────┬───────────────────────────────────┤
 │ Step │ Type         │ Data                              │
 ├──────┼──────────────┼───────────────────────────────────┤

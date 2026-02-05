@@ -43,31 +43,34 @@ If you're new, start with:
 ## Architecture at a Glance
 
 ```
+ RECOMMENDED: Gateway-first          │  ALTERNATIVE: Local in-process
+─────────────────────────────────────┼───────────────────────────────────
+ Browser UIs (Observer, Flow         │  AbstractCode (terminal)
+ Editor, Code Web, Your App)         │  AbstractAssistant (macOS tray)
+              │                      │             │
+              ▼                      │             │
+       AbstractGateway               │             │
+  (bundle discovery, run control)    │             │
+              │                      │             │
+              └──────────────────────┴─────────────┘
+                                     │
+                                     ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│  Host Applications                                                 │
-│  AbstractCode · AbstractAssistant · Observer · Flow Editor · ...  │
+│  Composition: AbstractAgent (ReAct/CodeAct/MemAct) + AbstractFlow │
 └───────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────────--─────┐
+│  Foundation: AbstractRuntime + AbstractCore (+ Voice/Vision plugins)│
+└────────────────────────────────────────────────────────────────--───┘
+                                     │
+                                     ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│  Composition Layer                                                 │
-│  AbstractAgent (ReAct/CodeAct/MemAct) · AbstractFlow (workflows)  │
-└───────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌───────────────────────────────────────────────────────────────────┐
-│  Foundation                                                        │
-│  AbstractRuntime (durable execution)  ·  AbstractCore (LLM API)   │
-└───────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-┌───────────────────────────────────────────────────────────────────┐
-│  Memory & Modalities                                               │
-│  AbstractMemory · AbstractSemantics · AbstractVoice · AbstractVision │
+│  Memory & Knowledge: AbstractMemory · AbstractSemantics           │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-See [Architecture](architecture.md) for details.
+See [Architecture](architecture.md) for details on both paths.
 
 ---
 

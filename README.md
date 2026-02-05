@@ -5,40 +5,38 @@
 AbstractFramework is a modular ecosystem for building AI agents and workflows that survive restarts, scale to production, and give you full visibility into what's happening. Every component is open source, works with local models, and designed to be composed however you need.
 
 ```
+┌──────────────────────────────────────────┬──────────────────────────────────┐
+│   GATEWAY PATH (Recommended)             │   LOCAL PATH (Alternative)       │
+├──────────────────────────────────────────┼──────────────────────────────────┤
+│                                          │                                  │
+│  Browser UIs (Observer, Flow Editor,     │  AbstractCode (terminal)         │
+│  Code Web, Your App)                     │  AbstractAssistant (macOS tray)  │
+│              │                           │             │                    │
+│              ▼                           │             │                    │
+│  ┌────────────────────────────────────┐  │             │                    │
+│  │        AbstractGateway             │  │             │                    │
+│  │  ────────────────────────────────  │  │             │                    │
+│  │  Bundle discovery (specialized     │  │             │                    │
+│  │  agents across all clients)        │  │             │                    │
+│  │  Run control (start/pause/resume)  │  │             │                    │
+│  │  Ledger streaming (real-time SSE)  │  │             │                    │
+│  └──────────────────┬─────────────────┘  │             │                    │
+│                     │                    │             │                    │
+└─────────────────────┼────────────────────┴─────────────┼────────────────────┘
+                      └──────────────────┬───────────────┘
+                                         ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Host Applications                                    │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │ AbstractCode │  │  Abstract    │  │ AbstractFlow │  │  Your Custom │     │
-│  │  (terminal)  │  │  Assistant   │  │   (visual)   │  │     App      │     │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘     │
-└─────────┼─────────────────┼─────────────────┼─────────────────┼─────────────┘
-          │                 │                 │                 │
-          ▼                 ▼                 ▼                 ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Composition Layer                                    │
-│  ┌──────────────────────────────┐  ┌──────────────────────────────────────┐ │
-│  │        AbstractAgent         │  │           AbstractMemory             │ │
-│  │  ReAct · CodeAct · MemAct    │  │  Temporal triples · Vector search    │ │
-│  └──────────────────────────────┘  └──────────────────────────────────────┘ │
+│  Composition: AbstractAgent (ReAct/CodeAct/MemAct) + AbstractFlow (.flow)   │
 └─────────────────────────────────────────────────────────────────────────────┘
-          │                                       │
-          ▼                                       ▼
+                                         │
+                                         ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Foundation Layer                                   │
-│  ┌────────────────────────────────┐  ┌────────────────────────────────────┐ │
-│  │        AbstractRuntime         │  │          AbstractCore              │ │
-│  │  ───────────────────────────── │  │  ────────────────────────────────  │ │
-│  │  Durable execution             │  │  Unified LLM API                   │ │
-│  │  Append-only ledger            │  │  Tool calling                      │ │
-│  │  Pause → Resume → Replay       │  │  Structured output                 │ │
-│  │  Effects & Waits               │  │  Any provider (local/cloud)        │ │
-│  └────────────────────────────────┘  └────────────────────────────────────┘ │
+│  Foundation: AbstractRuntime + AbstractCore (+ Voice/Vision capability plugins) │
 └─────────────────────────────────────────────────────────────────────────────┘
-          │                                       │
-          ▼                                       ▼
+                                         │
+                                         ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          Optional Modalities                                 │
-│       AbstractVoice (TTS/STT)  ·  AbstractVision (Image generation)         │
+│  Memory & Knowledge: AbstractMemory · AbstractSemantics                     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
