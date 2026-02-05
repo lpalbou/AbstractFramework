@@ -76,12 +76,12 @@ See [Architecture](architecture.md) for details on both paths.
 
 ## What's in This Repo
 
-This repo (`abstractframework` on PyPI) is a **meta-package + documentation index**:
+This repo is a **documentation index** for the AbstractFramework ecosystem:
 
-- Install common bundles via extras: `pip install "abstractframework[all]"`
-- Points you to the real projects (each package has its own repo)
+- Points you to the real projects (each package has its own repo on PyPI)
 - Most execution happens in **Python** (runtime, agents, gateway)
 - Browser UIs are distributed via **npm** (`@abstractframework/observer`, etc.)
+- Install individual packages as needed from PyPI
 
 ---
 

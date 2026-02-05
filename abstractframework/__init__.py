@@ -1,13 +1,11 @@
 """
-AbstractFramework (meta-package)
+AbstractFramework (documentation index)
 
-This package is a lightweight **gateway/index** for the AbstractFramework ecosystem.
-It exists to:
+This package provides utilities to inspect which AbstractFramework packages are installed.
 
-1) provide convenient install bundles via extras (e.g. `pip install "abstractframework[all]"`)
-2) offer a small helper to inspect which Abstract* Python packages are installed
+All functionality lives in the component projects (each has its own repository, PyPI package, docs, and release cadence).
+Install individual packages as needed from PyPI.
 
-Most functionality lives in the component projects (each has its own repository, docs, and release cadence).
 Start here:
   - https://github.com/lpalbou/AbstractFramework#readme
   - https://github.com/lpalbou/AbstractFramework/blob/main/docs/getting-started.md
@@ -91,5 +89,5 @@ def print_status() -> None:
 
     if len(installed) < len(all_packages):
         print("")
-        print('To install the full Python bundle:')
-        print('  pip install "abstractframework[all]"')
+        print('To install additional packages, see:')
+        print('  https://github.com/lpalbou/AbstractFramework#install')

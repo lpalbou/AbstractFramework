@@ -6,15 +6,30 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ### Changed
 
-- Rewrote gateway docs to match the implemented ecosystem (current package names, quickstarts, and commands).
-- Updated installer script (`scripts/install.sh`) to use the correct browser UI entrypoint (`npx abstractobserver`).
-- Fixed `abstractframework` convenience re-export to expose `abstractcore.create_llm` reliably.
+- **Repositioned as documentation-only hub** — This repo is now a documentation index; not published to PyPI
+  - Removed all references to `pip install "abstractframework[all]"` from docs
+  - Users install individual packages directly from PyPI (e.g., `pip install abstractcode`)
+  - Updated `scripts/install.sh` to install individual packages instead of meta-package
+  - Updated `abstractframework/__init__.py` to reflect documentation-only purpose
+- **Added durability notes** throughout documentation:
+  - `README.md` Quick Start section explains session persistence
+  - `docs/getting-started.md` Path 2 (Terminal Agent) includes durability note with `/clear` instruction
+- Rewrote gateway docs to match the implemented ecosystem (current package names, quickstarts, and commands)
+- Updated installer script to use the correct browser UI entrypoint (`npx abstractobserver`)
+- Fixed `abstractframework` convenience re-export to expose `abstractcore.create_llm` reliably
 - Clarified that AbstractVoice and AbstractVision are **capability plugins** for AbstractCore:
   - Updated `docs/getting-started.md` Path 6 (Voice I/O) and Path 7 (Image Generation) to show integration with AbstractCore via `llm.voice`, `llm.audio`, and `llm.vision` APIs
   - Updated intro table to show these as `abstractcore + plugin` combinations
   - Updated `README.md` Modalities section to explain the capability plugin architecture
   - Updated `docs/README.md` package table with plugin clarification
   - Path 7 now recommends HuggingFace for local image generation (Ollama/LM Studio do not support image generation models)
+
+### Technical (not user-facing)
+
+- Fixed package structure for potential PyPI publishing (`abstractframework/` subdirectory with `__init__.py`)
+- Fixed ruff config syntax (`select` moved to `[tool.ruff.lint]`)
+- Added `py.typed` marker for PEP 561 type checking support
+- Added `Typing :: Typed` and `Operating System :: OS Independent` classifiers
 
 ## [0.1.0] - 2026-02-04
 

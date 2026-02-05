@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "abstractframework"
 version = "0.1.0"
-description = "An open-source Agentic OS — the operating system for AI agents"
+description = "Documentation hub for the AbstractFramework ecosystem — an open-source Agentic OS"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Laurent-Philippe Albou", email = "lpalbou@gmail.com"}
+    {name = "Laurent-Philippe Albou", email = "contact@abstractcore.ai"}
 ]
 keywords = [
     "agentic-os",
@@ -29,11 +29,13 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
 ]
 requires-python = ">=3.10"
 
@@ -100,12 +102,17 @@ Issues = "https://github.com/lpalbou/AbstractFramework/issues"
 [tool.setuptools.packages.find]
 where = ["."]
 
+[tool.setuptools.package-data]
+abstractframework = ["py.typed"]
+
 [tool.black]
 line-length = 100
 target-version = ["py310", "py311", "py312"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
 
 [tool.mypy]

@@ -117,7 +117,8 @@ abstractcode --provider ollama --model qwen3:1.7b-q4_K_M
 - Type `/help` for all commands
 - Mention files with `@path/to/file` in your prompts
 - Tool execution requires approval by default (toggle with `/auto-accept`)
-- Sessions are durable — close and reopen, your context is preserved
+
+> **Durability Note**: Sessions persist across restarts — close and reopen, your **full context is preserved** (conversation history, tool calls, state). To start fresh: type `/clear`
 
 **Next**: See [AbstractCode docs](https://github.com/lpalbou/abstractcode/blob/main/docs/getting-started.md).
 

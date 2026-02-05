@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# AbstractFramework — installer (meta-package)
+# AbstractFramework — installer
 # =============================================================================
-# This installs the Python-side ecosystem via the `abstractframework` meta-package.
+# This installs the core AbstractFramework packages.
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | bash
@@ -15,7 +15,7 @@ set -euo pipefail
 
 banner() {
   printf "\n%s\n" "============================================================"
-  printf "%s\n" "  AbstractFramework (meta-package) — install"
+  printf "%s\n" "  AbstractFramework — install"
   printf "%s\n" "============================================================"
 }
 
@@ -68,9 +68,9 @@ echo "Upgrading pip..."
 python -m pip install -U pip
 
 echo ""
-echo "Installing AbstractFramework Python bundle..."
-echo "Note: this can be large (it installs multiple packages)."
-python -m pip install "abstractframework[all]"
+echo "Installing AbstractFramework core packages..."
+echo "Note: this installs the foundation + most common packages."
+python -m pip install abstractcore abstractruntime abstractagent abstractflow abstractcode "abstractgateway[http]" abstractmemory abstractsemantics
 
 echo ""
 echo "✓ Done."

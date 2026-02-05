@@ -65,6 +65,8 @@ abstractcode --provider ollama --model qwen3:1.7b
 
 You now have a durable coding assistant in your terminal. Type `/help` to explore.
 
+> **Durability**: Your session persists across restarts — close and reopen, your full context is preserved. Start fresh with `/clear`.
+
 ### Option 2: Just the LLM API
 
 Use AbstractCore as a drop-in unified LLM client:
@@ -103,12 +105,9 @@ Open http://localhost:3001, connect to the gateway, and start observing.
 
 ### Python Packages (pip)
 
+Install only what you need:
+
 ```bash
-# Full ecosystem (meta-package)
-pip install "abstractframework[all]"
-
-# Or install only what you need:
-
 # Foundation
 pip install abstractcore                # Unified LLM API
 pip install abstractruntime             # Durable execution
@@ -122,7 +121,7 @@ pip install abstractmemory              # Temporal triple store + vector search
 pip install abstractsemantics           # Predicate/entity-type registry
 
 # Applications
-pip install abstractcode                # Terminal TUI
+pip install abstractcode                # Terminal TUI (durable sessions)
 pip install abstractassistant           # macOS tray app
 pip install "abstractgateway[http]"     # HTTP run gateway
 
