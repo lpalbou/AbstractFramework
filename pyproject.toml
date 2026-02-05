@@ -51,7 +51,7 @@ runtime = ["abstractruntime"]
 agent = ["abstractagent"]
 flow = ["abstractflow"]
 code = ["abstractcode"]
-gateway = ["abstractgateway[http]"]
+gateway = ["abstractgateway"]
 memory = ["abstractmemory"]
 semantics = ["abstractsemantics"]
 voice = ["abstractvoice"]
@@ -64,7 +64,7 @@ backend = [
     "abstractruntime",
     "abstractagent",
     "abstractflow",
-    "abstractgateway[http]",
+    "abstractgateway",
     "abstractmemory",
     "abstractsemantics",
 ]
@@ -76,7 +76,7 @@ all = [
     "abstractagent",
     "abstractflow",
     "abstractcode",
-    "abstractgateway[http]",
+    "abstractgateway",
     "abstractmemory",
     "abstractsemantics",
     "abstractvoice",

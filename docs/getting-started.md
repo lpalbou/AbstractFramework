@@ -191,7 +191,7 @@ Deploy a remote control plane and observe runs in your browser.
 ### Install
 
 ```bash
-pip install "abstractgateway[http]"
+pip install "abstractgateway"
 # If your workflows use LLM/tools:
 pip install "abstractruntime[abstractcore]>=0.4.0"
 ```

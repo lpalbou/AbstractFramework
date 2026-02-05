@@ -34,7 +34,7 @@ No. Install only what you need:
 | Knowledge graph | `pip install abstractmemory abstractsemantics` |
 | Terminal coding assistant | `pip install abstractcode` |
 | macOS tray assistant | `pip install abstractassistant` |
-| Remote control plane | `pip install "abstractgateway[http]"` |
+| Remote control plane | `pip install "abstractgateway"` |
 | Browser UI | `npx @abstractframework/observer` |
 | Voice I/O (TTS/STT) | `pip install abstractvoice` |
 | Image generation | `pip install abstractvision` |

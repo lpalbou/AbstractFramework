@@ -70,7 +70,7 @@ python -m pip install -U pip
 echo ""
 echo "Installing AbstractFramework core packages..."
 echo "Note: this installs the foundation + most common packages."
-python -m pip install abstractcore abstractruntime abstractagent abstractflow abstractcode "abstractgateway[http]" abstractmemory abstractsemantics
+python -m pip install abstractcore abstractruntime abstractagent abstractflow abstractcode "abstractgateway" abstractmemory abstractsemantics
 
 echo ""
 echo "✓ Done."

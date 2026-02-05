@@ -52,15 +52,15 @@ AbstractFramework is a modular ecosystem for building AI agents and workflows th
 
 ### Option 1: Terminal Agent (5 minutes)
 
-The fastest way to try AbstractFramework:
+The fastest way to try an AbstractFramework agent:
 
 ```bash
 # Start a local model with Ollama
-ollama serve && ollama pull qwen3:1.7b
+ollama serve && ollama pull qwen3:4b
 
 # Run AbstractCode
 pip install abstractcode
-abstractcode --provider ollama --model qwen3:1.7b
+abstractcode --provider ollama --model qwen3:4b
 ```
 
 You now have a durable coding assistant in your terminal. Type `/help` to explore.
@@ -69,12 +69,11 @@ You now have a durable coding assistant in your terminal. Type `/help` to explor
 
 ### Option 2: Just the LLM API
 
-Use AbstractCore as a drop-in unified LLM client:
+Use AbstractCore as a drop-in unified LLM client that work with any provider and model:
 
 ```python
 from abstractcore import create_llm
 
-# Works with any provider
 llm = create_llm("ollama", model="qwen3:4b-instruct")
 # llm = create_llm("openai", model="gpt-4o")
 # llm = create_llm("anthropic", model="claude-3-5-sonnet-latest")
@@ -88,10 +87,10 @@ print(response.content)
 Deploy a run gateway and observe workflows in your browser:
 
 ```bash
-pip install "abstractgateway[http]"
+pip install "abstractgateway"
 
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
-export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+export ABSTRACTGATEWAY_AUTH_TOKEN="for-my-security-my-token-must-be-at-least-15-chars"
+export ABSTRACTGATEWAY_DATA_DIR="my-folder/runtime/gateway"
 
 abstractgateway serve --port 8080
 npx @abstractframework/observer
@@ -123,7 +122,7 @@ pip install abstractsemantics           # Predicate/entity-type registry
 # Applications
 pip install abstractcode                # Terminal TUI (durable sessions)
 pip install abstractassistant           # macOS tray app
-pip install "abstractgateway[http]"     # HTTP run gateway
+pip install "abstractgateway"           # HTTP run gateway
 
 # Modalities (optional capability plugins for AbstractCore)
 pip install abstractvoice               # Adds llm.voice (TTS) + llm.audio (STT)
@@ -177,7 +176,7 @@ npm install @abstractframework/monitor-gpu
 |---------|--------------|---------|
 | [**AbstractCode**](https://github.com/lpalbou/abstractcode) | Terminal TUI — durable coding assistant | `pip install abstractcode` |
 | [**AbstractAssistant**](https://github.com/lpalbou/abstractassistant) | macOS tray app — local agent with optional voice | `pip install abstractassistant` |
-| [**AbstractGateway**](https://github.com/lpalbou/abstractgateway) | HTTP server — remote runs, durable commands, SSE | `pip install "abstractgateway[http]"` |
+| [**AbstractGateway**](https://github.com/lpalbou/abstractgateway) | HTTP server — remote runs, durable commands, SSE | `pip install abstractgateway` |
 | [**AbstractObserver**](https://github.com/lpalbou/abstractobserver) | Browser UI — observe, launch, and control runs | `npx @abstractframework/observer` |
 
 ### Modalities (AbstractCore Capability Plugins)

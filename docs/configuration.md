@@ -24,7 +24,7 @@ AbstractFramework is modular, so configuration is **per component**. This page c
 ├───────────────────┼───────────────────────────────────────────────────────────┤
 │ Code Web UI       │ (UI settings for gateway connection)                     │
 ├───────────────────┼───────────────────────────────────────────────────────────┤
-│ AbstractCode      │ ABSTRACTCODE_WORKSPACE_DIR, ABSTRACTCODE_WORKSPACE_*     │
+│ AbstractCode      │ ABSTRACTCODE_WORKSPACE_*                                │
 ├───────────────────┼───────────────────────────────────────────────────────────┤
 │ AbstractAssistant │ --data-dir, --provider, --model                          │
 ├───────────────────┼───────────────────────────────────────────────────────────┤
@@ -204,7 +204,6 @@ Open http://localhost:3002 in your browser. Configure the gateway URL and auth t
 AbstractCode is a local host (no gateway needed). Key settings:
 
 ```bash
-export ABSTRACTCODE_WORKSPACE_DIR="$PWD"                # workspace root for @file mentions
 export ABSTRACTCODE_WORKSPACE_MOUNTS="repo=/abs/path"   # optional; newline-separated mounts also supported
 ```
 
