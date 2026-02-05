@@ -50,14 +50,23 @@ AbstractFramework is a modular ecosystem for building AI agents and workflows th
 
 ## Quick Start
 
+### Select a Provider / Model
+
+# Start a local model with Ollama
+ollama serve && ollama pull qwen3:4b
+
+> or install lmstudio with the model you want
+
+# Alternatively use OpenAI / Anthropic / OpenRouter
+Set one of those API keys as environment variable, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`
+
+For the examples below, we will use ollama and qwen3:4b but you can use any provider:model.
+
 ### Option 1: Terminal Agent (5 minutes)
 
 The fastest way to try an AbstractFramework agent:
 
 ```bash
-# Start a local model with Ollama
-ollama serve && ollama pull qwen3:4b
-
 # Run AbstractCode
 pip install abstractcode
 abstractcode --provider ollama --model qwen3:4b
@@ -67,7 +76,21 @@ You now have a durable coding assistant in your terminal. Type `/help` to explor
 
 > **Durability**: Your session persists across restarts — close and reopen, your full context is preserved. Start fresh with `/clear`.
 
-### Option 2: Just the LLM API
+### Option 2: Tray Assistant (macOS)
+
+Get a menu bar assistant with optional voice on macOS:
+
+```bash
+# Install and run
+pip install abstractassistant
+assistant tray
+```
+
+The assistant appears in your menu bar. Click to interact, or use keyboard shortcuts.
+
+> **Durability**: Sessions persist — your conversation history is preserved across app restarts.
+
+### Option 3: Just the LLM API
 
 Use AbstractCore as a drop-in unified LLM client that work with any provider and model:
 
@@ -82,7 +105,7 @@ response = llm.generate("Explain durable execution in 3 bullets.")
 print(response.content)
 ```
 
-### Option 3: Gateway + Browser UI
+### Option 4: Gateway + Browser UI
 
 Deploy a run gateway and observe workflows in your browser:
 

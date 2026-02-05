@@ -4,6 +4,10 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Option 2: Tray Assistant** in Quick Start — showcases AbstractAssistant (macOS menu bar app)
+
 ### Changed
 
 - **Repositioned as documentation-only hub** — This repo is now a documentation index; not published to PyPI
