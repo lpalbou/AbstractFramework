@@ -144,23 +144,38 @@ pip install "abstractruntime[abstractcore]"
 ### Example
 
 ```python
-from abstractruntime import Runtime, Effect
+from abstractruntime import (
+    Effect, EffectType, Runtime, StepPlan, WorkflowSpec,
+    InMemoryLedgerStore, InMemoryRunStore
+)
 
-async def my_workflow(context):
-    # This LLM call is durable — logged to the ledger
-    response = await context.effect(Effect.llm_call(
-        provider="ollama",
-        model="qwen3:4b-instruct",
-        messages=[{"role": "user", "content": "Hello!"}]
-    ))
-    
-    # If the process crashes here, it resumes from the checkpoint
-    return response.content
+# Define workflow nodes
+def ask(run, ctx):
+    return StepPlan(
+        node_id="ask",
+        effect=Effect(
+            type=EffectType.ASK_USER,
+            payload={"prompt": "What would you like to do?"},
+            result_key="user_input",
+        ),
+        next_node="done",
+    )
 
-# Create and run
-runtime = Runtime()
-run = await runtime.start("my_workflow", my_workflow)
-result = await runtime.run_until_complete(run.run_id)
+def done(run, ctx):
+    return StepPlan(node_id="done", complete_output={"answer": run.vars.get("user_input")})
+
+# Create workflow and runtime
+wf = WorkflowSpec(workflow_id="demo", entry_node="ask", nodes={"ask": ask, "done": done})
+rt = Runtime(run_store=InMemoryRunStore(), ledger_store=InMemoryLedgerStore())
+
+# Start and tick
+run_id = rt.start(workflow=wf)
+state = rt.tick(workflow=wf, run_id=run_id)
+print(state.status.value)  # "waiting"
+
+# Resume with user input
+state = rt.resume(workflow=wf, run_id=run_id, wait_key=state.waiting.wait_key, payload={"text": "Hello!"})
+print(state.status.value)  # "completed"
 ```
 
 **Next**: See [AbstractRuntime docs](https://github.com/lpalbou/abstractruntime/blob/main/docs/getting-started.md).
@@ -439,7 +454,7 @@ You need a running AbstractGateway (see [Path 4](#path-4-gateway--observer)).
 npx @abstractframework/code
 ```
 
-Configure the gateway URL in the UI settings, then start coding.
+Open http://localhost:3002 in your browser. Configure the gateway URL in the UI settings, then start coding.
 
 **Next**: See [AbstractCode web docs](https://github.com/lpalbou/abstractcode/blob/main/docs/web.md).
 

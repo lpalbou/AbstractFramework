@@ -187,7 +187,11 @@ Browser-based coding assistant (connects to a gateway).
 npx @abstractframework/code
 ```
 
-Configure the gateway URL and auth token in the UI settings.
+```bash
+export PORT="3002"        # default; server port
+```
+
+Open http://localhost:3002 in your browser. Configure the gateway URL and auth token in the UI settings.
 
 **Canonical docs**:
 - [Web docs](https://github.com/lpalbou/abstractcode/blob/main/docs/web.md)
@@ -383,3 +387,11 @@ abstractvoice-prefetch --piper en --stt small
 # 4. Run AbstractCode
 abstractcode --provider ollama --model qwen3:4b-instruct
 ```
+
+---
+
+## Related Documentation
+
+- **[Getting Started](getting-started.md)** — Pick a path and run something
+- **[Architecture](architecture.md)** — How the pieces fit together
+- **[FAQ](faq.md)** — Common questions and troubleshooting

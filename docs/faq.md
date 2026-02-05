@@ -212,19 +212,19 @@ Install what you need and compose them in your app.
 
 ## Stability & Maturity
 
-### Is the ecosystem "stable"?
+### What's the maturity of each package?
 
-Different components have different maturity levels:
+Different components are at different stages:
 
 | Status | Packages |
 |--------|----------|
-| **Stable foundations** | AbstractCore, AbstractRuntime |
-| **Active development** | AbstractAgent, AbstractGateway, AbstractObserver |
-| **Pre-alpha/experimental** | AbstractCode, AbstractFlow, AbstractAssistant |
+| **Beta** | AbstractCore |
+| **Active development** | AbstractRuntime, AbstractAgent, AbstractGateway, AbstractObserver |
+| **Pre-alpha** | AbstractCode, AbstractFlow, AbstractAssistant |
 | **Early/WIP** | AbstractMemory, AbstractSemantics |
 | **Alpha** | AbstractVoice, AbstractVision |
 
-For the authoritative status, check each project's README and changelog. We follow semantic versioning where possible.
+For the authoritative status, check each project's README and pyproject.toml classifiers. We follow semantic versioning where possible.
 
 ---
 
@@ -267,3 +267,11 @@ abstractvoice-prefetch --piper en
 ---
 
 Still stuck? Check the individual project docs or open an issue on GitHub.
+
+---
+
+## Related Documentation
+
+- **[Getting Started](getting-started.md)** — Pick a path and run something
+- **[Architecture](architecture.md)** — How the pieces fit together
+- **[Configuration](configuration.md)** — Environment variables and settings

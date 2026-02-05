@@ -336,3 +336,11 @@ Each project has its own architecture docs:
 ### Web UIs
 - [Flow Editor](https://github.com/lpalbou/abstractflow/blob/main/docs/web-editor.md) — Visual workflow authoring (`npx @abstractframework/flow`)
 - [Code Web UI](https://github.com/lpalbou/abstractcode/blob/main/docs/web.md) — Browser-based coding assistant (`npx @abstractframework/code`)
+
+---
+
+## Related Documentation
+
+- **[Getting Started](getting-started.md)** — Pick a path and run something
+- **[Configuration](configuration.md)** — Environment variables and settings
+- **[FAQ](faq.md)** — Common questions and troubleshooting
