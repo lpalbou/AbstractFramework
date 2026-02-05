@@ -30,9 +30,9 @@ AbstractFramework is a modular ecosystem for building AI agents and workflows th
 └─────────────────────────────────────────────────────────────────────────────┘
                                          │
                                          ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────────----───────┐
 │  Foundation: AbstractRuntime + AbstractCore (+ Voice/Vision capability plugins) │
-└─────────────────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────────────----───┘
                                          │
                                          ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -126,9 +126,9 @@ pip install abstractcode                # Terminal TUI
 pip install abstractassistant           # macOS tray app
 pip install "abstractgateway[http]"     # HTTP run gateway
 
-# Modalities (optional)
-pip install abstractvoice               # Voice I/O (TTS/STT)
-pip install abstractvision              # Image generation
+# Modalities (optional capability plugins for AbstractCore)
+pip install abstractvoice               # Adds llm.voice (TTS) + llm.audio (STT)
+pip install abstractvision              # Adds llm.vision (image generation)
 ```
 
 ### JavaScript/Node Packages (npm)
@@ -181,12 +181,14 @@ npm install @abstractframework/monitor-gpu
 | [**AbstractGateway**](https://github.com/lpalbou/abstractgateway) | HTTP server — remote runs, durable commands, SSE | `pip install "abstractgateway[http]"` |
 | [**AbstractObserver**](https://github.com/lpalbou/abstractobserver) | Browser UI — observe, launch, and control runs | `npx @abstractframework/observer` |
 
-### Modalities
+### Modalities (AbstractCore Capability Plugins)
+
+These are **optional capability plugins** for AbstractCore. Once installed, they expose additional capabilities on `llm` instances (e.g., `llm.voice.tts()`, `llm.vision.t2i()`), keeping AbstractCore lightweight by default.
 
 | Package | What It Does | Install |
 |---------|--------------|---------|
-| [**AbstractVoice**](https://github.com/lpalbou/abstractvoice) | Voice I/O — TTS (Piper), STT (Whisper) | `pip install abstractvoice` |
-| [**AbstractVision**](https://github.com/lpalbou/abstractvision) | Image generation — text-to-image, image-to-image | `pip install abstractvision` |
+| [**AbstractVoice**](https://github.com/lpalbou/abstractvoice) | Voice I/O — adds `llm.voice` (TTS) and `llm.audio` (STT) | `pip install abstractcore abstractvoice` |
+| [**AbstractVision**](https://github.com/lpalbou/abstractvision) | Image generation — adds `llm.vision` (text-to-image, image-to-image) | `pip install abstractcore abstractvision` |
 
 ### Web UIs (npm)
 

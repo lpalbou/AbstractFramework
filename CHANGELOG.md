@@ -9,6 +9,12 @@ All notable changes to AbstractFramework will be documented in this file.
 - Rewrote gateway docs to match the implemented ecosystem (current package names, quickstarts, and commands).
 - Updated installer script (`scripts/install.sh`) to use the correct browser UI entrypoint (`npx abstractobserver`).
 - Fixed `abstractframework` convenience re-export to expose `abstractcore.create_llm` reliably.
+- Clarified that AbstractVoice and AbstractVision are **capability plugins** for AbstractCore:
+  - Updated `docs/getting-started.md` Path 6 (Voice I/O) and Path 7 (Image Generation) to show integration with AbstractCore via `llm.voice`, `llm.audio`, and `llm.vision` APIs
+  - Updated intro table to show these as `abstractcore + plugin` combinations
+  - Updated `README.md` Modalities section to explain the capability plugin architecture
+  - Updated `docs/README.md` package table with plugin clarification
+  - Path 7 now recommends HuggingFace for local image generation (Ollama/LM Studio do not support image generation models)
 
 ## [0.1.0] - 2026-02-04
 

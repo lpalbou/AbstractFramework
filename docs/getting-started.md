@@ -13,8 +13,8 @@ AbstractFramework is modular — you can use a single package or compose several
 | Create durable workflows | [Path 3](#path-3-durable-workflows) | `abstractruntime` |
 | Deploy a remote run gateway | [Path 4](#path-4-gateway--observer) | `abstractgateway` + `abstractobserver` |
 | Use agent patterns (ReAct, etc.) | [Path 5](#path-5-agent-patterns) | `abstractagent` |
-| Add voice I/O to your app | [Path 6](#path-6-voice-io) | `abstractvoice` |
-| Generate images | [Path 7](#path-7-image-generation) | `abstractvision` |
+| Add voice/audio to AbstractCore | [Path 6](#path-6-voice-io) | `abstractcore` + `abstractvoice` (plugin) |
+| Add image generation to AbstractCore | [Path 7](#path-7-image-generation) | `abstractcore` + `abstractvision` (plugin) |
 | Build a knowledge graph | [Path 8](#path-8-knowledge-graph) | `abstractmemory` + `abstractsemantics` |
 | macOS menu bar assistant | [Path 9](#path-9-macos-assistant) | `abstractassistant` |
 | Visual workflow editor (browser) | [Path 10](#path-10-flow-editor) | `@abstractframework/flow` |
@@ -268,12 +268,14 @@ print(state.output["answer"])
 
 ## Path 6: Voice I/O
 
-Add speech-to-text and text-to-speech to your app.
+Add speech-to-text and text-to-speech capabilities to AbstractCore.
+
+> **Note**: AbstractVoice is a **capability plugin** for AbstractCore. Once installed, it exposes `llm.voice` (TTS) and `llm.audio` (STT) on any LLM instance, keeping AbstractCore lightweight by default.
 
 ### Install
 
 ```bash
-pip install abstractvoice
+pip install abstractcore abstractvoice
 ```
 
 ### Prefetch Models (Recommended)
@@ -285,7 +287,35 @@ abstractvoice-prefetch --stt small
 abstractvoice-prefetch --piper en
 ```
 
-### Use It
+### Use with AbstractCore (Recommended)
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("ollama", model="qwen3:4b-instruct")
+
+# Check available capabilities
+print(llm.capabilities.status())
+
+# Text-to-speech via capability
+wav_bytes = llm.voice.tts("Hello from AbstractCore!", format="wav")
+
+# Speech-to-text via capability
+text = llm.audio.transcribe("audio.wav", language="en")
+print(text)
+
+# Audio in LLM requests (transcribed automatically)
+response = llm.generate(
+    "Summarize the key points from this call.",
+    media=["meeting.wav"],
+    audio_policy="speech_to_text",
+)
+print(response.content)
+```
+
+### Standalone Use
+
+You can also use AbstractVoice directly without AbstractCore:
 
 ```python
 from abstractvoice import VoiceManager
@@ -306,31 +336,66 @@ print(text)
 abstractvoice --verbose
 ```
 
-**Next**: See [AbstractVoice docs](https://github.com/lpalbou/abstractvoice/blob/main/docs/getting-started.md).
+**Next**: See [AbstractVoice docs](https://github.com/lpalbou/abstractvoice/blob/main/docs/getting-started.md) and [AbstractCore Audio & Voice](https://abstractcore.dev/docs/audio.html).
 
 ---
 
 ## Path 7: Image Generation
 
-Generate images with text-to-image or image-to-image.
+Add text-to-image and image-to-image capabilities to AbstractCore.
+
+> **Note**: AbstractVision is a **capability plugin** for AbstractCore. Once installed, it exposes `llm.vision` for generative image tasks, keeping AbstractCore lightweight by default.
+
+### Supported Backends
+
+- **HuggingFace** (recommended) — Local diffusion models via `diffusers`
+- **OpenAI-compatible APIs** — Any server exposing `/v1/images/generations`
+
+> **Note**: Ollama and LM Studio do not currently support image generation models. Use HuggingFace for local image generation.
 
 ### Install
 
 ```bash
-pip install abstractvision
+pip install abstractcore abstractvision
 ```
 
-### Use It
+### Use with AbstractCore (Recommended)
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("openai", model="gpt-4o-mini")
+
+# Check available capabilities
+print(llm.capabilities.status())
+
+# Text-to-image via capability (requires HF_TOKEN or vision_base_url config)
+# png_bytes = llm.vision.t2i("a red square")
+```
+
+Configure the vision backend (choose one):
+
+```bash
+# Option 1: HuggingFace (recommended for local generation)
+export HF_TOKEN="hf_..."
+
+# Option 2: OpenAI-compatible server
+export ABSTRACTVISION_BASE_URL="http://localhost:7860/v1"
+```
+
+### Standalone Use with HuggingFace
+
+You can also use AbstractVision directly for local image generation:
 
 ```python
 from abstractvision import VisionManager, LocalAssetStore
-from abstractvision.backends import OpenAICompatibleBackendConfig, OpenAICompatibleVisionBackend
+from abstractvision.backends import HuggingFaceBackend, HuggingFaceBackendConfig
 
-# Configure backend (e.g., local server)
-backend = OpenAICompatibleVisionBackend(
-    config=OpenAICompatibleBackendConfig(
-        base_url="http://localhost:1234/v1",
-        api_key="local",
+# Configure HuggingFace backend (local diffusion models)
+backend = HuggingFaceBackend(
+    config=HuggingFaceBackendConfig(
+        model_id="stabilityai/stable-diffusion-xl-base-1.0",
+        # device="mps",  # for Apple Silicon
     )
 )
 
@@ -344,10 +409,14 @@ print(result)  # {"$artifact": "...", "content_type": "image/png", ...}
 ### CLI
 
 ```bash
-abstractvision t2i --base-url http://localhost:1234/v1 "a photo of a red fox"
+# Using HuggingFace
+abstractvision t2i --backend huggingface "a photo of a red fox"
+
+# Using OpenAI-compatible server
+abstractvision t2i --base-url http://localhost:7860/v1 "a photo of a red fox"
 ```
 
-**Next**: See [AbstractVision docs](https://github.com/lpalbou/abstractvision/blob/main/docs/getting-started.md).
+**Next**: See [AbstractVision docs](https://github.com/lpalbou/abstractvision/blob/main/docs/getting-started.md) and [AbstractCore Vision Capabilities](https://abstractcore.dev/docs/vision-capabilities.html).
 
 ---
 

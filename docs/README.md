@@ -24,8 +24,8 @@ If you're new, start with:
 | A terminal app for agentic coding | [AbstractCode](https://github.com/lpalbou/abstractcode) |
 | A macOS menu bar assistant | [AbstractAssistant](https://github.com/lpalbou/abstractassistant) |
 | A deployable run gateway (HTTP/SSE) | [AbstractGateway](https://github.com/lpalbou/abstractgateway) |
-| Voice I/O (TTS/STT) | [AbstractVoice](https://github.com/lpalbou/abstractvoice) |
-| Image generation | [AbstractVision](https://github.com/lpalbou/abstractvision) |
+| Voice I/O (TTS/STT) — capability plugin for AbstractCore | [AbstractVoice](https://github.com/lpalbou/abstractvoice) |
+| Image generation — capability plugin for AbstractCore | [AbstractVision](https://github.com/lpalbou/abstractvision) |
 | A temporal triple store for knowledge graphs | [AbstractMemory](https://github.com/lpalbou/abstractmemory) |
 | A semantics registry for KG assertions | [AbstractSemantics](https://github.com/lpalbou/abstractsemantics) |
 
