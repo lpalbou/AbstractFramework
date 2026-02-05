@@ -41,7 +41,7 @@ Every operation is logged. Workflows survive crashes. UIs can render by replayin
                 │                             │
                 ▼                             ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Foundation (Two Peers)                               │
+│                         Foundation (Two Peers)                              │
 │  ┌──────────────────────────┐  ┌──────────────────────────┐                 │
 │  │     AbstractRuntime      │  │      AbstractCore        │                 │
 │  │  ──────────────────────  │  │  ──────────────────────  │                 │
