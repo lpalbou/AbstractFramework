@@ -171,20 +171,20 @@ The Gateway discovers bundles and exposes them to thin clients. This is how you 
 Flows can implement **interface contracts** that define standard I/O patterns. This lets the same flow run in any compatible client:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  Interface: abstractcode.agent.v1                                           │
+┌────────────────────────────────────────────────────────────────────────────┐
+│  Interface: abstractcode.agent.v1                                          │
 │  ───────────────────────────────────────────────────────────────────────── │
 │  On Flow Start (outputs):  provider, model, prompt, tools, context, ...    │
 │  On Flow End (inputs):     response, success, meta, scratchpad             │
-└─────────────────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────────────────────┘
               │
               ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  Runs in:                                                                    │
+│  Runs in:                                                                   │
 │  • AbstractCode (terminal) — /workflow command                              │
-│  • AbstractObserver (browser) — workflow picker                              │
-│  • Code Web UI (browser) — workflow picker                                   │
-│  • Custom apps — via Gateway bundle discovery                                │
+│  • AbstractObserver (browser) — workflow picker                             │
+│  • Code Web UI (browser) — workflow picker                                  │
+│  • Custom apps — via Gateway bundle discovery                               │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -196,16 +196,16 @@ For production deployments, AbstractGateway provides the control plane:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      Browser / Clients                               │
+│                      Browser / Clients                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │
-│  │  Observer   │  │  Flow Editor│  │  Your UI    │                  │
+│  │  Observer   │  │  Flow Editor│  │  Your App   │                  │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘                  │
 └─────────┼────────────────┼────────────────┼─────────────────────────┘
           │                │                │
-          │         HTTP/SSE               │
+          │         HTTP/SSE                │
           ▼                ▼                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      AbstractGateway                                 │
+│                      AbstractGateway                                │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │
 │  │  REST API   │  │   Runner    │  │   Stores    │                  │
 │  │  /api/*     │  │  tick runs  │  │  ledger,    │                  │
@@ -236,15 +236,15 @@ AbstractFramework separates two concerns:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      Agent Context                                   │
+│                      Agent Context                                  │
 │  ┌────────────────────────────────────────────────────────────────┐ │
 │  │ Active Memory (what the LLM sees)                              │ │
 │  │ ─────────────────────────────────                              │ │
 │  │ Recent messages, compacted history, relevant knowledge         │ │
 │  └────────────────────────────────────────────────────────────────┘ │
-│                              │                                       │
+│                              │                                      │
 │              ┌───────────────┴───────────────┐                      │
-│              ▼                               ▼                       │
+│              ▼                               ▼                      │
 │  ┌─────────────────────┐       ┌─────────────────────┐              │
 │  │ Durable History     │       │ Knowledge Graph     │              │
 │  │ (Runtime + Ledger)  │       │ (AbstractMemory)    │              │
@@ -262,14 +262,14 @@ AbstractVoice and AbstractVision extend AbstractCore with multimodal capabilitie
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        AbstractCore                                  │
+│                        AbstractCore                                 │
 │  ┌─────────────────────────────────────────────────────────────────┐│
 │  │ Unified LLM API                                                 ││
 │  │ create_llm("ollama", model="...") → LLM instance                ││
 │  └─────────────────────────────────────────────────────────────────┘│
-│                              │                                       │
+│                              │                                      │
 │              ┌───────────────┼───────────────┐                      │
-│              ▼               ▼               ▼                       │
+│              ▼               ▼               ▼                      │
 │  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐        │
 │  │ Capability:     │ │ Capability:     │ │ Capability:     │        │
 │  │ llm.voice       │ │ llm.vision      │ │ llm.audio       │        │
