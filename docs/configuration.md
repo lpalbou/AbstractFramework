@@ -389,6 +389,19 @@ abstractcode --provider ollama --model qwen3:4b-instruct
 
 ---
 
+## Integrations (Email, Telegram)
+
+Some integrations are enabled on the gateway host and emit durable events that workflows can consume.
+
+- Telegram bridge + tools:
+  - `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_FLOW_ID=...`, `ABSTRACT_ENABLE_TELEGRAM_TOOLS=1`
+  - See [Guide: Telegram integration](guide/telegram-integration.md)
+- Email bridge + tools:
+  - `ABSTRACT_EMAIL_BRIDGE=1` and email account configuration (`ABSTRACT_EMAIL_*`)
+  - See [Guide: Email integration](guide/email-integration.md)
+
+---
+
 ## Related Documentation
 
 - **[Getting Started](getting-started.md)** — Pick a path and run something

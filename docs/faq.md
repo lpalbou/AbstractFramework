@@ -23,7 +23,13 @@ Start with [Getting Started](getting-started.md) to find the right entry point f
 
 ### Do I have to install the whole stack?
 
-No. Install only what you need:
+The recommended path is the full pinned release:
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+You can still install only what you need:
 
 | Your Goal | Install |
 |-----------|---------|
@@ -42,7 +48,7 @@ No. Install only what you need:
 | Visual workflow editor | `npx @abstractframework/flow` |
 | Browser coding assistant | `npx @abstractframework/code` |
 
-The `abstractframework` PyPI package is a convenience **meta-package** that bundles common installs via extras — useful if you want several packages at once.
+In `abstractframework==0.1.0`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
 
 ### What should I start with?
 

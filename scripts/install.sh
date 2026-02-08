@@ -2,7 +2,7 @@
 # =============================================================================
 # AbstractFramework — installer
 # =============================================================================
-# This installs the core AbstractFramework packages.
+# This installs the full pinned AbstractFramework release profile.
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | bash
@@ -48,7 +48,7 @@ echo "✓ Python: $(python3 --version 2>&1)"
 if command -v node >/dev/null 2>&1; then
   echo "✓ Node.js: $(node --version) (optional; used for AbstractObserver UI)"
 else
-  echo "ℹ Node.js not found (optional). Install Node 18+ if you want the browser UI: npx abstractobserver"
+  echo "ℹ Node.js not found (optional). Install Node 18+ if you want the browser UI: npx @abstractframework/observer"
 fi
 
 # Create venv if not already in one
@@ -68,9 +68,8 @@ echo "Upgrading pip..."
 python -m pip install -U pip
 
 echo ""
-echo "Installing AbstractFramework core packages..."
-echo "Note: this installs the foundation + most common packages."
-python -m pip install abstractcore abstractruntime abstractagent abstractflow abstractcode "abstractgateway" abstractmemory abstractsemantics
+echo "Installing AbstractFramework full release profile..."
+python -m pip install "abstractframework==0.1.0"
 
 echo ""
 echo "✓ Done."
@@ -87,7 +86,7 @@ echo "   export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle"
 echo "   export ABSTRACTGATEWAY_FLOWS_DIR=\"/path/to/bundles\"   # directory of *.flow bundles (or upload later)"
 echo "   export ABSTRACTGATEWAY_DATA_DIR=\"\$PWD/runtime/gateway\""
 echo "   abstractgateway serve --host 127.0.0.1 --port 8080"
-echo "   npx abstractobserver"
+echo "   npx @abstractframework/observer"
 echo ""
 echo "Docs:"
 echo "  - Getting started: https://github.com/lpalbou/AbstractFramework/blob/main/docs/getting-started.md"

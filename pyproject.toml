@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "abstractframework"
 version = "0.1.0"
-description = "Documentation hub for the AbstractFramework ecosystem — an open-source Agentic OS"
+description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -39,49 +39,63 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 
-# Base dependencies (minimal)
+# Base dependencies (full framework, batteries included)
 dependencies = [
-    "abstractcore>=0.1.0",
+    # Core runtime with provider/tool/media/embeddings/server stack enabled.
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractruntime==0.4.2",
+    "abstractagent==0.3.1",
+    # Flow editor backend + agent nodes.
+    "abstractflow[editor]==0.3.7",
+    "abstractcode==0.3.6",
+    "abstractgateway==0.2.1",
+    "abstractmemory==0.0.2",
+    "abstractsemantics==0.0.2",
+    "abstractvoice==0.6.3",
+    "abstractvision==0.2.1",
+    "abstractassistant==0.4.2",
 ]
 
 [project.optional-dependencies]
 # Individual components
-core = ["abstractcore[all]"]
-runtime = ["abstractruntime"]
-agent = ["abstractagent"]
-flow = ["abstractflow"]
-code = ["abstractcode"]
-gateway = ["abstractgateway"]
-memory = ["abstractmemory"]
-semantics = ["abstractsemantics"]
-voice = ["abstractvoice"]
-vision = ["abstractvision"]
-assistant = ["abstractassistant"]
+core = ["abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8"]
+runtime = ["abstractruntime==0.4.2"]
+agent = ["abstractagent==0.3.1"]
+flow = ["abstractflow[editor]==0.3.7"]
+code = ["abstractcode==0.3.6"]
+gateway = ["abstractgateway==0.2.1"]
+memory = ["abstractmemory==0.0.2"]
+semantics = ["abstractsemantics==0.0.2"]
+voice = ["abstractvoice==0.6.3"]
+vision = ["abstractvision==0.2.1"]
+assistant = ["abstractassistant==0.4.2"]
 
 # Bundles
 backend = [
-    "abstractcore[all]",
-    "abstractruntime",
-    "abstractagent",
-    "abstractflow",
-    "abstractgateway",
-    "abstractmemory",
-    "abstractsemantics",
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractruntime==0.4.2",
+    "abstractagent==0.3.1",
+    "abstractflow[editor]==0.3.7",
+    "abstractgateway==0.2.1",
+    "abstractmemory==0.0.2",
+    "abstractsemantics==0.0.2",
+    "abstractvoice==0.6.3",
+    "abstractvision==0.2.1",
 ]
 
 # Full installation (all packages)
 all = [
-    "abstractcore[all]",
-    "abstractruntime",
-    "abstractagent",
-    "abstractflow",
-    "abstractcode",
-    "abstractgateway",
-    "abstractmemory",
-    "abstractsemantics",
-    "abstractvoice",
-    "abstractvision",
-    "abstractassistant",
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractruntime==0.4.2",
+    "abstractagent==0.3.1",
+    "abstractflow[editor]==0.3.7",
+    "abstractcode==0.3.6",
+    "abstractgateway==0.2.1",
+    "abstractmemory==0.0.2",
+    "abstractsemantics==0.0.2",
+    "abstractvoice==0.6.3",
+    "abstractvision==0.2.1",
+    "abstractassistant==0.4.2",
 ]
 
 # Development dependencies

@@ -1,0 +1,61 @@
+# AbstractFramework
+> Meta-package + documentation hub for the AbstractFramework ecosystem (durable, observable agents/workflows).
+
+This repo pins ecosystem package versions and provides a tiny helper API in `abstractframework/`.
+Most runtime behavior lives in the individual package repos (AbstractCore/Runtime/Agent/Flow/Gateway/Code).
+
+Quick commands:
+- Install pinned stack: `pip install "abstractframework==0.1.0"`
+- Show detected component versions: `python -c "from abstractframework import print_status; print_status()"`
+
+Notes for LLMs working in this repo:
+- Prefer `docs/` as the ecosystem-level source of truth.
+- Keep changes minimal and ecosystem-level (docs + version pins).
+- If you need to change runtime behavior, you likely want the relevant package repo instead of this meta repo.
+
+## Start Here
+
+- [README.md](README.md): Ecosystem overview and install paths.
+- [docs/README.md](docs/README.md): Docs index for this repo.
+- [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
+- [docs/architecture.md](docs/architecture.md): How the stack fits together.
+- [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
+
+## Scenarios
+
+- [docs/scenarios/README.md](docs/scenarios/README.md): Scenarios index.
+- [docs/scenarios/offline-coding-assistant.md](docs/scenarios/offline-coding-assistant.md): Local durable coding assistant.
+- [docs/scenarios/gateway-first-local-dev.md](docs/scenarios/gateway-first-local-dev.md): Local gateway + web UIs.
+- [docs/scenarios/specialized-agent-flow.md](docs/scenarios/specialized-agent-flow.md): Portable `.flow` agent across clients.
+- [docs/scenarios/workflow-bundle-lifecycle.md](docs/scenarios/workflow-bundle-lifecycle.md): Publish/install/deprecate bundles.
+- [docs/scenarios/phone-thin-client.md](docs/scenarios/phone-thin-client.md): iPhone via Web/PWA + gateway.
+- [docs/scenarios/telegram-permanent-contact.md](docs/scenarios/telegram-permanent-contact.md): Telegram bridge + workflow.
+- [docs/scenarios/email-inbox-agent.md](docs/scenarios/email-inbox-agent.md): Email bridge + workflow.
+
+## Guides
+
+- [docs/guide/README.md](docs/guide/README.md): Guides index.
+- [docs/guide/deployment-topologies.md](docs/guide/deployment-topologies.md): Supported deployment patterns.
+- [docs/guide/deployment-web.md](docs/guide/deployment-web.md): Browser UIs and gateway setup.
+- [docs/guide/deployment-iphone.md](docs/guide/deployment-iphone.md): iPhone/PWA notes.
+- [docs/guide/gateway-security.md](docs/guide/gateway-security.md): Safe gateway exposure defaults.
+- [docs/guide/workflow-bundles.md](docs/guide/workflow-bundles.md): `.flow` bundles and lifecycle.
+- [docs/guide/process-manager-env-vars.md](docs/guide/process-manager-env-vars.md): Write-only env var config from Observer.
+
+## Release Profile (Pinned Versions)
+
+- [pyproject.toml](pyproject.toml): Single source of truth for pinned ecosystem versions and extras.
+- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
+
+## Full Context
+
+- [llms-full.txt](llms-full.txt): Concatenated context for copy/paste into an LLM (`python scripts/gen_llms_full.py`).
+
+## Optional
+
+- [AbstractCore](https://github.com/lpalbou/abstractcore): LLM providers, tools, structured output, media.
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): Durable execution (runs, effects, waits, ledger, stores).
+- [AbstractAgent](https://github.com/lpalbou/abstractagent): Agent patterns (ReAct/CodeAct/MemAct) built on runtime + core.
+- [AbstractFlow](https://github.com/lpalbou/abstractflow): VisualFlow authoring and `.flow` bundles.
+- [AbstractGateway](https://github.com/lpalbou/abstractgateway): HTTP/SSE control plane for gateway-first deployments.
+- [AbstractCode](https://github.com/lpalbou/abstractcode): Terminal + web host UIs for durable runs.

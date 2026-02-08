@@ -1,0 +1,4201 @@
+# AbstractFramework - llms-full
+> Full text of key files from this repo. Sections are separated by `--- <path> ---`.
+
+--- README.md ---
+# AbstractFramework
+
+**Build durable, observable AI systems — fully open source, works offline.**
+
+AbstractFramework is a modular ecosystem for building AI agents and workflows that survive restarts, scale to production, and give you full visibility into what's happening. Every component is open source, works with local models, and designed to be composed however you need.
+
+This repository is the **single access point** to the ecosystem:
+- install the full framework with one `pip` command
+- understand how all packages fit together
+- create and deploy new specialized solutions (flows/agents) across clients
+
+```
+┌──────────────────────────────────────────┬──────────────────────────────────┐
+│   GATEWAY PATH (Recommended)             │   LOCAL PATH (Alternative)       │
+├──────────────────────────────────────────┼──────────────────────────────────┤
+│                                          │                                  │
+│  Browser UIs (Observer, Flow Editor,     │  AbstractCode (terminal)         │
+│  Code Web, Your App)                     │  AbstractAssistant (macOS tray)  │
+│              │                           │             │                    │
+│              ▼                           │             │                    │
+│  ┌────────────────────────────────────┐  │             │                    │
+│  │        AbstractGateway             │  │             │                    │
+│  │  ────────────────────────────────  │  │             │                    │
+│  │  Bundle discovery (specialized     │  │             │                    │
+│  │  agents across all clients)        │  │             │                    │
+│  │  Run control (start/pause/resume)  │  │             │                    │
+│  │  Ledger streaming (real-time SSE)  │  │             │                    │
+│  └──────────────────┬─────────────────┘  │             │                    │
+│                     │                    │             │                    │
+└─────────────────────┼────────────────────┴─────────────┼────────────────────┘
+                      └──────────────────┬───────────────┘
+                                         ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Composition: AbstractAgent (ReAct/CodeAct/MemAct) + AbstractFlow (.flow)   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌──────────────────────────────────────────────────────────────────────----───────┐
+│  Foundation: AbstractRuntime + AbstractCore (+ Voice/Vision capability plugins) │
+└──────────────────────────────────────────────────────────────────────────----───┘
+                                         │
+                                         ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Memory & Knowledge: AbstractMemory · AbstractSemantics                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Why AbstractFramework?
+
+- **100% Open Source** — MIT licensed, no black boxes, you own everything
+- **Local First** — Run entirely offline with Ollama, LM Studio, or any local model
+- **Durable** — Workflows survive crashes; resume exactly where you left off
+- **Observable** — Every operation is logged; replay any run from history
+- **Modular** — Use one package or the full stack; compose what you need
+
+## Quick Start
+
+### Option 1: Install the Full Framework (Recommended)
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+`abstractframework==0.1.0` installs the pinned global release:
+
+| Package | Version |
+|---------|---------|
+| `abstractcore` | `2.11.8` |
+| `abstractruntime` | `0.4.2` |
+| `abstractagent` | `0.3.1` |
+| `abstractflow` | `0.3.7` |
+| `abstractcode` | `0.3.6` |
+| `abstractgateway` | `0.2.1` |
+| `abstractmemory` | `0.0.2` |
+| `abstractsemantics` | `0.0.2` |
+| `abstractvoice` | `0.6.3` |
+| `abstractvision` | `0.2.1` |
+| `abstractassistant` | `0.4.2` |
+
+Default behavior in this release:
+- `abstractcore` is installed with `openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`
+- `abstractflow` is installed with `editor`
+
+### Option 2: Select a Provider / Model
+
+```bash
+# Local (recommended)
+ollama serve && ollama pull qwen3:4b
+
+# Or use LM Studio
+# Or cloud providers via env vars:
+export OPENAI_API_KEY="..."
+export ANTHROPIC_API_KEY="..."
+export OPENROUTER_API_KEY="..."
+```
+
+### Option 3: Terminal Agent (5 minutes)
+
+```bash
+abstractcode --provider ollama --model qwen3:4b
+```
+
+You now have a durable coding assistant in your terminal. Type `/help` to explore.
+
+> **Durability**: Your session persists across restarts — close and reopen, your full context is preserved. Start fresh with `/clear`.
+
+### Option 4: Tray Assistant (macOS)
+
+```bash
+assistant tray
+```
+
+The assistant appears in your menu bar. Click to interact, or use keyboard shortcuts.
+
+> **Durability**: Sessions persist — your conversation history is preserved across app restarts.
+
+### Option 5: Just the LLM API
+
+Use AbstractCore as a drop-in unified LLM client that works with any provider and model:
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("ollama", model="qwen3:4b-instruct")
+# llm = create_llm("openai", model="gpt-4o")
+# llm = create_llm("anthropic", model="claude-3-5-sonnet-latest")
+
+response = llm.generate("Explain durable execution in 3 bullets.")
+print(response.content)
+```
+
+### Option 6: Gateway + Browser UI
+
+Deploy a run gateway and observe workflows in your browser:
+
+```bash
+export ABSTRACTGATEWAY_AUTH_TOKEN="for-my-security-my-token-must-be-at-least-15-chars"
+export ABSTRACTGATEWAY_DATA_DIR="my-folder/runtime/gateway"
+
+abstractgateway serve --port 8080
+npx @abstractframework/observer        # Gateway observability dashboard
+npx @abstractframework/flow            # Visual workflow editor
+npx @abstractframework/code            # Browser coding assistant
+```
+
+Open http://localhost:3001, connect to the gateway, and start observing.
+
+---
+
+## Install
+
+### Python (single command)
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+### Python (install specific components only)
+
+```bash
+pip install abstractcore==2.11.8
+pip install "abstractflow[editor]==0.3.7"
+pip install abstractgateway==0.2.1
+```
+
+### JavaScript/Node (browser UIs)
+
+```bash
+# Web UIs (run directly)
+npx @abstractframework/observer        # Gateway observability dashboard
+npx @abstractframework/flow            # Visual workflow editor
+npx @abstractframework/code            # Browser coding assistant
+
+# UI component libraries (for building your own apps)
+npm install @abstractframework/ui-kit
+npm install @abstractframework/panel-chat
+npm install @abstractframework/monitor-flow
+npm install @abstractframework/monitor-active-memory
+npm install @abstractframework/monitor-gpu
+```
+
+---
+
+## The Ecosystem
+
+The tables below describe the ecosystem components. The `abstractframework==0.1.0` install profile pins all Python packages to the versions listed in Quick Start.
+
+### Foundation
+
+| Package | What It Does | Install |
+|---------|--------------|---------|
+| [**AbstractCore**](https://github.com/lpalbou/abstractcore) | Unified LLM API — providers, tools, structured output, media | `pip install abstractcore` |
+| [**AbstractRuntime**](https://github.com/lpalbou/abstractruntime) | Durable execution — ledger, effects, pause/resume, replay | `pip install abstractruntime` |
+
+### Composition
+
+| Package | What It Does | Install |
+|---------|--------------|---------|
+| [**AbstractAgent**](https://github.com/lpalbou/abstractagent) | Agent patterns — ReAct, CodeAct, MemAct loops | `pip install abstractagent` |
+| [**AbstractFlow**](https://github.com/lpalbou/abstractflow) | Visual workflows — portable `.flow` bundles + editor | `pip install abstractflow` |
+
+### Memory & Semantics
+
+| Package | What It Does | Install |
+|---------|--------------|---------|
+| [**AbstractMemory**](https://github.com/lpalbou/abstractmemory) | Temporal triple store — provenance-aware, vector search | `pip install abstractmemory` |
+| [**AbstractSemantics**](https://github.com/lpalbou/abstractsemantics) | Schema registry — predicates, entity types for KG | `pip install abstractsemantics` |
+
+### Applications
+
+| Package | What It Does | Install |
+|---------|--------------|---------|
+| [**AbstractCode**](https://github.com/lpalbou/abstractcode) | Terminal TUI — durable coding assistant | `pip install abstractcode` |
+| [**AbstractAssistant**](https://github.com/lpalbou/abstractassistant) | macOS tray app — local agent with optional voice | `pip install abstractassistant` |
+| [**AbstractGateway**](https://github.com/lpalbou/abstractgateway) | HTTP server — remote runs, durable commands, SSE | `pip install abstractgateway` |
+| [**AbstractObserver**](https://github.com/lpalbou/abstractobserver) | Browser UI — observe, launch, and control runs | `npx @abstractframework/observer` |
+
+### Modalities (AbstractCore Capability Plugins)
+
+These are **optional capability plugins** for AbstractCore. Once installed, they expose additional capabilities on `llm` instances (e.g., `llm.voice.tts()`, `llm.vision.t2i()`), keeping AbstractCore lightweight by default.
+
+| Package | What It Does | Install |
+|---------|--------------|---------|
+| [**AbstractVoice**](https://github.com/lpalbou/abstractvoice) | Voice I/O — adds `llm.voice` (TTS) and `llm.audio` (STT) | `pip install abstractcore abstractvoice` |
+| [**AbstractVision**](https://github.com/lpalbou/abstractvision) | Image generation — adds `llm.vision` (text-to-image, image-to-image) | `pip install abstractcore abstractvision` |
+
+### Web UIs (npm)
+
+| Package | What It Does | Install |
+|---------|--------------|---------|
+| [**@abstractframework/flow**](https://github.com/lpalbou/abstractflow) | Visual workflow editor (drag-and-drop) | `npx @abstractframework/flow` |
+| [**@abstractframework/code**](https://github.com/lpalbou/abstractcode) | Browser-based coding assistant | `npx @abstractframework/code` |
+
+### UI Components (npm)
+
+| Package | What It Does |
+|---------|--------------|
+| [**@abstractframework/ui-kit**](https://github.com/lpalbou/abstractuic) | Theme tokens + UI primitives |
+| [**@abstractframework/panel-chat**](https://github.com/lpalbou/abstractuic) | Chat thread + message cards + composer |
+| [**@abstractframework/monitor-flow**](https://github.com/lpalbou/abstractuic) | Agent-cycle trace viewer |
+| [**@abstractframework/monitor-active-memory**](https://github.com/lpalbou/abstractuic) | Knowledge graph explorer (ReactFlow) |
+| [**@abstractframework/monitor-gpu**](https://github.com/lpalbou/abstractuic) | GPU utilization widget |
+
+---
+
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [Docs Index](docs/README.md) | Entrypoint docs for the ecosystem |
+| [Getting Started](docs/getting-started.md) | Pick a path and run something |
+| [Architecture](docs/architecture.md) | How the pieces fit together |
+| [API](docs/api.md) | Meta-package API (`create_llm`, install profile helpers) |
+| [Configuration](docs/configuration.md) | Environment variables & providers |
+| [FAQ](docs/faq.md) | Common questions |
+| [Scenarios](docs/scenarios/README.md) | End-to-end paths by use case |
+| [Guides](docs/guide/README.md) | Focused "how it works" notes |
+| [Glossary](docs/glossary.md) | Shared terminology |
+
+---
+
+## Create More Solutions
+
+AbstractFramework is designed so you can author one specialized workflow and deploy it across clients.
+
+1. Build your specialized logic in the Flow editor (`npx @abstractframework/flow`).
+2. Export it as a `.flow` bundle with an interface contract (`abstractcode.agent.v1`).
+3. Run it in terminal (`abstractcode --workflow ...`), browser UIs, or through `abstractgateway`.
+
+See `docs/getting-started.md` Path 12 for a complete end-to-end example.
+
+---
+
+## Philosophy
+
+We built AbstractFramework because we wanted:
+
+1. **Full control** — No vendor lock-in, no proprietary dependencies
+2. **Local by default** — Privacy and cost control with open-source models
+3. **Durability** — AI systems that don't lose work when things crash
+4. **Observability** — Complete visibility, not a black box
+5. **Composability** — Use what you need, replace what you don't
+
+Cloud APIs are supported when you need them (complex reasoning tasks), but the framework is designed to run entirely on your hardware.
+
+---
+
+## Contributing
+
+Every package is its own repo. Find what interests you:
+
+**Foundation:** [AbstractCore](https://github.com/lpalbou/abstractcore) · [AbstractRuntime](https://github.com/lpalbou/abstractruntime)
+
+**Composition:** [AbstractAgent](https://github.com/lpalbou/abstractagent) · [AbstractFlow](https://github.com/lpalbou/abstractflow)
+
+**Memory:** [AbstractMemory](https://github.com/lpalbou/abstractmemory) · [AbstractSemantics](https://github.com/lpalbou/abstractsemantics)
+
+**Apps:** [AbstractCode](https://github.com/lpalbou/abstractcode) · [AbstractAssistant](https://github.com/lpalbou/abstractassistant) · [AbstractGateway](https://github.com/lpalbou/abstractgateway) · [AbstractObserver](https://github.com/lpalbou/abstractobserver)
+
+**Modalities:** [AbstractVoice](https://github.com/lpalbou/abstractvoice) · [AbstractVision](https://github.com/lpalbou/abstractvision)
+
+**UI Components:** [AbstractUIC](https://github.com/lpalbou/abstractuic)
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+--- llms.txt ---
+# AbstractFramework
+> Meta-package + documentation hub for the AbstractFramework ecosystem (durable, observable agents/workflows).
+
+This repo pins ecosystem package versions and provides a tiny helper API in `abstractframework/`.
+Most runtime behavior lives in the individual package repos (AbstractCore/Runtime/Agent/Flow/Gateway/Code).
+
+Quick commands:
+- Install pinned stack: `pip install "abstractframework==0.1.0"`
+- Show detected component versions: `python -c "from abstractframework import print_status; print_status()"`
+
+Notes for LLMs working in this repo:
+- Prefer `docs/` as the ecosystem-level source of truth.
+- Keep changes minimal and ecosystem-level (docs + version pins).
+- If you need to change runtime behavior, you likely want the relevant package repo instead of this meta repo.
+
+## Start Here
+
+- [README.md](README.md): Ecosystem overview and install paths.
+- [docs/README.md](docs/README.md): Docs index for this repo.
+- [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
+- [docs/architecture.md](docs/architecture.md): How the stack fits together.
+- [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
+
+## Scenarios
+
+- [docs/scenarios/README.md](docs/scenarios/README.md): Scenarios index.
+- [docs/scenarios/offline-coding-assistant.md](docs/scenarios/offline-coding-assistant.md): Local durable coding assistant.
+- [docs/scenarios/gateway-first-local-dev.md](docs/scenarios/gateway-first-local-dev.md): Local gateway + web UIs.
+- [docs/scenarios/specialized-agent-flow.md](docs/scenarios/specialized-agent-flow.md): Portable `.flow` agent across clients.
+- [docs/scenarios/workflow-bundle-lifecycle.md](docs/scenarios/workflow-bundle-lifecycle.md): Publish/install/deprecate bundles.
+- [docs/scenarios/phone-thin-client.md](docs/scenarios/phone-thin-client.md): iPhone via Web/PWA + gateway.
+- [docs/scenarios/telegram-permanent-contact.md](docs/scenarios/telegram-permanent-contact.md): Telegram bridge + workflow.
+- [docs/scenarios/email-inbox-agent.md](docs/scenarios/email-inbox-agent.md): Email bridge + workflow.
+
+## Guides
+
+- [docs/guide/README.md](docs/guide/README.md): Guides index.
+- [docs/guide/deployment-topologies.md](docs/guide/deployment-topologies.md): Supported deployment patterns.
+- [docs/guide/deployment-web.md](docs/guide/deployment-web.md): Browser UIs and gateway setup.
+- [docs/guide/deployment-iphone.md](docs/guide/deployment-iphone.md): iPhone/PWA notes.
+- [docs/guide/gateway-security.md](docs/guide/gateway-security.md): Safe gateway exposure defaults.
+- [docs/guide/workflow-bundles.md](docs/guide/workflow-bundles.md): `.flow` bundles and lifecycle.
+- [docs/guide/process-manager-env-vars.md](docs/guide/process-manager-env-vars.md): Write-only env var config from Observer.
+
+## Release Profile (Pinned Versions)
+
+- [pyproject.toml](pyproject.toml): Single source of truth for pinned ecosystem versions and extras.
+- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
+
+## Full Context
+
+- [llms-full.txt](llms-full.txt): Concatenated context for copy/paste into an LLM (`python scripts/gen_llms_full.py`).
+
+## Optional
+
+- [AbstractCore](https://github.com/lpalbou/abstractcore): LLM providers, tools, structured output, media.
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): Durable execution (runs, effects, waits, ledger, stores).
+- [AbstractAgent](https://github.com/lpalbou/abstractagent): Agent patterns (ReAct/CodeAct/MemAct) built on runtime + core.
+- [AbstractFlow](https://github.com/lpalbou/abstractflow): VisualFlow authoring and `.flow` bundles.
+- [AbstractGateway](https://github.com/lpalbou/abstractgateway): HTTP/SSE control plane for gateway-first deployments.
+- [AbstractCode](https://github.com/lpalbou/abstractcode): Terminal + web host UIs for durable runs.
+
+--- pyproject.toml ---
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abstractframework"
+version = "0.1.0"
+description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Laurent-Philippe Albou", email = "contact@abstractcore.ai"}
+]
+keywords = [
+    "agentic-os",
+    "ai-agents",
+    "llm",
+    "autonomous-agents",
+    "workflows",
+    "multi-agent",
+    "durable-execution",
+    "knowledge-graph",
+    "openai",
+    "anthropic",
+    "ollama",
+    "local-llm"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+requires-python = ">=3.10"
+
+# Base dependencies (full framework, batteries included)
+dependencies = [
+    # Core runtime with provider/tool/media/embeddings/server stack enabled.
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractruntime==0.4.2",
+    "abstractagent==0.3.1",
+    # Flow editor backend + agent nodes.
+    "abstractflow[editor]==0.3.7",
+    "abstractcode==0.3.6",
+    "abstractgateway==0.2.1",
+    "abstractmemory==0.0.2",
+    "abstractsemantics==0.0.2",
+    "abstractvoice==0.6.3",
+    "abstractvision==0.2.1",
+    "abstractassistant==0.4.2",
+]
+
+[project.optional-dependencies]
+# Individual components
+core = ["abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8"]
+runtime = ["abstractruntime==0.4.2"]
+agent = ["abstractagent==0.3.1"]
+flow = ["abstractflow[editor]==0.3.7"]
+code = ["abstractcode==0.3.6"]
+gateway = ["abstractgateway==0.2.1"]
+memory = ["abstractmemory==0.0.2"]
+semantics = ["abstractsemantics==0.0.2"]
+voice = ["abstractvoice==0.6.3"]
+vision = ["abstractvision==0.2.1"]
+assistant = ["abstractassistant==0.4.2"]
+
+# Bundles
+backend = [
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractruntime==0.4.2",
+    "abstractagent==0.3.1",
+    "abstractflow[editor]==0.3.7",
+    "abstractgateway==0.2.1",
+    "abstractmemory==0.0.2",
+    "abstractsemantics==0.0.2",
+    "abstractvoice==0.6.3",
+    "abstractvision==0.2.1",
+]
+
+# Full installation (all packages)
+all = [
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractruntime==0.4.2",
+    "abstractagent==0.3.1",
+    "abstractflow[editor]==0.3.7",
+    "abstractcode==0.3.6",
+    "abstractgateway==0.2.1",
+    "abstractmemory==0.0.2",
+    "abstractsemantics==0.0.2",
+    "abstractvoice==0.6.3",
+    "abstractvision==0.2.1",
+    "abstractassistant==0.4.2",
+]
+
+# Development dependencies
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "black>=23.0",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/lpalbou/AbstractFramework"
+Documentation = "https://github.com/lpalbou/AbstractFramework/tree/main/docs"
+Repository = "https://github.com/lpalbou/AbstractFramework"
+Issues = "https://github.com/lpalbou/AbstractFramework/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+abstractframework = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+
+--- abstractframework/__init__.py ---
+"""
+AbstractFramework unified distribution package.
+
+This package provides:
+- a single install entrypoint for the full AbstractFramework ecosystem
+- lightweight helpers to inspect installed component versions
+
+Most implementation functionality still lives in component projects.
+"""
+
+from __future__ import annotations
+
+__version__ = "0.1.0"
+__author__ = "Laurent-Philippe Albou"
+__license__ = "MIT"
+
+RELEASE_VERSIONS: dict[str, str] = {
+    "abstractcore": "2.11.8",
+    "abstractruntime": "0.4.2",
+    "abstractagent": "0.3.1",
+    "abstractflow": "0.3.7",
+    "abstractcode": "0.3.6",
+    "abstractgateway": "0.2.1",
+    "abstractmemory": "0.0.2",
+    "abstractsemantics": "0.0.2",
+    "abstractvoice": "0.6.3",
+    "abstractvision": "0.2.1",
+    "abstractassistant": "0.4.2",
+}
+
+CORE_DEFAULT_EXTRAS = [
+    "openai",
+    "anthropic",
+    "huggingface",
+    "embeddings",
+    "tokens",
+    "tools",
+    "media",
+    "compression",
+    "server",
+]
+
+# Convenience re-exports (AbstractCore is a base dependency of this meta-package).
+# Keep this import lightweight: do not import optional tool/media deps here.
+try:
+    from abstractcore import GenerateResponse, create_llm  # type: ignore
+
+    __all__ = [
+        "CORE_DEFAULT_EXTRAS",
+        "RELEASE_VERSIONS",
+        "GenerateResponse",
+        "create_llm",
+        "get_installed_packages",
+        "get_release_profile",
+        "print_status",
+    ]
+except Exception:  # pragma: no cover
+    __all__ = [
+        "CORE_DEFAULT_EXTRAS",
+        "RELEASE_VERSIONS",
+        "get_installed_packages",
+        "get_release_profile",
+        "print_status",
+    ]
+
+
+def get_release_profile() -> dict[str, object]:
+    """Return the pinned global release profile shipped by this package."""
+
+    return {
+        "abstractframework": __version__,
+        "packages": RELEASE_VERSIONS.copy(),
+        "core_extras": list(CORE_DEFAULT_EXTRAS),
+        "flow_extra": "editor",
+    }
+
+
+def get_installed_packages() -> dict[str, str]:
+    """Return a dict of installed AbstractFramework Python packages and versions."""
+
+    packages: dict[str, str] = {}
+
+    def _maybe_add(import_name: str) -> None:
+        try:
+            mod = __import__(import_name)
+            packages[import_name] = getattr(mod, "__version__", "installed")
+        except Exception:
+            return
+
+    for name in [
+        "abstractcore",
+        "abstractruntime",
+        "abstractagent",
+        "abstractflow",
+        "abstractcode",
+        "abstractgateway",
+        "abstractmemory",
+        "abstractsemantics",
+        "abstractvoice",
+        "abstractvision",
+        "abstractassistant",
+    ]:
+        _maybe_add(name)
+
+    return packages
+
+
+def print_status() -> None:
+    """Print installation status of the main AbstractFramework Python packages."""
+
+    installed = get_installed_packages()
+    all_packages = [
+        "abstractcore",
+        "abstractruntime",
+        "abstractagent",
+        "abstractflow",
+        "abstractcode",
+        "abstractgateway",
+        "abstractmemory",
+        "abstractsemantics",
+        "abstractvoice",
+        "abstractvision",
+        "abstractassistant",
+    ]
+
+    print("AbstractFramework installation status")
+    print("=" * 40)
+
+    for pkg in all_packages:
+        if pkg in installed:
+            print(f"  ✓ {pkg}: {installed[pkg]}")
+        else:
+            print(f"  ✗ {pkg}: not installed")
+
+    print("")
+    print(f"Installed: {len(installed)}/{len(all_packages)} packages")
+
+    if len(installed) < len(all_packages):
+        print("")
+        print("To install the full pinned framework:")
+        print('  pip install "abstractframework==0.1.0"')
+
+--- docs/README.md ---
+# AbstractFramework Docs
+
+This folder is the **entrypoint documentation** for the AbstractFramework ecosystem.
+
+Install the full pinned release with one command:
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+That installs all core ecosystem Python packages together, with:
+- `abstractcore` configured with core extras (`openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`)
+- `abstractflow` configured with `editor`
+
+If you're new, start with:
+
+- [Getting Started](getting-started.md) — pick a path and run something
+- [Architecture](architecture.md) — how the stack fits together
+- [API](api.md) — `abstractframework` package helpers and release profile
+- [Configuration](configuration.md) — common configuration knobs
+- [FAQ](faq.md) — common questions and gotchas
+- [Scenarios](scenarios/README.md) — end-to-end paths by use case
+- [Guides](guide/README.md) — focused "how it works" notes
+- [Glossary](glossary.md) — shared terminology
+
+## LLM Context Files
+
+If you're feeding this repo into an LLM:
+
+- `llms.txt` is the navigation/index file.
+- `llms-full.txt` is a single concatenated context file.
+- Regenerate: `python scripts/gen_llms_full.py`
+
+---
+
+## Find What You Need
+
+### Python Packages (pip)
+
+| I want... | Package |
+|-----------|---------|
+| A unified LLM client library | [AbstractCore](https://github.com/lpalbou/abstractcore) |
+| A durable workflow runtime (pause/resume + ledger) | [AbstractRuntime](https://github.com/lpalbou/abstractruntime) |
+| Ready-made agent patterns (ReAct, CodeAct, MemAct) | [AbstractAgent](https://github.com/lpalbou/abstractagent) |
+| Visual workflows + bundling | [AbstractFlow](https://github.com/lpalbou/abstractflow) |
+| A terminal app for agentic coding | [AbstractCode](https://github.com/lpalbou/abstractcode) |
+| A macOS menu bar assistant | [AbstractAssistant](https://github.com/lpalbou/abstractassistant) |
+| A deployable run gateway (HTTP/SSE) | [AbstractGateway](https://github.com/lpalbou/abstractgateway) |
+| Voice I/O (TTS/STT) — capability plugin for AbstractCore | [AbstractVoice](https://github.com/lpalbou/abstractvoice) |
+| Image generation — capability plugin for AbstractCore | [AbstractVision](https://github.com/lpalbou/abstractvision) |
+| A temporal triple store for knowledge graphs | [AbstractMemory](https://github.com/lpalbou/abstractmemory) |
+| A semantics registry for KG assertions | [AbstractSemantics](https://github.com/lpalbou/abstractsemantics) |
+
+### npm Packages
+
+| I want... | Package |
+|-----------|---------|
+| A browser UI to observe gateway runs | `npx @abstractframework/observer` |
+| A visual workflow editor | `npx @abstractframework/flow` |
+| A browser-based coding assistant | `npx @abstractframework/code` |
+| UI building blocks for my own app | [@abstractframework/ui-kit](https://github.com/lpalbou/abstractuic), etc. |
+
+---
+
+## Architecture at a Glance
+
+```
+ RECOMMENDED: Gateway-first          │  ALTERNATIVE: Local in-process
+─────────────────────────────────────┼───────────────────────────────────
+ Browser UIs (Observer, Flow         │  AbstractCode (terminal)
+ Editor, Code Web, Your App)         │  AbstractAssistant (macOS tray)
+              │                      │             │
+              ▼                      │             │
+       AbstractGateway               │             │
+  (bundle discovery, run control)    │             │
+              │                      │             │
+              └──────────────────────┴─────────────┘
+                                     │
+                                     ▼
+┌───────────────────────────────────────────────────────────────────┐
+│  Composition: AbstractAgent (ReAct/CodeAct/MemAct) + AbstractFlow │
+└───────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────────--─────┐
+│  Foundation: AbstractRuntime + AbstractCore (+ Voice/Vision plugins)│
+└────────────────────────────────────────────────────────────────--───┘
+                                     │
+                                     ▼
+┌───────────────────────────────────────────────────────────────────┐
+│  Memory & Knowledge: AbstractMemory · AbstractSemantics           │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+See [Architecture](architecture.md) for details on both paths.
+
+---
+
+## What's in This Repo
+
+This repo provides:
+
+- One canonical package entrypoint (`abstractframework`) for full-stack installation
+- Ecosystem documentation (architecture, setup, configuration, FAQ)
+- Use-case scenarios and focused guides (see below)
+- A map of package responsibilities so teams can build and deploy new specialized solutions
+- Links to browser UIs distributed via npm (`@abstractframework/observer`, `@abstractframework/flow`, `@abstractframework/code`)
+
+---
+
+## Quick Links
+
+- [Main README](../README.md) — full ecosystem overview
+- [Getting Started](getting-started.md) — pick your path
+- [Architecture](architecture.md) — how it all fits together
+- [API](api.md) — package-level API helpers
+- [Configuration](configuration.md) — environment variables and settings
+- [FAQ](faq.md) — common questions and troubleshooting
+- [Scenarios](scenarios/README.md) — end-to-end paths by use case
+- [Guides](guide/README.md) — focused "how it works" notes
+- [Glossary](glossary.md) — shared terminology
+
+--- docs/getting-started.md ---
+# Getting Started
+
+Welcome! This guide gets you from zero to a working AbstractFramework setup in minutes.
+
+AbstractFramework is modular — you can install the full framework in one command or pick specific packages. Let's find the right starting point for you.
+
+## What Do You Want to Build?
+
+| Your Goal | Start Here | What You'll Use |
+|-----------|------------|-----------------|
+| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.0` |
+| Call LLMs with a unified API | [Path 1](#path-1-llm-integration) | `abstractcore` |
+| Build a local coding assistant | [Path 2](#path-2-terminal-agent) | `abstractcode` |
+| Create durable workflows | [Path 3](#path-3-durable-workflows) | `abstractruntime` |
+| Deploy a remote run gateway | [Path 4](#path-4-gateway--observer) | `abstractgateway` + `abstractobserver` |
+| Use agent patterns (ReAct, etc.) | [Path 5](#path-5-agent-patterns) | `abstractagent` |
+| Add voice/audio to AbstractCore | [Path 6](#path-6-voice-io) | `abstractcore` + `abstractvoice` (plugin) |
+| Add image generation to AbstractCore | [Path 7](#path-7-image-generation) | `abstractcore` + `abstractvision` (plugin) |
+| Build a knowledge graph | [Path 8](#path-8-knowledge-graph) | `abstractmemory` + `abstractsemantics` |
+| macOS menu bar assistant | [Path 9](#path-9-macos-assistant) | `abstractassistant` |
+| Visual workflow editor (browser) | [Path 10](#path-10-flow-editor) | `@abstractframework/flow` |
+| Browser-based coding assistant | [Path 11](#path-11-code-web-ui) | `@abstractframework/code` |
+| Create a specialized agent | [Path 12](#path-12-specialized-agent) | `abstractflow` + clients |
+
+## Path 0: Full Framework (Recommended)
+
+Install the pinned global release profile in one command:
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+This installs all framework Python packages together, including:
+
+| Package | Version |
+|---------|---------|
+| `abstractcore` | `2.11.8` |
+| `abstractruntime` | `0.4.2` |
+| `abstractagent` | `0.3.1` |
+| `abstractflow` | `0.3.7` (`editor`) |
+| `abstractcode` | `0.3.6` |
+| `abstractgateway` | `0.2.1` |
+| `abstractmemory` | `0.0.2` |
+| `abstractsemantics` | `0.0.2` |
+| `abstractvoice` | `0.6.3` |
+| `abstractvision` | `0.2.1` |
+| `abstractassistant` | `0.4.2` |
+
+`abstractcore` is installed with `openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`.
+
+Use this path when you want a fully functional setup with minimal decision overhead.
+
+## Prerequisites
+
+**Python**: 3.10 or newer
+
+**Node.js**: 18+ (only for browser UIs)
+
+**An LLM Backend** (pick one):
+- **Local (recommended)**: Ollama, LM Studio, vLLM, llama.cpp, LocalAI
+- **Cloud**: OpenAI, Anthropic, Google, Groq, Together AI, Mistral
+
+---
+
+## Path 1: LLM Integration
+
+The simplest path. Use AbstractCore as a unified LLM client.
+
+### Install
+
+```bash
+pip install abstractcore
+```
+
+### Configure a Provider
+
+**Local with Ollama** (free, no API key):
+
+```bash
+ollama serve
+ollama pull qwen3:4b-instruct
+export OLLAMA_HOST="http://localhost:11434"
+```
+
+**Or with LM Studio** (OpenAI-compatible):
+
+```bash
+export OPENAI_BASE_URL="http://127.0.0.1:1234/v1"
+export OPENAI_API_KEY="local"
+```
+
+**Or with Cloud APIs**:
+
+```bash
+export OPENAI_API_KEY="sk-..."
+# or
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+### Use It
+
+```python
+from abstractcore import create_llm
+
+# Local
+llm = create_llm("ollama", model="qwen3:4b-instruct")
+
+# Or cloud
+# llm = create_llm("openai", model="gpt-4o")
+# llm = create_llm("anthropic", model="claude-3-5-sonnet-latest")
+
+response = llm.generate("What is durable execution?")
+print(response.content)
+```
+
+**Next**: Add [tool calling](https://github.com/lpalbou/abstractcore/blob/main/docs/tools.md) or [structured output](https://github.com/lpalbou/abstractcore/blob/main/docs/structured-output.md).
+
+---
+
+## Path 2: Terminal Agent
+
+Get a durable coding assistant running in your terminal.
+
+### Install
+
+```bash
+pip install abstractcode
+```
+
+### Start Ollama
+
+```bash
+ollama serve
+ollama pull qwen3:1.7b-q4_K_M
+export OLLAMA_HOST="http://localhost:11434"
+```
+
+### Run
+
+```bash
+abstractcode --provider ollama --model qwen3:1.7b-q4_K_M
+```
+
+### Inside AbstractCode
+
+- Type `/help` for all commands
+- Mention files with `@path/to/file` in your prompts
+- Tool execution requires approval by default (toggle with `/auto-accept`)
+
+> **Durability Note**: Sessions persist across restarts — close and reopen, your **full context is preserved** (conversation history, tool calls, state). To start fresh: type `/clear`
+
+**Next**: See [AbstractCode docs](https://github.com/lpalbou/abstractcode/blob/main/docs/getting-started.md).
+
+---
+
+## Path 3: Durable Workflows
+
+Build workflows that survive crashes and can pause/resume.
+
+### Install
+
+```bash
+pip install abstractruntime
+# Add LLM integration:
+pip install "abstractruntime[abstractcore]"
+```
+
+### Key Concepts
+
+- **Run**: A durable workflow instance
+- **Ledger**: Append-only log of everything that happened
+- **Effect**: A request for something to happen (LLM call, tool call, timer)
+- **Wait**: An explicit pause point (state is checkpointed)
+
+### Example
+
+```python
+from abstractruntime import (
+    Effect, EffectType, Runtime, StepPlan, WorkflowSpec,
+    InMemoryLedgerStore, InMemoryRunStore
+)
+
+# Define workflow nodes
+def ask(run, ctx):
+    return StepPlan(
+        node_id="ask",
+        effect=Effect(
+            type=EffectType.ASK_USER,
+            payload={"prompt": "What would you like to do?"},
+            result_key="user_input",
+        ),
+        next_node="done",
+    )
+
+def done(run, ctx):
+    return StepPlan(node_id="done", complete_output={"answer": run.vars.get("user_input")})
+
+# Create workflow and runtime
+wf = WorkflowSpec(workflow_id="demo", entry_node="ask", nodes={"ask": ask, "done": done})
+rt = Runtime(run_store=InMemoryRunStore(), ledger_store=InMemoryLedgerStore())
+
+# Start and tick
+run_id = rt.start(workflow=wf)
+state = rt.tick(workflow=wf, run_id=run_id)
+print(state.status.value)  # "waiting"
+
+# Resume with user input
+state = rt.resume(workflow=wf, run_id=run_id, wait_key=state.waiting.wait_key, payload={"text": "Hello!"})
+print(state.status.value)  # "completed"
+```
+
+**Next**: See [AbstractRuntime docs](https://github.com/lpalbou/abstractruntime/blob/main/docs/getting-started.md).
+
+---
+
+## Path 4: Gateway + Observer
+
+Deploy a remote control plane and observe runs in your browser.
+
+### Install
+
+```bash
+pip install "abstractgateway"
+# If your workflows use LLM/tools:
+pip install "abstractruntime[abstractcore]>=0.4.0"
+```
+
+### Configure
+
+```bash
+# Required: authentication token
+export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+
+# Required: CORS for browser access
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+
+# Workflow source
+export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/your/bundles"
+export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+```
+
+### Start the Gateway
+
+```bash
+abstractgateway serve --host 127.0.0.1 --port 8080
+```
+
+Verify it's running:
+
+```bash
+curl -sS "http://127.0.0.1:8080/api/health"
+```
+
+### Start the Observer
+
+In another terminal:
+
+```bash
+npx @abstractframework/observer
+```
+
+Open http://localhost:3001 in your browser:
+1. Set **Gateway URL** to `http://127.0.0.1:8080`
+2. Paste your **Auth Token**
+3. Click **Connect**
+
+You're now observing your runs.
+
+**Next**: See [AbstractGateway docs](https://github.com/lpalbou/abstractgateway/blob/main/docs/getting-started.md).
+
+---
+
+## Path 5: Agent Patterns
+
+Use ready-made agent loops (ReAct, CodeAct, MemAct).
+
+### Install
+
+```bash
+pip install abstractagent
+```
+
+### Example: ReAct Agent
+
+```python
+from abstractagent import create_react_agent
+
+agent = create_react_agent(provider="ollama", model="qwen3:4b-instruct")
+agent.start("List the files in the current directory")
+state = agent.run_to_completion()
+print(state.output["answer"])
+```
+
+**Next**: See [AbstractAgent docs](https://github.com/lpalbou/abstractagent/blob/main/docs/getting-started.md).
+
+---
+
+## Path 6: Voice I/O
+
+Add speech-to-text and text-to-speech capabilities to AbstractCore.
+
+> **Note**: AbstractVoice is a **capability plugin** for AbstractCore. Once installed, it exposes `llm.voice` (TTS) and `llm.audio` (STT) on any LLM instance, keeping AbstractCore lightweight by default.
+
+### Install
+
+```bash
+pip install abstractcore abstractvoice
+```
+
+### Prefetch Models (Recommended)
+
+AbstractVoice is offline-first — prefetch models explicitly:
+
+```bash
+abstractvoice-prefetch --stt small
+abstractvoice-prefetch --piper en
+```
+
+### Use with AbstractCore (Recommended)
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("ollama", model="qwen3:4b-instruct")
+
+# Check available capabilities
+print(llm.capabilities.status())
+
+# Text-to-speech via capability
+wav_bytes = llm.voice.tts("Hello from AbstractCore!", format="wav")
+
+# Speech-to-text via capability
+text = llm.audio.transcribe("audio.wav", language="en")
+print(text)
+
+# Audio in LLM requests (transcribed automatically)
+response = llm.generate(
+    "Summarize the key points from this call.",
+    media=["meeting.wav"],
+    audio_policy="speech_to_text",
+)
+print(response.content)
+```
+
+### Standalone Use
+
+You can also use AbstractVoice directly without AbstractCore:
+
+```python
+from abstractvoice import VoiceManager
+
+vm = VoiceManager()
+
+# Text-to-speech
+vm.speak("Hello! This is AbstractVoice.")
+
+# Speech-to-text (from file)
+text = vm.transcribe_file("audio.wav")
+print(text)
+```
+
+### Interactive REPL
+
+```bash
+abstractvoice --verbose
+```
+
+**Next**: See [AbstractVoice docs](https://github.com/lpalbou/abstractvoice/blob/main/docs/getting-started.md) and [AbstractCore Audio & Voice](https://abstractcore.dev/docs/audio.html).
+
+---
+
+## Path 7: Image Generation
+
+Add text-to-image and image-to-image capabilities to AbstractCore.
+
+> **Note**: AbstractVision is a **capability plugin** for AbstractCore. Once installed, it exposes `llm.vision` for generative image tasks, keeping AbstractCore lightweight by default.
+
+### Supported Backends
+
+- **HuggingFace** (recommended) — Local diffusion models via `diffusers`
+- **OpenAI-compatible APIs** — Any server exposing `/v1/images/generations`
+
+> **Note**: Ollama and LM Studio do not currently support image generation models. Use HuggingFace for local image generation.
+
+### Install
+
+```bash
+pip install abstractcore abstractvision
+```
+
+### Use with AbstractCore (Recommended)
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("openai", model="gpt-4o-mini")
+
+# Check available capabilities
+print(llm.capabilities.status())
+
+# Text-to-image via capability (requires HF_TOKEN or vision_base_url config)
+# png_bytes = llm.vision.t2i("a red square")
+```
+
+Configure the vision backend (choose one):
+
+```bash
+# Option 1: HuggingFace (recommended for local generation)
+export HF_TOKEN="hf_..."
+
+# Option 2: OpenAI-compatible server
+export ABSTRACTVISION_BASE_URL="http://localhost:7860/v1"
+```
+
+### Standalone Use with HuggingFace
+
+You can also use AbstractVision directly for local image generation:
+
+```python
+from abstractvision import VisionManager, LocalAssetStore
+from abstractvision.backends import HuggingFaceBackend, HuggingFaceBackendConfig
+
+# Configure HuggingFace backend (local diffusion models)
+backend = HuggingFaceBackend(
+    config=HuggingFaceBackendConfig(
+        model_id="stabilityai/stable-diffusion-xl-base-1.0",
+        # device="mps",  # for Apple Silicon
+    )
+)
+
+vm = VisionManager(backend=backend, store=LocalAssetStore())
+
+# Generate image
+result = vm.generate_image("a watercolor painting of a lighthouse")
+print(result)  # {"$artifact": "...", "content_type": "image/png", ...}
+```
+
+### CLI
+
+```bash
+# Using HuggingFace
+abstractvision t2i --backend huggingface "a photo of a red fox"
+
+# Using OpenAI-compatible server
+abstractvision t2i --base-url http://localhost:7860/v1 "a photo of a red fox"
+```
+
+**Next**: See [AbstractVision docs](https://github.com/lpalbou/abstractvision/blob/main/docs/getting-started.md) and [AbstractCore Vision Capabilities](https://abstractcore.dev/docs/vision-capabilities.html).
+
+---
+
+## Path 8: Knowledge Graph
+
+Build a temporal, provenance-aware knowledge graph.
+
+### Install
+
+```bash
+pip install abstractmemory
+pip install abstractsemantics  # Schema registry
+
+# Optional: persistent storage + vector search
+pip install "abstractmemory[lancedb]"
+```
+
+### Use It
+
+```python
+from abstractmemory import InMemoryTripleStore, TripleAssertion, TripleQuery
+
+store = InMemoryTripleStore()
+
+# Add knowledge
+store.add([
+    TripleAssertion(
+        subject="Paris",
+        predicate="is_capital_of",
+        object="France",
+        scope="session",
+        owner_id="sess-1",
+    )
+])
+
+# Query
+hits = store.query(TripleQuery(subject="paris", scope="session", owner_id="sess-1"))
+print(hits[0].object)  # "france"
+```
+
+**Next**: See [AbstractMemory docs](https://github.com/lpalbou/abstractmemory/blob/main/docs/getting-started.md).
+
+---
+
+## Path 9: macOS Assistant
+
+Get a menu bar AI assistant with optional voice.
+
+### Install
+
+```bash
+pip install abstractassistant
+# Or with voice support:
+pip install "abstractassistant[full]"
+```
+
+### Run
+
+```bash
+# Tray mode (menu bar)
+assistant tray
+
+# Or single command
+assistant run --provider ollama --model qwen3:4b-instruct --prompt "Summarize my changes"
+```
+
+**Next**: See [AbstractAssistant docs](https://github.com/lpalbou/abstractassistant/blob/main/docs/getting-started.md).
+
+---
+
+## Path 10: Flow Editor
+
+Build and edit visual workflows in your browser.
+
+### Run
+
+```bash
+npx @abstractframework/flow
+```
+
+Open http://localhost:3003 in your browser.
+
+### What You Can Do
+
+- Drag-and-drop workflow nodes (LLM, tools, conditionals, loops)
+- Connect nodes visually
+- Test workflows in real-time
+- Export as `.flow` bundles for deployment
+
+**Next**: See [AbstractFlow docs](https://github.com/lpalbou/abstractflow/blob/main/docs/web-editor.md).
+
+---
+
+## Path 11: Code Web UI
+
+Run the browser-based coding assistant.
+
+### Prerequisites
+
+You need a running AbstractGateway (see [Path 4](#path-4-gateway--observer)).
+
+### Run
+
+```bash
+npx @abstractframework/code
+```
+
+Open http://localhost:3002 in your browser. Configure the gateway URL in the UI settings, then start coding.
+
+**Next**: See [AbstractCode web docs](https://github.com/lpalbou/abstractcode/blob/main/docs/web.md).
+
+---
+
+## Path 12: Specialized Agent
+
+Create a specialized agent that runs in any client (terminal, browser, custom apps).
+
+### Why?
+
+Instead of writing agent logic in code, you:
+1. Author a visual workflow with the Flow Editor
+2. Declare an interface contract (`abstractcode.agent.v1`)
+3. Run it in any compatible client — no client-specific code needed
+
+Use cases: code reviewers, deep researchers, data analysts, custom assistants.
+
+### Step 1: Author in the Flow Editor
+
+```bash
+npx @abstractframework/flow
+```
+
+Open http://localhost:3003 and create a workflow with:
+- **On Flow Start** node (outputs: `provider`, `model`, `prompt`)
+- Your agent logic (LLM nodes, tool nodes, conditionals, loops)
+- **On Flow End** node (inputs: `response`, `success`, `meta`)
+
+Set `interfaces: ["abstractcode.agent.v1"]` in the workflow properties.
+
+### Step 2: Export as a Bundle
+
+In the editor, export your workflow as a `.flow` bundle.
+
+### Step 3: Run Anywhere
+
+**Terminal (AbstractCode):**
+
+```bash
+abstractcode --workflow /path/to/my-agent.flow
+```
+
+**Install for easy access:**
+
+```bash
+abstractcode workflow install /path/to/my-agent.flow
+abstractcode --workflow my-agent
+```
+
+**Deploy to Gateway:**
+
+Copy your `.flow` bundle to `ABSTRACTGATEWAY_FLOWS_DIR`. It will appear in:
+- Observer's workflow picker
+- Code Web UI's workflow picker
+- Gateway's `/api/gateway/bundles` discovery endpoint
+
+**Custom app:**
+
+```python
+from abstractcode.workflow_agent import WorkflowAgent
+
+agent = WorkflowAgent(flow_ref="/path/to/my-agent.flow")
+state = agent.run_to_completion(prompt="Analyze this code...")
+print(state.output["response"])
+```
+
+**Next**: See [AbstractFlow docs](https://github.com/lpalbou/abstractflow/blob/main/docs/getting-started.md) and [Interface contracts](https://github.com/lpalbou/abstractflow/blob/main/docs/visualflow.md).
+
+---
+
+## What's Next?
+
+Now that you have something running:
+
+- **[Architecture](architecture.md)** — Understand how the pieces fit together
+- **[Configuration](configuration.md)** — All the environment variables and settings
+- **[FAQ](faq.md)** — Common questions and troubleshooting
+- **[Scenarios](scenarios/README.md)** — End-to-end paths by use case
+- **[Guides](guide/README.md)** — Focused "how it works" notes
+- **[Glossary](glossary.md)** — Shared terminology
+
+Each package also has detailed documentation:
+- Every repo has `docs/getting-started.md`, `docs/architecture.md`, and more
+- Check the repo README for the quickest overview
+
+--- docs/architecture.md ---
+# Architecture
+
+AbstractFramework is built around a simple but powerful idea: **durable, observable execution**.
+
+Every operation is logged. Workflows survive crashes. UIs can render by replaying history. Tools execute at explicit boundaries. This document explains how the pieces fit together.
+
+## The Big Picture
+
+AbstractFramework supports two deployment patterns: **Gateway-first (recommended)** and **Local in-process (alternative)**.
+
+### The Gateway Path (recommended)
+
+Unified execution of specialized agents across all thin clients, for both remote and local deployments.
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                      Thin Clients (Browser UIs)                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │  Observer   │  │ Flow Editor │  │  Code Web   │  │  Your App   │        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘        │
+└─────────┼────────────────┼────────────────┼────────────────┼───────────────┘
+          │                │    HTTP/SSE    │                │
+          └────────────────┴────────┬───────┴────────────────┘
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        AbstractGateway (Control Plane)                      │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  • Bundle discovery — expose .flow specialized agents to all clients        │
+│  • Run control — start/pause/resume/cancel/schedule                         │
+│  • Ledger streaming — real-time SSE updates                                 │
+│  • Unified execution — same workflow runs identically everywhere            │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Shared Foundation (see below)                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### The Local Path (alternative)
+
+In-process execution without a gateway, simpler, but limited to local deployments and without access to the abstractions of the gateway.
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Local Host Applications                                │
+│  ┌───────────────────┐    ┌──────────────────-─┐                            │
+│  │   AbstractCode    │    │  AbstractAssistant │  ◄── Run runtime directly  │
+│  │    (terminal)     │    │   (macOS tray)     │      (may migrate to GW)   │
+│  └─────────┬─────────┘    └─────────┬─────────-┘                            │
+└────────────┼────────────────────────┼───────────────────────────────────────┘
+             │                        │
+             └───────────-────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Shared Foundation (see below)                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key insights:**
+- **Gateway path is recommended**: It provides unified bundle discovery and execution of specialized agents across all thin clients
+- **Local path is an alternative**: AbstractCode and AbstractAssistant run the runtime in-process — simpler for local dev, but lacks unified workflow discovery
+- **Both paths use the same libraries**: The execution semantics are identical; only the host differs
+
+### Shared Foundation
+
+Both deployment paths converge on the same foundation: **AbstractRuntime** and **AbstractCore** are peers, while **Voice**/**Vision** are optional **AbstractCore capability plugins**. Memory and semantics are separate components that can be used by workflows via runtime effects/tooling.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Composition: AbstractAgent (ReAct/CodeAct/MemAct) + AbstractFlow (.flow)   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Foundation (Two Peers)                               │
+│                                                                             │
+│  ┌──────────────────────────────┐    ┌──────────────────────────────────┐   │
+│  │       AbstractRuntime        │    │         AbstractCore             │   │
+│  │   Durable kernel + ledger    │    │    LLM API + tool schemas        │   │
+│  └──────────────────────────────┘    │  ┌────────────┐ ┌─────────────┐  │   │
+│                                      │  │   Voice    │ │   Vision    │  │   │
+│                                      │  │  (TTS/STT) │ │ (Image gen) │  │   │
+│                                      │  └────────────┘ └─────────────┘  │   │
+│                                      │ capability plugins (optional)    │   │
+│                                      └──────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            Memory & Knowledge                               │
+│         AbstractMemory (temporal triples) + AbstractSemantics (KG)          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Core Concepts
+
+### Runs & The Ledger
+
+A **run** is a durable workflow instance. Every run has a **ledger** — an append-only log of everything that happened.
+
+```
+Run: agent_task_abc123
+┌─────────────────────────────────────────────────────────┐
+│ Ledger                                                  │
+├──────┬──────────────┬───────────────────────────────────┤
+│ Step │ Type         │ Data                              │
+├──────┼──────────────┼───────────────────────────────────┤
+│ 1    │ LLM_CALL     │ prompt, response, tokens          │
+│ 2    │ TOOL_CALLS   │ [{name: "read_file", args: ...}]  │
+│ 3    │ TOOL_RESULTS │ [{result: "file contents..."}]    │
+│ 4    │ LLM_CALL     │ prompt, response, tokens          │
+│ ...  │ ...          │ ...                               │
+└──────┴──────────────┴───────────────────────────────────┘
+```
+
+This design enables:
+- **Replay**: Reconstruct any state from the ledger
+- **Observability**: UIs render by reading history
+- **Durability**: Resume after crashes
+- **Debugging**: Inspect exactly what happened
+
+### Effects & Waits
+
+An **effect** is a typed request for something to happen (LLM call, tool call, user input, timer).
+
+A **wait** is an explicit pause. The run stops and stores its state. Later, something resumes it.
+
+```
+Agent: "I need to read a file"
+    │
+    ▼
+┌─────────────────────────────────┐
+│ Effect: TOOL_CALLS              │
+│ tools: [{read_file, path: ...}] │
+└─────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────┐
+│ Wait: WAITING_FOR_TOOL_RESULTS  │
+│ State checkpointed to storage   │
+└─────────────────────────────────┘
+    │
+    │  ← Host executes tool, resumes with results
+    ▼
+┌─────────────────────────────────┐
+│ Resume with tool results        │
+│ Run continues...                │
+└─────────────────────────────────┘
+```
+
+This is why AbstractCode and AbstractAssistant can survive restarts — tool execution happens at a durable boundary.
+
+### Flows & Bundles
+
+A **flow** is a specialized agent authored with AbstractFlow. Unlike simple agent loops, flows enable:
+- **Deterministic execution** — The same inputs produce the same execution path
+- **Recursive composition** — Flows can invoke subflows (nested workflows)
+- **Multi-state coordination** — Complex state machines with branching, loops, and parallel paths
+- **Multi-agent orchestration** — Multiple agent patterns coordinated within a single workflow
+
+A **bundle** (`.flow` file) is the portable distribution unit:
+- VisualFlow JSON (the workflow graph)
+- Manifest (metadata, entry points, interface declarations)
+- Subflows (dependencies)
+
+The Gateway discovers bundles and exposes them to thin clients. This is how you deploy and share workflows.
+
+### Interface Contracts (Run Anywhere)
+
+Flows can implement **interface contracts** that define standard I/O patterns. This lets the same flow run in any compatible client:
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│  Interface: abstractcode.agent.v1                                          │
+│  ───────────────────────────────────────────────────────────────────────── │
+│  On Flow Start (outputs):  provider, model, prompt, tools, context, ...    │
+│  On Flow End (inputs):     response, success, meta, scratchpad             │
+└────────────────────────────────────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Runs in:                                                                   │
+│  • AbstractCode (terminal) — /workflow command                              │
+│  • AbstractObserver (browser) — workflow picker                             │
+│  • Code Web UI (browser) — workflow picker                                  │
+│  • Custom apps — via Gateway bundle discovery                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Why this matters:** You author a specialized agent once in the visual editor (e.g., a "deep researcher" or "code reviewer") and it automatically works in every client that supports the interface. No client-specific code needed.
+
+## Gateway Architecture
+
+For production deployments, AbstractGateway provides the control plane:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Browser / Clients                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │
+│  │  Observer   │  │  Flow Editor│  │  Your App   │                  │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘                  │
+└─────────┼────────────────┼────────────────┼─────────────────────────┘
+          │                │                │
+          │         HTTP/SSE                │
+          ▼                ▼                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      AbstractGateway                                │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │
+│  │  REST API   │  │   Runner    │  │   Stores    │                  │
+│  │  /api/*     │  │  tick runs  │  │  ledger,    │                  │
+│  │             │  │  poll inbox │  │  artifacts  │                  │
+│  └─────────────┘  └─────────────┘  └─────────────┘                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Why a gateway?**
+- Remote execution (server owns durability)
+- Multiple clients can observe the same runs
+- Durable command inbox (pause, resume, cancel)
+- Replay-first observability over HTTP/SSE
+
+## Event Bridges (Inbound Integrations)
+
+Some deployments use inbound "bridges" that turn external messages into durable runtime events. Typical pattern:
+
+1. Bridge receives an inbound message (Telegram, email, etc.).
+2. Bridge chooses a stable `session_id` (for example `telegram:<chat_id>` or an email thread id).
+3. Gateway emits an event into that session (for example `telegram.message` or `email.message`).
+4. A workflow consumes the event (On Event) and replies by calling tools.
+
+This preserves durability and observability: inbound content becomes replayable ledger history + artifacts.
+
+See:
+- [Scenario: Telegram permanent contact](scenarios/telegram-permanent-contact.md)
+- [Scenario: Email inbox agent](scenarios/email-inbox-agent.md)
+
+## Memory Architecture
+
+AbstractFramework separates two concerns:
+
+1. **Durable History** (AbstractRuntime)
+   - Recoverable from ledger + artifacts
+   - Spans archived with summaries
+   - Provenance handles for deterministic recall
+
+2. **Semantic Knowledge** (AbstractMemory + AbstractSemantics)
+   - Temporal, provenance-aware triples
+   - Deterministic query semantics
+   - Schema consistency via AbstractSemantics registry
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Agent Context                                  │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │ Active Memory (what the LLM sees)                              │ │
+│  │ ─────────────────────────────────                              │ │
+│  │ Recent messages, compacted history, relevant knowledge         │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                              │                                      │
+│              ┌───────────────┴───────────────┐                      │
+│              ▼                               ▼                      │
+│  ┌─────────────────────┐       ┌─────────────────────┐              │
+│  │ Durable History     │       │ Knowledge Graph     │              │
+│  │ (Runtime + Ledger)  │       │ (AbstractMemory)    │              │
+│  │                     │       │                     │              │
+│  │ • Step records      │       │ • Temporal triples  │              │
+│  │ • Artifacts         │       │ • Vector search     │              │
+│  │ • Provenance        │       │ • Schema validation │              │
+│  └─────────────────────┘       └─────────────────────┘              │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+## Modality Architecture
+
+AbstractVoice and AbstractVision extend AbstractCore with multimodal capabilities:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        AbstractCore                                 │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │ Unified LLM API                                                 ││
+│  │ create_llm("ollama", model="...") → LLM instance                ││
+│  └─────────────────────────────────────────────────────────────────┘│
+│                              │                                      │
+│              ┌───────────────┼───────────────┐                      │
+│              ▼               ▼               ▼                      │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐        │
+│  │ Capability:     │ │ Capability:     │ │ Capability:     │        │
+│  │ llm.voice       │ │ llm.vision      │ │ llm.audio       │        │
+│  │ (via Abstract   │ │ (via Abstract   │ │ (native or      │        │
+│  │  Voice)         │ │  Vision)        │ │  fallback)      │        │
+│  └─────────────────┘ └─────────────────┘ └─────────────────┘        │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+## Security Model
+
+### Authentication
+
+- Gateway uses Bearer token authentication
+- Token set via `ABSTRACTGATEWAY_AUTH_TOKEN`
+- All API endpoints require valid token (except `/api/health`)
+
+### Tool Execution Boundary
+
+Tool **schemas** are durable; tool **callables** are not. This is intentional:
+
+```
+┌─────────────────────┐     ┌─────────────────────┐
+│ DURABLE (stored)    │     │ NOT DURABLE         │
+├─────────────────────┤     ├─────────────────────┤
+│ Tool schemas/specs  │     │ Tool implementations│
+│ Call arguments      │     │ Actual execution    │
+│ Results             │     │ Side effects        │
+└─────────────────────┘     └─────────────────────┘
+```
+
+This means:
+- Tool calls become approval points (configurable)
+- Execution is auditable
+- Runs remain restart-safe
+
+## Deployment Patterns
+
+### Local Development
+
+```
+You
+ │
+ └──► AbstractCode (terminal)
+         │
+         └──► Runtime + Core (in-process)
+```
+
+### Production (Gateway)
+
+```
+Browser ──► Nginx ──► AbstractGateway ──► SQLite/Postgres
+                           │
+                           └──► Runtime + Core
+```
+
+### Distributed
+
+```
+Browser ──► Load Balancer ──► Gateway (x3) ──► Postgres
+                                  │
+                                  └──► Worker pool
+```
+
+## Going Deeper
+
+Each project has its own architecture docs:
+
+### Foundation
+- [AbstractCore Architecture](https://github.com/lpalbou/abstractcore/blob/main/docs/architecture.md)
+- [AbstractRuntime Architecture](https://github.com/lpalbou/abstractruntime/blob/main/docs/architecture.md)
+
+### Composition
+- [AbstractAgent Architecture](https://github.com/lpalbou/abstractagent/blob/main/docs/architecture.md)
+- [AbstractFlow Architecture](https://github.com/lpalbou/abstractflow/blob/main/docs/architecture.md)
+
+### Memory & Semantics
+- [AbstractMemory Architecture](https://github.com/lpalbou/abstractmemory/blob/main/docs/architecture.md)
+- [AbstractSemantics Architecture](https://github.com/lpalbou/abstractsemantics/blob/main/docs/architecture.md)
+
+### Applications
+- [AbstractCode Architecture](https://github.com/lpalbou/abstractcode/blob/main/docs/architecture.md)
+- [AbstractAssistant Architecture](https://github.com/lpalbou/abstractassistant/blob/main/docs/architecture.md)
+- [AbstractGateway Architecture](https://github.com/lpalbou/abstractgateway/blob/main/docs/architecture.md)
+- [AbstractObserver Architecture](https://github.com/lpalbou/abstractobserver/blob/main/docs/architecture.md)
+
+### Modalities
+- [AbstractVoice Architecture](https://github.com/lpalbou/abstractvoice/blob/main/docs/architecture.md)
+- [AbstractVision Architecture](https://github.com/lpalbou/abstractvision/blob/main/docs/architecture.md)
+
+### UI Components
+- [AbstractUIC Architecture](https://github.com/lpalbou/abstractuic/blob/main/docs/architecture.md)
+
+### Web UIs
+- [Flow Editor](https://github.com/lpalbou/abstractflow/blob/main/docs/web-editor.md) — Visual workflow authoring (`npx @abstractframework/flow`)
+- [Code Web UI](https://github.com/lpalbou/abstractcode/blob/main/docs/web.md) — Browser-based coding assistant (`npx @abstractframework/code`)
+
+---
+
+## Related Documentation
+
+- **[Getting Started](getting-started.md)** — Pick a path and run something
+- **[Configuration](configuration.md)** — Environment variables and settings
+- **[FAQ](faq.md)** — Common questions and troubleshooting
+
+--- docs/configuration.md ---
+# Configuration
+
+AbstractFramework is modular, so configuration is **per component**. This page covers the most common settings you'll need — each section links to the canonical docs for deeper configuration.
+
+## Quick Reference
+
+```
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                          Configuration Overview                                │
+├───────────────────┬───────────────────────────────────────────────────────────┤
+│ Component         │ Key Environment Variables                                 │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractCore      │ OLLAMA_HOST, OPENAI_API_KEY, ANTHROPIC_API_KEY           │
+│                   │ + centralized config: ~/.abstractcore/config/             │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractRuntime   │ (Configured programmatically via stores)                  │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractGateway   │ ABSTRACTGATEWAY_AUTH_TOKEN, ABSTRACTGATEWAY_DATA_DIR     │
+│                   │ ABSTRACTGATEWAY_ALLOWED_ORIGINS, ABSTRACTGATEWAY_*        │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractObserver  │ HOST, PORT, ABSTRACTOBSERVER_MONITOR_GPU                 │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ Flow Editor       │ PORT (UI settings for gateway connection)                │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ Code Web UI       │ (UI settings for gateway connection)                     │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractCode      │ ABSTRACTCODE_WORKSPACE_*                                │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractAssistant │ --data-dir, --provider, --model                          │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractMemory    │ (Configured programmatically; LanceDB path optional)     │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractSemantics │ ABSTRACTSEMANTICS_REGISTRY_PATH                          │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractVoice     │ ABSTRACTVOICE_*, model paths in ~/.piper/                │
+├───────────────────┼───────────────────────────────────────────────────────────┤
+│ AbstractVision    │ ABSTRACTVISION_*, backend config                         │
+└───────────────────┴───────────────────────────────────────────────────────────┘
+```
+
+---
+
+## LLM Providers (AbstractCore)
+
+AbstractCore supports multiple providers (cloud and local). Pick what works for you.
+
+### Ollama (Local, Free)
+
+```bash
+export OLLAMA_HOST="http://localhost:11434"
+```
+
+```python
+from abstractcore import create_llm
+llm = create_llm("ollama", model="qwen3:4b-instruct")
+```
+
+### OpenAI-Compatible Servers (LM Studio, vLLM, LocalAI, llama.cpp)
+
+Most OpenAI-compatible servers accept:
+
+```bash
+export OPENAI_BASE_URL="http://127.0.0.1:1234/v1"
+export OPENAI_API_KEY="local"  # many local servers ignore this but clients require a value
+```
+
+```python
+from abstractcore import create_llm
+llm = create_llm("lmstudio", model="qwen/qwen3-4b-2507", base_url="http://127.0.0.1:1234/v1")
+```
+
+### Cloud APIs
+
+```bash
+export OPENAI_API_KEY="sk-..."
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+### Centralized Config (Recommended)
+
+AbstractCore can persist defaults and keys to `~/.abstractcore/config/abstractcore.json`:
+
+```bash
+abstractcore --configure   # interactive setup
+abstractcore --status      # show current config
+```
+
+**Canonical docs**:
+- [Centralized config](https://github.com/lpalbou/abstractcore/blob/main/docs/centralized-config.md)
+- [Prerequisites](https://github.com/lpalbou/abstractcore/blob/main/docs/prerequisites.md)
+
+---
+
+## AbstractGateway (Server Configuration)
+
+AbstractGateway is the remote control plane. Two variables are **required**:
+
+### Required
+
+```bash
+# Generate a secure auth token
+export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+
+# Allow browser connections (CORS)
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+```
+
+### Workflow Source + Durability Root
+
+Bundle mode (recommended):
+
+```bash
+export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"   # *.flow bundles
+export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+```
+
+SQLite backend (optional; artifacts remain file-backed):
+
+```bash
+export ABSTRACTGATEWAY_STORE_BACKEND=sqlite
+export ABSTRACTGATEWAY_DB_PATH="$PWD/runtime/gateway/gateway.sqlite3"
+```
+
+### LLM Defaults (If Your Bundles Use LLM/Tool Nodes)
+
+```bash
+export ABSTRACTGATEWAY_PROVIDER="ollama"
+export ABSTRACTGATEWAY_MODEL="qwen3:4b-instruct"
+```
+
+### Tool Execution Mode
+
+Most deployments should stay in **passthrough/approval mode** (tools become durable waits). Local in-process tool execution is a dev-only setting.
+
+**Canonical docs**:
+- [Getting started](https://github.com/lpalbou/AbstractGateway/blob/main/docs/getting-started.md)
+- [Configuration](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md)
+- [Security model](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md)
+
+---
+
+## AbstractObserver (Browser UI)
+
+Gateway observability dashboard.
+
+```bash
+npx @abstractframework/observer
+```
+
+```bash
+export HOST="0.0.0.0"     # default; bind address
+export PORT="3001"        # default; server port
+export ABSTRACTOBSERVER_MONITOR_GPU="on"  # optional GPU widget in header
+```
+
+**Canonical docs**:
+- [Getting started](https://github.com/lpalbou/AbstractObserver/blob/main/docs/getting-started.md)
+- [Configuration](https://github.com/lpalbou/AbstractObserver/blob/main/docs/configuration.md)
+
+---
+
+## Flow Editor (Browser UI)
+
+Visual workflow editor for authoring `.flow` bundles.
+
+```bash
+npx @abstractframework/flow
+```
+
+```bash
+export PORT="3003"        # default; server port
+```
+
+Configure the gateway connection in the UI settings.
+
+**Canonical docs**:
+- [Web editor guide](https://github.com/lpalbou/abstractflow/blob/main/docs/web-editor.md)
+
+---
+
+## Code Web UI (Browser UI)
+
+Browser-based coding assistant (connects to a gateway).
+
+```bash
+npx @abstractframework/code
+```
+
+```bash
+export PORT="3002"        # default; server port
+```
+
+Open http://localhost:3002 in your browser. Configure the gateway URL and auth token in the UI settings.
+
+**Canonical docs**:
+- [Web docs](https://github.com/lpalbou/abstractcode/blob/main/docs/web.md)
+- [Deployment](https://github.com/lpalbou/abstractcode/blob/main/docs/deployment-web.md)
+
+---
+
+## AbstractCode (Terminal UI)
+
+AbstractCode is a local host (no gateway needed). Key settings:
+
+```bash
+export ABSTRACTCODE_WORKSPACE_MOUNTS="repo=/abs/path"   # optional; newline-separated mounts also supported
+```
+
+Data is stored in `~/.abstractcode/` by default.
+
+**Canonical docs**:
+- [Getting started](https://github.com/lpalbou/abstractcode/blob/main/docs/getting-started.md)
+- [CLI reference](https://github.com/lpalbou/abstractcode/blob/main/docs/cli.md)
+
+---
+
+## AbstractAssistant (macOS Tray App)
+
+AbstractAssistant is configured via CLI flags:
+
+```bash
+assistant tray --provider ollama --model qwen3:4b-instruct
+assistant tray --data-dir /custom/path
+assistant tray --debug
+```
+
+Data is stored in `~/.abstractassistant/` by default:
+- `session.json`: UI snapshot
+- `runtime/`: run store + ledger + artifacts
+
+**Canonical docs**:
+- [Getting started](https://github.com/lpalbou/abstractassistant/blob/main/docs/getting-started.md)
+- [Architecture](https://github.com/lpalbou/abstractassistant/blob/main/docs/architecture.md)
+
+---
+
+## AbstractMemory (Knowledge Graph)
+
+AbstractMemory is configured programmatically. For persistent storage:
+
+```python
+from abstractmemory import LanceDBTripleStore
+
+# Persistent storage with vector search
+store = LanceDBTripleStore("/path/to/lancedb")
+```
+
+For in-memory (default):
+
+```python
+from abstractmemory import InMemoryTripleStore
+store = InMemoryTripleStore()
+```
+
+**Canonical docs**:
+- [Getting started](https://github.com/lpalbou/abstractmemory/blob/main/docs/getting-started.md)
+- [Stores](https://github.com/lpalbou/abstractmemory/blob/main/docs/stores.md)
+
+---
+
+## AbstractSemantics (Registry Path)
+
+To override the default semantics registry YAML:
+
+```bash
+export ABSTRACTSEMANTICS_REGISTRY_PATH="/abs/path/to/semantics.yaml"
+```
+
+**Canonical docs**:
+- [Getting started](https://github.com/lpalbou/AbstractSemantics/blob/main/docs/getting-started.md)
+- [Registry format](https://github.com/lpalbou/AbstractSemantics/blob/main/docs/registry.md)
+
+---
+
+## AbstractVoice (Voice I/O)
+
+### Model Paths
+
+TTS models (Piper) are stored in `~/.piper/models/`. Prefetch them:
+
+```bash
+abstractvoice-prefetch --piper en
+abstractvoice-prefetch --stt small
+```
+
+### Environment Variables
+
+```bash
+# Optional overrides
+export ABSTRACTVOICE_TTS_MODEL="en_US-amy-medium"
+export ABSTRACTVOICE_STT_MODEL="small"
+```
+
+### REPL Configuration
+
+```bash
+abstractvoice --verbose              # Enable debug logging
+abstractvoice --voice-mode stop      # Enable voice input on startup
+```
+
+**Canonical docs**:
+- [Getting started](https://github.com/lpalbou/abstractvoice/blob/main/docs/getting-started.md)
+- [Installation](https://github.com/lpalbou/abstractvoice/blob/main/docs/installation.md)
+- [Model management](https://github.com/lpalbou/abstractvoice/blob/main/docs/model-management.md)
+
+---
+
+## AbstractVision (Image Generation)
+
+### Backend Configuration
+
+Configured programmatically per backend:
+
+```python
+from abstractvision.backends import OpenAICompatibleBackendConfig, OpenAICompatibleVisionBackend
+
+backend = OpenAICompatibleVisionBackend(
+    config=OpenAICompatibleBackendConfig(
+        base_url="http://localhost:1234/v1",
+        api_key="local",
+        model_id="your-model",
+    )
+)
+```
+
+### Environment Variables (CLI)
+
+```bash
+export ABSTRACTVISION_BASE_URL="http://localhost:1234/v1"
+export ABSTRACTVISION_API_KEY="local"
+```
+
+### CLI Usage
+
+```bash
+abstractvision t2i --base-url http://localhost:1234/v1 "a photo of a mountain"
+abstractvision repl  # Interactive mode
+```
+
+**Canonical docs**:
+- [Getting started](https://github.com/lpalbou/abstractvision/blob/main/docs/getting-started.md)
+- [Configuration](https://github.com/lpalbou/abstractvision/blob/main/docs/reference/configuration.md)
+- [Backends](https://github.com/lpalbou/abstractvision/blob/main/docs/reference/backends.md)
+
+---
+
+## Example: Gateway + Observer (Local Dev)
+
+A complete local development setup:
+
+```bash
+# Gateway config
+export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
+export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
+export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+export ABSTRACTGATEWAY_AUTH_TOKEN="dev-token"
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+
+# Start gateway
+abstractgateway serve --host 127.0.0.1 --port 8080
+
+# In another terminal: start observer
+npx @abstractframework/observer
+```
+
+Open http://localhost:3001, paste your token, and connect.
+
+---
+
+## Example: Full Local Stack
+
+Running everything locally with Ollama:
+
+```bash
+# 1. Start Ollama
+ollama serve
+ollama pull qwen3:4b-instruct
+
+# 2. Configure LLM
+export OLLAMA_HOST="http://localhost:11434"
+
+# 3. Prefetch voice models (optional)
+abstractvoice-prefetch --piper en --stt small
+
+# 4. Run AbstractCode
+abstractcode --provider ollama --model qwen3:4b-instruct
+```
+
+---
+
+## Integrations (Email, Telegram)
+
+Some integrations are enabled on the gateway host and emit durable events that workflows can consume.
+
+- Telegram bridge + tools:
+  - `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_FLOW_ID=...`, `ABSTRACT_ENABLE_TELEGRAM_TOOLS=1`
+  - See [Guide: Telegram integration](guide/telegram-integration.md)
+- Email bridge + tools:
+  - `ABSTRACT_EMAIL_BRIDGE=1` and email account configuration (`ABSTRACT_EMAIL_*`)
+  - See [Guide: Email integration](guide/email-integration.md)
+
+---
+
+## Related Documentation
+
+- **[Getting Started](getting-started.md)** — Pick a path and run something
+- **[Architecture](architecture.md)** — How the pieces fit together
+- **[FAQ](faq.md)** — Common questions and troubleshooting
+
+--- docs/api.md ---
+# API
+
+This document covers the Python API exposed by the `abstractframework` meta-package.
+
+## Purpose
+
+`abstractframework` is a unified distribution package for the ecosystem. It provides:
+
+- one-command installation for the pinned full framework profile
+- lightweight runtime helpers to inspect installed component versions
+- convenience re-exports from `abstractcore`
+
+## Installation
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+## Exports
+
+### `create_llm`
+
+Re-export from `abstractcore`.
+
+```python
+from abstractframework import create_llm
+
+llm = create_llm("ollama", model="qwen3:4b-instruct")
+resp = llm.generate("hello")
+print(resp.content)
+```
+
+### `GenerateResponse`
+
+Re-exported response type from `abstractcore`.
+
+### `RELEASE_VERSIONS`
+
+Dictionary mapping each ecosystem package to the pinned version used in the global release profile.
+
+### `CORE_DEFAULT_EXTRAS`
+
+List of default `abstractcore` extras installed by `abstractframework==0.1.0`:
+
+- `openai`
+- `anthropic`
+- `huggingface`
+- `embeddings`
+- `tokens`
+- `tools`
+- `media`
+- `compression`
+- `server`
+
+### `get_release_profile()`
+
+Returns the pinned global profile metadata.
+
+```python
+from abstractframework import get_release_profile
+
+profile = get_release_profile()
+print(profile["abstractframework"])
+print(profile["packages"]["abstractcore"])
+```
+
+### `get_installed_packages()`
+
+Returns a dictionary of installed AbstractFramework package versions detected in the current environment.
+
+```python
+from abstractframework import get_installed_packages
+
+print(get_installed_packages())
+```
+
+### `print_status()`
+
+Prints a human-readable status report of detected packages.
+
+```python
+from abstractframework import print_status
+
+print_status()
+```
+
+## Notes
+
+- Most behavior and feature APIs live in the individual package repos.
+- Use this package for unified install/version pinning and ecosystem-level bootstrapping.
+
+--- docs/faq.md ---
+# FAQ
+
+Answers to common questions about AbstractFramework.
+
+---
+
+## General
+
+### What is AbstractFramework?
+
+AbstractFramework is an ecosystem of packages for building **durable, observable** AI systems. The key pieces:
+
+| Layer | Packages |
+|-------|----------|
+| **Foundation** | AbstractCore (LLM API), AbstractRuntime (durable execution) |
+| **Composition** | AbstractAgent (ReAct/CodeAct/MemAct), AbstractFlow (visual workflows) |
+| **Memory** | AbstractMemory (temporal triples), AbstractSemantics (schema registry) |
+| **Applications** | AbstractCode (terminal), AbstractAssistant (macOS tray), AbstractGateway (HTTP), AbstractObserver (browser UI) |
+| **Modalities** | AbstractVoice (TTS/STT), AbstractVision (image generation) |
+| **UI Components** | AbstractUIC (React components for building your own apps) |
+
+Start with [Getting Started](getting-started.md) to find the right entry point for your use case.
+
+### Do I have to install the whole stack?
+
+The recommended path is the full pinned release:
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+You can still install only what you need:
+
+| Your Goal | Install |
+|-----------|---------|
+| LLM integration only | `pip install abstractcore` |
+| Durable workflows | `pip install abstractruntime` |
+| Agent patterns (ReAct, etc.) | `pip install abstractagent` |
+| Visual workflows | `pip install abstractflow` |
+| Knowledge graph | `pip install abstractmemory abstractsemantics` |
+| Terminal coding assistant | `pip install abstractcode` |
+| macOS tray assistant | `pip install abstractassistant` |
+| Remote control plane | `pip install "abstractgateway"` |
+| Browser UI | `npx @abstractframework/observer` |
+| Voice I/O (TTS/STT) | `pip install abstractvoice` |
+| Image generation | `pip install abstractvision` |
+| Build custom UIs | `npm install @abstractframework/panel-chat` etc. |
+| Visual workflow editor | `npx @abstractframework/flow` |
+| Browser coding assistant | `npx @abstractframework/code` |
+
+In `abstractframework==0.1.0`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
+
+### What should I start with?
+
+It depends on what you're building:
+
+- **"I need LLMs/tools in my Python app."** → Start with AbstractCore
+- **"I want workflows that survive crashes."** → Start with AbstractRuntime
+- **"I want an agent loop (ReAct/CodeAct/MemAct)."** → Start with AbstractAgent
+- **"I want a terminal assistant today."** → Start with AbstractCode
+- **"I want a macOS menu bar assistant."** → Start with AbstractAssistant
+- **"I need remote runs + a browser UI."** → Start with AbstractGateway + AbstractObserver
+- **"I need voice input/output."** → Start with AbstractVoice
+- **"I need to generate images."** → Start with AbstractVision
+- **"I need a knowledge graph."** → Start with AbstractMemory + AbstractSemantics
+
+---
+
+## How Does AbstractFramework Compare?
+
+### What makes AbstractFramework different?
+
+AbstractFramework optimizes for a different axis than most agent frameworks:
+
+| What we optimize for | What most frameworks optimize for |
+|----------------------|-----------------------------------|
+| **Durability** — runs survive crashes, resume exactly | Quick prototyping, minimal boilerplate |
+| **Replayability** — reconstruct any state from history | Stateless request/response patterns |
+| **Provenance** — know what happened, when, and why | Black-box convenience |
+| **Network-safe thin clients** — UIs attach/detach freely | Tightly-coupled UIs |
+| **Visual authoring** on the same durable semantics | Code-first only |
+
+This makes AbstractFramework closer to **Temporal/Step Functions** adapted for LLM/tool loops, rather than "yet another agent SDK."
+
+### Honest comparison with other frameworks
+
+| Axis | AbstractFramework | LangChain | LlamaIndex | PydanticAI | Letta |
+|------|-------------------|-----------|------------|------------|-------|
+| **Durable pause/resume** | Strong | — | — | — | Partial |
+| **Replay-first control plane** | Strong | — | — | — | Partial |
+| **Append-only ledger** | Strong | — | — | — | Partial |
+| **Visual authoring** | Yes | Partial | Partial | — | — |
+| **Tool approvals as primitive** | Strong | Partial | Partial | Partial | Partial |
+| **RAG/connectors ecosystem** | Early | Strong | Strong | — | Partial |
+| **Typed minimal API** | — | Partial | Partial | Strong | — |
+| **Long-term memory product** | Early | — | Partial | — | Strong |
+| **Ecosystem integrations** | Growing | Strong | Strong | Growing | Growing |
+
+**Where we're ahead:**
+- Durable orchestration, replay, and auditability as core primitives
+- Tool execution boundaries with first-class approval flows
+- Visual workflows that compile to the same durable runtime
+
+**Where others are ahead:**
+- **LangChain/LlamaIndex**: Massive ecosystem of connectors, integrations, and community
+- **PydanticAI**: Minimal typed API with less boilerplate for simple cases
+- **Letta**: More mature long-term memory product today
+
+### When should I use AbstractFramework?
+
+**Good fit:**
+- Workflows that must survive restarts (long-running, scheduled)
+- Systems requiring audit trails and time-travel debugging
+- Human-in-the-loop approvals as a first-class concern
+- Multi-device architectures (orchestrator + remote tools)
+- Visual workflow authoring for non-developers
+
+**Consider alternatives when:**
+- You need a quick prototype with minimal code (→ PydanticAI)
+- You need extensive RAG connectors today (→ LlamaIndex)
+- You need maximum ecosystem integrations (→ LangChain)
+
+### Can I use AbstractFramework with LangChain/LlamaIndex?
+
+Yes. The recommended approach is to use AbstractFramework for orchestration and durability, while integrating other frameworks as tools or subflows:
+
+- Use LlamaIndex retrievers as tools within an AbstractAgent
+- Wrap LangChain chains as tool executors
+- Let AbstractRuntime handle durability while external libraries handle specific capabilities
+
+This gives you the best of both worlds: durable orchestration + ecosystem components.
+
+---
+
+## Creating & Running Specialized Agents
+
+### How do I create a specialized agent that runs everywhere?
+
+Use AbstractFlow to author a visual workflow, then declare an **interface contract**:
+
+1. **Create your flow** in the visual editor (`npx @abstractframework/flow`)
+2. Add `On Flow Start` and `On Flow End` nodes with the required pins
+3. Declare the interface: `interfaces: ["abstractcode.agent.v1"]`
+4. Export as a `.flow` bundle
+
+The same flow now runs in:
+- **AbstractCode** (terminal): `abstractcode --workflow my-agent.flow`
+- **AbstractObserver** (browser): Select from the workflow picker
+- **Code Web UI** (browser): Select from the workflow picker
+- **Custom apps**: Via Gateway bundle discovery API
+
+### What's the `abstractcode.agent.v1` interface?
+
+It's a standard I/O contract for chat-like agents:
+
+**On Flow Start outputs:**
+- `provider`, `model` — LLM configuration
+- `prompt` — User input
+- `tools` — Available tools (optional)
+- `context`, `memory` — Context/memory state (optional)
+
+**On Flow End inputs:**
+- `response` — Agent response (required)
+- `success` — Boolean success flag (required)
+- `meta` — Metadata object (required)
+
+Any flow implementing this interface can be run as an agent in compatible clients.
+
+### Can I run flows from other clients?
+
+Yes. The Gateway provides **bundle discovery**:
+
+```bash
+# List available flows from a gateway
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8080/api/gateway/bundles
+```
+
+Clients can query this endpoint to show available workflows in dropdowns/pickers.
+
+### What's the workflow registry?
+
+AbstractCode maintains a local registry of installed workflow bundles:
+
+```bash
+# Install a bundle
+abstractcode workflow install /path/to/my-agent.flow
+
+# List installed workflows
+abstractcode workflow list
+
+# Run an installed workflow
+abstractcode --workflow my-agent
+```
+
+Bundles can also be deployed to a Gateway for remote access.
+
+---
+
+## Architecture & Concepts
+
+### What's the difference between AbstractRuntime, AbstractAgent, and AbstractFlow?
+
+| Package | Purpose |
+|---------|---------|
+| **AbstractRuntime** | The durable execution substrate — runs, effects, waits, ledger, stores |
+| **AbstractAgent** | Agent patterns implemented as runtime workflows (ReAct, CodeAct, MemAct) |
+| **AbstractFlow** | Portable workflows (VisualFlow JSON) + authoring helpers and a reference editor |
+
+Think of AbstractRuntime as the engine, AbstractAgent as pre-built cars, and AbstractFlow as a visual car designer.
+
+### What is a "run"? What is the "ledger"?
+
+- A **run** is a durable workflow instance, identified by a `run_id`
+- The **ledger** is an append-only list of step records for that run — the complete history of what happened
+
+The ledger is the **source of truth**. Gateway-first UIs (like AbstractObserver) render by replaying the ledger and streaming new steps via SSE.
+
+### What are "effects" and "waits"?
+
+- An **effect** is a request for something to happen (LLM call, tool call, timer, etc.)
+- A **wait** is a pause point where the run's state is checkpointed
+
+When a run needs external input (like tool results), it emits a wait. The host process can shut down, restart, or hand off to another process — when the run resumes, it picks up exactly where it left off.
+
+### What's the difference between AbstractMemory and the runtime ledger?
+
+| Aspect | Runtime Ledger | AbstractMemory |
+|--------|----------------|----------------|
+| **Purpose** | Execution history | Semantic knowledge |
+| **Structure** | Append-only steps | Temporal triples |
+| **Query** | Sequential replay | Deterministic + vector search |
+| **Use case** | Durability, replay, debugging | Knowledge graphs, facts, relationships |
+
+They complement each other. The ledger tracks *what happened*; AbstractMemory tracks *what was learned*.
+
+---
+
+## Tools & Safety
+
+### Why do tools require approval? Why aren't they executed automatically?
+
+Two reasons: **durability** and **safety**.
+
+- Tool **schemas** are durable (stored in the ledger)
+- Tool **callables** are not durable (they live in the host process)
+
+So the runtime emits a durable `TOOL_CALLS` wait, then the host:
+1. Prompts for approval (default)
+2. Executes tools (locally or via remote worker)
+3. Resumes the run with JSON tool results
+
+This makes tool execution auditable, restart-safe, and controllable.
+
+---
+
+## Gateway & Deployment
+
+### Do I need AbstractGateway?
+
+Not for local-only usage.
+
+Use a gateway when you want:
+- **Remote execution** — server owns durability
+- **Multiple clients** — several UIs attached to the same runs
+- **Durable inbox** — pause/resume/cancel/schedule commands over HTTP
+- **Replay-first observability** — HTTP/SSE access to run history
+- **Scheduled workflows** — cron-style execution of automated agents
+- **Bundle discovery** — expose workflows to thin clients via API
+- **History bundles** — export reproducible run snapshots
+
+Local hosts like AbstractCode and AbstractAssistant run everything in one process without needing a gateway.
+
+### What can the Gateway do?
+
+Key capabilities:
+
+| Capability | Endpoint | Description |
+|------------|----------|-------------|
+| **Bundle discovery** | `GET /bundles` | List available workflow bundles |
+| **Start runs** | `POST /runs/start` | Launch a workflow |
+| **Schedule runs** | `POST /runs/schedule` | Cron-style scheduled execution |
+| **Ledger replay** | `GET /runs/{id}/ledger` | Replay execution history |
+| **Ledger streaming** | `GET /runs/{id}/ledger/stream` | Real-time SSE updates |
+| **History bundles** | `GET /runs/{id}/history_bundle` | Export reproducible snapshots |
+| **Provider discovery** | `GET /discovery/providers` | List available LLM providers |
+| **Tool discovery** | `GET /discovery/tools` | List available tools |
+| **Capabilities** | `GET /discovery/capabilities` | Voice/vision plugin status |
+| **KG query** | `POST /kg/query` | Query the knowledge graph |
+
+See the [Gateway API docs](https://github.com/lpalbou/abstractgateway/blob/main/docs/api.md) for the full API surface.
+
+### Where is data stored?
+
+Depends on the component:
+
+| Component | Default Location |
+|-----------|------------------|
+| AbstractGateway | `ABSTRACTGATEWAY_DATA_DIR` (file or SQLite + artifacts) |
+| AbstractCode | `~/.abstractcode/` |
+| AbstractAssistant | `~/.abstractassistant/` |
+| AbstractMemory | In-memory by default, or LanceDB path |
+| AbstractVoice | `~/.piper/models` (Piper TTS models) |
+
+See each project's docs for exact directory layouts and backup strategies.
+
+---
+
+## Local & Offline
+
+### Can I run everything with local models (offline)?
+
+Yes. The **core execution stack** works fully offline with local model servers:
+- Ollama
+- LM Studio
+- vLLM
+- llama.cpp
+- LocalAI
+
+You'll need internet only if you choose to download models or use cloud APIs. See [Configuration](configuration.md) for local setup details.
+
+### Does AbstractVoice work offline?
+
+Yes. AbstractVoice uses:
+- **Piper** for TTS (local ONNX models)
+- **faster-whisper** for STT (local Whisper models)
+
+Prefetch models once, then run fully offline:
+
+```bash
+abstractvoice-prefetch --stt small --piper en
+```
+
+### Does AbstractVision work offline?
+
+Yes, with local backends:
+- **Diffusers** (local Hugging Face models)
+- **stable-diffusion.cpp** (GGUF models)
+
+Or connect to a local OpenAI-compatible image server.
+
+---
+
+## UIs
+
+### Which browser UI should I use?
+
+| UI | Purpose | Install |
+|----|---------|---------|
+| **AbstractObserver** | Observe, launch, and control gateway runs | `npx @abstractframework/observer` |
+| **Flow Editor** | Visual workflow authoring (drag-and-drop) | `npx @abstractframework/flow` |
+| **Code Web UI** | Browser-based coding assistant | `npx @abstractframework/code` |
+
+All three connect to an AbstractGateway. See [Getting Started](getting-started.md) for setup.
+
+### Can I build my own UI?
+
+Yes. AbstractUIC provides React components:
+
+| Package | What It Does |
+|---------|--------------|
+| `@abstractframework/ui-kit` | Theme tokens + primitives |
+| `@abstractframework/panel-chat` | Chat thread + message cards |
+| `@abstractframework/monitor-flow` | Agent-cycle trace viewer |
+| `@abstractframework/monitor-active-memory` | Knowledge graph explorer |
+| `@abstractframework/monitor-gpu` | GPU utilization widget |
+
+Install what you need and compose them in your app.
+
+---
+
+## Stability & Maturity
+
+### What's the maturity of each package?
+
+Different components are at different stages:
+
+| Status | Packages |
+|--------|----------|
+| **Beta** | AbstractCore |
+| **Active development** | AbstractRuntime, AbstractAgent, AbstractGateway, AbstractObserver |
+| **Pre-alpha** | AbstractCode, AbstractFlow, AbstractAssistant |
+| **Early/WIP** | AbstractMemory, AbstractSemantics |
+| **Alpha** | AbstractVoice, AbstractVision |
+
+For the authoritative status, check each project's README and pyproject.toml classifiers. We follow semantic versioning where possible.
+
+---
+
+## Troubleshooting
+
+### My LLM calls aren't working
+
+1. Check your provider configuration (see [Configuration](configuration.md))
+2. For Ollama: ensure `ollama serve` is running
+3. For cloud APIs: verify your API key is set and valid
+4. Run `abstractcore --status` to see current LLM config
+
+### The gateway won't start
+
+1. Ensure `ABSTRACTGATEWAY_AUTH_TOKEN` is set
+2. Ensure `ABSTRACTGATEWAY_DATA_DIR` exists and is writable
+3. Check port availability (default: 8080)
+
+### The observer can't connect
+
+1. Verify the gateway URL is correct (typically `http://127.0.0.1:8080`)
+2. Ensure your auth token matches `ABSTRACTGATEWAY_AUTH_TOKEN`
+3. Check `ABSTRACTGATEWAY_ALLOWED_ORIGINS` includes your observer URL
+
+### AbstractVoice: "No model found"
+
+Prefetch models explicitly (offline-first design):
+
+```bash
+abstractvoice-prefetch --stt small
+abstractvoice-prefetch --piper en
+```
+
+### AbstractVision: No images generated
+
+1. Ensure your backend is running (local server or configured API)
+2. Check `base_url` in your backend config
+3. Some models require specific extras: `pip install "abstractvision[huggingface-dev]"`
+
+---
+
+Still stuck? Check the individual project docs or open an issue on GitHub.
+
+---
+
+## Related Documentation
+
+- **[Getting Started](getting-started.md)** — Pick a path and run something
+- **[Architecture](architecture.md)** — How the pieces fit together
+- **[Configuration](configuration.md)** — Environment variables and settings
+
+--- docs/glossary.md ---
+# Glossary
+
+This glossary defines the terms used across AbstractFramework docs.
+
+If you're new, skim **Core Execution** and **Flows and Bundles** first.
+
+## Core Execution
+
+### Run
+
+A durable workflow instance, identified by a `run_id`. A run has persisted state and an append-only history.
+
+### Ledger
+
+An append-only log of step records for a run. In gateway-first mode, UIs render by replaying the ledger and then
+streaming new steps (SSE).
+
+### Step
+
+One recorded unit in the ledger (for example: node start, effect requested, effect result, error).
+
+### Effect
+
+A typed request for side effects (LLM call, tool calls, ask user, wait until, etc.). Effects are durable: the request is
+recorded so the run can resume after restart.
+
+### Wait
+
+A pause point where the run stops progressing until it is resumed with external input (human answer, tool results, an
+event, or time).
+
+### Artifact
+
+A file- or store-backed blob referenced from JSON state/ledger (used for large payloads). Artifacts keep run state
+JSON-safe.
+
+## Flows and Bundles
+
+### WorkflowSpec
+
+A Python in-memory workflow graph (nodes are callables). Durable runs execute a `WorkflowSpec`, but it is not portable as
+an artifact because callables cannot be serialized safely.
+
+### VisualFlow
+
+A JSON workflow graph format used by AbstractFlow (and compiled by AbstractRuntime). This is the portable authoring
+format.
+
+### WorkflowBundle (`.flow`)
+
+A portable distribution unit that packages a VisualFlow plus any referenced subflows and assets. Gateways discover
+`.flow` bundles and expose them to clients.
+
+### Interface contract
+
+A versioned input/output contract a flow can implement so multiple clients can run it the same way (for example
+`abstractcode.agent.v1` for chat-like "agent" flows).
+
+## Tools
+
+### Tool spec (schema)
+
+A JSON-serializable description of a tool: name, description, and input schema. Tool specs are durable and can be stored
+in the ledger.
+
+### Tool executor (callable)
+
+The host-side implementation that actually runs tools. Executors are not durable; they live in the process that owns
+tool execution (terminal host, gateway runner, worker).
+
+### Approval boundary
+
+By default, tool execution is gated behind an explicit approval/resume step. This makes tool side effects auditable and
+restart-safe.
+
+## Memory
+
+### Active context
+
+The current message view sent to the model (what the LLM "sees"). It is a derived view and can be compacted without
+losing underlying history.
+
+### Stored history
+
+The durable record of what happened (ledger + artifacts). Stored history is the source of truth.
+
+### Span
+
+A durable handle (often an artifact reference) that points to a piece of stored history, typically produced by
+compaction or evidence capture.
+
+### Scope
+
+Where memory is read/written:
+
+- `run`: only this run
+- `session`: shared across runs that share a `session_id`
+- `global`: shared across all runs in the same runtime/gateway instance
+- `all`: query fan-out across `run + session + global`
+
+### Knowledge graph (KG) memory
+
+Long-term memory stored as temporal triples (AbstractMemory), optionally validated/normalized by a semantics registry
+(AbstractSemantics).
+
+## Modalities
+
+### Capability plugin
+
+An optional add-on that extends AbstractCore with deterministic modality APIs:
+
+- `llm.voice` / `llm.audio` via AbstractVoice
+- `llm.vision` via AbstractVision
+
+This keeps AbstractCore lightweight while letting hosts enable modalities where they run durable execution.
+
+
+--- docs/scenarios/README.md ---
+# Scenarios
+
+This section is use-case oriented. Each scenario is an end-to-end path with concrete commands and "what to expect".
+
+- [Offline coding assistant (terminal)](offline-coding-assistant.md)
+- [Gateway-first local development](gateway-first-local-dev.md)
+- [Specialized agent as a portable `.flow`](specialized-agent-flow.md)
+- [Workflow bundle lifecycle (publish/install/deprecate)](workflow-bundle-lifecycle.md)
+- [Telegram permanent contact](telegram-permanent-contact.md)
+- [Email inbox agent](email-inbox-agent.md)
+- [Phone thin client (iPhone via Web/PWA)](phone-thin-client.md)
+
+If you prefer component-first docs, start with [Getting Started](../getting-started.md).
+
+--- docs/scenarios/offline-coding-assistant.md ---
+# Scenario: Offline Coding Assistant (Terminal)
+
+Goal: run a durable coding assistant locally, offline-first, with Ollama (or an OpenAI-compatible local server).
+
+## Prereqs
+
+- Python 3.10+
+- An LLM backend:
+  - Ollama (recommended)
+  - LM Studio / vLLM / LocalAI (OpenAI-compatible)
+
+## Step 1: Install
+
+Minimal install:
+
+```bash
+pip install abstractcode
+```
+
+Full pinned stack (includes AbstractCode):
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+## Step 2: Start a local model
+
+### Ollama
+
+```bash
+ollama serve
+ollama pull qwen3:4b-instruct
+export OLLAMA_HOST="http://localhost:11434"
+```
+
+## Step 3: Run AbstractCode
+
+```bash
+abstractcode --provider ollama --model qwen3:4b-instruct
+```
+
+## Step 4: Work with files and tools
+
+- Mention files in prompts with `@path/to/file`.
+- Type `/help` for commands.
+- Tools are approval-gated by default:
+  - Toggle in-session: `/auto-accept`
+  - Start with: `--auto-approve`
+
+## What "durable" means here
+
+- Closing and reopening the app keeps state.
+- Default storage:
+  - `~/.abstractcode/state.json` (UI snapshot)
+  - `~/.abstractcode/state.d/` (durable run state + ledger + artifacts)
+- Start fresh: `/clear`
+- Disable persistence: `--no-state`
+
+## When to switch to the Gateway path
+
+Use a gateway when you want:
+- multiple thin clients observing the same run
+- remote execution
+- scheduling and a durable command inbox
+- bundle discovery for specialized agents
+
+See [Gateway-first local development](gateway-first-local-dev.md).
+
+
+--- docs/scenarios/gateway-first-local-dev.md ---
+# Scenario: Gateway-first Local Development
+
+Goal: run the full "thin clients + gateway control plane" stack locally:
+
+- AbstractGateway (HTTP/SSE control plane)
+- AbstractObserver (run observability)
+- AbstractFlow Editor (author `.flow` workflows)
+- Code Web UI (browser coding assistant)
+
+This is the recommended topology because execution is unified and clients can attach/detach freely.
+
+## Step 0: Install the pinned stack (recommended)
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+If you want a minimal install instead, you need at least:
+- `abstractgateway[http]`
+- `abstractruntime[abstractcore]`
+- (optional) `abstractagent`, `abstractflow[editor]` depending on your bundles
+
+## Step 1: Prepare directories
+
+Pick two folders:
+
+- `FLOWS_DIR`: where your `.flow` bundles live
+- `DATA_DIR`: where gateway stores run state/ledger/artifacts
+
+Example:
+
+```bash
+mkdir -p ./runtime/gateway ./runtime/flows
+```
+
+## Step 2: Configure the gateway
+
+```bash
+export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/runtime/flows"
+export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+```
+
+Optional defaults (if your flows use LLM nodes):
+
+```bash
+export ABSTRACTGATEWAY_PROVIDER="ollama"
+export ABSTRACTGATEWAY_MODEL="qwen3:4b-instruct"
+```
+
+## Step 3: Start the gateway
+
+```bash
+abstractgateway serve --host 127.0.0.1 --port 8080
+```
+
+Smoke check:
+
+```bash
+curl -sS http://127.0.0.1:8080/api/health
+```
+
+## Step 4: Start the thin clients
+
+In separate terminals:
+
+```bash
+npx @abstractframework/observer
+npx @abstractframework/flow
+npx @abstractframework/code
+```
+
+Default ports:
+- Observer: http://localhost:3001
+- Code Web: http://localhost:3002
+- Flow Editor: http://localhost:3003
+
+## Step 5: Connect UIs to the gateway
+
+In each UI:
+- Set Gateway URL: `http://127.0.0.1:8080`
+- Paste the auth token
+- Connect
+
+## Step 6: Author and run a specialized agent
+
+1. In Flow Editor, create a workflow implementing `abstractcode.agent.v1`.
+2. Export as a `.flow` bundle.
+3. Put the `.flow` file into `FLOWS_DIR` (or configure the editor to publish to the gateway).
+4. In Observer or Code Web, pick the workflow and start a run.
+5. Watch the ledger stream in Observer.
+
+See [Specialized agent as a portable `.flow`](specialized-agent-flow.md).
+
+## Troubleshooting
+
+- CORS errors in browser: widen `ABSTRACTGATEWAY_ALLOWED_ORIGINS` for your UI origin.
+- "Unauthorized": ensure the UI auth token matches `ABSTRACTGATEWAY_AUTH_TOKEN`.
+- Bundles not showing up: verify `ABSTRACTGATEWAY_FLOWS_DIR` contains `.flow` files, then reload bundles from the UI (or
+  restart the gateway).
+
+
+--- docs/scenarios/specialized-agent-flow.md ---
+# Scenario: Specialized Agent as a Portable `.flow`
+
+Goal: build a specialized agent once, then run it in:
+
+- AbstractCode (terminal)
+- Code Web UI (browser)
+- AbstractObserver (browser)
+- your own apps (via gateway bundle discovery)
+
+The key is an interface contract: `abstractcode.agent.v1`.
+
+## Step 1: Create the flow
+
+In the Flow Editor (`npx @abstractframework/flow`):
+
+1. Add an **On Flow Start** node.
+2. Add an **Agent** node (or **LLM Call** for a single-shot step).
+3. Add an **On Flow End** node.
+4. Wire the pins:
+   - Start outputs to Agent inputs: `provider`, `model`, `prompt` (and optional `tools`, `context`, `memory`)
+   - Agent outputs to End inputs: `response`, `success`, `meta` (and optional `scratchpad`)
+5. In flow properties, set:
+   - `interfaces: ["abstractcode.agent.v1"]`
+
+## Agent vs LLM Call
+
+- Use **Agent** when you want an internal multi-step loop (ReAct/CodeAct/MemAct style).
+- Use **LLM Call** when you want a single request/response and explicit tool wiring in the graph.
+
+See [Guide: Agent vs LLM Call](../guide/agent-vs-llm.md).
+
+## Step 2: Export as a bundle
+
+Export the workflow as a `.flow` bundle.
+
+A `.flow` bundle packages:
+- the root VisualFlow JSON
+- any referenced subflows
+- optional assets
+
+## Step 3: Run locally (terminal)
+
+With AbstractCode:
+
+```bash
+abstractcode --workflow /path/to/my-agent.flow
+```
+
+Or install the bundle into the local registry:
+
+```bash
+abstractcode workflow install /path/to/my-agent.flow
+abstractcode --workflow my-agent
+```
+
+## Step 4: Deploy to a gateway
+
+Copy the `.flow` bundle into `ABSTRACTGATEWAY_FLOWS_DIR`.
+
+Then it will appear in:
+- Observer workflow picker
+- Code Web UI workflow picker
+- Gateway discovery endpoints
+
+## Step 5: Pass memory (optional)
+
+If you want KG memory recall/writeback, wire a `memory` object into the Agent/LLM Call node.
+
+See [Guide: Flow + KG memory](../guide/flow-and-kg-memory.md).
+
+
+--- docs/scenarios/workflow-bundle-lifecycle.md ---
+# Scenario: Publish, Install, and Deprecate Workflows (`.flow` bundles)
+
+Goal: author a workflow once, distribute it as a portable `.flow` bundle, and manage its lifecycle on a gateway so it is
+discoverable across clients.
+
+## What you're managing
+
+AbstractFramework distributes workflows as WorkflowBundles (`.flow` files):
+- a zip bundle containing `manifest.json` + `flows/*.json` (and optional assets)
+- entrypoints can advertise interface contracts (for example `abstractcode.agent.v1`) for discovery across clients
+
+## Step 1: Author the workflow (Flow Editor)
+
+Run the editor UI:
+
+```bash
+npx @abstractframework/flow
+```
+
+Open http://localhost:3003 and create/update your workflow.
+
+## Step 2: Export/publish a `.flow` bundle
+
+In the editor, export a `.flow` file (the bundle includes the root flow plus referenced subflows).
+
+## Step 3: Put the bundle where the gateway loads bundles
+
+On the gateway host, configure:
+
+```bash
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/workflows"   # directory containing *.flow
+export ABSTRACTGATEWAY_DATA_DIR="/path/to/gateway-data" # durable stores (run, ledger, artifacts)
+```
+
+Copy your bundle into `ABSTRACTGATEWAY_FLOWS_DIR`, for example:
+
+- `my-bundle@0.1.0.flow`
+
+Start/restart the gateway (bundle mode is the default):
+
+```bash
+abstractgateway serve --host 127.0.0.1 --port 8080
+```
+
+## Step 4: Discover and run from clients
+
+Once loaded, the bundle entrypoints show up in:
+- Observer workflow picker
+- Code Web UI workflow picker
+- Gateway discovery endpoints (for custom clients)
+
+If you built a chat-like agent flow, declare `interfaces: ["abstractcode.agent.v1"]` so clients can run it as an agent.
+
+## Step 5: Deprecate instead of deleting (recommended)
+
+Deprecation hides workflows from discovery and blocks new starts, while keeping installed bundles for:
+- reproducibility of past runs
+- auditability and traceability
+
+Look for gateway lifecycle controls in your UI client (Observer / Flow Editor), or use the gateway API if needed.
+
+
+--- docs/scenarios/telegram-permanent-contact.md ---
+# Scenario: Telegram "Permanent Contact" (Gateway Bridge + Agent Workflow)
+
+Goal: run a Telegram contact that forwards inbound Telegram messages to a durable workflow (via gateway events) and sends
+replies back via tools.
+
+This is a gateway-first scenario: the gateway host owns durability and stores plaintext history for replay/observability.
+
+## High-level architecture
+
+1. Telegram bridge receives a message.
+2. Gateway maps it to a stable `session_id` (typically `telegram:<chat_id>`).
+3. Gateway emits an event (for example `telegram.message`) into that session.
+4. Your workflow handles the event and calls outbound Telegram tools:
+   - `send_telegram_message`
+   - `send_telegram_artifact` (files)
+
+## Security model choices
+
+Telegram has two integration paths:
+
+1. TDLib + Secret Chats (E2EE in transit; recommended)
+2. Bot API (easy, not E2EE)
+
+Even with E2EE, messages are decrypted on the gateway host and persisted to the durable stores in plaintext by design.
+Secure the gateway host and its storage.
+
+## Step 1: Install gateway Telegram support
+
+```bash
+pip install "abstractgateway[telegram]"
+```
+
+## Step 2: Configure the gateway (minimum)
+
+You need a normal gateway configuration plus Telegram bridge settings. At minimum:
+
+```bash
+export ABSTRACTGATEWAY_AUTH_TOKEN="..."  # required
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+
+export ABSTRACT_TELEGRAM_BRIDGE=1
+export ABSTRACT_ENABLE_TELEGRAM_TOOLS=1
+export ABSTRACT_TELEGRAM_FLOW_ID="<bundle_id>:<flow_id>"  # workflow that handles telegram.message
+```
+
+Then start the gateway:
+
+```bash
+abstractgateway serve --host 127.0.0.1 --port 8080
+```
+
+## Step 3: Wire the workflow (Flow Editor)
+
+Create a workflow that:
+
+1. waits for `telegram.message` (On Event)
+2. extracts `payload.telegram.text` and `payload.telegram.chat_id`
+3. generates a reply (Agent or LLM Call)
+4. calls `send_telegram_message(chat_id=..., text=...)`
+
+Inbound attachments arrive with an `artifact_id`. To send a file back, call `send_telegram_artifact(chat_id=..., artifact_id=...)`.
+
+## Step 4: TDLib (E2EE) bootstrap (recommended path)
+
+TDLib requires a real Telegram user account and the TDLib shared library (`tdjson`) installed on the gateway host. You
+then authenticate once to create a persistent TDLib session directory.
+
+Because TDLib setup is platform-specific, follow:
+- [Guide: Telegram integration](../guide/telegram-integration.md)
+
+## Step 5: Test
+
+Send a Telegram message to the AI contact. You should see:
+- gateway emits the event into the session
+- your run progresses and sends a reply via tools
+- Observer can replay the ledger for the session/run
+
+--- docs/scenarios/email-inbox-agent.md ---
+# Scenario: Email Inbox Agent (IMAP Bridge + SMTP Replies)
+
+Goal: ingest inbound emails as durable events and let a workflow reply (or take actions) with framework-native email tools.
+
+## High-level architecture
+
+- Inbound: gateway email bridge polls IMAP, stores raw + attachments as artifacts, emits `email.message` events into a
+  stable `session_id` per thread.
+- Outbound: workflows call `send_email` with centralized SMTP defaults (no repeating host/user per tool call).
+
+## Step 1: Configure email accounts on the tool-execution host
+
+Email tools are account-scoped: IMAP/SMTP host/user are configured on the process that executes tools (gateway local
+tools, CLI host, or a tool worker).
+
+For the full configuration matrix (env vs YAML vs AbstractCore config), use the canonical guide in the main framework
+workspace:
+- [Guide: Email integration](../guide/email-integration.md)
+
+## Step 2: Enable the inbound email bridge on the gateway host
+
+Minimum env vars (plus your email account config):
+
+```bash
+export ABSTRACT_EMAIL_BRIDGE=1
+export ABSTRACT_EMAIL_POLL_SECONDS=60
+
+export ABSTRACT_EMAIL_FLOW_ID="<bundle_id>:<flow_id>"   # autostart/attach a workflow per thread/session
+```
+
+Start the gateway with a persistent `ABSTRACTGATEWAY_DATA_DIR` so bridge state survives restarts.
+
+## Step 3: Wire the workflow
+
+Create a workflow that:
+1. handles the `email.message` event
+2. reads `payload.email.*` (subject/from/body and artifact-backed attachments)
+3. optionally opens attachments via `open_attachment(artifact_id=...)`
+4. replies with `send_email(to=..., subject=..., body_text=...)`
+
+## Step 4: Test
+
+Send an email into the mailbox. Expected:
+- the bridge emits `email.message`
+- a session-run starts (or is resumed) for that thread
+- your workflow replies via `send_email`
+
+--- docs/scenarios/phone-thin-client.md ---
+# Scenario: Phone Thin Client (iPhone via Web/PWA) + Gateway
+
+Goal: run a thin client UI on a phone that attaches to runs and controls them, while the gateway host owns durability and
+execution.
+
+This is especially useful for:
+- remote coding/agent sessions from a phone
+- observing runs while away from your workstation
+
+## Mental model (thin client)
+
+- The phone does not tick the runtime.
+- It renders by replaying/streaming the ledger.
+- It acts by sending durable commands (resume/pause/cancel/emit_event).
+
+## Quickstart (LAN dev, no HTTPS)
+
+1. Run the gateway bound to all interfaces (still use auth):
+   - `abstractgateway serve --host 0.0.0.0 --port 8080`
+2. Run the web UI host on all interfaces (dev server):
+   - `npx @abstractframework/code`
+3. Allow the dev origin in gateway CORS/origin allowlist.
+4. Open the web UI URL on your iPhone Safari and connect it to the gateway.
+
+## Production note (recommended)
+
+For installable iOS PWA behavior, host the web UI over HTTPS and run the gateway behind HTTPS termination (reverse proxy
+or tunnel). Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to the exact UI origin.
+
+## Canonical iPhone guide (deeper)
+
+For a step-by-step iPhone/PWA guide, see:
+- [Guide: Web deployment](../guide/deployment-web.md)
+- [Guide: iPhone notes](../guide/deployment-iphone.md)
+
+--- docs/guide/README.md ---
+# Guides
+
+Short, focused guides for common framework questions.
+
+- [Agent vs LLM Call (VisualFlow)](agent-vs-llm.md)
+- [Capability plugins (voice/audio/vision)](capability-plugins.md)
+- [Deployment topologies](deployment-topologies.md)
+- [Web deployment (browser UI + gateway)](deployment-web.md)
+- [iPhone notes (Safari / PWA)](deployment-iphone.md)
+- [Gateway exposure security](gateway-security.md)
+- [Runtime scope (run/session/global/all)](runtime-scope.md)
+- [Flow + KG memory (memory object)](flow-and-kg-memory.md)
+- [Scheduled workflows (durable jobs)](scheduled-workflows.md)
+- [Prompt caching (prompt/KV)](prompt-caching.md)
+- [WorkflowBundles (`.flow`) lifecycle](workflow-bundles.md)
+- [Telegram integration](telegram-integration.md)
+- [Email integration](email-integration.md)
+- [Process manager env vars (write-only)](process-manager-env-vars.md)
+
+--- docs/guide/agent-vs-llm.md ---
+# Agent vs LLM Call (VisualFlow)
+
+VisualFlow has two LLM-oriented nodes that intentionally look similar, but differ in **autonomy**.
+
+## When to use which
+
+### Use **LLM Call**
+
+- You want a **single** LLM request/response step (no internal loop).
+- You want to explicitly wire tool execution in the graph:
+  - `LLM Call.tool_calls` -> `Tool Calls.tool_calls` -> (your next node).
+
+### Use **Agent**
+
+- You want the node to run an **internal multi-step loop** (ReAct-style) until it finishes or hits a cap.
+- You want a runtime-owned **scratchpad** (trace/transcript) for observability.
+
+## Inputs (shared contract)
+
+Agent and LLM Call share the same parameter set and ordering (Agent has one extra cap: `max_iterations`):
+
+1. `use_context` (boolean): include the run's active context messages (`context.messages`) in the request.
+2. `context` (object): explicit context override. When provided, `context.messages` overrides inherited run context
+   messages.
+3. `provider` (provider), `model` (model): route the call.
+4. `system` (string): optional system instructions for this node.
+5. `prompt` (string): the user prompt/content for this node.
+6. `tools` (tools): allowlist of tools the model may request (execution is still explicit in the graph).
+7. Agent-only: `max_iterations` (number): maximum internal loop iterations (safety cap).
+8. `max_in_tokens` (number): optional per-call/per-agent input token budget (VisualFlow shorthand for
+   `max_input_tokens`).
+9. `temperature` (number), `seed` (number): sampling controls.
+10. `resp_schema` (object): optional JSON Schema for schema-constrained responses.
+
+Notes:
+- The canonical prompt key/pin is always `prompt` (there is no `request` alias).
+
+## Outputs (what differs)
+
+### LLM Call outputs
+
+- `response` (string), `success` (boolean), `meta` (object), `tool_calls` (array)
+
+### Agent outputs
+
+- `response` (string), `success` (boolean), `meta` (object), `scratchpad` (object)
+
+There is no separate `result` output pin in the durable contract.
+
+### Agent `scratchpad` (what it contains)
+
+The Agent scratchpad is runtime-owned observability (it can be large). Common fields:
+
+- `messages`: agent-internal transcript for the sub-run (ReAct loop)
+- `task`: the agent prompt/task for this node
+- `context_extra`: any extra fields passed in `context` besides `task`/`messages` (host-defined)
+- `node_traces` / `steps`: structured per-node trace + flattened UI-friendly steps
+- `tool_calls` / `tool_results`: best-effort extraction from the trace
+
+## `resp_schema` (structured responses)
+
+When `resp_schema` is provided:
+
+- `response` is a JSON string matching the schema (so it stays a simple `string` pin).
+- Use a JSON parser node if you want to treat it as an object downstream.
+
+## RunnableFlow interface (for chat-like clients)
+
+The RunnableFlow (v1) interface (id: `abstractcode.agent.v1`) is the host contract used by AbstractCode, AbstractObserver,
+and similar clients:
+
+- `On Flow Start` exposes the same parameter set (in the same order) so hosts can configure a workflow run.
+- Required `On Flow Start` pins: `provider`, `model`, `prompt` (everything else optional).
+- Required `On Flow End` pins: `response`, `success`, `meta` (others optional).
+
+
+--- docs/guide/capability-plugins.md ---
+# Capability plugins (Voice/Audio/Vision)
+
+This guide explains how to add optional audio/voice/vision capabilities to AbstractFramework without turning
+`abstractcore` into a kitchen sink.
+
+## Mental model (two concepts; don't mix them)
+
+1. **LLM input modalities (AbstractCore)**
+   - Attaching image/audio/video to an LLM call (`generate(..., media=[...])`) depends on the selected provider/model's
+     input capabilities.
+
+2. **Deterministic capabilities (plugins)**
+   - STT/TTS and generative vision are deterministic APIs that can be used with or without an LLM call:
+     - `core.voice` / `core.audio` (speech-to-text, text-to-speech) via `abstractvoice`
+     - `core.vision` (text-to-image, image-to-image, ...) via `abstractvision`
+
+This split keeps `abstractcore` lightweight by default.
+
+## Library mode (Python)
+
+### Install
+
+```bash
+pip install abstractcore
+pip install abstractvoice      # enables core.voice + core.audio
+pip install abstractvision     # enables core.vision
+```
+
+### Discover what's available
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("openai", model="gpt-4o-mini")  # example; pick a provider/model you have access to
+print(llm.capabilities.status())
+```
+
+Notes:
+- Capabilities load lazily the first time you access `llm.capabilities` / `llm.voice` / `llm.audio` / `llm.vision`.
+- Missing plugins raise an actionable error (includes an install hint).
+
+### Use voice/audio (STT/TTS)
+
+```python
+wav_bytes = llm.voice.tts("Hello from AbstractVoice", format="wav")
+open("hello.wav", "wb").write(wav_bytes)
+
+text = llm.audio.transcribe("speech.wav")
+print(text)
+```
+
+### Use generative vision (T2I/I2I/...)
+
+`core.vision` can use an OpenAI-compatible images backend (configured via `vision_base_url` / `ABSTRACTVISION_BASE_URL`).
+
+```python
+llm = create_llm(
+    "openai",
+    model="gpt-4o-mini",
+    vision_base_url="http://localhost:8000/v1",  # any OpenAI-compatible images endpoint
+)
+
+png_bytes = llm.vision.t2i("a red square on white background")
+open("out.png", "wb").write(png_bytes)
+```
+
+## Framework mode (gateway/runtime)
+
+Install modality plugins on the durable host (the machine/process that runs the runtime + tool execution and imports
+`abstractcore`), typically the AbstractGateway runner.
+
+Thin clients (web, remote TUI) do not need `abstractvoice`/`abstractvision` installed locally.
+
+## Server mode (OpenAI-compatible `/v1`)
+
+AbstractCore Server can optionally expose OpenAI-compatible endpoints by delegating to plugins:
+- `/v1/images/*` (via `abstractvision`)
+- `/v1/audio/*` (via the capability plugin layer, typically `abstractvoice`)
+
+These endpoints are interoperability-first. For durable artifact-backed outputs, prefer gateway/runtime + ArtifactStore.
+
+
+--- docs/guide/deployment-topologies.md ---
+# Deployment Topologies (Supported Patterns)
+
+AbstractFramework is easier to reason about if you think in roles, not packages:
+
+- UI / host UX: renders progress, collects approvals (AbstractCode, browser UIs, custom apps)
+- Orchestrator: durable state machine + stores (AbstractRuntime + stores)
+- Agent logic: produces effects/steps (AbstractAgent patterns, flows)
+- LLM gateway: provider abstraction + tool-call parsing (AbstractCore)
+- Tool executors: side effects (local tools, MCP workers, sandboxes)
+
+## Topology A: Single machine (local everything)
+
+Best for local development and offline-first workflows.
+
+- UI + runtime + tools run in one process (or one machine).
+- You can still use file-backed stores for durability.
+
+## Topology B: Local orchestration + remote inference
+
+Best when you want local tool execution but a remote model (GPU box, cloud API, hosted vLLM).
+
+- Runtime + tools stay local.
+- AbstractCore routes LLM calls to a remote provider endpoint.
+
+## Topology C: Remote tool execution (MCP-backed)
+
+Best when tools must run near the target environment (servers, private networks, sandboxes).
+
+- Runtime stays on the durable host.
+- Tool calls are delegated to an MCP worker.
+
+## Topology D: Thin client UI + remote durable host (Gateway-first)
+
+Recommended for multi-device, multi-client use.
+
+- The gateway host owns the durable runtime + stores and progresses runs.
+- Thin clients render by replaying/streaming the ledger and act by submitting durable commands.
+- Bundles (`.flow`) provide portable, discoverable specialized agents.
+
+## Topology E: Multi-host orchestration (planned/advanced)
+
+Only needed when you want to distribute durable orchestration itself across multiple hosts.
+For v0, prefer picking a host per run (avoid mid-run migration).
+
+## See also
+
+- [Scenario: Gateway-first local development](../scenarios/gateway-first-local-dev.md)
+- [Guide: Gateway exposure security](gateway-security.md)
+
+
+--- docs/guide/deployment-web.md ---
+# Web Deployment (Browser UI + Gateway)
+
+This guide covers deploying a browser UI (Observer / Flow Editor / Code Web UI) against an AbstractGateway.
+
+## What "gateway-first" means
+
+- The browser does not tick the runtime.
+- It renders by replaying/streaming the ledger.
+- It acts by sending durable commands (start/resume/pause/cancel/emit_event).
+
+## Minimum gateway settings (browser access)
+
+Set these on the gateway host:
+
+```bash
+export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+```
+
+Start the gateway:
+
+```bash
+abstractgateway serve --host 127.0.0.1 --port 8080
+```
+
+## Run the UIs
+
+```bash
+npx @abstractframework/observer
+npx @abstractframework/flow
+npx @abstractframework/code
+```
+
+Default ports:
+- Observer: http://localhost:3001
+- Code Web UI: http://localhost:3002
+- Flow Editor: http://localhost:3003
+
+In each UI, set:
+- Gateway URL: `http://127.0.0.1:8080`
+- Auth token: your `ABSTRACTGATEWAY_AUTH_TOKEN`
+
+## Production notes (high-signal)
+
+- Terminate TLS at a reverse proxy and forward to `127.0.0.1:8080`.
+- Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
+- Keep the gateway token secret and rotate it like any control-plane credential.
+
+See [Guide: Gateway exposure security](gateway-security.md).
+
+
+--- docs/guide/deployment-iphone.md ---
+# iPhone Notes (Safari / PWA)
+
+Code Web UI is designed to run on iPhone as a thin host UI that connects to a remote gateway deployment.
+
+## Prereqs (recommended)
+
+- Gateway reachable over HTTPS (reverse proxy + TLS).
+- Web UI hosted over HTTPS.
+- Gateway configured with:
+  - `ABSTRACTGATEWAY_AUTH_TOKEN` (recommended)
+  - `ABSTRACTGATEWAY_ALLOWED_ORIGINS` including your web UI origin (exact host recommended for prod)
+
+## Steps
+
+1. Open the web UI URL in Safari.
+2. In Settings:
+   - set Gateway URL (for example `https://gateway.example.com`)
+   - set auth token if required
+3. Optional: Safari -> Share -> Add to Home Screen.
+
+## Constraints
+
+- iOS suspends background tabs aggressively; durability depends on ledger replay, not "staying connected".
+- File access is remote (via gateway); the phone does not run local tools in v1.
+
+
+--- docs/guide/gateway-security.md ---
+# Gateway Exposure Security (Checklist)
+
+Treat `abstractgateway serve` as a control-plane service: it can access runs/ledgers/attachments, and (optionally) execute
+maintenance actions depending on your deployment.
+
+## Recommended defaults (local dev)
+
+- Bind to loopback: `--host 127.0.0.1`
+- Use a strong token:
+
+```bash
+export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+```
+
+- Allow only localhost origins for browser UIs:
+
+```bash
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+```
+
+## If exposing beyond localhost (LAN, tunnels, internet)
+
+1. Run behind TLS (reverse proxy or a trusted tunnel).
+2. Use a strong token and rotate it periodically.
+3. Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
+4. Protect reads as well as writes (ledgers contain prompts and tool outputs).
+
+## Verify quickly
+
+- `/api/health` returns `200`
+- `/api/gateway/*` endpoints return `401` without `Authorization: Bearer ...`
+
+## See also
+
+AbstractGateway has a deeper security guide (env vars, limits, lockouts, audit log):
+- https://github.com/lpalbou/abstractgateway/blob/main/docs/security.md
+
+
+--- docs/guide/runtime-scope.md ---
+# Runtime Scope (run / session / global / all)
+
+This guide defines the meaning of **scope** across AbstractRuntime's memory effects and host UX.
+
+## Why scope exists
+
+The runtime stores durable "memory" under a runtime-owned namespace in run state. A scope decides **which durable owner**
+receives reads/writes, and therefore which runs share memory.
+
+## Scopes
+
+### `run`
+
+- The current `run_id`.
+- Best for per-run working memory (notes/tags/compaction spans that should not leak outside this run).
+
+### `session`
+
+- Shared across runs that share the same `session_id`.
+- Use when you want continuity across multiple runs launched by the same client "session".
+
+Important: `session` is a host contract. If a host does not provide a stable `session_id`, session scope may degrade to
+"per-run" behavior.
+
+### `global`
+
+- A single global owner shared across the whole runtime instance.
+- Use for durable cross-session memory (preferences, stable facts).
+
+### `all`
+
+`all` is a query fan-out scope used by some operations to search across:
+- `run`
+- `session`
+- `global`
+
+This is why `global != all`:
+- `global` means "only the global owner"
+- `all` means "run + session + global"
+
+## Practical examples
+
+- "Remember this for the rest of this run": `scope=run`
+- "Remember this for this user session": `scope=session`
+- "Remember this forever": `scope=global`
+- "Search everything I know": `scope=all`
+
+## What survives a backend restart?
+
+Scope controls *which durable owner* receives reads/writes, but persistence depends on the host stores:
+
+- With file-backed stores (run store + ledger store + artifact store), `run`/`session`/`global` scoped memory persists.
+- With in-memory stores, scope still works, but everything is lost on restart.
+
+## Gateway API note (important)
+
+If you start runs via the gateway and you want `scope=session` behavior across multiple runs, you must send a stable
+`session_id` when starting those runs.
+
+
+--- docs/guide/flow-and-kg-memory.md ---
+# Flow + KG Memory (Memory object v0) - Guide
+
+This guide explains how to configure KG memory recall + writeback in VisualFlow using the first-class `memory` object.
+
+It is written for novice users of AbstractFlow and focuses on practical, step-by-step setup.
+
+## What is the `memory` object?
+
+`memory` is a JSON-safe object that groups "what memory the model can use" and "how KG memory is queried/written" into a
+single value.
+
+It is designed to:
+- keep Agent / LLM Call nodes clean (one pin instead of many),
+- be portable (host can pass one object),
+- stay backward compatible (legacy per-pin keys still work).
+
+Where it's used:
+- Agent node: connect `memory` -> `agent.memory`
+- LLM Call node: connect `memory` -> `llm_call.memory`
+- RunnableFlow start (optional): `On Flow Start.memory` can be supplied by the client/run modal
+
+## Quick start (recommended): use the Memory literal node
+
+1. In AbstractFlow, add a **Memory** node (Literals -> Memory).
+2. Edit its JSON to your desired configuration.
+3. Connect:
+   - `Memory.value` -> `Agent.memory` (or `LLM Call.memory`)
+4. Run the flow and inspect the node trace:
+   - When `use_kg_memory=true`, the model should receive a bounded "KG ACTIVE MEMORY" system block when recall finds
+     relevant items.
+
+## Provide memory from the client (RunnableFlow)
+
+RunnableFlow workflows (interface `abstractcode.agent.v1`) can accept a `memory` input at start:
+
+1. Ensure your `On Flow Start` node exposes an output pin `memory` (type `memory`).
+2. Wire `On Flow Start.memory` into your Agent/LLM Call.
+3. In your client (run modal / API), set `memory` as JSON.
+
+### Best practice: defaults + overrides
+
+If you want the flow to have good defaults but still allow overrides from the client:
+
+1. Create a Memory (defaults) literal node (typed `memory`).
+2. Ensure `On Flow Start` provides `memory = {}` by default.
+3. Merge defaults + overrides and use that output as the effective memory object.
+
+## Memory object schema (v0)
+
+All keys are optional. Omitted keys mean "no override" (runtime defaults apply).
+
+### Recall/source controls (Agent + LLM Call)
+
+- `use_session_attachments: boolean`
+- `use_span_memory: boolean`
+- `use_semantic_search: boolean` (reserved; not implemented in v0)
+- `use_kg_memory: boolean`
+- `memory_query: string` (defaults to the node prompt/task if omitted)
+- `memory_scope: string` (`run | session | global | all`)
+- `recall_level: string` (`urgent | standard | deep`)
+- `max_span_messages: number`
+- `kg_max_input_tokens: number`
+- `kg_limit: number`
+- `kg_min_score: number` (0..1)
+
+### KG write defaults (useful for ingest subflows)
+
+- `kg_write_scope: string` (`run | session | global`)
+- `kg_domain_focus: string`
+- `kg_max_out_tokens: number` (0 means "no cap")
+
+## Example memory object
+
+```json
+{
+  "use_session_attachments": true,
+  "use_span_memory": false,
+  "use_semantic_search": false,
+  "use_kg_memory": true,
+  "memory_query": "",
+  "memory_scope": "session",
+  "recall_level": "standard",
+  "max_span_messages": 24,
+  "kg_max_input_tokens": 1200,
+  "kg_limit": 80,
+  "kg_min_score": 0.35,
+  "kg_write_scope": "session",
+  "kg_domain_focus": "software / agents / memory systems",
+  "kg_max_out_tokens": 0
+}
+```
+
+## Query and insert (KG recall + KG writeback)
+
+### Query (recall)
+
+To make an Agent/LLM Call use KG recall:
+1. Set `memory.use_kg_memory = true`.
+2. Optionally set `memory.memory_query` (otherwise the prompt is used).
+3. Choose `memory.memory_scope`:
+   - `session` is common when you want continuity within one client session.
+   - `global` is common when you want durability across independent runs.
+
+### Insert (writeback)
+
+To write new knowledge into the KG, run an ingestion step/subflow after you produce an answer.
+The typical pattern is to build a turn transcript string and pass it to an extractor that writes assertions using:
+- scope from `memory.kg_write_scope` (or a fixed literal)
+- domain hint from `memory.kg_domain_focus`
+
+
+--- docs/guide/scheduled-workflows.md ---
+# Scheduled Workflows (Durable Jobs)
+
+This guide explains how scheduled workflows work when using `abstractgateway` + `abstractruntime`.
+
+## What "scheduled workflows" means in AbstractFramework
+
+A scheduled workflow is a durable parent run that triggers a target workflow as child runs over time.
+
+Key properties:
+- Durable: schedule state is persisted and survives restarts.
+- Replay-first observability: you can attach later and reconstruct what happened from the ledger.
+- Single authority: the gateway host owns ticking/resuming.
+
+## Who "runs" the schedule (and why it stops when processes stop)
+
+AbstractRuntime is a library. It can represent "wait until time X", but it does not create OS timers or wake itself up.
+
+Something must keep calling `Runtime.tick(...)` to advance runs. In the gateway topology, the gateway runner loop:
+- ticks running runs
+- resumes due waits (including "wait until" for scheduled jobs)
+- applies durable commands (pause/resume/cancel/emit_event)
+
+If you stop the gateway process, nothing ticks. When it restarts, due waits resume on the next poll cycle.
+
+## Creating a scheduled run (Gateway HTTP API)
+
+Endpoint: `POST /api/gateway/runs/schedule`
+
+Example: start now, repeat every 20 minutes forever:
+
+```bash
+curl -sS -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
+  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bundle_id": "my-bundle",
+    "flow_id": "root",
+    "input_data": { "prompt": "write my report" },
+    "start_at": "now",
+    "interval": "20m",
+    "share_context": true
+  }'
+```
+
+Example: start at a specific time (UTC ISO), run 10 times:
+
+```bash
+curl -sS -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
+  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bundle_id": "my-bundle",
+    "flow_id": "root",
+    "input_data": { "prompt": "write my report" },
+    "start_at": "2026-01-15T15:06:00+00:00",
+    "interval": "20m",
+    "repeat_count": 10
+  }'
+```
+
+Notes:
+- Intervals are relative (drift is expected if runs take time or the gateway is down).
+- If a child run blocks on a durable wait (ask-user, approvals, wait-event), the schedule blocks too (it waits for the
+  child to finish).
+- Durable execution is not transactional I/O (at-least-once semantics). Prefer idempotent outputs for scheduled jobs.
+
+## Controlling scheduled runs
+
+Scheduled runs are normal durable runs:
+- Pause the parent run to pause the schedule.
+- Cancel the parent run to stop the schedule and cancel active children.
+
+This is done via `POST /api/gateway/commands`.
+
+
+--- docs/guide/prompt-caching.md ---
+# Prompt Caching (Prompt / KV)
+
+This guide explains how the framework should think about caching for LLM calls, with an emphasis on prompt/KV caching
+(prefill reuse) rather than response memoization.
+
+## Terminology (three different "caches")
+
+1. Response cache (exact/semantic)
+   - Memoize final model outputs keyed by the input request.
+   - Useful for repetitive questions, but risky for correctness drift.
+
+2. Prompt/KV cache (prefix/prefill reuse)
+   - Reuse the model's internal KV state for repeated prompt prefixes.
+   - This can dramatically reduce time-to-first-token for long prompts with stable prefixes.
+
+3. Composable KV modules (advanced)
+   - Precompute caches for separate chunks (docs, history) and stitch them later.
+   - This is typically an engine-level feature and not guaranteed uniformly across providers.
+
+## AbstractCore support (best-effort)
+
+AbstractCore exposes a provider-optional prompt cache surface. Depending on provider/backend, it may be:
+- fully supported (in-process local backends),
+- pass-through to an upstream server,
+- or a no-op.
+
+Typical usage patterns:
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("mlx", model="mlx-community/Qwen3-4B")
+llm.prompt_cache_set("tenantA:session123")  # also sets the default key
+
+llm.generate("Hello")
+llm.generate("Continue, but shorter.")
+```
+
+Or per-call:
+
+```python
+resp = llm.generate("Summarize this.", prompt_cache_key="tenantA:session123")
+```
+
+## Gateway/runtime note
+
+In gateway-first deployments, prompt caching (when enabled) should be scoped per user/session to avoid accidental
+cross-user reuse. Prefer stable `session_id` values so cache keys remain stable across multiple runs.
+
+
+--- docs/guide/workflow-bundles.md ---
+# WorkflowBundles (`.flow`) and Lifecycle
+
+WorkflowBundles (`.flow`) are the portable distribution unit for VisualFlow workflows:
+
+- a zip bundle containing `manifest.json` + `flows/*.json` (and optional assets)
+- entrypoints can advertise interface contracts (for example `abstractcode.agent.v1`) for discovery across clients
+
+## Where bundles live (gateway-first)
+
+On a gateway host, configure a bundles directory:
+
+```bash
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/workflows"   # contains *.flow
+```
+
+The gateway discovers and serves bundles to thin clients via discovery endpoints.
+
+## Recommended lifecycle controls
+
+- Publish/install new versions instead of editing deployed bundles in place.
+- Deprecate workflows instead of deleting:
+  - hides from discovery
+  - blocks new starts
+  - keeps old versions available for replay/audit of historical runs
+
+## See also
+
+- [Scenario: Publish, install, and deprecate workflows](../scenarios/workflow-bundle-lifecycle.md)
+
+
+--- docs/guide/telegram-integration.md ---
+# Telegram Integration (Gateway Bridge + Workflow)
+
+This guide explains how to run a Telegram "permanent contact" that talks to an agent workflow through the gateway:
+
+- Inbound Telegram messages -> gateway emits durable events into a `session_id`
+- Outbound replies/files -> workflow calls tools (`send_telegram_message`, `send_telegram_artifact`)
+- Attachments -> stored in the ArtifactStore for durable replay
+
+## Security model choices
+
+Telegram has two integration paths:
+
+1. TDLib + Secret Chats (E2EE in transit; recommended)
+2. Bot API (easy, not E2EE)
+
+Even with E2EE, messages are decrypted on the gateway host and persisted to durable stores in plaintext by design. Secure
+the gateway host and its storage.
+
+## Minimal gateway configuration
+
+Install Telegram support:
+
+```bash
+pip install "abstractgateway[telegram]"
+```
+
+Set env vars on the gateway host:
+
+```bash
+export ABSTRACT_TELEGRAM_BRIDGE=1
+export ABSTRACT_ENABLE_TELEGRAM_TOOLS=1
+export ABSTRACT_TELEGRAM_FLOW_ID="<bundle_id>:<flow_id>"
+```
+
+Start the gateway normally.
+
+## Workflow wiring (VisualFlow)
+
+Create a flow that:
+1. waits for `telegram.message` (On Event; scope `session`)
+2. extracts `payload.telegram.text` and `payload.telegram.chat_id`
+3. generates a reply (Agent/LLM Call)
+4. calls `send_telegram_message(chat_id=..., text=...)`
+
+Inbound attachments arrive with an `artifact_id`. Send them back with `send_telegram_artifact(chat_id=..., artifact_id=...)`.
+
+## TDLib notes (E2EE path)
+
+TDLib requires:
+- a real Telegram user account for the AI identity
+- the TDLib shared library (`tdjson`) installed on the gateway host
+- a persistent TDLib session directory (so you authenticate once)
+
+Because TDLib is platform-specific, keep your setup steps close to your deployment scripts. The gateway integration code
+and configuration surface live in:
+- https://github.com/lpalbou/abstractgateway
+
+
+--- docs/guide/email-integration.md ---
+# Email Integration (Inbound IMAP -> Events, Outbound SMTP Defaults)
+
+This guide explains how to use framework-native email tooling:
+
+- Outbound: `send_email` with centralized SMTP defaults (no repeated host/user per call)
+- Inbound: gateway email bridge polls IMAP and emits durable `email.message` events into stable sessions, with
+  artifact-backed attachments
+
+## Minimal outbound configuration (SMTP defaults)
+
+Configure on the process that executes tools (gateway local tools, CLI host, or tool worker):
+
+```bash
+export ABSTRACT_EMAIL_SMTP_HOST="smtp.example.com"
+export ABSTRACT_EMAIL_SMTP_USERNAME="me@example.com"
+export ABSTRACT_EMAIL_SMTP_PASSWORD_ENV_VAR="EMAIL_PASSWORD"
+export EMAIL_PASSWORD="..."
+```
+
+Then a minimal tool call can be:
+
+```json
+{ "name": "send_email", "arguments": { "to": "you@example.com", "subject": "Hello", "body_text": "Hi!" } }
+```
+
+## Minimal inbound configuration (gateway email bridge)
+
+Configure IMAP + enable the bridge on the gateway host:
+
+```bash
+export ABSTRACT_EMAIL_BRIDGE=1
+export ABSTRACT_EMAIL_IMAP_HOST="imap.example.com"
+export ABSTRACT_EMAIL_IMAP_USERNAME="me@example.com"
+export ABSTRACT_EMAIL_IMAP_PASSWORD_ENV_VAR="EMAIL_PASSWORD"
+export ABSTRACT_EMAIL_POLL_SECONDS=60
+```
+
+Recommended for v0: auto-start a workflow per thread/session:
+
+```bash
+export ABSTRACT_EMAIL_FLOW_ID="<bundle_id>:<flow_id>"
+```
+
+## Workflow wiring
+
+Create a flow that:
+1. handles `email.message` (On Event; scope `session`)
+2. reads `payload.email.*` (subject/from/body and artifact-backed attachments)
+3. optionally opens attachments via `open_attachment(artifact_id=...)`
+4. replies with `send_email(...)`
+
+## See also
+
+Gateway maintenance docs mention the bridge and email inbox endpoints:
+- https://github.com/lpalbou/abstractgateway/blob/main/docs/maintenance.md
+
+
+--- docs/guide/process-manager-env-vars.md ---
+# Process Manager Env Vars (Write-only) - Operator Guide
+
+This guide explains how to configure a small allowlist of environment variables on the gateway host via AbstractObserver,
+without exposing the values back to browsers/clients.
+
+## What this is (and why)
+
+- Goal: configure framework integrations (for example email) from the UI.
+- Security model:
+  - allowlist-only keys (no arbitrary env var editing)
+  - write-only values (the gateway API never returns env var values)
+  - values are persisted on the gateway host with restrictive file permissions
+
+## Requirements
+
+- Gateway process manager enabled: `ABSTRACTGATEWAY_ENABLE_PROCESS_MANAGER=1`
+- AbstractObserver connected to that gateway
+
+## Where values are stored (host-side)
+
+- `<ABSTRACTGATEWAY_DATA_DIR>/process_manager/env_overrides.json`
+
+## How values are applied
+
+- When you set/unset an allowlisted env var in the UI:
+  - the gateway persists it to `env_overrides.json`
+  - the gateway applies it to its own `os.environ` (so integrations reading env vars can see it)
+- When the process manager launches managed processes, it merges:
+  1. gateway `os.environ`
+  2. allowlisted overrides
+  3. per-process env (static)
+
+If a service reads env vars only at startup, restart that service after changing env vars.
+
+## Allowlisted keys
+
+The allowlist is gateway-defined. Email-related keys are commonly allowlisted for inbox and SMTP defaults.
+
+## See also
+
+- AbstractGateway docs: https://github.com/lpalbou/abstractgateway
+

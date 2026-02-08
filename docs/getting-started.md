@@ -2,12 +2,13 @@
 
 Welcome! This guide gets you from zero to a working AbstractFramework setup in minutes.
 
-AbstractFramework is modular — you can use a single package or compose several together. Let's find the right starting point for you.
+AbstractFramework is modular — you can install the full framework in one command or pick specific packages. Let's find the right starting point for you.
 
 ## What Do You Want to Build?
 
 | Your Goal | Start Here | What You'll Use |
 |-----------|------------|-----------------|
+| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.0` |
 | Call LLMs with a unified API | [Path 1](#path-1-llm-integration) | `abstractcore` |
 | Build a local coding assistant | [Path 2](#path-2-terminal-agent) | `abstractcode` |
 | Create durable workflows | [Path 3](#path-3-durable-workflows) | `abstractruntime` |
@@ -20,6 +21,34 @@ AbstractFramework is modular — you can use a single package or compose several
 | Visual workflow editor (browser) | [Path 10](#path-10-flow-editor) | `@abstractframework/flow` |
 | Browser-based coding assistant | [Path 11](#path-11-code-web-ui) | `@abstractframework/code` |
 | Create a specialized agent | [Path 12](#path-12-specialized-agent) | `abstractflow` + clients |
+
+## Path 0: Full Framework (Recommended)
+
+Install the pinned global release profile in one command:
+
+```bash
+pip install "abstractframework==0.1.0"
+```
+
+This installs all framework Python packages together, including:
+
+| Package | Version |
+|---------|---------|
+| `abstractcore` | `2.11.8` |
+| `abstractruntime` | `0.4.2` |
+| `abstractagent` | `0.3.1` |
+| `abstractflow` | `0.3.7` (`editor`) |
+| `abstractcode` | `0.3.6` |
+| `abstractgateway` | `0.2.1` |
+| `abstractmemory` | `0.0.2` |
+| `abstractsemantics` | `0.0.2` |
+| `abstractvoice` | `0.6.3` |
+| `abstractvision` | `0.2.1` |
+| `abstractassistant` | `0.4.2` |
+
+`abstractcore` is installed with `openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`.
+
+Use this path when you want a fully functional setup with minimal decision overhead.
 
 ## Prerequisites
 
@@ -604,6 +633,9 @@ Now that you have something running:
 - **[Architecture](architecture.md)** — Understand how the pieces fit together
 - **[Configuration](configuration.md)** — All the environment variables and settings
 - **[FAQ](faq.md)** — Common questions and troubleshooting
+- **[Scenarios](scenarios/README.md)** — End-to-end paths by use case
+- **[Guides](guide/README.md)** — Focused "how it works" notes
+- **[Glossary](glossary.md)** — Shared terminology
 
 Each package also has detailed documentation:
 - Every repo has `docs/getting-started.md`, `docs/architecture.md`, and more

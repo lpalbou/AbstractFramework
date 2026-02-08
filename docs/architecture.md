@@ -220,6 +220,21 @@ For production deployments, AbstractGateway provides the control plane:
 - Durable command inbox (pause, resume, cancel)
 - Replay-first observability over HTTP/SSE
 
+## Event Bridges (Inbound Integrations)
+
+Some deployments use inbound "bridges" that turn external messages into durable runtime events. Typical pattern:
+
+1. Bridge receives an inbound message (Telegram, email, etc.).
+2. Bridge chooses a stable `session_id` (for example `telegram:<chat_id>` or an email thread id).
+3. Gateway emits an event into that session (for example `telegram.message` or `email.message`).
+4. A workflow consumes the event (On Event) and replies by calling tools.
+
+This preserves durability and observability: inbound content becomes replayable ledger history + artifacts.
+
+See:
+- [Scenario: Telegram permanent contact](scenarios/telegram-permanent-contact.md)
+- [Scenario: Email inbox agent](scenarios/email-inbox-agent.md)
+
 ## Memory Architecture
 
 AbstractFramework separates two concerns:

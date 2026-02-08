@@ -4,6 +4,11 @@
 
 AbstractFramework is a modular ecosystem for building AI agents and workflows that survive restarts, scale to production, and give you full visibility into what's happening. Every component is open source, works with local models, and designed to be composed however you need.
 
+This repository is the **single access point** to the ecosystem:
+- install the full framework with one `pip` command
+- understand how all packages fit together
+- create and deploy new specialized solutions (flows/agents) across clients
+
 ```
 ┌──────────────────────────────────────────┬──────────────────────────────────┐
 │   GATEWAY PATH (Recommended)             │   LOCAL PATH (Alternative)       │
@@ -50,25 +55,48 @@ AbstractFramework is a modular ecosystem for building AI agents and workflows th
 
 ## Quick Start
 
-### Select a Provider / Model
-
-# Start a local model with Ollama
-ollama serve && ollama pull qwen3:4b
-
-> or install lmstudio with the model you want
-
-# Alternatively use OpenAI / Anthropic / OpenRouter
-Set one of those API keys as environment variable, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`
-
-For the examples below, we will use ollama and qwen3:4b but you can use any provider:model.
-
-### Option 1: Terminal Agent (5 minutes)
-
-The fastest way to try an AbstractFramework agent:
+### Option 1: Install the Full Framework (Recommended)
 
 ```bash
-# Run AbstractCode
-pip install abstractcode
+pip install "abstractframework==0.1.0"
+```
+
+`abstractframework==0.1.0` installs the pinned global release:
+
+| Package | Version |
+|---------|---------|
+| `abstractcore` | `2.11.8` |
+| `abstractruntime` | `0.4.2` |
+| `abstractagent` | `0.3.1` |
+| `abstractflow` | `0.3.7` |
+| `abstractcode` | `0.3.6` |
+| `abstractgateway` | `0.2.1` |
+| `abstractmemory` | `0.0.2` |
+| `abstractsemantics` | `0.0.2` |
+| `abstractvoice` | `0.6.3` |
+| `abstractvision` | `0.2.1` |
+| `abstractassistant` | `0.4.2` |
+
+Default behavior in this release:
+- `abstractcore` is installed with `openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`
+- `abstractflow` is installed with `editor`
+
+### Option 2: Select a Provider / Model
+
+```bash
+# Local (recommended)
+ollama serve && ollama pull qwen3:4b
+
+# Or use LM Studio
+# Or cloud providers via env vars:
+export OPENAI_API_KEY="..."
+export ANTHROPIC_API_KEY="..."
+export OPENROUTER_API_KEY="..."
+```
+
+### Option 3: Terminal Agent (5 minutes)
+
+```bash
 abstractcode --provider ollama --model qwen3:4b
 ```
 
@@ -76,13 +104,9 @@ You now have a durable coding assistant in your terminal. Type `/help` to explor
 
 > **Durability**: Your session persists across restarts — close and reopen, your full context is preserved. Start fresh with `/clear`.
 
-### Option 2: Tray Assistant (macOS)
-
-Get a menu bar assistant with optional voice on macOS:
+### Option 4: Tray Assistant (macOS)
 
 ```bash
-# Install and run
-pip install abstractassistant
 assistant tray
 ```
 
@@ -90,9 +114,9 @@ The assistant appears in your menu bar. Click to interact, or use keyboard short
 
 > **Durability**: Sessions persist — your conversation history is preserved across app restarts.
 
-### Option 3: Just the LLM API
+### Option 5: Just the LLM API
 
-Use AbstractCore as a drop-in unified LLM client that work with any provider and model:
+Use AbstractCore as a drop-in unified LLM client that works with any provider and model:
 
 ```python
 from abstractcore import create_llm
@@ -105,18 +129,18 @@ response = llm.generate("Explain durable execution in 3 bullets.")
 print(response.content)
 ```
 
-### Option 4: Gateway + Browser UI
+### Option 6: Gateway + Browser UI
 
 Deploy a run gateway and observe workflows in your browser:
 
 ```bash
-pip install "abstractgateway"
-
 export ABSTRACTGATEWAY_AUTH_TOKEN="for-my-security-my-token-must-be-at-least-15-chars"
 export ABSTRACTGATEWAY_DATA_DIR="my-folder/runtime/gateway"
 
 abstractgateway serve --port 8080
-npx @abstractframework/observer
+npx @abstractframework/observer        # Gateway observability dashboard
+npx @abstractframework/flow            # Visual workflow editor
+npx @abstractframework/code            # Browser coding assistant
 ```
 
 Open http://localhost:3001, connect to the gateway, and start observing.
@@ -125,34 +149,21 @@ Open http://localhost:3001, connect to the gateway, and start observing.
 
 ## Install
 
-### Python Packages (pip)
-
-Install only what you need:
+### Python (single command)
 
 ```bash
-# Foundation
-pip install abstractcore                # Unified LLM API
-pip install abstractruntime             # Durable execution
-
-# Composition
-pip install abstractagent               # Agent patterns (ReAct, CodeAct, MemAct)
-pip install abstractflow                # Visual workflows
-
-# Memory & Semantics
-pip install abstractmemory              # Temporal triple store + vector search
-pip install abstractsemantics           # Predicate/entity-type registry
-
-# Applications
-pip install abstractcode                # Terminal TUI (durable sessions)
-pip install abstractassistant           # macOS tray app
-pip install "abstractgateway"           # HTTP run gateway
-
-# Modalities (optional capability plugins for AbstractCore)
-pip install abstractvoice               # Adds llm.voice (TTS) + llm.audio (STT)
-pip install abstractvision              # Adds llm.vision (image generation)
+pip install "abstractframework==0.1.0"
 ```
 
-### JavaScript/Node Packages (npm)
+### Python (install specific components only)
+
+```bash
+pip install abstractcore==2.11.8
+pip install "abstractflow[editor]==0.3.7"
+pip install abstractgateway==0.2.1
+```
+
+### JavaScript/Node (browser UIs)
 
 ```bash
 # Web UIs (run directly)
@@ -171,6 +182,8 @@ npm install @abstractframework/monitor-gpu
 ---
 
 ## The Ecosystem
+
+The tables below describe the ecosystem components. The `abstractframework==0.1.0` install profile pins all Python packages to the versions listed in Quick Start.
 
 ### Foundation
 
@@ -234,10 +247,27 @@ These are **optional capability plugins** for AbstractCore. Once installed, they
 
 | Guide | Description |
 |-------|-------------|
+| [Docs Index](docs/README.md) | Entrypoint docs for the ecosystem |
 | [Getting Started](docs/getting-started.md) | Pick a path and run something |
 | [Architecture](docs/architecture.md) | How the pieces fit together |
+| [API](docs/api.md) | Meta-package API (`create_llm`, install profile helpers) |
 | [Configuration](docs/configuration.md) | Environment variables & providers |
 | [FAQ](docs/faq.md) | Common questions |
+| [Scenarios](docs/scenarios/README.md) | End-to-end paths by use case |
+| [Guides](docs/guide/README.md) | Focused "how it works" notes |
+| [Glossary](docs/glossary.md) | Shared terminology |
+
+---
+
+## Create More Solutions
+
+AbstractFramework is designed so you can author one specialized workflow and deploy it across clients.
+
+1. Build your specialized logic in the Flow editor (`npx @abstractframework/flow`).
+2. Export it as a `.flow` bundle with an interface contract (`abstractcode.agent.v1`).
+3. Run it in terminal (`abstractcode --workflow ...`), browser UIs, or through `abstractgateway`.
+
+See `docs/getting-started.md` Path 12 for a complete end-to-end example.
 
 ---
 
