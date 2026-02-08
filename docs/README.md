@@ -5,7 +5,7 @@ This folder is the **entrypoint documentation** for the AbstractFramework ecosys
 Install the full pinned release with one command:
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 That installs all core ecosystem Python packages together, with:

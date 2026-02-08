@@ -26,7 +26,7 @@ Start with [Getting Started](getting-started.md) to find the right entry point f
 The recommended path is the full pinned release:
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 You can still install only what you need:
@@ -48,7 +48,7 @@ You can still install only what you need:
 | Visual workflow editor | `npx @abstractframework/flow` |
 | Browser coding assistant | `npx @abstractframework/code` |
 
-In `abstractframework==0.1.0`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
+In `abstractframework==0.1.1`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
 
 ### What should I start with?
 

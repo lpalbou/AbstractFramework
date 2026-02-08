@@ -69,7 +69,7 @@ python -m pip install -U pip
 
 echo ""
 echo "Installing AbstractFramework full release profile..."
-python -m pip install "abstractframework==0.1.0"
+python -m pip install "abstractframework==0.1.1"
 
 echo ""
 echo "✓ Done."

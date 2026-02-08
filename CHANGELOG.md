@@ -13,7 +13,7 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ### Changed
 
-- **Global `abstractframework==0.1.0` profile is now full-stack by default**:
+- **Global `abstractframework==0.1.1` profile is now full-stack by default**:
   - Pins and installs all ecosystem Python packages together:
     - `abstractcore==2.11.8`
     - `abstractruntime==0.4.2`
@@ -32,14 +32,14 @@ All notable changes to AbstractFramework will be documented in this file.
   - `README.md` now leads with one-command install and pinned version table
   - `docs/README.md`, `docs/getting-started.md`, and `docs/faq.md` now describe the full-release install path first
   - Added a dedicated “create more solutions” section in `README.md` for `.flow`-based specialized agent deployment
-- Updated `scripts/install.sh` to install `abstractframework==0.1.0` directly
+- Updated `scripts/install.sh` to install `abstractframework==0.1.1` directly
 - Updated status output in `abstractframework.print_status()` to point to one-command full install
 
 ### Technical (not user-facing)
 
 - Switched `pyproject.toml` dependency strategy from open-ended/minimal constraints to pinned ecosystem versions for deterministic global installs
 
-## [0.1.0] - 2026-02-04
+## [0.1.1] - 2026-02-04
 
 ### Added
 

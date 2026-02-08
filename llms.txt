@@ -5,7 +5,7 @@ This repo pins ecosystem package versions and provides a tiny helper API in `abs
 Most runtime behavior lives in the individual package repos (AbstractCore/Runtime/Agent/Flow/Gateway/Code).
 
 Quick commands:
-- Install pinned stack: `pip install "abstractframework==0.1.0"`
+- Install pinned stack: `pip install "abstractframework==0.1.1"`
 - Show detected component versions: `python -c "from abstractframework import print_status; print_status()"`
 
 Notes for LLMs working in this repo:

@@ -62,10 +62,10 @@ This repository is the **single access point** to the ecosystem:
 ### Option 1: Install the Full Framework (Recommended)
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
-`abstractframework==0.1.0` installs the pinned global release:
+`abstractframework==0.1.1` installs the pinned global release:
 
 | Package | Version |
 |---------|---------|
@@ -156,7 +156,7 @@ Open http://localhost:3001, connect to the gateway, and start observing.
 ### Python (single command)
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 ### Python (install specific components only)
@@ -187,7 +187,7 @@ npm install @abstractframework/monitor-gpu
 
 ## The Ecosystem
 
-The tables below describe the ecosystem components. The `abstractframework==0.1.0` install profile pins all Python packages to the versions listed in Quick Start.
+The tables below describe the ecosystem components. The `abstractframework==0.1.1` install profile pins all Python packages to the versions listed in Quick Start.
 
 ### Foundation
 
@@ -319,7 +319,7 @@ This repo pins ecosystem package versions and provides a tiny helper API in `abs
 Most runtime behavior lives in the individual package repos (AbstractCore/Runtime/Agent/Flow/Gateway/Code).
 
 Quick commands:
-- Install pinned stack: `pip install "abstractframework==0.1.0"`
+- Install pinned stack: `pip install "abstractframework==0.1.1"`
 - Show detected component versions: `python -c "from abstractframework import print_status; print_status()"`
 
 Notes for LLMs working in this repo:
@@ -381,7 +381,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.0"
+version = "0.1.1"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -524,7 +524,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -652,7 +652,7 @@ def print_status() -> None:
     if len(installed) < len(all_packages):
         print("")
         print("To install the full pinned framework:")
-        print('  pip install "abstractframework==0.1.0"')
+        print('  pip install "abstractframework==0.1.1"')
 
 --- docs/README.md ---
 # AbstractFramework Docs
@@ -662,7 +662,7 @@ This folder is the **entrypoint documentation** for the AbstractFramework ecosys
 Install the full pinned release with one command:
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 That installs all core ecosystem Python packages together, with:
@@ -788,7 +788,7 @@ AbstractFramework is modular — you can install the full framework in one comma
 
 | Your Goal | Start Here | What You'll Use |
 |-----------|------------|-----------------|
-| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.0` |
+| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.1` |
 | Call LLMs with a unified API | [Path 1](#path-1-llm-integration) | `abstractcore` |
 | Build a local coding assistant | [Path 2](#path-2-terminal-agent) | `abstractcode` |
 | Create durable workflows | [Path 3](#path-3-durable-workflows) | `abstractruntime` |
@@ -807,7 +807,7 @@ AbstractFramework is modular — you can install the full framework in one comma
 Install the pinned global release profile in one command:
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 This installs all framework Python packages together, including:
@@ -2241,7 +2241,7 @@ This document covers the Python API exposed by the `abstractframework` meta-pack
 ## Installation
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 ## Exports
@@ -2268,7 +2268,7 @@ Dictionary mapping each ecosystem package to the pinned version used in the glob
 
 ### `CORE_DEFAULT_EXTRAS`
 
-List of default `abstractcore` extras installed by `abstractframework==0.1.0`:
+List of default `abstractcore` extras installed by `abstractframework==0.1.1`:
 
 - `openai`
 - `anthropic`
@@ -2346,7 +2346,7 @@ Start with [Getting Started](getting-started.md) to find the right entry point f
 The recommended path is the full pinned release:
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 You can still install only what you need:
@@ -2368,7 +2368,7 @@ You can still install only what you need:
 | Visual workflow editor | `npx @abstractframework/flow` |
 | Browser coding assistant | `npx @abstractframework/code` |
 
-In `abstractframework==0.1.0`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
+In `abstractframework==0.1.1`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
 
 ### What should I start with?
 
@@ -2911,7 +2911,7 @@ pip install abstractcode
 Full pinned stack (includes AbstractCode):
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 ## Step 2: Start a local model
@@ -2973,7 +2973,7 @@ This is the recommended topology because execution is unified and clients can at
 ## Step 0: Install the pinned stack (recommended)
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 If you want a minimal install instead, you need at least:

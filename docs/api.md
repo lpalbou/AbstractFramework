@@ -13,7 +13,7 @@ This document covers the Python API exposed by the `abstractframework` meta-pack
 ## Installation
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 ## Exports
@@ -40,7 +40,7 @@ Dictionary mapping each ecosystem package to the pinned version used in the glob
 
 ### `CORE_DEFAULT_EXTRAS`
 
-List of default `abstractcore` extras installed by `abstractframework==0.1.0`:
+List of default `abstractcore` extras installed by `abstractframework==0.1.1`:
 
 - `openai`
 - `anthropic`

@@ -12,7 +12,7 @@ This is the recommended topology because execution is unified and clients can at
 ## Step 0: Install the pinned stack (recommended)
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 If you want a minimal install instead, you need at least:

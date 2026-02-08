@@ -58,10 +58,10 @@ This repository is the **single access point** to the ecosystem:
 ### Option 1: Install the Full Framework (Recommended)
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
-`abstractframework==0.1.0` installs the pinned global release:
+`abstractframework==0.1.1` installs the pinned global release:
 
 | Package | Version |
 |---------|---------|
@@ -152,7 +152,7 @@ Open http://localhost:3001, connect to the gateway, and start observing.
 ### Python (single command)
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 ### Python (install specific components only)
@@ -183,7 +183,7 @@ npm install @abstractframework/monitor-gpu
 
 ## The Ecosystem
 
-The tables below describe the ecosystem components. The `abstractframework==0.1.0` install profile pins all Python packages to the versions listed in Quick Start.
+The tables below describe the ecosystem components. The `abstractframework==0.1.1` install profile pins all Python packages to the versions listed in Quick Start.
 
 ### Foundation
 

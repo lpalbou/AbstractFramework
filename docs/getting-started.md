@@ -8,7 +8,7 @@ AbstractFramework is modular — you can install the full framework in one comma
 
 | Your Goal | Start Here | What You'll Use |
 |-----------|------------|-----------------|
-| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.0` |
+| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.1` |
 | Call LLMs with a unified API | [Path 1](#path-1-llm-integration) | `abstractcore` |
 | Build a local coding assistant | [Path 2](#path-2-terminal-agent) | `abstractcode` |
 | Create durable workflows | [Path 3](#path-3-durable-workflows) | `abstractruntime` |
@@ -27,7 +27,7 @@ AbstractFramework is modular — you can install the full framework in one comma
 Install the pinned global release profile in one command:
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 This installs all framework Python packages together, including:

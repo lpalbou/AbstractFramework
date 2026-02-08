@@ -20,7 +20,7 @@ pip install abstractcode
 Full pinned stack (includes AbstractCode):
 
 ```bash
-pip install "abstractframework==0.1.0"
+pip install "abstractframework==0.1.1"
 ```
 
 ## Step 2: Start a local model
