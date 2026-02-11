@@ -215,3 +215,26 @@ $RECYCLE.BIN/
 *.lnk
 
 untracked
+
+# ---------------------------------------------------------------------------
+# Sibling repos (cloned by scripts/clone.sh for local development).
+# Each is its own git repository — not tracked by AbstractFramework.
+# Leading / ensures these only match at the repo root level.
+# ---------------------------------------------------------------------------
+/abstractcore/
+/abstractruntime/
+/abstractagent/
+/abstractflow/
+/abstractcode/
+/abstractgateway/
+/abstractmemory/
+/abstractsemantics/
+/abstractvoice/
+/abstractvision/
+/abstractassistant/
+/abstractobserver/
+/abstractuic/
+
+# Node / npm artefacts (from npm-based sibling repos)
+node_modules/
+package-lock.json

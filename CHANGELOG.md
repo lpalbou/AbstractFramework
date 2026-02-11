@@ -4,6 +4,31 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+*No unreleased changes.*
+
+## [0.1.2] - 2026-02-12
+
+### Changed
+
+- **Bumped `abstractcore` pin from `2.11.8` to `2.11.9`**
+- **Fixed `abstractgateway` pin from `0.2.1` to `0.1.0`** (aligned with actual repo version)
+- **Bumped framework version from `0.1.1` to `0.1.2`**
+
+### Documentation
+
+- **Comprehensive documentation overhaul** surfacing 21 previously hidden capabilities:
+  - Added "What Can You Build?" section to README with 12 concrete use cases
+  - Added "Key Capabilities in Depth" section with code examples (MCP, structured output, streaming, voice, vision, glyph compression, embeddings, server, scheduling, event bridges, CLI apps, evidence/provenance)
+  - Enhanced docs/README.md as a welcoming hub with "What's Possible" capability overview
+  - Updated docs/architecture.md with MCP integration, evidence/provenance, scheduled workflows, split API/runner, and media pipeline architectures
+  - Added 3 new getting-started paths: MCP Integration (Path 13), Structured Output (Path 14), OpenAI-Compatible Server (Path 15)
+  - Added 17 new FAQ entries covering MCP, structured output, streaming, async, glyph compression, embeddings, server mode, CLI apps, snapshots, interaction tracing, voice cloning, GGUF models, scheduled workflows, event bridges, split API/runner, SQLite backend
+  - Enhanced docs/api.md with "Where to Find Specific APIs" navigation table
+  - Updated docs/glossary.md with 9 new terms (Snapshot, History bundle, Provenance, Evidence, MCP, Event bridge, Structured output, Glyph compression, Interaction trace)
+  - Updated llms.txt with full ecosystem repo list and enriched descriptions
+
+## [0.1.1] - 2026-02-04
+
 ### Added
 
 - **Unified release profile API metadata** in `abstractframework/__init__.py`:
@@ -31,7 +56,7 @@ All notable changes to AbstractFramework will be documented in this file.
 - **Docs repositioned to a single-entrypoint experience**:
   - `README.md` now leads with one-command install and pinned version table
   - `docs/README.md`, `docs/getting-started.md`, and `docs/faq.md` now describe the full-release install path first
-  - Added a dedicated “create more solutions” section in `README.md` for `.flow`-based specialized agent deployment
+  - Added a dedicated "create more solutions" section in `README.md` for `.flow`-based specialized agent deployment
 - Updated `scripts/install.sh` to install `abstractframework==0.1.1` directly
 - Updated status output in `abstractframework.print_status()` to point to one-command full install
 

@@ -28,6 +28,8 @@ Unified execution of specialized agents across all thin clients, for both remote
 │  • Bundle discovery — expose .flow specialized agents to all clients        │
 │  • Run control — start/pause/resume/cancel/schedule                         │
 │  • Ledger streaming — real-time SSE updates                                 │
+│  • Scheduled workflows — cron-style durable jobs                            │
+│  • Event bridges — Telegram, email, external services                       │
 │  • Unified execution — same workflow runs identically everywhere            │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
@@ -43,13 +45,13 @@ In-process execution without a gateway, simpler, but limited to local deployment
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                      Local Host Applications                                │
-│  ┌───────────────────┐    ┌──────────────────-─┐                            │
+│  ┌───────────────────┐    ┌────────────────────┐                            │
 │  │   AbstractCode    │    │  AbstractAssistant │  ◄── Run runtime directly  │
 │  │    (terminal)     │    │   (macOS tray)     │      (may migrate to GW)   │
-│  └─────────┬─────────┘    └─────────┬─────────-┘                            │
+│  └─────────┬─────────┘    └─────────┬──────────┘                            │
 └────────────┼────────────────────────┼───────────────────────────────────────┘
              │                        │
-             └───────────-────────────┘
+             └────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -78,6 +80,8 @@ Both deployment paths converge on the same foundation: **AbstractRuntime** and *
 │  ┌──────────────────────────────┐    ┌──────────────────────────────────┐   │
 │  │       AbstractRuntime        │    │         AbstractCore             │   │
 │  │   Durable kernel + ledger    │    │    LLM API + tool schemas        │   │
+│  │   Snapshots + provenance     │    │    Structured output + media     │   │
+│  │   Scheduler + history export │    │    Embeddings + MCP + server     │   │
 │  └──────────────────────────────┘    │  ┌────────────┐ ┌─────────────┐  │   │
 │                                      │  │   Voice    │ │   Vision    │  │   │
 │                                      │  │  (TTS/STT) │ │ (Image gen) │  │   │
@@ -219,6 +223,45 @@ For production deployments, AbstractGateway provides the control plane:
 - Multiple clients can observe the same runs
 - Durable command inbox (pause, resume, cancel)
 - Replay-first observability over HTTP/SSE
+- Scheduled workflows (cron-style durable jobs)
+- Bundle discovery (expose workflows to all clients)
+- Event bridges (Telegram, email, external services)
+
+### Split API / Runner (Production)
+
+For production deployments, the gateway supports **split-process architecture**: the HTTP API and the background runner loop can run as separate processes sharing the same data directory. This lets you restart the API without interrupting durable execution:
+
+```
+┌──────────────────────┐     ┌──────────────────────┐
+│  Process 1: HTTP API │     │  Process 2: Runner   │
+│  (stateless, fast    │     │  (ticks runs, polls   │
+│   restart)           │     │   inbox, resumes)     │
+└──────────┬───────────┘     └──────────┬───────────┘
+           │                            │
+           └────────────────────────────┘
+                        │
+                        ▼
+              ┌───────────────────┐
+              │  Shared data dir  │
+              │  (SQLite / file)  │
+              └───────────────────┘
+```
+
+## Scheduled Workflows
+
+The gateway supports durable scheduled workflows — recurring jobs that survive restarts:
+
+```
+POST /api/gateway/runs/schedule
+{
+  "bundle_id": "daily-report",
+  "start_at": "now",
+  "interval": "24h",
+  "repeat_count": 30
+}
+```
+
+A scheduled workflow is a durable **parent run** that triggers **child runs** at specified intervals. If the gateway process stops, due schedules resume on the next poll cycle when it restarts.
 
 ## Event Bridges (Inbound Integrations)
 
@@ -231,9 +274,60 @@ Some deployments use inbound "bridges" that turn external messages into durable 
 
 This preserves durability and observability: inbound content becomes replayable ledger history + artifacts.
 
+```
+┌───────────────────┐     ┌──────────────┐     ┌──────────────────┐
+│  External Service │     │    Bridge     │     │  AbstractGateway  │
+│  (Telegram, Email,│────▶│  (adapter)   │────▶│  (durable event   │
+│   Webhook, etc.)  │     │              │     │   → workflow run) │
+└───────────────────┘     └──────────────┘     └──────────────────┘
+```
+
 See:
 - [Scenario: Telegram permanent contact](scenarios/telegram-permanent-contact.md)
 - [Scenario: Email inbox agent](scenarios/email-inbox-agent.md)
+
+## MCP Integration (Model Context Protocol)
+
+AbstractCore integrates with **MCP (Model Context Protocol)** servers, enabling your agents to discover and use tools from external ecosystems without writing adapter code:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        AbstractCore                                  │
+│  ┌────────────────┐                                                  │
+│  │   MCP Client   │──────▶ MCP Server (HTTP) → external tool set    │
+│  │                │──────▶ MCP Server (stdio) → local tool provider  │
+│  └────────────────┘                                                  │
+│         │                                                            │
+│         ▼                                                            │
+│  MCP-discovered tools are presented alongside local tools            │
+│  to the LLM as part of the tool schema set                           │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+MCP tools integrate seamlessly with AbstractRuntime's durable tool execution: they participate in the same approval boundaries, ledger logging, and replay semantics as any other tool.
+
+## Evidence & Provenance Architecture
+
+AbstractFramework provides multiple layers of traceability for production-grade auditability:
+
+### Tamper-Evident Ledger
+
+The ledger is **hash-chained**: each step record includes a hash of the previous step, creating a tamper-evident audit trail. If any step is modified after the fact, the chain breaks.
+
+### Artifacts & Evidence
+
+Large payloads (file contents, screenshots, API responses) are stored as **artifacts** — referenced from JSON state and ledger by handle. This keeps run state JSON-safe while preserving full evidence.
+
+### Snapshots & Bookmarks
+
+Named **snapshots** let you checkpoint a run's state at any point. Useful for:
+- Creating restore points before risky operations
+- Bookmarking interesting states for later analysis
+- Exporting reproducible run states as **history bundles**
+
+### Interaction Tracing
+
+AbstractCore emits structured **interaction traces** (prompts, responses, token usage, timing) via a global event bus. Hosts can subscribe to these events for observability dashboards, cost tracking, or debugging.
 
 ## Memory Architecture
 
@@ -294,6 +388,36 @@ AbstractVoice and AbstractVision extend AbstractCore with multimodal capabilitie
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+**Capability plugins** are discovered automatically via Python entry points. Install `abstractvoice` or `abstractvision`, and the corresponding capabilities become available on any `llm` instance. Missing plugins raise actionable errors with install hints.
+
+## Media Input Architecture
+
+AbstractCore handles media input (images, audio, video, documents) with a **policy-driven** approach — no silent semantic changes:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Media Input Pipeline                                            │
+│                                                                  │
+│  generate(..., media=["image.png", "doc.pdf", "audio.wav"])      │
+│              │                                                   │
+│              ▼                                                   │
+│  ┌────────────────────────┐                                      │
+│  │ Policy check per type  │                                      │
+│  │ • image: native or     │                                      │
+│  │   vision fallback      │                                      │
+│  │ • audio: native or     │                                      │
+│  │   STT transcription    │                                      │
+│  │ • video: native or     │                                      │
+│  │   frame sampling       │                                      │
+│  │ • docs: text extract   │                                      │
+│  │   or glyph compress    │                                      │
+│  └────────────────────────┘                                      │
+│              │                                                   │
+│              ▼                                                   │
+│  Content routed to LLM with appropriate representation           │
+└──────────────────────────────────────────────────────────────────┘
+```
+
 ## Security Model
 
 ### Authentication
@@ -339,6 +463,14 @@ You
 Browser ──► Nginx ──► AbstractGateway ──► SQLite/Postgres
                            │
                            └──► Runtime + Core
+```
+
+### Production (Split API + Runner)
+
+```
+Browser ──► Nginx ──► AbstractGateway API ──► Shared storage
+                                                    ▲
+                      AbstractGateway Runner ────────┘
 ```
 
 ### Distributed

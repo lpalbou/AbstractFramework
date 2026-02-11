@@ -10,17 +10,17 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.11.8",
+    "abstractcore": "2.11.9",
     "abstractruntime": "0.4.2",
     "abstractagent": "0.3.1",
     "abstractflow": "0.3.7",
     "abstractcode": "0.3.6",
-    "abstractgateway": "0.2.1",
+    "abstractgateway": "0.1.0",
     "abstractmemory": "0.0.2",
     "abstractsemantics": "0.0.2",
     "abstractvoice": "0.6.3",
@@ -138,4 +138,4 @@ def print_status() -> None:
     if len(installed) < len(all_packages):
         print("")
         print("To install the full pinned framework:")
-        print('  pip install "abstractframework==0.1.1"')
+        print('  pip install "abstractframework==0.1.2"')

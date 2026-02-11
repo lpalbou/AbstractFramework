@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.1"
+version = "0.1.2"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -42,13 +42,13 @@ requires-python = ">=3.10"
 # Base dependencies (full framework, batteries included)
 dependencies = [
     # Core runtime with provider/tool/media/embeddings/server stack enabled.
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.9",
     "abstractruntime==0.4.2",
     "abstractagent==0.3.1",
     # Flow editor backend + agent nodes.
     "abstractflow[editor]==0.3.7",
     "abstractcode==0.3.6",
-    "abstractgateway==0.2.1",
+    "abstractgateway==0.1.0",
     "abstractmemory==0.0.2",
     "abstractsemantics==0.0.2",
     "abstractvoice==0.6.3",
@@ -58,12 +58,12 @@ dependencies = [
 
 [project.optional-dependencies]
 # Individual components
-core = ["abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8"]
+core = ["abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.9"]
 runtime = ["abstractruntime==0.4.2"]
 agent = ["abstractagent==0.3.1"]
 flow = ["abstractflow[editor]==0.3.7"]
 code = ["abstractcode==0.3.6"]
-gateway = ["abstractgateway==0.2.1"]
+gateway = ["abstractgateway==0.1.0"]
 memory = ["abstractmemory==0.0.2"]
 semantics = ["abstractsemantics==0.0.2"]
 voice = ["abstractvoice==0.6.3"]
@@ -72,11 +72,11 @@ assistant = ["abstractassistant==0.4.2"]
 
 # Bundles
 backend = [
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.9",
     "abstractruntime==0.4.2",
     "abstractagent==0.3.1",
     "abstractflow[editor]==0.3.7",
-    "abstractgateway==0.2.1",
+    "abstractgateway==0.1.0",
     "abstractmemory==0.0.2",
     "abstractsemantics==0.0.2",
     "abstractvoice==0.6.3",
@@ -85,12 +85,12 @@ backend = [
 
 # Full installation (all packages)
 all = [
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.8",
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.9",
     "abstractruntime==0.4.2",
     "abstractagent==0.3.1",
     "abstractflow[editor]==0.3.7",
     "abstractcode==0.3.6",
-    "abstractgateway==0.2.1",
+    "abstractgateway==0.1.0",
     "abstractmemory==0.0.2",
     "abstractsemantics==0.0.2",
     "abstractvoice==0.6.3",

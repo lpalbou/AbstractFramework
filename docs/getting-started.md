@@ -2,13 +2,15 @@
 
 Welcome! This guide gets you from zero to a working AbstractFramework setup in minutes.
 
-AbstractFramework is modular — you can install the full framework in one command or pick specific packages. Let's find the right starting point for you.
+AbstractFramework is modular — you can install the full framework in one command or pick specific packages. Whether you want a simple LLM API, a durable coding assistant, a visual workflow editor, voice-enabled agents, or a full production gateway — there's a path for you.
+
+**New here?** Start with [Path 0](#path-0-full-framework-recommended) to install everything, then jump to the path that matches what you want to build.
 
 ## What Do You Want to Build?
 
 | Your Goal | Start Here | What You'll Use |
 |-----------|------------|-----------------|
-| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.1` |
+| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.2` |
 | Call LLMs with a unified API | [Path 1](#path-1-llm-integration) | `abstractcore` |
 | Build a local coding assistant | [Path 2](#path-2-terminal-agent) | `abstractcode` |
 | Create durable workflows | [Path 3](#path-3-durable-workflows) | `abstractruntime` |
@@ -21,25 +23,28 @@ AbstractFramework is modular — you can install the full framework in one comma
 | Visual workflow editor (browser) | [Path 10](#path-10-flow-editor) | `@abstractframework/flow` |
 | Browser-based coding assistant | [Path 11](#path-11-code-web-ui) | `@abstractframework/code` |
 | Create a specialized agent | [Path 12](#path-12-specialized-agent) | `abstractflow` + clients |
+| Integrate external tools via MCP | [Path 13](#path-13-mcp-integration) | `abstractcore` |
+| Use structured output (Pydantic) | [Path 14](#path-14-structured-output) | `abstractcore` |
+| Run an OpenAI-compatible API server | [Path 15](#path-15-openai-compatible-server) | `abstractcore[server]` |
 
 ## Path 0: Full Framework (Recommended)
 
 Install the pinned global release profile in one command:
 
 ```bash
-pip install "abstractframework==0.1.1"
+pip install "abstractframework==0.1.2"
 ```
 
 This installs all framework Python packages together, including:
 
 | Package | Version |
 |---------|---------|
-| `abstractcore` | `2.11.8` |
+| `abstractcore` | `2.11.9` |
 | `abstractruntime` | `0.4.2` |
 | `abstractagent` | `0.3.1` |
 | `abstractflow` | `0.3.7` (`editor`) |
 | `abstractcode` | `0.3.6` |
-| `abstractgateway` | `0.2.1` |
+| `abstractgateway` | `0.1.0` |
 | `abstractmemory` | `0.0.2` |
 | `abstractsemantics` | `0.0.2` |
 | `abstractvoice` | `0.6.3` |
@@ -623,6 +628,111 @@ print(state.output["response"])
 ```
 
 **Next**: See [AbstractFlow docs](https://github.com/lpalbou/abstractflow/blob/main/docs/getting-started.md) and [Interface contracts](https://github.com/lpalbou/abstractflow/blob/main/docs/visualflow.md).
+
+---
+
+## Path 13: MCP Integration
+
+Discover and use tools from external MCP (Model Context Protocol) servers.
+
+### What is MCP?
+
+MCP is an open protocol for connecting LLMs to external tool providers. AbstractCore supports both HTTP and stdio MCP servers, letting you integrate external tool ecosystems without writing adapter code.
+
+### Install
+
+```bash
+pip install abstractcore
+```
+
+### Use It
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("openai", model="gpt-4o-mini")
+
+# MCP tools are discovered and presented alongside local tools
+response = llm.generate(
+    "Search for recent Python releases",
+    mcp_servers=[{"url": "http://localhost:3000/mcp"}],
+)
+```
+
+MCP tools integrate seamlessly with AbstractRuntime's durable execution: they participate in the same approval boundaries, ledger logging, and replay semantics as any other tool.
+
+**Next**: See [AbstractCore MCP docs](https://github.com/lpalbou/abstractcore/blob/main/docs/mcp.md).
+
+---
+
+## Path 14: Structured Output
+
+Extract structured data from any LLM using Pydantic models.
+
+### Install
+
+```bash
+pip install abstractcore
+```
+
+### Use It
+
+```python
+from pydantic import BaseModel
+from abstractcore import create_llm
+
+class Analysis(BaseModel):
+    title: str
+    key_points: list[str]
+    confidence: float
+
+llm = create_llm("openai", model="gpt-4o-mini")
+result = llm.generate(
+    "Analyze the pros and cons of microservices architecture.",
+    response_model=Analysis,
+)
+print(result.title)
+print(result.key_points)
+```
+
+AbstractCore uses provider-aware strategies — native JSON mode where available, with automatic retry and fallback for models that need it.
+
+**Next**: See [AbstractCore Structured Output docs](https://github.com/lpalbou/abstractcore/blob/main/docs/structured-output.md).
+
+---
+
+## Path 15: OpenAI-Compatible Server
+
+Turn AbstractCore into a multi-provider OpenAI-compatible API server. Route requests to any backend via `model="provider/model"`.
+
+### Install
+
+```bash
+pip install "abstractcore[server]"
+```
+
+### Run
+
+```bash
+python -m abstractcore.server.app
+```
+
+### Use with Any OpenAI Client
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="unused")
+resp = client.chat.completions.create(
+    model="ollama/qwen3:4b-instruct",
+    messages=[{"role": "user", "content": "Hello from the gateway!"}],
+)
+print(resp.choices[0].message.content)
+```
+
+The server supports tool calling, media input, and optionally exposes `/v1/images/*` (via AbstractVision) and `/v1/audio/*` (via AbstractVoice) endpoints.
+
+**Next**: See [AbstractCore Server docs](https://github.com/lpalbou/abstractcore/blob/main/docs/server.md).
 
 ---
 

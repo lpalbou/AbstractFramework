@@ -26,7 +26,7 @@ Start with [Getting Started](getting-started.md) to find the right entry point f
 The recommended path is the full pinned release:
 
 ```bash
-pip install "abstractframework==0.1.1"
+pip install "abstractframework==0.1.2"
 ```
 
 You can still install only what you need:
@@ -48,7 +48,7 @@ You can still install only what you need:
 | Visual workflow editor | `npx @abstractframework/flow` |
 | Browser coding assistant | `npx @abstractframework/code` |
 
-In `abstractframework==0.1.1`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
+In `abstractframework==0.1.2`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
 
 ### What should I start with?
 
@@ -197,6 +197,170 @@ Bundles can also be deployed to a Gateway for remote access.
 
 ---
 
+## Advanced Capabilities
+
+### How does MCP (Model Context Protocol) work?
+
+AbstractCore includes a built-in MCP client that can discover and integrate tools from external MCP servers — both HTTP and stdio transports.
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("openai", model="gpt-4o-mini")
+
+# MCP tools are discovered and presented alongside local tools
+response = llm.generate(
+    "What's in my database?",
+    mcp_servers=[{"url": "http://localhost:3000/mcp"}],
+)
+```
+
+MCP tools integrate with the full durable execution stack: they participate in approval boundaries, ledger logging, and replay semantics just like any other tool.
+
+See [AbstractCore MCP docs](https://github.com/lpalbou/abstractcore/blob/main/docs/mcp.md).
+
+### How does structured output work?
+
+AbstractCore supports Pydantic-based structured output across all providers:
+
+```python
+from pydantic import BaseModel
+from abstractcore import create_llm
+
+class Report(BaseModel):
+    title: str
+    findings: list[str]
+
+llm = create_llm("openai", model="gpt-4o-mini")
+report = llm.generate("Analyze HTTP/3 adoption.", response_model=Report)
+```
+
+AbstractCore uses **provider-aware strategies**: native JSON mode where available, with automatic retry and schema enforcement for models that need it.
+
+See [AbstractCore Structured Output docs](https://github.com/lpalbou/abstractcore/blob/main/docs/structured-output.md).
+
+### Does AbstractFramework support streaming?
+
+Yes. Full streaming support across all providers:
+
+```python
+for chunk in llm.generate("Write a poem.", stream=True):
+    print(chunk.content or "", end="", flush=True)
+```
+
+Async streaming is also supported (`async for chunk in llm.agenerate(..., stream=True)`).
+
+### Does AbstractFramework support async?
+
+Yes. Every `generate()` call has an `agenerate()` async counterpart:
+
+```python
+resp = await llm.agenerate("Summarize this document.")
+```
+
+See [AbstractCore Async Guide](https://github.com/lpalbou/abstractcore/blob/main/docs/async-guide.md).
+
+### What is glyph visual-text compression?
+
+A unique feature for processing long documents cheaply: render text/PDFs as images, then process them with a vision-capable model. This can dramatically reduce token usage for large documents.
+
+```python
+llm = create_llm("openai", model="gpt-4o", glyph="auto")
+resp = llm.generate("Summarize this contract.", media=["contract.pdf"])
+```
+
+Requires `pip install "abstractcore[compression]"` (and `pip install "abstractcore[media]"` for PDF support).
+
+See [AbstractCore Glyph docs](https://github.com/lpalbou/abstractcore/blob/main/docs/glyphs.md).
+
+### What are embeddings and how do I use them?
+
+AbstractCore includes an embedding API for building RAG pipelines and semantic search:
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm("ollama", model="qwen3:4b-instruct")
+embeddings = llm.embed(["first document", "second document"])
+```
+
+Requires `pip install "abstractcore[embeddings]"`.
+
+See [AbstractCore Embeddings docs](https://github.com/lpalbou/abstractcore/blob/main/docs/embeddings.md).
+
+### Can I serve AbstractCore as an OpenAI-compatible API?
+
+Yes. AbstractCore includes a server mode that exposes a multi-provider OpenAI-compatible `/v1` API:
+
+```bash
+pip install "abstractcore[server]"
+python -m abstractcore.server.app
+```
+
+Use any OpenAI client and route to any provider via `model="provider/model"` (e.g., `model="ollama/qwen3:4b-instruct"`).
+
+The server can also optionally expose `/v1/images/*` and `/v1/audio/*` endpoints when the corresponding plugins are installed.
+
+See [AbstractCore Server docs](https://github.com/lpalbou/abstractcore/blob/main/docs/server.md).
+
+### What are the built-in CLI apps?
+
+AbstractCore ships practical CLI tools out of the box:
+
+| App | What It Does |
+|-----|-------------|
+| `summarizer` | Summarize documents and text |
+| `extractor` | Extract structured data |
+| `judge` | LLM-as-a-judge evaluation |
+| `intent` | Intent classification |
+| `deepsearch` | Deep web search with synthesis |
+
+See [AbstractCore CLI Apps docs](https://github.com/lpalbou/abstractcore/blob/main/docs/apps/).
+
+### How do snapshots and history bundles work?
+
+**Snapshots** are named checkpoints of a run's state. You can create them at any point during execution, then restore to that state later:
+- Useful for creating restore points before risky operations
+- Bookmarking interesting states for later analysis
+
+**History bundles** let you export a complete, reproducible snapshot of a run — including the ledger, artifacts, and state — for debugging, sharing, or archiving.
+
+See [AbstractRuntime Snapshots docs](https://github.com/lpalbou/abstractruntime/blob/main/docs/snapshots.md).
+
+### What is interaction tracing?
+
+AbstractCore emits structured **interaction traces** (prompts, responses, token usage, timing) via a global event bus. Hosts can subscribe to these events for:
+- Observability dashboards
+- Cost tracking
+- Debugging and performance analysis
+
+See [AbstractCore Interaction Tracing docs](https://github.com/lpalbou/abstractcore/blob/main/docs/interaction-tracing.md).
+
+### Does AbstractVoice support voice cloning?
+
+Yes. AbstractVoice includes experimental voice cloning support:
+
+```bash
+pip install "abstractvoice[cloning]"
+abstractvoice-prefetch --openf5
+```
+
+See [AbstractVoice docs](https://github.com/lpalbou/abstractvoice/blob/main/docs/getting-started.md) for details.
+
+### Can AbstractVision run GGUF models locally?
+
+Yes. AbstractVision supports local GGUF diffusion models via the `stable-diffusion.cpp` backend (`sdcpp`):
+
+```bash
+abstractvision repl
+/backend sdcpp /path/to/model.gguf /path/to/vae.safetensors /path/to/clip.gguf
+/t2i "a watercolor painting" --open
+```
+
+The Python bindings for `stable-diffusion.cpp` are included in the default install. See [AbstractVision backends docs](https://github.com/lpalbou/abstractvision/blob/main/docs/reference/backends.md).
+
+---
+
 ## Architecture & Concepts
 
 ### What's the difference between AbstractRuntime, AbstractAgent, and AbstractFlow?
@@ -289,6 +453,55 @@ Key capabilities:
 | **KG query** | `POST /kg/query` | Query the knowledge graph |
 
 See the [Gateway API docs](https://github.com/lpalbou/abstractgateway/blob/main/docs/api.md) for the full API surface.
+
+### How do scheduled workflows work?
+
+The gateway supports durable scheduled workflows — recurring jobs that survive restarts. A scheduled workflow is a durable parent run that triggers child runs at specified intervals.
+
+```bash
+curl -X POST "http://localhost:8080/api/gateway/runs/schedule" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"bundle_id":"daily-report","start_at":"now","interval":"24h"}'
+```
+
+If the gateway stops, due schedules resume on restart. Pause or cancel the parent run to control the schedule.
+
+See [Guide: Scheduled Workflows](guide/scheduled-workflows.md).
+
+### How do event bridges (Telegram, email) work?
+
+Event bridges turn external messages into durable runtime events:
+1. Bridge receives an inbound message (Telegram, email, etc.)
+2. Bridge assigns a stable `session_id`
+3. Gateway emits a durable event into that session
+4. A workflow consumes the event and replies
+
+This preserves full durability and observability — inbound content becomes replayable ledger history.
+
+See [Guide: Telegram Integration](guide/telegram-integration.md) and [Guide: Email Integration](guide/email-integration.md).
+
+### Can I split the gateway API and runner?
+
+Yes. For production, the HTTP API and runner loop can run as separate processes sharing the same data directory. This lets you restart the API without interrupting durable execution:
+
+```bash
+# Process 1: Runner worker
+abstractgateway runner
+
+# Process 2: HTTP API only
+abstractgateway serve --no-runner --host 127.0.0.1 --port 8080
+```
+
+### Can I use SQLite instead of file-based storage?
+
+Yes. The gateway supports SQLite as a storage backend (recommended for production):
+
+```bash
+export ABSTRACTGATEWAY_STORE_BACKEND=sqlite
+export ABSTRACTGATEWAY_DB_PATH="$PWD/runtime/gateway/gateway.sqlite3"
+```
+
+Migration from file-based storage is supported via `abstractgateway migrate`.
 
 ### Where is data stored?
 
