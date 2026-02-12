@@ -15,7 +15,7 @@ __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.11.9",
+    "abstractcore": "2.12.0",
     "abstractruntime": "0.4.2",
     "abstractagent": "0.3.1",
     "abstractflow": "0.3.7",

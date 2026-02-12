@@ -42,7 +42,7 @@ requires-python = ">=3.10"
 # Base dependencies (full framework, batteries included)
 dependencies = [
     # Core runtime with provider/tool/media/embeddings/server stack enabled.
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.9",
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.12.0",
     "abstractruntime==0.4.2",
     "abstractagent==0.3.1",
     # Flow editor backend + agent nodes.
@@ -58,7 +58,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Individual components
-core = ["abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.9"]
+core = ["abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.12.0"]
 runtime = ["abstractruntime==0.4.2"]
 agent = ["abstractagent==0.3.1"]
 flow = ["abstractflow[editor]==0.3.7"]
@@ -72,7 +72,7 @@ assistant = ["abstractassistant==0.4.2"]
 
 # Bundles
 backend = [
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.9",
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.12.0",
     "abstractruntime==0.4.2",
     "abstractagent==0.3.1",
     "abstractflow[editor]==0.3.7",
@@ -85,7 +85,7 @@ backend = [
 
 # Full installation (all packages)
 all = [
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.11.9",
+    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.12.0",
     "abstractruntime==0.4.2",
     "abstractagent==0.3.1",
     "abstractflow[editor]==0.3.7",
