@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abstractmusic"
+dynamic = ["version"]
+description = "Model-agnostic music generation abstractions (text-to-music) for the Abstract ecosystem"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Laurent-Philippe Albou", email = "contact@abstractcore.ai"}]
+requires-python = ">=3.10"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  # Lightweight HTTP client; backend servers hold the heavy ML deps.
+  "httpx>=0.24.0,<1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/lpalbou/AbstractFramework"
+Repository = "https://github.com/lpalbou/AbstractFramework"
+
+[project.entry-points."abstractcore.capabilities_plugins"]
+abstractmusic = "abstractmusic.integrations.abstractcore_plugin:register"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0.0",
+]
+
+[tool.setuptools]
+packages = [
+  "abstractmusic",
+  "abstractmusic.backends",
+  "abstractmusic.integrations",
+]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.dynamic]
+version = {attr = "abstractmusic.__version__"}
+

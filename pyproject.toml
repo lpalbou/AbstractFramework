@@ -115,6 +115,7 @@ Issues = "https://github.com/lpalbou/AbstractFramework/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["abstractframework*"]
 
 [tool.setuptools.package-data]
 abstractframework = ["py.typed"]

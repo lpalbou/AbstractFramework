@@ -257,6 +257,7 @@ These are **optional capability plugins** for AbstractCore. Once installed, they
 |---------|--------------|---------|
 | [**AbstractVoice**](https://github.com/lpalbou/abstractvoice) | Voice I/O — TTS (Piper), STT (Whisper), voice cloning, multilingual, offline-first | `pip install abstractcore abstractvoice` |
 | [**AbstractVision**](https://github.com/lpalbou/abstractvision) | Image generation — text-to-image, image-to-image, Diffusers + GGUF + OpenAI-compatible | `pip install abstractcore abstractvision` |
+| **AbstractMusic** | Music generation — text-to-music via ACE-Step 1.5 REST API backend | `pip install abstractcore abstractmusic` |
 
 ### Web UIs (npm)
 
@@ -505,6 +506,29 @@ We built AbstractFramework because we believe AI systems deserve the same engine
 4. **Observability** — Complete visibility, not a black box. Every LLM call, tool execution, and decision is logged in a tamper-evident ledger you can replay anytime.
 5. **Composability** — Use what you need, replace what you don't. Every package is independently installable and designed to work with or without the others.
 6. **Visual authoring** — Complex workflows shouldn't require complex code. Build, test, and deploy AI workflows with a drag-and-drop editor — on the same durable runtime.
+
+---
+
+## Developer Setup (From Source)
+
+To work on the framework itself (all repos, editable installs):
+
+```bash
+# 1) Clone all 14 repos into a single directory
+./scripts/clone.sh
+
+# 2) Build everything from local source (editable mode) — stay in the .venv
+source ./scripts/build.sh
+
+# Use --clean to start with a fresh .venv (avoids cross-project pollution)
+source ./scripts/build.sh --clean
+
+# 3) Configure + verify readiness
+abstractcore --config
+abstractcore --install
+```
+
+See [Developer Setup](docs/getting-started.md#developer-setup-from-source) for details on `clone.sh`, `build.sh`, and `install.sh`.
 
 ---
 

@@ -13,6 +13,7 @@ This guide explains how to add optional audio/voice/vision capabilities to Abstr
    - STT/TTS and generative vision are deterministic APIs that can be used with or without an LLM call:
      - `core.voice` / `core.audio` (speech-to-text, text-to-speech) via `abstractvoice`
      - `core.vision` (text-to-image, image-to-image, ...) via `abstractvision`
+     - `core.music` (text-to-music) via `abstractmusic`
 
 This split keeps `abstractcore` lightweight by default.
 
@@ -24,6 +25,7 @@ This split keeps `abstractcore` lightweight by default.
 pip install abstractcore
 pip install abstractvoice      # enables core.voice + core.audio
 pip install abstractvision     # enables core.vision
+pip install abstractmusic      # enables core.music
 ```
 
 ### Discover what's available
@@ -62,6 +64,21 @@ llm = create_llm(
 
 png_bytes = llm.vision.t2i("a red square on white background")
 open("out.png", "wb").write(png_bytes)
+```
+
+### Use music generation (T2M)
+
+`core.music` is plugin-backed (like voice/vision). The first supported backend is **ACE-Step 1.5** via its REST API server.
+
+```python
+llm = create_llm(
+    "openai",
+    model="gpt-4o-mini",
+    music_base_url="http://127.0.0.1:8001",  # ACE-Step API server (acestep-api)
+)
+
+mp3_bytes = llm.music.t2m("uplifting synthwave, 120bpm, catchy chorus", format="mp3")
+open("out.mp3", "wb").write(mp3_bytes)
 ```
 
 ## Framework mode (gateway/runtime)

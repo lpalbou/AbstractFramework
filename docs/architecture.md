@@ -66,7 +66,7 @@ In-process execution without a gateway, simpler, but limited to local deployment
 
 ### Shared Foundation
 
-Both deployment paths converge on the same foundation: **AbstractRuntime** and **AbstractCore** are peers, while **Voice**/**Vision** are optional **AbstractCore capability plugins**. Memory and semantics are separate components that can be used by workflows via runtime effects/tooling.
+Both deployment paths converge on the same foundation: **AbstractRuntime** and **AbstractCore** are peers, while **Voice**/**Vision**/**Music** are optional **AbstractCore capability plugins**. Memory and semantics are separate components that can be used by workflows via runtime effects/tooling.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -367,7 +367,7 @@ AbstractFramework separates two concerns:
 
 ## Modality Architecture
 
-AbstractVoice and AbstractVision extend AbstractCore with multimodal capabilities:
+AbstractVoice, AbstractVision, and AbstractMusic extend AbstractCore with multimodal capabilities:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -377,18 +377,18 @@ AbstractVoice and AbstractVision extend AbstractCore with multimodal capabilitie
 │  │ create_llm("ollama", model="...") → LLM instance                ││
 │  └─────────────────────────────────────────────────────────────────┘│
 │                              │                                      │
-│              ┌───────────────┼───────────────┐                      │
-│              ▼               ▼               ▼                      │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐        │
-│  │ Capability:     │ │ Capability:     │ │ Capability:     │        │
-│  │ llm.voice       │ │ llm.vision      │ │ llm.audio       │        │
-│  │ (via Abstract   │ │ (via Abstract   │ │ (native or      │        │
-│  │  Voice)         │ │  Vision)        │ │  fallback)      │        │
-│  └─────────────────┘ └─────────────────┘ └─────────────────┘        │
+│              ┌───────────────┼───────────────┬───────────────┐      │
+│              ▼               ▼               ▼               ▼      │
+│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│  │ Capability:     │ │ Capability:     │ │ Capability:     │ │ Capability:     │
+│  │ llm.voice       │ │ llm.vision      │ │ llm.audio       │ │ llm.music       │
+│  │ (via Abstract   │ │ (via Abstract   │ │ (via Abstract   │ │ (via Abstract   │
+│  │  Voice)         │ │  Vision)        │ │  Voice)         │ │  Music)         │
+│  └─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Capability plugins** are discovered automatically via Python entry points. Install `abstractvoice` or `abstractvision`, and the corresponding capabilities become available on any `llm` instance. Missing plugins raise actionable errors with install hints.
+**Capability plugins** are discovered automatically via Python entry points. Install `abstractvoice`, `abstractvision`, and/or `abstractmusic`, and the corresponding capabilities become available on any `llm` instance. Missing plugins raise actionable errors with install hints.
 
 ## Media Input Architecture
 

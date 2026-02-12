@@ -18,6 +18,7 @@ AbstractFramework is modular — you can install the full framework in one comma
 | Use agent patterns (ReAct, etc.) | [Path 5](#path-5-agent-patterns) | `abstractagent` |
 | Add voice/audio to AbstractCore | [Path 6](#path-6-voice-io) | `abstractcore` + `abstractvoice` (plugin) |
 | Add image generation to AbstractCore | [Path 7](#path-7-image-generation) | `abstractcore` + `abstractvision` (plugin) |
+| Add music generation to AbstractCore | [Path 7a](#path-7a-music-generation) | `abstractcore` + `abstractmusic` (plugin) |
 | Build a knowledge graph | [Path 8](#path-8-knowledge-graph) | `abstractmemory` + `abstractsemantics` |
 | macOS menu bar assistant | [Path 9](#path-9-macos-assistant) | `abstractassistant` |
 | Visual workflow editor (browser) | [Path 10](#path-10-flow-editor) | `@abstractframework/flow` |
@@ -54,6 +55,16 @@ This installs all framework Python packages together, including:
 `abstractcore` is installed with `openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`.
 
 Use this path when you want a fully functional setup with minimal decision overhead.
+
+After install, configure and verify your setup:
+
+```bash
+# Interactive guided setup (model, base URL, vision, API keys, audio, video, embeddings, logging)
+abstractcore --config
+
+# Check readiness + download missing models
+abstractcore --install
+```
 
 ## Prerequisites
 
@@ -455,6 +466,43 @@ abstractvision t2i --base-url http://localhost:7860/v1 "a photo of a red fox"
 
 ---
 
+## Path 7a: Music Generation
+
+Add text-to-music capabilities to AbstractCore.
+
+> **Note**: AbstractMusic is a **capability plugin** for AbstractCore. Once installed, it exposes `llm.music` for deterministic text-to-music generation, keeping AbstractCore lightweight by default.
+
+### Install
+
+```bash
+pip install abstractcore abstractmusic
+```
+
+### Run a backend (ACE-Step 1.5)
+
+AbstractMusic v0 integrates with **ACE-Step 1.5** via its official REST API server.
+
+- Start the server in the ACE-Step-1.5 repo:
+  - `uv run acestep-api`
+  - Default base URL: `http://127.0.0.1:8001`
+
+### Use with AbstractCore
+
+```python
+from abstractcore import create_llm
+
+llm = create_llm(
+    "openai",
+    model="gpt-4o-mini",
+    music_base_url="http://127.0.0.1:8001",  # ACE-Step API server
+)
+
+mp3_bytes = llm.music.t2m("uplifting synthwave, 120bpm, catchy chorus", format="mp3")
+open("out.mp3", "wb").write(mp3_bytes)
+```
+
+---
+
 ## Path 8: Knowledge Graph
 
 Build a temporal, provenance-aware knowledge graph.
@@ -733,6 +781,71 @@ print(resp.choices[0].message.content)
 The server supports tool calling, media input, and optionally exposes `/v1/images/*` (via AbstractVision) and `/v1/audio/*` (via AbstractVoice) endpoints.
 
 **Next**: See [AbstractCore Server docs](https://github.com/lpalbou/abstractcore/blob/main/docs/server.md).
+
+---
+
+---
+
+## Developer Setup (From Source)
+
+If you want to work on AbstractFramework itself (contribute, modify, debug), use the source scripts instead of PyPI install.
+
+### Step 1: Clone all repositories
+
+```bash
+# Clone AbstractFramework + all 13 sibling repos into a single directory
+./scripts/clone.sh
+
+# Or into a specific directory
+./scripts/clone.sh ~/dev/abstractframework
+```
+
+This clones every package repo as a sibling directory inside the AbstractFramework root. Re-running pulls updates for already-cloned repos.
+
+### Step 2: Build from source
+
+```bash
+# Full build — stay in the .venv afterwards (recommended)
+source ./scripts/build.sh
+
+# Or without staying in the venv (you'll need to activate manually)
+./scripts/build.sh
+
+# Options (combinable):
+source ./scripts/build.sh --python    # Python packages only
+source ./scripts/build.sh --npm       # npm UI packages only
+source ./scripts/build.sh --clean     # delete .venv first (avoids cross-project pollution)
+```
+
+`build.sh` installs every Python package in editable mode (`pip install -e`) from local checkouts — NOT from PyPI. This means your code changes take effect immediately. Third-party dependencies (pydantic, torch, etc.) are resolved from PyPI normally.
+
+> **Important:** `build.sh` requires `clone.sh` to have been run first — it expects sibling repo directories to exist.
+
+> **Tip:** Use `source` (not `./`) so your shell stays in the `.venv` after the build.
+
+> **Tip:** Use `--clean` if you see dependency conflicts from other projects in your `.venv`. This deletes the venv and creates a fresh one.
+
+### Install from PyPI (alternative)
+
+For end users who just want to install the published release:
+
+```bash
+# One-liner install (creates .venv, installs full framework from PyPI)
+./scripts/install.sh
+
+# Or manually
+pip install "abstractframework==0.1.2"
+```
+
+### After install (source or PyPI)
+
+```bash
+# Configure your setup interactively
+abstractcore --config
+
+# Check readiness + download missing models
+abstractcore --install
+```
 
 ---
 

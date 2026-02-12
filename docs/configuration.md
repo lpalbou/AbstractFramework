@@ -40,6 +40,30 @@ AbstractFramework is modular, so configuration is **per component**. This page c
 
 ---
 
+## First-Time Setup (Recommended)
+
+The fastest way to configure AbstractCore is the interactive wizard:
+
+```bash
+# Interactive guided setup (7 steps: model, base URL, vision, API keys, audio, video, embeddings, logging)
+abstractcore --config
+
+# Then check readiness and download/install anything missing
+abstractcore --install
+
+# Or auto-download everything non-interactively
+abstractcore --install --yes
+
+# View current configuration
+abstractcore --status
+```
+
+`--config` walks you through all major settings. `--install` checks every subsystem (provider reachability, embeddings model, vision fallback, STT/TTS models, ffmpeg, API keys) and offers to download or install what's missing.
+
+See [AbstractCore Centralized Config](https://github.com/lpalbou/abstractcore/blob/main/docs/centralized-config.md) for the full configuration reference.
+
+---
+
 ## LLM Providers (AbstractCore)
 
 AbstractCore supports multiple providers (cloud and local). Pick what works for you.

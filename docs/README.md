@@ -98,6 +98,7 @@ AbstractFramework is more than a collection of packages — it's a complete AI i
 | A deployable run gateway (HTTP/SSE, scheduling, SQLite) | [AbstractGateway](https://github.com/lpalbou/abstractgateway) |
 | Voice I/O (TTS/STT, cloning, multilingual) — capability plugin for AbstractCore | [AbstractVoice](https://github.com/lpalbou/abstractvoice) |
 | Image generation (Diffusers, GGUF, OpenAI-compatible) — capability plugin for AbstractCore | [AbstractVision](https://github.com/lpalbou/abstractvision) |
+| Music generation (text-to-music) — capability plugin for AbstractCore | `abstractmusic` |
 | A temporal triple store for knowledge graphs | [AbstractMemory](https://github.com/lpalbou/abstractmemory) |
 | A semantics registry for KG assertions | [AbstractSemantics](https://github.com/lpalbou/abstractsemantics) |
 | An OpenAI-compatible multi-provider API server | [AbstractCore Server](https://github.com/lpalbou/abstractcore) (`pip install "abstractcore[server]"`) |
