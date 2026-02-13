@@ -478,13 +478,11 @@ Add text-to-music capabilities to AbstractCore.
 pip install abstractcore abstractmusic
 ```
 
-### Run a backend (ACE-Step 1.5)
+### Configure a local backend (ACE-Step v1.5)
 
-AbstractMusic v0 integrates with **ACE-Step 1.5** via its official REST API server.
+AbstractMusic generates **locally in-process**. The default backend is **ACE-Step v1.5**.
 
-- Start the server in the ACE-Step-1.5 repo:
-  - `uv run acestep-api`
-  - Default base URL: `http://127.0.0.1:8001`
+> If you switch to the Diffusers backend, **model licenses vary by checkpoint**. Choose a model compatible with your intended usage.
 
 ### Use with AbstractCore
 
@@ -492,13 +490,16 @@ AbstractMusic v0 integrates with **ACE-Step 1.5** via its official REST API serv
 from abstractcore import create_llm
 
 llm = create_llm(
-    "openai",
-    model="gpt-4o-mini",
-    music_base_url="http://127.0.0.1:8001",  # ACE-Step API server
+    # Any provider/model works here. The LLM does *not* generate music audio.
+    # Music generation is performed by the configured AbstractMusic backend (ACE-Step by default).
+    "ollama",
+    model="qwen3:4b-instruct",
+    music_backend="acestep",
+    music_model_id="ACE-Step/Ace-Step1.5",
 )
 
-mp3_bytes = llm.music.t2m("uplifting synthwave, 120bpm, catchy chorus", format="mp3")
-open("out.mp3", "wb").write(mp3_bytes)
+wav_bytes = llm.music.t2m("uplifting synthwave, 120bpm, catchy chorus", format="wav", duration_s=10.0)
+open("out.wav", "wb").write(wav_bytes)
 ```
 
 ---
@@ -778,7 +779,7 @@ resp = client.chat.completions.create(
 print(resp.choices[0].message.content)
 ```
 
-The server supports tool calling, media input, and optionally exposes `/v1/images/*` (via AbstractVision) and `/v1/audio/*` (via AbstractVoice) endpoints.
+The server supports tool calling, media input, and optionally exposes `/v1/images/*` (via AbstractVision) and `/v1/audio/*` (via capability plugins like AbstractVoice; plus `/v1/audio/music` when AbstractMusic is installed) endpoints.
 
 **Next**: See [AbstractCore Server docs](https://github.com/lpalbou/abstractcore/blob/main/docs/server.md).
 

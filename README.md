@@ -257,7 +257,7 @@ These are **optional capability plugins** for AbstractCore. Once installed, they
 |---------|--------------|---------|
 | [**AbstractVoice**](https://github.com/lpalbou/abstractvoice) | Voice I/O — TTS (Piper), STT (Whisper), voice cloning, multilingual, offline-first | `pip install abstractcore abstractvoice` |
 | [**AbstractVision**](https://github.com/lpalbou/abstractvision) | Image generation — text-to-image, image-to-image, Diffusers + GGUF + OpenAI-compatible | `pip install abstractcore abstractvision` |
-| **AbstractMusic** | Music generation — text-to-music via ACE-Step 1.5 REST API backend | `pip install abstractcore abstractmusic` |
+| **AbstractMusic** | Music generation — local text-to-music/audio (ACE-Step v1.5 default; Diffusers optional) | `pip install abstractcore abstractmusic` |
 
 ### Web UIs (npm)
 

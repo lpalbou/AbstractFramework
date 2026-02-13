@@ -299,7 +299,7 @@ python -m abstractcore.server.app
 
 Use any OpenAI client and route to any provider via `model="provider/model"` (e.g., `model="ollama/qwen3:4b-instruct"`).
 
-The server can also optionally expose `/v1/images/*` and `/v1/audio/*` endpoints when the corresponding plugins are installed.
+The server can also optionally expose `/v1/images/*` and `/v1/audio/*` endpoints when the corresponding plugins are installed (including `/v1/audio/music` when `abstractmusic` is installed).
 
 See [AbstractCore Server docs](https://github.com/lpalbou/abstractcore/blob/main/docs/server.md).
 

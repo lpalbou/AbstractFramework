@@ -24,23 +24,39 @@
 # =============================================================================
 
 # Detect whether the script is being sourced or executed.
-# When sourced, we avoid `set -e` (which would exit the user's shell on error)
-# and `exit` (which would close their terminal).
+# IMPORTANT: the shebang is ignored when sourcing, so this must work in zsh/bash.
 _AF_SOURCED=false
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]] 2>/dev/null; then
+if (return 0 2>/dev/null); then
     _AF_SOURCED=true
-fi
-
-if ! $_AF_SOURCED; then
-    set -euo pipefail
 fi
 
 # ---------------------------------------------------------------------------
 # Resolve paths
 # ---------------------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_AF_THIS_FILE=""
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    _AF_THIS_FILE="${BASH_SOURCE[0]}"
+elif [[ -n "${ZSH_VERSION:-}" ]]; then
+    _AF_THIS_FILE="${(%):-%x}"
+else
+    _AF_THIS_FILE="$0"
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${_AF_THIS_FILE}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 VENV_DIR="$ROOT_DIR/.venv"
+
+# If sourced, run the build in a real bash process (so bash-only syntax is safe),
+# then activate the venv in the current shell and return.
+if $_AF_SOURCED; then
+    AF_BUILD_WRAPPER=1 bash "$SCRIPT_DIR/build.sh" "$@" || return 1
+    # shellcheck disable=SC1091
+    source "$VENV_DIR/bin/activate"
+    echo "✓ Virtualenv is active in your shell."
+    return 0
+fi
+
+set -euo pipefail
 
 # ---------------------------------------------------------------------------
 # CLI flags
@@ -524,11 +540,9 @@ echo ""
 if $BUILD_PYTHON; then
     echo "Virtual environment: $VENV_DIR"
     echo ""
-    if $_AF_SOURCED; then
-        # Re-activate so the calling shell picks up the venv
-        # shellcheck disable=SC1091
-        source "$VENV_DIR/bin/activate"
-        echo "✓ Virtualenv is active in your shell."
+    if [[ "${AF_BUILD_WRAPPER:-}" == "1" ]]; then
+        echo "Note: you ran this via: source ./scripts/build.sh"
+        echo "      The venv will be activated in your current shell automatically."
         echo ""
     else
         echo "To activate in your shell (run the script with 'source' next time to skip this step):"

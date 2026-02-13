@@ -1,4 +1,4 @@
-# Capability plugins (Voice/Audio/Vision)
+# Capability plugins (Voice/Audio/Vision/Music)
 
 This guide explains how to add optional audio/voice/vision capabilities to AbstractFramework without turning
 `abstractcore` into a kitchen sink.
@@ -33,12 +33,12 @@ pip install abstractmusic      # enables core.music
 ```python
 from abstractcore import create_llm
 
-llm = create_llm("openai", model="gpt-4o-mini")  # example; pick a provider/model you have access to
+llm = create_llm("ollama", model="qwen3:4b-instruct")  # example; pick a provider/model you have access to
 print(llm.capabilities.status())
 ```
 
 Notes:
-- Capabilities load lazily the first time you access `llm.capabilities` / `llm.voice` / `llm.audio` / `llm.vision`.
+- Capabilities load lazily the first time you access `llm.capabilities` / `llm.voice` / `llm.audio` / `llm.vision` / `llm.music`.
 - Missing plugins raise an actionable error (includes an install hint).
 
 ### Use voice/audio (STT/TTS)
@@ -68,17 +68,20 @@ open("out.png", "wb").write(png_bytes)
 
 ### Use music generation (T2M)
 
-`core.music` is plugin-backed (like voice/vision). The first supported backend is **ACE-Step 1.5** via its REST API server.
+`core.music` is plugin-backed (like voice/vision). `abstractmusic` provides **local in-process** generation, with **ACE-Step v1.5** as the default backend (and Diffusers audio pipelines as an alternative backend).
 
 ```python
 llm = create_llm(
-    "openai",
-    model="gpt-4o-mini",
-    music_base_url="http://127.0.0.1:8001",  # ACE-Step API server (acestep-api)
+    # Any provider/model works here. The LLM does *not* generate music audio.
+    # Music generation is performed by the configured AbstractMusic backend (ACE-Step by default).
+    "ollama",
+    model="qwen3:4b-instruct",
+    music_backend="acestep",
+    music_model_id="ACE-Step/Ace-Step1.5",
 )
 
-mp3_bytes = llm.music.t2m("uplifting synthwave, 120bpm, catchy chorus", format="mp3")
-open("out.mp3", "wb").write(mp3_bytes)
+wav_bytes = llm.music.t2m("uplifting synthwave, 120bpm, catchy chorus", format="wav", duration_s=10.0)
+open("out.wav", "wb").write(wav_bytes)
 ```
 
 ## Framework mode (gateway/runtime)
@@ -86,13 +89,13 @@ open("out.mp3", "wb").write(mp3_bytes)
 Install modality plugins on the durable host (the machine/process that runs the runtime + tool execution and imports
 `abstractcore`), typically the AbstractGateway runner.
 
-Thin clients (web, remote TUI) do not need `abstractvoice`/`abstractvision` installed locally.
+Thin clients (web, remote TUI) do not need `abstractvoice`/`abstractvision`/`abstractmusic` installed locally.
 
 ## Server mode (OpenAI-compatible `/v1`)
 
 AbstractCore Server can optionally expose OpenAI-compatible endpoints by delegating to plugins:
 - `/v1/images/*` (via `abstractvision`)
-- `/v1/audio/*` (via the capability plugin layer, typically `abstractvoice`)
+- `/v1/audio/*` (via the capability plugin layer, typically `abstractvoice`; plus `/v1/audio/music` when `abstractmusic` is installed)
 
 These endpoints are interoperability-first. For durable artifact-backed outputs, prefer gateway/runtime + ArtifactStore.
 
