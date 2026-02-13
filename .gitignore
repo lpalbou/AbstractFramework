@@ -242,3 +242,5 @@ package-lock.json
 
 
 untracked
+docs/backlog/
+docs/adr/
