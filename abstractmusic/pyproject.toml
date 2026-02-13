@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "abstractmusic"
 dynamic = ["version"]
-description = "Model-agnostic music generation abstractions (text-to-music) for the Abstract ecosystem"
+description = "Model-agnostic local music/audio generation abstractions for the Abstract ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [{name = "Laurent-Philippe Albou", email = "contact@abstractcore.ai"}]
@@ -22,14 +22,26 @@ classifiers = [
   "Topic :: Multimedia",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+
+# Batteries-included by default (like AbstractVision): users should only need to download model weights.
 dependencies = [
-  # Lightweight HTTP client; backend servers hold the heavy ML deps.
-  "httpx>=0.24.0,<1.0.0",
+  "numpy>=1.24.0",
+  "diffusers>=0.36.0",
+  "torch>=2.0,<3.0.0",
+  "transformers>=4.0,<6.0.0",
+  "accelerate>=0.0",
+  "safetensors>=0.0",
+  # ACE-Step v1.5 (Transformers custom model code uses these)
+  "huggingface_hub>=0.20.0",
+  "einops>=0.8.1",
 ]
 
 [project.urls]
 Homepage = "https://github.com/lpalbou/AbstractFramework"
 Repository = "https://github.com/lpalbou/AbstractFramework"
+
+[project.scripts]
+abstractmusic = "abstractmusic.cli:main"
 
 [project.entry-points."abstractcore.capabilities_plugins"]
 abstractmusic = "abstractmusic.integrations.abstractcore_plugin:register"
@@ -44,6 +56,8 @@ packages = [
   "abstractmusic",
   "abstractmusic.backends",
   "abstractmusic.integrations",
+  "abstractmusic.vendor",
+  "abstractmusic.vendor.acestep_v15_turbo",
 ]
 
 [tool.setuptools.package-dir]
@@ -51,4 +65,3 @@ packages = [
 
 [tool.setuptools.dynamic]
 version = {attr = "abstractmusic.__version__"}
-

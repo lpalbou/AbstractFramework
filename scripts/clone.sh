@@ -42,6 +42,7 @@ SIBLING_REPOS=(
     "https://github.com/lpalbou/abstractsemantics.git"
     "https://github.com/lpalbou/abstractvoice.git"
     "https://github.com/lpalbou/abstractvision.git"
+    "https://github.com/lpalbou/AbstractMusic.git"
     "https://github.com/lpalbou/abstractassistant.git"
     # Browser UIs & npm packages
     "https://github.com/lpalbou/abstractobserver.git"
