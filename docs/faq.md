@@ -106,6 +106,26 @@ This makes AbstractFramework closer to **Temporal/Step Functions** adapted for L
 - **PydanticAI**: Minimal typed API with less boilerplate for simple cases
 - **Letta**: More mature long-term memory product today
 
+### How does AbstractFramework compare to chat-first platforms (OpenClaw, etc.)?
+
+The comparison table above covers **agent SDKs/frameworks**. A different category is **chat-first AI
+platforms** — like OpenClaw — that focus on connecting an AI assistant to messaging channels (Telegram,
+WhatsApp, Discord, etc.).
+
+The key architectural difference: AbstractFramework treats messaging channels as **event sources**
+feeding into a durable workflow engine. Chat-first platforms treat channels as the **primary interface**
+with a direct AI pipeline behind them.
+
+| Axis | AbstractFramework | Chat-first platforms (e.g. OpenClaw) |
+|------|-------------------|--------------------------------------|
+| **Design** | Workflow-first, channel-agnostic | Chat-first, multi-channel |
+| **Durability** | Hash-chained ledger, replay from any client | Internal conversation history |
+| **Observability** | Full run replay from browser/phone/terminal | In-channel + dashboard |
+| **Telegram API** | TDLib (E2EE) or Bot API | Bot API only |
+| **Setup time** | 10–15 min (wizard + env vars) | 5–10 min (unified wizard) |
+
+For a detailed comparison, see [Comparison: AbstractFramework vs. OpenClaw](comparisons/openclaw.md).
+
 ### When should I use AbstractFramework?
 
 **Good fit:**
@@ -119,6 +139,7 @@ This makes AbstractFramework closer to **Temporal/Step Functions** adapted for L
 - You need a quick prototype with minimal code (→ PydanticAI)
 - You need extensive RAG connectors today (→ LlamaIndex)
 - You need maximum ecosystem integrations (→ LangChain)
+- You want a personal AI chat assistant with fast multi-channel setup (→ [OpenClaw](comparisons/openclaw.md))
 
 ### Can I use AbstractFramework with LangChain/LlamaIndex?
 

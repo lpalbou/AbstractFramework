@@ -244,3 +244,5 @@ package-lock.json
 untracked
 docs/backlog/
 docs/adr/
+runtime/
+execute.sh

@@ -26,6 +26,7 @@ That installs all framework Python packages together, including:
 | **Looking for answers** to common questions | [FAQ](faq.md) — includes honest comparisons with other frameworks |
 | **Following a use case** end-to-end | [Scenarios](scenarios/README.md) — step-by-step walkthroughs |
 | **Diving into a specific topic** | [Guides](guide/README.md) — focused "how it works" notes |
+| **Comparing** with other frameworks | [Comparisons](comparisons/) — objective architectural trade-offs |
 | **Checking terminology** | [Glossary](glossary.md) — shared definitions across the ecosystem |
 | **Using the meta-package API** | [API](api.md) — `abstractframework` package helpers and release profile |
 
@@ -182,4 +183,5 @@ If you're feeding this repo into an LLM:
 - [FAQ](faq.md) — common questions and troubleshooting
 - [Scenarios](scenarios/README.md) — end-to-end paths by use case
 - [Guides](guide/README.md) — focused "how it works" notes
+- [Comparisons](comparisons/) — objective trade-offs vs. other frameworks
 - [Glossary](glossary.md) — shared terminology
