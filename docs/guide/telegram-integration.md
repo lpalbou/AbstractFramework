@@ -38,8 +38,10 @@ export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"
 export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."
 
-# Required for replies: execute tools in-process.
-export ABSTRACTGATEWAY_TOOL_MODE="local"
+# Required for replies + tool approvals:
+# - safe tools execute immediately
+# - dangerous/unknown tools pause and require a Telegram reply: `/approve` (anything else cancels)
+export ABSTRACTGATEWAY_TOOL_MODE="approval"
 ```
 
 Notes:
@@ -125,3 +127,10 @@ and configuration surface live in:
    - voice note (STT fallback depends on your `abstractcore --config` audio strategy + installed plugins)
    - video and document
 5. Send `/reset` to clear the binding/runs, then confirm the next message starts fresh.
+
+## Tool approvals (Telegram)
+
+When the agent requests a tool call that requires explicit permission (for example `write_file` or `execute_command`),
+the bridge sends an approval prompt into the chat. Reply with:
+- `/approve` (or `approve`) to execute the tool calls and continue
+- anything else to cancel the tool calls and let the workflow continue with failure results

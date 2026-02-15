@@ -422,7 +422,7 @@ Some integrations are enabled on the gateway host and emit durable events that w
   - Transport + credentials:
     - Bot API: `ABSTRACT_TELEGRAM_TRANSPORT=bot_api`, `ABSTRACT_TELEGRAM_BOT_TOKEN=...`
     - TDLib (E2EE): `ABSTRACT_TELEGRAM_TRANSPORT=tdlib` + TDLib setup (see guide)
-  - Replies require tool execution: `ABSTRACTGATEWAY_TOOL_MODE=local`
+  - Replies + tool approvals: `ABSTRACTGATEWAY_TOOL_MODE=approval` (safe tools run; dangerous tools require `/approve`)
   - Optional:
     - Telegram-only routing override: `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`)
     - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30)

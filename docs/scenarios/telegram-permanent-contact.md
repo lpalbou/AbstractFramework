@@ -42,8 +42,10 @@ export ABSTRACTGATEWAY_AUTH_TOKEN="..."  # required
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
-# Required for Telegram replies: execute tools in-process.
-export ABSTRACTGATEWAY_TOOL_MODE="local"
+# Required for Telegram replies + tool approvals:
+# - safe tools execute immediately
+# - dangerous/unknown tools require a Telegram reply: `/approve` (anything else cancels)
+export ABSTRACTGATEWAY_TOOL_MODE="approval"
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
 export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"  # or "tdlib" (E2EE)
