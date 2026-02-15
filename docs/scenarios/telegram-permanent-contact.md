@@ -42,10 +42,10 @@ export ABSTRACTGATEWAY_AUTH_TOKEN="..."  # required
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
-# Required for Telegram replies + tool approvals:
-# - safe tools execute immediately
-# - dangerous/unknown tools require a Telegram reply: `/approve` (anything else cancels)
-export ABSTRACTGATEWAY_TOOL_MODE="approval"
+# Tool execution + approvals:
+# - `passthrough` (default): tools become durable waits; the Telegram bridge auto-runs safe tools and prompts for approval on dangerous tools.
+# - `approval`: safe tools run in-process; dangerous tools still require a Telegram reply: `/approve` (anything else cancels)
+export ABSTRACTGATEWAY_TOOL_MODE="passthrough"
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
 export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"  # or "tdlib" (E2EE)
@@ -65,7 +65,8 @@ Notes:
 - Telegram-only routing override: set `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`) without changing other gateway traffic.
 - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30).
 - STT fallback and vision caption fallback are configured via `abstractcore --config` (audio strategy + vision fallback).
-- `/reset` clears the durable session; optional best-effort message deletion is controlled by `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES` and `ABSTRACT_TELEGRAM_RESET_DELETE_MAX`.
+- `/reset` clears the durable session; optional best-effort message deletion is controlled by `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES` and `ABSTRACT_TELEGRAM_RESET_DELETE_MAX`. The confirmation text is configurable via `ABSTRACT_TELEGRAM_RESET_MESSAGE`.
+- Send `/tools` in chat to view/change tool permissions (allowlist, auto-approve, require approval, blocklist).
 
 ## Step 3: Workflow wiring
 

@@ -38,10 +38,10 @@ export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"
 export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."
 
-# Required for replies + tool approvals:
-# - safe tools execute immediately
-# - dangerous/unknown tools pause and require a Telegram reply: `/approve` (anything else cancels)
-export ABSTRACTGATEWAY_TOOL_MODE="approval"
+# Tool execution + approvals:
+# - `passthrough` (default): tools become durable waits; the Telegram bridge auto-runs safe tools and prompts for approval on dangerous tools.
+# - `approval`: safe tools run in-process; dangerous tools still require a Telegram reply: `/approve` (anything else cancels)
+export ABSTRACTGATEWAY_TOOL_MODE="passthrough"
 ```
 
 Notes:
@@ -50,7 +50,7 @@ Notes:
 - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30; `0` keeps only system messages).
 - STT fallback and vision caption fallback are configured via `abstractcore --config` (audio strategy + vision fallback).
 - Telegram typing keepalive is best-effort: tune with `ABSTRACT_TELEGRAM_TYPING_INTERVAL_S` (default: 4s) and `ABSTRACT_TELEGRAM_TYPING_MAX_S` (default: 600s; set to `0` to disable).
-- `/reset` behavior is best-effort: the bridge clears the durable session and tries to delete recent messages. Control with `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES` (default: true) and `ABSTRACT_TELEGRAM_RESET_DELETE_MAX` (default: 200). Telegram may still reject deletions depending on chat permissions and age.
+- `/reset` behavior is best-effort: the bridge clears the durable session, sends a confirmation message, and optionally deletes recent messages in the background. Controls: `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES` (default: true), `ABSTRACT_TELEGRAM_RESET_DELETE_MAX` (default: 200), `ABSTRACT_TELEGRAM_RESET_MESSAGE` (confirmation text). Telegram may still reject deletions depending on chat permissions and age.
 
 Start the gateway normally.
 
@@ -104,6 +104,10 @@ If you author your own flow, the minimal shape is:
 
 Inbound attachments arrive with an `artifact_id`. Send them back with `send_telegram_artifact(chat_id=..., artifact_id=...)`.
 
+Notes:
+- Telegram `sendMessage` has a ~4096 character limit. `send_telegram_message` automatically splits long text into multiple messages and returns `message_ids` (best-effort) in the tool result.
+- Empty/whitespace `text` is rejected by Telegram; `send_telegram_message` falls back to a short error message so workflows still deliver something.
+
 Tip: if you want `/reset` to delete prior bot messages, store sent `message_id` values in `run.vars._runtime.telegram.sent_message_ids` (the bridge scans this on reset).
 
 ## TDLib notes (E2EE path)
@@ -134,3 +138,23 @@ When the agent requests a tool call that requires explicit permission (for examp
 the bridge sends an approval prompt into the chat. Reply with:
 - `/approve` (or `approve`) to execute the tool calls and continue
 - anything else to cancel the tool calls and let the workflow continue with failure results
+
+### Tool permissions (Telegram)
+
+You can control which tools are available and which require approval.
+
+In chat:
+- Send `/tools` to view the current tool policy.
+- Examples:
+  - `/tools safe` (default) — safe tools auto-run; dangerous tools require `/approve`
+  - `/tools open` — approve everything by default (dangerous)
+  - `/tools strict` — allow only the safe tool set
+  - `/tools allow read_file web_search` — custom allowlist
+  - `/tools block execute_command write_file` — block specific tools
+
+Operator defaults (env; applied per chat unless overridden via `/tools ...`):
+- `ABSTRACT_TELEGRAM_APPROVE_ALL_TOOLS=1`
+- `ABSTRACT_TELEGRAM_ALLOWED_TOOLS` (newline-separated or JSON list)
+- `ABSTRACT_TELEGRAM_AUTO_APPROVE_TOOLS` (newline-separated or JSON list)
+- `ABSTRACT_TELEGRAM_REQUIRE_APPROVAL_TOOLS` (newline-separated or JSON list)
+- `ABSTRACT_TELEGRAM_BLOCKED_TOOLS` (newline-separated or JSON list)
