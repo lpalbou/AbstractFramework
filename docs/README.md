@@ -72,7 +72,7 @@ AbstractFramework is more than a collection of packages — it's a complete AI i
 - **GPU monitoring** — real-time utilization widget
 
 ### Connect to the Outside World
-- **Telegram bridge** — durable bot with full audit trail
+- **Telegram bridge** — durable bot with full audit trail ([guide](guide/telegram-integration.md))
 - **Email bridge** — process email threads with workflows
 - **Event bridges** — any inbound service becomes a replayable ledger source
 - **OpenAI-compatible server** — serve any LLM through one `/v1` API

@@ -285,7 +285,7 @@ This preserves durability and observability: inbound content becomes replayable 
 See:
 - [Scenario: Telegram permanent contact](scenarios/telegram-permanent-contact.md)
 - [Scenario: Email inbox agent](scenarios/email-inbox-agent.md)
-- [Comparison: AbstractFramework vs. OpenClaw](comparisons/openclaw.md) — how this event bridge approach differs from chat-first platforms
+- [Guide: Telegram integration](guide/telegram-integration.md)
 
 ## MCP Integration (Model Context Protocol)
 

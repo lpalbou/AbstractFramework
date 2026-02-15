@@ -34,5 +34,30 @@ This file captures practical engineering notes discovered while evolving the cod
 - **AbstractCore Server audio endpoints**: `/v1/audio/speech` (TTS) and `/v1/audio/transcriptions` (STT) are implemented via capability plugins; `/v1/audio/translations` exists but returns **501** (not supported by the current capability contract).
 - **Music server endpoint**: `/v1/audio/music` is provided as an extension (no official OpenAI equivalent) and delegates to `core.music.t2m(...)` when `abstractmusic` is installed.
 - **MPS limitation**: some Diffusers audio pipelines (e.g. AudioLDM vocoder) can fail on Apple Silicon `mps`; `abstractmusic` retries on CPU with an explicit `#FALLBACK` warning.
-- **CLI gotcha**: `argparse` subcommands normally reject top-level flags after the subcommand; `abstractmusic` duplicates “common flags” onto `t2m`/`repl` so docs-style commands like `t2m ... --duration 10` work naturally.
+- **CLI gotcha**: `argparse` subcommands normally reject top-level flags after the subcommand; `abstractmusic` duplicates "common flags" onto `t2m`/`repl` so docs-style commands like `t2m ... --duration 10` work naturally.
 
+### 2026-02-14 — Telegram Bot activation (Bot API) + telegram-agent workflow
+
+- **Telegram bridge actor_id gotcha**: the GatewayRunner tick loop only processes runs with `actor_id == "gateway"`. The Telegram bridge originally created runs with `actor_id="telegram"`, which the runner silently ignored. Fix: bridge now uses `actor_id="gateway"`; Telegram origin is recorded in session_id, binding state, and event payloads.
+- **telegram-agent workflow pattern**: `basic-agent` (single-shot `abstractcode.agent.v1`) cannot handle Telegram because the bridge is event-driven (one run per chat + `telegram.message` events). The `telegram-agent` bundle uses an `on_event` node that compiles into a durable session-scoped listener child workflow, creating a message loop.
+- **Agent provider/model defaults**: VisualFlow Agent nodes now inherit provider/model from run-scoped runtime defaults (`_runtime.provider`/`_runtime.model`, typically set by the gateway) and fall back to AbstractCore global defaults (`abstractcore --config`) when missing, recording a `#FALLBACK` warning.
+- **Typing indicator keepalive**: the Telegram bridge now sends `sendChatAction(action="typing")` on a short loop (default 4s interval, 600s max) so the "..." bubble stays visible while the agent processes. Env: `ABSTRACT_TELEGRAM_TYPING_INTERVAL_S`, `ABSTRACT_TELEGRAM_TYPING_MAX_S`.
+- **Bot API polling (outbound)**: the Bot API transport uses long-polling (`getUpdates`) — the gateway calls OUT to `api.telegram.org`. Telegram does not need to know the gateway's IP. No webhook/public URL required.
+- **Telegram media handoff**: media artifacts are now promoted to top-level `attachments` in the event payload and wired into the agent `context`, enabling AbstractCore's existing multimodal path (`generate(media=...)`) for VLMs.
+- **Telegram media + text pairing**: Bot API images often arrive without text; the bridge now uses `caption` when present and stashes `pending_media` so a follow-up text message can reference the previous image.
+- **/reset command**: `/reset`, `/clear`, `/new` cancels all runs for the chat session, deletes the binding, and sends a confirmation. Optional best-effort message deletion is controlled by `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES`/`ABSTRACT_TELEGRAM_RESET_DELETE_MAX` and may still fail depending on Telegram permissions and message age.
+- **Telegram-only routing override**: set `ABSTRACT_TELEGRAM_MODEL` (and optionally `ABSTRACT_TELEGRAM_PROVIDER`) to override the model used for Telegram without changing other gateway traffic.
+- **AbstractFlow PropertiesPanel crash**: `providers.filter(...)` crashes when `/api/providers` returns non-array data (e.g. `{"detail":"Not Found"}`). Fix: guard with `Array.isArray()` on providers and models fetch callbacks.
+- **Gateway default model fallback**: when `ABSTRACTGATEWAY_PROVIDER/MODEL` are unset and flows do not specify provider/model, the gateway now falls back to AbstractCore config defaults (`abstractcore --config`) using `default_models.global_provider/global_model`.
+- **Agent node default model fallback**: Visual Agent nodes now fall back to AbstractCore global defaults when provider/model are missing, recording a `#FALLBACK` warning in `_flow_warnings`.
+- **Agent pin default marker**: setting agent `provider`/`model` pins to `__abstractcore_default__` uses AbstractCore global defaults (treated as an explicit default, not a missing-value fallback).
+- **Media artifact resolution**: LLM client now resolves `{"$artifact": ...}`/`artifact_id` media items via the runtime artifact store into file paths before passing to AbstractCore media handlers.
+- **Workflow-owned delivery**: the `telegram-agent` bundle executes `send_telegram_message` via `call_tool`, avoiding brittle “LLM must tool-call” patterns (and provider-specific hacks).
+
+### 2026-02-14 — AbstractCore model/architecture registry source of truth
+
+- **Canonical registries**: AbstractCore's model capabilities and architecture formats are owned by `abstractcore/assets/model_capabilities.json` and `abstractcore/assets/architecture_formats.json`. When new models or architectures ship, update these files first (see `abstractcore/assets/README.md` for field rules).
+
+### 2026-02-15 — Per-repo commit helper
+
+- **Commit script**: `scripts/commit.sh` commits changes per repository (root + siblings) with a shared message, skips clean repos, and prints a summary.

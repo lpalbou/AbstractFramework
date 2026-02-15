@@ -27,7 +27,8 @@ Secure the gateway host and its storage.
 ## Step 1: Install gateway Telegram support
 
 ```bash
-pip install "abstractgateway[telegram]"
+pip install "abstractgateway[http,telegram]"
+pip install "abstractcore[tools]"   # Bot API outbound tools (sendMessage/sendDocument)
 ```
 
 ## Step 2: Configure the gateway (minimum)
@@ -35,12 +36,20 @@ pip install "abstractgateway[telegram]"
 You need a normal gateway configuration plus Telegram bridge settings. At minimum:
 
 ```bash
+# Bundles (*.flow). Include the shipped `telegram-agent` bundle.
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"
 export ABSTRACTGATEWAY_AUTH_TOKEN="..."  # required
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+
+# Required for Telegram replies: execute tools in-process.
+export ABSTRACTGATEWAY_TOOL_MODE="local"
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
+export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"  # or "tdlib" (E2EE)
+export ABSTRACT_TELEGRAM_BOT_TOKEN="..."      # Bot API transport only
 export ABSTRACT_ENABLE_TELEGRAM_TOOLS=1
-export ABSTRACT_TELEGRAM_FLOW_ID="<bundle_id>:<flow_id>"  # workflow that handles telegram.message
+export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"  # handles telegram.message
 ```
 
 Then start the gateway:
@@ -49,7 +58,23 @@ Then start the gateway:
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
-## Step 3: Wire the workflow (Flow Editor)
+Notes:
+- Default LLM routing comes from `abstractcore --config` (global provider/model). Override with `ABSTRACTGATEWAY_PROVIDER` / `ABSTRACTGATEWAY_MODEL`.
+- Telegram-only routing override: set `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`) without changing other gateway traffic.
+- Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30).
+- STT fallback and vision caption fallback are configured via `abstractcore --config` (audio strategy + vision fallback).
+- `/reset` clears the durable session; optional best-effort message deletion is controlled by `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES` and `ABSTRACT_TELEGRAM_RESET_DELETE_MAX`.
+
+## Step 3: Workflow wiring
+
+### Option A (recommended): use the shipped `telegram-agent` bundle
+
+`telegram-agent@0.0.1:tg-agent-main` is event-driven and session-scoped:
+- Durable memory (uses `use_context=true` + the runtime’s durable `context.messages`)
+- Media-aware LLM calls (attachments are stored as artifacts and passed as `media`)
+- Workflow-owned delivery (workflow calls `send_telegram_message`; no LLM tool-calling required)
+
+### Option B: author your own flow (Flow Editor)
 
 Create a workflow that:
 
@@ -74,3 +99,7 @@ Send a Telegram message to the AI contact. You should see:
 - gateway emits the event into the session
 - your run progresses and sends a reply via tools
 - Observer can replay the ledger for the session/run
+
+## See also
+
+- [Guide: Telegram integration](../guide/telegram-integration.md) — configuration and TDLib details

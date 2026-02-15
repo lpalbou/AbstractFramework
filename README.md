@@ -413,7 +413,7 @@ curl -X POST "http://localhost:8080/api/gateway/runs/schedule" \
 
 Connect external services as durable event sources. Inbound messages become replayable ledger entries:
 
-- **Telegram**: `ABSTRACT_TELEGRAM_BRIDGE=1` — a Telegram bot becomes a permanent, durable contact
+- **Telegram**: `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_FLOW_ID=telegram-agent@0.0.1:tg-agent-main`, `ABSTRACT_ENABLE_TELEGRAM_TOOLS=1` — a durable Telegram contact (Bot API or TDLib)
 - **Email**: `ABSTRACT_EMAIL_BRIDGE=1` — email threads are processed by workflows with full audit trails
 
 ### 📋 Built-in CLI Apps

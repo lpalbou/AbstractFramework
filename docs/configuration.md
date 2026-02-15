@@ -105,7 +105,7 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 AbstractCore can persist defaults and keys to `~/.abstractcore/config/abstractcore.json`:
 
 ```bash
-abstractcore --configure   # interactive setup
+abstractcore --config      # interactive setup
 abstractcore --status      # show current config
 ```
 
@@ -418,7 +418,15 @@ abstractcode --provider ollama --model qwen3:4b-instruct
 Some integrations are enabled on the gateway host and emit durable events that workflows can consume.
 
 - Telegram bridge + tools:
-  - `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_FLOW_ID=...`, `ABSTRACT_ENABLE_TELEGRAM_TOOLS=1`
+  - `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_FLOW_ID=telegram-agent@0.0.1:tg-agent-main`, `ABSTRACT_ENABLE_TELEGRAM_TOOLS=1`
+  - Transport + credentials:
+    - Bot API: `ABSTRACT_TELEGRAM_TRANSPORT=bot_api`, `ABSTRACT_TELEGRAM_BOT_TOKEN=...`
+    - TDLib (E2EE): `ABSTRACT_TELEGRAM_TRANSPORT=tdlib` + TDLib setup (see guide)
+  - Replies require tool execution: `ABSTRACTGATEWAY_TOOL_MODE=local`
+  - Optional:
+    - Telegram-only routing override: `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`)
+    - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30)
+    - `/reset` message deletion controls: `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES`, `ABSTRACT_TELEGRAM_RESET_DELETE_MAX`
   - See [Guide: Telegram integration](guide/telegram-integration.md)
 - Email bridge + tools:
   - `ABSTRACT_EMAIL_BRIDGE=1` and email account configuration (`ABSTRACT_EMAIL_*`)

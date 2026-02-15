@@ -21,28 +21,88 @@ the gateway host and its storage.
 Install Telegram support:
 
 ```bash
-pip install "abstractgateway[telegram]"
+pip install "abstractgateway[http,telegram]"
+pip install "abstractcore[tools]"   # Bot API outbound tools (sendMessage/sendDocument)
 ```
 
 Set env vars on the gateway host:
 
 ```bash
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # directory containing *.flow bundles
+
 export ABSTRACT_TELEGRAM_BRIDGE=1
 export ABSTRACT_ENABLE_TELEGRAM_TOOLS=1
-export ABSTRACT_TELEGRAM_FLOW_ID="<bundle_id>:<flow_id>"
+export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"
+
+# Bot API (easy, not E2EE)
+export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"
+export ABSTRACT_TELEGRAM_BOT_TOKEN="..."
+
+# Required for replies: execute tools in-process.
+export ABSTRACTGATEWAY_TOOL_MODE="local"
 ```
+
+Notes:
+- Default LLM routing comes from `abstractcore --config` (global provider/model). Override with `ABSTRACTGATEWAY_PROVIDER` / `ABSTRACTGATEWAY_MODEL`.
+- Telegram-only routing override (does not affect other gateway traffic): set `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`).
+- Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30; `0` keeps only system messages).
+- STT fallback and vision caption fallback are configured via `abstractcore --config` (audio strategy + vision fallback).
+- Telegram typing keepalive is best-effort: tune with `ABSTRACT_TELEGRAM_TYPING_INTERVAL_S` (default: 4s) and `ABSTRACT_TELEGRAM_TYPING_MAX_S` (default: 600s; set to `0` to disable).
+- `/reset` behavior is best-effort: the bridge clears the durable session and tries to delete recent messages. Control with `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES` (default: true) and `ABSTRACT_TELEGRAM_RESET_DELETE_MAX` (default: 200). Telegram may still reject deletions depending on chat permissions and age.
 
 Start the gateway normally.
 
+## Local dev test (Bot API + LMStudio)
+
+If you're in the AbstractFramework repo, you can use `./execute.sh` as a convenience env setup:
+
+```bash
+source ./execute.sh
+```
+
+1. Start LMStudio “Local Server” and load `google/gemma-3n-e4b`.
+2. Export LLM routing (override the `abstractcore --config` defaults for this run):
+
+```bash
+export ABSTRACTGATEWAY_PROVIDER="lmstudio"
+export ABSTRACTGATEWAY_MODEL="google/gemma-3n-e4b"
+export LMSTUDIO_BASE_URL="http://127.0.0.1:1234/v1"
+```
+
+3. Ensure the gateway can see the shipped bundle (a directory containing `*.flow`):
+
+```bash
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # e.g. ./abstractgateway/flows/bundles in this repo
+```
+
+4. Send a Telegram message to the bot and verify:
+   - you receive a reply
+   - a follow-up (“What did I just say?”) works (durable memory)
+   - media messages (photo/voice/video/document) are handled
+
 ## Workflow wiring (VisualFlow)
 
-Create a flow that:
-1. waits for `telegram.message` (On Event; scope `session`)
-2. extracts `payload.telegram.text` and `payload.telegram.chat_id`
-3. generates a reply (Agent/LLM Call)
-4. calls `send_telegram_message(chat_id=..., text=...)`
+### Shipped `telegram-agent` bundle (recommended)
+
+AbstractGateway ships a `telegram-agent` bundle that is designed for the bridge:
+- event-driven + session-scoped (durable memory across messages)
+- media-aware (`attachments` become `media` for the LLM call)
+- workflow-owned delivery (workflow calls `send_telegram_message`; no LLM tool-calling required)
+- tracks sent Telegram `message_id` values so `/reset` can best-effort delete prior bot messages
+
+To use it, point `ABSTRACT_TELEGRAM_FLOW_ID` at `telegram-agent@0.0.1:tg-agent-main` and ensure the gateway loads the bundle (see `ABSTRACTGATEWAY_FLOWS_DIR`).
+
+### Custom workflow
+
+If you author your own flow, the minimal shape is:
+1. wait for `telegram.message` (On Event; scope `session`)
+2. extract `payload.telegram.text` and `payload.telegram.chat_id`
+3. generate a reply (Agent/LLM Call)
+4. call `send_telegram_message(chat_id=..., text=...)`
 
 Inbound attachments arrive with an `artifact_id`. Send them back with `send_telegram_artifact(chat_id=..., artifact_id=...)`.
+
+Tip: if you want `/reset` to delete prior bot messages, store sent `message_id` values in `run.vars._runtime.telegram.sent_message_ids` (the bridge scans this on reset).
 
 ## TDLib notes (E2EE path)
 
@@ -55,3 +115,13 @@ Because TDLib is platform-specific, keep your setup steps close to your deployme
 and configuration surface live in:
 - https://github.com/lpalbou/abstractgateway
 
+## Testing checklist
+
+1. Confirm the gateway loaded the `telegram-agent` bundle (API: `GET /api/gateway/bundles`).
+2. Send a message to the bot; verify you get a reply and that Observer can replay the run.
+3. Send a follow-up (“What did I just say?”) to confirm durable memory works.
+4. Send media:
+   - photo (with and without caption)
+   - voice note (STT fallback depends on your `abstractcore --config` audio strategy + installed plugins)
+   - video and document
+5. Send `/reset` to clear the binding/runs, then confirm the next message starts fresh.
