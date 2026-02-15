@@ -52,6 +52,17 @@ export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"  # or "tdlib" (E2EE)
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."      # Bot API transport only
 export ABSTRACT_ENABLE_TELEGRAM_TOOLS=1
 export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"  # handles telegram.message
+
+# Access control (recommended)
+# Use /whoami in Telegram to discover your numeric user_id / chat_id.
+export ABSTRACT_TELEGRAM_ADMIN_USERS="123456789"   # required to approve pairing requests
+export ABSTRACT_TELEGRAM_DM_POLICY="pairing"       # default: pairing (safe)
+export ABSTRACT_TELEGRAM_ALLOWED_USERS="123456789" # optional (for allowlist mode / pre-authorize)
+
+# Groups (default: allowlist + mention required)
+export ABSTRACT_TELEGRAM_GROUP_POLICY="allowlist"
+export ABSTRACT_TELEGRAM_ALLOWED_CHATS="-100123456789"
+export ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS=1
 ```
 
 Then start the gateway:

@@ -16,6 +16,108 @@ Telegram has two integration paths:
 Even with E2EE, messages are decrypted on the gateway host and persisted to durable stores in plaintext by design. Secure
 the gateway host and its storage.
 
+## Access control (critical)
+
+Telegram bots and user accounts are discoverable. Without access control, anyone who finds the handle can message it and
+trigger durable runs + LLM calls.
+
+The bridge is **fail-closed by default**:
+- DMs: `ABSTRACT_TELEGRAM_DM_POLICY=pairing` (default) — unknown users get a pairing code (sent once; use `/pair` to re-show); an admin approves it.
+- Groups: `ABSTRACT_TELEGRAM_GROUP_POLICY=allowlist` (default) — only explicitly allowlisted chats are processed.
+- Unauthorized messages are ignored (no run created, no token spend), except pairing prompts in DMs.
+
+Commands:
+- `/whoami` — always works; prints your `user_id` and `chat_id` (useful for allowlists).
+- `/pair` — request a pairing code (DM only).
+- `/pair list` — list pending requests (admin only).
+- `/pair approve <code>` — approve a request (admin only).
+- `/pair deny <code>` — deny a request (admin only).
+
+Recommended env vars (bridge host):
+
+```bash
+# Pairing approvals (set this to *your* numeric Telegram user_id; use /whoami)
+export ABSTRACT_TELEGRAM_ADMIN_USERS="123456789"
+
+# DMs: pairing (default) | allowlist | open | disabled
+export ABSTRACT_TELEGRAM_DM_POLICY="pairing"
+export ABSTRACT_TELEGRAM_PAIRING_TTL_S="3600"
+
+# DMs: allowlist mode (optional when using pairing)
+export ABSTRACT_TELEGRAM_ALLOWED_USERS="123456789"
+
+# Groups: allowlist (default) | open | disabled
+export ABSTRACT_TELEGRAM_GROUP_POLICY="allowlist"
+export ABSTRACT_TELEGRAM_ALLOWED_CHATS="-100123456789"
+
+# Groups: mention requirement (default true)
+export ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS=1
+
+# Optional: restrict which senders inside allowed groups can trigger the bridge.
+# - unset: fall back to ABSTRACT_TELEGRAM_ALLOWED_USERS (+ paired users)
+# - [] (empty JSON array): allow any sender in allowed groups
+export ABSTRACT_TELEGRAM_GROUP_ALLOWED_USERS='[]'
+```
+
+## Step-by-step: secure pairing (try it now)
+
+This is a practical checklist to verify access control + approvals end-to-end.
+
+1. Configure the bridge (Bot API example):
+
+```bash
+export ABSTRACT_TELEGRAM_BRIDGE=1
+export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"
+export ABSTRACT_TELEGRAM_BOT_TOKEN="..."               # from @BotFather
+export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"
+
+# Secure defaults
+export ABSTRACT_TELEGRAM_DM_POLICY="pairing"
+export ABSTRACT_TELEGRAM_GROUP_POLICY="allowlist"
+export ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS=1
+
+# IMPORTANT: set this to your own Telegram numeric user_id (discover via /whoami)
+export ABSTRACT_TELEGRAM_ADMIN_USERS="123456789"
+
+# Optional: customize /reset confirmation message
+export ABSTRACT_TELEGRAM_RESET_MESSAGE="Hi, what can I do for you today?"
+```
+
+2. Start the gateway, then DM the bot and run `/whoami`.
+   - Copy your `user_id` and put it in `ABSTRACT_TELEGRAM_ADMIN_USERS` (then restart the gateway if needed).
+
+3. From a *different* Telegram account (not in the allowlist), DM the bot anything.
+   - Expected: the bot replies with a pairing prompt and a one-time code (it does not spam on every message; use `/pair` to re-show the code).
+
+4. From the admin account, approve the request:
+   - `/pair list`
+   - `/pair approve <code>`
+
+5. Verify unauthorized DMs are blocked:
+   - Set `ABSTRACT_TELEGRAM_DM_POLICY="allowlist"` and restart.
+   - Expected: unknown users get ignored (except `/whoami`).
+
+6. Verify group allowlist + mention gate:
+   - Add the bot to a group chat, run `/whoami` in that group to get the negative `chat_id` (e.g. `-100...`).
+   - Set `ABSTRACT_TELEGRAM_ALLOWED_CHATS="-100..."` and restart.
+   - Expected: the bot only responds in allowlisted groups, and only when mentioned (e.g. `@YourBot do X`).
+
+7. Verify tool approvals:
+   - In the chat, ask: `run free -m` (or `uname -a`).
+   - Expected: the bot asks you to reply `/approve` before executing `execute_command`.
+   - Expected: after `/approve`, you receive the final answer/result in Telegram (you should not be prompted to approve `send_telegram_message`).
+
+## Viewing Telegram sessions in AbstractCode
+
+Telegram runs are durable; you can replay them from any thin client.
+
+1. Open AbstractCode (default): http://localhost:3002
+2. Go to **History**, click **Refresh**, then open the Telegram session (e.g. `telegram:<chat_id>:r<rev>`).
+
+Notes:
+- For event-driven transports (Telegram), AbstractCode attaches to the session’s `visual_event_listener_*` run when present so the view stays live as new messages arrive.
+- If you previously attached to a per-turn subrun and the chat stops updating, re-open the session from **History** to re-attach to the listener root.
+
 ## Minimal gateway configuration
 
 Install Telegram support:
