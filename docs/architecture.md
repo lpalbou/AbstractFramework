@@ -265,12 +265,14 @@ A scheduled workflow is a durable **parent run** that triggers **child runs** at
 
 ## Event Bridges (Inbound Integrations)
 
-Some deployments use inbound "bridges" that turn external messages into durable runtime events. Typical pattern:
+Some deployments use inbound "bridges" that turn external messages into durable runtime activity. Typical patterns:
 
-1. Bridge receives an inbound message (Telegram, email, etc.).
-2. Bridge chooses a stable `session_id` (for example `telegram:<chat_id>` or an email thread id).
-3. Gateway emits an event into that session (for example `telegram.message` or `email.message`).
-4. A workflow consumes the event (On Event) and replies by calling tools.
+1. Bridge receives an inbound message (email, webhook, etc.).
+2. Bridge chooses a stable `session_id` (for example `email:<thread_id>`).
+3. Bridge either:
+   - starts a new run per message (thin-client semantics), or
+   - emits an event into that session (for event-driven workflows).
+4. A workflow runs and produces durable ledger history + artifacts.
 
 This preserves durability and observability: inbound content becomes replayable ledger history + artifacts.
 

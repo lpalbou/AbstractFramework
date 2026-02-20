@@ -1,18 +1,16 @@
 # Scenario: Telegram "Permanent Contact" (Gateway Bridge + Agent Workflow)
 
-Goal: run a Telegram contact that forwards inbound Telegram messages to a durable workflow (via gateway events) and sends
-replies back via tools.
+Goal: run a Telegram contact that forwards inbound Telegram messages to a durable workflow (one run per message) and sends
+replies back to Telegram.
 
 This is a gateway-first scenario: the gateway host owns durability and stores plaintext history for replay/observability.
 
 ## High-level architecture
 
 1. Telegram bridge receives a message.
-2. Gateway maps it to a stable `session_id` (typically `telegram:<chat_id>`).
-3. Gateway emits an event (for example `telegram.message`) into that session.
-4. Your workflow handles the event and calls outbound Telegram tools:
-   - `send_telegram_message`
-   - `send_telegram_artifact` (files)
+2. Gateway maps it to a stable `session_id` (typically `telegram:<chat_id>:r<rev>`).
+3. Gateway starts a new run for the configured flow (thin-client semantics).
+4. The bridge sends the run output back to Telegram.
 
 ## Security model choices
 
@@ -28,7 +26,8 @@ Secure the gateway host and its storage.
 
 ```bash
 pip install "abstractgateway[http,telegram]"
-pip install "abstractcore[tools]"   # Bot API outbound tools (sendMessage/sendDocument)
+# Optional (only if your workflows call Telegram tools like `send_telegram_message`):
+# pip install "abstractcore[tools]"
 ```
 
 ## Step 2: Configure the gateway (minimum)
@@ -36,22 +35,23 @@ pip install "abstractcore[tools]"   # Bot API outbound tools (sendMessage/sendDo
 You need a normal gateway configuration plus Telegram bridge settings. At minimum:
 
 ```bash
-# Bundles (*.flow). Include the shipped `telegram-agent` bundle.
+# Bundles (*.flow). Include the shipped `basic-agent` bundle (and any custom bundles).
 export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"
 export ABSTRACTGATEWAY_AUTH_TOKEN="..."  # required
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
 # Tool execution + approvals:
-# - `passthrough` (default): tools become durable waits; the Telegram bridge auto-runs safe tools and prompts for approval on dangerous tools.
-# - `approval`: safe tools run in-process; dangerous tools still require a Telegram reply: `/approve` (anything else cancels)
-export ABSTRACTGATEWAY_TOOL_MODE="passthrough"
+# - `approval` (default): safe tools run in-process; dangerous/unknown tools require a Telegram reply: `/approve` or `/deny`.
+export ABSTRACTGATEWAY_TOOL_MODE="approval"
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
 export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"  # or "tdlib" (E2EE)
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."      # Bot API transport only
-export ABSTRACT_ENABLE_TELEGRAM_TOOLS=1
-export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"  # handles telegram.message
+# Optional: override which workflow to run per message.
+# Default (when unset): shipped `basic-agent` bundle entrypoint.
+# export ABSTRACT_TELEGRAM_BUNDLE_ID="basic-agent"
+# export ABSTRACT_TELEGRAM_FLOW_ID="81795ea9"
 
 # Access control (recommended)
 # Use /whoami in Telegram to discover your numeric user_id / chat_id.
@@ -81,23 +81,8 @@ Notes:
 
 ## Step 3: Workflow wiring
 
-### Option A (recommended): use the shipped `telegram-agent` bundle
-
-`telegram-agent@0.0.1:tg-agent-main` is event-driven and session-scoped:
-- Durable memory (uses `use_context=true` + the runtime’s durable `context.messages`)
-- Media-aware LLM calls (attachments are stored as artifacts and passed as `media`)
-- Workflow-owned delivery (workflow calls `send_telegram_message`; no LLM tool-calling required)
-
-### Option B: author your own flow (Flow Editor)
-
-Create a workflow that:
-
-1. waits for `telegram.message` (On Event)
-2. extracts `payload.telegram.text` and `payload.telegram.chat_id`
-3. generates a reply (Agent or LLM Call)
-4. calls `send_telegram_message(chat_id=..., text=...)`
-
-Inbound attachments arrive with an `artifact_id`. To send a file back, call `send_telegram_artifact(chat_id=..., artifact_id=...)`.
+Telegram is a thin client: any workflow that reads `prompt`/`context` (like `abstractcode.agent.v1`) and writes a string
+to `run.output.answer` or `run.output.response` will work. Durable memory comes from the Telegram `session_id`.
 
 ## Step 4: TDLib (E2EE) bootstrap (recommended path)
 

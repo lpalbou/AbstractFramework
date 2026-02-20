@@ -409,11 +409,11 @@ curl -X POST "http://localhost:8080/api/gateway/runs/schedule" \
   -d '{"bundle_id":"daily-report","start_at":"now","interval":"24h"}'
 ```
 
-### 🔌 Event Bridges (Telegram, Email, ...)
+### 🔌 Bridges (Telegram, Email, ...)
 
-Connect external services as durable event sources. Inbound messages become replayable ledger entries:
+Connect external services as durable event sources / thin clients. Inbound messages become replayable ledger entries:
 
-- **Telegram**: `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_FLOW_ID=telegram-agent@0.0.1:tg-agent-main`, `ABSTRACT_ENABLE_TELEGRAM_TOOLS=1` — a durable Telegram contact (Bot API or TDLib)
+- **Telegram (thin client)**: `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_TRANSPORT=bot_api|tdlib`, `ABSTRACT_TELEGRAM_BOT_TOKEN=...` — starts a new run per message under a stable `session_id`
 - **Email**: `ABSTRACT_EMAIL_BRIDGE=1` — email threads are processed by workflows with full audit trails
 
 ### 📋 Built-in CLI Apps

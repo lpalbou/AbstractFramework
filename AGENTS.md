@@ -61,3 +61,9 @@ This file captures practical engineering notes discovered while evolving the cod
 ### 2026-02-15 — Per-repo commit helper
 
 - **Commit script**: `scripts/commit.sh` commits changes per repository (root + siblings) with a shared message, skips clean repos, and prints a summary.
+
+### 2026-02-20 — Tool argument coercion risk
+
+- **Tool-call parsing can yield string values**: several tool-call formats preserve raw strings (XML-ish tags, code blocks), so tool args may arrive as `"false"`, `"0"`, or numeric strings.
+- **Security implication**: in Python, non-empty strings are truthy; without coercion, flags like `allow_dangerous` can be unintentionally enabled.
+- **Direction**: centralize schema-aware coercion with explicit `#FALLBACK` warnings, keep local defense-in-depth in high-risk tools like `execute_command`.

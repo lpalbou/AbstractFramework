@@ -1,10 +1,11 @@
 # Telegram Integration (Gateway Bridge + Workflow)
 
-This guide explains how to run a Telegram "permanent contact" that talks to an agent workflow through the gateway:
+This guide explains how to run a Telegram "permanent contact" that talks to an agent workflow through the gateway.
 
-- Inbound Telegram messages -> gateway emits durable events into a `session_id`
-- Outbound replies/files -> workflow calls tools (`send_telegram_message`, `send_telegram_artifact`)
-- Attachments -> stored in the ArtifactStore for durable replay
+Telegram is implemented as a **thin client**:
+- Inbound Telegram messages -> gateway starts a new run per message (stable `session_id` for durable memory)
+- Outbound replies -> the bridge sends the run output back to Telegram
+- Attachments -> stored in the ArtifactStore and passed as `context.attachments` / `context.media`
 
 ## Security model choices
 
@@ -69,7 +70,8 @@ This is a practical checklist to verify access control + approvals end-to-end.
 export ABSTRACT_TELEGRAM_BRIDGE=1
 export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."               # from @BotFather
-export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"
+# Optional: override which workflow to run per message (defaults to shipped `basic-agent`)
+# export ABSTRACT_TELEGRAM_FLOW_ID="81795ea9"
 
 # Secure defaults
 export ABSTRACT_TELEGRAM_DM_POLICY="pairing"
@@ -105,7 +107,7 @@ export ABSTRACT_TELEGRAM_RESET_MESSAGE="Hi, what can I do for you today?"
 7. Verify tool approvals:
    - In the chat, ask: `run free -m` (or `uname -a`).
    - Expected: the bot asks you to reply `/approve` before executing `execute_command`.
-   - Expected: after `/approve`, you receive the final answer/result in Telegram (you should not be prompted to approve `send_telegram_message`).
+   - Expected: after `/approve`, you receive the final answer/result in Telegram (read-only tools like `web_search` should not require approval).
 
 ## Viewing Telegram sessions in AbstractCode
 
@@ -115,8 +117,7 @@ Telegram runs are durable; you can replay them from any thin client.
 2. Go to **History**, click **Refresh**, then open the Telegram session (e.g. `telegram:<chat_id>:r<rev>`).
 
 Notes:
-- For event-driven transports (Telegram), AbstractCode attaches to the session’s `visual_event_listener_*` run when present so the view stays live as new messages arrive.
-- If you previously attached to a per-turn subrun and the chat stops updating, re-open the session from **History** to re-attach to the listener root.
+- Each incoming Telegram message creates a new run under the same `session_id` (durable memory across turns).
 
 ## Minimal gateway configuration
 
@@ -124,7 +125,8 @@ Install Telegram support:
 
 ```bash
 pip install "abstractgateway[http,telegram]"
-pip install "abstractcore[tools]"   # Bot API outbound tools (sendMessage/sendDocument)
+# Optional (only if your workflows call Telegram tools like `send_telegram_message`):
+# pip install "abstractcore[tools]"
 ```
 
 Set env vars on the gateway host:
@@ -133,17 +135,20 @@ Set env vars on the gateway host:
 export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # directory containing *.flow bundles
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
-export ABSTRACT_ENABLE_TELEGRAM_TOOLS=1
-export ABSTRACT_TELEGRAM_FLOW_ID="telegram-agent@0.0.1:tg-agent-main"
 
 # Bot API (easy, not E2EE)
 export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."
 
 # Tool execution + approvals:
-# - `passthrough` (default): tools become durable waits; the Telegram bridge auto-runs safe tools and prompts for approval on dangerous tools.
-# - `approval`: safe tools run in-process; dangerous tools still require a Telegram reply: `/approve` (anything else cancels)
-export ABSTRACTGATEWAY_TOOL_MODE="passthrough"
+# - `approval` (default): safe tools run in-process; dangerous/unknown tools still require a Telegram reply: `/approve` or `/deny`.
+# - `passthrough`: delegated execution (advanced; not recommended for thin clients).
+export ABSTRACTGATEWAY_TOOL_MODE="approval"
+
+# Optional: override which workflow to run per message.
+# Default (when unset): shipped `basic-agent` bundle entrypoint.
+# export ABSTRACT_TELEGRAM_BUNDLE_ID="basic-agent"
+# export ABSTRACT_TELEGRAM_FLOW_ID="81795ea9"
 ```
 
 Notes:
@@ -186,31 +191,15 @@ export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # e.g. ./abstractgateway/fl
 
 ## Workflow wiring (VisualFlow)
 
-### Shipped `telegram-agent` bundle (recommended)
+### Default workflow (recommended)
 
-AbstractGateway ships a `telegram-agent` bundle that is designed for the bridge:
-- event-driven + session-scoped (durable memory across messages)
-- media-aware (`attachments` become `media` for the LLM call)
-- workflow-owned delivery (workflow calls `send_telegram_message`; no LLM tool-calling required)
-- tracks sent Telegram `message_id` values so `/reset` can best-effort delete prior bot messages
-
-To use it, point `ABSTRACT_TELEGRAM_FLOW_ID` at `telegram-agent@0.0.1:tg-agent-main` and ensure the gateway loads the bundle (see `ABSTRACTGATEWAY_FLOWS_DIR`).
+By default, the bridge runs the shipped `basic-agent` bundle entrypoint once per incoming message and sends the run output back to Telegram.
+Durable memory comes from the stable Telegram `session_id` (no special workflow shape required).
 
 ### Custom workflow
 
-If you author your own flow, the minimal shape is:
-1. wait for `telegram.message` (On Event; scope `session`)
-2. extract `payload.telegram.text` and `payload.telegram.chat_id`
-3. generate a reply (Agent/LLM Call)
-4. call `send_telegram_message(chat_id=..., text=...)`
-
-Inbound attachments arrive with an `artifact_id`. Send them back with `send_telegram_artifact(chat_id=..., artifact_id=...)`.
-
-Notes:
-- Telegram `sendMessage` has a ~4096 character limit. `send_telegram_message` automatically splits long text into multiple messages and returns `message_ids` (best-effort) in the tool result.
-- Empty/whitespace `text` is rejected by Telegram; `send_telegram_message` falls back to a short error message so workflows still deliver something.
-
-Tip: if you want `/reset` to delete prior bot messages, store sent `message_id` values in `run.vars._runtime.telegram.sent_message_ids` (the bridge scans this on reset).
+Any flow that reads `prompt`/`context` (like `abstractcode.agent.v1`) and writes a string to `run.output.answer` or `run.output.response` will work.
+The bridge provides Telegram metadata in `input_data.telegram` if you want to branch on it.
 
 ## TDLib notes (E2EE path)
 
@@ -225,7 +214,7 @@ and configuration surface live in:
 
 ## Testing checklist
 
-1. Confirm the gateway loaded the `telegram-agent` bundle (API: `GET /api/gateway/bundles`).
+1. Confirm the gateway loaded your bundles (API: `GET /api/gateway/bundles`) and that the configured Telegram flow exists.
 2. Send a message to the bot; verify you get a reply and that Observer can replay the run.
 3. Send a follow-up (“What did I just say?”) to confirm durable memory works.
 4. Send media:
@@ -240,23 +229,5 @@ When the agent requests a tool call that requires explicit permission (for examp
 the bridge sends an approval prompt into the chat. Reply with:
 - `/approve` (or `approve`) to execute the tool calls and continue
 - anything else to cancel the tool calls and let the workflow continue with failure results
-
-### Tool permissions (Telegram)
-
-You can control which tools are available and which require approval.
-
-In chat:
-- Send `/tools` to view the current tool policy.
-- Examples:
-  - `/tools safe` (default) — safe tools auto-run; dangerous tools require `/approve`
-  - `/tools open` — approve everything by default (dangerous)
-  - `/tools strict` — allow only the safe tool set
-  - `/tools allow read_file web_search` — custom allowlist
-  - `/tools block execute_command write_file` — block specific tools
-
-Operator defaults (env; applied per chat unless overridden via `/tools ...`):
-- `ABSTRACT_TELEGRAM_APPROVE_ALL_TOOLS=1`
-- `ABSTRACT_TELEGRAM_ALLOWED_TOOLS` (newline-separated or JSON list)
-- `ABSTRACT_TELEGRAM_AUTO_APPROVE_TOOLS` (newline-separated or JSON list)
-- `ABSTRACT_TELEGRAM_REQUIRE_APPROVAL_TOOLS` (newline-separated or JSON list)
-- `ABSTRACT_TELEGRAM_BLOCKED_TOOLS` (newline-separated or JSON list)
+ 
+Note: `/tools` is intentionally disabled in thin-client mode; use `/approve` and `/deny`.

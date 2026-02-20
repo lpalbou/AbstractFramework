@@ -415,19 +415,20 @@ abstractcode --provider ollama --model qwen3:4b-instruct
 
 ## Integrations (Email, Telegram)
 
-Some integrations are enabled on the gateway host and emit durable events that workflows can consume.
+Some integrations are enabled on the gateway host and act as thin clients (start runs, resume waits, deliver outputs).
 
 - Telegram bridge + tools:
-  - `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_FLOW_ID=telegram-agent@0.0.1:tg-agent-main`, `ABSTRACT_ENABLE_TELEGRAM_TOOLS=1`
+  - `ABSTRACT_TELEGRAM_BRIDGE=1` (required)
   - Transport + credentials:
     - Bot API: `ABSTRACT_TELEGRAM_TRANSPORT=bot_api`, `ABSTRACT_TELEGRAM_BOT_TOKEN=...`
     - TDLib (E2EE): `ABSTRACT_TELEGRAM_TRANSPORT=tdlib` + TDLib setup (see guide)
-  - Replies + tool approvals: `ABSTRACTGATEWAY_TOOL_MODE=passthrough` (default) or `approval` (safe tools in-process; dangerous tools require `/approve`)
+  - Optional workflow override (defaults to shipped `basic-agent` entrypoint):
+    - `ABSTRACT_TELEGRAM_BUNDLE_ID="basic-agent"`, `ABSTRACT_TELEGRAM_FLOW_ID="81795ea9"`
+  - Replies + tool approvals: `ABSTRACTGATEWAY_TOOL_MODE=approval` (default; safe tools in-process; dangerous tools require `/approve` or `/deny`)
   - Optional:
     - Telegram-only routing override: `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`)
     - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30)
     - `/reset` message deletion controls: `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES`, `ABSTRACT_TELEGRAM_RESET_DELETE_MAX`
-    - Tool permissions defaults: `ABSTRACT_TELEGRAM_APPROVE_ALL_TOOLS`, `ABSTRACT_TELEGRAM_ALLOWED_TOOLS`, `ABSTRACT_TELEGRAM_AUTO_APPROVE_TOOLS`, `ABSTRACT_TELEGRAM_REQUIRE_APPROVAL_TOOLS`, `ABSTRACT_TELEGRAM_BLOCKED_TOOLS` (chat command: `/tools`)
     - Access control (recommended; bridge is fail-closed by default):
       - `/whoami` (always available) prints your Telegram `user_id` and `chat_id`
       - DMs: `ABSTRACT_TELEGRAM_DM_POLICY=pairing|allowlist|open|disabled`, admins: `ABSTRACT_TELEGRAM_ADMIN_USERS`, allowlist: `ABSTRACT_TELEGRAM_ALLOWED_USERS`
