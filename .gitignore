@@ -260,3 +260,6 @@ $RECYCLE.BIN/
 # Node / npm artefacts (from npm-based sibling repos)
 node_modules/
 package-lock.json
+
+# Local scratch / notes
+/untracked/
