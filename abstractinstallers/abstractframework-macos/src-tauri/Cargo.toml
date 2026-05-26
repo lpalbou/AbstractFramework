@@ -1,0 +1,16 @@
+# AbstractFramework macOS Installer (Rust/Tauri)
+[package]
+name = "abstractframework_macos_installer"
+version = "0.1.0"
+description = "AbstractFramework macOS installer manager (prototype)."
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+tauri = { version = "2.10.0", features = [] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rfd = "0.17.2"
+
+[build-dependencies]
+tauri-build = { version = "2.5.5", features = [] }

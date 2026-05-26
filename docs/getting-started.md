@@ -6,11 +6,25 @@ AbstractFramework is modular — you can install the full framework in one comma
 
 **New here?** Start with [Path 0](#path-0-full-framework-recommended) to install everything, then jump to the path that matches what you want to build.
 
+## Installer-based setup (prototype)
+For non-technical users, a **GUI installer prototype** exists for AbstractCore at
+`abstractinstallers/abstractcore`. It installs from **PyPI via pip** (no Git clone),
+creates an isolated `.venv`, then runs a multi‑step wizard that mirrors
+`abstractcore --config` (defaults, vision, keys, audio/video, embeddings, logging). For durable
+framework routing, use capability defaults such as `output.text` and `embedding.text`; see
+[Capability Routing Defaults](guide/capability-routing-defaults.md).
+
+- Run from source: `python abstractinstallers/abstractcore/installer_gui.py`
+- Build a clickable app: `abstractinstallers/abstractcore/BUILDING.md`
+- Rebuild the app bundle to pick up UI updates
+
+Design guidance for production installers is in `docs/installers/README.md`.
+
 ## What Do You Want to Build?
 
 | Your Goal | Start Here | What You'll Use |
 |-----------|------------|-----------------|
-| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework==0.1.2` |
+| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework[all]` |
 | Call LLMs with a unified API | [Path 1](#path-1-llm-integration) | `abstractcore` |
 | Build a local coding assistant | [Path 2](#path-2-terminal-agent) | `abstractcode` |
 | Create durable workflows | [Path 3](#path-3-durable-workflows) | `abstractruntime` |
@@ -21,6 +35,7 @@ AbstractFramework is modular — you can install the full framework in one comma
 | Add music generation to AbstractCore | [Path 7a](#path-7a-music-generation) | `abstractcore` + `abstractmusic` (plugin) |
 | Build a knowledge graph | [Path 8](#path-8-knowledge-graph) | `abstractmemory` + `abstractsemantics` |
 | macOS menu bar assistant | [Path 9](#path-9-macos-assistant) | `abstractassistant` |
+| SmartNote systray note organizer | [Path 16](#path-16-smartnote) | `smartnote` |
 | Visual workflow editor (browser) | [Path 10](#path-10-flow-editor) | `@abstractframework/flow` |
 | Browser-based coding assistant | [Path 11](#path-11-code-web-ui) | `@abstractframework/code` |
 | Create a specialized agent | [Path 12](#path-12-specialized-agent) | `abstractflow` + clients |
@@ -33,28 +48,41 @@ AbstractFramework is modular — you can install the full framework in one comma
 Install the pinned global release profile in one command:
 
 ```bash
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
 
 This installs all framework Python packages together, including:
 
 | Package | Version |
 |---------|---------|
-| `abstractcore` | `2.12.0` |
-| `abstractruntime` | `0.4.2` |
-| `abstractagent` | `0.3.1` |
+| `abstractcore` | `2.13.12` |
+| `abstractruntime` | `0.4.8` |
+| `abstractagent` | `0.3.2` |
 | `abstractflow` | `0.3.7` (`editor`) |
 | `abstractcode` | `0.3.6` |
-| `abstractgateway` | `0.1.0` |
-| `abstractmemory` | `0.0.2` |
-| `abstractsemantics` | `0.0.2` |
-| `abstractvoice` | `0.6.3` |
-| `abstractvision` | `0.2.1` |
+| `abstractgateway` | `0.2.4` (`server,memory`) |
+| `abstractmemory` | `0.2.4` |
+| `abstractsemantics` | `0.0.3` |
+| `abstractvoice` | `0.9.2` |
+| `abstractvision` | `0.3.3` |
+| `abstractmusic` | `0.1.1` |
 | `abstractassistant` | `0.4.2` |
 
-`abstractcore` is installed with `openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`.
+`abstractcore` is installed with `remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio`.
 
 Use this path when you want a fully functional setup with minimal decision overhead.
+
+For native local-engine deployments, use the hardware profile that matches the host:
+
+```bash
+pip install "abstractframework[apple]"     # full Gateway deployment on Apple Silicon
+pip install "abstractframework[gpu]"       # full Gateway deployment on GPU workstations
+pip install "abstractframework[all-apple]" # full pinned ecosystem, Apple profile
+pip install "abstractframework[all-gpu]"   # full pinned ecosystem, GPU profile
+```
+
+Docker deployments do not use the Apple profile. Use the lightweight Gateway server image for
+remote-provider deployments, or the explicit NVIDIA Gateway image on CUDA hosts.
 
 After install, configure and verify your setup:
 
@@ -480,7 +508,9 @@ pip install abstractcore abstractmusic
 
 ### Configure a local backend (ACE-Step v1.5)
 
-AbstractMusic generates **locally in-process**. The default backend is **ACE-Step v1.5**.
+AbstractMusic generates **locally in-process**. The recommended backend is
+**ACE-Step Official** (`acestep-official`), which wraps the upstream ACE-Step
+runtime and 5Hz LM planner.
 
 > If you switch to the Diffusers backend, **model licenses vary by checkpoint**. Choose a model compatible with your intended usage.
 
@@ -491,10 +521,10 @@ from abstractcore import create_llm
 
 llm = create_llm(
     # Any provider/model works here. The LLM does *not* generate music audio.
-    # Music generation is performed by the configured AbstractMusic backend (ACE-Step by default).
+    # Music generation is performed by the configured AbstractMusic backend.
     "ollama",
     model="qwen3:4b-instruct",
-    music_backend="acestep",
+    music_backend="acestep-official",
     music_model_id="ACE-Step/Ace-Step1.5",
 )
 
@@ -547,14 +577,17 @@ print(hits[0].object)  # "france"
 
 ## Path 9: macOS Assistant
 
-Get a menu bar AI assistant with optional voice.
+Get a menu bar AI assistant with voice backend included by default.
+
+**Gateway-first (recommended):**
+- Run AbstractGateway (see [Path 4](#path-4-gateway--observer))
+- Set `gateway.url` + `gateway.use_gateway=true` in `config.toml`
+- Use the workflow picker in the tray UI to select the bundle/flow per session
 
 ### Install
 
 ```bash
 pip install abstractassistant
-# Or with voice support:
-pip install "abstractassistant[full]"
 ```
 
 ### Run
@@ -567,7 +600,37 @@ assistant tray
 assistant run --provider ollama --model qwen3:4b-instruct --prompt "Summarize my changes"
 ```
 
+If the gateway is offline, the status pill shows **OFFLINE** and you can use
+**Reconnect gateway** from the menu to retry.
+
 **Next**: See [AbstractAssistant docs](https://github.com/lpalbou/abstractassistant/blob/main/docs/getting-started.md).
+
+---
+
+## Path 16: SmartNote
+
+Capture notes from a systray UI and let SmartNote self-organize by topic and similarity.
+
+### Install (from source)
+
+```bash
+python -m pip install -e ./smartnote
+```
+
+### Run
+
+```bash
+export SMARTNOTE_ENABLE_GATEWAY_TOOLS=1
+export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
+export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+abstractgateway serve --host 127.0.0.1 --port 8080
+smartnote
+```
+
+On startup, SmartNote builds the bundle if needed and uploads it to the gateway.
+Fragments are auto-classified into existing cards or create new cards.
+
+**Next**: See `smartnote/docs/getting-started.md`.
 
 ---
 
@@ -576,6 +639,9 @@ assistant run --provider ollama --model qwen3:4b-instruct --prompt "Summarize my
 Build and edit visual workflows in your browser.
 
 ### Run
+
+You need a running AbstractGateway (see [Path 4](#path-4-gateway--observer)). If the gateway is not on
+`http://127.0.0.1:8080`, set `ABSTRACTFLOW_GATEWAY_URL` or pass `--gateway-url`.
 
 ```bash
 npx @abstractframework/flow
@@ -632,6 +698,8 @@ Use cases: code reviewers, deep researchers, data analysts, custom assistants.
 ```bash
 npx @abstractframework/flow
 ```
+
+If your gateway is not on the default port, set `ABSTRACTFLOW_GATEWAY_URL` or pass `--gateway-url`.
 
 Open http://localhost:3003 and create a workflow with:
 - **On Flow Start** node (outputs: `provider`, `model`, `prompt`)
@@ -820,11 +888,15 @@ source ./scripts/build.sh --clean     # delete .venv first (avoids cross-project
 
 `build.sh` installs every Python package in editable mode (`pip install -e`) from local checkouts — NOT from PyPI. This means your code changes take effect immediately. Third-party dependencies (pydantic, torch, etc.) are resolved from PyPI normally.
 
+For source builds, `build.sh` prepares the project `.venv` for editable installs and then reuses that toolchain on later runs. The expected workflow is simply `source ./scripts/build.sh`; you should not need to manage pip build-isolation settings manually.
+
 > **Important:** `build.sh` requires `clone.sh` to have been run first — it expects sibling repo directories to exist.
 
 > **Tip:** Use `source` (not `./`) so your shell stays in the `.venv` after the build.
 
 > **Tip:** Use `--clean` if you see dependency conflicts from other projects in your `.venv`. This deletes the venv and creates a fresh one.
+
+> **macOS tip:** `build.sh` automatically clears Apple quarantine attributes from downloaded UI dependencies before the npm build step, so you should not need to run `xattr` manually.
 
 ### Install from PyPI (alternative)
 
@@ -835,7 +907,7 @@ For end users who just want to install the published release:
 ./scripts/install.sh
 
 # Or manually
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
 
 ### After install (source or PyPI)

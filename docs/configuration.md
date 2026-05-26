@@ -117,7 +117,18 @@ abstractcore --status      # show current config
 
 ## AbstractGateway (Server Configuration)
 
-AbstractGateway is the remote control plane. Two variables are **required**:
+AbstractGateway is the remote control plane and the deployment composition root. Use
+`abstractgateway-config` or `abstractgateway config` for Gateway-owned settings such as auth,
+origins, data directories, memory store, tool policy, and run defaults.
+
+Install profiles are separate from runtime configuration:
+
+- `abstractgateway[server]`: lightweight server profile for remote/OpenAI-compatible providers.
+- `abstractgateway[apple]`: full native macOS Python deployment profile.
+- `abstractgateway[gpu]`: full native GPU Python deployment profile.
+- Docker: lightweight server image, or explicit NVIDIA server image.
+
+Two variables are **required** for direct server startup:
 
 ### Required
 
@@ -146,12 +157,29 @@ export ABSTRACTGATEWAY_STORE_BACKEND=sqlite
 export ABSTRACTGATEWAY_DB_PATH="$PWD/runtime/gateway/gateway.sqlite3"
 ```
 
-### LLM Defaults (If Your Bundles Use LLM/Tool Nodes)
+### Capability Routing Defaults
 
 ```bash
-export ABSTRACTGATEWAY_PROVIDER="ollama"
-export ABSTRACTGATEWAY_MODEL="qwen3:4b-instruct"
+abstractcore --set-global-default lmstudio:qwen/qwen3.6-35b-a3b
+
+abstractgateway-config set-default output.text \
+  --provider lmstudio \
+  --model qwen/qwen3.6-35b-a3b \
+  --base-url http://127.0.0.1:1234/v1
+
+abstractgateway-config set-default embedding.text \
+  --provider lmstudio \
+  --model text-embedding-nomic-embed-text-v1.5 \
+  --base-url http://127.0.0.1:1234/v1
 ```
+
+Use capability routes for durable framework defaults. `output.text` controls the default text
+generation route, `input.text` controls default text understanding, and `embedding.text` controls
+semantic retrieval embeddings. Gateway deployment env vars are reserved for Gateway internals such
+as host, port, auth, stores, and the Core server URL/token.
+
+See [Capability Routing Defaults](guide/capability-routing-defaults.md) for the full route matrix,
+including image, video, voice, sound, scene3d, and future rerank routes.
 
 ### Tool Execution Mode
 
@@ -194,9 +222,11 @@ npx @abstractframework/flow
 
 ```bash
 export PORT="3003"        # default; server port
+export ABSTRACTFLOW_GATEWAY_URL="http://127.0.0.1:8080"  # gateway base URL
+export ABSTRACTGATEWAY_AUTH_TOKEN="dev-token"  # optional; bearer auth for secured gateways
 ```
 
-Configure the gateway connection in the UI settings.
+If needed, pass `--gateway-url` to the CLI (or use the legacy `ABSTRACTFLOW_BACKEND_URL`).
 
 **Canonical docs**:
 - [Web editor guide](https://github.com/lpalbou/abstractflow/blob/main/docs/web-editor.md)
@@ -261,7 +291,12 @@ Data is stored in `~/.abstractassistant/` by default:
 
 ## AbstractMemory (Knowledge Graph)
 
-AbstractMemory is configured programmatically. For persistent storage:
+AbstractMemory is configured programmatically. It is the optional knowledge-store
+package for temporal triples; it is not a hard dependency of the Runtime kernel.
+Gateway/Runtime memory integrations import it when memory-aware workflow nodes
+or KG query endpoints are enabled.
+
+For persistent storage:
 
 ```python
 from abstractmemory import LanceDBTripleStore
@@ -284,6 +319,11 @@ store = InMemoryTripleStore()
 ---
 
 ## AbstractSemantics (Registry Path)
+
+AbstractSemantics is the standalone vocabulary/schema registry for predicates,
+entity types, relationships, and JSON Schema refs. It is a required dependency
+of AbstractRuntime and is also used by memory integrations to validate KG
+assertions.
 
 To override the default semantics registry YAML:
 
@@ -369,6 +409,22 @@ abstractvision repl  # Interactive mode
 
 ---
 
+## SmartNote (Gateway-First Notes)
+
+SmartNote is a thin client that relies on AbstractGateway. Core settings:
+
+- `SMARTNOTE_GATEWAY_URL` (default `http://127.0.0.1:8080`)
+- `SMARTNOTE_GATEWAY_TOKEN` (must match `ABSTRACTGATEWAY_AUTH_TOKEN`)
+- `SMARTNOTE_ENABLE_GATEWAY_TOOLS=1` (set on the gateway host)
+- `SMARTNOTE_GATEWAY_BUNDLE_ID` (default `smartnote`)
+- `SMARTNOTE_GATEWAY_BUNDLE_VERSION` (default `0.1.0`)
+- `SMARTNOTE_GATEWAY_FLOW_ID` (default `smartnote_ingest`)
+- `SMARTNOTE_DATA_DIR` (defaults to `ABSTRACTGATEWAY_DATA_DIR` when unset)
+- `SMARTNOTE_CARD_MATCH_MIN_SCORE` (similarity threshold for auto-attach)
+- `SMARTNOTE_ROUTING_MIN_CONFIDENCE` (LLM routing confidence threshold)
+
+---
+
 ## Example: Gateway + Observer (Local Dev)
 
 A complete local development setup:
@@ -420,7 +476,7 @@ Some integrations are enabled on the gateway host and act as thin clients (start
 - Telegram bridge + tools:
   - `ABSTRACT_TELEGRAM_BRIDGE=1` (required)
   - Transport + credentials:
-    - Bot API: `ABSTRACT_TELEGRAM_TRANSPORT=bot_api`, `ABSTRACT_TELEGRAM_BOT_TOKEN=...`
+    - Bot API: `ABSTRACT_TELEGRAM_BOT_TOKEN=...` (transport defaults to `bot_api` when the token is set)
     - TDLib (E2EE): `ABSTRACT_TELEGRAM_TRANSPORT=tdlib` + TDLib setup (see guide)
   - Optional workflow override (defaults to shipped `basic-agent` entrypoint):
     - `ABSTRACT_TELEGRAM_BUNDLE_ID="basic-agent"`, `ABSTRACT_TELEGRAM_FLOW_ID="81795ea9"`
@@ -431,8 +487,8 @@ Some integrations are enabled on the gateway host and act as thin clients (start
     - `/reset` message deletion controls: `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES`, `ABSTRACT_TELEGRAM_RESET_DELETE_MAX`
     - Access control (recommended; bridge is fail-closed by default):
       - `/whoami` (always available) prints your Telegram `user_id` and `chat_id`
-      - DMs: `ABSTRACT_TELEGRAM_DM_POLICY=pairing|allowlist|open|disabled`, admins: `ABSTRACT_TELEGRAM_ADMIN_USERS`, allowlist: `ABSTRACT_TELEGRAM_ALLOWED_USERS`
-      - Groups: `ABSTRACT_TELEGRAM_GROUP_POLICY=allowlist|open|disabled`, allowlist: `ABSTRACT_TELEGRAM_ALLOWED_CHATS`, mention gate: `ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS`, sender allowlist override: `ABSTRACT_TELEGRAM_GROUP_ALLOWED_USERS`
+      - DMs (default: allowlist): `ABSTRACT_TELEGRAM_ALLOWED_USERS` (comma/newline-separated ints or JSON list) (+ optional `ABSTRACT_TELEGRAM_DM_POLICY=allowlist|pairing|open|disabled`)
+      - Groups (default: disabled): `ABSTRACT_TELEGRAM_GROUP_POLICY=disabled|allowlist|open` (+ `ABSTRACT_TELEGRAM_ALLOWED_CHATS` for allowlist mode)
   - See [Guide: Telegram integration](guide/telegram-integration.md)
 - Email bridge + tools:
   - `ABSTRACT_EMAIL_BRIDGE=1` and email account configuration (`ABSTRACT_EMAIL_*`)

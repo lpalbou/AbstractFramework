@@ -20,7 +20,7 @@ pip install abstractcode
 Full pinned stack (includes AbstractCode):
 
 ```bash
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
 
 ## Step 2: Start a local model
@@ -65,4 +65,3 @@ Use a gateway when you want:
 - bundle discovery for specialized agents
 
 See [Gateway-first local development](gateway-first-local-dev.md).
-

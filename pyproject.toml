@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.2"
+version = "0.1.4"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -42,60 +42,104 @@ requires-python = ">=3.10"
 # Base dependencies (full framework, batteries included)
 dependencies = [
     # Core runtime with provider/tool/media/embeddings/server stack enabled.
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.12.0",
-    "abstractruntime==0.4.2",
-    "abstractagent==0.3.1",
+    "abstractcore[remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio]==2.13.25",
+    "abstractruntime==0.4.21",
+    "abstractagent==0.3.7",
     # Flow editor backend + agent nodes.
-    "abstractflow[editor]==0.3.7",
+    "abstractflow[editor]==0.3.13",
     "abstractcode==0.3.6",
-    "abstractgateway==0.1.0",
-    "abstractmemory==0.0.2",
-    "abstractsemantics==0.0.2",
-    "abstractvoice==0.6.3",
-    "abstractvision==0.2.1",
-    "abstractassistant==0.4.2",
+    "abstractgateway[server,memory]==0.2.17",
+    "abstractmemory[lancedb]==0.2.6",
+    "abstractsemantics==0.0.4",
+    "abstractvoice==0.10.16",
+    "abstractvision==0.3.12",
+    "abstractmusic==0.1.11",
+    "abstractassistant==0.4.5",
 ]
 
 [project.optional-dependencies]
 # Individual components
-core = ["abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.12.0"]
-runtime = ["abstractruntime==0.4.2"]
-agent = ["abstractagent==0.3.1"]
-flow = ["abstractflow[editor]==0.3.7"]
+core = ["abstractcore[remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio]==2.13.25"]
+runtime = ["abstractruntime==0.4.21"]
+agent = ["abstractagent==0.3.7"]
+flow = ["abstractflow[editor]==0.3.13"]
 code = ["abstractcode==0.3.6"]
-gateway = ["abstractgateway==0.1.0"]
-memory = ["abstractmemory==0.0.2"]
-semantics = ["abstractsemantics==0.0.2"]
-voice = ["abstractvoice==0.6.3"]
-vision = ["abstractvision==0.2.1"]
-assistant = ["abstractassistant==0.4.2"]
+gateway = ["abstractgateway[server,memory]==0.2.17"]
+memory = ["abstractmemory[lancedb]==0.2.6"]
+semantics = ["abstractsemantics==0.0.4"]
+voice = ["abstractvoice==0.10.16"]
+vision = ["abstractvision==0.3.12"]
+music = ["abstractmusic==0.1.11"]
+assistant = ["abstractassistant==0.4.5"]
 
 # Bundles
 backend = [
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.12.0",
-    "abstractruntime==0.4.2",
-    "abstractagent==0.3.1",
-    "abstractflow[editor]==0.3.7",
-    "abstractgateway==0.1.0",
-    "abstractmemory==0.0.2",
-    "abstractsemantics==0.0.2",
-    "abstractvoice==0.6.3",
-    "abstractvision==0.2.1",
+    "abstractcore[remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio]==2.13.25",
+    "abstractruntime==0.4.21",
+    "abstractagent==0.3.7",
+    "abstractflow[editor]==0.3.13",
+    "abstractgateway[server,memory]==0.2.17",
+    "abstractmemory[lancedb]==0.2.6",
+    "abstractsemantics==0.0.4",
+    "abstractvoice==0.10.16",
+    "abstractvision==0.3.12",
+    "abstractmusic==0.1.11",
 ]
 
 # Full installation (all packages)
 all = [
-    "abstractcore[openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server]==2.12.0",
-    "abstractruntime==0.4.2",
-    "abstractagent==0.3.1",
-    "abstractflow[editor]==0.3.7",
+    "abstractcore[remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio]==2.13.25",
+    "abstractruntime==0.4.21",
+    "abstractagent==0.3.7",
+    "abstractflow[editor]==0.3.13",
     "abstractcode==0.3.6",
-    "abstractgateway==0.1.0",
-    "abstractmemory==0.0.2",
-    "abstractsemantics==0.0.2",
-    "abstractvoice==0.6.3",
-    "abstractvision==0.2.1",
-    "abstractassistant==0.4.2",
+    "abstractgateway[server,memory]==0.2.17",
+    "abstractmemory[lancedb]==0.2.6",
+    "abstractsemantics==0.0.4",
+    "abstractvoice==0.10.16",
+    "abstractvision==0.3.12",
+    "abstractmusic==0.1.11",
+    "abstractassistant==0.4.5",
+]
+
+# Native macOS Python installs. These are intentionally not Docker profiles:
+# MLX/Metal-backed engines run on the host Apple runtime.
+apple = [
+    "abstractgateway[apple]==0.2.17",
+]
+
+gpu = [
+    "abstractgateway[gpu]==0.2.17",
+]
+
+all-apple = [
+    "abstractcore[all-apple]==2.13.25",
+    "abstractruntime[all-apple]==0.4.21",
+    "abstractagent[all-apple]==0.3.7",
+    "abstractflow[apple]==0.3.13",
+    "abstractcode==0.3.6",
+    "abstractgateway[all-apple]==0.2.17",
+    "abstractmemory[all-apple]==0.2.6",
+    "abstractsemantics[all-apple]==0.0.4",
+    "abstractvoice[all-apple]==0.10.16",
+    "abstractvision[all-apple]==0.3.12",
+    "abstractmusic[all-apple]==0.1.11",
+    "abstractassistant==0.4.5",
+]
+
+all-gpu = [
+    "abstractcore[all-gpu]==2.13.25",
+    "abstractruntime[all-gpu]==0.4.21",
+    "abstractagent[all-gpu]==0.3.7",
+    "abstractflow[gpu]==0.3.13",
+    "abstractcode==0.3.6",
+    "abstractgateway[all-gpu]==0.2.17",
+    "abstractmemory[all-gpu]==0.2.6",
+    "abstractsemantics[all-gpu]==0.0.4",
+    "abstractvoice[all-gpu]==0.10.16",
+    "abstractvision[all-gpu]==0.3.12",
+    "abstractmusic[all-gpu]==0.1.11",
+    "abstractassistant==0.4.5",
 ]
 
 # Development dependencies
@@ -134,3 +178,6 @@ select = ["E", "F", "I", "N", "W"]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

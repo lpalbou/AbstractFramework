@@ -10,34 +10,36 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.2"
+__version__ = "0.1.4"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.12.0",
-    "abstractruntime": "0.4.2",
-    "abstractagent": "0.3.1",
-    "abstractflow": "0.3.7",
+    "abstractcore": "2.13.25",
+    "abstractruntime": "0.4.21",
+    "abstractagent": "0.3.7",
+    "abstractflow": "0.3.13",
     "abstractcode": "0.3.6",
-    "abstractgateway": "0.1.0",
-    "abstractmemory": "0.0.2",
-    "abstractsemantics": "0.0.2",
-    "abstractvoice": "0.6.3",
-    "abstractvision": "0.2.1",
-    "abstractassistant": "0.4.2",
+    "abstractgateway": "0.2.17",
+    "abstractmemory": "0.2.6",
+    "abstractsemantics": "0.0.4",
+    "abstractvoice": "0.10.16",
+    "abstractvision": "0.3.12",
+    "abstractmusic": "0.1.11",
+    "abstractassistant": "0.4.5",
 }
 
 CORE_DEFAULT_EXTRAS = [
-    "openai",
-    "anthropic",
-    "huggingface",
+    "remote",
     "embeddings",
     "tokens",
     "tools",
     "media",
     "compression",
     "server",
+    "vision",
+    "voice",
+    "audio",
 ]
 
 # Convenience re-exports (AbstractCore is a base dependency of this meta-package).
@@ -72,6 +74,7 @@ def get_release_profile() -> dict[str, object]:
         "packages": RELEASE_VERSIONS.copy(),
         "core_extras": list(CORE_DEFAULT_EXTRAS),
         "flow_extra": "editor",
+        "gateway_extras": ["server", "memory"],
     }
 
 
@@ -98,6 +101,7 @@ def get_installed_packages() -> dict[str, str]:
         "abstractsemantics",
         "abstractvoice",
         "abstractvision",
+        "abstractmusic",
         "abstractassistant",
     ]:
         _maybe_add(name)
@@ -120,6 +124,7 @@ def print_status() -> None:
         "abstractsemantics",
         "abstractvoice",
         "abstractvision",
+        "abstractmusic",
         "abstractassistant",
     ]
 
@@ -138,4 +143,4 @@ def print_status() -> None:
     if len(installed) < len(all_packages):
         print("")
         print("To install the full pinned framework:")
-        print('  pip install "abstractframework==0.1.2"')
+        print('  pip install "abstractframework[all]"')

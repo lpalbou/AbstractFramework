@@ -1,0 +1,20 @@
+{
+  "id": "abstractcore",
+  "name": "AbstractCore",
+  "default_profile": "minimal",
+  "profiles": {
+    "minimal": {
+      "extras": []
+    },
+    "all-apple": {
+      "extras": [
+        "all-apple"
+      ]
+    },
+    "all-gpu": {
+      "extras": [
+        "all-gpu"
+      ]
+    }
+  }
+}

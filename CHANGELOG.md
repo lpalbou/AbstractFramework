@@ -6,6 +6,46 @@ All notable changes to AbstractFramework will be documented in this file.
 
 *No unreleased changes.*
 
+## [0.1.4] - 2026-05-26
+
+### Changed
+
+- Bumped the pinned framework release set:
+  `abstractcore==2.13.25`, `abstractruntime==0.4.21`,
+  `abstractagent==0.3.7`, `abstractflow==0.3.13`,
+  `abstractgateway==0.2.17`, `abstractmemory==0.2.6`,
+  `abstractsemantics==0.0.4`, `abstractvoice==0.10.16`,
+  `abstractvision==0.3.12`, `abstractmusic==0.1.11`, and
+  `abstractassistant==0.4.5`.
+- Tightened repo hygiene so local-only artefacts and sibling projects (venvs,
+  caches, and independent repos like SmartNote / AI-Space) stay out of
+  AbstractFramework version control and distribution sources.
+
+### Added
+
+- Added installer documentation and scaffolding under `abstractinstallers/` and
+  expanded ecosystem docs (ADRs, guides, scenarios, and backlog entries) to
+  reflect current gateway-first deployment patterns.
+
+## [0.1.3] - 2026-05-08
+
+### Changed
+
+- Bumped the pinned framework release set for the install-profile alignment:
+  `abstractcore==2.13.12`, `abstractruntime==0.4.8`,
+  `abstractagent==0.3.2`, `abstractgateway==0.2.4`,
+  `abstractmemory==0.2.4`, `abstractsemantics==0.0.3`,
+  `abstractvoice==0.9.2`, `abstractvision==0.3.3`, and
+  `abstractmusic==0.1.1`.
+- Added native hardware aggregate extras:
+  `abstractframework[apple]`, `abstractframework[gpu]`,
+  `abstractframework[all-apple]`, and `abstractframework[all-gpu]`.
+  The `apple` and `gpu` root profiles delegate to the matching full Gateway
+  deployment profile; the `all-*` profiles pin the whole ecosystem.
+- Documented the Python-vs-Docker split: Python installs can use native Apple
+  and GPU profiles, while Docker remains the lightweight Gateway server image
+  plus the explicit NVIDIA server image.
+
 ## [0.1.2] - 2026-02-12
 
 ### Changed

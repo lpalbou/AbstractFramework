@@ -23,91 +23,80 @@ Telegram bots and user accounts are discoverable. Without access control, anyone
 trigger durable runs + LLM calls.
 
 The bridge is **fail-closed by default**:
-- DMs: `ABSTRACT_TELEGRAM_DM_POLICY=pairing` (default) — unknown users get a pairing code (sent once; use `/pair` to re-show); an admin approves it.
-- Groups: `ABSTRACT_TELEGRAM_GROUP_POLICY=allowlist` (default) — only explicitly allowlisted chats are processed.
-- Unauthorized messages are ignored (no run created, no token spend), except pairing prompts in DMs.
+- DMs: `ABSTRACT_TELEGRAM_DM_POLICY=allowlist` (default) — only allowlisted Telegram `user_id`s are processed.
+- Groups: `ABSTRACT_TELEGRAM_GROUP_POLICY=disabled` (default) — all group/supergroup/channel messages are ignored.
+- Unauthorized messages are ignored (no run created, no token spend). `/whoami` always works.
 
 Commands:
 - `/whoami` — always works; prints your `user_id` and `chat_id` (useful for allowlists).
-- `/pair` — request a pairing code (DM only).
-- `/pair list` — list pending requests (admin only).
-- `/pair approve <code>` — approve a request (admin only).
-- `/pair deny <code>` — deny a request (admin only).
+- `/pair ...` — pairing workflow (DM only; only when `ABSTRACT_TELEGRAM_DM_POLICY=pairing`).
 
-Recommended env vars (bridge host):
-
-```bash
-# Pairing approvals (set this to *your* numeric Telegram user_id; use /whoami)
-export ABSTRACT_TELEGRAM_ADMIN_USERS="123456789"
-
-# DMs: pairing (default) | allowlist | open | disabled
-export ABSTRACT_TELEGRAM_DM_POLICY="pairing"
-export ABSTRACT_TELEGRAM_PAIRING_TTL_S="3600"
-
-# DMs: allowlist mode (optional when using pairing)
-export ABSTRACT_TELEGRAM_ALLOWED_USERS="123456789"
-
-# Groups: allowlist (default) | open | disabled
-export ABSTRACT_TELEGRAM_GROUP_POLICY="allowlist"
-export ABSTRACT_TELEGRAM_ALLOWED_CHATS="-100123456789"
-
-# Groups: mention requirement (default true)
-export ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS=1
-
-# Optional: restrict which senders inside allowed groups can trigger the bridge.
-# - unset: fall back to ABSTRACT_TELEGRAM_ALLOWED_USERS (+ paired users)
-# - [] (empty JSON array): allow any sender in allowed groups
-export ABSTRACT_TELEGRAM_GROUP_ALLOWED_USERS='[]'
-```
-
-## Step-by-step: secure pairing (try it now)
-
-This is a practical checklist to verify access control + approvals end-to-end.
-
-1. Configure the bridge (Bot API example):
+Minimal env vars (Bot API + DM allowlist):
 
 ```bash
 export ABSTRACT_TELEGRAM_BRIDGE=1
-export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"
-export ABSTRACT_TELEGRAM_BOT_TOKEN="..."               # from @BotFather
-# Optional: override which workflow to run per message (defaults to shipped `basic-agent`)
-# export ABSTRACT_TELEGRAM_FLOW_ID="81795ea9"
 
-# Secure defaults
-export ABSTRACT_TELEGRAM_DM_POLICY="pairing"
-export ABSTRACT_TELEGRAM_GROUP_POLICY="allowlist"
-export ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS=1
+# Bot API (easy, not E2EE). If ABSTRACT_TELEGRAM_BOT_TOKEN is set, transport defaults to bot_api.
+export ABSTRACT_TELEGRAM_BOT_TOKEN="..."  # from @BotFather
 
-# IMPORTANT: set this to your own Telegram numeric user_id (discover via /whoami)
-export ABSTRACT_TELEGRAM_ADMIN_USERS="123456789"
-
-# Optional: customize /reset confirmation message
-export ABSTRACT_TELEGRAM_RESET_MESSAGE="Hi, what can I do for you today?"
+# Allowlisted DM users (numeric Telegram user_id). Use /whoami to discover yours.
+# Accepts comma/newline-separated ints or JSON list.
+export ABSTRACT_TELEGRAM_ALLOWED_USERS="123456789"
 ```
 
-2. Start the gateway, then DM the bot and run `/whoami`.
-   - Copy your `user_id` and put it in `ABSTRACT_TELEGRAM_ADMIN_USERS` (then restart the gateway if needed).
+## Quickstart (DM-only allowlist)
 
-3. From a *different* Telegram account (not in the allowlist), DM the bot anything.
-   - Expected: the bot replies with a pairing prompt and a one-time code (it does not spam on every message; use `/pair` to re-show the code).
+This is a practical checklist to verify access control + approvals end-to-end.
 
-4. From the admin account, approve the request:
-   - `/pair list`
-   - `/pair approve <code>`
+1. Configure the bridge (Bot API):
 
-5. Verify unauthorized DMs are blocked:
-   - Set `ABSTRACT_TELEGRAM_DM_POLICY="allowlist"` and restart.
-   - Expected: unknown users get ignored (except `/whoami`).
+```bash
+# Gateway (required for `abstractgateway serve`).
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # directory containing *.flow bundles (incl. shipped `basic-agent`)
+export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 
-6. Verify group allowlist + mention gate:
-   - Add the bot to a group chat, run `/whoami` in that group to get the negative `chat_id` (e.g. `-100...`).
-   - Set `ABSTRACT_TELEGRAM_ALLOWED_CHATS="-100..."` and restart.
-   - Expected: the bot only responds in allowlisted groups, and only when mentioned (e.g. `@YourBot do X`).
+export ABSTRACT_TELEGRAM_BRIDGE=1
+export ABSTRACT_TELEGRAM_BOT_TOKEN="..."               # from @BotFather
+```
 
-7. Verify tool approvals:
+2. Start the gateway.
+   - You may see a warning about an empty DM allowlist; this is expected until you set `ABSTRACT_TELEGRAM_ALLOWED_USERS`.
+   - Then DM the bot and run `/whoami`.
+   - Copy your `user_id` (the bot also prints an `export ABSTRACT_TELEGRAM_ALLOWED_USERS="..."` hint).
+
+3. Set your allowlist and restart the gateway:
+
+   - `export ABSTRACT_TELEGRAM_ALLOWED_USERS="123456789"`
+
+4. Verify:
+   - From an allowlisted account, send “hi” → expected: you receive a reply.
+   - From a non-allowlisted account, send “hi” → expected: ignored (except `/whoami`).
+
+5. Verify tool approvals:
    - In the chat, ask: `run free -m` (or `uname -a`).
    - Expected: the bot asks you to reply `/approve` before executing `execute_command`.
    - Expected: after `/approve`, you receive the final answer/result in Telegram (read-only tools like `web_search` should not require approval).
+
+## Optional: pairing mode (DMs)
+
+Pairing lets unknown users request access without editing `ABSTRACT_TELEGRAM_ALLOWED_USERS`, but it requires an admin.
+
+```bash
+export ABSTRACT_TELEGRAM_DM_POLICY="pairing"
+export ABSTRACT_TELEGRAM_ADMIN_USERS="123456789"   # your operator user_id (use /whoami)
+export ABSTRACT_TELEGRAM_PAIRING_TTL_S="3600"      # optional
+```
+
+## Optional: group chat support
+
+Group chats are disabled by default. To enable allowlisted groups:
+
+```bash
+export ABSTRACT_TELEGRAM_GROUP_POLICY="allowlist"
+export ABSTRACT_TELEGRAM_ALLOWED_CHATS="-100123456789"  # use /whoami inside the group to discover chat_id
+# Optional (default true): require @mention in groups
+export ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS=1
+```
 
 ## Viewing Telegram sessions in AbstractCode
 
@@ -133,12 +122,13 @@ Set env vars on the gateway host:
 
 ```bash
 export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # directory containing *.flow bundles
+export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"  # required
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
 
-# Bot API (easy, not E2EE)
-export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"
+# Bot API (easy, not E2EE). If ABSTRACT_TELEGRAM_BOT_TOKEN is set, transport defaults to bot_api.
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."
+export ABSTRACT_TELEGRAM_ALLOWED_USERS="123456789"  # use /whoami
 
 # Tool execution + approvals:
 # - `approval` (default): safe tools run in-process; dangerous/unknown tools still require a Telegram reply: `/approve` or `/deny`.
@@ -152,7 +142,8 @@ export ABSTRACTGATEWAY_TOOL_MODE="approval"
 ```
 
 Notes:
-- Default LLM routing comes from `abstractcore --config` (global provider/model). Override with `ABSTRACTGATEWAY_PROVIDER` / `ABSTRACTGATEWAY_MODEL`.
+- Default LLM routing comes from the execution-host `output.text` capability route. Set it with
+  `abstractcore --set-global-default ...` or `abstractgateway-config set-default output.text ...`.
 - Telegram-only routing override (does not affect other gateway traffic): set `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`).
 - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30; `0` keeps only system messages).
 - STT fallback and vision caption fallback are configured via `abstractcore --config` (audio strategy + vision fallback).
@@ -170,11 +161,13 @@ source ./execute.sh
 ```
 
 1. Start LMStudio “Local Server” and load `google/gemma-3n-e4b`.
-2. Export LLM routing (override the `abstractcore --config` defaults for this run):
+2. Set the text output route for this run:
 
 ```bash
-export ABSTRACTGATEWAY_PROVIDER="lmstudio"
-export ABSTRACTGATEWAY_MODEL="google/gemma-3n-e4b"
+abstractgateway-config set-default output.text \
+  --provider lmstudio \
+  --model google/gemma-3n-e4b \
+  --base-url http://127.0.0.1:1234/v1
 export LMSTUDIO_BASE_URL="http://127.0.0.1:1234/v1"
 ```
 

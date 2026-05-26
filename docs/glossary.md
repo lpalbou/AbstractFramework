@@ -56,6 +56,16 @@ A portable distribution unit that packages a VisualFlow plus any referenced subf
 A versioned input/output contract a flow can implement so multiple clients can run it the same way (for example
 `abstractcode.agent.v1` for chat-like "agent" flows).
 
+## Skills (planned)
+
+### Agent Skill (`SKILL.md`)
+
+A shareable “procedure pack” defined by the Agent Skills ecosystem: a folder containing a required `SKILL.md` (YAML
+frontmatter + instructions) and optional `scripts/`, `references/`, and `assets/`.
+
+In the planned AbstractFramework integration, **flows run** and skills are **activated/loaded** as run-attached modules.
+Skill scripts (when enabled) execute only as explicit tools with the usual approval/evidence/ledger semantics.
+
 ## Tools
 
 ### Tool spec (schema)
@@ -100,7 +110,8 @@ Where memory is read/written:
 
 ### Knowledge graph (KG) memory
 
-Long-term memory stored as temporal triples (AbstractMemory), optionally validated/normalized by a semantics registry
+Long-term memory stored as temporal triples (AbstractMemory), validated and
+normalized in framework workflows through the standalone semantics registry
 (AbstractSemantics).
 
 ## Modalities
@@ -113,4 +124,3 @@ An optional add-on that extends AbstractCore with deterministic modality APIs:
 - `llm.vision` via AbstractVision
 
 This keeps AbstractCore lightweight while letting hosts enable modalities where they run durable execution.
-

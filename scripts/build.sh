@@ -11,11 +11,15 @@
 # from PyPI / npm — only AbstractFramework packages come from local source.
 #
 # Usage:
-#   source ./scripts/build.sh       # build AND stay in the .venv afterwards (recommended)
-#   ./scripts/build.sh              # build (venv activates inside script only)
-#   ./scripts/build.sh --python     # Python packages only
-#   ./scripts/build.sh --npm        # npm packages only
-#   ./scripts/build.sh --clean      # delete .venv first (avoids pollution from other projects)
+#   source ./scripts/build.sh         # light editable build, then stay in the .venv
+#   ./scripts/build.sh                # light editable build (venv activates inside script only)
+#   ./scripts/build.sh --base         # explicit light editable build
+#   ./scripts/build.sh --apple        # heavy native Apple local-engine profile
+#   ./scripts/build.sh --gpu          # heavy native GPU local-engine profile
+#   ./scripts/build.sh --python       # Python packages only
+#   ./scripts/build.sh --npm          # npm packages only
+#   ./scripts/build.sh --clean        # delete .venv first (avoids pollution from other projects)
+#   AF_BUILD_PROFILE=base|apple|gpu|auto ./scripts/build.sh
 #
 # Prerequisites:
 #   - Python 3.10+  (required)
@@ -64,12 +68,16 @@ set -euo pipefail
 BUILD_PYTHON=true
 BUILD_NPM=true
 CLEAN_VENV=false
+BUILD_PROFILE="${AF_BUILD_PROFILE:-base}"
 
 for arg in "$@"; do
     case "$arg" in
         --python) BUILD_NPM=false ;;
         --npm)    BUILD_PYTHON=false ;;
         --clean)  CLEAN_VENV=true ;;
+        --apple)  BUILD_PROFILE="apple" ;;
+        --gpu)    BUILD_PROFILE="gpu" ;;
+        --base)   BUILD_PROFILE="base" ;;
     esac
 done
 
@@ -114,6 +122,86 @@ section() {
     echo "────────────────────────────────────────────────────────────"
 }
 
+is_macos() {
+    [[ "$(uname -s)" == "Darwin" ]]
+}
+
+resolve_build_profile() {
+    local requested
+    requested="$(printf '%s' "${BUILD_PROFILE:-base}" | tr '[:upper:]' '[:lower:]')"
+    case "$requested" in
+        ""|"base")
+            printf '%s' "base"
+            ;;
+        "auto")
+            if is_macos; then
+                printf '%s' "apple"
+            elif command -v nvidia-smi >/dev/null 2>&1; then
+                printf '%s' "gpu"
+            else
+                printf '%s' "base"
+            fi
+            ;;
+        "apple"|"all-apple")
+            printf '%s' "apple"
+            ;;
+        "gpu"|"all-gpu")
+            printf '%s' "gpu"
+            ;;
+        *)
+            af_die "unsupported AF_BUILD_PROFILE=${BUILD_PROFILE} (expected base, apple, gpu, all-apple, all-gpu, or auto)"
+            ;;
+    esac
+}
+
+build_profile_extras() {
+    local rel_dir="$1"
+    local profile="$2"
+
+    if [[ "$profile" == "base" ]]; then
+        printf '%s' ""
+        return 0
+    fi
+
+    case "$rel_dir" in
+        abstractgateway|abstractflow|abstractassistant)
+            case "$profile" in
+                apple) printf '%s' "[apple]" ;;
+                gpu) printf '%s' "[gpu]" ;;
+                *) printf '%s' "" ;;
+            esac
+            ;;
+        abstractsemantics|abstractmemory|abstractvision|abstractvoice|abstractmusic|abstractcore|abstractruntime|abstractagent)
+            case "$profile" in
+                apple) printf '%s' "[all-apple]" ;;
+                gpu) printf '%s' "[all-gpu]" ;;
+                *) printf '%s' "" ;;
+            esac
+            ;;
+        *)
+            printf '%s' ""
+            ;;
+    esac
+}
+
+macos_clear_quarantine() {
+    local target="$1"
+
+    if ! is_macos; then
+        return 0
+    fi
+    if ! command -v xattr >/dev/null 2>&1; then
+        return 0
+    fi
+    if [[ ! -e "$target" ]]; then
+        return 0
+    fi
+
+    # Gatekeeper can quarantine native addons in downloaded workspaces on macOS.
+    # Clearing only the quarantine xattr is safe and prevents dlopen failures.
+    xattr -dr com.apple.quarantine "$target" >/dev/null 2>&1 || true
+}
+
 # Check that a sibling repo directory exists; abort with a clear message if not.
 require_repo() {
     local name="$1"
@@ -136,7 +224,62 @@ install_editable() {
     require_repo "$rel_dir"
     echo ""
     echo "  📦  pip install -e ${rel_dir}${extras}"
-    pip install --quiet -e "${pkg_path}${extras}"
+    pip install --quiet --no-build-isolation -e "${pkg_path}${extras}"
+}
+
+remove_existing_meta_package() {
+    if python - <<'PY'
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    version("abstractframework")
+except PackageNotFoundError:
+    raise SystemExit(1)
+PY
+    then
+        echo "  Removing existing abstractframework metadata before local package installs."
+        echo "  This prevents stale release pins from making pip report false conflicts."
+        pip uninstall --quiet -y abstractframework
+    else
+        echo "  No existing abstractframework metadata found."
+    fi
+}
+
+remove_source_meta_egg_info() {
+    local egg_info="$ROOT_DIR/abstractframework.egg-info"
+
+    if [[ -d "$egg_info" ]]; then
+        echo "  Removing stale source-tree abstractframework.egg-info metadata."
+        rm -rf "$egg_info"
+    fi
+}
+
+build_npm_project() {
+    local rel_dir="$1"
+    local label="$2"
+    local pkg_dir="$ROOT_DIR/$rel_dir"
+
+    if [[ ! -d "$pkg_dir" ]]; then
+        echo "  WARNING: ${rel_dir}/ not found — skipping"
+        npm_ok=false
+        return 0
+    fi
+
+    echo ""
+    echo "  📦  ${label}"
+    (
+        cd "$pkg_dir"
+        if is_macos; then
+            echo "       macOS: clearing Gatekeeper quarantine on project files"
+            macos_clear_quarantine "$pkg_dir"
+        fi
+        npm install --no-audit --no-fund 2>&1 | tail -1
+        if is_macos && [[ -d "$pkg_dir/node_modules" ]]; then
+            echo "       macOS: clearing Gatekeeper quarantine on node_modules"
+            macos_clear_quarantine "$pkg_dir/node_modules"
+        fi
+        npm run build 2>&1 | tail -1
+    ) && echo "       ✓ built" || { echo "       WARNING: ${label} build failed"; npm_ok=false; }
 }
 
 # ---------------------------------------------------------------------------
@@ -211,45 +354,89 @@ if $BUILD_PYTHON; then
     fi
 
     echo ""
-    echo "  Upgrading pip + build tools…"
-    # hatchling is needed by abstractruntime, abstractgateway, abstractmemory
-    pip install --quiet --upgrade pip setuptools wheel hatchling
+    _build_tools_status="$(python - <<'PY'
+from importlib.metadata import PackageNotFoundError, version
+import re
+
+
+def parse(v: str) -> tuple[int, int, int]:
+    parts = [int(p) for p in re.findall(r"\d+", v)[:3]]
+    while len(parts) < 3:
+        parts.append(0)
+    return tuple(parts)
+
+
+checks = [
+    ("setuptools", (77, 0, 0), (81, 0, 0)),
+    ("wheel", (0, 0, 1), None),
+    ("hatchling", (1, 27, 0), None),
+    ("editables", (0, 5, 0), None),
+]
+
+issues = []
+for name, lower, upper in checks:
+    try:
+        current = parse(version(name))
+    except PackageNotFoundError:
+        issues.append(f"{name}=missing")
+        continue
+    if current < lower:
+        issues.append(f"{name}<{'.'.join(str(x) for x in lower)}")
+    if upper is not None and current >= upper:
+        issues.append(f"{name}>={'.'.join(str(x) for x in upper)}")
+
+print("ok" if not issues else "; ".join(issues))
+PY
+)"
+    if [[ "$_build_tools_status" == "ok" ]]; then
+        echo "  Build tools already satisfy local editable-install requirements."
+    else
+        echo "  Syncing build tools for local editable installs…"
+        echo "     ${_build_tools_status}"
+        pip install --quiet --upgrade "setuptools>=77,<81" wheel "hatchling>=1.27.0" "editables>=0.5"
+    fi
+
+    # Existing dev venvs may still have an older abstractframework meta-package
+    # installed. Since pip validates already-installed distributions after each
+    # editable install, stale meta-package pins can make every local install look
+    # conflicted even when the source packages are correct.
+    section "Python — Meta-package metadata"
+    remove_source_meta_egg_info
+    remove_existing_meta_package
+
+    section "Python — Dependency profile"
+    PYTHON_BUILD_PROFILE="$(resolve_build_profile)"
+    echo "  Using Python dependency profile: ${PYTHON_BUILD_PROFILE}"
 
     # ── Tier 0: No internal dependencies ────────────────────────────────
     section "Python — Tier 0  (no internal dependencies)"
-    install_editable "abstractsemantics"
-    install_editable "abstractmemory" "[lancedb]"
-    install_editable "abstractvision"
-    install_editable "abstractvoice"
-    install_editable "abstractmusic"
+    install_editable "abstractsemantics" "$(build_profile_extras "abstractsemantics" "$PYTHON_BUILD_PROFILE")"
+    install_editable "abstractmemory" "$(build_profile_extras "abstractmemory" "$PYTHON_BUILD_PROFILE")"
+    install_editable "abstractvision" "$(build_profile_extras "abstractvision" "$PYTHON_BUILD_PROFILE")"
+    install_editable "abstractvoice" "$(build_profile_extras "abstractvoice" "$PYTHON_BUILD_PROFILE")"
+    install_editable "abstractmusic" "$(build_profile_extras "abstractmusic" "$PYTHON_BUILD_PROFILE")"
 
     # ── Tier 1: Depends on Tier 0 ───────────────────────────────────────
     section "Python — Tier 1  (depends on Tier 0)"
-    # Install AbstractCore with the full extras matching the umbrella pyproject.toml
-    # + mlx on macOS (Apple Silicon local inference).
-    _CORE_EXTRAS="openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server"
-    if [[ "$(uname -s)" == "Darwin" ]]; then
-        _CORE_EXTRAS="${_CORE_EXTRAS},mlx"
-    fi
-    install_editable "abstractcore" "[${_CORE_EXTRAS}]"
-    install_editable "abstractruntime" "[abstractcore]"
+    install_editable "abstractcore" "$(build_profile_extras "abstractcore" "$PYTHON_BUILD_PROFILE")"
+    install_editable "abstractruntime" "$(build_profile_extras "abstractruntime" "$PYTHON_BUILD_PROFILE")"
 
     # ── Tier 2: Depends on Tier 0–1 ────────────────────────────────────
     section "Python — Tier 2  (depends on Tier 0–1)"
-    install_editable "abstractagent"
-    install_editable "abstractgateway" "[http]"
+    install_editable "abstractagent" "$(build_profile_extras "abstractagent" "$PYTHON_BUILD_PROFILE")"
+    install_editable "abstractgateway" "$(build_profile_extras "abstractgateway" "$PYTHON_BUILD_PROFILE")"
 
     # ── Tier 3: Depends on Tier 0–2 ────────────────────────────────────
     section "Python — Tier 3  (depends on Tier 0–2)"
-    install_editable "abstractflow" "[editor]"
-    install_editable "abstractcode" "[flow]"
-    install_editable "abstractassistant"
+    install_editable "abstractflow" "$(build_profile_extras "abstractflow" "$PYTHON_BUILD_PROFILE")"
+    install_editable "abstractcode"
+    install_editable "abstractassistant" "$(build_profile_extras "abstractassistant" "$PYTHON_BUILD_PROFILE")"
 
     # ── Tier 4: Meta-package (AbstractFramework itself) ────────────────
     section "Python — Tier 4  (meta-package)"
     echo ""
     echo "  📦  pip install -e . (AbstractFramework)"
-    pip install --quiet --no-deps -e "$ROOT_DIR"
+    pip install --quiet --no-build-isolation --no-deps -e "$ROOT_DIR"
 
     # ── Import safety: prevent workspace-root shadowing ─────────────────
     # Problem:
@@ -458,61 +645,10 @@ if $BUILD_NPM; then
 
     npm_ok=true
 
-    # ── abstractuic (monorepo with npm workspaces) ──────────────────────
-    if [[ -d "$ROOT_DIR/abstractuic" ]]; then
-        echo ""
-        echo "  📦  abstractuic  (monorepo: ui-kit, panel-chat, monitors)"
-        (
-            cd "$ROOT_DIR/abstractuic"
-            npm install --no-audit --no-fund 2>&1 | tail -1
-            npm run build 2>&1 | tail -1
-        ) && echo "       ✓ built" || { echo "       WARNING: abstractuic build failed"; npm_ok=false; }
-    else
-        echo "  WARNING: abstractuic/ not found — skipping"
-        npm_ok=false
-    fi
-
-    # ── abstractobserver ────────────────────────────────────────────────
-    if [[ -d "$ROOT_DIR/abstractobserver" ]]; then
-        echo ""
-        echo "  📦  abstractobserver"
-        (
-            cd "$ROOT_DIR/abstractobserver"
-            npm install --no-audit --no-fund 2>&1 | tail -1
-            npm run build 2>&1 | tail -1
-        ) && echo "       ✓ built" || { echo "       WARNING: abstractobserver build failed"; npm_ok=false; }
-    else
-        echo "  WARNING: abstractobserver/ not found — skipping"
-        npm_ok=false
-    fi
-
-    # ── abstractcode/web (browser coding assistant) ─────────────────────
-    if [[ -d "$ROOT_DIR/abstractcode/web" ]]; then
-        echo ""
-        echo "  📦  abstractcode/web  (@abstractframework/code)"
-        (
-            cd "$ROOT_DIR/abstractcode/web"
-            npm install --no-audit --no-fund 2>&1 | tail -1
-            npm run build 2>&1 | tail -1
-        ) && echo "       ✓ built" || { echo "       WARNING: abstractcode/web build failed"; npm_ok=false; }
-    else
-        echo "  WARNING: abstractcode/web/ not found — skipping"
-        npm_ok=false
-    fi
-
-    # ── abstractflow/web/frontend (visual workflow editor) ──────────────
-    if [[ -d "$ROOT_DIR/abstractflow/web/frontend" ]]; then
-        echo ""
-        echo "  📦  abstractflow/web/frontend  (@abstractframework/flow)"
-        (
-            cd "$ROOT_DIR/abstractflow/web/frontend"
-            npm install --no-audit --no-fund 2>&1 | tail -1
-            npm run build 2>&1 | tail -1
-        ) && echo "       ✓ built" || { echo "       WARNING: abstractflow/web/frontend build failed"; npm_ok=false; }
-    else
-        echo "  WARNING: abstractflow/web/frontend/ not found — skipping"
-        npm_ok=false
-    fi
+    build_npm_project "abstractuic" "abstractuic  (monorepo: ui-kit, panel-chat, monitors)"
+    build_npm_project "abstractobserver" "abstractobserver"
+    build_npm_project "abstractcode/web" "abstractcode/web  (@abstractframework/code)"
+    build_npm_project "abstractflow/web/frontend" "abstractflow/web/frontend  (@abstractframework/flow)"
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════

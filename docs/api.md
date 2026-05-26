@@ -13,8 +13,28 @@ This document covers the Python API exposed by the `abstractframework` meta-pack
 ## Installation
 
 ```bash
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
+
+Native local-engine deployment profiles are also available:
+
+```bash
+pip install "abstractframework[apple]"
+pip install "abstractframework[gpu]"
+pip install "abstractframework[all-apple]"
+pip install "abstractframework[all-gpu]"
+```
+
+The `apple` and `gpu` root profiles delegate to the matching full Gateway native Python deployment
+profile. Docker remains a Gateway deployment concern: lightweight server image by default, explicit
+NVIDIA image for CUDA hosts.
+
+## Installer prototype (GUI)
+
+A GUI installer prototype for AbstractCore lives at `abstractinstallers/abstractcore`.
+It installs via **PyPI/pip** into an isolated `.venv` and then runs a multi‑step
+configuration wizard. It does **not** clone GitHub repositories. For bundling a
+clickable app, see `abstractinstallers/abstractcore/BUILDING.md`.
 
 ## Exports
 
@@ -40,17 +60,18 @@ Dictionary mapping each ecosystem package to the pinned version used in the glob
 
 ### `CORE_DEFAULT_EXTRAS`
 
-List of default `abstractcore` extras installed by `abstractframework==0.1.2`:
+List of default `abstractcore` extras installed by the `abstractframework[all]` profile:
 
-- `openai`
-- `anthropic`
-- `huggingface`
+- `remote`
 - `embeddings`
 - `tokens`
 - `tools`
 - `media`
 - `compression`
 - `server`
+- `vision`
+- `voice`
+- `audio`
 
 ### `get_release_profile()`
 
@@ -88,3 +109,6 @@ print_status()
 
 - Most behavior and feature APIs live in the individual package repos.
 - Use this package for unified install/version pinning and ecosystem-level bootstrapping.
+- SmartNote is a systray app that runs through AbstractGateway and auto-classifies fragments into cards; install with `pip install -e ./smartnote`.
+- Gateway-first clients (AbstractAssistant) use bundle discovery + per-session workflow selection; see `docs/architecture.md`.
+- Installer design guidance lives in `docs/installers/README.md`.

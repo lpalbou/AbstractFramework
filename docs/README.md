@@ -7,12 +7,28 @@ Whether you're a developer looking to integrate LLMs into your app, an AI engine
 ## Quick Install
 
 ```bash
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
 
 That installs all framework Python packages together, including:
-- `abstractcore` configured with core extras (`openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`)
+- `abstractcore` configured with core extras (`remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio`)
+- `abstractgateway` configured with `server,memory`
 - `abstractflow` configured with `editor`
+
+Native local-engine installs use explicit Python profiles:
+
+```bash
+pip install "abstractframework[apple]"     # full Gateway deployment on Apple Silicon
+pip install "abstractframework[gpu]"       # full Gateway deployment on GPU workstations
+pip install "abstractframework[all-apple]" # full pinned ecosystem, Apple profile
+pip install "abstractframework[all-gpu]"   # full pinned ecosystem, GPU profile
+```
+
+Docker is separate: use the lightweight Gateway server image by default, or the explicit NVIDIA
+server image for CUDA hosts.
+
+Looking for a non-technical installer? See the proposed design in
+`docs/installers/README.md`.
 
 ---
 
@@ -21,6 +37,7 @@ That installs all framework Python packages together, including:
 | If You're... | Read This |
 |--------------|-----------|
 | **Brand new** to AbstractFramework | [Getting Started](getting-started.md) — pick a path based on what you want to build |
+| **Looking for a GUI installer** | [Installers](installers/README.md) — proposed installer design and steps |
 | **Evaluating** the framework | [Architecture](architecture.md) — understand how it all fits together |
 | **Setting up** your environment | [Configuration](configuration.md) — providers, API keys, and settings |
 | **Looking for answers** to common questions | [FAQ](faq.md) — includes honest comparisons with other frameworks |
@@ -31,6 +48,11 @@ That installs all framework Python packages together, including:
 | **Using the meta-package API** | [API](api.md) — `abstractframework` package helpers and release profile |
 
 ---
+
+## Gateway-First Clients
+
+AbstractAssistant is now a gateway-first thin client (workflow picker, durable reattach,
+offline reconnect). See the decision record in `docs/adr/2026-02-21_gateway-first-assistant.md`.
 
 ## What's Possible
 
@@ -96,6 +118,7 @@ AbstractFramework is more than a collection of packages — it's a complete AI i
 | Visual workflows + bundling + recursive subflows | [AbstractFlow](https://github.com/lpalbou/abstractflow) |
 | A terminal app for agentic coding (plan/review modes, MCP, workflows) | [AbstractCode](https://github.com/lpalbou/abstractcode) |
 | A macOS menu bar assistant (multi-session, voice) | [AbstractAssistant](https://github.com/lpalbou/abstractassistant) |
+| A macOS systray note organizer (self-organizing notes) | SmartNote (in-repo) |
 | A deployable run gateway (HTTP/SSE, scheduling, SQLite) | [AbstractGateway](https://github.com/lpalbou/abstractgateway) |
 | Voice I/O (TTS/STT, cloning, multilingual) — capability plugin for AbstractCore | [AbstractVoice](https://github.com/lpalbou/abstractvoice) |
 | Image generation (Diffusers, GGUF, OpenAI-compatible) — capability plugin for AbstractCore | [AbstractVision](https://github.com/lpalbou/abstractvision) |
@@ -110,7 +133,7 @@ AbstractFramework is more than a collection of packages — it's a complete AI i
 | I want... | Package |
 |-----------|---------|
 | A browser UI to observe, launch, and schedule gateway runs | `npx @abstractframework/observer` |
-| A visual workflow editor (drag-and-drop) | `npx @abstractframework/flow` |
+| A visual workflow editor (gateway-backed, drag-and-drop) | `npx @abstractframework/flow` |
 | A browser-based coding assistant | `npx @abstractframework/code` |
 | UI building blocks for my own app | [@abstractframework/ui-kit](https://github.com/lpalbou/abstractuic), etc. |
 
@@ -138,16 +161,21 @@ AbstractFramework is more than a collection of packages — it's a complete AI i
                                      │
                                      ▼
 ┌───────────────────────────────────────────────────────────────────────┐
-│  Foundation: AbstractRuntime + AbstractCore (+ Voice/Vision + MCP)    │
+│  Foundation: AbstractRuntime + AbstractCore                            │
+│  (+ Semantics schema refs, Voice/Vision/Music plugins, MCP)            │
 └───────────────────────────────────────────────────────────────────────┘
                                      │
                                      ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│  Memory & Knowledge: AbstractMemory · AbstractSemantics           │
+│  Memory & Knowledge: AbstractMemory (optional KG using Semantics)  │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
 See [Architecture](architecture.md) for details on both paths.
+
+Dependency note: `abstractsemantics` is the standalone vocabulary/schema
+registry and is required by `abstractruntime`; `abstractmemory` is an optional
+knowledge store used by memory-aware workflows and apps.
 
 ---
 
@@ -177,11 +205,13 @@ If you're feeding this repo into an LLM:
 
 - [Main README](../README.md) — full ecosystem overview
 - [Getting Started](getting-started.md) — pick your path
+- [Installers](installers/README.md) — proposed GUI installer design and steps
 - [Architecture](architecture.md) — how it all fits together
 - [API](api.md) — package-level API helpers
 - [Configuration](configuration.md) — environment variables and settings
 - [FAQ](faq.md) — common questions and troubleshooting
 - [Scenarios](scenarios/README.md) — end-to-end paths by use case
 - [Guides](guide/README.md) — focused "how it works" notes
+- [Capability Routing Defaults](guide/capability-routing-defaults.md) — default provider/model/base URL routes for input, output, embeddings, and future rerank
 - [Comparisons](comparisons/) — objective trade-offs vs. other frameworks
 - [Glossary](glossary.md) — shared terminology

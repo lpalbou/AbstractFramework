@@ -12,12 +12,11 @@ This is the recommended topology because execution is unified and clients can at
 ## Step 0: Install the pinned stack (recommended)
 
 ```bash
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
 
 If you want a minimal install instead, you need at least:
-- `abstractgateway[http]`
-- `abstractruntime[abstractcore]`
+- `abstractgateway[server,memory]`
 - (optional) `abstractagent`, `abstractflow[editor]` depending on your bundles
 
 ## Step 1: Prepare directories
@@ -42,12 +41,21 @@ export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/runtime/flows"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 ```
 
-Optional defaults (if your flows use LLM nodes):
+Optional route defaults (if your flows use LLM nodes):
 
 ```bash
-export ABSTRACTGATEWAY_PROVIDER="ollama"
-export ABSTRACTGATEWAY_MODEL="qwen3:4b-instruct"
+abstractgateway-config set-default output.text \
+  --provider ollama \
+  --model qwen3:4b-instruct
 ```
+
+You can also set the text default through Core:
+
+```bash
+abstractcore --set-global-default ollama/qwen3:4b-instruct
+```
+
+Capability routes are the durable default surface for local setups.
 
 ## Step 3: Start the gateway
 
@@ -99,4 +107,3 @@ See [Specialized agent as a portable `.flow`](specialized-agent-flow.md).
 - "Unauthorized": ensure the UI auth token matches `ABSTRACTGATEWAY_AUTH_TOKEN`.
 - Bundles not showing up: verify `ABSTRACTGATEWAY_FLOWS_DIR` contains `.flow` files, then reload bundles from the UI (or
   restart the gateway).
-

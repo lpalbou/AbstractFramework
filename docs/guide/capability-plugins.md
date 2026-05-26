@@ -68,15 +68,18 @@ open("out.png", "wb").write(png_bytes)
 
 ### Use music generation (T2M)
 
-`core.music` is plugin-backed (like voice/vision). `abstractmusic` provides **local in-process** generation, with **ACE-Step v1.5** as the default backend (and Diffusers audio pipelines as an alternative backend).
+`core.music` is plugin-backed (like voice/vision). `abstractmusic` provides
+**local in-process** generation, with **ACE-Step Official**
+(`acestep-official`) as the recommended backend and Diffusers audio pipelines
+as alternative backends.
 
 ```python
 llm = create_llm(
     # Any provider/model works here. The LLM does *not* generate music audio.
-    # Music generation is performed by the configured AbstractMusic backend (ACE-Step by default).
+    # Music generation is performed by the configured AbstractMusic backend.
     "ollama",
     model="qwen3:4b-instruct",
-    music_backend="acestep",
+    music_backend="acestep-official",
     music_model_id="ACE-Step/Ace-Step1.5",
 )
 
@@ -98,4 +101,3 @@ AbstractCore Server can optionally expose OpenAI-compatible endpoints by delegat
 - `/v1/audio/*` (via the capability plugin layer, typically `abstractvoice`; plus `/v1/audio/music` when `abstractmusic` is installed)
 
 These endpoints are interoperability-first. For durable artifact-backed outputs, prefer gateway/runtime + ArtifactStore.
-

@@ -30,6 +30,7 @@ Unified execution of specialized agents across all thin clients, for both remote
 │  • Ledger streaming — real-time SSE updates                                 │
 │  • Scheduled workflows — cron-style durable jobs                            │
 │  • Event bridges — Telegram, email, external services                       │
+│  • Framework routing defaults — control-plane access to Core route config   │
 │  • Unified execution — same workflow runs identically everywhere            │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
@@ -45,10 +46,14 @@ In-process execution without a gateway, simpler, but limited to local deployment
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                      Local Host Applications                                │
-│  ┌───────────────────┐    ┌────────────────────┐                            │
-│  │   AbstractCode    │    │  AbstractAssistant │  ◄── Run runtime directly  │
-│  │    (terminal)     │    │   (macOS tray)     │      (may migrate to GW)   │
-│  └─────────┬─────────┘    └─────────┬──────────┘                            │
+│  ┌───────────────────┐                                                      │
+│  │   AbstractCode    │  ◄── Run runtime directly (local dev)                │
+│  │    (terminal)     │                                                      │
+│  └─────────┬─────────┘                                                      │
+│                           ┌────────────────────┐                            │
+│                           │     SmartNote      │  ◄── Thin client to        │
+│                           │   (systray notes)  │      AbstractGateway       │
+│                           └────────────────────┘                            │
 └────────────┼────────────────────────┼───────────────────────────────────────┘
              │                        │
              └────────────────────────┘
@@ -61,12 +66,28 @@ In-process execution without a gateway, simpler, but limited to local deployment
 
 **Key insights:**
 - **Gateway path is recommended**: It provides unified bundle discovery and execution of specialized agents across all thin clients
-- **Local path is an alternative**: AbstractCode and AbstractAssistant run the runtime in-process — simpler for local dev, but lacks unified workflow discovery
+- **Local path is an alternative**: AbstractCode can run the runtime in-process for local dev; AbstractAssistant is now gateway-first by default
 - **Both paths use the same libraries**: The execution semantics are identical; only the host differs
+- **SmartNote data model**: fragments and cards are stored as artifacts, with KG edges for graph navigation
 
 ### Shared Foundation
 
-Both deployment paths converge on the same foundation: **AbstractRuntime** and **AbstractCore** are peers, while **Voice**/**Vision**/**Music** are optional **AbstractCore capability plugins**. Memory and semantics are separate components that can be used by workflows via runtime effects/tooling.
+Both deployment paths converge on the same foundation: **AbstractRuntime** and
+**AbstractCore** are peers, while **Voice**/**Vision**/**Music** are optional
+**AbstractCore capability plugins**.
+
+Default provider/model routing is Core-owned and operation-based:
+`input.*`, `output.*`, `embedding.*`, and future `rerank.*` routes. Gateway can
+edit those defaults as a control plane, but it does not own a separate model
+defaults file. In split deployments, Gateway proxies route-default reads/writes
+to the execution Core host so provider `base_url` values are evaluated from the
+host that actually calls the provider.
+
+**AbstractSemantics** is a lower-level vocabulary/schema registry used by
+Runtime for stable schema refs and by memory workflows for predicate/entity
+validation. **AbstractMemory** is a separate optional knowledge store. Runtime
+depends on Semantics; Runtime does not hard-depend on Memory. Gateway wires
+Memory into workflows when the memory package is installed.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -80,20 +101,26 @@ Both deployment paths converge on the same foundation: **AbstractRuntime** and *
 │  ┌──────────────────────────────┐    ┌──────────────────────────────────┐   │
 │  │       AbstractRuntime        │    │         AbstractCore             │   │
 │  │   Durable kernel + ledger    │    │    LLM API + tool schemas        │   │
-│  │   Snapshots + provenance     │    │    Structured output + media     │   │
+│  │   Schema refs + effects      │    │    Structured output + media     │   │
 │  │   Scheduler + history export │    │    Embeddings + MCP + server     │   │
-│  └──────────────────────────────┘    │  ┌────────────┐ ┌─────────────┐  │   │
-│                                      │  │   Voice    │ │   Vision    │  │   │
-│                                      │  │  (TTS/STT) │ │ (Image gen) │  │   │
-│                                      │  └────────────┘ └─────────────┘  │   │
+│  └──────────────────────────────┘    │  ┌────────┐ ┌────────┐ ┌───────┐ │   │
+│                                      │  │ Voice  │ │ Vision │ │ Music │ │   │
+│                                      │  │TTS/STT │ │Image   │ │Exp.   │ │   │
+│                                      │  └────────┘ └────────┘ └───────┘ │   │
 │                                      │ capability plugins (optional)    │   │
 │                                      └──────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Shared Semantics                                    │
+│     AbstractSemantics: predicates, entity types, schema refs                │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
 │                            Memory & Knowledge                               │
-│         AbstractMemory (temporal triples) + AbstractSemantics (KG)          │
+│       AbstractMemory: optional temporal KG store using shared semantics      │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -186,6 +213,7 @@ Flows can implement **interface contracts** that define standard I/O patterns. T
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  Runs in:                                                                   │
 │  • AbstractCode (terminal) — /workflow command                              │
+│  • AbstractAssistant (tray) — workflow picker + reattach                     │
 │  • AbstractObserver (browser) — workflow picker                             │
 │  • Code Web UI (browser) — workflow picker                                  │
 │  • Custom apps — via Gateway bundle discovery                               │
@@ -345,6 +373,8 @@ AbstractFramework separates two concerns:
    - Temporal, provenance-aware triples
    - Deterministic query semantics
    - Schema consistency via AbstractSemantics registry
+   - AbstractMemory is optional storage; AbstractSemantics is the shared schema
+     authority used by Runtime/Gateway memory integrations
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -519,8 +549,18 @@ Each project has its own architecture docs:
 
 ---
 
+## Distribution & Install Paths
+
+- **End-user installs**: PyPI packages via `pip` (including the GUI installer prototype for AbstractCore).
+- **Developer/source installs**: clone repos and run `scripts/clone.sh` + `scripts/build.sh` (editable installs).
+- **Installer prototype**: `abstractinstallers/abstractcore` wraps pip installs and a config wizard; it does not clone GitHub.
+- **Production installer design**: see `docs/installers/README.md`.
+
+---
+
 ## Related Documentation
 
 - **[Getting Started](getting-started.md)** — Pick a path and run something
+- **[Installers](installers/README.md)** — Proposed GUI installer design and steps
 - **[Configuration](configuration.md)** — Environment variables and settings
 - **[FAQ](faq.md)** — Common questions and troubleshooting

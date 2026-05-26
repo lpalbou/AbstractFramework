@@ -46,23 +46,27 @@ export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 export ABSTRACTGATEWAY_TOOL_MODE="approval"
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
-export ABSTRACT_TELEGRAM_TRANSPORT="bot_api"  # or "tdlib" (E2EE)
-export ABSTRACT_TELEGRAM_BOT_TOKEN="..."      # Bot API transport only
+# Bot API (easy, not E2EE). If ABSTRACT_TELEGRAM_BOT_TOKEN is set, transport defaults to bot_api.
+export ABSTRACT_TELEGRAM_BOT_TOKEN="..."      # from @BotFather
+# Optional: TDLib (E2EE) instead of Bot API:
+# export ABSTRACT_TELEGRAM_TRANSPORT="tdlib"
 # Optional: override which workflow to run per message.
 # Default (when unset): shipped `basic-agent` bundle entrypoint.
 # export ABSTRACT_TELEGRAM_BUNDLE_ID="basic-agent"
 # export ABSTRACT_TELEGRAM_FLOW_ID="81795ea9"
 
-# Access control (recommended)
-# Use /whoami in Telegram to discover your numeric user_id / chat_id.
-export ABSTRACT_TELEGRAM_ADMIN_USERS="123456789"   # required to approve pairing requests
-export ABSTRACT_TELEGRAM_DM_POLICY="pairing"       # default: pairing (safe)
-export ABSTRACT_TELEGRAM_ALLOWED_USERS="123456789" # optional (for allowlist mode / pre-authorize)
+# Access control (required by default)
+# Use /whoami in Telegram to discover your numeric user_id.
+export ABSTRACT_TELEGRAM_ALLOWED_USERS="123456789"
 
-# Groups (default: allowlist + mention required)
-export ABSTRACT_TELEGRAM_GROUP_POLICY="allowlist"
-export ABSTRACT_TELEGRAM_ALLOWED_CHATS="-100123456789"
-export ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS=1
+# Optional: pairing mode (lets unknown users request access, but requires an admin):
+# export ABSTRACT_TELEGRAM_DM_POLICY="pairing"
+# export ABSTRACT_TELEGRAM_ADMIN_USERS="123456789"
+
+# Optional: group chat support (disabled by default):
+# export ABSTRACT_TELEGRAM_GROUP_POLICY="allowlist"
+# export ABSTRACT_TELEGRAM_ALLOWED_CHATS="-100123456789"  # use /whoami inside the group to discover chat_id
+# export ABSTRACT_TELEGRAM_REQUIRE_MENTION_IN_GROUPS=1     # default true
 ```
 
 Then start the gateway:
@@ -72,12 +76,13 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
 Notes:
-- Default LLM routing comes from `abstractcore --config` (global provider/model). Override with `ABSTRACTGATEWAY_PROVIDER` / `ABSTRACTGATEWAY_MODEL`.
+- Default LLM routing comes from the execution-host `output.text` capability route. Set it with
+  `abstractcore --set-global-default ...` or `abstractgateway-config set-default output.text ...`.
 - Telegram-only routing override: set `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`) without changing other gateway traffic.
 - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30).
 - STT fallback and vision caption fallback are configured via `abstractcore --config` (audio strategy + vision fallback).
 - `/reset` clears the durable session; optional best-effort message deletion is controlled by `ABSTRACT_TELEGRAM_RESET_DELETE_MESSAGES` and `ABSTRACT_TELEGRAM_RESET_DELETE_MAX`. The confirmation text is configurable via `ABSTRACT_TELEGRAM_RESET_MESSAGE`.
-- Send `/tools` in chat to view/change tool permissions (allowlist, auto-approve, require approval, blocklist).
+- For tool approvals, the bridge will prompt you in chat; reply with `/approve` to run tools, or `/deny` to cancel.
 
 ## Step 3: Workflow wiring
 

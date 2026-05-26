@@ -19,7 +19,8 @@ AbstractFramework is not "yet another LLM wrapper." It's a **complete infrastruc
 |-----------------|--------------------------------|
 | **Build a coding assistant** that remembers everything across restarts | AbstractCode (terminal TUI) + durable runtime — your full session history, tool calls, and context survive crashes and reboots |
 | **Deploy a visual AI workflow** (drag-and-drop) that runs in terminal, browser, or any custom app | AbstractFlow visual editor → export `.flow` bundle → runs anywhere via interface contracts |
-| **Create a voice-enabled assistant** with offline TTS/STT | AbstractVoice (Piper + Whisper) + AbstractAssistant (macOS tray) — fully offline, no cloud required |
+| **Create a voice-enabled assistant** with durable runs | AbstractAssistant (gateway-first tray) + AbstractGateway + AbstractVoice (optional) |
+| **Capture and organize notes** with automatic card grouping | SmartNote (systray) + AbstractRuntime + AbstractMemory — self-organizing knowledge |
 | **Generate images locally** from text prompts | AbstractVision + local Diffusers/GGUF models — no API keys needed |
 | **Schedule recurring AI jobs** (reports, analysis, monitoring) | AbstractGateway scheduled workflows — durable, cron-style, survives restarts |
 | **Build a knowledge graph** that tracks what your AI has learned | AbstractMemory (temporal triples) + AbstractSemantics (schema validation) |
@@ -39,8 +40,8 @@ AbstractFramework is not "yet another LLM wrapper." It's a **complete infrastruc
 │   GATEWAY PATH (Recommended)             │   LOCAL PATH (Alternative)       │
 ├──────────────────────────────────────────┼──────────────────────────────────┤
 │                                          │                                  │
-│  Browser UIs (Observer, Flow Editor,     │  AbstractCode (terminal)         │
-│  Code Web, Your App)                     │  AbstractAssistant (macOS tray)  │
+│  Browser UIs (Observer, Flow Editor,     │  Local-only clients (legacy)     │
+│  Code Web, AbstractAssistant, Your App)  │  AbstractCode (terminal)         │
 │              │                           │             │                    │
 │              ▼                           │             │                    │
 │  ┌────────────────────────────────────┐  │             │                    │
@@ -62,14 +63,23 @@ AbstractFramework is not "yet another LLM wrapper." It's a **complete infrastruc
                                          │
                                          ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  Foundation: AbstractRuntime + AbstractCore (+ Voice/Vision plugins + MCP)   │
+│  Foundation: AbstractRuntime + AbstractCore                                  │
+│  (+ Semantics schema refs, Voice/Vision/Music plugins, MCP)                  │
 └─────────────────────────────────────────────────────────────────────────────┘
                                          │
                                          ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  Memory & Knowledge: AbstractMemory · AbstractSemantics                     │
+│  Memory & Knowledge: AbstractMemory (optional KG store using Semantics)      │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+AbstractAssistant now runs as a gateway-first thin client with workflow selection,
+durable run reattach, and offline reconnect behavior.
+
+Dependency note: `abstractsemantics` is the standalone vocabulary/schema
+registry and is required by `abstractruntime`. `abstractmemory` is a separate
+optional knowledge store used by memory-aware workflows and apps; Runtime and
+Gateway import it only when those memory paths are enabled.
 
 ---
 
@@ -92,27 +102,38 @@ AbstractFramework is not "yet another LLM wrapper." It's a **complete infrastruc
 ### Option 1: Install the Full Framework (Recommended)
 
 ```bash
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
 
-`abstractframework==0.1.2` installs the pinned global release:
+Native hardware aggregates:
+
+```bash
+pip install "abstractframework[apple]"     # full Gateway deployment for Apple Silicon
+pip install "abstractframework[gpu]"       # full Gateway deployment for GPU workstations
+pip install "abstractframework[all-apple]" # full pinned ecosystem, Apple profile
+pip install "abstractframework[all-gpu]"   # full pinned ecosystem, GPU profile
+```
+
+`abstractframework[all]` installs the pinned global release profile:
 
 | Package | Version |
 |---------|---------|
-| `abstractcore` | `2.12.0` |
-| `abstractruntime` | `0.4.2` |
-| `abstractagent` | `0.3.1` |
-| `abstractflow` | `0.3.7` |
+| `abstractcore` | `2.13.25` |
+| `abstractruntime` | `0.4.21` |
+| `abstractagent` | `0.3.7` |
+| `abstractflow` | `0.3.13` |
 | `abstractcode` | `0.3.6` |
-| `abstractgateway` | `0.1.0` |
-| `abstractmemory` | `0.0.2` |
-| `abstractsemantics` | `0.0.2` |
-| `abstractvoice` | `0.6.3` |
-| `abstractvision` | `0.2.1` |
-| `abstractassistant` | `0.4.2` |
+| `abstractgateway` | `0.2.17` |
+| `abstractmemory` | `0.2.6` |
+| `abstractsemantics` | `0.0.4` |
+| `abstractvoice` | `0.10.16` |
+| `abstractvision` | `0.3.12` |
+| `abstractmusic` | `0.1.11` |
+| `abstractassistant` | `0.4.5` |
 
 Default behavior in this release:
-- `abstractcore` is installed with `openai,anthropic,huggingface,embeddings,tokens,tools,media,compression,server`
+- `abstractcore` is installed with `remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio`
+- `abstractgateway` is installed with `server,memory`
 - `abstractflow` is installed with `editor`
 
 ### Option 2: Select a Provider / Model
@@ -145,6 +166,24 @@ assistant tray
 ```
 
 The assistant appears in your menu bar. Click to interact, or use keyboard shortcuts.
+
+### Option 4b: SmartNote (macOS tray)
+
+SmartNote is a separate project (intentionally not tracked in this meta-repo).
+If you have it checked out as a sibling folder named `smartnote/`, you can run:
+
+```bash
+python -m pip install -e ./smartnote
+export SMARTNOTE_ENABLE_GATEWAY_TOOLS=1
+export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
+export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+abstractgateway serve --host 127.0.0.1 --port 8080
+smartnote
+```
+
+SmartNote adds one-click note capture with automatic topic grouping, summaries, and related-note links.
+On startup it builds and uploads the bundle to the gateway automatically.
+Captured fragments are auto-classified into existing cards or create new cards.
 
 > **Durability**: Sessions persist — your conversation history is preserved across app restarts.
 
@@ -186,15 +225,15 @@ Open http://localhost:3001, connect to the gateway, and start observing.
 ### Python (single command)
 
 ```bash
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
 
 ### Python (install specific components only)
 
 ```bash
-pip install abstractcore==2.11.9
-pip install "abstractflow[editor]==0.3.7"
-pip install abstractgateway==0.1.0
+pip install abstractcore==2.13.25
+pip install "abstractflow[editor]==0.3.13"
+pip install "abstractgateway[server,memory]==0.2.17"
 ```
 
 ### JavaScript/Node (browser UIs)
@@ -217,7 +256,7 @@ npm install @abstractframework/monitor-gpu
 
 ## The Ecosystem
 
-The tables below describe the ecosystem components. The `abstractframework==0.1.2` install profile pins all Python packages to the versions listed in Quick Start.
+The tables below describe the ecosystem components. The `abstractframework[all]` install profile pins all Python packages to the versions listed in Quick Start.
 
 ### Foundation
 
@@ -237,8 +276,8 @@ The tables below describe the ecosystem components. The `abstractframework==0.1.
 
 | Package | What It Does | Install |
 |---------|--------------|---------|
-| [**AbstractMemory**](https://github.com/lpalbou/abstractmemory) | Temporal triple store — provenance-aware, vector search, LanceDB backend | `pip install abstractmemory` |
-| [**AbstractSemantics**](https://github.com/lpalbou/abstractsemantics) | Schema registry — predicates, entity types, JSON Schema for KG assertions | `pip install abstractsemantics` |
+| [**AbstractSemantics**](https://github.com/lpalbou/abstractsemantics) | Standalone schema registry — predicates, entity types, JSON Schema refs used by Runtime and memory workflows | `pip install abstractsemantics` |
+| [**AbstractMemory**](https://github.com/lpalbou/abstractmemory) | Optional temporal triple store — provenance-aware KG storage, vector search, LanceDB backend | `pip install abstractmemory` |
 
 ### Applications
 
@@ -246,6 +285,7 @@ The tables below describe the ecosystem components. The `abstractframework==0.1.
 |---------|--------------|---------|
 | [**AbstractCode**](https://github.com/lpalbou/abstractcode) | Terminal TUI — durable coding assistant with plan/review modes, workflows, MCP | `pip install abstractcode` |
 | [**AbstractAssistant**](https://github.com/lpalbou/abstractassistant) | macOS tray app — local agent with optional voice, multi-session, durable | `pip install abstractassistant` |
+| **SmartNote** | macOS systray notes — self-organizing note capture (separate project) | `pip install -e ./smartnote` |
 | [**AbstractGateway**](https://github.com/lpalbou/abstractgateway) | HTTP server — remote runs, durable commands, SSE, scheduling, bundle discovery, SQLite/file | `pip install abstractgateway` |
 | [**AbstractObserver**](https://github.com/lpalbou/abstractobserver) | Browser UI — observe, launch, schedule, and control runs, voice chat, mindmap | `npx @abstractframework/observer` |
 
@@ -413,7 +453,7 @@ curl -X POST "http://localhost:8080/api/gateway/runs/schedule" \
 
 Connect external services as durable event sources / thin clients. Inbound messages become replayable ledger entries:
 
-- **Telegram (thin client)**: `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_TRANSPORT=bot_api|tdlib`, `ABSTRACT_TELEGRAM_BOT_TOKEN=...` — starts a new run per message under a stable `session_id`
+- **Telegram (thin client)**: `ABSTRACT_TELEGRAM_BRIDGE=1`, `ABSTRACT_TELEGRAM_BOT_TOKEN=...`, `ABSTRACT_TELEGRAM_ALLOWED_USERS=...` (transport defaults to `bot_api` when the token is set; set `ABSTRACT_TELEGRAM_TRANSPORT=tdlib` for E2EE) — starts a new run per message under a stable `session_id`
 - **Email**: `ABSTRACT_EMAIL_BRIDGE=1` — email threads are processed by workflows with full audit trails
 
 ### 📋 Built-in CLI Apps
@@ -486,6 +526,7 @@ The same workflow can power:
 |-------|-------------|
 | [Docs Index](docs/README.md) | Entrypoint docs for the ecosystem |
 | [Getting Started](docs/getting-started.md) | Pick a path and run something |
+| [Installers](docs/installers/README.md) | Proposed GUI installer design and steps |
 | [Architecture](docs/architecture.md) | How the pieces fit together |
 | [API](docs/api.md) | Meta-package API (`create_llm`, install profile helpers) |
 | [Configuration](docs/configuration.md) | Environment variables & providers |
@@ -525,8 +566,17 @@ source ./scripts/build.sh --clean
 
 # 3) Configure + verify readiness
 abstractcore --config
+abstractcore --set-global-default lmstudio:qwen/qwen3.6-35b-a3b
 abstractcore --install
 ```
+
+Framework model defaults are capability routes. The global default command writes `input.text` and
+`output.text`; use `abstractgateway-config set-default output.text ...` when Gateway is the control
+plane for the execution host. See [Capability Routing Defaults](docs/guide/capability-routing-defaults.md).
+
+> **macOS:** For source builds, `scripts/build.sh` automatically clears Apple quarantine attributes from downloaded UI dependencies before the npm build step. No separate `xattr` command is required.
+
+> **`.venv`:** `scripts/build.sh` prepares the editable-install build tools inside the project `.venv` and reuses them on later runs, so the normal workflow remains `source ./scripts/build.sh`.
 
 See [Developer Setup](docs/getting-started.md#developer-setup-from-source) for details on `clone.sh`, `build.sh`, and `install.sh`.
 
@@ -542,7 +592,7 @@ Every package is its own repo. Find what interests you:
 
 **Memory:** [AbstractMemory](https://github.com/lpalbou/abstractmemory) · [AbstractSemantics](https://github.com/lpalbou/abstractsemantics)
 
-**Apps:** [AbstractCode](https://github.com/lpalbou/abstractcode) · [AbstractAssistant](https://github.com/lpalbou/abstractassistant) · [AbstractGateway](https://github.com/lpalbou/abstractgateway) · [AbstractObserver](https://github.com/lpalbou/abstractobserver)
+**Apps:** [AbstractCode](https://github.com/lpalbou/abstractcode) · [AbstractAssistant](https://github.com/lpalbou/abstractassistant) · SmartNote · [AbstractGateway](https://github.com/lpalbou/abstractgateway) · [AbstractObserver](https://github.com/lpalbou/abstractobserver)
 
 **Modalities:** [AbstractVoice](https://github.com/lpalbou/abstractvoice) · [AbstractVision](https://github.com/lpalbou/abstractvision)
 

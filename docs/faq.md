@@ -26,7 +26,7 @@ Start with [Getting Started](getting-started.md) to find the right entry point f
 The recommended path is the full pinned release:
 
 ```bash
-pip install "abstractframework==0.1.2"
+pip install "abstractframework[all]"
 ```
 
 You can still install only what you need:
@@ -40,6 +40,7 @@ You can still install only what you need:
 | Knowledge graph | `pip install abstractmemory abstractsemantics` |
 | Terminal coding assistant | `pip install abstractcode` |
 | macOS tray assistant | `pip install abstractassistant` |
+| SmartNote systray notes | `pip install -e ./smartnote` |
 | Remote control plane | `pip install "abstractgateway"` |
 | Browser UI | `npx @abstractframework/observer` |
 | Voice I/O (TTS/STT) | `pip install abstractvoice` |
@@ -48,7 +49,20 @@ You can still install only what you need:
 | Visual workflow editor | `npx @abstractframework/flow` |
 | Browser coding assistant | `npx @abstractframework/code` |
 
-In `abstractframework==0.1.2`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
+In `abstractframework[all]`, the meta-package is the main distribution entrypoint and installs all ecosystem Python packages with pinned versions.
+
+### Do you provide a GUI installer?
+
+We provide a **prototype GUI installer** for AbstractCore at `abstractinstallers/abstractcore`.
+It installs from **PyPI via pip** into an isolated `.venv` and runs a multi‑step wizard
+that mirrors `abstractcore --config` (defaults, vision, keys, audio/video, embeddings, logging).
+This is a prototype; the production installer strategy is documented in
+`docs/installers/README.md`.
+
+### Does the installer clone GitHub?
+
+No. The prototype installer installs published PyPI packages via `pip`. GitHub cloning
+is for developer/source builds (`scripts/clone.sh` + `scripts/build.sh`).
 
 ### What should I start with?
 
@@ -59,10 +73,31 @@ It depends on what you're building:
 - **"I want an agent loop (ReAct/CodeAct/MemAct)."** → Start with AbstractAgent
 - **"I want a terminal assistant today."** → Start with AbstractCode
 - **"I want a macOS menu bar assistant."** → Start with AbstractAssistant
+- **"I want self-organizing notes in a systray app."** → Start with SmartNote
 - **"I need remote runs + a browser UI."** → Start with AbstractGateway + AbstractObserver
 - **"I need voice input/output."** → Start with AbstractVoice
 - **"I need to generate images."** → Start with AbstractVision
 - **"I need a knowledge graph."** → Start with AbstractMemory + AbstractSemantics
+
+---
+
+## Gateway-First Assistant
+
+### Is AbstractAssistant gateway-first now?
+
+Yes. AbstractAssistant is now a thin client of AbstractGateway by default. It uses
+gateway bundle discovery, durable run reattach, and gateway audio endpoints for
+voice when configured.
+
+### How do I choose a workflow in AbstractAssistant?
+
+Use the **Workflow** dropdown in the tray UI. The selection is saved per session,
+so each session can target a different bundle/flow.
+
+### Why does the status show OFFLINE?
+
+The gateway connection is unavailable or restarting. Use **Reconnect gateway**
+from the menu, and the UI will retry with exponential backoff.
 
 ---
 
@@ -305,6 +340,23 @@ embeddings = llm.embed(["first document", "second document"])
 Requires `pip install "abstractcore[embeddings]"`.
 
 See [AbstractCore Embeddings docs](https://github.com/lpalbou/abstractcore/blob/main/docs/embeddings.md).
+
+### Where do I set the default model now?
+
+Use capability routing defaults. For text generation, set `output.text`; for text input
+understanding, set `input.text`; for retrieval embeddings, set `embedding.text`.
+
+```bash
+abstractcore --set-global-default lmstudio:qwen/qwen3.6-35b-a3b
+
+abstractgateway-config set-default embedding.text \
+  --provider lmstudio \
+  --model text-embedding-nomic-embed-text-v1.5 \
+  --base-url http://127.0.0.1:1234/v1
+```
+
+Gateway can edit the execution host's route defaults, but Core owns the persisted schema. See
+[Capability Routing Defaults](guide/capability-routing-defaults.md).
 
 ### Can I serve AbstractCore as an OpenAI-compatible API?
 
