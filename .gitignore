@@ -215,8 +215,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-untracked
-
 # ---------------------------------------------------------------------------
 # Sibling repos (cloned by scripts/clone.sh for local development).
 # Each is its own git repository — not tracked by AbstractFramework.
@@ -246,18 +244,19 @@ untracked
 
 # GitHub Pages build outputs (local-only)
 /abstractcore-gh-pages/
-/abstractcore-gh-pages
+
+# ---------------------------------------------------------------------------
+# Local-only development artefacts (never versioned)
+# ---------------------------------------------------------------------------
+/runtime/
+/execute.sh
+/test-cache.d/
+/test-cache2.d/
+
+# Independent projects present locally (not tracked here)
+/smartnote/
+/ai-space/
 
 # Node / npm artefacts (from npm-based sibling repos)
 node_modules/
 package-lock.json
-
-
-runtime/
-execute.sh
-
-
-test-cache.d/
-test-cache2.d/
-smartnote/
-ai-space/

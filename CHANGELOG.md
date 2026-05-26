@@ -17,15 +17,32 @@ All notable changes to AbstractFramework will be documented in this file.
   `abstractsemantics==0.0.4`, `abstractvoice==0.10.16`,
   `abstractvision==0.3.12`, `abstractmusic==0.1.11`, and
   `abstractassistant==0.4.5`.
+- Updated the global install profile wiring (core default extras, Gateway/Memory
+  extras, and Apple/GPU aggregate profiles) to match the current gateway-first
+  release set.
 - Tightened repo hygiene so local-only artefacts and sibling projects (venvs,
   caches, and independent repos like SmartNote / AI-Space) stay out of
   AbstractFramework version control and distribution sources.
+- Scoped pytest discovery to the root `tests/` folder to avoid collecting tests
+  from sibling checkouts that are present locally for orchestration.
 
 ### Added
 
-- Added installer documentation and scaffolding under `abstractinstallers/` and
-  expanded ecosystem docs (ADRs, guides, scenarios, and backlog entries) to
-  reflect current gateway-first deployment patterns.
+- Added installer documentation and scaffolding under `abstractinstallers/`,
+  including:
+  - A macOS Tauri v2 installer-manager prototype (`abstractframework-macos`)
+  - An AbstractCore installer script + GUI prototype (`abstractcore`)
+  - A Tauri init template for future installers (`tauri-init-template`)
+- Added helper scripts for orchestration and local dev:
+  `scripts/commit.sh`, `scripts/gateway-flow.sh`, and `scripts/gateway-flow-local.sh`.
+- Added a root-level install-profile pin alignment test:
+  `tests/test_install_profiles.py`.
+- Expanded ecosystem docs (ADRs, guides, scenarios, installers pages, and
+  backlog entries) to reflect current gateway-first deployment patterns.
+
+### Removed
+
+- Removed an internal memory summary artefact that should not have been tracked.
 
 ## [0.1.3] - 2026-05-08
 
