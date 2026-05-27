@@ -908,6 +908,8 @@ section[style*="background"]::before {
   padding: var(--space-xl) var(--space-xl) var(--space-lg);
   position: relative;
   overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto auto auto 1fr auto auto;
   transition:
     transform var(--duration) var(--ease),
     border-color var(--duration) var(--ease),
@@ -1068,6 +1070,7 @@ section[style*="background"]::before {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
+  align-self: start;
 }
 
 .entry-scenario h4 {
@@ -2871,6 +2874,8 @@ html {
 
 .carousel-slide img {
   width: 100%;
+  height: 420px;
+  object-fit: cover;
   display: block;
 }
 
