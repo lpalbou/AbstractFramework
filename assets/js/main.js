@@ -188,19 +188,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   }
 
-  /* ── Architecture layer focus effect ── */
-  const archLayers = document.querySelectorAll('.arch-layer');
-  const archDiagram = document.querySelector('.arch-layers');
-  if (archDiagram) {
-    archLayers.forEach(layer => {
-      layer.addEventListener('mouseenter', () => {
-        archDiagram.classList.add('has-focus');
-        layer.classList.add('focused');
+  /* ── Interactive isometric cube architecture ── */
+  const cubeGrid = document.getElementById('cubeGrid');
+  if (cubeGrid) {
+    const CUBE_SIZE = 48, COL_STEP = 90, ROW_STEP = 96;
+    const cubesData = [
+      { id:'code',      layer:'app',        col:-1.5, row:0, label:'Code',      name:'AbstractCode',         layerName:'Application',      href:'code.html',      desc:'Durable coding assistant with terminal TUI and browser UI. Every agent action is logged in an append-only ledger for perfect auditability.' },
+      { id:'flow',      layer:'app',        col:-0.5, row:0, label:'Flow',      name:'AbstractFlow',         layerName:'Application',      href:'flow.html',      desc:'Visual workflow editor inspired by UE4 Blueprint. Author multi-agent orchestrations with drag-and-drop, share as portable .flow bundles.' },
+      { id:'assistant', layer:'app',        col:0.5,  row:0, label:'Assistant', name:'AbstractAssistant',     layerName:'Application',      href:'assistant.html', desc:'macOS tray application with full voice support. Gateway-first thin client \u2014 start a conversation from the tray, continue anywhere.' },
+      { id:'observer',  layer:'app',        col:1.5,  row:0, label:'Observer',  name:'AbstractObserver',      layerName:'Application',      href:'observer.html',  desc:'Web-based observability dashboard. Monitor every AI operation, browse ledger history, and schedule agentic tasks with cron-like automation.' },
+      { id:'gateway',   layer:'control',    col:0,    row:1, label:'Gateway',   name:'AbstractGateway',       layerName:'Control Plane',    href:'gateway.html',   desc:'Production HTTP control plane for durable AI runs. SSE streaming, workflow bundle deployment, scheduling, multi-client support. SQLite or Postgres.' },
+      { id:'agent',     layer:'compose',    col:-0.5, row:2, label:'Agent',     name:'AbstractAgent',         layerName:'Composition',      href:'agent.html',     desc:'Library of agent patterns \u2014 ReAct, CodeAct, MemAct \u2014 built on three clean layers: logic, adapters, and agent wrappers.' },
+      { id:'flowrt',    layer:'compose',    col:0.5,  row:2, label:'Flow Runtime', name:'AbstractFlow Runtime', layerName:'Composition',    href:'flow.html',      desc:'Executes portable .flow bundles as durable workflow graphs. Supports subflows, multi-agent orchestration, and loop patterns.' },
+      { id:'core',      layer:'foundation', col:-0.5, row:3, label:'Core',      name:'AbstractCore',          layerName:'Foundation',       href:'core.html',      desc:'Unified Python LLM API for 9+ providers \u2014 cloud and local. Streaming, tool calling, structured output, media handling, embeddings.' },
+      { id:'runtime',   layer:'foundation', col:0.5,  row:3, label:'Runtime',   name:'AbstractRuntime',       layerName:'Foundation',       href:'runtime.html',   desc:'Persistent graph runner with durable execution. Append-only ledger, checkpoint/resume, explicit waits, tamper-evident hash chains.' },
+      { id:'voice',     layer:'plugin',     col:-1,   row:4, label:'Voice',     name:'AbstractVoice',         layerName:'Capability Plugin', href:'voice.html',    desc:'Voice I/O abstraction \u2014 TTS, STT, voice cloning. Works with multiple providers and models. Offline-first on Apple Silicon.' },
+      { id:'vision',    layer:'plugin',     col:0,    row:4, label:'Vision',    name:'AbstractVision',        layerName:'Capability Plugin', href:'vision.html',   desc:'Generative vision API \u2014 text-to-image, image editing, text-to-video, image-to-video. Backends for MLX-Gen, Diffusers, and more.' },
+      { id:'music',     layer:'plugin',     col:1,    row:4, label:'Music',     name:'AbstractMusic',         layerName:'Capability Plugin', href:'music.html',    desc:'Text-to-music generation via ACE-Step 1.5 and Stable Audio. Generates WAV locally on Apple Silicon with MPS memory management.' },
+      { id:'memory',    layer:'knowledge',  col:-0.5, row:5, label:'Memory',    name:'AbstractMemory',        layerName:'Knowledge',        href:'memory.html',    desc:'Temporal, provenance-aware triple store. Every fact has timestamps, confidence scores, and source attribution. Vector search built-in.' },
+      { id:'semantics', layer:'knowledge',  col:0.5,  row:5, label:'Semantics', name:'AbstractSemantics',     layerName:'Knowledge',        href:'semantics.html', desc:'Schema registry for predicates and entity types. YAML-defined ontology with JSON Schema generation. No hallucinated predicates.' },
+    ];
+    const layerColors = { app:'#34d399', control:'#22d3ee', compose:'#818cf8', foundation:'#6366f1', plugin:'#f472b6', knowledge:'#fbbf24' };
+
+    cubesData.forEach(c => {
+      const cx = c.col * COL_STEP, cy = c.row * ROW_STEP;
+      const wrap = document.createElement('div');
+      wrap.className = 'cube-wrap';
+      wrap.dataset.id = c.id;
+      wrap.dataset.layer = c.layer;
+      wrap.style.cssText = '--size:'+CUBE_SIZE+'px;--tx:'+cx+'px;--ty:'+cy+'px;transform:translate('+cx+'px,'+cy+'px)';
+      wrap.innerHTML = '<div class="cube"><div class="face top"></div><div class="face left"></div><div class="face right"></div></div>'
+        + '<div class="cube-tooltip"><div class="tip-layer" style="color:'+layerColors[c.layer]+'">'+c.layerName+'</div>'
+        + '<div class="tip-name">'+c.name+'</div><div class="tip-desc">'+c.desc+'</div></div>'
+        + '<div class="cube-label">'+c.label+'</div>';
+      wrap.addEventListener('click', function(){ window.location.href = c.href; });
+      cubeGrid.appendChild(wrap);
+    });
+
+    var layerLabels = [
+      { row:0, text:'APPLICATIONS', color:'#34d399' },
+      { row:1, text:'CONTROL PLANE', color:'#22d3ee' },
+      { row:2, text:'COMPOSITION', color:'#818cf8' },
+      { row:3, text:'FOUNDATION', color:'#6366f1' },
+      { row:4, text:'PLUGINS', color:'#f472b6' },
+      { row:5, text:'KNOWLEDGE', color:'#fbbf24' },
+    ];
+    layerLabels.forEach(function(l) {
+      var el = document.createElement('div');
+      el.className = 'layer-label';
+      el.dataset.layer = ['app','control','compose','foundation','plugin','knowledge'][l.row];
+      el.style.cssText = 'left:'+(2.5*COL_STEP)+'px;top:'+(l.row*ROW_STEP+14)+'px;color:'+l.color;
+      el.textContent = l.text;
+      cubeGrid.appendChild(el);
+    });
+
+    var cubeWraps = cubeGrid.querySelectorAll('.cube-wrap[data-id]');
+    var cubeLabels = cubeGrid.querySelectorAll('.layer-label');
+    function highlightCube(id) {
+      var activeLayer = null;
+      cubeWraps.forEach(function(w){ if(w.dataset.id===id) activeLayer=w.dataset.layer; });
+      cubeWraps.forEach(function(w){
+        w.classList.toggle('active', w.dataset.id===id);
+        w.classList.toggle('dimmed', id && w.dataset.id!==id);
       });
-      layer.addEventListener('mouseleave', () => {
-        archDiagram.classList.remove('has-focus');
-        layer.classList.remove('focused');
-      });
+      cubeLabels.forEach(function(l){ l.classList.toggle('highlight', l.dataset.layer===activeLayer); });
+    }
+    function clearCubeHighlight() {
+      cubeWraps.forEach(function(w){ w.classList.remove('active','dimmed'); });
+      cubeLabels.forEach(function(l){ l.classList.remove('highlight'); });
+    }
+    cubeWraps.forEach(function(w){
+      w.addEventListener('mouseenter', function(){ highlightCube(w.dataset.id); });
+      w.addEventListener('mouseleave', clearCubeHighlight);
     });
   }
 

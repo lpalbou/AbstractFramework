@@ -213,66 +213,10 @@ npx @abstractframework/flow</code></pre>
     <div class="section-header reveal">
       <div class="section-label">Architecture</div>
       <h2 class="section-title">Modular by Design</h2>
-      <p class="section-desc">Every package is independently installable. Use one or compose the full stack. Like building blocks, each piece fits precisely with the others.</p>
+      <p class="section-desc">Every package is independently installable. Hover each block to explore. Use one or compose the full stack.</p>
     </div>
-    <div class="showcase-grid reveal">
-      <div class="arch-diagram">
-        <div class="arch-layers">
-          <div class="arch-layer">
-            <div class="arch-layer-label">Applications</div>
-            <div class="arch-blocks">
-              <a href="code.html" class="arch-block green" data-tip="Terminal TUI + Web coding assistant">AbstractCode</a>
-              <a href="flow.html" class="arch-block green" data-tip="Visual workflow editor (UE4 Blueprint-inspired)">AbstractFlow</a>
-              <a href="assistant.html" class="arch-block green" data-tip="macOS tray assistant with voice">AbstractAssistant</a>
-              <a href="observer.html" class="arch-block green" data-tip="Observability dashboard for all runs">AbstractObserver</a>
-            </div>
-          </div>
-          <div class="arch-connector"><svg viewBox="0 0 20 20"><path d="M10 4v12M6 12l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>
-          <div class="arch-layer">
-            <div class="arch-layer-label">Control Plane</div>
-            <div class="arch-blocks">
-              <a href="gateway.html" class="arch-block cyan" data-tip="HTTP gateway: durable runs, SSE, scheduling, bundles">AbstractGateway</a>
-            </div>
-          </div>
-          <div class="arch-connector"><svg viewBox="0 0 20 20"><path d="M10 4v12M6 12l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>
-          <div class="arch-layer">
-            <div class="arch-layer-label">Composition</div>
-            <div class="arch-blocks">
-              <a href="agent.html" class="arch-block accent" data-tip="Agent patterns: ReAct, CodeAct, MemAct">AbstractAgent</a>
-              <a href="flow.html" class="arch-block accent" data-tip="Portable .flow bundles, visual editor">AbstractFlow Runtime</a>
-            </div>
-          </div>
-          <div class="arch-connector"><svg viewBox="0 0 20 20"><path d="M10 4v12M6 12l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>
-          <div class="arch-layer">
-            <div class="arch-layer-label">Foundation</div>
-            <div class="arch-blocks">
-              <a href="https://www.abstractcore.ai" target="_blank" rel="noopener noreferrer" class="arch-block accent" data-tip="Unified LLM API for all providers">AbstractCore</a>
-              <a href="runtime.html" class="arch-block accent" data-tip="Persistent graph runner with durable execution, ledger, effects, replay">AbstractRuntime</a>
-            </div>
-          </div>
-          <div class="arch-connector"><svg viewBox="0 0 20 20"><path d="M10 4v12M6 12l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>
-          <div class="arch-layer">
-            <div class="arch-layer-label">Plugins</div>
-            <div class="arch-blocks">
-              <a href="voice.html" class="arch-block pink" data-tip="TTS, STT, voice cloning, offline">Voice</a>
-              <a href="vision.html" class="arch-block pink" data-tip="Text-to-image, image editing, video gen">Vision</a>
-              <a href="music.html" class="arch-block pink" data-tip="Text-to-music generation">Music</a>
-            </div>
-          </div>
-          <div class="arch-connector"><svg viewBox="0 0 20 20"><path d="M10 4v12M6 12l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg></div>
-          <div class="arch-layer">
-            <div class="arch-layer-label">Knowledge</div>
-            <div class="arch-blocks">
-              <a href="memory.html" class="arch-block amber" data-tip="Temporal triple store, KG, vector search">AbstractMemory</a>
-              <a href="semantics.html" class="arch-block amber" data-tip="Predicate/entity schema registry">AbstractSemantics</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="showcase-content" style="display:flex;flex-direction:column;justify-content:center;align-items:center">
-        <img src="assets/img/logo-framework.png" alt="AbstractFramework — Modular by Design" loading="lazy" style="border-radius:var(--radius-lg);max-width:320px;filter:drop-shadow(0 8px 32px rgba(99,102,241,.3))">
-        <p style="color:var(--text-muted);font-size:.85rem;margin-top:1.5rem;text-align:center;max-width:300px">Each cube represents a module. Together, they form a unified ecosystem.</p>
-      </div>
+    <div class="cubes-container reveal">
+      <div class="iso-grid" id="cubeGrid"></div>
     </div>
   </div>
 </section>
