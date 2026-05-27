@@ -83,9 +83,9 @@
         <h3>Three-Layer Architecture</h3>
         <p>AbstractAgent separates concerns into three clean layers, making each independently testable and replaceable.</p>
         <ul class="showcase-features">
-          <li><span class="icon">&#10003;</span> <strong>Logic</strong> &mdash; prompting and response parsing, runtime-agnostic (<code>src/abstractagent/logic/</code>)</li>
-          <li><span class="icon">&#10003;</span> <strong>Adapters</strong> &mdash; logic &rarr; <code>WorkflowSpec</code> with durable <code>EffectType.*</code> steps (<code>src/abstractagent/adapters/</code>)</li>
-          <li><span class="icon">&#10003;</span> <strong>Agents</strong> &mdash; thin API wrappers via <code>BaseAgent</code> + concrete agents (<code>src/abstractagent/agents/</code>)</li>
+          <li><span class="icon">&#10003;</span> <strong>Logic</strong> &mdash; prompting and response parsing, runtime-agnostic</li>
+          <li><span class="icon">&#10003;</span> <strong>Adapters</strong> &mdash; translate logic into durable <code>WorkflowSpec</code> with <code>EffectType</code> steps</li>
+          <li><span class="icon">&#10003;</span> <strong>Agents</strong> &mdash; thin API wrappers via <code>BaseAgent</code> (ReAct, CodeAct, MemAct)</li>
         </ul>
       </div>
       <div>

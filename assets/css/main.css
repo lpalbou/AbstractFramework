@@ -532,6 +532,7 @@ code {
   font-size: var(--text-4xl);
   font-weight: 800;
   line-height: 1.08;
+  text-shadow: 0 2px 16px rgba(0,0,0,.6);
   letter-spacing: -0.035em;
   margin-bottom: var(--space-lg);
   animation: fadeSlideDown 0.8s 0.15s var(--ease-out) both;
@@ -553,7 +554,8 @@ code {
 
 .hero-sub {
   font-size: var(--text-lg);
-  color: var(--text-secondary);
+  color: var(--text);
+  text-shadow: 0 1px 8px rgba(0,0,0,.5);
   max-width: 700px;
   margin: 0 auto var(--space-2xl);
   line-height: 1.75;
@@ -1704,9 +1706,10 @@ pre code {
 }
 
 .mm-node {
-  padding: 0.85rem 1.6rem;
-  border-radius: var(--radius-sm);
+  padding: 1.2rem 2rem;
+  border-radius: var(--radius);
   font-weight: 600;
+  min-width: 140px;
   font-size: var(--text-sm);
   position: relative;
   transition:
@@ -1750,8 +1753,9 @@ pre code {
 
 .mm-arrow {
   color: var(--text-muted);
-  font-size: 1.2rem;
-  opacity: 0.6;
+  font-size: 1.4rem;
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
 
