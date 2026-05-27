@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractAssistant — Documentation | AbstractFramework</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="../" class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="nav-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#nav-g)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+      AbstractFramework
+    </a>
+    <ul class="nav-links">
+      <li><a href="../">Home</a></li>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#getting-started">Get Started</a></li>
+      <li><a href="#api">API</a></li>
+      <li><a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
+    </ul>
+  </nav>
+
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:8rem 0 4rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> APPLICATION</div>
+    <h1>Abstract<span class="gradient">Assistant</span></h1>
+    <p class="hero-sub">A macOS-first tray app and CLI that hosts a local, durable agent. Gateway-first thin client with voice-enabled chat, tool approval workflows, multi-session support, and full voice mode &mdash; all driven from the system tray.</p>
+    <div class="hero-actions">
+      <a href="#getting-started" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get Started
+      </a>
+      <a href="https://pypi.org/project/abstractassistant/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
+      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+    </div>
+    <div class="hero-code">
+<pre><code><span class="line-kw">pip install</span> abstractassistant
+
+<span class="line-cmt"># Launch the tray app</span>
+<span class="line-fn">assistant</span>
+
+<span class="line-cmt"># Or run a single CLI turn</span>
+<span class="line-fn">assistant</span> run --prompt <span class="line-str">"What is in this repo?"</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section class="section" id="overview">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Overview</div>
+      <h2 class="section-title">Gateway-First Thin Client</h2>
+      <p class="section-desc">AbstractAssistant connects to AbstractGateway, discovers available providers and models there, and keeps only local UI and session state. The heavy lifting &mdash; agent loops, tool execution, and LLM calls &mdash; happens on the gateway.</p>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <h3>Tray UI</h3>
+        <p>A macOS menu bar app with chat bubble, sessions, file attachments, tool approval dialogs, and voice controls. Runs as a lightweight system tray icon with click-to-chat interaction.</p>
+      </div>
+      <div class="comp-card">
+        <h3>CLI Mode</h3>
+        <p>Run a single agentic turn in the terminal without the UI. Supports tool approval prompts, file attachments, and provider/model selection via CLI flags.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Durable Tool Boundary</h3>
+        <p>Tool calls are surfaced as resumable durable waits. Safe read-only tools can auto-approve; writes, shell execution, and unknown tools require explicit user approval.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Voice Integration</h3>
+        <p>Built-in TTS and STT via AbstractVoice. Full voice mode with mic-reactive listening, speaking animation, frequency-band meters, and tray-first voice controls.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Your AI, Always at Hand</h2>
+      <p class="section-desc">A comprehensive personal AI assistant that lives in your menu bar, with full voice, vision, and tool control capabilities.</p>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <h3>Chat Bubble</h3>
+        <p>A lightweight chat interface that appears from the tray icon. Send messages, view responses with markdown rendering, and attach files with drag-and-drop.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Tool Approval UI</h3>
+        <p>Structured tool approval dialogs with tool name, key parameters, and approve/deny actions. Approve All mode auto-approves future tools for the session.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Multi-Session Support</h3>
+        <p>Create and switch between multiple sessions. Each session persists its transcript, last run ID, and context under the data directory.</p>
+      </div>
+      <div class="comp-card">
+        <h3>File Attachments</h3>
+        <p>Attach images, audio, video, PDFs, and documents. Audio files are pre-transcribed via AbstractVoice. Images go through the multimodal media pipeline.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Full Voice Mode</h3>
+        <p>Hands-free interaction driven from tray states: listening, thinking, speaking. Mic-reactive pulse animation scales with voice volume and shifts color for visual feedback.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Media Settings</h3>
+        <p>Configure voice, TTS model, STT model, and image generation from gateway-discovered catalogs. Select voices, providers, and models from the settings dialog.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Workflow Picker</h3>
+        <p>Select from gateway-discovered workflow entrypoints. Persisted per session so your preferred workflow is ready when you open the tray.</p>
+      </div>
+      <div class="comp-card">
+        <h3>macOS App Bundle</h3>
+        <p>Ship a helper that creates a native macOS app bundle under <code>/Applications</code> with proper icons and Launch Services integration.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section class="section" id="getting-started">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Getting Started</div>
+      <h2 class="section-title">Install and Launch</h2>
+      <p class="section-desc">AbstractAssistant requires Python 3.10+ and an AbstractGateway instance for tray mode. CLI mode can run standalone.</p>
+    </div>
+    <div class="reveal">
+      <h3 style="color:var(--text);margin-bottom:1rem">Install</h3>
+      <div class="code-block">
+<pre><code><span class="line-kw">pip install</span> abstractassistant
+
+<span class="line-cmt"># Verify installation</span>
+<span class="line-fn">assistant</span> --help</code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Launch with Gateway</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Start the gateway first</span>
+<span class="line-kw">export</span> <span class="line-var">ABSTRACTGATEWAY_FLOWS_DIR</span>=<span class="line-str">"$PWD/abstractgateway/flows/bundles"</span>
+<span class="line-kw">export</span> <span class="line-var">ABSTRACTGATEWAY_AUTH_TOKEN</span>=<span class="line-str">"your-shared-token"</span>
+<span class="line-fn">abstractgateway</span> serve --host 127.0.0.1 --port 8080
+
+<span class="line-cmt"># Launch the assistant (connects to gateway)</span>
+<span class="line-fn">assistant</span>
+
+<span class="line-cmt"># Or with explicit gateway override</span>
+<span class="line-fn">assistant</span> --gateway-url http://127.0.0.1:8080 --gateway-token <span class="line-str">"$ABSTRACTGATEWAY_AUTH_TOKEN"</span></code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">CLI Mode (No UI)</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Run a single agentic turn in the terminal</span>
+<span class="line-fn">assistant</span> run --prompt <span class="line-str">"What is in this repo and where do I start?"</span>
+
+<span class="line-cmt"># With provider override</span>
+<span class="line-fn">assistant</span> --provider ollama run --prompt <span class="line-str">"Explain this error"</span></code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">macOS App Bundle</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Create a native macOS app bundle</span>
+<span class="line-fn">create-app-bundle</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ API ═══════════════════ -->
+<section class="section" id="api">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">API Reference</div>
+      <h2 class="section-title">CLI &amp; Architecture</h2>
+      <p class="section-desc">AbstractAssistant exposes CLI commands, environment variables, and a durable agent host for tool-call boundary management.</p>
+    </div>
+
+    <div class="reveal">
+      <h3 style="color:var(--text);margin-bottom:1rem">CLI Commands</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Tray app (default command)</span>
+<span class="line-fn">assistant</span>
+
+<span class="line-cmt"># Single-turn CLI</span>
+<span class="line-fn">assistant</span> run --prompt <span class="line-str">"..."</span>
+
+<span class="line-cmt"># Global flags (before subcommand)</span>
+<span class="line-fn">assistant</span> --provider <span class="line-var">ollama</span> --data-dir <span class="line-var">~/.myassistant</span> run --prompt <span class="line-str">"..."</span></code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Environment Variables</h3>
+      <div class="code-block">
+<pre><code><span class="line-var">ABSTRACTGATEWAY_URL</span>               <span class="line-cmt"># Gateway base URL (default: http://127.0.0.1:8080)</span>
+<span class="line-var">ABSTRACTGATEWAY_AUTH_TOKEN</span>         <span class="line-cmt"># Gateway auth token (required)</span>
+<span class="line-var">ABSTRACTGATEWAY_MAX_ATTACHMENT_BYTES</span> <span class="line-cmt"># Max attachment size (default: 25 MiB)</span></code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Core Modules</h3>
+      <div class="components-grid" style="grid-template-columns:1fr 1fr">
+        <div class="comp-card">
+          <h3><code>agent_host.py</code></h3>
+          <p>Durable agent backend with tool waits, approval flows, attachment handling, and run resume. The core execution boundary between UI and runtime.</p>
+        </div>
+        <div class="comp-card">
+          <h3><code>tool_policy.py</code></h3>
+          <p>Safe auto-approve vs require-approval tool policy. Read-only and search tools auto-approve; file writes, shell commands, and unknowns require user consent.</p>
+        </div>
+        <div class="comp-card">
+          <h3><code>session_index.py</code></h3>
+          <p>Multi-session registry stored at <code>sessions.json</code>. Tracks active session ID, creation timestamps, and session metadata.</p>
+        </div>
+        <div class="comp-card">
+          <h3><code>session_store.py</code></h3>
+          <p>Lightweight <code>session.json</code> snapshot store for transcript persistence. Saves last run ID for fast UX state restoration.</p>
+        </div>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Data Directory</h3>
+      <div class="code-block">
+<pre><code><span class="line-var">~/.abstractassistant/</span>
+  <span class="line-fn">session.json</span>       <span class="line-cmt"># Transcript snapshot + last run ID</span>
+  <span class="line-fn">sessions.json</span>      <span class="line-cmt"># Session registry + active session</span>
+  <span class="line-fn">runtime/</span>           <span class="line-cmt"># AbstractRuntime stores (ledger, artifacts)</span>
+  <span class="line-fn">sessions/</span>          <span class="line-cmt"># Per-session data directories</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#fg)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+          AbstractAssistant
+        </div>
+        <p style="color:var(--text-muted);max-width:280px;font-size:var(--text-sm)">macOS-first tray app and CLI for local, durable AI agents. MIT Licensed.</p>
+      </div>
+      <div>
+        <h4>Documentation</h4>
+        <ul>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#getting-started">Getting Started</a></li>
+          <li><a href="#api">API Reference</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Ecosystem</h4>
+        <ul>
+          <li><a href="../">AbstractFramework</a></li>
+          <li><a href="abstractcore.html">AbstractCore</a></li>
+          <li><a href="abstractgateway.html">AbstractGateway</a></li>
+          <li><a href="abstractruntime.html">AbstractRuntime</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="https://pypi.org/project/abstractassistant/" target="_blank" rel="noopener noreferrer">PyPI</a></li>
+          <li><a href="https://github.com/lpalbou/abstractassistant/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a></li>
+          <li><a href="https://github.com/lpalbou/abstractassistant/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Laurent-Philippe Albou. MIT License.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

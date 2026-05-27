@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractSemantics — Documentation | AbstractFramework</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="../" class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="nav-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#nav-g)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+      AbstractFramework
+    </a>
+    <ul class="nav-links">
+      <li><a href="../">Home</a></li>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#getting-started">Get Started</a></li>
+      <li><a href="#api">API</a></li>
+      <li><a href="https://github.com/lpalbou/abstractsemantics" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
+    </ul>
+  </nav>
+
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:8rem 0 4rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> KNOWLEDGE</div>
+    <h1>Abstract<span class="gradient">Semantics</span></h1>
+    <p class="hero-sub">Central, editable semantics registry for AbstractFramework. Defines predicates and entity types as CURIE-based allowlists, with helpers to build compact JSON Schema for knowledge-graph assertion structured outputs.</p>
+    <div class="hero-actions">
+      <a href="#getting-started" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get Started
+      </a>
+      <a href="https://pypi.org/project/abstractsemantics/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
+      <a href="https://github.com/lpalbou/abstractsemantics" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+    </div>
+    <div class="hero-code">
+<pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> <span class="line-fn">load_semantics_registry</span>, <span class="line-fn">build_kg_assertion_schema_v0</span>
+
+reg = <span class="line-fn">load_semantics_registry</span>()
+schema = <span class="line-fn">build_kg_assertion_schema_v0</span>(registry=reg)
+
+<span class="line-kw">print</span>(<span class="line-fn">len</span>(reg.predicates), <span class="line-fn">len</span>(reg.entity_types))</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section class="section" id="overview">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Overview</div>
+      <h2 class="section-title">Definitions, Not Storage</h2>
+      <p class="section-desc">AbstractSemantics intentionally contains definitions only &mdash; prefix mappings, predicate allowlists, and entity-type allowlists. It makes no network calls and does not store or query data. Storage and querying belong in downstream systems like AbstractMemory.</p>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <h3>YAML Registry</h3>
+        <p>The semantics registry is a YAML file that defines allowed predicate IDs and entity-type IDs. Shipped as package data, overridable via <code>ABSTRACTSEMANTICS_REGISTRY_PATH</code>.</p>
+      </div>
+      <div class="comp-card">
+        <h3>JSON Schema Builder</h3>
+        <p>Build a compact, bounded JSON Schema dict from the registry for LLM structured outputs. Enforces predicate and entity-type enums, evidence fields, and output size limits.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Stable $ref Resolution</h3>
+        <p>Workflows can reference the schema by a stable <code>$ref</code> string and resolve it at runtime. No need to embed the full schema dict in flow definitions.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Dependency-Light</h3>
+        <p>Only depends on PyYAML. Tiny public API with immutable frozen dataclasses. Designed to be embedded in downstream systems with minimal overhead.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Registry &amp; Schema</h2>
+      <p class="section-desc">A shared vocabulary for knowledge-graph assertions used by runtimes, UIs, and ingestion pipelines across the AbstractFramework ecosystem.</p>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <h3>Predicate Allowlist</h3>
+        <p>35+ predicates from standard vocabularies (RDF, Dublin Core, Schema.org, SKOS, CiTO). Covers structure, metadata, context, actions, concepts, and evidence relationships.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Entity Type Allowlist</h3>
+        <p>17+ entity types spanning persons, organizations, events, places, concepts, datasets, software, media, and generic things. Hierarchical via optional <code>parent</code> pointers.</p>
+      </div>
+      <div class="comp-card">
+        <h3>CURIE Prefix Mapping</h3>
+        <p>Standard namespace prefixes (dcterms, schema, skos, cito, rdf) for compact, human-readable identifiers. Loaded but not expanded &mdash; IDs are treated as opaque strings.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Predicate Aliases</h3>
+        <p>A small, deterministic alias set for predicate strings that LLMs tend to emit by default. Optional &mdash; aliases are not part of the canonical registry.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Bounded Output Schema</h3>
+        <p>The v0 schema caps output size with <code>maxItems</code>, requires minimum assertions when non-empty, and bounds evidence fields with <code>maxLength</code> constraints.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Tolerant Loader</h3>
+        <p>The registry loader skips invalid items, ignores unknown keys, and requires only at least one valid predicate. Designed for forward compatibility as the registry evolves.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Inverse Pointers</h3>
+        <p>Predicates can declare inverse relationships (e.g. <code>dcterms:hasPart</code> &harr; <code>dcterms:isPartOf</code>) as navigational hints for graph exploration UIs.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Extraction Prompt</h3>
+        <p>Ships an optimized prompt template for LLM-based knowledge extraction aligned to the registry. Guidance for evidence quoting and confidence scoring.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section class="section" id="getting-started">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Getting Started</div>
+      <h2 class="section-title">Install and Use</h2>
+      <p class="section-desc">AbstractSemantics requires Python 3.10+ and depends only on PyYAML.</p>
+    </div>
+    <div class="reveal">
+      <h3 style="color:var(--text);margin-bottom:1rem">Install</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># From PyPI</span>
+<span class="line-kw">pip install</span> abstractsemantics
+
+<span class="line-cmt"># From source (editable, with test deps)</span>
+<span class="line-kw">pip install</span> -e <span class="line-str">".[dev]"</span></code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Load the Registry</h3>
+      <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> <span class="line-fn">load_semantics_registry</span>
+
+reg = <span class="line-fn">load_semantics_registry</span>()
+<span class="line-kw">print</span>(<span class="line-fn">len</span>(reg.predicates), <span class="line-fn">len</span>(reg.entity_types))
+
+<span class="line-cmt"># List allowed IDs</span>
+<span class="line-kw">print</span>(<span class="line-fn">sorted</span>(reg.<span class="line-fn">predicate_ids</span>())[:<span class="line-var">10</span>])
+<span class="line-kw">print</span>(<span class="line-fn">sorted</span>(reg.<span class="line-fn">entity_type_ids</span>())[:<span class="line-var">10</span>])</code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Build the JSON Schema</h3>
+      <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> <span class="line-fn">build_kg_assertion_schema_v0</span>, <span class="line-fn">load_semantics_registry</span>
+
+reg = <span class="line-fn">load_semantics_registry</span>()
+schema = <span class="line-fn">build_kg_assertion_schema_v0</span>(
+    registry=reg,
+    include_predicate_aliases=<span class="line-var">True</span>,
+    max_assertions=<span class="line-var">20</span>,
+    min_assertions_when_nonempty=<span class="line-var">1</span>,
+)</code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Resolve a $ref</h3>
+      <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> <span class="line-fn">KG_ASSERTION_SCHEMA_REF_V0</span>, <span class="line-fn">resolve_schema_ref</span>
+
+<span class="line-cmt"># Resolve a stable reference to a concrete schema</span>
+schema = <span class="line-fn">resolve_schema_ref</span>({<span class="line-str">"$ref"</span>: <span class="line-fn">KG_ASSERTION_SCHEMA_REF_V0</span>})
+<span class="line-kw">assert</span> <span class="line-fn">isinstance</span>(schema, <span class="line-fn">dict</span>)</code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Custom Registry</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Option A: environment variable</span>
+<span class="line-kw">export</span> <span class="line-var">ABSTRACTSEMANTICS_REGISTRY_PATH</span>=<span class="line-str">/path/to/semantics.yaml</span>
+
+<span class="line-cmt"># Option B: explicit path</span>
+<span class="line-kw">from</span> pathlib <span class="line-kw">import</span> <span class="line-fn">Path</span>
+<span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> <span class="line-fn">load_semantics_registry</span>
+
+reg = <span class="line-fn">load_semantics_registry</span>(<span class="line-fn">Path</span>(<span class="line-str">"/path/to/semantics.yaml"</span>))</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ API ═══════════════════ -->
+<section class="section" id="api">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">API Reference</div>
+      <h2 class="section-title">Public API Surface</h2>
+      <p class="section-desc">Import from <code>abstractsemantics</code> (re-exported from <code>__init__.py</code>). Direct submodule imports may change.</p>
+    </div>
+
+    <div class="reveal">
+      <h3 style="color:var(--text);margin-bottom:1rem">Registry API</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Load the registry</span>
+<span class="line-fn">load_semantics_registry</span>(path=<span class="line-var">None</span>) -> <span class="line-fn">SemanticsRegistry</span>
+<span class="line-fn">resolve_semantics_registry_path</span>() -> <span class="line-fn">Path</span>
+
+<span class="line-cmt"># SemanticsRegistry (frozen dataclass)</span>
+<span class="line-var">.version</span>: <span class="line-fn">int</span>
+<span class="line-var">.prefixes</span>: <span class="line-fn">Dict</span>[<span class="line-fn">str</span>, <span class="line-fn">str</span>]
+<span class="line-var">.predicates</span>: <span class="line-fn">List</span>[<span class="line-fn">PredicateDef</span>]
+<span class="line-var">.entity_types</span>: <span class="line-fn">List</span>[<span class="line-fn">EntityTypeDef</span>]
+<span class="line-var">.predicate_ids</span>() -> <span class="line-fn">set</span>[<span class="line-fn">str</span>]
+<span class="line-var">.entity_type_ids</span>() -> <span class="line-fn">set</span>[<span class="line-fn">str</span>]
+
+<span class="line-cmt"># Entry shapes</span>
+<span class="line-fn">PredicateDef</span>(id, label?, inverse?, description?)
+<span class="line-fn">EntityTypeDef</span>(id, label?, parent?, description?)</code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Schema API</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Build the structured-output JSON Schema</span>
+<span class="line-fn">build_kg_assertion_schema_v0</span>(
+    registry=<span class="line-var">None</span>,
+    include_predicate_aliases=<span class="line-var">False</span>,
+    max_assertions=<span class="line-var">12</span>,
+    min_assertions_when_nonempty=<span class="line-var">3</span>,
+    max_evidence_quote_len=<span class="line-var">160</span>,
+    max_original_context_len=<span class="line-var">280</span>,
+) -> <span class="line-fn">dict</span>
+
+<span class="line-cmt"># Stable reference constant</span>
+<span class="line-var">KG_ASSERTION_SCHEMA_REF_V0</span> = <span class="line-str">"abstractsemantics:kg_assertion_schema_v0"</span>
+
+<span class="line-cmt"># Resolve a $ref to a concrete schema dict</span>
+<span class="line-fn">resolve_schema_ref</span>(schema: <span class="line-fn">dict</span>) -> <span class="line-fn">dict</span> | <span class="line-var">None</span></code></pre>
+      </div>
+
+      <h3 style="color:var(--text);margin:2rem 0 1rem">Registry YAML Format</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># semantics.yaml</span>
+<span class="line-var">version</span>: <span class="line-var">0</span>
+<span class="line-var">prefixes</span>:
+  <span class="line-var">schema</span>: <span class="line-str">"https://schema.org/"</span>
+  <span class="line-var">dcterms</span>: <span class="line-str">"http://purl.org/dc/terms/"</span>
+<span class="line-var">predicates</span>:
+  - <span class="line-var">id</span>: <span class="line-str">"schema:name"</span>
+    <span class="line-var">label</span>: <span class="line-str">"name"</span>
+  - <span class="line-var">id</span>: <span class="line-str">"dcterms:hasPart"</span>
+    <span class="line-var">inverse</span>: <span class="line-str">"dcterms:isPartOf"</span>
+<span class="line-var">entity_types</span>:
+  - <span class="line-var">id</span>: <span class="line-str">"schema:Thing"</span>
+    <span class="line-var">label</span>: <span class="line-str">"Thing"</span>
+  - <span class="line-var">id</span>: <span class="line-str">"schema:Person"</span>
+    <span class="line-var">label</span>: <span class="line-str">"Person"</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#fg)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+          AbstractSemantics
+        </div>
+        <p style="color:var(--text-muted);max-width:280px;font-size:var(--text-sm)">Semantics registry and JSON Schema helpers for knowledge-graph assertions. MIT Licensed.</p>
+      </div>
+      <div>
+        <h4>Documentation</h4>
+        <ul>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#getting-started">Getting Started</a></li>
+          <li><a href="#api">API Reference</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Ecosystem</h4>
+        <ul>
+          <li><a href="../">AbstractFramework</a></li>
+          <li><a href="abstractcore.html">AbstractCore</a></li>
+          <li><a href="abstractmemory.html">AbstractMemory</a></li>
+          <li><a href="abstractruntime.html">AbstractRuntime</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="https://github.com/lpalbou/abstractsemantics" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="https://pypi.org/project/abstractsemantics/" target="_blank" rel="noopener noreferrer">PyPI</a></li>
+          <li><a href="https://github.com/lpalbou/abstractsemantics/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a></li>
+          <li><a href="https://github.com/lpalbou/abstractsemantics/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Laurent-Philippe Albou. MIT License.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

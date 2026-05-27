@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractRuntime — Documentation | AbstractFramework</title>
+  <meta name="description" content="AbstractRuntime: durable workflow runtime with checkpoint, append-only ledger, pause/resume/replay, snapshots, and provenance.">
+  <link rel="icon" type="image/svg+xml" href="../assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<nav class="nav">
+  <a href="../" class="nav-brand">
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="nav-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#nav-g)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+    AbstractFramework
+  </a>
+  <ul class="nav-links">
+    <li><a href="../">Home</a></li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#getting-started">Get Started</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="https://github.com/lpalbou/abstractruntime" target="_blank" rel="noopener noreferrer" class="nav-cta">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a></li>
+  </ul>
+</nav>
+
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:10rem var(--space-xl) 4rem">
+  <div class="hero-inner" style="max-width:800px">
+    <div class="hero-badge"><span class="dot"></span> FOUNDATION</div>
+    <h1 style="font-size:var(--text-3xl)"><span class="gradient">AbstractRuntime</span></h1>
+    <p class="hero-sub">Durable workflow runtime &mdash; interrupt, checkpoint, resume &mdash; with an append-only execution ledger, snapshots, and full provenance. The persistent graph runner at the heart of AbstractFramework.</p>
+    <div class="hero-actions">
+      <a href="https://pypi.org/project/abstractruntime/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        PyPI
+      </a>
+      <a href="https://github.com/lpalbou/abstractruntime" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section id="overview" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Overview</span>
+      <h2 class="section-title">What AbstractRuntime Is</h2>
+      <p class="section-desc">A durable state-machine runner for workflow graphs with explicit blocking via WaitState. Not an agent framework, not a prompt engine &mdash; a persistent graph runner.</p>
+    </div>
+
+    <div class="showcase-grid">
+      <div class="showcase-content">
+        <h3>Durable by Design</h3>
+        <p>Every workflow step is checkpointed and journaled. Runs survive process restarts, network failures, and deployment updates. Resume exactly where you left off.</p>
+        <ul class="showcase-features">
+          <li><span class="icon">&#10003;</span> <strong>Checkpoint</strong> &mdash; RunState persisted via pluggable RunStore</li>
+          <li><span class="icon">&#10003;</span> <strong>Append-only ledger</strong> &mdash; StepRecords journaled to LedgerStore</li>
+          <li><span class="icon">&#10003;</span> <strong>Explicit waits</strong> &mdash; ASK_USER, WAIT_UNTIL, WAIT_EVENT block runs durably</li>
+          <li><span class="icon">&#10003;</span> <strong>Tamper-evident chain</strong> &mdash; HashChainedLedgerStore for provenance</li>
+        </ul>
+      </div>
+      <div>
+        <div class="code-block"><pre><code><span class="line-cmt"># The core loop: start → tick → wait → resume</span>
+<span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> Runtime, WorkflowSpec
+<span class="line-kw">from</span> abstractruntime.storage <span class="line-kw">import</span> (
+    InMemoryRunStore, InMemoryLedgerStore
+)
+
+rt = <span class="line-fn">Runtime</span>(
+    run_store=<span class="line-fn">InMemoryRunStore</span>(),
+    ledger_store=<span class="line-fn">InMemoryLedgerStore</span>()
+)
+
+run_id = rt.<span class="line-fn">start</span>(workflow=wf)
+state  = rt.<span class="line-fn">tick</span>(workflow=wf, run_id=run_id)
+
+<span class="line-cmt"># Run blocked on user input</span>
+<span class="line-kw">assert</span> state.status.value == <span class="line-str">"waiting"</span>
+
+<span class="line-cmt"># Resume from any process, any time</span>
+state = rt.<span class="line-fn">resume</span>(
+    workflow=wf,
+    run_id=run_id,
+    wait_key=state.waiting.wait_key,
+    payload={<span class="line-str">"text"</span>: <span class="line-str">"yes"</span>}
+)</code></pre></div>
+      </div>
+    </div>
+
+    <div class="multimodal-visual" style="margin-top:var(--space-2xl)">
+      <h3 style="margin-bottom:var(--space-lg)">Architecture</h3>
+      <div class="mm-flow">
+        <div class="mm-node input">Host App / Service</div>
+        <div class="mm-arrow">&rarr;</div>
+        <div class="mm-node process">AbstractRuntime</div>
+        <div class="mm-arrow">&rarr;</div>
+        <div class="mm-node output">RunStore + LedgerStore</div>
+      </div>
+      <div class="mm-flow" style="margin-top:var(--space-md)">
+        <div class="mm-node process">AbstractRuntime</div>
+        <div class="mm-arrow">&rarr;</div>
+        <div class="mm-node input">AbstractCore (optional LLM + tools)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Capabilities</span>
+      <h2 class="section-title">Features</h2>
+      <p class="section-desc">Everything needed for durable, observable workflow execution.</p>
+    </div>
+
+    <div class="components-grid">
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag foundation">Core</span>
+        </div>
+        <h3>Persistent Graph Runner</h3>
+        <p>Workflows are defined as <code>WorkflowSpec</code> graphs with typed nodes. Nodes return <code>StepPlan</code> with effects &mdash; they never execute side effects directly.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag foundation">Durability</span>
+        </div>
+        <h3>Checkpoint + Ledger</h3>
+        <p><code>RunState</code> checkpointed via <code>RunStore</code>. Every step appended to an append-only <code>LedgerStore</code>. All vars must be JSON-serializable.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag composition">Effects</span>
+        </div>
+        <h3>Effects System</h3>
+        <p>Built-in effects: ASK_USER, WAIT_UNTIL, WAIT_EVENT, ANSWER_USER, EMIT_EVENT, START_SUBWORKFLOW, VARS_QUERY. Host-wired: LLM_CALL, TOOL_CALLS via AbstractCore.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag composition">Control</span>
+        </div>
+        <h3>Pause / Resume / Replay</h3>
+        <p>Runs block with typed <code>WaitState</code> and resume from any process. The runtime persists wait metadata and resumes to the correct node without re-execution.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag app">Storage</span>
+        </div>
+        <h3>Pluggable Backends</h3>
+        <p>In-memory (tests), JSON/JSONL files (dev), SQLite (production). ArtifactStore for large payloads. Offloading decorators for transparent payload externalization.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag modality">Provenance</span>
+        </div>
+        <h3>Tamper-Evident Chain</h3>
+        <p><code>HashChainedLedgerStore</code> + <code>verify_ledger_chain()</code> for cryptographic provenance. ObservableLedgerStore for live subscriptions.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag memory">Snapshots</span>
+        </div>
+        <h3>Snapshot &amp; Bookmark</h3>
+        <p><code>SnapshotStore</code> captures point-in-time state for debugging, rollback, and auditing. Bookmark any run state and restore it later.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag composition">Composition</span>
+        </div>
+        <h3>Subworkflows &amp; Events</h3>
+        <p>Start child runs with <code>START_SUBWORKFLOW</code>. Emit and wait for durable events. Cross-workflow coordination via event matching.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag app">Integration</span>
+        </div>
+        <h3>AbstractCore Bridge</h3>
+        <p>Effect handlers for LLM_CALL, TOOL_CALLS, MODEL_RESIDENCY. Three execution modes: local, remote, hybrid. Approval-gated tool execution with configurable policy.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section id="getting-started" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Quickstart</span>
+      <h2 class="section-title">Getting Started</h2>
+      <p class="section-desc">Build your first durable workflow &mdash; pause it, kill the process, resume it.</p>
+    </div>
+
+    <h3 style="margin-bottom:var(--space-md)">1. Install</h3>
+    <div class="code-block"><pre><code>pip install abstractruntime
+
+<span class="line-cmt"># With AbstractCore LLM + tools integration</span>
+pip install <span class="line-str">"abstractruntime[abstractcore]"</span>
+
+<span class="line-cmt"># Full multimodal</span>
+pip install <span class="line-str">"abstractruntime[multimodal]"</span></code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">2. Minimal Durable Workflow (Pause &rarr; Resume)</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> (
+    Effect, EffectType, Runtime, StepPlan, WorkflowSpec
+)
+<span class="line-kw">from</span> abstractruntime.storage <span class="line-kw">import</span> (
+    InMemoryLedgerStore, InMemoryRunStore
+)
+
+
+<span class="line-kw">def</span> <span class="line-fn">ask</span>(run, ctx):
+    <span class="line-kw">return</span> <span class="line-fn">StepPlan</span>(
+        node_id=<span class="line-str">"ask"</span>,
+        effect=<span class="line-fn">Effect</span>(
+            type=EffectType.<span class="line-var">ASK_USER</span>,
+            payload={<span class="line-str">"prompt"</span>: <span class="line-str">"Continue?"</span>},
+            result_key=<span class="line-str">"answer"</span>,
+        ),
+        next_node=<span class="line-str">"done"</span>,
+    )
+
+
+<span class="line-kw">def</span> <span class="line-fn">done</span>(run, ctx):
+    answer = run.vars.get(<span class="line-str">"answer"</span>) <span class="line-kw">or</span> {}
+    text = answer.get(<span class="line-str">"text"</span>) <span class="line-kw">if</span> isinstance(answer, dict) <span class="line-kw">else</span> <span class="line-var">None</span>
+    <span class="line-kw">return</span> <span class="line-fn">StepPlan</span>(
+        node_id=<span class="line-str">"done"</span>,
+        complete_output={<span class="line-str">"answer"</span>: text}
+    )
+
+
+wf = <span class="line-fn">WorkflowSpec</span>(
+    workflow_id=<span class="line-str">"demo"</span>,
+    entry_node=<span class="line-str">"ask"</span>,
+    nodes={<span class="line-str">"ask"</span>: ask, <span class="line-str">"done"</span>: done}
+)
+rt = <span class="line-fn">Runtime</span>(
+    run_store=<span class="line-fn">InMemoryRunStore</span>(),
+    ledger_store=<span class="line-fn">InMemoryLedgerStore</span>()
+)
+
+run_id = rt.<span class="line-fn">start</span>(workflow=wf)
+state = rt.<span class="line-fn">tick</span>(workflow=wf, run_id=run_id)
+<span class="line-kw">assert</span> state.status.value == <span class="line-str">"waiting"</span>
+
+state = rt.<span class="line-fn">resume</span>(
+    workflow=wf,
+    run_id=run_id,
+    wait_key=state.waiting.wait_key,
+    payload={<span class="line-str">"text"</span>: <span class="line-str">"yes"</span>}
+)
+<span class="line-kw">assert</span> state.status.value == <span class="line-str">"completed"</span></code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">3. With AbstractCore (LLM + Tools)</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> (
+    <span class="line-fn">create_local_runtime</span>
+)
+
+rt = <span class="line-fn">create_local_runtime</span>(
+    provider=<span class="line-str">"ollama"</span>,
+    model=<span class="line-str">"qwen3:4b"</span>
+)</code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">4. Approval-Gated Tool Execution</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> (
+    ApprovalToolExecutor,
+    MappingToolExecutor,
+    ToolApprovalPolicy,
+)
+
+tools = <span class="line-fn">ApprovalToolExecutor</span>(
+    delegate=<span class="line-fn">MappingToolExecutor</span>({<span class="line-str">"write_file"</span>: write_file}),
+    policy=<span class="line-fn">ToolApprovalPolicy</span>(),
+)</code></pre></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ API REFERENCE ═══════════════════ -->
+<section id="api" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Reference</span>
+      <h2 class="section-title">API Surface</h2>
+      <p class="section-desc">Core imports, effects, and storage backends.</p>
+    </div>
+
+    <h3 style="margin-bottom:var(--space-md)">Core Imports</h3>
+    <div class="code-block"><pre><code><span class="line-cmt"># Core kernel</span>
+<span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> (
+    Effect, EffectType, Runtime, StepPlan, WorkflowSpec
+)
+
+<span class="line-cmt"># Storage backends</span>
+<span class="line-kw">from</span> abstractruntime.storage <span class="line-kw">import</span> (
+    InMemoryRunStore, InMemoryLedgerStore,
+    JsonFileRunStore, JsonlLedgerStore,
+)
+
+<span class="line-cmt"># SQLite backends</span>
+<span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> SqliteRunStore, SqliteLedgerStore
+
+<span class="line-cmt"># Zero-config driver wrapper</span>
+<span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> <span class="line-fn">create_scheduled_runtime</span></code></pre></div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Effects Cheat Sheet</h3>
+    <div class="arch-diagram">
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-sm)">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:.75rem;color:var(--text-muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em">Effect</th>
+            <th style="text-align:left;padding:.75rem;color:var(--text-muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em">Behavior</th>
+          </tr>
+        </thead>
+        <tbody style="color:var(--text-secondary)">
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>ASK_USER</code></td><td style="padding:.6rem .75rem">Blocks with WaitReason.USER and durable prompt metadata</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>WAIT_UNTIL</code></td><td style="padding:.6rem .75rem">Blocks until ISO timestamp (time-based scheduling)</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>WAIT_EVENT</code></td><td style="padding:.6rem .75rem">Blocks waiting for a named event from another workflow</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>ANSWER_USER</code></td><td style="padding:.6rem .75rem">Non-blocking &ldquo;send a message&rdquo; to the host UI</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>EMIT_EVENT</code></td><td style="padding:.6rem .75rem">Emits a durable event; resumes matching WAIT_EVENT runs</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>START_SUBWORKFLOW</code></td><td style="padding:.6rem .75rem">Starts a child run (sync mode blocks parent)</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>VARS_QUERY</code></td><td style="padding:.6rem .75rem">Read-only query into RunState.vars paths</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>LLM_CALL</code></td><td style="padding:.6rem .75rem">Host-wired via AbstractCore (text, multimodal, media gen)</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>TOOL_CALLS</code></td><td style="padding:.6rem .75rem">Host-wired via AbstractCore (approval-gated execution)</td></tr>
+          <tr><td style="padding:.6rem .75rem"><code>MEMORY_*</code></td><td style="padding:.6rem .75rem">NOTE, QUERY, TAG, REHYDRATE, COMPACT &mdash; runtime memory</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Storage Backends</h3>
+    <div class="components-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
+      <div class="comp-card">
+        <h3>In-Memory</h3>
+        <p>Fast, ephemeral storage for tests and development. <code>InMemoryRunStore</code> + <code>InMemoryLedgerStore</code>.</p>
+      </div>
+      <div class="comp-card">
+        <h3>JSON / JSONL Files</h3>
+        <p>Human-readable persistence. <code>JsonFileRunStore</code> + <code>JsonlLedgerStore</code> for dev and single-process deployments.</p>
+      </div>
+      <div class="comp-card">
+        <h3>SQLite</h3>
+        <p>Production-grade local storage. <code>SqliteRunStore</code> + <code>SqliteLedgerStore</code> with proper locking and recovery.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Artifacts</h3>
+        <p><code>ArtifactStore</code> / <code>FileArtifactStore</code> for large binary payloads. Offloading decorators for transparent externalization.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Hash Chain</h3>
+        <p><code>HashChainedLedgerStore</code> + <code>verify_ledger_chain()</code> for tamper-evident audit trails.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Snapshots</h3>
+        <p><code>SnapshotStore</code> captures point-in-time bookmarks for debugging, rollback, and compliance.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Key Semantics</h3>
+    <div style="color:var(--text-secondary);line-height:1.8;font-size:var(--text-base)">
+      <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:.5rem">
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> Nodes do <strong>not</strong> execute side effects directly &mdash; they return a StepPlan</li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> Side effects are requested via <code>Effect(type=..., payload=...)</code> and executed by effect handlers</li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> When a run blocks, the runtime persists a <code>WaitState</code> under <code>RunState.waiting</code></li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> <code>resume()</code> continues from <code>WaitState.resume_to_node</code> &mdash; the waiting node is not re-run</li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> <code>RunState.vars</code> must be JSON-serializable &mdash; use ArtifactStore for large payloads</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="../" class="nav-brand" style="margin-bottom:.5rem">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="gf" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#gf)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+        AbstractFramework
+      </a>
+      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; Made with care for the AI community</p>
+    </div>
+    <div class="footer-col">
+      <h4>Foundation</h4>
+      <a href="abstractcore.html">AbstractCore</a>
+      <a href="abstractruntime.html">AbstractRuntime</a>
+      <a href="abstractagent.html">AbstractAgent</a>
+      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">AbstractFlow</a>
+    </div>
+    <div class="footer-col">
+      <h4>Applications</h4>
+      <a href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">AbstractGateway</a>
+      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">AbstractCode</a>
+      <a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">AbstractObserver</a>
+      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">AbstractAssistant</a>
+    </div>
+    <div class="footer-col">
+      <h4>Modalities &amp; Knowledge</h4>
+      <a href="https://github.com/lpalbou/abstractvoice" target="_blank" rel="noopener noreferrer">AbstractVoice</a>
+      <a href="https://github.com/lpalbou/abstractvision" target="_blank" rel="noopener noreferrer">AbstractVision</a>
+      <a href="https://github.com/lpalbou/abstractmusic" target="_blank" rel="noopener noreferrer">AbstractMusic</a>
+      <a href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer">AbstractMemory</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+  </div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractMusic — Documentation | AbstractFramework</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="../" class="nav-brand">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="nav-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#nav-g)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+      AbstractFramework
+    </a>
+    <ul class="nav-links">
+      <li><a href="../">Home</a></li>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#getting-started">Get Started</a></li>
+      <li><a href="#api">API</a></li>
+      <li><a href="https://github.com/lpalbou/abstractmusic" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
+    </ul>
+  </nav>
+
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" id="top">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> CAPABILITY PLUGIN</div>
+    <h1>Abstract<span class="gradient">Music</span></h1>
+    <p class="hero-sub">Model-agnostic text-to-music and text-to-audio generation for the Abstract ecosystem. Remote-first with ACE Music and ElevenLabs, local generation via ACE-Step and Stable Audio 3 on Apple Silicon and GPU.</p>
+    <div class="hero-actions">
+      <a href="#getting-started" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get Started
+      </a>
+      <a href="https://pypi.org/project/abstractmusic/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        PyPI
+      </a>
+      <a href="https://github.com/lpalbou/abstractmusic" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+    <div class="hero-code">
+<pre><code><span class="kw">from</span> abstractmusic <span class="kw">import</span> <span class="fn">MusicManager</span>
+
+mm = <span class="fn">MusicManager</span>(backend=<span class="str">"acemusic"</span>)
+
+<span class="cmt"># Generate music from a text prompt</span>
+audio = mm.<span class="fn">t2m</span>(<span class="str">"ambient lo-fi study music"</span>, duration=<span class="str">30</span>)
+
+<span class="cmt"># Save to file</span>
+<span class="fn">open</span>(<span class="str">"out.wav"</span>, <span class="str">"wb"</span>).<span class="fn">write</span>(audio)</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section class="section" id="overview">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Overview</div>
+      <h2 class="section-title">Music Generation for the Abstract Ecosystem</h2>
+      <p class="section-desc">AbstractMusic is a model-agnostic text-to-music and text-to-audio library. The base install is import-light with remote backends (ACE Music, ElevenLabs). Local inference stacks for ACE-Step, Stable Audio 3, and MusicGen live behind optional extras.</p>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <h3>Remote-First Default</h3>
+        <p>The <code>acemusic</code> backend calls a hosted API out of the box. The <code>elevenlabs</code> backend targets ElevenLabs Music endpoints. Both are stdlib-only with no heavy dependencies in the base install.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Local ACE-Step Generation</h3>
+        <p>The <code>acestep</code> backend uses AbstractMusic-owned orchestration around Diffusers <code>AceStepPipeline</code> with HuggingFace model weights. Runs locally on Apple Silicon (MPS) and CUDA GPUs, with automatic CPU fallback.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Text Planning Layer</h3>
+        <p>Separates text planning from audio synthesis. The built-in deterministic planner is dependency-free. Host applications can inject smarter planners through <code>MusicManager</code> or plugin configuration for prompt enhancement and lyrics generation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Multiple Backends, One Interface</h2>
+      <p class="section-desc">Generate music from text prompts using remote APIs or local models. The manager stays thin and model-agnostic while backends handle provider-specific behavior.</p>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          ACE Music (Remote)
+        </h3>
+        <p>Default remote backend. Calls a hosted ACE Music API with an API key. Lightweight stdlib-only client. Supports prompt, lyrics, duration, BPM, seed, and format parameters.</p>
+      </div>
+      <div class="comp-card">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          ElevenLabs Music (Remote)
+        </h3>
+        <p>Stdlib-only remote backend for ElevenLabs Music endpoints. Supports provider-neutral <code>MusicCompositionPlan</code> for structured music requests. Requires <code>ELEVENLABS_API_KEY</code>.</p>
+      </div>
+      <div class="comp-card">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg>
+          ACE-Step (Local)
+        </h3>
+        <p>Local generation via Diffusers <code>AceStepPipeline</code>. MIT-licensed XL Turbo checkpoint. Supports lyrics, vocal language, BPM, and seed. MPS bfloat16 preferred on Apple Silicon with automatic fallbacks.</p>
+      </div>
+      <div class="comp-card">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Stable Audio 3 (Local)
+        </h3>
+        <p>Internal text-to-music path for <code>stabilityai/stable-audio-3-small-music</code>. AbstractMusic-owned runtime code with HuggingFace weights. Small Music validated up to 120 seconds.</p>
+      </div>
+      <div class="comp-card">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Apple Silicon Optimized
+        </h3>
+        <p>ACE-Step prefers PyTorch MPS with bfloat16 when supported, then float32, with CPU float32 as the final fallback. Automatic MPS memory capping and watermark validation for 18 GB+ machines.</p>
+      </div>
+      <div class="comp-card">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Prompt Enhancement
+        </h3>
+        <p>Optional <code>--enhance-prompt</code> and <code>--auto-lyrics</code> flags. Structure prompting enabled by default for 45+ second generations. Planner results include a provider-neutral <code>composition_plan</code>.</p>
+      </div>
+      <div class="comp-card">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Quality Screening
+        </h3>
+        <p>Artifact screening with WAV/music-likeness inspection and repetition/novelty quality gates. Validation state is explicit through smoke metrics, tests, and registry status.</p>
+      </div>
+      <div class="comp-card">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Model Registry
+        </h3>
+        <p>Packaged <code>music_model_capabilities.json</code> declares model metadata, license, and precision policy. Discovery via <code>available_providers()</code>, <code>list_models()</code>, and <code>capability_catalog()</code> without loading weights.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section class="section" id="getting-started">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Getting Started</div>
+      <h2 class="section-title">Install &amp; First Track</h2>
+      <p class="section-desc">Generate music in minutes. The base install is lightweight with remote backends; local inference is an explicit extra.</p>
+    </div>
+
+    <div class="reveal" style="max-width:48rem;margin:0 auto">
+      <h3 style="margin-bottom:.75rem">Installation</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Base install (remote ACE Music + ElevenLabs backends)</span>
+<span class="line-kw">pip install</span> <span class="line-str">abstractmusic</span>
+
+<span class="line-cmt"># Local ACE-Step generation</span>
+<span class="line-kw">pip install</span> <span class="line-str">"abstractmusic[acestep]"</span>
+
+<span class="line-cmt"># Local Stable Audio 3</span>
+<span class="line-kw">pip install</span> <span class="line-str">"abstractmusic[stable-audio-3]"</span>
+
+<span class="line-cmt"># Full local stack (Apple Silicon)</span>
+<span class="line-kw">pip install</span> <span class="line-str">"abstractmusic[all-apple]"</span>
+
+<span class="line-cmt"># Full local stack (GPU)</span>
+<span class="line-kw">pip install</span> <span class="line-str">"abstractmusic[all-gpu]"</span></code></pre>
+      </div>
+
+      <h3 style="margin-top:2rem;margin-bottom:.75rem">CLI Quick Start</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Remote generation (default ACE Music backend)</span>
+<span class="line-kw">abstractmusic</span> <span class="line-str">t2m "ambient lo-fi study music" --out out.wav --duration 30</span>
+
+<span class="line-cmt"># ElevenLabs backend</span>
+<span class="line-kw">abstractmusic</span> <span class="line-str">--backend elevenlabs t2m "cinematic instrumental synth cue" \
+  --format mp3 --out out.mp3 --duration 30</span>
+
+<span class="line-cmt"># Local ACE-Step generation</span>
+<span class="line-kw">abstractmusic</span> <span class="line-str">--backend acestep t2m "ambient lo-fi study music" \
+  --out out.wav --duration 10</span>
+
+<span class="line-cmt"># Enhanced prompt with auto-lyrics</span>
+<span class="line-kw">abstractmusic</span> <span class="line-str">--backend acestep t2m "heroic fantasy epic music" \
+  --enhance-prompt --auto-lyrics --print-plan --out out.wav --duration 30</span>
+
+<span class="line-cmt"># Local Stable Audio 3</span>
+<span class="line-kw">abstractmusic</span> <span class="line-str">--backend stable-audio-3 t2m "rhythmic space shooter game music" \
+  --out out.wav --duration 30 --steps 16</span></code></pre>
+      </div>
+
+      <h3 style="margin-top:2rem;margin-bottom:.75rem">Quick Start (Python)</h3>
+      <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractmusic <span class="line-kw">import</span> <span class="line-fn">MusicManager</span>
+
+<span class="line-cmt"># Remote generation (reads ACEMUSIC_API_KEY from env)</span>
+<span class="line-var">mm</span> = <span class="line-fn">MusicManager</span>(backend=<span class="line-str">"acemusic"</span>)
+<span class="line-var">audio</span> = <span class="line-var">mm</span>.<span class="line-fn">t2m</span>(<span class="line-str">"ambient lo-fi study music"</span>, duration=<span class="line-str">30</span>)
+
+<span class="line-cmt"># Local ACE-Step generation</span>
+<span class="line-var">mm_local</span> = <span class="line-fn">MusicManager</span>(backend=<span class="line-str">"acestep"</span>)
+<span class="line-var">audio</span> = <span class="line-var">mm_local</span>.<span class="line-fn">t2m</span>(
+    <span class="line-str">"epic orchestral film score"</span>,
+    duration=<span class="line-str">30</span>,
+    seed=<span class="line-str">42</span>,
+)
+
+<span class="line-cmt"># Artifact-based generation</span>
+<span class="line-var">asset</span> = <span class="line-var">mm</span>.<span class="line-fn">generate_audio</span>(
+    prompt=<span class="line-str">"jazz piano trio"</span>,
+    duration=<span class="line-str">30</span>,
+    format=<span class="line-str">"wav"</span>,
+)</code></pre>
+      </div>
+
+      <h3 style="margin-top:2rem;margin-bottom:.75rem">Interactive REPL</h3>
+      <div class="code-block">
+<pre><code><span class="line-cmt"># Start the interactive REPL</span>
+<span class="line-kw">abstractmusic</span> <span class="line-str">cli</span>
+
+<span class="line-cmt"># Inside the REPL:</span>
+<span class="line-cmt"># /engines          — list available backends</span>
+<span class="line-cmt"># /models           — list known models by engine</span>
+<span class="line-cmt"># /engine acestep   — switch to local ACE-Step</span>
+<span class="line-cmt"># /model ACE-Step/acestep-v15-xl-turbo-diffusers</span>
+<span class="line-cmt"># /status           — show active engine, model, params</span>
+<span class="line-cmt"># /download on      — enable HuggingFace downloads</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ API ═══════════════════ -->
+<section class="section" id="api">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">API Reference</div>
+      <h2 class="section-title">Key Classes &amp; Methods</h2>
+      <p class="section-desc">The public API is built around <code>MusicManager</code> for direct usage and the AbstractCore capability plugin for ecosystem integration.</p>
+    </div>
+
+    <div class="reveal" style="max-width:48rem;margin:0 auto">
+
+      <h3 style="margin-bottom:.75rem">MusicManager &mdash; Core API</h3>
+      <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractmusic <span class="line-kw">import</span> <span class="line-fn">MusicManager</span>
+
+<span class="line-var">mm</span> = <span class="line-fn">MusicManager</span>(backend=<span class="line-str">"acemusic"</span>)
+
+<span class="line-cmt"># Generate audio bytes directly</span>
+<span class="line-var">audio_bytes</span> = <span class="line-var">mm</span>.<span class="line-fn">t2m</span>(
+    prompt=<span class="line-str">"ambient lo-fi study music"</span>,
+    duration=<span class="line-str">30</span>,
+    format=<span class="line-str">"wav"</span>,
+    seed=<span class="line-str">42</span>,
+)
+
+<span class="line-cmt"># Generate with artifact metadata</span>
+<span class="line-var">asset</span> = <span class="line-var">mm</span>.<span class="line-fn">generate_audio</span>(
+    prompt=<span class="line-str">"cinematic orchestral cue"</span>,
+    duration=<span class="line-str">60</span>,
+    lyrics=<span class="line-str">"Rise above the shadows..."</span>,
+    vocal_language=<span class="line-str">"en"</span>,
+    bpm=<span class="line-str">120</span>,
+)</code></pre>
+      </div>
+
+      <h3 style="margin-top:2rem;margin-bottom:.75rem">Text Planning Layer</h3>
+      <div class="code-block">
+<pre><code><span class="line-var">mm</span> = <span class="line-fn">MusicManager</span>(
+    backend=<span class="line-str">"acestep"</span>,
+    text_planner_mode=<span class="line-str">"auto"</span>,  <span class="line-cmt"># "auto" | "required" | "off"</span>
+)
+
+<span class="line-cmt"># Auto mode: uses injected provider when present,</span>
+<span class="line-cmt"># falls back to the deterministic planner</span>
+<span class="line-var">audio</span> = <span class="line-var">mm</span>.<span class="line-fn">t2m</span>(
+    <span class="line-str">"epic battle music with choir"</span>,
+    duration=<span class="line-str">45</span>,  <span class="line-cmt"># structure-prompt enabled by default at 45s+</span>
+)</code></pre>
+      </div>
+
+      <h3 style="margin-top:2rem;margin-bottom:.75rem">AbstractCore Plugin Integration</h3>
+      <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+
+<span class="line-var">llm</span> = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>)
+
+<span class="line-cmt"># Generate music via capability plugin</span>
+<span class="line-var">audio</span> = <span class="line-var">llm</span>.music.<span class="line-fn">t2m</span>(<span class="line-str">"chill ambient study beats"</span>, duration=<span class="line-str">30</span>)
+
+<span class="line-cmt"># Provider and model discovery (no weight loading)</span>
+<span class="line-var">providers</span> = <span class="line-var">llm</span>.music.<span class="line-fn">available_providers</span>()
+<span class="line-var">models</span> = <span class="line-var">llm</span>.music.<span class="line-fn">list_models</span>(provider=<span class="line-str">"acestep"</span>)
+<span class="line-var">catalog</span> = <span class="line-var">llm</span>.music.<span class="line-fn">capability_catalog</span>()
+
+<span class="line-cmt"># Local engine residency (acestep, stable-audio-3)</span>
+<span class="line-var">llm</span>.music.<span class="line-fn">load_resident_model</span>(provider=<span class="line-str">"acestep"</span>)
+<span class="line-var">llm</span>.music.<span class="line-fn">list_resident_models</span>()
+<span class="line-var">llm</span>.music.<span class="line-fn">unload_resident_model</span>(provider=<span class="line-str">"acestep"</span>)</code></pre>
+      </div>
+
+      <h3 style="margin-top:2rem;margin-bottom:.75rem">Available Backends</h3>
+      <div class="components-grid" style="margin-top:1rem">
+        <div class="comp-card">
+          <h3>ACE Music</h3>
+          <p>Default remote backend. Hosted API with <code>ACEMUSIC_API_KEY</code>. Stdlib-only client. Supports tagged <code>&lt;prompt&gt;</code> mode for strict duration enforcement.</p>
+        </div>
+        <div class="comp-card">
+          <h3>ElevenLabs Music</h3>
+          <p>Stdlib-only remote backend for ElevenLabs Music endpoints. Supports <code>MusicCompositionPlan</code> for structured requests. Requires <code>ELEVENLABS_API_KEY</code>.</p>
+        </div>
+        <div class="comp-card">
+          <h3>ACE-Step</h3>
+          <p>Local generation via <code>AceStepPipeline</code>. MIT XL Turbo checkpoint. Lyrics, vocal language, BPM, seed. MPS bfloat16 &rarr; float32 &rarr; CPU fallback chain.</p>
+        </div>
+        <div class="comp-card">
+          <h3>Stable Audio 3</h3>
+          <p>Internal <code>stable-audio-3-small-music</code> runtime. HuggingFace weights only, no upstream package. Validated at 30s and 120s. Requires HF gate approval.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="../" class="nav-brand" style="margin-bottom:.5rem">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="gf" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#gf)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+        AbstractFramework
+      </a>
+      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; Made with care for the AI community</p>
+    </div>
+    <div class="footer-col">
+      <h4>Foundation</h4>
+      <a href="https://github.com/lpalbou/abstractcore" target="_blank" rel="noopener noreferrer">AbstractCore</a>
+      <a href="https://github.com/lpalbou/abstractruntime" target="_blank" rel="noopener noreferrer">AbstractRuntime</a>
+      <a href="https://github.com/lpalbou/abstractagent" target="_blank" rel="noopener noreferrer">AbstractAgent</a>
+      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">AbstractFlow</a>
+    </div>
+    <div class="footer-col">
+      <h4>Modalities</h4>
+      <a href="abstractvoice.html">AbstractVoice</a>
+      <a href="abstractvision.html">AbstractVision</a>
+      <a href="abstractmusic.html">AbstractMusic</a>
+      <a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a>
+    </div>
+    <div class="footer-col">
+      <h4>Applications</h4>
+      <a href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">AbstractGateway</a>
+      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">AbstractCode</a>
+      <a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">AbstractObserver</a>
+      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">AbstractAssistant</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+  </div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

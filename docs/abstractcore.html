@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractCore — Documentation | AbstractFramework</title>
+  <meta name="description" content="AbstractCore: unified Python interface over 9+ LLM backends with streaming, tool calling, structured output, media handling, embeddings, and an OpenAI-compatible server.">
+  <link rel="icon" type="image/svg+xml" href="../assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<nav class="nav">
+  <a href="../" class="nav-brand">
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="nav-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#nav-g)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+    AbstractFramework
+  </a>
+  <ul class="nav-links">
+    <li><a href="../">Home</a></li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#getting-started">Get Started</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="https://github.com/lpalbou/abstractcore" target="_blank" rel="noopener noreferrer" class="nav-cta">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a></li>
+  </ul>
+</nav>
+
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:10rem var(--space-xl) 4rem">
+  <div class="hero-inner" style="max-width:800px">
+    <div class="hero-badge"><span class="dot"></span> FOUNDATION</div>
+    <h1 style="font-size:var(--text-3xl)"><span class="gradient">AbstractCore</span></h1>
+    <p class="hero-sub">Unified Python interface over 9+ LLM backends &mdash; cloud and local &mdash; with consistent streaming, tool calling, structured output, media handling, embeddings, and an OpenAI-compatible server.</p>
+    <div class="hero-actions">
+      <a href="https://pypi.org/project/abstractcore/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        PyPI
+      </a>
+      <a href="https://github.com/lpalbou/abstractcore" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="https://www.abstractcore.ai" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Docs Site
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section id="overview" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Overview</span>
+      <h2 class="section-title">What AbstractCore Is</h2>
+      <p class="section-desc">A unified Python interface over multiple LLM backends with consistent support for streaming, tool calling, structured output, media handling, embeddings, and an optional OpenAI-compatible HTTP server.</p>
+    </div>
+
+    <div class="showcase-grid">
+      <div class="showcase-content">
+        <h3>One API, Every Provider</h3>
+        <p>Write your code once and run it across cloud providers, local servers, and in-process engines. AbstractCore normalizes provider differences so you can switch backends without rewriting your application.</p>
+        <ul class="showcase-features">
+          <li><span class="icon">&#10003;</span> Cloud: OpenAI, Anthropic</li>
+          <li><span class="icon">&#10003;</span> Gateways: OpenRouter, Portkey</li>
+          <li><span class="icon">&#10003;</span> Local HTTP: Ollama, LM Studio, vLLM, any OpenAI-compatible endpoint</li>
+          <li><span class="icon">&#10003;</span> In-process: MLX (Apple Silicon), HuggingFace (GPU/CPU)</li>
+        </ul>
+      </div>
+      <div>
+        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+
+<span class="line-cmt"># Cloud provider</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+
+<span class="line-cmt"># Local server — same API</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
+
+<span class="line-cmt"># In-process on Apple Silicon</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3-4B"</span>)
+
+resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Say hello in French."</span>)
+print(resp.content)</code></pre></div>
+      </div>
+    </div>
+
+    <div class="showcase-grid reverse" style="margin-top:var(--space-2xl)">
+      <div class="showcase-content">
+        <h3>Design Principles</h3>
+        <p>AbstractCore is designed to be lightweight by default. The core install is small and fast. Heavy dependencies stay behind optional extras and are imported lazily.</p>
+        <ul class="showcase-features">
+          <li><span class="icon">&#10003;</span> <strong>Lightweight default install</strong> &mdash; no torch, no transformers, no server deps unless you ask</li>
+          <li><span class="icon">&#10003;</span> <strong>Pass-through tool execution</strong> &mdash; Core returns tool calls; your host/runtime executes them</li>
+          <li><span class="icon">&#10003;</span> <strong>Policy-driven media</strong> &mdash; audio/video/image input is explicit, never silently altered</li>
+          <li><span class="icon">&#10003;</span> <strong>Composable extras</strong> &mdash; install only the provider SDKs and features you need</li>
+        </ul>
+      </div>
+      <div>
+        <div class="code-block"><pre><code><span class="line-cmt"># Lightweight core (HTTP-only providers)</span>
+pip install abstractcore
+
+<span class="line-cmt"># Add only what you need</span>
+pip install <span class="line-str">"abstractcore[openai]"</span>
+pip install <span class="line-str">"abstractcore[anthropic]"</span>
+pip install <span class="line-str">"abstractcore[media]"</span>
+pip install <span class="line-str">"abstractcore[server]"</span>
+
+<span class="line-cmt"># Turnkey Apple Silicon install</span>
+pip install <span class="line-str">"abstractcore[all-apple]"</span>
+
+<span class="line-cmt"># Turnkey NVIDIA GPU install</span>
+pip install <span class="line-str">"abstractcore[all-gpu]"</span></code></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Capabilities</span>
+      <h2 class="section-title">Features</h2>
+      <p class="section-desc">Everything you need to build production AI applications, from basic text generation to multimodal pipelines.</p>
+    </div>
+
+    <div class="components-grid">
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag foundation">Providers</span>
+        </div>
+        <h3>9+ LLM Backends</h3>
+        <p>OpenAI, Anthropic, OpenRouter, Portkey, Ollama, LM Studio, vLLM, MLX, HuggingFace &mdash; and any generic OpenAI-compatible endpoint. Same <code>create_llm()</code> interface across all.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag foundation">Streaming</span>
+        </div>
+        <h3>Unified Streaming</h3>
+        <p>Pass <code>stream=True</code> to any provider and iterate over chunks. Works identically across cloud, local HTTP, and in-process backends.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag composition">Agentic</span>
+        </div>
+        <h3>Tool Calling</h3>
+        <p>Decorate functions with <code>@tool</code> for a universal tool representation. Pass-through by default &mdash; your host or runtime executes; Core normalizes across providers.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag composition">Structured</span>
+        </div>
+        <h3>Structured Output</h3>
+        <p>Pass a Pydantic model as <code>response_model=...</code> and get typed objects back. Uses native provider structured output when available, prompted strategies + validation otherwise.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag modality">Multimodal</span>
+        </div>
+        <h3>Media Handling</h3>
+        <p>Policy-driven image, audio, video, and document input. Configurable vision/audio/video fallback pipelines. Capability plugins for TTS, STT, image gen, video gen, and music.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag memory">Embeddings</span>
+        </div>
+        <h3>Embedding Manager</h3>
+        <p>Install <code>abstractcore[embeddings]</code> and use <code>EmbeddingManager</code> for text embeddings with local models. Clean API for RAG pipelines and semantic search.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag app">Server</span>
+        </div>
+        <h3>OpenAI-Compatible Server</h3>
+        <p>Turn AbstractCore into an API gateway with <code>/v1/chat/completions</code>, optional image/audio/video endpoints, Swagger UI, and configurable server auth.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag foundation">Config</span>
+        </div>
+        <h3>CLI &amp; Centralized Config</h3>
+        <p>Persistent configuration at <code>~/.abstractcore/config/</code>. Set API keys, default models, vision/audio/video strategies, logging, and server settings from the command line.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag composition">Sessions</span>
+        </div>
+        <h3>Session &amp; Prompt Caching</h3>
+        <p><code>BasicSession</code> for multi-turn state. <code>CachedSession</code> adds provider prompt caching with stable prefix reuse. Attach files as context &mdash; cache them across turns.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section id="getting-started" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Quickstart</span>
+      <h2 class="section-title">Getting Started</h2>
+      <p class="section-desc">From zero to generating in under a minute.</p>
+    </div>
+
+    <h3 style="margin-bottom:var(--space-md)">1. Install</h3>
+    <div class="code-block"><pre><code>pip install abstractcore
+
+<span class="line-cmt"># Add provider SDK extras as needed</span>
+pip install <span class="line-str">"abstractcore[openai]"</span>      <span class="line-cmt"># OpenAI SDK</span>
+pip install <span class="line-str">"abstractcore[anthropic]"</span>   <span class="line-cmt"># Anthropic SDK</span></code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">2. Minimal Generation</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Say hello in French."</span>)
+print(resp.content)</code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">3. Streaming</h3>
+    <div class="code-block"><pre><code><span class="line-kw">for</span> chunk <span class="line-kw">in</span> llm.<span class="line-fn">generate</span>(<span class="line-str">"Write a short poem."</span>, stream=<span class="line-var">True</span>):
+    print(chunk.content <span class="line-kw">or</span> <span class="line-str">""</span>, end=<span class="line-str">""</span>, flush=<span class="line-var">True</span>)</code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">4. Tool Calling</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>, <span class="line-fn">tool</span>
+
+<span class="line-kw">@</span><span class="line-fn">tool</span>
+<span class="line-kw">def</span> <span class="line-fn">get_weather</span>(city: <span class="line-var">str</span>) -> <span class="line-var">str</span>:
+    <span class="line-str">"""Return weather for a city."""</span>
+    <span class="line-kw">return</span> <span class="line-str">f"{city}: 22C and sunny"</span>
+
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+resp = llm.<span class="line-fn">generate</span>(
+    <span class="line-str">"What's the weather in Paris?"</span>,
+    tools=[get_weather]
+)
+print(resp.tool_calls)  <span class="line-cmt"># structured calls for your host to execute</span></code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">5. Structured Output</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> pydantic <span class="line-kw">import</span> <span class="line-fn">BaseModel</span>
+<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+
+<span class="line-kw">class</span> <span class="line-fn">Answer</span>(<span class="line-fn">BaseModel</span>):
+    title: <span class="line-var">str</span>
+    bullets: <span class="line-var">list</span>[<span class="line-var">str</span>]
+
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+result = llm.<span class="line-fn">generate</span>(
+    <span class="line-str">"Summarize HTTP/3 in 3 bullets."</span>,
+    response_model=Answer
+)
+print(result.title)
+print(result.bullets)</code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">6. Sessions &amp; Multi-Turn</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">BasicSession</span>, <span class="line-fn">create_llm</span>
+
+session = <span class="line-fn">BasicSession</span>(
+    <span class="line-fn">create_llm</span>(<span class="line-str">"anthropic"</span>, model=<span class="line-str">"claude-haiku-4-5"</span>),
+    temperature=<span class="line-var">0.3</span>
+)
+print(session.<span class="line-fn">generate</span>(<span class="line-str">"Give me 3 startup ideas."</span>).content)
+print(session.<span class="line-fn">generate</span>(<span class="line-str">"Pick the best one and explain why."</span>).content)</code></pre></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ API REFERENCE ═══════════════════ -->
+<section id="api" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Reference</span>
+      <h2 class="section-title">API Surface</h2>
+      <p class="section-desc">Key patterns and provider configuration.</p>
+    </div>
+
+    <h3 style="margin-bottom:var(--space-md)">Providers &amp; Environment Variables</h3>
+    <div class="arch-diagram">
+      <div class="arch-layers">
+        <div class="arch-layer">
+          <div class="arch-layer-label">Cloud</div>
+          <div class="arch-blocks">
+            <div class="arch-block accent">OpenAI<br><small style="color:var(--text-muted)">OPENAI_API_KEY</small></div>
+            <div class="arch-block accent">Anthropic<br><small style="color:var(--text-muted)">ANTHROPIC_API_KEY</small></div>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">Gateways</div>
+          <div class="arch-blocks">
+            <div class="arch-block cyan">OpenRouter<br><small style="color:var(--text-muted)">OPENROUTER_API_KEY</small></div>
+            <div class="arch-block cyan">Portkey<br><small style="color:var(--text-muted)">PORTKEY_API_KEY</small></div>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">Local HTTP</div>
+          <div class="arch-blocks">
+            <div class="arch-block green">Ollama<br><small style="color:var(--text-muted)">OLLAMA_BASE_URL</small></div>
+            <div class="arch-block green">LM Studio<br><small style="color:var(--text-muted)">LMSTUDIO_BASE_URL</small></div>
+            <div class="arch-block green">vLLM<br><small style="color:var(--text-muted)">VLLM_BASE_URL</small></div>
+            <div class="arch-block green">OpenAI-compat<br><small style="color:var(--text-muted)">OPENAI_BASE_URL</small></div>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">In-Process</div>
+          <div class="arch-blocks">
+            <div class="arch-block pink">MLX<br><small style="color:var(--text-muted)">Apple Silicon</small></div>
+            <div class="arch-block pink">HuggingFace<br><small style="color:var(--text-muted)">GPU / CPU</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Media Handling &amp; Policies</h3>
+    <p style="color:var(--text-secondary);margin-bottom:var(--space-lg)">Media input is policy-driven. Audio and video require explicit policy configuration to avoid silent semantic changes.</p>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"anthropic"</span>, model=<span class="line-str">"claude-haiku-4-5"</span>)
+resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describe this image."</span>, media=[<span class="line-str">"./image.png"</span>])
+print(resp.content)
+
+<span class="line-cmt"># Audio/video policies: native_only | speech_to_text | auto | caption</span>
+<span class="line-cmt"># Configure via CLI:</span>
+<span class="line-cmt">#   abstractcore --set-audio-strategy auto</span>
+<span class="line-cmt">#   abstractcore --set-video-strategy auto</span></code></pre></div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Embeddings</h3>
+    <div class="code-block"><pre><code>pip install <span class="line-str">"abstractcore[embeddings]"</span>
+
+<span class="line-kw">from</span> abstractcore.embeddings <span class="line-kw">import</span> <span class="line-fn">EmbeddingManager</span>
+
+em = <span class="line-fn">EmbeddingManager</span>()
+vec = em.<span class="line-fn">embed_text</span>(<span class="line-str">"hello world"</span>)
+print(len(vec))</code></pre></div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">OpenAI-Compatible Server</h3>
+    <div class="code-block"><pre><code>pip install <span class="line-str">"abstractcore[server]"</span>
+python -m abstractcore.server.app
+
+<span class="line-cmt"># Health check</span>
+curl http://localhost:8000/health
+
+<span class="line-cmt"># Chat completions (provider/model format)</span>
+curl -X POST http://localhost:8000/v1/chat/completions \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"model": "openai/gpt-4o-mini", "messages": [{"role": "user", "content": "Hello!"}]}'</span>
+
+<span class="line-cmt"># Swagger UI: http://localhost:8000/docs</span></code></pre></div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Capability Plugins</h3>
+    <p style="color:var(--text-secondary);margin-bottom:var(--space-lg)">AbstractCore discovers optional modality backends via Python entry points:</p>
+    <div class="components-grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">
+      <div class="comp-card">
+        <h3>AbstractVoice</h3>
+        <p>TTS &amp; STT via <code>llm.voice</code> and <code>llm.audio</code>. Local and server-backed speech pipelines.</p>
+      </div>
+      <div class="comp-card">
+        <h3>AbstractVision</h3>
+        <p>Image &amp; video generation via <code>llm.vision</code>. Text-to-image, image-to-image, text-to-video, image-to-video.</p>
+      </div>
+      <div class="comp-card">
+        <h3>AbstractMusic</h3>
+        <p>Text-to-music via <code>llm.music</code>. Local ACE-Step backend for in-process generation.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">CLI Configuration</h3>
+    <div class="code-block"><pre><code><span class="line-cmt"># Interactive config wizard</span>
+abstractcore --config
+
+<span class="line-cmt"># Set API keys</span>
+abstractcore --set-api-key openai sk-...
+abstractcore --set-api-key anthropic sk-ant-...
+
+<span class="line-cmt"># Set default models</span>
+abstractcore --set-chat-model openai/gpt-4o-mini
+abstractcore --set-code-model anthropic/claude-haiku-4-5
+
+<span class="line-cmt"># Media strategies</span>
+abstractcore --set-video-strategy auto
+abstractcore --set-audio-strategy auto
+
+<span class="line-cmt"># Check status</span>
+abstractcore --status</code></pre></div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Install Extras Reference</h3>
+    <div class="arch-diagram">
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-sm)">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:.75rem;color:var(--text-muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em">Extra</th>
+            <th style="text-align:left;padding:.75rem;color:var(--text-muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em">What it adds</th>
+          </tr>
+        </thead>
+        <tbody style="color:var(--text-secondary)">
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>openai</code></td><td style="padding:.6rem .75rem">OpenAI Python SDK</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>anthropic</code></td><td style="padding:.6rem .75rem">Anthropic Python SDK</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>remote</code></td><td style="padding:.6rem .75rem">OpenAI + Anthropic SDKs</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>huggingface</code></td><td style="padding:.6rem .75rem">Transformers + Torch (heavy)</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>mlx</code> / <code>apple</code></td><td style="padding:.6rem .75rem">Apple Silicon local LLM (heavy)</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>vllm</code> / <code>gpu</code></td><td style="padding:.6rem .75rem">NVIDIA GPU inference (heavy)</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>tools</code></td><td style="padding:.6rem .75rem">Built-in web search &amp; filesystem tools</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>media</code></td><td style="padding:.6rem .75rem">Image + PDF/Office document extraction</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>embeddings</code></td><td style="padding:.6rem .75rem">EmbeddingManager + local models</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>server</code></td><td style="padding:.6rem .75rem">OpenAI-compatible /v1 HTTP server (FastAPI)</td></tr>
+          <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.6rem .75rem"><code>tokens</code></td><td style="padding:.6rem .75rem">Precise token counting (tiktoken)</td></tr>
+          <tr><td style="padding:.6rem .75rem"><code>all-apple</code> / <code>all-gpu</code></td><td style="padding:.6rem .75rem">Full local dev environment (turnkey)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="../" class="nav-brand" style="margin-bottom:.5rem">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="gf" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#gf)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
+        AbstractFramework
+      </a>
+      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; Made with care for the AI community</p>
+    </div>
+    <div class="footer-col">
+      <h4>Foundation</h4>
+      <a href="abstractcore.html">AbstractCore</a>
+      <a href="abstractruntime.html">AbstractRuntime</a>
+      <a href="abstractagent.html">AbstractAgent</a>
+      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">AbstractFlow</a>
+    </div>
+    <div class="footer-col">
+      <h4>Applications</h4>
+      <a href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">AbstractGateway</a>
+      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">AbstractCode</a>
+      <a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">AbstractObserver</a>
+      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">AbstractAssistant</a>
+    </div>
+    <div class="footer-col">
+      <h4>Modalities &amp; Knowledge</h4>
+      <a href="https://github.com/lpalbou/abstractvoice" target="_blank" rel="noopener noreferrer">AbstractVoice</a>
+      <a href="https://github.com/lpalbou/abstractvision" target="_blank" rel="noopener noreferrer">AbstractVision</a>
+      <a href="https://github.com/lpalbou/abstractmusic" target="_blank" rel="noopener noreferrer">AbstractMusic</a>
+      <a href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer">AbstractMemory</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+  </div>
+</footer>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>
