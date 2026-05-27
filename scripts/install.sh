@@ -68,8 +68,8 @@ echo "Upgrading pip..."
 python -m pip install -U pip
 
 echo ""
-echo "Installing AbstractFramework full release profile..."
-python -m pip install "abstractframework==0.1.4"
+echo "Installing AbstractFramework (remote-first profile)..."
+python -m pip install "abstractframework==0.1.5"
 
 echo ""
 echo "✓ Done."

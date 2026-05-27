@@ -1,46 +1,39 @@
-# API
+# API (meta-package)
 
-This document covers the Python API exposed by the `abstractframework` meta-package.
+This page documents the API exported by `abstractframework`, the meta-package shipped by this repository.
 
-## Purpose
+`abstractframework` is a **pinned distribution profile** plus a few lightweight helpers. The framework can be used in two ways: **via code** (Python SDK, see below) or **via API routes** (HTTP/SSE through AbstractGateway, language-agnostic). Most functional APIs live in component packages — especially **AbstractCore** for the LLM SDK.
 
-`abstractframework` is a unified distribution package for the ecosystem. It provides:
+---
 
-- one-command installation for the pinned full framework profile
-- lightweight runtime helpers to inspect installed component versions
-- convenience re-exports from `abstractcore`
+## Install
 
-## Installation
+Full pinned ecosystem:
 
 ```bash
-pip install "abstractframework[all]"
+pip install abstractframework
 ```
 
-Native local-engine deployment profiles are also available:
+Only the LLM SDK:
 
 ```bash
-pip install "abstractframework[apple]"
-pip install "abstractframework[gpu]"
-pip install "abstractframework[all-apple]"
-pip install "abstractframework[all-gpu]"
+pip install abstractcore
 ```
 
-The `apple` and `gpu` root profiles delegate to the matching full Gateway native Python deployment
-profile. Docker remains a Gateway deployment concern: lightweight server image by default, explicit
-NVIDIA image for CUDA hosts.
+Hardware-specific profiles (native installs, not Docker):
 
-## Installer prototype (GUI)
+```bash
+pip install "abstractframework[apple]"       # Apple Silicon native stack (MLX/Metal)
+pip install "abstractframework[gpu]"         # GPU native stack (CUDA/ROCm)
+```
 
-A GUI installer prototype for AbstractCore lives at `abstractinstallers/abstractcore`.
-It installs via **PyPI/pip** into an isolated `.venv` and then runs a multi‑step
-configuration wizard. It does **not** clone GitHub repositories. For bundling a
-clickable app, see `abstractinstallers/abstractcore/BUILDING.md`.
+---
 
-## Exports
+## Convenience re-exports
+
+`abstractframework` re-exports two common AbstractCore entry points so simple scripts can `from abstractframework import ...` without a separate `abstractcore` import.
 
 ### `create_llm`
-
-Re-export from `abstractcore`.
 
 ```python
 from abstractframework import create_llm
@@ -52,63 +45,61 @@ print(resp.content)
 
 ### `GenerateResponse`
 
-Re-exported response type from `abstractcore`.
+The response type returned by `llm.generate(...)`.
+
+---
+
+## Release profile helpers
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package to the pinned version used in the global release profile.
+Dictionary mapping each ecosystem package name to the pinned version for this release.
 
 ### `CORE_DEFAULT_EXTRAS`
 
-List of default `abstractcore` extras installed by the `abstractframework[all]` profile:
-
-- `remote`
-- `embeddings`
-- `tokens`
-- `tools`
-- `media`
-- `compression`
-- `server`
-- `vision`
-- `voice`
-- `audio`
+List of AbstractCore extras implied by the default framework install profile (remote-first): `remote`, `tools`, `media`, `vision`, `voice`, `audio`, `music`.
 
 ### `get_release_profile()`
 
-Returns the pinned global profile metadata.
+Returns the full pinned profile metadata as a dict.
 
 ```python
 from abstractframework import get_release_profile
 
 profile = get_release_profile()
-print(profile["abstractframework"])
-print(profile["packages"]["abstractcore"])
+print(profile["abstractframework"])        # meta-package version
+print(profile["packages"]["abstractcore"]) # pinned Core version
 ```
 
 ### `get_installed_packages()`
 
-Returns a dictionary of installed AbstractFramework package versions detected in the current environment.
+Returns a dict of installed AbstractFramework package versions detected in the current environment.
 
 ```python
 from abstractframework import get_installed_packages
-
 print(get_installed_packages())
 ```
 
 ### `print_status()`
 
-Prints a human-readable status report of detected packages.
+Prints a human-readable status report of detected packages (installed vs missing).
 
 ```python
 from abstractframework import print_status
-
 print_status()
 ```
 
-## Notes
+---
 
-- Most behavior and feature APIs live in the individual package repos.
-- Use this package for unified install/version pinning and ecosystem-level bootstrapping.
-- SmartNote is a systray app that runs through AbstractGateway and auto-classifies fragments into cards; install with `pip install -e ./smartnote`.
-- Gateway-first clients (AbstractAssistant) use bundle discovery + per-session workflow selection; see `docs/architecture.md`.
-- Installer design guidance lives in `docs/installers/README.md`.
+## Where to find the functional APIs
+
+| What you need | Package |
+|---|---|
+| LLM calls, tools, structured output, media, embeddings, MCP | `abstractcore` |
+| Durable execution kernel (runs, ledger, effects, waits) | `abstractruntime` |
+| Agent patterns (ReAct, CodeAct, MemAct) | `abstractagent` |
+| Control plane (HTTP server, scheduling, bundle discovery, SSE) | `abstractgateway` |
+| Workflow authoring and `.flow` bundles | `abstractflow` |
+| Monitoring / operations UI | `@abstractframework/observer` (npm) |
+
+See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run.

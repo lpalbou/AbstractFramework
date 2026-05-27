@@ -10,36 +10,33 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.25",
-    "abstractruntime": "0.4.21",
-    "abstractagent": "0.3.7",
-    "abstractflow": "0.3.13",
+    "abstractcore": "2.13.29",
+    "abstractruntime": "0.4.24",
+    "abstractagent": "0.3.8",
+    "abstractflow": "0.3.15",
     "abstractcode": "0.3.6",
-    "abstractgateway": "0.2.17",
+    "abstractgateway": "0.2.20",
     "abstractmemory": "0.2.6",
     "abstractsemantics": "0.0.4",
     "abstractvoice": "0.10.16",
-    "abstractvision": "0.3.12",
-    "abstractmusic": "0.1.11",
-    "abstractassistant": "0.4.5",
+    "abstractvision": "0.3.16",
+    "abstractmusic": "0.1.12",
+    "abstractassistant": "0.4.6",
 }
 
 CORE_DEFAULT_EXTRAS = [
     "remote",
-    "embeddings",
-    "tokens",
     "tools",
     "media",
-    "compression",
-    "server",
     "vision",
     "voice",
     "audio",
+    "music",
 ]
 
 # Convenience re-exports (AbstractCore is a base dependency of this meta-package).
@@ -73,8 +70,11 @@ def get_release_profile() -> dict[str, object]:
         "abstractframework": __version__,
         "packages": RELEASE_VERSIONS.copy(),
         "core_extras": list(CORE_DEFAULT_EXTRAS),
-        "flow_extra": "editor",
-        "gateway_extras": ["server", "memory"],
+        "install_profiles": {
+            "base": "pip install abstractframework",
+            "apple": 'pip install "abstractframework[apple]"',
+            "gpu": 'pip install "abstractframework[gpu]"',
+        },
     }
 
 
@@ -142,5 +142,9 @@ def print_status() -> None:
 
     if len(installed) < len(all_packages):
         print("")
-        print("To install the full pinned framework:")
-        print('  pip install "abstractframework[all]"')
+        print("To install the framework profile:")
+        print("  pip install abstractframework")
+        print("")
+        print("Hardware-local profiles:")
+        print('  pip install "abstractframework[apple]"')
+        print('  pip install "abstractframework[gpu]"')

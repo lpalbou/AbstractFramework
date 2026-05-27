@@ -1,126 +1,147 @@
 # Glossary
 
-This glossary defines the terms used across AbstractFramework docs.
+Shared terminology used across AbstractFramework documentation.
 
-If you're new, skim **Core Execution** and **Flows and Bundles** first.
+If you're new, read these groups first:
 
-## Core Execution
+- **Durable execution**: run, ledger, effect, wait, artifact
+- **Workflows**: flow, bundle, interface contract
+- **Control plane**: gateway, schedule, observer
 
-### Run
+---
 
-A durable workflow instance, identified by a `run_id`. A run has persisted state and an append-only history.
+## Core (LLM SDK)
 
-### Ledger
+### Provider
 
-An append-only log of step records for a run. In gateway-first mode, UIs render by replaying the ledger and then
-streaming new steps (SSE).
+An LLM backend integration (Ollama, OpenAI, Anthropic, any OpenAI-compatible server, etc.).
 
-### Step
+### Model
 
-One recorded unit in the ledger (for example: node start, effect requested, effect result, error).
+A provider-specific model identifier (`qwen3:4b-instruct`, `gpt-4o-mini`, `claude-3-5-sonnet-latest`, etc.).
 
-### Effect
+### Capability route
 
-A typed request for side effects (LLM call, tool calls, ask user, wait until, etc.). Effects are durable: the request is
-recorded so the run can resume after restart.
+A stable "slot" for a default model/provider choice, scoped by capability rather than by application. Examples: `output.text` (default text generation), `input.text` (default text understanding), `embedding.text` (default embeddings).
 
-### Wait
+### Capability plugin
 
-A pause point where the run stops progressing until it is resumed with external input (human answer, tool results, an
-event, or time).
+An optional package that extends AbstractCore with a modality API without bloating the base install. Install a plugin and the API appears on `llm` instances:
 
-### Artifact
+- `abstractvoice` → `llm.voice` (TTS) / `llm.audio` (STT)
+- `abstractvision` → `llm.vision` (image generation)
+- `abstractmusic` → `llm.music` (text-to-music)
 
-A file- or store-backed blob referenced from JSON state/ledger (used for large payloads). Artifacts keep run state
-JSON-safe.
-
-## Flows and Bundles
-
-### WorkflowSpec
-
-A Python in-memory workflow graph (nodes are callables). Durable runs execute a `WorkflowSpec`, but it is not portable as
-an artifact because callables cannot be serialized safely.
-
-### VisualFlow
-
-A JSON workflow graph format used by AbstractFlow (and compiled by AbstractRuntime). This is the portable authoring
-format.
-
-### WorkflowBundle (`.flow`)
-
-A portable distribution unit that packages a VisualFlow plus any referenced subflows and assets. Gateways discover
-`.flow` bundles and expose them to clients.
-
-### Interface contract
-
-A versioned input/output contract a flow can implement so multiple clients can run it the same way (for example
-`abstractcode.agent.v1` for chat-like "agent" flows).
-
-## Skills (planned)
-
-### Agent Skill (`SKILL.md`)
-
-A shareable “procedure pack” defined by the Agent Skills ecosystem: a folder containing a required `SKILL.md` (YAML
-frontmatter + instructions) and optional `scripts/`, `references/`, and `assets/`.
-
-In the planned AbstractFramework integration, **flows run** and skills are **activated/loaded** as run-attached modules.
-Skill scripts (when enabled) execute only as explicit tools with the usual approval/evidence/ledger semantics.
+---
 
 ## Tools
 
 ### Tool spec (schema)
 
-A JSON-serializable description of a tool: name, description, and input schema. Tool specs are durable and can be stored
-in the ledger.
+A JSON-serializable description of a tool: name, description, and input schema. Tool specs are durable — they can be stored in the ledger and replayed.
 
 ### Tool executor (callable)
 
-The host-side implementation that actually runs tools. Executors are not durable; they live in the process that owns
-tool execution (terminal host, gateway runner, worker).
+The host-side implementation that actually runs a tool. Executors are **not** durable; they live in the process that owns tool execution.
 
 ### Approval boundary
 
-By default, tool execution is gated behind an explicit approval/resume step. This makes tool side effects auditable and
-restart-safe.
+By default, tool execution is gated behind an explicit approval/resume step. This makes tool side-effects auditable, controllable, and restart-safe. Approval policy is configurable per tool (auto-approve safe tools, require manual approval for mutations).
+
+---
+
+## Durable execution (Runtime)
+
+### Run
+
+A durable workflow instance, identified by a `run_id`. A run has persisted state and a full append-only history.
+
+### Session ID
+
+A stable identifier used to group multiple runs into a long-lived "session" across time and clients (a chat thread, a device session, etc.).
+
+### Ledger
+
+The append-only history of what happened in a run (steps, effects, results, waits, errors). Replay-first clients render by replaying the ledger and then streaming new events.
+
+### Step
+
+One recorded unit in the ledger (node transitions, effect requests, results, errors).
+
+### Effect
+
+A typed request for a side-effect (LLM call, tool calls, ask user, wait-until, …). Effects are recorded so a run can resume correctly after restarts.
+
+### Wait
+
+A durable pause point: the run is checkpointed and stops progressing until it is resumed with external input (tool results, user input, time, or an event).
+
+### Artifact
+
+A file- or store-backed blob referenced from JSON state/ledger. Used for large payloads (files, media, big tool results) to keep state JSON-safe while preserving evidence.
+
+---
+
+## Agent patterns
+
+### Agent
+
+A runtime workflow that implements a reasoning loop: observe → think → act → repeat. AbstractAgent ships three patterns:
+
+- **ReAct**: tool-first reasoning (observe environment, choose tool, execute, reflect)
+- **CodeAct**: code execution (generate Python, execute, observe output)
+- **MemAct**: memory-enhanced (read/write a knowledge graph during the loop)
+
+Agents can run standalone or as nodes inside a Flow.
+
+---
+
+## Workflows (Flow)
+
+### Flow
+
+A workflow graph: nodes + edges + state transitions. Flows encode orchestration logic: LLM steps, tool steps, branching, loops, subflows, and agent nodes.
+
+### VisualFlow
+
+The JSON workflow graph format used by AbstractFlow and executed by AbstractRuntime.
+
+### Workflow bundle (`.flow`)
+
+A portable distribution unit that packages a VisualFlow graph plus metadata (and optionally subflows/assets). Gateways discover `.flow` bundles and expose them to clients.
+
+### Interface contract
+
+A versioned input/output contract a flow can implement so multiple clients can run it consistently (for example `abstractcode.agent.v1` for chat-like agent flows).
+
+---
+
+## Control plane (Gateway) + operations (Observer)
+
+### Gateway
+
+The control plane for durable runs: start/resume/cancel, persistence, scheduling, bundle discovery, and ledger serving/streaming over HTTP/SSE.
+
+### Schedule
+
+A durable recurring trigger owned by the gateway ("run this workflow every 24h"). Schedules survive restarts.
+
+### Observer
+
+A thin-client browser UI for operations: monitor runs, inspect ledger history, watch live execution, control runs, and (when enabled) create schedules.
+
+---
 
 ## Memory
 
 ### Active context
 
-The current message view sent to the model (what the LLM "sees"). It is a derived view and can be compacted without
-losing underlying history.
+The current message view sent to the model (what the LLM "sees"). A derived view that can be compacted without losing underlying history.
 
 ### Stored history
 
-The durable record of what happened (ledger + artifacts). Stored history is the source of truth.
-
-### Span
-
-A durable handle (often an artifact reference) that points to a piece of stored history, typically produced by
-compaction or evidence capture.
-
-### Scope
-
-Where memory is read/written:
-
-- `run`: only this run
-- `session`: shared across runs that share a `session_id`
-- `global`: shared across all runs in the same runtime/gateway instance
-- `all`: query fan-out across `run + session + global`
+The durable record of what happened (ledger + artifacts). The source of truth.
 
 ### Knowledge graph (KG) memory
 
-Long-term memory stored as temporal triples (AbstractMemory), validated and
-normalized in framework workflows through the standalone semantics registry
-(AbstractSemantics).
-
-## Modalities
-
-### Capability plugin
-
-An optional add-on that extends AbstractCore with deterministic modality APIs:
-
-- `llm.voice` / `llm.audio` via AbstractVoice
-- `llm.vision` via AbstractVision
-
-This keeps AbstractCore lightweight while letting hosts enable modalities where they run durable execution.
+Long-term memory stored as temporal triples (AbstractMemory), validated through the shared semantics registry (AbstractSemantics). Optional — not a hard dependency of the runtime kernel.

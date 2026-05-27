@@ -1,124 +1,50 @@
-# Getting Started
+# Getting started
 
-Welcome! This guide gets you from zero to a working AbstractFramework setup in minutes.
+This guide helps you build a correct mental model quickly, then run something end-to-end.
 
-AbstractFramework is modular — you can install the full framework in one command or pick specific packages. Whether you want a simple LLM API, a durable coding assistant, a visual workflow editor, voice-enabled agents, or a full production gateway — there's a path for you.
+AbstractFramework is a **stack**:
 
-**New here?** Start with [Path 0](#path-0-full-framework-recommended) to install everything, then jump to the path that matches what you want to build.
+| Layer | Package | Role |
+|---|---|---|
+| SDK | **AbstractCore** | Provider/model abstraction, tools, structured output, media, embeddings |
+| Agent patterns | **AbstractAgent** | Ready-made loops: ReAct (tool-first), CodeAct (code execution), MemAct (memory-enhanced) |
+| Workflow authoring | **AbstractFlow** | Visual editor, portable `.flow` bundles, subflows |
+| Durable kernel | **AbstractRuntime** | Runs, effects, waits, ledger, artifacts |
+| Control plane | **AbstractGateway** | Persistence, scheduling, bundle discovery, SSE streaming |
+| Operations | **AbstractObserver** | Browser UI to monitor, control, and schedule runs |
 
-## Installer-based setup (prototype)
-For non-technical users, a **GUI installer prototype** exists for AbstractCore at
-`abstractinstallers/abstractcore`. It installs from **PyPI via pip** (no Git clone),
-creates an isolated `.venv`, then runs a multi‑step wizard that mirrors
-`abstractcore --config` (defaults, vision, keys, audio/video, embeddings, logging). For durable
-framework routing, use capability defaults such as `output.text` and `embedding.text`; see
-[Capability Routing Defaults](guide/capability-routing-defaults.md).
+**Rule of thumb**: start with **Core** when you want direct code-level integration (Python SDK); add **Gateway** when you need durability, orchestration, or multi-client/multi-language access via API routes.
 
-- Run from source: `python abstractinstallers/abstractcore/installer_gui.py`
-- Build a clickable app: `abstractinstallers/abstractcore/BUILDING.md`
-- Rebuild the app bundle to pick up UI updates
-
-Design guidance for production installers is in `docs/installers/README.md`.
-
-## What Do You Want to Build?
-
-| Your Goal | Start Here | What You'll Use |
-|-----------|------------|-----------------|
-| Install the full, pinned framework release | [Path 0](#path-0-full-framework-recommended) | `abstractframework[all]` |
-| Call LLMs with a unified API | [Path 1](#path-1-llm-integration) | `abstractcore` |
-| Build a local coding assistant | [Path 2](#path-2-terminal-agent) | `abstractcode` |
-| Create durable workflows | [Path 3](#path-3-durable-workflows) | `abstractruntime` |
-| Deploy a remote run gateway | [Path 4](#path-4-gateway--observer) | `abstractgateway` + `abstractobserver` |
-| Use agent patterns (ReAct, etc.) | [Path 5](#path-5-agent-patterns) | `abstractagent` |
-| Add voice/audio to AbstractCore | [Path 6](#path-6-voice-io) | `abstractcore` + `abstractvoice` (plugin) |
-| Add image generation to AbstractCore | [Path 7](#path-7-image-generation) | `abstractcore` + `abstractvision` (plugin) |
-| Add music generation to AbstractCore | [Path 7a](#path-7a-music-generation) | `abstractcore` + `abstractmusic` (plugin) |
-| Build a knowledge graph | [Path 8](#path-8-knowledge-graph) | `abstractmemory` + `abstractsemantics` |
-| macOS menu bar assistant | [Path 9](#path-9-macos-assistant) | `abstractassistant` |
-| SmartNote systray note organizer | [Path 16](#path-16-smartnote) | `smartnote` |
-| Visual workflow editor (browser) | [Path 10](#path-10-flow-editor) | `@abstractframework/flow` |
-| Browser-based coding assistant | [Path 11](#path-11-code-web-ui) | `@abstractframework/code` |
-| Create a specialized agent | [Path 12](#path-12-specialized-agent) | `abstractflow` + clients |
-| Integrate external tools via MCP | [Path 13](#path-13-mcp-integration) | `abstractcore` |
-| Use structured output (Pydantic) | [Path 14](#path-14-structured-output) | `abstractcore` |
-| Run an OpenAI-compatible API server | [Path 15](#path-15-openai-compatible-server) | `abstractcore[server]` |
-
-## Path 0: Full Framework (Recommended)
-
-Install the pinned global release profile in one command:
-
-```bash
-pip install "abstractframework[all]"
-```
-
-This installs all framework Python packages together, including:
-
-| Package | Version |
-|---------|---------|
-| `abstractcore` | `2.13.12` |
-| `abstractruntime` | `0.4.8` |
-| `abstractagent` | `0.3.2` |
-| `abstractflow` | `0.3.7` (`editor`) |
-| `abstractcode` | `0.3.6` |
-| `abstractgateway` | `0.2.4` (`server,memory`) |
-| `abstractmemory` | `0.2.4` |
-| `abstractsemantics` | `0.0.3` |
-| `abstractvoice` | `0.9.2` |
-| `abstractvision` | `0.3.3` |
-| `abstractmusic` | `0.1.1` |
-| `abstractassistant` | `0.4.2` |
-
-`abstractcore` is installed with `remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio`.
-
-Use this path when you want a fully functional setup with minimal decision overhead.
-
-For native local-engine deployments, use the hardware profile that matches the host:
-
-```bash
-pip install "abstractframework[apple]"     # full Gateway deployment on Apple Silicon
-pip install "abstractframework[gpu]"       # full Gateway deployment on GPU workstations
-pip install "abstractframework[all-apple]" # full pinned ecosystem, Apple profile
-pip install "abstractframework[all-gpu]"   # full pinned ecosystem, GPU profile
-```
-
-Docker deployments do not use the Apple profile. Use the lightweight Gateway server image for
-remote-provider deployments, or the explicit NVIDIA Gateway image on CUDA hosts.
-
-After install, configure and verify your setup:
-
-```bash
-# Interactive guided setup (model, base URL, vision, API keys, audio, video, embeddings, logging)
-abstractcore --config
-
-# Check readiness + download missing models
-abstractcore --install
-```
-
-## Prerequisites
-
-**Python**: 3.10 or newer
-
-**Node.js**: 18+ (only for browser UIs)
-
-**An LLM Backend** (pick one):
-- **Local (recommended)**: Ollama, LM Studio, vLLM, llama.cpp, LocalAI
-- **Cloud**: OpenAI, Anthropic, Google, Groq, Together AI, Mistral
+> **Prerequisites**: Python 3.10+. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
 
 ---
 
-## Path 1: LLM Integration
+## Choose your entry point
 
-The simplest path. Use AbstractCore as a unified LLM client.
+| If you are… | Start with | Why |
+|---|---|---|
+| Integrating AI features via code (Python SDK) | **AbstractCore** | Smallest surface area, fastest feedback loop |
+| Building durable workflows accessible from any language | **AbstractGateway** + **AbstractFlow** | Persistence, scheduling, HTTP/SSE — "author once, run from anywhere" |
 
-### Install
+You can also install the entire pinned ecosystem in one command:
+
+```bash
+pip install abstractframework
+```
+
+---
+
+## Core-first: integrate via code (Python SDK)
+
+### 1. Install
 
 ```bash
 pip install abstractcore
 ```
 
-### Configure a Provider
+### 2. Configure a provider
 
-**Local with Ollama** (free, no API key):
+**Local (Ollama)** — free, no API key:
 
 ```bash
 ollama serve
@@ -126,177 +52,90 @@ ollama pull qwen3:4b-instruct
 export OLLAMA_HOST="http://localhost:11434"
 ```
 
-**Or with LM Studio** (OpenAI-compatible):
+**OpenAI-compatible** (LM Studio, vLLM, LocalAI, llama.cpp):
 
 ```bash
 export OPENAI_BASE_URL="http://127.0.0.1:1234/v1"
 export OPENAI_API_KEY="local"
 ```
 
-**Or with Cloud APIs**:
+**Cloud APIs**:
 
 ```bash
 export OPENAI_API_KEY="sk-..."
-# or
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
-### Use It
+**Or use the interactive wizard** (persists config to `~/.abstractcore/config/`):
+
+```bash
+abstractcore --config
+abstractcore --status
+```
+
+### 3. Call the model
 
 ```python
 from abstractcore import create_llm
 
-# Local
 llm = create_llm("ollama", model="qwen3:4b-instruct")
-
-# Or cloud
-# llm = create_llm("openai", model="gpt-4o")
-# llm = create_llm("anthropic", model="claude-3-5-sonnet-latest")
-
-response = llm.generate("What is durable execution?")
-print(response.content)
+resp = llm.generate("Explain durable execution in 3 bullets.")
+print(resp.content)
 ```
 
-**Next**: Add [tool calling](https://github.com/lpalbou/abstractcore/blob/main/docs/tools.md) or [structured output](https://github.com/lpalbou/abstractcore/blob/main/docs/structured-output.md).
-
----
-
-## Path 2: Terminal Agent
-
-Get a durable coding assistant running in your terminal.
-
-### Install
-
-```bash
-pip install abstractcode
-```
-
-### Start Ollama
-
-```bash
-ollama serve
-ollama pull qwen3:1.7b-q4_K_M
-export OLLAMA_HOST="http://localhost:11434"
-```
-
-### Run
-
-```bash
-abstractcode --provider ollama --model qwen3:1.7b-q4_K_M
-```
-
-### Inside AbstractCode
-
-- Type `/help` for all commands
-- Mention files with `@path/to/file` in your prompts
-- Tool execution requires approval by default (toggle with `/auto-accept`)
-
-> **Durability Note**: Sessions persist across restarts — close and reopen, your **full context is preserved** (conversation history, tool calls, state). To start fresh: type `/clear`
-
-**Next**: See [AbstractCode docs](https://github.com/lpalbou/abstractcode/blob/main/docs/getting-started.md).
-
----
-
-## Path 3: Durable Workflows
-
-Build workflows that survive crashes and can pause/resume.
-
-### Install
-
-```bash
-pip install abstractruntime
-# Add LLM integration:
-pip install "abstractruntime[abstractcore]"
-```
-
-### Key Concepts
-
-- **Run**: A durable workflow instance
-- **Ledger**: Append-only log of everything that happened
-- **Effect**: A request for something to happen (LLM call, tool call, timer)
-- **Wait**: An explicit pause point (state is checkpointed)
-
-### Example
+### What else you can do with Core
 
 ```python
-from abstractruntime import (
-    Effect, EffectType, Runtime, StepPlan, WorkflowSpec,
-    InMemoryLedgerStore, InMemoryRunStore
-)
+# Tool calling
+resp = llm.generate("What's the weather?", tools=[get_weather])
 
-# Define workflow nodes
-def ask(run, ctx):
-    return StepPlan(
-        node_id="ask",
-        effect=Effect(
-            type=EffectType.ASK_USER,
-            payload={"prompt": "What would you like to do?"},
-            result_key="user_input",
-        ),
-        next_node="done",
-    )
+# Structured output (Pydantic)
+report = llm.generate("Analyze this.", response_model=Report)
 
-def done(run, ctx):
-    return StepPlan(node_id="done", complete_output={"answer": run.vars.get("user_input")})
+# Media input (images, audio, video, documents)
+resp = llm.generate("Describe this image.", media=["photo.jpg"])
 
-# Create workflow and runtime
-wf = WorkflowSpec(workflow_id="demo", entry_node="ask", nodes={"ask": ask, "done": done})
-rt = Runtime(run_store=InMemoryRunStore(), ledger_store=InMemoryLedgerStore())
+# Embeddings
+vectors = llm.embed(["first document", "second document"])
 
-# Start and tick
-run_id = rt.start(workflow=wf)
-state = rt.tick(workflow=wf, run_id=run_id)
-print(state.status.value)  # "waiting"
-
-# Resume with user input
-state = rt.resume(workflow=wf, run_id=run_id, wait_key=state.waiting.wait_key, payload={"text": "Hello!"})
-print(state.status.value)  # "completed"
+# Streaming
+for chunk in llm.generate("Write a poem.", stream=True):
+    print(chunk.content or "", end="", flush=True)
 ```
-
-**Next**: See [AbstractRuntime docs](https://github.com/lpalbou/abstractruntime/blob/main/docs/getting-started.md).
 
 ---
 
-## Path 4: Gateway + Observer
+## Gateway-first: durable runs + monitoring + scheduling
 
-Deploy a remote control plane and observe runs in your browser.
-
-### Install
+### 1. Install
 
 ```bash
-pip install "abstractgateway"
-# If your workflows use LLM/tools:
-pip install "abstractruntime[abstractcore]>=0.4.0"
+pip install abstractgateway
 ```
 
-### Configure
+### 2. Configure
 
 ```bash
-# Required: authentication token
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
-
-# Required: CORS for browser access
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-
-# Workflow source
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/your/bundles"
+export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 ```
 
-### Start the Gateway
+### 3. Start the gateway
 
 ```bash
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
-Verify it's running:
+Verify:
 
 ```bash
 curl -sS "http://127.0.0.1:8080/api/health"
 ```
 
-### Start the Observer
+### 4. Monitor runs with AbstractObserver
 
 In another terminal:
 
@@ -304,635 +143,89 @@ In another terminal:
 npx @abstractframework/observer
 ```
 
-Open http://localhost:3001 in your browser:
-1. Set **Gateway URL** to `http://127.0.0.1:8080`
-2. Paste your **Auth Token**
-3. Click **Connect**
+Open http://localhost:3001 and connect (gateway URL + auth token).
 
-You're now observing your runs.
+AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
-**Next**: See [AbstractGateway docs](https://github.com/lpalbou/abstractgateway/blob/main/docs/getting-started.md).
+### 5. Schedule recurring work
 
----
-
-## Path 5: Agent Patterns
-
-Use ready-made agent loops (ReAct, CodeAct, MemAct).
-
-### Install
+Schedules are owned by the gateway (they survive restarts):
 
 ```bash
-pip install abstractagent
-```
-
-### Example: ReAct Agent
-
-```python
-from abstractagent import create_react_agent
-
-agent = create_react_agent(provider="ollama", model="qwen3:4b-instruct")
-agent.start("List the files in the current directory")
-state = agent.run_to_completion()
-print(state.output["answer"])
-```
-
-**Next**: See [AbstractAgent docs](https://github.com/lpalbou/abstractagent/blob/main/docs/getting-started.md).
-
----
-
-## Path 6: Voice I/O
-
-Add speech-to-text and text-to-speech capabilities to AbstractCore.
-
-> **Note**: AbstractVoice is a **capability plugin** for AbstractCore. Once installed, it exposes `llm.voice` (TTS) and `llm.audio` (STT) on any LLM instance, keeping AbstractCore lightweight by default.
-
-### Install
-
-```bash
-pip install abstractcore abstractvoice
-```
-
-### Prefetch Models (Recommended)
-
-AbstractVoice is offline-first — prefetch models explicitly:
-
-```bash
-abstractvoice-prefetch --stt small
-abstractvoice-prefetch --piper en
-```
-
-### Use with AbstractCore (Recommended)
-
-```python
-from abstractcore import create_llm
-
-llm = create_llm("ollama", model="qwen3:4b-instruct")
-
-# Check available capabilities
-print(llm.capabilities.status())
-
-# Text-to-speech via capability
-wav_bytes = llm.voice.tts("Hello from AbstractCore!", format="wav")
-
-# Speech-to-text via capability
-text = llm.audio.transcribe("audio.wav", language="en")
-print(text)
-
-# Audio in LLM requests (transcribed automatically)
-response = llm.generate(
-    "Summarize the key points from this call.",
-    media=["meeting.wav"],
-    audio_policy="speech_to_text",
-)
-print(response.content)
-```
-
-### Standalone Use
-
-You can also use AbstractVoice directly without AbstractCore:
-
-```python
-from abstractvoice import VoiceManager
-
-vm = VoiceManager()
-
-# Text-to-speech
-vm.speak("Hello! This is AbstractVoice.")
-
-# Speech-to-text (from file)
-text = vm.transcribe_file("audio.wav")
-print(text)
-```
-
-### Interactive REPL
-
-```bash
-abstractvoice --verbose
-```
-
-**Next**: See [AbstractVoice docs](https://github.com/lpalbou/abstractvoice/blob/main/docs/getting-started.md) and [AbstractCore Audio & Voice](https://abstractcore.dev/docs/audio.html).
-
----
-
-## Path 7: Image Generation
-
-Add text-to-image and image-to-image capabilities to AbstractCore.
-
-> **Note**: AbstractVision is a **capability plugin** for AbstractCore. Once installed, it exposes `llm.vision` for generative image tasks, keeping AbstractCore lightweight by default.
-
-### Supported Backends
-
-- **HuggingFace** (recommended) — Local diffusion models via `diffusers`
-- **OpenAI-compatible APIs** — Any server exposing `/v1/images/generations`
-
-> **Note**: Ollama and LM Studio do not currently support image generation models. Use HuggingFace for local image generation.
-
-### Install
-
-```bash
-pip install abstractcore abstractvision
-```
-
-### Use with AbstractCore (Recommended)
-
-```python
-from abstractcore import create_llm
-
-llm = create_llm("openai", model="gpt-4o-mini")
-
-# Check available capabilities
-print(llm.capabilities.status())
-
-# Text-to-image via capability (requires HF_TOKEN or vision_base_url config)
-# png_bytes = llm.vision.t2i("a red square")
-```
-
-Configure the vision backend (choose one):
-
-```bash
-# Option 1: HuggingFace (recommended for local generation)
-export HF_TOKEN="hf_..."
-
-# Option 2: OpenAI-compatible server
-export ABSTRACTVISION_BASE_URL="http://localhost:7860/v1"
-```
-
-### Standalone Use with HuggingFace
-
-You can also use AbstractVision directly for local image generation:
-
-```python
-from abstractvision import VisionManager, LocalAssetStore
-from abstractvision.backends import HuggingFaceBackend, HuggingFaceBackendConfig
-
-# Configure HuggingFace backend (local diffusion models)
-backend = HuggingFaceBackend(
-    config=HuggingFaceBackendConfig(
-        model_id="stabilityai/stable-diffusion-xl-base-1.0",
-        # device="mps",  # for Apple Silicon
-    )
-)
-
-vm = VisionManager(backend=backend, store=LocalAssetStore())
-
-# Generate image
-result = vm.generate_image("a watercolor painting of a lighthouse")
-print(result)  # {"$artifact": "...", "content_type": "image/png", ...}
-```
-
-### CLI
-
-```bash
-# Using HuggingFace
-abstractvision t2i --backend huggingface "a photo of a red fox"
-
-# Using OpenAI-compatible server
-abstractvision t2i --base-url http://localhost:7860/v1 "a photo of a red fox"
-```
-
-**Next**: See [AbstractVision docs](https://github.com/lpalbou/abstractvision/blob/main/docs/getting-started.md) and [AbstractCore Vision Capabilities](https://abstractcore.dev/docs/vision-capabilities.html).
-
----
-
-## Path 7a: Music Generation
-
-Add text-to-music capabilities to AbstractCore.
-
-> **Note**: AbstractMusic is a **capability plugin** for AbstractCore. Once installed, it exposes `llm.music` for deterministic text-to-music generation, keeping AbstractCore lightweight by default.
-
-### Install
-
-```bash
-pip install abstractcore abstractmusic
-```
-
-### Configure a local backend (ACE-Step v1.5)
-
-AbstractMusic generates **locally in-process**. The recommended backend is
-**ACE-Step Official** (`acestep-official`), which wraps the upstream ACE-Step
-runtime and 5Hz LM planner.
-
-> If you switch to the Diffusers backend, **model licenses vary by checkpoint**. Choose a model compatible with your intended usage.
-
-### Use with AbstractCore
-
-```python
-from abstractcore import create_llm
-
-llm = create_llm(
-    # Any provider/model works here. The LLM does *not* generate music audio.
-    # Music generation is performed by the configured AbstractMusic backend.
-    "ollama",
-    model="qwen3:4b-instruct",
-    music_backend="acestep-official",
-    music_model_id="ACE-Step/Ace-Step1.5",
-)
-
-wav_bytes = llm.music.t2m("uplifting synthwave, 120bpm, catchy chorus", format="wav", duration_s=10.0)
-open("out.wav", "wb").write(wav_bytes)
+curl -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
+  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"bundle_id":"my-bundle","flow_id":"my-entrypoint","start_at":"now","interval":"24h"}'
 ```
 
 ---
 
-## Path 8: Knowledge Graph
+## Author orchestration with AbstractFlow
 
-Build a temporal, provenance-aware knowledge graph.
+The ecosystem's distribution unit is a **workflow bundle** (`.flow` file): a VisualFlow graph + metadata. Gateways discover bundles and expose them to all clients.
 
-### Install
+### 1. Open the Flow Editor
+
+With the gateway running:
 
 ```bash
-pip install abstractmemory
-pip install abstractsemantics  # Schema registry
-
-# Optional: persistent storage + vector search
-pip install "abstractmemory[lancedb]"
+npx @abstractframework/flow
 ```
 
-### Use It
+Open http://localhost:3003 and connect to your gateway.
 
-```python
-from abstractmemory import InMemoryTripleStore, TripleAssertion, TripleQuery
+### 2. Build a workflow
 
-store = InMemoryTripleStore()
+- **On Flow Start** → takes input (prompt, provider, model, …)
+- LLM steps, tool steps, branching, loops, subflows
+- **On Flow End** → returns output (response, success, metadata)
 
-# Add knowledge
-store.add([
-    TripleAssertion(
-        subject="Paris",
-        predicate="is_capital_of",
-        object="France",
-        scope="session",
-        owner_id="sess-1",
-    )
-])
+To make it reusable across clients, implement an **interface contract** (for example `abstractcode.agent.v1` — a standard chat-like agent I/O contract).
 
-# Query
-hits = store.query(TripleQuery(subject="paris", scope="session", owner_id="sess-1"))
-print(hits[0].object)  # "france"
+### 3. Export and deploy
+
+```bash
+cp my-agent.flow "$ABSTRACTGATEWAY_FLOWS_DIR/"
 ```
 
-**Next**: See [AbstractMemory docs](https://github.com/lpalbou/abstractmemory/blob/main/docs/getting-started.md).
+### 4. Run from any client
+
+Once deployed, the bundle appears in:
+
+- **AbstractObserver** — workflow picker / run launcher
+- **AbstractAssistant** — workflow picker (per session)
+- **Code Web UI** — workflow picker
+- **Your own client** — via the gateway bundle discovery API
 
 ---
 
-## Path 9: macOS Assistant
+## Example apps
 
-Get a menu bar AI assistant with voice backend included by default.
+### AbstractCode (terminal)
 
-**Gateway-first (recommended):**
-- Run AbstractGateway (see [Path 4](#path-4-gateway--observer))
-- Set `gateway.url` + `gateway.use_gateway=true` in `config.toml`
-- Use the workflow picker in the tray UI to select the bundle/flow per session
+A local dev client for agentic sessions — no server required:
 
-### Install
+```bash
+pip install abstractcode
+abstractcode --provider ollama --model qwen3:4b-instruct
+```
+
+Sessions are durable: close and reopen, your full context is preserved. Type `/help` for commands.
+
+### AbstractAssistant (macOS tray)
+
+Gateway-first by default. Select a workflow per session from the tray UI:
 
 ```bash
 pip install abstractassistant
-```
-
-### Run
-
-```bash
-# Tray mode (menu bar)
 assistant tray
-
-# Or single command
-assistant run --provider ollama --model qwen3:4b-instruct --prompt "Summarize my changes"
-```
-
-If the gateway is offline, the status pill shows **OFFLINE** and you can use
-**Reconnect gateway** from the menu to retry.
-
-**Next**: See [AbstractAssistant docs](https://github.com/lpalbou/abstractassistant/blob/main/docs/getting-started.md).
-
----
-
-## Path 16: SmartNote
-
-Capture notes from a systray UI and let SmartNote self-organize by topic and similarity.
-
-### Install (from source)
-
-```bash
-python -m pip install -e ./smartnote
-```
-
-### Run
-
-```bash
-export SMARTNOTE_ENABLE_GATEWAY_TOOLS=1
-export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
-abstractgateway serve --host 127.0.0.1 --port 8080
-smartnote
-```
-
-On startup, SmartNote builds the bundle if needed and uploads it to the gateway.
-Fragments are auto-classified into existing cards or create new cards.
-
-**Next**: See `smartnote/docs/getting-started.md`.
-
----
-
-## Path 10: Flow Editor
-
-Build and edit visual workflows in your browser.
-
-### Run
-
-You need a running AbstractGateway (see [Path 4](#path-4-gateway--observer)). If the gateway is not on
-`http://127.0.0.1:8080`, set `ABSTRACTFLOW_GATEWAY_URL` or pass `--gateway-url`.
-
-```bash
-npx @abstractframework/flow
-```
-
-Open http://localhost:3003 in your browser.
-
-### What You Can Do
-
-- Drag-and-drop workflow nodes (LLM, tools, conditionals, loops)
-- Connect nodes visually
-- Test workflows in real-time
-- Export as `.flow` bundles for deployment
-
-**Next**: See [AbstractFlow docs](https://github.com/lpalbou/abstractflow/blob/main/docs/web-editor.md).
-
----
-
-## Path 11: Code Web UI
-
-Run the browser-based coding assistant.
-
-### Prerequisites
-
-You need a running AbstractGateway (see [Path 4](#path-4-gateway--observer)).
-
-### Run
-
-```bash
-npx @abstractframework/code
-```
-
-Open http://localhost:3002 in your browser. Configure the gateway URL in the UI settings, then start coding.
-
-**Next**: See [AbstractCode web docs](https://github.com/lpalbou/abstractcode/blob/main/docs/web.md).
-
----
-
-## Path 12: Specialized Agent
-
-Create a specialized agent that runs in any client (terminal, browser, custom apps).
-
-### Why?
-
-Instead of writing agent logic in code, you:
-1. Author a visual workflow with the Flow Editor
-2. Declare an interface contract (`abstractcode.agent.v1`)
-3. Run it in any compatible client — no client-specific code needed
-
-Use cases: code reviewers, deep researchers, data analysts, custom assistants.
-
-### Step 1: Author in the Flow Editor
-
-```bash
-npx @abstractframework/flow
-```
-
-If your gateway is not on the default port, set `ABSTRACTFLOW_GATEWAY_URL` or pass `--gateway-url`.
-
-Open http://localhost:3003 and create a workflow with:
-- **On Flow Start** node (outputs: `provider`, `model`, `prompt`)
-- Your agent logic (LLM nodes, tool nodes, conditionals, loops)
-- **On Flow End** node (inputs: `response`, `success`, `meta`)
-
-Set `interfaces: ["abstractcode.agent.v1"]` in the workflow properties.
-
-### Step 2: Export as a Bundle
-
-In the editor, export your workflow as a `.flow` bundle.
-
-### Step 3: Run Anywhere
-
-**Terminal (AbstractCode):**
-
-```bash
-abstractcode --workflow /path/to/my-agent.flow
-```
-
-**Install for easy access:**
-
-```bash
-abstractcode workflow install /path/to/my-agent.flow
-abstractcode --workflow my-agent
-```
-
-**Deploy to Gateway:**
-
-Copy your `.flow` bundle to `ABSTRACTGATEWAY_FLOWS_DIR`. It will appear in:
-- Observer's workflow picker
-- Code Web UI's workflow picker
-- Gateway's `/api/gateway/bundles` discovery endpoint
-
-**Custom app:**
-
-```python
-from abstractcode.workflow_agent import WorkflowAgent
-
-agent = WorkflowAgent(flow_ref="/path/to/my-agent.flow")
-state = agent.run_to_completion(prompt="Analyze this code...")
-print(state.output["response"])
-```
-
-**Next**: See [AbstractFlow docs](https://github.com/lpalbou/abstractflow/blob/main/docs/getting-started.md) and [Interface contracts](https://github.com/lpalbou/abstractflow/blob/main/docs/visualflow.md).
-
----
-
-## Path 13: MCP Integration
-
-Discover and use tools from external MCP (Model Context Protocol) servers.
-
-### What is MCP?
-
-MCP is an open protocol for connecting LLMs to external tool providers. AbstractCore supports both HTTP and stdio MCP servers, letting you integrate external tool ecosystems without writing adapter code.
-
-### Install
-
-```bash
-pip install abstractcore
-```
-
-### Use It
-
-```python
-from abstractcore import create_llm
-
-llm = create_llm("openai", model="gpt-4o-mini")
-
-# MCP tools are discovered and presented alongside local tools
-response = llm.generate(
-    "Search for recent Python releases",
-    mcp_servers=[{"url": "http://localhost:3000/mcp"}],
-)
-```
-
-MCP tools integrate seamlessly with AbstractRuntime's durable execution: they participate in the same approval boundaries, ledger logging, and replay semantics as any other tool.
-
-**Next**: See [AbstractCore MCP docs](https://github.com/lpalbou/abstractcore/blob/main/docs/mcp.md).
-
----
-
-## Path 14: Structured Output
-
-Extract structured data from any LLM using Pydantic models.
-
-### Install
-
-```bash
-pip install abstractcore
-```
-
-### Use It
-
-```python
-from pydantic import BaseModel
-from abstractcore import create_llm
-
-class Analysis(BaseModel):
-    title: str
-    key_points: list[str]
-    confidence: float
-
-llm = create_llm("openai", model="gpt-4o-mini")
-result = llm.generate(
-    "Analyze the pros and cons of microservices architecture.",
-    response_model=Analysis,
-)
-print(result.title)
-print(result.key_points)
-```
-
-AbstractCore uses provider-aware strategies — native JSON mode where available, with automatic retry and fallback for models that need it.
-
-**Next**: See [AbstractCore Structured Output docs](https://github.com/lpalbou/abstractcore/blob/main/docs/structured-output.md).
-
----
-
-## Path 15: OpenAI-Compatible Server
-
-Turn AbstractCore into a multi-provider OpenAI-compatible API server. Route requests to any backend via `model="provider/model"`.
-
-### Install
-
-```bash
-pip install "abstractcore[server]"
-```
-
-### Run
-
-```bash
-python -m abstractcore.server.app
-```
-
-### Use with Any OpenAI Client
-
-```python
-from openai import OpenAI
-
-client = OpenAI(base_url="http://localhost:8000/v1", api_key="unused")
-resp = client.chat.completions.create(
-    model="ollama/qwen3:4b-instruct",
-    messages=[{"role": "user", "content": "Hello from the gateway!"}],
-)
-print(resp.choices[0].message.content)
-```
-
-The server supports tool calling, media input, and optionally exposes `/v1/images/*` (via AbstractVision) and `/v1/audio/*` (via capability plugins like AbstractVoice; plus `/v1/audio/music` when AbstractMusic is installed) endpoints.
-
-**Next**: See [AbstractCore Server docs](https://github.com/lpalbou/abstractcore/blob/main/docs/server.md).
-
----
-
----
-
-## Developer Setup (From Source)
-
-If you want to work on AbstractFramework itself (contribute, modify, debug), use the source scripts instead of PyPI install.
-
-### Step 1: Clone all repositories
-
-```bash
-# Clone AbstractFramework + all 13 sibling repos into a single directory
-./scripts/clone.sh
-
-# Or into a specific directory
-./scripts/clone.sh ~/dev/abstractframework
-```
-
-This clones every package repo as a sibling directory inside the AbstractFramework root. Re-running pulls updates for already-cloned repos.
-
-### Step 2: Build from source
-
-```bash
-# Full build — stay in the .venv afterwards (recommended)
-source ./scripts/build.sh
-
-# Or without staying in the venv (you'll need to activate manually)
-./scripts/build.sh
-
-# Options (combinable):
-source ./scripts/build.sh --python    # Python packages only
-source ./scripts/build.sh --npm       # npm UI packages only
-source ./scripts/build.sh --clean     # delete .venv first (avoids cross-project pollution)
-```
-
-`build.sh` installs every Python package in editable mode (`pip install -e`) from local checkouts — NOT from PyPI. This means your code changes take effect immediately. Third-party dependencies (pydantic, torch, etc.) are resolved from PyPI normally.
-
-For source builds, `build.sh` prepares the project `.venv` for editable installs and then reuses that toolchain on later runs. The expected workflow is simply `source ./scripts/build.sh`; you should not need to manage pip build-isolation settings manually.
-
-> **Important:** `build.sh` requires `clone.sh` to have been run first — it expects sibling repo directories to exist.
-
-> **Tip:** Use `source` (not `./`) so your shell stays in the `.venv` after the build.
-
-> **Tip:** Use `--clean` if you see dependency conflicts from other projects in your `.venv`. This deletes the venv and creates a fresh one.
-
-> **macOS tip:** `build.sh` automatically clears Apple quarantine attributes from downloaded UI dependencies before the npm build step, so you should not need to run `xattr` manually.
-
-### Install from PyPI (alternative)
-
-For end users who just want to install the published release:
-
-```bash
-# One-liner install (creates .venv, installs full framework from PyPI)
-./scripts/install.sh
-
-# Or manually
-pip install "abstractframework[all]"
-```
-
-### After install (source or PyPI)
-
-```bash
-# Configure your setup interactively
-abstractcore --config
-
-# Check readiness + download missing models
-abstractcore --install
 ```
 
 ---
 
-## What's Next?
+## Next steps
 
-Now that you have something running:
-
-- **[Architecture](architecture.md)** — Understand how the pieces fit together
-- **[Configuration](configuration.md)** — All the environment variables and settings
-- **[FAQ](faq.md)** — Common questions and troubleshooting
-- **[Scenarios](scenarios/README.md)** — End-to-end paths by use case
-- **[Guides](guide/README.md)** — Focused "how it works" notes
-- **[Glossary](glossary.md)** — Shared terminology
-
-Each package also has detailed documentation:
-- Every repo has `docs/getting-started.md`, `docs/architecture.md`, and more
-- Check the repo README for the quickest overview
+- **[Architecture](architecture.md)** — the layered model (Core / Runtime / Agent / Gateway / Flow / Observer)
+- **[Configuration](configuration.md)** — where defaults live and how to configure them
+- **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)
+- **[FAQ](faq.md)** — comparisons, offline operation, troubleshooting

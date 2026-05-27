@@ -12,12 +12,12 @@ This is the recommended topology because execution is unified and clients can at
 ## Step 0: Install the pinned stack (recommended)
 
 ```bash
-pip install "abstractframework[all]"
+pip install abstractframework
 ```
 
 If you want a minimal install instead, you need at least:
-- `abstractgateway[server,memory]`
-- (optional) `abstractagent`, `abstractflow[editor]` depending on your bundles
+- `abstractgateway`
+- `abstractflow` (and optionally `abstractflow[agent]` if your bundles use Agent nodes)
 
 ## Step 1: Prepare directories
 

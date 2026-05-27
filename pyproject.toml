@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.4"
+version = "0.1.5"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -39,116 +39,57 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 
-# Base dependencies (full framework, batteries included)
+# Base dependencies (remote-first, lightweight).
+#
+# Design constraints:
+# - `pip install abstractframework` should default to *remote inference* (no MLX/vLLM/Diffusers local engine stacks).
+# - Hardware-local stacks are opt-in via `abstractframework[apple]` and `abstractframework[gpu]`.
+# - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
-    # Core runtime with provider/tool/media/embeddings/server stack enabled.
-    "abstractcore[remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio]==2.13.25",
-    "abstractruntime==0.4.21",
-    "abstractagent==0.3.7",
-    # Flow editor backend + agent nodes.
-    "abstractflow[editor]==0.3.13",
+    # Gateway-first durable control plane (remote-light by default).
+    "abstractgateway==0.2.20",
+
+    # Workflow authoring + CLI app.
+    "abstractflow==0.3.15",
     "abstractcode==0.3.6",
-    "abstractgateway[server,memory]==0.2.17",
-    "abstractmemory[lancedb]==0.2.6",
+    "abstractassistant==0.4.6",
+
+    # Pin the core Python stack for release determinism (also pulled transitively).
+    "abstractcore==2.13.29",
+    "AbstractRuntime==0.4.24",
+    "abstractagent==0.3.8",
+    "AbstractMemory==0.2.6",
     "abstractsemantics==0.0.4",
+
+    # Capability plugins are remote-first by default; local runtimes live behind
+    # their package-specific `apple`/`gpu` (or `all-*`) extras.
     "abstractvoice==0.10.16",
-    "abstractvision==0.3.12",
-    "abstractmusic==0.1.11",
-    "abstractassistant==0.4.5",
+    "abstractvision==0.3.16",
+    "abstractmusic==0.1.12",
 ]
 
 [project.optional-dependencies]
-# Individual components
-core = ["abstractcore[remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio]==2.13.25"]
-runtime = ["abstractruntime==0.4.21"]
-agent = ["abstractagent==0.3.7"]
-flow = ["abstractflow[editor]==0.3.13"]
-code = ["abstractcode==0.3.6"]
-gateway = ["abstractgateway[server,memory]==0.2.17"]
-memory = ["abstractmemory[lancedb]==0.2.6"]
-semantics = ["abstractsemantics==0.0.4"]
-voice = ["abstractvoice==0.10.16"]
-vision = ["abstractvision==0.3.12"]
-music = ["abstractmusic==0.1.11"]
-assistant = ["abstractassistant==0.4.5"]
-
-# Bundles
-backend = [
-    "abstractcore[remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio]==2.13.25",
-    "abstractruntime==0.4.21",
-    "abstractagent==0.3.7",
-    "abstractflow[editor]==0.3.13",
-    "abstractgateway[server,memory]==0.2.17",
-    "abstractmemory[lancedb]==0.2.6",
-    "abstractsemantics==0.0.4",
-    "abstractvoice==0.10.16",
-    "abstractvision==0.3.12",
-    "abstractmusic==0.1.11",
-]
-
-# Full installation (all packages)
-all = [
-    "abstractcore[remote,embeddings,tokens,tools,media,compression,server,vision,voice,audio]==2.13.25",
-    "abstractruntime==0.4.21",
-    "abstractagent==0.3.7",
-    "abstractflow[editor]==0.3.13",
-    "abstractcode==0.3.6",
-    "abstractgateway[server,memory]==0.2.17",
-    "abstractmemory[lancedb]==0.2.6",
-    "abstractsemantics==0.0.4",
-    "abstractvoice==0.10.16",
-    "abstractvision==0.3.12",
-    "abstractmusic==0.1.11",
-    "abstractassistant==0.4.5",
-]
+# NOTE: Extras here are additive. The base install already pins and installs the
+# full Python ecosystem; `apple`/`gpu` select hardware-local stacks and upgrade
+# apps to their matching profiles.
+#
+# AbstractObserver is distributed as an npm package (`npx @abstractframework/observer`),
+# so it is not installable via pip extras.
 
 # Native macOS Python installs. These are intentionally not Docker profiles:
-# MLX/Metal-backed engines run on the host Apple runtime.
+# MLX/Metal-backed engines run on the host Apple runtime. This profile upgrades
+# the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
+# then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.2.17",
+    "abstractgateway[apple]==0.2.20",
+    "abstractflow[apple]==0.3.15",
+    "abstractassistant[apple]==0.4.6; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.2.17",
-]
-
-all-apple = [
-    "abstractcore[all-apple]==2.13.25",
-    "abstractruntime[all-apple]==0.4.21",
-    "abstractagent[all-apple]==0.3.7",
-    "abstractflow[apple]==0.3.13",
-    "abstractcode==0.3.6",
-    "abstractgateway[all-apple]==0.2.17",
-    "abstractmemory[all-apple]==0.2.6",
-    "abstractsemantics[all-apple]==0.0.4",
-    "abstractvoice[all-apple]==0.10.16",
-    "abstractvision[all-apple]==0.3.12",
-    "abstractmusic[all-apple]==0.1.11",
-    "abstractassistant==0.4.5",
-]
-
-all-gpu = [
-    "abstractcore[all-gpu]==2.13.25",
-    "abstractruntime[all-gpu]==0.4.21",
-    "abstractagent[all-gpu]==0.3.7",
-    "abstractflow[gpu]==0.3.13",
-    "abstractcode==0.3.6",
-    "abstractgateway[all-gpu]==0.2.17",
-    "abstractmemory[all-gpu]==0.2.6",
-    "abstractsemantics[all-gpu]==0.0.4",
-    "abstractvoice[all-gpu]==0.10.16",
-    "abstractvision[all-gpu]==0.3.12",
-    "abstractmusic[all-gpu]==0.1.11",
-    "abstractassistant==0.4.5",
-]
-
-# Development dependencies
-dev = [
-    "pytest>=7.0",
-    "pytest-asyncio>=0.21",
-    "black>=23.0",
-    "ruff>=0.1",
-    "mypy>=1.0",
+    "abstractgateway[gpu]==0.2.20",
+    "abstractflow[gpu]==0.3.15",
+    "abstractassistant[gpu]==0.4.6",
 ]
 
 [project.urls]

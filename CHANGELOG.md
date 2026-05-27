@@ -4,7 +4,24 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-*No unreleased changes.*
+## [0.1.5] - 2026-05-27
+
+### Changed
+
+- Refactored the meta-package install profiles to only support:
+  `pip install abstractframework` (remote-first),
+  `pip install "abstractframework[apple]"`, and
+  `pip install "abstractframework[gpu]"`.
+  Removed legacy profiles like `all`, `backend`, `all-apple`, and `all-gpu`.
+- Aligned the meta-package pins with the current repo package versions and their
+  revised profile wiring (Gateway-first stack + Flow + CLI app).
+- Installed the full Python ecosystem by default (including `abstractassistant`), and
+  upgraded it to hardware-local profiles via `abstractframework[apple]` / `[gpu]`.
+- Updated the macOS installer manifest to install `abstractframework[apple]` for the full framework.
+
+### Documentation
+
+- Revised the core documentation set for a clearer “two entry points” mental model (AbstractCore SDK vs AbstractGateway control plane), plus a more practical onboarding flow for authoring/deploying `.flow` bundles and monitoring/scheduling runs with AbstractObserver.
 
 ## [0.1.4] - 2026-05-26
 
