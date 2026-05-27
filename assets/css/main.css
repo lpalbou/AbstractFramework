@@ -1106,7 +1106,7 @@ section[style*="background"]::before {
 .iso-grid {
   position: relative;
   transform-style: preserve-3d;
-  height: calc(5 * 96px + 80px);
+  height: calc(5 * 110px + 80px);
   width: calc(4 * 90px);
 }
 
@@ -1221,7 +1221,7 @@ section[style*="background"]::before {
   top: calc(100% + 14px);
   font-size: .7rem;
   font-weight: 600;
-  color: #4a4a60;
+  color: #7a7a96;
   white-space: nowrap;
   pointer-events: none;
   letter-spacing: .02em;
@@ -1240,7 +1240,7 @@ section[style*="background"]::before {
   letter-spacing: .12em;
   text-transform: uppercase;
   white-space: nowrap;
-  opacity: .35;
+  opacity: .55;
   pointer-events: none;
   transition: opacity 250ms ease;
 }

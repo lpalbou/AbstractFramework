@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Interactive isometric cube architecture ── */
   const cubeGrid = document.getElementById('cubeGrid');
   if (cubeGrid) {
-    const CUBE_SIZE = 48, COL_STEP = 90, ROW_STEP = 96;
+    const CUBE_SIZE = 48, COL_STEP = 90, ROW_STEP = 110;
     const cubesData = [
       { id:'code',      layer:'app',        col:-1.5, row:0, label:'Code',      name:'AbstractCode',         layerName:'Application',      href:'code.html',      desc:'Durable coding assistant with terminal TUI and browser UI. Every agent action is logged in an append-only ledger for perfect auditability.' },
       { id:'flow',      layer:'app',        col:-0.5, row:0, label:'Flow',      name:'AbstractFlow',         layerName:'Application',      href:'flow.html',      desc:'Visual workflow editor inspired by UE4 Blueprint. Author multi-agent orchestrations with drag-and-drop, share as portable .flow bundles.' },
