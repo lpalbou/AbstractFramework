@@ -116,6 +116,27 @@ wav = vm.<span class="fn">speak_to_bytes</span>(<span class="str">"Headless TTS.
       <h2 class="section-title">Generated with AbstractVoice</h2>
       <p class="section-desc">Voice samples generated using the AbstractVoice TTS API. Same interface regardless of the underlying model or provider.</p>
     </div>
+    <h3 style="color:var(--text);font-size:1rem;margin-bottom:.5rem;text-align:center">Supertonic 3 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">— open-source, local ONNX inference</span></h3>
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;max-width:900px;margin:0 auto">
+      <div class="comp-card" style="padding:1.5rem">
+        <h4 style="margin-bottom:.25rem;color:var(--text)">F1 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Female)</span></h4>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Open-source female voice — welcome message</p>
+        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-supertonic-f1.wav" type="audio/wav"></audio>
+      </div>
+      <div class="comp-card" style="padding:1.5rem">
+        <h4 style="margin-bottom:.25rem;color:var(--text)">M1 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Male)</span></h4>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Open-source male voice — durability &amp; continuity</p>
+        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-supertonic-m1.wav" type="audio/wav"></audio>
+      </div>
+      <div class="comp-card" style="padding:1.5rem">
+        <h4 style="margin-bottom:.25rem;color:var(--text)">M3 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Male)</span></h4>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Open-source male voice — multimodal capabilities</p>
+        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-supertonic-m3.wav" type="audio/wav"></audio>
+      </div>
+    </div>
+    <p style="color:var(--text-muted);font-size:.78rem;margin-top:1rem;text-align:center">Generated via: <code>abstractvoice cli</code> then <code>/tts engine supertonic</code> — or programmatically with <code>SupertonicTTSAdapter</code></p>
+
+    <h3 style="color:var(--text);font-size:1rem;margin:2.5rem 0 .5rem;text-align:center">OpenAI TTS <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">— remote, via any OpenAI-compatible endpoint</span></h3>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;max-width:900px;margin:0 auto">
       <div class="comp-card" style="padding:1.5rem">
         <h4 style="margin-bottom:.25rem;color:var(--text)">Nova <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Female)</span></h4>
@@ -133,7 +154,7 @@ wav = vm.<span class="fn">speak_to_bytes</span>(<span class="str">"Headless TTS.
         <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-alloy.wav" type="audio/wav"></audio>
       </div>
     </div>
-    <p style="color:var(--text-muted);font-size:.78rem;margin-top:1.5rem;text-align:center">Generated via: <code>abstractvoice tts "text" --voice nova</code></p>
+    <p style="color:var(--text-muted);font-size:.78rem;margin-top:1rem;text-align:center">Generated via: <code>abstractvoice tts "text" --voice nova</code></p>
   </div>
 </section>
 
