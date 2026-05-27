@@ -1,0 +1,106 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractgateway/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractgateway/main/llms.txt
+
+# AbstractGateway
+
+> Durable Run Gateway host for AbstractRuntime: start runs + append durable commands; clients replay/stream the durable ledger (replay-first).
+
+This repository contains the `abstractgateway` Python package (CLI + FastAPI server + durable stores + runner worker).
+The main HTTP surface is `/api/gateway/*` (FastAPI routes in `src/abstractgateway/routes/gateway.py`).
+The live HTTP contract is the runtime OpenAPI schema: `GET /openapi.json` (Swagger UI: `GET /docs`).
+
+Format note: follows the [llms.txt specification](https://llmstxt.org/).
+
+Key invariants / defaults (evidence in code):
+- Security is enabled by default for `/api/gateway/*` (bearer token via `ABSTRACTGATEWAY_AUTH_TOKEN`/`ABSTRACTGATEWAY_AUTH_TOKENS`, origin allowlist via `ABSTRACTGATEWAY_ALLOWED_ORIGINS`, request limits). `/api/health` is intentionally public. `abstractgateway serve` fails fast when auth is required but no token is configured (`src/abstractgateway/security/gateway_security.py`, startup checks in `src/abstractgateway/cli.py`).
+- Bundle mode is the default workflow source (`ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle`) and loads `.flow` bundles from `ABSTRACTGATEWAY_FLOWS_DIR` (`src/abstractgateway/service.py`, `src/abstractgateway/hosts/bundle_host.py`).
+- SQLite safety invariant: when `ABSTRACTGATEWAY_STORE_BACKEND=sqlite`, the DB file (`ABSTRACTGATEWAY_DB_PATH`, default `<DATA_DIR>/gateway.sqlite3`) must be under `ABSTRACTGATEWAY_DATA_DIR` (fail-fast; prevents cross-wiring durable state) (`src/abstractgateway/config.py`).
+- The system is replay-first; SSE streams are an optimization, not a source of truth (`src/abstractgateway/routes/gateway.py`).
+- Gateway LLM helper defaults resolve explicit request values, optional flow pins, and execution-host capability route defaults such as `output.text`. Missing provider/model is a clear config error, not a hardcoded local fallback (`src/abstractgateway/provider_defaults.py`, `src/abstractgateway/capability_defaults.py`).
+- Optional operator endpoints include account-scoped email inbox routes (`/api/gateway/email/*`) used by AbstractObserver (Inbox → Email) (`src/abstractgateway/routes/gateway.py`).
+
+Multimodal notes:
+- Capability discovery for thin clients: `GET /api/gateway/discovery/capabilities` (best-effort; reports installed optional capabilities like `voice`, `tools`, `visualflow`, `vision_fallback`, `media`, plus the versioned shared run contract including input-data/history-bundle read endpoints, direct media feature gates, voice `tts|stt|listen`, prompt-cache surfaces, and model-residency truth).
+- Direct Gateway voice/audio durable endpoints (when `abstractvoice` is installed on the gateway host):
+  - STT: `POST /api/gateway/runs/{run_id}/audio/transcribe`
+  - TTS: `POST /api/gateway/runs/{run_id}/voice/tts`
+- Direct Gateway image durable endpoints:
+  - image generate: `POST /api/gateway/runs/{run_id}/images/generate`
+  - image edit: `POST /api/gateway/runs/{run_id}/images/edit`
+- Direct Gateway video durable endpoints:
+  - text-to-video: `POST /api/gateway/runs/{run_id}/videos/generate`
+  - image-to-video: `POST /api/gateway/runs/{run_id}/videos/from_image`
+- Direct Gateway music durable endpoint:
+  - music: `POST /api/gateway/runs/{run_id}/music/generate`
+- Generated and edited images plus text-to-video/image-to-video are available through Runtime workflows and the direct run-scoped routes when the corresponding Runtime/Core vision backend is configured. Video progress is exposed on the returned child run ledger as `abstract.progress`.
+- Dynamic catalogs for thin clients are exposed at `GET /api/gateway/voice/voices`, `GET /api/gateway/audio/speech/models`, `GET /api/gateway/audio/transcriptions/models`, `GET /api/gateway/audio/music/providers`, `GET /api/gateway/audio/music/models`, and `GET /api/gateway/vision/provider_models`; they proxy AbstractCore Server catalog routes when configured.
+- Catalog routes now add a Gateway-owned stable envelope: `catalog.contract=gateway_catalog_v1`, `catalog.version=1`, and canonical `items`, while still preserving legacy lower-layer fields for compatibility.
+- The shared client contract also exposes `common.readiness` as `gateway_surface_readiness_v1`: a compact surface-level summary derived from Gateway descriptors, media gates, memory, prompt-cache, and Runtime-backed model-residency truth.
+- Deployment/readiness truth is still narrower than catalog shape; Gateway does not invent selected-backend or degraded-state truth unless Runtime/Core exposes it.
+- `voice.listen` is a host-capture contract for higher apps, not a server microphone socket; clients capture locally and then emit an event or upload audio for STT.
+- KG memory is selected through Gateway env (`ABSTRACTGATEWAY_MEMORY_STORE_BACKEND=lancedb|memory`, plus `sqlite` when the installed AbstractMemory build exposes `SQLiteTripleStore`) and queried through `POST /api/gateway/kg/query`; store implementations remain owned by AbstractMemory, and Gateway currently targets the compatible AbstractMemory 0.0.x TripleStore API.
+- Text embeddings use the execution-host `embedding.text` capability route. Gateway does not persist a separate embedding provider/model file; split deployments proxy embedding generation to the remote AbstractCore server.
+- `/api/gateway/prompt_cache/*` exposes provider/model prompt-cache controls; `/api/gateway/prompt_cache/saved|save|load` are Runtime-backed host-local export/import admin aliases; `/api/gateway/sessions/{session_id}/prompt_cache/*` adds Gateway-owned session naming/status/prepare/clear/rebuild orchestration over those provider controls.
+- Docker scope: `abstractgateway-server` is the release-grade lightweight base-package image; `abstractgateway-server-nvidia` installs `abstractgateway[gpu]` and is experimental/best-effort until a CUDA smoke gate exists. Apple/MLX inference should run natively on macOS and be reached from the Gateway container via Docker Model Runner (`http://model-runner.docker.internal/engines/v1`) or a host bridge OpenAI-compatible URL.
+
+Regeneration:
+- `python scripts/generate-llms-full.py` regenerates `llms-full.txt` from the Markdown doc links in this `llms.txt`.
+
+Compatibility note:
+- `CHANGELOD.md` → `CHANGELOG.md`
+- `ACKNOWLEDMENTS.md` → `ACKNOWLEDGMENTS.md`
+
+## Ecosystem
+
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework): ecosystem meta-repo (this gateway is one component)
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): durable runs + tick loop + stores (required dependency)
+- [AbstractCore](https://github.com/lpalbou/abstractcore): lower-level provider/tool/media integrations consumed through Runtime facades
+- [AbstractRuntime ↔ AbstractCore integration](./README.md): why bundle LLM/tool nodes use the Runtime/Core integration
+- [AbstractFlow](https://github.com/lpalbou/abstractflow): authoring + bundling `.flow` WorkflowBundles (optional)
+
+## Start here
+
+- [README.md](./README.md): install + quickstart + doc map
+- [docs/README.md](./docs/README.md): docs index (what to read for each topic)
+- [docs/getting-started.md](./docs/getting-started.md): step-by-step setup (bundle mode + file/SQLite + split API/runner)
+- [llms-full.txt](./llms-full.txt): single-file snapshot of the Markdown docs linked in this file
+
+## Project docs
+
+- [CHANGELOG.md](./CHANGELOG.md): release notes (human-oriented)
+- [CONTRIBUTING.md](./CONTRIBUTING.md): dev setup + tests + contribution workflow
+- [SECURITY.md](./SECURITY.md): responsible vulnerability reporting process
+- [ACKNOWLEDGMENTS.md](./ACKNOWLEDGMENTS.md): dependency acknowledgments (see `pyproject.toml` for canonical list)
+
+## Core docs
+
+- [docs/getting-started.md](./docs/getting-started.md): run the gateway + choose file vs SQLite stores + split API/runner
+- [docs/api.md](./docs/api.md): client contract + curl examples (replay-first ledger + durable commands)
+- [docs/security.md](./docs/security.md): token auth + origin allowlist + limits + audit log
+- [docs/configuration.md](./docs/configuration.md): env vars + install extras
+- [docs/deployment.md](./docs/deployment.md): Docker/GHCR/Compose deployment profile
+- [docs/architecture.md](./docs/architecture.md): components + durability model (includes diagram)
+- [docs/faq.md](./docs/faq.md): common questions + troubleshooting
+
+## Key code entrypoints
+
+- [pyproject.toml](./pyproject.toml): packaging metadata + dependency extras + CLI entrypoint
+- [src/abstractgateway/app.py](./src/abstractgateway/app.py): FastAPI app + middleware + routers + health endpoint
+- [src/abstractgateway/routes/gateway.py](./src/abstractgateway/routes/gateway.py): `/api/gateway/*` endpoints (runs, ledger, bundles, commands, tooling)
+- [src/abstractgateway/security/gateway_security.py](./src/abstractgateway/security/gateway_security.py): auth/origin/limits/audit log middleware
+- [src/abstractgateway/service.py](./src/abstractgateway/service.py): composition root (config + stores + host + runner + optional bridges)
+- [src/abstractgateway/runner.py](./src/abstractgateway/runner.py): durable command inbox polling + run ticking
+- [src/abstractgateway/stores.py](./src/abstractgateway/stores.py): file vs SQLite store wiring
+- [src/abstractgateway/config.py](./src/abstractgateway/config.py): env var parsing + sqlite safety invariant
+- [src/abstractgateway/cli.py](./src/abstractgateway/cli.py): `abstractgateway serve|runner|migrate|triage-*|...`
+- [src/abstractgateway/hosts/bundle_host.py](./src/abstractgateway/hosts/bundle_host.py): `.flow` bundle loading + VisualFlow compilation + tool/LLM wiring switches
+- VisualFlow directory mode was intentionally removed; use VisualFlow CRUD + publish to `.flow` bundles (`/api/gateway/visualflows/*`) and run in bundle mode.
+
+## Optional
+
+- [docs/maintenance.md](./docs/maintenance.md): operator tooling (triage/backlog/process manager/file helpers; high trust required)
+- [scripts/generate-llms-full.py](./scripts/generate-llms-full.py): generator for `llms-full.txt`
+- [tests/](./tests/): test suite (`pytest`, most tests are marked `basic`)

@@ -1,0 +1,75 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractcode/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractcode/main/llms.txt
+
+# AbstractCode
+
+> Durable terminal TUI/CLI host for agentic coding on AbstractFramework (AbstractAgent + AbstractRuntime + AbstractCore). This repo contains the published Python package (`abstractcode/`) and an optional gateway-first web host UI (`web/`).
+
+This file follows the `llms.txt` manifest format (curated links). Use:
+- `llms.txt` when you can browse/fetch linked files.
+- `llms-full.txt` when you need an offline single-file snapshot (docs/policies only; no source code).
+To regenerate `llms-full.txt`, run: `python scripts/generate_llms_full.py`
+Format reference: https://llmstxt.org/
+
+Important notes (evidence-first):
+- Status: **pre-alpha**, version **0.3.6** (see `pyproject.toml` and `abstractcode/__init__.py`). Docs last verified: **2026-02-09**.
+- Source of truth is the code in `abstractcode/` and executable invariants in `tests/`. If docs and code disagree, follow the code/tests.
+- Authoritative in-app command list: `/help` (implemented in `abstractcode/react_shell.py::_show_help`).
+- Tools are approval-gated by default (wired via `PassthroughToolExecutor(mode="approval_required")` in `abstractcode/react_shell.py`).
+- The pip package is the Python CLI/TUI. The `web/` app is a separate Node/Vite build (see [docs/web.md](docs/web.md)).
+- Rebuilding `web/` requires a sibling `abstractuic/` repo via Vite path aliases (`web/vite.config.ts`); `web/dist/` is included for convenience.
+- Web voice UX exists (push-to-talk transcription + TTS playback) when the connected gateway exposes the endpoints used by `web/src/lib/gateway_client.ts` (`/audio/transcribe`, `/voice/tts`).
+- Local VisualFlow runs via `abstractcode flow ...` require `abstractcode[flow]` (see [docs/workflows.md](docs/workflows.md)).
+
+Dev loop:
+- `pytest -q`
+- `ruff check .`
+- `black .`
+
+## Start here
+
+- [README.md](README.md): Install + quickstart (+ architecture diagram)
+- [docs/getting-started.md](docs/getting-started.md): First run + key concepts
+- [docs/README.md](docs/README.md): Docs index (what to read when)
+- [docs/architecture.md](docs/architecture.md): Architecture (diagrams + code pointers)
+- [docs/cli.md](docs/cli.md): CLI/TUI reference (commands, env, persistence, MCP)
+
+## Integration surfaces
+
+- [docs/api.md](docs/api.md): CLI surface, minimal Python API, workflow contracts
+- [docs/workflows.md](docs/workflows.md): Local flows, workflow agent mode, gateway + bundles
+- [docs/ui_events.md](docs/ui_events.md): Workflow-driven UI events contract
+- [docs/faq.md](docs/faq.md): Common issues and troubleshooting
+
+## Code map (Python)
+
+- [abstractcode/__init__.py](abstractcode/__init__.py): Package metadata + `main(argv=None)` entrypoint
+- [abstractcode/__main__.py](abstractcode/__main__.py): `python -m abstractcode` entrypoint
+- [abstractcode/cli.py](abstractcode/cli.py): CLI arg parsing + subcommand dispatch (`flow`, `gateway`, `workflow`)
+- [abstractcode/react_shell.py](abstractcode/react_shell.py): TUI host (approvals, persistence, MCP, commands)
+- [abstractcode/file_mentions.py](abstractcode/file_mentions.py): `@file` mention parsing + workspace mounts
+- [abstractcode/workflow_agent.py](abstractcode/workflow_agent.py): VisualFlow “workflow as agent” (`abstractcode.agent.v1`)
+- [abstractcode/flow_cli.py](abstractcode/flow_cli.py): Local VisualFlow runner (`abstractcode flow ...`)
+- [abstractcode/gateway_cli.py](abstractcode/gateway_cli.py): Gateway HTTP client (runs, bundles, KG)
+- [abstractcode/workflow_cli.py](abstractcode/workflow_cli.py): Manage `.flow` bundles on a gateway
+- [tests/](tests/): Executable invariants / behavior examples
+
+## Policies
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): Development setup + PR guidelines
+- [SECURITY.md](SECURITY.md): Responsible disclosure process
+- [ACKNOWLEDMENTS.md](ACKNOWLEDMENTS.md): Dependency credits (canonical spelling in this repo)
+- [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md): Spelling alias (redirect)
+- [CHANGELOG.md](CHANGELOG.md): Release notes
+- [CHANGELOD.md](CHANGELOD.md): Typo alias (redirect)
+- [llms-full.txt](llms-full.txt): Offline snapshot of core docs/policies (no code)
+
+## Optional
+
+- [docs/web.md](docs/web.md): Web host overview + dev/build notes
+- [docs/deployment-web.md](docs/deployment-web.md): Run gateway + deploy web UI
+- [docs/deployment-iphone.md](docs/deployment-iphone.md): iPhone / PWA notes
+- [web/README.md](web/README.md): Web app README (gateway-first)

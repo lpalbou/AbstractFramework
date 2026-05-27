@@ -1,0 +1,433 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractruntime/main/llms-full.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractruntime/main/llms-full.txt
+
+# AbstractRuntime
+
+> Durable workflow runtime (interrupt → checkpoint → resume) with an append-only execution ledger.
+
+This file is an **agent-oriented build guide** for the AbstractRuntime *library*. It is designed to be directly actionable:
+- how to model workflows (`WorkflowSpec` + `StepPlan`)
+- how durability works (checkpoint + ledger + waits)
+- how to wire LLM/tool execution (via AbstractCore)
+- where the exact semantics live in code (`src/...`)
+
+Quick facts:
+- Python: 3.10+ (`pyproject.toml`)
+- Version: 0.4.24
+- Ecosystem: [AbstractFramework](https://github.com/lpalbou/AbstractFramework) umbrella; pairs with [AbstractCore](https://github.com/lpalbou/abstractcore)
+- Public export surface (source of truth): `src/abstractruntime/__init__.py`
+- Optional AbstractCore baseline: `abstractruntime[abstractcore]` installs `abstractcore>=2.13.29`
+- Multimodal extra: `abstractruntime[multimodal]` installs `abstractcore[remote,vision,voice,audio,music]>=2.13.29`
+- Config boundary: Runtime does not read `ABSTRACTGATEWAY_*`; Gateway-owned env/config should be translated into explicit Runtime inputs or Runtime-owned env names.
+
+```mermaid
+flowchart LR
+  Host["Host app / service"] -->|"WorkflowSpec"| RT["AbstractRuntime"]
+  RT -->|"checkpoints"| RS["RunStore"]
+  RT -->|"append-only"| LS["LedgerStore"]
+  RT -->|"LLM_CALL / TOOL_CALLS"| AC["AbstractCore (optional)"]
+```
+
+## What AbstractRuntime is (and is not)
+
+- **Is**: a durable state-machine runner for workflow graphs (`WorkflowSpec`), with explicit blocking via `WaitState`.
+- **Is not**: an agent framework, a prompt policy engine, or a UI builder. Those belong in higher layers.
+
+Docs: `docs/proposal.md`. Code: `src/abstractruntime/core/*`.
+
+## Public API quickstart (recommended imports)
+
+Source of truth: `src/abstractruntime/__init__.py`.
+
+Core kernel:
+
+```python
+from abstractruntime import Effect, EffectType, Runtime, StepPlan, WorkflowSpec
+```
+
+Most common stores:
+
+```python
+from abstractruntime.storage import InMemoryRunStore, InMemoryLedgerStore, JsonFileRunStore, JsonlLedgerStore
+```
+
+Zero-config driver wrapper:
+
+```python
+from abstractruntime import create_scheduled_runtime
+```
+
+If you need SQLite stores, they are exported at the package root:
+
+```python
+from abstractruntime import SqliteRunStore, SqliteLedgerStore
+```
+
+## Build with it: minimal pause → resume
+
+This is the smallest durable workflow you can run: one node asks a user, the run blocks, then you resume it.
+
+Implementation pointers:
+- runtime loop: `src/abstractruntime/core/runtime.py` (`Runtime.start/tick/resume`)
+- durable models: `src/abstractruntime/core/models.py` (`RunState`, `WaitState`, `StepPlan`, `Effect`)
+
+```python
+from abstractruntime import Effect, EffectType, Runtime, StepPlan, WorkflowSpec
+from abstractruntime.storage import InMemoryLedgerStore, InMemoryRunStore
+
+
+def ask(run, ctx):
+    return StepPlan(
+        node_id="ask",
+        effect=Effect(
+            type=EffectType.ASK_USER,
+            payload={"prompt": "Continue?"},
+            result_key="answer",
+        ),
+        next_node="done",
+    )
+
+
+def done(run, ctx):
+    answer = run.vars.get("answer") or {}
+    text = answer.get("text") if isinstance(answer, dict) else None
+    return StepPlan(node_id="done", complete_output={"answer": text})
+
+
+wf = WorkflowSpec(workflow_id="demo", entry_node="ask", nodes={"ask": ask, "done": done})
+rt = Runtime(run_store=InMemoryRunStore(), ledger_store=InMemoryLedgerStore())
+
+run_id = rt.start(workflow=wf)
+state = rt.tick(workflow=wf, run_id=run_id)
+assert state.status.value == "waiting"
+
+state = rt.resume(workflow=wf, run_id=run_id, wait_key=state.waiting.wait_key, payload={"text": "yes"})
+assert state.status.value == "completed"
+```
+
+Semantics to remember (code-enforced in `src/abstractruntime/core/runtime.py`):
+- Nodes do **not** execute side effects directly; they return a `StepPlan`.
+- Side effects are requested via `Effect(type=..., payload=...)` and executed by effect handlers.
+- When a run blocks, the runtime persists a `WaitState` under `RunState.waiting`.
+- `resume(...)` continues from `WaitState.resume_to_node` (the waiting node is not re-run).
+
+## Recommended host API: `create_scheduled_runtime()` (driver loop)
+
+If you want time-based waits (`WAIT_UNTIL`) to progress automatically, you need a driver. The built-in driver is:
+- `Scheduler` + `ScheduledRuntime` (`src/abstractruntime/scheduler/*`)
+- convenience factory: `create_scheduled_runtime()` (`src/abstractruntime/scheduler/convenience.py`)
+
+Docs: `docs/getting-started.md`. Code: `src/abstractruntime/scheduler/scheduler.py`.
+
+## Durability model (checkpoint + ledger)
+
+Core durability primitives:
+- **Checkpoint**: `RunState` persisted via a `RunStore` (`src/abstractruntime/storage/base.py`)
+- **Append-only journal**: `StepRecord` appended to a `LedgerStore` (`src/abstractruntime/storage/base.py`)
+
+Hard invariant:
+- `RunState.vars` must be JSON-serializable (`src/abstractruntime/core/models.py`).
+- For large payloads, store by reference via `ArtifactStore` (`src/abstractruntime/storage/artifacts.py`) and/or wrap stores with:
+  - `OffloadingRunStore`, `OffloadingLedgerStore` (`src/abstractruntime/storage/offloading.py`)
+
+## Effects cheat-sheet (what nodes can request)
+
+The effect protocol is defined by:
+- `Effect`, `EffectType`: `src/abstractruntime/core/models.py`
+- execution: `Runtime._register_builtin_handlers()` + handlers in `src/abstractruntime/core/runtime.py`
+
+Built-in waits:
+- `ASK_USER`: blocks with `WaitReason.USER` and durable prompt metadata (`prompt`, optional `choices`)  
+  Handler: `Runtime._handle_ask_user` (`src/abstractruntime/core/runtime.py`)
+- `WAIT_UNTIL`: blocks with `WaitReason.UNTIL` until ISO timestamp `payload.until`  
+  Handler: `Runtime._handle_wait_until`
+- `WAIT_EVENT`: blocks with `WaitReason.EVENT` waiting for `payload.wait_key` (or `{scope,name}` which is converted into a stable key)  
+  Handler: `Runtime._handle_wait_event`
+- `ANSWER_USER`: non-blocking “send a message” effect (host UI can render it)  
+  Handler: `Runtime._handle_answer_user`
+
+Eventing:
+- `EMIT_EVENT`: emits a durable event and resumes matching `WAIT_EVENT` runs when possible  
+  Handler: `Runtime._handle_emit_event`  
+  Notes (as implemented): requires a `QueryableRunStore` to discover waiting runs; and requires a workflow registry when listeners exist.
+
+Composition:
+- `START_SUBWORKFLOW`: starts a child run (sync mode blocks parent with `WaitReason.SUBWORKFLOW`)  
+  Handler: `Runtime._handle_start_subworkflow`  
+  Requires: a workflow registry (see scheduler registry: `src/abstractruntime/scheduler/registry.py`)
+
+Inspection:
+- `VARS_QUERY`: read-only query into `RunState.vars` paths  
+  Handler: `Runtime._handle_vars_query`, helpers in `src/abstractruntime/core/vars.py`
+
+Runtime-owned memory helpers (JSON-safe):
+- `MEMORY_NOTE`, `MEMORY_QUERY`, `MEMORY_TAG`, `MEMORY_REHYDRATE`: span/index operations under `vars["_runtime"]["memory_spans"]`  
+- `MEMORY_COMPACT`: archives older messages into `ArtifactStore` and replaces them with a system summary message  
+  Handler: `Runtime._handle_memory_compact` (requires `artifact_store`)
+
+Host-wired effects (protocol defined here; handlers provided by integrations):
+- `LLM_CALL`, `TOOL_CALLS`: typically wired via AbstractCore (`src/abstractruntime/integrations/abstractcore/*`)
+- `MEMORY_KG_*`: wired via the AbstractMemory bridge (`src/abstractruntime/integrations/abstractmemory/effect_handlers.py`)
+
+## Storage backends and common patterns
+
+Interfaces (source of truth): `src/abstractruntime/storage/base.py`.
+
+Included backends:
+- in-memory (tests/dev): `src/abstractruntime/storage/in_memory.py`
+- filesystem JSON/JSONL: `src/abstractruntime/storage/json_files.py`
+- SQLite: `src/abstractruntime/storage/sqlite.py`
+
+Durability helpers:
+- artifacts: `ArtifactStore`, `FileArtifactStore` (`src/abstractruntime/storage/artifacts.py`)
+- offloading decorators: `OffloadingRunStore`, `OffloadingLedgerStore` (`src/abstractruntime/storage/offloading.py`)
+- tamper-evidence: `HashChainedLedgerStore` + `verify_ledger_chain(...)` (`src/abstractruntime/storage/ledger_chain.py`)
+- subscriptions: `ObservableLedgerStore` (`src/abstractruntime/storage/observable.py`)
+- snapshots: `SnapshotStore` (`src/abstractruntime/storage/snapshots.py`)
+
+Docs: `docs/architecture.md`, `docs/provenance.md`, `docs/snapshots.md`.
+
+## Commands (durable control-plane inbox)
+
+AbstractRuntime includes append-only, idempotent **command inbox** primitives for gateways/workers:
+- interfaces/models: `src/abstractruntime/storage/commands.py` (`CommandRecord`, `CommandStore`, `CommandCursorStore`)
+- SQLite backend: `src/abstractruntime/storage/sqlite.py`
+
+These are exported at the package root (`src/abstractruntime/__init__.py`).
+
+## AbstractCore integration (LLM + tools)
+
+Docs: `docs/integrations/abstractcore.md`. Code: `src/abstractruntime/integrations/abstractcore/*`.
+
+What you get:
+- effect handlers for `LLM_CALL`, `TOOL_CALLS`, and `MODEL_RESIDENCY`
+- three execution modes (ADR-0002): local / remote / hybrid
+- tool execution modes: executed (trusted local), approval-gated local execution, or passthrough (external worker boundary)
+- public Runtime discovery, host-control, and durable run facades for AbstractCore-backed hosts
+- prompt-cache control methods and durable bloc/KV helpers on local/multi-local/remote LLM clients
+- cached-session/prompt-cache routing through stable runtime keys; provider cache objects stay inside AbstractCore clients
+- media input analysis and transcription via `LLM_CALL.media`
+- generated image, video, voice/audio, and music outputs via AbstractCore's unified `generate(..., output=...)` selector
+- generated binary outputs require a runtime ArtifactStore and are normalized to ArtifactStore refs instead of inline bytes
+- hardened remote provider-key routing: server auth uses `Authorization`, provider overrides use `X-AbstractCore-Provider-API-Key`
+- optional MCP worker entrypoint (`abstractruntime-mcp-worker`)
+
+Quick start (local mode, requires `pip install "abstractruntime[abstractcore]"`):
+
+```python
+from abstractruntime.integrations.abstractcore import create_local_runtime
+
+rt = create_local_runtime(provider="ollama", model="qwen3:4b")
+```
+
+Notes:
+- Tool calls and results are durable (ledger + checkpoints). Keep secrets out of tool arguments.
+- Use `ApprovalToolExecutor(delegate=..., policy=ToolApprovalPolicy())` when a local host should auto-run safe tools but pause for user approval before write/command/unknown tools.
+- Remote `params.api_key` and `params.provider_api_key` are compatibility inputs; runtime converts them to `X-AbstractCore-Provider-API-Key` headers for current AbstractCore servers.
+- Gateway/hosts choose Core server URLs, Core server auth headers, provider/model defaults, tool executors, artifact stores, and any Gateway env/config translation before Runtime sees the call.
+- Hosts should bind `get_abstractcore_host_facade(rt)` for prompt-cache, durable bloc/KV, and model-residency control operations, and use the Runtime-owned email wrapper layer (`get_abstractcore_host_facade(rt)` or `abstractruntime.integrations.abstractcore.comms_facade`) for host-local email helper operations instead of importing `abstractcore.tools.comms_tools` directly.
+- Hosts should use `abstractruntime.integrations.abstractcore.telegram_facade` for Telegram TDLib bootstrap/global-client/send helpers instead of importing `abstractcore.tools.telegram_tdlib` or `abstractcore.tools.telegram_tools` directly. These wrappers remain host-local and do not proxy through a remote Core server.
+- If an outbound email or Telegram send belongs to a run, hosts should prefer `get_abstractcore_run_facade(rt).send_email(...)` or `send_telegram_message(...)`. Those are durable `TOOL_CALLS` child runs: Runtime records the request and outcome, and replay should reuse the recorded result instead of resending the message. If the child run waits for approval or passthrough host execution, resume it through the same public boundary with `resume_tool_calls(...)`.
+- Use `pip install "abstractruntime[multimodal]"` for common AbstractCore media, vision, voice, audio, and music dependencies.
+- Optional comms tools (email/WhatsApp/Telegram) are gated by env vars; see `docs/tools-comms.md` and code `src/abstractruntime/integrations/abstractcore/default_tools.py`.
+- Read-file session attachment registration is bounded by `TOOL_CALLS.payload.max_attachment_bytes`, `run.vars["_runtime"]["max_attachment_bytes"]`, `ABSTRACTRUNTIME_MAX_ATTACHMENT_BYTES`, then the 25 MiB default.
+
+Minimal approval executor wiring:
+
+```python
+from abstractruntime.integrations.abstractcore import ApprovalToolExecutor, MappingToolExecutor, ToolApprovalPolicy
+
+tools = ApprovalToolExecutor(
+    delegate=MappingToolExecutor({"write_file": write_file}),
+    policy=ToolApprovalPolicy(),
+)
+```
+
+Prompt-cache control-plane sketch:
+
+```python
+from abstractruntime.integrations.abstractcore import get_abstractcore_host_facade
+
+facade = get_abstractcore_host_facade(rt)
+caps = facade.get_prompt_cache_capabilities()
+if caps.get("capabilities", {}).get("supports_prepare_modules"):
+    facade.prompt_cache_prepare_modules(namespace="assistant", modules=[{"module_id": "system", "system_prompt": "..."}])
+```
+
+LLM_CALL multimodal payload shape:
+
+```python
+Effect(
+    type=EffectType.LLM_CALL,
+    payload={
+        "prompt": "Describe this image",
+        "media": [{"$artifact": "artifact-id", "filename": "photo.png"}],
+        "output": {"modality": "text"},
+        "params": {"prompt_cache_key": "session:abc123"},
+    },
+    result_key="llm",
+)
+```
+
+Accepted high-level fields:
+- `prompt`, `messages`, `system_prompt`, and convenience `text`
+- `media`: a path, artifact ref (`{"$artifact": ...}` or `{"artifact_id": ...}`), media dict, or list of those
+- `output`: AbstractCore output selector; `outputs` is accepted as a runtime alias
+- `params`: provider/model routing, prompt-cache keys or `prompt_cache_binding`, generation controls, tracing, and structured-output schema options
+
+Generated media examples:
+
+```python
+# image generation
+{"text": "A clean app icon with a blue circuit motif", "output": {"modality": "image", "format": "png"}}
+
+# text-to-speech / voice
+{"text": "Runtime checkpoints are durable.", "output": {"modality": "voice", "voice": "alloy", "format": "wav"}}
+
+# audio transcription
+{"media": {"$artifact": "speech-artifact", "filename": "speech.wav"}, "output": {"modality": "text", "task": "transcription"}}
+```
+
+Result shape for generated media is JSON-safe:
+
+```json
+{
+  "content": null,
+  "outputs": {
+    "image": [
+      {
+        "modality": "image",
+        "task": "image_generation",
+        "artifact_id": "...",
+        "artifact_ref": {"$artifact": "...", "content_type": "image/png", "size_bytes": 12345}
+      }
+    ]
+  },
+  "metadata": {}
+}
+```
+
+Boundary rule: AbstractRuntime is the durable graph runner. It does not implement image, video, voice, music, or transcription model engines. AbstractCore owns provider capability plugins and server endpoints; Runtime carries JSON-safe requests, persists checkpoints/ledger entries, materializes input artifact refs for provider calls, stores generated bytes as artifacts, and records provider progress callbacks as `abstract.progress` ledger events.
+
+Remote multimodal guardrails:
+- remote/hybrid media generation uses AbstractCore Server endpoints, not the local AbstractCore capability dispatcher
+- remote image/TTS/STT endpoint calls do not inherit the chat model automatically; put `model` in the `output` selector only when you want explicit endpoint provider routing
+- remote image generation rejects input media rather than silently ignoring it; use `output.task="image_edit"` for Core-routed image edits with one source image and optional mask
+- remote voice output rejects input audio media rather than silently ignoring it; use local execution for voice clone/register or reference-guided TTS
+- remote STT requires exactly one audio media item that resolves to a local file path or artifact-backed temporary file
+- provider-request metadata redacts data URLs before persistence so ledger/checkpoints do not embed media bytes
+
+Cached sessions / prompt cache:
+- Prefer stable `params.prompt_cache_key` values or `run.vars["_runtime"]["prompt_cache"]` config to select cache namespaces; Runtime-owned `ABSTRACTRUNTIME_PROMPT_CACHE` is the process-wide opt-in.
+- Runtime derives prompt-cache keys only for text/chat calls. Non-text output selectors can carry explicit `prompt_cache_binding`, but Runtime does not infer a session cache key for image, voice, music, or transcription calls.
+- Gateway prompt-cache env vars should be consumed by Gateway and translated into `_runtime.prompt_cache`; Runtime does not read Gateway env names directly.
+- For durable exact reuse across restarts, use `LLM_CALL.params.prompt_cache_binding` from a prior `load_bloc_kv_artifact(...)` result instead of treating provider-native snapshots as durable workflow state.
+- For host-local operator workflows that still need provider-native export/import, use `get_abstractcore_host_facade(runtime).list_prompt_cache_exports(...)`, `prompt_cache_export(...)`, and `prompt_cache_import(...)`. That surface is local-only, partitions exports by provider/model under a Runtime-owned export root, and is intentionally separate from the durable bloc/binding contract.
+- For local runtimes, Runtime owns one content-addressed bloc root and stores one durable bloc text snapshot per SHA256 there; provider/model caches are separate derived artifacts under that bloc, not duplicate portable memory copies.
+- Keep provider cache handles, session objects, and warm-cache state inside AbstractCore clients or servers.
+- Runtime correctness must not depend on a warm cache; a cold cache may be slower but should produce the same durable graph behavior.
+- Use `get_abstractcore_host_facade(runtime)` for host-side cache inspection/preparation, durable bloc/KV control, and residency control, not `_abstractcore_llm_client`, and never store either in `RunState.vars`.
+- Runtime exposes durable bloc lifecycle controls on the host facade: `list_blocs(...)`, `list_bloc_kv_artifacts(...)`, `delete_bloc_kv_artifact(...)`, `prune_bloc_kv_artifacts(...)`, and `delete_bloc(...)`.
+- Lifecycle safety mirrors Core's public contract: use `dry_run=True` to preview, `clear_loaded=True` to clear matching live keys before deletion when Runtime can see that live state, and `force=True` only as an explicit operator override.
+
+## MCP worker (`abstractruntime-mcp-worker`)
+
+Docs: `docs/mcp-worker.md`. Code: `src/abstractruntime/integrations/abstractcore/mcp_worker.py`.
+
+This is an optional CLI that exposes AbstractCore toolsets over MCP via stdio (default) or HTTP (optional). Treat it as privileged when exposing `system` tools.
+
+## Rendering and node traces (host UX)
+
+Node traces are stored durably at `RunState.vars["_runtime"]["node_traces"]` (`src/abstractruntime/core/runtime.py`).
+
+Rendering helpers (useful for review UIs and debugging):
+- `render_agent_trace_markdown(...)` (`src/abstractruntime/rendering/agent_trace_report.py`)
+- `stringify_json(...)` (`src/abstractruntime/rendering/json_stringify.py`)
+
+## How to verify behavior quickly
+
+- Manual smoke tests: `docs/manual_testing.md`
+- Run tests:
+
+```bash
+python -m pytest -q
+```
+
+## Maintaining `llms*.txt` (for maintainers)
+
+Keep these two files tight and trustworthy:
+- `llms.txt`: a concise index of the most relevant docs and source-of-truth files (with 1-line descriptions).
+- `llms-full.txt`: an expanded, agent-oriented guide (this file) that should stay aligned with the public exports in `src/abstractruntime/__init__.py`.
+
+When the public API or semantics change, update:
+- `docs/api.md` (API surface)
+- `docs/getting-started.md` (onboarding example(s))
+- `docs/architecture.md` (semantics/invariants)
+- `llms.txt` and `llms-full.txt` (agent entrypoints)
+
+## Docs map (links)
+
+Start here:
+- `README.md`: install + minimal durable example + doc index
+- `docs/getting-started.md`: first workflow + scheduler + persistence
+- `docs/api.md`: public API surface (imports + pointers)
+- `docs/architecture.md`: component map + invariants (diagrams)
+- `docs/faq.md`: common questions and gotchas
+- `docs/troubleshooting.md`: symptom-oriented setup, runtime, and integration fixes
+
+Integration and operations:
+- `docs/integrations/abstractcore.md`: `LLM_CALL` / `TOOL_CALLS` wiring, cached sessions/prompt cache, media inputs, generated media, image edits, and model residency
+- `docs/mcp-worker.md`: MCP worker CLI
+- `docs/tools-comms.md`: opt-in comms toolset gating
+
+Durability and distribution:
+- `docs/limits.md`: `_limits` namespace + RuntimeConfig
+- `docs/provenance.md`: tamper-evident hash chain
+- `docs/evidence.md`: artifact-backed evidence capture for boundary tools
+- `docs/snapshots.md`: snapshot/bookmark model
+- `docs/workflow-bundles.md`: `.flow` bundle format, VisualFlow distribution, and concrete multi-entry fan-in metadata
+- VisualFlow media nodes (`generate_image`, `edit_image`/`image_to_image`, `generate_video`/`text_to_video`, `image_to_video`, `generate_voice`, `generate_music`, `transcribe_audio`) compile to `LLM_CALL` with an `output` selector, while `listen_voice` compiles to `WAIT_EVENT` (persist the authoring node type; no client-side lowering required).
+- VisualFlow multi-entry fan-in is lowered into internal `join_exec` and `path_mux` nodes when authoring JSON uses `entryRoutes` and `inputRouteOverrides`.
+
+## VisualFlow multi-entry fan-in (LLM authoring note)
+
+Use this when one visual node can be entered by more than one execution route and one or more data pins should vary by route. Store metadata on the target node, not by adding multiple data edges to the same pin:
+
+```json
+{
+  "entryRoutes": [
+    {"key": "start::exec-out", "sourceNodeId": "start", "sourceHandle": "exec-out"},
+    {"key": "ask::exec-out", "sourceNodeId": "ask", "sourceHandle": "exec-out"}
+  ],
+  "inputRouteOverrides": {
+    "prompt": {
+      "ask::exec-out": {"sourceNodeId": "ask", "sourceHandle": "response"}
+    }
+  }
+}
+```
+
+Compiler semantics:
+- `entryRoutes` order defines route indices.
+- `inputRouteOverrides` maps `pinId -> routeKey -> source`.
+- The compiler inserts internal `join_exec` and `path_mux` nodes.
+- The runtime persists the previous node and exec handle, so route choice survives waits/restarts.
+- Stale `entryRoutes` are rejected if they no longer match the incoming `exec-in` edges.
+
+## Maintainers
+
+- `CONTRIBUTING.md`: dev setup + guidelines
+- `CODE_OF_CONDUCT.md`: contributor conduct expectations
+- `SECURITY.md`: responsible disclosure
+- `ACKNOWLEDGMENTS.md`: dependency credits
+- `CHANGELOG.md`: release notes
+- `ROADMAP.md`: near-term priorities
+- `docs/adr/README.md`: design rationale (why)
+
+## Optional (deep context)
+
+- `docs/backlog/README.md`: detailed planned/completed work items
+- `examples/README.md`: runnable examples

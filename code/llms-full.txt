@@ -1,0 +1,1858 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractcode/main/llms-full.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractcode/main/llms-full.txt
+
+# AbstractCode (llms-full)
+
+> Full, unabridged content of the core documentation files for this repo.
+> Contains docs and project policies; it does not inline source code (see `llms.txt`).
+> Recommended: use `llms.txt` as the index when link-fetching is available; use `llms-full.txt` for offline/single-file context.
+> Generated from the files listed below. Relative Markdown links are normalized to repo-root paths.
+> If you update docs/policies, regenerate this file.
+> Last generated: 2026-02-09
+
+Files included (source):
+- `README.md`
+- `CHANGELOG.md`
+- `CHANGELOD.md`
+- `CONTRIBUTING.md`
+- `SECURITY.md`
+- `ACKNOWLEDMENTS.md`
+- `ACKNOWLEDGMENTS.md`
+- `docs/getting-started.md`
+- `docs/README.md`
+- `docs/architecture.md`
+- `docs/cli.md`
+- `docs/api.md`
+- `docs/faq.md`
+- `docs/workflows.md`
+- `docs/ui_events.md`
+- `docs/web.md`
+- `docs/deployment-web.md`
+- `docs/deployment-iphone.md`
+
+---
+
+<!-- FILE: README.md -->
+
+# AbstractCode
+
+Durable terminal TUI for agentic coding on the AbstractFramework stack (**AbstractAgent + AbstractRuntime + AbstractCore**).
+
+Status: **pre-alpha** (APIs and UX may change).
+
+Next: [`docs/getting-started.md`](docs/getting-started.md).
+
+## AbstractFramework ecosystem
+
+AbstractCode is part of **AbstractFramework**:
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework)
+- [AbstractCore](https://github.com/lpalbou/abstractcore) (providers + tools)
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime) (durable runs)
+
+## Features
+
+- Interactive TUI (`abstractcode`) with **durable runs** (resume/pause/cancel), snapshots, and logs
+- **Approval-gated tools** by default (with an allowlist you can configure)
+- Built-in agents: `react`, `memact`, `codeact` (from `abstractagent`)
+- Plan + Review modes (`--plan`, `--review`; `/plan`, `/review`)
+- VisualFlow workflows:
+  - run locally: `abstractcode flow ...` (optional extra)
+  - run as an agent: `abstractcode --agent <flow_ref>`
+- Remote tool execution via **MCP** (`/mcp`, `/executor`)
+- Optional gateway-first Web UI in `web/`
+
+## How it fits together (diagram)
+
+```mermaid
+flowchart LR
+  U[User] --> AC[AbstractCode\n(TUI/CLI host)]
+  AC --> AA[AbstractAgent\n(agent logic)]
+  AC --> AR[AbstractRuntime\n(durable execution)]
+  AR --> CORE[AbstractCore\n(LLM providers + tools)]
+
+  AC -->|approve| TOOLS[Local tools]
+  AC <--> MCP[MCP servers\n(remote tools)]
+
+  WEB[web/\n(browser host)] <--> GW[AbstractGateway\n(/api/gateway/*)]
+  AC -. optional .-> GW
+```
+
+## Install
+
+Python: **3.10+**
+
+```bash
+pip install abstractcode
+```
+
+Optional (run VisualFlow locally via `abstractcode flow ...`):
+
+```bash
+pip install "abstractcode[flow]"
+```
+
+From source (development):
+
+```bash
+pip install -e ".[dev]"
+```
+
+## Quickstart (TUI)
+
+Ollama (default provider):
+
+```bash
+abstractcode --provider ollama --model qwen3:1.7b-q4_K_M
+```
+
+OpenAI-compatible server (e.g. LM Studio):
+
+```bash
+abstractcode --provider openai --base-url http://127.0.0.1:1234/v1 --model qwen/qwen3-next-80b
+```
+
+Inside the app:
+- `/help` shows the authoritative command list
+- type a task (or use `/task ...`)
+- tool approvals: `/auto-accept` (or start with `--auto-approve`)
+- attach files with `@path/to/file` in your prompt
+
+## Persistence (durable runs)
+
+Default paths:
+- state file: `~/.abstractcode/state.json`
+- durable stores: `~/.abstractcode/state.d/`
+- saved settings: `~/.abstractcode/state.config.json`
+
+Disable persistence:
+
+```bash
+abstractcode --no-state
+```
+
+## Workflows
+
+- Local runs: `abstractcode flow run <flow_id_or_path> ...` (requires `abstractcode[flow]`)
+- Workflow agent: `abstractcode --agent /path/to/workflow.json ...`
+- Remote control-plane: `abstractcode gateway --help`
+- Bundle management on a gateway: `abstractcode workflow --help`
+
+Details: [`docs/workflows.md`](docs/workflows.md).
+
+## Web UI
+
+The web host lives in `web/` and connects to an **AbstractGateway** at `/api/gateway/*`.
+
+Start here:
+- [`docs/web.md`](docs/web.md)
+- [`docs/deployment-web.md`](docs/deployment-web.md)
+
+## Documentation
+
+- Start here: [`docs/getting-started.md`](docs/getting-started.md)
+- FAQ: [`docs/faq.md`](docs/faq.md)
+- Docs index: [`docs/README.md`](docs/README.md)
+- Agent-oriented docs: [`llms.txt`](llms.txt) and [`llms-full.txt`](llms-full.txt)
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/cli.md`](docs/cli.md)
+- [`docs/api.md`](docs/api.md)
+- [`docs/workflows.md`](docs/workflows.md)
+- [`docs/ui_events.md`](docs/ui_events.md)
+
+## Development
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+ruff check .
+black .
+```
+
+## Project
+
+- Changelog: [`CHANGELOG.md`](CHANGELOG.md)
+- Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Security: [`SECURITY.md`](SECURITY.md)
+- Acknowledgments: [`ACKNOWLEDMENTS.md`](ACKNOWLEDMENTS.md)
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).
+
+---
+
+<!-- FILE: CHANGELOG.md -->
+
+# Changelog
+
+All notable changes to AbstractCode will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.3.1] - 2026-02-04
+
+### Added
+- **Workflow-driven UI events (network-safe)**:
+  - Workflows can emit `Emit Event(name="abstract.message")` to show a message/notification in AbstractCode.
+  - Workflows can emit `Emit Event(name="abstract.tool_execution")` and `Emit Event(name="abstract.tool_result")` to render tool-call + tool-result UX blocks (without requiring actual tool execution).
+  - `WAIT_EVENT` can carry a `prompt` so workflows can do durable ask+wait under `WaitReason.EVENT` (useful for thin clients); AbstractCode will prompt and resume.
+  - `abstract.status` payload supports `duration` (seconds): default `-1` (sticky), `> 0` auto-clears unless superseded.
+  - Tool event payloads can be a **single object or a list** (e.g., wire `LLM Call.tool_calls` / `Tool Calls.results` directly into an `Emit Event`).
+  - Backward compatibility: `abstractcode.*` remains a deprecated alias accepted by existing hosts.
+- **Documentation refresh for public release**: clearer user-facing docs (`docs/getting-started.md`, `docs/architecture.md`, `docs/cli.md`, `docs/api.md`, `docs/faq.md`) plus `SECURITY.md`, `CONTRIBUTING.md`, and `ACKNOWLEDMENTS.md`.
+
+### Fixed
+- Align package version metadata and `abstractcode.__version__`.
+- `/help` now shows the correct `/gpu [status|on|off]` usage.
+
+## [0.3.0] - 2026-02-03
+
+### Added
+- **Workflow Agent Support** (`abstractcode/workflow_agent.py`): Run VisualFlow workflows as first-class agents via `abstractcode --agent <flow_id|flow_name|/path/to/flow.json>`
+  - `abstractcode.agent.v1` interface contract requires host-configurable `provider`/`model`/`tools` start pins (in addition to `prompt`/`response`)
+  - Workflows can emit `Emit Event(name="abstract.status")` to update TUI footer status text in real time
+  - `On Flow End.meta` (and optional `scratchpad`/`success`) surfaced as assistant-message metadata (`workflow_meta`, `workflow_scratchpad`, `workflow_success`)
+  - File-backed persistence support for durable workflow execution
+  - Documented in README with usage examples
+- **MCP (Model Context Protocol) Integration**: Connect to remote MCP servers for tool execution
+  - `/mcp` command to configure and manage MCP server connections
+  - `/executor` command to set default tool executor (local vs remote MCP server, session-persistent)
+  - Automatic tool synchronization from MCP servers
+  - Spinner feedback for remote MCP tool calls
+  - Support for stdio-based MCP servers
+  - MCP tools integrated into native tool allowlist
+- **Enhanced History Commands**:
+  - `/history copy` command to copy full conversation history to clipboard
+- **Collapsible Thought/Tool Blocks**: Tool-using iterations now render **Thought** and **Tool Call** as **click-to-toggle** blocks (collapsed by default) with high-signal one-line summary always visible
+- **Spinner Shimmer**: Status bar spinner text has subtle **reflect/shimmer** highlight traversing the entire text so "still working" is obvious without re-rendering scrollback
+- **`/logs provider --no-tool-defs`**: Optionally replace provider request `tools` array (full tool definitions) with array of tool names for compact sharing/debugging
+- **Terminal Markdown Module** (`abstractcode/terminal_markdown.py`): Dedicated module for rendering Markdown in terminal with newline unescaping
+- **New Test Coverage**:
+  - Workflow agent tests (`test_workflow_agent.py`)
+  - MCP remote tool execution tests (`test_remote_mcp_tool_execution.py`, `test_remote_mcp_tool_execution_stdio.py`)
+  - Repeat guardrail tests (`test_repeat_guardrail_write_file_content.py`)
+  - Tool examples toggle tests (`test_tools_examples_toggle.py`)
+  - History copy tests (`test_history_copy_full_to_clipboard.py`)
+  - Executor command tests (`test_executor_command.py`, `test_executor_real_logic.py`)
+  - Spinner shimmer tests (`test_fullscreen_ui_spinner_shimmer.py`)
+  - Log provider tests (`test_log_provider_no_tool_defs.py`, `test_log_provider_tool_calls_anthropic.py`)
+  - Answer markdown tests (`test_answer_markdown_newline_unescape.py`)
+
+### Changed
+- **`/clear`**: Now clears the screen (UI output) in addition to clearing in-memory conversation context
+- **`/memorize`**: Renamed from memory-note command to **Memorize** (consistent UX term) to avoid ambiguity with span tagging
+- **`/recall`**: Richer filtering and rehydration controls:
+  - Added `--tags-mode all|any`, repeatable `--user NAME`, and repeatable `--location LOC`
+  - Repeating `--tag k=v` now builds multi-value tags (e.g. `--tag person=alice --tag person=bob`)
+  - `--into-context` now also rehydrates matching `memory_note` spans as synthetic system message (`[MEMORY NOTE] ...`)
+- **Logging Commands**: Replaced legacy `/context` + `/llm` with `/logs runtime` + `/logs provider` (no backward compatibility)
+  - `/logs provider` now reads from durable ledger and includes **all LLM provider calls in current session** (across runs) unless `--run` is used
+  - `/logs provider` renders OpenAI/LMS-style "Received request … Generated prediction …" blocks (no truncation)
+  - `/logs runtime ... copy` and `/logs provider ... copy` now accept `copy` as trailing token and copy without rendering
+- **Verifier (Review) Mode**: Now enabled by default to prevent premature "stops" when model returns incomplete prose without tool calls
+  - Added `--no-review` to disable (not recommended)
+  - Default `--review-max-rounds` increased to 3
+- **Tool Prompt Examples**: Now **off by default** to avoid large token overhead; use `/tools examples on` to enable
+- **Output Versioning**: FullScreenUI now uses output versioning and caching for improved render performance
+- **Scrolling Behavior**: Enhanced scrolling in FullScreenUI with better page up/down and smooth scroll support
+
+### Fixed
+- **Spinner Shimmer Sweep**: Status bar spinner shimmer now traverses **entire** spinner text (previously capped to first ~10 visible characters)
+- **Tool Result Visibility**: Increased default tool observation preview to **1000 characters** (was 120) so small-but-critical outputs (e.g. exit codes, working directories) not silently truncated in UI
+- **ANSWER Newline Rendering**: Unescape literal `\n` / `\r\n` sequences into real line breaks before terminal Markdown rendering, so multi-line answers display correctly
+- **Web Search Reliability**: Added `ddgs>=9.10.0` as dependency so default `web_search` tool works without manual installs
+- **Native Tools Prompt Accounting**: ReactShell token estimation now excludes full `Tools (session)` Active Memory catalog for **native-tool models**, matching prompt actually sent to OpenAI-compatible servers (e.g. LMStudio)
+- **LLM-Call Payload Observability**: `/logs provider` shows verbatim provider request/response (`_provider_request` + `raw_response`), `/logs runtime` shows durable runtime step trace for LLM/tool calls
+- **`/logs provider` Tool-Call Detection**: Best-effort tool-call summary now detects Anthropic `tool_use` blocks in addition to OpenAI-style `tool_calls`
+- **Repeat Guardrail**: Reset duplicate-tool-call caches on **new runs** and **/cancel**, block `write_file` calls missing `content` to prevent repeated 0‑byte file writes
+- **File Tool CWD Injection**: File tools (read/write/edit) no longer inject `cwd` into UI preview, preventing confusion when relative paths shown
+- **Async Run Controls**: Improved async handling for pause/resume/cancel controls
+- **Flow CLI Entry Validation**: Added required entry inputs validation in CLI flow commands
+
+### Removed
+- **`/new`, `/reset`**: Removed alias commands (identical to `/clear`). Use `/clear`
+- **Legacy `/context`, `/llm`**: Removed in favor of `/logs runtime` and `/logs provider`
+
+### Technical Details
+- **44 commits**, **30 files changed**: 8,731 insertions, 756 deletions
+- New modules: `workflow_agent.py` (721 lines), `terminal_markdown.py` (168 lines)
+- 15 new test files covering workflow agents, MCP integration, repeat guardrails, and UI enhancements
+- AbstractCore dependency updated to include `[tools]` extras for web search reliability
+- Enhanced ReactShell with MCP client management, executor configuration, and improved token estimation
+
+### Migration Notes
+- Legacy `/context` and `/llm` commands removed; use `/logs runtime` and `/logs provider` instead
+- Tool prompt examples now off by default; enable with `/tools examples on` if needed
+- Verifier (review) mode now enabled by default; disable with `--no-review` if unwanted
+
+## [0.2.0] - 2025-12-17
+
+### Initial Release
+
+AbstractCode is an interactive terminal CLI for multi-agent agentic coding, providing a clean and powerful interface for AI-assisted development workflows.
+
+#### Core Features
+
+**Interactive Terminal Interface**
+- Full-screen terminal UI built with prompt_toolkit featuring scrollable output, ANSI color support, and mouse interaction
+- Clean command-line interface with slash-prefixed commands (`/help`, `/status`, `/task`, etc.)
+- Real-time status bar showing provider, model, and context token usage
+- Animated spinner with visual feedback during agent reasoning
+- Multi-line input support with command history and autocomplete
+
+**Multi-Agent Support**
+- React agent with thought-action-observation reasoning loops
+- CodeAct agent with Python code execution capabilities
+- Configurable iteration limits (default: 25) and context tokens (default: 32768)
+- Multiple LLM provider support (Ollama, OpenAI, and more via AbstractCore)
+- Dynamic model selection with per-provider configuration
+
+**Built-in Tool Suite**
+- `list_files` - Find and list files using glob patterns
+- `search_files` - Search file contents with regex patterns
+- `read_file` - Read files with optional line range selection
+- `write_file` - Write to files with automatic directory creation
+- `edit_file` - Edit files using regex or line-based replacements
+- `execute_command` - Execute shell commands with security gating
+- `web_search` - Search the web via DuckDuckGo (no API key required)
+- `fetch_url` - Fetch and process web content
+
+**State Management & Persistence**
+- Durable file-backed state with JSON storage (`~/.abstractcode/state.json`)
+- Directory-based stores for run, ledger, and snapshot persistence
+- Session resumption with conversation history restoration
+- Named snapshots for saving and loading specific run states
+- Optional in-memory mode for ephemeral sessions
+
+**Security & Safety**
+- Interactive tool approval with detailed argument preview
+- Per-tool approval flow with yes/no/all/edit/quit options
+- Argument editing in JSON format before execution
+- Double-confirmation required for shell command execution
+- Session-based "approve all" mode with persistence
+- Optional auto-approve mode for non-interactive use
+
+**Context & Memory Management**
+- Conversation history tracking with `/history` command
+- Memory usage breakdown by component (`/memory` command)
+- Intelligent conversation compaction with three modes:
+  - Light compression (minimal reduction)
+  - Standard compression (balanced approach)
+  - Heavy compression (aggressive reduction)
+- Configurable message preservation for recent context
+- Focus-based summarization to maintain topic coherence
+
+**Configuration & Customization**
+- Persistent configuration file (`*.config.json`) for saved settings
+- Environment variables for default agent type, state file location, and limits
+- CLI arguments for provider, model, iterations, tokens, and behavior
+- Runtime commands for adjusting max tokens, max messages, and auto-approve
+- Color output with `NO_COLOR` environment variable support
+
+**Interactive Commands**
+
+Task Management:
+- `/task <description>` - Start a new task
+- `/resume` - Resume the last saved or waiting run
+- `/clear` (aliases: `/reset`, `/new`) - Clear memory and start fresh
+
+Information & Status:
+- `/help` - Display all available commands
+- `/tools` - List available tools with descriptions
+- `/status` - Show current run ID, workflow, status, and waiting reason
+- `/history [N]` - Display recent conversation history
+- `/memory` - Show token usage breakdown
+
+Configuration:
+- `/auto-accept [on|off]` - Toggle auto-approve for tool execution
+- `/max-tokens [N]` - Show or set maximum context tokens (-1 for auto-detection)
+- `/max-messages [N]` - Show or set maximum history messages
+- `/compact [mode] [--preserve N]` - Compress conversation with configurable preservation
+
+Snapshots:
+- `/snapshot save <name>` - Save current run state as named snapshot
+- `/snapshot load <name>` - Load a saved snapshot by name
+- `/snapshot list` - List all available snapshots
+
+**Keyboard & Mouse Controls**
+- Enter - Submit input
+- Up/Down arrows - Navigate command history or completion menu
+- Page Up/Page Down - Scroll output area
+- Home/End - Jump to top or bottom of output
+- Ctrl+Up/Ctrl+Down - Smooth scroll output
+- Ctrl+L - Clear output area
+- Ctrl+C/Ctrl+D - Exit application
+- Mouse wheel - Scroll output area
+- Mouse click - Position cursor in input
+
+**Technical Architecture**
+- Thread-safe multi-threaded design with worker, spinner, and render threads
+- Atomic ANSI parsing with cached snapshots to prevent race conditions
+- Integration with AbstractCore for LLM capabilities
+- Integration with AbstractRuntime for workflow orchestration
+- Integration with AbstractAgent for agent implementations
+- Efficient lazy imports for fast `--help` response time
+- Graceful error handling with state preservation on interruption
+
+#### Dependencies
+
+**Required:**
+- `prompt_toolkit>=3.0.0` - Terminal UI framework
+
+**Implicit (from AbstractCore/AbstractRuntime/AbstractAgent):**
+- AbstractCore for LLM provider abstraction
+- AbstractRuntime for workflow and state management
+- AbstractAgent for React and CodeAct agent implementations
+
+#### Installation
+
+```bash
+pip install abstractcode
+```
+
+#### Quick Start
+
+```bash
+# Start with default settings (Ollama + qwen3:1.7b)
+abstractcode
+
+# Use a specific provider and model
+abstractcode --provider openai --model gpt-4o-mini
+
+# Use CodeAct agent with auto-approve
+abstractcode --agent codeact --auto-approve
+
+# Disable state persistence
+abstractcode --no-state
+
+# Set custom iteration and token limits
+abstractcode --max-iterations 50 --max-tokens 64000
+```
+
+#### Example Session
+
+```bash
+$ abstractcode
+AbstractCode v0.2.0 | Provider: ollama | Model: qwen3:1.7b
+
+> Create a Python script that analyzes a CSV file
+
+🤖 Thinking: I'll create a CSV analysis script using pandas...
+
+🔧 Tool: write_file
+   File: analyze_csv.py
+   [Approve] (y/n/all/edit/quit): y
+
+✓ File written successfully
+
+🤖 The script has been created. Would you like me to test it?
+
+> yes, test it with a sample CSV
+
+[Agent continues working...]
+
+Commands: /help | /status | /tools | /history | /clear
+```
+
+---
+
+## Versioning Notes
+
+- **0.2.0**: Initial public release with full feature set
+- **0.1.0**: Internal development version
+
+---
+
+[0.2.0]: https://github.com/lpalbou/abstractcode/releases/tag/v0.2.0
+
+---
+
+<!-- FILE: CHANGELOD.md -->
+
+# Changelog
+
+This repository’s changelog is maintained in [`CHANGELOG.md`](CHANGELOG.md).
+
+This file exists only as a convenience for common typos and external references.
+
+
+---
+
+<!-- FILE: CONTRIBUTING.md -->
+
+# Contributing to AbstractCode
+
+Thanks for taking the time to contribute. This project is still **pre-alpha**, so feedback, bug reports, and small focused PRs are especially valuable.
+
+AbstractCode is part of the **AbstractFramework** ecosystem:
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework)
+- [AbstractCore](https://github.com/lpalbou/abstractcore)
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime)
+
+## Quick links
+
+- Getting started: [`docs/getting-started.md`](docs/getting-started.md)
+- Architecture: [`docs/architecture.md`](docs/architecture.md)
+- CLI reference: [`docs/cli.md`](docs/cli.md)
+- Docs index: [`docs/README.md`](docs/README.md)
+
+## Development setup
+
+Prereqs:
+- Python **3.10+**
+- (Optional) Node.js if you work on the web app (`web/`)
+
+Install in editable mode with dev tools:
+
+```bash
+pip install -e ".[dev]"
+```
+
+Run tests:
+
+```bash
+pytest -q
+```
+
+Format and lint:
+
+```bash
+ruff check .
+black .
+```
+
+## What to include in a PR
+
+- A clear description of the problem and the approach.
+- Tests for behavior changes (or a short explanation if a test is not practical).
+- Docs updates when you change CLI flags/commands or UX behavior (prefer evidence-backed notes pointing to the relevant files/functions).
+- Changelog entry if the change is user-facing (see [`CHANGELOG.md`](CHANGELOG.md)).
+
+## Reporting bugs / feature requests
+
+If you found a bug or want a feature:
+- Prefer a minimal reproducible example and include:
+  - OS + Python version
+  - `abstractcode --help` output (or version)
+  - what you expected vs what happened
+
+Security issues: please follow [`SECURITY.md`](SECURITY.md).
+
+## Web app contributions
+
+The web app lives in `web/`. Local development currently depends on shared UI packages via Vite path aliases.
+
+See:
+- [`docs/web.md`](docs/web.md)
+- [`docs/deployment-web.md`](docs/deployment-web.md)
+
+---
+
+<!-- FILE: SECURITY.md -->
+
+# Security policy
+
+We take security seriously and appreciate responsible disclosure.
+
+## Reporting a vulnerability
+
+Please **do not** open a public GitHub issue for security reports.
+
+Preferred options:
+1) If GitHub Security Advisories are enabled for this repository, open a **private** security advisory.
+2) Otherwise, email: `contact@abstractcore.ai`
+
+Include as much of the following as you can:
+- affected version(s)
+- impact assessment (what an attacker can do)
+- steps to reproduce (or a PoC)
+- logs/error output if relevant
+- whether you discovered it in a default configuration
+- whether it also affects upstream components (AbstractCore / AbstractRuntime / AbstractAgent), if known
+
+## Coordinated disclosure
+
+We’ll acknowledge receipt and work with you on a coordinated timeline for a fix and release. If you need a specific credit line in release notes, mention it in your report.
+
+---
+
+<!-- FILE: ACKNOWLEDMENTS.md -->
+
+# Acknowledgments
+
+AbstractCode is built on (and inspired by) a lot of open-source work — thank you.
+
+## Where dependencies are declared
+
+- Python: `pyproject.toml`
+- Web UI: `web/package.json` (and the fully resolved tree in `web/package-lock.json`)
+- Web UI local packages: `web/vite.config.ts` aliases (`../../abstractuic/*`)
+
+## Runtime dependencies (Python)
+
+Declared in `pyproject.toml`:
+
+- `abstractagent` — built-in agents (`react`, `memact`, `codeact`)
+- `abstractruntime` — durable runs, stores, snapshots, and workflow execution
+- `abstractcore[tools,media]` — provider/model abstraction + tools + rich media handling
+- `prompt_toolkit` — interactive terminal UI (TUI)
+- `ddgs` — DuckDuckGo-backed search backend used by the default `web_search` tool
+
+## Optional extras (Python)
+
+- `abstractflow` — VisualFlow execution (`pip install "abstractcode[flow]"`, declared in `pyproject.toml`)
+- `abstractmemory` — optional memory/knowledge graph integration (imported in `abstractcode/react_shell.py`, not installed by default)
+
+## Web UI dependencies (TypeScript/React)
+
+Declared in `web/package.json`:
+
+- `react`, `react-dom` — UI framework
+- `vite`, `typescript` — build toolchain
+- `vitest` — tests
+- `@monaco-editor/react` — editor (Monaco wrapper)
+- `marked` — Markdown rendering
+- `dompurify` — HTML sanitization for rendered Markdown
+
+Local UI packages (via `web/vite.config.ts` aliases):
+
+- `@abstractuic/ui-kit` — shared theme/tokens and UI primitives
+- `@abstractuic/panel-chat` — chat message rendering
+- `@abstractuic/monitor-flow` — run/trace viewer (Context inspector)
+- `@abstractutils/monitor-gpu` — optional GPU widget integration
+
+## Development & packaging
+
+Declared in `pyproject.toml` (dev/build):
+
+- `pytest`, `pytest-cov` — tests/coverage
+- `ruff`, `black` — linting/formatting
+- `setuptools`, `wheel` — packaging
+
+## Abstract* ecosystem
+
+AbstractCode is part of the Abstract* stack and relies on:
+
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework)
+- [AbstractCore](https://github.com/lpalbou/abstractcore)
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime)
+- **AbstractAgent**
+- (optional) **AbstractFlow** for local VisualFlow runs (`abstractcode[flow]`)
+- **AbstractUIC** components in the Web UI (via `../../abstractuic/*`)
+
+Thank you to all contributors and the broader open-source community.
+
+---
+
+<!-- FILE: ACKNOWLEDGMENTS.md -->
+
+# Acknowledgments
+
+This repository’s acknowledgments are maintained in [`ACKNOWLEDMENTS.md`](ACKNOWLEDMENTS.md).
+
+This file exists only as a convenience for common spelling and external references.
+
+
+---
+
+<!-- FILE: docs/getting-started.md -->
+
+# Getting started
+
+AbstractCode is a **durable terminal TUI** for running agentic coding sessions on the AbstractFramework stack:
+- **AbstractRuntime** provides durable runs/ledger/waits/artifacts.
+- **AbstractAgent** provides the built-in agents (`react`, `memact`, `codeact`).
+- **AbstractCore** provides provider/model abstraction and tool definitions.
+
+Ecosystem links:
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework)
+- [AbstractCore](https://github.com/lpalbou/abstractcore)
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime)
+
+If you landed here directly, skim [`README.md`](README.md) for an overview.
+
+## 1) Install
+
+Python **3.10+**:
+
+```bash
+pip install abstractcode
+```
+
+Optional (run VisualFlow locally via `abstractcode flow ...`):
+
+```bash
+pip install "abstractcode[flow]"
+```
+
+Evidence:
+- Package deps and extras: `pyproject.toml`
+- CLI entrypoints: `abstractcode/__init__.py` and `abstractcode/__main__.py` → `abstractcode/cli.py`
+
+## 2) Start the interactive TUI
+
+Ollama (default provider):
+
+```bash
+abstractcode --provider ollama --model qwen3:1.7b-q4_K_M
+```
+
+OpenAI-compatible server (example: LM Studio):
+
+```bash
+abstractcode --provider openai --base-url http://127.0.0.1:1234/v1 --model qwen/qwen3-next-80b
+```
+
+In the app:
+- `/help` shows the authoritative command list (implemented in `abstractcode/react_shell.py::_show_help`)
+- type a task (or use `/task ...`)
+
+Evidence:
+- Arg parsing: `abstractcode/cli.py`
+- Interactive host: `abstractcode/react_shell.py`
+
+## 2b) Plan / Review modes (optional)
+
+AbstractCode supports two UX modes that affect how the agent responds:
+- **Plan mode**: the agent outputs a TODO plan before acting (`--plan` or `/plan on`)
+- **Review mode**: the agent self-checks before concluding (`--review` / `--no-review`, or `/review ...`)
+
+Evidence:
+- CLI flags: `abstractcode/cli.py`
+- TUI commands: `abstractcode/react_shell.py::_show_help`
+
+## 3) Approvals, tools, and files
+
+### Tool approvals (default-on)
+
+By default, tool calls pause at a durable boundary and require approval.
+
+- CLI: `--auto-approve` (unsafe; disables prompts)
+- TUI: `/auto-accept` (persists when state is enabled)
+
+Evidence:
+- Runtime is wired with `PassthroughToolExecutor(mode="approval_required")` in `abstractcode/react_shell.py`.
+- After approval, tools run via `MappingToolExecutor.from_tools(...)` in `abstractcode/react_shell.py`.
+
+### Attach files with `@path`
+
+Mention files in your prompt to attach them:
+
+```text
+Explain @abstractcode/cli.py and @docs/architecture.md
+```
+
+Evidence:
+- Mention parsing + workspace roots/mounts: `abstractcode/file_mentions.py`
+- Attachment ingestion to ArtifactStore: `abstractcode/react_shell.py::_ingest_attachments()`
+
+Workspace mounts (optional):
+- `ABSTRACTCODE_WORKSPACE_MOUNTS` (preferred)
+- `ABSTRACTGATEWAY_WORKSPACE_MOUNTS` (compat)
+
+Format: newline-separated `name=/abs/path` entries.
+
+## 4) Persistence (durable runs)
+
+Defaults:
+- state file: `~/.abstractcode/state.json`
+- durable stores: `~/.abstractcode/state.d/`
+- saved settings: `~/.abstractcode/state.config.json`
+
+Disable persistence:
+
+```bash
+abstractcode --no-state
+```
+
+Evidence: file-backed vs in-memory stores are selected in `abstractcode/react_shell.py`.
+
+## 5) Workflows and web UI (optional)
+
+Workflows:
+- Local VisualFlow runs: `abstractcode flow ...` (requires `abstractcode[flow]`)
+- Workflow agent mode: `abstractcode --agent <flow_ref>`
+- Gateway control-plane: `abstractcode gateway ...`
+- Gateway bundle management: `abstractcode workflow ...`
+
+Details: [`docs/workflows.md`](docs/workflows.md).
+
+Web UI:
+- The gateway-first web host is in `web/` (separate Node/Vite build; not part of the pip wheel).
+
+Details: [`docs/web.md`](docs/web.md) and [`docs/deployment-web.md`](docs/deployment-web.md).
+
+## Next
+
+- Docs index: [`docs/README.md`](docs/README.md)
+- FAQ (common issues): [`docs/faq.md`](docs/faq.md)
+- CLI/TUI reference (env vars, persistence details, MCP): [`docs/cli.md`](docs/cli.md)
+- Architecture (diagrams): [`docs/architecture.md`](docs/architecture.md)
+- API and integration points: [`docs/api.md`](docs/api.md)
+- Workflow UI events contract: [`docs/ui_events.md`](docs/ui_events.md)
+- Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Security policy: [`SECURITY.md`](SECURITY.md)
+
+---
+
+<!-- FILE: docs/README.md -->
+
+# AbstractCode documentation
+
+Start here: [`docs/getting-started.md`](docs/getting-started.md).
+
+AbstractCode is part of the **AbstractFramework** ecosystem:
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework)
+- [AbstractCore](https://github.com/lpalbou/abstractcore) (providers + tools)
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime) (durable execution)
+
+## Entry points
+
+- First-time setup + quick usage: [`docs/getting-started.md`](docs/getting-started.md)
+- Frequently asked questions: [`docs/faq.md`](docs/faq.md)
+- Project overview + install + quickstart: [`README.md`](README.md)
+- Agent-oriented docs: [`llms.txt`](llms.txt) and [`llms-full.txt`](llms-full.txt)
+- Architecture (with diagrams): [`docs/architecture.md`](docs/architecture.md)
+- CLI/TUI reference (commands, persistence, env): [`docs/cli.md`](docs/cli.md)
+- API and integration points: [`docs/api.md`](docs/api.md)
+- Workflows (VisualFlow + bundles + gateway): [`docs/workflows.md`](docs/workflows.md)
+- Workflow-driven UI events contract: [`docs/ui_events.md`](docs/ui_events.md)
+
+## Web app
+
+- Web overview + local dev/build notes: [`docs/web.md`](docs/web.md)
+- Deployment (gateway-first): [`docs/deployment-web.md`](docs/deployment-web.md)
+- iPhone / PWA notes: [`docs/deployment-iphone.md`](docs/deployment-iphone.md)
+
+## Project
+
+- Changelog: [`CHANGELOG.md`](CHANGELOG.md)
+- Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Security: [`SECURITY.md`](SECURITY.md)
+- Acknowledgments: [`ACKNOWLEDMENTS.md`](ACKNOWLEDMENTS.md)
+
+---
+
+<!-- FILE: docs/architecture.md -->
+
+# AbstractCode architecture
+
+> Last verified: 2026-02-09  
+> Scope: what is implemented in this repo (no roadmap claims).
+
+Start here: [`docs/getting-started.md`](docs/getting-started.md).
+
+AbstractCode is a **host UI** for running durable agent/workflow executions built on:
+- **AbstractAgent** (agents)
+- **AbstractRuntime** (durable runtime: runs, ledger, waits, artifacts)
+- **AbstractCore** (provider/model abstraction + tool definitions)
+
+This repo contains:
+- Python CLI/TUI package: `abstractcode/`
+- Gateway-first web host UI: `web/` (separate build; not part of the pip wheel)
+
+Related:
+- CLI/TUI reference: [`docs/cli.md`](docs/cli.md)
+- Workflows: [`docs/workflows.md`](docs/workflows.md)
+- UI events contract: [`docs/ui_events.md`](docs/ui_events.md)
+- Web overview: [`docs/web.md`](docs/web.md)
+
+## Big picture (CLI/TUI)
+
+```mermaid
+flowchart LR
+  U[User\n(terminal)] -->|input| UI[FullScreenUI\n(prompt_toolkit)]
+  UI <--> SH[ReactShell\n(command router + UX)]
+
+  SH -->|start/tick| RT[AbstractRuntime\n(durable execution)]
+  RT -->|LLM calls| LLM[AbstractCore LLM client\n(provider/model)]
+
+  RT -->|tool calls (durable wait)| PTE[PassthroughToolExecutor\napproval_required]
+  SH -->|approve + execute| MTE[MappingToolExecutor\n(local tools or MCP)]
+  MTE -->|tool results| RT
+
+  RT --> RS[RunStore\n(JsonFileRunStore / InMemoryRunStore)]
+  RT --> LS[LedgerStore\n(JsonlLedgerStore / InMemoryLedgerStore)]
+  RT --> AS[ArtifactStore\n(FileArtifactStore / InMemoryArtifactStore)]
+  RT --> SS[SnapshotStore\n(JsonSnapshotStore / InMemorySnapshotStore)]
+```
+
+Evidence (implementation):
+- CLI entrypoint + arg parsing: `abstractcode/cli.py`
+- Interactive host: `abstractcode/react_shell.py` (`ReactShell`)
+- UI: `abstractcode/fullscreen_ui.py` (`FullScreenUI`)
+- Runtime wiring: `abstractcode/react_shell.py` (creates stores + `create_local_runtime(...)`)
+
+## Web host (gateway-first)
+
+The web app is a **thin host** that talks only to an AbstractGateway under `/api/gateway/*`.
+
+```mermaid
+sequenceDiagram
+  participant B as Browser (web/)
+  participant G as AbstractGateway (/api/gateway/*)
+  participant R as AbstractRuntime (remote)
+
+  B->>G: Start run / list runs / discovery
+  B->>G: Stream ledger (SSE + cursor replay)
+  G-->>B: Ledger events
+  B->>G: Submit durable commands (resume waits, tool approvals)
+  G->>R: Execute durable commands
+```
+
+Evidence (implementation):
+- Gateway client + endpoints: `web/src/lib/gateway_client.ts`
+- UI rendering from ledger stream: `web/src/ui/app.tsx`
+
+## Repository layout
+
+```text
+abstractcode/                 # Python package (published to pip)
+  __init__.py                 # console entrypoint: abstractcode:main
+  __main__.py                 # module entrypoint: python -m abstractcode
+  cli.py                      # argparse CLI + subcommands (flow/workflow/gateway)
+  react_shell.py              # interactive shell + command routing
+  fullscreen_ui.py            # prompt_toolkit full-screen UI
+  input_handler.py            # prompt_toolkit input helpers
+  terminal_markdown.py        # markdown rendering for terminal output
+  theme.py                    # themes + env overrides
+  file_mentions.py            # @file parsing + workspace mount resolution
+  recall.py / remember.py     # memory UX helpers (host-side)
+  flow_cli.py                 # local VisualFlow runner (requires abstractflow extra)
+  workflow_agent.py           # run VisualFlow as an agent (abstractcode.agent.v1)
+  workflow_cli.py             # manage .flow bundles on a gateway
+  gateway_cli.py              # gateway HTTP client (runs, ledger follow, bundles, KG)
+
+web/                          # Web host UI (separate Node/Vite app)
+docs/                         # Documentation for this repo/package
+tests/                        # Test suite
+```
+
+## Execution modes
+
+### 1) Interactive agents (default)
+
+Command: `abstractcode ...`
+
+Dispatch:
+- `abstractcode/cli.py` constructs a `ReactShell` and enters the TUI loop.
+- Built-in agent kinds are selected by `--agent` (`react|memact|codeact`).
+
+Evidence:
+- Agent selection + shell creation: `abstractcode/cli.py`
+- Agent wiring + toolset selection: `abstractcode/react_shell.py`
+
+### 2) One-shot (`--prompt`)
+
+Command: `abstractcode --prompt "..." ...`
+
+Behavior:
+- runs a single task, prints the final answer, exits
+- supports `@file` mentions (attachments are stored in the ArtifactStore)
+
+Evidence: `abstractcode/cli.py::_run_one_shot_prompt()`.
+
+### 3) Local VisualFlow runs (`abstractcode flow ...`)
+
+Commands: `abstractcode flow run|resume|pause|...`
+
+Behavior:
+- runs VisualFlow workflows locally with durable stores, separate from the agent state file
+
+Evidence:
+- CLI parsing: `abstractcode/cli.py::build_flow_parser()`
+- Flow driver: `abstractcode/flow_cli.py`
+
+### 4) Workflow agent (`abstractcode --agent <flow_ref>`)
+
+Runs a VisualFlow workflow as a first-class “agent” in the TUI, using the `abstractcode.agent.v1` contract.
+
+Evidence: `abstractcode/workflow_agent.py` (`WorkflowAgent`).
+
+### 5) Gateway control-plane (`abstractcode gateway ...`)
+
+Commands: `abstractcode gateway run|attach|kg`
+
+Behavior:
+- starts/attaches to remote runs via gateway HTTP endpoints
+- can query the persisted KG via the gateway (when enabled server-side)
+
+Evidence: `abstractcode/gateway_cli.py`.
+
+## Durability + tool approvals (core invariant)
+
+AbstractCode keeps runs durable by persisting only JSON-safe state:
+- tool **specs** and **requests** can be persisted
+- tool **callables** are never persisted; they stay in the host process
+
+Approval boundary (TUI):
+1) runtime emits a durable wait for tool calls (`approval_required`)
+2) host prompts the user (or auto-approves)
+3) host executes tools (local or via MCP) and resumes the run with results
+
+Evidence:
+- Passthrough executor: `abstractcode/react_shell.py` (`PassthroughToolExecutor(mode="approval_required")`)
+- Local executor: `abstractcode/react_shell.py` (`MappingToolExecutor.from_tools(...)`)
+
+## Workflow-driven UX events
+
+Workflows can emit `emit_event` effects (ledger-backed) to request host UX updates:
+- status text: `abstract.status`
+- messages: `abstract.message`
+- tool blocks: `abstract.tool_execution`, `abstract.tool_result`
+
+Contract + payload shapes: [`docs/ui_events.md`](docs/ui_events.md).
+
+Evidence:
+- Ledger subscription + normalization: `abstractcode/workflow_agent.py::_subscribe_ui_events()`
+- TUI rendering: `abstractcode/react_shell.py` (`_on_step(...)`)
+
+---
+
+<!-- FILE: docs/cli.md -->
+
+# CLI / TUI reference
+
+This document covers **how to run AbstractCode** (CLI/TUI) and how its **durability + approvals** work.
+
+Start here: [`docs/getting-started.md`](docs/getting-started.md).
+
+See also: [`docs/faq.md`](docs/faq.md).
+
+Related:
+- Architecture: [`docs/architecture.md`](docs/architecture.md)
+- Workflows: [`docs/workflows.md`](docs/workflows.md)
+- Web app: [`docs/web.md`](docs/web.md)
+
+## Install
+
+See the top-level [`README.md`](README.md#install).
+
+## Run the TUI (interactive)
+
+Minimum:
+
+```bash
+abstractcode --provider ollama --model qwen3:1.7b-q4_K_M
+```
+
+Notes:
+- Full CLI flags live in `abstractcode/cli.py` (see `abstractcode --help`).
+- Inside the app, run `/help` for the authoritative command list (implemented in `abstractcode/react_shell.py::_show_help`).
+
+## One-shot mode (`--prompt`)
+
+Run a single task and exit (useful for scripting / quick checks):
+
+```bash
+abstractcode --provider ollama --model qwen3:1.7b-q4_K_M --prompt "Summarize @README.md"
+```
+
+Evidence:
+- One-shot driver: `abstractcode/cli.py::_run_one_shot_prompt()`
+- `@file` mention parsing: `abstractcode/file_mentions.py`
+
+## Key commands (TUI)
+
+Use `/help` for the full, authoritative list. Common commands:
+- `/status` (current run status)
+- `/logs runtime` and `/logs provider` (durable tracing and provider wire logs)
+- `/tools`, `/mcp`, `/executor` (tool allowlist + MCP servers + where tools execute)
+- `/plan [on|off]` and `/review ...` (response shaping modes)
+- `/snapshot save|load|list` (snapshots)
+- `/flow ...` (run local workflows inside the REPL; requires `abstractcode[flow]`)
+- `/gpu [status|on|off]` (optional gateway GPU meter)
+- `/whitelist ...` and `/blacklist ...` (session workspace mounts / blocks)
+- `/files` and `/files-keep [on|off]` (manage pending `@file` attachments)
+
+## Tool approvals (default-on)
+
+By default, tool calls are **paused at a durable boundary** and require approval:
+- CLI flag: `--auto-approve` (unsafe; disables prompts)
+- TUI command: `/auto-accept` (persists when state is enabled)
+
+Evidence:
+- Runtime tool executor is created as `PassthroughToolExecutor(mode="approval_required")` in `abstractcode/react_shell.py`.
+- Local execution after approval uses `MappingToolExecutor.from_tools(...)` in `abstractcode/react_shell.py`.
+
+## Plan / Review modes
+
+Two optional modes influence how the agent responds:
+- Plan mode: `--plan` (CLI) or `/plan on` (TUI)
+- Review mode: `--review` / `--no-review` (CLI) or `/review ...` (TUI)
+
+Evidence: `abstractcode/cli.py` and `/help` in `abstractcode/react_shell.py::_show_help`.
+
+## Persistence (durable runs)
+
+Default state file:
+- `~/.abstractcode/state.json` (override with `--state-file` or `ABSTRACTCODE_STATE_FILE`)
+
+When state is enabled, AbstractCode writes:
+- durable stores directory: `~/.abstractcode/state.d/` (derived from `state.json` → `state.d/`)
+- persisted settings: `~/.abstractcode/state.config.json`
+
+Disable persistence:
+
+```bash
+abstractcode --no-state
+```
+
+Evidence:
+- Store dir + stores selection: `abstractcode/react_shell.py` (file-backed `JsonFileRunStore` + `JsonlLedgerStore` vs in-memory).
+- Config file load/save: `abstractcode/react_shell.py::_load_config()` / `_save_config()`.
+
+## Attachments (`@file`) and workspace roots
+
+You can attach local/project files by mentioning them in a prompt:
+
+```text
+Explain @abstractcode/cli.py and @docs/architecture.md
+```
+
+Workspace resolution:
+- Default workspace root is the current working directory.
+- Optional named mounts via:
+  - `ABSTRACTCODE_WORKSPACE_MOUNTS` (preferred)
+  - `ABSTRACTGATEWAY_WORKSPACE_MOUNTS` (compat)
+  (newline-separated `name=/abs/path`).
+
+Session-only mounts/blocks:
+- `/whitelist <dir...>` or `/whitelist name=/abs/dir ...`
+- `/blacklist <path...>` and `/blacklist reset`
+
+Size limit:
+- Default max attachment size is **25 MB**.
+- Override via `ABSTRACTCODE_MAX_ATTACHMENT_BYTES` (or `ABSTRACTGATEWAY_MAX_ATTACHMENT_BYTES`).
+
+Evidence: `abstractcode/file_mentions.py` + `abstractcode/react_shell.py::_ingest_attachments()`.
+
+## MCP (remote tool execution)
+
+AbstractCode can discover tools from (and execute tools on) remote MCP servers.
+
+Commands (see `/help` for full syntax):
+- `/mcp add ...`, `/mcp sync`, `/mcp list`, `/mcp remove`
+- `/executor use <server_id>` to make tools run remotely by default
+
+Tool naming:
+- After sync, MCP tools are exposed as `mcp::<server_id>::<tool_name>` (see `/help` and `abstractcode/react_shell.py`).
+
+## Gateway integration (GPU meter)
+
+The TUI can poll AbstractGateway for GPU utilization and display a small meter in the footer:
+- command: `/gpu [status|on|off]`
+- endpoint: `GET /api/gateway/host/metrics/gpu`
+
+Enable:
+- in-session: `/gpu on`
+- env: `ABSTRACTCODE_GPU_MONITOR=1` (or `auto` to enable when a gateway URL/token is configured)
+
+Evidence: `abstractcode/react_shell.py::_gpu_monitor_enabled_from_env()` and `abstractcode/react_shell.py::_fetch_gateway_gpu_utilization_pct()`.
+
+## Environment variables (CLI + TUI)
+
+Common:
+- `ABSTRACTCODE_AGENT` (default agent selector; same as `--agent`)
+- `ABSTRACTCODE_BASE_URL` (provider base URL; same as `--base-url`)
+- `ABSTRACTCODE_STATE_FILE` (default state file)
+- `ABSTRACTCODE_MAX_ITERATIONS`, `ABSTRACTCODE_MAX_TOKENS` (CLI defaults)
+
+Workspace/attachments:
+- `ABSTRACTCODE_WORKSPACE_MOUNTS`
+- `ABSTRACTCODE_MAX_ATTACHMENT_BYTES`
+
+Gateway (for `/gpu` and `abstractcode gateway|workflow` commands):
+- `ABSTRACTCODE_GATEWAY_URL`, `ABSTRACTCODE_GATEWAY_TOKEN`
+- `ABSTRACTCODE_GPU_MONITOR` (`0|1|auto`)
+
+Themes:
+- `ABSTRACTCODE_THEME`
+- `ABSTRACTCODE_THEME_PRIMARY`, `ABSTRACTCODE_THEME_SECONDARY`, `ABSTRACTCODE_THEME_SURFACE`, `ABSTRACTCODE_THEME_MUTED`
+
+Evidence: `abstractcode/cli.py`, `abstractcode/react_shell.py`, `abstractcode/file_mentions.py`, `abstractcode/theme.py`.
+
+---
+
+<!-- FILE: docs/api.md -->
+
+# API and integration points
+
+Start here: [`docs/getting-started.md`](docs/getting-started.md).
+
+AbstractCode is primarily a **CLI/TUI application**. This page documents the integration points that are most useful for external users:
+- the CLI surface (stable entrypoint for scripting)
+- minimal Python API (entrypoint function)
+- workflow interface contracts (`abstractcode.agent.v1`)
+- workflow-driven UI events (`abstract.*`)
+- gateway interaction surface (what this repo’s clients call)
+
+Status: **pre-alpha** — interfaces may evolve, but changes should be reflected in the docs and [`CHANGELOG.md`](CHANGELOG.md).
+
+## 1) CLI (primary interface)
+
+The CLI entrypoint is the published script:
+
+```bash
+abstractcode --help
+```
+
+Note: workflow-related subcommands are dispatched by the first argument:
+- `abstractcode flow --help`
+- `abstractcode gateway --help`
+- `abstractcode workflow --help`
+
+Key modes:
+- interactive TUI: `abstractcode ...`
+- one-shot: `abstractcode --prompt "..." ...`
+- local VisualFlow runs: `abstractcode flow ...` (requires `abstractcode[flow]`)
+- gateway control-plane: `abstractcode gateway ...`
+- gateway bundle management: `abstractcode workflow ...`
+
+Evidence: `abstractcode/cli.py`.
+
+## 2) Python API (minimal)
+
+The supported Python entrypoint is:
+
+```python
+from abstractcode import main
+
+raise SystemExit(main(["--help"]))
+```
+
+Evidence: `abstractcode/__init__.py` defines `main(argv=None)` and delegates to `abstractcode/cli.py`.
+
+You can also run the module:
+
+```bash
+python -m abstractcode --help
+```
+
+Evidence: `abstractcode/__main__.py`.
+
+## 3) Workflow agent contract: `abstractcode.agent.v1`
+
+AbstractCode can run a VisualFlow workflow as an agent:
+
+```bash
+abstractcode --agent /path/to/workflow.json --provider ollama --model qwen3:1.7b-q4_K_M
+```
+
+Contract summary (required):
+- `interfaces: ["abstractcode.agent.v1"]`
+- **On Flow Start** outputs: `provider`, `model`, `prompt`, `tools`
+- **On Flow End** inputs: `response`, `success`, `meta`
+
+Details: [`docs/workflows.md`](docs/workflows.md).
+
+Evidence:
+- contract validation/scaffold: `abstractcode/workflow_agent.py` (`_apply_abstractcode_agent_v1_scaffold`, `_validate_abstractcode_agent_v1`)
+- run variable injection: `abstractcode/workflow_agent.py::WorkflowAgent.start()`
+
+## 4) Workflow-driven UI events (`abstract.*`)
+
+Workflows can emit durable UI hints via `emit_event` and have hosts render them:
+- `abstract.status`
+- `abstract.message`
+- `abstract.tool_execution`
+- `abstract.tool_result`
+
+Details: [`docs/ui_events.md`](docs/ui_events.md).
+
+Evidence: ledger subscription + normalization in `abstractcode/workflow_agent.py::_subscribe_ui_events()`.
+
+## 5) Gateway interaction surface (used by this repo)
+
+This repo includes:
+- a Python gateway client used by `abstractcode gateway ...` and `abstractcode workflow ...`: `abstractcode/gateway_cli.py`
+- a browser gateway client used by the web app: `web/src/lib/gateway_client.ts`
+
+They both call gateway endpoints under `/api/gateway/*`, but with different focus:
+- Python client: runs, ledger polling, durable commands, bundles, KG (`/runs/*`, `/commands`, `/bundles/*`, `/kg/query`)
+- Browser client: discovery + files + streaming views (`/discovery/*`, `/files/*`, `/runs/*`, etc.)
+
+Note: AbstractGateway is a separate component; its full API surface is defined in its own project.
+
+---
+
+<!-- FILE: docs/faq.md -->
+
+# FAQ
+
+Start here: [`docs/getting-started.md`](docs/getting-started.md).
+
+This page answers common questions from first-time users. For the authoritative CLI/TUI command list, run `/help` inside the app (implemented in `abstractcode/react_shell.py::_show_help`).
+
+## What is AbstractCode?
+
+AbstractCode is a **durable terminal TUI** for running agentic coding sessions on the AbstractFramework stack:
+- **AbstractRuntime**: durable execution (runs, ledger, waits, artifacts)
+- **AbstractAgent**: built-in agents (`react`, `memact`, `codeact`)
+- **AbstractCore**: provider/model abstraction + tool definitions
+
+Evidence: runtime wiring and agent selection in `abstractcode/react_shell.py` and `abstractcode/cli.py`.
+
+## Is AbstractCode the runtime or the gateway?
+
+No. AbstractCode is a **host UI**:
+- The TUI runs a local runtime (`create_local_runtime(...)`) by default.
+- The web app (`web/`) is a thin client that talks to **AbstractGateway** under `/api/gateway/*`.
+
+Evidence:
+- Local runtime creation: `abstractcode/react_shell.py`
+- Gateway HTTP client: `abstractcode/gateway_cli.py`
+- Web gateway client: `web/src/lib/gateway_client.ts`
+
+## How do I install it?
+
+```bash
+pip install abstractcode
+```
+
+Optional (to run VisualFlow locally via `abstractcode flow ...`):
+
+```bash
+pip install "abstractcode[flow]"
+```
+
+Evidence: extras in `pyproject.toml` and flow implementation in `abstractcode/flow_cli.py`.
+
+## How do I choose provider/model (Ollama, OpenAI-compatible, …)?
+
+Use `--provider` and `--model` (and `--base-url` when needed):
+
+```bash
+abstractcode --provider ollama --model qwen3:1.7b-q4_K_M
+abstractcode --provider openai --base-url http://127.0.0.1:1234/v1 --model qwen/qwen3-next-80b
+```
+
+Evidence: CLI args in `abstractcode/cli.py`.
+
+## Where does it store state? Can I disable persistence?
+
+By default AbstractCode persists to:
+- state file: `~/.abstractcode/state.json`
+- durable stores: `~/.abstractcode/state.d/`
+- saved settings: `~/.abstractcode/state.config.json`
+
+Disable persistence:
+
+```bash
+abstractcode --no-state
+```
+
+Evidence: store selection + config persistence in `abstractcode/react_shell.py`.
+
+## Why does it keep asking to approve tool calls?
+
+Tool execution is **approval-gated by default**. This is a durability + safety boundary:
+- runtime emits a durable wait for tool calls
+- the host prompts you
+- tools run locally (or via MCP) and results are fed back into the run
+
+Skip prompts (unsafe):
+- CLI: `--auto-approve`
+- TUI: `/auto-accept`
+
+Evidence:
+- Runtime tool executor: `PassthroughToolExecutor(mode=\"approval_required\")` in `abstractcode/react_shell.py`
+- Tool execution: `MappingToolExecutor.from_tools(...)` in `abstractcode/react_shell.py`
+
+## What are Plan and Review modes?
+
+- **Plan mode**: the agent produces a short TODO list before acting (`--plan` or `/plan on`).
+- **Review mode**: the agent runs a self-check pass before concluding (`--review` / `--no-review`, or `/review ...`).
+
+Evidence:
+- CLI flags: `abstractcode/cli.py`
+- TUI commands: `/help` in `abstractcode/react_shell.py::_show_help`
+
+## How do I restrict which tools the agent may use?
+
+Use `/tools` to manage the allowlist:
+- `/tools only <name...>`
+- `/tools enable <name...>`
+- `/tools disable <name...>`
+- `/tools reset`
+
+Evidence: implementation in `abstractcode/react_shell.py::_handle_tools()`.
+
+## How do I attach files to a prompt?
+
+Mention files as `@path` in your prompt:
+
+```text
+Explain @abstractcode/cli.py and @docs/architecture.md
+```
+
+Notes:
+- Workspace-relative paths are resolved against a workspace root (see below).
+- Absolute paths are also accepted (best-effort), but `@…` tokens stop at whitespace.
+
+Evidence:
+- Mention parsing: `abstractcode/file_mentions.py::extract_at_file_mentions()`
+- Attachment resolution: `abstractcode/react_shell.py::_resolve_attachment_file()`
+
+### What is the workspace root? Can I mount other directories?
+
+Workspace root:
+- Always the current working directory at launch.
+
+Optional mounts:
+- `ABSTRACTCODE_WORKSPACE_MOUNTS` (preferred) or `ABSTRACTGATEWAY_WORKSPACE_MOUNTS` (compat)
+  - newline-separated `name=/abs/path`
+
+Session-only mounts:
+- `/whitelist <dir...>` or `/whitelist name=/abs/dir ...`
+- `/blacklist <path...>` and `/blacklist reset`
+
+Evidence: `abstractcode/file_mentions.py::default_workspace_root()` and `abstractcode/file_mentions.py::default_workspace_mounts()`.
+
+## What’s the difference between `/logs runtime` and `/logs provider`?
+
+- `/logs runtime`: durable step trace for LLM/tool calls (runtime perspective)
+- `/logs provider`: provider wire request/response (what was sent/received)
+
+Evidence: commands are exposed in `abstractcode/react_shell.py::_show_help` and implemented in `abstractcode/react_shell.py`.
+
+## How do workflows work here?
+
+There are several workflow-related modes:
+
+- Local VisualFlow runs: `abstractcode flow ...` (requires `abstractcode[flow]`)
+- Workflow as an agent: `abstractcode --agent <flow_ref>` (implements `abstractcode.agent.v1`)
+- Gateway control-plane: `abstractcode gateway ...`
+- Gateway bundle management: `abstractcode workflow ...`
+
+Details: [`docs/workflows.md`](docs/workflows.md).
+
+Evidence:
+- Local flows: `abstractcode/flow_cli.py`
+- Workflow agent: `abstractcode/workflow_agent.py`
+- Gateway + bundles: `abstractcode/gateway_cli.py` and `abstractcode/workflow_cli.py`
+
+## Why doesn’t the web app build when I clone only this repo?
+
+The web app currently imports shared UI components via Vite path aliases pointing at a sibling `abstractuic/` repo.
+
+Options:
+- deploy the prebuilt static output from `web/dist/` (if it matches your needs), or
+- clone/build with the sibling UI repo present.
+
+Evidence:
+- Vite aliases: `web/vite.config.ts`
+- Imports: `web/src/ui/app.tsx` and `web/src/main.tsx`
+
+## How do I enable the GPU meter in the footer?
+
+The TUI can poll AbstractGateway:
+- endpoint: `GET /api/gateway/host/metrics/gpu`
+- command: `/gpu [status|on|off]`
+
+Enable:
+- in-session: `/gpu on`
+- env: `ABSTRACTCODE_GPU_MONITOR=1` (or `auto`)
+
+Evidence: `abstractcode/react_shell.py::_handle_gpu()` and `abstractcode/react_shell.py::_fetch_gateway_gpu_utilization_pct()`.
+
+## I’m on MemAct: why do I have `/memory` but not on ReAct/CodeAct?
+
+`/memory` is MemAct-specific (it shows MemAct “Active Memory”).
+
+Evidence: command list in `abstractcode/react_shell.py::_show_help` and agent wiring in `abstractcode/react_shell.py`.
+
+---
+
+<!-- FILE: docs/workflows.md -->
+
+# Workflows (VisualFlow / bundles / gateway)
+
+Start here: [`docs/getting-started.md`](docs/getting-started.md).
+
+AbstractCode supports these workflow-related modes:
+
+1) **Run VisualFlow locally**: `abstractcode flow ...` (requires `abstractflow`; install `abstractcode[flow]`)
+2) **Run a workflow *as an agent***: `abstractcode --agent <flow_ref>` (compiles via `abstractruntime.visualflow_compiler`)
+3) **Run/observe via AbstractGateway**: `abstractcode gateway ...`
+4) **Manage gateway workflow bundles**: `abstractcode workflow ...` (upload/list/remove `.flow` bundles)
+5) **Gateway-first web host UI**: `web/` (runs against `/api/gateway/*`)
+
+Related:
+- CLI: [`docs/cli.md`](docs/cli.md)
+- UI events contract: [`docs/ui_events.md`](docs/ui_events.md)
+- Web deployment: [`docs/deployment-web.md`](docs/deployment-web.md)
+
+## 1) Local workflows (`abstractcode flow ...`)
+
+Install:
+
+```bash
+pip install "abstractcode[flow]"
+```
+
+Run a flow by id (from a flows dir) or by path to a VisualFlow `.json`:
+
+```bash
+abstractcode flow run <flow_id_or_path> --flows-dir /path/to/flows --param query="who are you?"
+```
+
+Other useful commands:
+- `abstractcode flow runs` (list recent runs)
+- `abstractcode flow attach <run_id>` (set the current flow ref)
+- `abstractcode flow emit ...` (advanced: resume a wait_key / emit an event)
+
+Durability:
+- flow run reference file: `~/.abstractcode/flow_state.json` (override with `--flow-state-file` or `ABSTRACTCODE_FLOW_STATE_FILE`)
+- durable stores directory: `~/.abstractcode/flow_state.d/`
+
+Evidence:
+- Defaults: `abstractcode/flow_cli.py::default_flow_state_file()` and `abstractcode/flow_cli.py::_flow_store_dir()`.
+
+## 2) Workflow agent mode (`--agent <flow_ref>`)
+
+Run a workflow as an interactive “agent” inside the TUI:
+
+```bash
+abstractcode --agent /path/to/workflow.json --provider ollama --model qwen3:1.7b-q4_K_M
+```
+
+Supported `flow_ref` forms (resolved in `abstractcode/workflow_agent.py::resolve_visual_flow()`):
+- VisualFlow id (from `--flows-dir`/`ABSTRACTFLOW_FLOWS_DIR`)
+- VisualFlow `name`
+- path to `.json`
+- path/ref to a bundled `.flow` (zip) file
+- bundle ref `bundle_id[@version]` and optional `bundle_id[@version]:flow_id`
+
+### `abstractcode.agent.v1` contract (implemented)
+
+AbstractCode validates (and best-effort scaffolds) the interface:
+- Flow must declare `interfaces: ["abstractcode.agent.v1"]`
+- Required pins:
+  - **On Flow Start** outputs: `provider`, `model`, `prompt`, `tools`
+  - **On Flow End** inputs: `response`, `success`, `meta`
+
+Evidence: `_apply_abstractcode_agent_v1_scaffold()` + `_validate_abstractcode_agent_v1()` in `abstractcode/workflow_agent.py`.
+
+### Variables provided to the workflow
+
+At run start, AbstractCode passes (at least):
+- `vars.prompt`: the user task text
+- `vars.provider`, `vars.model`: from the runtime config (`--provider/--model`)
+- `vars.tools`: the session allowlist (empty list if not set)
+- `vars.context.messages`: the conversation history (host-managed)
+- `vars.context.attachments`: (optional) attachment refs from `@file` mentions
+- `vars._limits`: max_iterations/max_tokens/etc (host limits)
+
+Evidence: `abstractcode/workflow_agent.py::WorkflowAgent.start()`.
+
+### Outputs surfaced back to the host
+
+When the workflow completes, AbstractCode:
+- extracts `response` text (best-effort) from `RunState.output`
+- attaches `meta` to the assistant message metadata as `workflow_meta`
+- attaches optional `scratchpad` as `workflow_scratchpad`
+- attaches `success` as `workflow_success`
+
+Evidence: `abstractcode/workflow_agent.py::WorkflowAgent.step()`.
+
+## 3) AbstractGateway mode (`abstractcode gateway ...`)
+
+The `gateway` subcommand is a thin HTTP control-plane client:
+
+```bash
+abstractcode gateway run <flow_id> --input-json '{"prompt":"hello"}'
+abstractcode gateway attach <run_id>
+abstractcode gateway kg --scope session
+```
+
+Evidence: argument parsing in `abstractcode/cli.py` and HTTP client in `abstractcode/gateway_cli.py`.
+
+## Workflow bundles on a gateway (`abstractcode workflow ...`)
+
+This subcommand manages **WorkflowBundle** `.flow` files on a running AbstractGateway.
+
+Examples:
+
+```bash
+# Upload a bundle
+abstractcode workflow install /path/to/bundle.flow --overwrite
+
+# List entrypoints (optionally filter to workflows that implement the agent interface)
+abstractcode workflow list --interface abstractcode.agent.v1
+
+# Inspect and remove
+abstractcode workflow info my-bundle@1.2.3
+abstractcode workflow remove my-bundle@1.2.3
+
+# (Optional) Deprecate / undeprecate bundles on the gateway (hide + block launch)
+abstractcode workflow deprecate my-bundle --reason "superseded"
+abstractcode workflow undeprecate my-bundle
+```
+
+Gateway config:
+- flags: `--gateway-url`, `--gateway-token`
+- env: `ABSTRACTCODE_GATEWAY_URL`, `ABSTRACTCODE_GATEWAY_TOKEN`
+
+Evidence: CLI parser in `abstractcode/cli.py::build_workflow_parser()` and implementation in `abstractcode/workflow_cli.py`.
+
+## Workflow-driven UI events
+
+Workflows can emit reserved events that update AbstractCode’s UX (status/messages/tool blocks).
+
+Contract: [`docs/ui_events.md`](docs/ui_events.md).
+
+---
+
+<!-- FILE: docs/ui_events.md -->
+
+# Workflow-driven UI events (contract)
+
+AbstractCode can translate **durable** workflow `emit_event` effects into host UX updates.
+
+Start here: [`docs/getting-started.md`](docs/getting-started.md).
+
+This is designed so:
+- the event is recorded in the **ledger** (durable, replayable),
+- different hosts (TUI, web) can render the same “UX hint” deterministically.
+
+Related:
+- Workflows overview: [`docs/workflows.md`](docs/workflows.md)
+- Architecture: [`docs/architecture.md`](docs/architecture.md)
+
+## Event namespace + backward compatibility
+
+Canonical namespace: `abstract.*`
+
+Deprecated alias: `abstractcode.*` is accepted and normalized to `abstract.*`.
+
+Evidence: `abstractcode/workflow_agent.py::_normalize_ui_event_name()`.
+
+## Supported events
+
+### 1) `abstract.status`
+
+Purpose: update the host’s status/spinner text.
+
+Accepted payload shapes:
+- string: `"Indexing repo…"`
+- object: `{ "text": "Indexing repo…", "duration": 2 }`
+
+`duration` is seconds:
+- `null`/missing: host default
+- `-1`: sticky (do not auto-clear)
+- `> 0`: auto-clear after that many seconds (best-effort)
+
+Evidence:
+- Payload parsing: `abstractcode/workflow_agent.py::_extract_status()`
+- TUI rendering: `abstractcode/react_shell.py` (on-step handler for `"status"`)
+
+### 2) `abstract.message`
+
+Purpose: show a notification/message block in the host.
+
+Accepted payload shapes:
+- string: `"Done."`
+- object:
+  - required: `text`
+  - optional: `level` (`info|success|warning|error`), `title`, `meta` (object)
+
+Evidence:
+- Payload parsing: `abstractcode/workflow_agent.py::_extract_message()`
+- TUI rendering: `abstractcode/react_shell.py` (on-step handler for `"message"`)
+
+### 3) `abstract.tool_execution`
+
+Purpose: render a “tool call” UX block **without** requiring actual tool execution.
+
+Accepted payload shapes:
+- a single tool call object
+- a list of tool call objects
+
+Supported tool call object shapes (best-effort normalization):
+- Preferred normalized:
+  - `{ "name": "read_file", "arguments": { "path": "README.md" }, "call_id": "..." }`
+- OpenAI-ish:
+  - `{ "id": "...", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\":\"README.md\"}" } }`
+
+Evidence: `abstractcode/workflow_agent.py::_extract_tool_exec()` and UI translation in `_subscribe_ui_events()`.
+
+### 4) `abstract.tool_result`
+
+Purpose: render a “tool result” UX block.
+
+Accepted payload shapes:
+- a single tool result object
+- a list of tool result objects
+
+Supported tool result object fields (best-effort):
+- `name`/`tool`/`tool_name` (string)
+- `success` (boolean)
+- `output`/`result`/`content`/`text` (any; rendered as string)
+
+Evidence: `abstractcode/workflow_agent.py::_extract_tool_result()` and UI translation in `_subscribe_ui_events()`.
+
+## Operational notes
+
+- Events are only surfaced after the corresponding ledger record is written as `status == completed`.
+- Hosts must treat these events as **UX-only** (they must not affect correctness).
+
+Evidence: ledger subscription filter in `abstractcode/workflow_agent.py::_subscribe_ui_events()`.
+
+---
+
+<!-- FILE: docs/web.md -->
+
+# AbstractCode Web (gateway-first)
+
+The `web/` folder contains a **gateway-first** host UI:
+- talks only to **AbstractGateway** under `/api/gateway/*`
+- renders runs by replaying/streaming the **durable ledger**
+- resumes waits by submitting durable commands
+
+Start here: [`docs/getting-started.md`](docs/getting-started.md).
+
+Related:
+- Deployment: [`docs/deployment-web.md`](docs/deployment-web.md)
+- iPhone notes: [`docs/deployment-iphone.md`](docs/deployment-iphone.md)
+- Architecture: [`docs/architecture.md`](docs/architecture.md)
+
+## Status (important for external users)
+
+Good to know: the web app currently consumes shared UI components via Vite path aliases to a sibling `abstractuic/` repo:
+- configured in `web/vite.config.ts`
+- imports used in `web/src/ui/app.tsx` and `web/src/main.tsx`
+
+This repo includes a prebuilt `web/dist/` for convenience. If you need to modify/rebuild the web app, see the next section.
+
+## Voice (optional)
+
+AbstractCode Web supports **push-to-talk transcription** and **TTS playback** when the connected AbstractGateway exposes the endpoints the web client calls.
+
+Push-to-talk (record → upload → transcribe):
+- Upload: `POST /api/gateway/attachments/upload`
+- Transcribe: `POST /api/gateway/runs/{run_id}/audio/transcribe`
+
+Text-to-speech:
+- TTS: `POST /api/gateway/runs/{run_id}/voice/tts`
+
+Evidence:
+- Client methods: `web/src/lib/gateway_client.ts` (`attachments_upload`, `audio_transcribe`, `voice_tts`)
+- UI wiring: `web/src/ui/app.tsx` (`transcribe_voice_blob`, `toggle_tts`)
+
+## Local development (requires the sibling UI repo)
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Dev server:
+- runs on `http://127.0.0.1:3002/` (see `web/package.json`)
+- proxies `/api/*` to `http://localhost:8081` by default (see `web/vite.config.ts`)
+
+## Build
+
+```bash
+cd web
+npm run build
+```
+
+Output: `web/dist/` (static files).
+
+---
+
+<!-- FILE: docs/deployment-web.md -->
+
+# AbstractCode Web — Deployment (gateway-first)
+
+AbstractCode Web (`web/`) is a browser/PWA host that talks only to **AbstractGateway** (`/api/gateway/*`).
+
+Related:
+- Web app overview + local dev caveats: [`docs/web.md`](docs/web.md)
+- Architecture: [`docs/architecture.md`](docs/architecture.md)
+
+## 1) Run AbstractGateway
+
+Run a gateway that serves `/api/gateway/*` and (for browsers) allows your web app origin (CORS).
+
+Example (token + allowed origins):
+
+```bash
+export ABSTRACTGATEWAY_AUTH_TOKEN="dev-token"
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+
+abstractgateway serve --host 127.0.0.1 --port 8081
+```
+
+Notes:
+- Web UI uses gateway discovery endpoints for dropdowns: providers/models/tools.
+- Web UI uses gateway file endpoints for `@file` mentions: `/api/gateway/files/search` and `/api/gateway/files/read`.
+- Web UI uses gateway attachment endpoints for uploads: `/api/gateway/attachments/upload`.
+- (Optional) Voice features use: `/api/gateway/runs/{run_id}/audio/transcribe` and `/api/gateway/runs/{run_id}/voice/tts`.
+
+## 2) Run AbstractCode Web (dev)
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:3002/` and set:
+- `Gateway URL`: `http://127.0.0.1:8081`
+- `Auth token`: `dev-token` (if configured)
+
+## 3) Build + host (static)
+
+```bash
+cd web
+npm run build
+```
+
+Deploy `web/dist/` with any static file server.
+
+If you serve the web app on the **same origin** as the gateway, you can set `Gateway URL` to empty and rely on same-origin `/api/gateway/*` routing.
+
+---
+
+<!-- FILE: docs/deployment-iphone.md -->
+
+# AbstractCode Web — iPhone Notes (Safari / PWA)
+
+AbstractCode Web is designed to run on iPhone as a **thin host UI** that connects to a **remote** AbstractGateway + AbstractRuntime deployment.
+
+Related:
+- Web app overview: [`docs/web.md`](docs/web.md)
+- Web deployment: [`docs/deployment-web.md`](docs/deployment-web.md)
+
+## Prerequisites
+
+- A reachable HTTPS endpoint for AbstractGateway (recommended: reverse proxy + TLS).
+- The AbstractCode Web static site hosted over HTTPS.
+- Gateway configured with:
+  - `ABSTRACTGATEWAY_AUTH_TOKEN` (recommended)
+  - `ABSTRACTGATEWAY_ALLOWED_ORIGINS` including your web host origin (exact host recommended for prod).
+
+## Steps
+
+1) Open the AbstractCode Web URL in Safari.
+2) Go to `Settings`:
+   - set `Gateway URL` to your gateway URL (e.g. `https://gateway.example.com`)
+   - set `Auth token` if required
+3) (Optional) Add to Home Screen:
+   - Safari → Share → Add to Home Screen
+
+## Notes / constraints
+
+- iOS aggressively suspends background tabs; long-running workflows should be designed to be resumable (ledger replay).
+- File access is always remote (via gateway); the phone does not run local tools in v1.
+
+---

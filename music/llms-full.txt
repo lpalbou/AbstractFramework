@@ -1,0 +1,494 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractmusic/main/llms-full.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractmusic/main/llms-full.txt
+
+# AbstractMusic
+
+> Model-agnostic remote and local music and audio generation abstractions for the Abstract ecosystem.
+
+This file is an AI-readable companion to the repository docs. It summarizes the current public
+documentation and points to canonical files for details. It is not the source of truth; the linked
+docs and package metadata are canonical.
+
+## Document Index
+
+- [README.md](README.md): overview, installation, quick starts, CLI, text planning, licensing, CI/CD, and Apple/MPS behavior.
+- [docs/README.md](docs/README.md): docs tree index.
+- [docs/getting-started.md](docs/getting-started.md): install and first-run workflows.
+- [docs/repl.md](docs/repl.md): REPL commands, engine/model switching rules, downloads/offline toggle, and duration limits.
+- [docs/architecture.md](docs/architecture.md): core contracts and dependency boundaries.
+- [docs/api.md](docs/api.md): public API, request fields, planner hooks, registry, and backend kinds.
+- [docs/models.md](docs/models.md): reviewed model list and license/precision policy.
+- [docs/faq.md](docs/faq.md): common questions and limits.
+- [docs/troubleshooting.md](docs/troubleshooting.md): user-visible failure modes and recovery steps.
+- [docs/release.md](docs/release.md): release workflow and publishing setup.
+- [CHANGELOG.md](CHANGELOG.md): release history.
+- [CONTRIBUTING.md](CONTRIBUTING.md): development and contribution rules.
+- [SECURITY.md](SECURITY.md): private vulnerability reporting.
+- [docs/adr/README.md](docs/adr/README.md): architecture decision records index.
+- [docs/adr/0001_music_provider_abstraction_and_dependency_policy.md](docs/adr/0001_music_provider_abstraction_and_dependency_policy.md): provider abstraction and dependency policy.
+- [docs/backlog/overview.md](docs/backlog/overview.md): current roadmap and lifecycle counts.
+- [docs/backlog/README.md](docs/backlog/README.md): backlog layout and operating rules.
+
+---
+
+## README.md
+
+AbstractMusic is a model-agnostic text-to-music/text-to-audio library for the Abstract ecosystem.
+The base package is import-light and contains contracts, manager code, CLI/plugin wiring, docs,
+model metadata, and stdlib-only ACE Music and ElevenLabs Music remote backends. Heavy local runtime
+stacks live behind optional extras such as `acestep`, `musicgen`, `stable-audio`,
+`stable-audio-3`, `all-apple`, and `all-gpu`.
+
+The default backend is `acemusic`, which calls a configured hosted API and requires an API key.
+The second remote backend is `elevenlabs`, which calls ElevenLabs Music endpoints only and requires
+`ELEVENLABS_API_KEY`.
+The local ACE-Step route is `acestep`. It uses AbstractMusic-owned orchestration around Diffusers
+`AceStepPipeline` and Hugging Face model weights. It does not use an external ACE-Step source tree
+or package at runtime.
+The `stable-audio-3` route targets `stabilityai/stable-audio-3-small-music` with an
+AbstractMusic-owned internal inference subset and Hugging Face weights/configs only. It does not
+install or import the upstream Stable Audio runtime package and is currently scoped to
+text-to-music. Focused 30-second and 120-second Small Music smokes have passed objective gates, but
+broader prompt/seed and GPU validation are still open.
+
+Typical CLI usage:
+
+```bash
+abstractmusic t2m "ambient lo-fi study music" --out out.wav --duration 30
+abstractmusic --backend elevenlabs t2m "cinematic instrumental synth cue" --format mp3 --out out.mp3 --duration 30
+abstractmusic --backend acestep t2m "ambient lo-fi study music" --out out.wav --duration 10
+abstractmusic --backend stable-audio-3 t2m "rhythmic space shooter game music" --out out.wav --duration 30 --steps 16
+abstractmusic --backend acestep t2m "heroic fantasy epic music" --enhance-prompt --auto-lyrics --print-plan --out out.wav --duration 30
+```
+
+For generations of 45 seconds or more, `--structure-prompt` is enabled by default. It can be
+disabled with `--no-structure-prompt`.
+
+AbstractMusic separates text planning from audio synthesis. The built-in planner is
+dependency-free. Host applications can inject smarter planners through `MusicManager` or plugin
+configuration. When hosted by AbstractCore, AbstractMusic may consume a narrow structural text
+service exposing `generate_text(...)` or `generate_structured(...)` without importing AbstractCore.
+Planner results may include a provider-neutral `composition_plan`; compatible backends such as
+`elevenlabs` translate it into native structured music requests.
+
+On Apple hardware, the `acestep` backend tries PyTorch MPS first. The automatic dtype policy
+prefers MPS bfloat16 when supported, then MPS float32, with CPU float32 as the final fallback for
+invalid audio.
+
+---
+
+## docs/getting-started.md
+
+Install the base package with `pip install abstractmusic`. Use the default remote backend with an
+API key, or install a local backend extra before in-process generation. The default local ACE-Step
+install profile is:
+
+```bash
+pip install "abstractmusic[acestep]"
+```
+
+The `stable-audio` extra targets the gated `stabilityai/stable-audio-open-small` checkpoint and
+vendors the minimal `stable-audio-tools==0.0.19` model code inside AbstractMusic, so users do not
+need to install the upstream `stable-audio-tools` package.
+The `stable-audio-3` extra installs only Torch, Transformers, Safetensors, Hugging Face Hub,
+NumPy, and Einops for the internal Small Music text-to-music path. It excludes upstream runtime
+packages, Flash-Attn, codec libraries, UI, training, and LoRA dependencies.
+
+The public Python entry point is `MusicManager`. Backends are selected explicitly and generation
+returns audio bytes or a `GeneratedAsset` depending on the method used. The CLI supports one-shot
+generation and an interactive REPL with commands for engine, duration, BPM, seed, lyrics, planner
+mode, and model listing.
+
+Fast tests use fakes for most model components. Real model smoke tests are opt-in with
+`ABSTRACTMUSIC_RUN_REAL_MODEL_TESTS=1` because checkpoints are large and hardware-sensitive.
+
+---
+
+## docs/repl.md
+
+The REPL (`abstractmusic cli` / `abstractmusic repl`) is the interactive shell for iterating on
+prompts, engines, models, and parameters without restarting. It separates **engine** (backend
+implementation) from **model** (packaged model id, usually a Hugging Face repo for local engines).
+
+Discovery commands:
+
+- `/engines` lists engines and their default models.
+- `/models` lists known packaged models, grouped by engine.
+- `/status` shows the active engine, effective model, and key params.
+
+Routing rules:
+
+- `/model <id>` auto-switches the engine when the model is known in the registry.
+- Changing `/engine` clears an incompatible explicit `/model` back to the engine default.
+- `/download on|off` toggles whether local Hugging Face engines may download missing files.
+
+Stable Audio Open Small (`stable-audio`) is capped at 11 seconds. Stable Audio 3 (`stable-audio-3`)
+supports longer durations (Small Music up to 120 seconds; Medium up to 380 seconds).
+
+---
+
+## docs/architecture.md
+
+The core public contract is built around `MusicManager`, `MusicBackend`,
+`AudioGenerationRequest`, `GeneratedAsset`, and the model capability registry. Provider-specific
+logic belongs in backend modules. Shared fields such as prompt, lyrics, duration, format, seed,
+sample rate, and vocal language can be first-class request fields; specialized options should be
+explicit and documented.
+
+Text planning is a separate layer. A `MusicPlanningRequest` captures raw user intent and context,
+and a `MusicPromptPlan` is compiled into deterministic prompt/lyrics/metadata fields for the
+selected backend. AbstractMusic does not import AbstractCore or LLM runtimes for planning.
+
+Heavy imports must remain lazy. The base package stays focused on contracts, manager code,
+artifact helpers, docs, CLI/plugin shells, and provider metadata. Runtime engines live behind
+optional extras.
+
+---
+
+## docs/api.md
+
+`MusicManager` delegates generation to a configured backend. `generate_audio(...)` returns a
+`GeneratedAsset` unless a store is configured; `t2m(...)` returns audio bytes directly.
+
+Planner providers can be callables accepting `request_dict`, objects with
+`plan_music_text(request_dict)`, or objects with `create_plan(MusicPlanningRequest)`.
+`text_planner_mode="auto"` uses an injected provider when present and falls back to the
+deterministic planner. `required` raises on provider failure, and `off` preserves raw text.
+
+The AbstractCore plugin exposes discovery methods such as `available_providers(...)`,
+`list_models(...)`, `list_provider_models(...)`, `list_operations(...)`, and
+`capability_catalog(...)` from packaged metadata without loading model weights. Discovery uses
+backend-oriented provider ids such as `acemusic`, `elevenlabs`, `acestep`, `stable-audio`,
+`stable-audio-3`, and `diffusers`, and only returns providers/models whose runtime is usable in the
+current environment. It also exposes an optional residency surface (`load_resident_model`,
+`list_loaded_models`, `list_resident_models`, `unload_resident_model`) for local backends; remote
+providers remain stateless.
+
+Built-in backend kinds include `acemusic`, `elevenlabs`, `acestep`, `diffusers`, `musicgen`,
+`stable-audio`, and `stable-audio-3`.
+
+---
+
+## docs/models.md
+
+The model registry lives at `src/abstractmusic/assets/music_model_capabilities.json`. It is
+metadata only and must not silently reroute configured providers or models.
+
+Reviewed model entries include:
+
+- `acemusic/ace-step-api`: recommended lightweight remote backend through `acemusic`.
+- `elevenlabs/music_v1`: recommended lightweight remote backend through `elevenlabs`, scoped to
+  ElevenLabs Music endpoints rather than voice/TTS.
+- `ACE-Step/acestep-v15-xl-turbo-diffusers`: recommended local path through `acestep` for local
+  generation, MIT, text-to-music with lyrics.
+- Additional official ACE-Step checkpoints surfaced under `acestep` are
+  `ACE-Step/Ace-Step1.5`, `ACE-Step/acestep-v15-base`, and `ACE-Step/acestep-v15-sft`.
+- `facebook/musicgen-small`: optional Transformers backend, CC BY-NC 4.0.
+- `stabilityai/stable-audio-open-small`: optional gated short-clip backend under the Stability AI
+  Community License.
+- `stabilityai/stable-audio-3-small-music`: gated Stable Audio 3 Small Music backend through
+  `stable-audio-3`, using AbstractMusic-owned runtime code and Hugging Face weights/configs only.
+  Focused 30-second and 120-second local smokes have passed, but it is not yet a recommended
+  default.
+- `stabilityai/stable-audio-3-medium`: tracked behind `stable-audio-3` but not promoted before
+  broader Small Music validation.
+- Other trained AceStepPipeline-compatible checkpoints may work when selected explicitly, but they
+  are not surfaced in discovery until reviewed.
+- Additional candidate models are tracked for future optional providers.
+
+The precision rule is to prefer official 8-bit artifacts when available. If none are available,
+prefer official 16-bit artifacts.
+
+---
+
+## docs/troubleshooting.md
+
+Common user-visible issues:
+
+- Missing generation packages usually means the backend extra was not installed.
+- Missing default remote generation credentials means `ACEMUSIC_API_KEY` is not set. Use
+  `ACEMUSIC_BASE_URL` only for compatible custom endpoints.
+- If ACE Music returns the wrong duration, use tagged `<prompt>...</prompt>` mode and WAV outputs
+  for strict duration enforcement.
+- ElevenLabs Music live generation may return HTTP 402 `limited_access` if the key is valid but
+  the account tier does not include Music API access.
+- ACE-Step model access uses Hugging Face model weights and the standard Hugging Face cache, not
+  local ACE-Step source-tree paths.
+- Apple MPS can fall back to CPU when generation returns non-finite audio; forcing CPU is supported
+  with `--device cpu`.
+- Long generations may need explicit structure, seed changes, or clearer prompts to avoid static or
+  repetitive output.
+- Stable Audio Open Small requires Hugging Face gate approval and a token exposed as `HF_TOKEN` or
+  `HUGGINGFACE_HUB_TOKEN`.
+- Stable Audio 3 Small Music requires Hugging Face gate approval and a token exposed as `HF_TOKEN`
+  or `HUGGINGFACE_HUB_TOKEN`; do not install an upstream Stable Audio 3 runtime package.
+- The release workflow refuses duplicate PyPI versions and requires manual publish confirmation
+  when dispatched by hand.
+
+---
+
+## docs/release.md
+
+The canonical version source is `src/abstractmusic/_version.py`; `pyproject.toml` reads it
+dynamically. Tags use `v<version>`.
+
+Local preflight includes:
+
+```bash
+python -m pytest -q -m unit
+python -m build
+python -m twine check dist/*
+mkdocs build --strict
+```
+
+Manual release dispatch defaults to `publish=false` for rehearsal. Publishing requires
+`publish=true` and `publish_confirmation=publish-abstractmusic-<version>`. PyPI trusted
+publishing uses the `pypi` environment, and documentation deploys through GitHub Pages using the
+`github-pages` environment.
+
+---
+
+## CHANGELOG.md
+
+The changelog records user-visible changes only. Version `0.1.5` adds the stdlib-only ElevenLabs
+Music backend, the internal Stable Audio 3 Small Music backend, and the provider-neutral
+`MusicCompositionPlan` path. It keeps Stable Audio 3 behind a minimal optional extra and excludes
+upstream Stable Audio runtime packages, Flash-Attn, codec libraries, UI, training, LoRA, and local
+checkout paths from that profile.
+
+---
+
+## CONTRIBUTING.md
+
+Contributors should keep `MusicManager` model-agnostic, keep heavy imports lazy, avoid committing
+model weights or generated audio, update model capability metadata for provider changes, and add
+clear errors for unsupported request fields. Backend additions should include metadata, tests,
+docs for dependencies/hardware/license/precision, and real smoke tests when practical.
+
+---
+
+## SECURITY.md
+
+Security reports should be sent privately to `contact@abstractcore.ai`. Reports should include
+impact, reproduction steps, affected versions or commits, relevant logs/configuration, and
+suggested mitigation when available.
+
+---
+
+## docs/adr/README.md
+
+# Architecture Decision Records
+
+ADRs record decisions that shape multiple backlog items or public APIs.
+
+Use ADRs for provider abstraction rules, dependency-profile policy, model/license policy, fallback
+policy, and request/result schema decisions. Keep each ADR short and actionable, and link it from
+the backlog items it governs.
+
+---
+
+## docs/adr/0001_music_provider_abstraction_and_dependency_policy.md
+
+# ADR 0001: Music Provider Abstraction And Dependency Policy
+
+## Status
+
+Accepted
+
+## Context
+
+AbstractMusic must expose a unified way to generate music while supporting multiple local and
+remote-capable model families. Music generation models are heavy, hardware-sensitive, and unevenly
+licensed. A default install that eagerly pulls every local runtime would conflict with the
+AbstractCore and AbstractVision direction.
+
+## Decision
+
+AbstractMusic will keep a stable public request/result abstraction above provider-specific
+backends. Provider-specific features such as lyrics, vocal language, duration parameter names,
+guidance behavior, reference audio, or video input must be expressed through explicit capability
+metadata and first-class request fields where they are broadly useful.
+
+Heavy local inference stacks must be lazy-imported and should live behind optional extras once the
+packaging split is implemented. Default providers should prefer permissive, commercially usable
+licenses. Non-commercial or license-unclear providers may exist only as explicit optional providers
+with clear warnings and tests that prove they cannot be selected silently as defaults.
+
+## Consequences
+
+- The manager stays thin and model-agnostic.
+- Backends must expose enough capability metadata for callers and AbstractCore to avoid accidental
+  unsupported calls.
+- ACE-Step can be the primary local provider, but the public API cannot become ACE-Step-shaped.
+- TinyMozart and Omni2Sound are not default providers under this policy.
+
+## Enforcement
+
+- Backlog items that add providers must update capability metadata and docs.
+- Provider tests must cover unsupported parameter handling instead of silently ignoring inputs.
+- Packaging tests should verify dependency profiles after the local-extra split.
+
+---
+
+## docs/backlog/overview.md
+
+# AbstractMusic Backlog Overview
+
+## Current status
+
+AbstractMusic has a thin public manager, a minimal backend protocol, stdlib-only ACE Music and
+ElevenLabs Music remote backends, a generic Diffusers audio backend, a single public ACE-Step
+backend built on `AceStepPipeline`, an internal Stable Audio 3 Small Music spike, and an
+AbstractCore capability plugin. The ACE-Step path must not call a local ACE-Step source checkout or
+external ACE-Step package, and the Stable Audio 3 path must not import or wrap the upstream Stable
+Audio runtime package.
+
+The repository has the baseline docs, hygiene files, import-light packaging, a model registry, a
+CLI REPL, and a real smoke validation harness. Previous external-runtime experiments are no longer
+supported provider paths; accepted reference WAVs remain comparison artifacts only.
+
+## Status counts
+
+- Planned: 2
+- Proposed: 2
+- Completed: 12
+- Deprecated: 5
+- Recurrent: 2
+
+## Priority bands
+
+- P1: keep provider routing, defaults, and duration handling truthful and robust.
+- P1: broaden local-engine validation (Stable Audio 3 and ACE-Step Diffusers) before changing any
+  recommendation/default status.
+- P2: evaluate optional/non-core model families without polluting the base install.
+
+## Next recommended work
+
+1. Complete `planned/055_heartmula_optional_provider.md`.
+2. Complete `planned/060_yue_optional_provider.md`.
+
+## Planned work
+
+| Priority | Item | Outcome |
+| --- | --- | --- |
+| P2 | `planned/055_heartmula_optional_provider.md` | Evaluate and implement HeartMuLa as an optional lyrics/tags music provider if dependency and runtime boundaries are acceptable. |
+| P2 | `planned/060_yue_optional_provider.md` | Evaluate YuE as an optional multi-stage lyrics-to-music provider without claiming partial token generation is audio. |
+
+## Completed work
+
+| Completed | Item | Outcome |
+| --- | --- | --- |
+| 2026-05-15 | `completed/000_critical_assessment_and_roadmap.md` | Preserved the assessment and created the implementation roadmap. |
+| 2026-05-15 | `completed/010_repo_hygiene_docs_and_packaging.md` | Added repo/docs baseline, license/security/contribution files, ignore rules, and cleaned generated tracked artifacts. |
+| 2026-05-15 | `completed/020_music_abstraction_and_capability_registry.md` | Added capability types, request fields, backend capability hooks, packaged model registry, and registry tests. |
+| 2026-05-15 | `completed/040_real_generation_validation_matrix.md` | Added opt-in real generation tests and tightened WAV/music-likeness inspection after a short MPS smoke failed listening review. |
+| 2026-05-21 | `completed/030_acestep_diffusers_xl_provider.md` | Added and validated the package-owned ACE-Step XL Turbo path that now backs the public `acestep` backend. |
+| 2026-05-21 | `completed/045_audio_artifact_screening_and_quality_metadata.md` | Strengthened artifact screening and made validation state more explicit through smoke metrics, tests, and registry status. |
+| 2026-05-21 | `completed/050_dependency_profiles_and_optional_providers.md` | Added the lightweight ACE Music remote backend, kept base dependencies empty, expanded local platform extras, and documented optional provider boundaries. |
+| 2026-05-21 | `completed/065_acestep_repetition_quality_gate.md` | Added repetition/novelty-oriented artifact screening and wired it into ACE-Step quality reporting. |
+| 2026-05-21 | `completed/0083_stable_audio_3_local_provider_spike.md` | Implemented and validated Stable Audio 3 Small Music as a package-owned local backend (Small validated; Medium deferred). |
+| 2026-05-21 | `completed/0084_music_capability_residency_contract.md` | Exposed Core-friendly load/list/unload residency for local music engines without confusing remote discovery with local loaded state. |
+| 2026-05-21 | `completed/0085_truthful_stable_audio_capability_registration_and_music_routing.md` | Registered Stable Audio Open Small as a real capability backend and aligned discovery/catalog routing truth. |
+| 2026-05-21 | `completed/0086_repl_ux_and_default_model_routing_hardening.md` | Made the REPL discoverable and robust (engine/model routing, aligned model listing, downloads toggle, and data-driven defaults). |
+
+## Proposed work
+
+| Item | Promotion criteria |
+| --- | --- |
+| `proposed/0080_text_planning_provider_contract_for_music.md` | Promote when advanced music quality requires LLM-generated captions/lyrics/metadata and a no-AbstractCore-dependency planner boundary is clear. |
+| `proposed/0082_local_engine_priority_after_remote_baseline.md` | Promote when choosing the next local/open-weight engine spike after the two remote endpoint baseline. |
+
+## Deprecated work
+
+| Deprecated | Item | Reason |
+| --- | --- | --- |
+| 2026-05-20 | `deprecated/0025_external_acestep_runtime_wrapper.md` | Removed the out-of-package ACE-Step runtime wrapper path; standalone package code is required. |
+| 2026-05-21 | `deprecated/035_acestep_v15_backend_compatibility_hardening.md` | Superseded by the single-backend `acestep` contract; the old standalone `acestep-v15` path is no longer part of the supported surface. |
+| 2026-05-21 | `deprecated/0081_music_install_profile_boundary.md` | Superseded by completed dependency-profile implementation. |
+| 2026-05-21 | `deprecated/0075_stable_audio_open_small_validation.md` | Open Small validation is no longer tracked as separate planned work; keep it as an optional legacy backend and focus validation on Stable Audio 3. |
+| 2026-05-21 | `deprecated/070_musicgen_small_optional_provider.md` | MusicGen Small remains an optional non-commercial backend, but we are not pursuing further validation/recommendation work as part of the core roadmap. |
+
+## Completion process
+
+When a planned item is complete:
+
+1. Add a completion report to the item.
+2. Set `Status: Completed` and `Completed: <YYYY-MM-DD>`.
+3. Move it from `planned/` to `completed/`.
+4. Update this overview, including counts and any changed priorities.
+5. Run recurrent tasks whose conditions apply.
+
+## Planning notes
+
+- ACE-Step discovery/UI must stay on the single public `acestep` backend contract.
+- Previous external-runtime smoke artifacts remain useful as references, but they do not define the
+  supported package path.
+- On Apple hardware, prefer PyTorch MPS for the `acestep` backend with clear CPU fallbacks for
+  known unstable decode steps.
+- No additional model should be marked recommended until it passes a real generation smoke test
+  through AbstractMusic.
+- The ACE-Step XL Turbo Diffusers checkpoint is the cleanest near-term improvement path
+  because it uses a standard Diffusers pipeline layout and `AceStepPipeline`.
+- `facebook/musicgen-small` is a useful small validation provider because it has a simple
+  Transformers path and 300M weights, but it is CC BY-NC 4.0 and must not become the commercial
+  default.
+- `stabilityai/stable-audio-open-small` is a 341M gated short text-to-audio model worth tracking
+  for sound effects/loops and Apple/Arm-friendly experiments, but it is not currently a strong
+  default music model candidate.
+- TinyMozart is small and local but is unconditional MIDI piano, not general prompt-to-music, and
+  has no declared license in the Hugging Face metadata reviewed on 2026-05-15.
+- Omni2Sound is useful research for multimodal audio/foley, but it is CC BY-NC 4.0, CUDA/script
+  oriented, very large, and not suitable for a default commercial-capable music provider.
+- HeartMuLa can generate lyrics/tags conditioned music according to its Apache-2.0 Hugging Face
+  model card and official `heartlib` deployment docs. It should be evaluated as an optional
+  provider because it requires HeartCodec and a heavy runtime stack.
+- YuE Stage-1 is music-relevant and Apache-2.0, but it is not an end-to-end audio generator by
+  itself. A YuE provider needs the Stage-2 and codec/upsampler path before it can satisfy
+  AbstractMusic's generation goal.
+- With ACE Music and ElevenLabs Music in the base package, remote coverage is sufficient for now.
+  Future provider work should prioritize local/open-weight generation unless a remote endpoint
+  proves a reusable abstraction needed by local engines.
+- MiniMax documents a `music-2.6-free` API model, but its pricing and access pages still frame
+  music usage around token plans, pay-as-you-go balance, and limited-free quotas. Do not add it as
+  a third remote backend unless a user explicitly wants that provider and accepts the access
+  ambiguity.
+- Stable Audio 3.0 Small now has an internal package-owned text-to-music path that passed focused
+  30-second and 120-second validation runs at 16 steps. It is still a spike, not a recommended
+  default, until broader prompt/seed and GPU validation are recorded.
+- Stable Audio Open Small is registered and routed truthfully through the AbstractCore plugin as
+  `abstractmusic:stable-audio`, but it remains a gated short-clip legacy backend and is not marked
+  recommended.
+
+---
+
+## docs/backlog/README.md
+
+# AbstractMusic Backlog
+
+This folder is the engineering memory for AbstractMusic.
+
+The backlog is intentionally code-first: before implementing or changing an item,
+inspect the current code and docs because this project is moving quickly and older
+notes may be stale.
+
+## Layout
+
+- `overview.md`: status, priority order, and work ledger.
+- `planned/`: committed work that should be implemented.
+- `proposed/`: useful ideas that need more evidence before implementation.
+- `completed/`: finished work with completion reports.
+- `deprecated/`: retired work with deprecation reports.
+- `recurrent/`: checklist tasks that should run after relevant changes.
+
+## Rules
+
+- Keep planned items standalone.
+- Preserve the model/provider abstraction; do not hard-code one model into the public API.
+- Keep heavy local inference dependencies optional where possible.
+- Do not commit model weights, generated WAVs, Python bytecode, or cache artifacts.
+- Prefer permissive, commercially usable model licenses for default providers.
+- Never silently ignore generation inputs such as lyrics, duration, seed, model choice, fallback, or truncation.
+- Validate with fast unit tests and at least one real model smoke path before calling provider work complete.

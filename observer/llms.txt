@@ -1,0 +1,62 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractobserver/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractobserver/main/llms.txt
+
+# AbstractObserver
+
+> Gateway-only observability UI (Web/PWA) for AbstractFramework runs: a browser SPA + tiny Node.js CLI that connects to an AbstractGateway HTTP API (HTTP fetch + SSE ledger streaming) and submits durable commands.
+
+This repository is UI-only:
+- The packaged CLI (`bin/cli.js`) serves static assets from `dist/` (SPA fallback) and does **not** proxy `/api`.
+- The browser talks to the gateway via `src/lib/gateway_client.ts` (treat this file as the source of truth for HTTP endpoints and request shapes).
+
+## Quickstart
+- Run packaged UI server (no build step): `npx --yes --package @abstractframework/observer -- abstractobserver`
+- Dev server (Vite; proxies `/api` in dev): `npm install && npm run dev`
+- Unit tests (Vitest): `npm test`
+- Production build (writes `dist/`): `npm run build`
+- Regenerate `llms-full.txt`: `npm run llms:full`
+
+Notes:
+- Build output lives in `dist/` and is served by `bin/cli.js` (don’t edit `dist/` manually).
+- Dev/build uses Vite aliases to sibling workspace packages under `../abstractuic/*/src` (see `vite.config.ts` and `docs/development.md`).
+- `llms.txt` format reference: https://llmstxt.org/
+
+## Documentation (start here)
+- [README](README.md): Install and quickstart
+- [Getting started](docs/getting-started.md): Run the UI and connect to a gateway
+- [FAQ](docs/faq.md): Common questions (grounded in code)
+- [Docs index](docs/README.md): What to read next
+- [Architecture](docs/architecture.md): Components, data flow, diagrams
+- [Configuration](docs/configuration.md): CLI env vars, UI settings, deployment patterns
+- [API](docs/api.md): Gateway endpoints used by the UI (grounded in code)
+- [Development](docs/development.md): Local dev, workspace deps, tests, build
+- [Security](docs/security.md): Trust boundaries and operational guidance
+- [Troubleshooting](docs/troubleshooting.md): Common issues and fixes
+
+## Key entrypoints (code)
+- [CLI server](bin/cli.js): static server (`PORT`, `HOST`), SPA fallback, optional GPU widget config injection
+- [App shell + pages](src/ui/app.tsx): settings, page routing, observe/launch flows, durable commands
+- [Gateway client](src/lib/gateway_client.ts): HTTP client + SSE ledger streaming (API source of truth)
+- [Vite config](vite.config.ts): workspace aliases + dev `/api` proxy
+- [Package metadata](package.json): npm name/version, scripts, Node engine
+- [llms-full generator](scripts/generate-llms-full.mjs): defines which files are embedded into `llms-full.txt`
+
+## Ecosystem context
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework): ecosystem entrypoint and component map
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): durable workflow runtime behind the gateway ledger
+- [AbstractCore](https://github.com/lpalbou/abstractcore): unified LLM + tools layer commonly used by workflows
+
+## Common tasks
+- Add/change a gateway capability: update `src/lib/gateway_client.ts` (source of truth) → update `docs/api.md` → run `npm test` + `npm run build`.
+- Change CLI behavior/config: update `bin/cli.js` → update `docs/configuration.md` → run `npm run build`.
+- Update docs for agents: edit docs → regenerate `llms-full.txt` with `npm run llms:full`.
+
+## Optional (project meta)
+- [Changelog](CHANGELOG.md): Release notes
+- [Contributing](CONTRIBUTING.md): How to develop and submit changes
+- [Security policy](SECURITY.md): Responsible vulnerability reporting
+- [Acknowledgments](ACKNOWLEDGMENTS.md): Credits
+- [License](LICENSE): MIT license

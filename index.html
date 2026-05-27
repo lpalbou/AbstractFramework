@@ -33,7 +33,7 @@
       <div class="nav-dropdown-menu">
         <div class="nav-dropdown-group">
           <span class="nav-dropdown-label">Foundation</span>
-          <a href="https://www.abstractcore.ai" target="_blank" rel="noopener noreferrer">AbstractCore</a>
+          <a href="core.html">AbstractCore</a>
           <a href="runtime.html">AbstractRuntime</a>
         </div>
         <div class="nav-dropdown-group">
@@ -133,10 +133,12 @@ img = llm.vision.<span class="fn">t2i</span>(<span class="str">"A nebula over mo
 
       <!-- AbstractCore card -->
       <div class="entry-card core">
-        <div class="entry-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
+        <div class="entry-card-title">
+          <div class="entry-icon">
+            <img src="assets/img/logos/core.png" alt="AbstractCore">
+          </div>
+          <h3>AbstractCore</h3>
         </div>
-        <h3>AbstractCore</h3>
         <p>Start here if you need a lightweight LLM library for scripts, notebooks, or existing applications. No infrastructure required &mdash; just pip install and call. Add multimodal capabilities with plugins as you grow.</p>
         <ul class="entry-features">
           <li>9+ providers with identical API</li>
@@ -167,10 +169,12 @@ llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</s
 
       <!-- AbstractGateway card -->
       <div class="entry-card gateway">
-        <div class="entry-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/><circle cx="8" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="16" cy="10" r="1" fill="currentColor"/></svg>
+        <div class="entry-card-title">
+          <div class="entry-icon">
+            <img src="assets/img/logos/gateway.png" alt="AbstractGateway">
+          </div>
+          <h3>AbstractGateway</h3>
         </div>
-        <h3>AbstractGateway</h3>
         <p>Start here if you're building persistent AI applications &mdash; agents that run for hours, workflows that survive crashes, scheduled tasks. The gateway provides the durable execution layer, and thin clients (browser, terminal, mobile) connect to it.</p>
         <ul class="entry-features">
           <li>Durable execution that survives crashes and restarts</li>
@@ -341,7 +345,7 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractCore -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
+          <img src="assets/img/logos/core.png" alt="AbstractCore" width="24" height="24" style="border-radius:6px;background:transparent">
           <span class="comp-tag foundation">Foundation</span>
         </div>
         <h3>AbstractCore</h3>
@@ -391,7 +395,7 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
           <span class="comp-tag composition">Composition</span>
         </div>
         <h3>AbstractFlow</h3>
-        <p>Visual workflow editor inspired by UE4 Blueprints. Drag-and-drop nodes, export as portable <code>.flow</code> bundles, run as specialized agents anywhere. Recursive subflows, multi-agent orchestration.</p>
+        <p>Diagram-based, durable AI workflows for AbstractFramework. Drag-and-drop nodes, export as portable <code>.flow</code> bundles, run as specialized agents anywhere. Works standalone or through AbstractGateway API routes.</p>
         <div class="comp-links">
           <a class="comp-link" href="flow.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -402,7 +406,7 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractGateway -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/><circle cx="8" cy="10" r="1" fill="var(--green)"/><circle cx="12" cy="10" r="1" fill="var(--green)"/><circle cx="16" cy="10" r="1" fill="var(--green)"/></svg>
+          <img src="assets/img/logos/gateway.png" alt="AbstractGateway" width="29" height="29" style="border-radius:6px;background:transparent">
           <span class="comp-tag app">Application</span>
         </div>
         <h3>AbstractGateway</h3>
@@ -560,7 +564,7 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
     <div class="section-header reveal">
       <div class="section-label">Visual Authoring</div>
       <h2 class="section-title">Blueprint Your AI Workflows</h2>
-      <p class="section-desc">Inspired by Unreal Engine 4 Blueprints. Drag-and-drop nodes, wire connections, export portable <code>.flow</code> bundles that run anywhere in the ecosystem.</p>
+      <p class="section-desc">Diagram-based visual authoring. Drag-and-drop nodes, wire connections, export portable <code>.flow</code> bundles that run anywhere in the ecosystem.</p>
     </div>
 
     <div class="showcase-grid reveal">
@@ -724,11 +728,25 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Text-to-Video (Wan2.2)</h3>
       <p style="color:var(--text-secondary);margin-bottom:1.5rem">Local video generation via Wan2.2 TI2V 5B with first-frame image-to-video conditioning. Generated entirely on-device.</p>
-      <div class="video-showcase">
-        <video controls loop muted playsinline preload="metadata">
-          <source src="assets/video/t2v-example.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+      <div class="video-showcase" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem">
+        <div>
+          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
+            <source src="assets/video/t2v-example.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div>
+          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
+            <source src="assets/video/t2v-river.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div>
+          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
+            <source src="assets/video/t2v-space.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
       </div>
     </div>
     <div class="reveal" style="margin-top:2rem">
@@ -1079,7 +1097,7 @@ npx @abstractframework/code</code></pre>
     <div class="modes-grid reveal" style="margin-top:2rem">
       <div class="mode-card">
         <div class="mode-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 5-4 5-8s-2.17-4.47-3.8-5.33C16.03 7.33 14.5 6 12 6s-4.03 1.33-5.2 2.67C5.17 9.53 3 10 3 14s2 8 5 8c1.25 0 2.5-1.06 4-1.06z"/><path d="M12 2c1.5 0 3 .5 3 2s-1.5 3-3 3-3-1-3-3 1.5-2 3-2z"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--green)" stroke="none"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
         </div>
         <h3>Apple Silicon Profile</h3>
         <div class="code-block" style="margin:.5rem 0;font-size:.78rem">
@@ -1089,7 +1107,7 @@ npx @abstractframework/code</code></pre>
       </div>
       <div class="mode-card">
         <div class="mode-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg>
         </div>
         <h3>GPU Profile</h3>
         <div class="code-block" style="margin:.5rem 0;font-size:.78rem">
@@ -1099,7 +1117,7 @@ npx @abstractframework/code</code></pre>
       </div>
       <div class="mode-card">
         <div class="mode-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         </div>
         <h3>Light Profile</h3>
         <div class="code-block" style="margin:.5rem 0;font-size:.78rem">
@@ -1221,6 +1239,75 @@ npx @abstractframework/code</code></pre>
         </div>
         <h3>Write Once, Run Everywhere</h3>
         <p>Same code across providers. Same workflows across devices. Export and share <code>.flow</code> bundles with anyone.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ AI-READY DOCS ═══════════════════ -->
+<section id="ai-docs">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">AI-Ready Documentation</div>
+      <h2 class="section-title">Built for LLMs &amp; AI Agents</h2>
+      <p class="section-desc">Every AbstractFramework package ships <code>llms.txt</code> and <code>llms-full.txt</code> files following the <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt standard</a>. AI coding assistants, agents, and LLMs can consume up-to-date, structured documentation directly &mdash; no scraping, no hallucination.</p>
+    </div>
+
+    <div class="showcase-grid reveal">
+      <div class="showcase-content">
+        <h3>What Are llms.txt Files?</h3>
+        <p>The <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt specification</a> defines a standard way for projects to provide LLM-friendly documentation. Instead of forcing AI tools to parse complex HTML, these curated Markdown files give LLMs exactly what they need:</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> <code>llms.txt</code> &mdash; Concise overview with key concepts and API surface</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> <code>llms-full.txt</code> &mdash; Complete documentation with all details expanded inline</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Works with Cursor, Windsurf, Copilot, Claude, ChatGPT, and any MCP-capable tool</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Available via <a href="https://context7.com" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Context7</a> and other documentation aggregators</li>
+        </ul>
+      </div>
+      <div>
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Point any LLM at the raw documentation</span>
+<span class="line-cmt"># Always up-to-date from the source repo</span>
+
+<span class="line-cmt"># Concise overview (key concepts + API)</span>
+<span class="line-str">https://github.com/lpalbou/abstractcore/blob/main/llms.txt</span>
+
+<span class="line-cmt"># Full documentation (everything inline)</span>
+<span class="line-str">https://github.com/lpalbou/abstractcore/blob/main/llms-full.txt</span>
+
+<span class="line-cmt"># Same pattern for every package</span>
+<span class="line-str">https://github.com/lpalbou/abstract{package}/blob/main/llms.txt</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-top:2rem">
+      <h3 style="margin-bottom:1rem">All Packages</h3>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);text-align:left">
+              <th style="padding:.6rem .75rem;color:var(--text)">Package</th>
+              <th style="padding:.6rem .75rem;color:var(--text)">llms.txt</th>
+              <th style="padding:.6rem .75rem;color:var(--text)">llms-full.txt</th>
+            </tr>
+          </thead>
+          <tbody style="color:var(--text-secondary)">
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractCore</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractcore/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractcore/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractRuntime</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractruntime/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractruntime/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractAgent</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractagent/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractagent/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractFlow</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractflow/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractflow/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractGateway</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractgateway/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractgateway/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractCode</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractcode/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractcode/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractObserver</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractobserver/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractobserver/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractAssistant</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractassistant/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractassistant/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractVoice</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractvoice/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractvoice/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractVision</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractvision/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractvision/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractMusic</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractmusic/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractmusic/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractMemory</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractmemory/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractmemory/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+            <tr><td style="padding:.5rem .75rem">AbstractSemantics</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractsemantics/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractsemantics/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

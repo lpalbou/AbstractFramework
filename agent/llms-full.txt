@@ -1,0 +1,99 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractagent/main/llms-full.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractagent/main/llms-full.txt
+
+# AbstractAgent (full)
+
+> Expanded map of docs + source files for LLM-assisted understanding and maintenance.
+
+This repo is a Python package (`abstractagent`) that implements agent workflows as:
+1) pure logic (prompting/parsing, no runtime imports),
+2) runtime adapters (logic → `WorkflowSpec` with durable `EffectType.*` steps),
+3) thin agent API wrappers (`BaseAgent` + concrete agents).
+
+This file is a *larger* index than `llms.txt` (more source files + tests). It is not an official part of the `llms.txt` spec,
+but is commonly used as a “bigger context window” companion.
+
+Important notes (source-of-truth hints):
+- Runtime behavior lives in workflow adapters: `src/abstractagent/adapters/*_runtime.py`
+- Keep prompting/parsing runtime-agnostic: `src/abstractagent/logic/*` (no `abstractruntime` imports)
+- Docs entrypoint: `README.md` → `docs/getting-started.md` → `docs/README.md`
+- MemAct is not re-exported at the package top-level; import from `abstractagent.agents.memact` (see `docs/api.md`).
+- After changes, run tests: `pytest -q`
+
+## Ecosystem
+
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework): ecosystem overview
+- [AbstractCore](https://github.com/lpalbou/abstractcore): providers + tool schemas
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): durable workflows + storage/ledger
+
+## Docs
+
+- [README](README.md): Installation + quick start
+- [Documentation index](docs/README.md): Map of all docs
+- [Getting started](docs/getting-started.md): Minimal usage + persistence example
+- [FAQ](docs/faq.md): Common questions and troubleshooting
+- [API](docs/api.md): Public API surface
+- [Agents](docs/agents.md): Agent types + API
+- [Tools](docs/tools.md): Default tools, allowlists, built-ins (adapter-mapped + runtime-owned)
+- [Persistence](docs/persistence.md): Pause/resume across restarts
+- [Architecture](docs/architecture.md): How logic/adapters/agents fit together (diagrams)
+- [ReAct pipeline](docs/react-pipeline.md): ReAct workflow details
+- [Development](docs/development.md): Local dev, tests, build
+
+## Project
+
+- [Changelog](CHANGELOG.md): Release notes by version
+- [Security policy](SECURITY.md): How to report vulnerabilities responsibly
+- [Contributing](CONTRIBUTING.md): Dev setup + conventions
+- [Acknowledgements](ACKNOWLEDMENTS.md)
+- [pyproject](pyproject.toml): Dependencies, version, scripts
+- [License](LICENSE)
+
+## Source tree
+
+- [Package init](src/abstractagent/__init__.py): Top-level exports
+
+- [BaseAgent](src/abstractagent/agents/base.py): lifecycle + persistence + ledger access
+- [ReAct agent](src/abstractagent/agents/react.py): `ReactAgent`, `create_react_agent`
+- [CodeAct agent](src/abstractagent/agents/codeact.py): `CodeActAgent`, `create_codeact_agent`
+- [MemAct agent](src/abstractagent/agents/memact.py): `MemActAgent`, `create_memact_agent`
+
+- [ReAct workflow adapter](src/abstractagent/adapters/react_runtime.py): `create_react_workflow`
+- [CodeAct workflow adapter](src/abstractagent/adapters/codeact_runtime.py): `create_codeact_workflow`
+- [MemAct workflow adapter](src/abstractagent/adapters/memact_runtime.py): `create_memact_workflow`
+
+- [LLM param normalization](src/abstractagent/adapters/generation_params.py): temperature/seed/audio policies
+- [Attachment/media plumbing](src/abstractagent/adapters/media.py): `extract_media_from_context`
+
+- [ReAct logic](src/abstractagent/logic/react.py): `ReActLogic` (system prompt + response parsing)
+- [CodeAct logic](src/abstractagent/logic/codeact.py): `CodeActLogic` (python-block extraction)
+- [MemAct logic](src/abstractagent/logic/memact.py): `MemActLogic`
+- [Built-in tool schemas](src/abstractagent/logic/builtins.py): schema-only tool definitions
+- [Logic types](src/abstractagent/logic/types.py): `LLMRequest` dataclass
+
+- [Default tools bundle](src/abstractagent/tools/__init__.py): `ALL_TOOLS`
+- [execute_python tool](src/abstractagent/tools/code_execution.py): `execute_python`
+- [self_improve tool](src/abstractagent/tools/self_improve.py): local JSONL logging
+- [Local sandbox](src/abstractagent/sandbox/local.py): subprocess execution with timeout
+
+- [Deprecated CLI](src/abstractagent/repl.py): `react-agent` entrypoint (migration hint)
+
+## Tests
+
+- [ReAct workflow contract](tests/test_react_workflow_system_prompt_and_tools_override.py)
+- [ReAct followthrough retry](tests/test_react_loop_followthrough_retry.py)
+- [ReAct context transcript](tests/test_react_loop_context_transcript_levels.py)
+- [ReAct max-iterations conclusion](tests/test_react_max_iterations_concludes.py)
+- [delegate_agent behavior](tests/test_react_delegate_agent_tool.py)
+- [CodeAct logic](tests/test_codeact_logic.py)
+- [CodeAct verifier policy](tests/test_codeact_runtime_verifier_policy.py)
+- [MemAct workflow](tests/test_memact_workflow.py)
+- [MemAct session memory](tests/test_memact_session_memory.py)
+
+## Optional
+
+- [Manual demo](manual_agent_demo.py): minimal local demo (requires a working provider)
+- [LMStudio tool eval](src/abstractagent/scripts/lmstudio_tool_eval.py): manual evaluation harness

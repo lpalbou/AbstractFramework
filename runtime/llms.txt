@@ -1,0 +1,80 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractruntime/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractruntime/main/llms.txt
+
+# AbstractRuntime
+
+> Durable workflow runtime (interrupt → checkpoint → resume) with an append-only execution ledger.
+
+- Python: 3.10+ (see `pyproject.toml`)
+- Version: 0.4.24
+- Ecosystem: [AbstractFramework](https://github.com/lpalbou/AbstractFramework) umbrella, integrates with [AbstractCore](https://github.com/lpalbou/abstractcore)
+- Hard invariant: `RunState.vars` must be JSON-serializable (`src/abstractruntime/core/models.py`)
+- Current AbstractCore baseline: `abstractruntime[abstractcore]` installs `abstractcore>=2.13.29`
+- Multimodal extra: `abstractruntime[multimodal]` installs `abstractcore[remote,vision,voice,audio,music]>=2.13.29`
+- Config boundary: Runtime does not read `ABSTRACTGATEWAY_*`; Gateway-owned config should be translated into explicit Runtime inputs or Runtime-owned env names.
+
+## Start here
+
+- [README](README.md): install + minimal pause/resume example + docs map
+- [Getting started](docs/getting-started.md): first durable workflow + scheduler + persistence
+- [API reference](docs/api.md): public imports + pointers to source-of-truth modules
+- [Architecture](docs/architecture.md): component map + durability invariants (includes diagrams)
+- [Docs index](docs/README.md): full documentation map
+
+## Key code (source of truth)
+
+- [Public exports](src/abstractruntime/__init__.py): supported external API surface
+- [Runtime loop](src/abstractruntime/core/runtime.py): `start`/`tick`/`resume` semantics and built-in effect handlers
+- [Core models](src/abstractruntime/core/models.py): `RunState`, `WaitState`, `StepPlan`, `Effect`, `StepRecord`
+- [Scheduler wrapper](src/abstractruntime/scheduler/convenience.py): `create_scheduled_runtime()` / `ScheduledRuntime`
+- [Storage interfaces](src/abstractruntime/storage/base.py): `RunStore`, `LedgerStore`, `QueryableRunStore`
+
+## Guides
+
+- [FAQ](docs/faq.md): common questions and gotchas
+- [Troubleshooting](docs/troubleshooting.md): symptom-oriented setup, runtime, and integration fixes
+- [Manual testing](docs/manual_testing.md): smoke tests + how to run `pytest`
+- [Limits](docs/limits.md): `_limits` namespace and RuntimeConfig
+
+## Integrations
+
+- [AbstractCore integration](docs/integrations/abstractcore.md): `LLM_CALL` / `TOOL_CALLS` / `MODEL_RESIDENCY`, local/remote/hybrid, prompt-cache and residency host controls, local-only prompt-cache export/import admin, durable bloc/KV prompt-cache controls, discovery snapshot queries, durable run-scoped image/edit-image/text-to-video/image-to-video/voice/music/STT execution, media inputs, generated media outputs, progress ledger events, provider-key headers, and tool approval waits
+- Prompt-cache tracks: use `LLM_CALL.params.prompt_cache_key`, `run.vars["_runtime"]["prompt_cache"]`, or `ABSTRACTRUNTIME_PROMPT_CACHE` for best-effort text/chat session reuse; use `LLM_CALL.params.prompt_cache_binding` for durable exact bloc-backed reuse; and use `get_abstractcore_host_facade(runtime).list_prompt_cache_exports(...)`, `prompt_cache_export(...)`, and `prompt_cache_import(...)` only for host-local operator/admin export-import workflows around live local provider caches. Runtime does not auto-derive prompt-cache keys for image/video/voice/music/STT output selectors. Local Runtime stores one content-addressed bloc per root plus provider/model-specific derived KV artifacts. Gateway prompt-cache env belongs in Gateway.
+- Durable bloc lifecycle: Runtime exposes `list_blocs(...)`, `list_bloc_kv_artifacts(...)`, `delete_bloc_kv_artifact(...)`, `prune_bloc_kv_artifacts(...)`, and `delete_bloc(...)`, with `dry_run`, `clear_loaded`, and `force` safety controls on the host facade.
+- Runtime-owned Core surfaces: `get_abstractcore_discovery_facade(...)`, `get_abstractcore_host_facade(...)`, and `get_abstractcore_run_facade(...)`
+- Host-local operator wrappers: the host facade and `abstractruntime.integrations.abstractcore.comms_facade` expose email helpers (`list_email_accounts`, `list_emails`, `read_email`, `send_email`), and `abstractruntime.integrations.abstractcore.telegram_facade` exposes Telegram bootstrap/global-client/send wrappers without requiring hosts to import AbstractCore directly.
+- Durable outbound comms: when an email or Telegram send belongs to a run, use `get_abstractcore_run_facade(...).send_email(...)` or `send_telegram_message(...)` so Runtime records the request and outcome in a child run; replay should show the recorded result, not resend the message. If the child run waits for approval or passthrough execution, resume it through `resume_tool_calls(...)`.
+- [Artifacts](docs/api.md#artifacts-store-by-reference): JSON-safe refs for large payloads; generated images/audio/voice/music are stored here rather than embedded in `RunState.vars`
+- Remote multimodal guardrail: remote/hybrid media generation uses AbstractCore Server endpoints, does not inherit the chat model for media endpoints, routes image edits through Core `/images/edits`, routes video generation through Core `/videos/*`, rejects unsupported input media and non-file STT inputs instead of ignoring them, and redacts data URLs from persisted provider-request metadata
+- [MCP worker](docs/mcp-worker.md): `abstractruntime-mcp-worker` CLI (stdio/HTTP)
+- [Comms toolset](docs/tools-comms.md): opt-in email/WhatsApp/Telegram gating
+
+## Durability & observability
+
+- [Evidence capture](docs/evidence.md): artifact-backed evidence for boundary tools
+- [Snapshots](docs/snapshots.md): named bookmarks of run state
+- [Provenance](docs/provenance.md): tamper-evident hash-chained ledger
+
+## Distribution
+
+- [WorkflowBundles](docs/workflow-bundles.md): `.flow` bundle format, VisualFlow compilation, concrete multi-entry fan-in metadata, and shared/framework registry directory resolution
+- VisualFlow media nodes: `generate_image`, `edit_image`/`image_to_image`, `generate_video`/`text_to_video`, `image_to_video`, `generate_voice`, `generate_music`, and `transcribe_audio` compile to `LLM_CALL` with an `output` selector; `listen_voice` compiles to `WAIT_EVENT` (no client-side lowering required)
+- [VisualFlow compiler](docs/architecture.md): lowers multi-entry `entryRoutes` / `inputRouteOverrides` into internal `join_exec` / `path_mux` nodes
+
+## Maintainers
+
+- [Contributing](CONTRIBUTING.md): dev setup + guidelines
+- [Code of Conduct](CODE_OF_CONDUCT.md): contributor conduct expectations
+- [Security policy](SECURITY.md): responsible vulnerability reporting
+- [Acknowledgments](ACKNOWLEDGMENTS.md): dependency credits (from `pyproject.toml`)
+- [Changelog](CHANGELOG.md): release notes
+- [Roadmap](ROADMAP.md): near-term priorities
+- [ADRs](docs/adr/README.md): design rationale
+
+## Optional
+
+- [Backlog](docs/backlog/README.md): detailed work items (implemented + planned)
+- [Examples](examples/README.md): runnable scripts

@@ -1,0 +1,95 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractvision/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractvision/main/llms.txt
+
+# AbstractVision
+
+> Model-agnostic generative vision API (images, optional video) with a capability registry, artifact-ref outputs, and backends for OpenAI-compatible HTTP, Diffusers, stable-diffusion.cpp, and MLX-Gen.
+
+This repository’s current source of truth is the code under `src/abstractvision/` (docs in `docs/`).
+
+Format note: this file follows the `llms.txt` Markdown spec (H1 + optional summary/details + H2 “file list” sections; the `## Optional` section can be skipped when you need a shorter context). Spec: https://llmstxt.org/#format
+
+Maintenance tips:
+- Keep link descriptions concise and unambiguous; avoid unexplained jargon.
+- Regenerate `llms-full.txt` after doc/packaging changes: `python scripts/generate_llms_full.py`.
+
+Agent quickstart (choose the path that matches your goal):
+- **Use the library (Python / CLI)**: start with `README.md` → `docs/getting-started.md` → `docs/api.md` → `docs/reference/backends.md`; shell commands are `abstractvision t2i` / `abstractvision i2i` / `abstractvision t2v` / `abstractvision i2v`, and the interactive path is `abstractvision cli` (legacy alias `abstractvision repl`) with `/t2i` / `/i2i` / `/t2v` / `/i2v`.
+- **Integrate with AbstractCore/Runtime**: read `docs/reference/abstractcore-integration.md` and `docs/reference/artifacts.md` (includes local model residency control for in-process backends).
+- **Inspect provider model catalogs**: use `abstractvision provider-models`, `VisionManager.list_provider_models(...)`, or `llm.vision.list_provider_models(...)`; catalog listing is explicit and does not select the active model.
+- **Inspect local model/task metadata**: use `abstractvision catalog`, `abstractvision show-model`, or `GET /v1/vision/models`; runtime-backed local surfaces only expose tasks that the selected backend currently enables.
+- **Need the model curation policy**: read `docs/reference/capabilities-registry.md`, `docs/adr/0005_curated_capability_registry_and_download_catalog.md`, and `docs/adr/0006_operator_control_configuration_precedence_and_explicit_network_use.md`.
+- **Need a single file**: open `llms-full.txt` (generated bundle of the core docs).
+- **Need local Diffusers**: install `abstractvision[diffusers]`, set `ABSTRACTVISION_BACKEND=diffusers`, pre-download `runwayml/stable-diffusion-v1-5`, or set `ABSTRACTVISION_DIFFUSERS_ALLOW_DOWNLOAD=1`.
+- **Need local MLX-Gen**: install `abstractvision[mlx-gen]`, choose exact published model ids such as `AbstractFramework/qwen-image-2512-4bit` for `t2i`, `AbstractFramework/qwen-image-edit-2511-4bit` or `briaai/Fibo-Edit` for `i2i`, and `Wan-AI/Wan2.2-TI2V-5B-Diffusers` for `t2v`/`i2v`; pre-download with `abstractvision download ... --provider mlx-gen`.
+
+Reality checks (current shipped behavior, anchored in code):
+- Built-in backends implement `text_to_image`, `image_to_image`, and backend-dependent `text_to_video` / `image_to_video`.
+- Local MLX-Gen supports curated q4/q8 Apple Silicon image presets, official FIBO image snapshots, and Wan 2.2 TI2V `text_to_video` / first-frame `image_to_video`.
+- MLX-Gen Wan video progress is surfaced in shell/REPL output by default and through Python/Core `on_progress(event)` callbacks.
+- Local Diffusers `text_to_video` remains experimental and is temporarily disabled from the normal local surfaces.
+- OpenAI-compatible HTTP can also provide `text_to_video` / `image_to_video` when video endpoints are configured.
+- `multi_view_image` exists in the API but no built-in backend implements it yet.
+- Provider `/models` catalogs can be listed explicitly, including through the AbstractCore plugin boundary; they are not used for automatic model selection.
+- Backend normalization is shared across `VisionManager`, the playground API, and the AbstractCore plugin, so model-specific parameter constraints are enforced once in the backend layer instead of separately in each UI.
+
+## Documentation
+
+- [llms-full.txt](llms-full.txt): single-file bundle of the core docs (for agent ingestion)
+- [README.md](README.md): overview, install, quickstart
+- [docs/README.md](docs/README.md): docs index (map)
+- [docs/getting-started.md](docs/getting-started.md): first image (OpenAI-compatible HTTP / Diffusers / sdcpp) + Playground
+- [docs/troubleshooting.md](docs/troubleshooting.md): symptom-oriented setup/runtime fixes for local backends, playground, and integration issues
+- [docs/api.md](docs/api.md): public Python API surface
+- [docs/architecture.md](docs/architecture.md): how components fit together (with diagrams)
+- [docs/faq.md](docs/faq.md): common questions + troubleshooting
+- [docs/reference/backends.md](docs/reference/backends.md): backend support matrix + config notes
+- [docs/reference/configuration.md](docs/reference/configuration.md): CLI/REPL commands + `ABSTRACTVISION_*` env vars
+- [docs/reference/capabilities-registry.md](docs/reference/capabilities-registry.md): capability registry format + usage
+- [docs/adr/README.md](docs/adr/README.md): ADR index for durable engineering policy
+- [docs/adr/0005_curated_capability_registry_and_download_catalog.md](docs/adr/0005_curated_capability_registry_and_download_catalog.md): packaged capability registry and cache-backed model catalog policy
+- [docs/adr/0006_operator_control_configuration_precedence_and_explicit_network_use.md](docs/adr/0006_operator_control_configuration_precedence_and_explicit_network_use.md): explicit runtime selection, cache-only defaults, and network-use policy
+- [docs/reference/artifacts.md](docs/reference/artifacts.md): artifact refs + stores
+- [docs/reference/abstractcore-integration.md](docs/reference/abstractcore-integration.md): AbstractCore plugin + tool helpers
+- [playground/README.md](playground/README.md): self-contained local web UI/API served by `abstractvision playground`
+- [CONTRIBUTING.md](CONTRIBUTING.md): dev setup + tests + contribution guidelines
+- [SECURITY.md](SECURITY.md): responsible vulnerability reporting
+- [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md): upstream libraries/projects
+
+## AbstractFramework ecosystem
+
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework): ecosystem hub (how components fit together)
+- [AbstractCore](https://github.com/lpalbou/abstractcore): orchestration + tool calling (AbstractVision integrates via plugin/tools)
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): runtime services (artifact store integration via adapter)
+
+## Code entry points
+
+- [src/abstractvision/vision_manager.py](src/abstractvision/vision_manager.py): `VisionManager` orchestrator API
+- [src/abstractvision/types.py](src/abstractvision/types.py): request/response dataclasses (`ImageGenerationRequest`, `GeneratedAsset`, …)
+- [src/abstractvision/errors.py](src/abstractvision/errors.py): error types (`CapabilityNotSupportedError`, …)
+- [src/abstractvision/backends/base_backend.py](src/abstractvision/backends/base_backend.py): `VisionBackend` contract
+- [src/abstractvision/backends/__init__.py](src/abstractvision/backends/__init__.py): lazy imports (keeps `import abstractvision` import-light)
+- [src/abstractvision/backends/openai_compatible.py](src/abstractvision/backends/openai_compatible.py): OpenAI-compatible HTTP backend (+ optional video)
+- [src/abstractvision/backends/huggingface_diffusers.py](src/abstractvision/backends/huggingface_diffusers.py): local Diffusers backend (local images; experimental local video groundwork)
+- [src/abstractvision/backends/stable_diffusion_cpp.py](src/abstractvision/backends/stable_diffusion_cpp.py): stable-diffusion.cpp backend (GGUF via `sd-cli` or python bindings)
+- [src/abstractvision/model_capabilities.py](src/abstractvision/model_capabilities.py): capability registry loader + validator
+- [src/abstractvision/artifacts.py](src/abstractvision/artifacts.py): artifact refs + stores (`LocalAssetStore`, `RuntimeArtifactStoreAdapter`)
+- [src/abstractvision/cli.py](src/abstractvision/cli.py): CLI/REPL (`abstractvision`)
+- [src/abstractvision/playground_server.py](src/abstractvision/playground_server.py): self-contained playground server and `/v1/vision/*` jobs
+- [src/abstractvision/playground/vision_playground.html](src/abstractvision/playground/vision_playground.html): packaged playground UI asset
+- [src/abstractvision/integrations/abstractcore_plugin.py](src/abstractvision/integrations/abstractcore_plugin.py): AbstractCore capability plugin entry point and provider catalog shim
+- [src/abstractvision/integrations/abstractcore.py](src/abstractvision/integrations/abstractcore.py): AbstractCore tool helpers (`make_vision_tools`)
+
+## Testing
+
+- [Test suite](tests/): run `python -m unittest discover -s tests -p "test_*.py" -q`
+- [Changelog](CHANGELOG.md): release notes
+- [pyproject.toml](pyproject.toml): dependencies/extras + entry points
+- [scripts/generate_llms_full.py](scripts/generate_llms_full.py): regenerate `llms-full.txt`
+
+## Optional
+
+- [Engineering backlog](docs/backlog/README.md): internal design notes + completion reports

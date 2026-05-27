@@ -1,0 +1,83 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractassistant/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractassistant/main/llms.txt
+
+# AbstractAssistant
+
+> macOS-first tray app and CLI that hosts a local, durable agent (AbstractAgent + AbstractRuntime) and uses
+> AbstractCore for provider/tool/media schemas. Tool calls are surfaced as durable waits and executed by the
+> host only after explicit approval.
+
+Key facts (source of truth: the code under `abstractassistant/`):
+- CLI entrypoints: `assistant` / `abstractassistant` (see `pyproject.toml`, `abstractassistant/cli.py`)
+- Global CLI flags must appear **before** the subcommand (example: `assistant --provider ollama run --prompt "..."`)
+- Default data dir: `~/.abstractassistant/` (override `--data-dir`)
+- Tray mode can read `config.toml`; CLI `run` uses flags/defaults (see `abstractassistant/cli.py`)
+- Tool approval defaults: `abstractassistant/core/tool_policy.py`
+- Durable waits + resume: `abstractassistant/core/agent_host.py`
+- Preferred tests: `python -m pytest -q`
+- Suggested reading order: `docs/README.md` → `docs/getting-started.md` → `docs/api.md` → `docs/architecture.md`
+- Regenerate `llms-full.txt`: `python scripts/update_llms_full.py`
+
+Format reference: https://llmstxt.org/
+
+## Context
+
+- [llms-full.txt](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/llms-full.txt): single-file bundle (docs + core backend code) for offline/context-window use.
+
+## Docs
+
+- [README.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/README.md): overview + quickstart.
+- [docs/README.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/docs/README.md): documentation hub.
+- [docs/INSTALLATION.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/docs/INSTALLATION.md): install requirements and macOS app bundle helper.
+- [docs/getting-started.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/docs/getting-started.md): usage guide (approvals, attachments, sessions, config).
+- [docs/api.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/docs/api.md): CLI reference + programmatic API.
+- [docs/architecture.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/docs/architecture.md): durability/tool-boundary architecture (includes diagram).
+- [docs/faq.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/docs/faq.md): troubleshooting + common questions.
+
+## Core code
+
+- [abstractassistant/core/agent_host.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/core/agent_host.py): durable agent backend (waits, approvals, attachments, resume).
+- [abstractassistant/core/tool_policy.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/core/tool_policy.py): safe auto-approve vs require-approval tool policy.
+- [abstractassistant/core/session_index.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/core/session_index.py): multi-session registry under the data dir.
+- [abstractassistant/core/session_store.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/core/session_store.py): lightweight `session.json` snapshot store.
+- [abstractassistant/core/llm_manager.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/core/llm_manager.py): tray UI compatibility façade around `AgentHost`.
+- [abstractassistant/cli.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/cli.py): CLI entrypoint and terminal approval UX.
+- [abstractassistant/config.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/config.py): TOML config schema used by tray mode.
+
+## Tests
+
+- [tests/basic/test_tool_policy.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/tests/basic/test_tool_policy.py): tool approval policy contract.
+- [tests/basic/test_session_index.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/tests/basic/test_session_index.py): session registry durability contract.
+- [tests/basic/test_session_store.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/tests/basic/test_session_store.py): transcript snapshot persistence contract.
+- [tests/basic/test_transcript_summary.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/tests/basic/test_transcript_summary.py): UI transcript summarization helpers.
+- [tests/integration/test_agent_host_tool_wait_resume.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/tests/integration/test_agent_host_tool_wait_resume.py): tool wait → approve → execute → resume flow.
+- [tests/integration/test_agent_host_restart_resume.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/tests/integration/test_agent_host_restart_resume.py): resume a waiting run after restart.
+- [tests/integration/test_agent_host_allowed_tools_allowlist.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/tests/integration/test_agent_host_allowed_tools_allowlist.py): per-turn tool allowlist semantics.
+
+## Project
+
+- [pyproject.toml](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/pyproject.toml): dependencies, scripts, pytest configuration.
+- [CONTRIBUTING.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/CONTRIBUTING.md): development workflow.
+- [SECURITY.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/SECURITY.md): responsible disclosure process.
+- [ACKNOWLEDGMENTS.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/ACKNOWLEDGMENTS.md): dependency attributions.
+- [LICENSE](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/LICENSE): MIT license.
+
+## Ecosystem
+
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework): umbrella repository for the ecosystem.
+- [AbstractCore](https://github.com/lpalbou/abstractcore): providers, tool/media schemas.
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): durable runs, waits, ledger, artifacts.
+- [AbstractAgent](https://github.com/lpalbou/abstractagent): agent loops (ReAct/CodeAct/MemAct).
+- [AbstractVoice](https://github.com/lpalbou/abstractvoice): STT/TTS used by AbstractAssistant.
+
+## Optional
+
+- [config.toml](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/config.toml): example tray configuration file.
+- [CHANGELOG.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/CHANGELOG.md): release notes.
+- [docs/devnotes/README.md](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/docs/devnotes/README.md): internal dev notes (may be outdated).
+- [abstractassistant/app.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/app.py): tray app lifecycle (`pystray`) and UI wiring.
+- [abstractassistant/create_app_bundle.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/abstractassistant/create_app_bundle.py): macOS app bundle generator helper.
+- [scripts/update_llms_full.py](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/main/scripts/update_llms_full.py): regenerate `llms-full.txt` from the repo.

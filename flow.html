@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>AbstractFlow — Documentation | AbstractFramework</title>
-  <meta name="description" content="AbstractFlow is a visual workflow editor inspired by UE4 Blueprints. Diagram-based, durable AI workflows for Python with drag-and-drop nodes and portable .flow bundles.">
+  <meta name="description" content="AbstractFlow — diagram-based, durable AI workflows for AbstractFramework. Drag-and-drop nodes, portable .flow bundles, recursive subflows, and multi-agent orchestration. Works standalone or through AbstractGateway API routes.">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -55,7 +55,7 @@
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span> Composition &middot; Visual Authoring</div>
     <h1>Abstract<span class="gradient">Flow</span></h1>
-    <p class="hero-sub">Diagram-based, durable AI workflows for Python. A visual editor inspired by UE4 Blueprints with drag-and-drop nodes, portable <code>.flow</code> bundles, recursive subflows, and multi-agent orchestration. Gateway-first architecture.</p>
+    <p class="hero-sub">Diagram-based, durable AI workflows for AbstractFramework. Drag-and-drop visual editor with portable <code>.flow</code> bundles, recursive subflows, and multi-agent orchestration. Works standalone or through AbstractGateway API routes.</p>
     <div class="hero-actions">
       <a href="#getting-started" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -64,6 +64,8 @@
       <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
       <a href="https://pypi.org/project/abstractflow/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
       <a href="https://www.lpalbou.info/AbstractFlow/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Full Docs</a>
+      <a href="https://github.com/lpalbou/abstractflow/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/abstractflow/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
     <div class="hero-code">
 <pre><code><span class="line-cmt"># Launch the visual editor (no repo clone needed)</span>
@@ -83,13 +85,13 @@ npx @abstractframework/flow --gateway-url <span class="line-str">http://127.0.0.
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
       <h2 class="section-title">What is AbstractFlow?</h2>
-      <p class="section-desc">AbstractFlow is a workflow authoring and orchestration layer for the AbstractFramework ecosystem. It provides a small programmatic API, a portable VisualFlow JSON format, and a Gateway-first visual editor with React frontend.</p>
+      <p class="section-desc">AbstractFlow is a workflow authoring and orchestration layer for the AbstractFramework ecosystem. It provides a programmatic Python API, a portable VisualFlow JSON format, and a browser-based visual editor (React) that works through AbstractGateway API routes.</p>
     </div>
 
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
         <h3>Visual Editor</h3>
-        <p>A browser-based editor inspired by UE4 Blueprints. Drag nodes from the palette, wire connections, configure providers and models per node. Gateway-first: the editor talks to AbstractGateway for everything.</p>
+        <p>A browser-based visual editor. Drag nodes from the palette, wire connections, configure providers and models per node. Works standalone or through AbstractGateway via pure API routes.</p>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Portable Workflows</h3>
@@ -97,24 +99,66 @@ npx @abstractframework/flow --gateway-url <span class="line-str">http://127.0.0.
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Programmatic API</h3>
-        <p><code>Flow</code> and <code>FlowRunner</code> provide a pure Python API for building and running workflows. Create nodes with lambdas, wire edges, and execute with durable stores.</p>
+        <p><code>Flow</code> and <code>FlowRunner</code> provide a programmatic API for building and running workflows in Python. Create nodes with lambdas, wire edges, and execute with durable stores. Alternatively, interact via AbstractGateway API routes from any language.</p>
       </div>
     </div>
 
     <div class="section-header reveal" style="margin-top:3rem">
       <h3 class="section-title" style="font-size:1.5rem">How It Fits Together</h3>
     </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Architecture</span>
-<span class="line-cmt">#</span>
-<span class="line-cmt"># Visual Editor UI ──/api/gateway/*──▸ AbstractGateway</span>
-<span class="line-cmt">#   (React)                              ├─ discovery, runs, ledger</span>
-<span class="line-cmt">#                                        ├─ artifacts, media, bundles</span>
-<span class="line-cmt">#                                        └─▸ AbstractRuntime ──▸ AbstractCore</span>
-<span class="line-cmt">#</span>
-<span class="line-cmt"># Any host process (CLI / server / notebook)</span>
-<span class="line-cmt">#   └─ create_visual_runner / execute_visual_flow</span>
-<span class="line-cmt">#        └─ optional local Runtime compatibility</span></code></pre>
+    <div class="reveal" style="max-width:720px;margin:0 auto">
+      <svg viewBox="0 0 720 340" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%">
+        <defs>
+          <filter id="fglow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <linearGradient id="fgrad1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
+          <linearGradient id="fgrad2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+        </defs>
+        <!-- Path 1: Visual Editor → Gateway → Runtime → Core -->
+        <text x="20" y="22" fill="#818cf8" font-size="11" font-weight="600" font-family="Inter,sans-serif" opacity=".6">PATH 1 — VIA GATEWAY API ROUTES</text>
+        <!-- Visual Editor -->
+        <rect x="20" y="36" width="150" height="70" rx="10" fill="rgba(99,102,241,0.1)" stroke="#6366f1" stroke-width="1.5" filter="url(#fglow)"/>
+        <text x="95" y="63" fill="#818cf8" font-size="13" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">Visual Editor</text>
+        <text x="95" y="82" fill="#818cf8" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">React UI</text>
+        <!-- Arrow 1 -->
+        <line x1="170" y1="71" x2="230" y2="71" stroke="url(#fgrad1)" stroke-width="2" stroke-dasharray="6 3"/>
+        <polygon points="230,66 240,71 230,76" fill="#06b6d4"/>
+        <text x="200" y="63" fill="#22d3ee" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">/api/*</text>
+        <!-- Gateway -->
+        <rect x="240" y="36" width="200" height="70" rx="10" fill="rgba(6,182,212,0.1)" stroke="#06b6d4" stroke-width="1.5" filter="url(#fglow)"/>
+        <text x="340" y="58" fill="#22d3ee" font-size="13" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">AbstractGateway</text>
+        <text x="340" y="74" fill="#22d3ee" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">discovery · runs · ledger</text>
+        <text x="340" y="88" fill="#22d3ee" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">artifacts · media · bundles</text>
+        <!-- Arrow 2 -->
+        <line x1="440" y1="71" x2="500" y2="71" stroke="url(#fgrad2)" stroke-width="2" stroke-dasharray="6 3"/>
+        <polygon points="500,66 510,71 500,76" fill="#10b981"/>
+        <!-- Runtime -->
+        <rect x="510" y="36" width="170" height="70" rx="10" fill="rgba(16,185,129,0.1)" stroke="#10b981" stroke-width="1.5" filter="url(#fglow)"/>
+        <text x="595" y="63" fill="#34d399" font-size="13" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">AbstractRuntime</text>
+        <text x="595" y="82" fill="#34d399" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">→ AbstractCore</text>
+        <!-- Divider -->
+        <line x1="40" y1="140" x2="680" y2="140" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <text x="360" y="138" fill="rgba(255,255,255,0.2)" font-size="10" text-anchor="middle" font-family="Inter,sans-serif">or</text>
+        <!-- Path 2: Host Process → Local -->
+        <text x="20" y="175" fill="#f59e0b" font-size="11" font-weight="600" font-family="Inter,sans-serif" opacity=".6">PATH 2 — VIA PYTHON CODE</text>
+        <!-- Host Process -->
+        <rect x="20" y="190" width="200" height="70" rx="10" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1.5" filter="url(#fglow)"/>
+        <text x="120" y="217" fill="#fbbf24" font-size="13" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">Host Process</text>
+        <text x="120" y="236" fill="#fbbf24" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">CLI / server / notebook</text>
+        <!-- Arrow 3 -->
+        <line x1="220" y1="225" x2="300" y2="225" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6 3"/>
+        <polygon points="300,220 310,225 300,230" fill="#f59e0b"/>
+        <!-- FlowRunner -->
+        <rect x="310" y="190" width="220" height="70" rx="10" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="1.5" filter="url(#fglow)"/>
+        <text x="420" y="214" fill="#fbbf24" font-size="12" font-weight="600" text-anchor="middle" font-family="JetBrains Mono,monospace">FlowRunner</text>
+        <text x="420" y="232" fill="#fbbf24" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">execute_visual_flow()</text>
+        <text x="420" y="248" fill="#fbbf24" font-size="9" text-anchor="middle" font-family="Inter,sans-serif" opacity=".5">optional Runtime integration</text>
+        <!-- Shared output -->
+        <rect x="180" y="290" width="360" height="40" rx="8" fill="rgba(99,102,241,0.06)" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
+        <text x="360" y="315" fill="#818cf8" font-size="12" font-weight="500" text-anchor="middle" font-family="Inter,sans-serif">Portable .flow bundles — same format, both paths</text>
+        <!-- Arrows to shared -->
+        <line x1="340" y1="106" x2="340" y2="290" stroke="rgba(99,102,241,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+        <line x1="420" y1="260" x2="400" y2="290" stroke="rgba(99,102,241,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+      </svg>
     </div>
   </div>
 </section>
@@ -236,11 +280,11 @@ npx @abstractframework/flow --gateway-url <span class="line-str">http://127.0.0.
     <div class="section-header reveal">
       <div class="section-label">Getting Started</div>
       <h2 class="section-title">Two Ways to Use AbstractFlow</h2>
-      <p class="section-desc">Use the visual editor for diagram-based authoring, or the Python API for programmatic workflow construction.</p>
+      <p class="section-desc">Use the visual editor for diagram-based authoring, or build workflows programmatically. Both paths work through Python code or through AbstractGateway API routes from any language.</p>
     </div>
 
     <div class="section-header reveal" style="margin-top:2rem">
-      <h3 class="section-title" style="font-size:1.5rem">Visual Editor (Gateway-First)</h3>
+      <h3 class="section-title" style="font-size:1.5rem">Visual Editor (via Gateway API Routes)</h3>
     </div>
     <div class="code-block reveal">
 <pre><code><span class="line-cmt"># Terminal 1: Start the gateway</span>
@@ -312,7 +356,7 @@ abstractflow bundle unpack <span class="line-str">/tmp/ac-echo.flow</span> --dir
         <div class="code-block" style="margin:.5rem 0">
 <pre><code><span class="line-kw">pip install</span> abstractflow</code></pre>
         </div>
-        <p>Gateway-first thin client. VisualFlow models, bundle helpers, CLI. Python 3.10+.</p>
+        <p>VisualFlow models, bundle helpers, CLI. Works standalone or through AbstractGateway API routes. Python 3.10+.</p>
       </div>
       <div class="mode-card">
         <h3>Apple Profile</h3>
@@ -337,7 +381,7 @@ abstractflow bundle unpack <span class="line-str">/tmp/ac-echo.flow</span> --dir
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">API Reference</div>
-      <h2 class="section-title">Python API Surface</h2>
+      <h2 class="section-title">API Surface</h2>
       <p class="section-desc">The public API is intentionally small. AbstractFlow delegates compilation and runtime execution to AbstractRuntime.</p>
     </div>
 

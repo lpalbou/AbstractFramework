@@ -1,0 +1,68 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractagent/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractagent/main/llms.txt
+
+# AbstractAgent
+
+> Agent patterns (ReAct / CodeAct / MemAct) built on AbstractRuntime (durable workflows + storage/ledger) and AbstractCore (providers + tool schemas).
+
+This repository contains the `abstractagent` Python package (a library; no interactive UI).
+Use this file as a curated “map” for LLM/agent consumption. For a deeper index (more source files + tests), see `llms-full.txt`.
+
+Important notes (source-of-truth hints):
+- Docs entrypoint: `README.md` → `docs/getting-started.md` → `docs/README.md`
+- Runtime behavior lives in workflow adapters: `src/abstractagent/adapters/*_runtime.py`
+- Prompting/parsing logic stays runtime-agnostic: `src/abstractagent/logic/*` (no `abstractruntime` imports)
+- MemAct is not re-exported at the package top-level; import from `abstractagent.agents.memact` (see `docs/api.md`).
+- After changes, run tests: `pytest -q`
+
+## Ecosystem
+
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework): ecosystem overview
+- [AbstractCore](https://github.com/lpalbou/abstractcore): providers + tool schemas
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): durable workflows + storage/ledger
+
+## Docs
+
+- [README](README.md): Installation + quick start
+- [Documentation index](docs/README.md): Map of all docs
+- [Getting started](docs/getting-started.md): Minimal usage + persistence example
+- [FAQ](docs/faq.md): Common questions and troubleshooting
+- [API](docs/api.md): Public API surface
+- [Agents](docs/agents.md): Agent types + API
+- [Tools](docs/tools.md): Default tools, allowlists, built-ins (adapter-mapped + runtime-owned)
+- [Persistence](docs/persistence.md): Pause/resume across restarts
+- [Architecture](docs/architecture.md): How logic/adapters/agents fit together (diagrams)
+- [ReAct pipeline](docs/react-pipeline.md): ReAct workflow details
+- [Development](docs/development.md): Local dev, tests, build
+
+## Project
+
+- [Changelog](CHANGELOG.md): Release notes by version
+- [Security policy](SECURITY.md): How to report vulnerabilities responsibly
+- [Contributing](CONTRIBUTING.md): Dev setup + conventions
+- [Acknowledgements](ACKNOWLEDMENTS.md)
+- [pyproject.toml](pyproject.toml): Dependencies, version, scripts
+- [License](LICENSE)
+
+## Code entry points
+
+- [Public API](src/abstractagent/__init__.py): Exported symbols
+- [Agents package](src/abstractagent/agents/__init__.py): Agent factories + classes
+- [BaseAgent](src/abstractagent/agents/base.py): start/step/resume/attach/save_state/get_ledger
+- [ReAct workflow](src/abstractagent/adapters/react_runtime.py): `create_react_workflow(...)`
+- [CodeAct workflow](src/abstractagent/adapters/codeact_runtime.py): `create_codeact_workflow(...)`
+- [MemAct workflow](src/abstractagent/adapters/memact_runtime.py): `create_memact_workflow(...)`
+- [Built-in tool schemas](src/abstractagent/logic/builtins.py): schema-only tool definitions (adapter-mapped + runtime-owned)
+- [Default tools bundle](src/abstractagent/tools/__init__.py): `ALL_TOOLS`
+
+## Tests
+
+- [Test suite](tests/): `pytest` tests for workflows and agent behavior
+
+## Optional
+
+- [Manual demo](manual_agent_demo.py): Minimal local demo (requires a working provider)
+- [LMStudio tool eval](src/abstractagent/scripts/lmstudio_tool_eval.py): Manual evaluation harness against a real model

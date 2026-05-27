@@ -1,0 +1,73 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractsemantics/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractsemantics/main/llms.txt
+
+# abstractsemantics
+
+> Semantics registry + JSON Schema helpers for knowledge-graph (KG) assertion structured outputs in the AbstractFramework ecosystem.
+
+This file follows the `llms.txt` convention (H1 title, blockquote summary, no headings in this section, then `##` link groups). Links are repository-relative unless noted.
+
+How to use as an agent:
+- Start with `docs/getting-started.md`, then `docs/registry.md` and `docs/schema.md`.
+- Treat `src/abstractsemantics/` and `tests/` as the source of truth for behavior.
+- The `## Optional` section may be skipped by consumers building a smaller context.
+
+Maintenance notes:
+- Keep link descriptions short, concrete, and non-ambiguous; prioritize the files an agent needs to answer “how does this work?” quickly.
+- Regenerate `llms-full.txt` after changing `llms.txt` or any linked file (`python scripts/generate_llms_full.py`).
+
+Companion file:
+- `llms-full.txt` is an expanded snapshot generated from this manifest that embeds the contents of all repository-local links (external links are not embedded). Use it when you have a large context window or need offline grounding.
+
+Key behavior notes (source of truth: `src/abstractsemantics/`):
+- Default registry is packaged as `abstractsemantics/semantics.yaml` (override via `ABSTRACTSEMANTICS_REGISTRY_PATH` in `src/abstractsemantics/registry.py`).
+- `$ref` resolution uses schema builder defaults (`resolve_schema_ref()` calls `build_kg_assertion_schema_v0()` with default args; predicate aliases are off unless you build directly in `src/abstractsemantics/schema.py`).
+
+## Start here
+
+- [README](README.md): install, quickstart, and project scope
+- [Getting started](docs/getting-started.md): install, load registry, build schema, `$ref` resolution
+- [Documentation index](docs/README.md): table of contents for all docs
+- [Architecture](docs/architecture.md): components + diagrams
+- [Registry format](docs/registry.md): YAML format and loader behavior
+- [KG assertion JSON Schema](docs/schema.md): schema builder + `$ref` resolution
+- [FAQ](docs/faq.md): common questions and troubleshooting
+- [API reference](docs/api.md): public API surface
+- [Development](docs/development.md): tests, packaging, and release checklist
+
+## Source (core)
+
+- [Default registry](src/abstractsemantics/semantics.yaml): packaged semantics registry
+- [`abstractsemantics` exports](src/abstractsemantics/__init__.py): supported top-level imports
+- [Registry loader](src/abstractsemantics/registry.py): YAML loader + dataclasses
+- [Schema builder](src/abstractsemantics/schema.py): JSON Schema builder + `$ref` resolver
+- [Packaging metadata](pyproject.toml): Python version, dependencies, build backend
+
+## Evidence (tests)
+
+- [Registry tests](tests/test_registry.py): anchors loader expectations
+- [Schema tests](tests/test_schema.py): anchors builder + `$ref` resolution
+
+## Project and policies
+
+- [Changelog](CHANGELOG.md): release notes
+- [Contributing](CONTRIBUTING.md): development and PR guidelines
+- [Security policy](SECURITY.md): responsible vulnerability reporting
+- [Acknowledgments](ACKNOWLEDMENTS.md): credits and upstream projects/standards
+- [License](LICENSE): license terms
+
+## Ecosystem (external)
+
+- [AbstractFramework](https://github.com/lpalbou/AbstractFramework): umbrella repository
+- [AbstractCore](https://github.com/lpalbou/abstractcore): shared primitives/contracts
+- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): execution + ingestion boundary
+
+## Optional
+
+- [Semantic triple prompt](docs/guide/semantics/semantic-triple-prompt-v4-optimized.md): prompt template for extraction workflows
+- [llms-full generator](scripts/generate_llms_full.py): regenerates `llms-full.txt` from this manifest
+- [Full context snapshot](llms-full.txt): concatenation of the repository-local links above (excluding itself)
+- [llms.txt spec](https://llmstxt.org/): official format guidance and conventions

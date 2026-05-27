@@ -1,0 +1,40 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractmusic/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractmusic/main/llms.txt
+
+# AbstractMusic
+
+> Model-agnostic remote and local music and audio generation abstractions for the Abstract ecosystem.
+
+Use this index to find the canonical docs for installing AbstractMusic, selecting remote or local
+generation backends, using the CLI/API, integrating with AbstractCore, and releasing the package.
+
+## Core Docs
+
+- [README.md](README.md): project overview, install profiles, quick starts, CLI examples, text planning boundary, licensing, and Apple/MPS notes.
+- [docs/README.md](docs/README.md): documentation index for users, contributors, and tools.
+- [docs/getting-started.md](docs/getting-started.md): install commands, first generation examples, CLI and REPL usage, and real-model smoke testing.
+- [docs/repl.md](docs/repl.md): REPL guide: engines vs models, discovery commands, switching rules, offline/download toggle, and duration limits.
+- [docs/architecture.md](docs/architecture.md): provider boundary, text planning boundary, dependency policy, precision policy, and AbstractCore integration shape.
+- [docs/api.md](docs/api.md): `MusicManager`, request fields, text planner injection, model registry, and built-in backend kinds.
+- [docs/models.md](docs/models.md): reviewed model metadata, provider status, license notes, and precision rules.
+- [docs/faq.md](docs/faq.md): recurring model, testing, provider, and quantization questions.
+- [docs/troubleshooting.md](docs/troubleshooting.md): common setup, Hugging Face, MPS, repetition, Stable Audio, Stable Audio 3, and release failures.
+- [docs/release.md](docs/release.md): version source, local preflight, release rehearsal, PyPI publishing, and GitHub Pages setup.
+
+## Project Process
+
+- [CHANGELOG.md](CHANGELOG.md): user-visible release history.
+- [CONTRIBUTING.md](CONTRIBUTING.md): local development setup, test commands, backend contribution rules, and backlog process.
+- [SECURITY.md](SECURITY.md): vulnerability reporting policy.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): contributor behavior expectations.
+- [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md): upstream ecosystem and model-credit notes.
+
+## Design And Roadmap
+
+- [docs/adr/README.md](docs/adr/README.md): architecture decision records.
+- [docs/adr/0001_music_provider_abstraction_and_dependency_policy.md](docs/adr/0001_music_provider_abstraction_and_dependency_policy.md): provider abstraction and dependency policy.
+- [docs/backlog/overview.md](docs/backlog/overview.md): backlog process and current planning status.
+- [docs/backlog/README.md](docs/backlog/README.md): backlog index.

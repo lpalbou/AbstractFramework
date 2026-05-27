@@ -1,0 +1,263 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractmemory/main/llms-full.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractmemory/main/llms-full.txt
+
+# AbstractMemory (llms-full)
+
+> Append-only, temporal, provenance-aware triple assertions with deterministic structured queries, SQLite/LanceDB persistence, and optional vector/semantic retrieval. Part of the AbstractFramework ecosystem.
+
+This file is intended to be a standalone, copy/pasteable context for agentic coding assistants.
+If you only need an index of entry points, see [llms.txt](llms.txt).
+For the human entry point, see [README.md](README.md). For getting started, see [docs/getting-started.md](docs/getting-started.md).
+
+## Ecosystem (AbstractFramework)
+
+AbstractMemory is one component of the **AbstractFramework** ecosystem:
+- This package stores/query triples and their temporal/provenance metadata.
+- For semantic retrieval, it can optionally call an **AbstractGateway** embeddings endpoint via `AbstractGatewayTextEmbedder`.
+- In a typical deployment, **AbstractRuntime** and **AbstractCore** sit behind the gateway (this package does not depend on them directly).
+
+Evidence:
+- No direct AbstractCore/AbstractRuntime dependency: [pyproject.toml](pyproject.toml)
+- Gateway adapter boundary: [src/abstractmemory/embeddings.py](src/abstractmemory/embeddings.py)
+- Architecture overview: [docs/architecture.md](docs/architecture.md)
+
+## Docs index
+
+User-facing docs:
+- [docs/getting-started.md](docs/getting-started.md)
+- [docs/faq.md](docs/faq.md)
+- [docs/api.md](docs/api.md)
+- [docs/stores.md](docs/stores.md)
+- [docs/architecture.md](docs/architecture.md)
+- [docs/development.md](docs/development.md)
+- [docs/README.md](docs/README.md)
+
+Release/docs hygiene:
+- [CHANGELOG.md](CHANGELOG.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [SECURITY.md](SECURITY.md)
+- [LICENSE](LICENSE)
+- [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md)
+
+## Repository layout
+
+- `src/abstractmemory/` — library source (src-layout)
+- `docs/` — user-facing documentation
+- `tests/` — unit tests (LanceDB tests are optional and skipped if `lancedb` is not installed)
+
+Public API exports are defined in [src/abstractmemory/__init__.py](src/abstractmemory/__init__.py).
+
+## Install
+
+Requires Python 3.10+ (see [pyproject.toml](pyproject.toml)).
+
+From source (recommended inside the AbstractFramework monorepo):
+
+```bash
+python -m pip install -e .
+```
+
+Optional persistent backend + vector search:
+
+```bash
+python -m pip install -e ".[lancedb]"
+```
+
+Dev extras (tests):
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+PyPI (packaged release):
+
+```bash
+python -m pip install AbstractMemory
+python -m pip install "AbstractMemory[lancedb]"
+```
+
+Notes:
+- The distribution name is `AbstractMemory` (pip is case-insensitive). The import name is `abstractmemory`.
+- This checkout is the source of truth for these docs. As of 2026-05-05, PyPI's `AbstractMemory 0.2.3` has a different source layout from this repository and `origin` only has tags through `v0.2.2`; treat that mismatch as release drift until a maintainer republishes/tags from this repo.
+
+## Quickstart (in-memory)
+
+```python
+from abstractmemory import InMemoryTripleStore, TripleAssertion, TripleQuery
+
+store = InMemoryTripleStore()
+store.add(
+    [
+        TripleAssertion(
+            subject="Scrooge",
+            predicate="related_to",
+            object="Christmas",
+            scope="session",
+            owner_id="sess-1",
+            observed_at="2026-01-01T00:00:00+00:00",
+            provenance={"span_id": "span_123"},
+        )
+    ]
+)
+
+hits = store.query(TripleQuery(subject="scrooge", scope="session", owner_id="sess-1", limit=10))
+assert hits[0].object == "christmas"  # terms are canonicalized (trim + lowercase)
+```
+
+Evidence:
+- Canonicalization is tested in [tests/test_term_canonicalization.py](tests/test_term_canonicalization.py).
+
+## Core concepts (v0)
+
+### Data model: `TripleAssertion`
+
+Source: [src/abstractmemory/models.py](src/abstractmemory/models.py)
+
+An append-only semantic assertion with temporal + provenance metadata.
+
+Fields (selected):
+- `subject`, `predicate`, `object` (canonicalized: trim + lowercase)
+- `scope` (`run|session|global`) + optional `owner_id`
+- `observed_at` (timestamp string), `valid_from` / `valid_until` (optional validity window)
+- `confidence` (optional float)
+- `provenance` dict (e.g. span/artifact pointers)
+- `attributes` dict (extractor evidence/context and retrieval metadata)
+
+Helpers:
+- `to_dict()` / `from_dict(...)` for serialization.
+
+### Query model: `TripleQuery`
+
+Source: [src/abstractmemory/store.py](src/abstractmemory/store.py)
+
+Structured filters:
+- `subject`, `predicate`, `object` (exact match after canonicalization)
+- `scope`, `owner_id`
+- `since` / `until` filter `observed_at` (`>= since`, `<= until`)
+- `active_at` filters by validity window:
+  - include if `(valid_from is None or valid_from <= active_at)` and `(valid_until is None or valid_until > active_at)`
+  - end is **exclusive**
+
+Semantic/vector retrieval (optional):
+- `query_text` requires a configured embedder in vector-capable stores (no keyword fallback; stores raise `ValueError`).
+- `query_vector` bypasses embedding generation.
+- `vector_column` controls the vector field name (default `vector`).
+- `min_score` is a cosine similarity threshold.
+- `SQLiteTripleStore` is structured-query only and rejects `query_text` and `query_vector`.
+
+Result shaping:
+- `order`: `"asc" | "desc"` by `observed_at` for non-semantic queries
+- `limit <= 0` means “unbounded” (see [tests/test_triple_store_limits.py](tests/test_triple_store_limits.py)).
+
+Determinism note:
+- Structured filters and non-semantic ordering by `observed_at` are deterministic (given the same stored assertions).
+- Vector search ranking depends on the configured embedder/backend; ties are not specified.
+
+Vector query results:
+- When using `query_text` or `query_vector`, vector-capable stores attach retrieval metadata to `attributes["_retrieval"]` (cosine score; LanceDB also includes `_distance`).
+
+Important implementation detail:
+- Timestamps are compared/filtered as strings; prefer RFC-3339/UTC strings like `2026-01-01T00:00:00+00:00`.
+
+### Stores
+
+All stores implement the `TripleStore` protocol (see [src/abstractmemory/store.py](src/abstractmemory/store.py)):
+- `add(assertions) -> list[str]` (returns generated assertion ids)
+- `query(q) -> list[TripleAssertion]`
+- `close()`
+
+Note:
+- Assertion ids are generated on `add(...)` and returned, but they are not currently included in query results. If you need stable ids, store them yourself (e.g. in `provenance` or `attributes`).
+
+#### InMemoryTripleStore
+
+Source: [src/abstractmemory/in_memory_store.py](src/abstractmemory/in_memory_store.py)
+
+- Dependency-free, stores rows (and optional vectors) in process memory.
+- If constructed with an `embedder`, `add(...)` embeds a canonical text representation per assertion.
+- `query_text` requires an embedder; otherwise raises `ValueError` (see [tests/test_in_memory_query_text_fallback.py](tests/test_in_memory_query_text_fallback.py)).
+  - Embedded text includes `subject predicate object` plus selected `attributes` keys; see `_canonical_text(...)` in [src/abstractmemory/in_memory_store.py](src/abstractmemory/in_memory_store.py).
+
+#### SQLiteTripleStore
+
+Source: [src/abstractmemory/sqlite_store.py](src/abstractmemory/sqlite_store.py)
+
+- Persistent SQLite-backed table stored in a local file.
+- Uses only the Python standard library.
+- Creates schema/indexes during construction.
+- Supports deterministic structured queries and rejects `query_text` / `query_vector`.
+- Stores `provenance` and `attributes` as JSON strings plus canonical `text` for inspection/debugging.
+- Persistence and semantic rejection are tested in [tests/test_sqlite_triple_store.py](tests/test_sqlite_triple_store.py).
+
+#### LanceDBTripleStore (optional)
+
+Source: [src/abstractmemory/lancedb_store.py](src/abstractmemory/lancedb_store.py)
+
+- Persistent LanceDB-backed table stored under a local path (`uri`).
+- Creates the table on first insert.
+- Stores `provenance` and `attributes` as JSON strings plus a canonical `text` column.
+- Vector search uses `metric("cosine")` and attaches retrieval metadata to `attributes["_retrieval"]`.
+- Persistence across reopen is tested in [tests/test_lancedb_triple_store.py](tests/test_lancedb_triple_store.py).
+  - Embedded text includes `subject predicate object` plus selected `attributes` keys; see `_canonical_text(...)` in [src/abstractmemory/lancedb_store.py](src/abstractmemory/lancedb_store.py).
+
+## Embeddings boundary (no AbstractCore dependency)
+
+Source: [src/abstractmemory/embeddings.py](src/abstractmemory/embeddings.py)
+
+- `TextEmbedder` protocol: `embed_texts(texts) -> list[list[float]]`
+- `AbstractGatewayTextEmbedder`: calls an AbstractGateway embeddings endpoint via HTTP (`POST` JSON `{ "input": [...] }`) and expects an OpenAI-like `data[]` response with `embedding` (and optional `index`).
+
+Example (gateway-managed embeddings):
+
+```python
+import os
+
+from abstractmemory import (
+    AbstractGatewayTextEmbedder,
+    LanceDBTripleStore,
+    TripleAssertion,
+    TripleQuery,
+)
+
+embedder = AbstractGatewayTextEmbedder(
+    base_url="http://localhost:8000",
+    auth_token=os.getenv("ABSTRACTGATEWAY_AUTH_TOKEN"),
+    # endpoint_path defaults to "/api/gateway/embeddings"
+)
+
+store = LanceDBTripleStore("data/kg", embedder=embedder)
+store.add(
+    [
+        TripleAssertion(
+            subject="e:scrooge",
+            predicate="is_a",
+            object="person",
+            scope="global",
+            attributes={"evidence_quote": "Scrooge was a man…"},
+        )
+    ]
+)
+
+hits = store.query(TripleQuery(query_text="scrooge", scope="global", limit=5))
+```
+
+## Architecture (diagram)
+
+See the maintained architecture doc with a component diagram:
+- [docs/architecture.md](docs/architecture.md)
+
+## Development & tests
+
+- Run tests: `python -m pytest -q`
+- LanceDB tests are skipped when `lancedb` is not installed.
+- SQLite tests use the Python standard library and should always run.
+- `tests/conftest.py` bootstraps `sys.path` for monorepo layouts: [tests/conftest.py](tests/conftest.py)
+
+## Change checklist (when modifying behavior)
+
+- Update/extend tests (especially store/query contracts).
+- Update user-facing docs (`README.md`, `docs/getting-started.md`, and relevant `docs/*.md`).
+- Add an entry to `CHANGELOG.md`.
