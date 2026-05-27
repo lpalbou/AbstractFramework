@@ -905,7 +905,7 @@ section[style*="background"]::before {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: var(--space-2xl);
+  padding: var(--space-xl) var(--space-xl) var(--space-lg);
   position: relative;
   overflow: hidden;
   transition:
@@ -986,14 +986,14 @@ section[style*="background"]::before {
 }
 
 .entry-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  margin-bottom: var(--space-lg);
+  font-size: 1.3rem;
+  margin-bottom: var(--space-md);
   position: relative;
   transition: transform var(--duration) var(--ease);
 }
@@ -1015,24 +1015,24 @@ section[style*="background"]::before {
 }
 
 .entry-card h3 {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   letter-spacing: -0.01em;
 }
 
-.entry-card p {
+.entry-card > p {
   color: var(--text-secondary);
-  margin-bottom: var(--space-lg);
-  line-height: 1.7;
-  font-size: var(--text-base);
+  margin-bottom: var(--space-md);
+  line-height: 1.65;
+  font-size: var(--text-sm);
 }
 
 .entry-features {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.45rem;
 }
 
 .entry-features li {
@@ -1065,22 +1065,23 @@ section[style*="background"]::before {
 
 /* Entry point scenario blocks */
 .entry-scenario {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--border);
 }
 
 .entry-scenario h4 {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .entry-scenario p {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  line-height: 1.65;
+  line-height: 1.6;
+  margin-bottom: 0;
 }
 
 
