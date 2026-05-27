@@ -908,8 +908,6 @@ section[style*="background"]::before {
   padding: var(--space-xl) var(--space-xl) var(--space-lg);
   position: relative;
   overflow: hidden;
-  display: grid;
-  grid-template-rows: auto auto auto auto 1fr auto auto;
   transition:
     transform var(--duration) var(--ease),
     border-color var(--duration) var(--ease),
@@ -1065,12 +1063,22 @@ section[style*="background"]::before {
   box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
 }
 
+/* Equalize install code-block height across cards */
+.entry-card > .code-block:first-of-type {
+  min-height: 5.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.entry-card > .code-block:first-of-type pre {
+  width: 100%;
+}
+
 /* Entry point scenario blocks */
 .entry-scenario {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
-  align-self: start;
 }
 
 .entry-scenario h4 {
