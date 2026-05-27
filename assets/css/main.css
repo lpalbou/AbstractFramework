@@ -895,7 +895,9 @@ section[style*="background"]::before {
 .entry-points {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-xl);
+  grid-template-rows: repeat(7, auto);
+  column-gap: var(--space-xl);
+  row-gap: 0;
   margin-top: var(--space-2xl);
 }
 
@@ -908,6 +910,9 @@ section[style*="background"]::before {
   padding: var(--space-xl) var(--space-xl) var(--space-lg);
   position: relative;
   overflow: hidden;
+  display: grid;
+  grid-row: span 7;
+  grid-template-rows: subgrid;
   transition:
     transform var(--duration) var(--ease),
     border-color var(--duration) var(--ease),
@@ -1061,17 +1066,6 @@ section[style*="background"]::before {
 .entry-card.gateway .entry-features li::before {
   background: var(--green);
   box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
-}
-
-/* Equalize install code-block height across cards */
-.entry-card > .code-block:first-of-type {
-  min-height: 5.5rem;
-  display: flex;
-  align-items: center;
-}
-
-.entry-card > .code-block:first-of-type pre {
-  width: 100%;
 }
 
 /* Entry point scenario blocks */
@@ -2251,6 +2245,12 @@ pre code {
 @media (max-width: 1024px) {
   .entry-points {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .entry-card {
+    grid-row: auto;
+    grid-template-rows: none;
   }
 
   .showcase-grid {
