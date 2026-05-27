@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AbstractFramework — Interactive Architecture Cubes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e4e4ef;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+.arch-section{position:relative;width:100%;max-width:1100px;padding:2rem}
+
+/* ── Header ── */
+.arch-header{text-align:center;margin-bottom:2.5rem}
+.arch-header h2{font-size:1.8rem;font-weight:800;margin-bottom:.5rem}
+.arch-header h2 span{background:linear-gradient(135deg,#818cf8,#06b6d4,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.arch-header p{color:#9898b0;font-size:.92rem;max-width:600px;margin:.8rem auto 0;line-height:1.75}
+
+/* ── Cube Grid ── */
+.cubes-container{display:flex;align-items:flex-start;justify-content:center;position:relative}
+.iso-grid{position:relative;transform-style:preserve-3d;height:calc(5 * 96px + 80px);width:calc(4 * 90px)}
+
+/* Isometric cube wrapper */
+.cube-wrap{position:absolute;cursor:pointer;transition:transform 400ms cubic-bezier(.4,0,.2,1),filter 600ms cubic-bezier(.4,0,.2,1),opacity 600ms cubic-bezier(.4,0,.2,1)}
+.cube-wrap:hover,.cube-wrap.active{transform:translate(var(--tx),var(--ty)) translateY(-16px) scale(1.18);z-index:100;filter:brightness(1.4) drop-shadow(0 12px 28px rgba(255,255,255,.1))}
+.cube-wrap.dimmed{opacity:.15;filter:brightness(.4)}
+
+/* 3D cube */
+.cube{width:var(--size);height:var(--size);position:relative;transform-style:preserve-3d;transform:rotateX(-30deg) rotateY(45deg)}
+.face{position:absolute;width:100%;height:100%;backface-visibility:hidden}
+.face.top{transform:rotateX(90deg) translateZ(calc(var(--size)/2));background:var(--c-top)}
+.face.left{transform:rotateY(-90deg) translateZ(calc(var(--size)/2));background:var(--c-left)}
+.face.right{transform:translateZ(calc(var(--size)/2));background:var(--c-right)}
+
+/* Cube colors by layer */
+.cube-wrap[data-layer="app"]{--c-top:#1a9e6e;--c-left:#0f7a52;--c-right:#14b87a}
+.cube-wrap[data-layer="control"]{--c-top:#0891b2;--c-left:#0e6e8a;--c-right:#06b6d4}
+.cube-wrap[data-layer="compose"]{--c-top:#6366f1;--c-left:#4f46e5;--c-right:#818cf8}
+.cube-wrap[data-layer="foundation"]{--c-top:#4f46e5;--c-left:#3730a3;--c-right:#6366f1}
+.cube-wrap[data-layer="plugin"]{--c-top:#db2777;--c-left:#be185d;--c-right:#ec4899}
+.cube-wrap[data-layer="knowledge"]{--c-top:#d97706;--c-left:#b45309;--c-right:#f59e0b}
+
+/* Tooltip */
+.cube-tooltip{
+  position:absolute;bottom:calc(100% + 20px);left:50%;
+  transform:translateX(-50%) translateY(8px);
+  background:rgba(18,18,26,.95);backdrop-filter:blur(12px);
+  border:1px solid #2a2a3a;padding:16px 22px;border-radius:12px;
+  width:280px;pointer-events:none;opacity:0;
+  transition:opacity 200ms ease,transform 200ms ease;
+  z-index:200;box-shadow:0 12px 40px rgba(0,0,0,.7);
+  text-align:left;line-height:1.55
+}
+.cube-tooltip .tip-layer{font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.cube-tooltip .tip-name{font-weight:700;color:#e4e4ef;font-size:.92rem}
+.cube-tooltip .tip-desc{color:#9898b0;font-size:.78rem;margin-top:8px;line-height:1.7}
+.cube-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:rgba(18,18,26,.95)}
+.cube-wrap:hover .cube-tooltip{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Cube label */
+.cube-label{
+  position:absolute;width:140px;left:50%;margin-left:-70px;
+  text-align:center;top:calc(100% + 14px);
+  font-size:.7rem;font-weight:600;color:#4a4a60;
+  white-space:nowrap;pointer-events:none;letter-spacing:.02em;
+  transition:color 250ms ease
+}
+.cube-wrap:hover .cube-label,.cube-wrap.active .cube-label{color:#c4c4d8}
+
+/* Layer labels (right side) */
+.layer-label{
+  position:absolute;font-size:.62rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
+  white-space:nowrap;opacity:.35;pointer-events:none;
+  transition:opacity 250ms ease
+}
+.layer-label.highlight{opacity:.8}
+
+/* Connecting dotted lines between layers */
+.layer-connector{
+  position:absolute;width:1px;
+  border-left:1px dashed #1e1e2e;
+  pointer-events:none;z-index:-1
+}
+</style>
+</head>
+<body>
+
+<div class="arch-section">
+  <div class="arch-header">
+    <h2><span>Modular by Design</span></h2>
+    <p>Every package is independently installable. Hover each block to explore. Use one or compose the full stack.</p>
+  </div>
+
+  <div class="cubes-container">
+    <div class="iso-grid" id="cubeGrid"></div>
+  </div>
+</div>
+
+<script>
+const CUBE_SIZE = 48;
+const COL_STEP = 90;
+const ROW_STEP = 96;
+
+const cubes = [
+  { id:'code',      layer:'app',        col:-1.5, row:0, label:'Code',
+    name:'AbstractCode', layerName:'Application', href:'code.html',
+    desc:'Durable coding assistant with terminal TUI and browser UI. Every agent action is logged in an append-only ledger for perfect auditability.'},
+  { id:'flow',      layer:'app',        col:-0.5, row:0, label:'Flow',
+    name:'AbstractFlow', layerName:'Application', href:'flow.html',
+    desc:'Visual workflow editor inspired by UE4 Blueprint. Author multi-agent orchestrations with drag-and-drop, share as portable .flow bundles.'},
+  { id:'assistant', layer:'app',        col:0.5,  row:0, label:'Assistant',
+    name:'AbstractAssistant', layerName:'Application', href:'assistant.html',
+    desc:'macOS tray application with full voice support. Gateway-first thin client — start a conversation from the tray, continue anywhere.'},
+  { id:'observer',  layer:'app',        col:1.5,  row:0, label:'Observer',
+    name:'AbstractObserver', layerName:'Application', href:'observer.html',
+    desc:'Web-based observability dashboard. Monitor every AI operation, browse ledger history, and schedule agentic tasks with cron-like automation.'},
+
+  { id:'gateway',   layer:'control',    col:0, row:1, label:'Gateway',
+    name:'AbstractGateway', layerName:'Control Plane', href:'gateway.html',
+    desc:'Production HTTP control plane for durable AI runs. SSE streaming, workflow bundle deployment, scheduling, multi-client support. SQLite or Postgres.'},
+
+  { id:'agent',     layer:'compose',    col:-0.5, row:2, label:'Agent',
+    name:'AbstractAgent', layerName:'Composition', href:'agent.html',
+    desc:'Library of agent patterns — ReAct, CodeAct, MemAct — built on three clean layers: logic, adapters, and agent wrappers. Independently testable and extensible.'},
+  { id:'flowrt',    layer:'compose',    col:0.5,  row:2, label:'Flow',
+    name:'AbstractFlow', layerName:'Composition', href:'flow.html',
+    desc:'Executes portable .flow bundles as durable workflow graphs. Supports subflows, multi-agent orchestration, and loop patterns (e.g. self-check/correction).'},
+
+  { id:'core',      layer:'foundation', col:-0.5, row:3, label:'Core',
+    name:'AbstractCore', layerName:'Foundation', href:'core.html',
+    desc:'Unified Python LLM API for 9+ providers — cloud and local. Streaming, tool calling, structured output, media handling, embeddings. OpenAI-compatible server built-in.'},
+  { id:'runtime',   layer:'foundation', col:0.5,  row:3, label:'Runtime',
+    name:'AbstractRuntime', layerName:'Foundation', href:'runtime.html',
+    desc:'Persistent graph runner with durable execution. Append-only ledger, checkpoint/resume, explicit waits, tamper-evident hash chains. The execution kernel of the framework.'},
+
+  { id:'voice',     layer:'plugin',     col:-1, row:4, label:'Voice',
+    name:'AbstractVoice', layerName:'Capability Plugin', href:'voice.html',
+    desc:'Voice I/O abstraction — TTS, STT, voice cloning. Works with multiple providers and models (OpenAI, Supertonic, OmniVoice). Offline-first on Apple Silicon.'},
+  { id:'vision',    layer:'plugin',     col:0,  row:4, label:'Vision',
+    name:'AbstractVision', layerName:'Capability Plugin', href:'vision.html',
+    desc:'Generative vision API — text-to-image, image editing, text-to-video, image-to-video. Backends for MLX-Gen (Apple Silicon), Diffusers, sd.cpp, and OpenAI-compatible.'},
+  { id:'music',     layer:'plugin',     col:1,  row:4, label:'Music',
+    name:'AbstractMusic', layerName:'Capability Plugin', href:'music.html',
+    desc:'Text-to-music generation via ACE-Step 1.5 and Stable Audio. Generates WAV locally on Apple Silicon with MPS memory management. Integrates as an AbstractCore plugin.'},
+
+  { id:'memory',    layer:'knowledge',  col:-0.5, row:5, label:'Memory',
+    name:'AbstractMemory', layerName:'Knowledge', href:'memory.html',
+    desc:'Temporal, provenance-aware triple store. Every fact has timestamps, confidence scores, and source attribution. Multiple backends (InMemory, SQLite, LanceDB) with vector search.'},
+  { id:'semantics', layer:'knowledge',  col:0.5,  row:5, label:'Semantics',
+    name:'AbstractSemantics', layerName:'Knowledge', href:'semantics.html',
+    desc:'Schema registry for predicates and entity types. YAML-defined ontology with JSON Schema generation for LLM structured output. No hallucinated predicates, no schema drift.'},
+];
+
+const layerColors = {
+  app:'#34d399', control:'#22d3ee', compose:'#818cf8',
+  foundation:'#6366f1', plugin:'#f472b6', knowledge:'#fbbf24'
+};
+
+const grid = document.getElementById('cubeGrid');
+
+cubes.forEach(c => {
+  const cx = c.col * COL_STEP;
+  const cy = c.row * ROW_STEP;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'cube-wrap';
+  wrap.dataset.id = c.id;
+  wrap.dataset.layer = c.layer;
+  wrap.style.cssText = `--size:${CUBE_SIZE}px;--tx:${cx}px;--ty:${cy}px;transform:translate(${cx}px,${cy}px)`;
+
+  wrap.innerHTML = `
+    <div class="cube">
+      <div class="face top"></div>
+      <div class="face left"></div>
+      <div class="face right"></div>
+    </div>
+    <div class="cube-tooltip">
+      <div class="tip-layer" style="color:${layerColors[c.layer]}">${c.layerName}</div>
+      <div class="tip-name">${c.name}</div>
+      <div class="tip-desc">${c.desc}</div>
+    </div>
+    <div class="cube-label">${c.label}</div>
+  `;
+
+  wrap.addEventListener('click', () => { window.location.href = c.href; });
+
+  grid.appendChild(wrap);
+});
+
+// Layer labels on the right
+const layerLabels = [
+  { row:0, text:'APPLICATIONS', color:'#34d399' },
+  { row:1, text:'CONTROL PLANE', color:'#22d3ee' },
+  { row:2, text:'COMPOSITION', color:'#818cf8' },
+  { row:3, text:'FOUNDATION', color:'#6366f1' },
+  { row:4, text:'PLUGINS', color:'#f472b6' },
+  { row:5, text:'KNOWLEDGE', color:'#fbbf24' },
+];
+
+layerLabels.forEach(l => {
+  const el = document.createElement('div');
+  el.className = 'layer-label';
+  el.dataset.layer = ['app','control','compose','foundation','plugin','knowledge'][l.row];
+  el.style.cssText = `left:${2.5 * COL_STEP}px;top:${l.row * ROW_STEP + 14}px;color:${l.color}`;
+  el.textContent = l.text;
+  grid.appendChild(el);
+});
+
+// Connectors between layers
+[0,1,2,3,4].forEach(row => {
+  const line = document.createElement('div');
+  line.className = 'layer-connector';
+  line.style.cssText = `left:0;top:${row * ROW_STEP + CUBE_SIZE + 16}px;height:${ROW_STEP - CUBE_SIZE - 16}px`;
+  grid.appendChild(line);
+});
+
+// Hover interactions
+const cubeWraps = document.querySelectorAll('.cube-wrap[data-id]');
+const labels = document.querySelectorAll('.layer-label');
+
+function highlight(id) {
+  const activeLayer = [...cubeWraps].find(w=>w.dataset.id===id)?.dataset.layer;
+  cubeWraps.forEach(w => {
+    w.classList.toggle('active', w.dataset.id === id);
+    w.classList.toggle('dimmed', id && w.dataset.id !== id);
+  });
+  labels.forEach(l => l.classList.toggle('highlight', l.dataset.layer === activeLayer));
+}
+
+function clearHighlight() {
+  cubeWraps.forEach(w => { w.classList.remove('active','dimmed'); });
+  labels.forEach(l => l.classList.remove('highlight'));
+}
+
+cubeWraps.forEach(w => {
+  w.addEventListener('mouseenter', () => highlight(w.dataset.id));
+  w.addEventListener('mouseleave', clearHighlight);
+});
+</script>
+</body>
+</html>
