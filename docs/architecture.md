@@ -1,32 +1,36 @@
 # Architecture
 
-AbstractFramework is built around one idea: **durable, observable execution** for AI workflows.
+AbstractFramework is open-source AI infrastructure built around one idea: **durable, observable execution** for AI workflows.
 
 Most LLM frameworks optimize for prototyping speed. AbstractFramework optimizes for **operational reality**: workflows that pause/resume safely, runs that survive restarts, UIs that reconstruct state from history, and clear boundaries around tool execution and approvals.
 
 ---
 
-## The two development entry points
+## Choose your entry point
 
-### AbstractCore (low-level SDK)
+Start lightweight with just the LLM library, or go all-in with a production gateway. Both paths lead to the same ecosystem.
 
-Use when you want to add AI capabilities inside an application:
+### AbstractCore (SDK + optional `/v1`)
 
-- provider/model abstraction (local + cloud)
-- tool calling, structured output, streaming, async
-- media input policies and modality plugins (voice/vision/music)
-- embeddings, MCP tool discovery
+Start here if you need a lightweight LLM library for scripts, notebooks, or existing applications. No infrastructure required — just install and call. Add multimodal capabilities with plugins as you grow.
 
-The right first step when you need **in-process** execution and you mainly care about shipping features.
+- 9+ providers with identical API (local + cloud)
+- Universal tool calling, structured output, streaming
+- Media handling (images, PDFs, audio, video)
+- OpenAI-compatible HTTP server mode (`/v1`)
+- Multimodal via capability plugins (Voice, Vision, Music)
 
-### AbstractGateway (high-level control plane)
+The right first step when you mainly care about calling models/tools/media (in-process via Python or via `/v1`) and want the smallest surface area.
 
-Use when you want durable, multi-client, schedulable execution:
+### AbstractGateway (durable control plane)
 
-- persistent **runs** with pause/resume/cancel
-- scheduling and run control
-- bundle discovery (share workflows across clients)
-- ledger replay + SSE streaming for UIs
+Start here if you're building persistent AI applications — agents that run for hours, workflows that survive crashes, scheduled tasks. The gateway is your AI control plane: durable runs with ledger replay/streaming and thin clients that can attach/detach across devices.
+
+- Durable execution that survives crashes and restarts
+- Append-only ledger (replay-first) for auditability
+- Scheduled workflows (cron-style, recurring)
+- Multi-client: terminal, browser, tray, Telegram, email
+- Start on one device, continue on another
 
 The composition root when you need a control plane (local or remote).
 
@@ -139,7 +143,7 @@ Any gateway-backed client can: list bundles/entrypoints, start a run, attach to 
 
 ## Multimodality
 
-AbstractCore stays lightweight by treating modalities as **capability plugins** (discovered internally via Python entry points, but accessible from any client through the gateway's API routes):
+AbstractCore stays lightweight by treating modalities as **capability plugins** (discovered internally via Python entry points, then exposed via the AbstractCore SDK and its optional `/v1` endpoints; gateway-first deployments can also surface them through Gateway):
 
 | Plugin | Capability | API surface |
 |---|---|---|
@@ -161,7 +165,7 @@ AbstractCore adds value when you need: provider portability, consistent tool/str
 
 ### vs LangChain / LlamaIndex / PydanticAI
 
-Those are primarily **in-process orchestration libraries**. AbstractFramework is a **durable orchestration stack**.
+Those are primarily **in-process orchestration libraries**. AbstractFramework occupies a different niche: an **agentic OS-style** stack for durable, observable execution (runtime + append-only ledger + control plane), where the same workflows can run across providers, devices, and deployment modes.
 
 **Where AbstractFramework is stronger**: durability and pause/resume as primitives, replay-first observability, portable `.flow` bundles that run across clients.
 

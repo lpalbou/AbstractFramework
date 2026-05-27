@@ -15,10 +15,10 @@ If you're looking for the main SDK, that's **AbstractCore**. If you need durable
 
 ## Where should I start?
 
-- **AbstractCore** — when you want direct code-level integration (Python SDK) with a clean, provider-agnostic API.
+- **AbstractCore** — when you want direct LLM/tool/media integration with a clean, provider-agnostic API (Python SDK **or** OpenAI-compatible `/v1`).
 - **AbstractGateway** — when you need durability, orchestration, scheduling, or language-agnostic access via HTTP/SSE routes.
 
-Most teams start Core-first (code), then introduce Gateway (API routes) when workflows become long-running, scheduled, or shared across clients. See **[Getting Started](getting-started.md)**.
+Most teams start with Core (SDK or `/v1`), then introduce Gateway when workflows become long-running, scheduled, or shared across clients. See **[Getting Started](getting-started.md)**.
 
 ---
 

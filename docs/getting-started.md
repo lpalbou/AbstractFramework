@@ -2,6 +2,8 @@
 
 This guide helps you build a correct mental model quickly, then run something end-to-end.
 
+> **Write once. Generate everything.** Durable, observable, multimodal AI systems — one unified interface, any provider, any model, local or cloud.
+
 AbstractFramework is a **stack**:
 
 | Layer | Package | Role |
@@ -13,7 +15,7 @@ AbstractFramework is a **stack**:
 | Control plane | **AbstractGateway** | Persistence, scheduling, bundle discovery, SSE streaming |
 | Operations | **AbstractObserver** | Browser UI to monitor, control, and schedule runs |
 
-**Rule of thumb**: start with **Core** when you want direct code-level integration (Python SDK); add **Gateway** when you need durability, orchestration, or multi-client/multi-language access via API routes.
+**Rule of thumb**: start with **Core** when you want a lightweight LLM library (SDK or `/v1`) for scripts/notebooks/apps; add **Gateway** when you need persistent runs, scheduling, and multi-client continuity.
 
 > **Prerequisites**: Python 3.10+. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
 
@@ -23,8 +25,8 @@ AbstractFramework is a **stack**:
 
 | If you are… | Start with | Why |
 |---|---|---|
-| Integrating AI features via code (Python SDK) | **AbstractCore** | Smallest surface area, fastest feedback loop |
-| Building durable workflows accessible from any language | **AbstractGateway** + **AbstractFlow** | Persistence, scheduling, HTTP/SSE — "author once, run from anywhere" |
+| Calling LLMs/tools/media (SDK or OpenAI-compatible `/v1`) | **AbstractCore** | Lightweight, smallest surface area, fastest feedback loop |
+| Building persistent agents/workflows (durable runs) | **AbstractGateway** + **AbstractFlow** | Durability, scheduling, bundle discovery, ledger replay/streaming |
 
 You can also install the entire pinned ecosystem in one command:
 
@@ -34,7 +36,7 @@ pip install abstractframework
 
 ---
 
-## Core-first: integrate via code (Python SDK)
+## Core-first: integrate via AbstractCore (SDK or `/v1`)
 
 ### 1. Install
 

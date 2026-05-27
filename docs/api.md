@@ -2,7 +2,7 @@
 
 This page documents the API exported by `abstractframework`, the meta-package shipped by this repository.
 
-`abstractframework` is a **pinned distribution profile** plus a few lightweight helpers. The framework can be used in two ways: **via code** (Python SDK, see below) or **via API routes** (HTTP/SSE through AbstractGateway, language-agnostic). Most functional APIs live in component packages — especially **AbstractCore** for the LLM SDK.
+`abstractframework` is a **pinned distribution profile** plus a few lightweight helpers. AbstractFramework has two entrypoints: **AbstractCore** (LLM SDK + optional OpenAI-compatible `/v1` server) and **AbstractGateway** (durable run control plane over HTTP/SSE). Most functional APIs live in component packages — especially **AbstractCore** for the LLM SDK.
 
 ---
 

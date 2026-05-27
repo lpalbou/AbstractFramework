@@ -1,23 +1,35 @@
 # AbstractFramework
 
-**Durable, observable AI workflows — open source, local-first, multimodal.**
+**Write once. Generate everything.**
 
-AbstractFramework is an ecosystem of composable packages for building AI systems that work in the real world:
+A modular, open-source ecosystem for building **durable, observable, multimodal** AI systems. Text, voice, image, video, music — one unified interface, any provider, any model, local or cloud.
 
-- workflows that **pause and resume** safely (survive crashes and restarts)
-- an append-only **ledger** so any UI can reconstruct state by replaying history
-- explicit boundaries for **tool execution**, approvals, and evidence
-- **multimodal** capability plugins (voice, vision, music) that stay out of your way until you need them
+AbstractFramework is an ecosystem of composable packages for building AI systems that work in operational reality:
+
+- **Durable by default**: workflows **pause and resume** safely (survive crashes and restarts)
+- **Observable**: an append-only **ledger** so any UI can reconstruct state by replaying history
+- **Controlled actions**: explicit boundaries for **tool execution**, approvals, and evidence
+- **Multimodal**: capability plugins (voice, vision, music) that stay out of your way until you need them
+
+Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
 > **Prerequisites**: Python 3.10+. Node.js 18+ for browser UIs. An LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
 
 ---
 
-## Two ways to use the framework
+## Two entrypoints
 
-### 1) Code — AbstractCore (Python SDK)
+Start lightweight with just the LLM library, or go all-in with a production gateway. Both paths lead to the same ecosystem.
 
-Use when you're integrating AI features directly in code:
+### 1) AbstractCore — LLM SDK + OpenAI-compatible `/v1` server
+
+Start here if you need a lightweight LLM library for scripts, notebooks, or existing applications. No infrastructure required — just `pip install` and call. Add multimodal capabilities with plugins as you grow.
+
+- 9+ providers with identical API (local + cloud)
+- Universal tool calling, structured output, streaming
+- Media handling (images, PDFs, audio, video)
+- OpenAI-compatible HTTP server mode (`/v1`)
+- Multimodal via capability plugins (Voice, Vision, Music)
 
 ```bash
 pip install abstractcore
@@ -31,11 +43,17 @@ resp = llm.generate("Explain durable execution in 3 bullets.")
 print(resp.content)
 ```
 
-AbstractCore gives you: provider/model abstraction (local + cloud), tool calling, structured output (Pydantic), media input, embeddings, MCP tool discovery, and an optional OpenAI-compatible `/v1` server.
+AbstractCore gives you one interface for provider switching, tools, structured output, and media — as a Python SDK or via `/v1` for any OpenAI-compatible client.
 
-### 2) API routes — AbstractGateway (language-agnostic control plane)
+### 2) AbstractGateway — durable run control plane (HTTP/SSE APIs)
 
-Use when you need **durable orchestration** accessible from any language or client: persistent runs, scheduling, multi-client UIs — all over HTTP/SSE.
+Start here if you're building persistent AI applications — agents that run for hours, workflows that survive crashes, scheduled tasks. The gateway is your AI control plane: durable runs with ledger replay/streaming and thin clients that can attach/detach across devices.
+
+- Durable execution that survives crashes and restarts
+- Append-only ledger (replay-first) for auditability
+- Scheduled workflows (cron-style, recurring)
+- Multi-client: terminal, browser, tray, Telegram, email
+- Start on one device, continue on another
 
 ```bash
 pip install abstractgateway
@@ -91,17 +109,26 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 
 ## Install the pinned ecosystem profile
 
-Remote-first (recommended):
+### Light / Apple / GPU profiles
+
+Choose how the framework runs based on your hardware and constraints. All profiles keep the same interfaces; they mainly change which **local inference stacks** are available.
+
+**Light (default)** — endpoint-only inference (cloud APIs or local OpenAI-compatible servers), no in-process ML engine stacks:
 
 ```bash
 pip install abstractframework
 ```
 
-Hardware-local profiles (native installs, not Docker):
+**Apple** — native Apple Silicon local stacks (MLX/Metal) in addition to endpoint providers:
 
 ```bash
-pip install "abstractframework[apple]"       # Apple Silicon native stack (MLX/Metal)
-pip install "abstractframework[gpu]"         # GPU native stack (CUDA/ROCm)
+pip install "abstractframework[apple]"
+```
+
+**GPU** — native GPU local stacks (CUDA/ROCm) in addition to endpoint providers:
+
+```bash
+pip install "abstractframework[gpu]"
 ```
 
 ---

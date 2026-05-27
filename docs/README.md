@@ -1,6 +1,8 @@
 # AbstractFramework documentation
 
-AbstractFramework is an open-source ecosystem for building **durable, observable, multimodal AI applications**.
+**Write once. Generate everything.**
+
+A modular, open-source ecosystem for building **durable, observable, multimodal** AI systems. Text, voice, image, video, music — one unified interface, any provider, any model, local or cloud.
 
 This doc set focuses on two things:
 
@@ -13,25 +15,31 @@ Most implementation lives in component repositories. This repo ships the `abstra
 
 ## Start here
 
-### I want to integrate AI via code (Python SDK)
+### Choose your entry point
+
+Start lightweight with just the LLM library, or go all-in with a production gateway. Both paths lead to the same ecosystem.
+
+### AbstractCore (SDK + optional `/v1`)
 
 Start with **AbstractCore**:
 
-- Unified provider/model interface (local + cloud)
-- Tool calling, structured output (Pydantic), streaming, async
-- Media input (images/audio/video/docs) with explicit policies
-- Embeddings, MCP integration, optional OpenAI-compatible `/v1` server
+- 9+ providers with identical API (local + cloud)
+- Universal tool calling, structured output, streaming
+- Media handling (images, PDFs, audio, video)
+- OpenAI-compatible HTTP server mode (`/v1`)
+- Multimodal via capability plugins (Voice, Vision, Music)
 
 Read **[Getting Started](getting-started.md)** → "Core-first" section.
 
-### I want durable orchestration via API routes (any language)
+### AbstractGateway (durable control plane)
 
 Start with **AbstractGateway** + **AbstractFlow**:
 
-- Durable runs (pause/resume/cancel), persistence, scheduling
-- Bundle discovery: author a workflow once, deploy it, run it from any client
-- All over HTTP/SSE — use from any language or framework, not just Python
-- Ledger streaming so UIs can attach/detach without losing state
+- Durable execution that survives crashes and restarts
+- Append-only ledger (replay-first) for auditability
+- Scheduled workflows (cron-style, recurring)
+- Multi-client: terminal, browser, tray, Telegram, email
+- Start on one device, continue on another
 
 Read **[Getting Started](getting-started.md)** → "Gateway-first" section.
 

@@ -4,24 +4,36 @@
 --- README.md ---
 # AbstractFramework
 
-**Durable, observable AI workflows — open source, local-first, multimodal.**
+**Write once. Generate everything.**
 
-AbstractFramework is an ecosystem of composable packages for building AI systems that work in the real world:
+A modular, open-source ecosystem for building **durable, observable, multimodal** AI systems. Text, voice, image, video, music — one unified interface, any provider, any model, local or cloud.
 
-- workflows that **pause and resume** safely (survive crashes and restarts)
-- an append-only **ledger** so any UI can reconstruct state by replaying history
-- explicit boundaries for **tool execution**, approvals, and evidence
-- **multimodal** capability plugins (voice, vision, music) that stay out of your way until you need them
+AbstractFramework is an ecosystem of composable packages for building AI systems that work in operational reality:
+
+- **Durable by default**: workflows **pause and resume** safely (survive crashes and restarts)
+- **Observable**: an append-only **ledger** so any UI can reconstruct state by replaying history
+- **Controlled actions**: explicit boundaries for **tool execution**, approvals, and evidence
+- **Multimodal**: capability plugins (voice, vision, music) that stay out of your way until you need them
+
+Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
 > **Prerequisites**: Python 3.10+. Node.js 18+ for browser UIs. An LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
 
 ---
 
-## Two ways to use the framework
+## Two entrypoints
 
-### 1) Code — AbstractCore (Python SDK)
+Start lightweight with just the LLM library, or go all-in with a production gateway. Both paths lead to the same ecosystem.
 
-Use when you're integrating AI features directly in code:
+### 1) AbstractCore — LLM SDK + OpenAI-compatible `/v1` server
+
+Start here if you need a lightweight LLM library for scripts, notebooks, or existing applications. No infrastructure required — just `pip install` and call. Add multimodal capabilities with plugins as you grow.
+
+- 9+ providers with identical API (local + cloud)
+- Universal tool calling, structured output, streaming
+- Media handling (images, PDFs, audio, video)
+- OpenAI-compatible HTTP server mode (`/v1`)
+- Multimodal via capability plugins (Voice, Vision, Music)
 
 ```bash
 pip install abstractcore
@@ -35,11 +47,17 @@ resp = llm.generate("Explain durable execution in 3 bullets.")
 print(resp.content)
 ```
 
-AbstractCore gives you: provider/model abstraction (local + cloud), tool calling, structured output (Pydantic), media input, embeddings, MCP tool discovery, and an optional OpenAI-compatible `/v1` server.
+AbstractCore gives you one interface for provider switching, tools, structured output, and media — as a Python SDK or via `/v1` for any OpenAI-compatible client.
 
-### 2) API routes — AbstractGateway (language-agnostic control plane)
+### 2) AbstractGateway — durable run control plane (HTTP/SSE APIs)
 
-Use when you need **durable orchestration** accessible from any language or client: persistent runs, scheduling, multi-client UIs — all over HTTP/SSE.
+Start here if you're building persistent AI applications — agents that run for hours, workflows that survive crashes, scheduled tasks. The gateway is your AI control plane: durable runs with ledger replay/streaming and thin clients that can attach/detach across devices.
+
+- Durable execution that survives crashes and restarts
+- Append-only ledger (replay-first) for auditability
+- Scheduled workflows (cron-style, recurring)
+- Multi-client: terminal, browser, tray, Telegram, email
+- Start on one device, continue on another
 
 ```bash
 pip install abstractgateway
@@ -95,17 +113,26 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 
 ## Install the pinned ecosystem profile
 
-Remote-first (recommended):
+### Light / Apple / GPU profiles
+
+Choose how the framework runs based on your hardware and constraints. All profiles keep the same interfaces; they mainly change which **local inference stacks** are available.
+
+**Light (default)** — endpoint-only inference (cloud APIs or local OpenAI-compatible servers), no in-process ML engine stacks:
 
 ```bash
 pip install abstractframework
 ```
 
-Hardware-local profiles (native installs, not Docker):
+**Apple** — native Apple Silicon local stacks (MLX/Metal) in addition to endpoint providers:
 
 ```bash
-pip install "abstractframework[apple]"       # Apple Silicon native stack (MLX/Metal)
-pip install "abstractframework[gpu]"         # GPU native stack (CUDA/ROCm)
+pip install "abstractframework[apple]"
+```
+
+**GPU** — native GPU local stacks (CUDA/ROCm) in addition to endpoint providers:
+
+```bash
+pip install "abstractframework[gpu]"
 ```
 
 ---
@@ -273,6 +300,7 @@ dependencies = [
     # Workflow authoring + CLI app.
     "abstractflow==0.3.15",
     "abstractcode==0.3.6",
+    "abstractassistant==0.4.6",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
     "abstractcore==2.13.29",
@@ -289,6 +317,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# NOTE: Extras here are additive. The base install already pins and installs the
+# full Python ecosystem; `apple`/`gpu` select hardware-local stacks and upgrade
+# apps to their matching profiles.
+#
+# AbstractObserver is distributed as an npm package (`npx @abstractframework/observer`),
+# so it is not installable via pip extras.
+
 # Native macOS Python installs. These are intentionally not Docker profiles:
 # MLX/Metal-backed engines run on the host Apple runtime. This profile upgrades
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
@@ -302,6 +337,7 @@ apple = [
 gpu = [
     "abstractgateway[gpu]==0.2.20",
     "abstractflow[gpu]==0.3.15",
+    "abstractassistant[gpu]==0.4.6",
 ]
 
 [project.urls]
@@ -490,7 +526,9 @@ def print_status() -> None:
 --- docs/README.md ---
 # AbstractFramework documentation
 
-AbstractFramework is an open-source ecosystem for building **durable, observable, multimodal AI applications**.
+**Write once. Generate everything.**
+
+A modular, open-source ecosystem for building **durable, observable, multimodal** AI systems. Text, voice, image, video, music — one unified interface, any provider, any model, local or cloud.
 
 This doc set focuses on two things:
 
@@ -503,25 +541,31 @@ Most implementation lives in component repositories. This repo ships the `abstra
 
 ## Start here
 
-### I want to integrate AI via code (Python SDK)
+### Choose your entry point
+
+Start lightweight with just the LLM library, or go all-in with a production gateway. Both paths lead to the same ecosystem.
+
+### AbstractCore (SDK + optional `/v1`)
 
 Start with **AbstractCore**:
 
-- Unified provider/model interface (local + cloud)
-- Tool calling, structured output (Pydantic), streaming, async
-- Media input (images/audio/video/docs) with explicit policies
-- Embeddings, MCP integration, optional OpenAI-compatible `/v1` server
+- 9+ providers with identical API (local + cloud)
+- Universal tool calling, structured output, streaming
+- Media handling (images, PDFs, audio, video)
+- OpenAI-compatible HTTP server mode (`/v1`)
+- Multimodal via capability plugins (Voice, Vision, Music)
 
 Read **[Getting Started](getting-started.md)** → "Core-first" section.
 
-### I want durable orchestration via API routes (any language)
+### AbstractGateway (durable control plane)
 
 Start with **AbstractGateway** + **AbstractFlow**:
 
-- Durable runs (pause/resume/cancel), persistence, scheduling
-- Bundle discovery: author a workflow once, deploy it, run it from any client
-- All over HTTP/SSE — use from any language or framework, not just Python
-- Ledger streaming so UIs can attach/detach without losing state
+- Durable execution that survives crashes and restarts
+- Append-only ledger (replay-first) for auditability
+- Scheduled workflows (cron-style, recurring)
+- Multi-client: terminal, browser, tray, Telegram, email
+- Start on one device, continue on another
 
 Read **[Getting Started](getting-started.md)** → "Gateway-first" section.
 
@@ -592,6 +636,8 @@ Authoring                                Operations
 
 This guide helps you build a correct mental model quickly, then run something end-to-end.
 
+> **Write once. Generate everything.** Durable, observable, multimodal AI systems — one unified interface, any provider, any model, local or cloud.
+
 AbstractFramework is a **stack**:
 
 | Layer | Package | Role |
@@ -603,7 +649,7 @@ AbstractFramework is a **stack**:
 | Control plane | **AbstractGateway** | Persistence, scheduling, bundle discovery, SSE streaming |
 | Operations | **AbstractObserver** | Browser UI to monitor, control, and schedule runs |
 
-**Rule of thumb**: start with **Core** when you want direct code-level integration (Python SDK); add **Gateway** when you need durability, orchestration, or multi-client/multi-language access via API routes.
+**Rule of thumb**: start with **Core** when you want a lightweight LLM library (SDK or `/v1`) for scripts/notebooks/apps; add **Gateway** when you need persistent runs, scheduling, and multi-client continuity.
 
 > **Prerequisites**: Python 3.10+. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
 
@@ -613,8 +659,8 @@ AbstractFramework is a **stack**:
 
 | If you are… | Start with | Why |
 |---|---|---|
-| Integrating AI features via code (Python SDK) | **AbstractCore** | Smallest surface area, fastest feedback loop |
-| Building durable workflows accessible from any language | **AbstractGateway** + **AbstractFlow** | Persistence, scheduling, HTTP/SSE — "author once, run from anywhere" |
+| Calling LLMs/tools/media (SDK or OpenAI-compatible `/v1`) | **AbstractCore** | Lightweight, smallest surface area, fastest feedback loop |
+| Building persistent agents/workflows (durable runs) | **AbstractGateway** + **AbstractFlow** | Durability, scheduling, bundle discovery, ledger replay/streaming |
 
 You can also install the entire pinned ecosystem in one command:
 
@@ -624,7 +670,7 @@ pip install abstractframework
 
 ---
 
-## Core-first: integrate via code (Python SDK)
+## Core-first: integrate via AbstractCore (SDK or `/v1`)
 
 ### 1. Install
 
@@ -823,33 +869,37 @@ assistant tray
 --- docs/architecture.md ---
 # Architecture
 
-AbstractFramework is built around one idea: **durable, observable execution** for AI workflows.
+AbstractFramework is open-source AI infrastructure built around one idea: **durable, observable execution** for AI workflows.
 
 Most LLM frameworks optimize for prototyping speed. AbstractFramework optimizes for **operational reality**: workflows that pause/resume safely, runs that survive restarts, UIs that reconstruct state from history, and clear boundaries around tool execution and approvals.
 
 ---
 
-## The two development entry points
+## Choose your entry point
 
-### AbstractCore (low-level SDK)
+Start lightweight with just the LLM library, or go all-in with a production gateway. Both paths lead to the same ecosystem.
 
-Use when you want to add AI capabilities inside an application:
+### AbstractCore (SDK + optional `/v1`)
 
-- provider/model abstraction (local + cloud)
-- tool calling, structured output, streaming, async
-- media input policies and modality plugins (voice/vision/music)
-- embeddings, MCP tool discovery
+Start here if you need a lightweight LLM library for scripts, notebooks, or existing applications. No infrastructure required — just install and call. Add multimodal capabilities with plugins as you grow.
 
-The right first step when you need **in-process** execution and you mainly care about shipping features.
+- 9+ providers with identical API (local + cloud)
+- Universal tool calling, structured output, streaming
+- Media handling (images, PDFs, audio, video)
+- OpenAI-compatible HTTP server mode (`/v1`)
+- Multimodal via capability plugins (Voice, Vision, Music)
 
-### AbstractGateway (high-level control plane)
+The right first step when you mainly care about calling models/tools/media (in-process via Python or via `/v1`) and want the smallest surface area.
 
-Use when you want durable, multi-client, schedulable execution:
+### AbstractGateway (durable control plane)
 
-- persistent **runs** with pause/resume/cancel
-- scheduling and run control
-- bundle discovery (share workflows across clients)
-- ledger replay + SSE streaming for UIs
+Start here if you're building persistent AI applications — agents that run for hours, workflows that survive crashes, scheduled tasks. The gateway is your AI control plane: durable runs with ledger replay/streaming and thin clients that can attach/detach across devices.
+
+- Durable execution that survives crashes and restarts
+- Append-only ledger (replay-first) for auditability
+- Scheduled workflows (cron-style, recurring)
+- Multi-client: terminal, browser, tray, Telegram, email
+- Start on one device, continue on another
 
 The composition root when you need a control plane (local or remote).
 
@@ -962,7 +1012,7 @@ Any gateway-backed client can: list bundles/entrypoints, start a run, attach to 
 
 ## Multimodality
 
-AbstractCore stays lightweight by treating modalities as **capability plugins** (discovered internally via Python entry points, but accessible from any client through the gateway's API routes):
+AbstractCore stays lightweight by treating modalities as **capability plugins** (discovered internally via Python entry points, then exposed via the AbstractCore SDK and its optional `/v1` endpoints; gateway-first deployments can also surface them through Gateway):
 
 | Plugin | Capability | API surface |
 |---|---|---|
@@ -984,7 +1034,7 @@ AbstractCore adds value when you need: provider portability, consistent tool/str
 
 ### vs LangChain / LlamaIndex / PydanticAI
 
-Those are primarily **in-process orchestration libraries**. AbstractFramework is a **durable orchestration stack**.
+Those are primarily **in-process orchestration libraries**. AbstractFramework occupies a different niche: an **agentic OS-style** stack for durable, observable execution (runtime + append-only ledger + control plane), where the same workflows can run across providers, devices, and deployment modes.
 
 **Where AbstractFramework is stronger**: durability and pause/resume as primitives, replay-first observability, portable `.flow` bundles that run across clients.
 
@@ -1207,7 +1257,7 @@ This repo covers the overview. Each component repo owns its detailed configurati
 
 This page documents the API exported by `abstractframework`, the meta-package shipped by this repository.
 
-`abstractframework` is a **pinned distribution profile** plus a few lightweight helpers. The framework can be used in two ways: **via code** (Python SDK, see below) or **via API routes** (HTTP/SSE through AbstractGateway, language-agnostic). Most functional APIs live in component packages — especially **AbstractCore** for the LLM SDK.
+`abstractframework` is a **pinned distribution profile** plus a few lightweight helpers. AbstractFramework has two entrypoints: **AbstractCore** (LLM SDK + optional OpenAI-compatible `/v1` server) and **AbstractGateway** (durable run control plane over HTTP/SSE). Most functional APIs live in component packages — especially **AbstractCore** for the LLM SDK.
 
 ---
 
@@ -1327,10 +1377,10 @@ If you're looking for the main SDK, that's **AbstractCore**. If you need durable
 
 ## Where should I start?
 
-- **AbstractCore** — when you want direct code-level integration (Python SDK) with a clean, provider-agnostic API.
+- **AbstractCore** — when you want direct LLM/tool/media integration with a clean, provider-agnostic API (Python SDK **or** OpenAI-compatible `/v1`).
 - **AbstractGateway** — when you need durability, orchestration, scheduling, or language-agnostic access via HTTP/SSE routes.
 
-Most teams start Core-first (code), then introduce Gateway (API routes) when workflows become long-running, scheduled, or shared across clients. See **[Getting Started](getting-started.md)**.
+Most teams start with Core (SDK or `/v1`), then introduce Gateway when workflows become long-running, scheduled, or shared across clients. See **[Getting Started](getting-started.md)**.
 
 ---
 
