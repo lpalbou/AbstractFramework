@@ -35,6 +35,9 @@
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
     </a></li>
+    <li><a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta" style="margin-left:4px">
+      &#129303; Models
+    </a></li>
   </ul>
   <button class="mobile-toggle" aria-label="Menu">&#9776;</button>
 </nav>
@@ -256,7 +259,13 @@ img = llm.vision.<span class="fn">t2i</span>(<span class="str">"A nebula over mo
       </div>
     </div>
 
-    <div class="code-block reveal">
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="mm-python">Python</button>
+        <button class="tab-btn" data-tab="mm-api">OpenAI API</button>
+      </div>
+      <div class="tab-panel active" id="tab-mm-python">
+        <div class="code-block">
 <pre><code><span class="line-cmt"># Install capability plugins once</span>
 <span class="line-kw">pip install</span> abstractcore abstractvoice abstractvision abstractmusic
 
@@ -282,6 +291,30 @@ music = llm.music.<span class="line-fn">t2m</span>(<span class="line-str">"Ambie
 
 <span class="line-cmt"># Vision fallback: text-only models gain image understanding</span>
 resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describe this image"</span>, media=[<span class="line-str">"photo.jpg"</span>])</code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-mm-api">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Start the AbstractCore server</span>
+abstractcore serve --port <span class="line-var">8080</span>
+
+<span class="line-cmt"># Text generation</span>
+curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"model": "qwen3:4b", "messages": [{"role": "user", "content": "Tell me a story."}]}'</span>
+
+<span class="line-cmt"># Text-to-speech</span>
+curl http://localhost:<span class="line-var">8080</span>/v1/audio/speech \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"input": "Hello world", "voice": "default"}'</span> \
+  --output speech.wav
+
+<span class="line-cmt"># Text-to-image</span>
+curl http://localhost:<span class="line-var">8080</span>/v1/images/generations \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"prompt": "A lighthouse at sunset", "model": "flux.2-klein-4b"}'</span></code></pre>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -656,15 +689,28 @@ resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describ
       <h2 class="section-title">Images and Video, Locally</h2>
       <p class="section-desc">Generate images and video on your hardware. MLX-Gen powers Apple Silicon with FLUX.2, Z-Image, Qwen, ERNIE, Wan2.2. Mixed quantization (q4/q8) for efficiency on consumer hardware.</p>
     </div>
-    <div class="gallery reveal">
-      <div class="gallery-item">
-        <img src="assets/img/starship-snow.png" alt="AI-generated starship in snow landscape" loading="lazy">
-        <div class="gallery-caption">FLUX.2 Klein 4B q4/q8 via MLX-Gen &mdash; generated locally on Apple Silicon</div>
+    <div class="carousel reveal" id="gallery-carousel">
+      <div class="carousel-track">
+        <div class="carousel-slide">
+          <img src="assets/img/starship-snow.png" alt="FLUX.2 starship" loading="lazy">
+          <div class="carousel-caption">FLUX.2 Klein 4B q4/q8 &mdash; "A starship in snow"</div>
+        </div>
+        <div class="carousel-slide">
+          <img src="assets/img/starship-snow-pencil-sketch.png" alt="Pencil sketch edit" loading="lazy">
+          <div class="carousel-caption">Qwen Image Edit &mdash; Pencil sketch transformation</div>
+        </div>
+        <div class="carousel-slide">
+          <img src="assets/img/gallery-cyberpunk.png" alt="Cyberpunk city" loading="lazy">
+          <div class="carousel-caption">Z-Image Turbo 8bit &mdash; "Cyberpunk city at night"</div>
+        </div>
+        <div class="carousel-slide">
+          <img src="assets/img/gallery-samurai.png" alt="Samurai warrior" loading="lazy">
+          <div class="carousel-caption">Z-Image Turbo 8bit &mdash; "Samurai on cliff at dawn"</div>
+        </div>
       </div>
-      <div class="gallery-item">
-        <img src="assets/img/starship-snow-pencil-sketch.png" alt="Pencil sketch edit of starship" loading="lazy">
-        <div class="gallery-caption">Qwen Image Edit &mdash; "Turn this into a pencil sketch" applied to the original</div>
-      </div>
+      <button class="carousel-prev" aria-label="Previous">&#8249;</button>
+      <button class="carousel-next" aria-label="Next">&#8250;</button>
+      <div class="carousel-dots"></div>
     </div>
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Text-to-Video (Wan2.2)</h3>
@@ -674,6 +720,24 @@ resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describ
           <source src="assets/video/t2v-example.mp4" type="video/mp4">
           Your browser does not support the video tag.
         </video>
+      </div>
+    </div>
+    <div class="reveal" style="margin-top:2rem">
+      <h3 style="margin-bottom:1rem">Text-to-Music (ACE-Step / ACE Music)</h3>
+      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generate music from text prompts. Local via ACE-Step v1.5 on Apple Silicon, or remote via ACE Music API. Instrumental and vocal tracks with genre/style control.</p>
+      <div class="audio-showcase">
+        <div class="audio-player">
+          <div class="audio-meta">
+            <span class="audio-icon">&#9835;</span>
+            <div>
+              <div class="audio-title">Ambient Electronic Chill</div>
+              <div class="audio-prompt">Prompt: "ambient electronic chill lofi beats, soft synthesizer pads, gentle piano melody"</div>
+            </div>
+          </div>
+          <audio controls preload="metadata" style="width:100%;margin-top:12px">
+            <source src="assets/audio/demo-ambient.wav" type="audio/wav">
+          </audio>
+        </div>
       </div>
     </div>
   </div>
@@ -772,6 +836,113 @@ resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describ
   </div>
 </section>
 
+<!-- ═══════════════════ KNOWLEDGE GRAPH ═══════════════════ -->
+<section id="knowledge" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Knowledge</div>
+      <h2 class="section-title">Graph Memory &amp; Strong Semantics</h2>
+      <p class="section-desc">Agents need memory. AbstractMemory provides a temporal, provenance-aware knowledge graph. AbstractSemantics ensures schema consistency across the entire ecosystem.</p>
+    </div>
+    <div class="showcase-grid reveal">
+      <div>
+        <img src="assets/img/knowledge-graph-visual.png" alt="Knowledge graph visualization" loading="lazy" style="border-radius:var(--radius-lg);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
+      </div>
+      <div class="showcase-content">
+        <h3>Temporal Triple Store</h3>
+        <p>Every fact is a triple (subject, predicate, object) with timestamps, confidence scores, and provenance. Facts expire. Facts can be observations or beliefs. The graph remembers <em>when</em> something was true, not just <em>that</em> it was true.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Append-only with validity windows (since/until)</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Provenance: who extracted it, from what span</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Multiple backends: InMemory, SQLite, LanceDB</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Vector search for semantic similarity queries</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="kg-python">Python</button>
+        <button class="tab-btn" data-tab="kg-api">Gateway API</button>
+      </div>
+      <div class="tab-panel active" id="tab-kg-python">
+        <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> <span class="line-fn">InMemoryTripleStore</span>, <span class="line-fn">TripleAssertion</span>, <span class="line-fn">TripleQuery</span>
+
+store = <span class="line-fn">InMemoryTripleStore</span>()
+store.<span class="line-fn">add</span>([
+    <span class="line-fn">TripleAssertion</span>(
+        subject=<span class="line-str">"user"</span>,
+        predicate=<span class="line-str">"prefers"</span>,
+        object=<span class="line-str">"dark mode"</span>,
+        scope=<span class="line-str">"session"</span>,
+        confidence=<span class="line-var">0.95</span>,
+        provenance={<span class="line-str">"source"</span>: <span class="line-str">"conversation"</span>}
+    )
+])
+
+hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(subject=<span class="line-str">"user"</span>, limit=<span class="line-var">10</span>))</code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-kg-api">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Query the knowledge graph via gateway</span>
+curl http://localhost:<span class="line-var">8080</span>/api/gateway/kg/query \
+  -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"subject": "user", "limit": 10}'</span>
+
+<span class="line-cmt"># AbstractSemantics validates predicates</span>
+<span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> <span class="line-fn">load_semantics_registry</span>
+reg = <span class="line-fn">load_semantics_registry</span>()
+<span class="line-cmt"># 50+ predicates, entity types, CURIE prefixes</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase-grid reverse reveal" style="margin-top:3rem">
+      <div class="showcase-content">
+        <h3>Schema-Validated Semantics</h3>
+        <p>AbstractSemantics provides the ontology: allowed predicates, entity types, CURIE prefixes. JSON Schema generation ensures every knowledge assertion is valid. No hallucinated predicates, no schema drift.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> YAML registry of predicates and entity types</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> JSON Schema builder for LLM structured output</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Framework-wide vocabulary consistency</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Override via env for custom ontologies</li>
+        </ul>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center">
+        <div class="kg-diagram">
+          <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Edges -->
+            <line x1="200" y1="60" x2="80" y2="160" stroke="#6366f1" stroke-width="1.5" opacity="0.6"/>
+            <line x1="200" y1="60" x2="320" y2="160" stroke="#06b6d4" stroke-width="1.5" opacity="0.6"/>
+            <line x1="200" y1="60" x2="200" y2="250" stroke="#10b981" stroke-width="1.5" opacity="0.6"/>
+            <line x1="320" y1="160" x2="200" y2="250" stroke="#ec4899" stroke-width="1.5" opacity="0.6"/>
+            <line x1="80" y1="160" x2="200" y2="250" stroke="#f59e0b" stroke-width="1.5" opacity="0.6"/>
+            <!-- Edge labels -->
+            <text x="125" y="100" fill="#9898b0" font-size="10" font-style="italic" text-anchor="middle">prefers</text>
+            <text x="275" y="100" fill="#9898b0" font-size="10" font-style="italic" text-anchor="middle">works_on</text>
+            <text x="215" y="162" fill="#9898b0" font-size="10" font-style="italic" text-anchor="start">knows</text>
+            <text x="272" y="215" fill="#9898b0" font-size="10" font-style="italic" text-anchor="middle">uses</text>
+            <text x="125" y="215" fill="#9898b0" font-size="10" font-style="italic" text-anchor="middle">related_to</text>
+            <!-- Nodes -->
+            <circle cx="200" cy="50" r="28" fill="rgba(99,102,241,0.15)" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="200" y="54" fill="#818cf8" font-size="12" font-weight="600" text-anchor="middle">user</text>
+            <circle cx="80" cy="160" r="28" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="1.5"/>
+            <text x="80" y="164" fill="#34d399" font-size="10" font-weight="600" text-anchor="middle">dark_mode</text>
+            <circle cx="320" cy="160" r="28" fill="rgba(6,182,212,0.15)" stroke="#06b6d4" stroke-width="1.5"/>
+            <text x="320" y="156" fill="#22d3ee" font-size="9" font-weight="600" text-anchor="middle">project_</text>
+            <text x="320" y="168" fill="#22d3ee" font-size="9" font-weight="600" text-anchor="middle">alpha</text>
+            <circle cx="200" cy="250" r="28" fill="rgba(236,72,153,0.15)" stroke="#ec4899" stroke-width="1.5"/>
+            <text x="200" y="254" fill="#f472b6" font-size="12" font-weight="600" text-anchor="middle">Python</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════════ PROVIDERS ═══════════════════ -->
 <section>
   <div class="container">
@@ -780,7 +951,13 @@ resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describ
       <h2 class="section-title">One API. Every Provider.</h2>
       <p class="section-desc">Switch between providers with a single line change. Same code, same tools, same structured output. From local open-source models to cloud APIs.</p>
     </div>
-    <div class="code-block reveal">
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="prov-python">Python</button>
+        <button class="tab-btn" data-tab="prov-api">OpenAI API</button>
+      </div>
+      <div class="tab-panel active" id="tab-prov-python">
+        <div class="code-block">
 <pre><code><span class="line-cmt"># Switch providers with zero code changes</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>,     model=<span class="line-str">"qwen3:4b-instruct"</span>)
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"lmstudio"</span>,   model=<span class="line-str">"qwen/qwen3-4b-2507"</span>)
@@ -794,6 +971,26 @@ llm = <span class="line-fn">create_llm</span>(<span class="line-str">"portkey"</
 
 <span class="line-cmt"># Same interface everywhere</span>
 response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Hello"</span>, tools=[my_tool], response_model=MySchema)</code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-prov-api">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># AbstractCore's server is OpenAI-compatible</span>
+<span class="line-cmt"># Point any OpenAI SDK or tool at it</span>
+
+<span class="line-kw">from</span> openai <span class="line-kw">import</span> <span class="line-fn">OpenAI</span>
+
+client = <span class="line-fn">OpenAI</span>(base_url=<span class="line-str">"http://localhost:8080/v1"</span>, api_key=<span class="line-str">"unused"</span>)
+
+response = client.chat.completions.<span class="line-fn">create</span>(
+    model=<span class="line-str">"qwen3:4b"</span>,
+    messages=[{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"Hello"</span>}],
+    tools=[my_tool_schema],
+)
+
+<span class="line-cmt"># Works with LangChain, LlamaIndex, Vercel AI SDK, etc.</span></code></pre>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -805,16 +1002,16 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Hel
       <div class="section-label">Quick Start</div>
       <h2 class="section-title">Up and Running in Minutes</h2>
     </div>
-    <div class="entry-points reveal" style="grid-template-columns:1fr 1fr 1fr">
-
-      <!-- Option 1: Core -->
-      <div class="entry-card core">
-        <div class="entry-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        </div>
-        <h3>Option 1: Just the LLM Library</h3>
-        <div class="code-block" style="margin:1rem 0">
-<pre><code><span class="line-kw">pip install</span> abstractcore
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="start-core">Just AbstractCore</button>
+        <button class="tab-btn" data-tab="start-full">Full Framework</button>
+        <button class="tab-btn" data-tab="start-docker">Docker</button>
+      </div>
+      <div class="tab-panel active" id="tab-start-core">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Install the core LLM library</span>
+<span class="line-kw">pip install</span> abstractcore
 
 <span class="line-cmt"># Local provider (no API keys needed)</span>
 ollama serve && ollama pull qwen3:4b
@@ -822,22 +1019,19 @@ ollama serve && ollama pull qwen3:4b
 <span class="line-cmt"># Your first call</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
-<span class="line-fn">print</span>(llm.<span class="line-fn">generate</span>(<span class="line-str">"Hello!"</span>).content)</code></pre>
+<span class="line-fn">print</span>(llm.<span class="line-fn">generate</span>(<span class="line-str">"Hello!"</span>).content)
+
+<span class="line-cmt"># Add multimodal capabilities</span>
+<span class="line-kw">pip install</span> abstractvoice abstractvision abstractmusic</code></pre>
         </div>
       </div>
-
-      <!-- Option 2: Full Framework -->
-      <div class="entry-card gateway">
-        <div class="entry-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
-        </div>
-        <h3>Option 2: Full Framework</h3>
-        <div class="code-block" style="margin:1rem 0">
-<pre><code><span class="line-cmt"># Install everything</span>
+      <div class="tab-panel" id="tab-start-full">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Install the entire framework</span>
 <span class="line-kw">pip install</span> <span class="line-str">"abstractframework[all]"</span>
 
 <span class="line-cmt"># Start the gateway</span>
-abstractgateway serve --port 8080
+abstractgateway serve --port <span class="line-var">8080</span>
 
 <span class="line-cmt"># Launch browser UIs</span>
 npx @abstractframework/observer
@@ -848,18 +1042,12 @@ npx @abstractframework/code
 abstractcode --provider ollama --model qwen3:4b</code></pre>
         </div>
       </div>
-
-      <!-- Option 3: Docker -->
-      <div class="entry-card" style="border-top:3px solid var(--cyan)">
-        <div class="entry-icon" style="background:rgba(6,182,212,.12);color:var(--cyan)">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="13" width="20" height="7" rx="1"/><path d="M6 13V5a2 2 0 012-2h8a2 2 0 012 2v8"/><circle cx="12" cy="16.5" r="1"/></svg>
-        </div>
-        <h3>Option 3: Docker</h3>
-        <div class="code-block" style="margin:1rem 0">
+      <div class="tab-panel" id="tab-start-docker">
+        <div class="code-block">
 <pre><code><span class="line-cmt"># Pull and run the gateway</span>
 <span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway
 
-<span class="line-kw">docker run</span> -p 8080:8080 \
+<span class="line-kw">docker run</span> -p <span class="line-var">8080</span>:<span class="line-var">8080</span> \
   -v abstractdata:/data \
   ghcr.io/lpalbou/abstractgateway
 
@@ -868,7 +1056,6 @@ npx @abstractframework/observer
 npx @abstractframework/code</code></pre>
         </div>
       </div>
-
     </div>
 
     <!-- Hardware profiles -->
@@ -902,6 +1089,67 @@ npx @abstractframework/code</code></pre>
 <pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractframework[all]"</span></code></pre>
         </div>
         <p>Cloud-only inference. Works anywhere Python runs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ ROADMAP ═══════════════════ -->
+<section id="roadmap">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Roadmap</div>
+      <h2 class="section-title">Where We Are &amp; What's Next</h2>
+      <p class="section-desc">AbstractFramework is under active development. Here's what's shipped and what we're building next.</p>
+    </div>
+    <div class="roadmap-timeline reveal">
+      <div class="roadmap-item done">
+        <div class="roadmap-marker"></div>
+        <div class="roadmap-content">
+          <span class="roadmap-status">Shipped</span>
+          <h4>Foundation</h4>
+          <p>AbstractCore (9+ LLM providers), AbstractRuntime (durable execution), AbstractAgent (ReAct/CodeAct/MemAct)</p>
+        </div>
+      </div>
+      <div class="roadmap-item done">
+        <div class="roadmap-marker"></div>
+        <div class="roadmap-content">
+          <span class="roadmap-status">Shipped</span>
+          <h4>Multimodal Capabilities</h4>
+          <p>AbstractVoice (TTS/STT/cloning), AbstractVision (T2I/I2I/T2V/I2V via MLX-Gen), AbstractMusic (ACE-Step)</p>
+        </div>
+      </div>
+      <div class="roadmap-item done">
+        <div class="roadmap-marker"></div>
+        <div class="roadmap-content">
+          <span class="roadmap-status">Shipped</span>
+          <h4>Applications</h4>
+          <p>AbstractGateway (control plane), AbstractFlow (visual editor), AbstractCode (TUI + web), AbstractObserver (monitoring)</p>
+        </div>
+      </div>
+      <div class="roadmap-item done">
+        <div class="roadmap-marker"></div>
+        <div class="roadmap-content">
+          <span class="roadmap-status">Shipped</span>
+          <h4>Knowledge Layer</h4>
+          <p>AbstractMemory (temporal KG), AbstractSemantics (schema registry), agent memory effects</p>
+        </div>
+      </div>
+      <div class="roadmap-item active">
+        <div class="roadmap-marker"></div>
+        <div class="roadmap-content">
+          <span class="roadmap-status current">In Progress</span>
+          <h4>Ecosystem Maturation</h4>
+          <p>OpenAI Responses API support, Agent Skills integration, advanced prompt caching, expanded model registries, installer UX</p>
+        </div>
+      </div>
+      <div class="roadmap-item upcoming">
+        <div class="roadmap-marker"></div>
+        <div class="roadmap-content">
+          <span class="roadmap-status planned">Planned</span>
+          <h4>Scale &amp; Community</h4>
+          <p>Community skill marketplace, shared .flow bundle registry, multi-tenant gateway, enterprise deployment guides, expanded Docker profiles</p>
+        </div>
       </div>
     </div>
   </div>
@@ -982,6 +1230,13 @@ npx @abstractframework/code</code></pre>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="13" width="20" height="7" rx="1"/><path d="M6 13V5a2 2 0 012-2h8a2 2 0 012 2v8"/><circle cx="12" cy="16.5" r="1"/></svg>
       Docker Hub
     </a>
+    <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+      &#129303; HuggingFace Models
+    </a>
+    <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      npm Packages
+    </a>
   </div>
 </section>
 
@@ -1025,12 +1280,21 @@ npx @abstractframework/code</code></pre>
       <a href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer">AbstractMemory</a>
       <a href="https://github.com/lpalbou/abstractsemantics" target="_blank" rel="noopener noreferrer">AbstractSemantics</a>
     </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace Models</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm Packages</a>
+      <a href="https://ghcr.io/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">Docker Images</a>
+      <a href="https://www.abstractcore.ai" target="_blank" rel="noopener noreferrer">AbstractCore Docs</a>
+    </div>
   </div>
   <div class="footer-bottom">
     &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
     <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
     <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a> &middot;
-    <a href="https://ghcr.io/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">Docker</a>
+    <a href="https://ghcr.io/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">Docker</a> &middot;
+    <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace</a> &middot;
+    <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm</a>
   </div>
 </footer>
 
