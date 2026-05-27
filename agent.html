@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractAgent — Documentation | AbstractFramework</title>
+  <meta name="description" content="AbstractAgent: ReAct, CodeAct, and MemAct agent patterns with durable runs, tool approval, and max iterations.">
+  <link rel="icon" type="image/png" href="assets/img/logo-framework.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<nav class="nav">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links">
+    <li><a href="./">Home</a></li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#getting-started">Get Started</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="https://github.com/lpalbou/abstractagent" target="_blank" rel="noopener noreferrer" class="nav-cta">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a></li>
+  </ul>
+</nav>
+
+<div class="pkg-nav">
+  <div class="pkg-nav-inner">
+    <a href="core.html" class="pkg-nav-link">Core</a>
+    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
+    <a href="agent.html" class="pkg-nav-link active">Agent</a>
+    <a href="flow.html" class="pkg-nav-link">Flow</a>
+    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="code.html" class="pkg-nav-link">Code</a>
+    <a href="observer.html" class="pkg-nav-link">Observer</a>
+    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="voice.html" class="pkg-nav-link">Voice</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
+    <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="memory.html" class="pkg-nav-link">Memory</a>
+    <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+  </div>
+</div>
+
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:10rem var(--space-xl) 4rem">
+  <div class="hero-inner" style="max-width:800px">
+    <div class="hero-badge"><span class="dot"></span> COMPOSITION</div>
+    <h1 style="font-size:var(--text-3xl)"><span class="gradient">AbstractAgent</span></h1>
+    <p class="hero-sub">ReAct, CodeAct, and MemAct agent patterns &mdash; built on durable AbstractRuntime workflows with tool approval, max iterations, and clean logic/adapter/agent separation.</p>
+    <div class="hero-actions">
+      <a href="https://pypi.org/project/abstractagent/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        PyPI
+      </a>
+      <a href="https://github.com/lpalbou/abstractagent" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section id="overview" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Overview</span>
+      <h2 class="section-title">What AbstractAgent Is</h2>
+      <p class="section-desc">Agent workflows implemented as pure logic, runtime adapters, and thin API wrappers &mdash; cleanly separated for testability and reuse.</p>
+    </div>
+
+    <div class="showcase-grid">
+      <div class="showcase-content">
+        <h3>Three-Layer Architecture</h3>
+        <p>AbstractAgent separates concerns into three clean layers, making each independently testable and replaceable.</p>
+        <ul class="showcase-features">
+          <li><span class="icon">&#10003;</span> <strong>Logic</strong> &mdash; prompting and response parsing, runtime-agnostic (<code>src/abstractagent/logic/</code>)</li>
+          <li><span class="icon">&#10003;</span> <strong>Adapters</strong> &mdash; logic &rarr; <code>WorkflowSpec</code> with durable <code>EffectType.*</code> steps (<code>src/abstractagent/adapters/</code>)</li>
+          <li><span class="icon">&#10003;</span> <strong>Agents</strong> &mdash; thin API wrappers via <code>BaseAgent</code> + concrete agents (<code>src/abstractagent/agents/</code>)</li>
+        </ul>
+      </div>
+      <div>
+        <div class="multimodal-visual" style="margin:0">
+          <div class="mm-flow" style="flex-direction:column;gap:var(--space-md)">
+            <div class="mm-node input" style="width:100%;max-width:320px">Logic Layer<br><small style="opacity:.7">ReActLogic &middot; CodeActLogic &middot; MemActLogic</small></div>
+            <div class="mm-arrow" style="transform:rotate(90deg)">&rarr;</div>
+            <div class="mm-node process" style="width:100%;max-width:320px">Adapter Layer<br><small style="opacity:.7">Logic &rarr; WorkflowSpec + Effects</small></div>
+            <div class="mm-arrow" style="transform:rotate(90deg)">&rarr;</div>
+            <div class="mm-node output" style="width:100%;max-width:320px">Agent Layer<br><small style="opacity:.7">BaseAgent + ReactAgent, CodeActAgent, MemActAgent</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Agent Patterns</span>
+      <h2 class="section-title">Features</h2>
+      <p class="section-desc">Three agent patterns, durable execution, and production controls.</p>
+    </div>
+
+    <div class="modes-grid">
+      <div class="mode-card">
+        <span class="mode-icon" style="filter:drop-shadow(0 0 12px rgba(99,102,241,0.3))">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </span>
+        <h3>ReAct</h3>
+        <p>Reason + Act loop. The LLM observes, thinks, picks a tool, observes the result, and repeats until it has an answer. The classic agentic pattern.</p>
+        <div class="mode-tags">
+          <span class="mode-tag">think &rarr; act &rarr; observe</span>
+          <span class="mode-tag">tool calling</span>
+          <span class="mode-tag">iterative</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <span class="mode-icon" style="filter:drop-shadow(0 0 12px rgba(16,185,129,0.3))">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </span>
+        <h3>CodeAct</h3>
+        <p>The LLM writes Python code blocks to accomplish tasks. Code is extracted and executed in a sandboxed subprocess with configurable timeout.</p>
+        <div class="mode-tags">
+          <span class="mode-tag">code generation</span>
+          <span class="mode-tag">sandboxed exec</span>
+          <span class="mode-tag">verifier policy</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <span class="mode-icon" style="filter:drop-shadow(0 0 12px rgba(236,72,153,0.3))">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        </span>
+        <h3>MemAct</h3>
+        <p>ReAct extended with durable session memory. The agent persists knowledge across runs using runtime memory spans and knowledge graph edges.</p>
+        <div class="mode-tags">
+          <span class="mode-tag">session memory</span>
+          <span class="mode-tag">knowledge graph</span>
+          <span class="mode-tag">cross-run</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="components-grid" style="margin-top:var(--space-2xl)">
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag foundation">Durability</span>
+        </div>
+        <h3>Durable Runs</h3>
+        <p>Every agent iteration is checkpointed by AbstractRuntime. Runs survive process restarts. Resume mid-conversation or mid-tool-execution.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag composition">Safety</span>
+        </div>
+        <h3>Tool Approval</h3>
+        <p>Configurable <code>ToolApprovalPolicy</code> gates dangerous operations. Safe tools auto-execute; mutations pause for human approval before proceeding.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag app">Control</span>
+        </div>
+        <h3>Max Iterations</h3>
+        <p>Agents enforce a configurable iteration limit (default 50). When reached, the agent concludes with its best answer rather than looping indefinitely.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag modality">Sandbox</span>
+        </div>
+        <h3>Code Execution</h3>
+        <p>CodeAct runs Python in a local subprocess sandbox with timeout. <code>execute_python</code> tool with configurable security boundaries.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag memory">Delegation</span>
+        </div>
+        <h3>Agent Delegation</h3>
+        <p>Agents can delegate subtasks to other agents via the built-in <code>delegate_agent</code> tool, enabling hierarchical multi-agent workflows.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-card-header">
+          <span class="comp-tag foundation">Persistence</span>
+        </div>
+        <h3>Ledger &amp; Replay</h3>
+        <p>All LLM calls, tool executions, and decisions are logged to the append-only ledger. Replay any agent run from history for debugging.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section id="getting-started" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Quickstart</span>
+      <h2 class="section-title">Getting Started</h2>
+      <p class="section-desc">Create an agent in a few lines and run it against any provider.</p>
+    </div>
+
+    <h3 style="margin-bottom:var(--space-md)">1. Install</h3>
+    <div class="code-block"><pre><code>pip install abstractagent</code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">2. Create a ReAct Agent</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent.agents.react <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
+
+agent = <span class="line-fn">create_react_agent</span>(
+    provider=<span class="line-str">"openai"</span>,
+    model=<span class="line-str">"gpt-4o-mini"</span>,
+)
+
+result = agent.<span class="line-fn">run</span>(<span class="line-str">"What is the capital of France?"</span>)
+print(result)</code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">3. Create a CodeAct Agent</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent.agents.codeact <span class="line-kw">import</span> <span class="line-fn">create_codeact_agent</span>
+
+agent = <span class="line-fn">create_codeact_agent</span>(
+    provider=<span class="line-str">"ollama"</span>,
+    model=<span class="line-str">"qwen3:4b"</span>,
+)
+
+result = agent.<span class="line-fn">run</span>(<span class="line-str">"Write a function that computes fibonacci numbers, then compute fib(10)."</span>)
+print(result)</code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">4. Create a MemAct Agent (with persistent memory)</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent.agents.memact <span class="line-kw">import</span> <span class="line-fn">create_memact_agent</span>
+
+agent = <span class="line-fn">create_memact_agent</span>(
+    provider=<span class="line-str">"anthropic"</span>,
+    model=<span class="line-str">"claude-haiku-4-5"</span>,
+)
+
+<span class="line-cmt"># Memory persists across runs in the same session</span>
+result = agent.<span class="line-fn">run</span>(<span class="line-str">"My name is Alice and I work at Acme Corp."</span>)
+result = agent.<span class="line-fn">run</span>(<span class="line-str">"Where do I work?"</span>)
+print(result)  <span class="line-cmt"># Recalls from session memory</span></code></pre></div>
+
+    <h3 style="margin-bottom:var(--space-md)">5. With Custom Tools</h3>
+    <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">tool</span>
+<span class="line-kw">from</span> abstractagent.agents.react <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
+
+<span class="line-kw">@</span><span class="line-fn">tool</span>
+<span class="line-kw">def</span> <span class="line-fn">lookup_user</span>(user_id: <span class="line-var">str</span>) -> <span class="line-var">str</span>:
+    <span class="line-str">"""Look up user details by ID."""</span>
+    <span class="line-kw">return</span> <span class="line-str">f"User {user_id}: Alice, Engineering"</span>
+
+agent = <span class="line-fn">create_react_agent</span>(
+    provider=<span class="line-str">"openai"</span>,
+    model=<span class="line-str">"gpt-4o-mini"</span>,
+    tools=[lookup_user],
+)
+
+result = agent.<span class="line-fn">run</span>(<span class="line-str">"Look up user #42 and summarize their info."</span>)
+print(result)</code></pre></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ API REFERENCE ═══════════════════ -->
+<section id="api" class="section reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Reference</span>
+      <h2 class="section-title">API Surface</h2>
+      <p class="section-desc">Package structure, imports, and key components.</p>
+    </div>
+
+    <h3 style="margin-bottom:var(--space-md)">Package Exports</h3>
+    <div class="code-block"><pre><code><span class="line-cmt"># Agent constructors</span>
+<span class="line-kw">from</span> abstractagent.agents.react <span class="line-kw">import</span> ReactAgent, <span class="line-fn">create_react_agent</span>
+<span class="line-kw">from</span> abstractagent.agents.codeact <span class="line-kw">import</span> CodeActAgent, <span class="line-fn">create_codeact_agent</span>
+<span class="line-kw">from</span> abstractagent.agents.memact <span class="line-kw">import</span> MemActAgent, <span class="line-fn">create_memact_agent</span>
+
+<span class="line-cmt"># Base agent (for custom agents)</span>
+<span class="line-kw">from</span> abstractagent.agents.base <span class="line-kw">import</span> BaseAgent
+
+<span class="line-cmt"># Runtime-agnostic logic (prompting + parsing)</span>
+<span class="line-kw">from</span> abstractagent.logic.react <span class="line-kw">import</span> ReActLogic
+<span class="line-kw">from</span> abstractagent.logic.codeact <span class="line-kw">import</span> CodeActLogic
+<span class="line-kw">from</span> abstractagent.logic.memact <span class="line-kw">import</span> MemActLogic
+
+<span class="line-cmt"># Runtime workflow adapters</span>
+<span class="line-kw">from</span> abstractagent.adapters.react_runtime <span class="line-kw">import</span> <span class="line-fn">create_react_workflow</span>
+<span class="line-kw">from</span> abstractagent.adapters.codeact_runtime <span class="line-kw">import</span> <span class="line-fn">create_codeact_workflow</span>
+<span class="line-kw">from</span> abstractagent.adapters.memact_runtime <span class="line-kw">import</span> <span class="line-fn">create_memact_workflow</span></code></pre></div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Source Tree</h3>
+    <div class="arch-diagram">
+      <div class="arch-layers">
+        <div class="arch-layer">
+          <div class="arch-layer-label">Logic</div>
+          <div class="arch-blocks">
+            <div class="arch-block accent">ReActLogic</div>
+            <div class="arch-block accent">CodeActLogic</div>
+            <div class="arch-block accent">MemActLogic</div>
+            <div class="arch-block accent">builtins.py</div>
+          </div>
+        </div>
+        <div class="arch-connector">
+          <svg viewBox="0 0 20 20"><path d="M10 4v12M6 12l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">Adapters</div>
+          <div class="arch-blocks">
+            <div class="arch-block green">react_runtime.py</div>
+            <div class="arch-block green">codeact_runtime.py</div>
+            <div class="arch-block green">memact_runtime.py</div>
+          </div>
+        </div>
+        <div class="arch-connector">
+          <svg viewBox="0 0 20 20"><path d="M10 4v12M6 12l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">Agents</div>
+          <div class="arch-blocks">
+            <div class="arch-block cyan">ReactAgent</div>
+            <div class="arch-block cyan">CodeActAgent</div>
+            <div class="arch-block cyan">MemActAgent</div>
+            <div class="arch-block cyan">BaseAgent</div>
+          </div>
+        </div>
+        <div class="arch-connector">
+          <svg viewBox="0 0 20 20"><path d="M10 4v12M6 12l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-label">Tools</div>
+          <div class="arch-blocks">
+            <div class="arch-block pink">execute_python</div>
+            <div class="arch-block pink">self_improve</div>
+            <div class="arch-block pink">delegate_agent</div>
+            <div class="arch-block pink">ALL_TOOLS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Agent Patterns Comparison</h3>
+    <div class="arch-diagram">
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-sm)">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:.75rem;color:var(--text-muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em">Pattern</th>
+            <th style="text-align:left;padding:.75rem;color:var(--text-muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em">How It Works</th>
+            <th style="text-align:left;padding:.75rem;color:var(--text-muted);font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em">Best For</th>
+          </tr>
+        </thead>
+        <tbody style="color:var(--text-secondary)">
+          <tr style="border-bottom:1px solid var(--border-light)">
+            <td style="padding:.6rem .75rem"><strong style="color:var(--primary-light)">ReAct</strong></td>
+            <td style="padding:.6rem .75rem">Think &rarr; select tool &rarr; observe result &rarr; repeat</td>
+            <td style="padding:.6rem .75rem">General-purpose agentic tasks, information retrieval, multi-step reasoning</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border-light)">
+            <td style="padding:.6rem .75rem"><strong style="color:var(--green)">CodeAct</strong></td>
+            <td style="padding:.6rem .75rem">Generate Python code &rarr; execute in sandbox &rarr; observe output</td>
+            <td style="padding:.6rem .75rem">Data analysis, computation, file manipulation, automation scripts</td>
+          </tr>
+          <tr>
+            <td style="padding:.6rem .75rem"><strong style="color:var(--pink)">MemAct</strong></td>
+            <td style="padding:.6rem .75rem">ReAct + durable session memory &amp; knowledge graph</td>
+            <td style="padding:.6rem .75rem">Long-running assistants, cross-session context, personalization</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:var(--space-2xl);margin-bottom:var(--space-md)">Key Design Rules</h3>
+    <div style="color:var(--text-secondary);line-height:1.8;font-size:var(--text-base)">
+      <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:.5rem">
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> <strong>Logic is runtime-agnostic</strong> &mdash; no <code>abstractruntime</code> imports in <code>logic/</code></li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> <strong>Adapters bridge logic to runtime</strong> &mdash; logic &rarr; <code>WorkflowSpec</code> with durable <code>EffectType.*</code> steps</li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> <strong>Agents are thin wrappers</strong> &mdash; <code>BaseAgent</code> handles lifecycle, persistence, ledger access</li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> <strong>MemAct is not top-level</strong> &mdash; import from <code>abstractagent.agents.memact</code></li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> <strong>Max iterations default: 50</strong> &mdash; agents conclude rather than loop forever</li>
+        <li style="display:flex;align-items:flex-start;gap:.65rem"><span style="color:var(--green);flex-shrink:0">&#10003;</span> <strong>Default tools = full set</strong> &mdash; only explicit allowlists restrict available tools</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; Made with care for the AI community</p>
+    </div>
+    <div class="footer-col">
+      <h4>Foundation</h4>
+      <a href="abstractcore.html">AbstractCore</a>
+      <a href="abstractruntime.html">AbstractRuntime</a>
+      <a href="abstractagent.html">AbstractAgent</a>
+      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">AbstractFlow</a>
+    </div>
+    <div class="footer-col">
+      <h4>Applications</h4>
+      <a href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">AbstractGateway</a>
+      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">AbstractCode</a>
+      <a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">AbstractObserver</a>
+      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">AbstractAssistant</a>
+    </div>
+    <div class="footer-col">
+      <h4>Modalities &amp; Knowledge</h4>
+      <a href="https://github.com/lpalbou/abstractvoice" target="_blank" rel="noopener noreferrer">AbstractVoice</a>
+      <a href="https://github.com/lpalbou/abstractvision" target="_blank" rel="noopener noreferrer">AbstractVision</a>
+      <a href="https://github.com/lpalbou/abstractmusic" target="_blank" rel="noopener noreferrer">AbstractMusic</a>
+      <a href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer">AbstractMemory</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
