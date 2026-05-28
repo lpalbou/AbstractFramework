@@ -158,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const dots = dotsContainer.querySelectorAll('.carousel-dot');
     function goTo(index) {
+      slides[current].querySelectorAll('video').forEach(v => v.pause());
       current = ((index % total) + total) % total;
       track.style.transform = 'translateX(-' + (current * 100) + '%)';
       dots.forEach((d, i) => d.classList.toggle('active', i === current));

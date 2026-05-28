@@ -728,25 +728,30 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Text-to-Video (Wan2.2)</h3>
       <p style="color:var(--text-secondary);margin-bottom:1.5rem">Local video generation via Wan2.2 TI2V 5B with first-frame image-to-video conditioning. Generated entirely on-device.</p>
-      <div class="video-showcase" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem">
-        <div>
-          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
-            <source src="assets/video/t2v-example.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
+      <div class="carousel">
+        <div class="carousel-track">
+          <div class="carousel-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg">
+              <source src="assets/video/t2v-example.mp4" type="video/mp4">
+            </video>
+            <div class="carousel-caption">"A Star Trek vessel in slow orbit around earth with shimmering lights of metropoles"</div>
+          </div>
+          <div class="carousel-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg">
+              <source src="assets/video/t2v-river.mp4" type="video/mp4">
+            </video>
+            <div class="carousel-caption">"A crystal clear river in the mountains"</div>
+          </div>
+          <div class="carousel-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg">
+              <source src="assets/video/t2v-space.mp4" type="video/mp4">
+            </video>
+            <div class="carousel-caption">"A dynamic combat in space between two starships"</div>
+          </div>
         </div>
-        <div>
-          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
-            <source src="assets/video/t2v-river.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-        </div>
-        <div>
-          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
-            <source src="assets/video/t2v-space.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-        </div>
+        <button class="carousel-prev" aria-label="Previous">&#8592;</button>
+        <button class="carousel-next" aria-label="Next">&#8594;</button>
+        <div class="carousel-dots"></div>
       </div>
     </div>
     <div class="reveal" style="margin-top:2rem">

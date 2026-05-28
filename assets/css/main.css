@@ -2942,7 +2942,8 @@ html {
   flex-shrink: 0;
 }
 
-.carousel-slide img {
+.carousel-slide img,
+.carousel-slide video {
   width: 100%;
   height: 600px;
   object-fit: contain;

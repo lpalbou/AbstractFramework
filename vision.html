@@ -147,28 +147,30 @@ edit = vm.<span class="fn">edit_image</span>(<span class="str">"make it watercol
 
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Video Generation</h3>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem">
-        <div>
-          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
-            <source src="assets/video/t2v-example.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-          <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.5rem">Text-to-Video &mdash; Wan2.2 via MLX-Gen</p>
+      <div class="carousel">
+        <div class="carousel-track">
+          <div class="carousel-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg">
+              <source src="assets/video/t2v-example.mp4" type="video/mp4">
+            </video>
+            <div class="carousel-caption">"A Star Trek vessel in slow orbit around earth with shimmering lights of metropoles" &mdash; Wan2.2 via MLX-Gen</div>
+          </div>
+          <div class="carousel-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg">
+              <source src="assets/video/t2v-river.mp4" type="video/mp4">
+            </video>
+            <div class="carousel-caption">"A crystal clear river in the mountains" &mdash; Wan2.2 via MLX-Gen</div>
+          </div>
+          <div class="carousel-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg">
+              <source src="assets/video/t2v-space.mp4" type="video/mp4">
+            </video>
+            <div class="carousel-caption">"A dynamic combat in space between two starships" &mdash; Wan2.2 via MLX-Gen</div>
+          </div>
         </div>
-        <div>
-          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
-            <source src="assets/video/t2v-river.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-          <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.5rem">Text-to-Video &mdash; Wan2.2 via MLX-Gen</p>
-        </div>
-        <div>
-          <video controls loop muted playsinline preload="metadata" style="width:100%;border-radius:var(--radius);border:1px solid var(--border)">
-            <source src="assets/video/t2v-space.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-          <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.5rem">Text-to-Video &mdash; Wan2.2 via MLX-Gen</p>
-        </div>
+        <button class="carousel-prev" aria-label="Previous">&#8592;</button>
+        <button class="carousel-next" aria-label="Next">&#8594;</button>
+        <div class="carousel-dots"></div>
       </div>
     </div>
   </div>
