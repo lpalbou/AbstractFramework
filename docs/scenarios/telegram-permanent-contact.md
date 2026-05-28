@@ -22,10 +22,10 @@ Telegram has two integration paths:
 Even with E2EE, messages are decrypted on the gateway host and persisted to the durable stores in plaintext by design.
 Secure the gateway host and its storage.
 
-## Step 1: Install gateway Telegram support
+## Step 1: Install AbstractGateway (Telegram bridge)
 
 ```bash
-pip install "abstractgateway[http,telegram]"
+pip install abstractgateway
 # Optional (only if your workflows call Telegram tools like `send_telegram_message`):
 # pip install "abstractcore[tools]"
 ```

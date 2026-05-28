@@ -113,7 +113,7 @@ Notes:
 Install Telegram support:
 
 ```bash
-pip install "abstractgateway[http,telegram]"
+pip install abstractgateway
 # Optional (only if your workflows call Telegram tools like `send_telegram_message`):
 # pip install "abstractcore[tools]"
 ```

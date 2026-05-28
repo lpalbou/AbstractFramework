@@ -4,6 +4,10 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Documentation
+
+- Removed stale install instructions suggesting `abstractgateway[http]` (and `abstractgateway[http,telegram]`) are required for HTTP/SSE or Telegram bridge support; the base `abstractgateway` install already includes the server stack and these extras are compatibility aliases.
+
 ## [0.1.5] - 2026-05-27
 
 ### Changed
