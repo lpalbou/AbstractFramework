@@ -4,11 +4,7 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-### Documentation
-
-- Removed stale install instructions suggesting `abstractgateway[http]` (and `abstractgateway[http,telegram]`) are required for HTTP/SSE or Telegram bridge support; the base `abstractgateway` install already includes the server stack and these extras are compatibility aliases.
-
-## [0.1.5] - 2026-05-27
+## [0.1.5] - 2026-05-29
 
 ### Changed
 
@@ -19,6 +15,13 @@ All notable changes to AbstractFramework will be documented in this file.
   Removed legacy profiles like `all`, `backend`, `all-apple`, and `all-gpu`.
 - Aligned the meta-package pins with the current repo package versions and their
   revised profile wiring (Gateway-first stack + Flow + CLI app).
+- Bumped the pinned framework release set:
+  `abstractcore==2.13.30`, `AbstractRuntime==0.4.25`,
+  `abstractagent==0.3.9`, `abstractgateway==0.2.21`,
+  `abstractflow==0.3.16`, `abstractcode==0.3.7`,
+  `abstractassistant==0.4.7`, `AbstractMemory==0.2.6`,
+  `abstractsemantics==0.0.4`, `abstractvoice==0.10.17`,
+  `abstractvision==0.3.17`, and `abstractmusic==0.1.12`.
 - Installed the full Python ecosystem by default (including `abstractassistant`), and
   upgraded it to hardware-local profiles via `abstractframework[apple]` / `[gpu]`.
 - Updated the macOS installer manifest to install `abstractframework[apple]` for the full framework.
@@ -26,6 +29,7 @@ All notable changes to AbstractFramework will be documented in this file.
 ### Documentation
 
 - Revised the core documentation set for a clearer “two entry points” mental model (AbstractCore SDK vs AbstractGateway control plane), plus a more practical onboarding flow for authoring/deploying `.flow` bundles and monitoring/scheduling runs with AbstractObserver.
+- Removed stale install instructions suggesting `abstractgateway[http]` (and `abstractgateway[http,telegram]`) are required for HTTP/SSE or Telegram bridge support; the base `abstractgateway` install already includes the server stack and these extras are compatibility aliases.
 
 ## [0.1.4] - 2026-05-26
 

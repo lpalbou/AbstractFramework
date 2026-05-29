@@ -15,18 +15,18 @@ __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.29",
-    "abstractruntime": "0.4.24",
-    "abstractagent": "0.3.8",
-    "abstractflow": "0.3.15",
-    "abstractcode": "0.3.6",
-    "abstractgateway": "0.2.20",
+    "abstractcore": "2.13.30",
+    "abstractruntime": "0.4.25",
+    "abstractagent": "0.3.9",
+    "abstractflow": "0.3.16",
+    "abstractcode": "0.3.7",
+    "abstractgateway": "0.2.21",
     "abstractmemory": "0.2.6",
     "abstractsemantics": "0.0.4",
-    "abstractvoice": "0.10.16",
-    "abstractvision": "0.3.16",
+    "abstractvoice": "0.10.17",
+    "abstractvision": "0.3.17",
     "abstractmusic": "0.1.12",
-    "abstractassistant": "0.4.6",
+    "abstractassistant": "0.4.7",
 }
 
 CORE_DEFAULT_EXTRAS = [

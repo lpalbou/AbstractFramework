@@ -47,24 +47,24 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Gateway-first durable control plane (remote-light by default).
-    "abstractgateway==0.2.20",
+    "abstractgateway==0.2.21",
 
     # Workflow authoring + CLI app.
-    "abstractflow==0.3.15",
-    "abstractcode==0.3.6",
-    "abstractassistant==0.4.6",
+    "abstractflow==0.3.16",
+    "abstractcode==0.3.7",
+    "abstractassistant==0.4.7",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.13.29",
-    "AbstractRuntime==0.4.24",
-    "abstractagent==0.3.8",
+    "abstractcore==2.13.30",
+    "AbstractRuntime==0.4.25",
+    "abstractagent==0.3.9",
     "AbstractMemory==0.2.6",
     "abstractsemantics==0.0.4",
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
-    "abstractvoice==0.10.16",
-    "abstractvision==0.3.16",
+    "abstractvoice==0.10.17",
+    "abstractvision==0.3.17",
     "abstractmusic==0.1.12",
 ]
 
@@ -81,15 +81,15 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.2.20",
-    "abstractflow[apple]==0.3.15",
-    "abstractassistant[apple]==0.4.6; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.2.21",
+    "abstractflow[apple]==0.3.16",
+    "abstractassistant[apple]==0.4.7; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.2.20",
-    "abstractflow[gpu]==0.3.15",
-    "abstractassistant[gpu]==0.4.6",
+    "abstractgateway[gpu]==0.2.21",
+    "abstractflow[gpu]==0.3.16",
+    "abstractassistant[gpu]==0.4.7",
 ]
 
 [project.urls]
