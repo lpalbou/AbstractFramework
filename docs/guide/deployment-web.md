@@ -14,6 +14,7 @@ Set these on the gateway host:
 
 ```bash
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 ```
 
@@ -38,13 +39,26 @@ Default ports:
 
 In each UI, set:
 - Gateway URL: `http://127.0.0.1:8080`
-- Auth token: your `ABSTRACTGATEWAY_AUTH_TOKEN`
+- User: the Gateway user id assigned by the Gateway admin
+- Gateway token: that user's token, used only to create the browser session
+
+For hosted deployments on a non-local UI hostname, configure the Gateway URL on
+the UI server. Browser-supplied Gateway URL changes are rejected by Flow, Code
+Web, and Observer unless the app-specific
+`*_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG=1` override is enabled behind your own
+access control. If the UI is behind a reverse proxy that rewrites `Host`, enable
+`*_TRUST_PROXY_HEADERS=1` only after the proxy strips client-supplied forwarded
+headers.
 
 ## Production notes (high-signal)
 
 - Terminate TLS at a reverse proxy and forward to `127.0.0.1:8080`.
 - Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
-- Keep the gateway token secret and rotate it like any control-plane credential.
+- Keep the Gateway admin token secret and rotate it like any control-plane
+  credential.
+- Hosted browser apps should keep only their app-scoped Gateway session cookie;
+  do not persist user bearer tokens in browser storage.
+- Do not use one shared user token for independent users. Use Gateway
+  per-principal routing so each user token maps to that user's runtime.
 
 See [Guide: Gateway exposure security](gateway-security.md).
-

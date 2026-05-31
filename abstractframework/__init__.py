@@ -10,23 +10,23 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.30",
-    "abstractruntime": "0.4.25",
-    "abstractagent": "0.3.9",
-    "abstractflow": "0.3.16",
-    "abstractcode": "0.3.7",
-    "abstractgateway": "0.2.21",
+    "abstractcore": "2.13.31",
+    "abstractruntime": "0.4.26",
+    "abstractagent": "0.3.10",
+    "abstractflow": "0.3.17",
+    "abstractcode": "0.3.8",
+    "abstractgateway": "0.2.22",
     "abstractmemory": "0.2.6",
     "abstractsemantics": "0.0.4",
     "abstractvoice": "0.10.17",
-    "abstractvision": "0.3.17",
+    "abstractvision": "0.3.18",
     "abstractmusic": "0.1.12",
-    "abstractassistant": "0.4.7",
+    "abstractassistant": "0.4.8",
 }
 
 CORE_DEFAULT_EXTRAS = [

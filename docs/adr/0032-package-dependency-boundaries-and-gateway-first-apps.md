@@ -234,14 +234,14 @@ abstractagent
 
 abstractruntime
   -> abstractsemantics
-  -> optional abstractruntime[abstractcore] integration
+  -> base remote-light AbstractCore/tool/multimodal integration
   -> optional memory effect handlers that import abstractmemory at use time
 
 abstractgateway
   -> abstractruntime
-  -> server/http profiles add runtime[abstractcore], abstractagent, abstractflow
-     bundle compatibility, abstractcore tools/media/capability extras,
-     abstractvoice, abstractvision, and HTTP server dependencies
+  -> base server profile adds abstractagent, AbstractMemory/LanceDB, HTTP server
+     dependencies, and bundle compatibility; Runtime base provides Core
+     remote/tool/multimodal integration
   -> memory profile should add abstractmemory[lancedb] when KG workflows are
      expected to work out of the box
 

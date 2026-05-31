@@ -188,6 +188,45 @@ Notes for LLMs working in this repo:
 - Prefer `docs/` as the ecosystem-level source of truth.
 - Keep changes minimal and ecosystem-level (docs + version pins).
 - If you need to change runtime behavior, you likely want the relevant package repo instead of this meta repo.
+- Gateway-first hosted browser setups use Gateway user auth, opaque browser
+  sessions, and `/console` for account/admin/defaults management. AbstractFlow,
+  AbstractCode Web, and AbstractObserver exchange user tokens for app-scoped
+  browser sessions and do not persist bearer tokens in browser settings.
+  Gateway login responses do not expose session ids/CSRF tokens in JSON, and
+  default resolution is Core defaults -> Gateway baseline -> per-user overlay.
+  Do not treat the bootstrap `ABSTRACTGATEWAY_AUTH_TOKEN` as a browser-user
+  login token. Gateway session cookies are HTTP-only for the session id, use a
+  separate CSRF cookie, set `Secure` only under HTTPS, expire, logout cleanly,
+  and are revoked when the backing user is disabled/deleted/token-rotated.
+- Gateway user isolation is enforced through per-principal runtime routing plus
+  a central route-family policy. Ordinary users can use their own runs, ledgers,
+  artifacts, KG/session memory, private workflows, session artifacts,
+  prompt-cache session names, and defaults overlays. Admin-only workspace
+  helpers/import/export and provider prompt-cache controls are advertised as
+  unavailable in discovery with machine-readable `admin_required` metadata.
+  Deleting a user reserves the retained runtime id for that principal so the
+  runtime cannot be reassigned to a different same-tenant user while data is
+  still retained. Admins may explicitly transfer a retained runtime to an
+  existing same-tenant user or purge the retained runtime directory before
+  releasing the runtime id for reuse.
+- Gateway provider endpoint profiles are Gateway-owned reusable provider
+  endpoints. They include a description, provider family, base URL, optional
+  model allowlist, and a write-only API key. Discovery exposes them as virtual
+  providers such as `endpoint:office-vllm`; Runtime resolves the virtual id into
+  transient provider/base URL/key parameters without storing secrets in workflow
+  JSON or browser storage.
+- Hosted Flow, Code Web, and Observer use the server-configured Gateway URL on
+  non-loopback UI hostnames. Browser-supplied Gateway URL changes are rejected
+  unless the app-specific remote override is enabled behind access control.
+  Host checks trust `Host` by default; forwarded host headers require an
+  explicit trust-proxy env setting.
+- Gateway workflow sharing uses the explicit workflow catalog, not another
+  user's private `/bundles` directory. Catalog bundle versions are immutable,
+  admins move default pointers and ACLs, and users start catalog workflows with
+  `registry_scope: "tenant_catalog"` so the run executes in their own runtime.
+  Catalog scope is explicit, direct private-bundle routes reject
+  catalog-internal ids, and Gateway signs catalog workflow policy before
+  passing it to Runtime.
 
 ## Start Here
 
@@ -231,6 +270,15 @@ Notes for LLMs working in this repo:
 
 ## Proposals / Research (non-canonical)
 
+- [docs/backlog/overview.md](docs/backlog/overview.md): Root backlog index and active cross-package work.
+- [docs/backlog/completed/0141_flow_browser_session_gateway_auth.md](docs/backlog/completed/0141_flow_browser_session_gateway_auth.md): Completed Flow browser-session Gateway auth isolation.
+- [docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md](docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md): Planned Gateway tenant isolation and shared runtime design.
+- [docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md](docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md): In-progress shared Gateway per-principal runtime router work.
+- [docs/backlog/planned/gateway-control-plane/README.md](docs/backlog/planned/gateway-control-plane/README.md): Gateway admin/config/workflow-permission control-plane backlog track.
+- [docs/backlog/proposed/gateway-control-plane/README.md](docs/backlog/proposed/gateway-control-plane/README.md): Proposed Explorer/Manager package-boundary follow-ups.
+- [docs/backlog/completed/0154_multi_user_security_release_blockers.md](docs/backlog/completed/0154_multi_user_security_release_blockers.md): Completed multi-user release-blocking security fixes.
+- [docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md](docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md): Completed Gateway-owned provider endpoint profiles and virtual `endpoint:*` discovery.
+- [docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md](docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md): Proposed threshold for extracting shared hosted proxy helpers.
 - [docs/backlog/planned/074_agent_skills_integration.md](docs/backlog/planned/074_agent_skills_integration.md): Backlog item for Agent Skills integration.
 - [docs/backlog/planned/074_agent_skills_integration_plan.md](docs/backlog/planned/074_agent_skills_integration_plan.md): Phased plan for Agent Skills integration.
 - [docs/skills/](docs/skills/): Research notes (spec links + ecosystem scan) for Agent Skills.
@@ -252,7 +300,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.5"
+version = "0.1.6"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -295,24 +343,24 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Gateway-first durable control plane (remote-light by default).
-    "abstractgateway==0.2.21",
+    "abstractgateway==0.2.22",
 
     # Workflow authoring + CLI app.
-    "abstractflow==0.3.16",
-    "abstractcode==0.3.7",
-    "abstractassistant==0.4.7",
+    "abstractflow==0.3.17",
+    "abstractcode==0.3.8",
+    "abstractassistant==0.4.8",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.13.30",
-    "AbstractRuntime==0.4.25",
-    "abstractagent==0.3.9",
+    "abstractcore==2.13.31",
+    "AbstractRuntime==0.4.26",
+    "abstractagent==0.3.10",
     "AbstractMemory==0.2.6",
     "abstractsemantics==0.0.4",
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
     "abstractvoice==0.10.17",
-    "abstractvision==0.3.17",
+    "abstractvision==0.3.18",
     "abstractmusic==0.1.12",
 ]
 
@@ -329,15 +377,15 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.2.21",
-    "abstractflow[apple]==0.3.16",
-    "abstractassistant[apple]==0.4.7; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.2.22",
+    "abstractflow[apple]==0.3.17",
+    "abstractassistant[apple]==0.4.8; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.2.21",
-    "abstractflow[gpu]==0.3.16",
-    "abstractassistant[gpu]==0.4.7",
+    "abstractgateway[gpu]==0.2.22",
+    "abstractflow[gpu]==0.3.17",
+    "abstractassistant[gpu]==0.4.8",
 ]
 
 [project.urls]
@@ -384,23 +432,23 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.30",
-    "abstractruntime": "0.4.25",
-    "abstractagent": "0.3.9",
-    "abstractflow": "0.3.16",
-    "abstractcode": "0.3.7",
-    "abstractgateway": "0.2.21",
+    "abstractcore": "2.13.31",
+    "abstractruntime": "0.4.26",
+    "abstractagent": "0.3.10",
+    "abstractflow": "0.3.17",
+    "abstractcode": "0.3.8",
+    "abstractgateway": "0.2.22",
     "abstractmemory": "0.2.6",
     "abstractsemantics": "0.0.4",
     "abstractvoice": "0.10.17",
-    "abstractvision": "0.3.17",
+    "abstractvision": "0.3.18",
     "abstractmusic": "0.1.12",
-    "abstractassistant": "0.4.7",
+    "abstractassistant": "0.4.8",
 }
 
 CORE_DEFAULT_EXTRAS = [
@@ -755,8 +803,11 @@ pip install abstractgateway
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+
+# Optional: set only for a custom bundle registry. Packaged Gateway includes
+# the shipped basic-agent bundle when this is unset.
+# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 ```
 
 ### 3. Start the gateway
@@ -779,7 +830,9 @@ In another terminal:
 npx @abstractframework/observer
 ```
 
-Open http://localhost:3001 and connect (gateway URL + auth token).
+Open http://localhost:3001 and connect. In hosted user-auth mode, enter Gateway
+URL, Gateway user, and that user's token; Observer exchanges the token for a
+browser session and does not persist the token in browser settings.
 
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
@@ -808,7 +861,9 @@ With the gateway running:
 npx @abstractframework/flow
 ```
 
-Open http://localhost:3003 and connect to your gateway.
+Open http://localhost:3003 and connect to your gateway. In hosted user-auth
+mode, use Gateway URL, Gateway user, and that user's token; Flow keeps an
+opaque browser session instead of storing the token.
 
 ### 2. Build a workflow
 
@@ -821,8 +876,13 @@ To make it reusable across clients, implement an **interface contract** (for exa
 ### 3. Export and deploy
 
 ```bash
-cp my-agent.flow "$ABSTRACTGATEWAY_FLOWS_DIR/"
+mkdir -p "$PWD/bundles"
+cp my-agent.flow "$PWD/bundles/"
 ```
+
+Start or restart Gateway with `ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"` when
+you want that directory to be the active custom bundle registry. You can also
+publish bundles through the Gateway API from AbstractFlow.
 
 ### 4. Run from any client
 
@@ -919,7 +979,7 @@ AbstractGateway (control plane)
 ──────────────────────────────────────────────────────
  run lifecycle (start / resume / cancel)
  scheduling (durable, survives restarts)
- bundle discovery (.flow bundles)
+ private bundle discovery + shared workflow catalog
  artifact + ledger serving / streaming
                        │
                        ▼
@@ -996,6 +1056,11 @@ Build a workflow graph in the Flow Editor and export it as a `.flow` bundle.
 ### 2) Deploy the bundle
 
 Copy bundles to `ABSTRACTGATEWAY_FLOWS_DIR`. The gateway discovers them automatically.
+
+For hosted or multi-user gateways, admins can also promote immutable bundle
+versions into the Gateway workflow catalog. The catalog owns shared/default
+workflow pointers and ACLs; each catalog run still executes in the requesting
+user's runtime unless a future explicit system-run mode is added.
 
 ### 3) Run from any client
 
@@ -1110,12 +1175,30 @@ export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.to
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 ```
 
+For hosted or multi-user browser access, also enable Gateway user auth:
+
+```bash
+export ABSTRACTGATEWAY_USER_AUTH=1
+```
+
+The bootstrap token remains an admin/operator credential. Users sign in with a
+Gateway user id and that user's token, then browser apps keep only an opaque
+Gateway session. Gateway serves `/console` for account/runtime summary, admin
+user management, optional user email metadata, token rotation, and capability
+defaults selected from Gateway-discovered provider/model catalogs. Deleted users
+leave retained runtime reservations; admins can transfer retained runtime data to
+an existing same-tenant user or purge the retained runtime directory before
+releasing the runtime id for reuse.
+
 ### Recommended (bundle-based workflows)
 
 ```bash
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+
+# Optional: set only for a custom bundle registry. When unset, Gateway uses
+# the packaged shipped bundle directory containing basic-agent.
+# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 ```
 
 ### Start
@@ -1153,6 +1236,32 @@ abstractgateway-config set-default output.text \
 ```
 
 The gateway can update route defaults, but the default schema is Core-owned.
+When Gateway user auth is enabled, the admin/default runtime overlay acts as the
+Gateway baseline. Per-user writes through
+`/api/gateway/config/capability-defaults/{kind}/{modality}` are stored under the
+current user's runtime data plane and override the Gateway baseline only for
+that user, so one user's provider/model defaults do not mutate another user's
+defaults.
+
+### Gateway provider endpoint profiles
+
+Gateway Console also lets signed-in users create reusable provider endpoint
+profiles. A profile stores a display name, description, provider family such as
+`openai-compatible`, optional base URL, optional API key, capabilities, and an
+optional model allowlist. The raw API key is write-only through the API/UI and is
+not returned in discovery responses.
+
+For OpenAI-compatible and other discoverable endpoints, use the console's model
+discovery action to call the configured endpoint and populate the model picker.
+Leaving all models unselected keeps live discovery active; selecting models
+stores a fixed allowlist for that profile.
+
+After creation, the profile appears in provider discovery as a virtual provider
+id such as `endpoint:office-vllm`. Use that provider id in AbstractFlow nodes or
+Gateway capability defaults, then select a discovered/allowed model normally.
+At run time Gateway resolves the virtual provider into the real provider family,
+base URL, and key for the current runtime call; workflow JSON and exported
+bundles should not contain raw secrets.
 
 ---
 
@@ -1189,7 +1298,18 @@ export ABSTRACTGATEWAY_DB_PATH="$ABSTRACTGATEWAY_DATA_DIR/gateway.sqlite3"
 All gateway-backed browser UIs need two things:
 
 - **Gateway base URL** (example: `http://127.0.0.1:8080`)
-- **Bearer token** (must match `ABSTRACTGATEWAY_AUTH_TOKEN`)
+- **Gateway user + user token** in hosted user-auth mode
+
+Local single-user tools can still use `ABSTRACTGATEWAY_AUTH_TOKEN` as an
+operator token. Hosted browser apps should exchange user tokens for Gateway
+browser sessions and should not store bearer tokens in browser storage.
+AbstractFlow, AbstractCode Web, and AbstractObserver use this hosted
+browser-session path when you provide a Gateway user id.
+
+When these browser UIs are served from a non-loopback hostname, the Gateway URL
+comes from the UI server configuration. Browser-supplied Gateway URL changes
+are rejected unless the app-specific remote override is enabled behind your own
+access control.
 
 ### AbstractObserver
 
@@ -1197,7 +1317,9 @@ All gateway-backed browser UIs need two things:
 npx @abstractframework/observer
 ```
 
-Set the gateway URL + token in the UI (http://localhost:3001).
+Set Gateway URL, Gateway user, and that user's token in the UI
+(http://localhost:3001). Observer exchanges the token for an app-scoped browser
+session and does not persist the token in browser settings.
 
 ### Flow Editor
 
@@ -1358,6 +1480,52 @@ print_status()
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
 
 See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run.
+
+Gateway-hosted workflow APIs distinguish private runtime bundles from the
+shared workflow catalog:
+
+- `/api/gateway/bundles` remains the caller runtime's private bundle surface.
+- `/api/gateway/workflow-catalog` lists catalog workflows visible to the signed
+  in principal.
+- `/api/gateway/admin/workflow-catalog/*` is admin-only for immutable catalog
+  upload/promote/default/ACL/status operations.
+- `/api/gateway/runs/start` and `/api/gateway/runs/schedule` accept
+  `registry_scope: "tenant_catalog"` to start a catalog workflow in the
+  requesting user's runtime.
+- Catalog scope is explicit. Without `registry_scope`, Gateway starts only
+  private runtime bundles. Catalog flow/schema inspection uses ACL-aware
+  `/api/gateway/workflow-catalog/{bundle_id}/versions/{version}/flows/{flow_id}`
+  routes.
+
+Gateway-hosted user administration keeps retained runtime data explicit:
+
+- `/api/gateway/admin/users` is the admin-only user list/create/read/update/delete
+  surface.
+- `/api/gateway/admin/runtime-reservations` lists retained runtime reservations
+  left by deleted or reassigned users.
+- `/api/gateway/admin/runtime-reservations/{runtime_id}/transfer` intentionally
+  assigns retained runtime data to an existing same-tenant user.
+- `/api/gateway/admin/runtime-reservations/{runtime_id}/purge` requires exact
+  runtime-id confirmation, deletes the retained runtime directory, then releases
+  the runtime id for reuse.
+
+Gateway-hosted provider endpoint profiles make reusable hosted endpoints
+discoverable without exposing raw keys:
+
+- `/api/gateway/config/provider-endpoint-profiles` lists and creates profiles
+  for the current principal.
+- `/api/gateway/config/provider-endpoint-profiles/discover-models` previews the
+  model list for a draft or saved profile by calling the configured provider
+  family and base URL with the server-side or entered key. The response never
+  echoes the raw key.
+- `/api/gateway/config/provider-endpoint-profiles/{profile_id}` updates or
+  deletes an existing profile. Gateway-scoped profiles require an admin
+  principal.
+- `/api/gateway/discovery/providers` includes enabled profiles as virtual
+  providers such as `endpoint:office-vllm`.
+- `/api/gateway/discovery/providers/{provider_name}/models` resolves virtual
+  providers through the stored profile and returns the allowed or discovered
+  model list without returning the raw API key.
 
 --- docs/faq.md ---
 # FAQ
@@ -1784,30 +1952,42 @@ This is the recommended topology because execution is unified and clients can at
 pip install abstractframework
 ```
 
+From a source checkout, `./scripts/gateway-flow-local.sh` starts Gateway and
+Flow together and prints the default `admin` browser-login token. For a
+published-package smoke run, `./scripts/gateway-flow.sh` creates an isolated
+published-package venv, enables Gateway user auth, prepares the same `admin`
+user, and prints the Gateway URL, user, and token to enter in Flow.
+
 If you want a minimal install instead, you need at least:
 - `abstractgateway`
 - `abstractflow` (and optionally `abstractflow[agent]` if your bundles use Agent nodes)
 
 ## Step 1: Prepare directories
 
-Pick two folders:
+Pick the Gateway data folder. Packaged Gateway installs already include the
+shipped `basic-agent` bundle. In a source checkout, point the gateway at the
+repo's bundled workflows.
 
-- `FLOWS_DIR`: where your `.flow` bundles live
 - `DATA_DIR`: where gateway stores run state/ledger/artifacts
+- `FLOWS_DIR`: optional custom `.flow` bundle directory; in this repo use
+  `./abstractgateway/flows/bundles`
 
 Example:
 
 ```bash
-mkdir -p ./runtime/gateway ./runtime/flows
+mkdir -p ./runtime/gateway
 ```
 
 ## Step 2: Configure the gateway
 
 ```bash
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/runtime/flows"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+
+# Source checkout only. Packaged installs can omit this and use the shipped bundle path.
+export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/abstractgateway/flows/bundles"
 ```
 
 Optional route defaults (if your flows use LLM nodes):
@@ -1838,6 +2018,16 @@ Smoke check:
 curl -sS http://127.0.0.1:8080/api/health
 ```
 
+Create a local user token for browser UIs:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/api/gateway/admin/users \
+  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"tenant_id":"default","user_id":"admin","runtime_id":"default","roles":["admin","user"]}' \
+  | python -m json.tool
+```
+
 ## Step 4: Start the thin clients
 
 In separate terminals:
@@ -1857,8 +2047,9 @@ Default ports:
 
 In each UI:
 - Set Gateway URL: `http://127.0.0.1:8080`
-- Paste the auth token
-- Connect
+- Set User: `admin`
+- Paste the generated Gateway user token
+- Sign in
 
 ## Step 6: Author and run a specialized agent
 
@@ -1873,9 +2064,9 @@ See [Specialized agent as a portable `.flow`](specialized-agent-flow.md).
 ## Troubleshooting
 
 - CORS errors in browser: widen `ABSTRACTGATEWAY_ALLOWED_ORIGINS` for your UI origin.
-- "Unauthorized": ensure the UI auth token matches `ABSTRACTGATEWAY_AUTH_TOKEN`.
-- Bundles not showing up: verify `ABSTRACTGATEWAY_FLOWS_DIR` contains `.flow` files, then reload bundles from the UI (or
-  restart the gateway).
+- "Unauthorized": ensure the browser UI is signed in with a Gateway user token, not the admin token.
+- Bundles not showing up: verify `ABSTRACTGATEWAY_FLOWS_DIR` contains the shipped `basic-agent` bundle and any custom `.flow`
+  files, then reload bundles from the UI (or restart the gateway).
 
 --- docs/scenarios/specialized-agent-flow.md ---
 # Scenario: Specialized Agent as a Portable `.flow`
@@ -2445,11 +2636,14 @@ Best when tools must run near the target environment (servers, private networks,
 
 ## Topology D: Thin client UI + remote durable host (Gateway-first)
 
-Recommended for multi-device, multi-client use.
+Recommended for multi-device use and trusted multi-client use.
 
 - The gateway host owns the durable runtime + stores and progresses runs.
 - Thin clients render by replaying/streaming the ledger and act by submitting durable commands.
 - Bundles (`.flow`) provide portable, discoverable specialized agents.
+- A single Gateway bearer token is not a tenant/user isolation boundary. For
+  independent users, route each user or tenant to a separate Gateway/runtime/data
+  plane until tenant-aware Gateway authorization exists.
 
 ## Topology E: Multi-host orchestration (planned/advanced)
 
@@ -2460,7 +2654,6 @@ For v0, prefer picking a host per run (avoid mid-run migration).
 
 - [Scenario: Gateway-first local development](../scenarios/gateway-first-local-dev.md)
 - [Guide: Gateway exposure security](gateway-security.md)
-
 
 --- docs/guide/deployment-web.md ---
 # Web Deployment (Browser UI + Gateway)
@@ -2479,6 +2672,7 @@ Set these on the gateway host:
 
 ```bash
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 ```
 
@@ -2503,16 +2697,29 @@ Default ports:
 
 In each UI, set:
 - Gateway URL: `http://127.0.0.1:8080`
-- Auth token: your `ABSTRACTGATEWAY_AUTH_TOKEN`
+- User: the Gateway user id assigned by the Gateway admin
+- Gateway token: that user's token, used only to create the browser session
+
+For hosted deployments on a non-local UI hostname, configure the Gateway URL on
+the UI server. Browser-supplied Gateway URL changes are rejected by Flow, Code
+Web, and Observer unless the app-specific
+`*_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG=1` override is enabled behind your own
+access control. If the UI is behind a reverse proxy that rewrites `Host`, enable
+`*_TRUST_PROXY_HEADERS=1` only after the proxy strips client-supplied forwarded
+headers.
 
 ## Production notes (high-signal)
 
 - Terminate TLS at a reverse proxy and forward to `127.0.0.1:8080`.
 - Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
-- Keep the gateway token secret and rotate it like any control-plane credential.
+- Keep the Gateway admin token secret and rotate it like any control-plane
+  credential.
+- Hosted browser apps should keep only their app-scoped Gateway session cookie;
+  do not persist user bearer tokens in browser storage.
+- Do not use one shared user token for independent users. Use Gateway
+  per-principal routing so each user token maps to that user's runtime.
 
 See [Guide: Gateway exposure security](gateway-security.md).
-
 
 --- docs/guide/deployment-iphone.md ---
 # iPhone Notes (Safari / PWA)
@@ -2556,6 +2763,12 @@ maintenance actions depending on your deployment.
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 ```
 
+- Enable Gateway user auth when browser apps need per-user runtime routing:
+
+```bash
+export ABSTRACTGATEWAY_USER_AUTH=1
+```
+
 - Allow only localhost origins for browser UIs:
 
 ```bash
@@ -2569,16 +2782,106 @@ export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 3. Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
 4. Protect reads as well as writes (ledgers contain prompts and tool outputs).
 
+## User isolation
+
+When Gateway user auth is enabled, each user token resolves to a Gateway
+principal and runtime mapping. Hosted browser apps such as AbstractFlow,
+AbstractCode Web, and AbstractObserver exchange the signed-in user's token for
+a Gateway browser session, store only an app-scoped opaque session id in an
+HTTP-only browser cookie, and forward that session to Gateway server-side. The
+raw user token is not stored in browser settings, and Gateway login response
+bodies do not expose the session id or CSRF token. Mutating proxied Gateway
+requests also carry a CSRF token. A server/admin token does not sign in
+browsers. Gateway browser session cookies use an HTTP-only cookie for the
+session id, a separate CSRF cookie, `SameSite=Lax`, path `/`, no `Secure` flag
+on plain HTTP, and `Secure` when served over HTTPS. Sessions expire, logout
+revokes the session record, and disabling/deleting/rotating the backing Gateway
+user invalidates existing sessions.
+
+For independent users, prefer `1 user = 1 runtime` through Gateway's
+per-principal router. Gateway rejects duplicate runtime ids within the same
+tenant when creating or updating users, so an admin cannot accidentally map two
+tenant users to the same runtime. When a user is deleted, Gateway removes that
+user's credential but reserves the retained runtime id for that deleted
+principal; assigning the retained runtime to a different user is rejected unless
+an admin explicitly transfers or purges the retained runtime reservation. Purge
+requires exact runtime-id confirmation and deletes the retained runtime directory
+before releasing the runtime id. Transfer assigns the retained runtime to an
+existing same-tenant user and reserves that user's previous runtime id. Keep
+shared/cross-user memory or collaboration explicit, permissioned, and auditable.
+
+Hosted browser apps use the server-configured Gateway URL on non-local hosts.
+AbstractFlow, AbstractCode Web, and AbstractObserver reject browser-supplied
+Gateway URL changes when the UI is served from a non-loopback hostname. Enable
+the app-specific override only behind your own access control:
+`ABSTRACTFLOW_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG=1`,
+`ABSTRACTCODE_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG=1`, or
+`ABSTRACTOBSERVER_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG=1`. The host check uses
+the request `Host` header by default. Trust proxy headers only when your reverse
+proxy strips client-supplied forwarded headers, using the app-specific
+`*_TRUST_PROXY_HEADERS=1` setting or `ABSTRACTGATEWAY_TRUST_PROXY_HEADERS=1`.
+
+Shared workflows are handled through the Gateway workflow catalog rather than
+by sharing a user's private runtime bundle directory. Catalog versions are
+immutable by `bundle_id@version`; admins can move a default pointer, set ACLs,
+deprecate or block a version, or tombstone it without deleting the stored
+bundle bytes. Catalog workflows run in the requesting user's runtime by
+default, so the shared workflow definition does not imply shared run state.
+Run-start policy checks the signed-in user's tenant, roles, and catalog ACL
+before execution. Private `/api/gateway/bundles` routes remain per-runtime
+authoring surfaces.
+
+Catalog bundles are loaded under internal host ids, but those internal ids are
+not a public authorization surface. Direct private-bundle inspection routes
+reject catalog-internal ids; use the ACL-aware `/api/gateway/workflow-catalog`
+routes to list or inspect shared workflows. Gateway also strips client-supplied
+`_runtime.workflow_policy` values and replaces catalog starts with a signed
+Gateway-issued policy snapshot before Runtime sees the run.
+
+Gateway serves a built-in admin/account console at `/console`. The console uses
+the same browser-session contract: users sign in with a Gateway user id and
+token, then the browser keeps only the opaque session cookie. Because the
+console is served by Gateway itself, it does not ask for a Gateway URL; the
+current origin is the Gateway. Admin users can
+manage Gateway users, rotate tokens, and handle retained runtime reservations
+from this console. Signed-in users can set their own capability defaults from
+Gateway-discovered provider/model catalogs. Admin/root defaults act as the
+Gateway baseline; normal users inherit that baseline and can override it only
+for their own runtime.
+
+The console also supports Gateway-owned provider endpoint profiles. Profiles
+can describe OpenAI-compatible or hosted provider endpoints with a display name,
+description, provider family, base URL, API key, capabilities, and optional
+model allowlist. Discovery exposes only non-secret metadata and a virtual
+provider id such as `endpoint:office-vllm`; Gateway injects the raw key only into
+the runtime call that resolves that profile. Normal users can create user-scoped
+profiles. Gateway-scoped profiles require an admin principal.
+
+Gateway keeps operator surfaces admin-only through a central route-family
+policy. User management, audit/process/backlog/triage/report routes, email
+bridge routes, host metrics, model residency list/load/unload, server workspace
+file helpers, and server workspace artifact import/export require an admin
+principal. Browser local files should use upload routes; server filesystem
+read/import/export is not exposed to ordinary hosted users.
+
+Discovery metadata is permission-aware for these high-trust surfaces. Ordinary
+users see admin-only workspace artifact import/export and provider prompt-cache
+control operations marked unavailable with `admin_required` metadata. Their
+session prompt-cache names are still usable, but the private hash includes the
+current principal scope so two users cannot collide by choosing the same
+session id, provider, and model.
+
 ## Verify quickly
 
 - `/api/health` returns `200`
 - `/api/gateway/*` endpoints return `401` without `Authorization: Bearer ...`
+- `/console` loads the Gateway Console, and admin-only actions return `403` for
+  non-admin users
 
 ## See also
 
 AbstractGateway has a deeper security guide (env vars, limits, lockouts, audit log):
 - https://github.com/lpalbou/abstractgateway/blob/main/docs/security.md
-
 
 --- docs/guide/capability-routing-defaults.md ---
 # Capability Routing Defaults
@@ -3056,6 +3359,29 @@ export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/workflows"   # contains *.flow
 
 The gateway discovers and serves bundles to thin clients via discovery endpoints.
 
+Hosted gateways now distinguish two bundle registries:
+
+- **Private runtime bundles** live in the caller's routed runtime and are served
+  through `/api/gateway/bundles`. AbstractFlow's normal save/publish/test loop
+  continues to use this private surface.
+- **Workflow catalog bundles** live in the Gateway control plane and are served
+  through `/api/gateway/workflow-catalog`. Admins upload or promote immutable
+  `.flow` versions, move explicit default pointers, set ACLs, and deprecate,
+  block, or tombstone versions without deleting bundle bytes.
+
+Catalog workflows run in the requesting user's runtime by default. Clients
+start them with `registry_scope: "tenant_catalog"` plus `bundle_id`,
+`bundle_version` when an exact version is required, and `flow_id`. If the
+version is omitted, Gateway resolves the admin-managed default pointer rather
+than guessing from semantic version order. Exact older versions keep working
+until that specific version is deprecated, blocked, or tombstoned.
+
+Catalog starts must be explicit. If `registry_scope` is omitted, Gateway treats
+the request as a private-runtime bundle start and will not silently fall through
+to the shared catalog. Catalog run policy is Gateway-issued and signed before it
+is passed into Runtime state; clients cannot authorize catalog subworkflow
+starts by sending their own `_runtime.workflow_policy`.
+
 ## Recommended lifecycle controls
 
 - Publish/install new versions instead of editing deployed bundles in place.
@@ -3063,11 +3389,15 @@ The gateway discovers and serves bundles to thin clients via discovery endpoints
   - hides from discovery
   - blocks new starts
   - keeps old versions available for replay/audit of historical runs
+- For shared/default workflows, use the workflow catalog. Do not overwrite
+  catalog bundle bytes for an existing `bundle_id@version`; publish a new
+  immutable version and move the default pointer.
+- `framework_catalog` is reserved for a later cross-tenant catalog. The
+  implemented shared catalog scope today is `tenant_catalog`.
 
 ## See also
 
 - [Scenario: Publish, install, and deprecate workflows](../scenarios/workflow-bundle-lifecycle.md)
-
 
 --- docs/guide/agent-skills.md ---
 # Agent Skills (SKILL.md) — Proposal
@@ -3505,6 +3835,2631 @@ The allowlist is gateway-defined. Email-related keys are commonly allowlisted fo
 
 - AbstractGateway docs: https://github.com/lpalbou/abstractgateway
 
+
+--- docs/backlog/overview.md ---
+# AbstractFramework Backlog Overview
+
+This root backlog is the framework-level planning ledger for cross-package work. Some older items
+use legacy naming and duplicate numeric prefixes; new items should use four-digit global IDs and
+the lifecycle folders described by the backlog process.
+
+## Current Counts
+
+- Planned: many legacy items plus active cross-package work.
+- Proposed: legacy proposed items exist.
+- Completed: historical completion ledger exists under `completed/`.
+- Deprecated: not yet normalized at the root level.
+- Recurrent: not yet normalized at the root level.
+
+## Active Planned Work
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0142 | [Gateway tenant isolation and shared runtime design](planned/0142_gateway_tenant_isolation_and_shared_runtime.md) | Planned | Define and implement tenant-aware Gateway/Runtime isolation; current shared Gateway deployments are single-user or trusted-cohort only. |
+| 0143 | [Shared Gateway per-principal runtime router](planned/0143_shared_gateway_per_principal_runtime_router.md) | In progress | Gateway principal auth, admin user CRUD, per-principal GatewayService routing, and Flow browser-session routing landed; broader app auth and route-family isolation remain open. |
+| 0145-0153 | [Gateway control plane track](planned/gateway-control-plane/README.md) | Planned | Gateway-owned admin/account/config/workflow-permission control plane; starts with responsibility, RBAC, and browser-session contracts before broad UI/app migration. |
+
+## Gateway Control Plane Planned Track
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0145 | [Gateway admin console bootstrap](planned/gateway-control-plane/0145_gateway_admin_console_bootstrap.md) | In progress | Console v0 now serves `/console` with session sign-in, account/runtime summary, admin user management, optional email, create/delete confirmations, token rotation, and discovered provider/model defaults; richer runtime activity remains optional follow-up. |
+| 0146 | [Gateway RBAC scope policy matrix](planned/gateway-control-plane/0146_gateway_rbac_scope_policy_matrix.md) | In progress | Central route-family policy gates operator/server-workspace/model-residency surfaces, runtime ids are tenant-unique, and the Alice/Bob matrix now covers runs, ledgers, artifacts, session artifacts, KG/session memory, private workflows, prompt-cache naming, defaults overlays, workspace helper denials, and discovery leak behavior. |
+| 0147 | [Gateway per-principal config, secrets, and defaults](planned/gateway-control-plane/0147_gateway_per_principal_config_secrets_defaults.md) | In progress | Gateway-baseline plus per-user capability-default overlays and console UX landed; raw provider-secret storage/injection remains deliberately deferred pending a Core/Gateway secret boundary. |
+| 0148 | [Gateway workflow registry ACLs](planned/gateway-control-plane/0148_gateway_workflow_registry_acl.md) | In progress | Immutable tenant catalog versions, admin default pointers, ACL APIs, explicit catalog scope, signed run-start/schedule policy, host-side catalog guards, ACL-aware catalog inspection, and discovery metadata landed; per-tool/workspace/secret policy intersection and UI remain. |
+| 0150 | [Observer and Manager responsibility split](planned/gateway-control-plane/0150_observer_manager_responsibility_split.md) | Planned | Early containment audit to keep Observer focused on observability and admin/config ownership in Gateway/Gateway Console or later Manager surfaces. |
+| 0153 | [Gateway browser session security contract](planned/gateway-control-plane/0153_gateway_browser_session_security_contract.md) | In progress | Gateway/Flow opaque browser sessions, CSRF, logout, token-rotation revocation, Code/Observer hosted proxy convergence, and HTTP/HTTPS/origin/expiry/logout/revocation cookie matrix tests landed. |
+
+## Active Proposed Work
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0144 | [User profile metadata for selective model grounding](proposed/0144_user_profile_context_grounding.md) | Proposed | Discuss first/last name, birth date, inferred country, provenance, and query-time selective context injection before implementation. |
+| 0151 | [Runtime Explorer contract](proposed/gateway-control-plane/0151_runtime_explorer_contract.md) | Proposed | Reviewer consensus: start with a read-only Gateway envelope contract and Observer page for typed runtime resources; defer `abstractexplorer`, delete/export, raw workspace browsing, and admin cross-user exploration. |
+| 0152 | [AbstractManager package extraction](proposed/gateway-control-plane/0152_abstractmanager_package_extraction.md) | Proposed | Revisit a separate `abstractmanager` package only after console/config/workflow ACL surfaces prove real maintenance or reuse pressure. |
+| 0155 | [Hosted proxy shared helper extraction](proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md) | Proposed | Keep conformance tests now; extract a shared Node helper only if Code/Observer or future hosted apps drift again. |
+
+## Recent Completed Work
+
+| ID | Item | Completed | Notes |
+|----|------|-----------|-------|
+| 0157 | [Gateway provider endpoint profiles](completed/0157_gateway_provider_endpoint_profiles.md) | 2026-05-31 | Added Gateway-owned provider endpoint profiles with descriptions, write-only API keys, virtual `endpoint:*` providers in discovery, Runtime resolution, local dynamic provider construction, console UI with model discovery, and tests. |
+| 0156 | [Retained runtime admin lifecycle](completed/0156_retained_runtime_admin_lifecycle.md) | 2026-05-30 | Added admin-only retained runtime list/transfer/purge routes, Gateway Console actions, scoped purge deletion, transfer semantics, and regression tests. |
+| 0154 | [Multi-user security release blockers](completed/0154_multi_user_security_release_blockers.md) | 2026-05-30 | Added retained-runtime reservations, Code/Observer hosted URL guards, published launcher user bootstrap, and `.DS_Store` cleanup. |
+| 0149 | [Cross-app Gateway auth and defaults convergence](completed/0149_cross_app_gateway_auth_defaults_convergence.md) | 2026-05-30 | Per-app hosted/local auth/default matrix completed; Flow, Code Web, and Observer use hosted browser-session proxy auth; shared auth/default component intentionally deferred until duplication creates real pressure. |
+| 0141 | [Flow browser-session Gateway auth](completed/0141_flow_browser_session_gateway_auth.md) | 2026-05-30 | Initial Flow browser sign-in removed server/admin ambient browser auth; 0153 now supersedes raw token cookies with opaque Gateway browser sessions. |
+| 0140 | [Abstract Release Skill](completed/0140_abstract_release_skill.md) | 2026-05-24 | Added a read-only framework release orchestration skill with package discovery, release-wave planning, dependency-floor review, root profile pin drift checks, PyPI visibility gates, and approval/traceability guidance. |
+| 0139 | [Unified Framework Capability Defaults](completed/0139_unified_framework_capability_defaults.md) | 2026-05-24 | Core-owned routing defaults for input/output/embedding/rerank, Gateway control-plane access, atomic provider/model resolution, catalog-backed Flow defaults UI, and qwen3.6 text default. |
+
+## Operating Notes
+
+- Use `docs/adr/` for durable architecture policy.
+- Use this backlog for execution traceability, validation evidence, and follow-up state.
+- New backlog item filenames should use `NNNN_<slug>.md`; date-prefixed legacy files should not be copied for new work.
+
+--- docs/backlog/completed/0141_flow_browser_session_gateway_auth.md ---
+# Completed: Flow browser-session Gateway auth
+
+## Metadata
+- Created: 2026-05-29
+- Status: Completed
+- Completed: 2026-05-30
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0033
+- ADR impact: May revise existing ADR
+
+## Context
+AbstractFlow's browser editor uses a Flow server/proxy to inject Gateway auth
+into `/api/gateway/*` requests. Browser login is now scoped to the browser
+session and does not treat server/admin tokens as browser login state. This
+item describes the initial Flow-side boundary; planned item 0153 supersedes the
+raw token cookie implementation with opaque Gateway browser sessions and CSRF.
+
+## Current code reality
+- `abstractflow/web/backend/services/gateway_connection.py` persists only the
+  Gateway URL and resolves browser auth only from session cookies.
+- `abstractflow/web/backend/routes/connection.py` validates submitted user tokens
+  through Gateway `/me`, rejects admin/server principals, and sets only
+  HTTP-only browser cookies.
+- `abstractflow/web/frontend/bin/cli.js` and
+  `abstractflow/web/frontend/vite.config.ts` use the same browser-cookie
+  session model for status and proxy auth.
+- `abstractflow/web/frontend/src/components/GatewayConnectionModal.tsx` presents
+  Gateway URL, user, and Gateway token; tenant/runtime are returned by Gateway
+  as read-only principal metadata.
+
+## Problem
+The original problem was that server-configured Gateway tokens could become
+ambient browser auth. The current implementation removes that fallback for
+browser requests.
+
+## What we want to do
+Keep browser-session authentication as the default AbstractFlow hosted behavior
+so each browser/user must authenticate and only receives access to its own
+Gateway connection state.
+
+## Why
+Hosted Flow deployments need a clear security boundary. Gateway tokens are control-plane credentials and must not become ambient shared credentials for every browser that can load the Flow UI.
+
+## Requirements
+- Store Gateway connection state per browser session, not as a single global
+  process token.
+- Ensure `/api/gateway/*` proxy injection resolves the token from the browser
+  session.
+- Preserve local loopback ergonomics while still requiring browser sign-in.
+- Keep Gateway bearer tokens out of browser `localStorage`/`sessionStorage`.
+- Make remote Gateway URL changes explicit through
+  `ABSTRACTFLOW_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG`.
+
+## Suggested implementation
+- Use HTTP-only browser cookies for Gateway URL/token session state.
+- Remove `CONNECTION.gatewayToken`/`ABSTRACTGATEWAY_AUTH_TOKEN` fallback use from
+  browser status and proxy paths.
+- Teach the Python FastAPI host, Node static server, and Vite dev proxy the
+  same session resolution semantics.
+
+## Scope
+- AbstractFlow web backend connection routes.
+- AbstractFlow Node static server connection/proxy path.
+- Vite dev connection/proxy path.
+- Documentation and security guidance for hosted Flow deployments.
+
+## Non-goals
+- Do not change AbstractGateway's own bearer-token model in this item.
+- Do not store Gateway tokens in browser storage.
+- Do not make public multi-user hosting depend on a single shared Gateway token unless explicitly configured by the operator.
+
+## Dependencies and related tasks
+- ADR-0018 durable gateway/control-plane model.
+- ADR-0033 install profiles and server boundaries.
+- `abstractflow/docs/web-editor.md`
+- `abstractflow/docs/architecture.md`
+- `abstractflow/web/backend/routes/connection.py`
+- `abstractflow/web/frontend/bin/cli.js`
+
+## Expected outcomes
+- A distinct browser session connecting to the same hosted Flow server cannot use another session's Gateway token.
+- Hosted Flow can require each browser/user to authenticate or provide its own token.
+- Local single-user development remains easy and documented.
+
+## Validation
+- Unit/integration test with two browser clients and separate cookies proves isolation.
+- Regression test proves loopback local configuration still works.
+- Proxy auth tests prove `/api/gateway/*` injects the session token, not a stale process-global token.
+- Documentation explains local, single-user hosted, and multi-user hosted security modes.
+
+## Progress checklist
+- [x] Choose session/auth store design and hosted-mode defaults.
+- [x] Implement Python backend session-scoped connection storage.
+- [x] Implement Node static server session-scoped connection storage.
+- [x] Align Vite dev proxy behavior for local development.
+- [x] Add browser-session proxy isolation tests.
+- [x] Update Flow security docs and generated docs indexes.
+
+## Follow-up guidance
+Keep browser-session auth as the default Flow behavior. Future work should add
+CSRF/session-hardening tests and extend the same current-user auth model to
+Code, Assistant, Observer, and bridge-hosted app flows.
+
+--- docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md ---
+# Planned: Gateway tenant isolation and shared runtime design
+
+## Metadata
+- Created: 2026-05-29
+- Status: Planned
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033
+- ADR impact: May revise existing ADR
+
+## Context
+AbstractGateway currently uses bearer-token security for the gateway API
+surface. In user-auth mode, bearer tokens resolve to a user principal and
+Gateway can route each principal to a separate runtime/data plane. AbstractFlow
+uses browser-session cookies for user tokens and does not let a server/admin
+token become shared browser login state.
+
+The present model is suitable for local single-user deployments and trusted
+cohorts. It is not a multi-user isolation model for independent users.
+
+## Current code reality
+- `abstractflow/web/backend/main.py`, `abstractflow/web/frontend/bin/cli.js`, and
+  `abstractflow/web/frontend/vite.config.ts` proxy `/api/gateway/*` and inject
+  the signed-in browser session's Gateway user token.
+- `abstractgateway/src/abstractgateway/security/gateway_security.py` validates
+  global bearer tokens and origin policy, but does not resolve a tenant/user
+  principal.
+- Gateway run, ledger, command, artifact, KG, prompt-cache, and VisualFlow
+  routes are scoped by ids and request parameters, not by authenticated owner.
+- AbstractRuntime state carries `actor_id` and `session_id`; those are
+  provenance/correlation fields, not authorization boundaries.
+- Memory owner ids include run/session/global concepts; global means the runtime
+  instance's global owner, not a tenant-isolated namespace.
+
+## Problem
+If several independent users share one Flow/Gateway/runtime/data plane today,
+one user can potentially list or access another user's run metadata, ledgers,
+history bundles, artifacts, prompt-cache state, workflow mutations, memory, tool
+execution surface, workspace effects, provider credentials, and audit scope.
+`session_id`, `run_id`, `artifact_id`, and `owner_id` are not safe authorization
+proofs.
+
+## What we want to do
+Define and implement a tenant-aware Gateway architecture that supports
+independent users safely. Until that exists, document and enforce the supported
+deployment pattern: an authenticated front door routes each user or tenant to a
+separate Gateway/runtime/data plane.
+
+## Why
+Gateway is the durable control plane. Shared use without tenant authorization
+risks confidentiality leaks, integrity failures, workspace/file access problems,
+memory poisoning, credential bleed, and weak auditability.
+
+## Requirements
+- Add a `Principal` or `TenantContext` resolved from trusted Gateway auth.
+- Persist `tenant_id`, `user_id`, roles/scopes, and token fingerprint on runs and
+  audit records without logging bearer tokens.
+- Enforce tenant filtering for run list/detail, ledger replay/stream, history,
+  commands, artifacts, uploads/import/export, prompt cache, workflow CRUD/publish,
+  KG/memory owner access, workspace policy, tool execution, and provider
+  credentials.
+- Treat `session_id`, `run_id`, `artifact_id`, and `owner_id` as references only;
+  never as authorization.
+- Make `global` memory tenant-global by default; cross-tenant shared memory must
+  be an explicit namespace with provenance, consent, deletion, and poisoning
+  controls.
+- Keep local single-user ergonomics through an explicit single-tenant default.
+- Add two-user isolation tests across the control plane and stores.
+
+## Suggested implementation
+1. Near term: deploy an identity-aware front door that routes each authenticated
+   user or tenant to a separate Gateway process, data dir, artifact store, memory
+   store, workspace root, provider credential set, and quota bucket.
+2. Add Gateway token-to-principal mapping for single-process deployments, but keep
+   it single-tenant until storage and route enforcement are complete.
+3. Introduce tenant/user columns or metadata in run stores, artifact metadata,
+   prompt-cache keys, memory owner ids, workflow records, and audit logs.
+4. Centralize authorization checks in service/storage layers so route handlers
+   cannot accidentally bypass tenant filtering.
+5. Admin-gate or disable global enumeration paths (`scope=all`, arbitrary
+   `owner_id`, `all_owners`, broad artifact search, workflow mutation, and local
+   tools) until tenant-aware policy exists.
+
+## Scope
+- AbstractFlow hosted connection model.
+- AbstractGateway auth, routes, stores, artifact handling, memory/KG access,
+  prompt-cache routes, workflow CRUD/publish, commands, audit, and workspace
+  policy.
+- AbstractRuntime run state and store schemas where tenant ownership must be
+  durable.
+- Documentation, ADRs, and release gates for supported deployment topologies.
+
+## Non-goals
+- Do not claim current shared Gateway deployments are tenant-isolated.
+- Do not use caller-supplied `session_id`, `actor_id`, `owner_id`, or headers as a
+  trusted identity source.
+- Do not make cross-user learning implicit. Shared/org memory must be explicit
+  and auditable.
+- Do not treat workspace scoping or `execute_command` as an OS sandbox.
+
+## Dependencies and related tasks
+- `docs/backlog/completed/0141_flow_browser_session_gateway_auth.md`
+- `abstractgateway/docs/backlog/proposed/2026-05-13_shared_identity_context.md`
+- ADR-0018 durable Gateway/control-plane contract.
+- ADR-0021 deployment topologies and supported scenarios.
+- ADR-0033 install profiles and server boundaries.
+
+## Expected outcomes
+- Operators can choose between clearly documented single-tenant, trusted-cohort,
+  and future shared-tenant modes.
+- Independent users cannot enumerate or access each other's runs, artifacts,
+  memory, workflow mutations, workspaces, credentials, prompt-cache state, or
+  audit details.
+- Shared memory/cross-user learning is opt-in, provenance-rich, revocable, and
+  separate from private user/tenant memory.
+
+## Validation
+- Two-user integration tests for Flow proxy sessions, Gateway runs/list/history,
+  ledger stream/replay, commands, artifact search/content/upload/import/export,
+  KG/memory queries, prompt-cache routes, VisualFlow CRUD/publish, workspace
+  tools, and local tool execution policy.
+- Store-level tests proving tenant filters are enforced below route handlers.
+- Security docs and ADR checks confirming shared Gateway is not advertised as
+  isolated before the tenant model lands.
+
+## Progress checklist
+- [ ] Finalize principal/tenant data model and single-tenant compatibility mode.
+- [ ] Implement per-user/per-tenant Flow connection routing or front-door contract.
+- [ ] Persist tenant/user ownership on Gateway and Runtime records.
+- [ ] Enforce tenant filtering in Gateway service/store layers.
+- [ ] Add two-user authorization test matrix.
+- [ ] Document shared memory and cross-user learning as explicit opt-in.
+
+## Guidance for the implementing agent
+Start from code reality, not desired UX. Add authorization at the lowest shared
+storage/service layer available, then wire routes to it. Preserve single-user
+local ergonomics, but fail closed for shared hosted deployments.
+
+--- docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md ---
+# Planned: Shared Gateway per-principal runtime router
+
+## Metadata
+- Created: 2026-05-30
+- Status: Planned
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033
+- ADR impact: May revise existing ADR
+
+## Context
+A shared AbstractGateway front door can be the right hosted architecture when it
+acts as an authenticated router/control plane and routes each principal to an
+isolated runtime/data plane. This avoids a separate public Gateway URL per user
+while preserving the isolation properties of separate runtimes.
+
+An adversarial review compared the strongest pro and con arguments. Both sides
+converged on the same boundary: the design is sound if the shared Gateway routes
+to isolated per-user or per-tenant `GatewayService`/Runtime contexts. It is not
+sound if the Gateway keeps one shared service/stores/runtime and merely adds
+`user_id` labels.
+
+## Current code reality
+- `abstractgateway/src/abstractgateway/security/gateway_security.py` validates
+  global bearer tokens and origin policy. It does not currently resolve a
+  trusted `Principal` with `tenant_id`, `user_id`, roles, or scopes.
+- `abstractgateway/src/abstractgateway/service.py` exposes a singleton
+  `GatewayService` with one config, one store set, one host, one runner, one
+  auth policy, one embedding client, and optional bridges.
+- `abstractgateway/src/abstractgateway/stores.py` builds one file or SQLite
+  store set rooted at the configured Gateway data directory.
+- `abstractgateway/src/abstractgateway/routes/gateway.py` has many endpoints
+  that operate on caller-supplied ids such as `run_id`, `session_id`,
+  `artifact_id`, and `bundle_id`. Those ids are references, not authorization
+  proofs.
+- Session memory owner ids are derived from caller-controlled session ids in
+  several paths; global memory is runtime-instance global, not tenant global.
+- VisualFlow/bundle publish, artifact search/listing, workspace/file helpers,
+  prompt-cache routes, maintenance/process-manager routes, Telegram/email
+  bridges, and background command processing are currently designed around the
+  singleton service/data-plane shape.
+
+## Problem
+Hosted Flow/Gateway needs a multi-user story that is both ergonomic and safe.
+One Gateway per user is conceptually simple but operationally heavy: it creates
+endpoint sprawl, certificate/domain management overhead, duplicated routing,
+harder upgrades, version skew, and more complicated Flow connection UX.
+
+A single shared Gateway front door can solve those operational issues, but a
+partial implementation can be worse than no implementation. Routing only LLM
+calls per user while leaving runs, ledgers, artifacts, commands, memory,
+workspaces, prompt cache, bundles, provider credentials, or background workers
+global would still leak or mix users.
+
+## What we want to do
+Introduce a hosted-mode architecture where:
+
+```text
+Flow/browser
+  -> authenticated shared Gateway front door
+    -> trusted principal resolution
+      -> server-side principal-to-runtime routing
+        -> isolated GatewayService / Runtime context
+          -> isolated stores, memory, artifacts, workspace, secrets, queues
+```
+
+The first implementation should prefer isolated per-principal data planes over
+shared stores with tenant columns. A single process may hold several
+per-principal service objects, but each object must own its own data directory,
+stores, runner/queue, workspace root, provider defaults, secret scope, memory,
+artifact store, and prompt-cache namespace.
+
+## Why
+This architecture keeps the hosted product manageable while preserving the main
+security benefit of per-user runtimes. It gives Flow one stable API endpoint and
+lets login determine identity and runtime selection. It also creates a better
+foundation for later org/team features: admin consoles, billing, quotas, scoped
+collaboration, audit, and explicit shared memory.
+
+## Requirements
+- Add a trusted `Principal` model resolved by Gateway auth middleware or a
+  trusted front-door integration. It should include at least `tenant_id`,
+  `user_id`, roles/scopes, and token/session fingerprint metadata.
+- Gateway owns hosted-mode authentication. Apps such as AbstractFlow,
+  AbstractCode, AbstractAssistant, and AbstractObserver must authenticate as the
+  current user/session and forward only trusted Gateway credentials or cookies;
+  they must not share one app-server Gateway token across all browser users.
+- Add admin-level user management routes for Gateway operators to list, create,
+  update, disable, delete, and rotate credentials for users. These routes must
+  require an admin principal and must never disclose stored token hashes.
+- Clients must not send authoritative `user_id`, `tenant_id`, `runtime_id`, or
+  workspace root values. If accepted for UX, they must be advisory and checked
+  against server-side policy.
+- Add a server-side `Principal -> RuntimeContext/GatewayService` router.
+- Each per-principal context must own an isolated data plane:
+  - data directory;
+  - run store and ledger store;
+  - command inbox/cursor store and runner;
+  - artifact store;
+  - memory/KG owner namespace or store;
+  - prompt-cache/bloc namespace or disabled hosted-mode prompt cache;
+  - workspace root and mount policy;
+  - provider defaults, credentials, quotas, and secrets.
+- Admin/global endpoints must be separated from user endpoints. Hosted mode
+  should disable or admin-gate unscoped global enumeration and mutation paths.
+- Bundles/VisualFlows must be either tenant-local or global read-only with
+  admin-only publishing.
+- Every read/write path must authorize against the resolved principal, including
+  run start/list/detail, ledger replay/SSE, history bundle, resume/cancel,
+  commands, artifacts, uploads/import/export, memory/KG, prompt cache, workflow
+  CRUD/publish, workspace/file tools, provider config, maintenance routes, and
+  bridge-triggered runs.
+- Background workers must carry tenant context through queued commands, child
+  runs, event emission, artifact projection, and resume paths.
+- Logs, traces, temporary files, metrics, audit records, and error reports must
+  avoid unscoped user content or include principal-safe ownership metadata.
+
+## Suggested implementation
+1. Add a principal abstraction and middleware hook, but keep local single-user
+   mode as a default principal.
+2. Introduce a `GatewayServiceRouter` composition root that returns the current
+   principal's service/context instead of the process-wide singleton service.
+   In the first code slice, preserve the public `get_gateway_service()` helper
+   but make it resolve through a request context variable when hosted user auth
+   is enabled. This lets the existing route surface inherit per-principal data
+   planes before every endpoint is converted to explicit dependencies.
+3. Implement hosted v0 using separate data directories and store sets per
+   principal. Avoid a shared DB/schema migration in the first version.
+4. Add `/api/gateway/me` and `/api/gateway/admin/users` before app-specific
+   login UX so Flow and native apps can test the resolved principal contract.
+5. Move route dependencies from `get_gateway_service()` to
+   `get_gateway_service_for_principal(...)` or an equivalent request-scoped
+   dependency as route families are touched.
+6. Make global/admin surfaces explicit and fail closed in hosted mode:
+   broad artifact search, `scope=all`, arbitrary owner ids, workflow publishing,
+   process manager, backlog execution, local workspace tools, bridge admin
+   config, and provider credential mutation.
+7. Add app-auth adapters: browser apps should rely on Gateway session cookies or
+   request-bound user bearer tokens, while native apps should use user API
+   tokens/device login. All apps should call `/api/gateway/me` after connect.
+8. Add a two-user test harness that tries guessed ids across every route family.
+
+## Scope
+- AbstractGateway security, service composition, routes, stores, runner,
+  artifacts, workflow/bundle registry, memory/KG integration, prompt cache,
+  workspace policy, provider defaults, maintenance routes, and bridge entry
+  points.
+- AbstractRuntime ownership context where run state, child runs, memory owner
+  ids, prompt-cache bindings, and artifact projection need durable tenant
+  provenance.
+- AbstractFlow hosted connection UX for identity-aware Gateway discovery and
+  no browser-controlled runtime selection.
+- Documentation and ADR updates for supported hosted topologies.
+
+## Non-goals
+- Do not build a shared `GatewayService`/store set with only `user_id` labels as
+  the first version.
+- Do not claim that the current Gateway bearer token model provides per-user
+  isolation.
+- Do not trust caller-supplied `session_id`, `run_id`, `artifact_id`,
+  `owner_id`, or `bundle_id` as authorization.
+- Do not make cross-user memory or learning implicit. Shared/team memory must be
+  a later explicit namespace with consent, ACLs, audit, deletion semantics, and
+  poisoning controls.
+- Do not turn workspace scoping into a claimed OS sandbox.
+- Do not expose per-user runtime URLs or internal routing identifiers to the
+  browser as control inputs.
+
+## Dependencies and related tasks
+- `docs/backlog/completed/0141_flow_browser_session_gateway_auth.md`
+- `docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md`
+- `abstractgateway/docs/backlog/proposed/2026-05-13_shared_identity_context.md`
+- ADR-0018 durable Gateway/control-plane contract.
+- ADR-0021 deployment topologies and supported scenarios.
+- ADR-0033 install profiles and server boundaries.
+
+## Expected outcomes
+- Hosted Flow can connect to one public Gateway endpoint while each
+  authenticated user/tenant receives an isolated runtime/data plane.
+- Alice cannot enumerate, read, stream, resume, cancel, export, import, mutate,
+  or infer Bob's runs, ledgers, artifacts, sessions, memory, prompt cache,
+  workspaces, bundles, provider credentials, or command inbox.
+- Gateway operators can run local single-user mode, trusted-cohort mode, or
+  hosted per-principal runtime-router mode with explicit documentation.
+- Shared/team memory and collaboration remain future explicit product features,
+  not accidental leakage from shared infrastructure.
+
+## Validation
+- Unit tests for principal extraction, token/session fingerprinting, scope
+  checks, and service-router selection.
+- Two-user integration tests proving guessed `run_id`, `session_id`,
+  `artifact_id`, `bundle_id`, and memory owner ids cannot cross principals.
+- SSE/ledger/history tests proving streams and batch replay are principal-bound.
+- Command/resume/cancel tests proving queued records carry tenant context.
+- Artifact upload/list/search/content/export/import tests with Alice/Bob data.
+- VisualFlow/bundle tests for tenant-local or admin-only global publishing.
+- Workspace/file-tool tests proving hosted mode uses per-principal roots and
+  rejects arbitrary absolute roots.
+- Prompt-cache tests proving hosted mode scopes or disables shared cache state.
+- Audit/log checks proving bearer tokens are never logged and user content is
+  scoped/redacted.
+
+## Progress checklist
+- [x] Run adversarial two-subagent review for the shared Gateway router design.
+- [x] Define `Principal` and hosted-mode auth contract.
+- [x] Add admin user registry and admin-only CRUD routes.
+- [x] Design `GatewayServiceRouter` and local single-user compatibility mode.
+- [x] Implement per-principal data directories and service contexts.
+- [x] Convert existing route dependencies to request-scoped service lookup via
+      the `get_gateway_service()` composition root.
+- [ ] Admin-gate or disable global surfaces in hosted mode.
+- [ ] Carry principal context through runner/command/background paths.
+- [x] Add `/api/gateway/me` and app policy display.
+- [x] Change AbstractFlow hosted auth to current-user Gateway credentials rather
+      than one app-server token.
+- [ ] Change AbstractCode/Assistant/Observer hosted auth to current-user Gateway
+      credentials rather than one app-server token.
+- [ ] Add the two-user isolation test matrix.
+- [ ] Update ADRs and hosted deployment docs.
+
+## Review notes: 2026-05-30
+Two independent subagent reviews agreed that a shared Gateway can scale as a
+control-plane/router only if the per-user data planes are separate. The first
+implementation should therefore add identity resolution, admin user CRUD, and
+request-scoped service routing before attempting route-by-route tenant columns.
+
+The reviews also called out a hard boundary for hosted apps: AbstractFlow and
+other frontends cannot safely use one server-held Gateway token for all users.
+They need a current-user auth/session path that lets Gateway resolve the
+principal and route to that user's runtime. Until that app-auth migration is
+finished, hosted multi-user deployments must be treated as an incremental beta
+surface rather than a complete isolation guarantee across every app workflow.
+
+## Implementation report: 2026-05-30
+- Added `GatewayPrincipal`, request context propagation, and legacy-token
+  compatibility where `ABSTRACTGATEWAY_AUTH_TOKEN` resolves to `local-admin`.
+- Added a file-backed `GatewayUserRegistry` at
+  `<ABSTRACTGATEWAY_DATA_DIR>/auth/users.json` by default. User tokens are
+  PBKDF2-SHA256 hashed; generated/rotated tokens are returned once.
+- Added `GET /api/gateway/me` and admin-only
+  `/api/gateway/admin/users` list/create/read/update/delete routes.
+- Added request-scoped service routing: when user auth is enabled,
+  `get_gateway_service()` resolves the current principal and returns a
+  per-principal `GatewayService` with separate runtime/flows directories under
+  `<DATA_DIR>/users/<tenant_id>/<runtime_id>/`.
+- Kept local/single-user Gateway behavior compatible: without user auth, the
+  process-wide singleton service and legacy token model remain.
+- Changed AbstractFlow hosted connection handling so remote browser sessions
+  sign in with Gateway URL, Gateway user id, and user token. Flow validates that
+  Gateway `/me` resolves to that expected user before accepting the connection.
+  Gateway owns the user's tenant/runtime mapping and returns it as read-only
+  principal metadata. This was later hardened by 0153: Flow now exchanges the
+  user token for an opaque Gateway browser session, keeps only the session id in
+  an HTTP-only browser cookie, and forwards the session plus CSRF token for
+  mutating Gateway proxy calls. Different browsers must connect as their own
+  Gateway users.
+- Simplified the AbstractFlow modal to the three intended fields
+  (`Gateway URL`, `User`, `Gateway token`), removed the tenant/runtime input,
+  renamed the primary action to sign in, and made the resolved runtime a
+  read-only status detail returned by Gateway.
+- Hardened the Flow Gateway proxy so browser-supplied `Authorization`, `Cookie`,
+  `X-Forwarded-*`, and other unapproved headers are stripped before proxying;
+  Flow injects only the resolved Gateway browser session.
+- Hardened Gateway admin routes so they fail closed if the router is mounted
+  without `GatewaySecurityMiddleware` while Gateway security is enabled.
+- Updated Gateway and Flow docs plus `llms.txt`/`llms-full.txt` files to
+  describe the new auth/routing contract and remaining hosted-mode limits.
+
+Remaining work is intentionally still open: admin-gating every global/operator
+route family, carrying principal context through every background/bridge path,
+changing Code/Assistant/Observer hosted auth, and expanding the Alice/Bob
+guessed-id isolation matrix across run, artifact, memory, workspace,
+prompt-cache, process, and maintenance endpoints.
+
+## Guidance for the implementing agent
+Start by preserving the strong isolation boundary: separate per-principal data
+planes. Resist the shortcut of adding owner labels to the existing singleton
+service. Add authorization at the lowest shared layer available, not only in
+route handlers. Re-run the adversarial review before promoting shared stores,
+shared prompt cache, shared memory, or collaborative features.
+
+--- docs/backlog/planned/gateway-control-plane/README.md ---
+# Gateway control plane backlog track
+
+## Status
+Planned/in progress, with adjacent proposals for package extraction decisions.
+Gateway/Flow now have browser-session auth, central route-family authorization,
+the first Gateway Console, Gateway-baseline plus per-user capability-default
+overlays, secret-free browser login responses, full Gateway cookie/origin
+session matrix tests, an extended Alice/Bob isolation matrix for the current
+user-owned data surfaces, retained-runtime reservations after user deletion,
+retained-runtime transfer/purge lifecycle, and completed cross-app auth/default
+convergence planning. Gateway provider endpoint profiles now cover the first
+secret-safe reusable endpoint path. The track remains open for future
+route-family growth, workflow ACL UI, runtime exploration contracts, and a
+fuller provider-secret vault/bridge policy.
+
+## Purpose
+This track groups the Gateway admin/account/config/runtime-control work raised
+by the multi-user Gateway review. Gateway is the trust boundary and control
+plane; Flow, Code, Observer, and Assistant should become task UIs that consume
+Gateway auth, defaults, permissions, and catalogs instead of each owning global
+identity or model configuration.
+
+## Items
+- `0145_gateway_admin_console_bootstrap.md`: Gateway-served admin/account console v0.
+- `0146_gateway_rbac_scope_policy_matrix.md`: route-family role/scope hardening.
+- `0147_gateway_per_principal_config_secrets_defaults.md`: per-principal config, provider keys, and defaults through Gateway with Core as schema/persistence authority.
+- `0148_gateway_workflow_registry_acl.md`: private workflow registry plus tenant/framework catalog ACLs.
+- `0150_observer_manager_responsibility_split.md`: keep Observer focused and move admin/config ownership out.
+- `0153_gateway_browser_session_security_contract.md`: define hosted browser session, cookie, CSRF, logout, and revocation semantics.
+
+Adjacent proposals:
+- `../../proposed/gateway-control-plane/0151_runtime_explorer_contract.md`
+- `../../proposed/gateway-control-plane/0152_abstractmanager_package_extraction.md`
+
+Completed in this track:
+- `../../completed/0149_cross_app_gateway_auth_defaults_convergence.md`: converged Flow, Code Web, Observer, Gateway Console, Assistant, and automation behavior expectations for hosted/local auth and defaults; shared component extraction is deferred.
+- `../../completed/0154_multi_user_security_release_blockers.md`: closed the retained-runtime reuse, Code/Observer hosted Gateway URL guard, published launcher bootstrap, and `.DS_Store` hygiene release blockers.
+- `../../completed/0156_retained_runtime_admin_lifecycle.md`: added explicit admin list/transfer/purge lifecycle for retained runtime reservations.
+- `../../completed/0157_gateway_provider_endpoint_profiles.md`: added Gateway-owned endpoint profiles that surface as virtual `endpoint:*` providers with write-only credentials.
+
+## Reading order
+Continue by keeping `0146` and `0153` tests current as new route families and
+browser apps appear. `0145` now has a narrow console v0 with user email, confirmations,
+    and discovered provider/model selectors; keep it narrow. `0147` now has a
+Gateway baseline, per-principal defaults, and the initial Gateway provider
+endpoint profile injection boundary; encryption, bridge, delegated-tool, and
+audit policy remain. Use `0148` after the
+authorization/session boundaries are stable, with immutable catalog versions
+and explicit default pointers. `0149` is complete; do not extract a shared auth
+component until duplication creates a real maintenance problem. Keep `0151`,
+`0152`, and `0155` proposed until overlap, package pressure, or repeated hosted
+proxy drift is proven.
+
+## Relevant ADRs and docs
+- ADR-0018: Durable Run Gateway and Remote Host Control Plane.
+- ADR-0021: Deployment topologies and supported scenarios.
+- ADR-0033: Install profiles, config entrypoints, and server boundaries.
+- ADR-0035: Capability routing defaults.
+- `docs/guide/capability-routing-defaults.md`
+- `docs/guide/gateway-security.md`
+- `docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md`
+
+## Non-goals
+This track does not make Gateway a workflow authoring UI, coding UI, or rich run
+trace viewer. Flow remains the workflow authoring surface. Code remains the
+coding-agent UX. Observer remains the run/ledger observability UX unless future
+proposals intentionally split runtime exploration into a new app.
+
+--- docs/backlog/planned/gateway-control-plane/0145_gateway_admin_console_bootstrap.md ---
+# Planned: Gateway admin console bootstrap
+
+## Metadata
+- Created: 2026-05-30
+- Status: Planned
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033
+- ADR impact: May revise existing ADR
+
+## Context
+Gateway now has concrete principals, user-registry auth, admin-only user CRUD,
+and per-principal runtime routing. The first usable hosted experience still
+requires operators to use raw routes or scripts to see who they are, create
+users, rotate tokens, and understand what runtime a user owns.
+
+## Current code reality
+- `abstractgateway/src/abstractgateway/security/principal.py` defines
+  `GatewayPrincipal.is_admin()` as the `admin` role check.
+- `abstractgateway/src/abstractgateway/routes/gateway.py` exposes
+  `/api/gateway/me` and admin-only `/api/gateway/admin/users`.
+- `abstractgateway/src/abstractgateway/users.py` stores user records with
+  hashed bearer tokens, roles, scopes, enabled state, and `runtime_id`.
+- `scripts/gateway-flow-local.sh` now prepares `default/admin` by default and
+  gives it roles `admin,user`.
+- Gateway now serves a dependency-free console at `/console`, with `/`
+  redirecting there. The console uses Gateway browser sessions, reads `/me`,
+  lets admins manage `/admin/users`, and lets users edit per-principal
+  capability defaults.
+- The console now lists retained runtime reservations and lets admins explicitly
+  transfer or purge them after confirmation.
+- Console user creation now collects optional email contact metadata, asks for
+  confirmation before creating/deleting users, and uses Gateway discovery
+  endpoints for provider/model selection instead of free-text provider/model
+  fields.
+
+## Problem
+Installing or hosting Gateway is opaque. Admins need a browser-visible control
+plane for first-run account state, user creation, runtime assignment, token
+rotation, and runtime summary. Normal users need an account/runtime page that
+does not require raw API calls.
+
+## What we want to do
+Add a narrow Gateway-served console v0 at canonical `/console`, while keeping
+OpenAPI docs at `/docs`. `/` may redirect to `/console` when the console is
+enabled. The first version should focus on sign-in/session state, `/me`,
+account/runtime summary, and admin user management only for routes already
+covered by the RBAC policy matrix. Normal users should see their own
+account/runtime state and token-management options that policy permits.
+
+## Why
+Gateway is the trust boundary. A clean built-in control-plane UX reduces setup
+mistakes, avoids duplicating admin configuration in Flow/Observer/Code, and
+makes the `1 user = 1 runtime` model visible.
+
+## Requirements
+- Admin mutation pages are blocked on `0146` enforcement for every route they
+  call; frontend hiding is not authorization.
+- First-run credential disclosure is local-dev/loopback only, never a hosted
+  production pattern. Hosted deployments must use explicit operator bootstrap
+  and rotation paths.
+- Local-dev token display must avoid server logs, respect file permissions,
+  explain the token cache/recovery path, and encourage rotation.
+- Login follows the browser-session contract in `0153`: Gateway user tokens are
+  exchanged for app/browser sessions and are not retained in browser storage.
+- Admin views: list/create/update/disable/delete users, rotate tokens, assign
+  runtime ids, collect optional account email, inspect roles/scopes, transfer or
+  purge retained runtime reservations.
+- User views: current principal, runtime id, created date, enabled state, token
+  rotation if allowed, recent activity summary if available.
+- Never display token hashes or existing bearer tokens after issuance.
+- Keep `/docs` available for OpenAPI.
+
+## Suggested implementation
+Start with a small static app served by Gateway and backed by existing
+`/api/gateway/me` and `/api/gateway/admin/users`. Reuse AbstractUIC visual
+tokens/theme primitives where practical, but keep the first version small.
+
+## Scope
+- Gateway-served console route and static assets.
+- Account page and admin user-management page.
+- Minimal runtime summary endpoints if current API data is insufficient and
+  `0146` authorizes the route family.
+- Documentation for local and hosted setup.
+
+## Non-goals
+- Do not build workflow authoring into Gateway Console.
+- Do not build full run trace visualization; link to Observer.
+- Do not add per-user provider secret storage in this item; that is `0147`.
+
+## Dependencies and related tasks
+- `0146_gateway_rbac_scope_policy_matrix.md` (hard prerequisite for admin
+  mutation UX)
+- `0153_gateway_browser_session_security_contract.md`
+- `0147_gateway_per_principal_config_secrets_defaults.md`
+- `docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md`
+- `abstractgateway/docs/security.md`
+
+## Expected outcomes
+- A fresh local Gateway can be administered from a browser without raw curl.
+- The default local prepared user is `admin`.
+- Admin-only user CRUD remains enforced server-side.
+- Normal users cannot access admin pages or admin APIs.
+
+## Validation
+- Unit/API tests for admin and non-admin console API access.
+- Browser/manual check: admin can create a user and rotate token; normal user
+  cannot.
+- Security check: no token hashes or existing tokens are returned in user lists.
+
+## Recent validation
+- `python -m pytest abstractgateway/tests/test_gateway_security_middleware_unit.py abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_console.py abstractflow/tests/test_gateway_connection_config.py abstractflow/tests/test_web_gateway_proxy_auth.py -q` -> 51 passed, 2 warnings.
+- `python -m compileall -q abstractgateway/src/abstractgateway abstractflow/web/backend` -> passed.
+- Earlier full-gateway validation: `python -m pytest abstractgateway/tests` -> 261 passed, 2 skipped.
+
+## Progress checklist
+- [x] Decide console route and static asset packaging.
+- [x] Implement `0153` session semantics for console login.
+- [x] Add account/runtime summary page.
+- [x] Add admin user-management page after `0146` route checks exist.
+- [x] Add minimal per-user defaults UX through `0147` overlay APIs.
+- [x] Add retained-runtime reservation transfer/purge UX.
+- [ ] Add richer runtime summary/activity API if needed.
+- [x] Add tests and docs.
+
+## Implementation note - 2026-05-30
+
+Console v0 is implemented in `abstractgateway/src/abstractgateway/console.py`
+and mounted from `abstractgateway/src/abstractgateway/app.py`. It intentionally
+stays narrow: session sign-in/logout, account/runtime summary, admin user CRUD,
+token rotation, retained runtime reservation lifecycle, and per-principal
+capability-default editing. It does not own workflow authoring, deep runtime
+exploration, or raw provider secret storage.
+
+Follow-up console polish landed in the same track: provider/model defaults now
+come from Gateway discovery selectors, admin create/delete uses confirmation
+modals, and user records include optional email metadata for future
+notification/invite workflows. User deletion currently removes account/token
+access; runtime data retention/deletion must be handled by a separate retention
+policy before destructive runtime cleanup is exposed.
+
+2026-05-31 sign-in hardening: the console sign-in form now mirrors the shared
+AbstractUIC Gateway browser-session sign-in card shape, omits Gateway URL
+because `/console` is same-origin with Gateway, and has a generated JavaScript
+syntax regression test so a malformed inline script cannot silently break the
+login button again. React thin clients should use
+`GatewaySessionSignInCard` from `@abstractframework/ui-kit`; the built-in
+Gateway Console remains dependency-free static HTML and mirrors the same visual
+contract.
+
+## Guidance for the implementing agent
+Keep this console narrow. If it starts becoming a full observability or workflow
+authoring product, stop and split the concern into later items.
+
+--- docs/backlog/planned/gateway-control-plane/0146_gateway_rbac_scope_policy_matrix.md ---
+# Planned: Gateway RBAC scope policy matrix
+
+## Metadata
+- Created: 2026-05-30
+- Status: Planned
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033
+- ADR impact: Needs new ADR or ADR revision
+
+## Context
+Gateway has an `admin` role and admin-only user CRUD. Broader Gateway route
+families are not yet governed by a complete role/scope matrix. The current
+per-principal service router is a strong data-plane baseline, but route-family
+authorization still needs explicit policy.
+
+## Current code reality
+- `GatewayPrincipal.is_admin()` is a string-role check.
+- `/api/gateway/admin/users` is admin-gated.
+- `/api/gateway/admin/runtime-reservations` list/transfer/purge routes are
+  admin-gated.
+- Non-admin users get per-principal data directories through Gateway service
+  routing.
+- Gateway now has a central authorization helper and a first route-family
+  policy gate in the security middleware for admin, audit, process, backlog,
+  triage, reports, capability-default writes, model load/unload, bloc writes,
+  and prompt-cache writes.
+- Gateway route-family policy is now centralized in
+  `abstractgateway/src/abstractgateway/security/authorization.py`, and
+  `GatewaySecurityMiddleware` delegates route-family checks to that table.
+- Non-admin users can no longer satisfy admin-only route families via broad
+  scopes such as `*`; `admin_required` means the `admin` role is required.
+- Server-workspace file helpers, server-workspace artifact import/export, host
+  metrics, email bridge routes, model residency listing, and model load/unload
+  are admin-only in hosted user-auth mode. Browser file upload remains
+  available to ordinary users.
+- Capability-default writes are no longer treated as global admin writes in
+  hosted user-auth mode; they are stored as per-principal overlays under the
+  caller's runtime data plane by `0147`.
+- Gateway user records now reject duplicate runtime ids within the same tenant,
+  so `1 user = 1 runtime` cannot be accidentally broken by user creation or
+  user update. Deleted users also leave a retained-runtime reservation, so a
+  runtime whose data is retained cannot be assigned to a different principal in
+  the same tenant unless an admin explicitly transfers the retained runtime or
+  purges its data. The same runtime id can still exist in a different tenant.
+- Per-principal routing is now covered by an initial Alice/Bob matrix for runs,
+  run history, run input, ledger reads/streams/batches, artifact metadata,
+  artifact content, and artifact search. Cross-user guessed ids return `404` or
+  are omitted from batch/search results instead of returning empty records that
+  imply existence.
+- The Alice/Bob matrix now also covers private workflow bundles, VisualFlow
+  drafts, per-principal capability-default overlays, session artifacts,
+  prompt-cache key naming, and KG/session memory. Prompt-cache key hashing now
+  includes a private principal scope while keeping the returned public identity
+  app-level and portable.
+- Capability discovery now reports admin-only server-workspace artifact
+  import/export and provider prompt-cache control surfaces as unavailable for
+  ordinary users, with machine-readable `admin_required` metadata. Admin
+  principals still see those operations as available.
+- `ABSTRACTGATEWAY_DEV_READ_NO_AUTH=1` now uses a non-admin
+  `loopback-readonly` principal, and admin/operator route families still return
+  machine-readable `403` denials.
+- Powerful surfaces still need audit: workflow publish/remove/deprecate,
+  workspace/file helpers, broader prompt-cache variants, provider defaults,
+  credentials, broad runtime enumeration, bridge administration, discovery
+  visibility, and global/operator endpoints.
+
+## Problem
+The words `admin` and `user` exist, but most of Gateway does not yet have a
+decision-grade authorization matrix. Without one, future UI work can accidentally
+surface privileged operations to ordinary users.
+
+## What we want to do
+Define and enforce a route-family RBAC/scope policy matrix for Gateway. The
+matrix should state subject, action, resource class, owner/caller relation,
+required role, required scope, audit requirement, discovery visibility, and
+destructive/side-effect classification for each route family.
+
+## Why
+Gateway is now the shared control plane. Authorization must be centralized and
+testable before Gateway Console, workflow catalog permissions, per-user
+secrets, and runtime exploration can be trusted.
+
+## Requirements
+- Formalize at least `admin` and `user` roles plus concrete scope fields for
+  narrow grants; do not leave downstream items to invent their own scope model.
+- Model route authorization as subject/action/resource/condition checks, not
+  scattered `if admin` branches.
+- Admin-only: user management, credential/global config writes, global workflow
+  catalog promotion/removal, process control, broad tenant/runtime enumeration,
+  operator maintenance, and global policy changes.
+- User-owned: own runs, ledgers, artifacts, memory, private workflows, and
+  allowed runtime state.
+- Explicit policy needed for shared/org memory, shared workspaces, workflow
+  publishing, cross-runtime search, and destructive actions.
+- Dev read bypass must never create a principal that satisfies `is_admin()`.
+  Replace `local-admin` semantics with a distinct loopback/read-only principal,
+  route allowlist, and tests proving admin/user/secret/catalog data remains
+  unreachable.
+- Denial responses and discovery metadata must not leak hidden resource ids,
+  user existence, workflow existence, secret provider presence, or cross-runtime
+  counts.
+- Denials should be machine-readable, for example `reason_code`,
+  `required_role`, `required_scope`, and `resource_class`, without exposing
+  forbidden resource details.
+- Admin/global writes and denied high-risk attempts are audit-log events.
+
+## Suggested implementation
+Add a centralized Gateway authorization helper and route-family policy table.
+Refactor high-risk routes to call it. Keep denial reasons machine-readable so
+UIs can hide or disable actions cleanly.
+
+## Scope
+- Gateway policy definitions and helper APIs.
+- Route-family audits and tests.
+- Discovery metadata for allowed/denied actions where clients need UX hints.
+
+## Non-goals
+- Do not implement the full Gateway Console here.
+- Do not rely on frontend hiding as authorization.
+- Do not treat caller-supplied ids as authorization proof.
+
+## Dependencies and related tasks
+- `0143_shared_gateway_per_principal_runtime_router.md`
+- `0145_gateway_admin_console_bootstrap.md`
+- `0153_gateway_browser_session_security_contract.md`
+- `0148_gateway_workflow_registry_acl.md`
+- `0151_runtime_explorer_contract.md`
+
+## Expected outcomes
+- A non-admin cannot call admin-only route families.
+- A user cannot read or mutate another user's runtime by guessing ids.
+- Discovery can report permission-aware action availability.
+
+## Validation
+- Alice/Bob route-family isolation tests across users, runs, ledgers,
+  artifacts, memory, workflows, prompt cache, workspace files, and admin routes.
+- Dev read-bypass tests proving admin user lists and sensitive data remain
+  protected.
+- Contract tests for permission metadata.
+
+## Recent validation
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_security_middleware_unit.py -q` -> 31 passed.
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py::test_gateway_user_runtime_ids_are_unique_per_tenant abstractgateway/tests/test_gateway_principal_isolation_matrix.py -q` -> 2 passed.
+- `python -m py_compile abstractgateway/src/abstractgateway/users.py abstractgateway/src/abstractgateway/routes/gateway.py` -> passed.
+- `python -m pytest abstractgateway/tests/test_gateway_security_middleware_unit.py abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_console.py abstractflow/tests/test_gateway_connection_config.py abstractflow/tests/test_web_gateway_proxy_auth.py -q` -> 51 passed, 2 warnings.
+- `python -m compileall -q abstractgateway/src/abstractgateway abstractflow/web/backend` -> passed.
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_security_middleware_unit.py abstractflow/tests/test_gateway_connection_config.py abstractflow/tests/test_web_gateway_proxy_auth.py` -> 44 passed.
+- `python -m pytest abstractgateway/tests` -> 261 passed, 2 skipped.
+- `python -m pytest abstractflow/tests/test_gateway_connection_config.py abstractflow/tests/test_web_gateway_proxy_auth.py` -> 20 passed.
+- `python -m pytest abstractgateway/tests/test_gateway_install_profiles.py abstractgateway/tests/test_gateway_capability_catalog_proxy.py` -> 29 passed.
+- `python -m compileall -q abstractgateway/src/abstractgateway` -> passed.
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_principal_isolation_matrix.py abstractgateway/tests/test_capabilities_endpoint_contract.py abstractgateway/tests/test_abstractflow_editor_gateway_contract.py -q` -> 26 passed.
+- `python -m py_compile abstractgateway/src/abstractgateway/routes/gateway.py abstractgateway/src/abstractgateway/security/sessions.py abstractgateway/src/abstractgateway/security/gateway_security.py` -> passed.
+
+## Progress checklist
+- [ ] Write route-family policy matrix.
+- [x] Add central authorization helper.
+- [x] Harden dev read bypass for admin/operator route families.
+- [x] Add first hosted route-family policy table in Gateway middleware.
+- [x] Admin-gate server-workspace and operator route families.
+- [x] Add runtime-id uniqueness and retained-runtime reservation guards for
+  tenant-local Gateway users.
+- [x] Add admin-only retained runtime list/transfer/purge routes.
+- [x] Add initial Alice/Bob isolation tests for runs, ledgers, and artifacts.
+- [x] Extend Alice/Bob matrix to KG/session memory, private workflows,
+  prompt-cache key naming, session artifacts, and defaults overlays.
+- [x] Prove regular users cannot use admin-only workspace helper/import/export
+  surfaces.
+- [x] Add machine-readable denial tests for first operator route families.
+- [x] Add discovery leak tests for admin-only workspace artifact and
+  prompt-cache provider-control availability.
+- [x] Update docs with current route-family boundaries.
+
+## Guidance for the implementing agent
+Add authorization at the lowest shared Gateway layer available. Avoid scattering
+ad hoc `if admin` checks without a policy table.
+
+## Implementation note - 2026-05-30
+
+This item is materially advanced but not fully closed. The current code now has
+a central policy table and tested denials for operator/server-workspace route
+families. The remaining closure criterion is the broader Alice/Bob isolation
+matrix and discovery leak tests across every user-owned route family.
+
+The latest security pass adds table-driven denial coverage for admin, audit,
+process, backlog, triage, report, email, host, model residency, workspace,
+bloc, and prompt-cache route families using a non-admin user with wildcard
+scopes. This proves broad scopes cannot bypass `admin_required=True`; it does
+not replace the remaining user-owned data-plane isolation matrix.
+
+The latest isolation pass adds runtime-id uniqueness enforcement and extends
+the cross-user matrix to run, ledger, artifact, session artifact, KG/session
+memory, private workflow bundle, VisualFlow draft, prompt-cache naming, and
+capability-default overlay surfaces. It also verifies that ordinary users see
+admin-only workspace artifact import/export and provider prompt-cache controls
+as unavailable in discovery, and that direct workspace helper/import calls
+return machine-readable `403` denials.
+
+This item should remain open only for future route families as they are added
+or promoted. The user-requested Alice/Bob matrix extension is complete.
+
+--- docs/backlog/planned/gateway-control-plane/0147_gateway_per_principal_config_secrets_defaults.md ---
+# Planned: Gateway per-principal config, secrets, and defaults
+
+## Metadata
+- Created: 2026-05-30
+- Status: Planned
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0033, ADR-0035
+- ADR impact: May revise existing ADR
+
+## Context
+Provider/model defaults and API keys are currently configured through Core
+local config, environment variables, or duplicated app UI settings. Gateway is
+becoming the hosted control-plane UX, but Core should remain the schema and
+persistence authority for capability defaults and provider credentials.
+
+## Current code reality
+- ADR-0035 states Core owns capability default schema and persistence, while
+  Gateway is the control-plane access layer.
+- AbstractCore has config primitives for default models, provider API keys,
+  base URLs, and capability route defaults.
+- Flow mostly supports `Auto` and Gateway-discovered defaults.
+- Code and Observer still have app-local settings/auth/defaults that do not yet
+  fully match the Gateway browser-session model.
+- Gateway now supports per-principal capability-default overlays in hosted
+  user-auth mode. Writes to `/api/gateway/config/capability-defaults/...` are
+  stored under the caller's runtime data plane as
+  `config/capability_defaults.json` and merged over execution-host Core
+  defaults for Gateway responses.
+- The admin/root data plane overlay now acts as the Gateway baseline. Normal
+  users inherit that Gateway baseline first, then apply their own per-user
+  overlay. User overrides do not mutate the Gateway baseline or other users'
+  defaults.
+- Gateway Console v0 exposes those per-principal defaults.
+- Gateway provider endpoint profiles now cover the first explicit
+  per-principal/gateway-scoped provider-secret injection path for reusable
+  virtual providers such as `endpoint:office-vllm`; broader secret vault,
+  encryption, bridge, and delegated-tool rules remain open.
+
+## Problem
+Users must configure provider/model defaults repeatedly across apps, and hosted
+users need their own API keys/defaults isolated from other users. Storing keys
+in browser localStorage or mutating global env is wrong for multi-user Gateway
+deployments.
+
+## What we want to do
+Expose Gateway APIs and UI for per-principal provider credentials, base URLs,
+and capability defaults, while delegating schema/persistence mechanics to Core
+or per-principal Core config. Apps should consume Gateway defaults and only ask
+for provider/model when a user intentionally pins an override.
+
+## Why
+This removes duplicated UX, aligns apps behind Gateway, and preserves user
+isolation for secrets and model choices.
+
+## Requirements
+- Default resolution is preference selection within policy ceilings:
+  operator/tenant allowlist and capability policy constrain request overrides,
+  workflow pins, user defaults, tenant defaults, gateway defaults, and
+  execution-host Core defaults.
+- Resolved provider/model metadata reports non-secret provenance so UIs can show
+  whether a value came from request, workflow, user, tenant, Gateway baseline,
+  or Core.
+- Explicit workflow pins remain reproducible unless denied by current host
+  policy, in which case denial is explicit rather than silently rerouted.
+- API keys and provider secrets are never stored in browser storage.
+- Per-user secrets are injected only into that user's runtime context.
+- Capability defaults must not expose secret values.
+- Gateway Console can collect keys/defaults but must not become a second
+  defaults owner independent of Core.
+- Before implementation, record the Core/Gateway storage boundary: who encrypts
+  secrets, who can read raw values, how rotation/deletion works, how backups are
+  handled, and how access is audited.
+- Secrets must be redacted from logs, ledgers, artifacts, tool traces, audit
+  payloads, and discovery responses.
+- Define propagation rules for subruns, bridges, delegated tools, and any
+  admin/system execution path before those paths can use per-principal secrets.
+
+## Suggested implementation
+Add Gateway config endpoints that wrap Core config/default APIs for the current
+principal. First decide whether the implementation uses a per-principal secret
+store, per-principal Core config root, or another Core-owned mechanism. Expose
+readiness checks and catalog previews in Gateway Console only after that
+boundary is explicit.
+
+## Scope
+- Gateway APIs for provider credentials and capability defaults.
+- Gateway Console config page.
+- Per-principal isolation tests for secrets/defaults.
+- App docs that point users to Gateway defaults.
+
+## Non-goals
+- Do not remove direct AbstractCore CLI/config for local developer usage.
+- Do not force every app to remove explicit provider/model overrides.
+- Do not store raw secrets in Gateway audit logs or browser storage.
+
+## Dependencies and related tasks
+- ADR-0035 and `docs/guide/capability-routing-defaults.md`.
+- `0145_gateway_admin_console_bootstrap.md`
+- `0146_gateway_rbac_scope_policy_matrix.md`
+- `0153_gateway_browser_session_security_contract.md`
+- `../../completed/0149_cross_app_gateway_auth_defaults_convergence.md`
+
+## Expected outcomes
+- A Gateway user can configure provider keys/defaults once and use them from
+  Flow, Code, Observer, Assistant, and bridges.
+- Alice's provider keys/defaults are not visible or usable by Bob.
+- Apps default to Gateway/Core defaults unless a run/workflow explicitly pins.
+
+## Validation
+- Alice/Bob secret isolation tests.
+- Default cascade tests.
+- UI tests proving secrets are write-only or masked after creation.
+- App smoke tests with blank provider/model resolving through Gateway defaults.
+
+## Recent validation
+- `python -m pytest abstractgateway/tests/test_gateway_security_middleware_unit.py abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_console.py abstractflow/tests/test_gateway_connection_config.py abstractflow/tests/test_web_gateway_proxy_auth.py -q` -> 51 passed, 2 warnings.
+- `python -m compileall -q abstractgateway/src/abstractgateway abstractflow/web/backend` -> passed.
+- `python -m pytest abstractgateway/tests` -> 261 passed, 2 skipped.
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_security_middleware_unit.py abstractgateway/tests/test_gateway_console.py` -> 29 passed.
+- `python -m pytest abstractgateway/tests/test_gateway_install_profiles.py abstractgateway/tests/test_gateway_capability_catalog_proxy.py` -> 29 passed.
+
+## Progress checklist
+- [x] Define initial per-principal capability-default storage boundary with
+      Core schema and Gateway per-principal access control.
+- [x] Define and implement the initial provider endpoint profile injection
+      boundary for Gateway-owned virtual providers.
+- [ ] Define provider-secret encryption/rotation/audit boundary beyond the
+      initial local JSON store.
+- [x] Define initial provenance behavior for Gateway and per-principal defaults
+      (`source=abstractgateway.gateway` and `source=abstractgateway.principal`).
+- [ ] Define runtime/subrun/bridge secret injection rules.
+- [x] Add Gateway APIs for per-principal capability-default overlays.
+- [x] Add Gateway Console config UX for per-principal defaults.
+- [x] Update app/framework docs for current defaults behavior.
+- [x] Add Alice/Bob default isolation tests.
+- [x] Add initial endpoint profile secret redaction and non-admin scope tests.
+- [ ] Add broader secret isolation tests after a complete vault/bridge boundary exists.
+
+## Implementation note - 2026-05-30
+
+This item is partially implemented for provider/model/base URL defaults.
+Gateway provider endpoint profiles now provide the first raw provider credential
+path without writing user secrets into browser storage, workflow JSON, or
+process-wide environment variables. Profiles are resolved per request into
+transient Runtime parameters and redacted from persisted Runtime observability.
+The remaining design work is a fuller Core/Gateway secret contract covering
+encryption at rest, rotation semantics, subruns, bridges, delegated tools,
+audit, and deletion.
+
+Default cascade as implemented today: execution-host Core defaults provide the
+base route set, the Gateway/root overlay provides the operator baseline, and
+the current user's runtime overlay wins only for that user. Workflow pins and
+per-request overrides still need to be resolved by run-start policy in later
+items; do not silently reroute explicit workflow pins without an explicit
+policy denial or override record.
+
+## Guidance for the implementing agent
+Keep the authority split crisp: Core owns config schema and low-level execution
+config; Gateway owns authenticated hosted UX and per-principal access control.
+
+--- docs/backlog/planned/gateway-control-plane/0148_gateway_workflow_registry_acl.md ---
+# Planned: Gateway workflow registry ACLs
+
+## Metadata
+- Created: 2026-05-30
+- Status: In progress
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033
+- ADR impact: Needs new ADR or ADR revision
+
+## Context
+Flow authors VisualFlows and publishes bundles through Gateway. Runtime treats
+workflow bundles as transport/execution artifacts and intentionally does not
+own trust policy. Gateway must decide who can import, publish, run, promote,
+deprecate, remove, or grant access to workflows.
+
+## Current code reality
+- Gateway has per-principal service routing and per-user flow/bundle storage.
+- Gateway VisualFlow CRUD, publish, bundle upload/remove/deprecate endpoints
+  exist but need clearer admin/user/catalog permission semantics.
+- Flow currently consumes Gateway capability/discovery metadata and can hide or
+  show actions, but server-side Gateway must enforce permissions.
+- Existing per-principal `/visualflows` and bundle directories are private
+  authoring/storage surfaces. A shared tenant/framework catalog should be an
+  explicit Gateway-level metadata store, not an accidental reuse of one user's
+  bundle directory.
+
+## Problem
+Workflow registration and permissions are not yet a clean control-plane model.
+A globally visible workflow must not imply shared runtime state or unchecked
+write/tool permissions. Users should be able to draft private workflows, while
+admins control tenant/framework catalogs.
+
+## What we want to do
+Implement a two-tier Gateway workflow registry:
+- private/user registry for drafts and user-owned workflows;
+- tenant/framework catalog for admin-promoted immutable bundle versions with
+  explicit ACLs and run policies.
+
+Registry scopes should be explicit (`private`, `tenant_catalog`,
+`framework_catalog`, and later `system`) so a `bundle_id` collision or guessed
+id cannot silently switch between private and shared authority.
+
+## Why
+This lets Flow remain an authoring tool while Gateway becomes the trusted
+workflow registry and permission authority.
+
+## Requirements
+- Non-admin users can draft/test private workflows in their own runtime.
+- Admins can import/register/promote/deprecate/remove tenant/framework catalog
+  bundles.
+- Global/catalog workflows execute in the requesting user's runtime unless
+  explicitly launched as admin/system workflows.
+- ACL metadata lives in Gateway, not inside trusted bundle manifest fields.
+- Workspace/tool/write permissions are intersected with user role, workflow ACL,
+  tenant policy, and operator workspace policy.
+- Effective run policy is materialized at run start and includes `run_as`,
+  workflow visibility, allowed tools, workspace grants, secret access, approval
+  mode, network/process permissions, and destructive-action permissions.
+- Enforcement happens both at run start and at later tool/workspace/secret
+  access points; a workflow allowed to start is not automatically allowed to
+  perform every side effect it requests.
+- Admin/system workflow launch semantics require explicit service-principal
+  rules, approval gates, workspace binding, secret-source rules, and audit logs
+  before they are enabled.
+- Discovery exposes permission-aware action metadata for Flow UX.
+- Existing workflows that depend on an older catalog workflow version keep
+  running against that immutable version unless the version is explicitly
+  blocked for safety. Updating a default workflow pointer must not rewrite
+  historical bundle references or private workflows built on top of a previous
+  version.
+
+## Suggested implementation
+Add catalog metadata records keyed by bundle id, version, sha256, status,
+visibility, owner, publisher, promoter, timestamps, and ACL. Include review
+status, checksum verification, and the immutable policy snapshot or policy
+version used at run start. Keep bundle content immutable by version; updates
+create new versions and optional default-pointer changes. Add run-start,
+scheduled-run, subworkflow, and per-action checks that resolve catalog ACL and
+effective run policy before execution.
+
+Recommended state machine:
+`private/draft -> submitted -> approved/published -> deprecated -> removed/tombstoned`.
+Deprecation blocks new starts but preserves history/replay. Removal should keep
+tombstones so dependent workflows can explain why a referenced version is no
+longer startable.
+
+## Scope
+- Gateway registry metadata and ACL APIs.
+- Run-start authorization for catalog/private workflows.
+- Flow discovery contract updates for allowed/denied actions.
+- Tests for private vs catalog workflows.
+- Migration compatibility for existing private `/visualflows` and user bundle
+  storage.
+
+## Non-goals
+- Do not make Runtime own ACL policy.
+- Do not trust bundle-declared permissions without Gateway grants.
+- Do not add a full marketplace UX in this item.
+- Do not change `/bundles` from "current runtime bundles" to "global catalog"
+  without an explicit scope or a separate catalog endpoint.
+
+## Dependencies and related tasks
+- `0146_gateway_rbac_scope_policy_matrix.md`
+- `0145_gateway_admin_console_bootstrap.md`
+- `0153_gateway_browser_session_security_contract.md` for browser-admin
+  interactions with registry controls.
+- Flow publish/import UI.
+- Runtime workflow bundle validation.
+
+## Expected outcomes
+- Users cannot run or mutate workflows by guessing bundle ids.
+- Admins can promote workflows to a tenant/framework catalog.
+- Catalog workflows run in the caller's data plane by default.
+- Deprecation blocks new starts while preserving historical replay.
+
+## Validation
+- Alice/Bob private workflow isolation tests.
+- Non-admin publish-to-catalog denial tests.
+- Catalog ACL start/deny tests.
+- Immutable bundle version/sha256 tests.
+- Default-pointer update tests proving existing version references are not
+  rewritten.
+- Scheduled-run and subworkflow policy inheritance tests.
+- Workspace policy enforcement tests.
+
+## Progress checklist
+- [x] Define registry tiers and metadata schema.
+- [ ] Define effective run policy and admin/system workflow semantics.
+- [x] Add catalog ACL APIs.
+- [x] Enforce run-start ACL/policy.
+- [x] Enforce scheduled-run and catalog subworkflow status/policy checks.
+- [ ] Enforce per-tool/per-workspace policy checks.
+- [x] Update Gateway discovery metadata for catalog/private action split.
+- [x] Add two-user tests.
+
+## Implementation note - 2026-05-30
+
+Implemented the first catalog-control slice in `abstractgateway`:
+
+- Added a Gateway-owned workflow catalog store under the root Gateway data dir.
+  Catalog bundle bytes are immutable by `scope + tenant + bundle_id +
+  bundle_version + sha256`; re-uploading the same version with different bytes
+  is rejected.
+- Added explicit catalog endpoints:
+  - user-visible `GET /api/gateway/workflow-catalog`;
+  - admin-only upload, promote, default pointer, ACL, deprecate, block, and
+    tombstone routes under `/api/gateway/admin/workflow-catalog`.
+- Kept private `/api/gateway/visualflows` and `/api/gateway/bundles` as
+  per-principal runtime authoring/storage surfaces.
+- Loaded tenant catalog bundles into each user's runtime host under internal
+  catalog bundle ids so private bundle ids cannot shadow catalog ids.
+- Added `registry_scope` to run start and scheduled run requests. Catalog
+  starts resolve through ACLs and the admin default pointer, then run in the
+  requesting user's runtime.
+- Added host-side guards so direct internal catalog starts require a
+  Gateway-issued signed workflow-policy snapshot, and catalog subworkflow
+  starts are blocked when the signature, runtime binding, ACL, content hash, or
+  catalog status no longer validates.
+- Made catalog scope explicit: omitted `registry_scope` stays on the private
+  runtime bundle surface and does not silently fall through to the shared
+  catalog.
+- Blocked direct private-bundle inspection of catalog-internal bundle ids and
+  added ACL-aware catalog flow/schema inspection routes.
+- Reworked catalog install so byte immutability and metadata updates are
+  checked in one critical section; same-content inactive re-uploads cannot move
+  the default pointer back to an inactive version.
+- Rejected `framework_catalog` at the API until cross-tenant host loading and
+  policy semantics are implemented.
+- Added discovery metadata so clients can distinguish private bundle actions
+  from catalog/admin actions.
+
+Validation:
+
+- `python -m py_compile abstractgateway/src/abstractgateway/workflow_catalog.py abstractgateway/src/abstractgateway/config.py abstractgateway/src/abstractgateway/service.py abstractgateway/src/abstractgateway/hosts/bundle_host.py abstractgateway/src/abstractgateway/routes/gateway.py abstractgateway/tests/test_gateway_workflow_catalog_acl.py`
+- `python -m pytest abstractgateway/tests/test_gateway_workflow_catalog_acl.py -q` -> `2 passed`
+- `python -m pytest abstractgateway/tests/test_gateway_workflow_catalog_acl.py abstractgateway/tests/test_gateway_workflow_deprecation.py abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_capabilities_endpoint_contract.py abstractgateway/tests/test_abstractflow_editor_gateway_contract.py -q`
+- `python -m pytest abstractgateway/tests -q` -> `265 passed, 2 skipped`
+
+Remaining work:
+
+- Define any future admin/system run mode separately; current catalog runs are
+  caller-runtime only.
+- Intersect workflow catalog policy with tool, workspace, secret, network, and
+  destructive-action policies at effect/action boundaries.
+- Build Flow/Gateway Console UX for catalog promotion, default movement, ACLs,
+  and version status operations.
+
+## Refinement note - 2026-05-30
+
+Admin install/update/remove of default workflows should be modeled as catalog
+version management, not file replacement. Admins can promote a new immutable
+bundle version and move a default pointer, but private workflows and historical
+runs must retain their exact version reference. A later admin/system workflow
+execution mode must be explicit and audited; the default for catalog workflows
+is still "run in the requesting user's runtime."
+
+## Guidance for the implementing agent
+Keep authoring and authority separate: Flow may request publication, but Gateway
+must decide and audit the permission result.
+
+--- docs/backlog/completed/0149_cross_app_gateway_auth_defaults_convergence.md ---
+# Completed: Cross-app Gateway auth and defaults convergence
+
+## Metadata
+- Created: 2026-05-30
+- Status: Completed
+- Completed: 2026-05-30
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0033, ADR-0035
+- ADR impact: No ADR change in this pass; the convergence behavior is covered
+  by the existing Gateway/control-plane/defaults ADRs and the browser-session
+  contract tracked in `0153`.
+
+## Context
+AbstractFlow now uses browser-session Gateway user auth. Other apps still have
+older or duplicated auth/default patterns. Code, Observer, Assistant, and any
+browser UI should converge on the same Gateway session and default-resolution
+model.
+
+## Current code reality
+- Flow uses Gateway URL + user + token only during sign-in; it exchanges the
+  user token for a Gateway browser session and stores only the opaque session id
+  in an HTTP-only browser cookie.
+- Flow mutating Gateway proxy calls carry a CSRF token, and Gateway validates it
+  for session-authenticated writes.
+- Code Web now supports the same hosted Gateway URL + user + token sign-in
+  shape. Its static server creates an app-scoped browser session by exchanging
+  the user token with Gateway server-side, stores no bearer token in
+  localStorage, proxies `/api/*` with `X-AbstractGateway-Session`, and requires
+  an app CSRF header for mutating calls.
+- Observer now has the same hosted browser-session path and no longer persists
+  Gateway bearer tokens in localStorage. Its direct bearer mode remains a local
+  development escape hatch.
+- Flow static/Vite-hosted session login now consumes Gateway's cookie-based
+  login response correctly; it no longer assumes the Gateway session id and
+  CSRF token are returned in JSON.
+- Code Web start flow no longer blocks when provider/model are blank; hosted
+  runs can rely on Gateway/Core defaults unless the user sets an explicit
+  override.
+- Observer and Code Web still have app-specific UI copy and settings layouts;
+  a shared auth/default component remains optional if duplication grows.
+
+## Problem
+Users must learn different auth/default models for each app. Duplicated
+provider/model/default UI causes drift and can defeat per-user isolation.
+
+## What we want to do
+Move every hosted app to Gateway user-session auth and Gateway/Core defaults.
+Apps should expose provider/model only as explicit per-run, per-workflow, or
+advanced overrides.
+
+## Why
+This improves security, reduces duplicated UI, and makes Gateway the consistent
+deployment control plane.
+
+## Requirements
+- Flow, Code, Observer, Assistant, and future browser apps use Gateway
+  user-session auth in hosted mode.
+- No hosted browser app stores bearer tokens in localStorage.
+- Hosted mode detection and session semantics come from
+  `0153_gateway_browser_session_security_contract.md`; local/offline app modes
+  remain allowed to keep local development ergonomics.
+- Apps use Gateway catalogs/defaults by default.
+- Provider/model pins remain available where they are natural task-specific
+  overrides.
+- Disconnect/sign-out clears only the browser session for that app/domain.
+
+## Per-app hosted/local behavior matrix
+
+This matrix is the concrete meaning of "cross-app convergence": each app keeps
+its natural local ergonomics, but hosted browser surfaces share the Gateway
+session/default model.
+
+| App/surface | Hosted auth behavior | Local/development behavior | Default provider/model behavior | Notes |
+|---|---|---|---|---|
+| AbstractFlow web | User enters Gateway URL, user id, and user token once. The host exchanges the token for a Gateway browser session and proxies Gateway calls with session + CSRF. | Local script can print a dev user/token and start Flow/Gateway together. No ambient admin login should appear in the browser. | Nodes default to Gateway/Core capability defaults unless the flow pins provider/model. | Reference browser UX for Gateway sign-in. |
+| AbstractCode Web | Hosted server exchanges Gateway user credentials server-side, stores only app-scoped session cookies, strips bearer tokens from saved browser settings, and proxies `/api/*`. | CLI/env bearer token remains acceptable for trusted local runs. | Blank provider/model means "use Gateway defaults"; explicit per-run overrides remain allowed. | No localStorage bearer token in hosted mode. |
+| AbstractObserver web | Hosted server follows the same app-scoped session proxy and token-storage stripping as Code Web. | Direct bearer-token mode remains a local/operator escape hatch. | Observer should read Gateway catalogs/defaults for display and filters, not own global model defaults. | Observer remains observability UX, not the admin setup surface. |
+| Gateway Console | Native Gateway browser-session app. Users sign in with user id + token; admins manage users and Gateway baselines; normal users manage their own overlays. | Same URL works locally; dev scripts print the admin/user credential to enter. | Admin/default runtime owns Gateway baseline; user runtime owns per-user overlay. Provider/model selectors must be discovery-driven. | Console is account/admin/config, not deep runtime exploration. |
+| AbstractAssistant desktop | Not a hosted browser app today. It can keep CLI/env token or stored local config for trusted desktop use. | Same as hosted until a browser Assistant exists. | Gateway mode should prefer Gateway/Core defaults and only send explicit overrides when the user chooses them. | Do not force browser-cookie auth onto terminal/desktop-only surfaces. |
+| Scripts/automation | Use bearer tokens or admin/user tokens directly as server-to-server credentials. | Same. | Prefer Gateway defaults unless a reproducible run needs explicit provider/model. | Automation is not browser storage; protect tokens with OS/process controls. |
+
+Shared auth/default UI extraction is intentionally deferred. The current
+duplication is understandable and app-specific enough that a shared component
+could harden the wrong abstraction too early. Extract a shared component only
+after two or more browser apps need the same fields, validation, cookie-status
+display, logout behavior, and defaults picker with no app-specific branching.
+
+## Design review tensions
+
+The useful disagreement in this item is not "should apps converge" versus "do
+nothing"; it is where convergence should stop.
+
+- Centralized hosted auth/defaults vs app-local ergonomics: hosted browser apps
+  should share the Gateway browser-session and Gateway/Core defaults model, but
+  desktop, CLI, and trusted local development flows should keep direct token
+  ergonomics. Forcing cookie auth onto every client would make automation and
+  local development worse without improving hosted browser safety.
+- Shared component now vs delayed extraction: a common sign-in/defaults
+  component would reduce visual drift, but the apps still have different
+  layouts, status affordances, and local modes. Extracting now would likely
+  encode the wrong abstraction. The threshold is repeated identical behavior,
+  not the existence of similar fields.
+- Gateway baseline defaults vs per-user overrides: Gateway should provide the
+  tenant/admin baseline so apps stop duplicating global provider/model
+  configuration. Per-user overlays remain a separate `0147` concern so one
+  user's defaults do not silently change everyone else's behavior.
+- Gateway Console vs Observer or a future Manager/Explorer: account, admin,
+  auth, and baseline configuration belong in the Gateway Console. Observer
+  should stay focused on runs and platform observability. Runtime exploration is
+  intentionally separate until `0151` proves the contract and UX pressure.
+- Browser security vs operator escape hatches: hosted browser mode must not
+  persist bearer tokens in localStorage. Server-to-server scripts and local
+  operator tools can still use tokens directly, but docs and startup scripts
+  must label that as trusted-local or automation behavior.
+
+## Suggested implementation
+Audit each app. Introduce shared session/auth helpers or a small common UI kit
+component if duplication becomes high. Migrate app docs and settings screens to
+Gateway defaults.
+
+## Scope
+- App auth/session flows.
+- App provider/model default UX.
+- Docs and tests.
+
+## Non-goals
+- Do not remove local/offline app modes.
+- Do not remove explicit provider/model overrides needed for reproducibility.
+- Do not make Observer the admin setup UI.
+
+## Dependencies and related tasks
+- `0147_gateway_per_principal_config_secrets_defaults.md`
+- `0145_gateway_admin_console_bootstrap.md`
+- `0153_gateway_browser_session_security_contract.md`
+- `0150_observer_manager_responsibility_split.md`
+
+## Expected outcomes
+- A Gateway user can sign in consistently across apps.
+- Apps default to Gateway/Core configuration without duplicating global default
+  settings.
+- Hosted app auth no longer relies on app-local admin/server tokens.
+
+## Validation
+- Per-app login/logout tests.
+- Token storage audit proving no localStorage bearer token in hosted mode.
+- Blank provider/model smoke tests resolving through Gateway defaults.
+- Cross-app Alice/Bob isolation smoke tests.
+
+## Progress checklist
+- [x] Audit Code Web auth/default storage.
+- [x] Audit Observer auth/default storage.
+- [x] Audit Assistant Gateway mode auth/defaults.
+- [x] Migrate Code Web hosted mode to Gateway browser-session proxy auth.
+- [x] Migrate Observer hosted mode to Gateway browser-session proxy auth.
+- [x] Fix Flow static/Vite session login to parse Gateway login cookies.
+- [x] Define per-app hosted/local auth/default behavior matrix.
+- [x] Decide whether to extract shared auth/default UX now. Result: defer; the
+  current app-specific duplication is acceptable and a shared component should
+  wait until two or more apps need the same fields, validation, status display,
+  logout behavior, and defaults picker without app-specific branching.
+- [x] Add initial token-storage and hosted proxy smoke tests.
+- [x] Update package and framework docs/tests for the current convergence
+  behavior.
+
+## Recent audit notes
+- Code Web and Observer now store only app-scoped browser-session cookies in
+  hosted mode. Their settings persistence explicitly strips `auth_token`, and
+  their packaged servers reject browser-supplied Gateway URL changes on
+  non-local hosted UI hostnames unless an explicit app override is enabled.
+- Assistant remains a local/desktop client and can keep CLI/env bearer-token
+  ergonomics until a hosted browser surface exists.
+- Flow is the reference implementation for the current browser session contract.
+
+## Recent validation
+- `npm test -- --run src/lib/storage.test.ts` in `abstractcode/web` -> 1 passed.
+- `npm test -- --run src/ui/auth_storage.test.ts` in `abstractobserver` -> 1 passed.
+- `npm run build` in `abstractcode/web` -> passed.
+- `npm run build` in `abstractobserver` -> passed.
+- `npm run build` in `abstractflow/web/frontend` -> passed.
+- `node --check abstractcode/web/bin/cli.js && node --check abstractobserver/bin/cli.js && node --check abstractflow/web/frontend/bin/cli.js` -> passed.
+- Stub-Gateway hosted-session proxy smoke tests for AbstractCode Web,
+  AbstractObserver, and AbstractFlow static server -> passed. The smoke tests
+  verified cookie-based login exchange, no token leakage into app cookies,
+  Gateway session/CSRF injection, browser cookie stripping, Authorization
+  stripping, and app CSRF enforcement for mutating proxied calls.
+- `python -m pytest abstractflow/tests/test_gateway_connection_config.py abstractflow/tests/test_web_gateway_proxy_auth.py -q` -> 21 passed, 2 warnings.
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_principal_isolation_matrix.py abstractgateway/tests/test_capabilities_endpoint_contract.py abstractgateway/tests/test_abstractflow_editor_gateway_contract.py -q` -> 26 passed.
+
+## Guidance for the implementing agent
+Preserve task-specific app ergonomics. The goal is not to make all apps look the
+same, but to make identity, defaults, and secrets consistent.
+
+## Completion report
+
+Date: 2026-05-30
+
+Summary:
+- Documented the concrete per-app hosted/local auth/default behavior matrix for
+  AbstractFlow Web, AbstractCode Web, AbstractObserver Web, Gateway Console,
+  AbstractAssistant desktop, and scripts/automation.
+- Confirmed the shared auth/default component should not be extracted yet. The
+  right criterion is repeated identical behavior across multiple browser apps,
+  not a desire for visual uniformity.
+- Verified the current hosted browser apps use Gateway browser-session proxy
+  auth and do not persist Gateway bearer tokens in browser settings.
+- Repaired one stale AbstractFlow CLI doc sentence so it now says Flow stores
+  the opaque Gateway session id, not the user token.
+
+Files or symbols touched:
+- `docs/backlog/completed/0149_cross_app_gateway_auth_defaults_convergence.md`
+- `docs/backlog/overview.md`
+- `docs/backlog/planned/gateway-control-plane/README.md`
+- `docs/backlog/planned/gateway-control-plane/0147_gateway_per_principal_config_secrets_defaults.md`
+- `docs/backlog/planned/gateway-control-plane/0153_gateway_browser_session_security_contract.md`
+- `docs/guide/gateway-security.md`
+- `llms.txt`, `llms-full.txt`
+- `abstractflow/docs/cli.md`
+
+Validation:
+- `rg` audit across AbstractFlow, AbstractCode Web, AbstractObserver, and root
+  docs for hosted auth/default/token-storage wording.
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_principal_isolation_matrix.py abstractgateway/tests/test_capabilities_endpoint_contract.py abstractgateway/tests/test_abstractflow_editor_gateway_contract.py -q` -> 26 passed.
+- `python -m py_compile abstractgateway/src/abstractgateway/routes/gateway.py abstractgateway/src/abstractgateway/security/sessions.py abstractgateway/src/abstractgateway/security/gateway_security.py` -> passed.
+- `python /Users/albou/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/albou/.codex/skills/architect` -> passed.
+- `python /Users/albou/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/albou/.codex/skills/review` -> passed.
+
+Behavior changes:
+- No runtime behavior change is introduced by completing this item. The
+  behavior had already landed in Flow, Code Web, Observer, Gateway session
+  routing, and Gateway defaults. This completion closes the planning item by
+  making the behavior matrix, deferral decision, docs state, and validation
+  explicit.
+
+Residual risks:
+- Direct bearer-token mode remains available for local/operator development in
+  Code Web and Observer. This is intentional, but hosted docs must continue to
+  steer users toward browser-session proxy auth.
+- AbstractAssistant is still a local/desktop client. If a hosted browser
+  Assistant appears, it should implement the same Gateway browser-session
+  contract rather than reusing desktop token storage.
+- A shared auth/default component should be revisited only when duplicate app
+  implementation creates proven drift or maintenance cost.
+
+Follow-ups:
+- Keep `0153` open as the durable session/cookie contract while new browser
+  apps are added.
+- Keep `0147` open for provider-secret storage/injection boundaries; `0149`
+  does not solve per-user provider credentials.
+- See proposed item `0155` before extracting a shared hosted proxy helper; the
+  current posture is package-local code plus conformance tests.
+
+--- docs/backlog/planned/gateway-control-plane/0150_observer_manager_responsibility_split.md ---
+# Planned: Observer and Manager responsibility split
+
+## Metadata
+- Created: 2026-05-30
+- Status: Planned
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033
+- ADR impact: May revise existing ADR
+
+## Context
+Observer is useful but broad. It has grown toward observability, launch,
+backlog, email, process, and operational pages. Gateway now needs account,
+admin, config, user/runtime, and workflow-permission UX. Putting all of that
+into Observer would make app boundaries unclear.
+
+## Current code reality
+- Observer is the existing runtime/run observability app.
+- Gateway has control-plane APIs and is gaining identity/routing authority.
+- There is no dedicated Manager/Admin app yet.
+- Gateway Console v0 is planned as a narrow built-in control-plane UX.
+
+## Problem
+Without a responsibility split, Observer can become a catch-all operational app
+and Gateway can become a monolithic UI. Users need a clearer product map.
+
+## What we want to do
+Define app responsibilities early enough to contain scope before Gateway
+Console, Runtime Explorer, and cross-app migrations expand. Proposed ownership:
+- Gateway/Gateway Console: identity, account, admin, config, runtime summary,
+  workflow registry permissions.
+- Observer: run/ledger/artifact observability, runtime health, audit views, and
+  operational monitoring.
+- Flow: workflow authoring.
+- Code: coding-agent UX.
+- Assistant: personal assistant UX.
+- Future Explorer/Manager: only if Gateway Console or Observer becomes too broad.
+
+## Why
+Clear product boundaries improve user onboarding, code ownership, security, and
+release planning.
+
+## Requirements
+- Audit Observer high-trust surfaces: backlog execution, email, process control,
+  env management, scheduling, broad runtime management.
+- Immediately classify existing high-trust surfaces as observability,
+  admin/config, operator-only, domain-app, or migration candidate.
+- Hosted-mode unsafe paths must be marked operator-only behind Gateway
+  authorization or hidden/disabled until `0146` enforcement exists.
+- Decide which surfaces remain Observer operator views and which move behind
+  Gateway Console/Manager APIs.
+- Define links between apps instead of duplicating full functionality.
+- Keep all sensitive operations authorized by Gateway, not by frontend routing.
+
+## Suggested implementation
+Write a short app-boundary decision doc or ADR update, then migrate one surface
+at a time. Start by documenting which current Observer pages are observability,
+which are admin/config, and which are domain apps.
+
+## Scope
+- App responsibility audit.
+- Docs/ADR update.
+- Containment notes for high-trust Observer/Gateway routes that should not be
+  presented as ordinary hosted-user UX.
+- Follow-up tickets for migrations.
+
+## Non-goals
+- Do not create a new package before the boundary is proven.
+- Do not remove useful Observer pages without replacement.
+- Do not move Flow authoring into Gateway.
+
+## Dependencies and related tasks
+- `0145_gateway_admin_console_bootstrap.md`
+- `0146_gateway_rbac_scope_policy_matrix.md`
+- `0151_runtime_explorer_contract.md`
+- `0152_abstractmanager_package_extraction.md`
+
+## Expected outcomes
+- Users can understand which app to open for admin/config vs observability vs
+  authoring.
+- High-trust Observer surfaces are either clearly operator-only or moved into
+  Gateway-managed control plane.
+- Future package split decisions are grounded in actual use, not naming alone.
+
+## Validation
+- Documentation names each app's responsibility and non-goals.
+- UI navigation links users to the right app/surface.
+- Authorization tests protect high-trust surfaces.
+
+## Progress checklist
+- [ ] Audit Observer surfaces.
+- [ ] Draft app responsibility matrix.
+- [ ] Classify high-trust surfaces and containment status.
+- [ ] Update ADR/docs.
+- [ ] Create migration backlog items where needed.
+
+## Guidance for the implementing agent
+Do not solve this by naming a new app too early. First make the ownership model
+explicit, then extract only when code and UX pressure justify it.
+
+--- docs/backlog/planned/gateway-control-plane/0153_gateway_browser_session_security_contract.md ---
+# Planned: Gateway browser session security contract
+
+## Metadata
+- Created: 2026-05-30
+- Status: Planned
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033
+- ADR impact: Needs new ADR or ADR revision
+
+## Context
+Flow already uses browser-session Gateway auth, and the Gateway Console plus
+other hosted apps need the same security model. Gateway user tokens are bearer
+credentials assigned to a principal. Browser sessions are app-facing sessions
+that should be shorter-lived, revocable, and scoped to the browser/app origin.
+
+## Current code reality
+- Gateway exposes `/api/gateway/session/login` and
+  `/api/gateway/session/logout` for registry-backed user browser sessions.
+- Flow accepts Gateway URL, user id, and user token at connection time, validates
+  the token, exchanges it for an opaque Gateway browser session, and stores only
+  the session id in an HTTP-only Flow cookie across the Python host, Node static
+  host, and Vite dev proxy.
+- Flow stores a CSRF token in a separate browser cookie and sends it as
+  `X-AbstractFlow-CSRF`; the Flow proxy forwards `X-AbstractGateway-Session`
+  and `X-AbstractGateway-CSRF` to Gateway for mutating requests.
+- Gateway invalidates browser sessions when the backing user is disabled,
+  deleted, or its token hash changes.
+- Gateway session cookies are HTTP-only for the session id and readable only for
+  the CSRF token. They use `SameSite=Lax`, path `/`, no `Secure` flag on plain
+  HTTP, and `Secure` when the request scheme or trusted proxy header is HTTPS.
+  Non-remembered sessions omit `Max-Age`; remembered sessions set `Max-Age`.
+- Gateway user records store hashed bearer tokens and return generated/rotated
+  tokens only once.
+- Code Web and Observer now follow the same hosted-session proxy contract in
+  their packaged Node servers: Gateway user credentials are exchanged
+  server-side, app-scoped session cookies are issued, `/api/*` is proxied with
+  `X-AbstractGateway-Session`, writes require app CSRF headers, and saved
+  browser settings strip bearer tokens. They now also reject browser-supplied
+  Gateway URL changes on non-local hosted UI hostnames unless an explicit
+  app-specific override is enabled. Host checks trust the request `Host` header
+  by default; forwarded host headers require an explicit trust-proxy env setting.
+- Assistant remains a local/desktop app and can keep its CLI/env token
+  ergonomics until a hosted browser surface exists.
+
+## Problem
+Without a formal contract, apps can blur long-lived Gateway user tokens with
+browser sessions, duplicate token handling, store bearer tokens in browser
+storage, or implement inconsistent logout/revocation semantics. Admin UI work
+would then normalize brittle auth behavior.
+
+## What we want to do
+Define and implement a hosted browser-session contract for Gateway-connected
+apps. Apps should exchange a Gateway user token for an app/browser session and
+then proxy Gateway requests with server-side session credentials. Browser code
+must not retain the bearer token after connection.
+
+## Requirements
+- Browser apps never store Gateway bearer tokens in `localStorage`,
+  `sessionStorage`, IndexedDB, or readable cookies in hosted mode.
+- Session cookies are `HttpOnly`, `Secure` when served over HTTPS, use an
+  explicit `SameSite` posture, and have deliberate domain/path scoping.
+- Mutating routes have a CSRF posture appropriate to the deployment mode.
+- Sessions have expiry, logout, and server-side revocation behavior.
+- A rotated or disabled Gateway user token invalidates future session creation;
+  policy defines whether existing sessions are revoked immediately.
+- Error and discovery responses distinguish unauthenticated, expired,
+  revoked, and forbidden states without leaking hidden resources.
+- Local/offline app modes may keep their existing development ergonomics, but
+  hosted mode must use this contract.
+
+## Scope
+- Gateway-connected browser session contract.
+- Shared app expectations for Flow, Code Web, Observer, Gateway Console, and
+  future browser apps.
+- Tests for cookie flags, logout, revocation, and token-storage audit.
+
+## Non-goals
+- Do not replace Gateway user tokens as the principal credential.
+- Do not force terminal/local-only apps to use browser cookies.
+- Do not implement a full external IdP/OIDC flow in this item.
+
+## Dependencies and related tasks
+- `0146_gateway_rbac_scope_policy_matrix.md`
+- `0145_gateway_admin_console_bootstrap.md`
+- `../../completed/0149_cross_app_gateway_auth_defaults_convergence.md`
+- `docs/backlog/completed/0141_flow_browser_session_gateway_auth.md`
+
+## Expected outcomes
+- Hosted browser apps share one clear session/security model.
+- Admin console work does not rely on raw bearer-token storage in the browser.
+- Cross-app convergence has a concrete auth contract to implement against.
+
+## Validation
+- Browser tests prove Gateway bearer tokens are not present in web storage.
+- Cookie flag tests cover hosted and local-dev variants.
+- Logout and revocation tests prevent continued Gateway proxying.
+- CSRF tests cover mutating routes exposed through app sessions.
+- Origin tests cover same-origin/localhost and explicitly allowlisted
+  cross-origin hosted apps while rejecting untrusted origins.
+
+## Recent validation
+- `npm test -- --run src/lib/storage.test.ts` in `abstractcode/web` -> 1 passed.
+- `npm test -- --run src/ui/auth_storage.test.ts` in `abstractobserver` -> 1 passed.
+- Stub-Gateway hosted-session proxy smoke tests for AbstractCode Web,
+  AbstractObserver, and AbstractFlow static server -> passed.
+- `npm run build` in `abstractcode/web`, `abstractobserver`, and
+  `abstractflow/web/frontend` -> passed.
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_security_middleware_unit.py abstractflow/tests/test_gateway_connection_config.py abstractflow/tests/test_web_gateway_proxy_auth.py` -> 44 passed.
+- `npm run build` in `abstractflow/web/frontend` -> TypeScript and Vite production build passed.
+- `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_principal_isolation_matrix.py abstractgateway/tests/test_capabilities_endpoint_contract.py abstractgateway/tests/test_abstractflow_editor_gateway_contract.py -q` -> 26 passed.
+- `python -m py_compile abstractgateway/src/abstractgateway/routes/gateway.py abstractgateway/src/abstractgateway/security/sessions.py abstractgateway/src/abstractgateway/security/gateway_security.py` -> passed.
+
+## Progress checklist
+- [x] Define session issuance and cookie semantics for Gateway and Flow.
+- [x] Define CSRF and logout/revocation behavior for Gateway and Flow.
+- [x] Add shared hosted-mode detection expectations.
+- [x] Add Gateway/Flow tests and app migration guidance.
+- [x] Migrate Code Web and Observer from raw browser bearer-token storage.
+- [x] Add full cookie/origin/session matrix tests across HTTP, HTTPS,
+  same-origin, allowlisted cross-origin, untrusted cross-origin, expiry, logout,
+  and token-rotation revocation.
+
+## Guidance for the implementing agent
+Keep user tokens and browser sessions separate. A token authenticates a
+principal to Gateway; a browser session lets a specific app/browser continue
+acting for that principal under tighter cookie, expiry, and revocation rules.
+
+--- docs/backlog/completed/0154_multi_user_security_release_blockers.md ---
+# Planned: Multi-user security release blockers
+
+## Metadata
+- Created: 2026-05-30
+- Status: Completed
+- Completed: 2026-05-30
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033
+- ADR impact: None. This item enforces the current Gateway control-plane and browser-session decisions.
+
+## Context
+The multi-user Gateway work introduced user-authenticated browser sessions,
+per-principal runtime routing, and hosted app proxy sessions. A review found
+three release-blocking gaps: retained runtime data could be reassigned after
+user deletion, Code Web and Observer allowed browser-supplied Gateway URL
+changes on hosted hosts, and the published Gateway/Flow launcher did not
+bootstrap Gateway users for browser login.
+
+## Current code reality
+- `abstractgateway/src/abstractgateway/users.py` rejects duplicate runtime ids
+  among live users but, before this item, user deletion removed the only
+  assignment record while retaining runtime data on disk.
+- `abstractflow` rejects browser Gateway URL changes on non-local hosts unless
+  explicitly enabled, but `abstractcode/web/bin/cli.js` and
+  `abstractobserver/bin/cli.js` did not have the same guard.
+- `scripts/gateway-flow-local.sh` enables Gateway user auth, prepares the
+  default `admin` user, and prints Flow login credentials. `scripts/gateway-flow.sh`
+  still used only the legacy Gateway token and did not create a browser-login user.
+
+## Problem
+These gaps can break isolation, allow hosted app proxy misuse, or make the
+published startup path unusable for the new browser-session auth model.
+
+## What we want to do
+Close the release blockers with targeted changes that preserve the current
+architecture: Gateway owns users/runtime assignment, hosted apps proxy through
+browser sessions, and scripts print only the user credentials needed by Flow.
+
+## Why
+Multi-user Gateway support must fail closed before release. A user or admin
+should not accidentally route one person's retained runtime data to another
+principal, and hosted apps must not become arbitrary browser-directed proxies.
+
+## Requirements
+- Deleting a Gateway user reserves that user's runtime id while runtime data is
+  retained, preventing assignment to a different principal in the same tenant.
+- Flow, Code Web, and Observer share the same hosted/non-local browser Gateway
+  URL mutation rule.
+- Published-package `gateway-flow.sh` enables user auth, prepares an `admin`
+  user by default, caches the generated user token locally, and prints Gateway
+  URL/user/token for Flow sign-in.
+- `.DS_Store` files are ignored and must not remain tracked.
+
+## Suggested implementation
+- Add runtime reservation/tombstone records to the Gateway user registry.
+- Add Code Web and Observer URL guards matching Flow and cover them with
+  hosted-server tests.
+- Mirror the local launcher's user-bootstrap behavior in the published script.
+- Remove tracked `.DS_Store` files and keep ignore files aligned.
+
+## Scope
+- AbstractGateway user registry and console copy.
+- AbstractCode Web and AbstractObserver packaged Node servers plus tests.
+- Root startup scripts and docs.
+- Ignore hygiene for `.DS_Store`.
+
+## Non-goals
+- Do not add a purge, restore, or runtime-transfer UI in this item.
+- Do not extract a shared hosted proxy helper unless implementation pressure is
+  proven by tests or another drift incident.
+- Do not change Core or Runtime behavior.
+
+## Dependencies and related tasks
+- `0146_gateway_rbac_scope_policy_matrix.md`
+- `0153_gateway_browser_session_security_contract.md`
+- `../../completed/0149_cross_app_gateway_auth_defaults_convergence.md`
+
+## Expected outcomes
+- A deleted user's retained runtime cannot be assigned to another user.
+- Hosted Code/Observer reject remote-host Gateway URL changes just like Flow.
+- `./scripts/gateway-flow.sh` produces usable `admin` browser-login credentials.
+- Release hygiene no longer includes tracked `.DS_Store` files.
+
+## Validation
+- Gateway user-registry tests cover delete-plus-cross-user-runtime-reuse.
+- Code/Observer hosted server tests cover remote-host URL mutation rejection.
+- `bash -n scripts/gateway-flow.sh scripts/gateway-flow-local.sh`.
+- Targeted Gateway, Flow, Code, and Observer test suites pass.
+
+## Progress checklist
+- [x] Add Gateway runtime reservations.
+- [x] Add Code Web and Observer hosted URL guards.
+- [x] Align published launcher user bootstrap.
+- [x] Clean `.DS_Store` tracking/ignore state.
+- [x] Update docs and completion report.
+
+## Guidance for the implementing agent
+Keep the fixes narrow. The security model belongs in Gateway and in hosted app
+proxy boundaries; do not move user/routing ownership into Flow, Code, Observer,
+Core, or Runtime.
+
+## Architecture decision summary
+
+Decision question: how should the release blockers be closed without blurring
+Gateway/app responsibilities?
+
+Alternatives considered:
+- Disable instead of delete users. This would preserve runtime ownership, but
+  would change the user-management API and make the console's delete action
+  misleading.
+- Add retained-runtime reservations on delete. This preserves existing delete
+  UX while preventing cross-principal runtime reassignment.
+- Add a full purge/transfer workflow now. This would be most explicit, but it
+  adds admin UX and irreversible-data semantics beyond the release blocker.
+
+Chosen design: delete removes the user credential and creates a retained-runtime
+reservation. A different same-tenant principal cannot reuse the runtime id while
+data is retained. Recreating the same logical principal may reclaim its own
+reservation. Explicit purge/transfer remains a future admin workflow, not a
+silent side effect.
+
+For hosted app proxy duplication, the chosen near-term design is conformance
+tests plus matching URL guards in Code Web and Observer. A shared helper is
+proposed in `0155`, but not extracted in this item because the immediate
+security risk is closed by tests and the package boundary is not yet proven.
+
+## Completion report
+
+Date: 2026-05-30
+
+Summary:
+- Added `runtime_reservations` to the Gateway user registry. Deleting a user now
+  reserves the retained runtime id for that principal and blocks assigning it
+  to another user in the same tenant.
+- Updated Gateway Console delete copy so admins see that runtime data is
+  retained and the runtime id remains reserved.
+- Added hosted non-local Gateway URL guards to AbstractCode Web and
+  AbstractObserver packaged Node servers, matching Flow's behavior.
+- Tightened Flow/Code/Observer host checks so forwarded host headers are used
+  only when explicit trust-proxy env vars are set.
+- Added Code/Observer hosted-server tests proving remote-host browser Gateway
+  URL changes are rejected, including forged `X-Forwarded-Host` loopback
+  headers.
+- Updated `scripts/gateway-flow.sh` to enable Gateway user auth, prepare the
+  default `admin` browser user, cache the generated user token, and print the
+  Gateway URL/user/token for Flow sign-in.
+- Removed tracked `.DS_Store` files from AbstractObserver and added the missing
+  ignore rule.
+- Updated user-facing docs, backlog, and LLM context files.
+
+Files or symbols touched:
+- `abstractgateway/src/abstractgateway/users.py`
+- `abstractgateway/src/abstractgateway/console.py`
+- `abstractgateway/tests/test_gateway_principal_auth.py`
+- `abstractcode/web/bin/cli.js`
+- `abstractcode/web/src/lib/hosted_gateway_url_guard.test.ts`
+- `abstractobserver/bin/cli.js`
+- `abstractobserver/src/ui/hosted_gateway_url_guard.test.ts`
+- `abstractobserver/.gitignore`
+- `abstractflow/web/backend/services/gateway_connection.py`
+- `abstractflow/web/backend/routes/connection.py`
+- `abstractflow/web/frontend/bin/cli.js`
+- `abstractflow/web/frontend/vite.config.ts`
+- `abstractflow/tests/test_gateway_connection_config.py`
+- `scripts/gateway-flow.sh`
+- Root, Code, Observer, and Gateway docs/LLM context files.
+
+Validation:
+- `python -m pytest tests/test_gateway_principal_auth.py tests/test_gateway_principal_isolation_matrix.py tests/test_gateway_security_middleware_unit.py tests/test_gateway_workflow_catalog_acl.py tests/test_gateway_console.py tests/test_gateway_install_profiles.py tests/test_gateway_embeddings_endpoint.py -q` in `abstractgateway` -> 54 passed.
+- `python -m pytest tests/test_gateway_connection_config.py tests/test_web_gateway_proxy_auth.py -q` in `abstractflow` -> 21 passed, 2 FastAPI deprecation warnings.
+- `node --check bin/cli.js && npm test -- --run src/lib/storage.test.ts src/lib/hosted_gateway_url_guard.test.ts` in `abstractcode/web` -> 2 passed.
+- `node --check bin/cli.js && npm test -- --run src/ui/auth_storage.test.ts src/ui/hosted_gateway_url_guard.test.ts` in `abstractobserver` -> 2 passed.
+- `node --check web/frontend/bin/cli.js && npm --prefix web/frontend run build` in `abstractflow` -> passed.
+- `python -m py_compile web/backend/services/gateway_connection.py web/backend/routes/connection.py` in `abstractflow` -> passed.
+- `bash -n scripts/gateway-flow.sh scripts/gateway-flow-local.sh` -> passed.
+- Root, Gateway, Flow, Code, and Observer `llms-full` generation -> passed.
+
+Residual risks:
+- The explicit retained-runtime purge/transfer workflow was intentionally left
+  out of this release-blocker item and is handled by follow-up item `0156`.
+- Code Web and Observer still duplicate hosted proxy code. Proposed item `0155`
+  records the extraction threshold; current protection is conformance tests.
+
+--- docs/backlog/completed/0156_retained_runtime_admin_lifecycle.md ---
+# Completed: Retained runtime admin lifecycle
+
+## Metadata
+- Created: 2026-05-30
+- Status: Completed
+- Completed: 2026-05-30
+
+## ADR status
+- Governing ADRs: None
+- ADR impact: None
+
+## Context
+Gateway user deletion now removes account/token access while retaining the
+runtime data directory and reserving the runtime id for the deleted principal.
+That prevents accidental cross-user data exposure, but it leaves admins without
+an explicit way to intentionally purge retained runtime data or transfer it to
+another user.
+
+## Current code reality
+- `abstractgateway/src/abstractgateway/users.py` stores live users and
+  `runtime_reservations` in the Gateway user registry.
+- `GatewayUserRegistry.create_user()` and `update_user()` reject reuse of a
+  retained runtime reservation by another principal.
+- `GatewayUserRegistry.delete_user()` creates a retained-runtime reservation.
+- `abstractgateway/src/abstractgateway/routes/gateway.py` exposes admin user
+  CRUD, but no retained-runtime lifecycle routes.
+- `abstractgateway/src/abstractgateway/console.py` tells admins that runtime
+  data is retained, but has no reservation table, transfer action, or purge
+  action.
+
+## Problem
+The retained-runtime safety guard is secure but operationally incomplete.
+Admins can see that deletion retained data only through the delete confirmation
+copy and registry file internals. They cannot intentionally purge stale data or
+transfer retained data to a new owner through supported Gateway APIs.
+
+## What we want to do
+Add explicit admin-only lifecycle operations for retained runtime reservations:
+list, transfer, and purge. Transfer must be intentional and auditable through
+the registry. Purge must remove retained runtime files before releasing the
+runtime id for reuse.
+
+## Why
+This keeps the secure default while giving admins a deliberate recovery path for
+real account lifecycle events: employee departure, account rename, mistaken
+delete, or data-retention cleanup.
+
+## Requirements
+- Admins can list retained runtime reservations.
+- Non-admin users cannot list, purge, or transfer retained runtimes.
+- Transfer assigns a retained runtime to an existing same-tenant user and
+  reserves that user's previous runtime id.
+- Purge requires an exact runtime-id confirmation and deletes the retained
+  runtime directory before releasing the reservation.
+- Runtime file deletion must stay inside the Gateway per-user runtime root.
+- The Gateway Console exposes transfer and purge actions with confirmations.
+- Tests prove cross-user reuse remains blocked until explicit purge or transfer.
+
+## Suggested implementation
+- Extend `GatewayUserRegistry` with reservation listing, lookup, release, and
+  transfer helpers.
+- Add admin routes under `/api/gateway/admin/runtime-reservations`.
+- Add a Gateway service-cache invalidation helper for affected runtime ids.
+- Add a console section for retained runtime reservations.
+- Add focused Gateway tests around RBAC, transfer, purge, and data deletion.
+
+## Scope
+- AbstractGateway registry, admin API, console, tests, and docs.
+- Root/Gateway docs and AI-readable docs updates.
+
+## Non-goals
+- No runtime explorer UI.
+- No partial artifact-level purge.
+- No automatic data migration between different runtime layouts.
+- No cross-tenant transfer.
+
+## Dependencies and related tasks
+- `0145_gateway_admin_console_bootstrap.md`
+- `0146_gateway_rbac_scope_policy_matrix.md`
+- `0154_multi_user_security_release_blockers.md`
+
+## Expected outcomes
+- Deleted users still protect retained data by default.
+- Admins have an explicit, confirmed purge path.
+- Admins have an explicit, confirmed transfer path.
+- Tests and docs describe the lifecycle clearly.
+
+## Validation
+- `python -m pytest tests/test_gateway_principal_auth.py -q`
+- `python -m pytest tests/test_gateway_console.py -q`
+- `python -m py_compile src/abstractgateway/users.py src/abstractgateway/routes/gateway.py src/abstractgateway/service.py src/abstractgateway/console.py`
+
+## Progress checklist
+- [x] Add registry lifecycle helpers.
+- [x] Add admin routes and service-cache invalidation.
+- [x] Add Gateway Console retained-runtime UI.
+- [x] Add tests for RBAC, transfer, purge, and reuse.
+- [x] Update docs and backlog completion report.
+
+## Guidance for the implementing agent
+Preserve the conservative default. A retained runtime id must never become
+reusable just because the account row disappeared; reuse must follow an
+explicit purge or transfer operation.
+
+## Completion report
+
+Date: 2026-05-30
+
+Summary:
+- Added retained-runtime lifecycle helpers to the Gateway user registry.
+- Added admin-only list/transfer/purge routes under
+  `/api/gateway/admin/runtime-reservations`.
+- Added service-cache invalidation for affected runtime ids after transfer or
+  purge.
+- Added a `purging` reservation state so concurrent transfer attempts cannot
+  claim a retained runtime between purge validation and file deletion.
+- Added a Gateway Console retained-runtime table with transfer and purge actions
+  behind confirmation modals.
+- Added tests proving non-admin denial, purge-before-reuse, transfer to an
+  existing same-tenant user, previous-runtime reservation, and continued
+  cross-user reuse blocking.
+
+Files or symbols touched:
+- `abstractgateway/src/abstractgateway/users.py`
+- `abstractgateway/src/abstractgateway/routes/gateway.py`
+- `abstractgateway/src/abstractgateway/service.py`
+- `abstractgateway/src/abstractgateway/console.py`
+- `abstractgateway/tests/test_gateway_principal_auth.py`
+- `abstractgateway/tests/test_gateway_console.py`
+- `abstractgateway/docs/security.md`
+- `abstractgateway/docs/configuration.md`
+- `abstractgateway/README.md`
+- `abstractgateway/llms.txt`
+- `docs/guide/gateway-security.md`
+- `docs/configuration.md`
+- `docs/api.md`
+- `llms.txt`
+
+Validation:
+- `python -m pytest tests/test_gateway_principal_auth.py tests/test_gateway_console.py -q`
+  in `abstractgateway` -> 18 passed.
+- `python -m pytest tests/test_gateway_principal_isolation_matrix.py tests/test_gateway_security_middleware_unit.py tests/test_gateway_workflow_catalog_acl.py -q`
+  in `abstractgateway` -> 26 passed.
+- `python -m py_compile src/abstractgateway/users.py src/abstractgateway/routes/gateway.py src/abstractgateway/service.py src/abstractgateway/console.py`
+  in `abstractgateway` -> passed.
+
+Review notes:
+- Code quality: purge atomically marks reservations as `purging` before file
+  deletion, keeps deletion scoped under
+  `<ABSTRACTGATEWAY_DATA_DIR>/users/<tenant>/<runtime>`, and leaves the
+  reservation in place if file deletion fails.
+- Architecture: Gateway remains the owner of user/runtime assignment and
+  retained-runtime lifecycle. Runtime internals are not asked to understand
+  Gateway user ownership.
+- Naive user: the console now shows retained runtimes directly instead of
+  making admins infer them from failed user creation.
+- Expert user: the API exposes explicit lifecycle routes and returns data-path
+  diagnostics for admin inspection.
+- Operations: transfer does not copy data; it changes routing ownership. Purge
+  deletes the retained runtime root and then releases the reservation.
+
+Residual risks:
+- There is still no rich runtime explorer or artifact-level delete/export for
+  retained runtime data. That remains in the proposed runtime explorer track.
+- Transfer is same-tenant and existing-user only by design. Account rename flows
+  that need create-and-transfer can create the target first, then transfer.
+
+--- docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md ---
+# Completed: Gateway provider endpoint profiles
+
+## Metadata
+- Created: 2026-05-31
+- Status: Completed
+- Completed: 2026-05-31
+
+## ADR status
+- Governing ADRs: ADR-0033, ADR-0035
+- ADR impact: May revise existing ADR after the wider provider-secret vault and workflow export/import rules settle.
+
+## Context
+Gateway Console could edit capability defaults for the current principal:
+route, provider, model, and optional base URL. That was not enough to configure
+an OpenAI-compatible endpoint with the API key needed by hosted, multi-user
+Gateway deployments. Users also needed more than one endpoint; defaults and
+custom endpoints are separate concerns.
+
+## Problem
+Users need to configure OpenAI-compatible and other custom remote endpoints once
+in Gateway, then select and reuse them from Flow nodes without hardcoding raw
+secrets in workflow JSON, browser storage, run ledgers, or exported bundles.
+
+## Implemented design
+Gateway now owns provider endpoint profiles:
+
+- `id`: stable local identifier.
+- `display_name`: user-facing label.
+- `description`: operator/user explanation of what the endpoint is for.
+- `provider_family`: canonical provider implementation such as
+  `openai-compatible`, `openai`, `openrouter`, or `anthropic`.
+- `base_url`: optional endpoint URL; blank means provider default.
+- `api_key`: stored server-side and returned only as non-secret status and
+  fingerprint.
+- `scope`: `user` or `gateway`; gateway scope requires admin.
+- `capabilities`: text, embeddings, image, video, voice, music, or other route
+  families.
+- `allowed_models`: optional static allowlist; otherwise Gateway asks the
+  underlying discovery facade.
+
+Enabled profiles surface through provider discovery as virtual providers such
+as `endpoint:office-vllm`. Runtime resolves that virtual id through a
+host-provided resolver into the real provider family, base URL, and API key
+only for the transient provider call.
+
+## Scope
+- AbstractGateway profile store, config API, discovery integration, console UI,
+  bundle-host resolver, tests, and docs.
+- AbstractRuntime generic optional resolver hook and local multi-client support
+  for per-call provider construction with profile base URL/key.
+
+## Non-goals
+- No browser-stored provider keys.
+- No raw key in workflow JSON, exported bundles, discovery responses, or Runtime
+  observability.
+- No new provider class per endpoint alias.
+- No full workflow export/import endpoint-requirement mapper yet.
+- No encrypted-at-rest vault yet; the initial local profile JSON is permissioned
+  with `0600`, and the broader vault/audit policy remains under `0147`.
+
+## Completion report
+
+Date: 2026-05-31
+
+Summary:
+- Added `ProviderEndpointProfileStore` under AbstractGateway with public
+  non-secret profile views and private runtime resolution.
+- Added `/api/gateway/config/provider-endpoint-profiles` CRUD routes.
+- Added `/api/gateway/config/provider-endpoint-profiles/discover-models` so the
+  console can preview models from a draft or saved endpoint profile without
+  exposing the raw key.
+- Added profile-backed provider discovery and model discovery. Profiles with
+  an allowlist return that model list directly; other profiles discover through
+  the configured provider family, base URL, and profile key.
+- Added Gateway Console controls for profile id, name, description, provider
+  family, scope, base URL, API key, capabilities, and a discovered model picker
+  where selected models become the optional allowlist.
+- Added virtual provider labels to console provider selectors so profiles are
+  selectable like normal providers while preserving the `endpoint:*` id.
+- Added Runtime LLM-call profile resolution, provider/base URL/key injection,
+  and redaction from persisted observability traces.
+- Added local `MultiLocalAbstractCoreLLMClient` support for per-call provider
+  construction from profile `base_url` and `api_key`.
+- Added bundle-host resolver wiring so Gateway-hosted runs can resolve virtual
+  providers without Runtime importing Gateway.
+
+Validation:
+- `python -m pytest abstractgateway/tests/test_gateway_provider_endpoint_profiles.py abstractgateway/tests/test_gateway_discovery_endpoints.py abstractgateway/tests/test_gateway_console.py abstractruntime/tests/test_provider_endpoint_profile_resolution.py -q` -> 15 passed.
+- `python -m compileall -q abstractgateway/src/abstractgateway abstractruntime/src/abstractruntime` -> passed.
+
+Review notes:
+- Code quality: raw keys are write-only through API/UI responses and redacted in
+  Runtime observability. Scope changes upsert before deleting the old scoped row
+  to avoid losing a profile on validation failure.
+- Architecture: Gateway owns endpoint profiles and credentials; Runtime exposes
+  only a generic optional resolver hook and does not import Gateway.
+- Naive user: Gateway Console presents the endpoint as a named reusable object
+  with description, a discover-models action, and a visible virtual provider id
+  to copy/select.
+- Expert user: profiles support static model allowlists, dynamic discovery,
+  provider-family routing, gateway/user scope, and direct use in capability
+  defaults or Flow node provider pins.
+- Operations: initial storage is local JSON under the relevant Gateway data
+  plane with `0600` permissions. A stronger vault/encryption/audit layer remains
+  a follow-up under `0147`.
+
+Residual risks:
+- Workflow export/import still needs a portable endpoint requirement model so a
+  shared workflow can ask the importing user to map or create an endpoint
+  profile without exporting secrets.
+- Profile resolution is implemented for text provider/model discovery and
+  Runtime `LLM_CALL`/Agent execution, including output-selector calls that flow
+  through that effect. Direct Gateway embedding/media catalog routes can adopt
+  the same profile projection when those UI paths need virtual endpoint
+  selection outside `LLM_CALL`.
+- Gateway-scoped profile policy is currently admin-only create/update/delete and
+  inherited discovery/use. Finer tenant ACLs can be added when endpoint sharing
+  policy becomes stricter.
+- Secrets are permissioned local JSON, not encrypted at rest. That is acceptable
+  for the initial Gateway-local control-plane path but should not be treated as
+  the final hosted vault design.
+
+--- docs/backlog/proposed/gateway-control-plane/README.md ---
+# Gateway control plane proposals
+
+## Status
+Proposed.
+
+## Purpose
+These proposals preserve package-boundary options that are plausible but not
+yet implementation commitments. The planned Gateway control-plane track should
+prove the API and UX needs first.
+
+## Items
+- `0151_runtime_explorer_contract.md`: define whether runtime browsing becomes
+  Gateway Console tabs, Observer pages, or a future `abstractexplorer`.
+- `0152_abstractmanager_package_extraction.md`: decide whether the Gateway
+  admin/config UI should later become a separate `abstractmanager` package.
+- `0155_hosted_proxy_shared_helper_extraction.md`: decide when repeated hosted
+  browser-session proxy logic in Node apps should become a shared helper rather
+  than package-local code plus conformance tests.
+
+## Reading order
+Read the planned track first:
+`../../planned/gateway-control-plane/README.md`.
+
+## Non-goals
+These proposals do not authorize new packages yet. They record names and
+boundaries to revisit after Gateway Console v0, RBAC hardening, and config APIs
+land.
+
+--- docs/backlog/proposed/gateway-control-plane/0151_runtime_explorer_contract.md ---
+# Proposed: Runtime Explorer contract
+
+## Metadata
+- Created: 2026-05-30
+- Status: Proposed
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021
+- ADR impact: May revise existing ADR
+
+## Context
+Users need to understand their runtime: runs, ledgers, artifacts, memories,
+workflows, workspaces, quotas, storage, and recent activity. Gateway can expose
+the data, Observer already visualizes runs, and a future `abstractexplorer`
+could become a dedicated runtime browser.
+
+## Current code reality
+- Gateway has many endpoints for runs, artifacts, workflows, prompt cache,
+  workspaces, schedules, and maintenance.
+- Observer already handles run/ledger observability and some broad operational
+  surfaces.
+- Gateway Console v0 is planned for account/admin/runtime summary, not deep
+  runtime exploration.
+- Hosted user auth now routes normal users to per-principal runtime data
+  planes; any explorer contract must derive the browsed owner from the current
+  principal unless an admin-only audited route explicitly selects another user.
+
+## Problem or opportunity
+Runtime state is opaque. Users want a file-system-like way to list, search,
+inspect, export, delete, and understand their own runtime data. It is unclear
+whether that belongs in Gateway Console, Observer, or a new app.
+
+## Proposed direction
+Define an API-first Runtime Explorer contract before creating a package. The
+contract should cover list/search/detail/export/delete for current user's runs,
+artifacts, memory, workflows, sessions, workspace files, prompt-cache metadata,
+and storage usage. Keep admin cross-user exploration behind explicit RBAC.
+Before promotion, classify data by sensitivity: prompts, tool parameters,
+artifacts, memory, logs, PII, secrets, deleted data, retention state, and export
+redaction needs.
+
+Start with a read-only normalized resource envelope:
+`type`, `id`, `scope`, `owner`, `sensitivity`, `created_at`, `updated_at`,
+`summary`, `metadata`, `links`, and permission-aware `actions`. Keep
+`browse/search/detail` separate from `export/delete`; export and deletion need
+separate RBAC, audit logging, retention semantics, and confirmation UX.
+
+The runtime should feel queryable like an operating/file system, but that does
+not mean it should expose raw files first. The first API should expose typed
+runtime resources (runs, artifacts, memories, workflows, sessions, prompt-cache
+entries, workspace files, and storage summaries) with cursor pagination,
+date/type filters, and redacted previews.
+
+## Why it might matter
+If runtime exploration becomes a large UX, `abstractexplorer` is a clean name
+and boundary. If it stays small, it can remain Gateway Console tabs or Observer
+pages.
+
+## Promotion criteria
+- Gateway Console v0 and Observer both need overlapping runtime browsing.
+- Users need cross-cutting runtime search beyond run observability.
+- RBAC policy matrix can safely expose explorer routes.
+- Data classification, pagination, quota, export redaction, delete/retention,
+  and audit requirements are written down.
+
+## Validation ideas
+- Alice/Bob cannot explore each other's runtime data.
+- User can search own artifacts/runs/memory by metadata.
+- Admin cross-user views require admin role and audit logging.
+- Non-admin explorer requests cannot pass `owner_id`, `all_owners`, or arbitrary
+  runtime paths to escape their principal-derived runtime.
+- Export/delete actions require explicit action-level authorization and produce
+  audit events.
+
+## Non-goals
+- This proposal does not authorize a new package yet.
+- Do not build broad runtime exploration before route-family RBAC exists.
+- Do not implement delete/export as ordinary browsing actions; treat them as
+  high-risk operations with explicit RBAC, audit, and retention semantics.
+- Do not turn the initial Gateway Console into a deep explorer before the API
+  contract and sensitivity labels exist. It can link to Explorer/Observer once
+  the boundary is stable.
+
+## Guidance for future agents
+Reserve `abstractexplorer` as a plausible future package name, but start with
+contracts and narrow Gateway/Observer integrations.
+
+## Review synthesis - 2026-05-30
+
+Three independent review perspectives converged on the same boundary:
+
+- Product/UX perspective: build Runtime Explorer as a read-only Observer page
+  first. A user should be able to inspect their own runs, artifacts,
+  session-level memory, workflow references, and storage summaries without
+  learning raw Gateway routes. Keep destructive operations and admin
+  cross-user views out of v0.
+- Security/control-plane perspective: Gateway should own the explorer API
+  contract, RBAC, redaction, sensitivity labels, links, and permission-aware
+  actions. Normal user routes must derive owner from the authenticated
+  principal; do not accept `tenant_id`, `runtime_id`, `owner_id`, raw workspace
+  paths, or `all_owners` as ordinary user selectors.
+- Architecture perspective: do not create `abstractexplorer` yet. Gateway
+  already owns the data access and Observer already owns observability UX. A
+  separate package becomes justified only if cross-resource search, saved
+  views, export/retention tooling, and runtime "file system" navigation grow
+  beyond Observer's natural scope.
+
+If this proposal is promoted, narrow the first planned item to
+`runtime_explorer_read_only_v1`: a Gateway envelope contract plus an
+Observer-hosted page. The first envelope should cover `run`, `artifact`,
+`memory`, `workflow`, and `defaults` resources with bounded previews,
+provenance links, sensitivity labels, and action availability. Defer raw
+workspace browsing, prompt-cache internals, delete/export, and admin cross-user
+runtime browsing until separate RBAC, audit, redaction, and retention semantics
+are written.
+
+--- docs/backlog/proposed/gateway-control-plane/0152_abstractmanager_package_extraction.md ---
+# Proposed: AbstractManager package extraction
+
+## Metadata
+- Created: 2026-05-30
+- Status: Proposed
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0021, ADR-0033, ADR-0035
+- ADR impact: May revise existing ADR
+
+## Context
+Gateway needs an admin/account/config UX. The first version should likely be
+Gateway-served to keep first-run setup simple. If the UI grows into a rich
+control-plane product, a separate package such as `abstractmanager` may become
+cleaner.
+
+## Current code reality
+- Gateway owns identity, routing, user CRUD, and control-plane APIs.
+- Core owns config/default schema and persistence.
+- Flow, Code, Observer, and Assistant are task-specific apps.
+- There is no Manager package.
+
+## Problem or opportunity
+A built-in Gateway Console can become too large if it tries to own users,
+secrets, defaults, workflows, runtime browsing, audit, setup, and operations.
+A separate Manager package could improve frontend code quality and release
+boundaries, but creating it too early increases package sprawl.
+
+## Proposed direction
+Start with Gateway Console v0 inside Gateway. Reassess extraction after admin
+console, config/defaults, and workflow ACL pages are real. If extracted,
+`abstractmanager` should be a Gateway-hosted or Gateway-connected control-plane
+app, not a second authority.
+Gateway Console v0 should still be built behind a clean frontend boundary:
+typed Gateway API client, no direct Core calls, no app-local auth assumptions,
+and asset/package layout that can be extracted later without rewriting
+authorization.
+
+## Why it might matter
+This keeps initial setup simple while preserving a path to a cleaner product
+boundary if the admin/config UX grows.
+
+## Promotion criteria
+- Gateway Console frontend becomes too large for Gateway package maintenance.
+- Multiple Gateway deployments need the same rich admin UI.
+- AbstractUIC components and release flow make a package split cheaper than
+  embedding assets in Gateway.
+- Console v0, per-principal config/defaults, workflow ACLs, and the
+  responsibility split have shipped or been accepted.
+- Extraction does not make first-run setup harder.
+
+## Validation ideas
+- Compare bundle size, release overhead, install profile complexity, and user
+  setup friction before extraction.
+- Confirm Manager never bypasses Gateway authorization.
+
+## Non-goals
+- Do not create `abstractmanager` before Gateway Console v0 proves the need.
+- Do not let Manager own secrets/config independently of Gateway/Core.
+- Do not extract merely because the name is attractive; extract only when
+  maintenance, reuse, or release pressure proves the package boundary.
+
+## Guidance for future agents
+Treat `abstractmanager` as a package-boundary option, not a feature requirement.
+The authority remains Gateway plus Core config APIs either way.
+
+--- docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md ---
+# Proposed: Hosted proxy shared helper extraction
+
+## Metadata
+- Created: 2026-05-30
+- Status: Proposed
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: ADR-0018, ADR-0033
+- ADR impact: None unless promoted to a package-boundary change.
+
+## Context
+Flow, Code Web, and Observer all implement hosted Gateway browser-session
+proxying. Code Web and Observer currently duplicate similar Node server logic
+for app cookies, Gateway session exchange, CSRF forwarding, logout, and Gateway
+URL selection. A review found real drift: Flow blocked remote-host browser
+Gateway URL changes while Code Web and Observer did not.
+
+## Current code reality
+- Flow's Python backend and static/Vite server implementations already reject
+  browser Gateway URL changes from non-local hosts unless explicitly enabled.
+- Code Web and Observer now have matching guards and focused tests, but their
+  Node server implementations remain package-local.
+- No shared JavaScript package currently owns hosted Gateway proxy semantics.
+
+## Problem or opportunity
+Duplicated hosted proxy logic can drift again as app behavior evolves. A shared
+helper could reduce security drift, but extracting too early may create a
+cross-package abstraction that fits only today's two Node servers and not Flow's
+Python host or future apps.
+
+## Alternatives
+- Keep package-local code and require conformance tests in every hosted browser
+  app. This is small and reversible, but duplicated code remains.
+- Extract a tiny shared Node helper for Code Web and Observer only. This reduces
+  drift for the duplicated Node servers, but adds a new dependency boundary and
+  does not help Flow's Python host.
+- Define a language-neutral conformance suite first, then extract helpers only
+  when at least two apps need identical behavior beyond tests. This has slower
+  reuse but better evidence for the abstraction.
+
+## Recommendation
+Use conformance tests immediately and defer helper extraction. Promote this
+proposal if another hosted app is added or Code/Observer drift again despite
+tests. At that point, extract the smallest shared Node helper that owns only
+cookie/session/proxy policy, not app UI or provider/default UX.
+
+## Promotion criteria
+- Two or more Node hosted apps need the same code changes at the same time.
+- A conformance test catches repeated drift that would be easier to prevent by
+  centralizing the helper.
+- The helper can stay independent of app layout, routing, and feature flags.
+
+## Non-goals
+- Do not force Flow's Python backend into a JavaScript helper.
+- Do not create a shared UI component for login/defaults from this proposal.
+- Do not move Gateway authorization decisions out of Gateway.
+
+## Validation if promoted
+- Shared helper unit tests for cookie flags, URL guards, session exchange,
+  logout, CSRF injection, and header stripping.
+- App-level tests proving Code Web and Observer still expose the expected API
+  shape after adopting the helper.
 
 --- docs/backlog/planned/074_agent_skills_integration.md ---
 # 074 — Agent Skills (`SKILL.md`) Integration

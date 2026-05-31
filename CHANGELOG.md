@@ -4,6 +4,20 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-05-31
+
+### Changed
+
+- Bumped the pinned framework release set:
+  `abstractcore==2.13.31`, `AbstractRuntime==0.4.26`,
+  `abstractagent==0.3.10`, `abstractgateway==0.2.22`,
+  `abstractflow==0.3.17`, `abstractcode==0.3.8`,
+  `abstractassistant==0.4.8`, `AbstractMemory==0.2.6`,
+  `abstractsemantics==0.0.4`, `abstractvoice==0.10.17`,
+  `abstractvision==0.3.18`, and `abstractmusic==0.1.12`.
+- Propagated the MLX-Gen `0.18.8` vision runtime floor through AbstractVision and AbstractCore so Apple Silicon installs can use the latest Wan 2.2 video runtime support.
+- Included the Gateway multi-user/session control-plane release boundary, including per-user runtimes, admin user management, provider endpoint profiles, and cross-app hosted Gateway URL/session guards.
+
 ## [0.1.5] - 2026-05-29
 
 ### Changed

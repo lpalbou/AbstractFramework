@@ -6,6 +6,7 @@ Accepted (2026-05-08)
 ## Dates
 - Proposed: 2026-05-08
 - Accepted: 2026-05-08
+- Updated: 2026-05-29 (collapsed Runtime install profiles to base/apple/gpu)
 
 ## Context
 
@@ -15,7 +16,8 @@ terms, but installation and configuration have started to blur them:
 
 - Gateway/Core/Vision/Voice are moving toward lightweight remote defaults.
 - Music is currently local-heavy.
-- Runtime and Semantics must stay dependency-light.
+- Runtime must stay import-light at its durable kernel boundary while its package install can include
+  the remote-light Core/tool/multimodal capability stack needed by hosts.
 - Gateway needs to compose lower packages for deployment without absorbing their internals.
 - Core and Gateway both expose HTTP servers in some topologies, so auth/CORS cannot be treated as
   a single global Gateway-only concern.
@@ -41,20 +43,17 @@ It is not a third runtime configuration authority.
 
 ### 2) Unify profile vocabulary for Python installs
 
-Use consistent profile names for Python package installs. A lower-level package may expose an empty
-`apple`, `gpu`, `all-apple`, or `all-gpu` extra when it has no hardware-specific
-dependencies; this keeps dependency cascades simple for aggregate installers without changing the
-package's runtime responsibilities.
+Use consistent profile names for Python package installs. The preferred user-facing install surface
+is the package base plus `apple` and `gpu` when the package can add local inferencer stacks. Older
+aggregate spellings may remain only where a package still explicitly owns them.
 
 - `package`: the smallest useful install for that package's own role.
 - `package[remote]`: hosted/API provider support when not already in base.
 - `package[server]`: deployable HTTP/server profile for packages that host a server.
 - `package[apple]`: native Apple local engines where the package owns such engines.
 - `package[gpu]`: generic GPU local engines where the package owns such engines.
-- `package[all-apple]`: aggregate native Apple stack, or a pass-through/no-op alias for packages
-  with no Apple-specific dependencies.
-- `package[all-gpu]`: aggregate GPU stack, or a pass-through/no-op alias for packages
-  with no GPU-specific dependencies.
+- `package[all-apple]` / `package[all-gpu]`: legacy aggregate spellings. Prefer `package[apple]`
+  and `package[gpu]` for new docs and dependency cascades.
 
 Keep `gpu` vendor-neutral only where that is technically honest; otherwise use an explicit profile
 such as `server-nvidia` for Docker/container images or a future vendor-specific Python extra.
@@ -78,14 +77,18 @@ Recommended package roles:
   Music, Memory, and GPU/local profiles when explicitly requested. Because Gateway is the
   deployment composition root, `abstractgateway[apple]` and `abstractgateway[gpu]` are full native
   Python deployment profiles, equivalent in intent to `all-apple` and `all-gpu`.
-- `abstractruntime` stays a durable kernel with optional Core integration; its Apple profiles only
-  cascade to Core.
-- `abstractagent` stays an agent behavior package; its Apple profiles only cascade to Core/Runtime.
+- `abstractruntime` stays a durable kernel and base remote-light workflow host. Its base install
+  includes AbstractCore remote/tool/media capability integration and the MCP worker entry point;
+  `abstractruntime[apple]` and `abstractruntime[gpu]` add local inferencer stacks through
+  AbstractCore's native Apple/GPU aggregates.
+- `abstractagent` stays an agent behavior package; its Apple/GPU profiles only cascade to
+  Core/Runtime local-inferencer profiles.
 - `abstractsemantics` stays a vocabulary/schema package; its Apple profiles are no-op compatibility
   aliases.
 - `abstractmemory` owns storage/query contracts and optional backend extras such as LanceDB.
 - `abstractvision` and `abstractvoice` own modality backends and plugin defaults.
-- `abstractmusic` remains explicit/local-heavy until it has a remote-light base or remote backend.
+- `abstractmusic` base is remote-light; local music engines remain explicit package/profile
+  additions.
 
 ### 4) Define configuration precedence
 

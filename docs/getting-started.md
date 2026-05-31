@@ -121,8 +121,11 @@ pip install abstractgateway
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+
+# Optional: set only for a custom bundle registry. Packaged Gateway includes
+# the shipped basic-agent bundle when this is unset.
+# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 ```
 
 ### 3. Start the gateway
@@ -145,7 +148,9 @@ In another terminal:
 npx @abstractframework/observer
 ```
 
-Open http://localhost:3001 and connect (gateway URL + auth token).
+Open http://localhost:3001 and connect. In hosted user-auth mode, enter Gateway
+URL, Gateway user, and that user's token; Observer exchanges the token for a
+browser session and does not persist the token in browser settings.
 
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
@@ -174,7 +179,9 @@ With the gateway running:
 npx @abstractframework/flow
 ```
 
-Open http://localhost:3003 and connect to your gateway.
+Open http://localhost:3003 and connect to your gateway. In hosted user-auth
+mode, use Gateway URL, Gateway user, and that user's token; Flow keeps an
+opaque browser session instead of storing the token.
 
 ### 2. Build a workflow
 
@@ -187,8 +194,13 @@ To make it reusable across clients, implement an **interface contract** (for exa
 ### 3. Export and deploy
 
 ```bash
-cp my-agent.flow "$ABSTRACTGATEWAY_FLOWS_DIR/"
+mkdir -p "$PWD/bundles"
+cp my-agent.flow "$PWD/bundles/"
 ```
+
+Start or restart Gateway with `ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"` when
+you want that directory to be the active custom bundle registry. You can also
+publish bundles through the Gateway API from AbstractFlow.
 
 ### 4. Run from any client
 

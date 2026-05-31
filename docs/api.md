@@ -103,3 +103,49 @@ print_status()
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
 
 See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run.
+
+Gateway-hosted workflow APIs distinguish private runtime bundles from the
+shared workflow catalog:
+
+- `/api/gateway/bundles` remains the caller runtime's private bundle surface.
+- `/api/gateway/workflow-catalog` lists catalog workflows visible to the signed
+  in principal.
+- `/api/gateway/admin/workflow-catalog/*` is admin-only for immutable catalog
+  upload/promote/default/ACL/status operations.
+- `/api/gateway/runs/start` and `/api/gateway/runs/schedule` accept
+  `registry_scope: "tenant_catalog"` to start a catalog workflow in the
+  requesting user's runtime.
+- Catalog scope is explicit. Without `registry_scope`, Gateway starts only
+  private runtime bundles. Catalog flow/schema inspection uses ACL-aware
+  `/api/gateway/workflow-catalog/{bundle_id}/versions/{version}/flows/{flow_id}`
+  routes.
+
+Gateway-hosted user administration keeps retained runtime data explicit:
+
+- `/api/gateway/admin/users` is the admin-only user list/create/read/update/delete
+  surface.
+- `/api/gateway/admin/runtime-reservations` lists retained runtime reservations
+  left by deleted or reassigned users.
+- `/api/gateway/admin/runtime-reservations/{runtime_id}/transfer` intentionally
+  assigns retained runtime data to an existing same-tenant user.
+- `/api/gateway/admin/runtime-reservations/{runtime_id}/purge` requires exact
+  runtime-id confirmation, deletes the retained runtime directory, then releases
+  the runtime id for reuse.
+
+Gateway-hosted provider endpoint profiles make reusable hosted endpoints
+discoverable without exposing raw keys:
+
+- `/api/gateway/config/provider-endpoint-profiles` lists and creates profiles
+  for the current principal.
+- `/api/gateway/config/provider-endpoint-profiles/discover-models` previews the
+  model list for a draft or saved profile by calling the configured provider
+  family and base URL with the server-side or entered key. The response never
+  echoes the raw key.
+- `/api/gateway/config/provider-endpoint-profiles/{profile_id}` updates or
+  deletes an existing profile. Gateway-scoped profiles require an admin
+  principal.
+- `/api/gateway/discovery/providers` includes enabled profiles as virtual
+  providers such as `endpoint:office-vllm`.
+- `/api/gateway/discovery/providers/{provider_name}/models` resolves virtual
+  providers through the stored profile and returns the allowed or discovered
+  model list without returning the raw API key.

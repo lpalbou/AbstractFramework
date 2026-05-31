@@ -7,6 +7,7 @@ Accepted
 - Proposed: 2026-01-08
 - Accepted: 2026-01-08
 - Updated: 2026-05-08 (aligned with ADR-0033)
+- Updated: 2026-05-29 (clarified Gateway tenant/user isolation boundary)
 
 ## Context
 AbstractFramework is explicitly designed to support:
@@ -103,6 +104,19 @@ Gateway deployment profile is also host-configurable:
 Gateway auth/origin policy protects the Gateway control plane. If Gateway embeds Core in-process,
 Core server auth/origin policy is not exposed to clients. If Gateway calls a standalone Core server,
 that Core server has a separate service URL and auth configuration.
+
+Current Gateway auth is **not** a multi-user isolation boundary. A Gateway bearer token is
+gateway-level control-plane authority; it does not derive a user principal or tenant. Runtime
+`actor_id`, `session_id`, run ids, artifact ids, and memory owner ids are provenance/correlation
+fields and references, not authorization proofs. A shared Gateway instance is therefore supported
+only for single-user deployments or trusted cohorts where users may see and control the same runs,
+artifacts, workflows, memory, workspaces, tools, and provider credentials.
+
+For hosted deployments with independent users today, the supported pattern is an identity-aware
+front door that routes each user or tenant to a separate Gateway/runtime/data plane. A single shared
+Gateway with tenant routing is future work and requires tenant-aware authorization across Flow
+sessions, Gateway principals, runs, ledgers, commands, artifacts, memory, prompt cache, workflow
+mutation, workspaces, credentials, audit, and quotas.
 
 ### Topology E — Multi-host orchestrator pool (planned)
 Distribute **runs** across multiple orchestrator hosts (one host per run).

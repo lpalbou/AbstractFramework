@@ -31,11 +31,14 @@ Best when tools must run near the target environment (servers, private networks,
 
 ## Topology D: Thin client UI + remote durable host (Gateway-first)
 
-Recommended for multi-device, multi-client use.
+Recommended for multi-device use and trusted multi-client use.
 
 - The gateway host owns the durable runtime + stores and progresses runs.
 - Thin clients render by replaying/streaming the ledger and act by submitting durable commands.
 - Bundles (`.flow`) provide portable, discoverable specialized agents.
+- A single Gateway bearer token is not a tenant/user isolation boundary. For
+  independent users, route each user or tenant to a separate Gateway/runtime/data
+  plane until tenant-aware Gateway authorization exists.
 
 ## Topology E: Multi-host orchestration (planned/advanced)
 
@@ -46,4 +49,3 @@ For v0, prefer picking a host per run (avoid mid-run migration).
 
 - [Scenario: Gateway-first local development](../scenarios/gateway-first-local-dev.md)
 - [Guide: Gateway exposure security](gateway-security.md)
-

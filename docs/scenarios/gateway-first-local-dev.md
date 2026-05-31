@@ -15,30 +15,42 @@ This is the recommended topology because execution is unified and clients can at
 pip install abstractframework
 ```
 
+From a source checkout, `./scripts/gateway-flow-local.sh` starts Gateway and
+Flow together and prints the default `admin` browser-login token. For a
+published-package smoke run, `./scripts/gateway-flow.sh` creates an isolated
+published-package venv, enables Gateway user auth, prepares the same `admin`
+user, and prints the Gateway URL, user, and token to enter in Flow.
+
 If you want a minimal install instead, you need at least:
 - `abstractgateway`
 - `abstractflow` (and optionally `abstractflow[agent]` if your bundles use Agent nodes)
 
 ## Step 1: Prepare directories
 
-Pick two folders:
+Pick the Gateway data folder. Packaged Gateway installs already include the
+shipped `basic-agent` bundle. In a source checkout, point the gateway at the
+repo's bundled workflows.
 
-- `FLOWS_DIR`: where your `.flow` bundles live
 - `DATA_DIR`: where gateway stores run state/ledger/artifacts
+- `FLOWS_DIR`: optional custom `.flow` bundle directory; in this repo use
+  `./abstractgateway/flows/bundles`
 
 Example:
 
 ```bash
-mkdir -p ./runtime/gateway ./runtime/flows
+mkdir -p ./runtime/gateway
 ```
 
 ## Step 2: Configure the gateway
 
 ```bash
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/runtime/flows"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+
+# Source checkout only. Packaged installs can omit this and use the shipped bundle path.
+export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/abstractgateway/flows/bundles"
 ```
 
 Optional route defaults (if your flows use LLM nodes):
@@ -69,6 +81,16 @@ Smoke check:
 curl -sS http://127.0.0.1:8080/api/health
 ```
 
+Create a local user token for browser UIs:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/api/gateway/admin/users \
+  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"tenant_id":"default","user_id":"admin","runtime_id":"default","roles":["admin","user"]}' \
+  | python -m json.tool
+```
+
 ## Step 4: Start the thin clients
 
 In separate terminals:
@@ -88,8 +110,9 @@ Default ports:
 
 In each UI:
 - Set Gateway URL: `http://127.0.0.1:8080`
-- Paste the auth token
-- Connect
+- Set User: `admin`
+- Paste the generated Gateway user token
+- Sign in
 
 ## Step 6: Author and run a specialized agent
 
@@ -104,6 +127,6 @@ See [Specialized agent as a portable `.flow`](specialized-agent-flow.md).
 ## Troubleshooting
 
 - CORS errors in browser: widen `ABSTRACTGATEWAY_ALLOWED_ORIGINS` for your UI origin.
-- "Unauthorized": ensure the UI auth token matches `ABSTRACTGATEWAY_AUTH_TOKEN`.
-- Bundles not showing up: verify `ABSTRACTGATEWAY_FLOWS_DIR` contains `.flow` files, then reload bundles from the UI (or
-  restart the gateway).
+- "Unauthorized": ensure the browser UI is signed in with a Gateway user token, not the admin token.
+- Bundles not showing up: verify `ABSTRACTGATEWAY_FLOWS_DIR` contains the shipped `basic-agent` bundle and any custom `.flow`
+  files, then reload bundles from the UI (or restart the gateway).

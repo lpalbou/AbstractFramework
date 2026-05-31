@@ -54,12 +54,30 @@ export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.to
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 ```
 
+For hosted or multi-user browser access, also enable Gateway user auth:
+
+```bash
+export ABSTRACTGATEWAY_USER_AUTH=1
+```
+
+The bootstrap token remains an admin/operator credential. Users sign in with a
+Gateway user id and that user's token, then browser apps keep only an opaque
+Gateway session. Gateway serves `/console` for account/runtime summary, admin
+user management, optional user email metadata, token rotation, and capability
+defaults selected from Gateway-discovered provider/model catalogs. Deleted users
+leave retained runtime reservations; admins can transfer retained runtime data to
+an existing same-tenant user or purge the retained runtime directory before
+releasing the runtime id for reuse.
+
 ### Recommended (bundle-based workflows)
 
 ```bash
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+
+# Optional: set only for a custom bundle registry. When unset, Gateway uses
+# the packaged shipped bundle directory containing basic-agent.
+# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 ```
 
 ### Start
@@ -97,6 +115,32 @@ abstractgateway-config set-default output.text \
 ```
 
 The gateway can update route defaults, but the default schema is Core-owned.
+When Gateway user auth is enabled, the admin/default runtime overlay acts as the
+Gateway baseline. Per-user writes through
+`/api/gateway/config/capability-defaults/{kind}/{modality}` are stored under the
+current user's runtime data plane and override the Gateway baseline only for
+that user, so one user's provider/model defaults do not mutate another user's
+defaults.
+
+### Gateway provider endpoint profiles
+
+Gateway Console also lets signed-in users create reusable provider endpoint
+profiles. A profile stores a display name, description, provider family such as
+`openai-compatible`, optional base URL, optional API key, capabilities, and an
+optional model allowlist. The raw API key is write-only through the API/UI and is
+not returned in discovery responses.
+
+For OpenAI-compatible and other discoverable endpoints, use the console's model
+discovery action to call the configured endpoint and populate the model picker.
+Leaving all models unselected keeps live discovery active; selecting models
+stores a fixed allowlist for that profile.
+
+After creation, the profile appears in provider discovery as a virtual provider
+id such as `endpoint:office-vllm`. Use that provider id in AbstractFlow nodes or
+Gateway capability defaults, then select a discovered/allowed model normally.
+At run time Gateway resolves the virtual provider into the real provider family,
+base URL, and key for the current runtime call; workflow JSON and exported
+bundles should not contain raw secrets.
 
 ---
 
@@ -133,7 +177,18 @@ export ABSTRACTGATEWAY_DB_PATH="$ABSTRACTGATEWAY_DATA_DIR/gateway.sqlite3"
 All gateway-backed browser UIs need two things:
 
 - **Gateway base URL** (example: `http://127.0.0.1:8080`)
-- **Bearer token** (must match `ABSTRACTGATEWAY_AUTH_TOKEN`)
+- **Gateway user + user token** in hosted user-auth mode
+
+Local single-user tools can still use `ABSTRACTGATEWAY_AUTH_TOKEN` as an
+operator token. Hosted browser apps should exchange user tokens for Gateway
+browser sessions and should not store bearer tokens in browser storage.
+AbstractFlow, AbstractCode Web, and AbstractObserver use this hosted
+browser-session path when you provide a Gateway user id.
+
+When these browser UIs are served from a non-loopback hostname, the Gateway URL
+comes from the UI server configuration. Browser-supplied Gateway URL changes
+are rejected unless the app-specific remote override is enabled behind your own
+access control.
 
 ### AbstractObserver
 
@@ -141,7 +196,9 @@ All gateway-backed browser UIs need two things:
 npx @abstractframework/observer
 ```
 
-Set the gateway URL + token in the UI (http://localhost:3001).
+Set Gateway URL, Gateway user, and that user's token in the UI
+(http://localhost:3001). Observer exchanges the token for an app-scoped browser
+session and does not persist the token in browser settings.
 
 ### Flow Editor
 

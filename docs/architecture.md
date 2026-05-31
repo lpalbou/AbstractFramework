@@ -50,7 +50,7 @@ AbstractGateway (control plane)
 ──────────────────────────────────────────────────────
  run lifecycle (start / resume / cancel)
  scheduling (durable, survives restarts)
- bundle discovery (.flow bundles)
+ private bundle discovery + shared workflow catalog
  artifact + ledger serving / streaming
                        │
                        ▼
@@ -127,6 +127,11 @@ Build a workflow graph in the Flow Editor and export it as a `.flow` bundle.
 ### 2) Deploy the bundle
 
 Copy bundles to `ABSTRACTGATEWAY_FLOWS_DIR`. The gateway discovers them automatically.
+
+For hosted or multi-user gateways, admins can also promote immutable bundle
+versions into the Gateway workflow catalog. The catalog owns shared/default
+workflow pointers and ACLs; each catalog run still executes in the requesting
+user's runtime unless a future explicit system-run mode is added.
 
 ### 3) Run from any client
 

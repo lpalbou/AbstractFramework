@@ -12,6 +12,45 @@ Notes for LLMs working in this repo:
 - Prefer `docs/` as the ecosystem-level source of truth.
 - Keep changes minimal and ecosystem-level (docs + version pins).
 - If you need to change runtime behavior, you likely want the relevant package repo instead of this meta repo.
+- Gateway-first hosted browser setups use Gateway user auth, opaque browser
+  sessions, and `/console` for account/admin/defaults management. AbstractFlow,
+  AbstractCode Web, and AbstractObserver exchange user tokens for app-scoped
+  browser sessions and do not persist bearer tokens in browser settings.
+  Gateway login responses do not expose session ids/CSRF tokens in JSON, and
+  default resolution is Core defaults -> Gateway baseline -> per-user overlay.
+  Do not treat the bootstrap `ABSTRACTGATEWAY_AUTH_TOKEN` as a browser-user
+  login token. Gateway session cookies are HTTP-only for the session id, use a
+  separate CSRF cookie, set `Secure` only under HTTPS, expire, logout cleanly,
+  and are revoked when the backing user is disabled/deleted/token-rotated.
+- Gateway user isolation is enforced through per-principal runtime routing plus
+  a central route-family policy. Ordinary users can use their own runs, ledgers,
+  artifacts, KG/session memory, private workflows, session artifacts,
+  prompt-cache session names, and defaults overlays. Admin-only workspace
+  helpers/import/export and provider prompt-cache controls are advertised as
+  unavailable in discovery with machine-readable `admin_required` metadata.
+  Deleting a user reserves the retained runtime id for that principal so the
+  runtime cannot be reassigned to a different same-tenant user while data is
+  still retained. Admins may explicitly transfer a retained runtime to an
+  existing same-tenant user or purge the retained runtime directory before
+  releasing the runtime id for reuse.
+- Gateway provider endpoint profiles are Gateway-owned reusable provider
+  endpoints. They include a description, provider family, base URL, optional
+  model allowlist, and a write-only API key. Discovery exposes them as virtual
+  providers such as `endpoint:office-vllm`; Runtime resolves the virtual id into
+  transient provider/base URL/key parameters without storing secrets in workflow
+  JSON or browser storage.
+- Hosted Flow, Code Web, and Observer use the server-configured Gateway URL on
+  non-loopback UI hostnames. Browser-supplied Gateway URL changes are rejected
+  unless the app-specific remote override is enabled behind access control.
+  Host checks trust `Host` by default; forwarded host headers require an
+  explicit trust-proxy env setting.
+- Gateway workflow sharing uses the explicit workflow catalog, not another
+  user's private `/bundles` directory. Catalog bundle versions are immutable,
+  admins move default pointers and ACLs, and users start catalog workflows with
+  `registry_scope: "tenant_catalog"` so the run executes in their own runtime.
+  Catalog scope is explicit, direct private-bundle routes reject
+  catalog-internal ids, and Gateway signs catalog workflow policy before
+  passing it to Runtime.
 
 ## Start Here
 
@@ -55,6 +94,15 @@ Notes for LLMs working in this repo:
 
 ## Proposals / Research (non-canonical)
 
+- [docs/backlog/overview.md](docs/backlog/overview.md): Root backlog index and active cross-package work.
+- [docs/backlog/completed/0141_flow_browser_session_gateway_auth.md](docs/backlog/completed/0141_flow_browser_session_gateway_auth.md): Completed Flow browser-session Gateway auth isolation.
+- [docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md](docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md): Planned Gateway tenant isolation and shared runtime design.
+- [docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md](docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md): In-progress shared Gateway per-principal runtime router work.
+- [docs/backlog/planned/gateway-control-plane/README.md](docs/backlog/planned/gateway-control-plane/README.md): Gateway admin/config/workflow-permission control-plane backlog track.
+- [docs/backlog/proposed/gateway-control-plane/README.md](docs/backlog/proposed/gateway-control-plane/README.md): Proposed Explorer/Manager package-boundary follow-ups.
+- [docs/backlog/completed/0154_multi_user_security_release_blockers.md](docs/backlog/completed/0154_multi_user_security_release_blockers.md): Completed multi-user release-blocking security fixes.
+- [docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md](docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md): Completed Gateway-owned provider endpoint profiles and virtual `endpoint:*` discovery.
+- [docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md](docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md): Proposed threshold for extracting shared hosted proxy helpers.
 - [docs/backlog/planned/074_agent_skills_integration.md](docs/backlog/planned/074_agent_skills_integration.md): Backlog item for Agent Skills integration.
 - [docs/backlog/planned/074_agent_skills_integration_plan.md](docs/backlog/planned/074_agent_skills_integration_plan.md): Phased plan for Agent Skills integration.
 - [docs/skills/](docs/skills/): Research notes (spec links + ecosystem scan) for Agent Skills.

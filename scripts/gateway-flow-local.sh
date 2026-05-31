@@ -9,6 +9,7 @@ VENV_DIR="${VENV_DIR:-$ROOT_DIR/.venv}"
 BIN_DIR="$VENV_DIR/bin"
 PYTHON_BIN="${PYTHON_BIN:-${PYTHON:-$BIN_DIR/python}}"
 STARTUP_TIMEOUT_S="${STARTUP_TIMEOUT_S:-90}"
+VERBOSE="${VERBOSE:-0}"
 
 GATEWAY_HOST="${GATEWAY_HOST:-${ABSTRACTGATEWAY_HOST:-127.0.0.1}}"
 GATEWAY_PORT="${GATEWAY_PORT:-${ABSTRACTGATEWAY_PORT:-8080}}"
@@ -17,9 +18,16 @@ FLOW_PORT="${FLOW_PORT:-${ABSTRACTFLOW_PORT:-${PORT:-3000}}}"
 GATEWAY_URL="${GATEWAY_URL:-http://${GATEWAY_HOST}:${GATEWAY_PORT}}"
 RUNTIME_DIR="${RUNTIME_DIR:-${ABSTRACTFRAMEWORK_RUNTIME_DIR:-$ROOT_DIR/runtime}}"
 GATEWAY_RUNTIME_DIR="${GATEWAY_RUNTIME_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-$RUNTIME_DIR}}"
+GATEWAY_FLOWS_DIR="${GATEWAY_FLOWS_DIR:-${ABSTRACTGATEWAY_FLOWS_DIR:-$ROOT_DIR/abstractgateway/flows/bundles}}"
 FLOW_RUNTIME_DIR="${FLOW_RUNTIME_DIR:-${ABSTRACTFLOW_RUNTIME_DIR:-$RUNTIME_DIR/flow-local}}"
 LOG_DIR="${LOG_DIR:-$RUNTIME_DIR/logs}"
 DEFAULT_TOKEN_FILE="${DEFAULT_TOKEN_FILE:-$RUNTIME_DIR/dev/gateway-token}"
+LOCAL_GATEWAY_USERS="${LOCAL_GATEWAY_USERS:-${ABSTRACTGATEWAY_LOCAL_USERS:-admin}}"
+LOCAL_GATEWAY_USER_TENANT="${LOCAL_GATEWAY_USER_TENANT:-default}"
+LOCAL_GATEWAY_USER_TOKENS_FILE="${LOCAL_GATEWAY_USER_TOKENS_FILE:-$RUNTIME_DIR/dev/gateway-user-tokens.json}"
+LOCAL_GATEWAY_ROTATE_USER_TOKENS="${LOCAL_GATEWAY_ROTATE_USER_TOKENS:-0}"
+SHOW_ALL_GATEWAY_USERS="${SHOW_ALL_GATEWAY_USERS:-0}"
+SHOW_ADMIN_TOKEN="${SHOW_ADMIN_TOKEN:-0}"
 STOP_EXISTING="${STOP_EXISTING:-1}"
 FLOW_DIST_INDEX="$ROOT_DIR/abstractflow/web/frontend/dist/index.html"
 GATEWAY_HEALTH_URL="http://${GATEWAY_HOST}:${GATEWAY_PORT}/api/health"
@@ -41,6 +49,14 @@ Environment overrides:
   GATEWAY_HOST / GATEWAY_PORT      Gateway bind (default: 127.0.0.1:8080)
   FLOW_HOST / FLOW_PORT            Flow bind (default: 127.0.0.1:3000)
   RUNTIME_DIR                      Shared runtime root (default: $ROOT_DIR/runtime)
+  GATEWAY_FLOWS_DIR                Gateway bundle dir (default: abstractgateway/flows/bundles)
+  LOCAL_GATEWAY_USERS              Comma-separated local dev users to ensure (default: admin)
+  LOCAL_GATEWAY_USER_TENANT        Tenant for ensured local dev users (default: default)
+  LOCAL_GATEWAY_USER_TOKENS_FILE   Local plaintext dev-token cache
+  LOCAL_GATEWAY_ROTATE_USER_TOKENS Rotate non-local users missing cached tokens (default: 0)
+  SHOW_ALL_GATEWAY_USERS           Also list non-local registry users (default: 0)
+  SHOW_ADMIN_TOKEN                 Print the admin token in the final banner (default: 0)
+  VERBOSE                          Print local import paths and commands (default: 0)
   STARTUP_TIMEOUT_S                Startup readiness timeout in seconds (default: 90)
   STOP_EXISTING                    Kill existing gateway/flow first (default: 1)
 
@@ -84,6 +100,13 @@ require_cmd() {
 
 require_executable() {
     [[ -x "$1" ]] || die "required executable not found: $1"
+}
+
+is_truthy() {
+    case "${1:-}" in
+        1|true|TRUE|yes|YES|on|ON) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 
 show_log_tail() {
@@ -146,10 +169,283 @@ checks = (
     isinstance(flow_editor, dict) and bool(flow_editor.get("available", True)),
     bool((runs or {}).get("start", {}).get("endpoint")),
     bool((ledger or {}).get("stream", {}).get("endpoint")),
-    isinstance(durable_blocs, dict) and bool(durable_blocs.get("available")),
-    isinstance(model_residency, dict) and bool(model_residency.get("available")),
+    prompt_cache is None or isinstance(prompt_cache, dict),
+    durable_blocs is None or isinstance(durable_blocs, dict),
+    model_residency is None or isinstance(model_residency, dict),
 )
 raise SystemExit(0 if all(checks) else 1)
+PY
+}
+
+prepare_gateway_local_users() {
+    local users_csv="$1"
+    local tenant_id="$2"
+    local token_cache_file="$3"
+    local rotate_tokens="$4"
+    local gateway_url="$5"
+    local show_all_users="$6"
+    local verbose="$7"
+    "$PYTHON_BIN" - "$users_csv" "$tenant_id" "$token_cache_file" "$rotate_tokens" "$gateway_url" "$show_all_users" "$verbose" <<'PY'
+import datetime
+import json
+import stat
+import sys
+import urllib.request
+from pathlib import Path
+from typing import Any
+
+from abstractgateway.security.principal import safe_principal_component
+from abstractgateway.users import GatewayUserRegistry, gateway_user_auth_enabled
+
+
+def _as_bool(raw: Any, default: bool = False) -> bool:
+    if raw is None:
+        return default
+    value = str(raw).strip().lower()
+    if not value:
+        return default
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    if value in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
+def _now() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+
+users_csv, tenant_raw, cache_raw, rotate_raw, gateway_url, show_all_raw, verbose_raw = sys.argv[1:8]
+rotate_missing = _as_bool(rotate_raw, False)
+show_all = _as_bool(show_all_raw, False)
+verbose = _as_bool(verbose_raw, False)
+
+if not gateway_user_auth_enabled():
+    print("Gateway user auth: disabled")
+    print("Set ABSTRACTGATEWAY_USER_AUTH=1 to use per-user Flow sign-in tokens.")
+    raise SystemExit(0)
+
+tenant = safe_principal_component(tenant_raw, default="default")
+configured_users: list[str] = []
+for part in str(users_csv or "").replace("\n", ",").split(","):
+    user_id = safe_principal_component(part, default="")
+    if user_id and user_id not in configured_users:
+        configured_users.append(user_id)
+
+cache_path = Path(cache_raw).expanduser().resolve()
+cache: dict[str, Any] = {"version": 1, "users": {}}
+if cache_path.exists():
+    try:
+        loaded = json.loads(cache_path.read_text(encoding="utf-8"))
+        if isinstance(loaded, dict):
+            cache = loaded
+    except Exception as exc:
+        raise SystemExit(f"Invalid local Gateway user token cache: {cache_path}: {exc}") from exc
+cache["version"] = 1
+cache_users = cache.setdefault("users", {})
+if not isinstance(cache_users, dict):
+    cache_users = {}
+    cache["users"] = cache_users
+
+registry = GatewayUserRegistry()
+events: list[str] = []
+
+
+def _cache_key(tenant_id: str, user_id: str) -> str:
+    return f"{tenant_id}:{user_id}"
+
+
+def _cached_token(tenant_id: str, user_id: str) -> str:
+    entry = cache_users.get(_cache_key(tenant_id, user_id))
+    if isinstance(entry, dict):
+        return str(entry.get("token") or "").strip()
+    if isinstance(entry, str):
+        return entry.strip()
+    return ""
+
+
+def _remember_token(rec, token: str, reason: str) -> None:
+    if not token:
+        return
+    cache_users[rec.key] = {
+        "token": token,
+        "tenant_id": rec.tenant_id,
+        "user_id": rec.user_id,
+        "runtime_id": rec.runtime_id or rec.user_id,
+        "updated_at": _now(),
+        "reason": reason,
+    }
+
+
+def _token_matches(rec, token: str) -> bool:
+    if not token:
+        return False
+    principal = registry.authenticate(token)
+    return bool(
+        principal
+        and principal.user_id == rec.user_id
+        and principal.tenant_id == rec.tenant_id
+        and principal.runtime_id == (rec.runtime_id or rec.user_id)
+    )
+
+
+configured_keys: set[str] = set()
+for user_id in configured_users:
+    configured_keys.add(_cache_key(tenant, user_id))
+    desired_roles = ["admin", "user"] if user_id == "admin" else ["user"]
+    desired_runtime_id = "default" if user_id == "admin" and tenant == "default" else user_id
+    rec = registry.get_user(user_id, tenant_id=tenant)
+    if rec is None:
+        cached = _cached_token(tenant, user_id)
+        rec, issued = registry.create_user(
+            user_id=user_id,
+            tenant_id=tenant,
+            roles=desired_roles,
+            runtime_id=desired_runtime_id,
+            token=cached or None,
+        )
+        _remember_token(rec, issued, "created")
+        events.append(f"created local Gateway user {rec.tenant_id}/{rec.user_id}")
+        continue
+
+    if user_id == "admin" and "admin" not in set(rec.roles):
+        rec, _issued = registry.update_user(
+            user_id=rec.user_id,
+            tenant_id=rec.tenant_id,
+            roles=desired_roles,
+            enabled=True,
+        )
+        events.append(f"promoted local Gateway user {rec.tenant_id}/{rec.user_id} to admin")
+
+    if rec.runtime_id != desired_runtime_id:
+        previous_token = _cached_token(rec.tenant_id, rec.user_id)
+        rec, _issued = registry.update_user(
+            user_id=rec.user_id,
+            tenant_id=rec.tenant_id,
+            runtime_id=desired_runtime_id,
+            enabled=True,
+        )
+        if previous_token:
+            _remember_token(rec, previous_token, "runtime-moved")
+        events.append(f"moved local Gateway user {rec.tenant_id}/{rec.user_id} to runtime {desired_runtime_id}")
+
+    cached = _cached_token(rec.tenant_id, rec.user_id)
+    if not _token_matches(rec, cached):
+        rec, issued = registry.update_user(
+            user_id=rec.user_id,
+            tenant_id=rec.tenant_id,
+            enabled=True,
+            token="",
+        )
+        if issued:
+            _remember_token(rec, issued, "rotated-local-user")
+            events.append(f"rotated local Gateway user token for {rec.tenant_id}/{rec.user_id}")
+
+rows: list[dict[str, str]] = []
+for rec in registry.list_users():
+    is_configured = rec.key in configured_keys
+    if not is_configured and not show_all:
+        continue
+    token = _cached_token(rec.tenant_id, rec.user_id)
+    if not _token_matches(rec, token):
+        if rotate_missing and not is_configured:
+            rec, issued = registry.update_user(
+                user_id=rec.user_id,
+                tenant_id=rec.tenant_id,
+                token="",
+            )
+            token = issued or ""
+            _remember_token(rec, token, "rotated-missing-cache")
+            events.append(f"rotated Gateway user token for {rec.tenant_id}/{rec.user_id}")
+        else:
+            token = ""
+    rows.append(
+        {
+            "tenant": rec.tenant_id,
+            "user": rec.user_id,
+            "runtime": rec.runtime_id or rec.user_id,
+            "enabled": "yes" if rec.enabled else "no",
+            "token": token,
+            "configured": "yes" if is_configured else "no",
+        }
+    )
+
+if cache_users:
+    cache["updated_at"] = _now()
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = cache_path.with_suffix(cache_path.suffix + ".tmp")
+    tmp.write_text(json.dumps(cache, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    tmp.replace(cache_path)
+    try:
+        cache_path.chmod(stat.S_IRUSR | stat.S_IWUSR)
+    except Exception:
+        pass
+
+def _gateway_me(token: str) -> dict[str, Any] | None:
+    if not token:
+        return None
+    request = urllib.request.Request(
+        gateway_url.rstrip("/") + "/api/gateway/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=2.0) as response:
+            payload = json.load(response)
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    principal = payload.get("principal")
+    return principal if isinstance(principal, dict) else None
+
+
+for row in rows:
+    principal = _gateway_me(row["token"])
+    row["verified"] = "no"
+    if (
+        principal
+        and principal.get("tenant_id") == row["tenant"]
+        and principal.get("user_id") == row["user"]
+        and principal.get("runtime_id") == row["runtime"]
+    ):
+        row["verified"] = "yes"
+
+configured_rows = [row for row in rows if row["configured"] == "yes"]
+other_rows = [row for row in rows if row["configured"] != "yes"]
+
+print("Use this in AbstractFlow:")
+print(f"  Gateway URL: {gateway_url}")
+if len(configured_rows) == 1:
+    row = configured_rows[0]
+    token = row["token"] if row["verified"] == "yes" else "<token unavailable>"
+    print(f"  User:        {row['user']}")
+    print(f"  Token:       {token}")
+else:
+    print("  Users:")
+    user_w = max(4, *(len(row["user"]) for row in configured_rows)) if configured_rows else 4
+    print(f"    {'user':<{user_w}}  token")
+    if not configured_rows:
+        print(f"    {'(none)':<{user_w}}  <none>")
+    for row in configured_rows:
+        token = row["token"] if row["verified"] == "yes" else "<token unavailable>"
+        print(f"    {row['user']:<{user_w}}  {token}")
+
+if other_rows:
+    print()
+    print("Other registered users:")
+    user_w = max(4, *(len(row["user"]) for row in other_rows))
+    print(f"  {'user':<{user_w}}  token")
+    for row in other_rows:
+        token = row["token"] if row["verified"] == "yes" else "<token unavailable>"
+        print(f"  {row['user']:<{user_w}}  {token}")
+
+if verbose:
+    print()
+    print(f"Token cache: {cache_path}")
+if events and verbose:
+    print("  Changes:")
+    for event in events:
+        print(f"    - {event}")
 PY
 }
 
@@ -215,10 +511,14 @@ kill_matching_processes() {
 wait_for_url() {
     local url="$1"
     local timeout_s="${2:-$STARTUP_TIMEOUT_S}"
+    local child_pid="${3:-}"
     local started_at
     started_at="$(date +%s)"
     while true; do
         url_ready "$url" && return 0
+        if [[ -n "$child_pid" ]] && ! kill -0 "$child_pid" >/dev/null 2>&1; then
+            return 1
+        fi
         if (( "$(date +%s)" - started_at >= timeout_s )); then
             return 1
         fi
@@ -230,10 +530,14 @@ wait_for_gateway_contract() {
     local url="$1"
     local token="${2:-}"
     local timeout_s="${3:-$STARTUP_TIMEOUT_S}"
+    local child_pid="${4:-}"
     local started_at
     started_at="$(date +%s)"
     while true; do
         gateway_contract_ready "$url" "$token" && return 0
+        if [[ -n "$child_pid" ]] && ! kill -0 "$child_pid" >/dev/null 2>&1; then
+            return 1
+        fi
         if (( "$(date +%s)" - started_at >= timeout_s )); then
             return 1
         fi
@@ -243,6 +547,7 @@ wait_for_gateway_contract() {
 
 require_cmd lsof
 require_cmd pgrep
+require_cmd mktemp
 
 if [[ -n "$BUILD_PROFILE_FLAG" ]]; then
     echo "Preparing local Python packages with ./scripts/build.sh --python $BUILD_PROFILE_FLAG"
@@ -307,24 +612,31 @@ else
     export PYTHONPATH="$PYTHONPATH_PREFIX"
 fi
 
-"$PYTHON_BIN" - <<'PY'
+"$PYTHON_BIN" - "$VERBOSE" <<'PY'
 import importlib
 import sys
 
+def _truthy(raw: str) -> bool:
+    return str(raw or "").strip().lower() in {"1", "true", "yes", "on"}
+
+verbose = _truthy(sys.argv[1] if len(sys.argv) > 1 else "")
 required = ("abstractgateway", "abstractflow", "abstractruntime", "abstractcore")
+resolved = {}
 for name in required:
     mod = importlib.import_module(name)
     path = getattr(mod, "__file__", None)
     if not path:
         raise SystemExit(f"{name} resolved without a source file; check PYTHONPATH")
-print("Local source imports:")
-for name in required:
-    mod = importlib.import_module(name)
-    print(f"  {name}: {getattr(mod, '__file__', '')}")
+    resolved[name] = path
+if verbose:
+    print("Local source imports:")
+    for name in required:
+        print(f"  {name}: {resolved[name]}")
 sys.stdout.flush()
 PY
 
 [[ -f "$FLOW_DIST_INDEX" ]] || die "AbstractFlow frontend dist is missing: $FLOW_DIST_INDEX. Run ./scripts/build.sh or npm --prefix abstractflow/web/frontend run build."
+[[ -f "$GATEWAY_FLOWS_DIR/basic-agent.flow" || -f "$GATEWAY_FLOWS_DIR/basic-agent@0.0.1.flow" ]] || die "Gateway bundle dir must contain basic-agent: $GATEWAY_FLOWS_DIR"
 
 if [[ -z "${ABSTRACTGATEWAY_AUTH_TOKEN:-}" && -r "$DEFAULT_TOKEN_FILE" ]]; then
     ABSTRACTGATEWAY_AUTH_TOKEN="$(tr -d '\r\n' < "$DEFAULT_TOKEN_FILE")"
@@ -335,13 +647,15 @@ export ABSTRACTGATEWAY_HOST="$GATEWAY_HOST"
 export ABSTRACTGATEWAY_PORT="$GATEWAY_PORT"
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="${ABSTRACTGATEWAY_ALLOWED_ORIGINS:-http://localhost:*,http://127.0.0.1:*}"
 export ABSTRACTGATEWAY_DATA_DIR="$GATEWAY_RUNTIME_DIR"
+export ABSTRACTGATEWAY_FLOWS_DIR="$GATEWAY_FLOWS_DIR"
+export ABSTRACTGATEWAY_USER_AUTH="${ABSTRACTGATEWAY_USER_AUTH:-1}"
 export ABSTRACTFLOW_HOST="$FLOW_HOST"
 export ABSTRACTFLOW_PORT="$FLOW_PORT"
 export PORT="$FLOW_PORT"
 export ABSTRACTFLOW_GATEWAY_URL="$GATEWAY_URL"
 export ABSTRACTFLOW_RUNTIME_DIR="$FLOW_RUNTIME_DIR"
 
-mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$ABSTRACTFLOW_RUNTIME_DIR" "$LOG_DIR"
+mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$ABSTRACTFLOW_RUNTIME_DIR" "$LOG_DIR" "$(dirname "$LOCAL_GATEWAY_USER_TOKENS_FILE")"
 
 if [[ "$STOP_EXISTING" != "0" && "$STOP_EXISTING" != "false" && "$STOP_EXISTING" != "False" ]]; then
     kill_matching_processes "AbstractFlow" \
@@ -361,6 +675,7 @@ port_in_use "$FLOW_HOST" "$FLOW_PORT" && die "flow port is already in use: ${FLO
 
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 FLOW_LOG="$LOG_DIR/flow.log"
+GATEWAY_USERS_REPORT=""
 GATEWAY_PID=""
 FLOW_PID=""
 
@@ -371,58 +686,101 @@ cleanup() {
     [[ -n "$GATEWAY_PID" ]] && kill "$GATEWAY_PID" >/dev/null 2>&1 || true
     [[ -n "$FLOW_PID" ]] && wait "$FLOW_PID" >/dev/null 2>&1 || true
     [[ -n "$GATEWAY_PID" ]] && wait "$GATEWAY_PID" >/dev/null 2>&1 || true
+    [[ -n "$GATEWAY_USERS_REPORT" && -f "$GATEWAY_USERS_REPORT" ]] && rm -f "$GATEWAY_USERS_REPORT" >/dev/null 2>&1 || true
     exit "$status"
 }
 trap cleanup EXIT INT TERM
 
-echo "Starting AbstractGateway on http://${GATEWAY_HOST}:${GATEWAY_PORT}"
-echo "Gateway command: $PYTHON_BIN -m abstractgateway.cli serve"
-echo "Gateway log: $GATEWAY_LOG"
+echo
+echo "Starting AbstractGateway and AbstractFlow from local checkout."
+echo "Starting AbstractGateway: http://${GATEWAY_HOST}:${GATEWAY_PORT}"
+is_truthy "$VERBOSE" && echo "  command: $PYTHON_BIN -m abstractgateway.cli serve"
 "$PYTHON_BIN" -m abstractgateway.cli serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" >"$GATEWAY_LOG" 2>&1 &
 GATEWAY_PID=$!
 
-if ! wait_for_url "$GATEWAY_HEALTH_URL"; then
+if ! wait_for_url "$GATEWAY_HEALTH_URL" "$STARTUP_TIMEOUT_S" "$GATEWAY_PID"; then
     show_log_tail "Gateway did not become healthy" "$GATEWAY_LOG"
     exit 1
 fi
+echo "  health: ready"
 
-if ! wait_for_gateway_contract "$GATEWAY_CAPABILITIES_URL" "$ABSTRACTGATEWAY_AUTH_TOKEN"; then
+if ! wait_for_gateway_contract "$GATEWAY_CAPABILITIES_URL" "$ABSTRACTGATEWAY_AUTH_TOKEN" "$STARTUP_TIMEOUT_S" "$GATEWAY_PID"; then
     show_log_tail "Gateway did not expose the Flow contract" "$GATEWAY_LOG"
     exit 1
 fi
+echo "  Flow contract: ready"
 
-echo "Starting AbstractFlow on http://${FLOW_HOST}:${FLOW_PORT}"
-echo "Flow command: $PYTHON_BIN -m abstractflow.cli serve"
-echo "Flow log: $FLOW_LOG"
-"$PYTHON_BIN" -m abstractflow.cli serve \
+echo "Preparing Gateway users."
+GATEWAY_USERS_REPORT="$(mktemp "${TMPDIR:-/tmp}/gateway-flow-users.XXXXXX")"
+chmod 600 "$GATEWAY_USERS_REPORT" >/dev/null 2>&1 || true
+prepare_gateway_local_users \
+    "$LOCAL_GATEWAY_USERS" \
+    "$LOCAL_GATEWAY_USER_TENANT" \
+    "$LOCAL_GATEWAY_USER_TOKENS_FILE" \
+    "$LOCAL_GATEWAY_ROTATE_USER_TOKENS" \
+    "$GATEWAY_URL" \
+    "$SHOW_ALL_GATEWAY_USERS" \
+    "$VERBOSE" \
+    >"$GATEWAY_USERS_REPORT"
+echo "  users: ready"
+
+echo "Starting AbstractFlow: http://${FLOW_HOST}:${FLOW_PORT}"
+is_truthy "$VERBOSE" && echo "  command: $PYTHON_BIN -m abstractflow.cli serve"
+env -u ABSTRACTGATEWAY_AUTH_TOKEN "$PYTHON_BIN" -m abstractflow.cli serve \
     --host "$FLOW_HOST" \
     --port "$FLOW_PORT" \
     --gateway-url "$GATEWAY_URL" \
-    --gateway-token "$ABSTRACTGATEWAY_AUTH_TOKEN" \
     >"$FLOW_LOG" 2>&1 &
 FLOW_PID=$!
 
-if ! wait_for_url "$FLOW_HEALTH_URL"; then
+if ! wait_for_url "$FLOW_HEALTH_URL" "$STARTUP_TIMEOUT_S" "$FLOW_PID"; then
     show_log_tail "Flow backend did not become healthy" "$FLOW_LOG"
     exit 1
 fi
+echo "  backend: ready"
 
-if ! wait_for_url "$FLOW_UI_URL"; then
+if ! wait_for_url "$FLOW_UI_URL" "$STARTUP_TIMEOUT_S" "$FLOW_PID"; then
     show_log_tail "Flow UI did not become ready" "$FLOW_LOG"
     exit 1
+fi
+echo "  UI: ready"
+
+cat <<EOF
+
+Gateway ready: http://${GATEWAY_HOST}:${GATEWAY_PORT}
+Flow ready:    http://${FLOW_HOST}:${FLOW_PORT}
+
+EOF
+
+sed -n '1,160p' "$GATEWAY_USERS_REPORT"
+
+cat <<EOF
+
+Logs:
+  Gateway: $GATEWAY_LOG
+  Flow:    $FLOW_LOG
+EOF
+
+if is_truthy "$VERBOSE"; then
+    cat <<EOF
+Runtime:
+  Root:    $RUNTIME_DIR
+  Gateway: $ABSTRACTGATEWAY_DATA_DIR
+  Bundles: $ABSTRACTGATEWAY_FLOWS_DIR
+  Flow:    $ABSTRACTFLOW_RUNTIME_DIR
+  Caps:    $GATEWAY_CAPABILITIES_URL
+EOF
+fi
+
+if is_truthy "$SHOW_ADMIN_TOKEN"; then
+    cat <<EOF
+Admin token: $ABSTRACTGATEWAY_AUTH_TOKEN
+EOF
 fi
 
 cat <<EOF
 
-AbstractGateway: http://${GATEWAY_HOST}:${GATEWAY_PORT}
-Gateway caps:    $GATEWAY_CAPABILITIES_URL
-AbstractFlow:    http://${FLOW_HOST}:${FLOW_PORT}
-Runtime root:    $RUNTIME_DIR
-Gateway runtime: $ABSTRACTGATEWAY_DATA_DIR
-Flow runtime:    $ABSTRACTFLOW_RUNTIME_DIR
-Gateway token:   $ABSTRACTGATEWAY_AUTH_TOKEN
-
-Press Ctrl-C to stop both processes.
+Gateway and Flow are running. Leave this terminal open; press Ctrl-C to stop both.
 EOF
 
 while true; do

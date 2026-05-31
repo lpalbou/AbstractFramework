@@ -40,6 +40,7 @@ source .venv-abstract/bin/activate
 
 export ABSTRACTGATEWAY_AUTH_TOKEN="local-dev-token"
 export ABSTRACTGATEWAY_DATA_DIR="$HOME/.abstractgateway-local"
+export ABSTRACTGATEWAY_USER_AUTH=1
 
 abstractgateway-config set-default output.text \
   --provider mlx \
@@ -50,20 +51,30 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 
 The Gateway API is now at `http://127.0.0.1:8080`.
 
+Create a local Flow user token:
+
+```bash
+curl -s -X POST http://127.0.0.1:8080/api/gateway/admin/users \
+  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"tenant_id":"default","user_id":"admin","runtime_id":"default","roles":["admin","user"]}' \
+  | python -m json.tool
+```
+
+The response returns the user's Gateway token once.
+
 ## Start Flow
 
 Run this in terminal 2.
 
 ```bash
-export ABSTRACTGATEWAY_AUTH_TOKEN="local-dev-token"
-
 npx @abstractframework/flow \
   --gateway-url http://127.0.0.1:8080 \
-  --gateway-token "$ABSTRACTGATEWAY_AUTH_TOKEN" \
   --port 3003
 ```
 
-Open `http://127.0.0.1:3003`.
+Open `http://127.0.0.1:3003` and sign in as user `admin` with the generated
+Gateway user token.
 
 ## Create and run a first workflow
 
@@ -110,7 +121,8 @@ pip install -U "abstractgateway[apple]" "abstractflow[apple]"
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
-Then restart the Flow process with the same `--gateway-url` and `--gateway-token`.
+Then restart the Flow process with the same `--gateway-url` and sign in again if
+the browser session is no longer present.
 
 ## Optional local Ollama alternative
 
