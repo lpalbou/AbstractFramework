@@ -32,6 +32,10 @@ No.
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
 
+See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
+remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
+local endpoint providers.
+
 ---
 
 ## Can I run everything offline with local models?

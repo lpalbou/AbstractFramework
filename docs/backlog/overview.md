@@ -39,11 +39,23 @@ the lifecycle folders described by the backlog process.
 | 0151 | [Runtime Explorer contract](proposed/gateway-control-plane/0151_runtime_explorer_contract.md) | Proposed | Reviewer consensus: start with a read-only Gateway envelope contract and Observer page for typed runtime resources; defer `abstractexplorer`, delete/export, raw workspace browsing, and admin cross-user exploration. |
 | 0152 | [AbstractManager package extraction](proposed/gateway-control-plane/0152_abstractmanager_package_extraction.md) | Proposed | Revisit a separate `abstractmanager` package only after console/config/workflow ACL surfaces prove real maintenance or reuse pressure. |
 | 0155 | [Hosted proxy shared helper extraction](proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md) | Proposed | Keep conformance tests now; extract a shared Node helper only if Code/Observer or future hosted apps drift again. |
+| 0162-0163 | [Installer and setup track](proposed/installers/README.md) | Proposed | Prepare signed installer CI and evaluate a CPU-local profile after the extraction, generated manifest, doctor, and install chooser work landed. |
+
+## Installer And Setup Proposed Track
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0162 | [Signed installer CI and distribution](proposed/installers/0162_signed_installer_ci_and_distribution.md) | Proposed | Move from prototype builds to signed/notarized native installer artifacts with checksums and rollback/support logs. |
+| 0163 | [CPU local inference install profile](proposed/installers/0163_cpu_local_inference_install_profile.md) | Proposed | Evaluate `abstractframework[cpu]` separately from Light; require package-by-package backend and dependency evidence before promotion. |
 
 ## Recent Completed Work
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0161 | [Three-path public install guide](completed/0161_three_path_public_install_guide.md) | 2026-05-31 | Added `docs/install.md`, linked it from user docs, and clarified that Light is remote-first rather than reduced-functionality. |
+| 0160 | [Framework doctor and manifest CLI](completed/0160_framework_doctor_and_launch_cli.md) | 2026-05-31 | Added the `abstractframework` console script with `doctor` and `manifest` commands; launch remains deferred unless it can delegate cleanly. |
+| 0159 | [Generated install manifest contract](completed/0159_generated_install_manifest_contract.md) | 2026-05-31 | Added manifest generator, checked-in JSON/schema, CLI drift check, and tests tying the manifest to root pins. |
+| 0158 | [Installer repository extraction](completed/0158_installer_repository_extraction.md) | 2026-05-31 | Moved installer prototypes to `https://github.com/lpalbou/AbstractInstallers` and removed the tracked root `abstractinstallers/` tree. |
 | 0157 | [Gateway provider endpoint profiles](completed/0157_gateway_provider_endpoint_profiles.md) | 2026-05-31 | Added Gateway-owned provider endpoint profiles with descriptions, write-only API keys, virtual `endpoint:*` providers in discovery, Runtime resolution, local dynamic provider construction, console UI with model discovery, and tests. |
 | 0156 | [Retained runtime admin lifecycle](completed/0156_retained_runtime_admin_lifecycle.md) | 2026-05-30 | Added admin-only retained runtime list/transfer/purge routes, Gateway Console actions, scoped purge deletion, transfer semantics, and regression tests. |
 | 0154 | [Multi-user security release blockers](completed/0154_multi_user_security_release_blockers.md) | 2026-05-30 | Added retained-runtime reservations, Code/Observer hosted URL guards, published launcher user bootstrap, and `.DS_Store` cleanup. |

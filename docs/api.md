@@ -27,6 +27,8 @@ pip install "abstractframework[apple]"       # Apple Silicon native stack (MLX/M
 pip install "abstractframework[gpu]"         # GPU native stack (CUDA/ROCm)
 ```
 
+See [Install AbstractFramework](install.md) for the profile chooser and first health checks.
+
 ---
 
 ## Convenience re-exports
@@ -87,6 +89,25 @@ Prints a human-readable status report of detected packages (installed vs missing
 ```python
 from abstractframework import print_status
 print_status()
+```
+
+### `abstractframework doctor`
+
+Checks Python version, pinned package versions, Node/npm availability for browser UIs, and local
+hardware indicators for Apple/GPU profiles. It does not import heavy local inference stacks.
+
+```bash
+abstractframework doctor
+abstractframework doctor --json
+```
+
+### `abstractframework manifest`
+
+Prints or validates the installer-facing manifest generated from the root release profile.
+
+```bash
+abstractframework manifest
+abstractframework manifest --check docs/installers/install-manifest.json
 ```
 
 ---

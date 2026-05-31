@@ -10,7 +10,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -27,6 +27,27 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.18",
     "abstractmusic": "0.1.12",
     "abstractassistant": "0.4.8",
+}
+
+PACKAGE_DISTRIBUTIONS: dict[str, str] = {
+    "abstractcore": "abstractcore",
+    "abstractruntime": "AbstractRuntime",
+    "abstractagent": "abstractagent",
+    "abstractflow": "abstractflow",
+    "abstractcode": "abstractcode",
+    "abstractgateway": "abstractgateway",
+    "abstractmemory": "AbstractMemory",
+    "abstractsemantics": "abstractsemantics",
+    "abstractvoice": "abstractvoice",
+    "abstractvision": "abstractvision",
+    "abstractmusic": "abstractmusic",
+    "abstractassistant": "abstractassistant",
+}
+
+NPM_RELEASE_VERSIONS: dict[str, str] = {
+    "@abstractframework/flow": "0.3.17",
+    "@abstractframework/code": "0.3.8",
+    "@abstractframework/observer": "0.1.10",
 }
 
 CORE_DEFAULT_EXTRAS = [
@@ -69,9 +90,11 @@ def get_release_profile() -> dict[str, object]:
     return {
         "abstractframework": __version__,
         "packages": RELEASE_VERSIONS.copy(),
+        "distributions": PACKAGE_DISTRIBUTIONS.copy(),
+        "npm_packages": NPM_RELEASE_VERSIONS.copy(),
         "core_extras": list(CORE_DEFAULT_EXTRAS),
         "install_profiles": {
-            "base": "pip install abstractframework",
+            "light": "pip install abstractframework",
             "apple": 'pip install "abstractframework[apple]"',
             "gpu": 'pip install "abstractframework[gpu]"',
         },
@@ -90,20 +113,7 @@ def get_installed_packages() -> dict[str, str]:
         except Exception:
             return
 
-    for name in [
-        "abstractcore",
-        "abstractruntime",
-        "abstractagent",
-        "abstractflow",
-        "abstractcode",
-        "abstractgateway",
-        "abstractmemory",
-        "abstractsemantics",
-        "abstractvoice",
-        "abstractvision",
-        "abstractmusic",
-        "abstractassistant",
-    ]:
+    for name in PACKAGE_DISTRIBUTIONS:
         _maybe_add(name)
 
     return packages
@@ -113,20 +123,7 @@ def print_status() -> None:
     """Print installation status of the main AbstractFramework Python packages."""
 
     installed = get_installed_packages()
-    all_packages = [
-        "abstractcore",
-        "abstractruntime",
-        "abstractagent",
-        "abstractflow",
-        "abstractcode",
-        "abstractgateway",
-        "abstractmemory",
-        "abstractsemantics",
-        "abstractvoice",
-        "abstractvision",
-        "abstractmusic",
-        "abstractassistant",
-    ]
+    all_packages = list(PACKAGE_DISTRIBUTIONS)
 
     print("AbstractFramework installation status")
     print("=" * 40)

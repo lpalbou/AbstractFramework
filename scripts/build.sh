@@ -13,13 +13,14 @@
 # Usage:
 #   source ./scripts/build.sh         # light editable build, then stay in the .venv
 #   ./scripts/build.sh                # light editable build (venv activates inside script only)
-#   ./scripts/build.sh --base         # explicit light editable build
+#   ./scripts/build.sh --light        # explicit light editable build
+#   ./scripts/build.sh --base         # legacy alias for --light
 #   ./scripts/build.sh --apple        # heavy native Apple local-engine profile
 #   ./scripts/build.sh --gpu          # heavy native GPU local-engine profile
 #   ./scripts/build.sh --python       # Python packages only
 #   ./scripts/build.sh --npm          # npm packages only
 #   ./scripts/build.sh --clean        # delete .venv first (avoids pollution from other projects)
-#   AF_BUILD_PROFILE=base|apple|gpu|auto ./scripts/build.sh
+#   AF_BUILD_PROFILE=light|apple|gpu|auto ./scripts/build.sh
 #
 # Prerequisites:
 #   - Python 3.10+  (required)
@@ -68,7 +69,7 @@ set -euo pipefail
 BUILD_PYTHON=true
 BUILD_NPM=true
 CLEAN_VENV=false
-BUILD_PROFILE="${AF_BUILD_PROFILE:-base}"
+BUILD_PROFILE="${AF_BUILD_PROFILE:-light}"
 
 for arg in "$@"; do
     case "$arg" in
@@ -77,7 +78,8 @@ for arg in "$@"; do
         --clean)  CLEAN_VENV=true ;;
         --apple)  BUILD_PROFILE="apple" ;;
         --gpu)    BUILD_PROFILE="gpu" ;;
-        --base)   BUILD_PROFILE="base" ;;
+        --light)  BUILD_PROFILE="light" ;;
+        --base)   BUILD_PROFILE="light" ;;
     esac
 done
 
@@ -128,10 +130,10 @@ is_macos() {
 
 resolve_build_profile() {
     local requested
-    requested="$(printf '%s' "${BUILD_PROFILE:-base}" | tr '[:upper:]' '[:lower:]')"
+    requested="$(printf '%s' "${BUILD_PROFILE:-light}" | tr '[:upper:]' '[:lower:]')"
     case "$requested" in
-        ""|"base")
-            printf '%s' "base"
+        ""|"light"|"base")
+            printf '%s' "light"
             ;;
         "auto")
             if is_macos; then
@@ -139,7 +141,7 @@ resolve_build_profile() {
             elif command -v nvidia-smi >/dev/null 2>&1; then
                 printf '%s' "gpu"
             else
-                printf '%s' "base"
+                printf '%s' "light"
             fi
             ;;
         "apple"|"all-apple")
@@ -149,7 +151,7 @@ resolve_build_profile() {
             printf '%s' "gpu"
             ;;
         *)
-            af_die "unsupported AF_BUILD_PROFILE=${BUILD_PROFILE} (expected base, apple, gpu, all-apple, all-gpu, or auto)"
+            af_die "unsupported AF_BUILD_PROFILE=${BUILD_PROFILE} (expected light, apple, gpu, all-apple, all-gpu, or auto)"
             ;;
     esac
 }
@@ -158,7 +160,7 @@ build_profile_extras() {
     local rel_dir="$1"
     local profile="$2"
 
-    if [[ "$profile" == "base" ]]; then
+    if [[ "$profile" == "light" || "$profile" == "base" ]]; then
         printf '%s' ""
         return 0
     fi

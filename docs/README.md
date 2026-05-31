@@ -76,6 +76,7 @@ Authoring                                Operations
 
 | Page | What it covers |
 |---|---|
+| **[Install](install.md)** | Light / Apple / GPU install chooser, `abstractframework doctor`, and installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
@@ -102,5 +103,5 @@ Authoring                                Operations
 |---|---|
 | [docs/guide/](guide/) | Focused "how it works" notes |
 | [docs/scenarios/](scenarios/) | End-to-end walkthroughs by use case |
-| [docs/installers/](installers/) | Installer strategy and prototypes |
+| [docs/installers/](installers/) | Installer strategy, manifest contract, and prototype history |
 | [docs/comparisons/](comparisons/) | Trade-offs vs other frameworks |

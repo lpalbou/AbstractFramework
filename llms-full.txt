@@ -135,6 +135,9 @@ pip install "abstractframework[apple]"
 pip install "abstractframework[gpu]"
 ```
 
+See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
+`abstractframework doctor`, and the generated installer manifest contract.
+
 ---
 
 ## Documentation
@@ -142,6 +145,7 @@ pip install "abstractframework[gpu]"
 | Page | What it covers |
 |---|---|
 | [docs/README.md](docs/README.md) | Documentation hub — pick your starting point |
+| [docs/install.md](docs/install.md) | Light / Apple / GPU install chooser and first checks |
 | [docs/getting-started.md](docs/getting-started.md) | Two entry points + first end-to-end run |
 | [docs/architecture.md](docs/architecture.md) | Layered model, durable execution primitives, comparisons |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
@@ -182,6 +186,8 @@ Most runtime behavior lives in the individual package repos (AbstractCore/Runtim
 
 Quick commands:
 - Install pinned stack: `pip install abstractframework`
+- Check install health: `abstractframework doctor`
+- Print installer manifest: `abstractframework manifest`
 - Show detected component versions: `python -c "from abstractframework import print_status; print_status()"`
 
 Notes for LLMs working in this repo:
@@ -232,6 +238,7 @@ Notes for LLMs working in this repo:
 
 - [README.md](README.md): Ecosystem overview and install paths.
 - [docs/README.md](docs/README.md): Docs index for this repo.
+- [docs/install.md](docs/install.md): Light / Apple / GPU install chooser and generated manifest contract.
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
 - [docs/architecture.md](docs/architecture.md): How the stack fits together.
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
@@ -300,7 +307,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.6"
+version = "0.1.7"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -394,6 +401,9 @@ Documentation = "https://github.com/lpalbou/AbstractFramework/tree/main/docs"
 Repository = "https://github.com/lpalbou/AbstractFramework"
 Issues = "https://github.com/lpalbou/AbstractFramework/issues"
 
+[project.scripts]
+abstractframework = "abstractframework.cli:main"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["abstractframework*"]
@@ -432,7 +442,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -449,6 +459,27 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.18",
     "abstractmusic": "0.1.12",
     "abstractassistant": "0.4.8",
+}
+
+PACKAGE_DISTRIBUTIONS: dict[str, str] = {
+    "abstractcore": "abstractcore",
+    "abstractruntime": "AbstractRuntime",
+    "abstractagent": "abstractagent",
+    "abstractflow": "abstractflow",
+    "abstractcode": "abstractcode",
+    "abstractgateway": "abstractgateway",
+    "abstractmemory": "AbstractMemory",
+    "abstractsemantics": "abstractsemantics",
+    "abstractvoice": "abstractvoice",
+    "abstractvision": "abstractvision",
+    "abstractmusic": "abstractmusic",
+    "abstractassistant": "abstractassistant",
+}
+
+NPM_RELEASE_VERSIONS: dict[str, str] = {
+    "@abstractframework/flow": "0.3.17",
+    "@abstractframework/code": "0.3.8",
+    "@abstractframework/observer": "0.1.10",
 }
 
 CORE_DEFAULT_EXTRAS = [
@@ -491,9 +522,11 @@ def get_release_profile() -> dict[str, object]:
     return {
         "abstractframework": __version__,
         "packages": RELEASE_VERSIONS.copy(),
+        "distributions": PACKAGE_DISTRIBUTIONS.copy(),
+        "npm_packages": NPM_RELEASE_VERSIONS.copy(),
         "core_extras": list(CORE_DEFAULT_EXTRAS),
         "install_profiles": {
-            "base": "pip install abstractframework",
+            "light": "pip install abstractframework",
             "apple": 'pip install "abstractframework[apple]"',
             "gpu": 'pip install "abstractframework[gpu]"',
         },
@@ -512,20 +545,7 @@ def get_installed_packages() -> dict[str, str]:
         except Exception:
             return
 
-    for name in [
-        "abstractcore",
-        "abstractruntime",
-        "abstractagent",
-        "abstractflow",
-        "abstractcode",
-        "abstractgateway",
-        "abstractmemory",
-        "abstractsemantics",
-        "abstractvoice",
-        "abstractvision",
-        "abstractmusic",
-        "abstractassistant",
-    ]:
+    for name in PACKAGE_DISTRIBUTIONS:
         _maybe_add(name)
 
     return packages
@@ -535,20 +555,7 @@ def print_status() -> None:
     """Print installation status of the main AbstractFramework Python packages."""
 
     installed = get_installed_packages()
-    all_packages = [
-        "abstractcore",
-        "abstractruntime",
-        "abstractagent",
-        "abstractflow",
-        "abstractcode",
-        "abstractgateway",
-        "abstractmemory",
-        "abstractsemantics",
-        "abstractvoice",
-        "abstractvision",
-        "abstractmusic",
-        "abstractassistant",
-    ]
+    all_packages = list(PACKAGE_DISTRIBUTIONS)
 
     print("AbstractFramework installation status")
     print("=" * 40)
@@ -570,6 +577,369 @@ def print_status() -> None:
         print("Hardware-local profiles:")
         print('  pip install "abstractframework[apple]"')
         print('  pip install "abstractframework[gpu]"')
+
+--- abstractframework/install_manifest.py ---
+"""Generated install manifest helpers for AbstractFramework."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+from . import NPM_RELEASE_VERSIONS, PACKAGE_DISTRIBUTIONS, RELEASE_VERSIONS, __version__
+
+MANIFEST_SCHEMA_VERSION = 1
+MINIMUM_INSTALLER_VERSION = "0.1.0"
+
+
+def _python_packages() -> list[dict[str, str]]:
+    return [
+        {
+            "id": package_id,
+            "distribution": PACKAGE_DISTRIBUTIONS[package_id],
+            "version": version,
+            "registry": "pypi",
+        }
+        for package_id, version in RELEASE_VERSIONS.items()
+    ]
+
+
+def _npm_apps() -> list[dict[str, str]]:
+    return [
+        {
+            "id": package_name.rsplit("/", 1)[-1],
+            "package": package_name,
+            "version": version,
+            "registry": "npm",
+            "command": f"npx {package_name}",
+        }
+        for package_name, version in NPM_RELEASE_VERSIONS.items()
+    ]
+
+
+def build_install_manifest() -> dict[str, Any]:
+    """Build the installer-consumable manifest from root release pins."""
+
+    return {
+        "schema_version": MANIFEST_SCHEMA_VERSION,
+        "minimum_installer_version": MINIMUM_INSTALLER_VERSION,
+        "framework": {
+            "id": "abstractframework",
+            "name": "AbstractFramework",
+            "distribution": "abstractframework",
+            "version": __version__,
+            "registry": "pypi",
+            "python_requires": ">=3.10",
+        },
+        "source": {
+            "repository": "https://github.com/lpalbou/AbstractFramework",
+            "release_profile": "abstractframework.RELEASE_VERSIONS",
+        },
+        "profiles": [
+            {
+                "id": "light",
+                "name": "Light",
+                "summary": (
+                    "Remote-first install. Full framework functionality is available through "
+                    "remote or OpenAI-compatible endpoints; no local MLX, CUDA, Diffusers, or "
+                    "model-runtime stacks are installed by this profile."
+                ),
+                "pip_requirements": [f"abstractframework=={__version__}"],
+                "local_inference": False,
+                "platforms": ["macos", "linux", "windows"],
+                "prerequisites": ["python>=3.10", "network"],
+                "best_for": [
+                    "cloud APIs",
+                    "LM Studio, Ollama, vLLM, llama.cpp, or other endpoint servers",
+                    "lowest-friction install",
+                ],
+                "excludes": ["local MLX engines", "local CUDA/ROCm engines"],
+            },
+            {
+                "id": "apple",
+                "name": "Apple",
+                "summary": (
+                    "Native Apple Silicon profile. Adds local MLX/Metal-capable stacks on top "
+                    "of the same framework interfaces and endpoint providers."
+                ),
+                "pip_requirements": [f"abstractframework[apple]=={__version__}"],
+                "local_inference": True,
+                "platforms": ["macos"],
+                "prerequisites": ["python>=3.10", "apple-silicon", "network"],
+                "best_for": ["Mac users who want local Apple Silicon inferencers"],
+                "excludes": ["CUDA/ROCm engines"],
+            },
+            {
+                "id": "gpu",
+                "name": "GPU",
+                "summary": (
+                    "Native GPU profile. Adds CUDA/ROCm-oriented local stacks on top of the "
+                    "same framework interfaces and endpoint providers."
+                ),
+                "pip_requirements": [f"abstractframework[gpu]=={__version__}"],
+                "local_inference": True,
+                "platforms": ["linux", "windows"],
+                "prerequisites": ["python>=3.10", "gpu-driver", "network"],
+                "best_for": ["workstations or servers with supported discrete GPUs"],
+                "excludes": ["Apple MLX-only engines"],
+            },
+        ],
+        "python_packages": _python_packages(),
+        "npm_apps": _npm_apps(),
+        "post_install": {
+            "doctor": ["abstractframework", "doctor"],
+            "core_config": ["abstractcore", "--config"],
+            "gateway_flow": {
+                "gateway": ["abstractgateway", "serve"],
+                "flow": ["npx", "@abstractframework/flow"],
+            },
+        },
+        "security": {
+            "secrets_in_manifest": False,
+            "native_artifacts_signed": False,
+            "notes": "Prototype manifest; production installer artifacts must add signatures.",
+        },
+    }
+
+
+def manifest_json(indent: int = 2) -> str:
+    """Return the install manifest as stable JSON."""
+
+    return json.dumps(build_install_manifest(), indent=indent, sort_keys=True) + "\n"
+
+
+def write_install_manifest(path: str | Path) -> None:
+    """Write the generated install manifest to a path."""
+
+    Path(path).write_text(manifest_json(), encoding="utf-8")
+
+
+def check_install_manifest(path: str | Path) -> tuple[bool, str]:
+    """Compare a checked-in manifest file with the generated manifest."""
+
+    manifest_path = Path(path)
+    expected = manifest_json()
+    actual = manifest_path.read_text(encoding="utf-8")
+    if actual == expected:
+        return True, f"{manifest_path} is up to date"
+    return False, f"{manifest_path} differs from generated AbstractFramework install manifest"
+
+--- abstractframework/cli.py ---
+"""Command line helpers for the AbstractFramework meta-package."""
+
+from __future__ import annotations
+
+import argparse
+import importlib.metadata
+import json
+import platform
+import shutil
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Sequence
+
+from . import PACKAGE_DISTRIBUTIONS, RELEASE_VERSIONS, __version__
+from .install_manifest import check_install_manifest, manifest_json, write_install_manifest
+
+
+@dataclass(frozen=True)
+class Check:
+    id: str
+    status: str
+    message: str
+    detail: str | None = None
+
+    def as_dict(self) -> dict[str, str]:
+        data = {"id": self.id, "status": self.status, "message": self.message}
+        if self.detail:
+            data["detail"] = self.detail
+        return data
+
+
+def _distribution_version(distribution: str) -> str | None:
+    try:
+        return importlib.metadata.version(distribution)
+    except importlib.metadata.PackageNotFoundError:
+        return None
+
+
+def _command_version(command: str) -> str | None:
+    executable = shutil.which(command)
+    if not executable:
+        return None
+    try:
+        result = subprocess.run(
+            [executable, "--version"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except Exception:
+        return "available"
+    text = (result.stdout or result.stderr).strip().splitlines()
+    return text[0] if text else "available"
+
+
+def build_doctor_report(include_environment: bool = True) -> dict[str, object]:
+    """Return a doctor report without importing heavy local inference stacks."""
+
+    checks: list[Check] = []
+
+    python_version = ".".join(str(part) for part in sys.version_info[:3])
+    if sys.version_info >= (3, 10):
+        checks.append(Check("python", "ok", f"Python {python_version} satisfies >=3.10"))
+    else:
+        checks.append(Check("python", "error", f"Python {python_version} is below required >=3.10"))
+
+    installed_framework = _distribution_version("abstractframework")
+    if installed_framework in {None, __version__}:
+        status = "ok" if installed_framework == __version__ else "warn"
+        message = (
+            f"abstractframework {installed_framework} matches release profile"
+            if installed_framework
+            else "abstractframework distribution metadata is not installed"
+        )
+        checks.append(Check("abstractframework", status, message))
+    else:
+        checks.append(
+            Check(
+                "abstractframework",
+                "error",
+                f"abstractframework {installed_framework} does not match {__version__}",
+            )
+        )
+
+    for package_id, expected in RELEASE_VERSIONS.items():
+        distribution = PACKAGE_DISTRIBUTIONS[package_id]
+        actual = _distribution_version(distribution)
+        if actual is None:
+            checks.append(
+                Check(
+                    f"package:{package_id}",
+                    "error",
+                    f"{distribution} is not installed",
+                    f"Expected {distribution}=={expected}",
+                )
+            )
+        elif actual == expected:
+            checks.append(Check(f"package:{package_id}", "ok", f"{distribution}=={actual}"))
+        else:
+            checks.append(
+                Check(
+                    f"package:{package_id}",
+                    "error",
+                    f"{distribution}=={actual} does not match pinned {expected}",
+                )
+            )
+
+    if include_environment:
+        node_version = _command_version("node")
+        npm_version = _command_version("npm")
+        if node_version:
+            checks.append(Check("node", "ok", f"Node is available: {node_version}"))
+        else:
+            checks.append(Check("node", "warn", "Node is not available; browser UIs need Node/npm"))
+        if npm_version:
+            checks.append(Check("npm", "ok", f"npm is available: {npm_version}"))
+        else:
+            checks.append(Check("npm", "warn", "npm is not available; browser UIs need npm/npx"))
+
+        system = platform.system()
+        machine = platform.machine().lower()
+        if system == "Darwin" and machine in {"arm64", "aarch64"}:
+            checks.append(Check("hardware:apple", "ok", "Apple Silicon local profile can be used"))
+        elif system == "Darwin":
+            checks.append(
+                Check("hardware:apple", "warn", "Apple local profile expects Apple Silicon")
+            )
+        else:
+            checks.append(Check("hardware:apple", "warn", "Apple local profile is macOS-only"))
+
+        if shutil.which("nvidia-smi"):
+            checks.append(Check("hardware:gpu", "ok", "nvidia-smi is available"))
+        else:
+            checks.append(
+                Check(
+                    "hardware:gpu",
+                    "warn",
+                    "No nvidia-smi found; GPU profile may still work with another supported stack",
+                )
+            )
+
+    status_rank = {"error": 2, "warn": 1, "ok": 0}
+    worst = max((status_rank[check.status] for check in checks), default=0)
+    status = "error" if worst == 2 else "warn" if worst == 1 else "ok"
+    return {
+        "abstractframework": __version__,
+        "status": status,
+        "checks": [check.as_dict() for check in checks],
+    }
+
+
+def _print_doctor(report: dict[str, object]) -> None:
+    print(f"AbstractFramework doctor ({report['status']})")
+    print("=" * 40)
+    for raw in report["checks"]:  # type: ignore[index]
+        check = raw  # type: ignore[assignment]
+        marker = {"ok": "OK", "warn": "WARN", "error": "ERROR"}[check["status"]]
+        print(f"[{marker}] {check['message']}")
+        if check.get("detail"):
+            print(f"       {check['detail']}")
+
+
+def _doctor(args: argparse.Namespace) -> int:
+    report = build_doctor_report(include_environment=not args.no_environment)
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        _print_doctor(report)
+    return 1 if report["status"] == "error" else 0
+
+
+def _manifest(args: argparse.Namespace) -> int:
+    if args.write:
+        write_install_manifest(args.write)
+        print(f"Wrote {args.write}")
+        return 0
+    if args.check:
+        ok, message = check_install_manifest(args.check)
+        print(message)
+        return 0 if ok else 1
+    print(manifest_json(), end="")
+    return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="abstractframework")
+    subparsers = parser.add_subparsers(dest="command")
+
+    doctor = subparsers.add_parser("doctor", help="Check install health and profile consistency")
+    doctor.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    doctor.add_argument(
+        "--no-environment",
+        action="store_true",
+        help="Skip Node/npm/hardware probes and only check Python package profile consistency",
+    )
+    doctor.set_defaults(func=_doctor)
+
+    manifest = subparsers.add_parser("manifest", help="Print or validate the install manifest")
+    manifest.add_argument("--write", type=Path, help="Write the generated manifest to a path")
+    manifest.add_argument("--check", type=Path, help="Check a manifest file against the generator")
+    manifest.set_defaults(func=_manifest)
+
+    args = parser.parse_args(argv)
+    if not hasattr(args, "func"):
+        parser.print_help()
+        return 0
+    return args.func(args)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(main())
 
 --- docs/README.md ---
 # AbstractFramework documentation
@@ -650,6 +1020,7 @@ Authoring                                Operations
 
 | Page | What it covers |
 |---|---|
+| **[Install](install.md)** | Light / Apple / GPU install chooser, `abstractframework doctor`, and installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
@@ -676,8 +1047,144 @@ Authoring                                Operations
 |---|---|
 | [docs/guide/](guide/) | Focused "how it works" notes |
 | [docs/scenarios/](scenarios/) | End-to-end walkthroughs by use case |
-| [docs/installers/](installers/) | Installer strategy and prototypes |
+| [docs/installers/](installers/) | Installer strategy, manifest contract, and prototype history |
 | [docs/comparisons/](comparisons/) | Trade-offs vs other frameworks |
+
+--- docs/install.md ---
+# Install AbstractFramework
+
+Choose the install path by deciding where inference should run. The framework APIs stay the same
+across profiles; the profiles mainly change whether local inference engines are installed.
+
+## Quick chooser
+
+| Profile | Command | Use when | Local inference stacks |
+|---|---|---|---|
+| Light | `pip install abstractframework` | You use cloud APIs or endpoint servers such as LM Studio, Ollama, vLLM, llama.cpp, OpenRouter, or OpenAI-compatible services. | No |
+| Apple | `pip install "abstractframework[apple]"` | You are on Apple Silicon and want local MLX/Metal-capable engines as well as endpoint providers. | Yes, Apple-focused |
+| GPU | `pip install "abstractframework[gpu]"` | You have a supported discrete GPU and want local GPU-capable engines as well as endpoint providers. | Yes, GPU-focused |
+
+Light is not a reduced-functionality framework. It is the remote-first profile: multimodal input,
+multimodal output, embeddings, tools, durable runs, workflows, and Gateway/Flow still work when
+they are backed by remote or local endpoint providers.
+
+## Recommended technical install
+
+Use a clean virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+python -m pip install abstractframework
+abstractframework doctor
+```
+
+Use `uv` if you prefer faster environment management:
+
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install abstractframework
+abstractframework doctor
+```
+
+`pipx` is useful for isolated command-line apps, but a normal venv is usually clearer for the full
+framework because Gateway, Flow, Core, and local plugins share one environment.
+
+## Light profile
+
+```bash
+pip install abstractframework
+```
+
+Choose Light when:
+
+- you use OpenAI, Anthropic, OpenRouter, Portkey, or other hosted providers;
+- you use local model servers through HTTP, such as LM Studio, Ollama, vLLM, llama.cpp, or LocalAI;
+- you want the smallest and least surprising install;
+- you do not want pip to install MLX, CUDA, Diffusers, or local model-runtime stacks.
+
+After install:
+
+```bash
+abstractframework doctor
+abstractcore --config
+```
+
+## Apple profile
+
+```bash
+pip install "abstractframework[apple]"
+```
+
+Choose Apple when:
+
+- you are on Apple Silicon;
+- you want local Apple/MLX-capable inferencers in addition to endpoint providers;
+- you accept larger downloads and platform-specific native dependencies.
+
+Run:
+
+```bash
+abstractframework doctor
+abstractcore --config
+```
+
+## GPU profile
+
+```bash
+pip install "abstractframework[gpu]"
+```
+
+Choose GPU when:
+
+- you have a supported GPU stack and drivers;
+- you want local GPU-capable inferencers in addition to endpoint providers;
+- you accept larger downloads and platform-specific native dependencies.
+
+Run:
+
+```bash
+abstractframework doctor
+abstractcore --config
+```
+
+## Start Gateway and Flow
+
+For a local development setup, start Gateway and Flow from their package commands or from the
+workspace helper scripts when working from source. The first health check should always be:
+
+```bash
+abstractframework doctor
+```
+
+Then configure providers:
+
+```bash
+abstractcore --config
+```
+
+Gateway-hosted browser apps use Gateway user tokens and browser sessions. Do not use the bootstrap
+server token as a browser login token.
+
+## Non-technical installs
+
+Native GUI installers are moving to the standalone
+[`AbstractInstallers`](https://github.com/lpalbou/AbstractInstallers) repository. Until signed
+installer artifacts are published, the supported production path is the Python install profile
+described above.
+
+## Generated install manifest
+
+The installer-facing contract is generated from the root release profile:
+
+```bash
+abstractframework manifest
+abstractframework manifest --check docs/installers/install-manifest.json
+```
+
+Installers should consume this manifest instead of maintaining independent package pins.
 
 --- docs/getting-started.md ---
 # Getting started
@@ -715,6 +1222,8 @@ You can also install the entire pinned ecosystem in one command:
 ```bash
 pip install abstractframework
 ```
+
+For the full Light / Apple / GPU profile chooser, see [Install AbstractFramework](install.md).
 
 ---
 
@@ -1404,6 +1913,8 @@ pip install "abstractframework[apple]"       # Apple Silicon native stack (MLX/M
 pip install "abstractframework[gpu]"         # GPU native stack (CUDA/ROCm)
 ```
 
+See [Install AbstractFramework](install.md) for the profile chooser and first health checks.
+
 ---
 
 ## Convenience re-exports
@@ -1464,6 +1975,25 @@ Prints a human-readable status report of detected packages (installed vs missing
 ```python
 from abstractframework import print_status
 print_status()
+```
+
+### `abstractframework doctor`
+
+Checks Python version, pinned package versions, Node/npm availability for browser UIs, and local
+hardware indicators for Apple/GPU profiles. It does not import heavy local inference stacks.
+
+```bash
+abstractframework doctor
+abstractframework doctor --json
+```
+
+### `abstractframework manifest`
+
+Prints or validates the installer-facing manifest generated from the root release profile.
+
+```bash
+abstractframework manifest
+abstractframework manifest --check docs/installers/install-manifest.json
 ```
 
 ---
@@ -1561,6 +2091,10 @@ No.
 | Smallest useful (LLM SDK only) | `pip install abstractcore` |
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
+
+See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
+remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
+local endpoint providers.
 
 ---
 
@@ -3878,11 +4412,23 @@ the lifecycle folders described by the backlog process.
 | 0151 | [Runtime Explorer contract](proposed/gateway-control-plane/0151_runtime_explorer_contract.md) | Proposed | Reviewer consensus: start with a read-only Gateway envelope contract and Observer page for typed runtime resources; defer `abstractexplorer`, delete/export, raw workspace browsing, and admin cross-user exploration. |
 | 0152 | [AbstractManager package extraction](proposed/gateway-control-plane/0152_abstractmanager_package_extraction.md) | Proposed | Revisit a separate `abstractmanager` package only after console/config/workflow ACL surfaces prove real maintenance or reuse pressure. |
 | 0155 | [Hosted proxy shared helper extraction](proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md) | Proposed | Keep conformance tests now; extract a shared Node helper only if Code/Observer or future hosted apps drift again. |
+| 0162-0163 | [Installer and setup track](proposed/installers/README.md) | Proposed | Prepare signed installer CI and evaluate a CPU-local profile after the extraction, generated manifest, doctor, and install chooser work landed. |
+
+## Installer And Setup Proposed Track
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0162 | [Signed installer CI and distribution](proposed/installers/0162_signed_installer_ci_and_distribution.md) | Proposed | Move from prototype builds to signed/notarized native installer artifacts with checksums and rollback/support logs. |
+| 0163 | [CPU local inference install profile](proposed/installers/0163_cpu_local_inference_install_profile.md) | Proposed | Evaluate `abstractframework[cpu]` separately from Light; require package-by-package backend and dependency evidence before promotion. |
 
 ## Recent Completed Work
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0161 | [Three-path public install guide](completed/0161_three_path_public_install_guide.md) | 2026-05-31 | Added `docs/install.md`, linked it from user docs, and clarified that Light is remote-first rather than reduced-functionality. |
+| 0160 | [Framework doctor and manifest CLI](completed/0160_framework_doctor_and_launch_cli.md) | 2026-05-31 | Added the `abstractframework` console script with `doctor` and `manifest` commands; launch remains deferred unless it can delegate cleanly. |
+| 0159 | [Generated install manifest contract](completed/0159_generated_install_manifest_contract.md) | 2026-05-31 | Added manifest generator, checked-in JSON/schema, CLI drift check, and tests tying the manifest to root pins. |
+| 0158 | [Installer repository extraction](completed/0158_installer_repository_extraction.md) | 2026-05-31 | Moved installer prototypes to `https://github.com/lpalbou/AbstractInstallers` and removed the tracked root `abstractinstallers/` tree. |
 | 0157 | [Gateway provider endpoint profiles](completed/0157_gateway_provider_endpoint_profiles.md) | 2026-05-31 | Added Gateway-owned provider endpoint profiles with descriptions, write-only API keys, virtual `endpoint:*` providers in discovery, Runtime resolution, local dynamic provider construction, console UI with model discovery, and tests. |
 | 0156 | [Retained runtime admin lifecycle](completed/0156_retained_runtime_admin_lifecycle.md) | 2026-05-30 | Added admin-only retained runtime list/transfer/purge routes, Gateway Console actions, scoped purge deletion, transfer semantics, and regression tests. |
 | 0154 | [Multi-user security release blockers](completed/0154_multi_user_security_release_blockers.md) | 2026-05-30 | Added retained-runtime reservations, Code/Observer hosted URL guards, published launcher user bootstrap, and `.DS_Store` cleanup. |
@@ -6180,6 +6726,489 @@ Residual risks:
 - Secrets are permissioned local JSON, not encrypted at rest. That is acceptable
   for the initial Gateway-local control-plane path but should not be treated as
   the final hosted vault design.
+
+--- docs/backlog/proposed/installers/README.md ---
+# Installer And Setup Track
+
+This proposed track collects follow-up work for turning the current AbstractFramework install
+experience into a production-grade setup system for both technical and non-technical users.
+
+The items are grouped because they share the same boundary: `abstractframework` should remain the
+Python release profile and install contract, while native installer applications should consume
+that contract rather than duplicating pins by hand.
+
+Recommended reading order:
+
+1. `../../completed/0158_installer_repository_extraction.md`
+2. `../../completed/0159_generated_install_manifest_contract.md`
+3. `../../completed/0160_framework_doctor_and_launch_cli.md`
+4. `../../completed/0161_three_path_public_install_guide.md`
+5. `0162_signed_installer_ci_and_distribution.md`
+6. `0163_cpu_local_inference_install_profile.md`
+
+Relevant docs and decisions:
+
+- `docs/installers/`
+- `docs/adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md`
+- `docs/adr/0034-framework-release-sequence-and-gates.md`
+- `docs/adr/reorg/2026-02-21_installer_manager_strategy.md`
+- `docs/adr/reorg/2026-02-21_macos_installer_manager.md`
+- `https://github.com/lpalbou/AbstractInstallers`
+
+Non-goals for this proposed track:
+
+- Do not make the root `abstractframework` wheel ship native installer source or binaries.
+- Do not make installers own package version pins independently from the root release profile.
+- Do not bypass OS signing, notarization, or checksum requirements for production artifacts.
+- Do not add a CPU local profile until each package's CPU backend story is audited.
+
+--- docs/backlog/completed/0158_installer_repository_extraction.md ---
+# Proposed: Installer Repository Extraction
+
+## Metadata
+- Created: 2026-05-31
+- Status: Completed
+- Completed: 2026-05-31
+
+## ADR status
+- Governing ADRs: `docs/adr/reorg/2026-02-21_installer_manager_strategy.md`, `docs/adr/reorg/2026-02-21_macos_installer_manager.md`
+- ADR impact: May revise existing ADR
+
+## Context
+The root `AbstractFramework` repository currently contains `abstractinstallers/` as a sandbox for
+installer experiments. The root PyPI package does not include these files in the wheel or sdist,
+but the source tree now mixes Python release-profile concerns with Rust/Tauri installer product
+code.
+
+## Current code reality
+- `AbstractInstallers` now exists at `https://github.com/lpalbou/AbstractInstallers`.
+- The root `AbstractFramework` repo no longer tracks `abstractinstallers/`.
+- `pyproject.toml` still only packages `abstractframework*`.
+- `docs/installers/` already documents an installer-manager strategy.
+
+## Problem or opportunity
+Installer applications have a different lifecycle from the Python meta-package: native app
+toolchains, OS signing, notarization, updater artifacts, platform CI, and support logs. Keeping
+that source in the root repo risks confusing release ownership and encouraging hand-maintained
+manifest drift.
+
+## Proposed direction
+Create a separate GitHub repository named `AbstractInstallers` and move production installer app
+source there once the manifest contract is ready. Keep root `AbstractFramework` as the versioned
+Python install profile, docs hub, and manifest source of truth.
+
+Use `AbstractInstallers` rather than `AbstractInstaller`, `AbstractInstall`, or `AbstractSetup`:
+
+- `AbstractInstallers` matches the existing directory name and supports multiple artifacts
+  (`macOS`, `Windows`, `Linux`, future helper apps).
+- Plural naming is clearer for a repo that will hold more than one installer target and shared
+  installer infrastructure.
+- `AbstractInstaller` sounds like a single application rather than a repo owning several packages.
+- `AbstractInstall` reads like a command or package action, not a product/repo.
+- `AbstractSetup` is friendlier but less precise; it could mean first-run configuration rather
+  than installation, updates, repair, signing, and distribution.
+
+## Why it might matter
+Separating the installer repo keeps the framework package clean and makes native release
+engineering visible. It also lets installer CI evolve without blocking Python package releases.
+
+## Promotion criteria
+- The generated install manifest contract exists or has an accepted schema.
+- The macOS prototype needs production signing/distribution work.
+- Installer code changes start dominating root framework diffs or release planning.
+
+## Validation ideas
+- Verify root `abstractframework` wheel/sdist still exclude installer source.
+- Verify `AbstractInstallers` can consume a released manifest from `AbstractFramework`.
+- Build the macOS prototype from the new repo without path assumptions back into the root repo.
+
+## Non-goals
+- This proposal does not authorize deleting installer docs from `AbstractFramework`.
+- This proposal does not require moving historical backlog or ADR records.
+- This proposal does not decide the final UI toolkit beyond preserving the current Tauri prototype
+  as the first migration candidate.
+
+## Guidance for future agents
+Treat `AbstractFramework` as the release-profile authority and `AbstractInstallers` as a consumer.
+If a future design requires installers to mutate framework release pins directly, re-check the
+architecture before implementing it.
+
+## Completion report
+- Moved the tracked installer prototype source into the standalone `AbstractInstallers` repository.
+- Added repository-level `.gitignore`, `LICENSE`, and README updates there.
+- Pushed `AbstractInstallers` commit `3618978` to `https://github.com/lpalbou/AbstractInstallers`.
+- Removed tracked `abstractinstallers/` files and leftover local build artifacts from the root
+  `AbstractFramework` checkout.
+- Updated root docs to point users and future installer work at the standalone repository.
+
+--- docs/backlog/completed/0159_generated_install_manifest_contract.md ---
+# Proposed: Generated Install Manifest Contract
+
+## Metadata
+- Created: 2026-05-31
+- Status: Completed
+- Completed: 2026-05-31
+
+## ADR status
+- Governing ADRs: `docs/adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md`, `docs/adr/0034-framework-release-sequence-and-gates.md`
+- ADR impact: May revise existing ADR
+
+## Context
+Installers need a machine-readable description of AbstractFramework release profiles, components,
+versions, package extras, prerequisites, and launch commands. Today the macOS prototype uses a
+local `manifest.local.json`, and release work had to patch that file manually.
+
+## Current code reality
+- Root `pyproject.toml` pins the release profile. The Light profile is the base install;
+  `apple` and `gpu` are the hardware-local extras.
+- `abstractframework.RELEASE_VERSIONS` duplicates the release matrix for runtime inspection.
+- `abstractframework.install_manifest.build_install_manifest()` generates the installer-facing
+  manifest from root constants.
+- `docs/installers/install-manifest.json` is checked in and tested against the generator.
+- `docs/installers/install-manifest.schema.json` defines the current schema shape.
+- `abstractframework manifest --check docs/installers/install-manifest.json` validates drift.
+
+## Problem or opportunity
+Hand-maintained installer manifests drift. Drift is risky because installers are aimed at users
+least able to diagnose version/profile mistakes.
+
+## Proposed direction
+Create a generated, versioned install manifest contract owned by `AbstractFramework`. The manifest
+should be produced from root pins and profile definitions, then consumed by installer apps.
+
+The contract should include:
+
+- framework version and manifest schema version;
+- package pins and package registry type;
+- install profiles: Light, Apple, GPU;
+- per-profile pip requirements and npm app requirements where applicable;
+- Python/Node/platform prerequisites;
+- post-install commands such as doctor/config/launch;
+- checksum/signature fields for native installer artifacts when applicable;
+- compatibility metadata for minimum installer-manager version.
+
+The first implementation can generate a checked-in JSON file under `docs/installers/` or
+`abstractframework/assets/`, then later publish it as a GitHub release asset.
+
+## Why it might matter
+A generated contract makes the installer trustworthy and reduces duplicated release logic. It also
+lets a GUI installer, CLI doctor, docs, and future updater reason about the same release profile.
+
+## Promotion criteria
+- Installer app source moves to a separate repository.
+- Any release requires editing both root pins and installer manifests.
+- Install profile tests need to cover more than the current local macOS prototype.
+
+## Validation ideas
+- Generate the manifest from `pyproject.toml` and `abstractframework.RELEASE_VERSIONS`.
+- Validate it against a JSON schema.
+- Assert generated manifest package pins match root pins in tests.
+- Run a dry-run installer plan from the generated manifest for Light, Apple, and GPU profiles.
+
+## Non-goals
+- Do not make installers infer package versions from PyPI "latest".
+- Do not make the manifest execute arbitrary scripts.
+- Do not embed API keys, user secrets, or machine-local paths.
+
+## Guidance for future agents
+The manifest should be boring and explicit. Prefer a small schema that covers real installer needs
+over a flexible plugin system that can become a hidden package manager.
+
+## Completion report
+- Added `abstractframework/install_manifest.py`.
+- Added `docs/installers/install-manifest.json` and
+  `docs/installers/install-manifest.schema.json`.
+- Added `abstractframework manifest`, including `--write` and `--check`.
+- Updated install-profile tests so the checked-in manifest must match the generator and root pins.
+- Left signed native artifact metadata as explicit future work in item 0162.
+
+--- docs/backlog/completed/0160_framework_doctor_and_launch_cli.md ---
+# Proposed: Framework Doctor And Launch CLI
+
+## Metadata
+- Created: 2026-05-31
+- Status: Completed
+- Completed: 2026-05-31
+
+## ADR status
+- Governing ADRs: `docs/adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md`
+- ADR impact: None
+
+## Context
+The root `abstractframework` package currently exposes helper functions for release profile and
+installed package status, but no CLI. Installers and technical users both need the same readiness
+checks and launch guidance.
+
+## Current code reality
+- `abstractframework/__init__.py` defines release pins, distribution mappings,
+  `get_release_profile()`, `get_installed_packages()`, and `print_status()`.
+- `pyproject.toml` exposes the `abstractframework` console script.
+- `abstractframework.cli` implements `doctor` and `manifest`.
+- Existing app launch behavior lives in package-specific commands and scripts, such as Gateway,
+  Flow, Code, Observer, and local launcher scripts.
+- `docs/install.md`, `docs/api.md`, and README references document `abstractframework doctor`.
+
+## Problem or opportunity
+Without a shared doctor/launch surface, GUI installers tend to reimplement checks and technical
+users get inconsistent troubleshooting paths.
+
+## Proposed direction
+Add a small root CLI with two likely commands:
+
+- `abstractframework doctor`: inspect installed versions, profile consistency, Python/Node
+  prerequisites, Gateway/Flow readiness, local hardware availability, and common config problems.
+- `abstractframework launch`: start or delegate to the default local Gateway/Flow experience once
+  the install is healthy, using the same checks as the installer.
+
+Start with `doctor`. Add `launch` only if it can delegate cleanly to existing package CLIs without
+becoming another process manager.
+
+## Why it might matter
+The CLI becomes the shared support surface for users, installers, docs, and future updater flows.
+It helps technical users self-diagnose and lets non-technical installer UI show reliable, familiar
+failure messages.
+
+## Promotion criteria
+- Installer app needs reusable readiness checks.
+- Support reports show install failures that could be diagnosed by a root command.
+- The root package remains a meta-package but needs a small operational helper surface.
+
+## Validation ideas
+- Unit-test version/pin checks against `RELEASE_VERSIONS`.
+- Run `abstractframework doctor` in a base install and in missing-dependency simulations.
+- Verify the command does not import heavy local inference stacks unless explicitly checking them.
+- If `launch` is added, verify it starts Gateway/Flow without leaking admin credentials to browser
+  sessions.
+
+## Non-goals
+- Do not duplicate Gateway admin/user management.
+- Do not make root `abstractframework` a long-running service.
+- Do not replace package-specific CLIs.
+
+## Guidance for future agents
+Keep the CLI thin. It should orchestrate checks and delegate. If it starts to own app logic, move
+that logic back to the relevant package or installer repo.
+
+## Completion report
+- Added `abstractframework doctor` with package pin checks, Python version checks, Node/npm probes,
+  and Apple/GPU hardware indicators.
+- Added JSON output support through `abstractframework doctor --json`.
+- Added tests for the doctor report and manifest check command.
+- Did not add `abstractframework launch`; the design still says launch should only be added if it
+  can delegate cleanly without becoming a new process manager.
+
+--- docs/backlog/completed/0161_three_path_public_install_guide.md ---
+# Proposed: Three-Path Public Install Guide
+
+## Metadata
+- Created: 2026-05-31
+- Status: Completed
+- Completed: 2026-05-31
+
+## ADR status
+- Governing ADRs: `docs/adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md`
+- ADR impact: None
+
+## Context
+The release profile now has three clear installation modes: remote-first Light, Apple local, and
+GPU local. The docs mention these commands, but users need a more deliberate decision guide.
+
+## Current code reality
+- `README.md` documents `pip install abstractframework`,
+  `pip install "abstractframework[apple]"`, and `pip install "abstractframework[gpu]"`.
+- `docs/install.md` is the concise user-facing install chooser.
+- `docs/api.md`, `docs/faq.md`, `docs/getting-started.md`, `docs/README.md`, and README link to
+  the install chooser.
+- `docs/guide/apple-local-gateway-flow.md` covers a specific Apple local Gateway/Flow path.
+
+## Problem or opportunity
+Install decisions are high-friction because "full functionality" and "local inference" are easy
+to confuse. Users need to understand that Light still supports multimodal and embeddings through
+remote endpoints, while Apple/GPU add local inferencer stacks.
+
+## Proposed direction
+Create a public install guide with three primary paths:
+
+- Light: remote-first, lowest friction, no local MLX/CUDA/Diffusers stacks.
+- Apple: local Apple Silicon engines where supported, with larger downloads and macOS-specific
+  prerequisites.
+- GPU: local GPU engines where supported, with CUDA/ROCm/system-driver expectations.
+
+The guide should include:
+
+- who should choose each path;
+- exact commands using `pipx`, `uv`, and venv/pip options where appropriate;
+- expected disk/download implications;
+- first-run config steps;
+- how Gateway/Flow should be started;
+- how to run `abstractframework doctor` once it exists;
+- when to use the GUI installer instead.
+
+## Why it might matter
+This is the main bridge between technical and non-technical installs. It also reduces repeat
+confusion about Light installs accidentally installing local inference stacks.
+
+## Promotion criteria
+- Root `abstractframework` release profile is stable after `0.1.6`.
+- Generated manifest or doctor CLI work starts.
+- Installer repo extraction needs public docs that explain how CLI and GUI paths relate.
+
+## Validation ideas
+- Dry-run each documented pip command.
+- Verify Light install does not pull MLX/CUDA/local inference dependencies.
+- Verify Apple/GPU docs align with actual extras in root and package manifests.
+- Cross-link from `README.md`, `docs/getting-started.md`, `docs/installers/README.md`, and
+  `llms-full.txt`.
+
+## Non-goals
+- Do not document unsupported one-off package-manager flows as primary paths.
+- Do not claim native signed installers exist before release artifacts are available.
+- Do not bury warnings about large local model downloads.
+
+## Guidance for future agents
+Write this for a user making a decision, not for maintainers. The guide should be short enough to
+read before installing but precise enough to prevent the wrong profile choice.
+
+## Completion report
+- Added `docs/install.md` with Light / Apple / GPU profile guidance, venv/uv setup, first checks,
+  Gateway/Flow notes, and the generated manifest command.
+- Updated README, docs index, getting-started, API, FAQ, installer docs, `llms.txt`, and
+  `llms-full.txt`.
+- Kept CPU local inference out of the public install chooser pending item 0163.
+
+--- docs/backlog/proposed/installers/0162_signed_installer_ci_and_distribution.md ---
+# Proposed: Signed Installer CI And Distribution
+
+## Metadata
+- Created: 2026-05-31
+- Status: Proposed
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: `docs/adr/reorg/2026-02-21_installer_manager_strategy.md`, `docs/adr/reorg/2026-02-21_macos_installer_manager.md`
+- ADR impact: May revise existing ADR
+
+## Context
+The macOS installer prototype can build locally, but production installers need OS-specific
+release pipelines, signing, notarization, checksum publication, rollback/repair logs, and
+secret-safe automation.
+
+## Current code reality
+- `abstractinstallers/abstractframework-macos/BUILDING.md` describes local Tauri build steps.
+- `docs/installers/security-and-os-blocks.md` describes signing and OS trust requirements.
+- `docs/installers/release-and-manifest.md` describes a future release and manifest process.
+- No production installer CI exists in a dedicated installer repository.
+
+## Problem or opportunity
+Unsigned GUI installers create friction and security warnings for exactly the users the installer
+is meant to help. A production installer must feel trustworthy, recover cleanly, and avoid
+embedding secrets in build artifacts.
+
+## Proposed direction
+After the installer repo and manifest contract exist, add signed installer CI:
+
+- macOS signed/notarized `.dmg` or `.pkg`;
+- Windows signed `.msi` or `.exe`;
+- Linux AppImage first, with `.deb` later if demand justifies it;
+- release manifest update with artifact URLs, checksums, signatures, minimum app versions, and
+  rollback metadata;
+- install logs that users can export for support;
+- no hardcoded API keys or provider secrets in installer artifacts.
+
+## Why it might matter
+This is the difference between a prototype and a real non-technical install path. OS-native trust,
+rollback, and support logs reduce failed installs and support load.
+
+## Promotion criteria
+- `AbstractInstallers` exists as a dedicated repo.
+- macOS prototype is migrated or rebuilt there.
+- Generated manifest contract exists and can reference native installer artifacts.
+- Signing identities and GitHub environment secrets are available.
+
+## Validation ideas
+- CI builds signed artifacts on release tags.
+- macOS notarization gate passes.
+- Checksums in the manifest match uploaded artifacts.
+- A clean machine can install, run doctor checks, launch Gateway/Flow, and uninstall or repair.
+- Secrets scan confirms no provider/API keys are bundled.
+
+## Non-goals
+- Do not implement auto-update before basic install/repair is solid.
+- Do not ship unsigned artifacts as "production".
+- Do not use installer CI to publish Python packages; Python package release remains in package
+  repos and the root `abstractframework` profile.
+
+## Guidance for future agents
+Treat signing and rollback as release gates, not polish. A non-technical installer that trips OS
+security warnings is not production-ready.
+
+--- docs/backlog/proposed/installers/0163_cpu_local_inference_install_profile.md ---
+# Proposed: CPU Local Inference Install Profile
+
+## Metadata
+- Created: 2026-05-31
+- Status: Proposed
+- Completed: N/A
+
+## ADR status
+- Governing ADRs: `docs/adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md`
+- ADR impact: May revise existing ADR
+
+## Context
+The current root install profiles are Light, Apple, and GPU. Light is remote-first and avoids local
+inference stacks. Apple and GPU add hardware-local inferencer stacks. Modern desktop CPUs can run
+some models locally, so a fourth CPU profile may be useful for users without Apple Silicon or a
+discrete GPU.
+
+## Current code reality
+- Root `pyproject.toml` exposes only `apple` and `gpu` extras.
+- `docs/install.md` documents Light, Apple, and GPU only.
+- AbstractCore can use endpoint servers that may themselves run on CPU, such as Ollama,
+  llama.cpp, LM Studio, or LocalAI, through the Light profile.
+- Local in-process CPU support is not clearly audited across `abstractvoice`, `abstractvision`,
+  `abstractmusic`, `abstractcore`, `abstractruntime`, `abstractagent`, and `abstractgateway`.
+
+## Problem or opportunity
+Some users may want local inference on CPU-only machines. This can be especially plausible for
+text, embeddings, small STT/TTS, or small llama.cpp/Ollama workflows. However, CPU-local image,
+video, and music generation can be extremely slow, dependency-heavy, or unsupported depending on
+backend.
+
+## Proposed direction
+Evaluate a fourth `cpu` install profile before adding it:
+
+- `abstractframework[cpu]` would mean local CPU inferencers, not endpoint-only Light.
+- Each package must define what CPU local inference means and which backends are included.
+- Text/embedding CPU paths should be considered first.
+- Vision, video, music, and voice CPU paths require explicit performance and dependency warnings.
+- Docs must keep Light distinct from CPU: Light uses endpoints; CPU installs local inferencer
+  dependencies.
+
+## Why it might matter
+A CPU profile could help users on strong desktop CPUs, servers without GPUs, or machines where
+GPU/Apple stacks are unavailable. It could also provide a more predictable "offline but slow"
+path for basic text and embeddings.
+
+## Promotion criteria
+- Package-by-package audit identifies safe CPU backend choices.
+- Dry-run installs show no accidental CUDA/MLX dependency pull.
+- At least one practical text/embedding workflow works locally on CPU.
+- Docs can set honest expectations for latency, model size, and unsupported modalities.
+
+## Validation ideas
+- Add dependency tests asserting `abstractframework[cpu]` does not pull CUDA/MLX packages.
+- Run a CPU-only smoke workflow for text generation and embeddings.
+- Run or explicitly skip voice, vision, video, and music CPU smoke tests with documented reasons.
+- Verify `abstractframework doctor` can detect and explain the CPU profile separately from Light.
+
+## Non-goals
+- Do not implement CPU profile as an alias for Light.
+- Do not promise fast image/video/music generation on CPU.
+- Do not add CPU dependencies that make the default Light install heavy.
+
+## Guidance for future agents
+Start with evidence. CPU-local can be valuable, but only if the user can predict what works and
+what will be painfully slow.
 
 --- docs/backlog/proposed/gateway-control-plane/README.md ---
 # Gateway control plane proposals

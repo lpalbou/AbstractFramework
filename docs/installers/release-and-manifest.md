@@ -1,7 +1,12 @@
 # Release Pipeline and Manifest
 
 This guide describes how installer artifacts are built, signed, and published, plus
-the manifest format the Installer Manager uses to discover components.
+the manifest format the Installer Manager uses to discover components. The current
+profile manifest is generated from the root `abstractframework` release pins:
+
+```bash
+abstractframework manifest --check docs/installers/install-manifest.json
+```
 
 ## Release pipeline (recommended)
 1. Build per-OS artifacts for each component.
@@ -19,6 +24,10 @@ the manifest format the Installer Manager uses to discover components.
 - Supports rollback by keeping previous versions accessible.
 
 ## Manifest schema (core fields)
+
+The checked-in schema lives at `install-manifest.schema.json`. The generated release
+manifest lives at `install-manifest.json`.
+
 | Field | Description |
 |---|---|
 | `manifest_version` | Schema version for compatibility |

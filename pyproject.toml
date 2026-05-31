@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.6"
+version = "0.1.7"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -97,6 +97,9 @@ Homepage = "https://github.com/lpalbou/AbstractFramework"
 Documentation = "https://github.com/lpalbou/AbstractFramework/tree/main/docs"
 Repository = "https://github.com/lpalbou/AbstractFramework"
 Issues = "https://github.com/lpalbou/AbstractFramework/issues"
+
+[project.scripts]
+abstractframework = "abstractframework.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

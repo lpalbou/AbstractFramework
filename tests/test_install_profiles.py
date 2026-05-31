@@ -37,7 +37,7 @@ def _release_versions() -> dict[str, str]:
     return dict(namespace["RELEASE_VERSIONS"])  # type: ignore[index]
 
 
-def test_framework_profiles_expose_only_base_apple_gpu() -> None:
+def test_framework_profiles_expose_only_apple_gpu_extras() -> None:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     opt = pyproject["project"]["optional-dependencies"]
 
@@ -142,30 +142,56 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
     assert f"abstractassistant[gpu]=={assistant_version}" in opt["gpu"]
 
 
-def test_macos_installer_framework_full_uses_framework_apple_profile() -> None:
-    manifest = json.loads((ROOT / "abstractinstallers" / "abstractframework-macos" / "manifest.local.json").read_text())
-    components = {item["id"]: item for item in manifest["components"]}
-    release_versions = _release_versions()
+def test_generated_install_manifest_matches_checked_in_manifest() -> None:
+    from abstractframework.install_manifest import build_install_manifest, manifest_json
 
-    assert components["framework_full"]["extras"] == ["apple"]
-    assert components["framework_full"]["version"] == tomllib.loads(
+    manifest_path = ROOT / "docs" / "installers" / "install-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    assert manifest == build_install_manifest()
+    assert manifest_path.read_text(encoding="utf-8") == manifest_json()
+
+
+def test_install_manifest_profiles_are_generated_from_root_pins() -> None:
+    from abstractframework import NPM_RELEASE_VERSIONS
+    from abstractframework.install_manifest import build_install_manifest
+
+    manifest = build_install_manifest()
+    profiles = {item["id"]: item for item in manifest["profiles"]}
+    packages = {item["id"]: item for item in manifest["python_packages"]}
+    npm_apps = {item["package"]: item for item in manifest["npm_apps"]}
+    release_versions = _release_versions()
+    framework_version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))[
+        "project"
+    ]["version"]
+
+    assert set(profiles) == {"light", "apple", "gpu"}
+    assert profiles["light"]["pip_requirements"] == [f"abstractframework=={framework_version}"]
+    assert profiles["apple"]["pip_requirements"] == [
+        f"abstractframework[apple]=={framework_version}"
+    ]
+    assert profiles["gpu"]["pip_requirements"] == [f"abstractframework[gpu]=={framework_version}"]
+    assert profiles["light"]["local_inference"] is False
+    assert profiles["apple"]["local_inference"] is True
+    assert profiles["gpu"]["local_inference"] is True
+
+    for package_id, version in release_versions.items():
+        assert packages[package_id]["version"] == version
+
+    for package_name, version in NPM_RELEASE_VERSIONS.items():
+        assert npm_apps[package_name]["version"] == version
+
+
+def test_cli_manifest_check_and_doctor_report() -> None:
+    from abstractframework.cli import build_doctor_report, main
+
+    assert (
+        main(["manifest", "--check", str(ROOT / "docs" / "installers" / "install-manifest.json")])
+        == 0
+    )
+
+    report = build_doctor_report(include_environment=False)
+    assert report["abstractframework"] == tomllib.loads(
         (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     )["project"]["version"]
-
-    assert components["abstractcore"]["extras"] == ["all-apple"]
-    assert components["abstractruntime"]["extras"] == ["apple"]
-    assert components["abstractgateway"]["extras"] == ["apple"]
-    assert components["abstractagent"]["extras"] == ["apple"]
-
-    assert components["abstractcore"]["version"] == release_versions["abstractcore"]
-    assert components["abstractruntime"]["version"] == release_versions["abstractruntime"]
-    assert components["abstractgateway"]["version"] == release_versions["abstractgateway"]
-    assert components["abstractagent"]["version"] == release_versions["abstractagent"]
-    assert components["abstractflow"]["version"] == release_versions["abstractflow"]
-    assert components["abstractcode"]["version"] == release_versions["abstractcode"]
-    assert components["abstractassistant"]["version"] == release_versions["abstractassistant"]
-    assert components["abstractmemory"]["version"] == release_versions["abstractmemory"]
-    assert components["abstractsemantics"]["version"] == release_versions["abstractsemantics"]
-    assert components["abstractvoice"]["version"] == release_versions["abstractvoice"]
-    assert components["abstractvision"]["version"] == release_versions["abstractvision"]
-    assert components["abstractmusic"]["version"] == release_versions["abstractmusic"]
+    assert {check["status"] for check in report["checks"]} <= {"ok", "warn", "error"}

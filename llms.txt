@@ -6,6 +6,8 @@ Most runtime behavior lives in the individual package repos (AbstractCore/Runtim
 
 Quick commands:
 - Install pinned stack: `pip install abstractframework`
+- Check install health: `abstractframework doctor`
+- Print installer manifest: `abstractframework manifest`
 - Show detected component versions: `python -c "from abstractframework import print_status; print_status()"`
 
 Notes for LLMs working in this repo:
@@ -56,6 +58,7 @@ Notes for LLMs working in this repo:
 
 - [README.md](README.md): Ecosystem overview and install paths.
 - [docs/README.md](docs/README.md): Docs index for this repo.
+- [docs/install.md](docs/install.md): Light / Apple / GPU install chooser and generated manifest contract.
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
 - [docs/architecture.md](docs/architecture.md): How the stack fits together.
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.

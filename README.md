@@ -131,6 +131,9 @@ pip install "abstractframework[apple]"
 pip install "abstractframework[gpu]"
 ```
 
+See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
+`abstractframework doctor`, and the generated installer manifest contract.
+
 ---
 
 ## Documentation
@@ -138,6 +141,7 @@ pip install "abstractframework[gpu]"
 | Page | What it covers |
 |---|---|
 | [docs/README.md](docs/README.md) | Documentation hub — pick your starting point |
+| [docs/install.md](docs/install.md) | Light / Apple / GPU install chooser and first checks |
 | [docs/getting-started.md](docs/getting-started.md) | Two entry points + first end-to-end run |
 | [docs/architecture.md](docs/architecture.md) | Layered model, durable execution primitives, comparisons |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |

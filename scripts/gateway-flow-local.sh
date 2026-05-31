@@ -37,7 +37,7 @@ FLOW_UI_URL="http://${FLOW_HOST}:${FLOW_PORT}/"
 
 usage() {
     cat <<EOF
-Usage: $0 [--base|--apple|--gpu]
+Usage: $0 [--light|--apple|--gpu]
 
 Runs AbstractGateway and AbstractFlow from the local sibling repositories, not
 from published PyPI packages. The script prepends local package paths to
@@ -62,11 +62,13 @@ Environment overrides:
 
 Build local dependencies first when needed:
   ./scripts/build.sh          # light editable install
+  ./scripts/build.sh --light  # explicit light editable install
   ./scripts/build.sh --apple  # Apple local engines
   ./scripts/build.sh --gpu    # GPU local engines
 
-Passing --base / --apple / --gpu to this launcher triggers the matching
-Python-only local editable install before starting Gateway and Flow.
+Passing --light / --apple / --gpu to this launcher triggers the matching
+Python-only local editable install before starting Gateway and Flow. --base is
+accepted as a legacy alias for --light.
 EOF
 }
 
@@ -82,11 +84,15 @@ for arg in "$@"; do
             usage
             exit 0
             ;;
-        --base|--apple|--gpu)
-            if [[ -n "$BUILD_PROFILE_FLAG" && "$BUILD_PROFILE_FLAG" != "$arg" ]]; then
+        --light|--base|--apple|--gpu)
+            normalized_arg="$arg"
+            if [[ "$normalized_arg" == "--base" ]]; then
+                normalized_arg="--light"
+            fi
+            if [[ -n "$BUILD_PROFILE_FLAG" && "$BUILD_PROFILE_FLAG" != "$normalized_arg" ]]; then
                 die "conflicting profile flags: $BUILD_PROFILE_FLAG and $arg"
             fi
-            BUILD_PROFILE_FLAG="$arg"
+            BUILD_PROFILE_FLAG="$normalized_arg"
             ;;
         *)
             die "unsupported argument: $arg"

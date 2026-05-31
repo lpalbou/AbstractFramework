@@ -17,10 +17,12 @@ should work for the framework and individual apps.
 - `user-journeys.md` - Step-by-step installation flows (full stack and per-app).
 - `security-and-os-blocks.md` - How to avoid OS installation blocks.
 - `release-and-manifest.md` - Release pipeline and manifest guidance.
+- `install-manifest.json` - Generated installer-facing release/profile manifest.
+- `install-manifest.schema.json` - JSON Schema for the generated manifest.
 - `operations-and-support.md` - Logs, data locations, troubleshooting.
 - `implementation-plan.md` - Phased plan to deliver installers.
 
 ## Status
-These guides describe a target design. A macOS‑only prototype exists at
-`abstractinstallers/abstractframework-macos`, and a GUI prototype for AbstractCore
-exists at `abstractinstallers/abstractcore`.
+These guides describe a target design. Installer prototypes now live in the standalone
+[`AbstractInstallers`](https://github.com/lpalbou/AbstractInstallers) repository. This
+`AbstractFramework` repo owns the Python release profile and generated install manifest.

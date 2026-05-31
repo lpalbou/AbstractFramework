@@ -34,6 +34,8 @@ You can also install the entire pinned ecosystem in one command:
 pip install abstractframework
 ```
 
+For the full Light / Apple / GPU profile chooser, see [Install AbstractFramework](install.md).
+
 ---
 
 ## Core-first: integrate via AbstractCore (SDK or `/v1`)

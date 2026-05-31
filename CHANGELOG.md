@@ -4,6 +4,32 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-05-31
+
+### Added
+
+- Added the `abstractframework` CLI with `doctor` checks for Python/package
+  version consistency and `manifest` commands for installer manifest generation
+  and drift checks.
+- Added a generated installer manifest and schema under `docs/installers/`,
+  derived from the root release pins and covering the Light, Apple, and GPU
+  profiles.
+- Added a public install chooser that explains Light as the remote-first full
+  framework profile, with Apple and GPU as hardware-local profiles.
+
+### Changed
+
+- Moved installer application source out of the root framework repository into
+  the standalone `AbstractInstallers` repository. The root package remains the
+  release profile, documentation hub, and manifest source of truth.
+- Updated local source helper scripts to use `--light` as the canonical
+  remote-first profile name while keeping `--base` as a compatibility alias.
+
+### Removed
+
+- Removed the tracked `abstractinstallers/` prototype source tree from the root
+  `AbstractFramework` repository and package source distribution.
+
 ## [0.1.6] - 2026-05-31
 
 ### Changed
