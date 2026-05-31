@@ -152,6 +152,11 @@ def test_macos_installer_framework_full_uses_framework_apple_profile() -> None:
         (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     )["project"]["version"]
 
+    assert components["abstractcore"]["extras"] == ["all-apple"]
+    assert components["abstractruntime"]["extras"] == ["apple"]
+    assert components["abstractgateway"]["extras"] == ["apple"]
+    assert components["abstractagent"]["extras"] == ["apple"]
+
     assert components["abstractcore"]["version"] == release_versions["abstractcore"]
     assert components["abstractruntime"]["version"] == release_versions["abstractruntime"]
     assert components["abstractgateway"]["version"] == release_versions["abstractgateway"]

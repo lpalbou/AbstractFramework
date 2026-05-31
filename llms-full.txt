@@ -343,7 +343,7 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Gateway-first durable control plane (remote-light by default).
-    "abstractgateway==0.2.22",
+    "abstractgateway==0.2.23",
 
     # Workflow authoring + CLI app.
     "abstractflow==0.3.17",
@@ -377,13 +377,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.2.22",
+    "abstractgateway[apple]==0.2.23",
     "abstractflow[apple]==0.3.17",
     "abstractassistant[apple]==0.4.8; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.2.22",
+    "abstractgateway[gpu]==0.2.23",
     "abstractflow[gpu]==0.3.17",
     "abstractassistant[gpu]==0.4.8",
 ]
@@ -442,7 +442,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractagent": "0.3.10",
     "abstractflow": "0.3.17",
     "abstractcode": "0.3.8",
-    "abstractgateway": "0.2.22",
+    "abstractgateway": "0.2.23",
     "abstractmemory": "0.2.6",
     "abstractsemantics": "0.0.4",
     "abstractvoice": "0.10.17",

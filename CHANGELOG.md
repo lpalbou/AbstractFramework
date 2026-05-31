@@ -10,7 +10,7 @@ All notable changes to AbstractFramework will be documented in this file.
 
 - Bumped the pinned framework release set:
   `abstractcore==2.13.31`, `AbstractRuntime==0.4.26`,
-  `abstractagent==0.3.10`, `abstractgateway==0.2.22`,
+  `abstractagent==0.3.10`, `abstractgateway==0.2.23`,
   `abstractflow==0.3.17`, `abstractcode==0.3.8`,
   `abstractassistant==0.4.8`, `AbstractMemory==0.2.6`,
   `abstractsemantics==0.0.4`, `abstractvoice==0.10.17`,
