@@ -13,7 +13,6 @@ This guide covers deploying a browser UI (Observer / Flow Editor / Code Web UI) 
 Set these on the gateway host:
 
 ```bash
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 ```
@@ -23,6 +22,11 @@ Start the gateway:
 ```bash
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
+
+Gateway creates `default/admin` if needed and writes the first browser-login
+token to `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`. Use that token
+for `/console` and browser apps, then create named users or rotate tokens from
+the console.
 
 ## Run the UIs
 

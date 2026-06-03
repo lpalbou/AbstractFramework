@@ -23,16 +23,19 @@ persistence authority for capability defaults and provider credentials.
 - Flow mostly supports `Auto` and Gateway-discovered defaults.
 - Code and Observer still have app-local settings/auth/defaults that do not yet
   fully match the Gateway browser-session model.
-- Gateway now supports per-principal capability-default overlays in hosted
-  user-auth mode. Writes to `/api/gateway/config/capability-defaults/...` are
-  stored under the caller's runtime data plane as
-  `config/capability_defaults.json` and merged over execution-host Core
-  defaults for Gateway responses.
-- The admin/root data plane overlay now acts as the Gateway baseline. Normal
-  users inherit that Gateway baseline first, then apply their own per-user
-  overlay. User overrides do not mutate the Gateway baseline or other users'
-  defaults.
-- Gateway Console v0 exposes those per-principal defaults.
+- Gateway currently supports per-principal capability defaults in hosted
+  user-auth mode. Writes to
+  `/api/gateway/config/capability-defaults/...` are stored under the selected
+  runtime data plane as `config/abstractcore.json`, using Core's
+  `capability_defaults` schema. Gateway no longer reads or writes
+  `config/capability_defaults.json`.
+- The admin/root data plane Core config acts as the Gateway baseline.
+  Normal users inherit that Gateway baseline first, then apply their own
+  runtime-scoped Core config override. User overrides do not mutate the Gateway
+  baseline or other users' defaults. The target model is the same cascade
+  expressed as Core capability defaults scoped to the selected runtime/user
+  context.
+- Gateway Console v0 exposes those runtime-scoped Core defaults.
 - Gateway provider endpoint profiles now cover the first explicit
   per-principal/gateway-scoped provider-secret injection path for reusable
   virtual providers such as `endpoint:office-vllm`; broader secret vault,
@@ -47,7 +50,7 @@ deployments.
 ## What we want to do
 Expose Gateway APIs and UI for per-principal provider credentials, base URLs,
 and capability defaults, while delegating schema/persistence mechanics to Core
-or per-principal Core config. Apps should consume Gateway defaults and only ask
+or runtime-scoped Core config. Apps should consume Gateway defaults and only ask
 for provider/model when a user intentionally pins an override.
 
 ## Why
@@ -79,10 +82,10 @@ isolation for secrets and model choices.
 
 ## Suggested implementation
 Add Gateway config endpoints that wrap Core config/default APIs for the current
-principal. First decide whether the implementation uses a per-principal secret
-store, per-principal Core config root, or another Core-owned mechanism. Expose
-readiness checks and catalog previews in Gateway Console only after that
-boundary is explicit.
+principal. Use a per-runtime Core config root/file for capability defaults, and
+keep Gateway provider endpoint profiles as the first Gateway-owned secret
+injection path. Expose readiness checks and catalog previews in Gateway Console
+only after that boundary is explicit.
 
 ## Scope
 - Gateway APIs for provider credentials and capability defaults.
@@ -100,6 +103,7 @@ boundary is explicit.
 - `0145_gateway_admin_console_bootstrap.md`
 - `0146_gateway_rbac_scope_policy_matrix.md`
 - `0153_gateway_browser_session_security_contract.md`
+- `../../completed/0170_core_gateway_capability_defaults_config_convergence.md`
 - `../../completed/0149_cross_app_gateway_auth_defaults_convergence.md`
 
 ## Expected outcomes
@@ -124,15 +128,18 @@ boundary is explicit.
 ## Progress checklist
 - [x] Define initial per-principal capability-default storage boundary with
       Core schema and Gateway per-principal access control.
+- [x] Migrate the initial Gateway overlay storage to per-runtime Core config
+      files through `0170_core_gateway_capability_defaults_config_convergence`.
 - [x] Define and implement the initial provider endpoint profile injection
       boundary for Gateway-owned virtual providers.
 - [ ] Define provider-secret encryption/rotation/audit boundary beyond the
       initial local JSON store.
-- [x] Define initial provenance behavior for Gateway and per-principal defaults
-      (`source=abstractgateway.gateway` and `source=abstractgateway.principal`).
+- [x] Define initial provenance behavior for Gateway and runtime-scoped Core
+      defaults (`source=abstractcore.gateway_runtime` and
+      `source=abstractcore.runtime`).
 - [ ] Define runtime/subrun/bridge secret injection rules.
-- [x] Add Gateway APIs for per-principal capability-default overlays.
-- [x] Add Gateway Console config UX for per-principal defaults.
+- [x] Add Gateway APIs for runtime-scoped capability-default overrides.
+- [x] Add Gateway Console config UX for runtime-scoped defaults.
 - [x] Update app/framework docs for current defaults behavior.
 - [x] Add Alice/Bob default isolation tests.
 - [x] Add initial endpoint profile secret redaction and non-admin scope tests.
@@ -149,9 +156,18 @@ The remaining design work is a fuller Core/Gateway secret contract covering
 encryption at rest, rotation semantics, subruns, bridges, delegated tools,
 audit, and deletion.
 
+## Implementation note - 2026-06-01
+
+The defaults boundary is now stricter: capability defaults are Core defaults
+even when edited through Gateway. Gateway selects a Core config context for the
+active runtime/user and writes Core's `capability_defaults` format there.
+Existing `config/capability_defaults.json` Gateway overlays are ignored;
+operators should recreate those defaults with `abstractgateway-config
+set-default ...`.
+
 Default cascade as implemented today: execution-host Core defaults provide the
-base route set, the Gateway/root overlay provides the operator baseline, and
-the current user's runtime overlay wins only for that user. Workflow pins and
+base route set, the Gateway/root Core config provides the operator baseline,
+and the current user's runtime Core config wins only for that user. Workflow pins and
 per-request overrides still need to be resolved by run-start policy in later
 items; do not silently reroute explicit workflow pins without an explicit
 policy denial or override record.

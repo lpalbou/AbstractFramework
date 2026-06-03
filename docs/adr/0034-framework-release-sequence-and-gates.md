@@ -6,6 +6,7 @@ Accepted (2026-05-09)
 ## Dates
 - Proposed: 2026-05-09
 - Accepted: 2026-05-09
+- Updated: 2026-06-01 (aligned release sequence with `scripts/build.sh` tiers)
 
 ## Context
 
@@ -28,37 +29,41 @@ packages just because local tests or one workflow passed.
 
 ## Decision
 
-Release packages in topological order by published dependency floors, not by local workspace
-availability.
+Release packages in the same tier order used by `scripts/build.sh`, and never promote a package
+above a lower published dependency floor. The build order is the local development expression of
+the release topology; PyPI/npm visibility remains the release gate.
 
 ### Standard Order
 
-1. Release media/capability packages first when their versions are consumed by Core, Gateway, or
-   app-facing install profiles:
-   - `abstractvoice`
-   - `abstractmusic`
-   - `abstractvision`
-   - future generated-media capability plugins
-2. Release schema, vocabulary, and storage packages whose versions are consumed by Runtime,
-   Gateway, or memory-aware app features:
+1. Release Python Tier 0 packages first. These packages have no internal AbstractFramework
+   dependency in the local build order:
    - `abstractsemantics`
    - `abstractmemory`
-3. Release `abstractcore` after any capability plugin versions referenced by Core extras are
-   already available on PyPI.
-4. Release `abstractruntime` after `abstractsemantics`, `abstractmemory`, and any Core version
-   referenced by Runtime extras are available on PyPI. Runtime owns the `MEMORY_KG_*` effect
-   contract and therefore depends on the light AbstractMemory package, while hosts choose storage
-   backend extras such as LanceDB.
-5. Release `abstractagent` after the required `abstractcore` and `abstractruntime` versions are
-   available on PyPI.
-6. Release `abstractgateway` last among backend packages, after required Core, Runtime, Agent,
-   Memory, Semantics, Vision, Voice, and Music versions are available on PyPI and their current
-   branch checks are green. Gateway's base install is the remote-light server profile; its
-   `apple` and `gpu` extras are full hardware deployment profiles.
-7. Release the root `abstractframework` manifest, installers, or app-facing docs after Gateway
-   install profiles and deployment images are verified.
-8. Release thin-client apps after Gateway APIs, readiness contracts, artifact routes, and
-   generated-media capabilities are stable enough for them to consume.
+   - `abstractvision`
+   - `abstractvoice`
+   - `abstractmusic`
+   - future generated-media or foundation packages with no internal dependency
+2. Release Python Tier 1 packages after Tier 0 package versions referenced by their extras or
+   dependency metadata are available on PyPI:
+   - `abstractcore`
+   - `abstractruntime`
+3. Release Python Tier 2 packages after required Core and Runtime versions are available on PyPI:
+   - `abstractagent`
+   - `abstractgateway`
+4. Release Python Tier 3 app packages after their required lower package versions are available:
+   - `abstractcode`
+   - `abstractassistant`
+5. Release the root `abstractframework` manifest, installers, or app-facing docs after Python
+   Gateway/Core/Runtime/Agent/app install profiles and deployment images are verified.
+6. Release npm UI package repositories after Gateway APIs, readiness contracts, artifact routes,
+   and generated-media capabilities are stable enough for them to consume:
+   - `abstractuic`
+   - `abstractobserver`
+   - `abstractflow`
+
+`abstractcode/web` is an npm build target inside the `abstractcode` repository, not a separate
+repository in the workspace status scripts. Treat its npm artifact as part of the `abstractcode`
+release work unless it is split into its own repository later.
 
 If a package does not depend on a changed lower package, it may be skipped. If a package raises a
 dependency floor, the lower package must already be published and visible to `pip`.
@@ -99,6 +104,7 @@ target.
 - Keeps CI meaningful by validating the same PyPI dependency closure users will install.
 - Makes Gateway releases a true framework integration gate rather than a local green test.
 - Gives agents a deterministic sequence to follow during multi-package release work.
+- Keeps `scripts/build.sh`, `scripts/status.sh`, and release documentation aligned.
 
 ### Negative
 
@@ -125,6 +131,11 @@ target.
 - `abstractruntime`
 - `abstractagent`
 - `abstractgateway`
+- `abstractcode`
+- `abstractassistant`
+- `abstractuic`
+- `abstractobserver`
+- `abstractflow`
 - app and installer repositories that consume Gateway/Core releases
 
 ## Related

@@ -120,7 +120,7 @@ pip install abstractgateway
 ### 2. Configure
 
 ```bash
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
@@ -135,6 +135,12 @@ export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 ```bash
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
+
+On first local start, Gateway creates `default/admin`, writes the browser-login
+token to `runtime/gateway/auth/bootstrap-admin-token`, and prints it in the
+terminal. Use that token with user `admin` in `/console`, AbstractFlow,
+AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the
+legacy server/operator bearer-token path; it does not sign in browsers.
 
 Verify:
 
@@ -162,7 +168,7 @@ Schedules are owned by the gateway (they survive restarts):
 
 ```bash
 curl -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
   -H "Content-Type: application/json" \
   -d '{"bundle_id":"my-bundle","flow_id":"my-entrypoint","start_at":"now","interval":"24h"}'
 ```

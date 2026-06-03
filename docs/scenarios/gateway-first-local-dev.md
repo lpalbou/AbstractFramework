@@ -23,7 +23,7 @@ user, and prints the Gateway URL, user, and token to enter in Flow.
 
 If you want a minimal install instead, you need at least:
 - `abstractgateway`
-- `abstractflow` (and optionally `abstractflow[agent]` if your bundles use Agent nodes)
+- `npx @abstractframework/flow` for the editor UI
 
 ## Step 1: Prepare directories
 
@@ -44,7 +44,6 @@ mkdir -p ./runtime/gateway
 ## Step 2: Configure the gateway
 
 ```bash
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
@@ -53,10 +52,13 @@ export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/abstractgateway/flows/bundles"
 ```
 
+When the gateway starts, it creates `default/admin` if needed and writes the
+browser-login token to `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`.
+
 Optional route defaults (if your flows use LLM nodes):
 
 ```bash
-abstractgateway-config set-default output.text \
+abstractgateway-config set-default input.text \
   --provider ollama \
   --model qwen3:4b-instruct
 ```
@@ -81,14 +83,10 @@ Smoke check:
 curl -sS http://127.0.0.1:8080/api/health
 ```
 
-Create a local user token for browser UIs:
+Read the local admin user token for browser UIs:
 
 ```bash
-curl -sS -X POST http://127.0.0.1:8080/api/gateway/admin/users \
-  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
-  -H "Content-Type: application/json" \
-  --data '{"tenant_id":"default","user_id":"admin","runtime_id":"default","roles":["admin","user"]}' \
-  | python -m json.tool
+cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token"
 ```
 
 ## Step 4: Start the thin clients

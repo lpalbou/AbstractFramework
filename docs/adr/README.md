@@ -58,7 +58,7 @@ The Abstract Framework is a multi-package ecosystem where architectural decision
 | 0031 | [Workflow LLM routing overrides (`provider`/`model` first, `base_url` advanced)](0031-workflow-llm-routing-overrides-provider-model-and-base-url.md) | Proposed | 2026-02-08 | Runtime, Core, Gateway, Flow, Code | Keeps provider/model as portable workflow routing; treats base_url as host policy |
 | 0032 | [Package Dependency Boundaries and Gateway-First Apps](0032-package-dependency-boundaries-and-gateway-first-apps.md) | Proposed | 2026-05-06 | All | Clarifies Semantics/Memory placement, capability plugins, Core/Agent/Runtime/Gateway layering, app direction, and change impact |
 | 0033 | [Install Profiles, Config Entrypoints, and Server Boundaries](0033-install-profiles-config-entrypoints-and-server-boundaries.md) | Accepted | 2026-05-08 | All | Defines Core/Gateway entry points, profile vocabulary, config precedence, and auth/CORS boundaries |
-| 0034 | [Framework Release Sequence and Gates](0034-framework-release-sequence-and-gates.md) | Accepted | 2026-05-09 | All | Defines topological release order, PyPI propagation gates, branch CI gates, and Gateway-last discipline |
+| 0034 | [Framework Release Sequence and Gates](0034-framework-release-sequence-and-gates.md) | Accepted | 2026-05-09 | All | Defines build-aligned release order, registry propagation gates, branch CI gates, and Gateway/root readiness discipline |
 | 0035 | [Capability Routing Defaults](0035-capability-routing-defaults.md) | Accepted | 2026-05-24 | Core, Gateway, Flow, capability plugins | Defines input/output, embedding, and rerank capability routes with Core-owned persistence and Gateway control-plane access |
 
 ### Package-Specific Decisions

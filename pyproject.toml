@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.7"
+version = "0.1.8"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -46,26 +46,25 @@ requires-python = ">=3.10"
 # - Hardware-local stacks are opt-in via `abstractframework[apple]` and `abstractframework[gpu]`.
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
-    # Gateway-first durable control plane (remote-light by default).
-    "abstractgateway==0.2.23",
+    # Durable Gateway control plane (remote-light by default).
+    "abstractgateway==0.2.26",
 
-    # Workflow authoring + CLI app.
-    "abstractflow==0.3.17",
-    "abstractcode==0.3.8",
-    "abstractassistant==0.4.8",
+    # Workflow authoring UI is distributed through npm as @abstractframework/flow.
+    "abstractcode==0.3.9",
+    "abstractassistant==0.4.9",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.13.31",
-    "AbstractRuntime==0.4.26",
-    "abstractagent==0.3.10",
+    "abstractcore==2.13.32",
+    "AbstractRuntime==0.4.27",
+    "abstractagent==0.3.11",
     "AbstractMemory==0.2.6",
     "abstractsemantics==0.0.4",
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
     "abstractvoice==0.10.17",
-    "abstractvision==0.3.18",
-    "abstractmusic==0.1.12",
+    "abstractvision==0.3.19",
+    "abstractmusic==0.1.13",
 ]
 
 [project.optional-dependencies]
@@ -81,15 +80,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.2.23",
-    "abstractflow[apple]==0.3.17",
-    "abstractassistant[apple]==0.4.8; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.2.26",
+    "abstractassistant[apple]==0.4.9; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.2.23",
-    "abstractflow[gpu]==0.3.17",
-    "abstractassistant[gpu]==0.4.8",
+    "abstractgateway[gpu]==0.2.26",
+    "abstractassistant[gpu]==0.4.9",
 ]
 
 [project.urls]

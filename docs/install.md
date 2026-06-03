@@ -115,6 +115,25 @@ abstractcore --config
 Gateway-hosted browser apps use Gateway user tokens and browser sessions. Do not use the bootstrap
 server token as a browser login token.
 
+## Container deployment
+
+For a server/VPS deployment, prefer the Gateway container rather than installing every app package
+on the host:
+
+```bash
+docker run \
+  -p 8080:8080 \
+  -v "$PWD/runtime:/data" \
+  -e ABSTRACTGATEWAY_DATA_DIR=/data \
+  -e ABSTRACTGATEWAY_USER_AUTH=1 \
+  ghcr.io/lpalbou/abstractgateway:latest
+```
+
+This is the Light container: full framework capabilities through remote/endpoint inference, without
+local MLX/CUDA stacks. On first start it creates `default/admin` and writes the login token to
+`runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
+NVIDIA host when you explicitly want the local GPU profile.
+
 ## Non-technical installs
 
 Native GUI installers are moving to the standalone

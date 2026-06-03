@@ -30,7 +30,7 @@ Example: start now, repeat every 20 minutes forever:
 
 ```bash
 curl -sS -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
   -H "Content-Type: application/json" \
   -d '{
     "bundle_id": "my-bundle",
@@ -46,7 +46,7 @@ Example: start at a specific time (UTC ISO), run 10 times:
 
 ```bash
 curl -sS -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $ABSTRACTGATEWAY_AUTH_TOKEN" \
+  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
   -H "Content-Type: application/json" \
   -d '{
     "bundle_id": "my-bundle",
@@ -71,4 +71,3 @@ Scheduled runs are normal durable runs:
 - Cancel the parent run to stop the schedule and cancel active children.
 
 This is done via `POST /api/gateway/commands`.
-

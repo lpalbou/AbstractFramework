@@ -19,7 +19,8 @@ Notes for LLMs working in this repo:
   AbstractCode Web, and AbstractObserver exchange user tokens for app-scoped
   browser sessions and do not persist bearer tokens in browser settings.
   Gateway login responses do not expose session ids/CSRF tokens in JSON, and
-  default resolution is Core defaults -> Gateway baseline -> per-user overlay.
+  default resolution is Core defaults -> Gateway baseline Core config ->
+  per-runtime Core config override.
   Do not treat the bootstrap `ABSTRACTGATEWAY_AUTH_TOKEN` as a browser-user
   login token. Gateway session cookies are HTTP-only for the session id, use a
   separate CSRF cookie, set `Secure` only under HTTPS, expire, logout cleanly,
@@ -27,7 +28,7 @@ Notes for LLMs working in this repo:
 - Gateway user isolation is enforced through per-principal runtime routing plus
   a central route-family policy. Ordinary users can use their own runs, ledgers,
   artifacts, KG/session memory, private workflows, session artifacts,
-  prompt-cache session names, and defaults overlays. Admin-only workspace
+  prompt-cache session names, and runtime-scoped Core defaults. Admin-only workspace
   helpers/import/export and provider prompt-cache controls are advertised as
   unavailable in discovery with machine-readable `admin_required` metadata.
   Deleting a user reserves the retained runtime id for that principal so the
@@ -35,12 +36,20 @@ Notes for LLMs working in this repo:
   still retained. Admins may explicitly transfer a retained runtime to an
   existing same-tenant user or purge the retained runtime directory before
   releasing the runtime id for reuse.
-- Gateway provider endpoint profiles are Gateway-owned reusable provider
-  endpoints. They include a description, provider family, base URL, optional
-  model allowlist, and a write-only API key. Discovery exposes them as virtual
-  providers such as `endpoint:office-vllm`; Runtime resolves the virtual id into
-  transient provider/base URL/key parameters without storing secrets in workflow
-  JSON or browser storage.
+- Gateway provider connections are Gateway-owned reusable profiles for OpenAI,
+  Anthropic, OpenRouter, Portkey, LM Studio, Ollama, and custom
+  OpenAI-compatible endpoints. They include a description, provider family,
+  base URL, optional model allowlist, and a write-only API key. Discovery
+  exposes them as virtual providers such as `endpoint:office-vllm`; Runtime
+  resolves the virtual id into transient provider/base URL/key parameters
+  without storing secrets in workflow JSON or browser storage.
+- AbstractCore also supports local single-principal provider endpoint profiles
+  through `abstractcore config set-provider ...`. These profiles expose the
+  same virtual provider shape (`endpoint:<id>`) for Core-only developers, while
+  Gateway remains responsible for hosted user/runtime scoping.
+- Gateway Console separates provider configuration from defaults: the Providers
+  tab stores endpoint URLs/API keys and tests discovery; the Defaults tab only
+  maps capability routes to configured virtual providers and discovered models.
 - Hosted Flow, Code Web, and Observer use the server-configured Gateway URL on
   non-loopback UI hostnames. Browser-supplied Gateway URL changes are rejected
   unless the app-specific remote override is enabled behind access control.
@@ -105,6 +114,7 @@ Notes for LLMs working in this repo:
 - [docs/backlog/proposed/gateway-control-plane/README.md](docs/backlog/proposed/gateway-control-plane/README.md): Proposed Explorer/Manager package-boundary follow-ups.
 - [docs/backlog/completed/0154_multi_user_security_release_blockers.md](docs/backlog/completed/0154_multi_user_security_release_blockers.md): Completed multi-user release-blocking security fixes.
 - [docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md](docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md): Completed Gateway-owned provider endpoint profiles and virtual `endpoint:*` discovery.
+- [docs/backlog/planned/0164_gateway_docker_ghcr_deployment_track.md](docs/backlog/planned/0164_gateway_docker_ghcr_deployment_track.md): Planned Gateway Docker/GHCR deployment track for light and GPU images.
 - [docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md](docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md): Proposed threshold for extracting shared hosted proxy helpers.
 - [docs/backlog/planned/074_agent_skills_integration.md](docs/backlog/planned/074_agent_skills_integration.md): Backlog item for Agent Skills integration.
 - [docs/backlog/planned/074_agent_skills_integration_plan.md](docs/backlog/planned/074_agent_skills_integration_plan.md): Phased plan for Agent Skills integration.
@@ -116,6 +126,6 @@ Notes for LLMs working in this repo:
 - [AbstractCore](https://github.com/lpalbou/abstractcore): LLM providers, tools, structured output, media.
 - [AbstractRuntime](https://github.com/lpalbou/abstractruntime): Durable execution (runs, effects, waits, ledger, stores).
 - [AbstractAgent](https://github.com/lpalbou/abstractagent): Agent patterns (ReAct/CodeAct/MemAct) built on runtime + core.
-- [AbstractFlow](https://github.com/lpalbou/abstractflow): VisualFlow authoring and `.flow` bundles.
+- [AbstractFlow](https://github.com/lpalbou/abstractflow): npm web editor for VisualFlow authoring on top of AbstractGateway.
 - [AbstractGateway](https://github.com/lpalbou/abstractgateway): HTTP/SSE control plane for gateway-first deployments.
 - [AbstractCode](https://github.com/lpalbou/abstractcode): Terminal + web host UIs for durable runs.

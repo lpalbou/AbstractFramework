@@ -120,7 +120,7 @@ abstractframework manifest --check docs/installers/install-manifest.json
 | Durable execution kernel (runs, ledger, effects, waits) | `abstractruntime` |
 | Agent patterns (ReAct, CodeAct, MemAct) | `abstractagent` |
 | Control plane (HTTP server, scheduling, bundle discovery, SSE) | `abstractgateway` |
-| Workflow authoring and `.flow` bundles | `abstractflow` |
+| Workflow authoring UI | `@abstractframework/flow` (npm) |
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
 
 See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run.

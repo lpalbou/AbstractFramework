@@ -4,6 +4,23 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-06-03
+
+### Changed
+
+- Updated the root release profile pins and generated installer manifest to use
+  `abstractgateway==0.2.26`, `abstractcore==2.13.32`, `AbstractRuntime==0.4.27`,
+  `abstractagent==0.3.11`, `abstractcode==0.3.9`, `abstractassistant==0.4.9`,
+  `abstractvision==0.3.19`, `abstractmusic==0.1.13`, and
+  `@abstractframework/flow==0.3.18`.
+- Updated Gateway/Flow install and auth docs to use Gateway user auth and the
+  generated `default/admin` browser-login token instead of legacy
+  `ABSTRACTGATEWAY_AUTH_TOKEN` examples for browser sign-in.
+- Documented the breaking Gateway defaults cleanup for the next Gateway release:
+  Gateway no longer reads `config/capability_defaults.json` overlays and uses
+  only Core config files (`config/abstractcore.json`) for baseline and
+  per-runtime capability defaults.
+
 ## [0.1.7] - 2026-05-31
 
 ### Added

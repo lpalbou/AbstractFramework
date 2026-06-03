@@ -50,24 +50,24 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 ### Required
 
 ```bash
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 ```
 
-For hosted or multi-user browser access, also enable Gateway user auth:
-
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-```
-
-The bootstrap token remains an admin/operator credential. Users sign in with a
+When user auth is enabled, `abstractgateway serve` ensures `default/admin`
+exists and writes the first browser-login token to
+`$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`. Users sign in with a
 Gateway user id and that user's token, then browser apps keep only an opaque
-Gateway session. Gateway serves `/console` for account/runtime summary, admin
-user management, optional user email metadata, token rotation, and capability
-defaults selected from Gateway-discovered provider/model catalogs. Deleted users
-leave retained runtime reservations; admins can transfer retained runtime data to
-an existing same-tenant user or purge the retained runtime directory before
-releasing the runtime id for reuse.
+Gateway session. `ABSTRACTGATEWAY_AUTH_TOKEN` is still available for legacy
+server/operator bearer-token deployments, but it maps to `local-admin` and is
+not a browser sign-in token.
+
+Gateway serves `/console` for account/runtime summary, admin user management,
+optional user email metadata, token rotation, retained runtime transfer/purge,
+provider connections, and multimodal capability defaults selected from
+available providers. Deleted users leave retained runtime reservations;
+admins can transfer retained runtime data to an existing same-tenant user or
+purge the retained runtime directory before releasing the runtime id for reuse.
 
 ### Recommended (bundle-based workflows)
 
@@ -94,46 +94,130 @@ AbstractCore organizes defaults as **capability routes** — stable slots scoped
 
 | Route | Meaning |
 |---|---|
-| `output.text` | Default text generation model |
-| `input.text` | Default text understanding model |
+| `input.text` | Canonical LLM text model for understanding and generation |
+| `output.text` | Read-only derived view of `input.text` |
+| `input.image` | Image-understanding fallback when `input.text` is not vision-capable |
+| `input.video` | Video-understanding fallback when native video/frame support is not available or should be overridden |
+| `input.voice` | Speech-to-text fallback for audio attachments |
+| `input.sound` | Non-speech audio/SFX understanding route, not a speech transcription route |
 | `embedding.text` | Default embeddings model |
 
 ### Set defaults in Core (single-host)
 
 ```bash
-abstractcore --set-global-default ollama:qwen3:4b-instruct
+abstractcore config set-default input.text \
+  --provider ollama \
+  --model qwen3:4b-instruct
+
+abstractcore config defaults
 ```
+
+The older `abstractcore --set-global-default ...` and
+`abstractcore --set-capability-default ...` flags remain supported for
+compatibility. The `abstractcore config ...` form is the preferred explicit
+route-default syntax.
+
+### Core provider endpoint profiles
+
+For reusable OpenAI-compatible endpoints, configure a named Core provider
+profile once and point route defaults at its virtual provider id:
+
+```bash
+export OVH_AI_API_KEY="..."
+
+abstractcore config set-provider ovh-provider \
+  --family openai-compatible \
+  --base-url https://oai.endpoints.kepler.ai.cloud.ovh.net/v1 \
+  --api-key $OVH_AI_API_KEY \
+  --name "OVH Provider" \
+  --description "OVH hosted OpenAI-compatible endpoint"
+
+abstractcore config models ovh-provider
+
+abstractcore config set-default input.text \
+  --provider endpoint:ovh-provider \
+  --model Qwen3.5-9B
+```
+
+`endpoint:ovh-provider` is the reusable public id. The URL and key stay in the
+Core config file, not in exported workflows. Use
+`abstractcore config providers --json` to list profiles; raw keys are not
+printed.
+
+If you want the config to store an environment reference instead of the expanded
+secret value, pass the variable literally, for example `--api-key
+'$OVH_AI_API_KEY'`.
 
 ### Set defaults through the Gateway (control plane)
 
 In gateway-first deployments, set defaults via gateway tooling so the execution host stays consistent:
 
 ```bash
-abstractgateway-config set-default output.text \
+abstractgateway-config set-default input.text \
   --provider ollama \
   --model qwen3:4b-instruct
+
+abstractgateway-config defaults
 ```
 
-The gateway can update route defaults, but the default schema is Core-owned.
-When Gateway user auth is enabled, the admin/default runtime overlay acts as the
-Gateway baseline. Per-user writes through
-`/api/gateway/config/capability-defaults/{kind}/{modality}` are stored under the
-current user's runtime data plane and override the Gateway baseline only for
-that user, so one user's provider/model defaults do not mutate another user's
-defaults.
+The gateway can update route defaults, but the default schema and file format
+are Core-owned. When Gateway user auth is enabled, the Gateway baseline is
+stored as a Core config file:
 
-### Gateway provider endpoint profiles
+```text
+$ABSTRACTGATEWAY_DATA_DIR/config/abstractcore.json
+```
 
-Gateway Console also lets signed-in users create reusable provider endpoint
-profiles. A profile stores a display name, description, provider family such as
-`openai-compatible`, optional base URL, optional API key, capabilities, and an
-optional model allowlist. The raw API key is write-only through the API/UI and is
-not returned in discovery responses.
+Per-user writes through
+`/api/gateway/config/capability-defaults/{kind}/{modality}` are stored as a
+runtime-scoped Core config file:
 
-For OpenAI-compatible and other discoverable endpoints, use the console's model
-discovery action to call the configured endpoint and populate the model picker.
-Leaving all models unselected keeps live discovery active; selecting models
-stores a fixed allowlist for that profile.
+```text
+$ABSTRACTGATEWAY_DATA_DIR/users/<tenant>/<runtime>/runtime/config/abstractcore.json
+```
+
+User runtime defaults override the Gateway baseline only for that runtime, so
+one user's provider/model defaults do not mutate another user's defaults.
+Gateway no longer reads or writes `config/capability_defaults.json`; existing
+overlay files are ignored. Recreate those defaults with
+`abstractgateway-config set-default ...`.
+
+### Gateway provider connections
+
+Gateway Console also lets signed-in users create reusable provider connections
+through a guided setup flow for OpenAI, Anthropic, OpenRouter, Portkey, LM
+Studio, Ollama, and custom OpenAI-compatible endpoints. A connection stores a
+display name, description, provider family, optional base URL, optional API key,
+and optional advanced model allowlist. The raw API key is write-only through the
+API/UI and is not returned in discovery responses. AbstractCore owns model
+capability metadata, so normal setup does not ask users to classify models
+manually.
+
+The **Providers** tab is where endpoint base URLs and API keys are configured.
+Its **Test** action calls the selected provider or endpoint and previews model
+discovery before saving. Leaving all advanced model restrictions unselected
+keeps live discovery active; selecting models stores a fixed allowlist for that
+profile. The **Multimodal Capabilities** tab intentionally does not ask for a
+base URL or API key: it maps each capability route to one available provider
+and one discovered/allowed model. Available providers include saved Gateway
+provider connections plus direct providers such as `openai` or `anthropic`
+when their required key is already present in scoped Core config or process
+environment. LM Studio and Ollama also appear automatically when Gateway can
+reach their configured or default local endpoints and discover models from
+them.
+
+The **Sandbox** tab uses the same provider/default contract. Choose a configured
+capability route, then send a short prompt. Text chat uses the selected text
+default, and generated media routes such as `output.image`, `output.voice`,
+`output.sound`, `output.music`, or `output.video` run through that route's
+configured provider/model and return the generated artifact link.
+
+`input.voice`, `input.video`, and `input.sound` are fallback gates, not hidden
+package probes. If a route is unconfigured and the primary text model cannot
+handle that input natively, the request fails with a configuration error rather
+than silently using an installed speech, vision, or audio package. `input.video`
+can be reported as covered by `input.text` when the text model supports visual
+frames; operators can still override it with a dedicated video/VLM route.
 
 After creation, the profile appears in provider discovery as a virtual provider
 id such as `endpoint:office-vllm`. Use that provider id in AbstractFlow nodes or
@@ -168,7 +252,11 @@ export ABSTRACTGATEWAY_DB_PATH="$ABSTRACTGATEWAY_DATA_DIR/gateway.sqlite3"
 
 ### Core config directory
 
-`~/.abstractcore/config/` stores persisted provider keys, base URLs, and defaults (written by `abstractcore --config`).
+`~/.abstractcore/config/` stores persisted provider keys, base URLs, and
+defaults for direct Core usage (written by `abstractcore --config` or
+`abstractcore config ...`). You can target another config explicitly with
+`ABSTRACTCORE_CONFIG_FILE`, `ABSTRACTCORE_CONFIG_DIR`, or
+`abstractcore config --config-file /path/to/abstractcore.json ...`.
 
 ---
 

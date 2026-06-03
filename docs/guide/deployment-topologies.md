@@ -36,9 +36,24 @@ Recommended for multi-device use and trusted multi-client use.
 - The gateway host owns the durable runtime + stores and progresses runs.
 - Thin clients render by replaying/streaming the ledger and act by submitting durable commands.
 - Bundles (`.flow`) provide portable, discoverable specialized agents.
-- A single Gateway bearer token is not a tenant/user isolation boundary. For
-  independent users, route each user or tenant to a separate Gateway/runtime/data
-  plane until tenant-aware Gateway authorization exists.
+- Independent users should use Gateway user auth. Gateway routes each principal
+  to a runtime/data plane and reserves retained runtime ids after deletion until
+  an admin explicitly transfers or purges that runtime.
+
+Container baseline:
+
+```bash
+docker run \
+  -p 8080:8080 \
+  -v "$PWD/runtime:/data" \
+  -e ABSTRACTGATEWAY_DATA_DIR=/data \
+  -e ABSTRACTGATEWAY_USER_AUTH=1 \
+  ghcr.io/lpalbou/abstractgateway:latest
+```
+
+Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only for explicit NVIDIA/GPU
+deployments. Apple/MLX inference should run natively on macOS and be exposed to
+the light Gateway container as an OpenAI-compatible endpoint.
 
 ## Topology E: Multi-host orchestration (planned/advanced)
 

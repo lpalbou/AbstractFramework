@@ -52,23 +52,25 @@ Core modality names are:
 - `video`
 - `voice`
 - `sound`
+- `music`
 - `scene3d`
 
 The current route matrix is:
 
 | Key | Meaning |
 |-----|---------|
-| `input.text` | Text understanding / prompt input |
-| `input.image` | Image understanding / VLM or image caption route |
+| `input.text` | Canonical LLM text route for understanding and generation |
+| `input.image` | Image understanding fallback when `input.text` is not vision-capable |
 | `input.video` | Video understanding / native video or frame route |
 | `input.voice` | Speech input / STT route |
 | `input.sound` | Non-speech audio understanding route |
 | `input.scene3d` | 3D scene understanding route |
-| `output.text` | Text generation route |
+| `output.text` | Read-only derived view of `input.text` |
 | `output.image` | Image generation route |
 | `output.video` | Video generation route |
 | `output.voice` | Speech/TTS generation route |
-| `output.sound` | Sound/music generation route |
+| `output.sound` | Sound effects / text-to-audio generation route |
+| `output.music` | Music generation route |
 | `output.scene3d` | 3D scene generation route |
 | `embedding.text` | Text embedding route |
 | `embedding.image` | Image or multimodal embedding route |
@@ -144,8 +146,26 @@ Legacy environment defaults are not part of the conceptual model. New setup surf
 scripts should use capability routes instead of Gateway provider/model env defaults.
 
 For text setup convenience, `abstractcore --set-global-default lmstudio:qwen/qwen3.6-35b-a3b`
-writes explicit `input.text` and `output.text` route defaults while older config fields still
-exist.
+writes the canonical `input.text` route default while older config fields still
+exist. Writes to `output.text` are accepted for compatibility but canonicalize to
+`input.text`.
+
+`input.image` is a fallback route, not a second default for every vision-capable
+LLM. If the configured `input.text` model is known in AbstractCore's
+model-capability registry to accept image input, effective defaults may report
+`input.image` as covered by `input.text` and make it read-only in control-plane
+UI.
+
+`input.video` is also a fallback route. If the configured `input.text` model is
+known to handle visual frames or video, effective defaults may report
+`input.video` as covered by `input.text`, but the row remains overrideable so an
+operator can route video through a dedicated VLM/video backend.
+
+`input.voice` gates speech-to-text fallback. Installed voice/STT packages do not
+create hidden audio fallback behavior by themselves; a text-only model needs an
+explicit `input.voice` route or an explicit per-request speech-to-text policy.
+`input.sound` is non-speech audio understanding and must not be reused as a
+speech transcription route.
 
 ### 6) Residency is separate from defaults
 
@@ -156,7 +176,13 @@ failure by itself.
 Thin clients should render these as separate views:
 
 - Loaded models: provider/runtime residency truth.
-- Defaults: route configuration for `input`, `output`, `embedding`, and `rerank`.
+- Defaults: route configuration for `input`, `output`, `embedding`, and
+  `rerank`, edited from the control plane that owns the runtime configuration.
+
+AbstractFlow now keeps Model Residency loaded-only and leaves default editing to
+Gateway Console or Core/Gateway config CLIs. Flow provider selectors expose a
+blank `Auto (Gateway default)` option instead of materializing defaults into
+saved workflows.
 
 ## Consequences
 
@@ -188,17 +214,23 @@ Thin clients should render these as separate views:
 - Gateway code must not add new persisted provider/model defaults files.
 - Gateway embedding code must resolve `embedding.text` through the execution-host capability
   defaults path.
-- AbstractFlow must keep provider-loaded residency and routing defaults in separate tabs/views.
+- AbstractFlow must not mix provider-loaded residency with routing-default
+  editing. It may show loaded models for operator visibility, but default route
+  editing belongs in Gateway Console or Core/Gateway config CLIs.
 - Backlog work that changes these boundaries must cite this ADR.
 
 ## Validation
 
-- Core config tests cover explicit route defaults, `input.text`/`output.text` global-default writes,
-  and embedding route/base URL synchronization.
+- Core config tests cover explicit route defaults, `output.text` canonicalization
+  to `input.text`, image fallback coverage by vision-capable text models, and
+  embedding route/base URL synchronization.
+- Core media-policy tests cover explicit `input.voice` STT fallback gating and
+  explicit `input.video` VLM/frame fallback routing.
 - Core server tests cover the `/v1/config/capability-defaults/{kind}/{modality}` contract.
 - Gateway tests cover route-default precedence and embedding endpoint use of `embedding.text`
   without `gateway_embeddings.json`.
-- Flow frontend contract tests cover the separated loaded/defaults modal and absence of browser
+- Flow frontend validation covers loaded-only Model Residency behavior,
+  `Auto (Gateway default)` provider switch-back options, and absence of browser
   native confirmation dialogs.
 
 ## Packages Affected

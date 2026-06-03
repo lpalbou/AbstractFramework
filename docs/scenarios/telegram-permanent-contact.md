@@ -76,8 +76,9 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
 Notes:
-- Default LLM routing comes from the execution-host `output.text` capability route. Set it with
-  `abstractcore --set-global-default ...` or `abstractgateway-config set-default output.text ...`.
+- Default LLM routing comes from the execution-host `input.text` capability
+  route. Set it with `abstractcore --set-global-default ...` or
+  `abstractgateway-config set-default input.text ...`.
 - Telegram-only routing override: set `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`) without changing other gateway traffic.
 - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30).
 - STT fallback and vision caption fallback are configured via `abstractcore --config` (audio strategy + vision fallback).

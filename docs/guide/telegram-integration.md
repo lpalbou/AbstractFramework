@@ -142,8 +142,9 @@ export ABSTRACTGATEWAY_TOOL_MODE="approval"
 ```
 
 Notes:
-- Default LLM routing comes from the execution-host `output.text` capability route. Set it with
-  `abstractcore --set-global-default ...` or `abstractgateway-config set-default output.text ...`.
+- Default LLM routing comes from the execution-host `input.text` capability
+  route. Set it with `abstractcore --set-global-default ...` or
+  `abstractgateway-config set-default input.text ...`.
 - Telegram-only routing override (does not affect other gateway traffic): set `ABSTRACT_TELEGRAM_MODEL="..."` (and optionally `ABSTRACT_TELEGRAM_PROVIDER="..."`).
 - Durable history limit: `ABSTRACT_TELEGRAM_MAX_HISTORY_MESSAGES` (default: 30; `0` keeps only system messages).
 - STT fallback and vision caption fallback are configured via `abstractcore --config` (audio strategy + vision fallback).
@@ -164,7 +165,7 @@ source ./execute.sh
 2. Set the text output route for this run:
 
 ```bash
-abstractgateway-config set-default output.text \
+abstractgateway-config set-default input.text \
   --provider lmstudio \
   --model google/gemma-3n-e4b \
   --base-url http://127.0.0.1:1234/v1

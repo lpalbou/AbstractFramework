@@ -9,16 +9,18 @@ VENV_DIR="${VENV_DIR:-$ROOT_DIR/.venv-gateway-flow-published}"
 BIN_DIR="$VENV_DIR/bin"
 PYTHON_BIN="${PYTHON_BIN:-${PYTHON:-$BIN_DIR/python}}"
 PYTHON_BOOTSTRAP="${PYTHON_BOOTSTRAP:-python3}"
+NPX_BIN="${NPX_BIN:-npx}"
 STARTUP_TIMEOUT_S="${STARTUP_TIMEOUT_S:-90}"
 INSTALL_FINGERPRINT_FILE="$VENV_DIR/.gateway-flow-published.fingerprint"
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
-    DEFAULT_INSTALL_SPEC="abstractflow[apple]"
+    DEFAULT_INSTALL_SPEC="abstractgateway[apple]"
 else
-    DEFAULT_INSTALL_SPEC="abstractflow"
+    DEFAULT_INSTALL_SPEC="abstractgateway"
 fi
 PUBLISHED_INSTALL_SPEC="${PUBLISHED_INSTALL_SPEC:-$DEFAULT_INSTALL_SPEC}"
 PUBLISHED_INSTALL_MODE="${PUBLISHED_INSTALL_MODE:-auto}"
+FLOW_NPM_SPEC="${FLOW_NPM_SPEC:-@abstractframework/flow}"
 
 GATEWAY_HOST="${GATEWAY_HOST:-${ABSTRACTGATEWAY_HOST:-127.0.0.1}}"
 GATEWAY_PORT="${GATEWAY_PORT:-${ABSTRACTGATEWAY_PORT:-8080}}"
@@ -27,7 +29,6 @@ FLOW_PORT="${FLOW_PORT:-${ABSTRACTFLOW_PORT:-${PORT:-3000}}}"
 GATEWAY_URL="${GATEWAY_URL:-http://${GATEWAY_HOST}:${GATEWAY_PORT}}"
 RUNTIME_DIR="${RUNTIME_DIR:-${ABSTRACTFRAMEWORK_RUNTIME_DIR:-$ROOT_DIR/runtime}}"
 GATEWAY_RUNTIME_DIR="${GATEWAY_RUNTIME_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-$RUNTIME_DIR}}"
-FLOW_RUNTIME_DIR="${FLOW_RUNTIME_DIR:-${ABSTRACTFLOW_RUNTIME_DIR:-$RUNTIME_DIR/flow-published}}"
 LOG_DIR="${LOG_DIR:-$RUNTIME_DIR/logs}"
 DEFAULT_TOKEN_FILE="${DEFAULT_TOKEN_FILE:-$RUNTIME_DIR/dev/gateway-token}"
 LOCAL_GATEWAY_USERS="${LOCAL_GATEWAY_USERS:-${ABSTRACTGATEWAY_LOCAL_USERS:-admin}}"
@@ -46,14 +47,16 @@ usage() {
     cat <<EOF
 Usage: $0
 
-Runs AbstractGateway and AbstractFlow from published PyPI packages in a venv
-separate from the local source checkout.
+Runs AbstractGateway from published PyPI packages and AbstractFlow from the
+published npm package.
 
 Environment overrides:
   VENV_DIR                         Published-package venv (default: $ROOT_DIR/.venv-gateway-flow-published)
   PYTHON_BOOTSTRAP                 Python used to create the venv (default: python3)
   PUBLISHED_INSTALL_SPEC           Pip spec to install (default: $DEFAULT_INSTALL_SPEC)
   PUBLISHED_INSTALL_MODE           auto, always, or skip (default: auto)
+  NPX_BIN                          npx executable for AbstractFlow (default: npx)
+  FLOW_NPM_SPEC                    npm spec for AbstractFlow (default: @abstractframework/flow)
   GATEWAY_HOST / GATEWAY_PORT      Gateway bind (default: 127.0.0.1:8080)
   FLOW_HOST / FLOW_PORT            Flow bind (default: 127.0.0.1:3000)
   RUNTIME_DIR                      Shared runtime root (default: $ROOT_DIR/runtime)
@@ -341,7 +344,7 @@ PY
 }
 
 published_install_fingerprint() {
-    "$PYTHON_BIN" - "$PUBLISHED_INSTALL_SPEC" "$0" "$ROOT_DIR/abstractflow/pyproject.toml" "$ROOT_DIR/abstractgateway/pyproject.toml" <<'PY'
+    "$PYTHON_BIN" - "$PUBLISHED_INSTALL_SPEC" "$FLOW_NPM_SPEC" "$0" "$ROOT_DIR/abstractflow/package.json" "$ROOT_DIR/abstractgateway/pyproject.toml" <<'PY'
 import hashlib
 import pathlib
 import sys
@@ -371,7 +374,7 @@ install_needed() {
         always) return 0 ;;
         skip) return 1 ;;
         auto)
-            [[ ! -x "$BIN_DIR/abstractgateway" || ! -x "$BIN_DIR/abstractflow" ]] && return 0
+            [[ ! -x "$BIN_DIR/abstractgateway" ]] && return 0
             install_fingerprint_matches || return 0
             return 1
             ;;
@@ -531,6 +534,7 @@ require_cmd "$PYTHON_BOOTSTRAP"
 require_cmd lsof
 require_cmd pgrep
 require_cmd mktemp
+require_cmd "$NPX_BIN"
 if [[ ! -d "$VENV_DIR" ]]; then
     echo "Creating published-package venv: $VENV_DIR"
     "$PYTHON_BOOTSTRAP" -m venv "$VENV_DIR"
@@ -547,8 +551,6 @@ else
 fi
 
 require_executable "$BIN_DIR/abstractgateway"
-require_executable "$BIN_DIR/abstractflow"
-
 # Published mode must not import packages from this source checkout.
 unset PYTHONPATH
 
@@ -566,12 +568,11 @@ export ABSTRACTFLOW_HOST="$FLOW_HOST"
 export ABSTRACTFLOW_PORT="$FLOW_PORT"
 export PORT="$FLOW_PORT"
 export ABSTRACTFLOW_GATEWAY_URL="$GATEWAY_URL"
-export ABSTRACTFLOW_RUNTIME_DIR="$FLOW_RUNTIME_DIR"
 
-mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$ABSTRACTFLOW_RUNTIME_DIR" "$LOG_DIR" "$(dirname "$LOCAL_GATEWAY_USER_TOKENS_FILE")"
+mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$LOG_DIR" "$(dirname "$LOCAL_GATEWAY_USER_TOKENS_FILE")"
 
 if [[ "$STOP_EXISTING" != "0" && "$STOP_EXISTING" != "false" && "$STOP_EXISTING" != "False" ]]; then
-    kill_matching_processes "AbstractFlow" "$BIN_DIR/abstractflow[[:space:]]+serve" "abstractflow[[:space:]]+serve"
+    kill_matching_processes "AbstractFlow" "@abstractframework/flow" "abstractflow-editor"
     kill_matching_processes "AbstractGateway" "$BIN_DIR/abstractgateway[[:space:]]+serve" "abstractgateway[[:space:]]+serve"
 fi
 kill_port_listeners "$GATEWAY_PORT" "AbstractGateway"
@@ -629,9 +630,9 @@ prepare_gateway_local_users \
 echo "Gateway users ready."
 
 echo "Starting AbstractFlow on http://${FLOW_HOST}:${FLOW_PORT}"
-echo "Flow command: $BIN_DIR/abstractflow serve"
+echo "Flow command: $NPX_BIN --yes $FLOW_NPM_SPEC"
 echo "Flow log: $FLOW_LOG"
-env -u ABSTRACTGATEWAY_AUTH_TOKEN "$BIN_DIR/abstractflow" serve \
+env -u ABSTRACTGATEWAY_AUTH_TOKEN "$NPX_BIN" --yes "$FLOW_NPM_SPEC" \
     --host "$FLOW_HOST" \
     --port "$FLOW_PORT" \
     --gateway-url "$GATEWAY_URL" \
@@ -639,7 +640,7 @@ env -u ABSTRACTGATEWAY_AUTH_TOKEN "$BIN_DIR/abstractflow" serve \
 FLOW_PID=$!
 
 if ! wait_for_url "$FLOW_HEALTH_URL"; then
-    show_log_tail "Flow backend did not become healthy" "$FLOW_LOG"
+    show_log_tail "Flow proxy did not become healthy" "$FLOW_LOG"
     exit 1
 fi
 
@@ -655,7 +656,6 @@ Gateway caps:   $GATEWAY_CAPABILITIES_URL
 AbstractFlow:   http://${FLOW_HOST}:${FLOW_PORT}
 Runtime root:    $RUNTIME_DIR
 Gateway runtime: $ABSTRACTGATEWAY_DATA_DIR
-Flow runtime:    $ABSTRACTFLOW_RUNTIME_DIR
 
 EOF
 

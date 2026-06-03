@@ -58,7 +58,7 @@ Start here if you're building persistent AI applications — agents that run for
 ```bash
 pip install abstractgateway
 
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
 export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
@@ -66,6 +66,12 @@ export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
+
+On first local start, Gateway creates `default/admin`, writes the browser-login
+token to `runtime/gateway/auth/bootstrap-admin-token`, and prints the token in
+the terminal. Use that `admin` user token in `/console`, AbstractFlow,
+AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` remains a
+legacy server/operator bearer token; it is not a browser sign-in token.
 
 Monitor runs from a browser:
 

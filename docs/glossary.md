@@ -22,7 +22,7 @@ A provider-specific model identifier (`qwen3:4b-instruct`, `gpt-4o-mini`, `claud
 
 ### Capability route
 
-A stable "slot" for a default model/provider choice, scoped by capability rather than by application. Examples: `output.text` (default text generation), `input.text` (default text understanding), `embedding.text` (default embeddings).
+A stable "slot" for a default model/provider choice, scoped by capability rather than by application. Examples: `input.text` (canonical LLM text route), `input.image` (fallback image-understanding route when the text model is not vision-capable), and `embedding.text` (default embeddings). `output.text` is a read-only derived view of `input.text`.
 
 ### Capability plugin
 

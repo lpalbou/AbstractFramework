@@ -5,7 +5,7 @@
     "name": "AbstractFramework",
     "python_requires": ">=3.10",
     "registry": "pypi",
-    "version": "0.1.7"
+    "version": "0.1.8"
   },
   "minimum_installer_version": "0.1.0",
   "npm_apps": [
@@ -14,14 +14,14 @@
       "id": "flow",
       "package": "@abstractframework/flow",
       "registry": "npm",
-      "version": "0.3.17"
+      "version": "0.3.18"
     },
     {
       "command": "npx @abstractframework/code",
       "id": "code",
       "package": "@abstractframework/code",
       "registry": "npm",
-      "version": "0.3.8"
+      "version": "0.3.9"
     },
     {
       "command": "npx @abstractframework/observer",
@@ -66,7 +66,7 @@
       "local_inference": false,
       "name": "Light",
       "pip_requirements": [
-        "abstractframework==0.1.7"
+        "abstractframework==0.1.8"
       ],
       "platforms": [
         "macos",
@@ -90,7 +90,7 @@
       "local_inference": true,
       "name": "Apple",
       "pip_requirements": [
-        "abstractframework[apple]==0.1.7"
+        "abstractframework[apple]==0.1.8"
       ],
       "platforms": [
         "macos"
@@ -113,7 +113,7 @@
       "local_inference": true,
       "name": "GPU",
       "pip_requirements": [
-        "abstractframework[gpu]==0.1.7"
+        "abstractframework[gpu]==0.1.8"
       ],
       "platforms": [
         "linux",
@@ -132,37 +132,31 @@
       "distribution": "abstractcore",
       "id": "abstractcore",
       "registry": "pypi",
-      "version": "2.13.31"
+      "version": "2.13.32"
     },
     {
       "distribution": "AbstractRuntime",
       "id": "abstractruntime",
       "registry": "pypi",
-      "version": "0.4.26"
+      "version": "0.4.27"
     },
     {
       "distribution": "abstractagent",
       "id": "abstractagent",
       "registry": "pypi",
-      "version": "0.3.10"
-    },
-    {
-      "distribution": "abstractflow",
-      "id": "abstractflow",
-      "registry": "pypi",
-      "version": "0.3.17"
+      "version": "0.3.11"
     },
     {
       "distribution": "abstractcode",
       "id": "abstractcode",
       "registry": "pypi",
-      "version": "0.3.8"
+      "version": "0.3.9"
     },
     {
       "distribution": "abstractgateway",
       "id": "abstractgateway",
       "registry": "pypi",
-      "version": "0.2.23"
+      "version": "0.2.26"
     },
     {
       "distribution": "AbstractMemory",
@@ -186,19 +180,19 @@
       "distribution": "abstractvision",
       "id": "abstractvision",
       "registry": "pypi",
-      "version": "0.3.18"
+      "version": "0.3.19"
     },
     {
       "distribution": "abstractmusic",
       "id": "abstractmusic",
       "registry": "pypi",
-      "version": "0.1.12"
+      "version": "0.1.13"
     },
     {
       "distribution": "abstractassistant",
       "id": "abstractassistant",
       "registry": "pypi",
-      "version": "0.4.8"
+      "version": "0.4.9"
     }
   ],
   "schema_version": 1,

@@ -6,13 +6,21 @@ maintenance actions depending on your deployment.
 ## Recommended defaults (local dev)
 
 - Bind to loopback: `--host 127.0.0.1`
-- Use a strong token:
+- Enable Gateway user auth for browser apps and per-user runtime routing:
+
+```bash
+export ABSTRACTGATEWAY_USER_AUTH=1
+```
+
+- Use the generated `default/admin` browser-login token from
+  `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token` for first setup, then
+  rotate it or create named users in `/console`.
+- Use a strong `ABSTRACTGATEWAY_AUTH_TOKEN` only for legacy server/operator
+  bearer-token deployments; it is not a browser sign-in token.
 
 ```bash
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
 ```
-
-- Enable Gateway user auth when browser apps need per-user runtime routing:
 
 ```bash
 export ABSTRACTGATEWAY_USER_AUTH=1
@@ -93,10 +101,11 @@ token, then the browser keeps only the opaque session cookie. Because the
 console is served by Gateway itself, it does not ask for a Gateway URL; the
 current origin is the Gateway. Admin users can
 manage Gateway users, rotate tokens, and handle retained runtime reservations
-from this console. Signed-in users can set their own capability defaults from
-Gateway-discovered provider/model catalogs. Admin/root defaults act as the
-Gateway baseline; normal users inherit that baseline and can override it only
-for their own runtime.
+from this console. Signed-in users configure provider connections in the
+Providers tab, then set capability defaults from those configured virtual
+providers and discovered models. Admin/root defaults act as the Gateway
+baseline; normal users inherit that baseline and can override it only for their
+own runtime.
 
 The console also supports Gateway-owned provider endpoint profiles. Profiles
 can describe OpenAI-compatible or hosted provider endpoints with a display name,
@@ -105,6 +114,15 @@ model allowlist. Discovery exposes only non-secret metadata and a virtual
 provider id such as `endpoint:office-vllm`; Gateway injects the raw key only into
 the runtime call that resolves that profile. Normal users can create user-scoped
 profiles. Gateway-scoped profiles require an admin principal.
+
+The console Sandbox sends browser-local prompt-grounding metadata such as local
+datetime, timezone, timezone offset, and locale with test chat requests. Runtime
+may use those fields to ground the model response for the browser user, but the
+fields are explicitly untrusted and are never used for authorization, runtime
+routing, provider credential selection, or audit authority. Server-derived
+grounding remains recorded as provenance. When both browser timezone and browser
+locale are present, country grounding prefers the timezone mapping over the
+locale region because browser language is not a reliable location signal.
 
 Gateway keeps operator surfaces admin-only through a central route-family
 policy. User management, audit/process/backlog/triage/report routes, email

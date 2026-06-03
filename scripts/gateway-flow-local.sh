@@ -8,6 +8,7 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 VENV_DIR="${VENV_DIR:-$ROOT_DIR/.venv}"
 BIN_DIR="$VENV_DIR/bin"
 PYTHON_BIN="${PYTHON_BIN:-${PYTHON:-$BIN_DIR/python}}"
+NODE_BIN="${NODE_BIN:-node}"
 STARTUP_TIMEOUT_S="${STARTUP_TIMEOUT_S:-90}"
 VERBOSE="${VERBOSE:-0}"
 
@@ -19,7 +20,6 @@ GATEWAY_URL="${GATEWAY_URL:-http://${GATEWAY_HOST}:${GATEWAY_PORT}}"
 RUNTIME_DIR="${RUNTIME_DIR:-${ABSTRACTFRAMEWORK_RUNTIME_DIR:-$ROOT_DIR/runtime}}"
 GATEWAY_RUNTIME_DIR="${GATEWAY_RUNTIME_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-$RUNTIME_DIR}}"
 GATEWAY_FLOWS_DIR="${GATEWAY_FLOWS_DIR:-${ABSTRACTGATEWAY_FLOWS_DIR:-$ROOT_DIR/abstractgateway/flows/bundles}}"
-FLOW_RUNTIME_DIR="${FLOW_RUNTIME_DIR:-${ABSTRACTFLOW_RUNTIME_DIR:-$RUNTIME_DIR/flow-local}}"
 LOG_DIR="${LOG_DIR:-$RUNTIME_DIR/logs}"
 DEFAULT_TOKEN_FILE="${DEFAULT_TOKEN_FILE:-$RUNTIME_DIR/dev/gateway-token}"
 LOCAL_GATEWAY_USERS="${LOCAL_GATEWAY_USERS:-${ABSTRACTGATEWAY_LOCAL_USERS:-admin}}"
@@ -29,7 +29,7 @@ LOCAL_GATEWAY_ROTATE_USER_TOKENS="${LOCAL_GATEWAY_ROTATE_USER_TOKENS:-0}"
 SHOW_ALL_GATEWAY_USERS="${SHOW_ALL_GATEWAY_USERS:-0}"
 SHOW_ADMIN_TOKEN="${SHOW_ADMIN_TOKEN:-0}"
 STOP_EXISTING="${STOP_EXISTING:-1}"
-FLOW_DIST_INDEX="$ROOT_DIR/abstractflow/web/frontend/dist/index.html"
+FLOW_DIST_INDEX="$ROOT_DIR/abstractflow/dist/index.html"
 GATEWAY_HEALTH_URL="http://${GATEWAY_HOST}:${GATEWAY_PORT}/api/health"
 GATEWAY_CAPABILITIES_URL="${GATEWAY_URL}/api/gateway/discovery/capabilities"
 FLOW_HEALTH_URL="http://${FLOW_HOST}:${FLOW_PORT}/api/health"
@@ -39,13 +39,14 @@ usage() {
     cat <<EOF
 Usage: $0 [--light|--apple|--gpu]
 
-Runs AbstractGateway and AbstractFlow from the local sibling repositories, not
-from published PyPI packages. The script prepends local package paths to
-PYTHONPATH and starts gateway/flow with python -m.
+Runs AbstractGateway from local Python sources and AbstractFlow from the local
+web package source. The script prepends local Python package paths to
+PYTHONPATH for Gateway and starts Flow with Node.
 
 Environment overrides:
   VENV_DIR                         Local development venv (default: $ROOT_DIR/.venv)
   PYTHON_BIN / PYTHON              Python executable (default: VENV_DIR/bin/python)
+  NODE_BIN                         Node executable for AbstractFlow (default: node)
   GATEWAY_HOST / GATEWAY_PORT      Gateway bind (default: 127.0.0.1:8080)
   FLOW_HOST / FLOW_PORT            Flow bind (default: 127.0.0.1:3000)
   RUNTIME_DIR                      Shared runtime root (default: $ROOT_DIR/runtime)
@@ -67,7 +68,7 @@ Build local dependencies first when needed:
   ./scripts/build.sh --gpu    # GPU local engines
 
 Passing --light / --apple / --gpu to this launcher triggers the matching
-Python-only local editable install before starting Gateway and Flow. --base is
+Python local editable install plus npm build before starting Gateway and Flow. --base is
 accepted as a legacy alias for --light.
 EOF
 }
@@ -554,10 +555,11 @@ wait_for_gateway_contract() {
 require_cmd lsof
 require_cmd pgrep
 require_cmd mktemp
+require_cmd "$NODE_BIN"
 
 if [[ -n "$BUILD_PROFILE_FLAG" ]]; then
-    echo "Preparing local Python packages with ./scripts/build.sh --python $BUILD_PROFILE_FLAG"
-    bash "$SCRIPT_DIR/build.sh" --python "$BUILD_PROFILE_FLAG"
+    echo "Preparing local packages with ./scripts/build.sh $BUILD_PROFILE_FLAG"
+    bash "$SCRIPT_DIR/build.sh" "$BUILD_PROFILE_FLAG"
 fi
 
 require_executable "$PYTHON_BIN"
@@ -592,8 +594,6 @@ add_repo_paths "abstractcore"
 add_repo_paths "abstractruntime"
 add_repo_paths "abstractagent"
 add_repo_paths "abstractgateway"
-add_repo_paths "abstractflow"
-add_path "$ROOT_DIR/abstractflow/web"
 add_repo_paths "abstractcode"
 add_repo_paths "abstractassistant"
 add_repo_paths "abstractobserver"
@@ -626,7 +626,7 @@ def _truthy(raw: str) -> bool:
     return str(raw or "").strip().lower() in {"1", "true", "yes", "on"}
 
 verbose = _truthy(sys.argv[1] if len(sys.argv) > 1 else "")
-required = ("abstractgateway", "abstractflow", "abstractruntime", "abstractcore")
+required = ("abstractgateway", "abstractruntime", "abstractcore")
 resolved = {}
 for name in required:
     mod = importlib.import_module(name)
@@ -641,7 +641,7 @@ if verbose:
 sys.stdout.flush()
 PY
 
-[[ -f "$FLOW_DIST_INDEX" ]] || die "AbstractFlow frontend dist is missing: $FLOW_DIST_INDEX. Run ./scripts/build.sh or npm --prefix abstractflow/web/frontend run build."
+[[ -f "$FLOW_DIST_INDEX" ]] || die "AbstractFlow dist is missing: $FLOW_DIST_INDEX. Run ./scripts/build.sh or npm --prefix abstractflow run build."
 [[ -f "$GATEWAY_FLOWS_DIR/basic-agent.flow" || -f "$GATEWAY_FLOWS_DIR/basic-agent@0.0.1.flow" ]] || die "Gateway bundle dir must contain basic-agent: $GATEWAY_FLOWS_DIR"
 
 if [[ -z "${ABSTRACTGATEWAY_AUTH_TOKEN:-}" && -r "$DEFAULT_TOKEN_FILE" ]]; then
@@ -659,15 +659,14 @@ export ABSTRACTFLOW_HOST="$FLOW_HOST"
 export ABSTRACTFLOW_PORT="$FLOW_PORT"
 export PORT="$FLOW_PORT"
 export ABSTRACTFLOW_GATEWAY_URL="$GATEWAY_URL"
-export ABSTRACTFLOW_RUNTIME_DIR="$FLOW_RUNTIME_DIR"
 
-mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$ABSTRACTFLOW_RUNTIME_DIR" "$LOG_DIR" "$(dirname "$LOCAL_GATEWAY_USER_TOKENS_FILE")"
+mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$LOG_DIR" "$(dirname "$LOCAL_GATEWAY_USER_TOKENS_FILE")"
 
 if [[ "$STOP_EXISTING" != "0" && "$STOP_EXISTING" != "false" && "$STOP_EXISTING" != "False" ]]; then
     kill_matching_processes "AbstractFlow" \
-        "$BIN_DIR/abstractflow[[:space:]]+serve" \
-        "abstractflow[[:space:]]+serve" \
-        "python[^[:space:]]*[[:space:]].*-m[[:space:]]+abstractflow.cli[[:space:]]+serve"
+        "node[[:space:]].*abstractflow/bin/cli\\.js" \
+        "@abstractframework/flow" \
+        "abstractflow-editor"
     kill_matching_processes "AbstractGateway" \
         "$BIN_DIR/abstractgateway[[:space:]]+serve" \
         "abstractgateway[[:space:]]+serve" \
@@ -731,8 +730,8 @@ prepare_gateway_local_users \
 echo "  users: ready"
 
 echo "Starting AbstractFlow: http://${FLOW_HOST}:${FLOW_PORT}"
-is_truthy "$VERBOSE" && echo "  command: $PYTHON_BIN -m abstractflow.cli serve"
-env -u ABSTRACTGATEWAY_AUTH_TOKEN "$PYTHON_BIN" -m abstractflow.cli serve \
+is_truthy "$VERBOSE" && echo "  command: $NODE_BIN $ROOT_DIR/abstractflow/bin/cli.js"
+env -u ABSTRACTGATEWAY_AUTH_TOKEN "$NODE_BIN" "$ROOT_DIR/abstractflow/bin/cli.js" \
     --host "$FLOW_HOST" \
     --port "$FLOW_PORT" \
     --gateway-url "$GATEWAY_URL" \
@@ -740,10 +739,10 @@ env -u ABSTRACTGATEWAY_AUTH_TOKEN "$PYTHON_BIN" -m abstractflow.cli serve \
 FLOW_PID=$!
 
 if ! wait_for_url "$FLOW_HEALTH_URL" "$STARTUP_TIMEOUT_S" "$FLOW_PID"; then
-    show_log_tail "Flow backend did not become healthy" "$FLOW_LOG"
+    show_log_tail "Flow server did not become healthy" "$FLOW_LOG"
     exit 1
 fi
-echo "  backend: ready"
+echo "  health: ready"
 
 if ! wait_for_url "$FLOW_UI_URL" "$STARTUP_TIMEOUT_S" "$FLOW_PID"; then
     show_log_tail "Flow UI did not become ready" "$FLOW_LOG"
@@ -773,7 +772,6 @@ Runtime:
   Root:    $RUNTIME_DIR
   Gateway: $ABSTRACTGATEWAY_DATA_DIR
   Bundles: $ABSTRACTGATEWAY_FLOWS_DIR
-  Flow:    $ABSTRACTFLOW_RUNTIME_DIR
   Caps:    $GATEWAY_CAPABILITIES_URL
 EOF
 fi

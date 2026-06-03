@@ -54,7 +54,6 @@ def test_framework_profile_pins_match_release_versions() -> None:
     assert _dependency_version(deps, "AbstractRuntime") == release_versions["abstractruntime"]
     assert _dependency_version(deps, "abstractagent") == release_versions["abstractagent"]
     assert _dependency_version(deps, "abstractgateway") == release_versions["abstractgateway"]
-    assert _dependency_version(deps, "abstractflow") == release_versions["abstractflow"]
     assert _dependency_version(deps, "abstractcode") == release_versions["abstractcode"]
     assert _dependency_version(deps, "abstractassistant") == release_versions["abstractassistant"]
     assert _dependency_version(deps, "AbstractMemory") == release_versions["abstractmemory"]
@@ -64,14 +63,12 @@ def test_framework_profile_pins_match_release_versions() -> None:
     assert _dependency_version(deps, "abstractmusic") == release_versions["abstractmusic"]
 
     assert f"abstractgateway[apple]=={release_versions['abstractgateway']}" in opt["apple"]
-    assert f"abstractflow[apple]=={release_versions['abstractflow']}" in opt["apple"]
     assert any(
         dep.startswith(f"abstractassistant[apple]=={release_versions['abstractassistant']}")
         for dep in opt["apple"]
     )
 
     assert f"abstractgateway[gpu]=={release_versions['abstractgateway']}" in opt["gpu"]
-    assert f"abstractflow[gpu]=={release_versions['abstractflow']}" in opt["gpu"]
     assert f"abstractassistant[gpu]=={release_versions['abstractassistant']}" in opt["gpu"]
 
 
@@ -81,7 +78,7 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
         ROOT / "abstractruntime" / "pyproject.toml",
         ROOT / "abstractagent" / "pyproject.toml",
         ROOT / "abstractgateway" / "pyproject.toml",
-        ROOT / "abstractflow" / "abstractflow" / "_version.py",
+        ROOT / "abstractflow" / "package.json",
         ROOT / "abstractcode" / "pyproject.toml",
         ROOT / "abstractassistant" / "pyproject.toml",
     ]
@@ -109,10 +106,9 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
         ROOT / "abstractgateway" / "pyproject.toml",
         r'^\s*version\s*=\s*"([^"]+)"\s*$',
     )
-    flow_version = _version_from_regex(
-        ROOT / "abstractflow" / "abstractflow" / "_version.py",
-        r'__version__\s*=\s*"([^"]+)"',
-    )
+    flow_version = json.loads((ROOT / "abstractflow" / "package.json").read_text(encoding="utf-8"))[
+        "version"
+    ]
     code_version = _version_from_regex(
         ROOT / "abstractcode" / "pyproject.toml",
         r'^\s*version\s*=\s*"([^"]+)"\s*$',
@@ -126,20 +122,20 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
     assert f"AbstractRuntime=={runtime_version}" in deps
     assert f"abstractagent=={agent_version}" in deps
     assert f"abstractgateway=={gateway_version}" in deps
-    assert f"abstractflow=={flow_version}" in deps
     assert f"abstractcode=={code_version}" in deps
     assert f"abstractassistant=={assistant_version}" in deps
 
     assert f"abstractgateway[apple]=={gateway_version}" in opt["apple"]
-    assert f"abstractflow[apple]=={flow_version}" in opt["apple"]
     assert any(
         dep.startswith(f"abstractassistant[apple]=={assistant_version}")
         for dep in opt["apple"]
     )
 
     assert f"abstractgateway[gpu]=={gateway_version}" in opt["gpu"]
-    assert f"abstractflow[gpu]=={flow_version}" in opt["gpu"]
     assert f"abstractassistant[gpu]=={assistant_version}" in opt["gpu"]
+    from abstractframework import NPM_RELEASE_VERSIONS
+
+    assert NPM_RELEASE_VERSIONS["@abstractframework/flow"] == flow_version
 
 
 def test_generated_install_manifest_matches_checked_in_manifest() -> None:

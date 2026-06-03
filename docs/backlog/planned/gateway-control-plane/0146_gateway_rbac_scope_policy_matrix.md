@@ -165,7 +165,7 @@ UIs can hide or disable actions cleanly.
 - [x] Add admin-only retained runtime list/transfer/purge routes.
 - [x] Add initial Alice/Bob isolation tests for runs, ledgers, and artifacts.
 - [x] Extend Alice/Bob matrix to KG/session memory, private workflows,
-  prompt-cache key naming, session artifacts, and defaults overlays.
+  prompt-cache key naming, session artifacts, and runtime-scoped defaults.
 - [x] Prove regular users cannot use admin-only workspace helper/import/export
   surfaces.
 - [x] Add machine-readable denial tests for first operator route families.

@@ -166,7 +166,7 @@ build_profile_extras() {
     fi
 
     case "$rel_dir" in
-        abstractgateway|abstractflow|abstractassistant)
+        abstractgateway|abstractassistant)
             case "$profile" in
                 apple) printf '%s' "[apple]" ;;
                 gpu) printf '%s' "[gpu]" ;;
@@ -430,7 +430,6 @@ PY
 
     # ── Tier 3: Depends on Tier 0–2 ────────────────────────────────────
     section "Python — Tier 3  (depends on Tier 0–2)"
-    install_editable "abstractflow" "$(build_profile_extras "abstractflow" "$PYTHON_BUILD_PROFILE")"
     install_editable "abstractcode"
     install_editable "abstractassistant" "$(build_profile_extras "abstractassistant" "$PYTHON_BUILD_PROFILE")"
 
@@ -620,7 +619,7 @@ PY
     echo ""
     echo "  Verifying imports (and detecting namespace shadowing)..."
     _import_ok=true
-    for _pkg in abstractcore abstractruntime abstractagent abstractflow abstractcode abstractgateway abstractmemory abstractsemantics abstractvoice abstractvision abstractmusic abstractassistant; do
+    for _pkg in abstractcore abstractruntime abstractagent abstractcode abstractgateway abstractmemory abstractsemantics abstractvoice abstractvision abstractmusic abstractassistant; do
         if ! python -c "import importlib; m=importlib.import_module('${_pkg}'); assert getattr(m, '__file__', None) is not None" 2>/dev/null; then
             _import_ok=false
             echo "     ✗ ${_pkg}"
@@ -650,7 +649,7 @@ if $BUILD_NPM; then
     build_npm_project "abstractuic" "abstractuic  (monorepo: ui-kit, panel-chat, monitors)"
     build_npm_project "abstractobserver" "abstractobserver"
     build_npm_project "abstractcode/web" "abstractcode/web  (@abstractframework/code)"
-    build_npm_project "abstractflow/web/frontend" "abstractflow/web/frontend  (@abstractframework/flow)"
+    build_npm_project "abstractflow" "abstractflow  (@abstractframework/flow)"
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════

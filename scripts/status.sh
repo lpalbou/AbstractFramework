@@ -3,7 +3,8 @@
 # AbstractFramework — git status overview for all repositories
 # =============================================================================
 # Displays a concise git status report for the root AbstractFramework repository
-# and every sibling repository cloned by scripts/clone.sh.
+# and every sibling repository cloned by scripts/clone.sh, grouped in the same
+# package order used by scripts/build.sh.
 #
 # For each repository the script shows:
 #   • Current branch
@@ -24,22 +25,49 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-# Sibling repositories — must mirror the list in scripts/clone.sh.
-SIBLING_REPOS=(
+# Build/status groups.
+#
+# Format:
+#   display-name[:primary-relative-path[:fallback-relative-path...]]
+#
+# Most repositories use the same display name and directory name. AbstractMusic
+# has historically appeared with mixed repository casing, so accept both the
+# canonical lowercase local package path and the GitHub repository casing.
+# The group order mirrors scripts/build.sh:
+#   Python Tier 0 -> Tier 4, then npm UI packages.
+# abstractcode/web is an npm build target inside the abstractcode repository, so
+# the abstractcode repo is listed once in Python Tier 3.
+GROUP_PY_TIER0=(
+    abstractsemantics
+    abstractmemory
+    abstractvision
+    abstractvoice
+    abstractmusic:abstractmusic:AbstractMusic
+)
+
+GROUP_PY_TIER1=(
     abstractcore
     abstractruntime
+)
+
+GROUP_PY_TIER2=(
     abstractagent
-    abstractflow
-    abstractcode
     abstractgateway
-    abstractmemory
-    abstractsemantics
-    abstractvoice
-    abstractvision
-    abstractmusic
+)
+
+GROUP_PY_TIER3=(
+    abstractcode
     abstractassistant
-    abstractobserver
+)
+
+GROUP_PY_TIER4=(
+    abstractframework:.
+)
+
+GROUP_NPM=(
     abstractuic
+    abstractobserver
+    abstractflow
 )
 
 # ---------------------------------------------------------------------------
@@ -93,6 +121,33 @@ require_cmd() {
         echo "ERROR: required command not found: $1"
         exit 1
     fi
+}
+
+repo_dir_for() {
+    local spec="$1"
+    local fields=()
+    IFS=':' read -r -a fields <<< "$spec"
+    local name="${fields[0]}"
+
+    if [[ ${#fields[@]} -eq 1 ]]; then
+        printf "%s/%s\n" "$ROOT_DIR" "$name"
+        return 0
+    fi
+
+    local candidate
+    for candidate in "${fields[@]:1}"; do
+        if [[ -d "$ROOT_DIR/$candidate/.git" ]]; then
+            printf "%s/%s\n" "$ROOT_DIR" "$candidate"
+            return 0
+        fi
+    done
+
+    printf "%s/%s\n" "$ROOT_DIR" "${fields[1]}"
+}
+
+repo_display_name() {
+    local spec="$1"
+    printf "%s\n" "${spec%%:*}"
 }
 
 # Print status for a single repository.
@@ -173,6 +228,38 @@ report_repo() {
     $has_changes && return 1 || return 0
 }
 
+report_group() {
+    local title="$1"
+    shift
+
+    local group_output=""
+    local repo_spec repo_name repo_dir repo_output
+
+    for repo_spec in "$@"; do
+        repo_name="$(repo_display_name "$repo_spec")"
+        repo_dir="$(repo_dir_for "$repo_spec")"
+
+        if repo_output="$(report_repo "$repo_name" "$repo_dir")"; then
+            :
+        else
+            dirty=$((dirty + 1))
+        fi
+
+        total=$((total + 1))
+
+        if [[ -n "$repo_output" ]]; then
+            group_output+="${repo_output}"$'\n'
+        fi
+    done
+
+    if [[ -n "$group_output" ]]; then
+        printf "${C_BOLD}  %s${C_RESET}\n" "$title"
+        printf "  %s\n\n" "────────────────────────────────────────────────────────"
+        printf "%b" "$group_output"
+        echo ""
+    fi
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -182,22 +269,13 @@ require_cmd git
 total=0
 dirty=0
 
-# ── Root repository (AbstractFramework) ───────────────────────────────────
-printf "${C_BOLD}  Root repository${C_RESET}\n"
-printf "  %s\n\n" "────────────────────────────────────────────────────────"
-
-report_repo "abstractframework" "$ROOT_DIR" || dirty=$((dirty + 1))
-total=$((total + 1))
-echo ""
-
-# ── Sibling repositories ─────────────────────────────────────────────────
-printf "${C_BOLD}  Sibling repositories${C_RESET}\n"
-printf "  %s\n\n" "────────────────────────────────────────────────────────"
-
-for repo_name in "${SIBLING_REPOS[@]}"; do
-    report_repo "$repo_name" "$ROOT_DIR/$repo_name" || dirty=$((dirty + 1))
-    total=$((total + 1))
-done
+# ── Build order ──────────────────────────────────────────────────────────
+report_group "Python Tier 0 — No internal dependencies" "${GROUP_PY_TIER0[@]}"
+report_group "Python Tier 1 — Depends on Tier 0" "${GROUP_PY_TIER1[@]}"
+report_group "Python Tier 2 — Depends on Tier 0-1" "${GROUP_PY_TIER2[@]}"
+report_group "Python Tier 3 — Depends on Tier 0-2" "${GROUP_PY_TIER3[@]}"
+report_group "Python Tier 4 — Meta-package" "${GROUP_PY_TIER4[@]}"
+report_group "npm — UI package repositories" "${GROUP_NPM[@]}"
 
 # ── Summary ───────────────────────────────────────────────────────────────
 echo ""
