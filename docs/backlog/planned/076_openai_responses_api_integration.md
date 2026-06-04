@@ -9,7 +9,11 @@
 
 ## Summary
 
-Migrate the AbstractCore OpenAI provider from the Chat Completions API (`/v1/chat/completions`) to the Responses API (`/v1/responses`). The Responses API is OpenAI's successor to Chat Completions, recommended for all new projects. It provides all Chat Completions functionality plus reasoning summaries, built-in tools, better cache utilization, and improved reasoning model performance.
+Implement a true AbstractCore Server `/v1/responses` contract, then route provider calls through
+native Responses transports where they exist. Start with the OpenAI provider because OpenAI owns
+the canonical Responses API, but treat the server endpoint as a cross-provider compatibility
+surface: some providers can delegate to native `/v1/responses`, while others require a Core-owned
+adapter on top of chat/generate APIs.
 
 ## Why
 
@@ -30,20 +34,33 @@ Live API tests (2026-02-22) confirmed:
 
 ### What we do
 
-1. **Rewrite OpenAI provider internals**: replace `client.chat.completions.create()` with `client.responses.create()` in `_generate_internal()`, `_agenerate_internal()`, and streaming paths
-2. **Map parameters**: `messages` → `input`, system prompt → `instructions`, `max_completion_tokens` → `max_output_tokens`, `response_format` → `text.format`, tool call shapes
-3. **Extract reasoning summaries**: populate `GenerateResponse.metadata["reasoning"]` from `output[type="reasoning"].summary`
-4. **Auto-request reasoning summaries**: when `_is_reasoning_model()` is true, include `reasoning: {"summary": "auto"}` in the request
-5. **Expose `reasoning_effort`**: pass through as a `reasoning.effort` parameter (optional kwarg)
-6. **Set `store: false` by default**: avoid unexpected data retention on OpenAI's side; document this clearly
-7. **Rewrite `_format_response()`**: parse `Response` objects instead of `ChatCompletion` objects
-8. **Rewrite streaming**: handle Responses API event types (`response.output_text.delta`, `response.function_call_arguments.delta`, `response.reasoning_summary_text.delta`, `response.completed`)
-9. **Update AbstractCore server `/v1/responses`**: for OpenAI models, optionally shortcut through the provider's Responses path instead of converting to Chat Completions format
-10. **Tests**: empirical API tests for all paths (generation, tools, structured output, streaming, reasoning capture, multi-turn)
+1. **Define the server contract**: decide the strict `/v1/responses` behavior that AbstractCore
+   promises across providers, including object shape, streaming events, response ids, optional
+   state storage, unsupported-field handling, and capability metadata.
+2. **Rewrite OpenAI provider internals**: replace `client.chat.completions.create()` with `client.responses.create()` in `_generate_internal()`, `_agenerate_internal()`, and streaming paths
+3. **Map parameters**: `messages` → `input`, system prompt → `instructions`, `max_completion_tokens` → `max_output_tokens`, `response_format` → `text.format`, tool call shapes
+4. **Extract reasoning summaries**: populate `GenerateResponse.metadata["reasoning"]` from `output[type="reasoning"].summary`
+5. **Auto-request reasoning summaries**: when `_is_reasoning_model()` is true, include `reasoning: {"summary": "auto"}` in the request
+6. **Expose `reasoning_effort`**: pass through as a `reasoning.effort` parameter (optional kwarg)
+7. **Set `store: false` by default**: avoid unexpected data retention on OpenAI's side; document this clearly
+8. **Rewrite `_format_response()`**: parse `Response` objects instead of `ChatCompletion` objects
+9. **Rewrite streaming**: handle Responses API event types (`response.output_text.delta`, `response.function_call_arguments.delta`, `response.reasoning_summary_text.delta`, `response.completed`)
+10. **Add provider-native delegation where available**: OpenAI first; then LM Studio, vLLM,
+    OpenRouter, Portkey, Ollama, and generic endpoint profiles only when a probe or explicit
+    provider capability says `/v1/responses` is supported.
+11. **Build Core-owned Responses providers for local/non-native backends**: Anthropic, MLX,
+    HuggingFace, and unsupported OpenAI-compatible endpoints must still be able to serve
+    `/v1/responses` through an AbstractCore-owned Responses adapter. This adapter is part of the
+    endpoint contract, not a loose fallback: it must create first-class Responses objects and SSE
+    events from `GenerateResponse`, preserve provider metadata, and clearly mark or reject features
+    that are not available without a native upstream Responses API.
+12. **Tests**: empirical API tests for all paths (generation, tools, structured output, streaming, reasoning capture, multi-turn)
 
 ### What we don't
 
-- Change other providers (Ollama, Anthropic, OpenAI-compatible, Portkey, etc.) — they remain on Chat Completions
+- Blindly force every provider onto native `/v1/responses`. Providers without native Responses
+  support must use a documented adapter or return a clear unsupported-feature error for fields that
+  cannot be honored.
 - Change the `GenerateResponse` type — it already has the right fields
 - Change AbstractRuntime or AbstractGateway — they consume `GenerateResponse` and read `metadata["reasoning"]` when present
 - Change the AbstractCore server `/v1/chat/completions` endpoint — it continues to work
@@ -184,3 +201,65 @@ These are low priority — the framework handles unknown models gracefully via d
 - **Avoid a new `reasoning_effort` knob**: consider mapping existing `thinking=` (BaseProvider) to Responses `reasoning.effort` to keep the surface unified.
 - **Be careful with "auto-request reasoning summaries"**: making `reasoning.summary: "auto"` unconditional for all thinking-capable models can change cost/latency. Consider opt-in (or tie it to `thinking=`).
 - **Server `/v1/responses` contract**: the server currently accepts Responses-style `input`, but returns Chat Completions output. If you add an OpenAI-provider "shortcut", spell out whether `/v1/responses` remains a ChatCompletions-shaped response for compatibility, or becomes a true Responses object (breaking change).
+
+---
+
+## Provider support investigation (2026-06-03)
+
+### Current Core code reality
+
+- `abstractcore.server.app` exposes `POST /v1/responses`, converts Responses-style `input` into
+  `ChatCompletionRequest`, executes through `process_chat_completion(...)`, and wraps generated
+  output back into a Responses-like `object: "response"` payload. It does not currently have a
+  provider-native Responses transport or a response object lifecycle.
+- `OpenAIProvider` still calls `client.chat.completions.create(...)`.
+- `AnthropicProvider` calls `client.messages.create(...)`.
+- `OllamaProvider` uses Ollama native `/api/chat` or `/api/generate`.
+- `LMStudioProvider`, `VLLMProvider`, `OpenRouterProvider`, `PortkeyProvider`, and endpoint
+  profiles inherit `OpenAICompatibleProvider`, whose text path targets chat completions.
+- `MLXProvider` and `HuggingFaceProvider` are local in-process providers, so their `/v1/responses`
+  support must be created by AbstractCore itself as a first-class Core-owned Responses adapter over
+  local `GenerateResponse` output.
+
+### Provider matrix
+
+| Provider family | Native `/v1/responses` available upstream? | Core can expose true `/v1/responses`? | Notes |
+|---|---:|---:|---|
+| OpenAI | Yes | Yes, native first | Use OpenAI SDK `responses.create`; this is the canonical implementation target. |
+| Anthropic | No | Adapter only | Anthropic's canonical API is Messages (`/v1/messages`). Core can map Responses input/output, but provider-native response ids, hosted OpenAI tools, and exact event semantics are not available. |
+| Ollama | Yes, via OpenAI compatibility docs | Native candidate or adapter | Ollama documents OpenAI-compatible `/v1/responses`, `/v1/chat/completions`, and `/v1/completions`, but Core's Ollama provider currently uses native `/api/chat`/`/api/generate`. Add explicit native-Responses path or keep the adapter with capability notes. |
+| LM Studio | Yes | Native candidate | LM Studio documents OpenAI compatibility endpoints for Responses, Chat Completions, Completions, Models, and Embeddings. Core's LM Studio provider currently inherits chat-completions transport. |
+| vLLM | Yes, for text generation models | Native candidate | vLLM docs list `/v1/responses` among supported OpenAI APIs, limited to text-generation models. Core's vLLM provider currently inherits chat-completions transport. |
+| OpenRouter | Yes, beta/OpenResponses format | Native candidate with guardrails | OpenRouter documents `POST https://openrouter.ai/api/v1/responses` using OpenResponses API format. Treat as provider-native but verify model/tool/streaming behavior and beta/experimental headers. |
+| Portkey | Yes | Native candidate | Portkey documents `POST https://api.portkey.ai/v1/responses`, retrieve/delete response routes, and `portkey.responses.create(...)`. Core's Portkey provider currently inherits chat-completions transport. |
+| Generic OpenAI-compatible / `endpoint:*` profiles | Unknown by definition | Probe-gated | Cannot assume. Add per-profile capability probing or explicit config (`responses_mode=native|adapter|disabled`) and fall back to adapter or clear errors. |
+| MLX | No upstream HTTP API in this provider | Core-owned first-class Responses adapter | AbstractCore must create valid Responses objects/events over local `GenerateResponse` output. This is required provider coverage, not optional fallback; unsupported native-only features must be marked or rejected. |
+| HuggingFace | No for the current local provider | Core-owned first-class Responses adapter | AbstractCore must wrap local Transformers/GGUF generation in the same first-class Responses object/event contract used for MLX. No native upstream transport exists, so state/reasoning continuity must be explicitly limited. |
+
+### Contract recommendation
+
+Do not define "true `/v1/responses`" as "every provider calls a native upstream `/v1/responses`".
+That is impossible across the provider set. Define two explicit modes instead:
+
+1. **Native Responses mode**: provider transport is an upstream Responses API and Core preserves
+   the provider's response object/event semantics as much as possible.
+2. **Core-owned Responses adapter mode**: Core accepts the Responses request shape, runs the
+   provider through chat/generate/local APIs, and itself creates first-class Responses objects and
+   streaming events while marking or rejecting unsupported provider-native features. This mode is
+   mandatory for MLX, HuggingFace, Anthropic, and any configured endpoint profile that lacks a
+   verified native `/v1/responses` transport.
+
+The server should expose capability metadata so clients can distinguish native from adapter mode.
+Fields such as `previous_response_id`, stored response retrieval/deletion, hosted OpenAI tools,
+reasoning item continuity, and exact streaming event parity should be tested and either supported,
+adapted, or rejected with a clear error per provider.
+
+### Source notes
+
+- OpenAI API Reference: `https://platform.openai.com/docs/api-reference/responses`
+- Anthropic Messages API: `https://docs.anthropic.com/en/api/messages`
+- Ollama OpenAI compatibility: `https://docs.ollama.com/openai`
+- LM Studio OpenAI compatibility: `https://lmstudio.ai/docs/developer/openai-compat`
+- vLLM online serving/OpenAI-compatible server: `https://docs.vllm.ai/en/latest/serving/online_serving/`
+- OpenRouter Responses API: `https://openrouter.ai/docs/api/api-reference/responses/create-responses`
+- Portkey Responses API: `https://portkey.ai/docs/api-reference/inference-api/responses/responses`

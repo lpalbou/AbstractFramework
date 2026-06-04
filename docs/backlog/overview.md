@@ -17,13 +17,14 @@ the lifecycle folders described by the backlog process.
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
 | 0142 | [Gateway tenant isolation and shared runtime design](planned/0142_gateway_tenant_isolation_and_shared_runtime.md) | Planned | Define and implement tenant-aware Gateway/Runtime isolation; current shared Gateway deployments are single-user or trusted-cohort only. |
+| 076 | [OpenAI Responses API integration](planned/076_openai_responses_api_integration.md) | Planned | Define a true Core Server `/v1/responses` contract, use native Responses transports where available, and require Core-owned first-class Responses adapters for MLX, HuggingFace, Anthropic, and non-native endpoint profiles. |
 | 0143 | [Shared Gateway per-principal runtime router](planned/0143_shared_gateway_per_principal_runtime_router.md) | In progress | Gateway principal auth, admin user CRUD, per-principal GatewayService routing, and Flow browser-session routing landed; broader app auth and route-family isolation remain open. |
 | 0145-0153 | [Gateway control plane track](planned/gateway-control-plane/README.md) | Planned | Gateway-owned admin/account/config/workflow-permission control plane; starts with responsibility, RBAC, and browser-session contracts before broad UI/app migration. |
 | 0164 | [Gateway Docker GHCR deployment track](planned/0164_gateway_docker_ghcr_deployment_track.md) | In progress | Align Gateway containers with ADR-0033/0034: `ghcr.io/lpalbou/abstractgateway` light/GPU tags, user-auth bootstrap, `/data` volume, PyPI-based image builds, and Docker docs. |
 | 0166 | [Gateway local user-auth bootstrap UX](planned/0166_gateway_local_user_auth_bootstrap_ux.md) | In progress | Native `abstractgateway serve` should match Docker by creating/printing the `default/admin` browser-login token path when user auth is enabled. |
 | 0167 | [Gateway provider connection setup console](planned/0167_gateway_provider_connection_setup_console.md) | In progress | Providers tab now owns endpoint URL/key setup with Test/Confirm modals; Defaults now maps capability routes only to configured provider connections and discovered models. |
 | 0168 | [Abstract release root profile pin guard](planned/0168_release_skill_root_profile_pin_guard.md) | In progress | Tighten the `abstract-release` skill so partial lower-package releases cannot silently leave root pins/docs behind. |
-| 0175 | [Multimodal capabilities track](planned/multimodal-capabilities/README.md) | Planned | Refine the Core capability taxonomy so speech, SFX/sound, and music understanding are distinct without breaking compatibility. Registry coverage for the initial audio-understanding models completed in 0174. |
+| 0179 | [LLM and Agent model input artifacts](planned/0179_llm_agent_model_input_artifacts.md) | Planned | Add first-class Flow model-input artifact-list authoring for LLM Call and Agent nodes, lowering ordered refs to Runtime media/context attachments while preserving Gateway artifact validation and Core route compatibility. |
 
 ## Gateway Control Plane Planned Track
 
@@ -46,6 +47,7 @@ the lifecycle folders described by the backlog process.
 | 0155 | [Hosted proxy shared helper extraction](proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md) | Proposed | Keep conformance tests now; extract a shared Node helper only if Code/Observer or future hosted apps drift again. |
 | 0162-0163 | [Installer and setup track](proposed/installers/README.md) | Proposed | Prepare signed installer CI and evaluate a CPU-local profile after the extraction, generated manifest, doctor, and install chooser work landed. |
 | 0169 | [Gateway Console route-specific default catalogs](proposed/0169_gateway_console_route_specific_default_catalogs.md) | Proposed | Decide the smallest Defaults-modal adapter for embeddings, image/video, voice, and music catalog filtering without moving URL/key setup out of Providers. |
+| 0181 | [Code node managed Python packages with simple authoring UX](proposed/0181_code_node_managed_python_packages_simplified_ux.md) | Proposed | Preserve the package-install architecture guardrails while making the user process simple: write imports, confirm package chips, prepare/test through Gateway, and run with Runtime/worker-managed provenance. |
 
 ## Installer And Setup Proposed Track
 
@@ -54,11 +56,11 @@ the lifecycle folders described by the backlog process.
 | 0162 | [Signed installer CI and distribution](proposed/installers/0162_signed_installer_ci_and_distribution.md) | Proposed | Move from prototype builds to signed/notarized native installer artifacts with checksums and rollback/support logs. |
 | 0163 | [CPU local inference install profile](proposed/installers/0163_cpu_local_inference_install_profile.md) | Proposed | Evaluate `abstractframework[cpu]` separately from Light; require package-by-package backend and dependency evidence before promotion. |
 
-## Multimodal Capabilities Planned Track
+## Multimodal Capabilities Completed Track
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| 0175 | [Multimodal capability taxonomy and schema](planned/multimodal-capabilities/0175_multimodal_capability_taxonomy_schema.md) | Planned | Add route-level audio input semantics for speech, sound/SFX, and music; preserve broad legacy booleans as compatibility views during migration. |
+| 0175 | [Multimodal capability taxonomy and schema](completed/multimodal-capabilities/0175_multimodal_capability_taxonomy_schema.md) | Completed | Added route-keyed `capability_routes`, JSON Schema validation, Core helper APIs, route-aware `/v1/models`, Runtime forwarding, Gateway Console route filters, and `input.music` default-route support; media-policy helper migration remains a follow-up. |
 
 ## Multimodal Capabilities Proposed Track
 
@@ -70,6 +72,10 @@ the lifecycle folders described by the backlog process.
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0180 | [AbstractFlow compact node pin disclosure](completed/0180_abstractflow_compact_node_pin_disclosure.md) | 2026-06-04 | Added a generic UI-only node pin disclosure policy, compact bottom chevron, focused Vitest coverage, lint/build validation, and browser QA for compact/expanded/connected optional pins. |
+| 0178 | [Gateway and Flow reasoning control propagation](completed/0178_gateway_flow_reasoning_control.md) | 2026-06-03 | Added Gateway run-scoped `thinking`, Flow LLM/Agent controls and pins, Runtime VisualFlow propagation, AbstractAgent generation-param forwarding, docs, and focused Gateway/Runtime/Agent/Flow validation. |
+| 0177 | [Flow route-aware provider and model selection](completed/0177_flow_route_aware_model_selection.md) | 2026-06-03 | Threaded Core/Gateway `capability_route` discovery into Flow selectors and Runtime Provider Models execution, including fail-closed invalid route handling, docs, and focused Runtime/Flow validation. |
+| 0175 | [Multimodal capability taxonomy and schema](completed/multimodal-capabilities/0175_multimodal_capability_taxonomy_schema.md) | 2026-06-03 | Added route-keyed model capability metadata and schema, Core route helpers, `/v1/models?capability_route=...`, Runtime/Gateway forwarding, Gateway Console route filters, docs, and focused cross-package tests. |
 | 0174 | [Audio understanding model registry coverage](completed/0174_audio_understanding_model_registry.md) | 2026-06-02 | Added source-backed Core registry entries and route hints for Qwen3-Omni Captioner/Instruct, Qwen2.5-Omni, Qwen2-Audio, Audio Flamingo 3, and MOSS-Audio; Qwen3.6 remains audio false; Qwen3.6 MTP GGUF variants no longer overclaim image/video; schema, alias, lookup, and duplicate-key checks passed. |
 | 0173 | [Core provider endpoint profiles](completed/0173_core_provider_endpoint_profiles.md) | 2026-06-02 | Added Core-owned single-principal provider endpoint profiles, `abstractcore config set-provider/providers/models/test-provider/delete-provider`, `endpoint:*` registry/factory and embedding-manager resolution, OVH-style docs, and redacted CLI output. |
 | 0172 | [Explicit multimodal default fallback routing](completed/0172_explicit_multimodal_default_fallback_routing.md) | 2026-06-02 | Made `input.voice` and explicit/covered `input.video` the fallback gates, removed Flow default editing from Model Residency, allowed blank LLM/Agent pins to use Gateway defaults, added Auto provider switch-back options, and validated Core/Gateway/Runtime/Flow behavior. |

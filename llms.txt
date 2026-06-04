@@ -50,6 +50,13 @@ Notes for LLMs working in this repo:
 - Gateway Console separates provider configuration from defaults: the Providers
   tab stores endpoint URLs/API keys and tests discovery; the Defaults tab only
   maps capability routes to configured virtual providers and discovered models.
+  LLM/embedding model pickers use Core `capability_route` filters such as
+  `input.image,output.text` and `embedding.text`; generated-media defaults use
+  capability plugin catalogs.
+- AbstractFlow uses the same route-aware discovery for text model selectors and
+  Models Catalog nodes. Gateway `/runs/start` accepts optional `thinking`, and
+  Flow LLM Call/Agent nodes can set or pin `thinking` so reasoning controls
+  flow through Runtime and AbstractAgent into Core.
 - Hosted Flow, Code Web, and Observer use the server-configured Gateway URL on
   non-loopback UI hostnames. Browser-supplied Gateway URL changes are rejected
   unless the app-specific remote override is enabled behind access control.

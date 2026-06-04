@@ -12,11 +12,22 @@ NODE_BIN="${NODE_BIN:-node}"
 STARTUP_TIMEOUT_S="${STARTUP_TIMEOUT_S:-90}"
 VERBOSE="${VERBOSE:-0}"
 
-GATEWAY_HOST="${GATEWAY_HOST:-${ABSTRACTGATEWAY_HOST:-127.0.0.1}}"
+GATEWAY_HOST="${GATEWAY_HOST:-${ABSTRACTGATEWAY_HOST:-0.0.0.0}}"
 GATEWAY_PORT="${GATEWAY_PORT:-${ABSTRACTGATEWAY_PORT:-8080}}"
-FLOW_HOST="${FLOW_HOST:-${ABSTRACTFLOW_HOST:-127.0.0.1}}"
+FLOW_HOST="${FLOW_HOST:-${ABSTRACTFLOW_HOST:-0.0.0.0}}"
 FLOW_PORT="${FLOW_PORT:-${ABSTRACTFLOW_PORT:-${PORT:-3000}}}"
-GATEWAY_URL="${GATEWAY_URL:-http://${GATEWAY_HOST}:${GATEWAY_PORT}}"
+case "$GATEWAY_HOST" in
+    0.0.0.0|::) GATEWAY_CONNECT_HOST="${GATEWAY_CONNECT_HOST:-127.0.0.1}" ;;
+    *) GATEWAY_CONNECT_HOST="${GATEWAY_CONNECT_HOST:-$GATEWAY_HOST}" ;;
+esac
+case "$FLOW_HOST" in
+    0.0.0.0|::) FLOW_CONNECT_HOST="${FLOW_CONNECT_HOST:-127.0.0.1}" ;;
+    *) FLOW_CONNECT_HOST="${FLOW_CONNECT_HOST:-$FLOW_HOST}" ;;
+esac
+PUBLIC_HOST="${PUBLIC_HOST:-${LAN_HOST:-${ABSTRACTFRAMEWORK_PUBLIC_HOST:-}}}"
+GATEWAY_PUBLIC_HOST="${GATEWAY_PUBLIC_HOST:-${ABSTRACTGATEWAY_PUBLIC_HOST:-$PUBLIC_HOST}}"
+FLOW_PUBLIC_HOST="${FLOW_PUBLIC_HOST:-${ABSTRACTFLOW_PUBLIC_HOST:-$PUBLIC_HOST}}"
+GATEWAY_URL="${GATEWAY_URL:-http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}}"
 RUNTIME_DIR="${RUNTIME_DIR:-${ABSTRACTFRAMEWORK_RUNTIME_DIR:-$ROOT_DIR/runtime}}"
 GATEWAY_RUNTIME_DIR="${GATEWAY_RUNTIME_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-$RUNTIME_DIR}}"
 GATEWAY_FLOWS_DIR="${GATEWAY_FLOWS_DIR:-${ABSTRACTGATEWAY_FLOWS_DIR:-$ROOT_DIR/abstractgateway/flows/bundles}}"
@@ -30,10 +41,10 @@ SHOW_ALL_GATEWAY_USERS="${SHOW_ALL_GATEWAY_USERS:-0}"
 SHOW_ADMIN_TOKEN="${SHOW_ADMIN_TOKEN:-0}"
 STOP_EXISTING="${STOP_EXISTING:-1}"
 FLOW_DIST_INDEX="$ROOT_DIR/abstractflow/dist/index.html"
-GATEWAY_HEALTH_URL="http://${GATEWAY_HOST}:${GATEWAY_PORT}/api/health"
+GATEWAY_HEALTH_URL="http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}/api/health"
 GATEWAY_CAPABILITIES_URL="${GATEWAY_URL}/api/gateway/discovery/capabilities"
-FLOW_HEALTH_URL="http://${FLOW_HOST}:${FLOW_PORT}/api/health"
-FLOW_UI_URL="http://${FLOW_HOST}:${FLOW_PORT}/"
+FLOW_HEALTH_URL="http://${FLOW_CONNECT_HOST}:${FLOW_PORT}/api/health"
+FLOW_UI_URL="http://${FLOW_CONNECT_HOST}:${FLOW_PORT}/"
 
 usage() {
     cat <<EOF
@@ -47,8 +58,12 @@ Environment overrides:
   VENV_DIR                         Local development venv (default: $ROOT_DIR/.venv)
   PYTHON_BIN / PYTHON              Python executable (default: VENV_DIR/bin/python)
   NODE_BIN                         Node executable for AbstractFlow (default: node)
-  GATEWAY_HOST / GATEWAY_PORT      Gateway bind (default: 127.0.0.1:8080)
-  FLOW_HOST / FLOW_PORT            Flow bind (default: 127.0.0.1:3000)
+  GATEWAY_HOST / GATEWAY_PORT      Gateway bind (default: 0.0.0.0:8080 for LAN access)
+  GATEWAY_URL                      Gateway URL used by Flow proxy (default: loopback Gateway URL)
+  PUBLIC_HOST / LAN_HOST           LAN hostname/IP to print for both services (default: auto-detect)
+  GATEWAY_PUBLIC_HOST              LAN hostname/IP to print for Gateway (default: PUBLIC_HOST)
+  FLOW_HOST / FLOW_PORT            Flow bind (default: 0.0.0.0:3000 for LAN access)
+  FLOW_PUBLIC_HOST                 LAN hostname/IP to print for Flow (default: PUBLIC_HOST)
   RUNTIME_DIR                      Shared runtime root (default: $ROOT_DIR/runtime)
   GATEWAY_FLOWS_DIR                Gateway bundle dir (default: abstractgateway/flows/bundles)
   LOCAL_GATEWAY_USERS              Comma-separated local dev users to ensure (default: admin)
@@ -114,6 +129,67 @@ is_truthy() {
         1|true|TRUE|yes|YES|on|ON) return 0 ;;
         *) return 1 ;;
     esac
+}
+
+is_wildcard_host() {
+    case "${1:-}" in
+        0.0.0.0|::) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_loopback_host() {
+    case "${1:-}" in
+        localhost|127.*|::1) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+detect_lan_host() {
+    "$PYTHON_BIN" - <<'PY'
+import socket
+import sys
+
+
+def emit(ip: str) -> None:
+    ip = str(ip or "").strip()
+    if ip and not ip.startswith("127.") and ip != "0.0.0.0":
+        print(ip)
+        raise SystemExit(0)
+
+
+try:
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.settimeout(0.2)
+        sock.connect(("8.8.8.8", 80))
+        emit(sock.getsockname()[0])
+except Exception:
+    pass
+
+try:
+    infos = socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET, socket.SOCK_DGRAM)
+except Exception:
+    infos = []
+
+seen: set[str] = set()
+for info in infos:
+    ip = str(info[4][0])
+    if ip in seen:
+        continue
+    seen.add(ip)
+    emit(ip)
+
+sys.exit(1)
+PY
+}
+
+append_default_gateway_origin() {
+    local origin="$1"
+    [[ -n "$origin" ]] || return 0
+    case ",$DEFAULT_GATEWAY_ALLOWED_ORIGINS," in
+        *,"$origin",*) return 0 ;;
+    esac
+    DEFAULT_GATEWAY_ALLOWED_ORIGINS="${DEFAULT_GATEWAY_ALLOWED_ORIGINS},${origin}"
 }
 
 show_log_tail() {
@@ -644,6 +720,50 @@ PY
 [[ -f "$FLOW_DIST_INDEX" ]] || die "AbstractFlow dist is missing: $FLOW_DIST_INDEX. Run ./scripts/build.sh or npm --prefix abstractflow run build."
 [[ -f "$GATEWAY_FLOWS_DIR/basic-agent.flow" || -f "$GATEWAY_FLOWS_DIR/basic-agent@0.0.1.flow" ]] || die "Gateway bundle dir must contain basic-agent: $GATEWAY_FLOWS_DIR"
 
+DETECTED_PUBLIC_HOST=""
+if { [[ -z "$GATEWAY_PUBLIC_HOST" ]] && is_wildcard_host "$GATEWAY_HOST"; } || \
+    { [[ -z "$FLOW_PUBLIC_HOST" ]] && is_wildcard_host "$FLOW_HOST"; }; then
+    DETECTED_PUBLIC_HOST="$(detect_lan_host 2>/dev/null || true)"
+fi
+if [[ -z "$GATEWAY_PUBLIC_HOST" ]] && is_wildcard_host "$GATEWAY_HOST"; then
+    GATEWAY_PUBLIC_HOST="$DETECTED_PUBLIC_HOST"
+fi
+if [[ -z "$FLOW_PUBLIC_HOST" ]] && is_wildcard_host "$FLOW_HOST"; then
+    FLOW_PUBLIC_HOST="$DETECTED_PUBLIC_HOST"
+fi
+
+GATEWAY_LOCAL_URL="http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}"
+GATEWAY_NETWORK_URL=""
+if [[ -n "$GATEWAY_PUBLIC_HOST" ]]; then
+    GATEWAY_NETWORK_URL="http://${GATEWAY_PUBLIC_HOST}:${GATEWAY_PORT}"
+elif is_wildcard_host "$GATEWAY_HOST"; then
+    GATEWAY_NETWORK_URL="http://<this-machine-LAN-IP>:${GATEWAY_PORT}"
+elif ! is_loopback_host "$GATEWAY_HOST"; then
+    GATEWAY_NETWORK_URL="http://${GATEWAY_HOST}:${GATEWAY_PORT}"
+fi
+
+FLOW_LOCAL_URL="http://${FLOW_CONNECT_HOST}:${FLOW_PORT}"
+FLOW_NETWORK_URL=""
+if [[ -n "$FLOW_PUBLIC_HOST" ]]; then
+    FLOW_NETWORK_URL="http://${FLOW_PUBLIC_HOST}:${FLOW_PORT}"
+elif is_wildcard_host "$FLOW_HOST"; then
+    FLOW_NETWORK_URL="http://<this-machine-LAN-IP>:${FLOW_PORT}"
+elif ! is_loopback_host "$FLOW_HOST"; then
+    FLOW_NETWORK_URL="http://${FLOW_HOST}:${FLOW_PORT}"
+fi
+
+DEFAULT_GATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+if [[ -n "$FLOW_PUBLIC_HOST" ]]; then
+    append_default_gateway_origin "http://${FLOW_PUBLIC_HOST}:${FLOW_PORT}"
+elif ! is_wildcard_host "$FLOW_HOST" && ! is_loopback_host "$FLOW_HOST"; then
+    append_default_gateway_origin "http://${FLOW_HOST}:${FLOW_PORT}"
+fi
+if [[ -n "$GATEWAY_PUBLIC_HOST" ]]; then
+    append_default_gateway_origin "http://${GATEWAY_PUBLIC_HOST}:${GATEWAY_PORT}"
+elif ! is_wildcard_host "$GATEWAY_HOST" && ! is_loopback_host "$GATEWAY_HOST"; then
+    append_default_gateway_origin "http://${GATEWAY_HOST}:${GATEWAY_PORT}"
+fi
+
 if [[ -z "${ABSTRACTGATEWAY_AUTH_TOKEN:-}" && -r "$DEFAULT_TOKEN_FILE" ]]; then
     ABSTRACTGATEWAY_AUTH_TOKEN="$(tr -d '\r\n' < "$DEFAULT_TOKEN_FILE")"
 fi
@@ -651,7 +771,7 @@ fi
 export ABSTRACTGATEWAY_AUTH_TOKEN="${ABSTRACTGATEWAY_AUTH_TOKEN:-local-dev-token}"
 export ABSTRACTGATEWAY_HOST="$GATEWAY_HOST"
 export ABSTRACTGATEWAY_PORT="$GATEWAY_PORT"
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="${ABSTRACTGATEWAY_ALLOWED_ORIGINS:-http://localhost:*,http://127.0.0.1:*}"
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="${ABSTRACTGATEWAY_ALLOWED_ORIGINS:-$DEFAULT_GATEWAY_ALLOWED_ORIGINS}"
 export ABSTRACTGATEWAY_DATA_DIR="$GATEWAY_RUNTIME_DIR"
 export ABSTRACTGATEWAY_FLOWS_DIR="$GATEWAY_FLOWS_DIR"
 export ABSTRACTGATEWAY_USER_AUTH="${ABSTRACTGATEWAY_USER_AUTH:-1}"
@@ -675,8 +795,8 @@ fi
 kill_port_listeners "$GATEWAY_PORT" "AbstractGateway"
 kill_port_listeners "$FLOW_PORT" "AbstractFlow"
 
-port_in_use "$GATEWAY_HOST" "$GATEWAY_PORT" && die "gateway port is already in use: ${GATEWAY_HOST}:${GATEWAY_PORT}"
-port_in_use "$FLOW_HOST" "$FLOW_PORT" && die "flow port is already in use: ${FLOW_HOST}:${FLOW_PORT}"
+port_in_use "$GATEWAY_CONNECT_HOST" "$GATEWAY_PORT" && die "gateway port is already in use: ${GATEWAY_HOST}:${GATEWAY_PORT}"
+port_in_use "$FLOW_CONNECT_HOST" "$FLOW_PORT" && die "flow port is already in use: ${FLOW_HOST}:${FLOW_PORT}"
 
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 FLOW_LOG="$LOG_DIR/flow.log"
@@ -750,12 +870,16 @@ if ! wait_for_url "$FLOW_UI_URL" "$STARTUP_TIMEOUT_S" "$FLOW_PID"; then
 fi
 echo "  UI: ready"
 
-cat <<EOF
-
-Gateway ready: http://${GATEWAY_HOST}:${GATEWAY_PORT}
-Flow ready:    http://${FLOW_HOST}:${FLOW_PORT}
-
-EOF
+echo
+echo "Gateway local:   $GATEWAY_LOCAL_URL"
+if [[ -n "$GATEWAY_NETWORK_URL" ]]; then
+    echo "Gateway network: $GATEWAY_NETWORK_URL"
+fi
+echo "Flow local:      $FLOW_LOCAL_URL"
+if [[ -n "$FLOW_NETWORK_URL" ]]; then
+    echo "Flow network:    $FLOW_NETWORK_URL"
+fi
+echo
 
 sed -n '1,160p' "$GATEWAY_USERS_REPORT"
 

@@ -94,7 +94,7 @@ understanding without confusing STT models, SFX generators, and music generators
 - Do not infer sound/music understanding from STT model names.
 
 ## Dependencies and related tasks
-- `0175_multimodal_capability_taxonomy_schema.md`
+- `docs/backlog/completed/multimodal-capabilities/0175_multimodal_capability_taxonomy_schema.md`
 - `docs/backlog/completed/0172_explicit_multimodal_default_fallback_routing.md`
 - `docs/adr/0035-capability-routing-defaults.md`
 
@@ -169,8 +169,8 @@ Files touched:
 - `abstractcore/tests/assets/test_model_capabilities_schema.py`
 - `abstractcore/tests/providers/test_model_registry_variant_resolution_unit.py`
 - `docs/backlog/completed/0174_audio_understanding_model_registry.md`
-- `docs/backlog/planned/multimodal-capabilities/README.md`
-- `docs/backlog/planned/multimodal-capabilities/0175_multimodal_capability_taxonomy_schema.md`
+- `docs/backlog/completed/multimodal-capabilities/README.md`
+- `docs/backlog/completed/multimodal-capabilities/0175_multimodal_capability_taxonomy_schema.md`
 - `docs/backlog/overview.md`
 
 Validation:
@@ -190,7 +190,9 @@ Validation:
 
 Residual risks and follow-ups:
 - `audio_input_capabilities` is metadata only in this item. Route-specific
-  runtime behavior remains owned by `0175_multimodal_capability_taxonomy_schema.md`.
+  runtime behavior was implemented by
+  `docs/backlog/completed/multimodal-capabilities/0175_multimodal_capability_taxonomy_schema.md`;
+  media-policy migration remains follow-up work.
 - Model acquisition/download guidance for large local audio models remains owned
   by `0176_multimodal_model_acquisition_guidance.md`.
 - Some HF candidates are intentionally not included yet: Kimi-Audio,

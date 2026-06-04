@@ -100,6 +100,7 @@ AbstractCore organizes defaults as **capability routes** — stable slots scoped
 | `input.video` | Video-understanding fallback when native video/frame support is not available or should be overridden |
 | `input.voice` | Speech-to-text fallback for audio attachments |
 | `input.sound` | Non-speech audio/SFX understanding route, not a speech transcription route |
+| `input.music` | Music-audio understanding route, not a speech transcription route |
 | `embedding.text` | Default embeddings model |
 
 ### Set defaults in Core (single-host)
@@ -116,6 +117,40 @@ The older `abstractcore --set-global-default ...` and
 `abstractcore --set-capability-default ...` flags remain supported for
 compatibility. The `abstractcore config ...` form is the preferred explicit
 route-default syntax.
+
+Model discovery for LLM and embedding defaults can filter by Core route keys,
+for example `capability_route=input.image,output.text`,
+`capability_route=input.sound,output.text`, or
+`capability_route=embedding.text`. Generated image/video/voice/sound/music
+defaults use capability plugin catalogs instead, so plugin readiness and
+download/setup state are not stored in `model_capabilities.json`.
+
+AbstractFlow uses the same Gateway/Core discovery contract for text model
+authoring. Text provider/model selectors ask Gateway for `output.text` models,
+and the Models Catalog node can store a capability route such as
+`input.image,output.text` so workflows can discover the provider's models for a
+specific input/output shape at run time. Flow stores only selection intent; Core
+and Gateway remain the source of truth for model capability metadata.
+
+### Reasoning and thinking controls
+
+AbstractCore exposes a provider-neutral `thinking` generation option for models
+that support explicit reasoning controls. Gateway accepts the same field on
+`POST /api/gateway/runs/start` and stores it as `_runtime.thinking` for the
+run:
+
+```json
+{
+  "bundle_id": "basic-agent",
+  "input_data": {"prompt": "Plan the migration"},
+  "thinking": "high"
+}
+```
+
+Flow LLM Call and Agent nodes also expose a Reasoning selector and a `thinking`
+input pin. A node setting or pin value overrides the run default for that node;
+leaving it on Auto inherits the Gateway/runtime default. Core performs the
+provider-specific translation or unsupported-parameter handling.
 
 ### Core provider endpoint profiles
 
@@ -212,12 +247,13 @@ default, and generated media routes such as `output.image`, `output.voice`,
 `output.sound`, `output.music`, or `output.video` run through that route's
 configured provider/model and return the generated artifact link.
 
-`input.voice`, `input.video`, and `input.sound` are fallback gates, not hidden
+`input.voice`, `input.video`, `input.sound`, and `input.music` are fallback gates, not hidden
 package probes. If a route is unconfigured and the primary text model cannot
 handle that input natively, the request fails with a configuration error rather
-than silently using an installed speech, vision, or audio package. `input.video`
-can be reported as covered by `input.text` when the text model supports visual
-frames; operators can still override it with a dedicated video/VLM route.
+than silently using an installed speech, vision, audio, or music package.
+`input.video`, `input.sound`, and `input.music` can be reported as covered by
+`input.text` when the text model supports those inputs; operators can still
+override them with dedicated routes.
 
 After creation, the profile appears in provider discovery as a virtual provider
 id such as `endpoint:office-vllm`. Use that provider id in AbstractFlow nodes or

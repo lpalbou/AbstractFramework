@@ -6,9 +6,9 @@ setup, model acquisition, and operator/user onboarding.
 Items here are plausible and useful, but they need more evidence before they
 become implementation commitments.
 
-## Related planned track
+## Related completed track
 
-- `docs/backlog/planned/multimodal-capabilities/README.md`
+- `docs/backlog/completed/multimodal-capabilities/README.md`
 
 ## Non-goals
 

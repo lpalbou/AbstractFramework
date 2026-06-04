@@ -7,6 +7,7 @@ Accepted (2026-05-24)
 - Proposed: 2026-05-24
 - Accepted: 2026-05-24
 - Revised: 2026-05-24
+- Revised: 2026-06-03
 
 ## Context
 
@@ -64,6 +65,7 @@ The current route matrix is:
 | `input.video` | Video understanding / native video or frame route |
 | `input.voice` | Speech input / STT route |
 | `input.sound` | Non-speech audio understanding route |
+| `input.music` | Music-audio understanding route |
 | `input.scene3d` | 3D scene understanding route |
 | `output.text` | Read-only derived view of `input.text` |
 | `output.image` | Image generation route |
@@ -101,6 +103,24 @@ AbstractCore, Gateway deployment secrets, or capability-package configuration.
 `base_url` is interpreted from the execution host that performs the capability call. In split
 deployments, a provider URL reachable from the Runtime/Core host may not be reachable from Gateway
 or the browser, and the control plane must not pretend otherwise.
+
+Effective control-plane rows may add derived metadata such as `source`, `status`, `configured`,
+`covered_by`, `read_only`, `overrideable`, `available_actions`, or validation/readiness hints.
+Those fields are not persisted route-default payload fields. They are computed from configured
+Core routes, model capability coverage, provider catalogs, plugin readiness, and host write policy.
+
+### 2.1) Model capability metadata is route-normalized but not a defaults store
+
+`abstractcore/assets/model_capabilities.json` may expose route-keyed native model support metadata
+that uses the same `input.*`, `output.*`, `embedding.*`, and `rerank.*` vocabulary as capability
+defaults. This metadata answers questions such as "can this model natively satisfy `input.image`,
+`input.sound`, or `embedding.text`?"
+
+It does not replace capability defaults, provider catalogs, plugin catalogs, or readiness checks.
+Static model metadata must not claim that a configured provider is reachable, a local model is
+downloaded or loaded, a plugin is installed, or a route is allowed by policy. Generative and
+transform backend inventories remain owned by the capability packages that implement them, per
+ADR-0028.
 
 ### 3) Core owns the schema and persistence
 
@@ -167,6 +187,11 @@ explicit `input.voice` route or an explicit per-request speech-to-text policy.
 `input.sound` is non-speech audio understanding and must not be reused as a
 speech transcription route.
 
+`input.sound` and `input.music` may be covered by `input.text` only when the
+configured text route points to a model that AbstractCore's model-capability
+registry says accepts those native audio/music inputs. They remain overrideable
+so operators can choose a dedicated audio-understanding backend.
+
 ### 6) Residency is separate from defaults
 
 Model residency routes list provider-reported loaded/resident models. Capability defaults list
@@ -211,6 +236,14 @@ saved workflows.
 ## Enforcement
 
 - New capability-default API fields use `kind`, not `direction`.
+- Persisted route defaults stay limited to `provider`, `model`, `base_url`, and `options`; row
+  `source`/`status`/`action`/coverage/readiness metadata must be derived by effective-default APIs
+  or thin clients.
+- Model capability registry changes that add route-keyed support metadata must use the same route
+  vocabulary as this ADR and must not introduce nested boolean `input_capabilities` /
+  `output_capabilities` as a second public taxonomy.
+- `model_capabilities.json` must not become a provider/plugin readiness or acquisition catalog;
+  capability package catalogs remain the authority for implemented transform/generative backends.
 - Gateway code must not add new persisted provider/model defaults files.
 - Gateway embedding code must resolve `embedding.text` through the execution-host capability
   defaults path.
@@ -224,6 +257,9 @@ saved workflows.
 - Core config tests cover explicit route defaults, `output.text` canonicalization
   to `input.text`, image fallback coverage by vision-capable text models, and
   embedding route/base URL synchronization.
+- Core model-registry tests cover any route-keyed capability metadata, derived broad-boolean
+  compatibility views, and rejection of route taxonomy drift or unsupported source/status/action
+  fields in raw model records.
 - Core media-policy tests cover explicit `input.voice` STT fallback gating and
   explicit `input.video` VLM/frame fallback routing.
 - Core server tests cover the `/v1/config/capability-defaults/{kind}/{modality}` contract.
