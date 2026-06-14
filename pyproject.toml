@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.10"
+version = "0.1.11"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -51,7 +51,7 @@ dependencies = [
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
     "abstractcode==0.3.9",
-    "abstractassistant==0.4.10",
+    "abstractassistant==0.4.11",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
     "abstractcore==2.13.38",
@@ -81,12 +81,12 @@ dependencies = [
 # then adds user-facing apps.
 apple = [
     "abstractgateway[apple]==0.2.28",
-    "abstractassistant[apple]==0.4.10; platform_system == \"Darwin\"",
+    "abstractassistant[apple]==0.4.11; platform_system == \"Darwin\"",
 ]
 
 gpu = [
     "abstractgateway[gpu]==0.2.28",
-    "abstractassistant[gpu]==0.4.10",
+    "abstractassistant[gpu]==0.4.11",
 ]
 
 [project.urls]

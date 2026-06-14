@@ -4,6 +4,12 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-06-14
+
+### Changed
+
+- Repinned the root release profile to `abstractassistant==0.4.11` after the follow-up Gateway history/message-id patch so the meta-package only points at the final published assistant build from this release wave.
+
 ## [0.1.10] - 2026-06-14
 
 ### Changed
