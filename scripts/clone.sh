@@ -44,6 +44,7 @@ SIBLING_REPOS=(
     "https://github.com/lpalbou/abstractvision.git"
     "https://github.com/lpalbou/AbstractMusic.git"
     "https://github.com/lpalbou/abstractassistant.git"
+    "https://github.com/lpalbou/AbstractSkill.git"
     # Browser UIs & npm packages
     "https://github.com/lpalbou/abstractobserver.git"
     # UI component library (React monorepo)
@@ -120,6 +121,10 @@ echo ""
 # ── Clone / update sibling repos ───────────────────────────────────────────
 for repo_url in "${SIBLING_REPOS[@]}"; do
     repo_name=$(basename "$repo_url" .git)
+    # Keep local checkout names aligned with PyPI package directories.
+    if [[ "$repo_name" == "AbstractSkill" ]]; then
+        repo_name="abstractskill"
+    fi
 
     if [ -d "$TARGET_DIR/$repo_name/.git" ]; then
         echo "↻  Updating  $repo_name"

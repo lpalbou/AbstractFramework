@@ -60,6 +60,8 @@ The Abstract Framework is a multi-package ecosystem where architectural decision
 | 0033 | [Install Profiles, Config Entrypoints, and Server Boundaries](0033-install-profiles-config-entrypoints-and-server-boundaries.md) | Accepted | 2026-05-08 | All | Defines Core/Gateway entry points, profile vocabulary, config precedence, and auth/CORS boundaries |
 | 0034 | [Framework Release Sequence and Gates](0034-framework-release-sequence-and-gates.md) | Accepted | 2026-05-09 | All | Defines build-aligned release order, registry propagation gates, branch CI gates, and Gateway/root readiness discipline |
 | 0035 | [Capability Routing Defaults](0035-capability-routing-defaults.md) | Accepted | 2026-05-24 | Core, Gateway, Flow, capability plugins | Defines input/output, embedding, and rerank capability routes with Core-owned persistence and Gateway control-plane access |
+| 0036 | [Runtime-Owned Artifact Descriptor Contract](0036-artifact-descriptor-contract.md) | Accepted | 2026-06-06 | Runtime, Gateway, Observer, Core, capability plugins | Defines Runtime-owned artifact descriptors, access stats, legacy projection, and Gateway/Observer responsibilities |
+| 0037 | [Hosted File Source Contract And WorkspacePath Authority](0037-hosted-file-source-contract-and-workspacepath-authority.md) | Accepted | 2026-06-11 | Flow, Gateway, Runtime, Observer, Code | Defines hosted `Artifact` / `Local File` / `Server File` source terms, Gateway-owned server-path authority, and the `WorkspacePath` target contract |
 
 ### Package-Specific Decisions
 

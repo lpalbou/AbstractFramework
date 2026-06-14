@@ -4,6 +4,28 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-06-14
+
+### Changed
+
+- Synced the root Light, Apple, and GPU release profile to the published framework wave:
+  `abstractgateway==0.2.28`, `abstractassistant==0.4.10`, `abstractcore==2.13.38`,
+  `AbstractRuntime==0.4.29`, `abstractagent==0.3.12`, `abstractvoice==0.10.18`,
+  `abstractvision==0.3.26`, `@abstractframework/flow==0.3.19`, and
+  `@abstractframework/observer==0.1.11`.
+- Regenerated the installer manifest and package/version guards from the root release profile so CLI doctor/manifest checks, install docs, and profile tests all match the published package set.
+
+## [0.1.9] - 2026-06-06
+
+### Changed
+
+- Updated root Light, Apple, and GPU release pins to consume the permissive PDF stack:
+  `abstractgateway==0.2.27`, `abstractcore==2.13.35`, `AbstractRuntime==0.4.28`,
+  and `abstractvision==0.3.22`.
+- The root install profiles now inherit Runtime's always-installed `pypdf` and
+  `reportlab` PDF read/write path while keeping PyMuPDF-family dependencies out
+  of default installs.
+
 ## [0.1.8] - 2026-06-03
 
 ### Changed

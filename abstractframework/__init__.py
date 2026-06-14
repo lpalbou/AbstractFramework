@@ -10,22 +10,22 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.8"
+__version__ = "0.1.10"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.32",
-    "abstractruntime": "0.4.27",
-    "abstractagent": "0.3.11",
+    "abstractcore": "2.13.38",
+    "abstractruntime": "0.4.29",
+    "abstractagent": "0.3.12",
     "abstractcode": "0.3.9",
-    "abstractgateway": "0.2.26",
+    "abstractgateway": "0.2.28",
     "abstractmemory": "0.2.6",
     "abstractsemantics": "0.0.4",
-    "abstractvoice": "0.10.17",
-    "abstractvision": "0.3.19",
+    "abstractvoice": "0.10.18",
+    "abstractvision": "0.3.26",
     "abstractmusic": "0.1.13",
-    "abstractassistant": "0.4.9",
+    "abstractassistant": "0.4.10",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -43,9 +43,9 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.3.18",
+    "@abstractframework/flow": "0.3.19",
     "@abstractframework/code": "0.3.9",
-    "@abstractframework/observer": "0.1.10",
+    "@abstractframework/observer": "0.1.11",
 }
 
 CORE_DEFAULT_EXTRAS = [

@@ -144,6 +144,24 @@ Any gateway-backed client can: list bundles/entrypoints, start a run, attach to 
 - Control runs (cancel, resume)
 - Schedule recurring runs
 
+## File-like sources in hosted clients
+
+Hosted clients such as AbstractFlow need a clear split between file origin and
+runtime value:
+
+- `Artifact`: a saved Runtime-owned file payload. Reusable across runs.
+- `Local File`: a file chosen from the client device. In hosted/browser mode it
+  is uploaded and normalized into an Artifact before durable execution.
+- `Server File`: a user-facing label for a file inside Gateway-approved
+  workspace scope on the server. Path-based operations still depend on
+  workspace policy and current grants; importing it creates an Artifact
+  snapshot.
+
+Internally, the durable payload handle is the artifact ref. Server-side path
+access stays a Gateway-owned workspace capability rather than a generic server
+filesystem abstraction. Current UI surfaces may still say `Workspace` in some
+places until terminology alignment work lands.
+
 ---
 
 ## Multimodality

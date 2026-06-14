@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run AbstractGateway and AbstractFlow from this source checkout.
+# Run AbstractGateway, AbstractFlow, and AbstractObserver from this source checkout.
 
 set -euo pipefail
 
@@ -16,6 +16,8 @@ GATEWAY_HOST="${GATEWAY_HOST:-${ABSTRACTGATEWAY_HOST:-0.0.0.0}}"
 GATEWAY_PORT="${GATEWAY_PORT:-${ABSTRACTGATEWAY_PORT:-8080}}"
 FLOW_HOST="${FLOW_HOST:-${ABSTRACTFLOW_HOST:-0.0.0.0}}"
 FLOW_PORT="${FLOW_PORT:-${ABSTRACTFLOW_PORT:-${PORT:-3000}}}"
+OBSERVER_HOST="${OBSERVER_HOST:-${ABSTRACTOBSERVER_HOST:-0.0.0.0}}"
+OBSERVER_PORT="${OBSERVER_PORT:-${ABSTRACTOBSERVER_PORT:-3001}}"
 case "$GATEWAY_HOST" in
     0.0.0.0|::) GATEWAY_CONNECT_HOST="${GATEWAY_CONNECT_HOST:-127.0.0.1}" ;;
     *) GATEWAY_CONNECT_HOST="${GATEWAY_CONNECT_HOST:-$GATEWAY_HOST}" ;;
@@ -24,9 +26,14 @@ case "$FLOW_HOST" in
     0.0.0.0|::) FLOW_CONNECT_HOST="${FLOW_CONNECT_HOST:-127.0.0.1}" ;;
     *) FLOW_CONNECT_HOST="${FLOW_CONNECT_HOST:-$FLOW_HOST}" ;;
 esac
+case "$OBSERVER_HOST" in
+    0.0.0.0|::) OBSERVER_CONNECT_HOST="${OBSERVER_CONNECT_HOST:-127.0.0.1}" ;;
+    *) OBSERVER_CONNECT_HOST="${OBSERVER_CONNECT_HOST:-$OBSERVER_HOST}" ;;
+esac
 PUBLIC_HOST="${PUBLIC_HOST:-${LAN_HOST:-${ABSTRACTFRAMEWORK_PUBLIC_HOST:-}}}"
 GATEWAY_PUBLIC_HOST="${GATEWAY_PUBLIC_HOST:-${ABSTRACTGATEWAY_PUBLIC_HOST:-$PUBLIC_HOST}}"
 FLOW_PUBLIC_HOST="${FLOW_PUBLIC_HOST:-${ABSTRACTFLOW_PUBLIC_HOST:-$PUBLIC_HOST}}"
+OBSERVER_PUBLIC_HOST="${OBSERVER_PUBLIC_HOST:-${ABSTRACTOBSERVER_PUBLIC_HOST:-$PUBLIC_HOST}}"
 GATEWAY_URL="${GATEWAY_URL:-http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}}"
 RUNTIME_DIR="${RUNTIME_DIR:-${ABSTRACTFRAMEWORK_RUNTIME_DIR:-$ROOT_DIR/runtime}}"
 GATEWAY_RUNTIME_DIR="${GATEWAY_RUNTIME_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-$RUNTIME_DIR}}"
@@ -41,29 +48,33 @@ SHOW_ALL_GATEWAY_USERS="${SHOW_ALL_GATEWAY_USERS:-0}"
 SHOW_ADMIN_TOKEN="${SHOW_ADMIN_TOKEN:-0}"
 STOP_EXISTING="${STOP_EXISTING:-1}"
 FLOW_DIST_INDEX="$ROOT_DIR/abstractflow/dist/index.html"
+OBSERVER_DIST_INDEX="$ROOT_DIR/abstractobserver/dist/index.html"
 GATEWAY_HEALTH_URL="http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}/api/health"
 GATEWAY_CAPABILITIES_URL="${GATEWAY_URL}/api/gateway/discovery/capabilities"
 FLOW_HEALTH_URL="http://${FLOW_CONNECT_HOST}:${FLOW_PORT}/api/health"
 FLOW_UI_URL="http://${FLOW_CONNECT_HOST}:${FLOW_PORT}/"
+OBSERVER_UI_URL="http://${OBSERVER_CONNECT_HOST}:${OBSERVER_PORT}/"
 
 usage() {
     cat <<EOF
 Usage: $0 [--light|--apple|--gpu]
 
-Runs AbstractGateway from local Python sources and AbstractFlow from the local
-web package source. The script prepends local Python package paths to
-PYTHONPATH for Gateway and starts Flow with Node.
+Runs AbstractGateway from local Python sources and AbstractFlow/AbstractObserver
+from local web package sources. The script prepends local Python package paths
+to PYTHONPATH for Gateway and starts the web UIs with Node.
 
 Environment overrides:
   VENV_DIR                         Local development venv (default: $ROOT_DIR/.venv)
   PYTHON_BIN / PYTHON              Python executable (default: VENV_DIR/bin/python)
-  NODE_BIN                         Node executable for AbstractFlow (default: node)
+  NODE_BIN                         Node executable for AbstractFlow/Observer (default: node)
   GATEWAY_HOST / GATEWAY_PORT      Gateway bind (default: 0.0.0.0:8080 for LAN access)
-  GATEWAY_URL                      Gateway URL used by Flow proxy (default: loopback Gateway URL)
-  PUBLIC_HOST / LAN_HOST           LAN hostname/IP to print for both services (default: auto-detect)
+  GATEWAY_URL                      Gateway URL used by Flow/Observer proxies (default: loopback Gateway URL)
+  PUBLIC_HOST / LAN_HOST           LAN hostname/IP to print for all services (default: auto-detect)
   GATEWAY_PUBLIC_HOST              LAN hostname/IP to print for Gateway (default: PUBLIC_HOST)
   FLOW_HOST / FLOW_PORT            Flow bind (default: 0.0.0.0:3000 for LAN access)
   FLOW_PUBLIC_HOST                 LAN hostname/IP to print for Flow (default: PUBLIC_HOST)
+  OBSERVER_HOST / OBSERVER_PORT    Observer bind (default: 0.0.0.0:3001 for LAN access)
+  OBSERVER_PUBLIC_HOST             LAN hostname/IP to print for Observer (default: PUBLIC_HOST)
   RUNTIME_DIR                      Shared runtime root (default: $ROOT_DIR/runtime)
   GATEWAY_FLOWS_DIR                Gateway bundle dir (default: abstractgateway/flows/bundles)
   LOCAL_GATEWAY_USERS              Comma-separated local dev users to ensure (default: admin)
@@ -74,7 +85,7 @@ Environment overrides:
   SHOW_ADMIN_TOKEN                 Print the admin token in the final banner (default: 0)
   VERBOSE                          Print local import paths and commands (default: 0)
   STARTUP_TIMEOUT_S                Startup readiness timeout in seconds (default: 90)
-  STOP_EXISTING                    Kill existing gateway/flow first (default: 1)
+  STOP_EXISTING                    Kill existing gateway/flow/observer first (default: 1)
 
 Build local dependencies first when needed:
   ./scripts/build.sh          # light editable install
@@ -83,8 +94,8 @@ Build local dependencies first when needed:
   ./scripts/build.sh --gpu    # GPU local engines
 
 Passing --light / --apple / --gpu to this launcher triggers the matching
-Python local editable install plus npm build before starting Gateway and Flow. --base is
-accepted as a legacy alias for --light.
+Python local editable install plus npm build before starting Gateway, Flow, and
+Observer. --base is accepted as a legacy alias for --light.
 EOF
 }
 
@@ -718,11 +729,13 @@ sys.stdout.flush()
 PY
 
 [[ -f "$FLOW_DIST_INDEX" ]] || die "AbstractFlow dist is missing: $FLOW_DIST_INDEX. Run ./scripts/build.sh or npm --prefix abstractflow run build."
-[[ -f "$GATEWAY_FLOWS_DIR/basic-agent.flow" || -f "$GATEWAY_FLOWS_DIR/basic-agent@0.0.1.flow" ]] || die "Gateway bundle dir must contain basic-agent: $GATEWAY_FLOWS_DIR"
+[[ -f "$OBSERVER_DIST_INDEX" ]] || die "AbstractObserver dist is missing: $OBSERVER_DIST_INDEX. Run ./scripts/build.sh or npm --prefix abstractobserver run build."
+[[ -f "$GATEWAY_FLOWS_DIR/basic-agent.flow" ]] || die "Gateway bundle dir must contain basic-agent: $GATEWAY_FLOWS_DIR"
 
 DETECTED_PUBLIC_HOST=""
 if { [[ -z "$GATEWAY_PUBLIC_HOST" ]] && is_wildcard_host "$GATEWAY_HOST"; } || \
-    { [[ -z "$FLOW_PUBLIC_HOST" ]] && is_wildcard_host "$FLOW_HOST"; }; then
+    { [[ -z "$FLOW_PUBLIC_HOST" ]] && is_wildcard_host "$FLOW_HOST"; } || \
+    { [[ -z "$OBSERVER_PUBLIC_HOST" ]] && is_wildcard_host "$OBSERVER_HOST"; }; then
     DETECTED_PUBLIC_HOST="$(detect_lan_host 2>/dev/null || true)"
 fi
 if [[ -z "$GATEWAY_PUBLIC_HOST" ]] && is_wildcard_host "$GATEWAY_HOST"; then
@@ -730,6 +743,9 @@ if [[ -z "$GATEWAY_PUBLIC_HOST" ]] && is_wildcard_host "$GATEWAY_HOST"; then
 fi
 if [[ -z "$FLOW_PUBLIC_HOST" ]] && is_wildcard_host "$FLOW_HOST"; then
     FLOW_PUBLIC_HOST="$DETECTED_PUBLIC_HOST"
+fi
+if [[ -z "$OBSERVER_PUBLIC_HOST" ]] && is_wildcard_host "$OBSERVER_HOST"; then
+    OBSERVER_PUBLIC_HOST="$DETECTED_PUBLIC_HOST"
 fi
 
 GATEWAY_LOCAL_URL="http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}"
@@ -752,11 +768,26 @@ elif ! is_loopback_host "$FLOW_HOST"; then
     FLOW_NETWORK_URL="http://${FLOW_HOST}:${FLOW_PORT}"
 fi
 
+OBSERVER_LOCAL_URL="http://${OBSERVER_CONNECT_HOST}:${OBSERVER_PORT}"
+OBSERVER_NETWORK_URL=""
+if [[ -n "$OBSERVER_PUBLIC_HOST" ]]; then
+    OBSERVER_NETWORK_URL="http://${OBSERVER_PUBLIC_HOST}:${OBSERVER_PORT}"
+elif is_wildcard_host "$OBSERVER_HOST"; then
+    OBSERVER_NETWORK_URL="http://<this-machine-LAN-IP>:${OBSERVER_PORT}"
+elif ! is_loopback_host "$OBSERVER_HOST"; then
+    OBSERVER_NETWORK_URL="http://${OBSERVER_HOST}:${OBSERVER_PORT}"
+fi
+
 DEFAULT_GATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 if [[ -n "$FLOW_PUBLIC_HOST" ]]; then
     append_default_gateway_origin "http://${FLOW_PUBLIC_HOST}:${FLOW_PORT}"
 elif ! is_wildcard_host "$FLOW_HOST" && ! is_loopback_host "$FLOW_HOST"; then
     append_default_gateway_origin "http://${FLOW_HOST}:${FLOW_PORT}"
+fi
+if [[ -n "$OBSERVER_PUBLIC_HOST" ]]; then
+    append_default_gateway_origin "http://${OBSERVER_PUBLIC_HOST}:${OBSERVER_PORT}"
+elif ! is_wildcard_host "$OBSERVER_HOST" && ! is_loopback_host "$OBSERVER_HOST"; then
+    append_default_gateway_origin "http://${OBSERVER_HOST}:${OBSERVER_PORT}"
 fi
 if [[ -n "$GATEWAY_PUBLIC_HOST" ]]; then
     append_default_gateway_origin "http://${GATEWAY_PUBLIC_HOST}:${GATEWAY_PORT}"
@@ -779,10 +810,17 @@ export ABSTRACTFLOW_HOST="$FLOW_HOST"
 export ABSTRACTFLOW_PORT="$FLOW_PORT"
 export PORT="$FLOW_PORT"
 export ABSTRACTFLOW_GATEWAY_URL="$GATEWAY_URL"
+export ABSTRACTOBSERVER_HOST="$OBSERVER_HOST"
+export ABSTRACTOBSERVER_PORT="$OBSERVER_PORT"
+export ABSTRACTOBSERVER_GATEWAY_URL="${ABSTRACTOBSERVER_GATEWAY_URL:-$GATEWAY_URL}"
 
 mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$LOG_DIR" "$(dirname "$LOCAL_GATEWAY_USER_TOKENS_FILE")"
 
 if [[ "$STOP_EXISTING" != "0" && "$STOP_EXISTING" != "false" && "$STOP_EXISTING" != "False" ]]; then
+    kill_matching_processes "AbstractObserver" \
+        "node[[:space:]].*abstractobserver/bin/cli\\.js" \
+        "@abstractframework/observer" \
+        "abstractobserver"
     kill_matching_processes "AbstractFlow" \
         "node[[:space:]].*abstractflow/bin/cli\\.js" \
         "@abstractframework/flow" \
@@ -794,21 +832,27 @@ if [[ "$STOP_EXISTING" != "0" && "$STOP_EXISTING" != "false" && "$STOP_EXISTING"
 fi
 kill_port_listeners "$GATEWAY_PORT" "AbstractGateway"
 kill_port_listeners "$FLOW_PORT" "AbstractFlow"
+kill_port_listeners "$OBSERVER_PORT" "AbstractObserver"
 
 port_in_use "$GATEWAY_CONNECT_HOST" "$GATEWAY_PORT" && die "gateway port is already in use: ${GATEWAY_HOST}:${GATEWAY_PORT}"
 port_in_use "$FLOW_CONNECT_HOST" "$FLOW_PORT" && die "flow port is already in use: ${FLOW_HOST}:${FLOW_PORT}"
+port_in_use "$OBSERVER_CONNECT_HOST" "$OBSERVER_PORT" && die "observer port is already in use: ${OBSERVER_HOST}:${OBSERVER_PORT}"
 
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 FLOW_LOG="$LOG_DIR/flow.log"
+OBSERVER_LOG="$LOG_DIR/observer.log"
 GATEWAY_USERS_REPORT=""
 GATEWAY_PID=""
 FLOW_PID=""
+OBSERVER_PID=""
 
 cleanup() {
     local status=$?
     trap - EXIT INT TERM
+    [[ -n "$OBSERVER_PID" ]] && kill "$OBSERVER_PID" >/dev/null 2>&1 || true
     [[ -n "$FLOW_PID" ]] && kill "$FLOW_PID" >/dev/null 2>&1 || true
     [[ -n "$GATEWAY_PID" ]] && kill "$GATEWAY_PID" >/dev/null 2>&1 || true
+    [[ -n "$OBSERVER_PID" ]] && wait "$OBSERVER_PID" >/dev/null 2>&1 || true
     [[ -n "$FLOW_PID" ]] && wait "$FLOW_PID" >/dev/null 2>&1 || true
     [[ -n "$GATEWAY_PID" ]] && wait "$GATEWAY_PID" >/dev/null 2>&1 || true
     [[ -n "$GATEWAY_USERS_REPORT" && -f "$GATEWAY_USERS_REPORT" ]] && rm -f "$GATEWAY_USERS_REPORT" >/dev/null 2>&1 || true
@@ -817,7 +861,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo
-echo "Starting AbstractGateway and AbstractFlow from local checkout."
+echo "Starting AbstractGateway, AbstractFlow, and AbstractObserver from local checkout."
 echo "Starting AbstractGateway: http://${GATEWAY_HOST}:${GATEWAY_PORT}"
 is_truthy "$VERBOSE" && echo "  command: $PYTHON_BIN -m abstractgateway.cli serve"
 "$PYTHON_BIN" -m abstractgateway.cli serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" >"$GATEWAY_LOG" 2>&1 &
@@ -870,6 +914,22 @@ if ! wait_for_url "$FLOW_UI_URL" "$STARTUP_TIMEOUT_S" "$FLOW_PID"; then
 fi
 echo "  UI: ready"
 
+echo "Starting AbstractObserver: http://${OBSERVER_HOST}:${OBSERVER_PORT}"
+is_truthy "$VERBOSE" && echo "  command: HOST=$OBSERVER_HOST PORT=$OBSERVER_PORT ABSTRACTOBSERVER_GATEWAY_URL=$ABSTRACTOBSERVER_GATEWAY_URL $NODE_BIN $ROOT_DIR/abstractobserver/bin/cli.js"
+env -u ABSTRACTGATEWAY_AUTH_TOKEN \
+    HOST="$OBSERVER_HOST" \
+    PORT="$OBSERVER_PORT" \
+    ABSTRACTOBSERVER_GATEWAY_URL="$ABSTRACTOBSERVER_GATEWAY_URL" \
+    "$NODE_BIN" "$ROOT_DIR/abstractobserver/bin/cli.js" \
+    >"$OBSERVER_LOG" 2>&1 &
+OBSERVER_PID=$!
+
+if ! wait_for_url "$OBSERVER_UI_URL" "$STARTUP_TIMEOUT_S" "$OBSERVER_PID"; then
+    show_log_tail "Observer UI did not become ready" "$OBSERVER_LOG"
+    exit 1
+fi
+echo "  UI: ready"
+
 echo
 echo "Gateway local:   $GATEWAY_LOCAL_URL"
 if [[ -n "$GATEWAY_NETWORK_URL" ]]; then
@@ -878,6 +938,10 @@ fi
 echo "Flow local:      $FLOW_LOCAL_URL"
 if [[ -n "$FLOW_NETWORK_URL" ]]; then
     echo "Flow network:    $FLOW_NETWORK_URL"
+fi
+echo "Observer local:  $OBSERVER_LOCAL_URL"
+if [[ -n "$OBSERVER_NETWORK_URL" ]]; then
+    echo "Observer network: $OBSERVER_NETWORK_URL"
 fi
 echo
 
@@ -888,6 +952,7 @@ cat <<EOF
 Logs:
   Gateway: $GATEWAY_LOG
   Flow:    $FLOW_LOG
+  Observer: $OBSERVER_LOG
 EOF
 
 if is_truthy "$VERBOSE"; then
@@ -908,7 +973,7 @@ fi
 
 cat <<EOF
 
-Gateway and Flow are running. Leave this terminal open; press Ctrl-C to stop both.
+Gateway, Flow, and Observer are running. Leave this terminal open; press Ctrl-C to stop all three.
 EOF
 
 while true; do
@@ -918,6 +983,10 @@ while true; do
     fi
     if ! kill -0 "$FLOW_PID" >/dev/null 2>&1; then
         show_log_tail "Flow exited" "$FLOW_LOG"
+        exit 1
+    fi
+    if ! kill -0 "$OBSERVER_PID" >/dev/null 2>&1; then
+        show_log_tail "Observer exited" "$OBSERVER_LOG"
         exit 1
     fi
     sleep 2

@@ -204,8 +204,9 @@ $ABSTRACTGATEWAY_DATA_DIR/config/abstractcore.json
 ```
 
 Per-user writes through
-`/api/gateway/config/capability-defaults/{kind}/{modality}` are stored as a
-runtime-scoped Core config file:
+`/api/gateway/config/capability-defaults/{kind}/{modality}` or
+`/api/gateway/config/capability-defaults/{kind}/{modality}/{task}` are stored
+as a runtime-scoped Core config file:
 
 ```text
 $ABSTRACTGATEWAY_DATA_DIR/users/<tenant>/<runtime>/runtime/config/abstractcore.json
@@ -243,9 +244,14 @@ them.
 
 The **Sandbox** tab uses the same provider/default contract. Choose a configured
 capability route, then send a short prompt. Text chat uses the selected text
-default, and generated media routes such as `output.image`, `output.voice`,
-`output.sound`, `output.music`, or `output.video` run through that route's
-configured provider/model and return the generated artifact link.
+default, and generated media routes such as `output.image.text_to_image`,
+`output.video.text_to_video`, `output.voice`, `output.sound`, or
+`output.music` run through that route's configured provider/model and return
+the generated artifact link. Image edit, image upscale, and image-to-video use
+separate defaults: `output.image.image_to_image`,
+`output.image.image_upscale`, and `output.video.image_to_video`. Gateway
+Console presents these concrete generated-media routes instead of the broad
+`output.image` and `output.video` compatibility defaults.
 
 `input.voice`, `input.video`, `input.sound`, and `input.music` are fallback gates, not hidden
 package probes. If a route is unconfigured and the primary text model cannot

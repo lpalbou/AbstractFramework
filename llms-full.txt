@@ -83,6 +83,9 @@ Monitor runs from a browser:
 npx @abstractframework/observer   # open http://localhost:3001
 ```
 
+For artifact and runtime-resource investigation, see
+`docs/guide/runtime-artifacts.md`.
+
 ---
 
 ## Author once, run everywhere (AbstractFlow)
@@ -264,6 +267,7 @@ Notes for LLMs working in this repo:
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
 - [docs/architecture.md](docs/architecture.md): How the stack fits together.
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
+- [docs/adr/README.md](docs/adr/README.md): Cross-package ADR index and accepted platform contracts.
 
 ## Scenarios
 
@@ -284,6 +288,7 @@ Notes for LLMs working in this repo:
 - [docs/guide/deployment-iphone.md](docs/guide/deployment-iphone.md): iPhone/PWA notes.
 - [docs/guide/gateway-security.md](docs/guide/gateway-security.md): Safe gateway exposure defaults.
 - [docs/guide/capability-routing-defaults.md](docs/guide/capability-routing-defaults.md): Provider/model/base URL defaults for input, output, embedding, and rerank routes.
+- [docs/guide/runtime-artifacts.md](docs/guide/runtime-artifacts.md): Runtime artifact descriptors, Gateway artifact search, Observer views, ledger/KG boundaries, and safe retrieval practice.
 - [docs/guide/workflow-bundles.md](docs/guide/workflow-bundles.md): `.flow` bundles and lifecycle.
 - [docs/guide/agent-skills.md](docs/guide/agent-skills.md): Agent Skills (SKILL.md) proposal and how it composes with flows.
 - [docs/guide/process-manager-env-vars.md](docs/guide/process-manager-env-vars.md): Write-only env var config from Observer.
@@ -330,7 +335,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.8"
+version = "0.1.10"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -373,23 +378,23 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.2.26",
+    "abstractgateway==0.2.28",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
     "abstractcode==0.3.9",
-    "abstractassistant==0.4.9",
+    "abstractassistant==0.4.10",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.13.32",
-    "AbstractRuntime==0.4.27",
-    "abstractagent==0.3.11",
+    "abstractcore==2.13.38",
+    "AbstractRuntime==0.4.29",
+    "abstractagent==0.3.12",
     "AbstractMemory==0.2.6",
     "abstractsemantics==0.0.4",
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
-    "abstractvoice==0.10.17",
-    "abstractvision==0.3.19",
+    "abstractvoice==0.10.18",
+    "abstractvision==0.3.26",
     "abstractmusic==0.1.13",
 ]
 
@@ -406,13 +411,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.2.26",
-    "abstractassistant[apple]==0.4.9; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.2.28",
+    "abstractassistant[apple]==0.4.10; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.2.26",
-    "abstractassistant[gpu]==0.4.9",
+    "abstractgateway[gpu]==0.2.28",
+    "abstractassistant[gpu]==0.4.10",
 ]
 
 [project.urls]
@@ -462,22 +467,22 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.8"
+__version__ = "0.1.10"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.32",
-    "abstractruntime": "0.4.27",
-    "abstractagent": "0.3.11",
+    "abstractcore": "2.13.38",
+    "abstractruntime": "0.4.29",
+    "abstractagent": "0.3.12",
     "abstractcode": "0.3.9",
-    "abstractgateway": "0.2.26",
+    "abstractgateway": "0.2.28",
     "abstractmemory": "0.2.6",
     "abstractsemantics": "0.0.4",
-    "abstractvoice": "0.10.17",
-    "abstractvision": "0.3.19",
+    "abstractvoice": "0.10.18",
+    "abstractvision": "0.3.26",
     "abstractmusic": "0.1.13",
-    "abstractassistant": "0.4.9",
+    "abstractassistant": "0.4.10",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -495,9 +500,9 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.3.18",
+    "@abstractframework/flow": "0.3.19",
     "@abstractframework/code": "0.3.9",
-    "@abstractframework/observer": "0.1.10",
+    "@abstractframework/observer": "0.1.11",
 }
 
 CORE_DEFAULT_EXTRAS = [
@@ -1043,8 +1048,10 @@ Authoring                                Operations
 | **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
+| **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
 | **[FAQ](faq.md)** | Common questions, troubleshooting, comparisons |
 | **[API](api.md)** | The `abstractframework` meta-package API (pins + helpers + re-exports) |
+| **[Runtime artifacts and retrieval](guide/runtime-artifacts.md)** | Runtime, Gateway, Observer, ledger, and KG responsibility map for artifact/retrieval work |
 
 ---
 
@@ -1625,6 +1632,24 @@ Any gateway-backed client can: list bundles/entrypoints, start a run, attach to 
 - Control runs (cancel, resume)
 - Schedule recurring runs
 
+## File-like sources in hosted clients
+
+Hosted clients such as AbstractFlow need a clear split between file origin and
+runtime value:
+
+- `Artifact`: a saved Runtime-owned file payload. Reusable across runs.
+- `Local File`: a file chosen from the client device. In hosted/browser mode it
+  is uploaded and normalized into an Artifact before durable execution.
+- `Server File`: a user-facing label for a file inside Gateway-approved
+  workspace scope on the server. Path-based operations still depend on
+  workspace policy and current grants; importing it creates an Artifact
+  snapshot.
+
+Internally, the durable payload handle is the artifact ref. Server-side path
+access stays a Gateway-owned workspace capability rather than a generic server
+filesystem abstraction. Current UI surfaces may still say `Workspace` in some
+places until terminology alignment work lands.
+
 ---
 
 ## Multimodality
@@ -1877,8 +1902,9 @@ $ABSTRACTGATEWAY_DATA_DIR/config/abstractcore.json
 ```
 
 Per-user writes through
-`/api/gateway/config/capability-defaults/{kind}/{modality}` are stored as a
-runtime-scoped Core config file:
+`/api/gateway/config/capability-defaults/{kind}/{modality}` or
+`/api/gateway/config/capability-defaults/{kind}/{modality}/{task}` are stored
+as a runtime-scoped Core config file:
 
 ```text
 $ABSTRACTGATEWAY_DATA_DIR/users/<tenant>/<runtime>/runtime/config/abstractcore.json
@@ -1916,9 +1942,14 @@ them.
 
 The **Sandbox** tab uses the same provider/default contract. Choose a configured
 capability route, then send a short prompt. Text chat uses the selected text
-default, and generated media routes such as `output.image`, `output.voice`,
-`output.sound`, `output.music`, or `output.video` run through that route's
-configured provider/model and return the generated artifact link.
+default, and generated media routes such as `output.image.text_to_image`,
+`output.video.text_to_video`, `output.voice`, `output.sound`, or
+`output.music` run through that route's configured provider/model and return
+the generated artifact link. Image edit, image upscale, and image-to-video use
+separate defaults: `output.image.image_to_image`,
+`output.image.image_upscale`, and `output.video.image_to_video`. Gateway
+Console presents these concrete generated-media routes instead of the broad
+`output.image` and `output.video` compatibility defaults.
 
 `input.voice`, `input.video`, `input.sound`, and `input.music` are fallback gates, not hidden
 package probes. If a route is unconfigured and the primary text model cannot
@@ -2483,7 +2514,29 @@ A durable pause point: the run is checkpointed and stops progressing until it is
 
 ### Artifact
 
-A file- or store-backed blob referenced from JSON state/ledger. Used for large payloads (files, media, big tool results) to keep state JSON-safe while preserving evidence.
+A Runtime-owned durable file payload referenced from JSON state/ledger. Use
+artifacts for large payloads (files, media, evidence, big tool results) so run
+state stays JSON-safe while the bytes remain reusable, searchable, and
+observable across runs.
+
+### Workspace File / Workspace Folder
+
+A server-side file or folder inside the current Gateway-approved workspace
+scope. This is the engineering term for server paths used by file helpers,
+imports, exports, and run workspaces. A workspace file is not generic arbitrary
+server filesystem access.
+
+### Local File / Local Folder
+
+A client-side source chosen from the current device. In hosted/browser mode,
+this is an intake source, not a durable runtime path. Local file bytes are
+typically uploaded and stored as an Artifact before durable execution.
+
+### Server File / Server Folder
+
+A user-facing source label for a workspace-scoped server file or folder. In
+product copy, `Server File` means “a file inside the Gateway-approved workspace
+scope,” not “any file the server can see.”
 
 ---
 
@@ -3111,6 +3164,7 @@ Short, focused guides for common framework questions.
 - [iPhone notes (Safari / PWA)](deployment-iphone.md)
 - [Gateway exposure security](gateway-security.md)
 - [Runtime scope (run/session/global/all)](runtime-scope.md)
+- [Runtime artifacts and retrieval](runtime-artifacts.md)
 - [Flow + KG memory (memory object)](flow-and-kg-memory.md)
 - [Scheduled workflows (durable jobs)](scheduled-workflows.md)
 - [Prompt caching (prompt/KV)](prompt-caching.md)
@@ -3508,6 +3562,29 @@ export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 3. Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
 4. Protect reads as well as writes (ledgers contain prompts and tool outputs).
 
+## Hosted file-source terms
+
+When hosted browser clients talk about files, use this vocabulary:
+
+- `Artifact`: a saved Runtime-owned file payload.
+- `Local File`: a file chosen from the client device. In hosted/browser mode it
+  is uploaded and becomes an Artifact before durable execution.
+- `Server File`: a user-facing label for a file inside Gateway-approved
+  workspace scope on the server. It does **not** mean arbitrary server
+  filesystem access.
+
+Canonical server paths use:
+
+- `rel/path` for the main workspace root
+- `mount_alias/rel/path` for approved mounts
+
+If two allowed mounts share the same basename, Gateway now assigns
+deterministic digest-suffixed mount aliases so the public path string is stable
+across Gateway discovery, import/export, and Runtime execution.
+
+Current UI surfaces may still say `Workspace` in some places. The engineering
+term remains `Workspace File` / `Workspace Folder`.
+
 ## User isolation
 
 When Gateway user auth is enabled, each user token resolves to a Gateway
@@ -3600,6 +3677,11 @@ file helpers, and server workspace artifact import/export require an admin
 principal. Browser local files should use upload routes; server filesystem
 read/import/export is not exposed to ordinary hosted users.
 
+In hosted user-auth mode today, ordinary users can still upload `Local File`
+sources and reuse Artifacts, but server workspace helper routes and server
+workspace artifact import/export remain admin/operator controlled until a
+stronger per-principal workspace grant model lands.
+
 Discovery metadata is permission-aware for these high-trust surfaces. Ordinary
 users see admin-only workspace artifact import/export and provider prompt-cache
 control operations marked unavailable with `admin_required` metadata. Their
@@ -3634,8 +3716,12 @@ endpoints and the AbstractFlow "Loaded models" view.
 Routes use:
 
 ```text
-<kind>.<modality>
+<kind>.<modality>[.<task>]
 ```
+
+The optional task suffix is used only for generated-media defaults that need
+different provider/model pairs inside one modality. Model capability metadata
+stays broad unless a separate ADR changes it.
 
 Route kinds:
 
@@ -3666,7 +3752,11 @@ Examples:
 - `input.sound`: non-speech audio understanding route. It is not used as a
   speech-to-text fallback.
 - `output.text`: read-only derived view of `input.text`.
-- `output.image`: image generation backend.
+- `output.image.text_to_image`: text-to-image generation backend.
+- `output.image.image_to_image`: image edit / image-to-image backend.
+- `output.image.image_upscale`: image restoration / upscale backend.
+- `output.video.text_to_video`: text-to-video generation backend.
+- `output.video.image_to_video`: image-to-video generation backend.
 - `output.voice`: TTS route.
 - `output.sound`: sound effects / text-to-audio route.
 - `output.music`: music generation route.
@@ -3710,6 +3800,12 @@ Gateway is the control plane:
 
 In split deployments, `base_url` is interpreted from the execution host that actually calls the
 provider. A URL that works from the Core/Runtime host may not work from the browser or Gateway host.
+
+Task-specific generated-media routes are the operator-facing configuration
+surface. Core still accepts broad `output.image` and `output.video`
+compatibility defaults for older configurations, but Gateway Console does not
+display them because `output.image.text_to_image` and
+`output.video.text_to_video` are the concrete defaults for those tasks.
 
 ## Configure From Core
 
@@ -3919,6 +4015,137 @@ Scope controls *which durable owner* receives reads/writes, but persistence depe
 If you start runs via the gateway and you want `scope=session` behavior across multiple runs, you must send a stable
 `session_id` when starting those runs.
 
+
+--- docs/guide/runtime-artifacts.md ---
+# Runtime artifacts and retrieval
+
+This guide explains how to investigate runtime resources without conflating
+artifacts, ledgers, provider traces, and semantic memory.
+
+## Responsibility map
+
+| Layer | Responsibility |
+|---|---|
+| AbstractRuntime | Stores runs, ledgers, waits, artifacts, artifact descriptors, media facts, and access stats. Runtime is the source of truth for artifact identity and canonical descriptors. |
+| AbstractGateway | Exposes Runtime resources over HTTP, applies auth/RBAC, projects `artifact_envelope_v1`, provides exact stats/facets/paging, and adds action links where available. |
+| AbstractObserver | Visualizes Gateway data. Observe explains workflow narratives from ledger records; Runtime Activity supervises runs; Artifact Explorer inventories artifacts. |
+| AbstractMemory / KG | Stores semantic memory and knowledge graph records. It is for concept/entity/relationship retrieval, not byte-level artifact inventory. |
+| AbstractSemantics | Validates semantic predicates and schema-level meaning where KG/memory data is used. |
+
+## Artifact vs local/server file sources
+
+Use these terms consistently when a hosted client works with files:
+
+- `Artifact`: the durable Runtime-owned file payload. This is what Artifact
+  Explorer inventories.
+- `Local File`: a client-device source. In hosted/browser mode it is uploaded
+  and stored as an Artifact before durable execution.
+- `Server File`: a user-facing label for a file inside Gateway-approved
+  workspace scope. For artifact-style inputs it may be imported into a new
+  Artifact; for path-based operations it remains a workspace-scoped server path
+  whose availability depends on current Gateway policy and grants.
+
+This guide is about Artifacts. A server workspace file that has not been
+imported or produced as an Artifact will not appear in Artifact Explorer.
+
+## Which surface to use
+
+Use **Observe** when the question is about a workflow: what was requested, what
+steps ran, what is waiting, what failed, what subworkflows exist, and what the
+final outcome was. Observe replays the run ledger and can stream updates.
+
+Use **Runtime Activity** when the question is operational: what is running,
+waiting, failed, scheduled, stale, or needs a human action. Activity rows expose
+open Observe, open ledger, open artifacts, open logs, copy ids, and cancel/stop
+actions where Gateway authorizes them. Queue counts are for the loaded run page
+unless Gateway exposes a broader run-stats endpoint.
+
+Use **Artifact Explorer** when the question is about outputs: images, markdown,
+HTML, JSON, voice, music, transcripts, documents, workflow snapshots, and other
+files. Artifact Explorer uses Gateway artifact search with exact stats/facets
+when available and pages the result set.
+
+If the question is “what files are available in the server workspace for this
+run?”, use workspace/file-helper surfaces instead. Artifact search only answers
+questions about stored artifacts.
+
+Use **Mindmap/KG** when the question is semantic: entities, relationships,
+notes, memories, and graph-level knowledge. Do not use artifact metadata search
+as a substitute for KG retrieval.
+
+Use **Gateway audit/provider links** for host-level request traces. Audit tails
+are global system activity unless an artifact envelope or ledger record links a
+trace to a specific run/artifact.
+Gateway artifact envelopes only expose safe relative Gateway/UI action links;
+external provider URLs should be converted into Gateway-owned trace records or
+redacted trace artifacts before users open them.
+
+## Artifact search contract
+
+Gateway artifact search is the canonical thin-client query path:
+
+```bash
+curl -sS -H "$AUTH" \
+  "$BASE_URL/api/gateway/artifacts/search?scope=all&artifact_kind=music,voice&include_stats=true&limit=500"
+```
+
+Useful filters include `scope`, `session_id`, `run_id`, `artifact_kind`,
+`semantic_kind`, `render_kind`, `modality`, `content_type`, `workflow_id`,
+`node_id`, `created_after`, `created_before`, `query`, and `tags`.
+
+Use `include_stats=true` when a UI needs exact totals, byte totals, or facet
+counts. The stats are independent of the current page limit. Use `limit`,
+`offset`, and cursors for bounded pages.
+
+`artifact_kind` is UI-oriented. Canonical filters should prefer descriptor
+fields:
+
+- `semantic_kind=music` for generated music.
+- `semantic_kind=voice` for TTS/voice artifacts.
+- `render_kind=markdown` for Markdown rendering.
+- `render_kind=html` for HTML source rendering and full-page preview.
+- Generic `audio` should be treated as unclassified audio, not as voice or
+  music unless the descriptor says so.
+
+## Provenance and descriptors
+
+Runtime-owned artifact descriptors are the reliable source for artifact meaning.
+For descriptor-aware generated media, the envelope may include:
+
+- producer package, capability route, provider, model, backend;
+- prompt or TTS text, requested format, redacted parameters, output index;
+- source artifacts used for edits, reference media, image-to-video, or other
+  derivations;
+- media facts such as dimensions, sample rate, channels, duration, and frame
+  counts;
+- links back to run, workflow, node, turn, ledger cursor, and provider trace
+  availability.
+
+Missing descriptor fields mean the producer did not record that fact or the
+artifact is legacy. Consumers should show that absence plainly.
+
+## Direct Runtime inspection
+
+When investigating from the filesystem, start with the Gateway data directory
+or runtime root configured by `ABSTRACTGATEWAY_DATA_DIR`. Artifact bytes,
+metadata, and catalog state are Runtime-owned. Prefer Gateway APIs when the
+server is running because Gateway applies authorization and records access
+actions for previews/downloads.
+
+For package-level details, see:
+
+- `abstractruntime/docs/artifacts.md`
+- `abstractruntime/docs/api.md#artifacts-store-by-reference`
+- `abstractgateway/docs/api.md#artifacts-and-filesystem-handoff`
+- `abstractobserver/docs/architecture.md#runtime-boundary`
+
+## Privacy and safety
+
+Artifact metadata can include prompts, source refs, provider/model ids, and
+bounded generation parameters. Do not dump raw provider payloads, secrets, or
+large artifact contents in summaries. Prefer ids, counts, descriptors, and
+redacted snippets unless the user explicitly asks to inspect a non-image
+artifact's content.
 
 --- docs/guide/flow-and-kg-memory.md ---
 # Flow + KG Memory (Memory object v0) - Guide
@@ -4669,6 +4896,14 @@ the lifecycle folders described by the backlog process.
 - Deprecated: not yet normalized at the root level.
 - Recurrent: not yet normalized at the root level.
 
+## Next Recommended Work
+
+1. Investigate Observer wait handling as a replayable session chat/handoff instead of continuing to refine the narrow answer modal.
+2. Design a first-class Session -> Turn -> Run/Subrun -> Artifact/Log hierarchy for Runtime Activity before adding more run-table complexity.
+3. Complete the Observer/Manager responsibility split so high-trust admin/process controls stop competing with observability surfaces.
+4. Add a Gateway run-stats endpoint if Activity queue counts must be exact across the whole runtime instead of the loaded run page.
+5. Adopt `build_artifact_descriptor_payload(...)` in direct `abstractvision`, `abstractvoice`, and `abstractmusic` artifact writers that bypass the Runtime AbstractCore generated-media path.
+
 ## Active Planned Work
 
 | ID | Item | Status | Notes |
@@ -4681,6 +4916,9 @@ the lifecycle folders described by the backlog process.
 | 0166 | [Gateway local user-auth bootstrap UX](planned/0166_gateway_local_user_auth_bootstrap_ux.md) | In progress | Native `abstractgateway serve` should match Docker by creating/printing the `default/admin` browser-login token path when user auth is enabled. |
 | 0167 | [Gateway provider connection setup console](planned/0167_gateway_provider_connection_setup_console.md) | In progress | Providers tab now owns endpoint URL/key setup with Test/Confirm modals; Defaults now maps capability routes only to configured provider connections and discovered models. |
 | 0168 | [Abstract release root profile pin guard](planned/0168_release_skill_root_profile_pin_guard.md) | In progress | Tighten the `abstract-release` skill so partial lower-package releases cannot silently leave root pins/docs behind. |
+| 0179 | [LLM and Agent model input artifacts](planned/0179_llm_agent_model_input_artifacts.md) | Planned | Add first-class Flow model-input artifact-list authoring for LLM Call and Agent nodes, lowering ordered refs to Runtime media/context attachments while preserving Gateway artifact validation and Core route compatibility. |
+| 0182-0186 | [VisualFlow recursion budget track](planned/visualflow-recursion-budget/README.md) | Planned | Runtime-enforced recursive Subflow budget defaulting to 3, Flow cycle detection and controls, Gateway observability, a separate same-flow feedback-loop budget, and ADR/docs/vocabulary cleanup. |
+| 0200 | [Gateway experimental NVIDIA image publish fix](planned/0200_gateway_experimental_nvidia_image_publish_fix.md) | Planned | Repair the experimental NVIDIA Gateway image path so GHCR GPU tags publish for real instead of remaining best-effort release attempts. |
 
 ## Gateway Control Plane Planned Track
 
@@ -4693,6 +4931,30 @@ the lifecycle folders described by the backlog process.
 | 0150 | [Observer and Manager responsibility split](planned/gateway-control-plane/0150_observer_manager_responsibility_split.md) | Planned | Early containment audit to keep Observer focused on observability and admin/config ownership in Gateway/Gateway Console or later Manager surfaces. |
 | 0153 | [Gateway browser session security contract](planned/gateway-control-plane/0153_gateway_browser_session_security_contract.md) | In progress | Gateway/Flow opaque browser sessions, CSRF, logout, token-rotation revocation, Code/Observer hosted proxy convergence, and HTTP/HTTPS/origin/expiry/logout/revocation cookie matrix tests landed. |
 
+## VisualFlow Recursion Budget Planned Track
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0182 | [Runtime recursive subworkflow budget](planned/visualflow-recursion-budget/0182_runtime_recursive_subworkflow_budget.md) | Planned | Runtime owns recursive call detection at `START_SUBWORKFLOW`, with default 3 recursive calls and stable over-limit failure semantics. |
+| 0183 | [Flow recursive Subflow analysis and controls](planned/visualflow-recursion-budget/0183_flow_recursive_subflow_analysis_and_controls.md) | Planned | AbstractFlow detects direct/mutual Subflow cycles, warns in preflight, and exposes synchronized recursive-call controls without enforcing execution. |
+| 0184 | [Gateway recursion observability and runner coverage](planned/visualflow-recursion-budget/0184_gateway_recursion_observability_and_runner_coverage.md) | Planned | Gateway projects Runtime results, preserves ledger/history visibility, and tests no-stuck-parent behavior without owning enforcement. |
+| 0185 | [VisualFlow feedback loop budget](planned/visualflow-recursion-budget/0185_visualflow_feedback_loop_budget.md) | Planned | Same-flow improvement loops get their own runtime-enforced feedback-cycle budget, separate from recursive Subflow calls and Agent iterations. |
+| 0186 | [Recursion contract ADR, docs, and iteration vocabulary](planned/visualflow-recursion-budget/0186_recursion_contract_adr_docs_and_vocabulary.md) | Planned | Create or revise the durable ADR contract, document counting/defaults, and align labels such as Recursive Subflow calls, Agent loop iterations, and Feedback loop cycles. |
+
+## Runtime Artifact Observability Completed Track
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0198 | [Observer observability replay workbench](completed/runtime-artifact-observability/0198_observer_observability_replay_workbench.md) | Completed | Runtime history bundles now carry bounded replay artifact summaries and indexed best-effort session turns; Observer has a read-only Replay tab and Runtime Activity no longer exposes inline cancel controls. |
+| 0197 | [Runtime artifact type OR filters and stable facets](completed/runtime-artifact-observability/0197_runtime_artifact_type_or_filter_facets.md) | Completed | Observer type chips now visibly combine with OR, selected results remain server-filtered, and chip counts come from the same non-type scope/search/date stats instead of the filtered result set. |
+| 0194 | [Observer runtime activity monitor and wait actions](completed/runtime-artifact-observability/0194_observer_runtime_activity_monitor_and_wait_actions.md) | Completed | Runtime Activity now has explicit attention queues, a dense searchable/sortable run table, selected-run context/actions, direct cancel/stop, loaded-page count labeling, and offline/focus/responsive fixes. |
+| 0193 | [Runtime artifact coredoc and explore skill](completed/runtime-artifact-observability/0193_runtime_artifact_coredoc_and_explore_skill.md) | Completed | Added Runtime artifact docs, root runtime-artifacts guide, package/root LLM updates, and a validated `runtime-explore` skill for bounded redacted investigations. |
+| 0190 | [Media generation provenance and enrichment](completed/runtime-artifact-observability/0190_media_generation_provenance_and_enrichment.md) | Completed | Runtime/Gateway generated-media paths now store descriptors/structured metadata, preserve child projection provenance, redact sensitive metadata, and cover image/video/voice/music/transcript tests. |
+| 0192 | [Observer canonical artifact explorer UI](completed/runtime-artifact-observability/0192_observer_canonical_artifact_explorer_ui.md) | Completed | Observer Runtime Artifact Explorer now consumes Gateway envelopes/stats, separates Voice/Music/Sound/Unclassified audio, shows server-backed counts/pages, previews content, and surfaces provenance/actions with explicit legacy labels. |
+| 0191 | [Gateway artifact envelope, query, and provider traces](completed/runtime-artifact-observability/0191_gateway_artifact_envelope_query_and_provider_traces.md) | Completed | Gateway artifact search/list/detail now expose `artifact_envelope_v1`, exact stats/facets, bounded paging, access-action stats, action links, capability descriptors, and UI-safe `artifact_kind` filtering. |
+| 0188 | [Artifact descriptor contract and ADR](completed/runtime-artifact-observability/0188_artifact_descriptor_contract_and_adr.md) | Completed | Added ADR-0036 and Runtime-owned `ArtifactDescriptor`/`ArtifactAccessStats` vocabulary with legacy projection and fallback labels. |
+| 0189 | [Runtime artifact catalog and access stats](completed/runtime-artifact-observability/0189_runtime_artifact_catalog_and_access_stats.md) | Completed | Added descriptor-compatible Runtime metadata, explicit update/access APIs, exact counts/facets, filters, paging, and a repairable SQLite file-store catalog. |
+
 ## Active Proposed Work
 
 | ID | Item | Status | Notes |
@@ -4703,6 +4965,15 @@ the lifecycle folders described by the backlog process.
 | 0155 | [Hosted proxy shared helper extraction](proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md) | Proposed | Keep conformance tests now; extract a shared Node helper only if Code/Observer or future hosted apps drift again. |
 | 0162-0163 | [Installer and setup track](proposed/installers/README.md) | Proposed | Prepare signed installer CI and evaluate a CPU-local profile after the extraction, generated manifest, doctor, and install chooser work landed. |
 | 0169 | [Gateway Console route-specific default catalogs](proposed/0169_gateway_console_route_specific_default_catalogs.md) | Proposed | Decide the smallest Defaults-modal adapter for embeddings, image/video, voice, and music catalog filtering without moving URL/key setup out of Providers. |
+| 0181 | [Code node managed Python packages with simple authoring UX](proposed/0181_code_node_managed_python_packages_simplified_ux.md) | Proposed | Preserve the package-install architecture guardrails while making the user process simple: write imports, confirm package chips, prepare/test through Gateway, and run with Runtime/worker-managed provenance. |
+| 0195-0196 | [Runtime artifact observability proposed track](proposed/runtime-artifact-observability/README.md) | Proposed | Parked follow-ups for wait handling via replayable session chat/handoff and first-class Session -> Turn -> Run hierarchy in Observer Runtime Activity. |
+
+## Runtime Artifact Observability Proposed Track
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0195 | [Observer wait handling via session replay and chat handoff](proposed/runtime-artifact-observability/0195_observer_wait_replay_chat_session_handoff.md) | Proposed | Investigate whether waiting runs should be answered through a replayable session/chat context rather than a narrow modal. |
+| 0196 | [Observer session-turn-runtime hierarchy](proposed/runtime-artifact-observability/0196_observer_session_turn_runtime_hierarchy.md) | Proposed | Investigate a first-class Session -> Turn -> Run/Subrun -> Artifact/Log hierarchy for Runtime Activity and artifact/log navigation. |
 
 ## Installer And Setup Proposed Track
 
@@ -4727,6 +4998,18 @@ the lifecycle folders described by the backlog process.
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0198 | [Observer observability replay workbench](completed/runtime-artifact-observability/0198_observer_observability_replay_workbench.md) | 2026-06-06 | Added bounded artifact summaries and indexed session-turn discovery to Runtime history bundles, plus an Observe Replay tab and monitor-only Runtime Activity actions. |
+| 0199 | [AbstractFlow and AbstractAssistant vision LoRA and batch surface](completed/0199_abstractflow_and_abstractassistant_vision_lora_and_batch_surface.md) | 2026-06-14 | Flow now surfaces task-filtered provider/model discovery, `count`, ordered `seeds`, and stacked LoRA adapters in the media node authoring UI, while Assistant forwards the same route fields and adapter discovery through its Gateway thin-client path. |
+| 0197 | [Runtime artifact type OR filters and stable facets](completed/runtime-artifact-observability/0197_runtime_artifact_type_or_filter_facets.md) | 2026-06-06 | Type chips now compose as OR, keep available counts visible from base facets, and Gateway regression coverage verifies mixed-kind artifact filters return a union. |
+| 0194 | [Observer runtime activity monitor and wait actions](completed/runtime-artifact-observability/0194_observer_runtime_activity_monitor_and_wait_actions.md) | 2026-06-06 | Runtime Activity now separates operational supervision from artifact browsing with attention queues, readable waiting context, safe actions, honest loaded-page counts, and offline/focus/responsive fixes. |
+| 0193 | [Runtime artifact coredoc and explore skill](completed/runtime-artifact-observability/0193_runtime_artifact_coredoc_and_explore_skill.md) | 2026-06-06 | Added cross-package artifact/retrieval docs, regenerated LLM docs, and validated the `runtime-explore` skill. |
+| 0190 | [Media generation provenance and enrichment](completed/runtime-artifact-observability/0190_media_generation_provenance_and_enrichment.md) | 2026-06-06 | Added Runtime-owned descriptor payload helper, generated-media descriptors/metadata, Gateway projection preservation, STT descriptors, link sanitization, and media provenance tests. |
+| 0192 | [Observer canonical artifact explorer UI](completed/runtime-artifact-observability/0192_observer_canonical_artifact_explorer_ui.md) | 2026-06-06 | Observer now uses Gateway-backed artifact envelopes/stats/pages, separates semantic media kinds from render formats, and exposes preview/provenance/action detail with focused tests/build/browser smoke validation. |
+| 0191 | [Gateway artifact envelope, query, and provider traces](completed/runtime-artifact-observability/0191_gateway_artifact_envelope_query_and_provider_traces.md) | 2026-06-06 | Gateway now projects Runtime artifact descriptors into `artifact_envelope_v1`, exact stats/facets, bounded pages, access-action stats, and canonical/legacy-safe filters. |
+| 0189 | [Runtime artifact catalog and access stats](completed/runtime-artifact-observability/0189_runtime_artifact_catalog_and_access_stats.md) | 2026-06-06 | Runtime artifact metadata now persists descriptors/access stats and supports exact counts, facets, filters, paging, and repairable file-store catalogs. |
+| 0188 | [Artifact descriptor contract and ADR](completed/runtime-artifact-observability/0188_artifact_descriptor_contract_and_adr.md) | 2026-06-06 | Added ADR-0036 and the Runtime-owned artifact descriptor contract separating render kind, semantic kind, provenance, media facts, and legacy fallback labels. |
+| 0187 | [Framework PDF profile pins](completed/0187_framework_pdf_profile_pins.md) | 2026-06-06 | Root Light, Apple, and GPU pins now consume Core/Runtime/Gateway versions with permissive PDF read/write support and regenerated installer manifest coverage. |
+| 0180 | [AbstractFlow compact node pin disclosure](completed/0180_abstractflow_compact_node_pin_disclosure.md) | 2026-06-04 | Added a generic UI-only node pin disclosure policy, compact bottom chevron, focused Vitest coverage, lint/build validation, and browser QA for compact/expanded/connected optional pins. |
 | 0178 | [Gateway and Flow reasoning control propagation](completed/0178_gateway_flow_reasoning_control.md) | 2026-06-03 | Added Gateway run-scoped `thinking`, Flow LLM/Agent controls and pins, Runtime VisualFlow propagation, AbstractAgent generation-param forwarding, docs, and focused Gateway/Runtime/Agent/Flow validation. |
 | 0177 | [Flow route-aware provider and model selection](completed/0177_flow_route_aware_model_selection.md) | 2026-06-03 | Threaded Core/Gateway `capability_route` discovery into Flow selectors and Runtime Provider Models execution, including fail-closed invalid route handling, docs, and focused Runtime/Flow validation. |
 | 0175 | [Multimodal capability taxonomy and schema](completed/multimodal-capabilities/0175_multimodal_capability_taxonomy_schema.md) | 2026-06-03 | Added route-keyed model capability metadata and schema, Core route helpers, `/v1/models?capability_route=...`, Runtime/Gateway forwarding, Gateway Console route filters, docs, and focused cross-package tests. |

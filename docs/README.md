@@ -81,8 +81,10 @@ Authoring                                Operations
 | **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
+| **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
 | **[FAQ](faq.md)** | Common questions, troubleshooting, comparisons |
 | **[API](api.md)** | The `abstractframework` meta-package API (pins + helpers + re-exports) |
+| **[Runtime artifacts and retrieval](guide/runtime-artifacts.md)** | Runtime, Gateway, Observer, ledger, and KG responsibility map for artifact/retrieval work |
 
 ---
 

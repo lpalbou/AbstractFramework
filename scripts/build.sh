@@ -57,7 +57,11 @@ if $_AF_SOURCED; then
     AF_BUILD_WRAPPER=1 bash "$SCRIPT_DIR/build.sh" "$@" || return 1
     # shellcheck disable=SC1091
     source "$VENV_DIR/bin/activate"
-    echo "✓ Virtualenv is active in your shell."
+    if [[ -t 1 ]]; then
+        printf "\033[32m✓\033[0m Virtualenv is active in your shell.\n"
+    else
+        printf "✓ Virtualenv is active in your shell.\n"
+    fi
     return 0
 fi
 
@@ -86,10 +90,24 @@ done
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+# ANSI color codes (disabled when stdout is not a terminal)
+if [[ -t 1 ]]; then
+    C_RESET="\033[0m"
+    C_BOLD="\033[1m"
+    C_GREEN="\033[32m"
+    C_YELLOW="\033[33m"
+    C_RED="\033[31m"
+    C_CYAN="\033[36m"
+    C_DIM="\033[2m"
+else
+    C_RESET="" C_BOLD="" C_GREEN="" C_YELLOW="" C_RED="" C_CYAN="" C_DIM=""
+fi
+
 banner() {
-    printf "\n%s\n" "============================================================"
-    printf "%s\n"   "  AbstractFramework — build all packages (dev mode)"
-    printf "%s\n"   "============================================================"
+    printf "\n${C_BOLD}%s${C_RESET}\n" "============================================================"
+    printf "${C_BOLD}%s${C_RESET}\n"   "  AbstractFramework — build all packages (dev mode)"
+    printf "${C_BOLD}%s${C_RESET}\n"   "============================================================"
+    echo ""
 }
 
 require_cmd() {
@@ -102,7 +120,7 @@ af_die() {
     # Abort the build with a clear message.
     # IMPORTANT: when this script is sourced, `exit` would terminate the user's shell.
     local msg="$1"
-    echo "ERROR: ${msg}"
+    printf "${C_RED}ERROR:${C_RESET} %s\n" "$msg"
     if $_AF_SOURCED; then
         return 1
     fi
@@ -119,9 +137,34 @@ PY
 
 section() {
     echo ""
-    echo "────────────────────────────────────────────────────────────"
-    echo "  $1"
-    echo "────────────────────────────────────────────────────────────"
+    printf "${C_BOLD}  %s${C_RESET}\n" "$1"
+    printf "  %s\n" "────────────────────────────────────────────────────────"
+}
+
+ok_line() {
+    printf "  ${C_GREEN}✓${C_RESET} %s\n" "$1"
+}
+
+warn_line() {
+    printf "  ${C_YELLOW}WARNING:${C_RESET} %s\n" "$1"
+}
+
+warn_cont() {
+    printf "         %s\n" "$1"
+}
+
+info_line() {
+    printf "  %s\n" "$1"
+}
+
+dim_line() {
+    printf "  ${C_DIM}%s${C_RESET}\n" "$1"
+}
+
+package_line() {
+    local kind="$1"
+    local detail="$2"
+    printf "  ${C_BOLD}${C_YELLOW}%-10s${C_RESET}  ${C_CYAN}%s${C_RESET}\n" "$kind" "$detail"
 }
 
 is_macos() {
@@ -209,8 +252,8 @@ require_repo() {
     local name="$1"
     if [[ ! -d "$ROOT_DIR/$name" ]]; then
         echo ""
-        echo "ERROR: sibling repo not found: $ROOT_DIR/$name"
-        echo "       Run  ./scripts/clone.sh  first to clone all repositories."
+        printf "${C_RED}ERROR:${C_RESET} sibling repo not found: %s\n" "$ROOT_DIR/$name"
+        echo "       Run ./scripts/clone.sh first to clone all repositories."
         af_die "missing sibling repo: $name"
     fi
 }
@@ -225,7 +268,7 @@ install_editable() {
 
     require_repo "$rel_dir"
     echo ""
-    echo "  📦  pip install -e ${rel_dir}${extras}"
+    package_line "pip" "install -e ${rel_dir}${extras}"
     pip install --quiet --no-build-isolation -e "${pkg_path}${extras}"
 }
 
@@ -239,11 +282,11 @@ except PackageNotFoundError:
     raise SystemExit(1)
 PY
     then
-        echo "  Removing existing abstractframework metadata before local package installs."
-        echo "  This prevents stale release pins from making pip report false conflicts."
+        info_line "Removing existing abstractframework metadata before local package installs."
+        dim_line "This prevents stale release pins from making pip report false conflicts."
         pip uninstall --quiet -y abstractframework
     else
-        echo "  No existing abstractframework metadata found."
+        ok_line "No existing abstractframework metadata found."
     fi
 }
 
@@ -251,7 +294,7 @@ remove_source_meta_egg_info() {
     local egg_info="$ROOT_DIR/abstractframework.egg-info"
 
     if [[ -d "$egg_info" ]]; then
-        echo "  Removing stale source-tree abstractframework.egg-info metadata."
+        info_line "Removing stale source-tree abstractframework.egg-info metadata."
         rm -rf "$egg_info"
     fi
 }
@@ -262,13 +305,13 @@ build_npm_project() {
     local pkg_dir="$ROOT_DIR/$rel_dir"
 
     if [[ ! -d "$pkg_dir" ]]; then
-        echo "  WARNING: ${rel_dir}/ not found — skipping"
+        warn_line "${rel_dir}/ not found — skipping"
         npm_ok=false
         return 0
     fi
 
     echo ""
-    echo "  📦  ${label}"
+    package_line "npm" "$label"
     (
         cd "$pkg_dir"
         if is_macos; then
@@ -281,7 +324,7 @@ build_npm_project() {
             macos_clear_quarantine "$pkg_dir/node_modules"
         fi
         npm run build 2>&1 | tail -1
-    ) && echo "       ✓ built" || { echo "       WARNING: ${label} build failed"; npm_ok=false; }
+    ) && printf "       ${C_GREEN}✓ built${C_RESET}\n" || { printf "       ${C_YELLOW}WARNING:${C_RESET} %s build failed\n" "$label"; npm_ok=false; }
 }
 
 # ---------------------------------------------------------------------------
@@ -297,22 +340,22 @@ if $BUILD_PYTHON; then
     if [[ "$(py_version_ok)" != "ok" ]]; then
         af_die "Python 3.10+ is required. Detected: $(python3 --version 2>&1)"
     fi
-    echo "✓ Python:   $(python3 --version 2>&1)"
+    ok_line "Python:   $(python3 --version 2>&1)"
 fi
 
 if $BUILD_NPM; then
     if command -v node >/dev/null 2>&1; then
-        echo "✓ Node.js:  $(node --version)"
-        echo "✓ npm:      $(npm --version)"
+        ok_line "Node.js:  $(node --version)"
+        ok_line "npm:      $(npm --version)"
     else
         echo ""
-        echo "WARNING: Node.js not found — skipping npm builds."
-        echo "         Install Node 18+ to build the browser UI packages."
+        warn_line "Node.js not found — skipping npm builds."
+        warn_cont "Install Node 18+ to build the browser UI packages."
         BUILD_NPM=false
     fi
 fi
 
-echo "✓ Root:     $ROOT_DIR"
+ok_line "Root:     $ROOT_DIR"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # PYTHON PACKAGES
@@ -322,7 +365,7 @@ if $BUILD_PYTHON; then
 
     # --clean: remove existing venv to avoid pollution from other projects
     if $CLEAN_VENV && [[ -d "$VENV_DIR" ]]; then
-        echo "  🗑️  Removing existing venv (--clean): $VENV_DIR"
+        info_line "Removing existing venv (--clean): $VENV_DIR"
         rm -rf "$VENV_DIR"
         # Also clear VIRTUAL_ENV so we don't skip venv creation below
         unset VIRTUAL_ENV 2>/dev/null || true
@@ -330,18 +373,18 @@ if $BUILD_PYTHON; then
 
     if [[ -z "${VIRTUAL_ENV:-}" ]]; then
         if [[ ! -d "$VENV_DIR" ]]; then
-            echo "  Creating:  $VENV_DIR"
+            info_line "Creating:  $VENV_DIR"
             python3 -m venv "$VENV_DIR"
         else
-            echo "  Found:     $VENV_DIR"
+            ok_line "Found:     $VENV_DIR"
         fi
         # shellcheck disable=SC1091
         source "$VENV_DIR/bin/activate"
-        echo "  Activated: $VIRTUAL_ENV"
+        ok_line "Activated: $VIRTUAL_ENV"
     else
         if [[ "$VIRTUAL_ENV" != "$VENV_DIR" ]]; then
             echo ""
-            echo "ERROR: Active venv ($VIRTUAL_ENV) differs from project venv ($VENV_DIR)"
+            printf "${C_RED}ERROR:${C_RESET} Active venv (%s) differs from project venv (%s)\n" "$VIRTUAL_ENV" "$VENV_DIR"
             echo "       Refusing to continue to avoid polluting an unrelated environment."
             echo ""
             echo "       Fix:  deactivate && source ./scripts/build.sh --clean"
@@ -350,9 +393,9 @@ if $BUILD_PYTHON; then
             if [[ "${AF_ALLOW_FOREIGN_VENV:-}" != "1" ]]; then
                 af_die "foreign venv detected"
             fi
-            echo "  ⚠️  WARNING: Proceeding due to AF_ALLOW_FOREIGN_VENV=1 (unsafe)."
+            warn_line "Proceeding due to AF_ALLOW_FOREIGN_VENV=1 (unsafe)."
         fi
-        echo "  Using existing virtualenv: $VIRTUAL_ENV"
+        ok_line "Using existing virtualenv: $VIRTUAL_ENV"
     fi
 
     echo ""
@@ -391,9 +434,9 @@ print("ok" if not issues else "; ".join(issues))
 PY
 )"
     if [[ "$_build_tools_status" == "ok" ]]; then
-        echo "  Build tools already satisfy local editable-install requirements."
+        ok_line "Build tools already satisfy local editable-install requirements."
     else
-        echo "  Syncing build tools for local editable installs…"
+        info_line "Syncing build tools for local editable installs…"
         echo "     ${_build_tools_status}"
         pip install --quiet --upgrade "setuptools>=77,<81" wheel "hatchling>=1.27.0" "editables>=0.5"
     fi
@@ -408,10 +451,11 @@ PY
 
     section "Python — Dependency profile"
     PYTHON_BUILD_PROFILE="$(resolve_build_profile)"
-    echo "  Using Python dependency profile: ${PYTHON_BUILD_PROFILE}"
+    ok_line "Using Python dependency profile: ${PYTHON_BUILD_PROFILE}"
 
     # ── Tier 0: No internal dependencies ────────────────────────────────
     section "Python — Tier 0  (no internal dependencies)"
+    install_editable "abstractskill"
     install_editable "abstractsemantics" "$(build_profile_extras "abstractsemantics" "$PYTHON_BUILD_PROFILE")"
     install_editable "abstractmemory" "$(build_profile_extras "abstractmemory" "$PYTHON_BUILD_PROFILE")"
     install_editable "abstractvision" "$(build_profile_extras "abstractvision" "$PYTHON_BUILD_PROFILE")"
@@ -436,7 +480,7 @@ PY
     # ── Tier 4: Meta-package (AbstractFramework itself) ────────────────
     section "Python — Tier 4  (meta-package)"
     echo ""
-    echo "  📦  pip install -e . (AbstractFramework)"
+    package_line "pip" "install -e . (AbstractFramework)"
     pip install --quiet --no-build-isolation --no-deps -e "$ROOT_DIR"
 
     # ── Import safety: prevent workspace-root shadowing ─────────────────
@@ -538,11 +582,11 @@ PY
 
     if [[ "$_py_safe_ok" == "1" ]]; then
         export PYTHONSAFEPATH=1
-        echo "  ✅ Enabled safe-path via PYTHONSAFEPATH=1 (Python ${_py_ver})"
+        ok_line "Enabled safe-path via PYTHONSAFEPATH=1 (Python ${_py_ver})"
     else
-        echo "  ⚠️  WARNING: Python ${_py_ver} does not support PYTHONSAFEPATH / -P."
-        echo "     Installing venv-local fallback via sitecustomize.py"
-        echo "     #FALLBACK : Python < 3.11 (no safe-path flag)"
+        warn_line "Python ${_py_ver} does not support PYTHONSAFEPATH / -P."
+        warn_cont "Installing venv-local fallback via sitecustomize.py"
+        warn_cont "#FALLBACK : Python < 3.11 (no safe-path flag)"
 
         _site_dir="$(python - <<'PY'
 import site
@@ -551,7 +595,7 @@ print(paths[0] if paths else "")
 PY
 )"
         if [[ -z "$_site_dir" ]]; then
-            echo "  ⚠️  WARNING: could not determine site-packages directory; imports may still shadow."
+            warn_line "could not determine site-packages directory; imports may still shadow."
         else
             _sitecustomize="${_site_dir}/sitecustomize.py"
             if [[ ! -f "$_sitecustomize" ]] || ! grep -q "AbstractFramework dev fix: safe-path fallback" "$_sitecustomize" 2>/dev/null; then
@@ -604,9 +648,9 @@ if _remove_cwd_from_sys_path():
     except Exception:
         pass
 PY
-                echo "  ✅ Installed safe-path fallback: ${_sitecustomize}"
+                ok_line "Installed safe-path fallback: ${_sitecustomize}"
             else
-                echo "  ✅ sitecustomize.py fallback already present"
+                ok_line "sitecustomize.py fallback already present"
             fi
         fi
     fi
@@ -622,17 +666,17 @@ PY
     for _pkg in abstractcore abstractruntime abstractagent abstractcode abstractgateway abstractmemory abstractsemantics abstractvoice abstractvision abstractmusic abstractassistant; do
         if ! python -c "import importlib; m=importlib.import_module('${_pkg}'); assert getattr(m, '__file__', None) is not None" 2>/dev/null; then
             _import_ok=false
-            echo "     ✗ ${_pkg}"
+            printf "     ${C_RED}✗${C_RESET} %s\n" "$_pkg"
         fi
     done
     if ! python -c "import abstractcore; assert hasattr(abstractcore, 'create_llm')" 2>/dev/null; then
         _import_ok=false
-        echo "     ✗ abstractcore (shadowed: missing create_llm)"
+        printf "     ${C_RED}✗${C_RESET} abstractcore (shadowed: missing create_llm)\n"
     fi
     if [ "$_import_ok" = true ]; then
-        echo "  ✅ All packages import successfully"
+        ok_line "All packages import successfully"
     else
-        echo "  ⚠️  Some imports failed or were shadowed (namespace package) — check the output above"
+        warn_line "Some imports failed or were shadowed (namespace package) — check the output above"
     fi
 
     py_ok=true
@@ -656,37 +700,37 @@ fi
 # Summary
 # ═══════════════════════════════════════════════════════════════════════════
 echo ""
-echo "============================================================"
-echo "  Build complete."
+printf "${C_BOLD}%s${C_RESET}\n" "============================================================"
+printf "  ${C_BOLD}Build complete.${C_RESET}\n"
 if $BUILD_PYTHON; then
     if ${py_ok:-false}; then
-        echo "  ✓ Python:  all packages installed (editable mode)"
+        printf "  ${C_GREEN}✓ Python:${C_RESET}  all packages installed (editable mode)\n"
     else
-        echo "  ⚠ Python:  some packages may have issues"
+        printf "  ${C_YELLOW}WARNING:${C_RESET} Python packages may have issues\n"
     fi
 fi
 if $BUILD_NPM; then
     if ${npm_ok:-false}; then
-        echo "  ✓ npm:     all UI packages built"
+        printf "  ${C_GREEN}✓ npm:${C_RESET}     all UI packages built\n"
     else
-        echo "  ⚠ npm:     some UI packages had issues (see warnings above)"
+        printf "  ${C_YELLOW}WARNING:${C_RESET} npm packages had issues (see warnings above)\n"
     fi
 fi
-echo "============================================================"
+printf "${C_BOLD}%s${C_RESET}\n" "============================================================"
 echo ""
 if $BUILD_PYTHON; then
-    echo "Virtual environment: $VENV_DIR"
+    printf "${C_BOLD}%s${C_RESET} %s\n" "Virtual environment:" "$VENV_DIR"
     echo ""
     if [[ "${AF_BUILD_WRAPPER:-}" == "1" ]]; then
-        echo "Note: you ran this via: source ./scripts/build.sh"
+        printf "${C_BOLD}%s${C_RESET} %s\n" "Note:" "you ran this via: source ./scripts/build.sh"
         echo "      The venv will be activated in your current shell automatically."
         echo ""
     else
-        echo "To activate in your shell (run the script with 'source' next time to skip this step):"
+        printf "${C_BOLD}%s${C_RESET}\n" "To activate in your shell (run the script with 'source' next time to skip this step):"
         echo "  source $VENV_DIR/bin/activate"
         echo ""
     fi
-    echo "Quick verification:"
+    printf "${C_BOLD}%s${C_RESET}\n" "Quick verification:"
     echo "  python -c 'import abstractcore; print(abstractcore)'"
     echo "  python -c 'import abstractruntime; print(abstractruntime)'"
     echo "  python -c 'import abstractagent; print(abstractagent)'"

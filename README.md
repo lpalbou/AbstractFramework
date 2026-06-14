@@ -79,6 +79,9 @@ Monitor runs from a browser:
 npx @abstractframework/observer   # open http://localhost:3001
 ```
 
+For artifact and runtime-resource investigation, see
+`docs/guide/runtime-artifacts.md`.
+
 ---
 
 ## Author once, run everywhere (AbstractFlow)

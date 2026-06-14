@@ -199,6 +199,10 @@ ehthumbs_vista.db
 # Dump file
 *.stackdump
 
+# Local editor / test output
+*.swp
+test-results/
+
 # Folder config file
 [Dd]esktop.ini
 
@@ -241,6 +245,7 @@ $RECYCLE.BIN/
 /abstractcognition/
 /abstractsound/
 /abstractspatial/
+/abstractskill/
 
 # GitHub Pages build outputs (local-only)
 /abstractcore-gh-pages/

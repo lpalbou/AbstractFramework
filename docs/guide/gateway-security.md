@@ -39,6 +39,29 @@ export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 3. Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
 4. Protect reads as well as writes (ledgers contain prompts and tool outputs).
 
+## Hosted file-source terms
+
+When hosted browser clients talk about files, use this vocabulary:
+
+- `Artifact`: a saved Runtime-owned file payload.
+- `Local File`: a file chosen from the client device. In hosted/browser mode it
+  is uploaded and becomes an Artifact before durable execution.
+- `Server File`: a user-facing label for a file inside Gateway-approved
+  workspace scope on the server. It does **not** mean arbitrary server
+  filesystem access.
+
+Canonical server paths use:
+
+- `rel/path` for the main workspace root
+- `mount_alias/rel/path` for approved mounts
+
+If two allowed mounts share the same basename, Gateway now assigns
+deterministic digest-suffixed mount aliases so the public path string is stable
+across Gateway discovery, import/export, and Runtime execution.
+
+Current UI surfaces may still say `Workspace` in some places. The engineering
+term remains `Workspace File` / `Workspace Folder`.
+
 ## User isolation
 
 When Gateway user auth is enabled, each user token resolves to a Gateway
@@ -130,6 +153,11 @@ bridge routes, host metrics, model residency list/load/unload, server workspace
 file helpers, and server workspace artifact import/export require an admin
 principal. Browser local files should use upload routes; server filesystem
 read/import/export is not exposed to ordinary hosted users.
+
+In hosted user-auth mode today, ordinary users can still upload `Local File`
+sources and reuse Artifacts, but server workspace helper routes and server
+workspace artifact import/export remain admin/operator controlled until a
+stronger per-principal workspace grant model lands.
 
 Discovery metadata is permission-aware for these high-trust surfaces. Ordinary
 users see admin-only workspace artifact import/export and provider prompt-cache

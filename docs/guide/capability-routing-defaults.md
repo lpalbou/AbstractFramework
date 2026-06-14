@@ -12,8 +12,12 @@ endpoints and the AbstractFlow "Loaded models" view.
 Routes use:
 
 ```text
-<kind>.<modality>
+<kind>.<modality>[.<task>]
 ```
+
+The optional task suffix is used only for generated-media defaults that need
+different provider/model pairs inside one modality. Model capability metadata
+stays broad unless a separate ADR changes it.
 
 Route kinds:
 
@@ -44,7 +48,11 @@ Examples:
 - `input.sound`: non-speech audio understanding route. It is not used as a
   speech-to-text fallback.
 - `output.text`: read-only derived view of `input.text`.
-- `output.image`: image generation backend.
+- `output.image.text_to_image`: text-to-image generation backend.
+- `output.image.image_to_image`: image edit / image-to-image backend.
+- `output.image.image_upscale`: image restoration / upscale backend.
+- `output.video.text_to_video`: text-to-video generation backend.
+- `output.video.image_to_video`: image-to-video generation backend.
 - `output.voice`: TTS route.
 - `output.sound`: sound effects / text-to-audio route.
 - `output.music`: music generation route.
@@ -88,6 +96,12 @@ Gateway is the control plane:
 
 In split deployments, `base_url` is interpreted from the execution host that actually calls the
 provider. A URL that works from the Core/Runtime host may not work from the browser or Gateway host.
+
+Task-specific generated-media routes are the operator-facing configuration
+surface. Core still accepts broad `output.image` and `output.video`
+compatibility defaults for older configurations, but Gateway Console does not
+display them because `output.image.text_to_image` and
+`output.video.text_to_video` are the concrete defaults for those tasks.
 
 ## Configure From Core
 

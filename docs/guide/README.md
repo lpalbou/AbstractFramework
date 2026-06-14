@@ -10,6 +10,7 @@ Short, focused guides for common framework questions.
 - [iPhone notes (Safari / PWA)](deployment-iphone.md)
 - [Gateway exposure security](gateway-security.md)
 - [Runtime scope (run/session/global/all)](runtime-scope.md)
+- [Runtime artifacts and retrieval](runtime-artifacts.md)
 - [Flow + KG memory (memory object)](flow-and-kg-memory.md)
 - [Scheduled workflows (durable jobs)](scheduled-workflows.md)
 - [Prompt caching (prompt/KV)](prompt-caching.md)

@@ -78,6 +78,7 @@ Notes for LLMs working in this repo:
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
 - [docs/architecture.md](docs/architecture.md): How the stack fits together.
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
+- [docs/adr/README.md](docs/adr/README.md): Cross-package ADR index and accepted platform contracts.
 
 ## Scenarios
 
@@ -98,6 +99,7 @@ Notes for LLMs working in this repo:
 - [docs/guide/deployment-iphone.md](docs/guide/deployment-iphone.md): iPhone/PWA notes.
 - [docs/guide/gateway-security.md](docs/guide/gateway-security.md): Safe gateway exposure defaults.
 - [docs/guide/capability-routing-defaults.md](docs/guide/capability-routing-defaults.md): Provider/model/base URL defaults for input, output, embedding, and rerank routes.
+- [docs/guide/runtime-artifacts.md](docs/guide/runtime-artifacts.md): Runtime artifact descriptors, Gateway artifact search, Observer views, ledger/KG boundaries, and safe retrieval practice.
 - [docs/guide/workflow-bundles.md](docs/guide/workflow-bundles.md): `.flow` bundles and lifecycle.
 - [docs/guide/agent-skills.md](docs/guide/agent-skills.md): Agent Skills (SKILL.md) proposal and how it composes with flows.
 - [docs/guide/process-manager-env-vars.md](docs/guide/process-manager-env-vars.md): Write-only env var config from Observer.

@@ -8,6 +8,7 @@ Accepted (2026-05-24)
 - Accepted: 2026-05-24
 - Revised: 2026-05-24
 - Revised: 2026-06-03
+- Revised: 2026-06-08
 
 ## Context
 
@@ -31,13 +32,17 @@ Runtime, Gateway, CLI tooling, installers, and thin clients.
 
 ## Decision
 
-### 1) Route defaults are keyed by kind and modality
+### 1) Route defaults are keyed by kind, modality, and optional task
 
 The shared default key is:
 
 ```text
-<kind>.<modality>
+<kind>.<modality>[.<task>]
 ```
+
+The optional `<task>` suffix exists only for capability defaults where one modality has multiple
+operationally distinct generated-media backends. Static model capability metadata remains broad
+(`input.*`, `output.*`, `embedding.*`, `rerank.*`) unless a separate ADR changes that registry.
 
 Route kinds:
 
@@ -68,8 +73,11 @@ The current route matrix is:
 | `input.music` | Music-audio understanding route |
 | `input.scene3d` | 3D scene understanding route |
 | `output.text` | Read-only derived view of `input.text` |
-| `output.image` | Image generation route |
-| `output.video` | Video generation route |
+| `output.image.text_to_image` | Text-to-image generation route |
+| `output.image.image_to_image` | Image edit / image-to-image route |
+| `output.image.image_upscale` | Image restoration / upscale route |
+| `output.video.text_to_video` | Text-to-video generation route |
+| `output.video.image_to_video` | Image-to-video generation route |
 | `output.voice` | Speech/TTS generation route |
 | `output.sound` | Sound effects / text-to-audio generation route |
 | `output.music` | Music generation route |
@@ -192,6 +200,15 @@ configured text route points to a model that AbstractCore's model-capability
 registry says accepts those native audio/music inputs. They remain overrideable
 so operators can choose a dedicated audio-understanding backend.
 
+Task-specific generated-media defaults take precedence over broad
+compatibility routes. For example, `output.image.image_to_image` controls image
+edit provider/model selection, while `output.image.text_to_image` controls
+text-to-image. `output.image` and `output.video` remain accepted compatibility
+defaults for older configurations, but new setup and Gateway UI surfaces should
+expose the task-specific rows directly so image generation, image edit, image
+upscale, text-to-video, and image-to-video do not accidentally share one
+provider/model pair.
+
 ### 6) Residency is separate from defaults
 
 Model residency routes list provider-reported loaded/resident models. Capability defaults list
@@ -242,6 +259,9 @@ saved workflows.
 - Model capability registry changes that add route-keyed support metadata must use the same route
   vocabulary as this ADR and must not introduce nested boolean `input_capabilities` /
   `output_capabilities` as a second public taxonomy.
+- Task suffixes are valid for capability defaults only. Do not add task suffixes to
+  `model_capabilities.json` as a substitute for provider/plugin catalogs or generated-media task
+  catalogs.
 - `model_capabilities.json` must not become a provider/plugin readiness or acquisition catalog;
   capability package catalogs remain the authority for implemented transform/generative backends.
 - Gateway code must not add new persisted provider/model defaults files.
@@ -262,9 +282,14 @@ saved workflows.
   fields in raw model records.
 - Core media-policy tests cover explicit `input.voice` STT fallback gating and
   explicit `input.video` VLM/frame fallback routing.
-- Core server tests cover the `/v1/config/capability-defaults/{kind}/{modality}` contract.
+- Core server tests cover both `/v1/config/capability-defaults/{kind}/{modality}` and
+  `/v1/config/capability-defaults/{kind}/{modality}/{task}` contracts.
 - Gateway tests cover route-default precedence and embedding endpoint use of `embedding.text`
   without `gateway_embeddings.json`.
+- Runtime tests cover task-specific generated-media default resolution for text-to-image,
+  image-to-image, image upscale, text-to-video, and image-to-video.
+- Gateway console tests cover task-specific provider/model catalog lookups and three-segment
+  default-route persistence.
 - Flow frontend validation covers loaded-only Model Residency behavior,
   `Auto (Gateway default)` provider switch-back options, and absence of browser
   native confirmation dialogs.
@@ -281,6 +306,7 @@ saved workflows.
 ## Related
 
 - Backlog 0139: `docs/backlog/completed/0139_unified_framework_capability_defaults.md`
+- Backlog 0807: `abstractcore/docs/backlog/planned/0807_task_specific_multimodal_default_routes.md`
 - ADR-0028: `docs/adr/0028-capabilities-plugins-and-library-framework-modes.md`
 - ADR-0031: `docs/adr/0031-workflow-llm-routing-overrides-provider-model-and-base-url.md`
 - ADR-0033: `docs/adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md`

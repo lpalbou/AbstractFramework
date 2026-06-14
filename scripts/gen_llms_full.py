@@ -36,6 +36,7 @@ FILES: list[str] = [
     "docs/guide/gateway-security.md",
     "docs/guide/capability-routing-defaults.md",
     "docs/guide/runtime-scope.md",
+    "docs/guide/runtime-artifacts.md",
     "docs/guide/flow-and-kg-memory.md",
     "docs/guide/scheduled-workflows.md",
     "docs/guide/prompt-caching.md",

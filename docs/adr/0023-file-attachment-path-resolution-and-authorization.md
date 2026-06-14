@@ -71,9 +71,15 @@ For thin/remote clients (web/mobile/remote CLI), we also need:
 - **Dual-policy / targets**: separate `target=server` (gateway host filesystem; operator-controlled policy) vs `target=client` (client device filesystem; user-controlled policy).
   - This prevents remote users from expanding server file access at runtime while still enabling convenient local-device attachments.
 
+Hosted Flow/Gateway source terminology and workspace authority for these thin
+clients are now governed by ADR-0037. This ADR remains focused on attachment
+path resolution and authorization behavior rather than the broader hosted source
+contract.
+
 Tracked in:
 - `docs/backlog/planned/511-framework-attachment-targets-and-dual-workspace-policy-server-client.md`
 - `docs/backlog/completed/468-framework-gateway-attachments-upload-endpoint-v0.md`
+- `docs/adr/0037-hosted-file-source-contract-and-workspacepath-authority.md`
 
 ## Consequences
 

@@ -38,6 +38,7 @@ set -euo pipefail
 # abstractcode/web is an npm build target inside the abstractcode repository, so
 # the abstractcode repo is listed once in Python Tier 3.
 GROUP_PY_TIER0=(
+    abstractskill:abstractskill:AbstractSkill
     abstractsemantics
     abstractmemory
     abstractvision

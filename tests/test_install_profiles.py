@@ -138,6 +138,34 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
     assert NPM_RELEASE_VERSIONS["@abstractframework/flow"] == flow_version
 
 
+def test_framework_profiles_inherit_runtime_pdf_stack() -> None:
+    runtime_pyproject = ROOT / "abstractruntime" / "pyproject.toml"
+    gateway_pyproject = ROOT / "abstractgateway" / "pyproject.toml"
+    if not runtime_pyproject.exists() or not gateway_pyproject.exists():
+        pytest.skip("Sibling Runtime/Gateway checkouts are not present in this standalone checkout.")
+
+    root_project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    gateway_project = tomllib.loads(gateway_pyproject.read_text(encoding="utf-8"))["project"]
+    runtime_project = tomllib.loads(runtime_pyproject.read_text(encoding="utf-8"))["project"]
+
+    root_deps = "\n".join(root_project["dependencies"])
+    root_apple = "\n".join(root_project["optional-dependencies"]["apple"])
+    root_gpu = "\n".join(root_project["optional-dependencies"]["gpu"])
+    gateway_deps = "\n".join(gateway_project["dependencies"])
+    gateway_apple = "\n".join(gateway_project["optional-dependencies"]["apple"])
+    gateway_gpu = "\n".join(gateway_project["optional-dependencies"]["gpu"])
+    runtime_deps = "\n".join(runtime_project["dependencies"])
+
+    assert "AbstractRuntime==0.4.29" in root_deps
+    assert "abstractgateway[apple]==0.2.28" in root_apple
+    assert "abstractgateway[gpu]==0.2.28" in root_gpu
+    assert "AbstractRuntime>=0.4.29" in gateway_deps
+    assert "AbstractRuntime[apple]>=0.4.29" in gateway_apple
+    assert "AbstractRuntime[gpu]>=0.4.29" in gateway_gpu
+    assert "pypdf<7.0.0,>=6.0.0" in runtime_deps
+    assert "reportlab<5.0.0,>=4.0.0" in runtime_deps
+
+
 def test_generated_install_manifest_matches_checked_in_manifest() -> None:
     from abstractframework.install_manifest import build_install_manifest, manifest_json
 

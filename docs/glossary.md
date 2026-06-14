@@ -78,7 +78,29 @@ A durable pause point: the run is checkpointed and stops progressing until it is
 
 ### Artifact
 
-A file- or store-backed blob referenced from JSON state/ledger. Used for large payloads (files, media, big tool results) to keep state JSON-safe while preserving evidence.
+A Runtime-owned durable file payload referenced from JSON state/ledger. Use
+artifacts for large payloads (files, media, evidence, big tool results) so run
+state stays JSON-safe while the bytes remain reusable, searchable, and
+observable across runs.
+
+### Workspace File / Workspace Folder
+
+A server-side file or folder inside the current Gateway-approved workspace
+scope. This is the engineering term for server paths used by file helpers,
+imports, exports, and run workspaces. A workspace file is not generic arbitrary
+server filesystem access.
+
+### Local File / Local Folder
+
+A client-side source chosen from the current device. In hosted/browser mode,
+this is an intake source, not a durable runtime path. Local file bytes are
+typically uploaded and stored as an Artifact before durable execution.
+
+### Server File / Server Folder
+
+A user-facing source label for a workspace-scoped server file or folder. In
+product copy, `Server File` means “a file inside the Gateway-approved workspace
+scope,” not “any file the server can see.”
 
 ---
 

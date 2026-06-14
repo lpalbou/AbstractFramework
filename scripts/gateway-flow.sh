@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run AbstractGateway and AbstractFlow from published PyPI packages.
+# Run AbstractGateway, AbstractFlow, and AbstractObserver from published packages.
 
 set -euo pipefail
 
@@ -21,12 +21,31 @@ fi
 PUBLISHED_INSTALL_SPEC="${PUBLISHED_INSTALL_SPEC:-$DEFAULT_INSTALL_SPEC}"
 PUBLISHED_INSTALL_MODE="${PUBLISHED_INSTALL_MODE:-auto}"
 FLOW_NPM_SPEC="${FLOW_NPM_SPEC:-@abstractframework/flow}"
+OBSERVER_NPM_SPEC="${OBSERVER_NPM_SPEC:-@abstractframework/observer}"
 
-GATEWAY_HOST="${GATEWAY_HOST:-${ABSTRACTGATEWAY_HOST:-127.0.0.1}}"
+GATEWAY_HOST="${GATEWAY_HOST:-${ABSTRACTGATEWAY_HOST:-0.0.0.0}}"
 GATEWAY_PORT="${GATEWAY_PORT:-${ABSTRACTGATEWAY_PORT:-8080}}"
-FLOW_HOST="${FLOW_HOST:-${ABSTRACTFLOW_HOST:-127.0.0.1}}"
+FLOW_HOST="${FLOW_HOST:-${ABSTRACTFLOW_HOST:-0.0.0.0}}"
 FLOW_PORT="${FLOW_PORT:-${ABSTRACTFLOW_PORT:-${PORT:-3000}}}"
-GATEWAY_URL="${GATEWAY_URL:-http://${GATEWAY_HOST}:${GATEWAY_PORT}}"
+OBSERVER_HOST="${OBSERVER_HOST:-${ABSTRACTOBSERVER_HOST:-0.0.0.0}}"
+OBSERVER_PORT="${OBSERVER_PORT:-${ABSTRACTOBSERVER_PORT:-3001}}"
+case "$GATEWAY_HOST" in
+    0.0.0.0|::) GATEWAY_CONNECT_HOST="${GATEWAY_CONNECT_HOST:-127.0.0.1}" ;;
+    *) GATEWAY_CONNECT_HOST="${GATEWAY_CONNECT_HOST:-$GATEWAY_HOST}" ;;
+esac
+case "$FLOW_HOST" in
+    0.0.0.0|::) FLOW_CONNECT_HOST="${FLOW_CONNECT_HOST:-127.0.0.1}" ;;
+    *) FLOW_CONNECT_HOST="${FLOW_CONNECT_HOST:-$FLOW_HOST}" ;;
+esac
+case "$OBSERVER_HOST" in
+    0.0.0.0|::) OBSERVER_CONNECT_HOST="${OBSERVER_CONNECT_HOST:-127.0.0.1}" ;;
+    *) OBSERVER_CONNECT_HOST="${OBSERVER_CONNECT_HOST:-$OBSERVER_HOST}" ;;
+esac
+PUBLIC_HOST="${PUBLIC_HOST:-${LAN_HOST:-${ABSTRACTFRAMEWORK_PUBLIC_HOST:-}}}"
+GATEWAY_PUBLIC_HOST="${GATEWAY_PUBLIC_HOST:-${ABSTRACTGATEWAY_PUBLIC_HOST:-$PUBLIC_HOST}}"
+FLOW_PUBLIC_HOST="${FLOW_PUBLIC_HOST:-${ABSTRACTFLOW_PUBLIC_HOST:-$PUBLIC_HOST}}"
+OBSERVER_PUBLIC_HOST="${OBSERVER_PUBLIC_HOST:-${ABSTRACTOBSERVER_PUBLIC_HOST:-$PUBLIC_HOST}}"
+GATEWAY_URL="${GATEWAY_URL:-http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}}"
 RUNTIME_DIR="${RUNTIME_DIR:-${ABSTRACTFRAMEWORK_RUNTIME_DIR:-$ROOT_DIR/runtime}}"
 GATEWAY_RUNTIME_DIR="${GATEWAY_RUNTIME_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-$RUNTIME_DIR}}"
 LOG_DIR="${LOG_DIR:-$RUNTIME_DIR/logs}"
@@ -36,37 +55,47 @@ LOCAL_GATEWAY_USER_TENANT="${LOCAL_GATEWAY_USER_TENANT:-default}"
 LOCAL_GATEWAY_USER_TOKENS_FILE="${LOCAL_GATEWAY_USER_TOKENS_FILE:-$RUNTIME_DIR/dev/gateway-user-tokens.json}"
 LOCAL_GATEWAY_ROTATE_USER_TOKENS="${LOCAL_GATEWAY_ROTATE_USER_TOKENS:-0}"
 SHOW_ALL_GATEWAY_USERS="${SHOW_ALL_GATEWAY_USERS:-0}"
+SHOW_ADMIN_TOKEN="${SHOW_ADMIN_TOKEN:-0}"
 VERBOSE="${VERBOSE:-0}"
 STOP_EXISTING="${STOP_EXISTING:-1}"
-GATEWAY_HEALTH_URL="http://${GATEWAY_HOST}:${GATEWAY_PORT}/api/health"
+GATEWAY_HEALTH_URL="http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}/api/health"
 GATEWAY_CAPABILITIES_URL="${GATEWAY_URL}/api/gateway/discovery/capabilities"
-FLOW_HEALTH_URL="http://${FLOW_HOST}:${FLOW_PORT}/api/health"
-FLOW_UI_URL="http://${FLOW_HOST}:${FLOW_PORT}/"
+FLOW_HEALTH_URL="http://${FLOW_CONNECT_HOST}:${FLOW_PORT}/api/health"
+FLOW_UI_URL="http://${FLOW_CONNECT_HOST}:${FLOW_PORT}/"
+OBSERVER_UI_URL="http://${OBSERVER_CONNECT_HOST}:${OBSERVER_PORT}/"
 
 usage() {
     cat <<EOF
 Usage: $0
 
-Runs AbstractGateway from published PyPI packages and AbstractFlow from the
-published npm package.
+Runs AbstractGateway from published PyPI packages and AbstractFlow/AbstractObserver
+from published npm packages.
 
 Environment overrides:
   VENV_DIR                         Published-package venv (default: $ROOT_DIR/.venv-gateway-flow-published)
   PYTHON_BOOTSTRAP                 Python used to create the venv (default: python3)
   PUBLISHED_INSTALL_SPEC           Pip spec to install (default: $DEFAULT_INSTALL_SPEC)
   PUBLISHED_INSTALL_MODE           auto, always, or skip (default: auto)
-  NPX_BIN                          npx executable for AbstractFlow (default: npx)
+  NPX_BIN                          npx executable for AbstractFlow/Observer (default: npx)
   FLOW_NPM_SPEC                    npm spec for AbstractFlow (default: @abstractframework/flow)
-  GATEWAY_HOST / GATEWAY_PORT      Gateway bind (default: 127.0.0.1:8080)
-  FLOW_HOST / FLOW_PORT            Flow bind (default: 127.0.0.1:3000)
+  OBSERVER_NPM_SPEC                npm spec for AbstractObserver (default: @abstractframework/observer)
+  GATEWAY_HOST / GATEWAY_PORT      Gateway bind (default: 0.0.0.0:8080 for LAN access)
+  GATEWAY_URL                      Gateway URL used by Flow/Observer proxies (default: loopback Gateway URL)
+  PUBLIC_HOST / LAN_HOST           LAN hostname/IP to print for all services (default: auto-detect)
+  GATEWAY_PUBLIC_HOST              LAN hostname/IP to print for Gateway (default: PUBLIC_HOST)
+  FLOW_HOST / FLOW_PORT            Flow bind (default: 0.0.0.0:3000 for LAN access)
+  FLOW_PUBLIC_HOST                 LAN hostname/IP to print for Flow (default: PUBLIC_HOST)
+  OBSERVER_HOST / OBSERVER_PORT    Observer bind (default: 0.0.0.0:3001 for LAN access)
+  OBSERVER_PUBLIC_HOST             LAN hostname/IP to print for Observer (default: PUBLIC_HOST)
   RUNTIME_DIR                      Shared runtime root (default: $ROOT_DIR/runtime)
   LOCAL_GATEWAY_USERS              Comma-separated users to ensure (default: admin)
   LOCAL_GATEWAY_USER_TENANT        Tenant for ensured users (default: default)
   LOCAL_GATEWAY_USER_TOKENS_FILE   Local plaintext dev-token cache
   LOCAL_GATEWAY_ROTATE_USER_TOKENS Rotate non-local users missing cached tokens (default: 0)
   SHOW_ALL_GATEWAY_USERS           Also list non-local registry users (default: 0)
+  SHOW_ADMIN_TOKEN                 Print the admin token in the final banner (default: 0)
   STARTUP_TIMEOUT_S                Startup readiness timeout in seconds (default: 90)
-  STOP_EXISTING                    Kill existing gateway/flow first (default: 1)
+  STOP_EXISTING                    Kill existing gateway/flow/observer first (default: 1)
 
 Use ./scripts/gateway-flow-local.sh for local source checkout code.
 EOF
@@ -82,6 +111,13 @@ die() {
     exit 1
 }
 
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help) ;;
+        *) die "unsupported argument: $arg" ;;
+    esac
+done
+
 require_cmd() {
     command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
 }
@@ -95,6 +131,67 @@ is_truthy() {
         1|true|TRUE|yes|YES|on|ON) return 0 ;;
         *) return 1 ;;
     esac
+}
+
+is_wildcard_host() {
+    case "${1:-}" in
+        0.0.0.0|::) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_loopback_host() {
+    case "${1:-}" in
+        localhost|127.*|::1) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+detect_lan_host() {
+    "$PYTHON_BIN" - <<'PY'
+import socket
+import sys
+
+
+def emit(ip: str) -> None:
+    ip = str(ip or "").strip()
+    if ip and not ip.startswith("127.") and ip != "0.0.0.0":
+        print(ip)
+        raise SystemExit(0)
+
+
+try:
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+        sock.settimeout(0.2)
+        sock.connect(("8.8.8.8", 80))
+        emit(sock.getsockname()[0])
+except Exception:
+    pass
+
+try:
+    infos = socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET, socket.SOCK_DGRAM)
+except Exception:
+    infos = []
+
+seen: set[str] = set()
+for info in infos:
+    ip = str(info[4][0])
+    if ip in seen:
+        continue
+    seen.add(ip)
+    emit(ip)
+
+sys.exit(1)
+PY
+}
+
+append_default_gateway_origin() {
+    local origin="$1"
+    [[ -n "$origin" ]] || return 0
+    case ",$DEFAULT_GATEWAY_ALLOWED_ORIGINS," in
+        *,"$origin",*) return 0 ;;
+    esac
+    DEFAULT_GATEWAY_ALLOWED_ORIGINS="${DEFAULT_GATEWAY_ALLOWED_ORIGINS},${origin}"
 }
 
 show_log_tail() {
@@ -117,6 +214,7 @@ import datetime
 import json
 import stat
 import sys
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -288,7 +386,6 @@ for rec in registry.list_users():
             "runtime": rec.runtime_id or rec.user_id,
             "enabled": "yes" if rec.enabled else "no",
             "token": token,
-            "verified": "yes" if _token_matches(rec, token) else "no",
             "configured": "yes" if is_configured else "no",
         }
     )
@@ -303,6 +400,35 @@ if cache_users:
         cache_path.chmod(stat.S_IRUSR | stat.S_IWUSR)
     except Exception:
         pass
+
+def _gateway_me(token: str) -> dict[str, Any] | None:
+    if not token:
+        return None
+    request = urllib.request.Request(
+        gateway_url.rstrip("/") + "/api/gateway/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=2.0) as response:
+            payload = json.load(response)
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    principal = payload.get("principal")
+    return principal if isinstance(principal, dict) else None
+
+
+for row in rows:
+    principal = _gateway_me(row["token"])
+    row["verified"] = "no"
+    if (
+        principal
+        and principal.get("tenant_id") == row["tenant"]
+        and principal.get("user_id") == row["user"]
+        and principal.get("runtime_id") == row["runtime"]
+    ):
+        row["verified"] = "yes"
 
 configured_rows = [row for row in rows if row["configured"] == "yes"]
 other_rows = [row for row in rows if row["configured"] != "yes"]
@@ -344,7 +470,7 @@ PY
 }
 
 published_install_fingerprint() {
-    "$PYTHON_BIN" - "$PUBLISHED_INSTALL_SPEC" "$FLOW_NPM_SPEC" "$0" "$ROOT_DIR/abstractflow/package.json" "$ROOT_DIR/abstractgateway/pyproject.toml" <<'PY'
+    "$PYTHON_BIN" - "$PUBLISHED_INSTALL_SPEC" "$FLOW_NPM_SPEC" "$OBSERVER_NPM_SPEC" "$0" "$ROOT_DIR/abstractflow/package.json" "$ROOT_DIR/abstractobserver/package.json" "$ROOT_DIR/abstractgateway/pyproject.toml" <<'PY'
 import hashlib
 import pathlib
 import sys
@@ -435,8 +561,9 @@ checks = (
     isinstance(flow_editor, dict) and bool(flow_editor.get("available", True)),
     bool((runs or {}).get("start", {}).get("endpoint")),
     bool((ledger or {}).get("stream", {}).get("endpoint")),
-    isinstance(durable_blocs, dict) and bool(durable_blocs.get("available")),
-    isinstance(model_residency, dict) and bool(model_residency.get("available")),
+    prompt_cache is None or isinstance(prompt_cache, dict),
+    durable_blocs is None or isinstance(durable_blocs, dict),
+    model_residency is None or isinstance(model_residency, dict),
 )
 raise SystemExit(0 if all(checks) else 1)
 PY
@@ -504,10 +631,14 @@ kill_matching_processes() {
 wait_for_url() {
     local url="$1"
     local timeout_s="${2:-$STARTUP_TIMEOUT_S}"
+    local child_pid="${3:-}"
     local started_at
     started_at="$(date +%s)"
     while true; do
         url_ready "$url" && return 0
+        if [[ -n "$child_pid" ]] && ! kill -0 "$child_pid" >/dev/null 2>&1; then
+            return 1
+        fi
         if (( "$(date +%s)" - started_at >= timeout_s )); then
             return 1
         fi
@@ -519,10 +650,14 @@ wait_for_gateway_contract() {
     local url="$1"
     local token="${2:-}"
     local timeout_s="${3:-$STARTUP_TIMEOUT_S}"
+    local child_pid="${4:-}"
     local started_at
     started_at="$(date +%s)"
     while true; do
         gateway_contract_ready "$url" "$token" && return 0
+        if [[ -n "$child_pid" ]] && ! kill -0 "$child_pid" >/dev/null 2>&1; then
+            return 1
+        fi
         if (( "$(date +%s)" - started_at >= timeout_s )); then
             return 1
         fi
@@ -554,6 +689,69 @@ require_executable "$BIN_DIR/abstractgateway"
 # Published mode must not import packages from this source checkout.
 unset PYTHONPATH
 
+DETECTED_PUBLIC_HOST=""
+if { [[ -z "$GATEWAY_PUBLIC_HOST" ]] && is_wildcard_host "$GATEWAY_HOST"; } || \
+    { [[ -z "$FLOW_PUBLIC_HOST" ]] && is_wildcard_host "$FLOW_HOST"; } || \
+    { [[ -z "$OBSERVER_PUBLIC_HOST" ]] && is_wildcard_host "$OBSERVER_HOST"; }; then
+    DETECTED_PUBLIC_HOST="$(detect_lan_host 2>/dev/null || true)"
+fi
+if [[ -z "$GATEWAY_PUBLIC_HOST" ]] && is_wildcard_host "$GATEWAY_HOST"; then
+    GATEWAY_PUBLIC_HOST="$DETECTED_PUBLIC_HOST"
+fi
+if [[ -z "$FLOW_PUBLIC_HOST" ]] && is_wildcard_host "$FLOW_HOST"; then
+    FLOW_PUBLIC_HOST="$DETECTED_PUBLIC_HOST"
+fi
+if [[ -z "$OBSERVER_PUBLIC_HOST" ]] && is_wildcard_host "$OBSERVER_HOST"; then
+    OBSERVER_PUBLIC_HOST="$DETECTED_PUBLIC_HOST"
+fi
+
+GATEWAY_LOCAL_URL="http://${GATEWAY_CONNECT_HOST}:${GATEWAY_PORT}"
+GATEWAY_NETWORK_URL=""
+if [[ -n "$GATEWAY_PUBLIC_HOST" ]]; then
+    GATEWAY_NETWORK_URL="http://${GATEWAY_PUBLIC_HOST}:${GATEWAY_PORT}"
+elif is_wildcard_host "$GATEWAY_HOST"; then
+    GATEWAY_NETWORK_URL="http://<this-machine-LAN-IP>:${GATEWAY_PORT}"
+elif ! is_loopback_host "$GATEWAY_HOST"; then
+    GATEWAY_NETWORK_URL="http://${GATEWAY_HOST}:${GATEWAY_PORT}"
+fi
+
+FLOW_LOCAL_URL="http://${FLOW_CONNECT_HOST}:${FLOW_PORT}"
+FLOW_NETWORK_URL=""
+if [[ -n "$FLOW_PUBLIC_HOST" ]]; then
+    FLOW_NETWORK_URL="http://${FLOW_PUBLIC_HOST}:${FLOW_PORT}"
+elif is_wildcard_host "$FLOW_HOST"; then
+    FLOW_NETWORK_URL="http://<this-machine-LAN-IP>:${FLOW_PORT}"
+elif ! is_loopback_host "$FLOW_HOST"; then
+    FLOW_NETWORK_URL="http://${FLOW_HOST}:${FLOW_PORT}"
+fi
+
+OBSERVER_LOCAL_URL="http://${OBSERVER_CONNECT_HOST}:${OBSERVER_PORT}"
+OBSERVER_NETWORK_URL=""
+if [[ -n "$OBSERVER_PUBLIC_HOST" ]]; then
+    OBSERVER_NETWORK_URL="http://${OBSERVER_PUBLIC_HOST}:${OBSERVER_PORT}"
+elif is_wildcard_host "$OBSERVER_HOST"; then
+    OBSERVER_NETWORK_URL="http://<this-machine-LAN-IP>:${OBSERVER_PORT}"
+elif ! is_loopback_host "$OBSERVER_HOST"; then
+    OBSERVER_NETWORK_URL="http://${OBSERVER_HOST}:${OBSERVER_PORT}"
+fi
+
+DEFAULT_GATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+if [[ -n "$FLOW_PUBLIC_HOST" ]]; then
+    append_default_gateway_origin "http://${FLOW_PUBLIC_HOST}:${FLOW_PORT}"
+elif ! is_wildcard_host "$FLOW_HOST" && ! is_loopback_host "$FLOW_HOST"; then
+    append_default_gateway_origin "http://${FLOW_HOST}:${FLOW_PORT}"
+fi
+if [[ -n "$OBSERVER_PUBLIC_HOST" ]]; then
+    append_default_gateway_origin "http://${OBSERVER_PUBLIC_HOST}:${OBSERVER_PORT}"
+elif ! is_wildcard_host "$OBSERVER_HOST" && ! is_loopback_host "$OBSERVER_HOST"; then
+    append_default_gateway_origin "http://${OBSERVER_HOST}:${OBSERVER_PORT}"
+fi
+if [[ -n "$GATEWAY_PUBLIC_HOST" ]]; then
+    append_default_gateway_origin "http://${GATEWAY_PUBLIC_HOST}:${GATEWAY_PORT}"
+elif ! is_wildcard_host "$GATEWAY_HOST" && ! is_loopback_host "$GATEWAY_HOST"; then
+    append_default_gateway_origin "http://${GATEWAY_HOST}:${GATEWAY_PORT}"
+fi
+
 if [[ -z "${ABSTRACTGATEWAY_AUTH_TOKEN:-}" && -r "$DEFAULT_TOKEN_FILE" ]]; then
     ABSTRACTGATEWAY_AUTH_TOKEN="$(tr -d '\r\n' < "$DEFAULT_TOKEN_FILE")"
 fi
@@ -561,37 +759,47 @@ fi
 export ABSTRACTGATEWAY_AUTH_TOKEN="${ABSTRACTGATEWAY_AUTH_TOKEN:-local-dev-token}"
 export ABSTRACTGATEWAY_HOST="$GATEWAY_HOST"
 export ABSTRACTGATEWAY_PORT="$GATEWAY_PORT"
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="${ABSTRACTGATEWAY_ALLOWED_ORIGINS:-http://localhost:*,http://127.0.0.1:*}"
+export ABSTRACTGATEWAY_ALLOWED_ORIGINS="${ABSTRACTGATEWAY_ALLOWED_ORIGINS:-$DEFAULT_GATEWAY_ALLOWED_ORIGINS}"
 export ABSTRACTGATEWAY_DATA_DIR="$GATEWAY_RUNTIME_DIR"
 export ABSTRACTGATEWAY_USER_AUTH="${ABSTRACTGATEWAY_USER_AUTH:-1}"
 export ABSTRACTFLOW_HOST="$FLOW_HOST"
 export ABSTRACTFLOW_PORT="$FLOW_PORT"
 export PORT="$FLOW_PORT"
 export ABSTRACTFLOW_GATEWAY_URL="$GATEWAY_URL"
+export ABSTRACTOBSERVER_HOST="$OBSERVER_HOST"
+export ABSTRACTOBSERVER_PORT="$OBSERVER_PORT"
+export ABSTRACTOBSERVER_GATEWAY_URL="${ABSTRACTOBSERVER_GATEWAY_URL:-$GATEWAY_URL}"
 
 mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$LOG_DIR" "$(dirname "$LOCAL_GATEWAY_USER_TOKENS_FILE")"
 
 if [[ "$STOP_EXISTING" != "0" && "$STOP_EXISTING" != "false" && "$STOP_EXISTING" != "False" ]]; then
+    kill_matching_processes "AbstractObserver" "@abstractframework/observer" "abstractobserver"
     kill_matching_processes "AbstractFlow" "@abstractframework/flow" "abstractflow-editor"
     kill_matching_processes "AbstractGateway" "$BIN_DIR/abstractgateway[[:space:]]+serve" "abstractgateway[[:space:]]+serve"
 fi
 kill_port_listeners "$GATEWAY_PORT" "AbstractGateway"
 kill_port_listeners "$FLOW_PORT" "AbstractFlow"
+kill_port_listeners "$OBSERVER_PORT" "AbstractObserver"
 
-port_in_use "$GATEWAY_HOST" "$GATEWAY_PORT" && die "gateway port is already in use: ${GATEWAY_HOST}:${GATEWAY_PORT}"
-port_in_use "$FLOW_HOST" "$FLOW_PORT" && die "flow port is already in use: ${FLOW_HOST}:${FLOW_PORT}"
+port_in_use "$GATEWAY_CONNECT_HOST" "$GATEWAY_PORT" && die "gateway port is already in use: ${GATEWAY_HOST}:${GATEWAY_PORT}"
+port_in_use "$FLOW_CONNECT_HOST" "$FLOW_PORT" && die "flow port is already in use: ${FLOW_HOST}:${FLOW_PORT}"
+port_in_use "$OBSERVER_CONNECT_HOST" "$OBSERVER_PORT" && die "observer port is already in use: ${OBSERVER_HOST}:${OBSERVER_PORT}"
 
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 FLOW_LOG="$LOG_DIR/flow.log"
+OBSERVER_LOG="$LOG_DIR/observer.log"
 GATEWAY_USERS_REPORT=""
 GATEWAY_PID=""
 FLOW_PID=""
+OBSERVER_PID=""
 
 cleanup() {
     local status=$?
     trap - EXIT INT TERM
+    [[ -n "$OBSERVER_PID" ]] && kill "$OBSERVER_PID" >/dev/null 2>&1 || true
     [[ -n "$FLOW_PID" ]] && kill "$FLOW_PID" >/dev/null 2>&1 || true
     [[ -n "$GATEWAY_PID" ]] && kill "$GATEWAY_PID" >/dev/null 2>&1 || true
+    [[ -n "$OBSERVER_PID" ]] && wait "$OBSERVER_PID" >/dev/null 2>&1 || true
     [[ -n "$FLOW_PID" ]] && wait "$FLOW_PID" >/dev/null 2>&1 || true
     [[ -n "$GATEWAY_PID" ]] && wait "$GATEWAY_PID" >/dev/null 2>&1 || true
     [[ -n "$GATEWAY_USERS_REPORT" && -f "$GATEWAY_USERS_REPORT" ]] && rm -f "$GATEWAY_USERS_REPORT" >/dev/null 2>&1 || true
@@ -599,21 +807,24 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-echo "Starting AbstractGateway on http://${GATEWAY_HOST}:${GATEWAY_PORT}"
-echo "Gateway command: $BIN_DIR/abstractgateway serve"
-echo "Gateway log: $GATEWAY_LOG"
+echo
+echo "Starting AbstractGateway, AbstractFlow, and AbstractObserver from published packages."
+echo "Starting AbstractGateway: http://${GATEWAY_HOST}:${GATEWAY_PORT}"
+is_truthy "$VERBOSE" && echo "  command: $BIN_DIR/abstractgateway serve"
 "$BIN_DIR/abstractgateway" serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" >"$GATEWAY_LOG" 2>&1 &
 GATEWAY_PID=$!
 
-if ! wait_for_url "$GATEWAY_HEALTH_URL"; then
+if ! wait_for_url "$GATEWAY_HEALTH_URL" "$STARTUP_TIMEOUT_S" "$GATEWAY_PID"; then
     show_log_tail "Gateway did not become healthy" "$GATEWAY_LOG"
     exit 1
 fi
+echo "  health: ready"
 
-if ! wait_for_gateway_contract "$GATEWAY_CAPABILITIES_URL" "$ABSTRACTGATEWAY_AUTH_TOKEN"; then
+if ! wait_for_gateway_contract "$GATEWAY_CAPABILITIES_URL" "$ABSTRACTGATEWAY_AUTH_TOKEN" "$STARTUP_TIMEOUT_S" "$GATEWAY_PID"; then
     show_log_tail "Gateway did not expose the Flow contract" "$GATEWAY_LOG"
     exit 1
 fi
+echo "  Flow contract: ready"
 
 echo "Preparing Gateway users."
 GATEWAY_USERS_REPORT="$(mktemp "${TMPDIR:-/tmp}/gateway-flow-users.XXXXXX")"
@@ -627,11 +838,10 @@ prepare_gateway_local_users \
     "$SHOW_ALL_GATEWAY_USERS" \
     "$VERBOSE" \
     >"$GATEWAY_USERS_REPORT"
-echo "Gateway users ready."
+echo "  users: ready"
 
-echo "Starting AbstractFlow on http://${FLOW_HOST}:${FLOW_PORT}"
-echo "Flow command: $NPX_BIN --yes $FLOW_NPM_SPEC"
-echo "Flow log: $FLOW_LOG"
+echo "Starting AbstractFlow: http://${FLOW_HOST}:${FLOW_PORT}"
+is_truthy "$VERBOSE" && echo "  command: $NPX_BIN --yes $FLOW_NPM_SPEC"
 env -u ABSTRACTGATEWAY_AUTH_TOKEN "$NPX_BIN" --yes "$FLOW_NPM_SPEC" \
     --host "$FLOW_HOST" \
     --port "$FLOW_PORT" \
@@ -639,31 +849,77 @@ env -u ABSTRACTGATEWAY_AUTH_TOKEN "$NPX_BIN" --yes "$FLOW_NPM_SPEC" \
     >"$FLOW_LOG" 2>&1 &
 FLOW_PID=$!
 
-if ! wait_for_url "$FLOW_HEALTH_URL"; then
+if ! wait_for_url "$FLOW_HEALTH_URL" "$STARTUP_TIMEOUT_S" "$FLOW_PID"; then
     show_log_tail "Flow proxy did not become healthy" "$FLOW_LOG"
     exit 1
 fi
+echo "  health: ready"
 
-if ! wait_for_url "$FLOW_UI_URL"; then
+if ! wait_for_url "$FLOW_UI_URL" "$STARTUP_TIMEOUT_S" "$FLOW_PID"; then
     show_log_tail "Flow UI did not become ready" "$FLOW_LOG"
     exit 1
 fi
+echo "  UI: ready"
 
-cat <<EOF
+echo "Starting AbstractObserver: http://${OBSERVER_HOST}:${OBSERVER_PORT}"
+is_truthy "$VERBOSE" && echo "  command: HOST=$OBSERVER_HOST PORT=$OBSERVER_PORT ABSTRACTOBSERVER_GATEWAY_URL=$ABSTRACTOBSERVER_GATEWAY_URL $NPX_BIN --yes $OBSERVER_NPM_SPEC"
+env -u ABSTRACTGATEWAY_AUTH_TOKEN \
+    HOST="$OBSERVER_HOST" \
+    PORT="$OBSERVER_PORT" \
+    ABSTRACTOBSERVER_GATEWAY_URL="$ABSTRACTOBSERVER_GATEWAY_URL" \
+    "$NPX_BIN" --yes "$OBSERVER_NPM_SPEC" \
+    >"$OBSERVER_LOG" 2>&1 &
+OBSERVER_PID=$!
 
-AbstractGateway: http://${GATEWAY_HOST}:${GATEWAY_PORT}
-Gateway caps:   $GATEWAY_CAPABILITIES_URL
-AbstractFlow:   http://${FLOW_HOST}:${FLOW_PORT}
-Runtime root:    $RUNTIME_DIR
-Gateway runtime: $ABSTRACTGATEWAY_DATA_DIR
+if ! wait_for_url "$OBSERVER_UI_URL" "$STARTUP_TIMEOUT_S" "$OBSERVER_PID"; then
+    show_log_tail "Observer UI did not become ready" "$OBSERVER_LOG"
+    exit 1
+fi
+echo "  UI: ready"
 
-EOF
+echo
+echo "Gateway local:   $GATEWAY_LOCAL_URL"
+if [[ -n "$GATEWAY_NETWORK_URL" ]]; then
+    echo "Gateway network: $GATEWAY_NETWORK_URL"
+fi
+echo "Flow local:      $FLOW_LOCAL_URL"
+if [[ -n "$FLOW_NETWORK_URL" ]]; then
+    echo "Flow network:    $FLOW_NETWORK_URL"
+fi
+echo "Observer local:  $OBSERVER_LOCAL_URL"
+if [[ -n "$OBSERVER_NETWORK_URL" ]]; then
+    echo "Observer network: $OBSERVER_NETWORK_URL"
+fi
+echo
 
 sed -n '1,160p' "$GATEWAY_USERS_REPORT"
 
 cat <<EOF
 
-Press Ctrl-C to stop both processes.
+Logs:
+  Gateway: $GATEWAY_LOG
+  Flow:    $FLOW_LOG
+  Observer: $OBSERVER_LOG
+EOF
+
+if is_truthy "$VERBOSE"; then
+    cat <<EOF
+Runtime:
+  Root:    $RUNTIME_DIR
+  Gateway: $ABSTRACTGATEWAY_DATA_DIR
+  Caps:    $GATEWAY_CAPABILITIES_URL
+EOF
+fi
+
+if is_truthy "$SHOW_ADMIN_TOKEN"; then
+    cat <<EOF
+Admin token: $ABSTRACTGATEWAY_AUTH_TOKEN
+EOF
+fi
+
+cat <<EOF
+
+Gateway, Flow, and Observer are running. Leave this terminal open; press Ctrl-C to stop all three.
 EOF
 
 while true; do
@@ -673,6 +929,10 @@ while true; do
     fi
     if ! kill -0 "$FLOW_PID" >/dev/null 2>&1; then
         show_log_tail "Flow exited" "$FLOW_LOG"
+        exit 1
+    fi
+    if ! kill -0 "$OBSERVER_PID" >/dev/null 2>&1; then
+        show_log_tail "Observer exited" "$OBSERVER_LOG"
         exit 1
     fi
     sleep 2
