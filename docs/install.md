@@ -187,7 +187,7 @@ does not.
 
 `abstractframework` 0.2.0 pins `abstractgateway==0.3.0`, `abstractassistant==0.5.0`,
 `abstractcore==2.14.0`, `AbstractRuntime==0.4.33`, `abstractagent==0.3.13`,
-`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.3`,
+`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.4`,
 `abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any

@@ -2,7 +2,18 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
-## [Unreleased]
+## [0.2.1] - 2026-09-24
+
+Patch release: the one-line install works on a machine without a C compiler, and the
+meta-package pins abstractvoice 0.11.4. Everything else is unchanged from 0.2.0.
+
+### Changed
+
+- **abstractvoice 0.11.4** (was 0.11.3). It takes voice activity detection from
+  `webrtcvad-wheels`, which ships prebuilt wheels for macOS arm64, Linux and Windows, instead
+  of `webrtcvad`, which is source-only on PyPI and needs a compiler. This is the pin that made
+  `pip install abstractframework[apple]` build `webrtcvad` from source. The other pins are
+  unchanged: abstractgateway 0.3.0, abstractcore 2.14.0, AbstractRuntime 0.4.33.
 
 ### Fixed
 

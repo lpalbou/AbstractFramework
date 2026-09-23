@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.2.0"
+version = "0.2.1"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -62,7 +62,7 @@ dependencies = [
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
-    "abstractvoice==0.11.3",
+    "abstractvoice==0.11.4",
     "abstractvision==0.3.29",
     "abstractmusic==0.1.15",
 ]

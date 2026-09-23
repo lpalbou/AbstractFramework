@@ -57,7 +57,7 @@ The response type returned by `llm.generate(...)`.
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.2.0:
 `abstractcore` 2.14.0, `abstractruntime` 0.4.33, `abstractagent` 0.3.13, `abstractgateway` 0.3.0,
-`abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.3, `abstractvision` 0.3.29,
+`abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.4, `abstractvision` 0.3.29,
 `abstractmusic` 0.1.15, `abstractassistant` 0.5.0.
 
 ### `PACKAGE_DISTRIBUTIONS`

@@ -257,7 +257,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.2.0)
+### Release matrix (abstractframework 0.2.1)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -273,7 +273,7 @@ and tested together.
 | PyPI | `abstractagent` | 0.3.13 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.11.3 |
+| PyPI | `abstractvoice` | 0.11.4 |
 | PyPI | `abstractvision` | 0.3.29 |
 | PyPI | `abstractmusic` | 0.1.15 |
 | npm | `@abstractframework/flow` | 0.3.20 |

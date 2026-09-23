@@ -169,7 +169,7 @@
     "name": "AbstractFramework",
     "python_requires": ">=3.10",
     "registry": "pypi",
-    "version": "0.2.0"
+    "version": "0.2.1"
   },
   "minimum_installer_version": "0.2.0",
   "npm_apps": [
@@ -286,7 +286,7 @@
       "local_inference": false,
       "name": "Light",
       "pip_requirements": [
-        "abstractframework==0.2.0"
+        "abstractframework==0.2.1"
       ],
       "platforms": [
         "macos",
@@ -310,7 +310,7 @@
       "local_inference": true,
       "name": "Apple",
       "pip_requirements": [
-        "abstractframework[apple]==0.2.0"
+        "abstractframework[apple]==0.2.1"
       ],
       "platforms": [
         "macos"
@@ -334,7 +334,7 @@
       "local_inference": true,
       "name": "GPU",
       "pip_requirements": [
-        "abstractframework[gpu]==0.2.0"
+        "abstractframework[gpu]==0.2.1"
       ],
       "platforms": [
         "linux",
@@ -389,7 +389,7 @@
       "distribution": "abstractvoice",
       "id": "abstractvoice",
       "registry": "pypi",
-      "version": "0.11.3"
+      "version": "0.11.4"
     },
     {
       "distribution": "abstractvision",
