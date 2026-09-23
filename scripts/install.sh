@@ -13,7 +13,8 @@
 #      profile), free disk, a free port, systemd user bus (Linux)
 #   2. uv (https://docs.astral.sh/uv) if missing, then Python 3.12 through uv
 #   3. `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"`
-#      (isolated, user-scoped; commands land in ~/.local/bin)
+#      (isolated, user-scoped; commands land in ~/.local/bin; prebuilt wheels
+#      only, so no C compiler / Xcode tools are needed)
 #   4. optional: Node.js for the browser apps, terminal tools, Ollama, LM Studio
 #   5. registers the gateway as a user service when the installed gateway
 #      supports `abstractgateway service install`, otherwise starts it in the
@@ -63,6 +64,43 @@ AF_CRATE_CONSOLE="abstractgateway-console@0.7.0"
 AF_CRATE_CODE_CLI="abstractcode@0.5.1"
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
 AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
+
+# ---------------------------------------------------------------------------
+# Prebuilt wheels only: no C compiler (Xcode CLT, gcc, MSVC) is ever needed.
+# A few native dependencies of the gateway tree publish no wheel on PyPI, so a
+# plain install compiles them (and on a fresh Mac pops the Xcode tools dialog).
+# `uv tool install` gets these overrides (a requirement whose override marker is
+# never true is dropped from the resolution):
+#   webrtcvad          sdist only; `webrtcvad-wheels` (same module) comes in
+#                      through --with instead
+#   stable-diffusion-cpp-python  sdist only; that optional image backend is left
+#                      out (diffusers / MLX image backends are unaffected)
+#   aec-audio-processing  wheels for Windows and macOS 15+ (Darwin 24) only
+#   llama-cpp-python   sdist only on PyPI; the upstream prebuilt release wheels,
+#                      hash-pinned: CPU 0.3.35 on Linux/Windows, Metal 0.3.28 on
+#                      Apple Silicon (the 0.3.32-0.3.35 Metal wheels fail zip CRC
+#                      checks and uv refuses them)
+#   vllm               Linux only (no Windows build exists)
+# and --no-build-package for the same packages, so a gap fails fast with a clear
+# resolver error instead of starting a compiler. Pure-Python sdists (langdetect,
+# antlr4-python3-runtime, encodec, transformers-stream-generator) still build:
+# they need no compiler. install.ps1 carries the same list
+# (tests/test_install_profiles.py keeps the two in sync).
+# ---------------------------------------------------------------------------
+AF_WITH_WHEELS="webrtcvad-wheels>=2.0.14"
+AF_NO_BUILD_PACKAGES="webrtcvad llama-cpp-python stable-diffusion-cpp-python aec-audio-processing vllm"
+af_uv_overrides() {
+    cat <<'AF_OVERRIDES'
+webrtcvad; sys_platform == 'never'
+stable-diffusion-cpp-python; sys_platform == 'never'
+aec-audio-processing>=1.0.0; sys_platform == 'win32' or (sys_platform == 'darwin' and platform_release >= '24')
+llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.28-metal/llama_cpp_python-0.3.28-py3-none-macosx_11_0_arm64.whl#sha256=a318a2e55031fe64e3c1d959b8802b9008bb8a304002d123f45f60b4a20200c1 ; sys_platform == 'darwin' and platform_machine == 'arm64'
+llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl#sha256=d172f3d3c8cdd194c3c47c71cb077ed6e61354a2d0f939ceeac0c8fd29999596 ; sys_platform == 'linux' and platform_machine == 'x86_64'
+llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl#sha256=b5a4abd4d1d506d6f06b997c21d0532670a3f5350c9e6cfb3e54c33bf1322584 ; sys_platform == 'linux' and platform_machine == 'aarch64'
+llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-win_amd64.whl#sha256=31590ea000d5aff6f05f1e428048e72318a83709288159a5bd4dabec530080bb ; sys_platform == 'win32' and (platform_machine == 'AMD64' or platform_machine == 'x86_64')
+vllm>=0.6.0,<1.0.0; sys_platform == 'linux'
+AF_OVERRIDES
+}
 
 # ---------------------------------------------------------------------------
 # Options
@@ -350,6 +388,9 @@ printf '%sAbstractFramework bootstrap%s  %s%s%s\n' "$C_B" "$C_0" "$C_D" \
 
 step "Preflight"
 ok "system: $OS_ID $ARCH$([ -n "$MACOS_VERSION" ] && echo " (macOS $MACOS_VERSION)")"
+if [ "$OS_ID" = macos ] && ! xcode-select -p >/dev/null 2>&1; then
+    info "no C compiler (Xcode CLT) – fine, all packages install as prebuilt wheels"
+fi
 DL="$(fetch_cmd)"
 [ -n "$DL" ] || die "need curl or wget"
 
@@ -499,7 +540,15 @@ run "install Python $AF_PYTHON" "$UV" python install "$AF_PYTHON"
 step "AbstractGateway"
 BEFORE=""
 if [ "$PRINT" = 0 ]; then BEFORE="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"; fi
-set -- "$UV" tool install --python "$AF_PYTHON"
+OVERRIDES_FILE="$DATA_DIR/uv-overrides.txt"
+if [ "$PRINT" = 1 ]; then
+    info "$OVERRIDES_FILE (written at install time; prebuilt wheels only, see the top of install.sh):"
+    af_uv_overrides | sed 's/^/      /'
+else
+    af_uv_overrides >"$OVERRIDES_FILE"
+fi
+set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS" --overrides "$OVERRIDES_FILE"
+for _p in $AF_NO_BUILD_PACKAGES; do set -- "$@" --no-build-package "$_p"; done
 [ "$WITH_CORE_CLI" = 1 ] && set -- "$@" --with-executables-from abstractcore
 if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
     run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway

@@ -4,6 +4,19 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **One-line install needs no compiler.** On a Mac without Xcode Command Line Tools the gateway
+  install failed building `webrtcvad` from source (and would next have failed on
+  `llama-cpp-python`, `stable-diffusion-cpp-python` and `aec-audio-processing`). `install.sh` and
+  `install.ps1` now run `uv tool install` with `--with 'webrtcvad-wheels>=2.0.14'`, an overrides
+  file (`uv-overrides.txt` in the gateway data directory) that drops `webrtcvad`, takes
+  `llama-cpp-python` from its hash-pinned upstream wheels (Metal 0.3.28 on Apple Silicon, CPU
+  0.3.35 elsewhere), keeps `aec-audio-processing` to Windows and macOS 15+, keeps `vllm` to Linux
+  and leaves out the optional stable-diffusion.cpp backend, plus `--no-build-package` for those
+  packages so a missing wheel fails fast instead of starting a compiler. On macOS the preflight
+  says when no compiler is present, and that this is fine.
+
 ## [0.2.0] - 2026-09-23
 
 Install the framework with one line, sign in to the gateway console with a one-time link, and

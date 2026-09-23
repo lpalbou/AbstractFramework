@@ -365,6 +365,91 @@ def test_install_sh_reads_the_pin_from_the_manifest(tmp_path: Path) -> None:
     assert not (tmp_path / ".local").exists(), "--print must not install anything"
 
 
+# --- prebuilt wheels only: no C compiler / Xcode tools needed --------------------------------
+
+_NO_BUILD = ["webrtcvad", "llama-cpp-python", "stable-diffusion-cpp-python", "aec-audio-processing", "vllm"]
+
+
+def _sh_overrides() -> list[str]:
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    match = re.search(r"cat <<'AF_OVERRIDES'\n(.*?)\nAF_OVERRIDES\n", sh, flags=re.S)
+    assert match is not None, "install.sh lost its uv overrides heredoc"
+    return match.group(1).splitlines()
+
+
+def _ps1_overrides() -> list[str]:
+    ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    match = re.search(r"^\$AfUvOverrides = @'\r?\n(.*?)\r?\n'@", ps1, flags=re.S | re.M)
+    assert match is not None, "install.ps1 lost its uv overrides here-string"
+    return match.group(1).splitlines()
+
+
+def test_install_scripts_carry_the_same_prebuilt_wheel_overrides() -> None:
+    overrides = _sh_overrides()
+    assert overrides == _ps1_overrides()
+    assert "webrtcvad; sys_platform == 'never'" in overrides
+    # every native package without a PyPI wheel is either dropped or pinned to a wheel URL
+    named = {line.split(";", 1)[0].split("@", 1)[0].split(">", 1)[0].strip() for line in overrides}
+    assert named == set(_NO_BUILD)
+    for line in overrides:
+        if " @ " in line:
+            url = line.split(" @ ", 1)[1].split(" ;", 1)[0]
+            assert url.startswith("https://github.com/abetlen/llama-cpp-python/releases/download/")
+            assert re.search(r"\.whl#sha256=[0-9a-f]{64}$", url), f"unpinned wheel URL: {line}"
+
+    ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    assert "$AfWithWheels = 'webrtcvad-wheels>=2.0.14'" in ps1
+    ps_nb = re.search(r"^\$AfNoBuildPackages = @\((.*)\)$", ps1, flags=re.M)
+    assert ps_nb is not None and re.findall(r"'([^']+)'", ps_nb.group(1)) == _NO_BUILD
+    assert "'--with', $AfWithWheels, '--overrides', $overridesFile" in ps1
+    assert "@('--no-build-package', $p)" in ps1
+
+
+def test_install_sh_print_shows_the_prebuilt_wheel_install_command(tmp_path: Path) -> None:
+    import subprocess
+
+    out = subprocess.run(
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--print", "--profile", "light", "--port", "18999", "--no-tray"],
+        check=True,
+        capture_output=True,
+        text=True,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
+    ).stdout
+    install = next(line for line in out.splitlines() if " tool install --python 3.12 " in line)
+    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides " in install
+    assert "uv-overrides.txt" in install
+    assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
+    assert re.search(r" abstractgateway==\S+$", install.rstrip()), install
+    for line in _sh_overrides():
+        assert line in out, f"--print does not show the override: {line}"
+    assert not (tmp_path / "Library").exists() and not (tmp_path / ".local").exists()
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_path: Path) -> None:
+    import subprocess
+
+    script = ROOT / "scripts" / "install.ps1"
+    parse = subprocess.run(
+        [
+            "pwsh", "-NoProfile", "-Command",
+            "$e=$null; $t=$null; [System.Management.Automation.Language.Parser]::ParseFile("
+            f"'{script}', [ref]$t, [ref]$e) | Out-Null; $e.Count",
+        ],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip()
+    assert parse == "0"
+    out = subprocess.run(
+        ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "light", "-Port", "18999", "-NoTray"],
+        check=True, capture_output=True, text=True,
+        env={**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad")},
+    ).stdout
+    install = next(line for line in out.splitlines() if " tool install --python 3.12 " in line)
+    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides " in install
+    assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
+    assert not (tmp_path / "lad").exists(), "-Print must not write anything"
+
+
 def _serve(routes: dict[str, object]):
     import http.server
     import threading

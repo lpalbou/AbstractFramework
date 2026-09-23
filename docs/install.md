@@ -30,7 +30,8 @@ default model picked from the models that fit your machine, and the apps. The **
    `light` otherwise.
 2. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 3. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.3.0"`.
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.3.0"`, from prebuilt wheels
+   only (see [No compiler needed](#no-compiler-needed)).
 4. Optionally installs Node.js for the browser apps, terminal tools, Ollama or LM Studio (flags
    below).
 5. Registers the gateway to start at login with `abstractgateway service install` (a LaunchAgent on
@@ -43,6 +44,19 @@ default model picked from the models that fit your machine, and the apps. The **
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
 upgrades or repairs the install in place.
+
+### No compiler needed
+
+The script never compiles anything, so you do not need Xcode Command Line Tools, gcc or the MSVC
+Build Tools. A few native dependencies publish no wheel on PyPI; the script passes uv a small
+overrides file (written to `uv-overrides.txt` in the gateway data directory, printed by `--print`)
+that swaps `webrtcvad` for `webrtcvad-wheels`, takes `llama-cpp-python` from its upstream prebuilt
+wheels (hash-pinned), keeps `aec-audio-processing` and `vllm` to the platforms that have wheels,
+and leaves out the optional stable-diffusion.cpp image backend. It also refuses to build those
+packages from source, so a gap fails with a clear error instead of starting a compiler. If macOS
+asks you to install the command line developer tools (an `xcode-select` prompt) during an install,
+you are running an older copy of the script or an older `--pin`: cancel the prompt, fetch the
+script again with the one-liner above and re-run it.
 
 ### Options
 
@@ -79,6 +93,7 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
 uv tool install --python 3.12 "abstractgateway[tray]==0.3.0"    # [apple,tray] or [gpu,tray] for local engines
+                       # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --host 127.0.0.1 --port 8080   # or: abstractgateway serve
 abstractgateway-config claim-url --base-url http://127.0.0.1:8080  # prints a one-time console link
@@ -154,6 +169,10 @@ whether local inference engines are installed.
 | Light | macOS, Linux, Windows | 3.10–3.13 | No local inference engines. |
 | Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 | GPU | Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
+
+A plain `pip install` of the `apple` or `gpu` profile builds a few native packages from source
+(`llama-cpp-python`, `stable-diffusion-cpp-python`, `webrtcvad` until abstractvoice 0.11.4,
+`aec-audio-processing`), so it needs a C/C++ compiler. The one-line install above does not.
 
 `abstractframework` 0.2.0 pins `abstractgateway==0.3.0`, `abstractassistant==0.5.0`,
 `abstractcore==2.14.0`, `AbstractRuntime==0.4.33`, `abstractagent==0.3.13`,
