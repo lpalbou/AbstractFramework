@@ -10,21 +10,21 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.11"
+__version__ = "0.1.12"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.38",
-    "abstractruntime": "0.4.29",
-    "abstractagent": "0.3.12",
-    "abstractgateway": "0.2.28",
-    "abstractmemory": "0.2.6",
-    "abstractsemantics": "0.0.4",
-    "abstractvoice": "0.10.18",
-    "abstractvision": "0.3.26",
-    "abstractmusic": "0.1.13",
-    "abstractassistant": "0.4.11",
+    "abstractcore": "2.13.42",
+    "abstractruntime": "0.4.32",
+    "abstractagent": "0.3.13",
+    "abstractgateway": "0.2.30",
+    "abstractmemory": "0.3.0",
+    "abstractsemantics": "0.0.5",
+    "abstractvoice": "0.11.3",
+    "abstractvision": "0.3.29",
+    "abstractmusic": "0.1.15",
+    "abstractassistant": "0.5.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -41,9 +41,11 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.3.19",
-    "@abstractframework/code": "0.3.9",
-    "@abstractframework/observer": "0.1.11",
+    "@abstractframework/flow": "0.3.20",
+    "@abstractframework/code": "0.4.2",
+    "@abstractframework/observer": "0.1.12",
+    "@abstractframework/continuum": "0.2.0",
+    "@abstractframework/entity": "0.1.0",
 }
 
 CORE_DEFAULT_EXTRAS = [

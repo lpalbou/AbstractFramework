@@ -43,7 +43,9 @@ Apps / UIs (thin clients)
 ──────────────────────────────────────────────────────
  AbstractObserver (monitor / control / schedule)
  Flow Editor (author workflows)
- Code Web UI, AbstractAssistant, your custom app
+ AbstractCode (terminal + web), AbstractAssistant, your custom app
+ AbstractContinuum console, AbstractEntity manager
+ Gateway consoles: web /console, terminal abstractgateway-console
                        │  HTTP/SSE
                        ▼
 AbstractGateway (control plane)
@@ -75,6 +77,39 @@ LLM + tools + multimodality
  tools, structured output, media input, embeddings, MCP
  capability plugins: voice / vision / music
 ```
+
+## How the framework is distributed
+
+Each layer ships through the registry that fits it. The `abstractframework` meta-package pins the
+Python side with exact versions; the apps and terminal tools are installed next to it.
+
+```mermaid
+flowchart LR
+    subgraph PyPI["PyPI (pinned by abstractframework)"]
+        GW["abstractgateway<br/>server + /console"]
+        AS["abstractassistant"]
+        STACK["abstractcore · AbstractRuntime · abstractagent<br/>AbstractMemory · abstractsemantics<br/>abstractvoice · abstractvision · abstractmusic"]
+    end
+    subgraph npm["npm (npx @abstractframework/...)"]
+        APPS["flow · code · observer<br/>continuum · entity"]
+    end
+    subgraph crates["crates.io (cargo install)"]
+        CLI["abstractcode"]
+        CON["abstractgateway-console"]
+    end
+    subgraph GHCR["GHCR images"]
+        IMG["abstractgateway · abstractcore"]
+    end
+    AS -->|HTTP/SSE| GW
+    APPS -->|HTTP/SSE| GW
+    CLI -->|HTTP/SSE| GW
+    CON -->|HTTP/SSE| GW
+    GW --> STACK
+    IMG -.->|same server, containerized| GW
+```
+
+See [Install AbstractFramework](install.md) for the versions released together and the commands
+for each registry.
 
 **AbstractFlow** is the authoring/distribution layer: you design a VisualFlow graph, export a `.flow` bundle, and run it anywhere a compatible host exists.
 

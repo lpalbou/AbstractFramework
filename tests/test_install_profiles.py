@@ -161,12 +161,17 @@ def test_framework_profiles_inherit_runtime_pdf_stack() -> None:
     gateway_gpu = "\n".join(gateway_project["optional-dependencies"]["gpu"])
     runtime_deps = "\n".join(runtime_project["dependencies"])
 
-    assert "AbstractRuntime==0.4.29" in root_deps
-    assert "abstractgateway[apple]==0.2.28" in root_apple
-    assert "abstractgateway[gpu]==0.2.28" in root_gpu
-    assert "AbstractRuntime>=0.4.29" in gateway_deps
-    assert "AbstractRuntime[apple]>=0.4.29" in gateway_apple
-    assert "AbstractRuntime[gpu]>=0.4.29" in gateway_gpu
+    release_versions = _release_versions()
+    runtime_version = release_versions["abstractruntime"]
+    gateway_version = release_versions["abstractgateway"]
+
+    assert f"AbstractRuntime=={runtime_version}" in root_deps
+    assert f"abstractgateway[apple]=={gateway_version}" in root_apple
+    assert f"abstractgateway[gpu]=={gateway_version}" in root_gpu
+    # The pinned Gateway must accept the pinned Runtime in every profile.
+    assert f"AbstractRuntime>={runtime_version}" in gateway_deps
+    assert f"AbstractRuntime[apple]>={runtime_version}" in gateway_apple
+    assert f"AbstractRuntime[gpu]>={runtime_version}" in gateway_gpu
     assert "pypdf<7.0.0,>=6.0.0" in runtime_deps
     assert "reportlab<5.0.0,>=4.0.0" in runtime_deps
 

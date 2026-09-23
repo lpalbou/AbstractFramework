@@ -130,8 +130,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 
 | Package | What it is |
 |---|---|
-| [abstractcode](../abstractcode/) | Terminal coding client with durable sessions and tool approvals |
-| [abstractcode-tui](../abstractcode-tui/) | Rust terminal client on the AbstractTUI engine |
+| [abstractcode](../abstractcode/) | Coding client with durable sessions and tool approvals: Rust terminal client (`cargo install abstractcode`) and browser client (`npx @abstractframework/code`) |
 | [abstractassistant](../abstractassistant/) | macOS tray client for gateway-native chat and voice |
 | [abstractobserver](../abstractobserver/) | Browser UI for monitoring, control, and scheduling |
 | [abstractentity](../abstractentity/) | Summoned-entity manager and chat/replay UI |

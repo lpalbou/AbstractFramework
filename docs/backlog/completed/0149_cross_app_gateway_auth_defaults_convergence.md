@@ -222,8 +222,8 @@ Validation:
   docs for hosted auth/default/token-storage wording.
 - `python -m pytest abstractgateway/tests/test_gateway_principal_auth.py abstractgateway/tests/test_gateway_principal_isolation_matrix.py abstractgateway/tests/test_capabilities_endpoint_contract.py abstractgateway/tests/test_abstractflow_editor_gateway_contract.py -q` -> 26 passed.
 - `python -m py_compile abstractgateway/src/abstractgateway/routes/gateway.py abstractgateway/src/abstractgateway/security/sessions.py abstractgateway/src/abstractgateway/security/gateway_security.py` -> passed.
-- `python /Users/albou/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/albou/.codex/skills/architect` -> passed.
-- `python /Users/albou/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/albou/.codex/skills/review` -> passed.
+- `python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ~/.codex/skills/architect` -> passed.
+- `python ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ~/.codex/skills/review` -> passed.
 
 Behavior changes:
 - No runtime behavior change is introduced by completing this item. The

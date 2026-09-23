@@ -8,6 +8,43 @@ profile manifest is generated from the root `abstractframework` release pins:
 abstractframework manifest --check docs/installers/install-manifest.json
 ```
 
+## Generated profile manifest (schema version 1)
+
+`install-manifest.json` is what installers can consume today. It is generated from
+`abstractframework/__init__.py` (`__version__`, `RELEASE_VERSIONS`, `PACKAGE_DISTRIBUTIONS`,
+`NPM_RELEASE_VERSIONS`) and `abstractframework/install_manifest.py`, and validated by
+`install-manifest.schema.json`.
+
+| Field | Description |
+|---|---|
+| `schema_version` | Manifest schema version (`1`) |
+| `minimum_installer_version` | Oldest installer that understands this manifest |
+| `framework` | The `abstractframework` distribution, its version and `python_requires` |
+| `source` | Repository URL and the Python symbol the pins come from |
+| `profiles` | `light`, `apple`, `gpu`: pip requirement, platforms, prerequisites, whether local inference is installed |
+| `python_packages` | Every pinned PyPI package: id, distribution name, version |
+| `npm_apps` | Every npm app released with this version and its `npx` command |
+| `post_install` | Commands to run after install (`abstractframework doctor`, `abstractcore --config`, gateway + flow) |
+| `security` | Whether secrets or signed native artifacts are present |
+
+For abstractframework 0.1.12 the manifest lists the ten pinned PyPI packages and five npm apps
+(`flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.2.0, `entity` 0.1.0).
+
+### Updating it for a release
+
+1. Change the pins in `pyproject.toml` and the matching dictionaries in
+   `abstractframework/__init__.py`.
+2. Regenerate the manifest: `abstractframework manifest --write docs/installers/install-manifest.json`
+   (run it from the repository checkout so it reads the edited source).
+3. Check it: `abstractframework manifest --check docs/installers/install-manifest.json`. The test
+   suite (`python -m pytest -q`) fails if the checked-in manifest, the pins and
+   `RELEASE_VERSIONS` disagree.
+
+## Signed artifact manifest (target design)
+
+The rest of this page describes the manifest a future signed-installer pipeline will publish. It is
+a design reference and is not generated yet.
+
 ## Release pipeline (recommended)
 1. Build per-OS artifacts for each component.
 2. Sign binaries and installers.
@@ -23,10 +60,7 @@ abstractframework manifest --check docs/installers/install-manifest.json
 - Allows stable/beta channels without manual downloads.
 - Supports rollback by keeping previous versions accessible.
 
-## Manifest schema (core fields)
-
-The checked-in schema lives at `install-manifest.schema.json`. The generated release
-manifest lives at `install-manifest.json`.
+## Artifact manifest fields
 
 | Field | Description |
 |---|---|

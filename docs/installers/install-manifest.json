@@ -5,7 +5,7 @@
     "name": "AbstractFramework",
     "python_requires": ">=3.10",
     "registry": "pypi",
-    "version": "0.1.11"
+    "version": "0.1.12"
   },
   "minimum_installer_version": "0.1.0",
   "npm_apps": [
@@ -14,21 +14,35 @@
       "id": "flow",
       "package": "@abstractframework/flow",
       "registry": "npm",
-      "version": "0.3.19"
+      "version": "0.3.20"
     },
     {
       "command": "npx @abstractframework/code",
       "id": "code",
       "package": "@abstractframework/code",
       "registry": "npm",
-      "version": "0.3.9"
+      "version": "0.4.2"
     },
     {
       "command": "npx @abstractframework/observer",
       "id": "observer",
       "package": "@abstractframework/observer",
       "registry": "npm",
-      "version": "0.1.11"
+      "version": "0.1.12"
+    },
+    {
+      "command": "npx @abstractframework/continuum",
+      "id": "continuum",
+      "package": "@abstractframework/continuum",
+      "registry": "npm",
+      "version": "0.2.0"
+    },
+    {
+      "command": "npx @abstractframework/entity",
+      "id": "entity",
+      "package": "@abstractframework/entity",
+      "registry": "npm",
+      "version": "0.1.0"
     }
   ],
   "post_install": {
@@ -66,7 +80,7 @@
       "local_inference": false,
       "name": "Light",
       "pip_requirements": [
-        "abstractframework==0.1.11"
+        "abstractframework==0.1.12"
       ],
       "platforms": [
         "macos",
@@ -90,7 +104,7 @@
       "local_inference": true,
       "name": "Apple",
       "pip_requirements": [
-        "abstractframework[apple]==0.1.11"
+        "abstractframework[apple]==0.1.12"
       ],
       "platforms": [
         "macos"
@@ -98,6 +112,7 @@
       "prerequisites": [
         "python>=3.10",
         "apple-silicon",
+        "macos>=14",
         "network"
       ],
       "summary": "Native Apple Silicon profile. Adds local MLX/Metal-capable stacks on top of the same framework interfaces and endpoint providers."
@@ -113,7 +128,7 @@
       "local_inference": true,
       "name": "GPU",
       "pip_requirements": [
-        "abstractframework[gpu]==0.1.11"
+        "abstractframework[gpu]==0.1.12"
       ],
       "platforms": [
         "linux",
@@ -132,61 +147,61 @@
       "distribution": "abstractcore",
       "id": "abstractcore",
       "registry": "pypi",
-      "version": "2.13.38"
+      "version": "2.13.42"
     },
     {
       "distribution": "AbstractRuntime",
       "id": "abstractruntime",
       "registry": "pypi",
-      "version": "0.4.29"
+      "version": "0.4.32"
     },
     {
       "distribution": "abstractagent",
       "id": "abstractagent",
       "registry": "pypi",
-      "version": "0.3.12"
+      "version": "0.3.13"
     },
     {
       "distribution": "abstractgateway",
       "id": "abstractgateway",
       "registry": "pypi",
-      "version": "0.2.28"
+      "version": "0.2.30"
     },
     {
       "distribution": "AbstractMemory",
       "id": "abstractmemory",
       "registry": "pypi",
-      "version": "0.2.6"
+      "version": "0.3.0"
     },
     {
       "distribution": "abstractsemantics",
       "id": "abstractsemantics",
       "registry": "pypi",
-      "version": "0.0.4"
+      "version": "0.0.5"
     },
     {
       "distribution": "abstractvoice",
       "id": "abstractvoice",
       "registry": "pypi",
-      "version": "0.10.18"
+      "version": "0.11.3"
     },
     {
       "distribution": "abstractvision",
       "id": "abstractvision",
       "registry": "pypi",
-      "version": "0.3.26"
+      "version": "0.3.29"
     },
     {
       "distribution": "abstractmusic",
       "id": "abstractmusic",
       "registry": "pypi",
-      "version": "0.1.13"
+      "version": "0.1.15"
     },
     {
       "distribution": "abstractassistant",
       "id": "abstractassistant",
       "registry": "pypi",
-      "version": "0.4.11"
+      "version": "0.5.0"
     }
   ],
   "schema_version": 1,

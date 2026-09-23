@@ -6,7 +6,8 @@ If you're new, read these groups first:
 
 - **Durable execution**: run, ledger, effect, wait, artifact
 - **Workflows**: flow, bundle, interface contract
-- **Control plane**: gateway, schedule, observer
+- **Control plane**: gateway, schedule, observer, gateway console
+- **Distribution**: install profile, release pins
 
 ---
 
@@ -151,6 +152,22 @@ A durable recurring trigger owned by the gateway ("run this workflow every 24h")
 ### Observer
 
 A thin-client browser UI for operations: monitor runs, inspect ledger history, watch live execution, control runs, and (when enabled) create schedules.
+
+### Gateway console
+
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`).
+
+---
+
+## Distribution
+
+### Install profile
+
+One of the three ways to install the pinned Python stack: **Light** (`pip install abstractframework`, remote/endpoint inference only), **Apple** (`abstractframework[apple]`, adds MLX/Metal engines on macOS 14+) and **GPU** (`abstractframework[gpu]`, adds CUDA/ROCm engines). See [Install](install.md).
+
+### Release pins
+
+The exact (`==`) versions a given `abstractframework` release installs, exposed as `RELEASE_VERSIONS` and checked by `abstractframework doctor`.
 
 ---
 

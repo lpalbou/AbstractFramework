@@ -80,15 +80,23 @@ agent, `deep-research`, and `co-scientist` among them. See
 
 On first local start, Gateway creates `default/admin`, writes the browser-login
 token to `runtime/gateway/auth/bootstrap-admin-token`, and prints the token in
-the terminal. Use that `admin` user token in `/console`, AbstractFlow,
+the terminal. Use that `admin` user token in the built-in web console at
+`http://127.0.0.1:8080/console`, AbstractFlow,
 AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` remains a
 legacy server/operator bearer token; it is not a browser sign-in token.
 
-Monitor runs from a browser:
+Monitor runs from a browser, or from a terminal with the gateway console:
 
 ```bash
 npx @abstractframework/observer   # open http://localhost:3001
+
+cargo install abstractgateway-console   # Rust 1.87+
+ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.1:8080
 ```
+
+Container images are published for the gateway and the AbstractCore server:
+`ghcr.io/lpalbou/abstractgateway:0.2.30` (`0.2.30-gpu` is an experimental NVIDIA
+image) and `ghcr.io/lpalbou/abstractcore:2.13.42`.
 
 For artifact and runtime-resource investigation, see
 `docs/guide/runtime-artifacts.md`.
@@ -157,13 +165,13 @@ The ecosystem, grouped by layer. Each name links to the package's own README.
 
 | App | What it does | Install |
 |---|---|---|
-| [AbstractCode](abstractcode/) | Terminal agentic dev client — durable sessions, tool approvals, `/workflow` support | `pip install abstractcode` |
-| [AbstractCode-TUI](abstractcode-tui/) | AbstractCode on the AbstractTUI engine (reactive Rust terminal client) | `cargo install abstractcode-tui` |
+| [AbstractCode](abstractcode/) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, `/workflow` support | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
 | [AbstractAssistant](abstractassistant/) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
 | [AbstractObserver](abstractobserver/) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
 | [AbstractEntity](abstractentity/) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
-| [AbstractContinuum](abstractcontinuum/) | Continuous iterative development and deployment console | see package README |
-| **Code Web UI** | Browser coding assistant (gateway-backed) | `npx @abstractframework/code` |
+| [AbstractContinuum](abstractcontinuum/) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
+| **Gateway consoles** | Operator consoles for a running gateway: web at `/console`, terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
+| **Code Web UI** | Browser client of AbstractCode (gateway-backed) | `npx @abstractframework/code` |
 | **Flow Editor** | Visual workflow authoring in the browser | `npx @abstractframework/flow` |
 
 ### Shared libraries
@@ -200,6 +208,46 @@ pip install "abstractframework[apple]"
 pip install "abstractframework[gpu]"
 ```
 
+| Profile | Command | Platforms | Python |
+|---|---|---|---|
+| Light | `pip install abstractframework` | macOS, Linux, Windows | 3.10–3.13 |
+| Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
+| GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
+
+### Release matrix (abstractframework 0.1.12)
+
+`abstractframework` pins every Python package with `==`, so one version of the
+meta-package always installs the same stack. The browser apps and Rust tools are
+distributed through npm and crates.io; the versions below are the ones released
+and tested together.
+
+| Registry | Package | Version |
+|---|---|---|
+| PyPI | `abstractgateway` | 0.2.30 |
+| PyPI | `abstractassistant` | 0.5.0 |
+| PyPI | `abstractcore` | 2.13.42 |
+| PyPI | `AbstractRuntime` | 0.4.32 |
+| PyPI | `abstractagent` | 0.3.13 |
+| PyPI | `AbstractMemory` | 0.3.0 |
+| PyPI | `abstractsemantics` | 0.0.5 |
+| PyPI | `abstractvoice` | 0.11.3 |
+| PyPI | `abstractvision` | 0.3.29 |
+| PyPI | `abstractmusic` | 0.1.15 |
+| npm | `@abstractframework/flow` | 0.3.20 |
+| npm | `@abstractframework/code` | 0.4.2 |
+| npm | `@abstractframework/observer` | 0.1.12 |
+| npm | `@abstractframework/continuum` | 0.2.0 |
+| npm | `@abstractframework/entity` | 0.1.0 |
+| crates.io | `abstractcode` | 0.5.1 |
+| crates.io | `abstractgateway-console` | 0.6.0 |
+| crates.io | `abstracttui` | 0.6.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.2.30 (`0.2.30-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore` | 2.13.42 |
+
+Optional add-ons that are not part of any profile install separately:
+`pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and
+`pip install abstractskill` (0.2.1).
+
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
 `abstractframework doctor`, and the generated installer manifest contract.
 
@@ -225,7 +273,7 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 Clone all sibling repos and build everything in editable mode:
 
 ```bash
-./scripts/clone.sh           # clone 14 repos as siblings
+./scripts/clone.sh           # clone every sibling repository next to this one
 source ./scripts/build.sh    # editable installs into .venv (use `source` to stay in the venv)
 ```
 
@@ -248,6 +296,7 @@ MIT. See [LICENSE](LICENSE).
 
 This repo pins ecosystem package versions and provides a tiny helper API in `abstractframework/`.
 Most runtime behavior lives in the individual package repos (AbstractCore/Runtime/Agent/Flow/Gateway/Code).
+AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a browser client (`npx @abstractframework/code`); both need a running gateway.
 
 Quick commands:
 - Install pinned stack: `pip install abstractframework`
@@ -359,7 +408,11 @@ Notes for LLMs working in this repo:
 ## Release Profile (Pinned Versions)
 
 - [pyproject.toml](pyproject.toml): Single source of truth for pinned ecosystem versions and extras.
-- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
+- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
+- [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated profile manifest (pins, profiles, npm apps).
+- abstractframework 0.1.12 pins (PyPI, `==`): abstractgateway 0.2.30, abstractassistant 0.5.0, abstractcore 2.13.42, AbstractRuntime 0.4.32, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.3, abstractvision 0.3.29, abstractmusic 0.1.15.
+- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.2.0, `entity` 0.1.0 (run with `npx`); crates `abstractcode` 0.5.1, `abstractgateway-console` 0.6.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.2.30`, `ghcr.io/lpalbou/abstractcore:2.13.42`.
+- Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
 
@@ -398,12 +451,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.11"
+version = "0.1.12"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Laurent-Philippe Albou", email = "contact@abstractcore.ai"}
+    {name = "Laurent-Philippe Albou", email = "contact@abstractframework.ai"}
 ]
 keywords = [
     "agentic-os",
@@ -428,6 +481,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Typing :: Typed",
 ]
@@ -441,24 +495,23 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.2.28",
+    "abstractgateway==0.2.30",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractcode==0.3.9",
-    "abstractassistant==0.4.11",
+    "abstractassistant==0.5.0",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.13.38",
-    "AbstractRuntime==0.4.29",
-    "abstractagent==0.3.12",
-    "AbstractMemory==0.2.6",
-    "abstractsemantics==0.0.4",
+    "abstractcore==2.13.42",
+    "AbstractRuntime==0.4.32",
+    "abstractagent==0.3.13",
+    "AbstractMemory==0.3.0",
+    "abstractsemantics==0.0.5",
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
-    "abstractvoice==0.10.18",
-    "abstractvision==0.3.26",
-    "abstractmusic==0.1.13",
+    "abstractvoice==0.11.3",
+    "abstractvision==0.3.29",
+    "abstractmusic==0.1.15",
 ]
 
 [project.optional-dependencies]
@@ -474,13 +527,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.2.28",
-    "abstractassistant[apple]==0.4.11; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.2.30",
+    "abstractassistant[apple]==0.5.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.2.28",
-    "abstractassistant[gpu]==0.4.11",
+    "abstractgateway[gpu]==0.2.30",
+    "abstractassistant[gpu]==0.5.0",
 ]
 
 [project.urls]
@@ -530,29 +583,27 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.11"
+__version__ = "0.1.12"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.38",
-    "abstractruntime": "0.4.29",
-    "abstractagent": "0.3.12",
-    "abstractcode": "0.3.9",
-    "abstractgateway": "0.2.28",
-    "abstractmemory": "0.2.6",
-    "abstractsemantics": "0.0.4",
-    "abstractvoice": "0.10.18",
-    "abstractvision": "0.3.26",
-    "abstractmusic": "0.1.13",
-    "abstractassistant": "0.4.11",
+    "abstractcore": "2.13.42",
+    "abstractruntime": "0.4.32",
+    "abstractagent": "0.3.13",
+    "abstractgateway": "0.2.30",
+    "abstractmemory": "0.3.0",
+    "abstractsemantics": "0.0.5",
+    "abstractvoice": "0.11.3",
+    "abstractvision": "0.3.29",
+    "abstractmusic": "0.1.15",
+    "abstractassistant": "0.5.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
     "abstractcore": "abstractcore",
     "abstractruntime": "AbstractRuntime",
     "abstractagent": "abstractagent",
-    "abstractcode": "abstractcode",
     "abstractgateway": "abstractgateway",
     "abstractmemory": "AbstractMemory",
     "abstractsemantics": "abstractsemantics",
@@ -563,9 +614,11 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.3.19",
-    "@abstractframework/code": "0.3.9",
-    "@abstractframework/observer": "0.1.11",
+    "@abstractframework/flow": "0.3.20",
+    "@abstractframework/code": "0.4.2",
+    "@abstractframework/observer": "0.1.12",
+    "@abstractframework/continuum": "0.2.0",
+    "@abstractframework/entity": "0.1.0",
 }
 
 CORE_DEFAULT_EXTRAS = [
@@ -752,7 +805,7 @@ def build_install_manifest() -> dict[str, Any]:
                 "pip_requirements": [f"abstractframework[apple]=={__version__}"],
                 "local_inference": True,
                 "platforms": ["macos"],
-                "prerequisites": ["python>=3.10", "apple-silicon", "network"],
+                "prerequisites": ["python>=3.10", "apple-silicon", "macos>=14", "network"],
                 "best_for": ["Mac users who want local Apple Silicon inferencers"],
                 "excludes": ["CUDA/ROCm engines"],
             },
@@ -1160,8 +1213,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 
 | Package | What it is |
 |---|---|
-| [abstractcode](../abstractcode/) | Terminal coding client with durable sessions and tool approvals |
-| [abstractcode-tui](../abstractcode-tui/) | Rust terminal client on the AbstractTUI engine |
+| [abstractcode](../abstractcode/) | Coding client with durable sessions and tool approvals: Rust terminal client (`cargo install abstractcode`) and browser client (`npx @abstractframework/code`) |
 | [abstractassistant](../abstractassistant/) | macOS tray client for gateway-native chat and voice |
 | [abstractobserver](../abstractobserver/) | Browser UI for monitoring, control, and scheduling |
 | [abstractentity](../abstractentity/) | Summoned-entity manager and chat/replay UI |
@@ -1210,6 +1262,22 @@ across profiles; the profiles mainly change whether local inference engines are 
 | Light | `pip install abstractframework` | You use cloud APIs or endpoint servers such as LM Studio, Ollama, vLLM, llama.cpp, OpenRouter, or OpenAI-compatible services. | No |
 | Apple | `pip install "abstractframework[apple]"` | You are on Apple Silicon and want local MLX/Metal-capable engines as well as endpoint providers. | Yes, Apple-focused |
 | GPU | `pip install "abstractframework[gpu]"` | You have a supported discrete GPU and want local GPU-capable engines as well as endpoint providers. | Yes, GPU-focused |
+
+### Requirements per profile
+
+| Profile | Platforms | Python | Notes |
+|---|---|---|---|
+| Light | macOS, Linux, Windows | 3.10–3.13 | No local inference engines. |
+| Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
+| GPU | Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
+
+`abstractframework` 0.1.12 pins `abstractgateway==0.2.30`, `abstractassistant==0.5.0`,
+`abstractcore==2.13.42`, `AbstractRuntime==0.4.32`, `abstractagent==0.3.13`,
+`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.3`,
+`abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
+`abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
+(`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
+installed package whose version differs from these pins.
 
 Light is not a reduced-functionality framework. It is the remote-first profile: multimodal input,
 multimodal output, embeddings, tools, durable runs, workflows, and Gateway/Flow still work when
@@ -1297,10 +1365,37 @@ abstractframework doctor
 abstractcore --config
 ```
 
+## Apps and tools outside pip
+
+The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
+Run or install them next to the Python stack:
+
+| Tool | Command | Version released with 0.1.12 |
+|---|---|---|
+| Gateway web console | built into `abstractgateway`: open `http://127.0.0.1:8080/console` after `abstractgateway serve` | 0.2.30 |
+| Gateway terminal console | `cargo install abstractgateway-console` (Rust 1.87+), then `abstractgateway-console --url http://127.0.0.1:8080` | 0.6.0 |
+| Flow Editor | `npx @abstractframework/flow` | 0.3.20 |
+| Code Web UI | `npx @abstractframework/code` | 0.4.2 |
+| Observer | `npx @abstractframework/observer` | 0.1.12 |
+| Continuum console | `npx @abstractframework/continuum` | 0.2.0 |
+| Entity manager | `npx @abstractframework/entity` | 0.1.0 |
+| AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.5.1 |
+
+The browser apps need Node.js 18 or later and a running gateway. Optional Python add-ons outside the
+profiles install on their own: `pip install abstract3d`, `pip install abstractcamera`,
+`pip install abstractskill`.
+
 ## Start Gateway and Flow
 
-For a local development setup, start Gateway and Flow from their package commands or from the
-workspace helper scripts when working from source. The first health check should always be:
+Start the gateway, then open a browser app against it:
+
+```bash
+abstractgateway serve --host 127.0.0.1 --port 8080
+npx @abstractframework/flow
+```
+
+When you work from source, the workspace helper scripts start the same services. The first health
+check should always be:
 
 ```bash
 abstractframework doctor
@@ -1326,13 +1421,15 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:latest
+  ghcr.io/lpalbou/abstractgateway:0.2.30
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
 local MLX/CUDA stacks. On first start it creates `default/admin` and writes the login token to
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
-NVIDIA host when you explicitly want the local GPU profile.
+NVIDIA host when you explicitly want the local GPU profile (pinned tag: `0.2.30-gpu`; this image is
+experimental). The AbstractCore OpenAI-compatible server is also published as
+`ghcr.io/lpalbou/abstractcore:2.13.42`.
 
 ## Non-technical installs
 
@@ -1494,7 +1591,8 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 
 On first local start, Gateway creates `default/admin`, writes the browser-login
 token to `runtime/gateway/auth/bootstrap-admin-token`, and prints it in the
-terminal. Use that token with user `admin` in `/console`, AbstractFlow,
+terminal. Use that token with user `admin` in the built-in web console
+(`http://127.0.0.1:8080/console`), AbstractFlow,
 AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the
 legacy server/operator bearer-token path; it does not sign in browsers.
 
@@ -1585,13 +1683,19 @@ Once deployed, the bundle appears in:
 
 ## Example apps
 
-### AbstractCode (terminal)
+### AbstractCode (terminal and browser)
 
-A local dev client for agentic sessions — no server required:
+A coding client for durable agentic sessions on the gateway you started above. Install the Rust
+terminal client from crates.io (or download a prebuilt binary from the
+[AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases)), or run the
+browser client with `npx`:
 
 ```bash
-pip install abstractcode
-abstractcode --provider ollama --model qwen3:4b-instruct
+cargo install abstractcode
+abstractcode doctor              # check the gateway connection
+abstractcode
+
+npx @abstractframework/code      # browser client on http://127.0.0.1:3002
 ```
 
 Sessions are durable: close and reopen, your full context is preserved. Type `/help` for commands.
@@ -1660,7 +1764,9 @@ Apps / UIs (thin clients)
 ──────────────────────────────────────────────────────
  AbstractObserver (monitor / control / schedule)
  Flow Editor (author workflows)
- Code Web UI, AbstractAssistant, your custom app
+ AbstractCode (terminal + web), AbstractAssistant, your custom app
+ AbstractContinuum console, AbstractEntity manager
+ Gateway consoles: web /console, terminal abstractgateway-console
                        │  HTTP/SSE
                        ▼
 AbstractGateway (control plane)
@@ -1692,6 +1798,39 @@ LLM + tools + multimodality
  tools, structured output, media input, embeddings, MCP
  capability plugins: voice / vision / music
 ```
+
+## How the framework is distributed
+
+Each layer ships through the registry that fits it. The `abstractframework` meta-package pins the
+Python side with exact versions; the apps and terminal tools are installed next to it.
+
+```mermaid
+flowchart LR
+    subgraph PyPI["PyPI (pinned by abstractframework)"]
+        GW["abstractgateway<br/>server + /console"]
+        AS["abstractassistant"]
+        STACK["abstractcore · AbstractRuntime · abstractagent<br/>AbstractMemory · abstractsemantics<br/>abstractvoice · abstractvision · abstractmusic"]
+    end
+    subgraph npm["npm (npx @abstractframework/...)"]
+        APPS["flow · code · observer<br/>continuum · entity"]
+    end
+    subgraph crates["crates.io (cargo install)"]
+        CLI["abstractcode"]
+        CON["abstractgateway-console"]
+    end
+    subgraph GHCR["GHCR images"]
+        IMG["abstractgateway · abstractcore"]
+    end
+    AS -->|HTTP/SSE| GW
+    APPS -->|HTTP/SSE| GW
+    CLI -->|HTTP/SSE| GW
+    CON -->|HTTP/SSE| GW
+    GW --> STACK
+    IMG -.->|same server, containerized| GW
+```
+
+See [Install AbstractFramework](install.md) for the versions released together and the commands
+for each registry.
 
 **AbstractFlow** is the authoring/distribution layer: you design a VisualFlow graph, export a `.flow` bundle, and run it anywhere a compatible host exists.
 
@@ -2278,7 +2417,22 @@ The response type returned by `llm.generate(...)`.
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release.
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.1.12:
+`abstractcore` 2.13.42, `abstractruntime` 0.4.32, `abstractagent` 0.3.13, `abstractgateway` 0.2.30,
+`abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.3, `abstractvision` 0.3.29,
+`abstractmusic` 0.1.15, `abstractassistant` 0.5.0.
+
+### `PACKAGE_DISTRIBUTIONS`
+
+Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for example
+`abstractruntime` → `AbstractRuntime`).
+
+### `NPM_RELEASE_VERSIONS`
+
+The npm apps released with this version, each runnable with `npx <package>`:
+`@abstractframework/flow` 0.3.20, `@abstractframework/code` 0.4.2,
+`@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.2.0 and
+`@abstractframework/entity` 0.1.0. They also appear as `npm_apps` in the install manifest.
 
 ### `CORE_DEFAULT_EXTRAS`
 
@@ -2345,6 +2499,10 @@ abstractframework manifest --check docs/installers/install-manifest.json
 | Control plane (HTTP server, scheduling, bundle discovery, SSE) | `abstractgateway` |
 | Workflow authoring UI | `@abstractframework/flow` (npm) |
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
+| Coding client | `abstractcode` (crates.io) and `@abstractframework/code` (npm) |
+| Gateway operator console | built-in `/console`, and `abstractgateway-console` (crates.io) |
+| Continuous development console | `@abstractframework/continuum` (npm) |
+| Summoned-entity manager | `@abstractframework/entity` (npm) |
 
 See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run.
 
@@ -2428,6 +2586,9 @@ No.
 | Smallest useful (LLM SDK only) | `pip install abstractcore` |
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
+| A browser app against an existing gateway | `npx @abstractframework/<flow\|code\|observer\|continuum\|entity>` |
+| A terminal client | `cargo install abstractcode` or `cargo install abstractgateway-console` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.2.30` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -2581,7 +2742,8 @@ If you're new, read these groups first:
 
 - **Durable execution**: run, ledger, effect, wait, artifact
 - **Workflows**: flow, bundle, interface contract
-- **Control plane**: gateway, schedule, observer
+- **Control plane**: gateway, schedule, observer, gateway console
+- **Distribution**: install profile, release pins
 
 ---
 
@@ -2727,6 +2889,22 @@ A durable recurring trigger owned by the gateway ("run this workflow every 24h")
 
 A thin-client browser UI for operations: monitor runs, inspect ledger history, watch live execution, control runs, and (when enabled) create schedules.
 
+### Gateway console
+
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`).
+
+---
+
+## Distribution
+
+### Install profile
+
+One of the three ways to install the pinned Python stack: **Light** (`pip install abstractframework`, remote/endpoint inference only), **Apple** (`abstractframework[apple]`, adds MLX/Metal engines on macOS 14+) and **GPU** (`abstractframework[gpu]`, adds CUDA/ROCm engines). See [Install](install.md).
+
+### Release pins
+
+The exact (`==`) versions a given `abstractframework` release installs, exposed as `RELEASE_VERSIONS` and checked by `abstractframework doctor`.
+
 ---
 
 ## Memory
@@ -2761,28 +2939,30 @@ If you prefer component-first docs, start with [Getting Started](../getting-star
 --- docs/scenarios/offline-coding-assistant.md ---
 # Scenario: Offline Coding Assistant (Terminal)
 
-Goal: run a durable coding assistant locally, offline-first, with Ollama (or an OpenAI-compatible local server).
+Goal: run a durable coding assistant on one machine, offline-first, with Ollama (or an
+OpenAI-compatible local server) as the model backend.
+
+AbstractCode is a client of AbstractGateway: the gateway runs the coding agent on your machine and
+the terminal client connects to it over HTTP/SSE. Nothing leaves the machine when the model server
+is local too.
 
 ## Prereqs
 
-- Python 3.10+
+- Python 3.10+ (for the gateway)
+- Rust 1.87+ (for `cargo install abstractcode`), or a prebuilt binary from the
+  [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases)
 - An LLM backend:
   - Ollama (recommended)
   - LM Studio / vLLM / LocalAI (OpenAI-compatible)
 
 ## Step 1: Install
 
-Minimal install:
-
 ```bash
-pip install abstractcode
+pip install abstractframework     # pinned stack, includes abstractgateway
+cargo install abstractcode        # terminal client
 ```
 
-Full pinned stack (includes AbstractCode):
-
-```bash
-pip install abstractframework
-```
+`pip install abstractgateway` is enough if you only want the gateway.
 
 ## Step 2: Start a local model
 
@@ -2794,32 +2974,46 @@ ollama pull qwen3:4b-instruct
 export OLLAMA_HOST="http://localhost:11434"
 ```
 
-## Step 3: Run AbstractCode
+Pick it as the default text model:
 
 ```bash
-abstractcode --provider ollama --model qwen3:4b-instruct
+abstractcore --config
 ```
 
-## Step 4: Work with files and tools
+## Step 3: Start the gateway on loopback
 
-- Mention files in prompts with `@path/to/file`.
+```bash
+abstractgateway serve --host 127.0.0.1 --port 8080
+```
+
+The gateway ships the `coding-agent:coder` workflow that AbstractCode uses by default.
+
+## Step 4: Run AbstractCode
+
+```bash
+abstractcode doctor               # checks the gateway connection and available workflows
+abstractcode                      # connects to http://127.0.0.1:8080
+```
+
+Prefer a browser? `npx @abstractframework/code` serves the same client on
+`http://127.0.0.1:3002`.
+
+## Step 5: Work with files and tools
+
+- Type a task and press Enter; reasoning cycles and tool cards stream in live.
+- Tools are approval-gated by default: approve or reject each call, from either client.
 - Type `/help` for commands.
-- Tools are approval-gated by default:
-  - Toggle in-session: `/auto-accept`
-  - Start with: `--auto-approve`
 
 ## What "durable" means here
 
-- Closing and reopening the app keeps state.
-- Default storage:
-  - `~/.abstractcode/state.json` (UI snapshot)
-  - `~/.abstractcode/state.d/` (durable run state + ledger + artifacts)
-- Start fresh: `/clear`
-- Disable persistence: `--no-state`
+- The run lives in the gateway, not in the client. Close the terminal and reattach later; the
+  session keeps its full history.
+- A run gated on your approval in the terminal can be approved from the browser client, and the
+  other way round.
 
-## When to switch to the Gateway path
+## When to go further
 
-Use a gateway when you want:
+Use the same gateway when you want:
 - multiple thin clients observing the same run
 - remote execution
 - scheduling and a durable command inbox
@@ -5054,6 +5248,11 @@ the lifecycle folders described by the backlog process.
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
+| 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
+| 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
+| 0848 | [Supervisor must not blame model inference for a blocked gateway](planned/0848_supervisor_must_not_blame_inference_for_a_blocked_gateway.md) | Planned (not started) | The unhealthy banner asserts a cause it cannot observe; it was wrong 4/4 on 2026-09-17 (the cause was a workflow publish rebuilding the host on the event loop). Point at `runtime/audit_log.jsonl` and the ledgers. |
+| 0849 | [Test suites must not reach the operator's live stack](planned/0849_test_suites_must_not_reach_the_operators_live_stack.md) | Planned (abstractassistant guarded; other packages not audited) | An assistant GUI test republished the live gateway's managed workflow twice, costing two ~60 s stalls. abstractassistant is now guarded; audit every other package. |
 | 0142 | [Gateway tenant isolation and shared runtime design](planned/0142_gateway_tenant_isolation_and_shared_runtime.md) | Planned | Define and implement tenant-aware Gateway/Runtime isolation; current shared Gateway deployments are single-user or trusted-cohort only. |
 | 076 | [OpenAI Responses API integration](planned/076_openai_responses_api_integration.md) | Planned | Define a true Core Server `/v1/responses` contract, use native Responses transports where available, and require Core-owned first-class Responses adapters for MLX, HuggingFace, Anthropic, and non-native endpoint profiles. |
 | 0143 | [Shared Gateway per-principal runtime router](planned/0143_shared_gateway_per_principal_runtime_router.md) | In progress | Gateway principal auth, admin user CRUD, per-principal GatewayService routing, and Flow browser-session routing landed; broader app auth and route-family isolation remain open. |
@@ -5068,6 +5267,7 @@ the lifecycle folders described by the backlog process.
 | 0201-0207,0209-0210 | [Multimodal capability projection and workflow-callability track](planned/multimodal-capability-projection/README.md) | In progress | The first Core/Runtime substrate wave is landed: Core `request=` + resolved-route metadata and Runtime `resolved_actions` export. Gateway descriptors, replay envelopes, and client adoption still remain. |
 | 0212-0222 | [Agency parity track (Codex-0.89 gaps)](planned/agency-parity/README.md) | In progress | Implemented + tested: 0212 (prefix-cache stability), 0213 (context fidelity/thought retention), 0214 (parallel read-only tools), 0216 (edit_file safety + CRLF/dash-line follow-ups), 0217 (verifier + update_plan + inject_guidance + default RetryPolicy), 039 (arg coercion + PEP-563 schema-type fix), 0215 engine + generalized output offload, 0220 (persistent-shell tools — opt-in, approval-gated, live-verified on OVH gpt-oss-120b). LIVE evidence recorded 2026-07-08 (track README "Live evidence"): prefix stability 12/12 + OpenAI cached_tokens 60.9%, thought retention, 2.09× parallel tools, verifier live catch, edit_file traps 3/3. Remaining: 0218 (design-first context-budget survival), 0219 (retrieval/project memory — owned elsewhere), unified prompt-caching strategy (0221). ADR-0026 binding: no lossy truncation in the loop. |
 | 0232 | [Sandbox `execute_command` and fix workspace path containment](planned/0232_execute_command_sandboxing_and_workspace_path_containment.md) | Planned | P0 security. `execute_command` is raw `sh -c` with the full inherited environment and no filesystem containment, so a `write_file` refused by `workspace_only` succeeds via shell heredoc (observed live 2026-07-30); `~/.abstractcode/gateway.json` and `~/.codex/auth.json` are readable, subsuming the `fetch_url` approval gate. Path containment is string-based, so case-variant and Unicode-NFD denylist bypasses work on APFS and `workspace_allowed_paths` pointing at the workspaces base exposes 1,746 sibling workspaces. Proposes fail-loud workspace clamping, identity-based (`st_dev`,`st_ino`) containment with `openat`+`O_NOFOLLOW`, per-invocation OS sandbox (sandbox-exec/bubblewrap) with container fallback, environment scrubbing, and approval tiering that forbids auto-approving `execute_command` while unsandboxed. |
+| 0233 | [Real run cancellation: abort in-flight LLM calls](planned/0233_real_run_cancellation_abort_in_flight_llm_calls.md) | Planned | P1. `/cancel` is a state write only — `cancel_run` sets `status=CANCELLED` and returns while the tick thread stays blocked in `llm.generate()`, so the generation runs to completion and keeps burning GPU/paid tokens (observed: 5 overlapping generation pairs, largest 211s). Threads a cancellation token through abstractcore (HTTP abort, extending the existing `cancel_event`), abstractruntime, abstractgateway and abstractcode-tui, with an honest `cancelled_in_flight` ledger outcome and a client message that distinguishes 'marked cancelled' from 'stopped'. |
 
 ## Gateway Control Plane Planned Track
 

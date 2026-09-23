@@ -11,6 +11,22 @@ across profiles; the profiles mainly change whether local inference engines are 
 | Apple | `pip install "abstractframework[apple]"` | You are on Apple Silicon and want local MLX/Metal-capable engines as well as endpoint providers. | Yes, Apple-focused |
 | GPU | `pip install "abstractframework[gpu]"` | You have a supported discrete GPU and want local GPU-capable engines as well as endpoint providers. | Yes, GPU-focused |
 
+### Requirements per profile
+
+| Profile | Platforms | Python | Notes |
+|---|---|---|---|
+| Light | macOS, Linux, Windows | 3.10–3.13 | No local inference engines. |
+| Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
+| GPU | Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
+
+`abstractframework` 0.1.12 pins `abstractgateway==0.2.30`, `abstractassistant==0.5.0`,
+`abstractcore==2.13.42`, `AbstractRuntime==0.4.32`, `abstractagent==0.3.13`,
+`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.3`,
+`abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
+`abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
+(`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
+installed package whose version differs from these pins.
+
 Light is not a reduced-functionality framework. It is the remote-first profile: multimodal input,
 multimodal output, embeddings, tools, durable runs, workflows, and Gateway/Flow still work when
 they are backed by remote or local endpoint providers.
@@ -97,10 +113,37 @@ abstractframework doctor
 abstractcore --config
 ```
 
+## Apps and tools outside pip
+
+The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
+Run or install them next to the Python stack:
+
+| Tool | Command | Version released with 0.1.12 |
+|---|---|---|
+| Gateway web console | built into `abstractgateway`: open `http://127.0.0.1:8080/console` after `abstractgateway serve` | 0.2.30 |
+| Gateway terminal console | `cargo install abstractgateway-console` (Rust 1.87+), then `abstractgateway-console --url http://127.0.0.1:8080` | 0.6.0 |
+| Flow Editor | `npx @abstractframework/flow` | 0.3.20 |
+| Code Web UI | `npx @abstractframework/code` | 0.4.2 |
+| Observer | `npx @abstractframework/observer` | 0.1.12 |
+| Continuum console | `npx @abstractframework/continuum` | 0.2.0 |
+| Entity manager | `npx @abstractframework/entity` | 0.1.0 |
+| AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.5.1 |
+
+The browser apps need Node.js 18 or later and a running gateway. Optional Python add-ons outside the
+profiles install on their own: `pip install abstract3d`, `pip install abstractcamera`,
+`pip install abstractskill`.
+
 ## Start Gateway and Flow
 
-For a local development setup, start Gateway and Flow from their package commands or from the
-workspace helper scripts when working from source. The first health check should always be:
+Start the gateway, then open a browser app against it:
+
+```bash
+abstractgateway serve --host 127.0.0.1 --port 8080
+npx @abstractframework/flow
+```
+
+When you work from source, the workspace helper scripts start the same services. The first health
+check should always be:
 
 ```bash
 abstractframework doctor
@@ -126,13 +169,15 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:latest
+  ghcr.io/lpalbou/abstractgateway:0.2.30
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
 local MLX/CUDA stacks. On first start it creates `default/admin` and writes the login token to
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
-NVIDIA host when you explicitly want the local GPU profile.
+NVIDIA host when you explicitly want the local GPU profile (pinned tag: `0.2.30-gpu`; this image is
+experimental). The AbstractCore OpenAI-compatible server is also published as
+`ghcr.io/lpalbou/abstractcore:2.13.42`.
 
 ## Non-technical installs
 

@@ -85,7 +85,7 @@ def build_install_manifest() -> dict[str, Any]:
                 "pip_requirements": [f"abstractframework[apple]=={__version__}"],
                 "local_inference": True,
                 "platforms": ["macos"],
-                "prerequisites": ["python>=3.10", "apple-silicon", "network"],
+                "prerequisites": ["python>=3.10", "apple-silicon", "macos>=14", "network"],
                 "best_for": ["Mac users who want local Apple Silicon inferencers"],
                 "excludes": ["CUDA/ROCm engines"],
             },

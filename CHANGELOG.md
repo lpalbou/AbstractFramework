@@ -4,6 +4,86 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-09-23
+
+### Changed
+
+- The release profile now pins the packages released on 2026-09-23. `pip install abstractframework`
+  (and the `apple` / `gpu` extras) installs exactly these versions:
+
+  | Registry | Package | 0.1.11 | 0.1.12 |
+  |---|---|---|---|
+  | PyPI | `abstractgateway` (`[apple]`, `[gpu]` in the profiles) | 0.2.28 | **0.2.30** |
+  | PyPI | `abstractassistant` (`[apple]` on macOS, `[gpu]` in the profiles) | 0.4.11 | **0.5.0** |
+  | PyPI | `abstractcore` | 2.13.38 | **2.13.42** |
+  | PyPI | `AbstractRuntime` | 0.4.29 | **0.4.32** |
+  | PyPI | `abstractagent` | 0.3.12 | **0.3.13** |
+  | PyPI | `AbstractMemory` | 0.2.6 | **0.3.0** |
+  | PyPI | `abstractsemantics` | 0.0.4 | **0.0.5** |
+  | PyPI | `abstractvoice` | 0.10.18 | **0.11.3** |
+  | PyPI | `abstractvision` | 0.3.26 | **0.3.29** |
+  | PyPI | `abstractmusic` | 0.1.13 | **0.1.15** |
+  | npm | `@abstractframework/flow` | 0.3.19 | **0.3.20** |
+  | npm | `@abstractframework/code` | 0.3.9 | **0.4.2** |
+  | npm | `@abstractframework/observer` | 0.1.11 | **0.1.12** |
+  | npm | `@abstractframework/continuum` | — | **0.2.0** (new) |
+  | npm | `@abstractframework/entity` | — | **0.1.0** (new) |
+  | crates.io | `abstractcode` | — | **0.5.1** |
+  | crates.io | `abstractgateway-console` | — | **0.6.0** |
+  | crates.io | `abstracttui` | — | **0.6.0** |
+  | GHCR | `ghcr.io/lpalbou/abstractgateway` | — | **0.2.30** (`0.2.30-gpu` experimental) |
+  | GHCR | `ghcr.io/lpalbou/abstractcore` | — | **2.13.42** |
+
+  `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `abstractframework doctor` and the generated
+  `docs/installers/install-manifest.json` follow the same matrix. The manifest now lists the
+  Continuum console and the Entity manager as npm apps, and the Apple profile states its
+  macOS 14+ prerequisite.
+- All three profiles resolve on Python 3.10, 3.11, 3.12 and 3.13 (Python 3.13 is now a declared
+  classifier). In the `apple` and `gpu` profiles, F5-TTS voice cloning needs Python 3.11+.
+- AbstractCode is a Rust terminal client (`cargo install abstractcode`, or a prebuilt binary from
+  its GitHub release) plus the browser client `npx @abstractframework/code`. It is no longer a
+  Python package, so the meta-package does not install it.
+- Documentation describes the released framework: the release matrix, per-profile Python and OS
+  requirements, the gateway's built-in web console at `/console` and the terminal console
+  (`cargo install abstractgateway-console`), the npm apps, the Rust clients and the container
+  images.
+
+### Added
+
+- Performance work shipped through the pinned packages: live prefill and generation progress for
+  LLM calls (streamed through the gateway ledger and shown by AbstractCode), and a much lower
+  per-turn orchestration overhead for chat workflows on the gateway, including on large run
+  stores. Restart a running gateway to pick these up.
+- Source-checkout tooling:
+  - `scripts/af.sh` / `scripts/af-local.sh` and `scripts/start.sh` / `scripts/start-local.sh`
+    start the gateway first, then the browser apps, in one terminal. A supervisor keeps the gateway
+    running across app failures, restarts crashed apps within a bounded budget, and stops
+    everything cleanly on Ctrl-C. `start-local.sh` builds only when you pass `--build`
+    (`--build=light|apple|gpu|auto`).
+  - Launchers for the Continuum console (`scripts/console[-local].sh`) and the Code Web UI
+    (`scripts/code[-local].sh`).
+  - `scripts/clone.sh` clones every released sibling repository, including AbstractCamera,
+    AbstractContinuum, AbstractEntity, Abstract3D, AbstractUIC and AbstractTUI, into lowercase
+    directories. `scripts/build.sh` builds the Rust crates (`--rust`), the new npm apps and
+    AbstractCamera, and when an editable install cannot be resolved it asks `uv` to name the
+    conflicting requirements.
+
+### Fixed
+
+- Gateway launchers wait for the previous gateway process to exit and check the runner lock before
+  starting, so a restarted gateway always runs its workflows.
+
+### Known limitations
+
+- The `abstractcore[all]` extra cannot be resolved on any platform. The framework profiles do not
+  use it; use `abstractcore[all-apple]` or `abstractcore[all-gpu]` instead.
+- The full local-engine profile extras are named `all-apple` / `all-gpu` in AbstractCore,
+  AbstractVoice, AbstractVision, AbstractMusic, AbstractMemory and Abstract3D, and `apple` / `gpu`
+  in AbstractRuntime, AbstractAgent, AbstractGateway and AbstractAssistant. In AbstractCore,
+  `apple` / `gpu` currently mean the MLX-only / vLLM-only subsets. A later release will align
+  every package on `apple` / `gpu` for the full profile, keeping the old names as aliases for one
+  release.
+
 ## [0.1.11] - 2026-06-14
 
 ### Changed

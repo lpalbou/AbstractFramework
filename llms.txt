@@ -3,6 +3,7 @@
 
 This repo pins ecosystem package versions and provides a tiny helper API in `abstractframework/`.
 Most runtime behavior lives in the individual package repos (AbstractCore/Runtime/Agent/Flow/Gateway/Code).
+AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a browser client (`npx @abstractframework/code`); both need a running gateway.
 
 Quick commands:
 - Install pinned stack: `pip install abstractframework`
@@ -114,7 +115,11 @@ Notes for LLMs working in this repo:
 ## Release Profile (Pinned Versions)
 
 - [pyproject.toml](pyproject.toml): Single source of truth for pinned ecosystem versions and extras.
-- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
+- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
+- [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated profile manifest (pins, profiles, npm apps).
+- abstractframework 0.1.12 pins (PyPI, `==`): abstractgateway 0.2.30, abstractassistant 0.5.0, abstractcore 2.13.42, AbstractRuntime 0.4.32, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.3, abstractvision 0.3.29, abstractmusic 0.1.15.
+- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.2.0, `entity` 0.1.0 (run with `npx`); crates `abstractcode` 0.5.1, `abstractgateway-console` 0.6.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.2.30`, `ghcr.io/lpalbou/abstractcore:2.13.42`.
+- Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
 

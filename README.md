@@ -76,15 +76,23 @@ agent, `deep-research`, and `co-scientist` among them. See
 
 On first local start, Gateway creates `default/admin`, writes the browser-login
 token to `runtime/gateway/auth/bootstrap-admin-token`, and prints the token in
-the terminal. Use that `admin` user token in `/console`, AbstractFlow,
+the terminal. Use that `admin` user token in the built-in web console at
+`http://127.0.0.1:8080/console`, AbstractFlow,
 AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` remains a
 legacy server/operator bearer token; it is not a browser sign-in token.
 
-Monitor runs from a browser:
+Monitor runs from a browser, or from a terminal with the gateway console:
 
 ```bash
 npx @abstractframework/observer   # open http://localhost:3001
+
+cargo install abstractgateway-console   # Rust 1.87+
+ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.1:8080
 ```
+
+Container images are published for the gateway and the AbstractCore server:
+`ghcr.io/lpalbou/abstractgateway:0.2.30` (`0.2.30-gpu` is an experimental NVIDIA
+image) and `ghcr.io/lpalbou/abstractcore:2.13.42`.
 
 For artifact and runtime-resource investigation, see
 `docs/guide/runtime-artifacts.md`.
@@ -153,13 +161,13 @@ The ecosystem, grouped by layer. Each name links to the package's own README.
 
 | App | What it does | Install |
 |---|---|---|
-| [AbstractCode](abstractcode/) | Terminal agentic dev client — durable sessions, tool approvals, `/workflow` support | `pip install abstractcode` |
-| [AbstractCode-TUI](abstractcode-tui/) | AbstractCode on the AbstractTUI engine (reactive Rust terminal client) | `cargo install abstractcode-tui` |
+| [AbstractCode](abstractcode/) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, `/workflow` support | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
 | [AbstractAssistant](abstractassistant/) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
 | [AbstractObserver](abstractobserver/) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
 | [AbstractEntity](abstractentity/) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
-| [AbstractContinuum](abstractcontinuum/) | Continuous iterative development and deployment console | see package README |
-| **Code Web UI** | Browser coding assistant (gateway-backed) | `npx @abstractframework/code` |
+| [AbstractContinuum](abstractcontinuum/) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
+| **Gateway consoles** | Operator consoles for a running gateway: web at `/console`, terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
+| **Code Web UI** | Browser client of AbstractCode (gateway-backed) | `npx @abstractframework/code` |
 | **Flow Editor** | Visual workflow authoring in the browser | `npx @abstractframework/flow` |
 
 ### Shared libraries
@@ -196,6 +204,46 @@ pip install "abstractframework[apple]"
 pip install "abstractframework[gpu]"
 ```
 
+| Profile | Command | Platforms | Python |
+|---|---|---|---|
+| Light | `pip install abstractframework` | macOS, Linux, Windows | 3.10–3.13 |
+| Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
+| GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
+
+### Release matrix (abstractframework 0.1.12)
+
+`abstractframework` pins every Python package with `==`, so one version of the
+meta-package always installs the same stack. The browser apps and Rust tools are
+distributed through npm and crates.io; the versions below are the ones released
+and tested together.
+
+| Registry | Package | Version |
+|---|---|---|
+| PyPI | `abstractgateway` | 0.2.30 |
+| PyPI | `abstractassistant` | 0.5.0 |
+| PyPI | `abstractcore` | 2.13.42 |
+| PyPI | `AbstractRuntime` | 0.4.32 |
+| PyPI | `abstractagent` | 0.3.13 |
+| PyPI | `AbstractMemory` | 0.3.0 |
+| PyPI | `abstractsemantics` | 0.0.5 |
+| PyPI | `abstractvoice` | 0.11.3 |
+| PyPI | `abstractvision` | 0.3.29 |
+| PyPI | `abstractmusic` | 0.1.15 |
+| npm | `@abstractframework/flow` | 0.3.20 |
+| npm | `@abstractframework/code` | 0.4.2 |
+| npm | `@abstractframework/observer` | 0.1.12 |
+| npm | `@abstractframework/continuum` | 0.2.0 |
+| npm | `@abstractframework/entity` | 0.1.0 |
+| crates.io | `abstractcode` | 0.5.1 |
+| crates.io | `abstractgateway-console` | 0.6.0 |
+| crates.io | `abstracttui` | 0.6.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.2.30 (`0.2.30-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore` | 2.13.42 |
+
+Optional add-ons that are not part of any profile install separately:
+`pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and
+`pip install abstractskill` (0.2.1).
+
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
 `abstractframework doctor`, and the generated installer manifest contract.
 
@@ -221,7 +269,7 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 Clone all sibling repos and build everything in editable mode:
 
 ```bash
-./scripts/clone.sh           # clone 14 repos as siblings
+./scripts/clone.sh           # clone every sibling repository next to this one
 source ./scripts/build.sh    # editable installs into .venv (use `source` to stay in the venv)
 ```
 

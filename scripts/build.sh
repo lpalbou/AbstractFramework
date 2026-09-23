@@ -217,12 +217,15 @@ build_profile_extras() {
     # looks like a bug and is deliberately left alone. Their `apple` extra is
     # only `abstractcore[all-apple]`, which this script installs directly one
     # line below -- so nothing is missed -- while ASKING for it re-resolves the
-    # environment, and the root meta-package (installed editable, pinning
-    # `abstractcore==2.13.38`, `abstractvision==0.3.26`) then drags every local
-    # editable install back to those older PyPI builds. Verified by dry-run:
-    # requesting [apple] here would downgrade abstractcore, abstractvision,
-    # abstractruntime, abstractgateway and abstractassistant at once.
-    # Fix the root pins first; only then is this mapping safe to "correct".
+    # environment, and the root meta-package (installed editable, with exact
+    # `==` pins) then drags every local editable install back to the pinned
+    # PyPI builds whenever a sibling checkout is ahead of the root pins. With
+    # the 0.1.11 pins (`abstractcore==2.13.38`, `abstractvision==0.3.26`) a
+    # dry-run showed [apple] here would downgrade abstractcore, abstractvision,
+    # abstractruntime, abstractgateway and abstractassistant at once. 0.1.12
+    # pins the released checkouts (core 2.13.42, runtime 0.4.32, agent 0.3.13,
+    # gateway 0.2.30, assistant 0.5.0), but the hazard returns with the next
+    # sibling bump, so the mapping stays as it is.
     case "$rel_dir" in
         abstractgateway|abstractassistant)
             case "$profile" in

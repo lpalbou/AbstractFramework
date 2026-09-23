@@ -9,3 +9,5 @@ recursive-include scripts *.sh
 recursive-include scripts *.py
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+prune docs/backlog
+prune docs/reports

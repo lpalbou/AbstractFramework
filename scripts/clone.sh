@@ -46,8 +46,11 @@ SIBLING_REPOS=(
     "https://github.com/lpalbou/AbstractMusic.git"
     "https://github.com/lpalbou/abstractassistant.git"
     "https://github.com/lpalbou/AbstractSkill.git"
+    "https://github.com/lpalbou/AbstractCamera.git"
     # Browser UIs & npm packages
     "https://github.com/lpalbou/abstractobserver.git"
+    "https://github.com/lpalbou/AbstractContinuum.git"
+    "https://github.com/lpalbou/AbstractEntity.git"
     # UI component library (React monorepo; checkout dir: abstractuic)
     "https://github.com/lpalbou/AbstractUIC.git"
     # Rust Tier 0 — terminal UI engine
@@ -124,14 +127,10 @@ echo ""
 # ── Clone / update sibling repos ───────────────────────────────────────────
 for repo_url in "${SIBLING_REPOS[@]}"; do
     repo_name=$(basename "$repo_url" .git)
-    # Keep local checkout names aligned with PyPI package directories.
-    if [[ "$repo_name" == "AbstractSkill" ]]; then
-        repo_name="abstractskill"
-    elif [[ "$repo_name" == "AbstractUIC" ]]; then
-        repo_name="abstractuic"
-    elif [[ "$repo_name" == "AbstractTUI" ]]; then
-        repo_name="abstracttui"
-    fi
+    # Checkout directories are always lowercase (abstractmusic, abstractuic,
+    # abstracttui, ...): build.sh, repo_groups.sh and .gitignore expect them,
+    # and a case-sensitive filesystem would otherwise get "AbstractMusic".
+    repo_name=$(printf '%s' "$repo_name" | tr '[:upper:]' '[:lower:]')
 
     if [ -d "$TARGET_DIR/$repo_name/.git" ]; then
         echo "↻  Updating  $repo_name"

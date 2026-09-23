@@ -139,7 +139,8 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 
 On first local start, Gateway creates `default/admin`, writes the browser-login
 token to `runtime/gateway/auth/bootstrap-admin-token`, and prints it in the
-terminal. Use that token with user `admin` in `/console`, AbstractFlow,
+terminal. Use that token with user `admin` in the built-in web console
+(`http://127.0.0.1:8080/console`), AbstractFlow,
 AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the
 legacy server/operator bearer-token path; it does not sign in browsers.
 
@@ -230,13 +231,19 @@ Once deployed, the bundle appears in:
 
 ## Example apps
 
-### AbstractCode (terminal)
+### AbstractCode (terminal and browser)
 
-A local dev client for agentic sessions — no server required:
+A coding client for durable agentic sessions on the gateway you started above. Install the Rust
+terminal client from crates.io (or download a prebuilt binary from the
+[AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases)), or run the
+browser client with `npx`:
 
 ```bash
-pip install abstractcode
-abstractcode --provider ollama --model qwen3:4b-instruct
+cargo install abstractcode
+abstractcode doctor              # check the gateway connection
+abstractcode
+
+npx @abstractframework/code      # browser client on http://127.0.0.1:3002
 ```
 
 Sessions are durable: close and reopen, your full context is preserved. Type `/help` for commands.

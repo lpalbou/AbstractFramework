@@ -55,7 +55,22 @@ The response type returned by `llm.generate(...)`.
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release.
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.1.12:
+`abstractcore` 2.13.42, `abstractruntime` 0.4.32, `abstractagent` 0.3.13, `abstractgateway` 0.2.30,
+`abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.3, `abstractvision` 0.3.29,
+`abstractmusic` 0.1.15, `abstractassistant` 0.5.0.
+
+### `PACKAGE_DISTRIBUTIONS`
+
+Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for example
+`abstractruntime` → `AbstractRuntime`).
+
+### `NPM_RELEASE_VERSIONS`
+
+The npm apps released with this version, each runnable with `npx <package>`:
+`@abstractframework/flow` 0.3.20, `@abstractframework/code` 0.4.2,
+`@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.2.0 and
+`@abstractframework/entity` 0.1.0. They also appear as `npm_apps` in the install manifest.
 
 ### `CORE_DEFAULT_EXTRAS`
 
@@ -122,6 +137,10 @@ abstractframework manifest --check docs/installers/install-manifest.json
 | Control plane (HTTP server, scheduling, bundle discovery, SSE) | `abstractgateway` |
 | Workflow authoring UI | `@abstractframework/flow` (npm) |
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
+| Coding client | `abstractcode` (crates.io) and `@abstractframework/code` (npm) |
+| Gateway operator console | built-in `/console`, and `abstractgateway-console` (crates.io) |
+| Continuous development console | `@abstractframework/continuum` (npm) |
+| Summoned-entity manager | `@abstractframework/entity` (npm) |
 
 See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run.
 
