@@ -76,7 +76,7 @@ Authoring                                Operations
 
 | Page | What it covers |
 |---|---|
-| **[Install](install.md)** | Light / Apple / GPU install chooser, `abstractframework doctor`, and installer manifest contract |
+| **[Install](install.md)** | One-line install (`install.sh` / `install.ps1`), options and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
@@ -164,5 +164,5 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 |---|---|
 | [docs/guide/](guide/) | Focused "how it works" notes |
 | [docs/scenarios/](scenarios/) | End-to-end walkthroughs by use case |
-| [docs/installers/](installers/) | Installer strategy, manifest contract, and prototype history |
+| [docs/installers/](installers/README.md) | Install design: script bootstrap + gateway console, per-OS journeys, OS security, manifest, operations |
 | [docs/comparisons/](comparisons/) | Trade-offs vs other frameworks |

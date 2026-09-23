@@ -17,7 +17,29 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-> **Prerequisites**: Python 3.10+. Node.js 18+ for browser UIs. An LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
+> **Prerequisites**: none for the one-line install below (it provisions Python and, optionally, Node.js). For a manual install: Python 3.10–3.13, Node.js 18+ for browser UIs, and an LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
+
+---
+
+## Quick start
+
+One line installs the gateway (no admin rights, no system Python), starts it on
+`127.0.0.1:8080`, and opens its web console, where a first-run wizard sets up engines, a default
+model and the apps:
+
+```bash
+# macOS / Linux
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+```
+
+```powershell
+# Windows 10 22H2+ / 11
+powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+```
+
+Add `--with-apps`, `--with-ollama` or `--with-lmstudio` for Node.js and local engines, `--print` to
+see every command first, and `--uninstall` to remove it. Options, the equivalent commands and
+uninstall details: [Install](docs/install.md).
 
 ---
 
@@ -306,6 +328,7 @@ Most runtime behavior lives in the individual package repos (AbstractCore/Runtim
 AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a browser client (`npx @abstractframework/code`); both need a running gateway.
 
 Quick commands:
+- One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); `--print` dry run, `--uninstall` to remove
 - Install pinned stack: `pip install abstractframework`
 - Check install health: `abstractframework doctor`
 - Print installer manifest: `abstractframework manifest`
@@ -381,7 +404,8 @@ Notes for LLMs working in this repo:
 
 - [README.md](README.md): Ecosystem overview and install paths.
 - [docs/README.md](docs/README.md): Docs index for this repo.
-- [docs/install.md](docs/install.md): Light / Apple / GPU install chooser and generated manifest contract.
+- [docs/install.md](docs/install.md): One-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, uninstall), Light / Apple / GPU chooser, generated manifest contract.
+- [docs/installers/README.md](docs/installers/README.md): Install design: script bootstrap + gateway console (strategy, per-OS journeys, components, OS security/sudo/UAC/execution policy, manifest, operations).
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
 - [abstractgateway/docs/shipped-workflows.md](abstractgateway/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
 - [docs/architecture.md](docs/architecture.md): How the stack fits together.
@@ -417,7 +441,8 @@ Notes for LLMs working in this repo:
 
 - [pyproject.toml](pyproject.toml): Single source of truth for pinned ecosystem versions and extras.
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
-- [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated profile manifest (pins, profiles, npm apps).
+- [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
+- [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
 - abstractframework 0.1.12 pins (PyPI, `==`): abstractgateway 0.2.30, abstractassistant 0.5.0, abstractcore 2.13.42, AbstractRuntime 0.4.32, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.3, abstractvision 0.3.29, abstractmusic 0.1.15.
 - Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.2.0, `entity` 0.1.0 (run with `npx`); crates `abstractcode` 0.5.1, `abstractgateway-console` 0.6.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.2.30`, `ghcr.io/lpalbou/abstractcore:2.13.42`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
@@ -736,8 +761,52 @@ from typing import Any
 
 from . import NPM_RELEASE_VERSIONS, PACKAGE_DISTRIBUTIONS, RELEASE_VERSIONS, __version__
 
-MANIFEST_SCHEMA_VERSION = 1
-MINIMUM_INSTALLER_VERSION = "0.1.0"
+MANIFEST_SCHEMA_VERSION = 2
+MINIMUM_INSTALLER_VERSION = "0.2.0"
+
+REPOSITORY = "https://github.com/lpalbou/AbstractFramework"
+RAW_SCRIPTS = "https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts"
+
+# Python version the bootstrap provisions through uv. 3.12 satisfies MLX, F5-TTS (3.11+)
+# and vLLM (3.10-3.13); it is passed explicitly because the packages have no upper bound.
+BOOTSTRAP_PYTHON = "3.12"
+DEFAULT_GATEWAY_PORT = 8080
+
+# Flags shared by scripts/install.sh (POSIX) and scripts/install.ps1 (PowerShell).
+BOOTSTRAP_FLAGS: list[dict[str, str]] = [
+    {"sh": "--profile auto|light|apple|gpu", "ps": "-Profile", "env": "AF_PROFILE",
+     "summary": "Install profile; auto picks apple on Apple Silicon macOS 14+, gpu when "
+                "nvidia-smi/rocminfo works, light otherwise."},
+    {"sh": "--port N", "ps": "-Port", "env": "AF_PORT",
+     "summary": "Gateway port (default 8080; the next free port when 8080 is busy)."},
+    {"sh": "--pin VERSION|latest", "ps": "-Pin", "env": "AF_PIN",
+     "summary": "abstractgateway version (default: bootstrap.gateway_version)."},
+    {"sh": "--from PATH|REQUIREMENT", "ps": "-From", "env": "AF_FROM",
+     "summary": "Install the gateway from a checkout, wheel or requirement (testing)."},
+    {"sh": "--data-dir DIR", "ps": "-DataDir", "env": "AF_DATA_DIR",
+     "summary": "Gateway data dir (default: the per-OS user data dir)."},
+    {"sh": "--with-apps", "ps": "-WithApps", "env": "",
+     "summary": "Ensure Node.js >= 18 for the npx browser apps (uv tool install nodejs-wheel)."},
+    {"sh": "--with-console", "ps": "-WithConsole", "env": "",
+     "summary": "cargo install abstractgateway-console when cargo exists."},
+    {"sh": "--with-code-cli", "ps": "-WithCodeCli", "env": "",
+     "summary": "cargo install abstractcode (terminal client) when cargo exists."},
+    {"sh": "--with-core-cli", "ps": "-WithCoreCli", "env": "",
+     "summary": "Also expose the abstractcore command (--with-executables-from abstractcore)."},
+    {"sh": "--with-ollama", "ps": "-WithOllama", "env": "",
+     "summary": "Run Ollama's official installer (Linux/macOS may ask for sudo)."},
+    {"sh": "--with-lmstudio", "ps": "-WithLmStudio", "env": "",
+     "summary": "Install LM Studio (headless llmster on macOS/Linux, winget on Windows)."},
+    {"sh": "--no-tray", "ps": "-NoTray", "env": "", "summary": "Skip the tray extra."},
+    {"sh": "--no-service", "ps": "-NoService", "env": "",
+     "summary": "Do not register a login service; start the gateway in the background."},
+    {"sh": "--no-start", "ps": "-NoStart", "env": "", "summary": "Install only."},
+    {"sh": "--no-open", "ps": "-NoOpen", "env": "", "summary": "Do not open the browser."},
+    {"sh": "--print", "ps": "-Print", "env": "",
+     "summary": "Dry run: preflight, then print every command; change nothing."},
+    {"sh": "--uninstall [--purge]", "ps": "-Uninstall [-Purge]", "env": "",
+     "summary": "Remove the service and uv tools (purge also deletes the data dir)."},
+]
 
 
 def _python_packages() -> list[dict[str, str]]:
@@ -834,19 +903,93 @@ def build_install_manifest() -> dict[str, Any]:
         ],
         "python_packages": _python_packages(),
         "npm_apps": _npm_apps(),
-        "post_install": {
-            "doctor": ["abstractframework", "doctor"],
-            "core_config": ["abstractcore", "--config"],
-            "gateway_flow": {
-                "gateway": ["abstractgateway", "serve"],
-                "flow": ["npx", "@abstractframework/flow"],
-            },
-        },
+        "bootstrap": _bootstrap(),
+        "post_install": _post_install(),
         "security": {
             "secrets_in_manifest": False,
             "native_artifacts_signed": False,
-            "notes": "Prototype manifest; production installer artifacts must add signatures.",
+            "notes": (
+                "The bootstrap is a script (curl | sh, irm | iex) that installs signed-by-vendor "
+                "or PyPI/npm artifacts; nothing it runs needs our code signature. Only native "
+                "double-click apps (AbstractAssistant .app, future launchers) need signing."
+            ),
         },
+    }
+
+
+def _bootstrap() -> dict[str, Any]:
+    gateway_version = RELEASE_VERSIONS["abstractgateway"]
+    return {
+        "gateway_version": gateway_version,
+        "python": BOOTSTRAP_PYTHON,
+        "tool_requirement": "abstractgateway[{extras}]==" + gateway_version,
+        "profile_extras": {"light": [], "apple": ["apple"], "gpu": ["gpu"]},
+        "optional_extras": ["tray"],
+        "default_port": DEFAULT_GATEWAY_PORT,
+        "scripts": {
+            "unix": {
+                "url": f"{RAW_SCRIPTS}/install.sh",
+                "platforms": ["macos", "linux"],
+                "one_liner": f"curl -LsSf {RAW_SCRIPTS}/install.sh | sh",
+                "with_flags": f"curl -LsSf {RAW_SCRIPTS}/install.sh | sh -s -- --with-apps",
+            },
+            "windows": {
+                "url": f"{RAW_SCRIPTS}/install.ps1",
+                "platforms": ["windows"],
+                "one_liner": (
+                    'powershell -ExecutionPolicy ByPass -c "irm '
+                    f'{RAW_SCRIPTS}/install.ps1 | iex"'
+                ),
+                "with_flags": (
+                    "& ([scriptblock]::Create((irm "
+                    f"{RAW_SCRIPTS}/install.ps1))) -WithApps"
+                ),
+            },
+        },
+        "flags": BOOTSTRAP_FLAGS,
+        "steps": [
+            "preflight (OS, arch, macOS >= 14 for apple, GPU driver for gpu, disk, port)",
+            "install uv when missing (astral.sh official script, no admin)",
+            f"uv python install {BOOTSTRAP_PYTHON}",
+            f'uv tool install --python {BOOTSTRAP_PYTHON} "abstractgateway[<extras>]==<pin>"',
+            "optional: nodejs-wheel, cargo crates, Ollama / LM Studio vendor installers",
+            "abstractgateway service install (when supported) or a background start",
+            "wait for GET /api/health",
+            "abstractgateway-config claim-url (when supported) and open /console",
+        ],
+        "uninstall": [
+            ["abstractgateway", "service", "uninstall"],
+            ["uv", "tool", "uninstall", "abstractgateway"],
+        ],
+    }
+
+
+def _post_install() -> dict[str, Any]:
+    base_url = f"http://127.0.0.1:{DEFAULT_GATEWAY_PORT}"
+    return {
+        "entrypoint": "console",
+        "gateway": [
+            "abstractgateway",
+            "serve",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(DEFAULT_GATEWAY_PORT),
+        ],
+        "health_url": f"{base_url}/api/health",
+        "console_url": f"{base_url}/console",
+        "claim": ["abstractgateway-config", "claim-url"],
+        "claim_fallback": {
+            "token_file": "<data_dir>/auth/bootstrap-admin-token",
+            "command": ["abstractgateway-config", "bootstrap-admin", "--print-token"],
+        },
+        "service": ["abstractgateway", "service", "install"],
+        "doctor": ["abstractframework", "doctor"],
+        "apps": [["npx", "-y", package] for package in NPM_RELEASE_VERSIONS],
+        "notes": (
+            "Providers, API keys, engines, models and users are configured in the gateway "
+            "console (/console first-run wizard); every console action prints its CLI twin."
+        ),
     }
 
 
@@ -880,30 +1023,51 @@ from __future__ import annotations
 import argparse
 import importlib.metadata
 import json
+import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
-from dataclasses import dataclass
+import urllib.error
+import urllib.request
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
 from . import PACKAGE_DISTRIBUTIONS, RELEASE_VERSIONS, __version__
 from .install_manifest import check_install_manifest, manifest_json, write_install_manifest
 
 
+STATUS_RANK = {"error": 2, "warn": 1, "ok": 0, "info": 0}
+
+DEFAULT_GATEWAY_URL = "http://127.0.0.1:8080"
+DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434"
+DEFAULT_LMSTUDIO_URL = "http://127.0.0.1:1234/v1"
+SUPPORTED_PYTHON = ((3, 10), (3, 13))
+MIN_NODE_MAJOR = 18
+MIN_MACOS_MAJOR = 14
+DISK_WARN_BYTES = 5 * 1024**3
+DISK_ERROR_BYTES = 1 * 1024**3
+
+
 @dataclass(frozen=True)
 class Check:
+    """One doctor finding. ``status`` is ok | warn | error | info (info never fails)."""
+
     id: str
     status: str
     message: str
     detail: str | None = None
+    data: dict[str, Any] = field(default_factory=dict)
 
-    def as_dict(self) -> dict[str, str]:
-        data = {"id": self.id, "status": self.status, "message": self.message}
+    def as_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"id": self.id, "status": self.status, "message": self.message}
         if self.detail:
-            data["detail"] = self.detail
-        return data
+            out["detail"] = self.detail
+        if self.data:
+            out["data"] = self.data
+        return out
 
 
 def _distribution_version(distribution: str) -> str | None:
@@ -931,16 +1095,324 @@ def _command_version(command: str) -> str | None:
     return text[0] if text else "available"
 
 
-def build_doctor_report(include_environment: bool = True) -> dict[str, object]:
-    """Return a doctor report without importing heavy local inference stacks."""
+def _http_get_json(url: str, timeout: float) -> tuple[int | None, Any, str | None]:
+    """Read-only GET. Returns (status, parsed JSON or None, error)."""
+
+    request = urllib.request.Request(url, method="GET", headers={"Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
+            body = response.read(1_000_000)
+            try:
+                return response.status, json.loads(body.decode("utf-8")), None
+            except (ValueError, UnicodeDecodeError):
+                return response.status, None, None
+    except urllib.error.HTTPError as exc:
+        return exc.code, None, f"HTTP {exc.code}"
+    except Exception as exc:  # connection refused, timeout, DNS ...
+        reason = getattr(exc, "reason", exc)
+        return None, None, str(reason)
+
+
+def _uv_tool_bin_dir() -> Path:
+    for env in ("UV_TOOL_BIN_DIR", "XDG_BIN_HOME"):
+        value = os.environ.get(env)
+        if value:
+            return Path(value)
+    return Path.home() / ".local" / "bin"
+
+
+def _find_executable(name: str) -> str | None:
+    found = shutil.which(name)
+    if found:
+        return found
+    suffix = ".exe" if platform.system() == "Windows" else ""
+    candidate = _uv_tool_bin_dir() / f"{name}{suffix}"
+    return str(candidate) if candidate.exists() else None
+
+
+def _parse_major(version_text: str | None) -> int | None:
+    if not version_text:
+        return None
+    match = re.search(r"(\d+)(?:\.\d+)*", version_text)
+    return int(match.group(1)) if match else None
+
+
+def _macos_version() -> tuple[int, ...] | None:
+    if platform.system() != "Darwin":
+        return None
+    raw = platform.mac_ver()[0]
+    try:
+        return tuple(int(part) for part in raw.split(".") if part)
+    except ValueError:
+        return None
+
+
+def _gateway_url() -> str:
+    return (os.environ.get("ABSTRACTGATEWAY_URL") or DEFAULT_GATEWAY_URL).rstrip("/")
+
+
+def _ollama_url() -> str:
+    raw = os.environ.get("OLLAMA_BASE_URL") or os.environ.get("OLLAMA_HOST") or DEFAULT_OLLAMA_URL
+    if "://" not in raw:
+        raw = f"http://{raw}"
+    return raw.rstrip("/")
+
+
+def _lmstudio_url() -> str:
+    raw = (os.environ.get("LMSTUDIO_BASE_URL") or DEFAULT_LMSTUDIO_URL).rstrip("/")
+    return raw if raw.endswith("/v1") else f"{raw}/v1"
+
+
+def _python_check() -> Check:
+    version = ".".join(str(part) for part in sys.version_info[:3])
+    low, high = SUPPORTED_PYTHON
+    data = {"version": version, "executable": sys.executable, "supported": "3.10-3.13"}
+    if sys.version_info[:2] < low:
+        return Check("python", "error", f"Python {version} is below the supported 3.10", data=data)
+    if sys.version_info[:2] > high:
+        return Check(
+            "python",
+            "warn",
+            f"Python {version} is newer than the tested 3.10-3.13",
+            "The bootstrap installs the framework on Python 3.12 through uv.",
+            data=data,
+        )
+    return Check("python", "ok", f"Python {version} (supported: 3.10-3.13)", data=data)
+
+
+def _platform_checks() -> list[Check]:
+    system = platform.system()
+    machine = platform.machine().lower()
+    checks: list[Check] = []
+    macos = _macos_version()
+    data: dict[str, Any] = {"os": system, "arch": machine}
+    if macos:
+        data["macos"] = ".".join(str(part) for part in macos)
+    if system == "Darwin" and machine in {"arm64", "aarch64"}:
+        if macos and macos[0] >= MIN_MACOS_MAJOR:
+            checks.append(
+                Check(
+                    "profile:apple",
+                    "ok",
+                    f"Apple Silicon on macOS {data.get('macos')}: the apple profile is supported",
+                    data=data,
+                )
+            )
+        else:
+            checks.append(
+                Check(
+                    "profile:apple",
+                    "warn",
+                    f"The apple profile needs macOS {MIN_MACOS_MAJOR}+ (this is {data.get('macos')})",
+                    "Use the light profile, or upgrade macOS for local MLX engines.",
+                    data=data,
+                )
+            )
+    elif system == "Darwin":
+        checks.append(
+            Check("profile:apple", "info", "Intel Mac: use the light profile", data=data)
+        )
+    else:
+        checks.append(
+            Check("profile:apple", "info", "The apple profile is for Apple Silicon Macs", data=data)
+        )
+
+    gpu_tool = None
+    for tool in ("nvidia-smi", "rocminfo"):
+        if shutil.which(tool):
+            gpu_tool = tool
+            break
+    if gpu_tool:
+        checks.append(
+            Check("profile:gpu", "ok", f"{gpu_tool} is available", data={"tool": gpu_tool})
+        )
+    else:
+        checks.append(
+            Check(
+                "profile:gpu",
+                "info",
+                "No nvidia-smi or rocminfo; the gpu profile would run local engines on CPU",
+            )
+        )
+    return checks
+
+
+def _tool_checks() -> list[Check]:
+    checks: list[Check] = []
+    uv = _find_executable("uv")
+    if uv:
+        version = _command_version(uv)
+        checks.append(Check("uv", "ok", f"uv is available: {version}", data={"path": uv}))
+    else:
+        checks.append(
+            Check(
+                "uv",
+                "warn",
+                "uv is not installed",
+                "The bootstrap (scripts/install.sh, install.ps1) installs it; see docs/install.md.",
+            )
+        )
+
+    node = _find_executable("node")
+    node_version = _command_version(node) if node else None
+    major = _parse_major(node_version)
+    npm = _find_executable("npm")
+    node_data: dict[str, Any] = {"path": node, "version": node_version, "npm": npm}
+    if node and major is not None and major >= MIN_NODE_MAJOR:
+        source = "nodejs-wheel (uv tool)" if str(_uv_tool_bin_dir()) in node else "system"
+        node_data["source"] = source
+        checks.append(Check("node", "ok", f"Node {node_version} ({source})", data=node_data))
+    elif node:
+        checks.append(
+            Check(
+                "node",
+                "warn",
+                f"Node {node_version} is older than {MIN_NODE_MAJOR}; the browser apps need 18+",
+                "Install a newer Node, or run: uv tool install nodejs-wheel",
+                data=node_data,
+            )
+        )
+    else:
+        checks.append(
+            Check(
+                "node",
+                "warn",
+                "Node is not available; the browser apps (npx) need Node 18+",
+                "No admin needed: uv tool install nodejs-wheel (or install.sh --with-apps)",
+            )
+        )
+    return checks
+
+
+def _disk_check() -> Check:
+    target = Path.home()
+    try:
+        usage = shutil.disk_usage(target)
+    except OSError as exc:
+        return Check("disk", "warn", f"Could not read free disk space for {target}: {exc}")
+    free_gb = usage.free / 1024**3
+    data = {"path": str(target), "free_bytes": usage.free}
+    if usage.free < DISK_ERROR_BYTES:
+        return Check("disk", "error", f"Only {free_gb:.1f} GB free under {target}", data=data)
+    if usage.free < DISK_WARN_BYTES:
+        return Check(
+            "disk",
+            "warn",
+            f"{free_gb:.1f} GB free under {target}; local models need several GB each",
+            data=data,
+        )
+    return Check("disk", "ok", f"{free_gb:.1f} GB free under {target}", data=data)
+
+
+def _gateway_checks(timeout: float) -> list[Check]:
+    """Read-only probes of the gateway (GET /api/health) and its local config."""
 
     checks: list[Check] = []
-
-    python_version = ".".join(str(part) for part in sys.version_info[:3])
-    if sys.version_info >= (3, 10):
-        checks.append(Check("python", "ok", f"Python {python_version} satisfies >=3.10"))
+    url = _gateway_url()
+    status, body, error = _http_get_json(f"{url}/api/health", timeout)
+    data: dict[str, Any] = {"url": url}
+    if status == 200 and isinstance(body, dict) and body.get("service") == "abstractgateway":
+        data["health"] = body.get("status")
+        checks.append(Check("gateway", "ok", f"Gateway reachable at {url} ({body.get('status')})",
+                            f"Console: {url}/console", data=data))
+    elif status is not None:
+        data["http_status"] = status
+        checks.append(Check("gateway", "warn", f"{url}/api/health answered {status}, not a gateway",
+                            data=data))
     else:
-        checks.append(Check("python", "error", f"Python {python_version} is below required >=3.10"))
+        data["error"] = error
+        checks.append(
+            Check(
+                "gateway",
+                "warn",
+                f"No gateway at {url}",
+                "Start it with `abstractgateway serve --host 127.0.0.1 --port 8080` or "
+                "re-run the bootstrap; set ABSTRACTGATEWAY_URL for another address.",
+                data=data,
+            )
+        )
+
+    config_cli = _find_executable("abstractgateway-config")
+    if not config_cli:
+        checks.append(Check("gateway:config", "info", "abstractgateway-config is not on PATH"))
+        return checks
+    try:
+        result = subprocess.run(
+            [config_cli, "status", "--json"],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=max(timeout, 30.0),
+        )
+        payload = json.loads(result.stdout) if result.stdout.strip() else {}
+    except Exception as exc:
+        checks.append(Check("gateway:config", "warn", f"abstractgateway-config status failed: {exc}"))
+        return checks
+    gateway = payload.get("gateway") if isinstance(payload, dict) else None
+    gateway = gateway if isinstance(gateway, dict) else {}
+    summary = {
+        "data_dir": gateway.get("data_dir"),
+        "auth_configured": gateway.get("auth_configured"),
+        "auth_mode": gateway.get("auth_mode"),
+        "store_backend": gateway.get("store_backend"),
+        "service": payload.get("service") if isinstance(payload, dict) else None,
+    }
+    if result.returncode != 0 or not gateway:
+        checks.append(
+            Check("gateway:config", "warn", "abstractgateway-config status --json gave no gateway section",
+                  data={k: v for k, v in summary.items() if v is not None})
+        )
+    else:
+        checks.append(
+            Check(
+                "gateway:config",
+                "ok",
+                f"Gateway data dir: {summary['data_dir']}",
+                data={k: v for k, v in summary.items() if v is not None},
+            )
+        )
+    return checks
+
+
+def _engine_checks(timeout: float) -> list[Check]:
+    checks: list[Check] = []
+    ollama = _ollama_url()
+    status, body, error = _http_get_json(f"{ollama}/api/version", timeout)
+    if status == 200:
+        version = body.get("version") if isinstance(body, dict) else None
+        label = f"Ollama {version}" if version else "Ollama"
+        checks.append(Check("engine:ollama", "ok", f"{label} reachable at {ollama}",
+                            data={"url": ollama, "version": version}))
+    else:
+        checks.append(Check("engine:ollama", "info", f"Ollama not reachable at {ollama} (optional)",
+                            data={"url": ollama, "error": error or f"HTTP {status}"}))
+    lmstudio = _lmstudio_url()
+    status, body, error = _http_get_json(f"{lmstudio}/models", timeout)
+    if status == 200:
+        models = body.get("data") if isinstance(body, dict) else None
+        count = len(models) if isinstance(models, list) else None
+        checks.append(Check("engine:lmstudio", "ok", f"LM Studio reachable at {lmstudio}",
+                            data={"url": lmstudio, "models": count}))
+    else:
+        checks.append(Check("engine:lmstudio", "info", f"LM Studio not reachable at {lmstudio} (optional)",
+                            data={"url": lmstudio, "error": error or f"HTTP {status}"}))
+    return checks
+
+
+def build_doctor_report(
+    include_environment: bool = True,
+    include_network: bool | None = None,
+    timeout: float = 2.0,
+) -> dict[str, object]:
+    """Return a doctor report without importing heavy local inference stacks.
+
+    Network probes are read-only GETs (gateway ``/api/health``, Ollama ``/api/version``,
+    LM Studio ``/v1/models``); they run with the environment checks unless disabled.
+    """
+
+    if include_network is None:
+        include_network = include_environment
+    checks: list[Check] = [_python_check()]
 
     installed_framework = _distribution_version("abstractframework")
     if installed_framework in {None, __version__}:
@@ -984,45 +1456,24 @@ def build_doctor_report(include_environment: bool = True) -> dict[str, object]:
             )
 
     if include_environment:
-        node_version = _command_version("node")
-        npm_version = _command_version("npm")
-        if node_version:
-            checks.append(Check("node", "ok", f"Node is available: {node_version}"))
-        else:
-            checks.append(Check("node", "warn", "Node is not available; browser UIs need Node/npm"))
-        if npm_version:
-            checks.append(Check("npm", "ok", f"npm is available: {npm_version}"))
-        else:
-            checks.append(Check("npm", "warn", "npm is not available; browser UIs need npm/npx"))
+        checks.extend(_platform_checks())
+        checks.extend(_tool_checks())
+        checks.append(_disk_check())
+    if include_network:
+        checks.extend(_gateway_checks(timeout))
+        checks.extend(_engine_checks(timeout))
 
-        system = platform.system()
-        machine = platform.machine().lower()
-        if system == "Darwin" and machine in {"arm64", "aarch64"}:
-            checks.append(Check("hardware:apple", "ok", "Apple Silicon local profile can be used"))
-        elif system == "Darwin":
-            checks.append(
-                Check("hardware:apple", "warn", "Apple local profile expects Apple Silicon")
-            )
-        else:
-            checks.append(Check("hardware:apple", "warn", "Apple local profile is macOS-only"))
-
-        if shutil.which("nvidia-smi"):
-            checks.append(Check("hardware:gpu", "ok", "nvidia-smi is available"))
-        else:
-            checks.append(
-                Check(
-                    "hardware:gpu",
-                    "warn",
-                    "No nvidia-smi found; GPU profile may still work with another supported stack",
-                )
-            )
-
-    status_rank = {"error": 2, "warn": 1, "ok": 0}
-    worst = max((status_rank[check.status] for check in checks), default=0)
+    worst = max((STATUS_RANK[check.status] for check in checks), default=0)
     status = "error" if worst == 2 else "warn" if worst == 1 else "ok"
     return {
+        "schema": "abstractframework_doctor_v2",
         "abstractframework": __version__,
         "status": status,
+        "platform": {
+            "os": platform.system(),
+            "arch": platform.machine(),
+            "python": ".".join(str(part) for part in sys.version_info[:3]),
+        },
         "checks": [check.as_dict() for check in checks],
     }
 
@@ -1032,14 +1483,18 @@ def _print_doctor(report: dict[str, object]) -> None:
     print("=" * 40)
     for raw in report["checks"]:  # type: ignore[index]
         check = raw  # type: ignore[assignment]
-        marker = {"ok": "OK", "warn": "WARN", "error": "ERROR"}[check["status"]]
+        marker = {"ok": "OK", "warn": "WARN", "error": "ERROR", "info": "INFO"}[check["status"]]
         print(f"[{marker}] {check['message']}")
         if check.get("detail"):
             print(f"       {check['detail']}")
 
 
 def _doctor(args: argparse.Namespace) -> int:
-    report = build_doctor_report(include_environment=not args.no_environment)
+    report = build_doctor_report(
+        include_environment=not args.no_environment,
+        include_network=not (args.no_environment or args.no_network),
+        timeout=args.timeout,
+    )
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
@@ -1069,7 +1524,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     doctor.add_argument(
         "--no-environment",
         action="store_true",
-        help="Skip Node/npm/hardware probes and only check Python package profile consistency",
+        help="Skip host, tool and network probes; only check the Python package profile",
+    )
+    doctor.add_argument(
+        "--no-network",
+        action="store_true",
+        help="Skip the read-only HTTP probes (gateway /api/health, Ollama, LM Studio)",
+    )
+    doctor.add_argument(
+        "--timeout",
+        type=float,
+        default=2.0,
+        help="Seconds per HTTP probe (default: 2)",
     )
     doctor.set_defaults(func=_doctor)
 
@@ -1167,7 +1633,7 @@ Authoring                                Operations
 
 | Page | What it covers |
 |---|---|
-| **[Install](install.md)** | Light / Apple / GPU install chooser, `abstractframework doctor`, and installer manifest contract |
+| **[Install](install.md)** | One-line install (`install.sh` / `install.ps1`), options and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
@@ -1255,16 +1721,145 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 |---|---|
 | [docs/guide/](guide/) | Focused "how it works" notes |
 | [docs/scenarios/](scenarios/) | End-to-end walkthroughs by use case |
-| [docs/installers/](installers/) | Installer strategy, manifest contract, and prototype history |
+| [docs/installers/](installers/README.md) | Install design: script bootstrap + gateway console, per-OS journeys, OS security, manifest, operations |
 | [docs/comparisons/](comparisons/) | Trade-offs vs other frameworks |
 
 --- docs/install.md ---
 # Install AbstractFramework
 
-Choose the install path by deciding where inference should run. The framework APIs stay the same
-across profiles; the profiles mainly change whether local inference engines are installed.
+## Quick start
 
-## Quick chooser
+One line installs the gateway, starts it on `127.0.0.1:8080`, and opens its web console in your
+browser. No admin rights and no system Python are needed.
+
+macOS and Linux:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+```
+
+Windows 10 22H2+ / 11 (PowerShell):
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+```
+
+The console then walks you through engines (Ollama, LM Studio, or a cloud API key), a default model
+and the apps.
+
+### What the script does
+
+1. Checks the machine (OS, CPU, macOS 14+ for Apple Silicon, NVIDIA/ROCm, free disk, a free port)
+   and picks a profile: `apple` on Apple Silicon, `gpu` when `nvidia-smi` or `rocminfo` works,
+   `light` otherwise.
+2. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
+3. Installs the gateway as an isolated uv tool, pinned to this release:
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.2.30"`.
+4. Optionally installs Node.js for the browser apps, terminal tools, Ollama or LM Studio (flags
+   below).
+5. Registers the gateway to start at login when the installed gateway supports
+   `abstractgateway service install`; otherwise starts it in the background.
+6. Waits for `/api/health`, then opens `http://127.0.0.1:8080/console`, signed in through a
+   one-time link when the gateway supports `abstractgateway-config claim-url`. Otherwise it shows
+   where the admin token is.
+
+Every command is printed as it runs, and the summary lists them all. Re-running the script
+upgrades or repairs the install in place.
+
+### Options
+
+| macOS/Linux | Windows | What it does |
+|---|---|---|
+| `--profile auto\|light\|apple\|gpu` | `-Profile` | Override the profile choice |
+| `--port N` | `-Port N` | Gateway port (default 8080; the next free port when 8080 is busy) |
+| `--with-apps` | `-WithApps` | Make sure Node.js 18+ exists for the browser apps (`uv tool install nodejs-wheel`, no admin) |
+| `--with-ollama` | `-WithOllama` | Run Ollama's official installer (Linux uses sudo; the script tells you first) |
+| `--with-lmstudio` | `-WithLmStudio` | Install LM Studio (headless daemon on macOS/Linux, winget on Windows) |
+| `--with-console` | `-WithConsole` | Install the `abstractgateway-console` crate with cargo (terminal console; needs Rust) |
+| `--with-code-cli` | `-WithCodeCli` | Install the `abstractcode` crate with cargo (terminal client; needs Rust) |
+| `--with-core-cli` | `-WithCoreCli` | Also put the `abstractcore` command on PATH |
+| `--no-service` | `-NoService` | Do not register a login service |
+| `--no-open` | `-NoOpen` | Do not open the browser |
+| `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |
+| `--data-dir DIR` | `-DataDir` | Gateway data directory |
+| `--print` | `-Print` (or `-WhatIf`) | Show the plan and every command; change nothing |
+| `--uninstall [--purge]` | `-Uninstall [-Purge]` | Remove the service and uv tools (purge also deletes the data) |
+
+Pass options through the one-liner like this:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --with-apps --with-ollama
+```
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -WithApps -WithOllama
+```
+
+### The same install by hand
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
+uv python install 3.12
+uv tool install --python 3.12 "abstractgateway[tray]==0.2.30"   # [apple,tray] or [gpu,tray] for local engines
+uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
+ABSTRACTGATEWAY_USER_AUTH=1 abstractgateway serve --host 127.0.0.1 --port 8080
+# open http://127.0.0.1:8080/console and sign in as admin with the token the gateway prints
+```
+
+### Run at login
+
+Gateways that provide `abstractgateway service install` register the login service for you
+(LaunchAgent on macOS, `systemd --user` on Linux, a logon entry on Windows):
+
+```bash
+abstractgateway service install --host 127.0.0.1 --port 8080
+abstractgateway service uninstall
+```
+
+With a gateway that does not, `install.sh` starts it in the background and `install.ps1` adds a
+Startup-folder shortcut. To start it at login yourself on Linux, a user unit is enough:
+
+```ini
+# ~/.config/systemd/user/abstractgateway.service
+[Service]
+Environment=ABSTRACTGATEWAY_USER_AUTH=1
+Environment=ABSTRACTGATEWAY_DATA_DIR=%h/.local/share/abstractgateway
+ExecStart=%h/.local/bin/abstractgateway serve --host 127.0.0.1 --port 8080
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+```
+
+Then `systemctl --user daemon-reload && systemctl --user enable --now abstractgateway`. On macOS
+use a LaunchAgent in `~/Library/LaunchAgents/` with the same absolute command and environment
+(launchd does not read your shell profile, so use absolute paths).
+
+### Upgrade and uninstall
+
+- Upgrade: re-run the one-liner (or `uv tool upgrade abstractgateway`).
+- Uninstall: `curl -LsSf .../install.sh | sh -s -- --uninstall` (Windows: the script block with
+  `-Uninstall`), or by hand: `abstractgateway service uninstall` (when registered), then
+  `uv tool uninstall abstractgateway`. Your data stays in the data directory until you delete it
+  (`--purge`). See [Operations and support](installers/operations-and-support.md) for locations.
+
+### Check the install
+
+```bash
+uvx abstractframework doctor
+```
+
+It checks Python, uv, Node, disk, the gateway (`ABSTRACTGATEWAY_URL`, default
+`http://127.0.0.1:8080`), and whether Ollama and LM Studio are reachable. It only reads.
+
+## Install the Python framework (developers)
+
+Use the profiles below when you want every framework library in one Python environment, for
+example to build on AbstractCore or AbstractRuntime directly. Choose the profile by deciding where
+inference should run. The framework APIs stay the same across profiles; the profiles mainly change
+whether local inference engines are installed.
+
+### Quick chooser
 
 | Profile | Command | Use when | Local inference stacks |
 |---|---|---|---|
@@ -1272,7 +1867,7 @@ across profiles; the profiles mainly change whether local inference engines are 
 | Apple | `pip install "abstractframework[apple]"` | You are on Apple Silicon and want local MLX/Metal-capable engines as well as endpoint providers. | Yes, Apple-focused |
 | GPU | `pip install "abstractframework[gpu]"` | You have a supported discrete GPU and want local GPU-capable engines as well as endpoint providers. | Yes, GPU-focused |
 
-### Requirements per profile
+#### Requirements per profile
 
 | Profile | Platforms | Python | Notes |
 |---|---|---|---|
@@ -1329,12 +1924,8 @@ Choose Light when:
 - you want the smallest and least surprising install;
 - you do not want pip to install MLX, CUDA, Diffusers, or local model-runtime stacks.
 
-After install:
-
-```bash
-abstractframework doctor
-abstractcore --config
-```
+After install, run `abstractframework doctor`, start the gateway and configure providers in its
+console (see [Start the gateway](#start-the-gateway-and-apps)).
 
 ## Apple profile
 
@@ -1348,12 +1939,7 @@ Choose Apple when:
 - you want local Apple/MLX-capable inferencers in addition to endpoint providers;
 - you accept larger downloads and platform-specific native dependencies.
 
-Run:
-
-```bash
-abstractframework doctor
-abstractcore --config
-```
+Then run `abstractframework doctor`.
 
 ## GPU profile
 
@@ -1367,12 +1953,7 @@ Choose GPU when:
 - you want local GPU-capable inferencers in addition to endpoint providers;
 - you accept larger downloads and platform-specific native dependencies.
 
-Run:
-
-```bash
-abstractframework doctor
-abstractcore --config
-```
+Then run `abstractframework doctor`.
 
 ## Apps and tools outside pip
 
@@ -1394,27 +1975,19 @@ The browser apps need Node.js 18 or later and a running gateway. Optional Python
 profiles install on their own: `pip install abstract3d`, `pip install abstractcamera`,
 `pip install abstractskill`.
 
-## Start Gateway and Flow
+## Start the gateway and apps
 
-Start the gateway, then open a browser app against it:
+Start the gateway, open its console, then any browser app against it:
 
 ```bash
-abstractgateway serve --host 127.0.0.1 --port 8080
+ABSTRACTGATEWAY_USER_AUTH=1 abstractgateway serve --host 127.0.0.1 --port 8080
+# console: http://127.0.0.1:8080/console (sign in as admin)
 npx @abstractframework/flow
 ```
 
-When you work from source, the workspace helper scripts build and start the same services (see
-[Workspace scripts](workspace-scripts.md)). The first health check should always be:
-
-```bash
-abstractframework doctor
-```
-
-Then configure providers:
-
-```bash
-abstractcore --config
-```
+Configure providers, API keys and default models in the console. `abstractcore --config` remains
+available for library-only use of AbstractCore. When you work from source, the workspace helper
+scripts build and start the same services (see [Workspace scripts](workspace-scripts.md)).
 
 Gateway-hosted browser apps use Gateway user tokens and browser sessions. Do not use the bootstrap
 server token as a browser login token.
@@ -1440,12 +2013,11 @@ NVIDIA host when you explicitly want the local GPU profile (pinned tag: `0.2.30-
 experimental). The AbstractCore OpenAI-compatible server is also published as
 `ghcr.io/lpalbou/abstractcore:2.13.42`.
 
-## Non-technical installs
+## How installs are designed
 
-Native GUI installers are moving to the standalone
-[`AbstractInstallers`](https://github.com/lpalbou/AbstractInstallers) repository. Until signed
-installer artifacts are published, the supported production path is the Python install profile
-described above.
+The one-line scripts and the gateway console are the install experience on every OS; there is no
+separate GUI installer. Design, security model and per-OS behavior are in
+[docs/installers](installers/README.md).
 
 ## Generated install manifest
 
@@ -1456,7 +2028,9 @@ abstractframework manifest
 abstractframework manifest --check docs/installers/install-manifest.json
 ```
 
-Installers should consume this manifest instead of maintaining independent package pins.
+The bootstrap scripts read `bootstrap.gateway_version` from it; other installers should consume
+this manifest instead of maintaining independent package pins. Field reference:
+[release-and-manifest.md](installers/release-and-manifest.md).
 
 --- docs/getting-started.md ---
 # Getting started
@@ -1478,7 +2052,23 @@ AbstractFramework is a **stack**:
 
 **Rule of thumb**: start with **Core** when you want a lightweight LLM library (SDK or `/v1`) for scripts/notebooks/apps; add **Gateway** when you need persistent runs, scheduling, and multi-client continuity.
 
-> **Prerequisites**: Python 3.10+. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
+> **Prerequisites**: Python 3.10–3.13 for the manual installs below. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
+
+## Fastest path: the one-line install
+
+If you want a running gateway and its web console without setting up Python yourself, use the
+bootstrap script. It installs uv, Python 3.12 and the pinned gateway in your user account, starts
+the gateway on `127.0.0.1:8080`, and opens `/console`:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+```
+
+On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`.
+Configure providers and models in the console, then continue with
+[Monitor runs](#4-monitor-runs-with-abstractobserver) or [AbstractFlow](#author-orchestration-with-abstractflow).
+Options and uninstall: [Install](install.md#quick-start). The sections below cover manual installs
+for library and developer use.
 
 ---
 
@@ -2593,6 +3183,7 @@ No.
 
 | Goal | Install |
 |---|---|
+| A running gateway + web console, no Python setup | the one-line bootstrap in [Install](install.md#quick-start) |
 | Smallest useful (LLM SDK only) | `pip install abstractcore` |
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
@@ -2713,11 +3304,53 @@ Plugins are configured on the machine that actually executes (local app host or 
 
 ## Where is data stored?
 
-- **Gateway**: `ABSTRACTGATEWAY_DATA_DIR` is the durability root (runs, ledger, artifacts, schedules).
+- **Gateway**: `ABSTRACTGATEWAY_DATA_DIR` is the durability root (runs, ledger, artifacts, schedules). The bootstrap scripts set it to `~/Library/Application Support/AbstractGateway` (macOS), `~/.local/share/abstractgateway` (Linux) or `%LOCALAPPDATA%\AbstractGateway` (Windows).
 - **Core config**: `~/.abstractcore/config/` (persisted by `abstractcore --config`).
 - **Local apps**: typically `~/.abstractcode/`, `~/.abstractassistant/`, etc.
 
 If you care about auditability and long-lived workflows, back up the gateway data directory.
+
+---
+
+## Installing with the one-line script
+
+### Why is `abstractgateway` not found after the install?
+
+The commands live in `~/.local/bin` (`%USERPROFILE%\.local\bin` on Windows). The script runs
+`uv tool update-shell` once to add that directory to your PATH, which applies to **new**
+terminals. Open a new terminal, or call `~/.local/bin/abstractgateway` directly. Pass
+`--no-modify-path` if you manage PATH yourself.
+
+### Which port does the gateway use?
+
+`8080` by default. When something else already listens there (for example `llama-server` or
+`mlx_lm.server`, which also default to 8080), the script picks the next free port, remembers it
+for later runs, and prints the console URL. Choose one with `--port N` (`-Port N`).
+
+### Will it ask for my password or admin rights?
+
+Not for the default install: uv, Python, the gateway and Node (`nodejs-wheel`) install in your
+user account. Only optional vendor installers may: Ollama on Linux uses sudo (it installs a system
+service), Ollama on macOS may ask to link `/usr/local/bin/ollama`, and LM Studio on Linux may ask
+to install `libatomic1`. The script tells you before running them.
+
+### Windows says scripts are disabled on this system
+
+Pasting the one-liner works under the default `Restricted` policy because
+`powershell -ExecutionPolicy ByPass -c "irm … | iex"` runs a command, not a script file, and the
+bypass applies to that process only. If your organization sets the policy through Group Policy
+(`Get-ExecutionPolicy -List` shows `MachinePolicy` or `UserPolicy`), a saved `install.ps1` will not
+run; use the one-liner or ask your administrator. The installer reports this during preflight.
+
+### How do I see what the script will do before running it?
+
+Add `--print` (Windows: `-Print` or `-WhatIf`). It runs the read-only checks and prints every
+command without changing anything.
+
+### How do I remove it?
+
+Re-run the script with `--uninstall` (`-Uninstall`). Add `--purge` (`-Purge`) to delete the gateway
+data as well. See [Install](install.md#upgrade-and-uninstall).
 
 ---
 
@@ -3076,6 +3709,460 @@ bash scripts/tests/test_af_supervisor.sh  # stack supervisor semantics with stub
 ```
 
 All three run against temporary directories and stub services; they do not modify the workspace.
+
+--- docs/installers/README.md ---
+# Installers
+
+This directory documents how AbstractFramework is installed on a user's machine: a one-line
+bootstrap script per OS that provisions the gateway with [uv](https://docs.astral.sh/uv/), and
+the gateway's web console (`/console`) as the guided setup UI. The user-facing instructions are in
+[Install](../install.md); these pages explain the design, the contracts and the security model
+behind them. The decision is recorded in
+[ADR-0038](../adr/0038-script-bootstrap-and-gateway-console-install.md).
+
+## Document map
+
+- [`strategy.md`](strategy.md): the install model and why it is script + console.
+- [`user-journeys.md`](user-journeys.md): what happens step by step on macOS, Linux and Windows,
+  for first install, apps, engines, upgrade and uninstall.
+- [`components.md`](components.md): each component, how it reaches the machine, and what the
+  bootstrap does with it.
+- [`security-and-os-blocks.md`](security-and-os-blocks.md): Gatekeeper, SmartScreen, execution
+  policy, sudo/UAC prompts, loopback binding, and where code signing still applies.
+- [`release-and-manifest.md`](release-and-manifest.md): the generated install manifest
+  (`install-manifest.json`, schema v2) and how releases update it.
+- [`operations-and-support.md`](operations-and-support.md): data and log locations, health
+  checks, troubleshooting.
+- [`implementation-plan.md`](implementation-plan.md): what is delivered and what comes next.
+- `install-manifest.json` / `install-manifest.schema.json`: the generated manifest and its schema.
+
+## Scripts
+
+| OS | Script | One-liner |
+|---|---|---|
+| macOS, Linux | [`scripts/install.sh`](../../scripts/install.sh) | `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh \| sh` |
+| Windows 10 22H2+ / 11 | [`scripts/install.ps1`](../../scripts/install.ps1) | `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 \| iex"` |
+
+--- docs/installers/strategy.md ---
+# Installer Strategy
+
+AbstractFramework installs as a **one-line script per OS** plus the **AbstractGateway web
+console** as the guided UI. The script provisions everything the gateway needs in user space,
+starts it on `127.0.0.1`, and opens `/console` in the browser; from there the console configures
+providers, engines, models and users. This page explains the model; [Install](../install.md) has
+the commands and [ADR-0038](../adr/0038-script-bootstrap-and-gateway-console-install.md) records
+the decision.
+
+## The model in one picture
+
+```mermaid
+flowchart LR
+    U["User pastes one line"] --> S["install.sh / install.ps1"]
+    S --> UV["uv (installed if missing)"]
+    UV --> PY["Python 3.12 (uv-managed)"]
+    UV --> GW["abstractgateway[profile,tray]==pin<br/>(uv tool, ~/.local/bin)"]
+    UV -. "--with-apps" .-> NODE["nodejs-wheel (node, npm, npx)"]
+    S -. "--with-ollama / --with-lmstudio" .-> V["Vendor installers"]
+    S --> SVC["abstractgateway service install<br/>(LaunchAgent / systemd --user / Startup)"]
+    SVC --> H["GET /api/health"]
+    H --> C["Browser: /console (claim link)"]
+    C --> W["First-run wizard: engines, default model, apps"]
+```
+
+## Principles
+
+- **No admin rights on the default path.** uv, Python, the gateway and Node all install under the
+  user's home. Only optional vendor installers (Ollama on Linux, for example) may ask for sudo or
+  UAC, and the script says so before running them.
+- **No system Python.** uv downloads a standalone Python 3.12, which satisfies every profile (MLX,
+  F5-TTS, vLLM). The script always passes `--python 3.12`.
+- **One source of pins.** The gateway version comes from `bootstrap.gateway_version` in the
+  generated [install manifest](release-and-manifest.md), which follows the root release pins.
+- **Every step has a CLI twin.** The script prints each command; `--print` (`-Print` on Windows)
+  shows the whole plan without changing anything; the final summary lists the commands so the
+  install can be reproduced by hand. Power users can skip the script entirely.
+- **The gateway owns the host integration.** Autostart is `abstractgateway service install`, and
+  browser sign-in is a one-time claim link from `abstractgateway-config claim-url`. The script uses
+  them when the installed gateway provides them and otherwise starts the gateway in the background
+  and shows the admin token file.
+- **Loopback first.** The gateway binds `127.0.0.1`. Remote hosts use an SSH tunnel or the
+  container deployment.
+- **Idempotent.** Re-running the script upgrades or repairs in place and keeps the port, profile and
+  data directory from the previous run. `--uninstall` removes the service and the uv tools and keeps
+  data unless `--purge` is given.
+
+## Profiles
+
+The script picks a profile from the machine and accepts `--profile` to override it.
+
+| Profile | Picked when | Gateway extras | Local engines |
+|---|---|---|---|
+| `apple` | Apple Silicon, macOS 14 or later | `apple,tray` | MLX/Metal stacks in the gateway environment |
+| `gpu` | `nvidia-smi` or `rocminfo` works (Linux; best-effort on Windows) | `gpu,tray` | CUDA/ROCm stacks |
+| `light` | anything else | `tray` (Linux: only with a display) | none: remote APIs and endpoint servers (Ollama, LM Studio, vLLM, llama.cpp) |
+
+The bootstrap installs the gateway distribution, which is the framework's deployment entry point
+(ADR-0033). The full meta-package (`pip install "abstractframework[<profile>]"`) stays available
+for developers who want every library in one environment.
+
+## Where the guided UI lives
+
+The console already covers providers, API keys, capability defaults, users and model downloads.
+The first-run wizard adds: host profile, engine detection and one-click installs (with the exact
+command shown), a default model filtered to what fits the machine, and app launch commands. The
+terminal console (`abstractgateway-console`) offers the same screens on headless hosts.
+
+## Large model assets
+
+Models are not part of the bootstrap. The console's Models tab shows sizes and a fit verdict for
+the machine before a download, and downloads run as background jobs with progress.
+
+## Out of scope
+
+Signed native launchers, enterprise MSI/pkg packages and offline bundles are not part of this
+model; see [implementation-plan.md](implementation-plan.md).
+
+--- docs/installers/user-journeys.md ---
+# User Journeys
+
+These flows describe exactly what the bootstrap scripts do. Commands are in
+[Install](../install.md); the model is in [strategy.md](strategy.md).
+
+## First install on macOS
+
+1. Paste in Terminal:
+   `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
+2. **Preflight** (read-only): macOS version and CPU (`sw_vers`, `uname -m`), profile choice
+   (`apple` on Apple Silicon with macOS 14+, else `light`), free disk under your home, port 8080
+   (the next free port is used and remembered when 8080 is taken).
+3. **uv**: installed into `~/.local/bin` by the official astral.sh script when missing
+   (`UV_NO_MODIFY_PATH=1`), then `uv tool update-shell` adds `~/.local/bin` to your shell profile
+   once.
+4. **Python**: `uv python install 3.12`.
+5. **Gateway**: `uv tool install --python 3.12 "abstractgateway[apple,tray]==<pin>"`. The
+   commands `abstractgateway` and `abstractgateway-config` land in `~/.local/bin`.
+6. **Optional** (flags): Node for the apps (`--with-apps` installs the `nodejs-wheel` uv tool when
+   no Node 18+ exists), Ollama (`--with-ollama`: the official installer, which may ask for your
+   password to link `/usr/local/bin/ollama`), LM Studio (`--with-lmstudio`: the headless `llmster`
+   daemon), terminal tools (`--with-console`, `--with-code-cli` through cargo).
+7. **Service**: `abstractgateway service install --host 127.0.0.1 --port 8080` registers a
+   per-user LaunchAgent, so the gateway starts at login. When the installed gateway has no
+   `service` command, the script starts it in the background instead.
+8. **Health**: waits up to 60 seconds for `GET /api/health`.
+9. **Sign-in**: `abstractgateway-config claim-url` mints a one-time link valid for 10 minutes on
+   this machine; without it, the script prints the path of the admin token file
+   (`~/Library/Application Support/AbstractGateway/auth/bootstrap-admin-token`).
+10. **Browser**: opens `http://127.0.0.1:8080/console` (with the claim link when available). The
+    first-run wizard walks through engines, a default model and the apps.
+
+## First install on Linux
+
+Same one-liner and steps, with these differences:
+
+- Profile: `gpu` when `nvidia-smi` or `rocminfo` works, else `light`. The tray extra is added only
+  when a display (`DISPLAY`/`WAYLAND_DISPLAY`) exists.
+- Data: `${XDG_DATA_HOME:-~/.local/share}/abstractgateway`.
+- Service: a `systemd --user` unit when a user session bus exists
+  (`systemctl --user show-environment`). Containers and minimal SSH hosts have none; the script
+  then starts the gateway in the background and says so. For always-on servers use the container
+  deployment in [Install](../install.md#container-deployment).
+- Browser: `xdg-open` when a display exists; otherwise the script prints the URL and an SSH tunnel
+  hint (`ssh -L 8080:127.0.0.1:8080 <host>`).
+- `--with-ollama` runs Ollama's Linux installer, which uses sudo, installs into `/usr/local` and
+  creates a system service. The script announces this before running it.
+- Linux ARM64: the pinned AbstractCore caps `psutil` below 6, which has no aarch64 wheel, so a C
+  compiler is needed (`sudo apt-get install -y gcc`). The preflight warns when none is found.
+
+## First install on Windows
+
+1. In PowerShell:
+   `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`
+2. **Preflight**: Windows build (22H2/19045 or later), architecture, execution policy set by Group
+   Policy (reported and explained), long-path support, free disk, port.
+3. **uv**: the official `install.ps1` from astral.sh into `%USERPROFILE%\.local\bin`.
+4. **Python and gateway**: `uv python install 3.12`, then
+   `uv tool install --python 3.12 "abstractgateway[tray]==<pin>"` (`[gpu,tray]` when `nvidia-smi`
+   works).
+5. **Optional**: `-WithApps` (nodejs-wheel, no UAC), `-WithOllama` (`winget install Ollama.Ollama
+   --scope user`, or Ollama's `install.ps1`), `-WithLmStudio` (`winget install
+   ElementLabs.LMStudio --scope user`, or LM Studio's headless `install.ps1`).
+6. **Autostart**: `abstractgateway service install` when available; otherwise a shortcut in your
+   Startup folder that starts the gateway with a hidden window at sign-in (no admin).
+7. **Start, health, sign-in, browser**: hidden-window start, `/api/health`, claim link or the token
+   file under `%LOCALAPPDATA%\AbstractGateway\auth\`, then the console opens.
+
+To pass options through the one-liner, use a script block:
+`& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -WithApps`.
+
+## Apps
+
+Browser apps (Flow, Code, Observer, Continuum, Entity) run on demand with
+`npx -y @abstractframework/<app>`; nothing is installed globally. They talk to the gateway at
+`ABSTRACTGATEWAY_URL` (default `http://127.0.0.1:8080`). `--with-apps` only makes sure Node 18+
+exists.
+
+## Upgrade and repair
+
+Re-run the same one-liner. The script keeps the previous port and profile, installs the pin from
+the current manifest (a no-op when it is already installed), restarts the gateway only when the
+package changed, and re-checks health. `uv tool upgrade abstractgateway` and the tray's "Check for
+updates" are equivalent for uv-tool installs.
+
+## Uninstall
+
+`sh install.sh --uninstall` (or `install.ps1 -Uninstall`) removes the service or Startup shortcut,
+stops the gateway, and uninstalls the `abstractgateway` uv tool (and `nodejs-wheel` when the script
+installed it). The data directory is kept unless you add `--purge` (`-Purge`). uv, Ollama and LM
+Studio stay installed; remove them with their own uninstallers.
+
+## Dry run
+
+`--print` (`-Print`, or `-WhatIf`) runs the read-only preflight and prints every command the
+install would run, then stops.
+
+--- docs/installers/components.md ---
+# Components and Packaging Matrix
+
+How each component reaches a user's machine under the [script bootstrap](strategy.md).
+
+## Installed by the bootstrap
+
+| Component | Delivered as | Installed by | Notes |
+|---|---|---|---|
+| uv | Static binary | astral.sh `install.sh` / `install.ps1` | Skipped when already on the machine. Lives in `~/.local/bin` (`%USERPROFILE%\.local\bin`). |
+| Python 3.12 | python-build-standalone | `uv python install 3.12` | Isolated from any system Python. |
+| AbstractGateway (+ AbstractCore, AbstractRuntime, AbstractAgent, AbstractMemory as dependencies) | PyPI wheel, uv tool | `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"` | Exposes `abstractgateway` and `abstractgateway-config`; `--with-core-cli` also exposes `abstractcore`. |
+| Gateway service | LaunchAgent / systemd user unit / Startup entry | `abstractgateway service install` | When the installed gateway provides it; otherwise a background start (Windows: Startup-folder shortcut). |
+| Node.js (optional) | `nodejs-wheel` uv tool | `--with-apps` | Only when no Node 18+ is present; no admin, same bin directory. |
+
+## Run on demand
+
+| Component | Command | Notes |
+|---|---|---|
+| Gateway web console | `http://127.0.0.1:8080/console` | Built into the gateway; the guided setup UI. |
+| Flow editor, Code web, Observer, Continuum, Entity | `npx -y @abstractframework/<app>` | Need Node 18+ and a running gateway. |
+
+## Optional tools (flags)
+
+| Component | Flag | Installed with |
+|---|---|---|
+| Gateway terminal console | `--with-console` | `cargo install --locked abstractgateway-console` (needs Rust; the script prints the command when cargo is missing) |
+| AbstractCode terminal client | `--with-code-cli` | `cargo install --locked abstractcode` |
+
+## Third-party engines
+
+| Engine | Flag | macOS / Linux | Windows | Detection (skip when found) |
+|---|---|---|---|---|
+| Ollama | `--with-ollama` | `curl -fsSL https://ollama.com/install.sh \| sh` (Linux: sudo, system service) | `winget install Ollama.Ollama --scope user`, else `irm https://ollama.com/install.ps1 \| iex` | `ollama` on PATH or `GET :11434/api/version` |
+| LM Studio | `--with-lmstudio` | `curl -fsSL https://lmstudio.ai/install.sh \| bash` (headless daemon; Apple Silicon only on macOS) | `winget install ElementLabs.LMStudio --scope user`, else `irm https://lmstudio.ai/install.ps1 \| iex` | `lms`, `~/.lmstudio/bin/lms`, the app bundle, or `GET :1234/v1/models` |
+
+The console's Engines tab offers the same installs later, with the command shown before it runs.
+
+## Native apps (outside the bootstrap)
+
+| Component | Delivery | Notes |
+|---|---|---|
+| AbstractAssistant | `pip install "abstractassistant[apple]"`; macOS `.app` build | The `.app` is the component that needs Developer ID signing and notarization. |
+| Docker image | `ghcr.io/lpalbou/abstractgateway:<version>` | Server deployments; see [Install](../install.md#container-deployment). |
+
+## Availability rules
+
+- The `apple` profile is refused on anything but Apple Silicon with macOS 14+.
+- The `gpu` profile warns (and continues) when no `nvidia-smi`/`rocminfo` works; engines then run
+  on CPU.
+- Engines that do not support the host (LM Studio on Intel Macs) are skipped with a message.
+
+--- docs/installers/security-and-os-blocks.md ---
+# OS Security and Installation Blocks
+
+The bootstrap is a script, not a downloaded application, so the OS gates that block unsigned
+installers do not apply to it. This page explains what each OS checks, what the scripts do about
+it, and where code signing is still required.
+
+## macOS (Gatekeeper)
+
+- Gatekeeper checks **quarantined applications** (downloaded by a browser) for a Developer ID
+  signature and notarization. Files fetched by `curl` carry no `com.apple.quarantine` attribute,
+  so `curl … | sh` and the binaries it installs (uv, the uv-managed Python, wheels) run without a
+  Gatekeeper prompt.
+- The optional vendor installers (Ollama, LM Studio) are signed and notarized by their vendors.
+- The gateway binds `127.0.0.1`, so the macOS Application Firewall does not ask to accept incoming
+  connections.
+
+## Windows (SmartScreen and execution policy)
+
+- SmartScreen and Mark-of-the-Web apply to downloaded files. `irm … | iex` downloads the script
+  into memory and writes no file, so SmartScreen does not prompt. The script launches `.exe`
+  shims created by uv, not downloaded installers.
+- **Execution policy** is the only script gate. Pasted commands always run; `.ps1` files do not
+  under `Restricted` (the Windows client default) or `AllSigned`. The one-liner uses
+  `powershell -ExecutionPolicy ByPass -c "…"`, which applies to that process only and is not
+  persisted. Vendor one-liners run in a child `powershell -ExecutionPolicy ByPass` process.
+- **Group Policy** (`MachinePolicy`/`UserPolicy`) overrides `-ExecutionPolicy ByPass`. The script
+  detects an `AllSigned` or `Restricted` policy set this way and explains it: the pasted one-liner
+  still works, a saved `install.ps1` does not, and managed machines may need an administrator.
+- The autostart fallback is a Startup-folder shortcut that runs `powershell.exe -Command` (not a
+  `.ps1` file), so the execution policy does not block it. No UAC prompt is needed: uv, Python,
+  Node (`nodejs-wheel`), Ollama (`--scope user`) and LM Studio (`--scope user`) all install per
+  user. `winget install OpenJS.NodeJS.LTS` is deliberately not used because it installs
+  machine-wide and triggers UAC.
+
+## Linux
+
+- Nothing in the default path needs root. Everything installs under `~/.local` and
+  `${XDG_DATA_HOME:-~/.local/share}`.
+- `--with-ollama` runs Ollama's official installer, which **uses sudo**: it installs into
+  `/usr/local`, creates an `ollama` user and a system `ollama.service`. The script prints this
+  before running it. LM Studio's headless installer may ask for sudo to install `libatomic1`.
+- On ARM64 without a C compiler, the gateway install fails while building `psutil`; install `gcc`
+  from your distribution first.
+
+## Sudo and UAC prompts at a glance
+
+| Step | macOS | Linux | Windows |
+|---|---|---|---|
+| uv, Python, gateway, nodejs-wheel | none | none | none |
+| Service / autostart | none (LaunchAgent) | none (`systemd --user`); `loginctl enable-linger` for always-on may need polkit | none (Startup folder) |
+| `--with-ollama` | may ask for your password (`/usr/local/bin/ollama` link) | sudo | none (user scope) |
+| `--with-lmstudio` | none | may ask sudo for `libatomic1` | none (user scope) |
+
+## Network exposure
+
+- The gateway binds `127.0.0.1` in every bootstrap path.
+- One-time sign-in links (`abstractgateway-config claim-url`) are single use, expire after 10
+  minutes and are accepted only from a loopback client.
+- The admin token file is written with mode `0600`; the scripts print its path, not its content.
+- Remote access: use an SSH tunnel (`ssh -L 8080:127.0.0.1:8080 <host>`) or the container
+  deployment with explicit auth.
+
+## Integrity
+
+- Every download uses HTTPS from the vendor's official host (astral.sh, pypi.org, ollama.com,
+  lmstudio.ai, raw.githubusercontent.com). uv verifies package hashes from the index.
+- Review before running: fetch the script, read it, then run it, or use `--print` to see every
+  command without changing anything.
+
+## Where code signing still applies
+
+Native double-click artifacts need signatures: the AbstractAssistant `.app` (Developer ID +
+notarization + stapling) and any future Windows `.exe`/`.msi` launcher (Authenticode). The
+bootstrap and everything it installs need no signature of ours.
+
+## GPU drivers
+
+The scripts never install drivers. They offer the `gpu` profile only when `nvidia-smi` or
+`rocminfo` works; otherwise local engines fall back to CPU with a warning.
+
+--- docs/installers/operations-and-support.md ---
+# Operations and Support
+
+Where a bootstrap install keeps its files, how to check it, and how to fix common problems. The
+install itself is described in [user-journeys.md](user-journeys.md).
+
+## Locations
+
+| What | macOS | Linux | Windows |
+|---|---|---|---|
+| uv | `~/.local/bin/uv` | `~/.local/bin/uv` | `%USERPROFILE%\.local\bin\uv.exe` |
+| Gateway commands (uv tool shims) | `~/.local/bin` | `~/.local/bin` | `%USERPROFILE%\.local\bin` |
+| Gateway environment | `~/.local/share/uv/tools/abstractgateway` | same | `%APPDATA%\uv\data\tools\abstractgateway` |
+| Gateway data | `~/Library/Application Support/AbstractGateway` | `${XDG_DATA_HOME:-~/.local/share}/abstractgateway` | `%LOCALAPPDATA%\AbstractGateway` |
+| Admin token (0600) | `<data>/auth/bootstrap-admin-token` | same | same |
+| Logs | `<data>/logs/gateway.log`, `<data>/logs/install-*.log` | same | `<data>\logs\gateway.err.log`, `install-*.log` |
+| Bootstrap state (port, mode, profile) | `<data>/bootstrap.env` | same | same |
+| AbstractCore config | `~/.abstractcore/config/abstractcore.json` | same | `%USERPROFILE%\.abstractcore\config\abstractcore.json` |
+
+`--data-dir` (or `AF_DATA_DIR`) moves the gateway data directory.
+
+## Health checks
+
+```bash
+curl http://127.0.0.1:8080/api/health          # the gateway answers
+uvx abstractframework doctor                    # host, tools, gateway, engines
+abstractgateway-config status --json            # data dir, auth, defaults
+```
+
+`abstractframework doctor` only reads: it sends `GET /api/health` to `ABSTRACTGATEWAY_URL`
+(default `http://127.0.0.1:8080`), `GET /api/version` to Ollama and `GET /v1/models` to LM Studio.
+Add `--json` for tooling and `--no-network` to skip the HTTP probes.
+
+## Troubleshooting
+
+- **`abstractgateway: command not found`**: open a new terminal (the PATH change applies to new
+  shells) or call `~/.local/bin/abstractgateway` directly.
+- **Port 8080 in use**: the script picks the next free port and records it in `bootstrap.env`;
+  pass `--port` to choose one. The summary prints the URL.
+- **Gateway exited during start**: the script prints the last log lines; the full log is
+  `<data>/logs/gateway.log`.
+- **No gateway after reboot**: the gateway starts at login only when a service or Startup entry was
+  registered (see the `Mode:` line of the summary). Re-run the script, or start it by hand.
+- **Browser apps cannot connect**: check `ABSTRACTGATEWAY_URL` and that the gateway is healthy.
+- **Local engine not reachable**: start Ollama or the LM Studio server; the console's Engines tab
+  and `abstractframework doctor` show what is reachable.
+- **Linux ARM64 build error for psutil**: install a C compiler (`sudo apt-get install -y gcc`) and
+  re-run.
+
+## Uninstall
+
+`sh install.sh --uninstall [--purge]` or `install.ps1 -Uninstall [-Purge]`. Data is kept unless
+you purge it.
+
+--- docs/installers/release-and-manifest.md ---
+# Release and Install Manifest
+
+The install manifest is the machine-readable contract between a release and everything that
+installs it: the bootstrap scripts, the docs, and any tool that wants the pinned versions. It is
+generated from the root `abstractframework` release pins, never edited by hand:
+
+```bash
+abstractframework manifest                                   # print it
+abstractframework manifest --write docs/installers/install-manifest.json
+abstractframework manifest --check docs/installers/install-manifest.json
+```
+
+## Fields (schema version 2)
+
+`install-manifest.json` is generated from `abstractframework/__init__.py` (`__version__`,
+`RELEASE_VERSIONS`, `PACKAGE_DISTRIBUTIONS`, `NPM_RELEASE_VERSIONS`) and
+`abstractframework/install_manifest.py`, and validated by `install-manifest.schema.json`.
+
+| Field | Description |
+|---|---|
+| `schema_version` | `2` |
+| `minimum_installer_version` | Oldest consumer that understands this manifest |
+| `framework` | The `abstractframework` distribution, its version and `python_requires` |
+| `source` | Repository URL and the Python symbol the pins come from |
+| `profiles` | `light`, `apple`, `gpu`: pip requirement, platforms, prerequisites, whether local inference is installed |
+| `python_packages` | Every pinned PyPI package: id, distribution name, version |
+| `npm_apps` | Every npm app released with this version and its `npx` command |
+| `bootstrap` | What the one-line scripts install: `gateway_version`, `python` (`3.12`), `tool_requirement`, `profile_extras`, `optional_extras`, `default_port`, script URLs and one-liners, the shared flag table (`sh`/`ps`/env names), the step list, and the uninstall commands |
+| `post_install` | Console-first next steps: `entrypoint: "console"`, the `serve` command on `127.0.0.1`, `health_url`, `console_url`, the `claim` command and its token-file fallback, the `service` command, `doctor`, and the `npx` app commands |
+| `security` | Whether secrets or signed native artifacts are present |
+
+`scripts/install.sh` reads `bootstrap.gateway_version` from the manifest next to it and embeds the
+same value for `curl | sh` use; `scripts/install.ps1` does the same. `python -m pytest -q` and
+`bash scripts/tests/test_inventory.sh` fail when the scripts, the manifest and the root pins
+disagree.
+
+## Updating it for a release
+
+1. Release the lower packages first, in the order of
+   [ADR-0034](../adr/0034-framework-release-sequence-and-gates.md).
+2. Change the pins in `pyproject.toml` and the matching dictionaries in
+   `abstractframework/__init__.py`.
+3. Regenerate the manifest: `abstractframework manifest --write docs/installers/install-manifest.json`
+   (from the repository checkout, so it reads the edited source).
+4. Update the embedded pins in `scripts/install.sh` (`AF_GATEWAY_PIN_DEFAULT`, `AF_NPM_APPS`,
+   crates) and `scripts/install.ps1` (`$AfGatewayPinDefault`, `$AfNpmApps`, crates).
+5. Run `python -m pytest -q` and `bash scripts/tests/test_inventory.sh`. CI's `bootstrap-smoke`
+   job installs the published pin on Ubuntu, macOS and Windows.
+
+## Signed artifacts
+
+The bootstrap installs PyPI and npm packages and vendor installers, so the release pipeline
+publishes no signed installers. Native apps that need signing (the AbstractAssistant `.app`)
+publish their artifacts on their own release pages; see
+[security-and-os-blocks.md](security-and-os-blocks.md#where-code-signing-still-applies).
 
 --- docs/scenarios/README.md ---
 # Scenarios

@@ -36,3 +36,102 @@ jobs:
           python -m pip install --upgrade build twine
           python -m build
           python -m twine check dist/*
+
+  # The one-line bootstrap (scripts/install.sh, scripts/install.ps1) on the three
+  # desktop OSes: a dry run, then a real install of the published gateway pin from
+  # docs/installers/install-manifest.json, a health check, and an uninstall.
+  bootstrap-smoke:
+    name: Bootstrap smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      NO_COLOR: "1"
+    steps:
+      - name: Check out AbstractFramework
+        uses: actions/checkout@v4
+
+      - name: Point uv at a cacheable directory
+        shell: bash
+        run: echo "UV_CACHE_DIR=${RUNNER_TEMP}/uv-cache" >> "$GITHUB_ENV"
+
+      - name: Cache uv downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/uv-cache
+          key: uv-bootstrap-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('docs/installers/install-manifest.json') }}
+          restore-keys: uv-bootstrap-${{ runner.os }}-${{ runner.arch }}-
+
+      # --- macOS / Linux -----------------------------------------------------------
+      - name: Dry run (install.sh --print)
+        if: runner.os != 'Windows'
+        run: sh scripts/install.sh --print --profile light --port 18080 --with-apps
+
+      - name: Install the published pin (install.sh)
+        if: runner.os != 'Windows'
+        run: sh scripts/install.sh --no-service --no-open --no-modify-path --profile light --port 18080
+
+      - name: Health and doctor (Unix)
+        if: runner.os != 'Windows'
+        env:
+          ABSTRACTGATEWAY_URL: http://127.0.0.1:18080
+        run: |
+          curl -fsS http://127.0.0.1:18080/api/health
+          echo
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18080/console)" = 200
+          PATH="$HOME/.local/bin:$PATH" PYTHONPATH=. python3 -m abstractframework doctor --json > doctor.json || true
+          python3 -c "import json; c={x['id']: x for x in json.load(open('doctor.json'))['checks']}; assert c['gateway']['status'] == 'ok', c['gateway']; print('doctor sees the gateway:', c['gateway']['message'])"
+
+      - name: Re-run is idempotent (install.sh)
+        if: runner.os != 'Windows'
+        run: sh scripts/install.sh --no-service --no-open --no-modify-path --profile light --port 18080 | tee rerun.log && grep -q "already installed" rerun.log
+
+      - name: Gateway log on failure (Unix)
+        if: failure() && runner.os != 'Windows'
+        run: |
+          tail -n 80 "$HOME/.local/share/abstractgateway/logs/gateway.log" 2>/dev/null || true
+          tail -n 80 "$HOME/Library/Application Support/AbstractGateway/logs/gateway.log" 2>/dev/null || true
+
+      - name: Uninstall (install.sh)
+        if: always() && runner.os != 'Windows'
+        run: |
+          sh scripts/install.sh --uninstall --purge
+          if curl -fsS --max-time 3 http://127.0.0.1:18080/api/health; then echo "gateway still running" >&2; exit 1; fi
+
+      # --- Windows (Windows PowerShell 5.1 for the install, PowerShell 7 for the dry run) ---
+      - name: Dry run (install.ps1 -Print, PowerShell 7)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/install.ps1 -Print -Profile light -Port 18080 -WithApps
+
+      - name: Install the published pin (install.ps1, Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          powershell -NoProfile -ExecutionPolicy ByPass -File scripts/install.ps1 -NoService -NoOpen -NoModifyPath -Profile light -Port 18080
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Health (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $h = Invoke-RestMethod http://127.0.0.1:18080/api/health
+          $h | ConvertTo-Json -Depth 2 -Compress
+          if ($h.service -ne 'abstractgateway') { throw 'not a gateway' }
+          $c = Invoke-WebRequest http://127.0.0.1:18080/console -UseBasicParsing
+          if ($c.StatusCode -ne 200) { throw "console answered $($c.StatusCode)" }
+
+      - name: Gateway log on failure (Windows)
+        if: failure() && runner.os == 'Windows'
+        shell: pwsh
+        run: Get-Content "$env:LOCALAPPDATA\AbstractGateway\logs\gateway.err.log" -Tail 80 -ErrorAction SilentlyContinue
+
+      - name: Uninstall (install.ps1)
+        if: always() && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./scripts/install.ps1 -Uninstall -Purge
+          try { Invoke-RestMethod http://127.0.0.1:18080/api/health -TimeoutSec 3 | Out-Null; throw 'gateway still running' } catch { if ("$_" -like '*still running*') { throw } }

@@ -17,7 +17,23 @@ AbstractFramework is a **stack**:
 
 **Rule of thumb**: start with **Core** when you want a lightweight LLM library (SDK or `/v1`) for scripts/notebooks/apps; add **Gateway** when you need persistent runs, scheduling, and multi-client continuity.
 
-> **Prerequisites**: Python 3.10+. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
+> **Prerequisites**: Python 3.10–3.13 for the manual installs below. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
+
+## Fastest path: the one-line install
+
+If you want a running gateway and its web console without setting up Python yourself, use the
+bootstrap script. It installs uv, Python 3.12 and the pinned gateway in your user account, starts
+the gateway on `127.0.0.1:8080`, and opens `/console`:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+```
+
+On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`.
+Configure providers and models in the console, then continue with
+[Monitor runs](#4-monitor-runs-with-abstractobserver) or [AbstractFlow](#author-orchestration-with-abstractflow).
+Options and uninstall: [Install](install.md#quick-start). The sections below cover manual installs
+for library and developer use.
 
 ---
 

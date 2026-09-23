@@ -18,9 +18,31 @@ All notable changes to AbstractFramework will be documented in this file.
   individually, the npm apps, and the Rust crates `abstracttui`, `abstractcode` and
   `abstractgateway-console`. New `--plan` and `AF_VENV_DIR`; `--python/--npm/--rust` combine; the
   script exits non-zero when a selected build fails.
-- `scripts/install.sh` installs the 0.1.12 release with `--profile light|apple|gpu`, optional
-  `--with-apps`, `--with-console` and `--with-code-cli`, and prints its plan with `--print`.
+- One-line bootstrap installers: `scripts/install.sh` (macOS, Linux) and `scripts/install.ps1`
+  (Windows 10 22H2+ / 11, PowerShell 5.1 and 7). They install uv and Python 3.12 when needed,
+  install the pinned gateway as a uv tool (`abstractgateway[<profile>,tray]`, profile picked from
+  the machine), start it on `127.0.0.1`, wait for `/api/health` and open `/console`. Options:
+  `--profile`, `--port`, `--with-apps` (Node.js through `nodejs-wheel`), `--with-ollama`,
+  `--with-lmstudio`, `--with-console`, `--with-code-cli`, `--with-core-cli`, `--no-service`,
+  `--no-open`, `--print` (dry run), `--uninstall [--purge]`. The gateway is registered as a login
+  service and the browser signed in with a one-time link when the installed gateway provides
+  `abstractgateway service` and `abstractgateway-config claim-url`. See [Install](docs/install.md).
+- `abstractframework doctor` checks the Python range (3.10–3.13), macOS 14+ on Apple Silicon for the
+  `apple` profile, uv, Node.js 18+ (system or `nodejs-wheel`), free disk, and reads the gateway
+  health (`ABSTRACTGATEWAY_URL`), `abstractgateway-config status --json`, Ollama and LM Studio
+  reachability. New `--no-network` and `--timeout`; checks can report `info`.
+- CI job `bootstrap-smoke` installs the published gateway pin with the scripts on Ubuntu, macOS and
+  Windows.
+- ADR-0038: the one-line scripts and the gateway console are the install experience.
 - Documentation: [docs/workspace-scripts.md](docs/workspace-scripts.md).
+
+### Changed
+
+- Install manifest schema version 2: new `bootstrap` section (gateway pin, Python version, extras
+  per profile, script URLs, flags); `post_install` is console-first (`abstractgateway serve` on
+  `127.0.0.1`, `/console`, claim link, service) and no longer lists `abstractcore --config`.
+- `docs/installers/` describes the script bootstrap and console instead of a GUI installer manager
+  with signed per-app packages.
 
 ## [0.1.12] - 2026-09-23
 

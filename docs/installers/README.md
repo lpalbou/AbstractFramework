@@ -1,28 +1,31 @@
 # Installers
 
-This directory documents a proposed installer system for AbstractFramework. It is a
-design reference that explains how a non-technical, cross-platform install experience
-should work for the framework and individual apps.
-
-## Goals
-- Provide a simple GUI installer for non-technical users.
-- Keep the framework modular: install the full stack or one app at a time.
-- Follow the gateway-first architecture as the default deployment path.
-- Avoid manual environment variables by using guided configuration.
-- Surface all fallbacks and truncation explicitly (`#FALLBACK`, `#TRUNCATION`).
+This directory documents how AbstractFramework is installed on a user's machine: a one-line
+bootstrap script per OS that provisions the gateway with [uv](https://docs.astral.sh/uv/), and
+the gateway's web console (`/console`) as the guided setup UI. The user-facing instructions are in
+[Install](../install.md); these pages explain the design, the contracts and the security model
+behind them. The decision is recorded in
+[ADR-0038](../adr/0038-script-bootstrap-and-gateway-console-install.md).
 
 ## Document map
-- `strategy.md` - Recommended installer architecture and SOTA practices.
-- `components.md` - Component packaging matrix for AbstractFramework apps.
-- `user-journeys.md` - Step-by-step installation flows (full stack and per-app).
-- `security-and-os-blocks.md` - How to avoid OS installation blocks.
-- `release-and-manifest.md` - Release pipeline and manifest guidance.
-- `install-manifest.json` - Generated installer-facing release/profile manifest.
-- `install-manifest.schema.json` - JSON Schema for the generated manifest.
-- `operations-and-support.md` - Logs, data locations, troubleshooting.
-- `implementation-plan.md` - Phased plan to deliver installers.
 
-## Status
-These guides describe a target design. Installer prototypes now live in the standalone
-[`AbstractInstallers`](https://github.com/lpalbou/AbstractInstallers) repository. This
-`AbstractFramework` repo owns the Python release profile and generated install manifest.
+- [`strategy.md`](strategy.md): the install model and why it is script + console.
+- [`user-journeys.md`](user-journeys.md): what happens step by step on macOS, Linux and Windows,
+  for first install, apps, engines, upgrade and uninstall.
+- [`components.md`](components.md): each component, how it reaches the machine, and what the
+  bootstrap does with it.
+- [`security-and-os-blocks.md`](security-and-os-blocks.md): Gatekeeper, SmartScreen, execution
+  policy, sudo/UAC prompts, loopback binding, and where code signing still applies.
+- [`release-and-manifest.md`](release-and-manifest.md): the generated install manifest
+  (`install-manifest.json`, schema v2) and how releases update it.
+- [`operations-and-support.md`](operations-and-support.md): data and log locations, health
+  checks, troubleshooting.
+- [`implementation-plan.md`](implementation-plan.md): what is delivered and what comes next.
+- `install-manifest.json` / `install-manifest.schema.json`: the generated manifest and its schema.
+
+## Scripts
+
+| OS | Script | One-liner |
+|---|---|---|
+| macOS, Linux | [`scripts/install.sh`](../../scripts/install.sh) | `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh \| sh` |
+| Windows 10 22H2+ / 11 | [`scripts/install.ps1`](../../scripts/install.ps1) | `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 \| iex"` |

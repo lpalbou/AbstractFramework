@@ -28,6 +28,7 @@ No.
 
 | Goal | Install |
 |---|---|
+| A running gateway + web console, no Python setup | the one-line bootstrap in [Install](install.md#quick-start) |
 | Smallest useful (LLM SDK only) | `pip install abstractcore` |
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
@@ -148,11 +149,53 @@ Plugins are configured on the machine that actually executes (local app host or 
 
 ## Where is data stored?
 
-- **Gateway**: `ABSTRACTGATEWAY_DATA_DIR` is the durability root (runs, ledger, artifacts, schedules).
+- **Gateway**: `ABSTRACTGATEWAY_DATA_DIR` is the durability root (runs, ledger, artifacts, schedules). The bootstrap scripts set it to `~/Library/Application Support/AbstractGateway` (macOS), `~/.local/share/abstractgateway` (Linux) or `%LOCALAPPDATA%\AbstractGateway` (Windows).
 - **Core config**: `~/.abstractcore/config/` (persisted by `abstractcore --config`).
 - **Local apps**: typically `~/.abstractcode/`, `~/.abstractassistant/`, etc.
 
 If you care about auditability and long-lived workflows, back up the gateway data directory.
+
+---
+
+## Installing with the one-line script
+
+### Why is `abstractgateway` not found after the install?
+
+The commands live in `~/.local/bin` (`%USERPROFILE%\.local\bin` on Windows). The script runs
+`uv tool update-shell` once to add that directory to your PATH, which applies to **new**
+terminals. Open a new terminal, or call `~/.local/bin/abstractgateway` directly. Pass
+`--no-modify-path` if you manage PATH yourself.
+
+### Which port does the gateway use?
+
+`8080` by default. When something else already listens there (for example `llama-server` or
+`mlx_lm.server`, which also default to 8080), the script picks the next free port, remembers it
+for later runs, and prints the console URL. Choose one with `--port N` (`-Port N`).
+
+### Will it ask for my password or admin rights?
+
+Not for the default install: uv, Python, the gateway and Node (`nodejs-wheel`) install in your
+user account. Only optional vendor installers may: Ollama on Linux uses sudo (it installs a system
+service), Ollama on macOS may ask to link `/usr/local/bin/ollama`, and LM Studio on Linux may ask
+to install `libatomic1`. The script tells you before running them.
+
+### Windows says scripts are disabled on this system
+
+Pasting the one-liner works under the default `Restricted` policy because
+`powershell -ExecutionPolicy ByPass -c "irm … | iex"` runs a command, not a script file, and the
+bypass applies to that process only. If your organization sets the policy through Group Policy
+(`Get-ExecutionPolicy -List` shows `MachinePolicy` or `UserPolicy`), a saved `install.ps1` will not
+run; use the one-liner or ask your administrator. The installer reports this during preflight.
+
+### How do I see what the script will do before running it?
+
+Add `--print` (Windows: `-Print` or `-WhatIf`). It runs the read-only checks and prints every
+command without changing anything.
+
+### How do I remove it?
+
+Re-run the script with `--uninstall` (`-Uninstall`). Add `--purge` (`-Purge`) to delete the gateway
+data as well. See [Install](install.md#upgrade-and-uninstall).
 
 ---
 

@@ -1,41 +1,52 @@
 # Operations and Support
 
-This guide describes operational behavior once the installer system exists: logs,
-data locations, troubleshooting, and support workflows.
+Where a bootstrap install keeps its files, how to check it, and how to fix common problems. The
+install itself is described in [user-journeys.md](user-journeys.md).
 
-## Data locations (defaults)
-- AbstractCore config: `~/.abstractcore/config/`
-- AbstractGateway data dir: set by installer (defaults to a user-local path)
-- AbstractCode: `~/.abstractcode/`
-- AbstractAssistant: `~/.abstractassistant/`
-- AbstractVoice models: `~/.piper/models/`
+## Locations
 
-The manager should always show the actual paths in its UI to avoid ambiguity.
+| What | macOS | Linux | Windows |
+|---|---|---|---|
+| uv | `~/.local/bin/uv` | `~/.local/bin/uv` | `%USERPROFILE%\.local\bin\uv.exe` |
+| Gateway commands (uv tool shims) | `~/.local/bin` | `~/.local/bin` | `%USERPROFILE%\.local\bin` |
+| Gateway environment | `~/.local/share/uv/tools/abstractgateway` | same | `%APPDATA%\uv\data\tools\abstractgateway` |
+| Gateway data | `~/Library/Application Support/AbstractGateway` | `${XDG_DATA_HOME:-~/.local/share}/abstractgateway` | `%LOCALAPPDATA%\AbstractGateway` |
+| Admin token (0600) | `<data>/auth/bootstrap-admin-token` | same | same |
+| Logs | `<data>/logs/gateway.log`, `<data>/logs/install-*.log` | same | `<data>\logs\gateway.err.log`, `install-*.log` |
+| Bootstrap state (port, mode, profile) | `<data>/bootstrap.env` | same | same |
+| AbstractCore config | `~/.abstractcore/config/abstractcore.json` | same | `%USERPROFILE%\.abstractcore\config\abstractcore.json` |
 
-## Logs
-The manager should store logs in a user-visible location and provide a "Copy logs"
-button for support. Each component should also expose its own logs or error reports.
+`--data-dir` (or `AF_DATA_DIR`) moves the gateway data directory.
 
-## Health checks (post-install and on update)
-- Gateway health endpoint reachable.
-- Provider configuration valid (local server reachable or API key present).
-- Optional plugins (voice/vision/music) show ready status.
-- Disk space warnings for large model assets.
+## Health checks
 
-## Troubleshooting checklist
-- **Gateway not reachable**: verify the service is running and the port is not in use.
-- **Observer/Flow/Code Web cannot connect**: check gateway URL and auth token.
-- **Local provider not reachable**: confirm Ollama/LM Studio is running.
-- **Missing models**: use the manager to prefetch or download on demand.
-- **Performance issues**: confirm GPU availability; otherwise expect CPU fallback.
+```bash
+curl http://127.0.0.1:8080/api/health          # the gateway answers
+uvx abstractframework doctor                    # host, tools, gateway, engines
+abstractgateway-config status --json            # data dir, auth, defaults
+```
 
-## Support bundle (recommended)
-The manager should be able to export a support bundle that includes:
-- Version list of installed components
-- Config files (redacted secrets)
-- Recent logs
-- Health check results
+`abstractframework doctor` only reads: it sends `GET /api/health` to `ABSTRACTGATEWAY_URL`
+(default `http://127.0.0.1:8080`), `GET /api/version` to Ollama and `GET /v1/models` to LM Studio.
+Add `--json` for tooling and `--no-network` to skip the HTTP probes.
 
-## Uninstall behavior
-Uninstall should remove binaries and services but keep user data by default. The
-manager must show data locations so users can delete them manually if desired.
+## Troubleshooting
+
+- **`abstractgateway: command not found`**: open a new terminal (the PATH change applies to new
+  shells) or call `~/.local/bin/abstractgateway` directly.
+- **Port 8080 in use**: the script picks the next free port and records it in `bootstrap.env`;
+  pass `--port` to choose one. The summary prints the URL.
+- **Gateway exited during start**: the script prints the last log lines; the full log is
+  `<data>/logs/gateway.log`.
+- **No gateway after reboot**: the gateway starts at login only when a service or Startup entry was
+  registered (see the `Mode:` line of the summary). Re-run the script, or start it by hand.
+- **Browser apps cannot connect**: check `ABSTRACTGATEWAY_URL` and that the gateway is healthy.
+- **Local engine not reachable**: start Ollama or the LM Studio server; the console's Engines tab
+  and `abstractframework doctor` show what is reachable.
+- **Linux ARM64 build error for psutil**: install a C compiler (`sudo apt-get install -y gcc`) and
+  re-run.
+
+## Uninstall
+
+`sh install.sh --uninstall [--purge]` or `install.ps1 -Uninstall [-Purge]`. Data is kept unless
+you purge it.

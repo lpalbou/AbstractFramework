@@ -13,7 +13,29 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-> **Prerequisites**: Python 3.10+. Node.js 18+ for browser UIs. An LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
+> **Prerequisites**: none for the one-line install below (it provisions Python and, optionally, Node.js). For a manual install: Python 3.10–3.13, Node.js 18+ for browser UIs, and an LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
+
+---
+
+## Quick start
+
+One line installs the gateway (no admin rights, no system Python), starts it on
+`127.0.0.1:8080`, and opens its web console, where a first-run wizard sets up engines, a default
+model and the apps:
+
+```bash
+# macOS / Linux
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+```
+
+```powershell
+# Windows 10 22H2+ / 11
+powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+```
+
+Add `--with-apps`, `--with-ollama` or `--with-lmstudio` for Node.js and local engines, `--print` to
+see every command first, and `--uninstall` to remove it. Options, the equivalent commands and
+uninstall details: [Install](docs/install.md).
 
 ---
 
