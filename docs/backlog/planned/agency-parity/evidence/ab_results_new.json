@@ -1,0 +1,19 @@
+{
+ "world": "new",
+ "abstractcore_file": "<workspace>/abstractcore/abstractcore/__init__.py",
+ "crlf_edit": {
+  "bytes_after": "[app]\\r\\nmode = production\\r\\nlevel = 3\\r\\n",
+  "crlf_preserved": true,
+  "silently_rewritten_to_lf": false
+ },
+ "dashdash_diff": {
+  "tool_message_head": "Edited /var/folders/2n/0v7_ckq916q9s57rj5kymkj40000gn/T/ab_new_h1lz27l8/query.sql (+0 -0)\n@@ -1,3 +1,2 @@\n 1 1 | SELECT 1;\n 2 2 | SELECT 2;\n\nPost-edit excerpt (",
+  "applied": true,
+  "file_after": "SELECT 1;\nSELECT 2;\n"
+ },
+ "string_flag_coercion": {
+  "tool_message_head": "Edited /var/folders/2n/0v7_ckq916q9s57rj5kymkj40000gn/T/ab_new_h1lz27l8/config.py (+1 -1) replacements=1/1\n@@ -1 +1 @@\n-1   | retries = 3\n+  1 | retries = 5\n\nPo",
+  "file_actually_edited": true,
+  "file_after": "retries = 5\n"
+ }
+}

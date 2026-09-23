@@ -45,6 +45,10 @@ starts by sending their own `_runtime.workflow_policy`.
   - hides from discovery
   - blocks new starts
   - keeps old versions available for replay/audit of historical runs
+- Specialized applications may intentionally preselect or hardcode a
+  `bundle_id`/`flow_id` when that workflow is the product contract. This is a
+  valid use of WorkflowBundles; what matters is that the app still starts a
+  normal durable Gateway run instead of bypassing workflow execution.
 - For shared/default workflows, use the workflow catalog. Do not overwrite
   catalog bundle bytes for an existing `bundle_id@version`; publish a new
   immutable version and move the default pointer.

@@ -68,14 +68,16 @@ Each route stores a small JSON-safe target:
   "provider": "lmstudio",
   "model": "qwen/qwen3.6-35b-a3b",
   "base_url": "http://127.0.0.1:1234/v1",
+  "reasoning": "medium",
   "options": {
     "voice": "M1"
   }
 }
 ```
 
-`provider`, `model`, and `base_url` are shared fields. `options` is provider/plugin-specific and can
-carry values such as a voice, language, quality preset, or backend profile.
+`provider`, `model`, and `base_url` are shared fields. `reasoning` is an optional non-secret
+default for reasoning-capable text routes. `options` is provider/plugin-specific and can carry
+values such as a voice, language, quality preset, or backend profile.
 
 Secrets do not belong in route defaults. API keys remain provider credentials managed by
 AbstractCore, Gateway deployment secrets, or the capability plugin.
@@ -110,7 +112,8 @@ Set the framework text default:
 ```bash
 abstractcore config set-default input.text \
   --provider lmstudio \
-  --model qwen/qwen3.6-35b-a3b
+  --model qwen/qwen3.6-35b-a3b \
+  --reasoning medium
 ```
 
 `output.text` is accepted as a compatibility alias, but Core persists it as

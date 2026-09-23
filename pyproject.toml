@@ -50,7 +50,6 @@ dependencies = [
     "abstractgateway==0.2.28",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractcode==0.3.9",
     "abstractassistant==0.4.11",
 
     # Pin the core Python stack for release determinism (also pulled transitively).

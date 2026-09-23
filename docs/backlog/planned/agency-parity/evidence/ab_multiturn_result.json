@@ -1,0 +1,17 @@
+{
+ "turn1_status": "RunStatus.COMPLETED",
+ "code_on_disk": "4832",
+ "turn1_answer_head": "The code is 4832.",
+ "turn2_status": "RunStatus.COMPLETED",
+ "turn2_answer": "4832",
+ "turn2_recalled_code_from_session_memory": true,
+ "turn3_status": "RunStatus.COMPLETED",
+ "turn3_answer_head": "Your favorite color is ultramarine and the code is 4832.",
+ "turn3_waited_and_resumed": true,
+ "turn3_combined_old_fact": true,
+ "durable_messages_total": 11,
+ "hygiene_loop_tail_leaked": 0,
+ "hygiene_attachment_index_leaked": 0,
+ "hygiene_orphan_tool_call_ids": [],
+ "MULTI_TURN_AGENCY_OK": true
+}

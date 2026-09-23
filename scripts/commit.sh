@@ -5,7 +5,8 @@
 # Commits changes in the root AbstractFramework repo and each sibling repository
 # with a shared commit message. Repositories are processed in the same grouped
 # package order used by scripts/build.sh and scripts/status.sh. Clean repos are
-# skipped; missing repos are reported. This does NOT push to remotes.
+# reported but not committed; missing repos are reported. This does NOT push to
+# remotes.
 #
 # Usage:
 #   ./scripts/commit.sh "Your commit message"
@@ -17,54 +18,13 @@
 
 set -euo pipefail
 
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-# Build/status groups.
-#
-# Format:
-#   display-name[:primary-relative-path[:fallback-relative-path...]]
-#
-# Most repositories use the same display name and directory name. AbstractMusic
-# has historically appeared with mixed repository casing, so accept both the
-# canonical lowercase local package path and the GitHub repository casing.
-# The group order mirrors scripts/build.sh and scripts/status.sh:
-#   Python Tier 0 -> Tier 4, then npm UI packages.
-# abstractcode/web is an npm build target inside the abstractcode repository, so
-# the abstractcode repo is committed once in Python Tier 3.
-GROUP_PY_TIER0=(
-    abstractskill:abstractskill:AbstractSkill
-    abstractsemantics
-    abstractmemory
-    abstractvision
-    abstractvoice
-    abstractmusic:abstractmusic:AbstractMusic
-)
+# Resolve paths early so commit and status can share the same repo inventory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-GROUP_PY_TIER1=(
-    abstractcore
-    abstractruntime
-)
-
-GROUP_PY_TIER2=(
-    abstractagent
-    abstractgateway
-)
-
-GROUP_PY_TIER3=(
-    abstractcode
-    abstractassistant
-)
-
-GROUP_PY_TIER4=(
-    abstractframework:.
-)
-
-GROUP_NPM=(
-    abstractuic
-    abstractobserver
-    abstractflow
-)
+# Shared repository inventory and traversal order.
+# shellcheck source=./lib/repo_groups.sh
+source "$SCRIPT_DIR/lib/repo_groups.sh"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -110,37 +70,10 @@ is_af_root() {
 usage() {
     echo "Usage: $0 <commit message>"
     echo ""
-    echo "Commits all dirty AbstractFramework repositories in build/status order."
+    echo "Commits all dirty AbstractFramework repositories in status order."
     echo ""
     echo "Example:"
     echo "  $0 \"Fix gateway timeout handling\""
-}
-
-repo_dir_for() {
-    local spec="$1"
-    local fields=()
-    IFS=':' read -r -a fields <<< "$spec"
-    local name="${fields[0]}"
-
-    if [[ ${#fields[@]} -eq 1 ]]; then
-        printf "%s/%s\n" "$ROOT_DIR" "$name"
-        return 0
-    fi
-
-    local candidate
-    for candidate in "${fields[@]:1}"; do
-        if [[ -d "$ROOT_DIR/$candidate/.git" ]]; then
-            printf "%s/%s\n" "$ROOT_DIR" "$candidate"
-            return 0
-        fi
-    done
-
-    printf "%s/%s\n" "$ROOT_DIR" "${fields[1]}"
-}
-
-repo_display_name() {
-    local spec="$1"
-    printf "%s\n" "${spec%%:*}"
 }
 
 count_paths() {
@@ -201,7 +134,7 @@ commit_repo() {
     fi
 
     local branch
-    branch="$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "???")"
+    branch="$(repo_branch_for "$repo_dir")"
 
     local status
     if ! status="$(git -C "$repo_dir" status --porcelain 2>/dev/null)"; then
@@ -288,9 +221,6 @@ fi
 
 require_cmd git
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-
 if ! is_af_root "$ROOT_DIR"; then
     echo "ERROR: cannot determine AbstractFramework root from: $ROOT_DIR"
     echo "       Run from inside the repo or check your checkout."
@@ -308,12 +238,7 @@ clean=0
 missing=0
 failed=0
 
-commit_group "Python Tier 0 — No internal dependencies" "${GROUP_PY_TIER0[@]}"
-commit_group "Python Tier 1 — Depends on Tier 0" "${GROUP_PY_TIER1[@]}"
-commit_group "Python Tier 2 — Depends on Tier 0-1" "${GROUP_PY_TIER2[@]}"
-commit_group "Python Tier 3 — Depends on Tier 0-2" "${GROUP_PY_TIER3[@]}"
-commit_group "Python Tier 4 — Meta-package" "${GROUP_PY_TIER4[@]}"
-commit_group "npm — UI package repositories" "${GROUP_NPM[@]}"
+run_repo_groups commit_group
 
 echo ""
 printf "${C_BOLD}%s${C_RESET}\n" "============================================================"

@@ -54,7 +54,6 @@ def test_framework_profile_pins_match_release_versions() -> None:
     assert _dependency_version(deps, "AbstractRuntime") == release_versions["abstractruntime"]
     assert _dependency_version(deps, "abstractagent") == release_versions["abstractagent"]
     assert _dependency_version(deps, "abstractgateway") == release_versions["abstractgateway"]
-    assert _dependency_version(deps, "abstractcode") == release_versions["abstractcode"]
     assert _dependency_version(deps, "abstractassistant") == release_versions["abstractassistant"]
     assert _dependency_version(deps, "AbstractMemory") == release_versions["abstractmemory"]
     assert _dependency_version(deps, "abstractsemantics") == release_versions["abstractsemantics"]
@@ -79,7 +78,7 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
         ROOT / "abstractagent" / "pyproject.toml",
         ROOT / "abstractgateway" / "pyproject.toml",
         ROOT / "abstractflow" / "package.json",
-        ROOT / "abstractcode" / "pyproject.toml",
+        ROOT / "abstractcode" / "tui" / "Cargo.toml",
         ROOT / "abstractassistant" / "pyproject.toml",
     ]
     missing = [path for path in required_paths if not path.exists()]
@@ -110,7 +109,7 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
         "version"
     ]
     code_version = _version_from_regex(
-        ROOT / "abstractcode" / "pyproject.toml",
+        ROOT / "abstractcode" / "tui" / "Cargo.toml",
         r'^\s*version\s*=\s*"([^"]+)"\s*$',
     )
     assistant_version = _version_from_regex(
@@ -122,7 +121,13 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
     assert f"AbstractRuntime=={runtime_version}" in deps
     assert f"abstractagent=={agent_version}" in deps
     assert f"abstractgateway=={gateway_version}" in deps
-    assert f"abstractcode=={code_version}" in deps
+    # AbstractCode ships as the crate `abstractcode` and the npm package
+    # `@abstractframework/code`, not as a Python distribution, so the
+    # meta-package must NOT pin it.
+    assert not any(dep.startswith("abstractcode==") for dep in deps), (
+        "abstractcode is no longer a PyPI distribution; drop the pin"
+    )
+    assert code_version, "expected a version in abstractcode/tui/Cargo.toml"
     assert f"abstractassistant=={assistant_version}" in deps
 
     assert f"abstractgateway[apple]=={gateway_version}" in opt["apple"]

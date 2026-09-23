@@ -40,6 +40,9 @@ persistence authority for capability defaults and provider credentials.
   per-principal/gateway-scoped provider-secret injection path for reusable
   virtual providers such as `endpoint:office-vllm`; broader secret vault,
   encryption, bridge, and delegated-tool rules remain open.
+- Hosted Gateway still resolves some temporary route decisions by mutating
+  transient Runtime params rather than by producing one shared resolved-route
+  object that survives replay and cross-topology execution.
 
 ## Problem
 Users must configure provider/model defaults repeatedly across apps, and hosted
@@ -62,11 +65,29 @@ isolation for secrets and model choices.
   operator/tenant allowlist and capability policy constrain request overrides,
   workflow pins, user defaults, tenant defaults, gateway defaults, and
   execution-host Core defaults.
-- Resolved provider/model metadata reports non-secret provenance so UIs can show
-  whether a value came from request, workflow, user, tenant, Gateway baseline,
-  or Core.
+- Resolved route metadata reports non-secret provenance so UIs and replay
+  surfaces can show whether a text route or a specific modality route came from
+  request, workflow, user, tenant, Gateway baseline, or Core.
+- Per-principal defaults must feed the same shared route resolver used by
+  direct Core, local Runtime, remote Runtime, and Core server execution; the
+  hosted path must not become a separate merge algorithm.
+- Gateway should use one shared resolved-route merge path for request-time and
+  run-start route changes, rather than letting each app spread ad hoc
+  provider/model/base URL fields across local payloads. Gateway configures and
+  supplies default layers, but the canonical resolved-route object and merge
+  semantics remain a shared Core/Runtime contract.
+- If a future public structured override payload is exposed, it must remain an advanced,
+  policy-gated surface layered on top of that shared resolver rather than a second merge model.
+- Optional non-secret `reasoning` defaults for reasoning-capable models may be
+  configured through the same route-default cascade, but they must flow through
+  the shared Core/Runtime route object rather than a Gateway-only execution
+  knob.
 - Explicit workflow pins remain reproducible unless denied by current host
   policy, in which case denial is explicit rather than silently rerouted.
+- This does not forbid explicit hardcoded workflow selection where a product
+  endpoint intentionally targets a specific published workflow or catalog
+  default; the restriction is against silent rerouting or app-local
+  reimplementation of route merge/policy logic.
 - API keys and provider secrets are never stored in browser storage.
 - Per-user secrets are injected only into that user's runtime context.
 - Capability defaults must not expose secret values.
@@ -79,13 +100,21 @@ isolation for secrets and model choices.
   payloads, and discovery responses.
 - Define propagation rules for subruns, bridges, delegated tools, and any
   admin/system execution path before those paths can use per-principal secrets.
+- Durable agent bundles, workflow subruns, and future super-agent workflows must consume the same
+  shared resolved-route path; they must not gain a separate hosted-only merge algorithm.
+- Request-scoped provider/model/base URL/profile overrides must be evaluated as
+  temporary route layers over those defaults, with explicit allow/deny outcomes
+  and redacted replay/audit provenance.
 
 ## Suggested implementation
 Add Gateway config endpoints that wrap Core config/default APIs for the current
 principal. Use a per-runtime Core config root/file for capability defaults, and
 keep Gateway provider endpoint profiles as the first Gateway-owned secret
 injection path. Expose readiness checks and catalog previews in Gateway Console
-only after that boundary is explicit.
+only after that boundary is explicit. For temporary per-call changes, prefer one
+route-override payload normalized into the same shared resolved-route object
+required by Runtime/Core route resolution instead of new app-local override
+shapes.
 
 ## Scope
 - Gateway APIs for provider credentials and capability defaults.
@@ -103,6 +132,7 @@ only after that boundary is explicit.
 - `0145_gateway_admin_console_bootstrap.md`
 - `0146_gateway_rbac_scope_policy_matrix.md`
 - `0153_gateway_browser_session_security_contract.md`
+- `../../proposed/0211_public_generate_route_override_surface.md`
 - `../../completed/0170_core_gateway_capability_defaults_config_convergence.md`
 - `../../completed/0149_cross_app_gateway_auth_defaults_convergence.md`
 
@@ -111,6 +141,9 @@ only after that boundary is explicit.
   Flow, Code, Observer, Assistant, and bridges.
 - Alice's provider keys/defaults are not visible or usable by Bob.
 - Apps default to Gateway/Core defaults unless a run/workflow explicitly pins.
+- One-off per-modality overrides can inherit the broader default route set while
+  remaining visible as explicit request-time decisions instead of hidden ambient
+  config mutations.
 
 ## Validation
 - Alice/Bob secret isolation tests.
@@ -173,5 +206,7 @@ items; do not silently reroute explicit workflow pins without an explicit
 policy denial or override record.
 
 ## Guidance for the implementing agent
-Keep the authority split crisp: Core owns config schema and low-level execution
-config; Gateway owns authenticated hosted UX and per-principal access control.
+Keep the authority split crisp: Core owns config schema and the lower-level
+route-resolution contract; Gateway owns authenticated hosted UX,
+per-principal access control, and projection of scoped defaults into that
+shared contract.

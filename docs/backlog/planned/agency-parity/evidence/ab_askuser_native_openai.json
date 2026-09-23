@@ -1,0 +1,9 @@
+{
+ "provider": "openai (native)",
+ "model": "gpt-5-mini",
+ "status": "RunStatus.COMPLETED",
+ "waited_on_ask_user": true,
+ "error": "",
+ "answer": "Your favorite color is ultramarine.",
+ "note": "Current code completes; the identical probe on git HEAD abstractagent 400s with 'tool_call_ids did not have response messages' (reproduced 2026-07-09 ~03:15, see CHANGELOG; HEAD arm not re-run here to avoid spending on a known failure)."
+}

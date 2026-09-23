@@ -85,6 +85,65 @@ Authoring                                Operations
 | **[FAQ](faq.md)** | Common questions, troubleshooting, comparisons |
 | **[API](api.md)** | The `abstractframework` meta-package API (pins + helpers + re-exports) |
 | **[Runtime artifacts and retrieval](guide/runtime-artifacts.md)** | Runtime, Gateway, Observer, ledger, and KG responsibility map for artifact/retrieval work |
+| **[Shipped workflows](../abstractgateway/docs/shipped-workflows.md)** | The workflows a packaged Gateway serves out of the box — coder, deep research, co-scientist — and how to run them |
+
+---
+
+## Package map by layer
+
+The root [README](../README.md) is the fuller package catalog. This shorter map
+keeps the docs hub cross-linked to the package owners' entrypoints.
+
+### Foundation
+
+| Package | What it is |
+|---|---|
+| [abstractcore](../abstractcore/) | Unified LLM interface: providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
+| [abstractsemantics](../abstractsemantics/) | Shared semantics registry for predicates and entity types |
+| [abstractmemory](../abstractmemory/) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
+
+### Durable execution
+
+| Package | What it is |
+|---|---|
+| [abstractruntime](../abstractruntime/) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts, and the entity identity lane |
+| [abstractagent](../abstractagent/) | ReAct, CodeAct, and MemAct patterns on top of Runtime + Core |
+| [abstractflow](../abstractflow/) | Visual workflow editor and portable `.flow` bundles |
+
+### Control plane
+
+| Package | What it is |
+|---|---|
+| [abstractgateway](../abstractgateway/) | Deployable control plane: durable runs over HTTP/SSE, scheduling, workflow catalog, auth, artifact/ledger serving, and the summoned-entity door |
+
+### Multimodal capabilities
+
+| Package | What it is |
+|---|---|
+| [abstractvoice](../abstractvoice/) | Voice I/O (TTS / STT), local and remote backends |
+| [abstractvision](../abstractvision/) | Model-agnostic image generation |
+| [abstractmusic](../abstractmusic/) | Text-to-music / text-to-audio capability plugin |
+| [abstract3d](../abstract3d/) | Local-first 3D generation |
+| [abstractcamera](../abstractcamera/) | Camera control and capture tools |
+
+### Apps and clients
+
+| Package | What it is |
+|---|---|
+| [abstractcode](../abstractcode/) | Terminal coding client with durable sessions and tool approvals |
+| [abstractcode-tui](../abstractcode-tui/) | Rust terminal client on the AbstractTUI engine |
+| [abstractassistant](../abstractassistant/) | macOS tray client for gateway-native chat and voice |
+| [abstractobserver](../abstractobserver/) | Browser UI for monitoring, control, and scheduling |
+| [abstractentity](../abstractentity/) | Summoned-entity manager and chat/replay UI |
+| [abstractcontinuum](../abstractcontinuum/) | Continuous iterative development and deployment console |
+
+### Shared libraries
+
+| Package | What it is |
+|---|---|
+| [abstracttui](../abstracttui/) | Reactive Rust terminal UI engine |
+| [abstractuic](../abstractuic/) | Shared React/Web Components UI kit |
+| [abstractskill](../abstractskill/) | Shared Agent Skills (`SKILL.md`) loader and activation library |
 
 ---
 

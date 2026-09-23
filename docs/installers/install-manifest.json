@@ -147,12 +147,6 @@
       "version": "0.3.12"
     },
     {
-      "distribution": "abstractcode",
-      "id": "abstractcode",
-      "registry": "pypi",
-      "version": "0.3.9"
-    },
-    {
       "distribution": "abstractgateway",
       "id": "abstractgateway",
       "registry": "pypi",

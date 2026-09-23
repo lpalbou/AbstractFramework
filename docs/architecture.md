@@ -71,6 +71,7 @@ LLM + tools + multimodality
 ──────────────────────────────────────────────────────
  AbstractCore
  provider/model abstraction + routing defaults
+ request/output normalization + call-scoped resolved-route truth
  tools, structured output, media input, embeddings, MCP
  capability plugins: voice / vision / music
 ```
@@ -78,6 +79,11 @@ LLM + tools + multimodality
 **AbstractFlow** is the authoring/distribution layer: you design a VisualFlow graph, export a `.flow` bundle, and run it anywhere a compatible host exists.
 
 **AbstractAgent** is the composition layer: ready-made agent loops (ReAct, CodeAct, MemAct) built on top of Runtime. These can be used standalone or inside a Flow as agent nodes.
+
+Portable workflow execution does not require every client to be a generic workflow picker. Some
+products expose workflow selection, while others intentionally bind to one published workflow or
+interface family for a specialized task. The invariant is that execution still happens as a durable
+Gateway/Runtime workflow.
 
 ---
 
@@ -94,6 +100,10 @@ A durable workflow instance with persisted state. Identified by a `run_id`.
 The append-only history of a run: every step, effect, result, wait, and error is recorded.
 
 This is what makes replay-first UIs possible: a client reconstructs state by replaying history, then follows along by streaming new events over SSE.
+
+For Core-backed multimodal generation, Runtime can also persist bounded `resolved_actions`
+summaries in replay exports. Those records capture the normalized request/output summary and the
+effective resolved route without turning route internals into the ordinary app-facing vocabulary.
 
 ### Effects and waits
 

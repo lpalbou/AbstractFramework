@@ -20,7 +20,12 @@ Examples:
 - several file artifacts + prompt: "compare these PDFs, images, transcripts, and recordings"
 - mixed image/video/audio artifacts + prompt: "compare these inputs"
 
-The framework already has Core route metadata (`input.image`, `input.video`, `input.voice`, `input.sound`, `input.music`) and Gateway/Runtime artifact refs. The missing piece is a first-class Flow authoring abstraction for node-local model input artifact lists that lower into the existing Core/Runtime media path.
+The framework already has Core route metadata (`input.image`, `input.video`, `input.voice`,
+`input.sound`, `input.music`) and Gateway/Runtime artifact refs. The missing piece is a first-class
+Flow authoring abstraction for node-local model input artifact lists that lower into the existing
+Core/Runtime media path. As the lower-level Core contract converges on `generate(request, output)`,
+this item should treat Flow-side artifact lowering as an adapter into normalized request media, not
+as a separate long-term semantics layer.
 
 ## Current code reality
 - `abstractflow/src/types/nodes.ts` defines `LLM Call` and `Agent` with `context`, `system`, `prompt`, `tools`, `prompt_cache_binding`, `thinking`, and structured-output pins, but no explicit model-input artifact pin or collector node.
@@ -92,6 +97,8 @@ Implement model input artifacts as an artifact-ref collection contract:
 - Runtime:
   - Normalize `input_artifacts` into an ordered `pending["media"]` list for LLM calls.
   - Normalize `input_artifacts` into an ordered Agent child `context.attachments` list so AbstractAgent's existing media extraction path works.
+  - Treat both `pending["media"]` and `context.attachments` as adapters into the same normalized
+    request-media contract rather than as permanent parallel semantics.
   - Preserve explicit empty lists as "no artifacts for this call" and avoid double-including inherited context attachments.
 - Gateway:
   - Continue validating artifact refs before run start/resume where refs are user-provided.

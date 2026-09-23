@@ -19,6 +19,7 @@
 #   ./scripts/build.sh --gpu          # heavy native GPU local-engine profile
 #   ./scripts/build.sh --python       # Python packages only
 #   ./scripts/build.sh --npm          # npm packages only
+#   ./scripts/build.sh --rust         # Rust crates only (abstracttui)
 #   ./scripts/build.sh --clean        # delete .venv first (avoids pollution from other projects)
 #   AF_BUILD_PROFILE=light|apple|gpu|auto ./scripts/build.sh
 #
@@ -72,13 +73,15 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 BUILD_PYTHON=true
 BUILD_NPM=true
+BUILD_RUST=true
 CLEAN_VENV=false
 BUILD_PROFILE="${AF_BUILD_PROFILE:-light}"
 
 for arg in "$@"; do
     case "$arg" in
-        --python) BUILD_NPM=false ;;
-        --npm)    BUILD_PYTHON=false ;;
+        --python) BUILD_NPM=false; BUILD_RUST=false ;;
+        --npm)    BUILD_PYTHON=false; BUILD_RUST=false ;;
+        --rust)   BUILD_PYTHON=false; BUILD_NPM=false ;;
         --clean)  CLEAN_VENV=true ;;
         --apple)  BUILD_PROFILE="apple" ;;
         --gpu)    BUILD_PROFILE="gpu" ;;
@@ -208,6 +211,18 @@ build_profile_extras() {
         return 0
     fi
 
+    # abstractruntime and abstractagent publish `apple`/`gpu`, NOT `all-apple`,
+    # so the line below asks them for an extra they do not define: pip warns
+    # ("does not provide the extra 'all-apple'") and installs them bare. That
+    # looks like a bug and is deliberately left alone. Their `apple` extra is
+    # only `abstractcore[all-apple]`, which this script installs directly one
+    # line below -- so nothing is missed -- while ASKING for it re-resolves the
+    # environment, and the root meta-package (installed editable, pinning
+    # `abstractcore==2.13.38`, `abstractvision==0.3.26`) then drags every local
+    # editable install back to those older PyPI builds. Verified by dry-run:
+    # requesting [apple] here would downgrade abstractcore, abstractvision,
+    # abstractruntime, abstractgateway and abstractassistant at once.
+    # Fix the root pins first; only then is this mapping safe to "correct".
     case "$rel_dir" in
         abstractgateway|abstractassistant)
             case "$profile" in
@@ -216,7 +231,7 @@ build_profile_extras() {
                 *) printf '%s' "" ;;
             esac
             ;;
-        abstractsemantics|abstractmemory|abstractvision|abstractvoice|abstractmusic|abstractcore|abstractruntime|abstractagent)
+        abstractsemantics|abstractmemory|abstractvision|abstractvoice|abstractmusic|abstract3d|abstractcore|abstractruntime|abstractagent)
             case "$profile" in
                 apple) printf '%s' "[all-apple]" ;;
                 gpu) printf '%s' "[all-gpu]" ;;
@@ -258,6 +273,33 @@ require_repo() {
     fi
 }
 
+# Name the conflict pip could not name.
+#
+# pip answers an UNSATISFIABLE graph with `resolution-too-deep`: it spends its
+# whole backtracking budget before it can prove which two requirements are
+# irreconcilable, so the operator is told the graph is "too complex" and
+# advised to add lower bounds — for what is really package A wanting X>=n and
+# package B wanting X<n. uv's resolver reports that pair in seconds. This is
+# DIAGNOSIS ONLY: the build still fails, it just stops lying about why.
+explain_resolution_failure() {
+    local rel_dir="$1" extras="$2" pkg_path="$3"
+
+    if ! command -v uv >/dev/null 2>&1; then
+        echo ""
+        printf "${C_YELLOW}hint:${C_RESET} install uv (https://docs.astral.sh/uv/) and re-run — its resolver\n"
+        echo "      names the conflicting requirement pair that pip's depth limit hides."
+        return 0
+    fi
+
+    echo ""
+    printf "${C_YELLOW}Re-resolving %s%s with uv to name the actual conflict...${C_RESET}\n" "$rel_dir" "$extras"
+    echo ""
+    # --dry-run: resolve and report, install nothing. A uv failure here is the
+    # POINT (it prints the conflict), so it must not abort this handler.
+    uv pip install --dry-run --no-build-isolation \
+        --python "$VENV_DIR/bin/python" -e "${pkg_path}${extras}" 2>&1 | tail -40 || true
+}
+
 # Editable-install a Python package from a local directory.
 # Usage: install_editable <relative_dir> [pip_extras]
 # Example: install_editable abstractcore "[tools,media]"
@@ -269,7 +311,10 @@ install_editable() {
     require_repo "$rel_dir"
     echo ""
     package_line "pip" "install -e ${rel_dir}${extras}"
-    pip install --quiet --no-build-isolation -e "${pkg_path}${extras}"
+    if ! pip install --quiet --no-build-isolation -e "${pkg_path}${extras}"; then
+        explain_resolution_failure "$rel_dir" "$extras" "$pkg_path"
+        af_die "pip install -e ${rel_dir}${extras} failed"
+    fi
 }
 
 remove_existing_meta_package() {
@@ -327,6 +372,30 @@ build_npm_project() {
     ) && printf "       ${C_GREEN}✓ built${C_RESET}\n" || { printf "       ${C_YELLOW}WARNING:${C_RESET} %s build failed\n" "$label"; npm_ok=false; }
 }
 
+# Build a standalone Rust crate repository with cargo.
+# The default (debug) profile is used: it is incremental and serves as the
+# "does it still compile" gate. Rust consumers (e.g. abstractcoder) compile the
+# crate from source via cargo path dependencies, so no artifact install is
+# needed here.
+build_rust_project() {
+    local rel_dir="$1"
+    local label="$2"
+    local pkg_dir="$ROOT_DIR/$rel_dir"
+
+    if [[ ! -d "$pkg_dir" ]]; then
+        warn_line "${rel_dir}/ not found — skipping"
+        rust_ok=false
+        return 0
+    fi
+
+    echo ""
+    package_line "cargo" "$label"
+    (
+        cd "$pkg_dir"
+        cargo build --quiet 2>&1 | tail -5
+    ) && printf "       ${C_GREEN}✓ built${C_RESET}\n" || { printf "       ${C_YELLOW}WARNING:${C_RESET} %s build failed\n" "$label"; rust_ok=false; }
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -352,6 +421,17 @@ if $BUILD_NPM; then
         warn_line "Node.js not found — skipping npm builds."
         warn_cont "Install Node 18+ to build the browser UI packages."
         BUILD_NPM=false
+    fi
+fi
+
+if $BUILD_RUST; then
+    if command -v cargo >/dev/null 2>&1; then
+        ok_line "cargo:    $(cargo --version)"
+    else
+        echo ""
+        warn_line "cargo not found — skipping Rust builds."
+        warn_cont "Install Rust (https://rustup.rs) to build abstracttui."
+        BUILD_RUST=false
     fi
 fi
 
@@ -461,6 +541,8 @@ PY
     install_editable "abstractvision" "$(build_profile_extras "abstractvision" "$PYTHON_BUILD_PROFILE")"
     install_editable "abstractvoice" "$(build_profile_extras "abstractvoice" "$PYTHON_BUILD_PROFILE")"
     install_editable "abstractmusic" "$(build_profile_extras "abstractmusic" "$PYTHON_BUILD_PROFILE")"
+    install_editable "abstractcamera"
+    install_editable "abstract3d" "$(build_profile_extras "abstract3d" "$PYTHON_BUILD_PROFILE")"
 
     # ── Tier 1: Depends on Tier 0 ───────────────────────────────────────
     section "Python — Tier 1  (depends on Tier 0)"
@@ -474,7 +556,6 @@ PY
 
     # ── Tier 3: Depends on Tier 0–2 ────────────────────────────────────
     section "Python — Tier 3  (depends on Tier 0–2)"
-    install_editable "abstractcode"
     install_editable "abstractassistant" "$(build_profile_extras "abstractassistant" "$PYTHON_BUILD_PROFILE")"
 
     # ── Tier 4: Meta-package (AbstractFramework itself) ────────────────
@@ -663,7 +744,7 @@ PY
     echo ""
     echo "  Verifying imports (and detecting namespace shadowing)..."
     _import_ok=true
-    for _pkg in abstractcore abstractruntime abstractagent abstractcode abstractgateway abstractmemory abstractsemantics abstractvoice abstractvision abstractmusic abstractassistant; do
+    for _pkg in abstractcore abstractruntime abstractagent abstractgateway abstractmemory abstractsemantics abstractvoice abstractvision abstractmusic abstractcamera abstract3d abstractassistant; do
         if ! python -c "import importlib; m=importlib.import_module('${_pkg}'); assert getattr(m, '__file__', None) is not None" 2>/dev/null; then
             _import_ok=false
             printf "     ${C_RED}✗${C_RESET} %s\n" "$_pkg"
@@ -690,10 +771,24 @@ if $BUILD_NPM; then
 
     npm_ok=true
 
-    build_npm_project "abstractuic" "abstractuic  (monorepo: ui-kit, panel-chat, monitors)"
+    build_npm_project "abstractuic" "abstractui  (abstractuic monorepo: ui-kit, panel-chat, monitors)"
     build_npm_project "abstractobserver" "abstractobserver"
     build_npm_project "abstractcode/web" "abstractcode/web  (@abstractframework/code)"
     build_npm_project "abstractflow" "abstractflow  (@abstractframework/flow)"
+    build_npm_project "abstractentity" "abstractentity  (@abstractframework/entity)"
+    build_npm_project "abstractcontinuum" "abstractcontinuum  (@abstractframework/continuum)"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════
+# RUST CRATES
+# ═══════════════════════════════════════════════════════════════════════════
+if $BUILD_RUST; then
+    section "Rust Tier 0 — Building standalone crates from local source"
+
+    rust_ok=true
+
+    build_rust_project "abstracttui" "abstracttui  (terminal UI engine)"
+    build_rust_project "abstractcode" "abstractcode  (terminal client; workspace member tui/)"
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -714,6 +809,13 @@ if $BUILD_NPM; then
         printf "  ${C_GREEN}✓ npm:${C_RESET}     all UI packages built\n"
     else
         printf "  ${C_YELLOW}WARNING:${C_RESET} npm packages had issues (see warnings above)\n"
+    fi
+fi
+if $BUILD_RUST; then
+    if ${rust_ok:-false}; then
+        printf "  ${C_GREEN}✓ Rust:${C_RESET}    all crates built\n"
+    else
+        printf "  ${C_YELLOW}WARNING:${C_RESET} Rust crates had issues (see warnings above)\n"
     fi
 fi
 printf "${C_BOLD}%s${C_RESET}\n" "============================================================"

@@ -1,0 +1,14 @@
+{
+ "world": "old",
+ "status": "RunStatus.COMPLETED",
+ "llm_calls": 5,
+ "final_request_assistant_toolcall_msgs": 4,
+ "with_nonempty_reasoning_content": 0,
+ "example_thoughts": [
+  "",
+  "",
+  "",
+  ""
+ ],
+ "task_done": true
+}

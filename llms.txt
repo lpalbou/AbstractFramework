@@ -69,6 +69,12 @@ Notes for LLMs working in this repo:
   Catalog scope is explicit, direct private-bundle routes reject
   catalog-internal ids, and Gateway signs catalog workflow policy before
   passing it to Runtime.
+- A packaged Gateway serves shipped workflow bundles out of the box, with no
+  manual install: `basic-agent` (default chat agent), `coding-agent` (a
+  verify-gated coder, `coder` entrypoint), `deep-research`, `co-scientist`,
+  `docs-qa`, `abstractassistant-orchestrator`, and the `react-agent` /
+  `codeact-agent` / `memact-agent` native loops. Setting
+  `ABSTRACTGATEWAY_FLOWS_DIR` replaces that registry with a custom one.
 
 ## Start Here
 
@@ -76,6 +82,7 @@ Notes for LLMs working in this repo:
 - [docs/README.md](docs/README.md): Docs index for this repo.
 - [docs/install.md](docs/install.md): Light / Apple / GPU install chooser and generated manifest contract.
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
+- [abstractgateway/docs/shipped-workflows.md](abstractgateway/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
 - [docs/architecture.md](docs/architecture.md): How the stack fits together.
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
 - [docs/adr/README.md](docs/adr/README.md): Cross-package ADR index and accepted platform contracts.

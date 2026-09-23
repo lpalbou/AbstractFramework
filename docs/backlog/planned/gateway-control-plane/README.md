@@ -16,9 +16,11 @@ fuller provider-secret vault/bridge policy.
 ## Purpose
 This track groups the Gateway admin/account/config/runtime-control work raised
 by the multi-user Gateway review. Gateway is the trust boundary and control
-plane; Flow, Code, Observer, and Assistant should become task UIs that consume
-Gateway auth, defaults, permissions, and catalogs instead of each owning global
-identity or model configuration.
+plane; Flow, Code, Observer, and Assistant should consume Gateway auth,
+defaults, permissions, catalogs, and policy-signed workflow governance instead
+of each owning global identity or route-merging logic. Client-local workflow
+selection state is still acceptable when it selects among Gateway-exposed
+workflows/defaults.
 
 ## Items
 - `0145_gateway_admin_console_bootstrap.md`: Gateway-served admin/account console v0.

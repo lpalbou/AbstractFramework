@@ -1,0 +1,19 @@
+{
+ "world": "old",
+ "abstractcore_file": "/tmp/proof_old_abstractcore/abstractcore/__init__.py",
+ "crlf_edit": {
+  "bytes_after": "[app]\\nmode = production\\nlevel = 3\\n",
+  "crlf_preserved": false,
+  "silently_rewritten_to_lf": true
+ },
+ "dashdash_diff": {
+  "tool_message_head": "\u274c Error: Invalid unified diff: missing '+++ ' header after '--- '",
+  "applied": false,
+  "file_after": "SELECT 1;\n-- old comment\nSELECT 2;\n"
+ },
+ "string_flag_coercion": {
+  "tool_message_head": "Preview /var/folders/2n/0v7_ckq916q9s57rj5kymkj40000gn/T/ab_old_slyn1vt6/config.py (+1 -1) replacements=1/1\n@@ -1 +1 @@\n-1   | retries = 3\n+  1 | retries = 5\n\nP",
+  "file_actually_edited": false,
+  "file_after": "retries = 3\n"
+ }
+}

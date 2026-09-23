@@ -42,13 +42,16 @@ SIBLING_REPOS=(
     "https://github.com/lpalbou/abstractsemantics.git"
     "https://github.com/lpalbou/abstractvoice.git"
     "https://github.com/lpalbou/abstractvision.git"
+    "https://github.com/lpalbou/abstract3d.git"
     "https://github.com/lpalbou/AbstractMusic.git"
     "https://github.com/lpalbou/abstractassistant.git"
     "https://github.com/lpalbou/AbstractSkill.git"
     # Browser UIs & npm packages
     "https://github.com/lpalbou/abstractobserver.git"
-    # UI component library (React monorepo)
-    "https://github.com/lpalbou/abstractuic.git"
+    # UI component library (React monorepo; checkout dir: abstractuic)
+    "https://github.com/lpalbou/AbstractUIC.git"
+    # Rust Tier 0 — terminal UI engine
+    "https://github.com/lpalbou/AbstractTUI.git"
 )
 
 # ---------------------------------------------------------------------------
@@ -124,6 +127,10 @@ for repo_url in "${SIBLING_REPOS[@]}"; do
     # Keep local checkout names aligned with PyPI package directories.
     if [[ "$repo_name" == "AbstractSkill" ]]; then
         repo_name="abstractskill"
+    elif [[ "$repo_name" == "AbstractUIC" ]]; then
+        repo_name="abstractuic"
+    elif [[ "$repo_name" == "AbstractTUI" ]]; then
+        repo_name="abstracttui"
     fi
 
     if [ -d "$TARGET_DIR/$repo_name/.git" ]; then

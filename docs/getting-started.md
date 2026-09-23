@@ -125,8 +125,9 @@ export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
-# Optional: set only for a custom bundle registry. Packaged Gateway includes
-# the shipped basic-agent bundle when this is unset.
+# Optional: set only for a custom bundle registry. When this is unset,
+# Gateway serves its shipped workflows (basic-agent, coding-agent,
+# deep-research, co-scientist, and more).
 # export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 ```
 
@@ -178,6 +179,12 @@ curl -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
 ## Author orchestration with AbstractFlow
 
 The ecosystem's distribution unit is a **workflow bundle** (`.flow` file): a VisualFlow graph + metadata. Gateways discover bundles and expose them to all clients.
+
+You do not have to start from an empty registry. A packaged Gateway already
+serves a set of ready workflows — a verify-gated coding agent, `deep-research`,
+and `co-scientist` among them — listed in
+[AbstractGateway's shipped workflows](../abstractgateway/docs/shipped-workflows.md).
+Author your own when you need something they do not cover.
 
 ### 1. Open the Flow Editor
 

@@ -39,6 +39,9 @@ RUNTIME_DIR="${RUNTIME_DIR:-${ABSTRACTFRAMEWORK_RUNTIME_DIR:-$ROOT_DIR/runtime}}
 GATEWAY_RUNTIME_DIR="${GATEWAY_RUNTIME_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-$RUNTIME_DIR}}"
 GATEWAY_FLOWS_DIR="${GATEWAY_FLOWS_DIR:-${ABSTRACTGATEWAY_FLOWS_DIR:-$ROOT_DIR/abstractgateway/flows/bundles}}"
 LOG_DIR="${LOG_DIR:-$RUNTIME_DIR/logs}"
+# Backlog/triage browsing needs the repo root; without it the whole /backlog +
+# /reports family answers 404 "not configured" (operator incident 2026-07-13).
+export ABSTRACTGATEWAY_TRIAGE_REPO_ROOT="${ABSTRACTGATEWAY_TRIAGE_REPO_ROOT:-$ROOT_DIR}"
 DEFAULT_TOKEN_FILE="${DEFAULT_TOKEN_FILE:-$RUNTIME_DIR/dev/gateway-token}"
 LOCAL_GATEWAY_USERS="${LOCAL_GATEWAY_USERS:-${ABSTRACTGATEWAY_LOCAL_USERS:-admin}}"
 LOCAL_GATEWAY_USER_TENANT="${LOCAL_GATEWAY_USER_TENANT:-default}"
@@ -556,6 +559,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 PY
 }
 
+# KILL RECEIPT (operator ruling 2026-08-20; sibling of apps_common.sh's
+# af_kill_receipt — this launcher is deliberately standalone): every kill
+# this script issues lands in the machine-wide ledger, so the stack
+# supervisor's incident banner can NAME the killer instead of reporting an
+# anonymous "exited (status 143)". Best-effort: never breaks the launcher.
+af_kill_receipt() {
+    local ledger="${AF_KILL_RECEIPTS:-$HOME/.abstractframework/kill-receipts.log}"
+    local ts
+    ts="$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo '?')"
+    echo "[af-kill ${ts}] by pid $$ (ppid ${PPID:-?}, script ${0##*/}): $*" >>"$ledger" 2>/dev/null || true
+}
+
 kill_port_listeners() {
     local port="$1"
     local label="$2"
@@ -563,16 +578,25 @@ kill_port_listeners() {
     pids="$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | sort -u || true)"
     [[ -z "$pids" ]] && return 0
     echo "Stopping existing listener(s) on port ${port} for ${label}: ${pids//$'\n'/ }"
+    af_kill_receipt "kill_port_listeners ${port} (${label}): TERM ${pids//$'\n'/ }"
     kill $pids >/dev/null 2>&1 || true
     sleep 1
     pids="$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | sort -u || true)"
     if [[ -n "$pids" ]]; then
         echo "Force-stopping stubborn listener(s) on port ${port}: ${pids//$'\n'/ }"
+        af_kill_receipt "kill_port_listeners ${port} (${label}): KILL ${pids//$'\n'/ }"
         kill -9 $pids >/dev/null 2>&1 || true
     fi
 }
 
 kill_matching_processes() {
+    # Stops matching processes and WAITS for them to die. The wait is
+    # load-bearing for the gateway: a TERM'd serve process closes its port
+    # listener early in graceful shutdown but keeps holding
+    # <data_dir>/gateway_runner.lock until open connections (SSE ledger
+    # streams) drain and lifespan shutdown runs. Starting the replacement
+    # before the old process exits leaves the new gateway serving HTTP with a
+    # refused GatewayRunner — runs hang on "On Flow Start" with zero ledger.
     local label="$1"
     shift
     local pids=""
@@ -589,17 +613,55 @@ kill_matching_processes() {
     )"
     [[ -z "$pids" ]] && return 0
     echo "Stopping existing ${label} process(es): ${pids//$'\n'/ }"
+    af_kill_receipt "kill_matching_processes (${label}): TERM ${pids//$'\n'/ }"
     kill $pids >/dev/null 2>&1 || true
-    sleep 1
-    local stubborn=""
-    local pid
-    for pid in $pids; do
-        kill -0 "$pid" >/dev/null 2>&1 && stubborn+="$pid "
+    local i alive="" pid
+    for i in 1 2 3 4 5; do
+        alive=""
+        for pid in $pids; do
+            kill -0 "$pid" >/dev/null 2>&1 && alive+="$pid "
+        done
+        [[ -z "$alive" ]] && return 0
+        sleep 1
     done
-    if [[ -n "$stubborn" ]]; then
-        echo "Force-stopping stubborn ${label} process(es): $stubborn"
-        kill -9 $stubborn >/dev/null 2>&1 || true
+    echo "Force-stopping stubborn ${label} process(es): $alive"
+    af_kill_receipt "kill_matching_processes (${label}): KILL ${alive}"
+    kill -9 $alive >/dev/null 2>&1 || true
+    for i in 1 2 3; do
+        sleep 1
+        alive=""
+        for pid in $pids; do
+            kill -0 "$pid" >/dev/null 2>&1 && alive+="$pid "
+        done
+        [[ -z "$alive" ]] && return 0
+    done
+    echo "#FALLBACK ${label} process(es) still visible after KILL: $alive (likely zombies; inspect: ps -p ${alive// /,})"
+}
+
+require_gateway_runner_lock_free() {
+    # Prove the runner singleton lock is actually free before starting the
+    # replacement gateway: probe the exact kernel flock whose silent refusal
+    # (GatewayRunner.start -> one invisible warning) caused the stuck-runs
+    # incident. Process checks can be fooled; the flock cannot.
+    local lock_file="$1"
+    [[ -e "$lock_file" ]] || return 0
+    if "$PYTHON_BIN" - "$lock_file" <<'PY'
+import fcntl, sys
+try:
+    fh = open(sys.argv[1], "a")
+    fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    sys.exit(1)
+sys.exit(0)
+PY
+    then
+        return 0
     fi
+    local holders
+    holders="$(lsof -t -- "$lock_file" 2>/dev/null | sort -u | tr '\n' ' ' || true)"
+    die "gateway runner lock is still held: ${lock_file} (holder pid(s): ${holders:-unknown}).
+A gateway started now would serve HTTP but never tick runs (they hang on
+'On Flow Start' with zero ledger). Stop the holder first: kill ${holders:-<pid>}"
 }
 
 wait_for_url() {
@@ -681,7 +743,8 @@ add_repo_paths "abstractcore"
 add_repo_paths "abstractruntime"
 add_repo_paths "abstractagent"
 add_repo_paths "abstractgateway"
-add_repo_paths "abstractcode"
+add_repo_paths "abstractcamera"
+add_repo_paths "abstract3d"
 add_repo_paths "abstractassistant"
 add_repo_paths "abstractobserver"
 add_repo_paths "abstractuic"
@@ -827,8 +890,7 @@ if [[ "$STOP_EXISTING" != "0" && "$STOP_EXISTING" != "false" && "$STOP_EXISTING"
         "abstractflow-editor"
     kill_matching_processes "AbstractGateway" \
         "$BIN_DIR/abstractgateway[[:space:]]+serve" \
-        "abstractgateway[[:space:]]+serve" \
-        "python[^[:space:]]*[[:space:]].*-m[[:space:]]+abstractgateway.cli[[:space:]]+serve"
+        "abstractgateway(\\.cli)?[[:space:]]+serve"
 fi
 kill_port_listeners "$GATEWAY_PORT" "AbstractGateway"
 kill_port_listeners "$FLOW_PORT" "AbstractFlow"
@@ -837,6 +899,7 @@ kill_port_listeners "$OBSERVER_PORT" "AbstractObserver"
 port_in_use "$GATEWAY_CONNECT_HOST" "$GATEWAY_PORT" && die "gateway port is already in use: ${GATEWAY_HOST}:${GATEWAY_PORT}"
 port_in_use "$FLOW_CONNECT_HOST" "$FLOW_PORT" && die "flow port is already in use: ${FLOW_HOST}:${FLOW_PORT}"
 port_in_use "$OBSERVER_CONNECT_HOST" "$OBSERVER_PORT" && die "observer port is already in use: ${OBSERVER_HOST}:${OBSERVER_PORT}"
+require_gateway_runner_lock_free "$ABSTRACTGATEWAY_DATA_DIR/gateway_runner.lock"
 
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 FLOW_LOG="$LOG_DIR/flow.log"
@@ -863,8 +926,10 @@ trap cleanup EXIT INT TERM
 echo
 echo "Starting AbstractGateway, AbstractFlow, and AbstractObserver from local checkout."
 echo "Starting AbstractGateway: http://${GATEWAY_HOST}:${GATEWAY_PORT}"
-is_truthy "$VERBOSE" && echo "  command: $PYTHON_BIN -m abstractgateway.cli serve"
-"$PYTHON_BIN" -m abstractgateway.cli serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" >"$GATEWAY_LOG" 2>&1 &
+is_truthy "$VERBOSE" && echo "  command: $PYTHON_BIN -P -m abstractgateway.cli serve"
+# -P (safe path): keep the launch cwd off sys.path so repo folders named like
+# installed packages (abstractvoice/) cannot shadow them (2026-07-17 incident).
+"$PYTHON_BIN" -P -m abstractgateway.cli serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" >"$GATEWAY_LOG" 2>&1 &
 GATEWAY_PID=$!
 
 if ! wait_for_url "$GATEWAY_HEALTH_URL" "$STARTUP_TIMEOUT_S" "$GATEWAY_PID"; then
@@ -920,6 +985,7 @@ env -u ABSTRACTGATEWAY_AUTH_TOKEN \
     HOST="$OBSERVER_HOST" \
     PORT="$OBSERVER_PORT" \
     ABSTRACTOBSERVER_GATEWAY_URL="$ABSTRACTOBSERVER_GATEWAY_URL" \
+    ABSTRACTOBSERVER_ENTITY_APP_URL="${ABSTRACTOBSERVER_ENTITY_APP_URL:-http://${ENTITY_HOST:-127.0.0.1}:${ENTITY_PORT:-3007}}" \
     "$NODE_BIN" "$ROOT_DIR/abstractobserver/bin/cli.js" \
     >"$OBSERVER_LOG" 2>&1 &
 OBSERVER_PID=$!
@@ -943,6 +1009,12 @@ echo "Observer local:  $OBSERVER_LOCAL_URL"
 if [[ -n "$OBSERVER_NETWORK_URL" ]]; then
     echo "Observer network: $OBSERVER_NETWORK_URL"
 fi
+# The entity, console, and code apps are their OWN packages — this stack does
+# not start them; point people at their launchers (or af-local.sh for everything).
+echo "Summoned entities (create, visit, own time): http://${ENTITY_HOST:-127.0.0.1}:${ENTITY_PORT:-3007}  (start it: scripts/entity-local.sh)"
+echo "Continuum console (backlog, codex, inbox):   http://${CONTINUUM_HOST:-127.0.0.1}:${CONTINUUM_PORT:-3003}  (start it: scripts/console-local.sh)"
+echo "Code assistant (browser):                    http://${CODE_HOST:-127.0.0.1}:${CODE_PORT:-3002}  (start it: scripts/code-local.sh)"
+echo "Whole framework in one command:              scripts/af-local.sh"
 echo
 
 sed -n '1,160p' "$GATEWAY_USERS_REPORT"
@@ -976,18 +1048,77 @@ cat <<EOF
 Gateway, Flow, and Observer are running. Leave this terminal open; press Ctrl-C to stop all three.
 EOF
 
+# SUPERVISION POLICY (2026-07-14, second linked-teardown incident): a dead UI
+# child must NOT kill the whole stack. Two incidents shared the mechanism —
+# one child exits (e.g. a seat bounces only the observer with its own
+# launcher, which kills THIS script's observer child), the old loop exited,
+# and cleanup() tore down the gateway serving live entities. Now:
+#   - gateway death stays FATAL (it is the control plane; everything proxies
+#     to it; auto-restarting a crash-looping control plane hides real faults);
+#   - flow/observer death: if the port is already served again (an external
+#     relaunch — today's case), ADOPT it and stop supervising that child;
+#     otherwise RESTART the child (capped, with backoff), and only after the
+#     cap is spent does the stack come down.
+url_answers() {
+    curl -fsS -m 3 -o /dev/null "$1" >/dev/null 2>&1
+}
+
+FLOW_RESTARTS=0
+OBSERVER_RESTARTS=0
+MAX_CHILD_RESTARTS="${MAX_CHILD_RESTARTS:-3}"
+
+restart_flow() {
+    env -u ABSTRACTGATEWAY_AUTH_TOKEN "$NODE_BIN" "$ROOT_DIR/abstractflow/bin/cli.js" \
+        --host "$FLOW_HOST" \
+        --port "$FLOW_PORT" \
+        --gateway-url "$GATEWAY_URL" \
+        >>"$FLOW_LOG" 2>&1 &
+    FLOW_PID=$!
+}
+
+restart_observer() {
+    env -u ABSTRACTGATEWAY_AUTH_TOKEN \
+        HOST="$OBSERVER_HOST" \
+        PORT="$OBSERVER_PORT" \
+        ABSTRACTOBSERVER_GATEWAY_URL="$ABSTRACTOBSERVER_GATEWAY_URL" \
+        ABSTRACTOBSERVER_ENTITY_APP_URL="${ABSTRACTOBSERVER_ENTITY_APP_URL:-http://${ENTITY_HOST:-127.0.0.1}:${ENTITY_PORT:-3007}}" \
+        "$NODE_BIN" "$ROOT_DIR/abstractobserver/bin/cli.js" \
+        >>"$OBSERVER_LOG" 2>&1 &
+    OBSERVER_PID=$!
+}
+
 while true; do
     if ! kill -0 "$GATEWAY_PID" >/dev/null 2>&1; then
-        show_log_tail "Gateway exited" "$GATEWAY_LOG"
+        show_log_tail "Gateway exited (fatal: the control plane died — stack comes down)" "$GATEWAY_LOG"
         exit 1
     fi
-    if ! kill -0 "$FLOW_PID" >/dev/null 2>&1; then
-        show_log_tail "Flow exited" "$FLOW_LOG"
-        exit 1
+    if [[ -n "$FLOW_PID" ]] && ! kill -0 "$FLOW_PID" >/dev/null 2>&1; then
+        if url_answers "$FLOW_HEALTH_URL"; then
+            echo "Flow child exited but ${FLOW_HEALTH_URL} still answers — an external relaunch serves it; adopting (no teardown)."
+            FLOW_PID=""
+        elif (( FLOW_RESTARTS < MAX_CHILD_RESTARTS )); then
+            FLOW_RESTARTS=$((FLOW_RESTARTS + 1))
+            echo "Flow exited — restarting it (attempt ${FLOW_RESTARTS}/${MAX_CHILD_RESTARTS}); gateway stays up."
+            sleep $((FLOW_RESTARTS * 2))
+            restart_flow
+        else
+            show_log_tail "Flow exited ${MAX_CHILD_RESTARTS} times — giving up" "$FLOW_LOG"
+            exit 1
+        fi
     fi
-    if ! kill -0 "$OBSERVER_PID" >/dev/null 2>&1; then
-        show_log_tail "Observer exited" "$OBSERVER_LOG"
-        exit 1
+    if [[ -n "$OBSERVER_PID" ]] && ! kill -0 "$OBSERVER_PID" >/dev/null 2>&1; then
+        if url_answers "$OBSERVER_UI_URL"; then
+            echo "Observer child exited but ${OBSERVER_UI_URL} still answers — an external relaunch serves it; adopting (no teardown)."
+            OBSERVER_PID=""
+        elif (( OBSERVER_RESTARTS < MAX_CHILD_RESTARTS )); then
+            OBSERVER_RESTARTS=$((OBSERVER_RESTARTS + 1))
+            echo "Observer exited — restarting it (attempt ${OBSERVER_RESTARTS}/${MAX_CHILD_RESTARTS}); gateway stays up."
+            sleep $((OBSERVER_RESTARTS * 2))
+            restart_observer
+        else
+            show_log_tail "Observer exited ${MAX_CHILD_RESTARTS} times — giving up" "$OBSERVER_LOG"
+            exit 1
+        fi
     fi
     sleep 2
 done

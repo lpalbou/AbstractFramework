@@ -1,0 +1,19 @@
+{
+ "model": "Qwen3.5-397B-A17B",
+ "provider": "endpoint:ovh-provider",
+ "attachment_registered": true,
+ "attachment_id": "9976f5aa1fba62c33f3552949fd6e4ce",
+ "raw_arm": {
+  "status": "RunStatus.FAILED",
+  "error_head": "OpenAI-compatible server API error (400): {\"error\":{\"message\":\"System message must be at the beginning.\",\"type\":\"BadRequestError\",\"param\":null,\"code\":400}}",
+  "attachment_index_reached_provider": false,
+  "reproduced_incident_400": true
+ },
+ "fixed_arm": {
+  "status": "RunStatus.COMPLETED",
+  "error_head": "",
+  "answer_head": "READY",
+  "attachment_index_reached_provider": true
+ },
+ "PRODUCTION_PARITY_OK": true
+}

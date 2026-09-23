@@ -23,55 +23,6 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
-# Build/status groups.
-#
-# Format:
-#   display-name[:primary-relative-path[:fallback-relative-path...]]
-#
-# Most repositories use the same display name and directory name. AbstractMusic
-# has historically appeared with mixed repository casing, so accept both the
-# canonical lowercase local package path and the GitHub repository casing.
-# The group order mirrors scripts/build.sh:
-#   Python Tier 0 -> Tier 4, then npm UI packages.
-# abstractcode/web is an npm build target inside the abstractcode repository, so
-# the abstractcode repo is listed once in Python Tier 3.
-GROUP_PY_TIER0=(
-    abstractskill:abstractskill:AbstractSkill
-    abstractsemantics
-    abstractmemory
-    abstractvision
-    abstractvoice
-    abstractmusic:abstractmusic:AbstractMusic
-)
-
-GROUP_PY_TIER1=(
-    abstractcore
-    abstractruntime
-)
-
-GROUP_PY_TIER2=(
-    abstractagent
-    abstractgateway
-)
-
-GROUP_PY_TIER3=(
-    abstractcode
-    abstractassistant
-)
-
-GROUP_PY_TIER4=(
-    abstractframework:.
-)
-
-GROUP_NPM=(
-    abstractuic
-    abstractobserver
-    abstractflow
-)
-
-# ---------------------------------------------------------------------------
 # CLI flags
 # ---------------------------------------------------------------------------
 SHORT_MODE=false
@@ -93,6 +44,10 @@ done
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Shared repository inventory and traversal order.
+# shellcheck source=./lib/repo_groups.sh
+source "$SCRIPT_DIR/lib/repo_groups.sh"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -124,33 +79,6 @@ require_cmd() {
     fi
 }
 
-repo_dir_for() {
-    local spec="$1"
-    local fields=()
-    IFS=':' read -r -a fields <<< "$spec"
-    local name="${fields[0]}"
-
-    if [[ ${#fields[@]} -eq 1 ]]; then
-        printf "%s/%s\n" "$ROOT_DIR" "$name"
-        return 0
-    fi
-
-    local candidate
-    for candidate in "${fields[@]:1}"; do
-        if [[ -d "$ROOT_DIR/$candidate/.git" ]]; then
-            printf "%s/%s\n" "$ROOT_DIR" "$candidate"
-            return 0
-        fi
-    done
-
-    printf "%s/%s\n" "$ROOT_DIR" "${fields[1]}"
-}
-
-repo_display_name() {
-    local spec="$1"
-    printf "%s\n" "${spec%%:*}"
-}
-
 # Print status for a single repository.
 # Arguments: $1 = display name, $2 = absolute path to the repo
 # Returns: 0 if repo is clean, 1 if it has pending work
@@ -169,7 +97,7 @@ report_repo() {
 
     # --- Gather git info ---------------------------------------------------
     local branch staged unstaged untracked ahead behind
-    branch="$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "???")"
+    branch="$(repo_branch_for "$repo_dir")"
     staged="$(git -C "$repo_dir" diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')"
     unstaged="$(git -C "$repo_dir" diff --name-only 2>/dev/null | wc -l | tr -d ' ')"
     untracked="$(git -C "$repo_dir" ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')"
@@ -271,12 +199,7 @@ total=0
 dirty=0
 
 # ── Build order ──────────────────────────────────────────────────────────
-report_group "Python Tier 0 — No internal dependencies" "${GROUP_PY_TIER0[@]}"
-report_group "Python Tier 1 — Depends on Tier 0" "${GROUP_PY_TIER1[@]}"
-report_group "Python Tier 2 — Depends on Tier 0-1" "${GROUP_PY_TIER2[@]}"
-report_group "Python Tier 3 — Depends on Tier 0-2" "${GROUP_PY_TIER3[@]}"
-report_group "Python Tier 4 — Meta-package" "${GROUP_PY_TIER4[@]}"
-report_group "npm — UI package repositories" "${GROUP_NPM[@]}"
+run_repo_groups report_group
 
 # ── Summary ───────────────────────────────────────────────────────────────
 echo ""

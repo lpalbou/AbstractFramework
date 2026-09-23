@@ -61,11 +61,18 @@ pip install abstractgateway
 export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
+
+# Optional: set only to serve your own bundle registry instead of the
+# workflows Gateway ships with.
+# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
 
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
+
+Out of the box this serves a ready set of workflows — a verify-gated coding
+agent, `deep-research`, and `co-scientist` among them. See
+[shipped workflows](abstractgateway/docs/shipped-workflows.md).
 
 On first local start, Gateway creates `default/admin`, writes the browser-login
 token to `runtime/gateway/auth/bootstrap-admin-token`, and prints the token in
@@ -90,10 +97,10 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 
 1. Open the Flow Editor (`npx @abstractframework/flow`)
 2. Build a workflow: LLM steps, tool steps, branching, loops, subflows
-3. Export a `.flow` bundle and copy it to `ABSTRACTGATEWAY_FLOWS_DIR`
+3. Export a `.flow` bundle into your own bundle directory and point `ABSTRACTGATEWAY_FLOWS_DIR` at it (or publish it through the Gateway API)
 4. Run it from any gateway-backed client (Observer, AbstractAssistant, Code Web UI, your app)
 
-**AbstractAgent** provides ready-made agent patterns (ReAct, CodeAct, MemAct) that can be used inside flows or standalone.
+**AbstractAgent** provides ready-made agent patterns (ReAct, CodeAct, MemAct) that can be used inside flows or standalone. The workflows Gateway ships with are authored the same way — their editable sources are documented in [shipped workflow sources](abstractflow/docs/shipped-workflow-sources.md).
 
 ---
 
@@ -105,14 +112,63 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 
 ---
 
-## Example apps
+## Package map
+
+The ecosystem, grouped by layer. Each name links to the package's own README.
+
+### Foundation
+
+| Package | What it is |
+|---|---|
+| [abstractcore](abstractcore/) | Unified LLM interface: 9+ providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
+| [abstractsemantics](abstractsemantics/) | Central semantics registry (predicates + entity types) with JSON-Schema helpers |
+| [abstractmemory](abstractmemory/) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
+
+### Durable execution
+
+| Package | What it is |
+|---|---|
+| [abstractruntime](abstractruntime/) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts; the VisualFlow compiler (visual graphs → executable workflows); the entity identity lane (homes, chat/life/visit drivers) |
+| [abstractagent](abstractagent/) | Agent patterns (ReAct / CodeAct / MemAct) composing Runtime + Core |
+| [abstractflow](abstractflow/) | Visual workflow editor + portable `.flow` bundles — author once, run anywhere |
+
+### Control plane
+
+| Package | What it is |
+|---|---|
+| [abstractgateway](abstractgateway/) | Deployable control plane: durable runs over HTTP/SSE, scheduling + run commands (cancel/steer), workflow catalog, artifact/ledger serving, multi-user auth with per-user runtimes, the summoned-entity lifecycle (create / summon / visit / state / blueprint), and the operator consoles (web + TUI) |
+
+### Multimodal capabilities
+
+| Package | What it is |
+|---|---|
+| [abstractvoice](abstractvoice/) | Voice I/O (TTS / STT), local and remote backends |
+| [abstractvision](abstractvision/) | Model-agnostic generative vision (images, optional video) |
+| [abstractmusic](abstractmusic/) | Text-to-music / text-to-audio (Core capability plugin) |
+| [abstract3d](abstract3d/) | Local-first 3D generation |
+| [abstractcamera](abstractcamera/) | Camera control and capture tools |
+| [abstractsound](abstractsound/), [abstractvideo](abstractvideo/), [abstractspatial](abstractspatial/), [abstractgeometry](abstractgeometry/), [abstractcognition](abstractcognition/) | Reserved capability packages (namespaces held; APIs landing incrementally) |
+
+### Apps and clients
 
 | App | What it does | Install |
 |---|---|---|
-| **AbstractCode** | Terminal agentic dev client — durable sessions, tool approvals, `/workflow` support | `pip install abstractcode` |
-| **AbstractAssistant** | macOS tray client — gateway-first, workflow picker per session, voice support | `pip install abstractassistant` |
-| **AbstractObserver** | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
+| [AbstractCode](abstractcode/) | Terminal agentic dev client — durable sessions, tool approvals, `/workflow` support | `pip install abstractcode` |
+| [AbstractCode-TUI](abstractcode-tui/) | AbstractCode on the AbstractTUI engine (reactive Rust terminal client) | `cargo install abstractcode-tui` |
+| [AbstractAssistant](abstractassistant/) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
+| [AbstractObserver](abstractobserver/) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
+| [AbstractEntity](abstractentity/) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
+| [AbstractContinuum](abstractcontinuum/) | Continuous iterative development and deployment console | see package README |
 | **Code Web UI** | Browser coding assistant (gateway-backed) | `npx @abstractframework/code` |
+| **Flow Editor** | Visual workflow authoring in the browser | `npx @abstractframework/flow` |
+
+### Shared libraries
+
+| Package | What it is |
+|---|---|
+| [abstracttui](abstracttui/) | Rust terminal-UI engine built on fine-grained reactive signals |
+| [abstractuic](abstractuic/) | Reusable UI kit for framework clients (React components + Web Components) |
+| [abstractskill](abstractskill/) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) |
 
 ---
 

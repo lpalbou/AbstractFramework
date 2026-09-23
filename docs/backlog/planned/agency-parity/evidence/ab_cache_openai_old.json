@@ -1,0 +1,31 @@
+{
+ "world": "old",
+ "status": "RunStatus.COMPLETED",
+ "distinct_system_prompts_across_calls": 5,
+ "system_prompt_first_line_example": "Iteration: 1/8",
+ "per_call": [
+  {
+   "prompt_tokens": 2194,
+   "cached_tokens": 0
+  },
+  {
+   "prompt_tokens": 2423,
+   "cached_tokens": 0
+  },
+  {
+   "prompt_tokens": 2654,
+   "cached_tokens": 0
+  },
+  {
+   "prompt_tokens": 2891,
+   "cached_tokens": 0
+  },
+  {
+   "prompt_tokens": 3055,
+   "cached_tokens": 0
+  }
+ ],
+ "total_prompt_tokens": 13217,
+ "total_cached_tokens": 0,
+ "cached_pct": 0.0
+}

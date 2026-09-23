@@ -582,6 +582,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 PY
 }
 
+# KILL RECEIPT (operator ruling 2026-08-20; sibling of apps_common.sh's
+# af_kill_receipt — this launcher is deliberately standalone): every kill
+# this script issues lands in the machine-wide ledger, so the stack
+# supervisor's incident banner can NAME the killer instead of reporting an
+# anonymous "exited (status 143)". Best-effort: never breaks the launcher.
+af_kill_receipt() {
+    local ledger="${AF_KILL_RECEIPTS:-$HOME/.abstractframework/kill-receipts.log}"
+    local ts
+    ts="$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo '?')"
+    echo "[af-kill ${ts}] by pid $$ (ppid ${PPID:-?}, script ${0##*/}): $*" >>"$ledger" 2>/dev/null || true
+}
+
 kill_port_listeners() {
     local port="$1"
     local label="$2"
@@ -589,16 +601,25 @@ kill_port_listeners() {
     pids="$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | sort -u || true)"
     [[ -z "$pids" ]] && return 0
     echo "Stopping existing listener(s) on port ${port} for ${label}: ${pids//$'\n'/ }"
+    af_kill_receipt "kill_port_listeners ${port} (${label}): TERM ${pids//$'\n'/ }"
     kill $pids >/dev/null 2>&1 || true
     sleep 1
     pids="$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | sort -u || true)"
     if [[ -n "$pids" ]]; then
         echo "Force-stopping stubborn listener(s) on port ${port}: ${pids//$'\n'/ }"
+        af_kill_receipt "kill_port_listeners ${port} (${label}): KILL ${pids//$'\n'/ }"
         kill -9 $pids >/dev/null 2>&1 || true
     fi
 }
 
 kill_matching_processes() {
+    # Stops matching processes and WAITS for them to die. The wait is
+    # load-bearing for the gateway: a TERM'd serve process closes its port
+    # listener early in graceful shutdown but keeps holding
+    # <data_dir>/gateway_runner.lock until open connections (SSE ledger
+    # streams) drain and lifespan shutdown runs. Starting the replacement
+    # before the old process exits leaves the new gateway serving HTTP with a
+    # refused GatewayRunner — runs hang on "On Flow Start" with zero ledger.
     local label="$1"
     shift
     local pids=""
@@ -615,17 +636,55 @@ kill_matching_processes() {
     )"
     [[ -z "$pids" ]] && return 0
     echo "Stopping existing ${label} process(es): ${pids//$'\n'/ }"
+    af_kill_receipt "kill_matching_processes (${label}): TERM ${pids//$'\n'/ }"
     kill $pids >/dev/null 2>&1 || true
-    sleep 1
-    local stubborn=""
-    local pid
-    for pid in $pids; do
-        kill -0 "$pid" >/dev/null 2>&1 && stubborn+="$pid "
+    local i alive="" pid
+    for i in 1 2 3 4 5; do
+        alive=""
+        for pid in $pids; do
+            kill -0 "$pid" >/dev/null 2>&1 && alive+="$pid "
+        done
+        [[ -z "$alive" ]] && return 0
+        sleep 1
     done
-    if [[ -n "$stubborn" ]]; then
-        echo "Force-stopping stubborn ${label} process(es): $stubborn"
-        kill -9 $stubborn >/dev/null 2>&1 || true
+    echo "Force-stopping stubborn ${label} process(es): $alive"
+    af_kill_receipt "kill_matching_processes (${label}): KILL ${alive}"
+    kill -9 $alive >/dev/null 2>&1 || true
+    for i in 1 2 3; do
+        sleep 1
+        alive=""
+        for pid in $pids; do
+            kill -0 "$pid" >/dev/null 2>&1 && alive+="$pid "
+        done
+        [[ -z "$alive" ]] && return 0
+    done
+    echo "#FALLBACK ${label} process(es) still visible after KILL: $alive (likely zombies; inspect: ps -p ${alive// /,})"
+}
+
+require_gateway_runner_lock_free() {
+    # Prove the runner singleton lock is actually free before starting the
+    # replacement gateway: probe the exact kernel flock whose silent refusal
+    # (GatewayRunner.start -> one invisible warning) caused the stuck-runs
+    # incident. Process checks can be fooled; the flock cannot.
+    local lock_file="$1"
+    [[ -e "$lock_file" ]] || return 0
+    if "$PYTHON_BIN" - "$lock_file" <<'PY'
+import fcntl, sys
+try:
+    fh = open(sys.argv[1], "a")
+    fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    sys.exit(1)
+sys.exit(0)
+PY
+    then
+        return 0
     fi
+    local holders
+    holders="$(lsof -t -- "$lock_file" 2>/dev/null | sort -u | tr '\n' ' ' || true)"
+    die "gateway runner lock is still held: ${lock_file} (holder pid(s): ${holders:-unknown}).
+A gateway started now would serve HTTP but never tick runs (they hang on
+'On Flow Start' with zero ledger). Stop the holder first: kill ${holders:-<pid>}"
 }
 
 wait_for_url() {
@@ -775,7 +834,9 @@ mkdir -p "$ABSTRACTGATEWAY_DATA_DIR" "$LOG_DIR" "$(dirname "$LOCAL_GATEWAY_USER_
 if [[ "$STOP_EXISTING" != "0" && "$STOP_EXISTING" != "false" && "$STOP_EXISTING" != "False" ]]; then
     kill_matching_processes "AbstractObserver" "@abstractframework/observer" "abstractobserver"
     kill_matching_processes "AbstractFlow" "@abstractframework/flow" "abstractflow-editor"
-    kill_matching_processes "AbstractGateway" "$BIN_DIR/abstractgateway[[:space:]]+serve" "abstractgateway[[:space:]]+serve"
+    kill_matching_processes "AbstractGateway" \
+        "$BIN_DIR/abstractgateway[[:space:]]+serve" \
+        "abstractgateway(\\.cli)?[[:space:]]+serve"
 fi
 kill_port_listeners "$GATEWAY_PORT" "AbstractGateway"
 kill_port_listeners "$FLOW_PORT" "AbstractFlow"
@@ -784,6 +845,7 @@ kill_port_listeners "$OBSERVER_PORT" "AbstractObserver"
 port_in_use "$GATEWAY_CONNECT_HOST" "$GATEWAY_PORT" && die "gateway port is already in use: ${GATEWAY_HOST}:${GATEWAY_PORT}"
 port_in_use "$FLOW_CONNECT_HOST" "$FLOW_PORT" && die "flow port is already in use: ${FLOW_HOST}:${FLOW_PORT}"
 port_in_use "$OBSERVER_CONNECT_HOST" "$OBSERVER_PORT" && die "observer port is already in use: ${OBSERVER_HOST}:${OBSERVER_PORT}"
+require_gateway_runner_lock_free "$ABSTRACTGATEWAY_DATA_DIR/gateway_runner.lock"
 
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 FLOW_LOG="$LOG_DIR/flow.log"
@@ -867,6 +929,7 @@ env -u ABSTRACTGATEWAY_AUTH_TOKEN \
     HOST="$OBSERVER_HOST" \
     PORT="$OBSERVER_PORT" \
     ABSTRACTOBSERVER_GATEWAY_URL="$ABSTRACTOBSERVER_GATEWAY_URL" \
+    ABSTRACTOBSERVER_ENTITY_APP_URL="${ABSTRACTOBSERVER_ENTITY_APP_URL:-http://${ENTITY_HOST:-127.0.0.1}:${ENTITY_PORT:-3007}}" \
     "$NPX_BIN" --yes "$OBSERVER_NPM_SPEC" \
     >"$OBSERVER_LOG" 2>&1 &
 OBSERVER_PID=$!
@@ -890,6 +953,12 @@ echo "Observer local:  $OBSERVER_LOCAL_URL"
 if [[ -n "$OBSERVER_NETWORK_URL" ]]; then
     echo "Observer network: $OBSERVER_NETWORK_URL"
 fi
+# The entity, console, and code apps are their OWN packages — this stack does
+# not start them; point people at their launchers (or af.sh for everything).
+echo "Summoned entities (create, visit, own time): http://${ENTITY_HOST:-127.0.0.1}:${ENTITY_PORT:-3007}  (start it: scripts/entity.sh)"
+echo "Continuum console (backlog, codex, inbox):   http://${CONTINUUM_HOST:-127.0.0.1}:${CONTINUUM_PORT:-3003}  (start it: scripts/console.sh)"
+echo "Code assistant (browser):                    http://${CODE_HOST:-127.0.0.1}:${CODE_PORT:-3002}  (start it: scripts/code.sh)"
+echo "Whole framework in one command:              scripts/af.sh"
 echo
 
 sed -n '1,160p' "$GATEWAY_USERS_REPORT"

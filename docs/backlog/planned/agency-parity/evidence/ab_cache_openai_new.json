@@ -1,0 +1,31 @@
+{
+ "world": "new",
+ "status": "RunStatus.COMPLETED",
+ "distinct_system_prompts_across_calls": 1,
+ "system_prompt_first_line_example": "## MY PERSONA",
+ "per_call": [
+  {
+   "prompt_tokens": 2187,
+   "cached_tokens": 0
+  },
+  {
+   "prompt_tokens": 2414,
+   "cached_tokens": 2048
+  },
+  {
+   "prompt_tokens": 2644,
+   "cached_tokens": 2048
+  },
+  {
+   "prompt_tokens": 2883,
+   "cached_tokens": 2048
+  },
+  {
+   "prompt_tokens": 3083,
+   "cached_tokens": 2048
+  }
+ ],
+ "total_prompt_tokens": 13211,
+ "total_cached_tokens": 8192,
+ "cached_pct": 62.0
+}

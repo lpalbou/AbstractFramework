@@ -1,0 +1,14 @@
+{
+ "world": "new",
+ "status": "RunStatus.COMPLETED",
+ "llm_calls": 5,
+ "final_request_assistant_toolcall_msgs": 4,
+ "with_nonempty_reasoning_content": 4,
+ "example_thoughts": [
+  "We need to read notes_a.txt, notes_b.txt, notes_c.txt each with read_file tool, one per re",
+  "We need to read notes_b.txt next.",
+  "We need to read notes_c.txt now.",
+  "We have read all three notes. Need to write summary.txt combining the three facts. Combine"
+ ],
+ "task_done": true
+}
