@@ -86,6 +86,7 @@ Notes for LLMs working in this repo:
 - [abstractgateway/docs/shipped-workflows.md](abstractgateway/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
 - [docs/architecture.md](docs/architecture.md): How the stack fits together.
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
+- [docs/workspace-scripts.md](docs/workspace-scripts.md): Working from source: package inventory (scripts/lib/packages.txt), dependency tiers, build/status/pull/commit/push scripts.
 - [docs/adr/README.md](docs/adr/README.md): Cross-package ADR index and accepted platform contracts.
 
 ## Scenarios

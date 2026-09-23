@@ -7,6 +7,7 @@ Accepted (2026-05-09)
 - Proposed: 2026-05-09
 - Accepted: 2026-05-09
 - Updated: 2026-06-01 (aligned release sequence with `scripts/build.sh` tiers)
+- Updated: 2026-09-23 (tiers now come from `scripts/lib/packages.txt`, printed by `scripts/deps.sh`)
 
 ## Context
 
@@ -32,6 +33,14 @@ packages just because local tests or one workflow passed.
 Release packages in the same tier order used by `scripts/build.sh`, and never promote a package
 above a lower published dependency floor. The build order is the local development expression of
 the release topology; PyPI/npm visibility remains the release gate.
+
+The tiers are computed from the dependency edges recorded in `scripts/lib/packages.txt` (Python,
+npm and Rust packages; `./scripts/deps.sh` prints them, `./scripts/deps.sh check` verifies them
+against the package metadata, `./scripts/deps.sh rdeps <id>` lists what must follow a bump). That
+inventory is authoritative where it is more precise than the list below: `AbstractRuntime`
+depends on `abstractcore` and releases after it, `abstractgateway` depends on `abstractagent` and
+releases after it, `abstract3d` releases before `abstractcore`, and `abstractcode` is a Rust crate
+plus the `@abstractframework/code` npm app rather than a Python package.
 
 ### Standard Order
 

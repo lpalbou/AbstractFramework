@@ -19,6 +19,7 @@ FILES: list[str] = [
     "docs/api.md",
     "docs/faq.md",
     "docs/glossary.md",
+    "docs/workspace-scripts.md",
     "docs/scenarios/README.md",
     "docs/scenarios/offline-coding-assistant.md",
     "docs/scenarios/gateway-first-local-dev.md",

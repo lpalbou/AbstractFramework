@@ -142,8 +142,8 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 npx @abstractframework/flow
 ```
 
-When you work from source, the workspace helper scripts start the same services. The first health
-check should always be:
+When you work from source, the workspace helper scripts build and start the same services (see
+[Workspace scripts](workspace-scripts.md)). The first health check should always be:
 
 ```bash
 abstractframework doctor

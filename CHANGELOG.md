@@ -4,6 +4,24 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/lib/packages.txt`: one inventory of the 29 published packages (21 repositories) with
+  their registry names, sub-paths, dependency tiers and dependency edges, read by every workspace
+  script. `scripts/deps.sh` prints the tiers with their edges, reverse dependencies (`rdeps`) and
+  validates the inventory against the package files (`check`).
+- `scripts/push.sh` (dry run by default, `--yes` to push `main`, never forced) and
+  `scripts/pull.sh` (fetch + fast-forward only) for the whole workspace, grouped by tier.
+- `scripts/status.sh --registry` compares local versions with PyPI, npm and crates.io;
+  `--versions` and `--tiers` add the local versions and the dependency view.
+- `scripts/build.sh` builds every package in tier order: the seven AbstractUIC packages
+  individually, the npm apps, and the Rust crates `abstracttui`, `abstractcode` and
+  `abstractgateway-console`. New `--plan` and `AF_VENV_DIR`; `--python/--npm/--rust` combine; the
+  script exits non-zero when a selected build fails.
+- `scripts/install.sh` installs the 0.1.12 release with `--profile light|apple|gpu`, optional
+  `--with-apps`, `--with-console` and `--with-code-cli`, and prints its plan with `--print`.
+- Documentation: [docs/workspace-scripts.md](docs/workspace-scripts.md).
+
 ## [0.1.12] - 2026-09-23
 
 ### Changed

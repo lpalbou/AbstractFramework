@@ -80,6 +80,7 @@ Authoring                                Operations
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
+| **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
 | **[FAQ](faq.md)** | Common questions, troubleshooting, comparisons |

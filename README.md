@@ -261,6 +261,7 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | [docs/faq.md](docs/faq.md) | Common questions, comparisons, troubleshooting |
 | [docs/api.md](docs/api.md) | Meta-package API (pins, helpers, re-exports) |
+| [docs/workspace-scripts.md](docs/workspace-scripts.md) | Working from source: package tiers, build, status, pull/commit/push scripts |
 
 ---
 
@@ -270,8 +271,14 @@ Clone all sibling repos and build everything in editable mode:
 
 ```bash
 ./scripts/clone.sh           # clone every sibling repository next to this one
-source ./scripts/build.sh    # editable installs into .venv (use `source` to stay in the venv)
+./scripts/deps.sh            # dependency tiers: what builds and installs first, and why
+source ./scripts/build.sh    # Python (editable, into .venv), npm and Rust builds, tier by tier
 ```
+
+Keep the whole workspace in sync with `./scripts/status.sh` (git overview per tier; `--registry`
+compares local versions with PyPI, npm and crates.io), `./scripts/pull.sh`, `./scripts/commit.sh`
+and `./scripts/push.sh` (a dry run until you add `--yes`). See
+[docs/workspace-scripts.md](docs/workspace-scripts.md) for every script and option.
 
 Then configure:
 

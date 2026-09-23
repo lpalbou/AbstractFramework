@@ -265,3 +265,4 @@ assistant tray
 - **[Configuration](configuration.md)** — where defaults live and how to configure them
 - **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)
 - **[FAQ](faq.md)** — comparisons, offline operation, troubleshooting
+- **[Workspace scripts](workspace-scripts.md)** — work from source: clone, build and sync every package in dependency order
