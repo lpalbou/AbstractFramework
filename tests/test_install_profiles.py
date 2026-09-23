@@ -401,7 +401,9 @@ def test_install_scripts_carry_the_same_prebuilt_wheel_overrides() -> None:
     assert "$AfWithWheels = 'webrtcvad-wheels>=2.0.14'" in ps1
     ps_nb = re.search(r"^\$AfNoBuildPackages = @\((.*)\)$", ps1, flags=re.M)
     assert ps_nb is not None and re.findall(r"'([^']+)'", ps_nb.group(1)) == _NO_BUILD
-    assert "'--with', $AfWithWheels, '--overrides', $overridesFile" in ps1
+    # relative name + Push-Location: uv splits an --overrides value at whitespace
+    assert "'--with', $AfWithWheels, '--overrides', 'uv-overrides.txt'" in ps1
+    assert "Push-Location -LiteralPath $DataDir" in ps1
     assert "@('--no-build-package', $p)" in ps1
 
 
@@ -417,7 +419,9 @@ def test_install_sh_print_shows_the_prebuilt_wheel_install_command(tmp_path: Pat
     ).stdout
     install = next(line for line in out.splitlines() if " tool install --python 3.12 " in line)
     assert "--with 'webrtcvad-wheels>=2.0.14' --overrides " in install
-    assert "uv-overrides.txt" in install
+    # uv splits an --overrides value at whitespace (macOS "Application Support"), so the
+    # install runs from the data dir with a relative file name
+    assert install.lstrip().startswith("$ cd ") and " --overrides uv-overrides.txt " in install
     assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
     assert re.search(r" abstractgateway==\S+$", install.rstrip()), install
     for line in _sh_overrides():

@@ -547,14 +547,20 @@ if [ "$PRINT" = 1 ]; then
 else
     af_uv_overrides >"$OVERRIDES_FILE"
 fi
-set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS" --overrides "$OVERRIDES_FILE"
+# uv splits an --overrides value at whitespace ("Application Support"), so the install
+# runs from the data dir and names the file relatively.
+set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS" --overrides uv-overrides.txt
 for _p in $AF_NO_BUILD_PACKAGES; do set -- "$@" --no-build-package "$_p"; done
 [ "$WITH_CORE_CLI" = 1 ] && set -- "$@" --with-executables-from abstractcore
 if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
     run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
 else
     [ -n "$FROM" ] && set -- "$@" --reinstall
+    _cwd="$(pwd)"
+    RUN_SHOW="cd $(q "$DATA_DIR") && $(show_cmd "$@" "$GW_SPEC")"
+    [ "$PRINT" = 1 ] || cd "$DATA_DIR"
     run "install abstractgateway" "$@" "$GW_SPEC"
+    [ "$PRINT" = 1 ] || cd "$_cwd" 2>/dev/null || cd "$HOME"
 fi
 AFTER="$BEFORE"
 if [ "$PRINT" = 0 ]; then

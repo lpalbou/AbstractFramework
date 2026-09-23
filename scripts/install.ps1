@@ -461,14 +461,22 @@ function Main {
         # UTF-8 without a BOM (Set-Content -Encoding UTF8 adds one on PowerShell 5.1).
         [System.IO.File]::WriteAllText($overridesFile, (($AfUvOverrides -split "`r?`n") -join "`n") + "`n")
     }
-    $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels, '--overrides', $overridesFile)
+    # uv splits an --overrides value at whitespace (a user name with a space), so the
+    # install runs from the data dir and names the file relatively.
+    $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels, '--overrides', 'uv-overrides.txt')
     foreach ($p in $AfNoBuildPackages) { $argv += @('--no-build-package', $p) }
     if ($WithCoreCli) { $argv += @('--with-executables-from', 'abstractcore') }
     if ($before -and $Pin -eq 'latest' -and -not $From -and $state['PROFILE'] -eq $profileName) {
         Invoke-Native -Description 'upgrade abstractgateway' -Argv @($uv, 'tool', 'upgrade', 'abstractgateway') | Out-Null
     } else {
         if ($From) { $argv += '--reinstall' }
-        Invoke-Native -Description 'install abstractgateway' -Argv ($argv + @($gwSpec)) | Out-Null
+        $shownInstall = "Set-Location $(Format-Arg $DataDir); $(Format-Cmd ($argv + @($gwSpec)))"
+        if (-not $script:DryRun) { Push-Location -LiteralPath $DataDir }
+        try {
+            Invoke-Native -Description 'install abstractgateway' -Argv ($argv + @($gwSpec)) -Shown $shownInstall | Out-Null
+        } finally {
+            if (-not $script:DryRun) { Pop-Location }
+        }
     }
     $after = $before
     if (-not $script:DryRun) {
