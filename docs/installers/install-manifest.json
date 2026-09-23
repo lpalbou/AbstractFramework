@@ -1,4 +1,168 @@
 {
+  "bootstrap": {
+    "default_port": 8080,
+    "flags": [
+      {
+        "env": "AF_PROFILE",
+        "ps": "-Profile",
+        "sh": "--profile auto|light|apple|gpu",
+        "summary": "Install profile; auto picks apple on Apple Silicon macOS 14+, gpu when nvidia-smi/rocminfo works, light otherwise."
+      },
+      {
+        "env": "AF_PORT",
+        "ps": "-Port",
+        "sh": "--port N",
+        "summary": "Gateway port (default 8080; the next free port when 8080 is busy)."
+      },
+      {
+        "env": "AF_PIN",
+        "ps": "-Pin",
+        "sh": "--pin VERSION|latest",
+        "summary": "abstractgateway version (default: bootstrap.gateway_version)."
+      },
+      {
+        "env": "AF_FROM",
+        "ps": "-From",
+        "sh": "--from PATH|REQUIREMENT",
+        "summary": "Install the gateway from a checkout, wheel or requirement (testing)."
+      },
+      {
+        "env": "AF_DATA_DIR",
+        "ps": "-DataDir",
+        "sh": "--data-dir DIR",
+        "summary": "Gateway data dir (default: the per-OS user data dir)."
+      },
+      {
+        "env": "",
+        "ps": "-WithApps",
+        "sh": "--with-apps",
+        "summary": "Ensure Node.js >= 18 for the npx browser apps (uv tool install nodejs-wheel)."
+      },
+      {
+        "env": "",
+        "ps": "-WithConsole",
+        "sh": "--with-console",
+        "summary": "cargo install abstractgateway-console when cargo exists."
+      },
+      {
+        "env": "",
+        "ps": "-WithCodeCli",
+        "sh": "--with-code-cli",
+        "summary": "cargo install abstractcode (terminal client) when cargo exists."
+      },
+      {
+        "env": "",
+        "ps": "-WithCoreCli",
+        "sh": "--with-core-cli",
+        "summary": "Also expose the abstractcore command (--with-executables-from abstractcore)."
+      },
+      {
+        "env": "",
+        "ps": "-WithOllama",
+        "sh": "--with-ollama",
+        "summary": "Run Ollama's official installer (Linux/macOS may ask for sudo)."
+      },
+      {
+        "env": "",
+        "ps": "-WithLmStudio",
+        "sh": "--with-lmstudio",
+        "summary": "Install LM Studio (headless llmster on macOS/Linux, winget on Windows)."
+      },
+      {
+        "env": "",
+        "ps": "-NoTray",
+        "sh": "--no-tray",
+        "summary": "Skip the tray extra."
+      },
+      {
+        "env": "",
+        "ps": "-NoService",
+        "sh": "--no-service",
+        "summary": "Do not register a login service; start the gateway in the background."
+      },
+      {
+        "env": "",
+        "ps": "-NoStart",
+        "sh": "--no-start",
+        "summary": "Install only."
+      },
+      {
+        "env": "",
+        "ps": "-NoOpen",
+        "sh": "--no-open",
+        "summary": "Do not open the browser."
+      },
+      {
+        "env": "",
+        "ps": "-Print",
+        "sh": "--print",
+        "summary": "Dry run: preflight, then print every command; change nothing."
+      },
+      {
+        "env": "",
+        "ps": "-Uninstall [-Purge]",
+        "sh": "--uninstall [--purge]",
+        "summary": "Remove the service and uv tools (purge also deletes the data dir)."
+      }
+    ],
+    "gateway_version": "0.2.30",
+    "optional_extras": [
+      "tray"
+    ],
+    "profile_extras": {
+      "apple": [
+        "apple"
+      ],
+      "gpu": [
+        "gpu"
+      ],
+      "light": []
+    },
+    "python": "3.12",
+    "scripts": {
+      "unix": {
+        "one_liner": "curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh",
+        "platforms": [
+          "macos",
+          "linux"
+        ],
+        "url": "https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh",
+        "with_flags": "curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --with-apps"
+      },
+      "windows": {
+        "one_liner": "powershell -ExecutionPolicy ByPass -c \"irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex\"",
+        "platforms": [
+          "windows"
+        ],
+        "url": "https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1",
+        "with_flags": "& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -WithApps"
+      }
+    },
+    "steps": [
+      "preflight (OS, arch, macOS >= 14 for apple, GPU driver for gpu, disk, port)",
+      "install uv when missing (astral.sh official script, no admin)",
+      "uv python install 3.12",
+      "uv tool install --python 3.12 \"abstractgateway[<extras>]==<pin>\"",
+      "optional: nodejs-wheel, cargo crates, Ollama / LM Studio vendor installers",
+      "abstractgateway service install (when supported) or a background start",
+      "wait for GET /api/health",
+      "abstractgateway-config claim-url (when supported) and open /console"
+    ],
+    "tool_requirement": "abstractgateway[{extras}]==0.2.30",
+    "uninstall": [
+      [
+        "abstractgateway",
+        "service",
+        "uninstall"
+      ],
+      [
+        "uv",
+        "tool",
+        "uninstall",
+        "abstractgateway"
+      ]
+    ]
+  },
   "framework": {
     "distribution": "abstractframework",
     "id": "abstractframework",
@@ -7,7 +171,7 @@
     "registry": "pypi",
     "version": "0.1.12"
   },
-  "minimum_installer_version": "0.1.0",
+  "minimum_installer_version": "0.2.0",
   "npm_apps": [
     {
       "command": "npx @abstractframework/flow",
@@ -46,24 +210,66 @@
     }
   ],
   "post_install": {
-    "core_config": [
-      "abstractcore",
-      "--config"
+    "apps": [
+      [
+        "npx",
+        "-y",
+        "@abstractframework/flow"
+      ],
+      [
+        "npx",
+        "-y",
+        "@abstractframework/code"
+      ],
+      [
+        "npx",
+        "-y",
+        "@abstractframework/observer"
+      ],
+      [
+        "npx",
+        "-y",
+        "@abstractframework/continuum"
+      ],
+      [
+        "npx",
+        "-y",
+        "@abstractframework/entity"
+      ]
     ],
+    "claim": [
+      "abstractgateway-config",
+      "claim-url"
+    ],
+    "claim_fallback": {
+      "command": [
+        "abstractgateway-config",
+        "bootstrap-admin",
+        "--print-token"
+      ],
+      "token_file": "<data_dir>/auth/bootstrap-admin-token"
+    },
+    "console_url": "http://127.0.0.1:8080/console",
     "doctor": [
       "abstractframework",
       "doctor"
     ],
-    "gateway_flow": {
-      "flow": [
-        "npx",
-        "@abstractframework/flow"
-      ],
-      "gateway": [
-        "abstractgateway",
-        "serve"
-      ]
-    }
+    "entrypoint": "console",
+    "gateway": [
+      "abstractgateway",
+      "serve",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "8080"
+    ],
+    "health_url": "http://127.0.0.1:8080/api/health",
+    "notes": "Providers, API keys, engines, models and users are configured in the gateway console (/console first-run wizard); every console action prints its CLI twin.",
+    "service": [
+      "abstractgateway",
+      "service",
+      "install"
+    ]
   },
   "profiles": [
     {
@@ -204,10 +410,10 @@
       "version": "0.5.0"
     }
   ],
-  "schema_version": 1,
+  "schema_version": 2,
   "security": {
     "native_artifacts_signed": false,
-    "notes": "Prototype manifest; production installer artifacts must add signatures.",
+    "notes": "The bootstrap is a script (curl | sh, irm | iex) that installs signed-by-vendor or PyPI/npm artifacts; nothing it runs needs our code signature. Only native double-click apps (AbstractAssistant .app, future launchers) need signing.",
     "secrets_in_manifest": false
   },
   "source": {

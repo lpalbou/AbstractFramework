@@ -1,289 +1,731 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # =============================================================================
-# AbstractFramework — installer (published packages)
+# AbstractFramework bootstrap installer (macOS / Linux)
 # =============================================================================
-# Installs the pinned AbstractFramework release from the public registries
-# (PyPI, npm, crates.io) — NOT from local checkouts (that is scripts/build.sh).
-# The versions below mirror docs/installers/install-manifest.json;
-# scripts/tests/test_inventory.sh fails when they drift.
+# One line, no admin rights, no system Python needed:
 #
-# Usage:
-#   curl -sSL https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | bash
-#   curl -sSL .../install.sh | bash -s -- --profile apple --with-apps
-#   ./scripts/install.sh [options]
+#   curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+#   curl -LsSf .../install.sh | sh -s -- --with-apps --with-ollama
 #
-# Options:
-#   --profile light|apple|gpu   Python profile (default: light, or $AF_PROFILE)
-#                                 light  remote-first: cloud APIs / endpoint servers
-#                                 apple  + local MLX/Metal engines (macOS 14+, Apple Silicon)
-#                                 gpu    + local CUDA/ROCm engines (Linux/Windows)
-#   --with-apps                 also `npm install -g` the browser apps at their
-#                               released versions (flow, code, observer,
-#                               continuum, entity); needs Node.js 18+.
-#                               Without it, run them on demand with `npx`.
-#   --with-console              also `cargo install abstractgateway-console`
-#                               (terminal console for the gateway; Rust 1.87+)
-#   --with-code-cli             also `cargo install abstractcode` (terminal client)
-#   --venv DIR                  virtualenv to create/use when none is active
-#                               (default: ./.venv, or $AF_VENV_DIR)
-#   --print, --dry-run          print the plan (tier order + commands), install nothing
-#   --print-versions            print "<registry> <name> <version>" lines and exit
-#   -h, --help                  this help
+# What it does (every step prints its command; `--print` shows them all and
+# changes nothing):
+#   1. preflight: OS/arch, macOS >= 14 (apple profile), NVIDIA/ROCm (gpu
+#      profile), free disk, a free port, systemd user bus (Linux)
+#   2. uv (https://docs.astral.sh/uv) if missing, then Python 3.12 through uv
+#   3. `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"`
+#      (isolated, user-scoped; commands land in ~/.local/bin)
+#   4. optional: Node.js for the browser apps, terminal tools, Ollama, LM Studio
+#   5. registers the gateway as a user service when the installed gateway
+#      supports `abstractgateway service install`, otherwise starts it in the
+#      background; waits for /api/health
+#   6. opens the gateway console (one-time claim URL when supported)
+#
+# Options (environment twins in brackets):
+#   --profile auto|light|apple|gpu  install profile (default auto)          [AF_PROFILE]
+#   --port N                 gateway port (default 8080, next free if busy)  [AF_PORT]
+#   --pin VERSION|latest     abstractgateway version (default: install manifest) [AF_PIN]
+#   --from PATH|REQUIREMENT  install the gateway from a checkout, wheel or
+#                            requirement instead of the pinned release      [AF_FROM]
+#   --manifest PATH          read the pin from this install-manifest.json
+#   --data-dir DIR           gateway data dir (default: per-OS user data dir) [AF_DATA_DIR]
+#   --with-apps              make sure Node.js >= 18 exists for the npx apps
+#                            (uv tool install nodejs-wheel; no admin)
+#   --with-console           cargo install the terminal console (needs Rust)
+#   --with-code-cli          cargo install the AbstractCode terminal client
+#   --with-core-cli          also expose the `abstractcore` command
+#   --with-ollama            run Ollama's official installer (may ask for sudo)
+#   --with-lmstudio          run LM Studio's headless installer (llmster)
+#   --no-tray                skip the tray extra
+#   --no-service             do not register a login service; start in background
+#   --no-start               install only; do not start the gateway
+#   --no-open                do not open the browser
+#   --no-modify-path         do not run `uv tool update-shell`
+#   --print, --dry-run       show the plan and commands; change nothing
+#   --print-versions         print the pinned versions and exit
+#   --uninstall [--purge]    remove the service and the uv tools (--purge also
+#                            deletes the gateway data dir)
+#   -v, --verbose            show the full output of every command
+#   -h, --help               this help
 # =============================================================================
 
-set -euo pipefail
+if [ -n "${ZSH_VERSION:-}" ]; then emulate sh; fi
+set -eu
 
 # ---------------------------------------------------------------------------
-# Release pins — keep in sync with docs/installers/install-manifest.json
-# (checked by scripts/tests/test_inventory.sh).
+# Release pins. The gateway pin mirrors `bootstrap.gateway_version` in
+# docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
+# on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_VERSION="0.1.12"
-
-# Python packages the root meta-package pins, in dependency-tier order
-# ("tier|distribution|version"; tiers from scripts/lib/packages.txt).
-PY_RELEASE=(
-    "0|AbstractMemory|0.3.0"
-    "0|abstractsemantics|0.0.5"
-    "0|abstractvoice|0.11.3"
-    "0|abstractvision|0.3.29"
-    "0|abstractmusic|0.1.15"
-    "2|abstractcore|2.13.42"
-    "3|AbstractRuntime|0.4.32"
-    "4|abstractagent|0.3.13"
-    "4|abstractassistant|0.5.0"
-    "5|abstractgateway|0.2.30"
-    "6|abstractframework|${AF_VERSION}"
-)
-
-# Browser apps (npm), run with `npx <package>` or installed with --with-apps.
-NPM_APPS=(
-    "@abstractframework/flow|0.3.20"
-    "@abstractframework/code|0.4.2"
-    "@abstractframework/observer|0.1.12"
-    "@abstractframework/continuum|0.2.0"
-    "@abstractframework/entity|0.1.0"
-)
-
-# Optional Rust terminal tools (crates.io). The install manifest has no crate
-# section yet; these follow the released crates (docs/install.md).
-CRATE_CONSOLE="abstractgateway-console|0.6.0"
-CRATE_CODE_CLI="abstractcode|0.5.1"
+AF_GATEWAY_PIN_DEFAULT="0.2.30"
+AF_PYTHON="3.12"
+AF_NPM_APPS="@abstractframework/flow@0.3.20 @abstractframework/code@0.4.2 @abstractframework/observer@0.1.12 @abstractframework/continuum@0.2.0 @abstractframework/entity@0.1.0"
+AF_CRATE_CONSOLE="abstractgateway-console@0.6.0"
+AF_CRATE_CODE_CLI="abstractcode@0.5.1"
+AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
+AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
 
 # ---------------------------------------------------------------------------
-# CLI
+# Options
 # ---------------------------------------------------------------------------
-PROFILE="${AF_PROFILE:-light}"
-WITH_APPS=false
-WITH_CONSOLE=false
-WITH_CODE_CLI=false
-PRINT_ONLY=false
-VENV_DIR="${AF_VENV_DIR:-.venv}"
+PROFILE="${AF_PROFILE:-auto}"
+PORT="${AF_PORT:-}"
+PIN="${AF_PIN:-}"
+FROM="${AF_FROM:-}"
+MANIFEST=""
+DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
+WITH_APPS=0; WITH_CONSOLE=0; WITH_CODE_CLI=0; WITH_CORE_CLI=0
+WITH_OLLAMA=0; WITH_LMSTUDIO=0
+NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
+PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0
 
 usage() {
-    local self="${BASH_SOURCE[0]:-}"
-    if [[ -n "$self" && -f "$self" ]]; then
-        sed -n '2,32p' "$self" | sed 's/^# \{0,1\}//'
+    if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
+        sed -n '2,50p' "$0" | sed 's/^# \{0,1\}//'
     else
-        echo "Usage: install.sh [--profile light|apple|gpu] [--with-apps] [--with-console] [--with-code-cli] [--venv DIR] [--print]"
+        echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
+        echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
+        echo "Full help: $AF_DOCS"
     fi
 }
 
-while [[ $# -gt 0 ]]; do
+need_arg() { [ $# -ge 2 ] && [ -n "$2" ] || { echo "ERROR: $1 needs a value" >&2; exit 2; }; }
+
+while [ $# -gt 0 ]; do
     case "$1" in
-        --profile) shift; PROFILE="${1:-}" ;;
-        --profile=*) PROFILE="${1#--profile=}" ;;
+        --profile) need_arg "$@"; PROFILE="$2"; shift ;;
+        --profile=*) PROFILE="${1#*=}" ;;
         --light|--apple|--gpu) PROFILE="${1#--}" ;;
-        --with-apps) WITH_APPS=true ;;
-        --with-console) WITH_CONSOLE=true ;;
-        --with-code-cli) WITH_CODE_CLI=true ;;
-        --venv) shift; VENV_DIR="${1:-}" ;;
-        --venv=*) VENV_DIR="${1#--venv=}" ;;
-        --print|--dry-run|-n) PRINT_ONLY=true ;;
+        --port) need_arg "$@"; PORT="$2"; shift ;;
+        --port=*) PORT="${1#*=}" ;;
+        --pin) need_arg "$@"; PIN="$2"; shift ;;
+        --pin=*) PIN="${1#*=}" ;;
+        --from) need_arg "$@"; FROM="$2"; shift ;;
+        --from=*) FROM="${1#*=}" ;;
+        --manifest) need_arg "$@"; MANIFEST="$2"; shift ;;
+        --manifest=*) MANIFEST="${1#*=}" ;;
+        --data-dir) need_arg "$@"; DATA_DIR="$2"; shift ;;
+        --data-dir=*) DATA_DIR="${1#*=}" ;;
+        --with-apps) WITH_APPS=1 ;;
+        --with-console) WITH_CONSOLE=1 ;;
+        --with-code-cli) WITH_CODE_CLI=1 ;;
+        --with-core-cli) WITH_CORE_CLI=1 ;;
+        --with-ollama) WITH_OLLAMA=1 ;;
+        --with-lmstudio) WITH_LMSTUDIO=1 ;;
+        --no-tray) NO_TRAY=1 ;;
+        --no-service) NO_SERVICE=1 ;;
+        --no-start) NO_START=1 ;;
+        --no-open) NO_OPEN=1 ;;
+        --no-modify-path) NO_MODIFY_PATH=1 ;;
+        --print|--dry-run|-n) PRINT=1 ;;
         --print-versions)
-            echo "pypi abstractframework ${AF_VERSION}"
-            for entry in "${PY_RELEASE[@]}"; do
-                IFS='|' read -r _t dist ver <<<"$entry"
-                [[ "$dist" == "abstractframework" ]] || echo "pypi $dist $ver"
-            done
-            for entry in "${NPM_APPS[@]}"; do echo "npm ${entry%%|*} ${entry#*|}"; done
-            for entry in "$CRATE_CONSOLE" "$CRATE_CODE_CLI"; do echo "crates ${entry%%|*} ${entry#*|}"; done
-            exit 0
-            ;;
+            echo "pypi abstractgateway $AF_GATEWAY_PIN_DEFAULT"
+            for spec in $AF_NPM_APPS; do echo "npm ${spec%@*} ${spec##*@}"; done
+            for spec in $AF_CRATE_CONSOLE $AF_CRATE_CODE_CLI; do echo "crates ${spec%@*} ${spec##*@}"; done
+            exit 0 ;;
+        --uninstall) UNINSTALL=1 ;;
+        --purge) PURGE=1 ;;
+        -v|--verbose) VERBOSE=1 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
     shift
 done
 
-case "$PROFILE" in
-    light) PIP_REQUIREMENT="abstractframework==${AF_VERSION}" ;;
-    apple) PIP_REQUIREMENT="abstractframework[apple]==${AF_VERSION}" ;;
-    gpu)   PIP_REQUIREMENT="abstractframework[gpu]==${AF_VERSION}" ;;
-    *) echo "ERROR: unknown profile '$PROFILE' (expected light, apple or gpu)" >&2; exit 2 ;;
-esac
-
 # ---------------------------------------------------------------------------
-# Helpers
+# Output helpers
 # ---------------------------------------------------------------------------
-banner() {
-  printf "\n%s\n" "============================================================"
-  printf "%s\n" "  AbstractFramework ${AF_VERSION} — install (profile: ${PROFILE})"
-  printf "%s\n" "============================================================"
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != "dumb" ]; then
+    C_B="$(printf '\033[1m')"; C_D="$(printf '\033[2m')"; C_R="$(printf '\033[31m')"
+    C_G="$(printf '\033[32m')"; C_Y="$(printf '\033[33m')"; C_C="$(printf '\033[36m')"; C_0="$(printf '\033[0m')"
+else
+    C_B=""; C_D=""; C_R=""; C_G=""; C_Y=""; C_C=""; C_0=""
+fi
+STEP=0
+step() { STEP=$((STEP + 1)); printf '\n%s[%s] %s%s\n' "$C_B" "$STEP" "$1" "$C_0"; }
+ok()   { printf '  %s✓%s %s\n' "$C_G" "$C_0" "$1"; }
+info() { printf '  %s·%s %s\n' "$C_C" "$C_0" "$1"; }
+warn() { printf '  %s!%s %s\n' "$C_Y" "$C_0" "$1"; }
+die()  { printf '\n%sERROR:%s %s\n' "$C_R" "$C_0" "$1" >&2; exit 1; }
+
+# Shell-quote one word for display.
+q() {
+    case "$1" in
+        ''|*[!A-Za-z0-9_./:=@,+%-]*) printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")" ;;
+        *) printf '%s' "$1" ;;
+    esac
+}
+show_cmd() {
+    _line=""
+    for _w in "$@"; do _line="$_line $(q "$_w")"; done
+    printf '%s' "${_line# }"
 }
 
-require_cmd() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "ERROR: required command not found: $1${2:+ ($2)}"
-    exit 1
-  fi
-}
+TWINS=""
+twin() { TWINS="${TWINS}    $1
+"; }
 
-py_version_ok() {
-  python3 - <<'PY'
-import sys
-ok = sys.version_info >= (3, 10)
-print("ok" if ok else "bad")
-PY
-}
-
-# Run (or, with --print, only show) a command.
+LOG_FILE=""
+# run DESCRIPTION CMD... : print the command, run it quietly (log) or verbosely.
 run() {
-  echo "  \$ $*"
-  $PRINT_ONLY && return 0
-  "$@"
-}
-
-print_plan() {
-  echo ""
-  echo "Install plan — dependency tiers (lowest first; pip resolves them in one step):"
-  local entry tier dist ver next last="" idx=0
-  while [[ "$idx" -lt "${#PY_RELEASE[@]}" ]]; do
-    IFS='|' read -r tier dist ver <<<"${PY_RELEASE[$idx]}"
-    if [[ "$tier" != "$last" ]]; then
-      printf "  tier %s:" "$tier"
-      last="$tier"
-    fi
-    printf " %s==%s" "$dist" "$ver"
-    next="${PY_RELEASE[$((idx + 1))]:-}"
-    [[ "${next%%|*}" != "$tier" ]] && echo ""
-    idx=$((idx + 1))
-  done
-  echo "  python profile: ${PROFILE}  ->  pip install \"${PIP_REQUIREMENT}\""
-  echo ""
-  echo "Browser apps (npm; need a running gateway and Node.js 18+):"
-  for entry in "${NPM_APPS[@]}"; do
-    if $WITH_APPS; then
-      printf "  %-32s %-8s npm install -g %s@%s\n" "${entry%%|*}" "${entry#*|}" "${entry%%|*}" "${entry#*|}"
+    _desc="$1"; shift
+    _shown="${RUN_SHOW:-$(show_cmd "$@")}"; RUN_SHOW=""
+    printf '  %s$ %s%s\n' "$C_D" "$_shown" "$C_0"
+    twin "$_shown"
+    _soft="$RUN_SOFT"; RUN_SOFT=0
+    [ "$PRINT" = 1 ] && return 0
+    _rc=0
+    if [ "$VERBOSE" = 1 ] || [ -z "$LOG_FILE" ]; then
+        "$@" || _rc=$?
     else
-      printf "  %-32s %-8s run on demand: npx %s\n" "${entry%%|*}" "${entry#*|}" "${entry%%|*}"
+        printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
+        "$@" >>"$LOG_FILE" 2>&1 || _rc=$?
     fi
-  done
-  echo ""
-  echo "Terminal tools (crates.io, optional):"
-  printf "  %-32s %-8s %s\n" "${CRATE_CONSOLE%%|*}" "${CRATE_CONSOLE#*|}" \
-    "$($WITH_CONSOLE && echo "cargo install --locked ${CRATE_CONSOLE%%|*} --version ${CRATE_CONSOLE#*|}" || echo "not selected (add --with-console)")"
-  printf "  %-32s %-8s %s\n" "${CRATE_CODE_CLI%%|*}" "${CRATE_CODE_CLI#*|}" \
-    "$($WITH_CODE_CLI && echo "cargo install --locked ${CRATE_CODE_CLI%%|*} --version ${CRATE_CODE_CLI#*|}" || echo "not selected (add --with-code-cli)")"
-  echo ""
+    [ "$_rc" = 0 ] && return 0
+    if [ "$_soft" = 1 ]; then
+        warn "$_desc did not succeed (exit $_rc; details in ${LOG_FILE:-the output above}); continuing"
+        return 0
+    fi
+    if [ -n "$LOG_FILE" ] && [ "$VERBOSE" = 0 ]; then
+        printf '%s--- last lines of %s ---%s\n' "$C_D" "$LOG_FILE" "$C_0" >&2
+        tail -n 25 "$LOG_FILE" >&2 || true
+    fi
+    die "$_desc failed (command: $_shown)"
+}
+RUN_SOFT=0
+# run_sh DESCRIPTION 'shell pipeline' : for the vendor `curl ... | sh` one-liners.
+RUN_SHOW=""
+run_sh() { RUN_SHOW="$2"; run "$1" sh -c "$2"; }
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+http_get() {  # URL -> body on stdout; non-zero when unreachable
+    if have curl; then curl -fsS --connect-timeout 2 --max-time 5 "$1" 2>/dev/null
+    elif have wget; then wget -qO- --timeout=5 "$1" 2>/dev/null
+    else return 1; fi
+}
+fetch_cmd() {  # the downloader as a shell fragment, for `... | sh`
+    if have curl; then echo "curl -LsSf"; elif have wget; then echo "wget -qO-"; else echo ""; fi
 }
 
 # ---------------------------------------------------------------------------
-# Main
+# Platform facts
 # ---------------------------------------------------------------------------
-banner
-print_plan
-
-if $PRINT_ONLY; then
-  echo "Commands (--print: nothing is executed):"
+OS="$(uname -s)"; ARCH="$(uname -m)"
+case "$OS" in
+    Darwin) OS_ID=macos ;;
+    Linux)  OS_ID=linux ;;
+    MINGW*|MSYS*|CYGWIN*) die "Windows: use install.ps1 (powershell -ExecutionPolicy ByPass -c \"irm .../install.ps1 | iex\")." ;;
+    *) die "unsupported OS: $OS (supported: macOS, Linux; Windows uses install.ps1)" ;;
+esac
+MACOS_VERSION=""; MACOS_MAJOR=0
+if [ "$OS_ID" = macos ]; then
+    MACOS_VERSION="$(sw_vers -productVersion 2>/dev/null || echo 0)"
+    MACOS_MAJOR="${MACOS_VERSION%%.*}"
 fi
 
-require_cmd python3 "Python 3.10+"
-if [[ "$(py_version_ok)" != "ok" ]]; then
-  echo "ERROR: Python 3.10+ is required. Detected: $(python3 --version 2>&1)"
-  exit 1
+if [ -z "$DATA_DIR" ]; then
+    if [ "$OS_ID" = macos ]; then DATA_DIR="$HOME/Library/Application Support/AbstractGateway"
+    else DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/abstractgateway"; fi
 fi
-echo "✓ Python: $(python3 --version 2>&1)"
+STATE_FILE="$DATA_DIR/bootstrap.env"
+PID_FILE="$DATA_DIR/gateway.pid"
+LOG_DIR="$DATA_DIR/logs"
+GATEWAY_LOG="$LOG_DIR/gateway.log"
+
+# Previous run state (port, service mode, whether we installed Node).
+ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""
+if [ -f "$STATE_FILE" ]; then
+    ST_PORT="$(sed -n 's/^PORT=//p' "$STATE_FILE" | tail -n 1)"
+    ST_MODE="$(sed -n 's/^MODE=//p' "$STATE_FILE" | tail -n 1)"
+    ST_NODE_WHEEL="$(sed -n 's/^NODE_WHEEL=//p' "$STATE_FILE" | tail -n 1)"
+    ST_PROFILE="$(sed -n 's/^PROFILE=//p' "$STATE_FILE" | tail -n 1)"
+fi
+
+# ---------------------------------------------------------------------------
+# uv discovery
+# ---------------------------------------------------------------------------
+UV=""
+find_uv() {
+    if have uv; then UV="$(command -v uv)"; return 0; fi
+    for _c in "${UV_INSTALL_DIR:-}/uv" "${XDG_BIN_HOME:-}/uv" "$HOME/.local/bin/uv" "$HOME/.cargo/bin/uv"; do
+        if [ -x "$_c" ]; then UV="$_c"; return 0; fi
+    done
+    return 1
+}
+TOOL_BIN=""
+tool_bin() {
+    if [ -n "$UV" ] && [ -x "$UV" ]; then TOOL_BIN="$("$UV" tool dir --bin 2>/dev/null || true)"; fi
+    [ -n "$TOOL_BIN" ] || TOOL_BIN="${UV_TOOL_BIN_DIR:-${XDG_BIN_HOME:-$HOME/.local/bin}}"
+}
+
+gateway_supports() {  # gateway_supports service|claim-url
+    case "$1" in
+        service) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" service --help >/dev/null 2>&1 ;;
+        claim-url) [ -x "$TOOL_BIN/abstractgateway-config" ] && "$TOOL_BIN/abstractgateway-config" claim-url --help >/dev/null 2>&1 ;;
+    esac
+}
+
+pid_alive() { [ -f "$PID_FILE" ] && _p="$(cat "$PID_FILE" 2>/dev/null)" && [ -n "$_p" ] && kill -0 "$_p" 2>/dev/null; }
+
+stop_background_gateway() {
+    if pid_alive; then
+        _p="$(cat "$PID_FILE")"
+        run "stop the background gateway" kill "$_p"
+        if [ "$PRINT" = 0 ]; then
+            _i=0; while kill -0 "$_p" 2>/dev/null && [ "$_i" -lt 20 ]; do sleep 0.5; _i=$((_i + 1)); done
+            kill -0 "$_p" 2>/dev/null && kill -9 "$_p" 2>/dev/null || true
+            rm -f "$PID_FILE"
+        fi
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Uninstall
+# ---------------------------------------------------------------------------
+if [ "$UNINSTALL" = 1 ]; then
+    printf '%sAbstractFramework uninstall%s%s\n' "$C_B" "$C_0" "$([ "$PRINT" = 1 ] && echo ' (--print: nothing is changed)')"
+    find_uv || true; tool_bin
+    step "Gateway service and processes"
+    if gateway_supports service; then
+        run "remove the gateway service" "$TOOL_BIN/abstractgateway" service uninstall
+    elif [ "$ST_MODE" = service ]; then
+        warn "the state file says a service was registered, but this gateway has no 'service' command; remove it by hand ($AF_DOCS)"
+    fi
+    stop_background_gateway
+    step "uv tools"
+    if [ -n "$UV" ]; then
+        if "$UV" tool list 2>/dev/null | grep -q '^abstractgateway '; then
+            run "uninstall abstractgateway" "$UV" tool uninstall abstractgateway
+        else info "abstractgateway is not installed as a uv tool"; fi
+        if [ "$ST_NODE_WHEEL" = 1 ] && "$UV" tool list 2>/dev/null | grep -q '^nodejs-wheel '; then
+            run "uninstall nodejs-wheel" "$UV" tool uninstall nodejs-wheel
+        fi
+    else
+        info "uv not found; nothing to uninstall there"
+    fi
+    step "Data"
+    if [ "$PURGE" = 1 ]; then
+        run "delete the gateway data dir" rm -rf "$DATA_DIR"
+    else
+        info "kept the gateway data dir: $DATA_DIR (delete it with --uninstall --purge)"
+    fi
+    info "kept: uv ($([ -n "$UV" ] && echo "$UV" || echo 'not found')), Ollama, LM Studio, and any cargo tools"
+    printf '\n%sDone.%s\n' "$C_G" "$C_0"
+    exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Pin resolution
+# ---------------------------------------------------------------------------
+manifest_pin() {
+    sed -n 's/.*"gateway_version": *"\([^"]*\)".*/\1/p' "$1" 2>/dev/null | head -n 1
+}
+PIN_SOURCE=""
+if [ -n "$PIN" ]; then PIN_SOURCE="--pin"
+elif [ -n "$FROM" ]; then PIN_SOURCE="--from"
+else
+    if [ -z "$MANIFEST" ] && [ -f "$0" ]; then
+        _m="$(dirname "$0")/../docs/installers/install-manifest.json"
+        [ -f "$_m" ] && MANIFEST="$_m"
+    fi
+    if [ -n "$MANIFEST" ]; then
+        [ -f "$MANIFEST" ] || die "--manifest: no such file: $MANIFEST"
+        PIN="$(manifest_pin "$MANIFEST")"
+        [ -n "$PIN" ] || die "no bootstrap.gateway_version in $MANIFEST"
+        PIN_SOURCE="$MANIFEST"
+    else
+        PIN="$AF_GATEWAY_PIN_DEFAULT"; PIN_SOURCE="built into install.sh"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# 1. Preflight
+# ---------------------------------------------------------------------------
+printf '%sAbstractFramework bootstrap%s  %s%s%s\n' "$C_B" "$C_0" "$C_D" \
+    "$([ "$PRINT" = 1 ] && echo '(--print: preflight only, nothing is installed)' || echo "$AF_SCRIPT_URL")" "$C_0"
+
+step "Preflight"
+ok "system: $OS_ID $ARCH$([ -n "$MACOS_VERSION" ] && echo " (macOS $MACOS_VERSION)")"
+DL="$(fetch_cmd)"
+[ -n "$DL" ] || die "need curl or wget"
+
+HAS_NVIDIA=0; HAS_ROCM=0
+if have nvidia-smi && nvidia-smi -L >/dev/null 2>&1; then HAS_NVIDIA=1; fi
+if have rocminfo && rocminfo >/dev/null 2>&1; then HAS_ROCM=1; fi
+APPLE_OK=0
+if [ "$OS_ID" = macos ] && [ "$ARCH" = arm64 ] && [ "$MACOS_MAJOR" -ge 14 ] 2>/dev/null; then APPLE_OK=1; fi
 
 case "$PROFILE" in
-  apple)
-    if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
-      echo "WARNING: the apple profile targets Apple Silicon macOS 14+; this is $(uname -s)/$(uname -m)."
-    fi
-    ;;
-  gpu)
-    if [[ "$(uname -s)" == "Darwin" ]]; then
-      echo "WARNING: the gpu profile targets Linux/Windows CUDA/ROCm hosts; on a Mac use --profile apple."
-    fi
-    ;;
+    auto|"")
+        if [ -n "$ST_PROFILE" ]; then PROFILE="$ST_PROFILE"; _why="kept from the previous install"
+        elif [ "$APPLE_OK" = 1 ]; then PROFILE=apple; _why="Apple Silicon, macOS $MACOS_VERSION"
+        elif [ "$HAS_NVIDIA" = 1 ]; then PROFILE=gpu; _why="nvidia-smi found a GPU"
+        elif [ "$HAS_ROCM" = 1 ]; then PROFILE=gpu; _why="rocminfo found a GPU"
+        else PROFILE=light; _why="no local accelerator stack detected"; fi
+        ok "profile: $PROFILE ($_why; override with --profile)" ;;
+    light) ok "profile: light (remote/endpoint engines only)" ;;
+    apple)
+        [ "$OS_ID" = macos ] && [ "$ARCH" = arm64 ] || die "the apple profile needs an Apple Silicon Mac (this is $OS_ID $ARCH); use --profile light"
+        [ "$MACOS_MAJOR" -ge 14 ] 2>/dev/null || die "the apple profile needs macOS 14 or later (this is $MACOS_VERSION); use --profile light"
+        ok "profile: apple (local MLX/Metal engines)" ;;
+    gpu)
+        [ "$OS_ID" = linux ] || die "the gpu profile targets Linux (Windows: install.ps1); on a Mac use --profile apple"
+        if [ "$HAS_NVIDIA" = 0 ] && [ "$HAS_ROCM" = 0 ]; then
+            warn "gpu profile requested but neither nvidia-smi nor rocminfo works; local GPU engines will fall back to CPU"
+        fi
+        ok "profile: gpu (local CUDA/ROCm engines)" ;;
+    *) die "unknown profile '$PROFILE' (expected auto, light, apple or gpu)" ;;
 esac
 
-if $WITH_APPS; then
-  $PRINT_ONLY || require_cmd npm "Node.js 18+ for --with-apps"
-elif command -v node >/dev/null 2>&1; then
-  echo "✓ Node.js: $(node --version) (browser apps run with npx)"
+EXTRAS=""
+case "$PROFILE" in apple) EXTRAS="apple" ;; gpu) EXTRAS="gpu" ;; esac
+if [ "$NO_TRAY" = 0 ]; then
+    if [ "$OS_ID" = macos ] || [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+        EXTRAS="${EXTRAS:+$EXTRAS,}tray"
+    else
+        info "no display: the tray extra is skipped"
+    fi
+fi
+
+# Gateway requirement.
+if [ -n "$FROM" ]; then
+    if [ -e "$FROM" ]; then
+        _abs="$(cd "$(dirname "$FROM")" && pwd)/$(basename "$FROM")"
+        GW_SPEC="abstractgateway${EXTRAS:+[$EXTRAS]} @ file://$_abs"
+    else
+        GW_SPEC="$FROM"
+    fi
+elif [ "$PIN" = latest ]; then
+    GW_SPEC="abstractgateway${EXTRAS:+[$EXTRAS]}"
 else
-  echo "ℹ Node.js not found (optional). Install Node 18+ to run the browser apps (npx @abstractframework/flow, ...)."
+    GW_SPEC="abstractgateway${EXTRAS:+[$EXTRAS]}==$PIN"
 fi
-if $WITH_CONSOLE || $WITH_CODE_CLI; then
-  $PRINT_ONLY || require_cmd cargo "Rust toolchain from https://rustup.rs for the terminal tools"
+ok "gateway: $GW_SPEC  ${C_D}(pin from $PIN_SOURCE)${C_0}"
+
+# Disk.
+case "$PROFILE" in apple) NEED_MB=8000 ;; gpu) NEED_MB=12000 ;; *) NEED_MB=1500 ;; esac
+[ "$WITH_APPS" = 1 ] && NEED_MB=$((NEED_MB + 300))
+FREE_MB="$(df -Pk "$HOME" 2>/dev/null | awk 'NR==2 {print int($4/1024)}')"
+if [ -n "$FREE_MB" ]; then
+    if [ "$FREE_MB" -lt 1000 ]; then die "only ${FREE_MB} MB free under $HOME (about ${NEED_MB} MB needed)"
+    elif [ "$FREE_MB" -lt "$NEED_MB" ]; then warn "only ${FREE_MB} MB free under $HOME; the $PROFILE profile needs about ${NEED_MB} MB (models need more)"
+    else ok "disk: ${FREE_MB} MB free (about ${NEED_MB} MB needed, models extra)"; fi
 fi
 
-# Create a venv if none is active.
-if [[ -z "${VIRTUAL_ENV:-}" ]]; then
-  echo ""
-  echo "Virtual environment: ${VENV_DIR}"
-  run python3 -m venv "$VENV_DIR"
-  if ! $PRINT_ONLY; then
-    # shellcheck disable=SC1091
-    source "$VENV_DIR/bin/activate"
-    echo "✓ Activated: $VIRTUAL_ENV"
-  else
-    echo "  \$ source ${VENV_DIR}/bin/activate"
-  fi
+# Port.
+port_busy() {
+    if have lsof; then lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1 && return 0
+    fi
+    if have ss; then ss -ltnH 2>/dev/null | awk '{print $4}' | grep -Eq "[:.]$1\$" && return 0
+    fi
+    if have curl; then
+        curl -s -o /dev/null --connect-timeout 1 --max-time 2 "http://127.0.0.1:$1/" 2>/dev/null
+        [ $? -ne 7 ] && return 0
+    fi
+    return 1
+}
+is_our_gateway() {  # port -> 0 when an abstractgateway answers there
+    http_get "http://127.0.0.1:$1/api/health" | grep -q '"abstractgateway"'
+}
+REUSE_RUNNING=0
+if [ -z "$PORT" ]; then PORT="${ST_PORT:-8080}"; PORT_EXPLICIT=0; else PORT_EXPLICIT=1; fi
+case "$PORT" in ''|*[!0-9]*) die "--port must be a number (got '$PORT')" ;; esac
+if port_busy "$PORT"; then
+    if [ "$PORT" = "$ST_PORT" ] && { pid_alive || { [ "$ST_MODE" = service ] && is_our_gateway "$PORT"; }; }; then
+        REUSE_RUNNING=1
+        ok "port $PORT: this install's gateway is already running (it will be restarted if the package changes)"
+    elif [ "$PORT_EXPLICIT" = 1 ]; then
+        die "port $PORT is already in use by another process; pick another one with --port"
+    else
+        _p=$((PORT + 1))
+        while [ "$_p" -le $((PORT + 20)) ] && port_busy "$_p"; do _p=$((_p + 1)); done
+        [ "$_p" -le $((PORT + 20)) ] || die "ports $PORT-$((PORT + 20)) are all busy; pick one with --port"
+        warn "port $PORT is in use by another process; using $_p (kept for future runs)"
+        PORT="$_p"
+    fi
 else
-  echo "✓ Using existing virtualenv: $VIRTUAL_ENV"
+    ok "port $PORT is free"
+fi
+BASE_URL="http://127.0.0.1:$PORT"
+
+# Linux ARM64: abstractcore 2.13 caps psutil below 6, and psutil 5.x ships no
+# aarch64 Linux wheel, so uv builds it from source and needs a C compiler.
+if [ "$OS_ID" = linux ] && { [ "$ARCH" = aarch64 ] || [ "$ARCH" = arm64 ]; } && ! have cc && ! have gcc; then
+    warn "Linux ARM64 without a C compiler: psutil must be built from source; install one first (Debian/Ubuntu: sudo apt-get install -y gcc)"
 fi
 
-echo ""
-echo "Python packages (profile ${PROFILE}):"
-run python3 -m pip install -U pip
-run python3 -m pip install "$PIP_REQUIREMENT"
-
-if $WITH_APPS; then
-  echo ""
-  echo "Browser apps (npm, global):"
-  for entry in "${NPM_APPS[@]}"; do
-    run npm install -g "${entry%%|*}@${entry#*|}"
-  done
+# Linux service manager.
+SYSTEMD_USER=0
+if [ "$OS_ID" = linux ]; then
+    if have systemctl && systemctl --user show-environment >/dev/null 2>&1; then
+        SYSTEMD_USER=1; ok "systemd user session available"
+    elif [ "$NO_SERVICE" = 0 ]; then
+        warn "no systemd user session (container or minimal SSH host): the gateway will run in the background, not as a service"
+    fi
 fi
 
-if $WITH_CONSOLE; then
-  echo ""
-  echo "Gateway terminal console (crates.io):"
-  run cargo install --locked "${CRATE_CONSOLE%%|*}" --version "${CRATE_CONSOLE#*|}"
-fi
-if $WITH_CODE_CLI; then
-  echo ""
-  echo "AbstractCode terminal client (crates.io):"
-  run cargo install --locked "${CRATE_CODE_CLI%%|*}" --version "${CRATE_CODE_CLI#*|}"
+# ---------------------------------------------------------------------------
+# 2. uv + Python
+# ---------------------------------------------------------------------------
+if [ "$PRINT" = 0 ]; then
+    mkdir -p "$LOG_DIR"
+    LOG_FILE="$LOG_DIR/install-$(date +%Y%m%d-%H%M%S).log"
+    ( umask 077; : >"$LOG_FILE" )
 fi
 
-echo ""
-if $PRINT_ONLY; then
-  echo "✓ Plan printed (--print): nothing was installed."
-  exit 0
+step "uv (Python toolchain manager)"
+if find_uv; then
+    ok "uv found: $UV ($("$UV" --version 2>/dev/null | awk '{print $2}'))"
+else
+    info "installing uv from astral.sh into ~/.local/bin (no admin)"
+    run_sh "install uv" "$DL https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh"
+    if [ "$PRINT" = 1 ]; then UV="uv"; else find_uv || die "uv was installed but cannot be found (looked in \$UV_INSTALL_DIR, \$XDG_BIN_HOME, ~/.local/bin)"; ok "uv installed: $UV"; fi
 fi
-echo "✓ Done."
+if [ "$PRINT" = 1 ] && [ "$UV" = uv ]; then TOOL_BIN="${UV_TOOL_BIN_DIR:-${XDG_BIN_HOME:-$HOME/.local/bin}}"; else tool_bin; fi
+
+step "Python $AF_PYTHON (managed by uv, isolated from any system Python)"
+run "install Python $AF_PYTHON" "$UV" python install "$AF_PYTHON"
+
+# ---------------------------------------------------------------------------
+# 3. Gateway
+# ---------------------------------------------------------------------------
+step "AbstractGateway"
+BEFORE=""
+if [ "$PRINT" = 0 ]; then BEFORE="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"; fi
+set -- "$UV" tool install --python "$AF_PYTHON"
+[ "$WITH_CORE_CLI" = 1 ] && set -- "$@" --with-executables-from abstractcore
+if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
+    run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
+else
+    [ -n "$FROM" ] && set -- "$@" --reinstall
+    run "install abstractgateway" "$@" "$GW_SPEC"
+fi
+AFTER="$BEFORE"
+if [ "$PRINT" = 0 ]; then
+    AFTER="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"
+    [ -x "$TOOL_BIN/abstractgateway" ] || die "abstractgateway is not in $TOOL_BIN after the install"
+    if [ -z "$BEFORE" ]; then ok "installed abstractgateway $AFTER"
+    elif [ "$BEFORE" = "$AFTER" ] && [ -z "$FROM" ]; then ok "abstractgateway $AFTER already installed"
+    else ok "abstractgateway $BEFORE -> $AFTER"; fi
+fi
+ST_SPEC=""
+[ -f "$STATE_FILE" ] && ST_SPEC="$(sed -n 's/^GATEWAY_SPEC=//p' "$STATE_FILE" | tail -n 1)"
+CHANGED=0
+if [ "$BEFORE" != "$AFTER" ] || [ -n "$FROM" ] || { [ -n "$ST_SPEC" ] && [ "$ST_SPEC" != "$GW_SPEC" ]; }; then CHANGED=1; fi
+GW="$TOOL_BIN/abstractgateway"
+GWCFG="$TOOL_BIN/abstractgateway-config"
+
+case ":$PATH:" in
+    *":$TOOL_BIN:"*) ;;
+    *)
+        if [ "$NO_MODIFY_PATH" = 0 ]; then
+            RUN_SOFT=1 run "add $TOOL_BIN to PATH in your shell profile" "$UV" tool update-shell
+            info "open a new terminal for the 'abstractgateway' command to be on PATH"
+        else
+            warn "$TOOL_BIN is not on PATH; add it yourself or use absolute paths"
+        fi ;;
+esac
+
+# ---------------------------------------------------------------------------
+# 4. Optional components
+# ---------------------------------------------------------------------------
+NODE_WHEEL="${ST_NODE_WHEEL:-0}"
+if [ "$WITH_APPS" = 1 ]; then
+    step "Node.js for the browser apps"
+    _nv="$(node -v 2>/dev/null | sed 's/^v//; s/\..*//')" || true
+    if [ -n "$_nv" ] && [ "$_nv" -ge 18 ] 2>/dev/null; then
+        ok "Node.js $(node -v) found"
+    elif [ -x "$TOOL_BIN/node" ]; then
+        ok "Node.js from nodejs-wheel: $TOOL_BIN/node"
+    else
+        info "no Node.js >= 18: installing the nodejs-wheel uv tool (node, npm, npx in $TOOL_BIN; no admin)"
+        run "install nodejs-wheel" "$UV" tool install nodejs-wheel
+        NODE_WHEEL=1
+    fi
+    info "apps are not installed globally; each runs on demand (first launch downloads it):"
+    for spec in $AF_NPM_APPS; do
+        printf '      npx -y %s   %s# ABSTRACTGATEWAY_URL=%s%s\n' "$spec" "$C_D" "$BASE_URL" "$C_0"
+    done
+fi
+
+if [ "$WITH_CONSOLE" = 1 ] || [ "$WITH_CODE_CLI" = 1 ]; then
+    step "Terminal tools (crates.io)"
+    for _sel in console code; do
+        if [ "$_sel" = console ]; then [ "$WITH_CONSOLE" = 1 ] || continue; _c="$AF_CRATE_CONSOLE"
+        else [ "$WITH_CODE_CLI" = 1 ] || continue; _c="$AF_CRATE_CODE_CLI"; fi
+        if have cargo; then
+            run "cargo install ${_c%@*}" cargo install --locked "${_c%@*}" --version "${_c##*@}"
+        else
+            warn "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked ${_c%@*} --version ${_c##*@}"
+        fi
+    done
+fi
+
+if [ "$WITH_OLLAMA" = 1 ]; then
+    step "Ollama (vendor installer)"
+    if have ollama || http_get "http://127.0.0.1:11434/api/version" >/dev/null; then
+        ok "Ollama already installed or reachable; skipped"
+    else
+        if [ "$OS_ID" = linux ]; then
+            warn "Ollama's Linux installer uses sudo: it installs to /usr/local and creates a system service. It may ask for your password."
+        else
+            warn "Ollama's installer moves Ollama.app to /Applications and may ask for your password for /usr/local/bin/ollama."
+        fi
+        run_sh "install Ollama" "$DL https://ollama.com/install.sh | sh"
+    fi
+fi
+
+if [ "$WITH_LMSTUDIO" = 1 ]; then
+    step "LM Studio (headless daemon, vendor installer)"
+    if have lms || [ -x "$HOME/.lmstudio/bin/lms" ] || [ -d "/Applications/LM Studio.app" ] || http_get "http://127.0.0.1:1234/v1/models" >/dev/null; then
+        ok "LM Studio already installed or reachable; skipped"
+    else
+        if [ "$OS_ID" = macos ] && [ "$ARCH" != arm64 ]; then
+            warn "LM Studio supports Apple Silicon Macs only; skipped"
+        else
+            [ "$OS_ID" = linux ] && warn "the LM Studio installer may ask for sudo to add libatomic1."
+            run_sh "install LM Studio (llmster)" "curl -fsSL https://lmstudio.ai/install.sh | bash"
+            info "start its server with: ~/.lmstudio/bin/lms daemon up && ~/.lmstudio/bin/lms server start --port 1234 --bind 127.0.0.1"
+        fi
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# 5. Service / start
+# ---------------------------------------------------------------------------
+write_state() {
+    [ "$PRINT" = 1 ] && return 0
+    mkdir -p "$DATA_DIR"
+    {
+        echo "# written by AbstractFramework install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "PORT=$PORT"; echo "MODE=$MODE"; echo "PROFILE=$PROFILE"
+        echo "NODE_WHEEL=$NODE_WHEEL"; echo "GATEWAY_SPEC=$GW_SPEC"; echo "GATEWAY_VERSION=$AFTER"
+    } >"$STATE_FILE"
+}
+
+export ABSTRACTGATEWAY_DATA_DIR="$DATA_DIR"
+# The released 0.2.x gateway refuses to start without an auth mode; user auth with a
+# bootstrapped admin is the loopback default from 0.3 on. Setting it is harmless there.
+export ABSTRACTGATEWAY_USER_AUTH=1
+
+MODE=none
+SERVICE_OK=0
+if gateway_supports service; then SERVICE_OK=1; fi
+USE_SERVICE=0
+if [ "$NO_SERVICE" = 0 ] && { [ "$OS_ID" = macos ] || [ "$SYSTEMD_USER" = 1 ]; }; then
+    # In --print mode the gateway may not be installed yet: show the service path.
+    if [ "$SERVICE_OK" = 1 ] || [ "$PRINT" = 1 ]; then USE_SERVICE=1; fi
+fi
+
+if [ "$NO_START" = 1 ]; then
+    step "Start"
+    info "--no-start: the gateway is installed but not started"
+    MODE="${ST_MODE:-none}"
+elif [ "$USE_SERVICE" = 1 ]; then
+    step "Login service ($([ "$OS_ID" = macos ] && echo 'LaunchAgent' || echo 'systemd --user'))"
+    if [ "$PRINT" = 1 ] && [ "$SERVICE_OK" = 0 ]; then
+        info "(only when the installed gateway has 'abstractgateway service'; otherwise it starts in the background)"
+    fi
+    stop_background_gateway
+    run "register the gateway service" "$GW" service install --host 127.0.0.1 --port "$PORT"
+    MODE=service
+else
+    step "Start in the background"
+    if [ "$NO_SERVICE" = 0 ] && [ "$PRINT" = 0 ] && [ "$SERVICE_OK" = 0 ]; then
+        warn "gateway $AFTER has no 'abstractgateway service' command: it will not start at login"
+        info "re-run this installer after the gateway upgrades, or set up a login item by hand: $AF_DOCS#run-at-login"
+    fi
+    if [ "$REUSE_RUNNING" = 1 ] && [ "$CHANGED" = 0 ] && pid_alive; then
+        ok "already running (pid $(cat "$PID_FILE")), unchanged"
+    else
+        stop_background_gateway
+        _cmd="ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") ABSTRACTGATEWAY_USER_AUTH=1 nohup $(q "$GW") serve --host 127.0.0.1 --port $PORT >>$(q "$GATEWAY_LOG") 2>&1 &"
+        printf '  %s$ %s%s\n' "$C_D" "$_cmd" "$C_0"
+        twin "$_cmd"
+        if [ "$PRINT" = 0 ]; then
+            ( umask 077; : >>"$GATEWAY_LOG" )
+            nohup "$GW" serve --host 127.0.0.1 --port "$PORT" >>"$GATEWAY_LOG" 2>&1 </dev/null &
+            echo $! >"$PID_FILE"
+            ok "started (pid $(cat "$PID_FILE")), log: $GATEWAY_LOG"
+        fi
+    fi
+    MODE=background
+fi
+write_state
+
+# ---------------------------------------------------------------------------
+# 6. Health + console
+# ---------------------------------------------------------------------------
+CONSOLE_URL="$BASE_URL/console"
+if [ "$NO_START" = 0 ]; then
+    step "Health check"
+    twin "curl $BASE_URL/api/health"
+    if [ "$PRINT" = 1 ]; then
+        info "would wait up to 60 s for $BASE_URL/api/health"
+    else
+        _i=0
+        until http_get "$BASE_URL/api/health" | grep -q '"abstractgateway"'; do
+            _i=$((_i + 1))
+            if [ "$MODE" = background ] && ! pid_alive; then
+                tail -n 30 "$GATEWAY_LOG" >&2 || true
+                die "the gateway exited during startup (log: $GATEWAY_LOG)"
+            fi
+            [ "$_i" -ge 60 ] && { tail -n 30 "$GATEWAY_LOG" >&2 2>/dev/null || true; die "no answer from $BASE_URL/api/health after 60 s (log: $GATEWAY_LOG)"; }
+            sleep 1
+        done
+        ok "gateway healthy at $BASE_URL (${_i}s)"
+    fi
+
+    step "Console sign-in"
+    CLAIMED=0
+    if [ "$PRINT" = 0 ] && gateway_supports claim-url; then
+        _claim="$("$GWCFG" claim-url --base-url "$BASE_URL" 2>>"$LOG_FILE" | grep -Eo 'https?://[^[:space:]]+' | tail -n 1)" || true
+        if [ -n "$_claim" ]; then
+            CONSOLE_URL="$_claim"; CLAIMED=1
+            twin "$(show_cmd "$GWCFG" claim-url --base-url "$BASE_URL")"
+            ok "one-time sign-in link created (valid 10 minutes, this machine only)"
+        else
+            warn "'abstractgateway-config claim-url' is present but returned no URL (see $LOG_FILE); falling back to the admin token"
+        fi
+    elif [ "$PRINT" = 1 ]; then
+        info "$(show_cmd abstractgateway-config claim-url --base-url "$BASE_URL")   (when supported)"
+    fi
+    TOKEN_FILE="$DATA_DIR/auth/bootstrap-admin-token"
+    if [ "$CLAIMED" = 0 ]; then
+        info "sign in as 'admin' with the token in: $TOKEN_FILE"
+        info "    cat $(q "$TOKEN_FILE")"
+    fi
+
+    if [ "$NO_OPEN" = 1 ] || [ "$PRINT" = 1 ]; then
+        info "open: $CONSOLE_URL"
+    elif [ "$OS_ID" = macos ] && have open; then
+        if open "$CONSOLE_URL" >/dev/null 2>&1; then ok "opened the console in your browser"; else info "open: $CONSOLE_URL"; fi
+    elif [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && have xdg-open; then
+        if xdg-open "$CONSOLE_URL" >/dev/null 2>&1; then ok "opened the console in your browser"; else info "open: $CONSOLE_URL"; fi
+    else
+        info "open: $CONSOLE_URL"
+        info "remote host? tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): nothing was changed.' || echo 'AbstractFramework is installed.')" "$C_0"
+printf '  %-11s %s\n' "Console:" "$BASE_URL/console" "Gateway:" "$GW_SPEC ($PROFILE profile)" \
+    "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
 echo ""
-echo "Check the install, then configure providers:"
-echo "   abstractframework doctor"
-echo "   abstractcore --config"
-echo ""
-echo "Start the gateway (control plane), then a browser app against it:"
-echo "   abstractgateway serve --host 127.0.0.1 --port 8080"
-echo "   npx @abstractframework/flow        # or: code, observer, continuum, entity"
-echo "   # built-in web console: http://127.0.0.1:8080/console"
-echo ""
-echo "Docs:"
-echo "  - Install guide:   https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
-echo "  - Getting started: https://github.com/lpalbou/AbstractFramework/blob/main/docs/getting-started.md"
+echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service stop" || echo "kill \$(cat $(q "$PID_FILE"))")"
+echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service start" || echo "re-run this installer, or: ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve --host 127.0.0.1 --port $PORT")"
+echo "  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)"
+echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
+echo "  Check:      uvx abstractframework doctor"
+echo "  Apps:       npx -y @abstractframework/flow   (also: code, observer, continuum, entity)"
+echo "  Docs:       $AF_DOCS"
+if [ -n "$TWINS" ]; then
+    echo ""
+    echo "  The same steps by hand:"
+    printf '%s' "$TWINS"
+fi
+[ -n "$LOG_FILE" ] && printf '\n  %sFull log: %s%s\n' "$C_D" "$LOG_FILE" "$C_0"
+exit 0

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import tomllib
 from pathlib import Path
@@ -228,4 +229,213 @@ def test_cli_manifest_check_and_doctor_report() -> None:
     assert report["abstractframework"] == tomllib.loads(
         (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     )["project"]["version"]
-    assert {check["status"] for check in report["checks"]} <= {"ok", "warn", "error"}
+    assert {check["status"] for check in report["checks"]} <= {"ok", "warn", "error", "info"}
+
+
+# --- bootstrap installers, manifest v2 and doctor (WS5) ---------------------------------------
+
+
+def test_manifest_bootstrap_section_pins_the_released_gateway() -> None:
+    from abstractframework.install_manifest import build_install_manifest
+
+    manifest = build_install_manifest()
+    bootstrap = manifest["bootstrap"]
+    release_versions = _release_versions()
+
+    assert manifest["schema_version"] == 2
+    assert bootstrap["gateway_version"] == release_versions["abstractgateway"]
+    assert bootstrap["python"] == "3.12"
+    assert bootstrap["profile_extras"] == {"light": [], "apple": ["apple"], "gpu": ["gpu"]}
+    assert bootstrap["scripts"]["unix"]["url"].endswith("/scripts/install.sh")
+    assert bootstrap["scripts"]["windows"]["url"].endswith("/scripts/install.ps1")
+    assert "| sh" in bootstrap["scripts"]["unix"]["one_liner"]
+    assert "-ExecutionPolicy ByPass" in bootstrap["scripts"]["windows"]["one_liner"]
+    for flag in bootstrap["flags"]:
+        assert flag["sh"].startswith("--") and flag["ps"].startswith("-")
+
+
+def test_manifest_post_install_is_console_first() -> None:
+    from abstractframework.install_manifest import build_install_manifest
+
+    post = build_install_manifest()["post_install"]
+    assert post["entrypoint"] == "console"
+    assert post["gateway"][:2] == ["abstractgateway", "serve"]
+    assert "127.0.0.1" in post["gateway"]
+    assert post["console_url"].endswith("/console")
+    assert post["claim"] == ["abstractgateway-config", "claim-url"]
+    assert post["claim_fallback"]["token_file"].endswith("auth/bootstrap-admin-token")
+    # The old config front door must not come back: the console configures providers.
+    assert "core_config" not in post
+    assert all(cmd[:2] == ["npx", "-y"] for cmd in post["apps"])
+
+
+def test_manifest_validates_against_schema() -> None:
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = json.loads(
+        (ROOT / "docs" / "installers" / "install-manifest.schema.json").read_text(encoding="utf-8")
+    )
+    manifest = json.loads(
+        (ROOT / "docs" / "installers" / "install-manifest.json").read_text(encoding="utf-8")
+    )
+    jsonschema.validate(manifest, schema)
+    broken = dict(manifest)
+    broken.pop("bootstrap")
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(broken, schema)
+
+
+def _script_pins(text: str) -> dict[str, str]:
+    pins: dict[str, str] = {}
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) == 3:
+            pins[f"{parts[0]}:{parts[1]}"] = parts[2]
+    return pins
+
+
+def test_bootstrap_scripts_embed_the_manifest_pins() -> None:
+    import subprocess
+
+    from abstractframework import NPM_RELEASE_VERSIONS
+    from abstractframework.install_manifest import build_install_manifest
+
+    manifest = build_install_manifest()
+    out = subprocess.run(
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--print-versions"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    sh_pins = _script_pins(out)
+    assert sh_pins["pypi:abstractgateway"] == manifest["bootstrap"]["gateway_version"]
+    for package, version in NPM_RELEASE_VERSIONS.items():
+        assert sh_pins[f"npm:{package}"] == version
+
+    ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    match = re.search(r"^\$AfGatewayPinDefault = '([^']+)'", ps1, flags=re.MULTILINE)
+    assert match and match.group(1) == manifest["bootstrap"]["gateway_version"]
+    ps_apps = re.search(r"^\$AfNpmApps = @\((.*)\)$", ps1, flags=re.MULTILINE)
+    assert ps_apps is not None
+    for package, version in NPM_RELEASE_VERSIONS.items():
+        assert f"'{package}@{version}'" in ps_apps.group(1)
+    sh_crates = {k: v for k, v in sh_pins.items() if k.startswith("crates:")}
+    for key, version in sh_crates.items():
+        assert f"'{key.split(':', 1)[1]}@{version}'" in ps1
+
+
+def test_install_sh_reads_the_pin_from_the_manifest(tmp_path: Path) -> None:
+    import subprocess
+
+    manifest = tmp_path / "install-manifest.json"
+    manifest.write_text('{\n  "bootstrap": {\n    "gateway_version": "9.9.9"\n  }\n}\n')
+    out = subprocess.run(
+        [
+            "sh", str(ROOT / "scripts" / "install.sh"), "--print", "--profile", "light",
+            "--port", "18999", "--manifest", str(manifest), "--no-tray",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
+    ).stdout
+    assert "abstractgateway==9.9.9" in out
+    assert "nothing was changed" in out
+    assert not (tmp_path / ".local").exists(), "--print must not install anything"
+
+
+def _serve(routes: dict[str, object]):
+    import http.server
+    import threading
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self) -> None:  # noqa: N802
+            body = routes.get(self.path)
+            if body is None:
+                self.send_response(404)
+                self.end_headers()
+                return
+            data = json.dumps(body).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def do_POST(self) -> None:  # noqa: N802 - the doctor must never mutate
+            raise AssertionError("doctor sent a POST")
+
+        def log_message(self, *args: object) -> None:
+            return
+
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server
+
+
+def test_doctor_probes_gateway_and_engines_read_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from abstractframework.cli import build_doctor_report, main
+
+    server = _serve(
+        {
+            "/api/health": {"status": "healthy", "service": "abstractgateway"},
+            "/api/version": {"version": "0.34.3"},
+            "/v1/models": {"data": [{"id": "qwen3-8b"}, {"id": "gemma"}]},
+        }
+    )
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    cfg = fake_bin / "abstractgateway-config"
+    cfg.write_text(
+        "#!/bin/sh\n"
+        'echo \'{"gateway": {"data_dir": "/data/gw", "auth_configured": true, '
+        '"store_backend": "file"}, "service": {"installed": true}}\'\n'
+    )
+    cfg.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{fake_bin}{os.pathsep}{os.environ.get('PATH', '')}")
+    monkeypatch.setenv("ABSTRACTGATEWAY_URL", base)
+    monkeypatch.setenv("OLLAMA_BASE_URL", base)
+    monkeypatch.setenv("LMSTUDIO_BASE_URL", f"{base}/v1")
+    try:
+        report = build_doctor_report(include_environment=True, include_network=True, timeout=2)
+    finally:
+        server.shutdown()
+
+    checks = {check["id"]: check for check in report["checks"]}  # type: ignore[index]
+    assert report["schema"] == "abstractframework_doctor_v2"
+    assert {"os", "arch", "python"} <= set(report["platform"])  # type: ignore[arg-type]
+    assert checks["gateway"]["status"] == "ok"
+    assert checks["gateway"]["data"]["url"] == base
+    assert checks["gateway:config"]["data"]["data_dir"] == "/data/gw"
+    assert checks["gateway:config"]["data"]["service"] == {"installed": True}
+    assert checks["engine:ollama"]["status"] == "ok"
+    assert checks["engine:ollama"]["data"]["version"] == "0.34.3"
+    assert checks["engine:lmstudio"]["data"]["models"] == 2
+    for key in ("python", "uv", "node", "disk", "profile:apple", "profile:gpu"):
+        assert key in checks
+    assert {check["status"] for check in report["checks"]} <= {"ok", "warn", "error", "info"}  # type: ignore[union-attr]
+
+    assert main(["doctor", "--json", "--no-network"]) in (0, 1)
+
+
+def test_doctor_reports_unreachable_gateway_as_warning(monkeypatch: pytest.MonkeyPatch) -> None:
+    import socket
+
+    from abstractframework.cli import build_doctor_report
+
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    sock.close()  # nothing listens here now
+    monkeypatch.setenv("ABSTRACTGATEWAY_URL", f"http://127.0.0.1:{port}")
+    monkeypatch.setenv("OLLAMA_BASE_URL", f"http://127.0.0.1:{port}")
+    monkeypatch.setenv("LMSTUDIO_BASE_URL", f"http://127.0.0.1:{port}")
+    monkeypatch.setenv("PATH", "/nonexistent")
+    report = build_doctor_report(include_environment=False, include_network=True, timeout=1)
+    checks = {check["id"]: check for check in report["checks"]}  # type: ignore[index]
+    assert checks["gateway"]["status"] == "warn"
+    assert checks["engine:ollama"]["status"] == "info"
+    assert checks["engine:lmstudio"]["status"] == "info"
+    assert checks["gateway:config"]["status"] == "info"

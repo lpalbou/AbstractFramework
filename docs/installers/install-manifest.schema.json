@@ -11,13 +11,14 @@
     "profiles",
     "python_packages",
     "npm_apps",
+    "bootstrap",
     "post_install",
     "security"
   ],
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "minimum_installer_version": {
       "type": "string"
@@ -27,36 +28,62 @@
     },
     "source": {
       "type": "object",
-      "required": ["repository", "release_profile"],
+      "required": [
+        "repository",
+        "release_profile"
+      ],
       "properties": {
-        "repository": {"type": "string"},
-        "release_profile": {"type": "string"}
+        "repository": {
+          "type": "string"
+        },
+        "release_profile": {
+          "type": "string"
+        }
       },
       "additionalProperties": false
     },
     "profiles": {
       "type": "array",
       "minItems": 1,
-      "items": {"$ref": "#/$defs/profile"}
+      "items": {
+        "$ref": "#/$defs/profile"
+      }
     },
     "python_packages": {
       "type": "array",
-      "items": {"$ref": "#/$defs/package"}
+      "items": {
+        "$ref": "#/$defs/package"
+      }
     },
     "npm_apps": {
       "type": "array",
-      "items": {"$ref": "#/$defs/npm_app"}
+      "items": {
+        "$ref": "#/$defs/npm_app"
+      }
+    },
+    "bootstrap": {
+      "$ref": "#/$defs/bootstrap"
     },
     "post_install": {
-      "type": "object"
+      "$ref": "#/$defs/post_install"
     },
     "security": {
       "type": "object",
-      "required": ["secrets_in_manifest", "native_artifacts_signed", "notes"],
+      "required": [
+        "secrets_in_manifest",
+        "native_artifacts_signed",
+        "notes"
+      ],
       "properties": {
-        "secrets_in_manifest": {"type": "boolean"},
-        "native_artifacts_signed": {"type": "boolean"},
-        "notes": {"type": "string"}
+        "secrets_in_manifest": {
+          "type": "boolean"
+        },
+        "native_artifacts_signed": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
       },
       "additionalProperties": false
     }
@@ -64,14 +91,30 @@
   "$defs": {
     "package": {
       "type": "object",
-      "required": ["id", "version", "registry"],
+      "required": [
+        "id",
+        "version",
+        "registry"
+      ],
       "properties": {
-        "id": {"type": "string"},
-        "name": {"type": "string"},
-        "distribution": {"type": "string"},
-        "version": {"type": "string"},
-        "registry": {"type": "string"},
-        "python_requires": {"type": "string"}
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "distribution": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "registry": {
+          "type": "string"
+        },
+        "python_requires": {
+          "type": "string"
+        }
       },
       "additionalProperties": false
     },
@@ -89,42 +132,280 @@
         "excludes"
       ],
       "properties": {
-        "id": {"type": "string"},
-        "name": {"type": "string"},
-        "summary": {"type": "string"},
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
         "pip_requirements": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         },
-        "local_inference": {"type": "boolean"},
+        "local_inference": {
+          "type": "boolean"
+        },
         "platforms": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         },
         "prerequisites": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         },
         "best_for": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         },
         "excludes": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false
     },
     "npm_app": {
       "type": "object",
-      "required": ["id", "package", "version", "registry", "command"],
+      "required": [
+        "id",
+        "package",
+        "version",
+        "registry",
+        "command"
+      ],
       "properties": {
-        "id": {"type": "string"},
-        "package": {"type": "string"},
-        "version": {"type": "string"},
-        "registry": {"type": "string"},
-        "command": {"type": "string"}
+        "id": {
+          "type": "string"
+        },
+        "package": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "registry": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "argv": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "script": {
+      "type": "object",
+      "required": [
+        "url",
+        "platforms",
+        "one_liner",
+        "with_flags"
+      ],
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "one_liner": {
+          "type": "string"
+        },
+        "with_flags": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "bootstrap": {
+      "type": "object",
+      "description": "How the one-line bootstrap scripts (scripts/install.sh, scripts/install.ps1) provision the gateway with uv.",
+      "required": [
+        "gateway_version",
+        "python",
+        "tool_requirement",
+        "profile_extras",
+        "optional_extras",
+        "default_port",
+        "scripts",
+        "flags",
+        "steps",
+        "uninstall"
+      ],
+      "properties": {
+        "gateway_version": {
+          "type": "string",
+          "description": "abstractgateway version the scripts pin (read by install.sh/install.ps1)."
+        },
+        "python": {
+          "type": "string",
+          "description": "Python version passed to uv (--python)."
+        },
+        "tool_requirement": {
+          "type": "string",
+          "description": "uv tool requirement template; {extras} is the comma-joined extras."
+        },
+        "profile_extras": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "optional_extras": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "default_port": {
+          "type": "integer"
+        },
+        "scripts": {
+          "type": "object",
+          "required": [
+            "unix",
+            "windows"
+          ],
+          "properties": {
+            "unix": {
+              "$ref": "#/$defs/script"
+            },
+            "windows": {
+              "$ref": "#/$defs/script"
+            }
+          },
+          "additionalProperties": false
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "sh",
+              "ps",
+              "env",
+              "summary"
+            ],
+            "properties": {
+              "sh": {
+                "type": "string"
+              },
+              "ps": {
+                "type": "string"
+              },
+              "env": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uninstall": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/argv"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "post_install": {
+      "type": "object",
+      "description": "Console-first next steps after an install.",
+      "required": [
+        "entrypoint",
+        "gateway",
+        "health_url",
+        "console_url",
+        "claim",
+        "claim_fallback",
+        "service",
+        "doctor",
+        "apps",
+        "notes"
+      ],
+      "properties": {
+        "entrypoint": {
+          "type": "string",
+          "const": "console"
+        },
+        "gateway": {
+          "$ref": "#/$defs/argv"
+        },
+        "health_url": {
+          "type": "string"
+        },
+        "console_url": {
+          "type": "string"
+        },
+        "claim": {
+          "$ref": "#/$defs/argv"
+        },
+        "claim_fallback": {
+          "type": "object",
+          "required": [
+            "token_file",
+            "command"
+          ],
+          "properties": {
+            "token_file": {
+              "type": "string"
+            },
+            "command": {
+              "$ref": "#/$defs/argv"
+            }
+          },
+          "additionalProperties": false
+        },
+        "service": {
+          "$ref": "#/$defs/argv"
+        },
+        "doctor": {
+          "$ref": "#/$defs/argv"
+        },
+        "apps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/argv"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
       },
       "additionalProperties": false
     }

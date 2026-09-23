@@ -8,8 +8,9 @@
 #      proof that the check is not decoration
 #   3. the bash loader (repo_groups.sh) and the Python helper read the same
 #      packages in the same dependency order
-#   4. scripts/install.sh pins == docs/installers/install-manifest.json ==
-#      root pyproject pins; its crate versions == the docs/install.md table
+#   4. scripts/install.sh and install.ps1 pins == docs/installers/install-manifest.json
+#      (bootstrap.gateway_version == the root pyproject gateway pin, npm apps);
+#      their crate versions == the docs/install.md table
 #   5. the published launchers start npm packages that exist in packages.txt
 #
 # Read-only: nothing in the workspace is modified. Run:
@@ -88,7 +89,7 @@ sorted_tiers="$(echo "$sh_tiers" | tr ' ' '\n' | sed '/^$/d' | sort -n | tr '\n'
 [[ "$sh_tiers" == "$sorted_tiers" ]]
 check "af_pkg_indices yields packages in non-decreasing tier order" "$?"
 
-# --- 4. install.sh pins vs install manifest, root pyproject, docs -------------------------
+# --- 4. bootstrap installer pins vs install manifest, root pyproject, docs --------------
 bash "$SCRIPTS_DIR/install.sh" --print-versions >"$WORK/install-versions.txt"
 check "install.sh --print-versions runs" "$?"
 python3 - "$WORK/install-versions.txt" "$ROOT_DIR" >"$WORK/pins.out" 2>&1 <<'PY'
@@ -99,26 +100,33 @@ lines = [l.split() for l in Path(sys.argv[1]).read_text().splitlines() if l.stri
 root = Path(sys.argv[2])
 script = {(reg, name.lower()): ver for reg, name, ver in lines}
 manifest = json.loads((root / "docs/installers/install-manifest.json").read_text())
-expected = {("pypi", "abstractframework"): manifest["framework"]["version"]}
-for p in manifest["python_packages"]:
-    expected[("pypi", p["distribution"].lower())] = p["version"]
+problems = []
+gw = manifest["bootstrap"]["gateway_version"]
+pkg_gw = next(p["version"] for p in manifest["python_packages"] if p["id"] == "abstractgateway")
+if gw != pkg_gw:
+    problems.append(f"manifest bootstrap.gateway_version {gw} != python_packages abstractgateway {pkg_gw}")
+expected = {("pypi", "abstractgateway"): gw}
 for a in manifest["npm_apps"]:
     expected[("npm", a["package"].lower())] = a["version"]
-problems = []
 for key, ver in expected.items():
     if script.get(key) != ver:
         problems.append(f"install.sh {key} = {script.get(key)}, install-manifest.json = {ver}")
 for key in script:
     if key[0] != "crates" and key not in expected:
         problems.append(f"install.sh pins {key} which install-manifest.json does not list")
-# root pyproject exact pins
+# root pyproject gateway pin
 pyproject = (root / "pyproject.toml").read_text()
-for name, ver in re.findall(r'"([A-Za-z0-9_.-]+)==([0-9][^"]*)"', pyproject.split("[project.optional-dependencies]")[0]):
-    if script.get(("pypi", name.lower())) != ver:
-        problems.append(f"pyproject pins {name}=={ver}, install.sh has {script.get(('pypi', name.lower()))}")
-m = re.search(r'^version = "([^"]+)"', pyproject, re.M)
-if m and script.get(("pypi", "abstractframework")) != m.group(1):
-    problems.append(f"pyproject version {m.group(1)} != install.sh {script.get(('pypi', 'abstractframework'))}")
+m = re.search(r'"abstractgateway==([^"]+)"', pyproject)
+if not m or m.group(1) != gw:
+    problems.append(f"pyproject abstractgateway pin {m and m.group(1)} != bootstrap {gw}")
+# install.ps1 carries the same pins
+ps1 = (root / "scripts/install.ps1").read_text()
+m = re.search(r"^\$AfGatewayPinDefault = '([^']+)'", ps1, re.M)
+if not m or m.group(1) != gw:
+    problems.append(f"install.ps1 gateway pin {m and m.group(1)} != {gw}")
+for (reg, name), ver in script.items():
+    if reg in ("npm", "crates") and f"'{name}@{ver}'" not in ps1.lower():
+        problems.append(f"install.ps1 does not pin {name}@{ver}")
 # crates vs the docs/install.md table
 install_md = (root / "docs/install.md").read_text()
 for (reg, name), ver in script.items():
@@ -132,7 +140,7 @@ sys.exit(1 if problems else 0)
 PY
 status=$?
 [[ "$status" == "0" ]] || sed 's/^/        /' "$WORK/pins.out"
-check "install.sh pins == install-manifest.json == pyproject pins; crates == docs/install.md" "$status"
+check "install.sh/install.ps1 pins == install-manifest.json == pyproject gateway pin; crates == docs/install.md" "$status"
 
 # --- 5. launchers reference real npm packages ---------------------------------------------
 missing=""
