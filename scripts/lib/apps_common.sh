@@ -89,11 +89,13 @@ is_truthy() { case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in 1|t
 # node CLIs. PUBLISHED mode uses whatever python has the packages installed and
 # npx for the JS apps.
 resolve_local_python() {
-    local candidates=("$ROOT_DIR/.venv/bin/python" "$ROOT_DIR/.venv/bin/python3")
+    # AF_VENV_DIR: same override as scripts/build.sh (default <root>/.venv).
+    local venv="${AF_VENV_DIR:-$ROOT_DIR/.venv}"
+    local candidates=("$venv/bin/python" "$venv/bin/python3")
     for c in "${candidates[@]}"; do
         [[ -x "$c" ]] && { echo "$c"; return 0; }
     done
-    command -v python3 || die "no python found (expected $ROOT_DIR/.venv/bin/python for -local)"
+    command -v python3 || die "no python found (expected $venv/bin/python for -local)"
 }
 
 resolve_published_python() {

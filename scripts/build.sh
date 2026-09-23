@@ -2,16 +2,24 @@
 # =============================================================================
 # AbstractFramework — build all packages from local repos
 # =============================================================================
-# Development-only script that installs every AbstractFramework Python package
-# in editable mode (from local checkouts, NOT from PyPI) and builds every npm
-# package from source (NOT from the npm registry).
+# Development-only script that builds EVERY package of the workspace from the
+# local checkouts, tier by tier, in dependency order (scripts/lib/packages.txt;
+# see ./scripts/deps.sh for the tiers and the edges):
 #
-# All Python packages are installed into an isolated .venv at the project root.
-# Third-party dependencies (pydantic, react, torch, …) are resolved normally
-# from PyPI / npm — only AbstractFramework packages come from local source.
+#   Python  editable installs (NOT from PyPI) of the 13 Python packages and the
+#           root meta-package, into one isolated virtualenv
+#   npm     the 7 AbstractUIC packages (ui-kit, app-server, monitor-*,
+#           panel-chat) then the apps flow, observer, continuum, entity and
+#           code/web — built from source, NOT from the npm registry
+#   Rust    abstracttui, abstractcode (abstractcode/tui) and
+#           abstractgateway-console (abstractgateway/console-tui), `cargo build`
+#
+# Third-party dependencies (pydantic, react, torch, crates, …) are resolved
+# normally from PyPI / npm / crates.io — only AbstractFramework Python
+# packages and the AbstractUIC sources come from the local checkouts.
 #
 # Usage:
-#   source ./scripts/build.sh         # light editable build, then stay in the .venv
+#   source ./scripts/build.sh         # light editable build, then stay in the venv
 #   ./scripts/build.sh                # light editable build (venv activates inside script only)
 #   ./scripts/build.sh --light        # explicit light editable build
 #   ./scripts/build.sh --base         # legacy alias for --light
@@ -19,13 +27,17 @@
 #   ./scripts/build.sh --gpu          # heavy native GPU local-engine profile
 #   ./scripts/build.sh --python       # Python packages only
 #   ./scripts/build.sh --npm          # npm packages only
-#   ./scripts/build.sh --rust         # Rust crates only (abstracttui)
-#   ./scripts/build.sh --clean        # delete .venv first (avoids pollution from other projects)
+#   ./scripts/build.sh --rust         # Rust crates only
+#   ./scripts/build.sh --npm --rust   # selections combine
+#   ./scripts/build.sh --plan         # print the tier-ordered build plan, build nothing
+#   ./scripts/build.sh --clean        # delete the venv first (avoids pollution from other projects)
 #   AF_BUILD_PROFILE=light|apple|gpu|auto ./scripts/build.sh
+#   AF_VENV_DIR=/path/to/venv ./scripts/build.sh   # venv location (default: <root>/.venv)
 #
 # Prerequisites:
-#   - Python 3.10+  (required)
-#   - Node.js 18+   (optional; only needed for UI packages)
+#   - Python 3.10+  (required for the Python packages)
+#   - Node.js 18+   (optional; only needed for the npm packages)
+#   - cargo         (optional; only needed for the Rust crates)
 #   - git            (repos must already be cloned via scripts/clone.sh)
 # =============================================================================
 
@@ -50,12 +62,18 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${_AF_THIS_FILE}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-VENV_DIR="$ROOT_DIR/.venv"
+# AF_VENV_DIR overrides the virtualenv location (a relative path is taken from
+# the current directory). Default: the workspace .venv.
+VENV_DIR="${AF_VENV_DIR:-$ROOT_DIR/.venv}"
+case "$VENV_DIR" in
+    /*) ;;
+    *) VENV_DIR="$PWD/$VENV_DIR" ;;
+esac
 
 # If sourced, run the build in a real bash process (so bash-only syntax is safe),
 # then activate the venv in the current shell and return.
 if $_AF_SOURCED; then
-    AF_BUILD_WRAPPER=1 bash "$SCRIPT_DIR/build.sh" "$@" || return 1
+    AF_BUILD_WRAPPER=1 AF_VENV_DIR="$VENV_DIR" bash "$SCRIPT_DIR/build.sh" "$@" || return 1
     # shellcheck disable=SC1091
     source "$VENV_DIR/bin/activate"
     if [[ -t 1 ]]; then
@@ -68,27 +86,51 @@ fi
 
 set -euo pipefail
 
+# pip's "new release available" notice after every editable install is noise.
+export PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Shared package inventory (scripts/lib/packages.txt): kinds, paths, tiers.
+# shellcheck source=./lib/repo_groups.sh
+source "$SCRIPT_DIR/lib/repo_groups.sh"
+
 # ---------------------------------------------------------------------------
 # CLI flags
 # ---------------------------------------------------------------------------
-BUILD_PYTHON=true
-BUILD_NPM=true
-BUILD_RUST=true
+# --python / --npm / --rust SELECT ecosystems and combine; none = all three.
+SELECT_PYTHON=false
+SELECT_NPM=false
+SELECT_RUST=false
 CLEAN_VENV=false
+PLAN_ONLY=false
 BUILD_PROFILE="${AF_BUILD_PROFILE:-light}"
 
 for arg in "$@"; do
     case "$arg" in
-        --python) BUILD_NPM=false; BUILD_RUST=false ;;
-        --npm)    BUILD_PYTHON=false; BUILD_RUST=false ;;
-        --rust)   BUILD_PYTHON=false; BUILD_NPM=false ;;
+        --python) SELECT_PYTHON=true ;;
+        --npm)    SELECT_NPM=true ;;
+        --rust)   SELECT_RUST=true ;;
         --clean)  CLEAN_VENV=true ;;
         --apple)  BUILD_PROFILE="apple" ;;
         --gpu)    BUILD_PROFILE="gpu" ;;
         --light)  BUILD_PROFILE="light" ;;
         --base)   BUILD_PROFILE="light" ;;
+        --plan|--dry-run) PLAN_ONLY=true ;;
+        -h|--help)
+            sed -n '2,41p' "$SCRIPT_DIR/build.sh" | sed 's/^# \{0,1\}//'
+            exit 0
+            ;;
+        *)
+            echo "ERROR: unknown argument: $arg (see --help)" >&2
+            exit 2
+            ;;
     esac
 done
+if ! $SELECT_PYTHON && ! $SELECT_NPM && ! $SELECT_RUST; then
+    SELECT_PYTHON=true; SELECT_NPM=true; SELECT_RUST=true
+fi
+BUILD_PYTHON=$SELECT_PYTHON
+BUILD_NPM=$SELECT_NPM
+BUILD_RUST=$SELECT_RUST
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -304,16 +346,19 @@ explain_resolution_failure() {
 }
 
 # Editable-install a Python package from a local directory.
-# Usage: install_editable <relative_dir> [pip_extras]
-# Example: install_editable abstractcore "[tools,media]"
+# Usage: install_editable <relative_dir> [pip_extras] [label] [needs]
+# Example: install_editable abstractcore "[tools,media]" "pip t2" "abstractvision"
 install_editable() {
     local rel_dir="$1"
     local extras="${2:-}"
+    local label="${3:-pip}"
+    local needs="${4:-}"
     local pkg_path="$ROOT_DIR/$rel_dir"
 
     require_repo "$rel_dir"
     echo ""
-    package_line "pip" "install -e ${rel_dir}${extras}"
+    package_line "$label" "install -e ${rel_dir}${extras}"
+    [[ -n "$needs" ]] && dim_line "     needs: ${needs}"
     if ! pip install --quiet --no-build-isolation -e "${pkg_path}${extras}"; then
         explain_resolution_failure "$rel_dir" "$extras" "$pkg_path"
         af_die "pip install -e ${rel_dir}${extras} failed"
@@ -347,56 +392,148 @@ remove_source_meta_egg_info() {
     fi
 }
 
-build_npm_project() {
-    local rel_dir="$1"
-    local label="$2"
-    local pkg_dir="$ROOT_DIR/$rel_dir"
+# Log directory for npm / cargo output: the terminal shows one line per
+# package; the full log is printed (tail) only when a step fails.
+BUILD_LOG_DIR="${AF_BUILD_LOG_DIR:-${TMPDIR:-/tmp}/af-build-logs.$$}"
 
-    if [[ ! -d "$pkg_dir" ]]; then
-        warn_line "${rel_dir}/ not found — skipping"
+run_logged() {
+    # run_logged <log-file> <dir> <command...>: run in <dir>, keep the output in
+    # <log-file>, print its tail on failure. Returns the command status.
+    local log="$1" dir="$2"
+    shift 2
+    mkdir -p "$BUILD_LOG_DIR"
+    local status=0
+    (cd "$dir" && "$@") >"$log" 2>&1 || status=$?
+    if [[ "$status" -eq 0 ]]; then
+        return 0
+    fi
+    printf "       ${C_RED}failed (exit %s):${C_RESET} %s  (in %s)\n" "$status" "$*" "$dir"
+    tail -25 "$log" | sed 's/^/       | /'
+    printf "       ${C_DIM}full log: %s${C_RESET}\n" "$log"
+    return "$status"
+}
+
+# Does <repo_dir>/package.json declare npm workspaces (AbstractUIC)?
+is_npm_workspace_root() {
+    [[ -f "$1/package.json" ]] && grep -q '"workspaces"' "$1/package.json"
+}
+
+package_has_npm_script() {
+    node -e 'const p = require(process.argv[1]); process.exit(p.scripts && p.scripts[process.argv[2]] ? 0 : 1)' \
+        "$1/package.json" "$2"
+}
+
+NPM_INSTALLED_ROOTS=" "
+
+# Build one npm package from packages.txt (index $1).
+# - A package inside an npm WORKSPACE repo (AbstractUIC) is installed once at
+#   the workspace root and built with `npm run build --workspace <path>`.
+# - Any other package (flow, observer, continuum, entity, abstractcode/web) is
+#   installed and built in its own directory.
+build_npm_package() {
+    local i="$1"
+    local id="${AF_PKG_ID[$i]}" name="${AF_PKG_NAME[$i]}" rel_path="${AF_PKG_PATH[$i]}"
+    local pkg_dir repo_dir install_root location deps
+    pkg_dir="$(af_pkg_dir "$i")"
+    repo_dir="$(repo_dir_for "${AF_PKG_REPO[$i]}")"
+    location="$(af_pkg_location "$i")"
+    deps="$(af_pkg_dep_ids "$i")"
+
+    echo ""
+    package_line "npm t${AF_PKG_TIER[$i]}" "${location}  (${name})"
+    [[ -n "$deps" ]] && dim_line "     needs: ${deps}"
+    if [[ ! -f "$pkg_dir/package.json" ]]; then
+        printf "       ${C_RED}missing:${C_RESET} %s/package.json — run ./scripts/clone.sh\n" "$pkg_dir"
         npm_ok=false
         return 0
     fi
 
-    echo ""
-    package_line "npm" "$label"
-    (
-        cd "$pkg_dir"
-        if is_macos; then
-            echo "       macOS: clearing Gatekeeper quarantine on project files"
-            macos_clear_quarantine "$pkg_dir"
-        fi
-        npm install --no-audit --no-fund 2>&1 | tail -1
-        if is_macos && [[ -d "$pkg_dir/node_modules" ]]; then
-            echo "       macOS: clearing Gatekeeper quarantine on node_modules"
-            macos_clear_quarantine "$pkg_dir/node_modules"
-        fi
-        npm run build 2>&1 | tail -1
-    ) && printf "       ${C_GREEN}✓ built${C_RESET}\n" || { printf "       ${C_YELLOW}WARNING:${C_RESET} %s build failed\n" "$label"; npm_ok=false; }
+    if [[ "$rel_path" != "." ]] && is_npm_workspace_root "$repo_dir"; then
+        install_root="$repo_dir"
+    else
+        install_root="$pkg_dir"
+    fi
+
+    case "$NPM_INSTALLED_ROOTS" in
+        *" $install_root "*) ;;
+        *)
+            if is_macos; then
+                macos_clear_quarantine "$install_root"
+            fi
+            echo "       npm install  (${install_root#"$ROOT_DIR"/})"
+            if ! run_logged "$BUILD_LOG_DIR/npm-install-${AF_PKG_REPO[$i]}.log" "$install_root" \
+                    npm install --no-audit --no-fund; then
+                npm_ok=false
+                return 0
+            fi
+            if is_macos && [[ -d "$install_root/node_modules" ]]; then
+                macos_clear_quarantine "$install_root/node_modules"
+            fi
+            NPM_INSTALLED_ROOTS="${NPM_INSTALLED_ROOTS}${install_root} "
+            ;;
+    esac
+
+    if ! package_has_npm_script "$pkg_dir" build; then
+        printf "       ${C_GREEN}✓ no build step${C_RESET} ${C_DIM}(ships its sources)${C_RESET}\n"
+        npm_built=$((npm_built + 1))
+        return 0
+    fi
+    if [[ "$install_root" != "$pkg_dir" ]]; then
+        run_logged "$BUILD_LOG_DIR/npm-build-${id}.log" "$install_root" \
+            npm run build --workspace "$rel_path" || { npm_ok=false; return 0; }
+    else
+        run_logged "$BUILD_LOG_DIR/npm-build-${id}.log" "$pkg_dir" \
+            npm run build || { npm_ok=false; return 0; }
+    fi
+    printf "       ${C_GREEN}✓ built${C_RESET}\n"
+    npm_built=$((npm_built + 1))
 }
 
-# Build a standalone Rust crate repository with cargo.
+# Build one Rust crate from packages.txt (index $1) with `cargo build`.
 # The default (debug) profile is used: it is incremental and serves as the
-# "does it still compile" gate. Rust consumers (e.g. abstractcoder) compile the
-# crate from source via cargo path dependencies, so no artifact install is
-# needed here.
-build_rust_project() {
-    local rel_dir="$1"
-    local label="$2"
-    local pkg_dir="$ROOT_DIR/$rel_dir"
+# "does it still compile" gate. The crates consume abstracttui from crates.io
+# (see Cargo.toml), so the local abstracttui build is a check of that crate,
+# not an input of the others.
+build_rust_package() {
+    local i="$1"
+    local id="${AF_PKG_ID[$i]}" pkg_dir location deps
+    pkg_dir="$(af_pkg_dir "$i")"
+    location="$(af_pkg_location "$i")"
+    deps="$(af_pkg_dep_ids "$i")"
 
-    if [[ ! -d "$pkg_dir" ]]; then
-        warn_line "${rel_dir}/ not found — skipping"
+    echo ""
+    package_line "cargo t${AF_PKG_TIER[$i]}" "${location}  (crate ${AF_PKG_NAME[$i]})"
+    [[ -n "$deps" ]] && dim_line "     needs: ${deps}"
+    if [[ ! -f "$pkg_dir/Cargo.toml" ]]; then
+        printf "       ${C_RED}missing:${C_RESET} %s/Cargo.toml — run ./scripts/clone.sh\n" "$pkg_dir"
         rust_ok=false
         return 0
     fi
+    run_logged "$BUILD_LOG_DIR/cargo-${id}.log" "$pkg_dir" cargo build || { rust_ok=false; return 0; }
+    printf "       ${C_GREEN}✓ built${C_RESET}\n"
+    rust_built=$((rust_built + 1))
+}
 
-    echo ""
-    package_line "cargo" "$label"
-    (
-        cd "$pkg_dir"
-        cargo build --quiet 2>&1 | tail -5
-    ) && printf "       ${C_GREEN}✓ built${C_RESET}\n" || { printf "       ${C_YELLOW}WARNING:${C_RESET} %s build failed\n" "$label"; rust_ok=false; }
+# Print the tier-ordered plan (--plan) without building anything.
+print_build_plan() {
+    local kind i last_tier
+    for kind in python npm rust; do
+        case "$kind" in
+            python) $BUILD_PYTHON || continue ;;
+            npm) $BUILD_NPM || continue ;;
+            rust) $BUILD_RUST || continue ;;
+        esac
+        section "Plan — ${kind}"
+        last_tier=""
+        while IFS= read -r i; do
+            if [[ "${AF_PKG_TIER[$i]}" != "$last_tier" ]]; then
+                last_tier="${AF_PKG_TIER[$i]}"
+                info_line "$(af_tier_title "$last_tier")"
+            fi
+            printf "    %-22s %-30s %s\n" "${AF_PKG_ID[$i]}" "$(af_pkg_location "$i")" \
+                "$( [[ -n "$(af_pkg_dep_ids "$i")" ]] && echo "needs: $(af_pkg_dep_ids "$i")" )"
+        done < <( { af_pkg_indices "$kind"; [[ "$kind" == "python" ]] && af_pkg_indices meta; } )
+    done
 }
 
 # ---------------------------------------------------------------------------
@@ -433,12 +570,23 @@ if $BUILD_RUST; then
     else
         echo ""
         warn_line "cargo not found — skipping Rust builds."
-        warn_cont "Install Rust (https://rustup.rs) to build abstracttui."
+        warn_cont "Install Rust (https://rustup.rs) to build the Rust crates."
         BUILD_RUST=false
     fi
 fi
 
 ok_line "Root:     $ROOT_DIR"
+ok_line "Packages: $AF_PKG_COUNT in scripts/lib/packages.txt (tiers 0-$AF_MAX_TIER; ./scripts/deps.sh shows the edges)"
+if $BUILD_PYTHON; then
+    ok_line "Venv:     $VENV_DIR"
+fi
+
+if $PLAN_ONLY; then
+    print_build_plan
+    echo ""
+    info_line "--plan: nothing was built."
+    exit 0
+fi
 
 # ═══════════════════════════════════════════════════════════════════════════
 # PYTHON PACKAGES
@@ -536,36 +684,28 @@ PY
     PYTHON_BUILD_PROFILE="$(resolve_build_profile)"
     ok_line "Using Python dependency profile: ${PYTHON_BUILD_PROFILE}"
 
-    # ── Tier 0: No internal dependencies ────────────────────────────────
-    section "Python — Tier 0  (no internal dependencies)"
-    install_editable "abstractskill"
-    install_editable "abstractsemantics" "$(build_profile_extras "abstractsemantics" "$PYTHON_BUILD_PROFILE")"
-    install_editable "abstractmemory" "$(build_profile_extras "abstractmemory" "$PYTHON_BUILD_PROFILE")"
-    install_editable "abstractvision" "$(build_profile_extras "abstractvision" "$PYTHON_BUILD_PROFILE")"
-    install_editable "abstractvoice" "$(build_profile_extras "abstractvoice" "$PYTHON_BUILD_PROFILE")"
-    install_editable "abstractmusic" "$(build_profile_extras "abstractmusic" "$PYTHON_BUILD_PROFILE")"
-    install_editable "abstractcamera"
-    install_editable "abstract3d" "$(build_profile_extras "abstract3d" "$PYTHON_BUILD_PROFILE")"
-
-    # ── Tier 1: Depends on Tier 0 ───────────────────────────────────────
-    section "Python — Tier 1  (depends on Tier 0)"
-    install_editable "abstractcore" "$(build_profile_extras "abstractcore" "$PYTHON_BUILD_PROFILE")"
-    install_editable "abstractruntime" "$(build_profile_extras "abstractruntime" "$PYTHON_BUILD_PROFILE")"
-
-    # ── Tier 2: Depends on Tier 0–1 ────────────────────────────────────
-    section "Python — Tier 2  (depends on Tier 0–1)"
-    install_editable "abstractagent" "$(build_profile_extras "abstractagent" "$PYTHON_BUILD_PROFILE")"
-    install_editable "abstractgateway" "$(build_profile_extras "abstractgateway" "$PYTHON_BUILD_PROFILE")"
-
-    # ── Tier 3: Depends on Tier 0–2 ────────────────────────────────────
-    section "Python — Tier 3  (depends on Tier 0–2)"
-    install_editable "abstractassistant" "$(build_profile_extras "abstractassistant" "$PYTHON_BUILD_PROFILE")"
-
-    # ── Tier 4: Meta-package (AbstractFramework itself) ────────────────
-    section "Python — Tier 4  (meta-package)"
-    echo ""
-    package_line "pip" "install -e . (AbstractFramework)"
-    pip install --quiet --no-build-isolation --no-deps -e "$ROOT_DIR"
+    # ── Every Python package, tier by tier (scripts/lib/packages.txt) ──
+    # A package is installed only after everything it depends on (tier =
+    # dependency depth; ./scripts/deps.sh --kind python shows the edges).
+    _last_tier=""
+    while IFS= read -r _i; do
+        if [[ "${AF_PKG_TIER[$_i]}" != "$_last_tier" ]]; then
+            _last_tier="${AF_PKG_TIER[$_i]}"
+            section "Python — $(af_tier_title "$_last_tier")"
+        fi
+        _deps="$(af_pkg_dep_ids "$_i")"
+        if [[ "${AF_PKG_KIND[$_i]}" == "meta" ]]; then
+            # The meta-package pins released versions with `==`; installing its
+            # dependencies would drag the editable checkouts back to PyPI builds.
+            echo ""
+            package_line "pip t${_last_tier}" "install --no-deps -e . (AbstractFramework meta-package)"
+            pip install --quiet --no-build-isolation --no-deps -e "$ROOT_DIR"
+            continue
+        fi
+        install_editable "$(af_pkg_location "$_i")" \
+            "$(build_profile_extras "${AF_PKG_ID[$_i]}" "$PYTHON_BUILD_PROFILE")" \
+            "pip t${_last_tier}" "$_deps"
+    done < <(af_pkg_indices python; af_pkg_indices meta)
 
     # ── Import safety: prevent workspace-root shadowing ─────────────────
     # Problem:
@@ -747,7 +887,8 @@ PY
     echo ""
     echo "  Verifying imports (and detecting namespace shadowing)..."
     _import_ok=true
-    for _pkg in abstractcore abstractruntime abstractagent abstractgateway abstractmemory abstractsemantics abstractvoice abstractvision abstractmusic abstractcamera abstract3d abstractassistant; do
+    # Import names are the package ids of the Python rows of packages.txt.
+    for _pkg in $(af_pkg_indices python | while IFS= read -r _i; do echo "${AF_PKG_ID[$_i]}"; done); do
         if ! python -c "import importlib; m=importlib.import_module('${_pkg}'); assert getattr(m, '__file__', None) is not None" 2>/dev/null; then
             _import_ok=false
             printf "     ${C_RED}✗${C_RESET} %s\n" "$_pkg"
@@ -763,35 +904,33 @@ PY
         warn_line "Some imports failed or were shadowed (namespace package) — check the output above"
     fi
 
-    py_ok=true
+    py_ok="$_import_ok"
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════
 # NPM PACKAGES
 # ═══════════════════════════════════════════════════════════════════════════
 if $BUILD_NPM; then
-    section "npm — Building UI packages from local source"
+    section "npm — Building every npm package from local source, tier by tier"
 
     npm_ok=true
-
-    build_npm_project "abstractuic" "abstractui  (abstractuic monorepo: ui-kit, panel-chat, monitors)"
-    build_npm_project "abstractobserver" "abstractobserver"
-    build_npm_project "abstractcode/web" "abstractcode/web  (@abstractframework/code)"
-    build_npm_project "abstractflow" "abstractflow  (@abstractframework/flow)"
-    build_npm_project "abstractentity" "abstractentity  (@abstractframework/entity)"
-    build_npm_project "abstractcontinuum" "abstractcontinuum  (@abstractframework/continuum)"
+    npm_built=0
+    while IFS= read -r _i; do
+        build_npm_package "$_i"
+    done < <(af_pkg_indices npm)
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════
 # RUST CRATES
 # ═══════════════════════════════════════════════════════════════════════════
 if $BUILD_RUST; then
-    section "Rust Tier 0 — Building standalone crates from local source"
+    section "Rust — Building every crate from local source, tier by tier"
 
     rust_ok=true
-
-    build_rust_project "abstracttui" "abstracttui  (terminal UI engine)"
-    build_rust_project "abstractcode" "abstractcode  (terminal client; workspace member tui/)"
+    rust_built=0
+    while IFS= read -r _i; do
+        build_rust_package "$_i"
+    done < <(af_pkg_indices rust)
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -804,21 +943,21 @@ if $BUILD_PYTHON; then
     if ${py_ok:-false}; then
         printf "  ${C_GREEN}✓ Python:${C_RESET}  all packages installed (editable mode)\n"
     else
-        printf "  ${C_YELLOW}WARNING:${C_RESET} Python packages may have issues\n"
+        printf "  ${C_RED}FAILED:${C_RESET}  Python imports failed or were shadowed (see above)\n"
     fi
 fi
 if $BUILD_NPM; then
     if ${npm_ok:-false}; then
-        printf "  ${C_GREEN}✓ npm:${C_RESET}     all UI packages built\n"
+        printf "  ${C_GREEN}✓ npm:${C_RESET}     %s npm packages built\n" "$npm_built"
     else
-        printf "  ${C_YELLOW}WARNING:${C_RESET} npm packages had issues (see warnings above)\n"
+        printf "  ${C_RED}FAILED:${C_RESET}  npm: %s built, some failed (see the logs above)\n" "$npm_built"
     fi
 fi
 if $BUILD_RUST; then
     if ${rust_ok:-false}; then
-        printf "  ${C_GREEN}✓ Rust:${C_RESET}    all crates built\n"
+        printf "  ${C_GREEN}✓ Rust:${C_RESET}    %s crates built\n" "$rust_built"
     else
-        printf "  ${C_YELLOW}WARNING:${C_RESET} Rust crates had issues (see warnings above)\n"
+        printf "  ${C_RED}FAILED:${C_RESET}  Rust: %s built, some failed (see the logs above)\n" "$rust_built"
     fi
 fi
 printf "${C_BOLD}%s${C_RESET}\n" "============================================================"
@@ -839,4 +978,11 @@ if $BUILD_PYTHON; then
     echo "  python -c 'import abstractcore; print(abstractcore)'"
     echo "  python -c 'import abstractruntime; print(abstractruntime)'"
     echo "  python -c 'import abstractagent; print(abstractagent)'"
+fi
+
+# Exit non-zero when any selected ecosystem failed, so callers (start-local.sh
+# --build, CI) never proceed on a partial build.
+if { $BUILD_PYTHON && ! ${py_ok:-false}; } || { $BUILD_NPM && ! ${npm_ok:-false}; } \
+    || { $BUILD_RUST && ! ${rust_ok:-false}; }; then
+    exit 1
 fi

@@ -1,23 +1,32 @@
 #!/usr/bin/env bash
 # =============================================================================
-# AbstractFramework — git status overview for all repositories
+# AbstractFramework — status overview for every repository and package
 # =============================================================================
-# Displays a concise git status report for the root AbstractFramework repository
-# and every sibling repository cloned by scripts/clone.sh, grouped in the same
-# package order used by scripts/build.sh.
+# Git status of the root AbstractFramework repository and every sibling
+# repository, grouped by dependency TIER (scripts/lib/packages.txt: a
+# repository sits in the tier of its highest package, so tier 0 is what has
+# to be installed / released first).
 #
 # For each repository the script shows:
 #   • Current branch
 #   • Pending changes (staged, unstaged, untracked)
-#   • Unpushed commits (ahead of upstream)
-#   • Unpulled commits (behind upstream)
+#   • Unpushed commits (ahead of upstream)   -> scripts/push.sh
+#   • Unpulled commits (behind upstream)     -> scripts/pull.sh
+#   • The packages it holds (kind + id)
 #
 # Usage:
-#   ./scripts/status.sh            # show status for all repos
-#   ./scripts/status.sh --short    # show only repos with pending work
+#   ./scripts/status.sh              # git overview, grouped by tier
+#   ./scripts/status.sh --short      # only repos with pending work
+#   ./scripts/status.sh --versions   # + local version of every package
+#   ./scripts/status.sh --registry   # + local vs latest on PyPI / npm / crates.io (network)
+#   ./scripts/status.sh --tiers      # + install/release order per tier with dependency edges
+#   ./scripts/status.sh --no-git --registry   # only the registry table
+#
+# "behind"/"unpushed" compare with the LAST FETCHED upstream; run
+# ./scripts/pull.sh --dry-run first to refresh them (fetch only).
 #
 # Prerequisites:
-#   - git
+#   - git; python3 for --versions / --registry / --tiers
 # =============================================================================
 
 set -euo pipefail
@@ -26,16 +35,29 @@ set -euo pipefail
 # CLI flags
 # ---------------------------------------------------------------------------
 SHORT_MODE=false
+SHOW_GIT=true
+SHOW_VERSIONS=false
+SHOW_REGISTRY=false
+SHOW_TIERS=false
+usage() {
+    echo "Usage: $0 [--short|-s] [--versions] [--registry] [--tiers] [--no-git] [--help|-h]"
+    echo ""
+    echo "  --short, -s   Only show repos with pending changes or unpushed commits"
+    echo "  --versions    Also print the local version of every package (no network)"
+    echo "  --registry    Also compare local versions with PyPI / npm / crates.io (network)"
+    echo "  --tiers       Also print the install/release order per tier with dependency edges"
+    echo "  --no-git      Skip the git overview (use with --versions/--registry/--tiers)"
+    echo "  --help, -h    Show this help message"
+}
 for arg in "$@"; do
     case "$arg" in
         --short|-s) SHORT_MODE=true ;;
-        --help|-h)
-            echo "Usage: $0 [--short|-s] [--help|-h]"
-            echo ""
-            echo "  --short, -s   Only show repos with pending changes or unpushed commits"
-            echo "  --help, -h    Show this help message"
-            exit 0
-            ;;
+        --versions) SHOW_VERSIONS=true ;;
+        --registry) SHOW_REGISTRY=true ;;
+        --tiers|--deps) SHOW_TIERS=true ;;
+        --no-git) SHOW_GIT=false ;;
+        --help|-h) usage; exit 0 ;;
+        *) echo "ERROR: unknown argument: $arg" >&2; usage >&2; exit 2 ;;
     esac
 done
 
@@ -45,7 +67,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Shared repository inventory and traversal order.
+# Shared package inventory (scripts/lib/packages.txt) and tier traversal.
 # shellcheck source=./lib/repo_groups.sh
 source "$SCRIPT_DIR/lib/repo_groups.sh"
 
@@ -67,7 +89,7 @@ fi
 
 banner() {
     printf "\n${C_BOLD}%s${C_RESET}\n" "============================================================"
-    printf "${C_BOLD}%s${C_RESET}\n"   "  AbstractFramework — git status overview"
+    printf "${C_BOLD}%s${C_RESET}\n"   "  AbstractFramework — status overview"
     printf "${C_BOLD}%s${C_RESET}\n"   "============================================================"
     echo ""
 }
@@ -80,11 +102,13 @@ require_cmd() {
 }
 
 # Print status for a single repository.
-# Arguments: $1 = display name, $2 = absolute path to the repo
+# Arguments: $1 = display name, $2 = absolute path to the repo,
+#            $3 = packages summary (dim second line)
 # Returns: 0 if repo is clean, 1 if it has pending work
 report_repo() {
     local name="$1"
     local repo_dir="$2"
+    local packages="${3:-}"
 
     # --- Guard: directory must exist and contain .git ----------------------
     if [[ ! -d "$repo_dir/.git" ]]; then
@@ -146,6 +170,9 @@ report_repo() {
         printf "  ${C_GREEN}✓ clean${C_RESET}"
     fi
     echo ""
+    if [[ -n "$packages" ]]; then
+        printf "      ${C_DIM}%s${C_RESET}\n" "$packages"
+    fi
 
     # --- Show unpushed commit subjects for quick reference -----------------
     if [[ "$ahead" -gt 0 ]]; then
@@ -168,7 +195,7 @@ report_group() {
         repo_name="$(repo_display_name "$repo_spec")"
         repo_dir="$(repo_dir_for "$repo_spec")"
 
-        if repo_output="$(report_repo "$repo_name" "$repo_dir")"; then
+        if repo_output="$(report_repo "$repo_name" "$repo_dir" "$(af_repo_packages "$repo_spec")")"; then
             :
         else
             dirty=$((dirty + 1))
@@ -193,23 +220,49 @@ report_group() {
 # Main
 # ---------------------------------------------------------------------------
 banner
-require_cmd git
 
 total=0
 dirty=0
 
-# ── Build order ──────────────────────────────────────────────────────────
-run_repo_groups report_group
+if $SHOW_GIT; then
+    require_cmd git
+    # ── Tier order (scripts/lib/packages.txt) ──────────────────────────────
+    run_repo_groups report_group
 
-# ── Summary ───────────────────────────────────────────────────────────────
-echo ""
-echo "============================================================"
-clean=$((total - dirty))
-if [[ "$dirty" -eq 0 ]]; then
-    printf "  ${C_GREEN}${C_BOLD}All ${total} repositories are clean.${C_RESET}\n"
-else
-    printf "  ${C_BOLD}${total} repos scanned:${C_RESET}  "
-    printf "${C_GREEN}${clean} clean${C_RESET}, ${C_YELLOW}${dirty} with pending work${C_RESET}\n"
+    # ── Summary ───────────────────────────────────────────────────────────
+    echo "============================================================"
+    clean=$((total - dirty))
+    if [[ "$dirty" -eq 0 ]]; then
+        printf "  ${C_GREEN}${C_BOLD}All ${total} repositories are clean.${C_RESET}\n"
+    else
+        printf "  ${C_BOLD}${total} repos scanned:${C_RESET}  "
+        printf "${C_GREEN}${clean} clean${C_RESET}, ${C_YELLOW}${dirty} with pending work${C_RESET}\n"
+    fi
+    echo "============================================================"
+    echo ""
 fi
-echo "============================================================"
-echo ""
+
+extra_status=0
+if $SHOW_VERSIONS || $SHOW_REGISTRY; then
+    require_cmd python3
+    if $SHOW_REGISTRY; then
+        printf "${C_BOLD}  %s${C_RESET}\n" "Package versions — local checkout vs latest published (PyPI / npm / crates.io)"
+        printf "  %s\n\n" "────────────────────────────────────────────────────────"
+        python3 "$SCRIPT_DIR/lib/af_inventory.py" versions --registry || extra_status=1
+    else
+        printf "${C_BOLD}  %s${C_RESET}\n" "Package versions — local checkout"
+        printf "  %s\n\n" "────────────────────────────────────────────────────────"
+        python3 "$SCRIPT_DIR/lib/af_inventory.py" versions || extra_status=1
+    fi
+    echo ""
+fi
+
+if $SHOW_TIERS; then
+    require_cmd python3
+    printf "${C_BOLD}  %s${C_RESET}\n" "Install / release order — per tier, with the dependency edges (scripts/deps.sh)"
+    printf "  %s\n" "────────────────────────────────────────────────────────"
+    python3 "$SCRIPT_DIR/lib/af_inventory.py" tiers || extra_status=1
+    echo ""
+fi
+
+exit "$extra_status"

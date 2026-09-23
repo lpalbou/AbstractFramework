@@ -11,8 +11,9 @@
 #   5. a hung critical service (alive, health probes failing) is killed and
 #      respawned
 #   6. shutdown stops everything, apps first, critical last
-#   7. singleton guard: a second acquire on a live pidfile is refused; a
-#      stale pidfile (dead pid) is reclaimed
+#   7. singleton guard: with SUP_SINGLETON_TAKEOVER=0 a second acquire on a
+#      live pidfile is refused; a stale pidfile (dead pid) is reclaimed; by
+#      default a live previous holder is stopped and replaced
 #   8. a FAILED app is revived with a fresh budget after the cooldown
 #
 # Stubs are real processes: python http.server for probeable services, plain
@@ -218,11 +219,15 @@ SUP_LOG_FILE=""
 PIDFILE="$WORK/af_stack.pid"
 sup_acquire_singleton "$PIDFILE"
 check "test7: first acquire succeeds" "$?"
-# A second acquire from another live process must be refused. The subshell
-# sources a fresh library copy so it has its own state, and its $$ differs.
-( SUP_LOG_FILE=""; source "$LIB_DIR/af_supervisor.sh"; sup_acquire_singleton "$PIDFILE" ) >/dev/null 2>&1
+# A second acquire from another live process must be refused when takeover is
+# disabled. It MUST run in a separate `bash` process: a `( ... )` subshell
+# shares this script's $$, so with the default REPLACE semantics
+# (SUP_SINGLETON_TAKEOVER=1, 2026-07-22) it "took over" by TERMing the test
+# runner itself — the historical "dies at test7" (exit 143).
+env SUP_SINGLETON_TAKEOVER=0 SUP_LOG_FILE="" bash -c \
+    'source "$1/af_supervisor.sh"; sup_acquire_singleton "$2"' _ "$LIB_DIR" "$PIDFILE" >/dev/null 2>&1
 [[ "$?" != "0" ]]
-check "test7: second acquire on a LIVE pidfile is refused" "$?"
+check "test7: second acquire on a LIVE pidfile is refused (SUP_SINGLETON_TAKEOVER=0)" "$?"
 [[ "$(cat "$PIDFILE")" == "$$" ]]
 check "test7: pidfile still names the first owner" "$?"
 sup_release_singleton
@@ -231,6 +236,23 @@ check "test7: release removes the pidfile" "$?"
 echo "999999" >"$PIDFILE"   # stale: no such pid
 sup_acquire_singleton "$PIDFILE" >/dev/null 2>&1
 check "test7: stale pidfile (dead pid) is reclaimed" "$?"
+sup_release_singleton
+
+# Default REPLACE semantics: a live previous supervisor (a stand-in `sleep`)
+# is stopped and the pidfile taken over.
+# The stand-in is started by a throwaway shell so it is NOT our child: a
+# child of this script would linger as a zombie (kill -0 still succeeds)
+# until we `wait` for it, which would fake a failed takeover.
+OLD_SUP_PID="$(bash -c 'sleep 300 >/dev/null 2>&1 & echo $!')"
+echo "$OLD_SUP_PID" >"$PIDFILE"
+sup_acquire_singleton "$PIDFILE" >/dev/null 2>&1
+check "test7: default takeover acquires a pidfile held by a live process" "$?"
+kill -0 "$OLD_SUP_PID" 2>/dev/null
+[[ "$?" != "0" ]]
+check "test7: the previous holder was stopped by the takeover" "$?"
+kill -9 "$OLD_SUP_PID" 2>/dev/null || true
+[[ "$(cat "$PIDFILE")" == "$$" ]]
+check "test7: pidfile names the new owner after takeover" "$?"
 sup_release_singleton
 
 # --- test 8: FAILED app revives after cooldown -----------------------------------

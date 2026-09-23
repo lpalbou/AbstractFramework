@@ -14,8 +14,14 @@
 #   2) Fresh setup into a new directory:
 #      ./scripts/clone.sh ~/dev/abstract      # clones AF + siblings there
 #
-# If a repo already exists locally, the script pulls updates instead of
-# re-cloning.
+#   3) Print the repository list (tier order) and exit:
+#      ./scripts/clone.sh --list
+#
+# If a repo already exists locally, the script fast-forwards it instead of
+# re-cloning (never rebases or merges local commits).
+#
+# The repository list is scripts/lib/packages.txt (21 repositories holding
+# 29 packages); the clone order is the dependency tier order.
 #
 # Prerequisites:
 #   - git
@@ -26,36 +32,28 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-# The AbstractFramework (meta-package) repository — cloned first as root.
-AF_REPO="https://github.com/lpalbou/AbstractFramework.git"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Sibling repositories — cloned INTO the AbstractFramework root.
-# Python packages (PyPI)
-SIBLING_REPOS=(
-    "https://github.com/lpalbou/abstractcore.git"
-    "https://github.com/lpalbou/abstractruntime.git"
-    "https://github.com/lpalbou/abstractagent.git"
-    "https://github.com/lpalbou/abstractflow.git"
-    "https://github.com/lpalbou/abstractcode.git"
-    "https://github.com/lpalbou/abstractgateway.git"
-    "https://github.com/lpalbou/abstractmemory.git"
-    "https://github.com/lpalbou/abstractsemantics.git"
-    "https://github.com/lpalbou/abstractvoice.git"
-    "https://github.com/lpalbou/abstractvision.git"
-    "https://github.com/lpalbou/abstract3d.git"
-    "https://github.com/lpalbou/AbstractMusic.git"
-    "https://github.com/lpalbou/abstractassistant.git"
-    "https://github.com/lpalbou/AbstractSkill.git"
-    "https://github.com/lpalbou/AbstractCamera.git"
-    # Browser UIs & npm packages
-    "https://github.com/lpalbou/abstractobserver.git"
-    "https://github.com/lpalbou/AbstractContinuum.git"
-    "https://github.com/lpalbou/AbstractEntity.git"
-    # UI component library (React monorepo; checkout dir: abstractuic)
-    "https://github.com/lpalbou/AbstractUIC.git"
-    # Rust Tier 0 — terminal UI engine
-    "https://github.com/lpalbou/AbstractTUI.git"
-)
+# The repository list comes from the shared package inventory
+# (scripts/lib/packages.txt: `repo` + `github` columns), cloned tier by tier
+# so the order matches build.sh / status.sh. ROOT_DIR here is only used by
+# the loader; clone targets are resolved below.
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+# shellcheck source=./lib/repo_groups.sh
+source "$SCRIPT_DIR/lib/repo_groups.sh"
+
+AF_REPO="https://github.com/$(af_repo_github ".").git"
+
+# "dir|owner/Name" per sibling repository, lowest tier first.
+SIBLING_REPOS=()
+_t=0
+while [[ "$_t" -le "$AF_MAX_TIER" ]]; do
+    while IFS= read -r _repo; do
+        [[ "$_repo" == "." ]] && continue
+        SIBLING_REPOS[${#SIBLING_REPOS[@]}]="${_repo}|$(af_repo_github "$_repo")"
+    done < <(af_repos_in_tier "$_t")
+    _t=$((_t + 1))
+done
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -82,20 +80,36 @@ is_af_root() {
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+LIST_ONLY=false
+TARGET_ARG=""
+for arg in "$@"; do
+    case "$arg" in
+        --list) LIST_ONLY=true ;;
+        -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -*) echo "ERROR: unknown argument: $arg" >&2; exit 2 ;;
+        *) TARGET_ARG="$arg" ;;
+    esac
+done
+
+if $LIST_ONLY; then
+    echo "root  $AF_REPO"
+    for entry in "${SIBLING_REPOS[@]}"; do
+        printf "%-18s https://github.com/%s.git\n" "${entry%%|*}" "${entry#*|}"
+    done
+    exit 0
+fi
+
 banner
 require_cmd git
-
-# Determine the script's own location (reliable even via symlinks).
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 cloned=0
 updated=0
 failed=0
 
 # ── Resolve the root directory ──────────────────────────────────────────────
-if [[ -n "${1:-}" ]]; then
+if [[ -n "$TARGET_ARG" ]]; then
     # A target directory was supplied.
-    TARGET_DIR="$1"
+    TARGET_DIR="$TARGET_ARG"
     if is_af_root "$TARGET_DIR"; then
         echo "✓ Target is already an AbstractFramework checkout."
     else
@@ -125,23 +139,24 @@ echo "Sibling repos:    ${#SIBLING_REPOS[@]}"
 echo ""
 
 # ── Clone / update sibling repos ───────────────────────────────────────────
-for repo_url in "${SIBLING_REPOS[@]}"; do
-    repo_name=$(basename "$repo_url" .git)
-    # Checkout directories are always lowercase (abstractmusic, abstractuic,
-    # abstracttui, ...): build.sh, repo_groups.sh and .gitignore expect them,
-    # and a case-sensitive filesystem would otherwise get "AbstractMusic".
-    repo_name=$(printf '%s' "$repo_name" | tr '[:upper:]' '[:lower:]')
+for entry in "${SIBLING_REPOS[@]}"; do
+    # Checkout directories are lowercase (abstractmusic, abstractuic, ...) as
+    # listed in packages.txt; the URL keeps GitHub's canonical casing.
+    repo_name="${entry%%|*}"
+    repo_url="https://github.com/${entry#*|}.git"
 
     if [ -d "$TARGET_DIR/$repo_name/.git" ]; then
         echo "↻  Updating  $repo_name"
-        if (cd "$TARGET_DIR/$repo_name" && git pull --rebase --quiet 2>/dev/null); then
+        # Fast-forward only: local commits are never rebased or merged here
+        # (./scripts/pull.sh reports diverged repos in detail).
+        if git -C "$TARGET_DIR/$repo_name" pull --ff-only --quiet 2>/dev/null; then
             updated=$((updated + 1))
         else
-            echo "   WARNING: git pull failed for $repo_name (resolve manually)"
+            echo "   WARNING: git pull --ff-only failed for $repo_name (diverged or local changes; resolve manually)"
             failed=$((failed + 1))
         fi
     else
-        echo "⬇  Cloning   $repo_name"
+        echo "⬇  Cloning   $repo_name  ($repo_url)"
         if git clone --quiet "$repo_url" "$TARGET_DIR/$repo_name" 2>/dev/null; then
             cloned=$((cloned + 1))
         else
@@ -163,6 +178,8 @@ echo "============================================================"
 echo ""
 echo "Root:     $(cd "$TARGET_DIR" && pwd)"
 echo ""
-echo "Next step — build everything from local repos:"
+echo "Next steps:"
 echo "  cd $(cd "$TARGET_DIR" && pwd)"
-echo "  ./scripts/build.sh"
+echo "  ./scripts/deps.sh            # tiers: what builds / installs first, and why"
+echo "  source ./scripts/build.sh    # build everything from the local repos"
+echo "  ./scripts/status.sh          # git overview per tier"

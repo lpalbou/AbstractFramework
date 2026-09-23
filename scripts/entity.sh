@@ -5,8 +5,8 @@
 # 2026-07-12 split; the observer no longer ships entity.html).
 # Requires the gateway (start it first). Local-code twin: entity-local.sh
 #
-# NOTE: requires @abstractframework/entity to be PUBLISHED; until that first
-# release, the -local twin is authoritative.
+# Published on npm since @abstractframework/entity 0.1.0 (2026-09-23); pin a
+# version with ENTITY_NPM_SPEC=@abstractframework/entity@0.1.0.
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/apps_common.sh"
 

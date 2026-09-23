@@ -5,8 +5,9 @@
 #
 # Composes the per-app launchers (gateway.sh, flow.sh, observer.sh, code.sh,
 # console.sh, entity.sh); each keeps its own preflight + restart semantics.
-# NOTE: @abstractframework/entity and @abstractframework/continuum must be
-# published for their apps to start; until then use af-local.sh.
+# Every app is on npm (flow, observer, code, continuum, entity — versions in
+# docs/installers/install-manifest.json); the gateway and the assistant come
+# from the Python install (scripts/install.sh or pip install abstractframework).
 #
 # Ports: ONE canonical map, identical to start-local.sh/af-local.sh (two
 # launchers must never disagree on ports — 2026-07-21 incident):

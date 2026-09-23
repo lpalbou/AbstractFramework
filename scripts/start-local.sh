@@ -7,7 +7,7 @@
 #
 # Building is OPT-IN (maintainer directive 2026-09-21). Starting is the common
 # case and a build is multi-minute, so the default starts what is already
-# installed in .venv and touches nothing. Pass --build when you want the
+# installed in .venv (or $AF_VENV_DIR) and touches nothing. Pass --build when you want the
 # libraries rebuilt:
 #
 #   ./scripts/start-local.sh                 # start only — no build
@@ -81,9 +81,9 @@ if $START_DO_BUILD; then
         exit 1
     fi
     echo "Build complete."
-elif [[ ! -x "$_START_ROOT_DIR/.venv/bin/python" ]]; then
+elif [[ ! -x "${AF_VENV_DIR:-$_START_ROOT_DIR/.venv}/bin/python" ]]; then
     # Nothing to serve: starting would fail later with a far less obvious error.
-    echo "error: no build found at $_START_ROOT_DIR/.venv — run ./scripts/start-local.sh --build first" >&2
+    echo "error: no build found at ${AF_VENV_DIR:-$_START_ROOT_DIR/.venv} — run ./scripts/start-local.sh --build first" >&2
     exit 1
 fi
 

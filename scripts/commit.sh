@@ -3,10 +3,11 @@
 # AbstractFramework — commit per repository
 # =============================================================================
 # Commits changes in the root AbstractFramework repo and each sibling repository
-# with a shared commit message. Repositories are processed in the same grouped
-# package order used by scripts/build.sh and scripts/status.sh. Clean repos are
-# reported but not committed; missing repos are reported. This does NOT push to
-# remotes.
+# with a shared commit message (`git add -A` + `git commit`, per repository).
+# Repositories are processed tier by tier, in the same order as
+# scripts/status.sh (scripts/lib/packages.txt). Clean repos are reported but
+# not committed; missing repos are reported. This does NOT push: review with
+# ./scripts/status.sh, then ./scripts/push.sh (dry-run) and ./scripts/push.sh --yes.
 #
 # Usage:
 #   ./scripts/commit.sh "Your commit message"
@@ -22,7 +23,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Shared repository inventory and traversal order.
+# Shared package inventory (scripts/lib/packages.txt) and tier traversal.
 # shellcheck source=./lib/repo_groups.sh
 source "$SCRIPT_DIR/lib/repo_groups.sh"
 
