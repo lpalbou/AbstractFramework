@@ -136,6 +136,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | [abstractobserver](../abstractobserver/) | Browser UI for monitoring, control, and scheduling |
 | [abstractentity](../abstractentity/) | Summoned-entity manager and chat/replay UI |
 | [abstractcontinuum](../abstractcontinuum/) | Continuous iterative development and deployment console |
+| Consoles | Web consoles built into `abstractgateway serve` and `abstractcore serve` (`/console`, with Models and Engines tabs); terminal consoles `cargo install abstractgateway-console` and `cargo install abstractcore-console` |
 
 ### Shared libraries
 

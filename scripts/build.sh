@@ -11,8 +11,9 @@
 #   npm     the 7 AbstractUIC packages (ui-kit, app-server, monitor-*,
 #           panel-chat) then the apps flow, observer, continuum, entity and
 #           code/web — built from source, NOT from the npm registry
-#   Rust    abstracttui, abstractcode (abstractcode/tui) and
-#           abstractgateway-console (abstractgateway/console-tui), `cargo build`
+#   Rust    abstracttui, abstractcore-console (abstractcore/console-tui),
+#           abstractcode (abstractcode/tui) and abstractgateway-console
+#           (abstractgateway/console-tui), `cargo build`
 #
 # Third-party dependencies (pydantic, react, torch, crates, …) are resolved
 # normally from PyPI / npm / crates.io — only AbstractFramework Python
@@ -264,9 +265,9 @@ build_profile_extras() {
     # PyPI builds whenever a sibling checkout is ahead of the root pins. With
     # the 0.1.11 pins (`abstractcore==2.13.38`, `abstractvision==0.3.26`) a
     # dry-run showed [apple] here would downgrade abstractcore, abstractvision,
-    # abstractruntime, abstractgateway and abstractassistant at once. 0.1.12
-    # pins the released checkouts (core 2.13.42, runtime 0.4.32, agent 0.3.13,
-    # gateway 0.2.30, assistant 0.5.0), but the hazard returns with the next
+    # abstractruntime, abstractgateway and abstractassistant at once. 0.2.0
+    # pins the released checkouts (core 2.14.0, runtime 0.4.33, agent 0.3.13,
+    # gateway 0.3.0, assistant 0.5.0), but the hazard returns with the next
     # sibling bump, so the mapping stays as it is.
     case "$rel_dir" in
         abstractgateway|abstractassistant)

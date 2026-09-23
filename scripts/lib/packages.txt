@@ -45,11 +45,12 @@ abstractmusic           | abstractmusic     | lpalbou/AbstractMusic       | pyth
 abstractcamera          | abstractcamera    | lpalbou/AbstractCamera      | python | .                     | pypi     | abstractcamera                         | 0    | -
 abstract3d              | abstract3d        | lpalbou/abstract3d          | python | .                     | pypi     | abstract3d                             | 1    | abstractvision:dep
 abstractcore            | abstractcore      | lpalbou/AbstractCore        | python | .                     | pypi     | abstractcore                           | 2    | abstractvision:extra,abstractvoice:extra,abstractmusic:extra,abstract3d:extra
+core-console            | abstractcore      | lpalbou/AbstractCore        | rust   | console-tui           | crates   | abstractcore-console                   | 1    | abstracttui:dep
 abstractruntime         | abstractruntime   | lpalbou/AbstractRuntime     | python | .                     | pypi     | AbstractRuntime                        | 3    | abstractcore:dep,abstractmemory:dep,abstractsemantics:dep
 abstractagent           | abstractagent     | lpalbou/AbstractAgent       | python | .                     | pypi     | abstractagent                          | 4    | abstractcore:dep,abstractruntime:dep
 abstractassistant       | abstractassistant | lpalbou/AbstractAssistant   | python | .                     | pypi     | abstractassistant                      | 4    | abstractcore:dep,abstractruntime:dep,abstractvoice:dep
 abstractgateway         | abstractgateway   | lpalbou/AbstractGateway     | python | .                     | pypi     | abstractgateway                        | 5    | abstractruntime:dep,abstractagent:dep,abstractmemory:dep,abstractcore:extra
-gateway-console         | abstractgateway   | lpalbou/AbstractGateway     | rust   | console-tui           | crates   | abstractgateway-console                | 1    | abstracttui:dep
+gateway-console         | abstractgateway   | lpalbou/AbstractGateway     | rust   | console-tui           | crates   | abstractgateway-console                | 2    | abstracttui:dep,core-console:dep
 ui-kit                  | abstractuic       | lpalbou/AbstractUIC         | npm    | ui-kit                | npm      | @abstractframework/ui-kit              | 0    | -
 app-server              | abstractuic       | lpalbou/AbstractUIC         | npm    | app-server            | npm      | @abstractframework/app-server          | 0    | -
 monitor-flow            | abstractuic       | lpalbou/AbstractUIC         | npm    | monitor-flow          | npm      | @abstractframework/monitor-flow        | 0    | -

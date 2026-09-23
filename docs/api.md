@@ -55,8 +55,8 @@ The response type returned by `llm.generate(...)`.
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.1.12:
-`abstractcore` 2.13.42, `abstractruntime` 0.4.32, `abstractagent` 0.3.13, `abstractgateway` 0.2.30,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.2.0:
+`abstractcore` 2.14.0, `abstractruntime` 0.4.33, `abstractagent` 0.3.13, `abstractgateway` 0.3.0,
 `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.3, `abstractvision` 0.3.29,
 `abstractmusic` 0.1.15, `abstractassistant` 0.5.0.
 
@@ -72,6 +72,13 @@ The npm apps released with this version, each runnable with `npx <package>`:
 `@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.2.0 and
 `@abstractframework/entity` 0.1.0. They also appear as `npm_apps` in the install manifest.
 
+### `CRATE_RELEASE_VERSIONS`
+
+The Rust terminal tools released with this version, installed with `cargo install <crate>`:
+`abstractgateway-console` 0.7.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1 and the
+`abstracttui` engine 0.6.0. The bootstrap scripts install `abstractgateway-console` and
+`abstractcode` at these versions with `--with-console` and `--with-code-cli`.
+
 ### `CORE_DEFAULT_EXTRAS`
 
 List of AbstractCore extras implied by the default framework install profile (remote-first): `remote`, `tools`, `media`, `vision`, `voice`, `audio`, `music`.
@@ -86,6 +93,7 @@ from abstractframework import get_release_profile
 profile = get_release_profile()
 print(profile["abstractframework"])        # meta-package version
 print(profile["packages"]["abstractcore"]) # pinned Core version
+print(profile["crates"])                   # CRATE_RELEASE_VERSIONS
 ```
 
 ### `get_installed_packages()`
@@ -108,12 +116,18 @@ print_status()
 
 ### `abstractframework doctor`
 
-Checks Python version, pinned package versions, Node/npm availability for browser UIs, and local
-hardware indicators for Apple/GPU profiles. It does not import heavy local inference stacks.
+Checks the Python version (3.10–3.13), pinned package versions, the Apple/GPU profile
+prerequisites (macOS 14+ on Apple Silicon, `nvidia-smi` / `rocminfo`), uv, Node.js 18+ (system or
+`nodejs-wheel`), free disk, and, over read-only GET requests, the gateway health
+(`ABSTRACTGATEWAY_URL`, default `http://127.0.0.1:8080`), `abstractgateway-config status --json`,
+and whether Ollama and LM Studio are reachable. It does not import heavy local inference stacks.
+Checks report `ok`, `warn`, `error` or `info` (`info` never fails the run).
 
 ```bash
 abstractframework doctor
-abstractframework doctor --json
+abstractframework doctor --json          # schema abstractframework_doctor_v2
+abstractframework doctor --no-network    # skip the gateway / engine probes
+abstractframework doctor --timeout 5     # probe timeout in seconds (default 2)
 ```
 
 ### `abstractframework manifest`
@@ -139,6 +153,8 @@ abstractframework manifest --check docs/installers/install-manifest.json
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
 | Coding client | `abstractcode` (crates.io) and `@abstractframework/code` (npm) |
 | Gateway operator console | built-in `/console`, and `abstractgateway-console` (crates.io) |
+| Local models and engines (catalog, fit, download, delete, engine installs) | `abstractcore` (`abstractcore models`, `abstractcore engines`, `/acore/*`), mirrored by `abstractgateway` (`/api/gateway/models`, `/engines`, `/jobs`) |
+| AbstractCore consoles | built-in `/console` of `abstractcore serve`, and `abstractcore-console` (crates.io) |
 | Continuous development console | `@abstractframework/continuum` (npm) |
 | Summoned-entity manager | `@abstractframework/entity` (npm) |
 

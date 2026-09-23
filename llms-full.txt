@@ -23,9 +23,10 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 
 ## Quick start
 
-One line installs the gateway (no admin rights, no system Python), starts it on
-`127.0.0.1:8080`, and opens its web console, where a first-run wizard sets up engines, a default
-model and the apps:
+One line installs the gateway (no admin rights, no system Python), registers it as a login
+service, starts it on `127.0.0.1:8080`, and opens its web console already signed in. A first-run
+guide then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits
+your machine, and lists the apps:
 
 ```bash
 # macOS / Linux
@@ -40,6 +41,17 @@ powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpa
 Add `--with-apps`, `--with-ollama` or `--with-lmstudio` for Node.js and local engines, `--print` to
 see every command first, and `--uninstall` to remove it. Options, the equivalent commands and
 uninstall details: [Install](docs/install.md).
+
+Already have Python? Either entry point works the same way: start it, then open the link it prints.
+
+```bash
+pip install abstractcore && abstractcore serve        # http://127.0.0.1:8000/console#claim=…
+pip install abstractgateway && abstractgateway serve  # http://127.0.0.1:8080/console#claim=…
+```
+
+Both consoles have **Models** (browse models that fit this machine, download, delete) and
+**Engines** (detect and install local engines) tabs; every action also shows its command-line
+equivalent (`abstractcore models …`, `abstractcore engines …`, `abstractgateway models …`).
 
 ---
 
@@ -69,6 +81,12 @@ resp = llm.generate("Explain durable execution in 3 bullets.")
 print(resp.content)
 ```
 
+`abstractcore serve` starts the `/v1` server on `127.0.0.1:8000` and prints a one-time link to its
+web console (Overview, Models, Engines, Providers). The same Models and Engines screens are
+available from the command line (`abstractcore models catalog|list|download|delete`,
+`abstractcore engines status|install`) and in the terminal console
+(`cargo install abstractcore-console`).
+
 AbstractCore gives you one interface for provider switching, tools, structured output, and media — as a Python SDK or via `/v1` for any OpenAI-compatible client.
 
 ### 2) AbstractGateway — durable run control plane (HTTP/SSE APIs)
@@ -83,15 +101,24 @@ Start here if you're building persistent AI applications — agents that run for
 
 ```bash
 pip install abstractgateway
+abstractgateway serve
+```
 
+With no auth configured, `abstractgateway serve` binds `127.0.0.1:8080`, enables user auth,
+creates `default/admin` in the per-user data folder, and prints a one-time sign-in link
+(`http://127.0.0.1:8080/console#claim=…`, valid 10 minutes, this machine only). Open it to reach the
+web console and its first-run guide. `abstractgateway claim` mints a new link;
+`abstractgateway service install` starts the gateway at login.
+
+To choose the data folder, the allowed browser origins or your own workflow bundles, set the
+environment explicitly:
+
+```bash
 export ABSTRACTGATEWAY_USER_AUTH=1
 export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
-
-# Optional: set only to serve your own bundle registry instead of the
-# workflows Gateway ships with.
-# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
+# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"   # serve your own bundle registry
 
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
@@ -100,12 +127,10 @@ Out of the box this serves a ready set of workflows — a verify-gated coding
 agent, `deep-research`, and `co-scientist` among them. See
 [shipped workflows](abstractgateway/docs/shipped-workflows.md).
 
-On first local start, Gateway creates `default/admin`, writes the browser-login
-token to `runtime/gateway/auth/bootstrap-admin-token`, and prints the token in
-the terminal. Use that `admin` user token in the built-in web console at
-`http://127.0.0.1:8080/console`, AbstractFlow,
-AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` remains a
-legacy server/operator bearer token; it is not a browser sign-in token.
+The `admin` user token is kept in `<data dir>/auth/bootstrap-admin-token`; use it to sign in to
+AbstractFlow, AbstractCode Web or AbstractObserver, or to the console without a claim link.
+`ABSTRACTGATEWAY_AUTH_TOKEN` remains a legacy server/operator bearer token; it is not a browser
+sign-in token.
 
 Monitor runs from a browser, or from a terminal with the gateway console:
 
@@ -117,8 +142,7 @@ ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.2.30` (`0.2.30-gpu` is an experimental NVIDIA
-image) and `ghcr.io/lpalbou/abstractcore:2.13.42`.
+`ghcr.io/lpalbou/abstractgateway:0.3.0` and `ghcr.io/lpalbou/abstractcore-server:2.14.0`.
 
 For artifact and runtime-resource investigation, see
 `docs/guide/runtime-artifacts.md`.
@@ -192,7 +216,8 @@ The ecosystem, grouped by layer. Each name links to the package's own README.
 | [AbstractObserver](abstractobserver/) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
 | [AbstractEntity](abstractentity/) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
 | [AbstractContinuum](abstractcontinuum/) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
-| **Gateway consoles** | Operator consoles for a running gateway: web at `/console`, terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
+| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
+| **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed) | `npx @abstractframework/code` |
 | **Flow Editor** | Visual workflow authoring in the browser | `npx @abstractframework/flow` |
 
@@ -236,7 +261,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.1.12)
+### Release matrix (abstractframework 0.2.0)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -245,10 +270,10 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.2.30 |
+| PyPI | `abstractgateway` | 0.3.0 |
 | PyPI | `abstractassistant` | 0.5.0 |
-| PyPI | `abstractcore` | 2.13.42 |
-| PyPI | `AbstractRuntime` | 0.4.32 |
+| PyPI | `abstractcore` | 2.14.0 |
+| PyPI | `AbstractRuntime` | 0.4.33 |
 | PyPI | `abstractagent` | 0.3.13 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
@@ -261,10 +286,11 @@ and tested together.
 | npm | `@abstractframework/continuum` | 0.2.0 |
 | npm | `@abstractframework/entity` | 0.1.0 |
 | crates.io | `abstractcode` | 0.5.1 |
-| crates.io | `abstractgateway-console` | 0.6.0 |
+| crates.io | `abstractgateway-console` | 0.7.0 |
+| crates.io | `abstractcore-console` | 0.2.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.2.30 (`0.2.30-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore` | 2.13.42 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.3.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.14.0 |
 
 Optional add-ons that are not part of any profile install separately:
 `pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and
@@ -306,11 +332,12 @@ compares local versions with PyPI, npm and crates.io), `./scripts/pull.sh`, `./s
 and `./scripts/push.sh` (a dry run until you add `--yes`). See
 [docs/workspace-scripts.md](docs/workspace-scripts.md) for every script and option.
 
-Then configure:
+Then configure providers and models in a console (`abstractcore serve` or
+`abstractgateway serve`, then open the printed link), or from the terminal:
 
 ```bash
-abstractcore --config
-abstractcore --install
+abstractcore --config    # interactive configuration wizard
+abstractcore --install   # check every subsystem and download missing models and dependencies
 ```
 
 ---
@@ -328,7 +355,8 @@ Most runtime behavior lives in the individual package repos (AbstractCore/Runtim
 AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a browser client (`npx @abstractframework/code`); both need a running gateway.
 
 Quick commands:
-- One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); `--print` dry run, `--uninstall` to remove
+- One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); installs uv + Python 3.12 + the pinned gateway as a uv tool, registers the login service, starts it on 127.0.0.1:8080 and opens `/console` through a one-time claim link; `--print` dry run, `--uninstall` to remove
+- Start either entry point and open the printed one-time link: `abstractcore serve` (http://127.0.0.1:8000/console#claim=…) or `abstractgateway serve` (http://127.0.0.1:8080/console#claim=…); both consoles have Models (catalog + fit verdict, download, delete) and Engines (detect, install) tabs, mirrored by `abstractcore models|engines` and `abstractgateway models|engines`
 - Install pinned stack: `pip install abstractframework`
 - Check install health: `abstractframework doctor`
 - Print installer manifest: `abstractframework manifest`
@@ -443,8 +471,8 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.1.12 pins (PyPI, `==`): abstractgateway 0.2.30, abstractassistant 0.5.0, abstractcore 2.13.42, AbstractRuntime 0.4.32, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.3, abstractvision 0.3.29, abstractmusic 0.1.15.
-- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.2.0, `entity` 0.1.0 (run with `npx`); crates `abstractcode` 0.5.1, `abstractgateway-console` 0.6.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.2.30`, `ghcr.io/lpalbou/abstractcore:2.13.42`.
+- abstractframework 0.2.0 pins (PyPI, `==`): abstractgateway 0.3.0, abstractassistant 0.5.0, abstractcore 2.14.0, AbstractRuntime 0.4.33, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.3, abstractvision 0.3.29, abstractmusic 0.1.15.
+- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.2.0, `entity` 0.1.0 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.7.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.3.0`, `ghcr.io/lpalbou/abstractcore-server:2.14.0`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
@@ -484,7 +512,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.1.12"
+version = "0.2.0"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -528,14 +556,14 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.2.30",
+    "abstractgateway==0.3.0",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
     "abstractassistant==0.5.0",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.13.42",
-    "AbstractRuntime==0.4.32",
+    "abstractcore==2.14.0",
+    "AbstractRuntime==0.4.33",
     "abstractagent==0.3.13",
     "AbstractMemory==0.3.0",
     "abstractsemantics==0.0.5",
@@ -560,12 +588,12 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.2.30",
+    "abstractgateway[apple]==0.3.0",
     "abstractassistant[apple]==0.5.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.2.30",
+    "abstractgateway[gpu]==0.3.0",
     "abstractassistant[gpu]==0.5.0",
 ]
 
@@ -616,15 +644,15 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.12"
+__version__ = "0.2.0"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.42",
-    "abstractruntime": "0.4.32",
+    "abstractcore": "2.14.0",
+    "abstractruntime": "0.4.33",
     "abstractagent": "0.3.13",
-    "abstractgateway": "0.2.30",
+    "abstractgateway": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.11.3",
@@ -652,6 +680,15 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/observer": "0.1.12",
     "@abstractframework/continuum": "0.2.0",
     "@abstractframework/entity": "0.1.0",
+}
+
+# Terminal tools published on crates.io alongside this release (installed with `cargo install`,
+# or by the bootstrap scripts' --with-console / --with-code-cli flags).
+CRATE_RELEASE_VERSIONS: dict[str, str] = {
+    "abstractgateway-console": "0.7.0",
+    "abstractcore-console": "0.2.0",
+    "abstractcode": "0.5.1",
+    "abstracttui": "0.6.0",
 }
 
 CORE_DEFAULT_EXTRAS = [
@@ -696,6 +733,7 @@ def get_release_profile() -> dict[str, object]:
         "packages": RELEASE_VERSIONS.copy(),
         "distributions": PACKAGE_DISTRIBUTIONS.copy(),
         "npm_packages": NPM_RELEASE_VERSIONS.copy(),
+        "crates": CRATE_RELEASE_VERSIONS.copy(),
         "core_extras": list(CORE_DEFAULT_EXTRAS),
         "install_profiles": {
             "light": "pip install abstractframework",
@@ -1693,6 +1731,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | [abstractobserver](../abstractobserver/) | Browser UI for monitoring, control, and scheduling |
 | [abstractentity](../abstractentity/) | Summoned-entity manager and chat/replay UI |
 | [abstractcontinuum](../abstractcontinuum/) | Continuous iterative development and deployment console |
+| Consoles | Web consoles built into `abstractgateway serve` and `abstractcore serve` (`/console`, with Models and Engines tabs); terminal consoles `cargo install abstractgateway-console` and `cargo install abstractcore-console` |
 
 ### Shared libraries
 
@@ -1729,8 +1768,9 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 
 ## Quick start
 
-One line installs the gateway, starts it on `127.0.0.1:8080`, and opens its web console in your
-browser. No admin rights and no system Python are needed.
+One line installs the gateway, registers it to start at login, starts it on `127.0.0.1:8080`, and
+opens its web console in your browser, already signed in. No admin rights and no system Python are
+needed.
 
 macOS and Linux:
 
@@ -1744,8 +1784,10 @@ Windows 10 22H2+ / 11 (PowerShell):
 powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
 ```
 
-The console then walks you through engines (Ollama, LM Studio, or a cloud API key), a default model
-and the apps.
+The console's first-run guide then walks you through a local engine (Ollama, LM Studio, MLX,
+llama.cpp, with a one-click install that shows its exact command first) or a cloud API key, a
+default model picked from the models that fit your machine, and the apps. The **Models** and
+**Engines** tabs stay available afterwards.
 
 ### What the script does
 
@@ -1754,14 +1796,16 @@ and the apps.
    `light` otherwise.
 2. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 3. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.2.30"`.
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.3.0"`.
 4. Optionally installs Node.js for the browser apps, terminal tools, Ollama or LM Studio (flags
    below).
-5. Registers the gateway to start at login when the installed gateway supports
-   `abstractgateway service install`; otherwise starts it in the background.
-6. Waits for `/api/health`, then opens `http://127.0.0.1:8080/console`, signed in through a
-   one-time link when the gateway supports `abstractgateway-config claim-url`. Otherwise it shows
-   where the admin token is.
+5. Registers the gateway to start at login with `abstractgateway service install` (a LaunchAgent on
+   macOS, a `systemd --user` unit on Linux, a Startup shortcut on Windows) and starts it. With
+   `--no-service`, or on a Linux host without a user systemd session, it starts the gateway in the
+   background instead.
+6. Waits for `/api/health`, then opens `http://127.0.0.1:8080/console` through a one-time sign-in
+   link (`abstractgateway-config claim-url`, valid 10 minutes, this machine only). If no link can be
+   created, it shows where the admin token is.
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
 upgrades or repairs the install in place.
@@ -1800,24 +1844,26 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.2.30"   # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.3.0"    # [apple,tray] or [gpu,tray] for local engines
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
-ABSTRACTGATEWAY_USER_AUTH=1 abstractgateway serve --host 127.0.0.1 --port 8080
-# open http://127.0.0.1:8080/console and sign in as admin with the token the gateway prints
+abstractgateway service install --host 127.0.0.1 --port 8080   # or: abstractgateway serve
+abstractgateway-config claim-url --base-url http://127.0.0.1:8080  # prints a one-time console link
 ```
 
 ### Run at login
 
-Gateways that provide `abstractgateway service install` register the login service for you
-(LaunchAgent on macOS, `systemd --user` on Linux, a logon entry on Windows):
+`abstractgateway service install` registers the login service (LaunchAgent on macOS,
+`systemd --user` on Linux, a Startup shortcut on Windows, experimental) and starts the gateway:
 
 ```bash
 abstractgateway service install --host 127.0.0.1 --port 8080
+abstractgateway service status
 abstractgateway service uninstall
 ```
 
-With a gateway that does not, `install.sh` starts it in the background and `install.ps1` adds a
-Startup-folder shortcut. To start it at login yourself on Linux, a user unit is enough:
+The bootstrap scripts use it by default. Gateways older than 0.3.0 (installed with `--pin`) have no
+`service` command: `install.sh` then starts the gateway in the background and `install.ps1` adds a
+Startup-folder shortcut. To write a login entry yourself on Linux, a user unit is enough:
 
 ```ini
 # ~/.config/systemd/user/abstractgateway.service
@@ -1875,8 +1921,8 @@ whether local inference engines are installed.
 | Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 | GPU | Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 
-`abstractframework` 0.1.12 pins `abstractgateway==0.2.30`, `abstractassistant==0.5.0`,
-`abstractcore==2.13.42`, `AbstractRuntime==0.4.32`, `abstractagent==0.3.13`,
+`abstractframework` 0.2.0 pins `abstractgateway==0.3.0`, `abstractassistant==0.5.0`,
+`abstractcore==2.14.0`, `AbstractRuntime==0.4.33`, `abstractagent==0.3.13`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.3`,
 `abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
@@ -1960,10 +2006,12 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version released with 0.1.12 |
+| Tool | Command | Version released with 0.2.0 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open `http://127.0.0.1:8080/console` after `abstractgateway serve` | 0.2.30 |
-| Gateway terminal console | `cargo install abstractgateway-console` (Rust 1.87+), then `abstractgateway-console --url http://127.0.0.1:8080` | 0.6.0 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.3.0 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.14.0 |
+| Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.2.0 |
+| Gateway terminal console | `cargo install abstractgateway-console` (Rust 1.87+), then `abstractgateway-console --url http://127.0.0.1:8080` | 0.7.0 |
 | Flow Editor | `npx @abstractframework/flow` | 0.3.20 |
 | Code Web UI | `npx @abstractframework/code` | 0.4.2 |
 | Observer | `npx @abstractframework/observer` | 0.1.12 |
@@ -1980,13 +2028,13 @@ profiles install on their own: `pip install abstract3d`, `pip install abstractca
 Start the gateway, open its console, then any browser app against it:
 
 ```bash
-ABSTRACTGATEWAY_USER_AUTH=1 abstractgateway serve --host 127.0.0.1 --port 8080
-# console: http://127.0.0.1:8080/console (sign in as admin)
+abstractgateway serve            # binds 127.0.0.1:8080 and prints a one-time console link
 npx @abstractframework/flow
 ```
 
-Configure providers, API keys and default models in the console. `abstractcore --config` remains
-available for library-only use of AbstractCore. When you work from source, the workspace helper
+Configure providers, API keys, engines and default models in the console. For library-only use
+of AbstractCore, `abstractcore serve` opens the same Models and Engines screens in its own console,
+and `abstractcore --config` remains available in the terminal. When you work from source, the workspace helper
 scripts build and start the same services (see [Workspace scripts](workspace-scripts.md)).
 
 Gateway-hosted browser apps use Gateway user tokens and browser sessions. Do not use the bootstrap
@@ -2003,15 +2051,15 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.2.30
+  ghcr.io/lpalbou/abstractgateway:0.3.0
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
 local MLX/CUDA stacks. On first start it creates `default/admin` and writes the login token to
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
-NVIDIA host when you explicitly want the local GPU profile (pinned tag: `0.2.30-gpu`; this image is
+NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore:2.13.42`.
+`ghcr.io/lpalbou/abstractcore-server:2.14.0`.
 
 ## How installs are designed
 
@@ -2057,15 +2105,16 @@ AbstractFramework is a **stack**:
 ## Fastest path: the one-line install
 
 If you want a running gateway and its web console without setting up Python yourself, use the
-bootstrap script. It installs uv, Python 3.12 and the pinned gateway in your user account, starts
-the gateway on `127.0.0.1:8080`, and opens `/console`:
+bootstrap script. It installs uv, Python 3.12 and the pinned gateway in your user account, registers
+it to start at login, starts it on `127.0.0.1:8080`, and opens `/console` already signed in:
 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
 ```
 
 On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`.
-Configure providers and models in the console, then continue with
+The console's first-run guide sets up a local engine or a cloud key and a default model (the
+**Models** tab lists the models that fit your machine and downloads them). Then continue with
 [Monitor runs](#4-monitor-runs-with-abstractobserver) or [AbstractFlow](#author-orchestration-with-abstractflow).
 Options and uninstall: [Install](install.md#quick-start). The sections below cover manual installs
 for library and developer use.
@@ -2121,7 +2170,20 @@ export OPENAI_API_KEY="sk-..."
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
-**Or use the interactive wizard** (persists config to `~/.abstractcore/config/`):
+**Or use a console.** `abstractcore serve` starts the server on `127.0.0.1:8000` and prints a
+one-time link to its web console, where the **Engines** tab detects and installs local engines
+(Ollama, LM Studio, MLX, llama.cpp) and the **Models** tab downloads a model that fits this machine.
+The same actions exist on the command line and in the terminal console:
+
+```bash
+abstractcore serve                      # open the printed http://127.0.0.1:8000/console#claim=… link
+abstractcore engines status             # which local engines are installed and running
+abstractcore models catalog             # models, with a fit verdict for this machine
+abstractcore models download ollama qwen3:4b-instruct
+cargo install abstractcore-console      # terminal console (Rust 1.87+)
+```
+
+The interactive terminal wizard persists config to `~/.abstractcore/config/`:
 
 ```bash
 abstractcore --config
@@ -2168,7 +2230,12 @@ for chunk in llm.generate("Write a poem.", stream=True):
 pip install abstractgateway
 ```
 
-### 2. Configure
+### 2. Configure (optional)
+
+With no configuration, `abstractgateway serve` binds `127.0.0.1:8080`, enables user auth, and keeps
+its data in the per-user data folder (macOS `~/Library/Application Support/AbstractGateway`, Linux
+`~/.local/share/abstractgateway`, Windows `%LOCALAPPDATA%\AbstractGateway`). Set the environment
+when you want another data folder, browser origins or bundle registry:
 
 ```bash
 export ABSTRACTGATEWAY_USER_AUTH=1
@@ -2188,12 +2255,15 @@ export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
-On first local start, Gateway creates `default/admin`, writes the browser-login
-token to `runtime/gateway/auth/bootstrap-admin-token`, and prints it in the
-terminal. Use that token with user `admin` in the built-in web console
-(`http://127.0.0.1:8080/console`), AbstractFlow,
-AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the
-legacy server/operator bearer-token path; it does not sign in browsers.
+On first local start, Gateway creates `default/admin`, keeps its token in
+`<data dir>/auth/bootstrap-admin-token` (readable by you only), and prints a one-time link:
+`First run: open http://127.0.0.1:8080/console#claim=…`. Open it to sign in to the web console and
+its first-run guide (engines, default model, apps); `abstractgateway claim --open` mints a new
+link. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCode Web or
+AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operator bearer-token
+path; it does not sign in browsers.
+
+To start the gateway at login, use `abstractgateway service install --host 127.0.0.1 --port 8080`.
 
 Verify:
 
@@ -2338,7 +2408,8 @@ Start here if you need a lightweight LLM library for scripts, notebooks, or exis
 - 9+ providers with identical API (local + cloud)
 - Universal tool calling, structured output, streaming
 - Media handling (images, PDFs, audio, video)
-- OpenAI-compatible HTTP server mode (`/v1`)
+- OpenAI-compatible HTTP server mode (`/v1`), with a web console at `/console`
+- Local model and engine management: browse models that fit this machine, download, delete, install engines
 - Multimodal via capability plugins (Voice, Vision, Music)
 
 The right first step when you mainly care about calling models/tools/media (in-process via Python or via `/v1`) and want the smallest surface area.
@@ -2366,7 +2437,8 @@ Apps / UIs (thin clients)
  Flow Editor (author workflows)
  AbstractCode (terminal + web), AbstractAssistant, your custom app
  AbstractContinuum console, AbstractEntity manager
- Gateway consoles: web /console, terminal abstractgateway-console
+ Gateway consoles: web /console (first-run guide, Models, Engines),
+                  terminal abstractgateway-console
                        │  HTTP/SSE
                        ▼
 AbstractGateway (control plane)
@@ -2394,6 +2466,8 @@ LLM + tools + multimodality
 ──────────────────────────────────────────────────────
  AbstractCore
  provider/model abstraction + routing defaults
+ host profile, model catalog + fit, engines, download/delete jobs
+   (CLI, /acore/* routes, web /console, terminal abstractcore-console)
  request/output normalization + call-scoped resolved-route truth
  tools, structured output, media input, embeddings, MCP
  capability plugins: voice / vision / music
@@ -2417,17 +2491,42 @@ flowchart LR
     subgraph crates["crates.io (cargo install)"]
         CLI["abstractcode"]
         CON["abstractgateway-console"]
+        CCON["abstractcore-console<br/>(app + Models/Engines screens library)"]
     end
     subgraph GHCR["GHCR images"]
-        IMG["abstractgateway · abstractcore"]
+        IMG["abstractgateway · abstractcore-server"]
     end
+    BOOT["install.sh / install.ps1<br/>(uv tool install abstractgateway)"]
+    BOOT -->|installs, starts, opens /console| GW
     AS -->|HTTP/SSE| GW
     APPS -->|HTTP/SSE| GW
     CLI -->|HTTP/SSE| GW
     CON -->|HTTP/SSE| GW
+    CON -->|embeds screens| CCON
+    CCON -->|abstractcore CLI| STACK
     GW --> STACK
     IMG -.->|same server, containerized| GW
 ```
+
+The Models and Engines features are implemented once, in AbstractCore, and inherited by the
+gateway:
+
+```mermaid
+flowchart TB
+    CORE["AbstractCore<br/>host profile · catalog + fit · engines · jobs"]
+    CORE --> CCLI["abstractcore models / engines (CLI)"]
+    CORE --> CAPI["abstractcore serve<br/>/acore/* + web /console"]
+    CORE --> CTUI["abstractcore-console<br/>screens 9 Models, 0 Engines"]
+    CORE -->|via AbstractRuntime| GAPI["abstractgateway<br/>/api/gateway/models, engines, jobs, host/profile"]
+    GAPI --> GWEB["gateway web /console<br/>embeds Core's Models and Engines screens"]
+    GAPI --> GTUI["abstractgateway-console<br/>mounts the abstractcore-console screens over HTTP"]
+    GAPI --> GCLI["abstractgateway models / engines (CLI)"]
+```
+
+Every console action shows its command-line equivalent. Download, delete and engine installs are
+admin-only jobs; engine installs from a console are enabled by default only for a server bound to
+loopback (`allow_engine_install` on the gateway, `ABSTRACTCORE_ALLOW_ENGINE_INSTALL` on the core
+server).
 
 See [Install AbstractFramework](install.md) for the versions released together and the commands
 for each registry.
@@ -3017,8 +3116,8 @@ The response type returned by `llm.generate(...)`.
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.1.12:
-`abstractcore` 2.13.42, `abstractruntime` 0.4.32, `abstractagent` 0.3.13, `abstractgateway` 0.2.30,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.2.0:
+`abstractcore` 2.14.0, `abstractruntime` 0.4.33, `abstractagent` 0.3.13, `abstractgateway` 0.3.0,
 `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.3, `abstractvision` 0.3.29,
 `abstractmusic` 0.1.15, `abstractassistant` 0.5.0.
 
@@ -3034,6 +3133,13 @@ The npm apps released with this version, each runnable with `npx <package>`:
 `@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.2.0 and
 `@abstractframework/entity` 0.1.0. They also appear as `npm_apps` in the install manifest.
 
+### `CRATE_RELEASE_VERSIONS`
+
+The Rust terminal tools released with this version, installed with `cargo install <crate>`:
+`abstractgateway-console` 0.7.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1 and the
+`abstracttui` engine 0.6.0. The bootstrap scripts install `abstractgateway-console` and
+`abstractcode` at these versions with `--with-console` and `--with-code-cli`.
+
 ### `CORE_DEFAULT_EXTRAS`
 
 List of AbstractCore extras implied by the default framework install profile (remote-first): `remote`, `tools`, `media`, `vision`, `voice`, `audio`, `music`.
@@ -3048,6 +3154,7 @@ from abstractframework import get_release_profile
 profile = get_release_profile()
 print(profile["abstractframework"])        # meta-package version
 print(profile["packages"]["abstractcore"]) # pinned Core version
+print(profile["crates"])                   # CRATE_RELEASE_VERSIONS
 ```
 
 ### `get_installed_packages()`
@@ -3070,12 +3177,18 @@ print_status()
 
 ### `abstractframework doctor`
 
-Checks Python version, pinned package versions, Node/npm availability for browser UIs, and local
-hardware indicators for Apple/GPU profiles. It does not import heavy local inference stacks.
+Checks the Python version (3.10–3.13), pinned package versions, the Apple/GPU profile
+prerequisites (macOS 14+ on Apple Silicon, `nvidia-smi` / `rocminfo`), uv, Node.js 18+ (system or
+`nodejs-wheel`), free disk, and, over read-only GET requests, the gateway health
+(`ABSTRACTGATEWAY_URL`, default `http://127.0.0.1:8080`), `abstractgateway-config status --json`,
+and whether Ollama and LM Studio are reachable. It does not import heavy local inference stacks.
+Checks report `ok`, `warn`, `error` or `info` (`info` never fails the run).
 
 ```bash
 abstractframework doctor
-abstractframework doctor --json
+abstractframework doctor --json          # schema abstractframework_doctor_v2
+abstractframework doctor --no-network    # skip the gateway / engine probes
+abstractframework doctor --timeout 5     # probe timeout in seconds (default 2)
 ```
 
 ### `abstractframework manifest`
@@ -3101,6 +3214,8 @@ abstractframework manifest --check docs/installers/install-manifest.json
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
 | Coding client | `abstractcode` (crates.io) and `@abstractframework/code` (npm) |
 | Gateway operator console | built-in `/console`, and `abstractgateway-console` (crates.io) |
+| Local models and engines (catalog, fit, download, delete, engine installs) | `abstractcore` (`abstractcore models`, `abstractcore engines`, `/acore/*`), mirrored by `abstractgateway` (`/api/gateway/models`, `/engines`, `/jobs`) |
+| AbstractCore consoles | built-in `/console` of `abstractcore serve`, and `abstractcore-console` (crates.io) |
 | Continuous development console | `@abstractframework/continuum` (npm) |
 | Summoned-entity manager | `@abstractframework/entity` (npm) |
 
@@ -3188,8 +3303,8 @@ No.
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app against an existing gateway | `npx @abstractframework/<flow\|code\|observer\|continuum\|entity>` |
-| A terminal client | `cargo install abstractcode` or `cargo install abstractgateway-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.2.30` |
+| A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.3.0` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -3341,6 +3456,28 @@ Pasting the one-liner works under the default `Restricted` policy because
 bypass applies to that process only. If your organization sets the policy through Group Policy
 (`Get-ExecutionPolicy -List` shows `MachinePolicy` or `UserPolicy`), a saved `install.ps1` will not
 run; use the one-liner or ask your administrator. The installer reports this during preflight.
+
+### The sign-in link expired or I closed the tab
+
+The one-time link is valid for 10 minutes and works only from the same machine. Mint a new one with
+`abstractgateway claim --open` (or `abstractgateway-config claim-url`). The admin token also stays
+in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path.
+
+### How do I stop or restart the gateway?
+
+When the script registered the login service, `abstractgateway service status` shows it,
+`abstractgateway service uninstall` stops the gateway and removes the login entry (your data is
+kept), and `abstractgateway service install --host 127.0.0.1 --port 8080` registers and starts it
+again. With `--no-service`, the install summary prints the stop and start commands; re-running the
+installer starts it again.
+
+### How do I download a model or install Ollama later?
+
+Open the console's **Engines** tab (detect, install with the exact command shown first) and
+**Models** tab (models that fit this machine, download, delete). From a terminal:
+`abstractgateway engines status|install` and `abstractgateway models catalog|download|delete`.
+Engine installs from the console run on the gateway host and are enabled by default only when the
+gateway listens on loopback.
 
 ### How do I see what the script will do before running it?
 
@@ -3534,7 +3671,23 @@ A thin-client browser UI for operations: monitor runs, inspect ledger history, w
 
 ### Gateway console
 
-The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`).
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens.
+
+### Core console
+
+The console for AbstractCore on its own. The web console is served at `/console` by `abstractcore serve` (Overview, Models, Engines, Providers); the terminal console is the `abstractcore-console` crate, which is also the library that provides the Models and Engines screens to the gateway's terminal console.
+
+### Claim link
+
+A one-time console sign-in link (`/console#claim=<code>`), single use, valid for 10 minutes and redeemable only from the same machine. `abstractgateway serve` and `abstractcore serve` print one on a first local start; `abstractgateway claim` and `abstractgateway-config claim-url` mint a new one.
+
+### First-run guide
+
+The gateway console's setup flow, opened once per data folder by the claim link and later from the **Setup** button: host summary, local engines, a default model that fits the machine, and the apps.
+
+### Models and Engines
+
+The local model and engine management shared by AbstractCore and the gateway: a model catalog with a fit verdict for this machine (`fits`, `tight`, `too_large`, `partial_offload`, `unknown`), installed models with sizes, download and delete jobs, and detection and installation of local engines (Ollama, LM Studio, MLX, llama.cpp, vLLM, transformers). Available as `abstractcore models|engines`, `abstractgateway models|engines`, and in the consoles.
 
 ---
 
@@ -3544,9 +3697,13 @@ The operator console for one gateway. The web console is built into `abstractgat
 
 One of the three ways to install the pinned Python stack: **Light** (`pip install abstractframework`, remote/endpoint inference only), **Apple** (`abstractframework[apple]`, adds MLX/Metal engines on macOS 14+) and **GPU** (`abstractframework[gpu]`, adds CUDA/ROCm engines). See [Install](install.md).
 
+### Bootstrap script
+
+The one-line installer (`scripts/install.sh` for macOS and Linux, `scripts/install.ps1` for Windows). It installs uv, Python 3.12 and the pinned gateway as a uv tool, registers and starts it, and opens the console with a claim link. See [Install](install.md#quick-start).
+
 ### Release pins
 
-The exact (`==`) versions a given `abstractframework` release installs, exposed as `RELEASE_VERSIONS` and checked by `abstractframework doctor`.
+The exact (`==`) versions a given `abstractframework` release installs, exposed as `RELEASE_VERSIONS` and checked by `abstractframework doctor`. The npm apps and crates released with it are listed in `NPM_RELEASE_VERSIONS` and `CRATE_RELEASE_VERSIONS`.
 
 ---
 
@@ -3578,7 +3735,7 @@ If you only want to *use* the framework, install the published packages instead:
 ## The package inventory
 
 `scripts/lib/packages.txt` is the single list every script reads. It has one row per published
-package (29 packages in 21 repositories):
+package (30 packages in 21 repositories):
 
 | Column | Meaning |
 |---|---|
@@ -3614,8 +3771,8 @@ difference. Run it after you add a dependency between two packages, then update 
 | Tier | Python (PyPI) | npm | Rust (crates.io) |
 |---|---|---|---|
 | 0 | abstractskill, abstractsemantics, AbstractMemory, abstractvision, abstractvoice, abstractmusic, abstractcamera | ui-kit, app-server, monitor-flow, monitor-gpu, monitor-memory, monitor-active-memory | abstracttui |
-| 1 | abstract3d | panel-chat, flow | abstractgateway-console, abstractcode |
-| 2 | abstractcore | observer, continuum, entity, code (web) | |
+| 1 | abstract3d | panel-chat, flow | abstractcore-console, abstractcode |
+| 2 | abstractcore | observer, continuum, entity, code (web) | abstractgateway-console |
 | 3 | AbstractRuntime | | |
 | 4 | abstractagent, abstractassistant | | |
 | 5 | abstractgateway | | |
@@ -3667,8 +3824,8 @@ source ./scripts/build.sh        # rebuild what you work on
   meta-package into one virtualenv. Third-party dependencies still come from PyPI.
 - **npm**: the seven AbstractUIC packages (installed once at the `abstractuic` workspace root, built
   per package), then the apps `flow`, `observer`, `continuum`, `entity` and `code` (web).
-- **Rust**: `cargo build` of `abstracttui`, `abstractcode` (`abstractcode/tui`) and
-  `abstractgateway-console` (`abstractgateway/console-tui`).
+- **Rust**: `cargo build` of `abstracttui`, `abstractcore-console` (`abstractcore/console-tui`),
+  `abstractcode` (`abstractcode/tui`) and `abstractgateway-console` (`abstractgateway/console-tui`).
 
 | Option | Effect |
 |---|---|
@@ -3782,9 +3939,9 @@ flowchart LR
   shows the whole plan without changing anything; the final summary lists the commands so the
   install can be reproduced by hand. Power users can skip the script entirely.
 - **The gateway owns the host integration.** Autostart is `abstractgateway service install`, and
-  browser sign-in is a one-time claim link from `abstractgateway-config claim-url`. The script uses
-  them when the installed gateway provides them and otherwise starts the gateway in the background
-  and shows the admin token file.
+  browser sign-in is a one-time claim link from `abstractgateway-config claim-url` (both in the
+  pinned gateway, 0.3.0). With an older gateway selected through `--pin`, the script starts the
+  gateway in the background and shows the admin token file instead.
 - **Loopback first.** The gateway binds `127.0.0.1`. Remote hosts use an SSH tunnel or the
   container deployment.
 - **Idempotent.** Re-running the script upgrades or repairs in place and keeps the port, profile and
@@ -3846,14 +4003,15 @@ These flows describe exactly what the bootstrap scripts do. Commands are in
    password to link `/usr/local/bin/ollama`), LM Studio (`--with-lmstudio`: the headless `llmster`
    daemon), terminal tools (`--with-console`, `--with-code-cli` through cargo).
 7. **Service**: `abstractgateway service install --host 127.0.0.1 --port 8080` registers a
-   per-user LaunchAgent, so the gateway starts at login. When the installed gateway has no
-   `service` command, the script starts it in the background instead.
+   per-user LaunchAgent and starts it, so the gateway also starts at login. With `--no-service`,
+   the script starts it in the background instead.
 8. **Health**: waits up to 60 seconds for `GET /api/health`.
 9. **Sign-in**: `abstractgateway-config claim-url` mints a one-time link valid for 10 minutes on
-   this machine; without it, the script prints the path of the admin token file
+   this machine; if no link can be created, the script prints the path of the admin token file
    (`~/Library/Application Support/AbstractGateway/auth/bootstrap-admin-token`).
-10. **Browser**: opens `http://127.0.0.1:8080/console` (with the claim link when available). The
-    first-run wizard walks through engines, a default model and the apps.
+10. **Browser**: opens the claim link (`http://127.0.0.1:8080/console#claim=…`). The first-run guide
+    walks through engines (detected on this Mac, with one-click installs), a default model that fits
+    the machine, and the apps; the **Models** and **Engines** tabs stay available afterwards.
 
 ## First install on Linux
 
@@ -3870,8 +4028,9 @@ Same one-liner and steps, with these differences:
   hint (`ssh -L 8080:127.0.0.1:8080 <host>`).
 - `--with-ollama` runs Ollama's Linux installer, which uses sudo, installs into `/usr/local` and
   creates a system service. The script announces this before running it.
-- Linux ARM64: the pinned AbstractCore caps `psutil` below 6, which has no aarch64 wheel, so a C
-  compiler is needed (`sudo apt-get install -y gcc`). The preflight warns when none is found.
+- Linux ARM64: gateways before 0.3.0 (selected with `--pin`) pull an AbstractCore that caps
+  `psutil` below 6, which has no aarch64 wheel, so a C compiler is needed
+  (`sudo apt-get install -y gcc`). The preflight warns when none is found.
 
 ## First install on Windows
 
@@ -3886,8 +4045,8 @@ Same one-liner and steps, with these differences:
 5. **Optional**: `-WithApps` (nodejs-wheel, no UAC), `-WithOllama` (`winget install Ollama.Ollama
    --scope user`, or Ollama's `install.ps1`), `-WithLmStudio` (`winget install
    ElementLabs.LMStudio --scope user`, or LM Studio's headless `install.ps1`).
-6. **Autostart**: `abstractgateway service install` when available; otherwise a shortcut in your
-   Startup folder that starts the gateway with a hidden window at sign-in (no admin).
+6. **Autostart**: `abstractgateway service install` (a Startup-folder entry, experimental on
+   Windows). With `-NoService` the gateway starts once in a hidden window instead.
 7. **Start, health, sign-in, browser**: hidden-window start, `/api/health`, claim link or the token
    file under `%LOCALAPPDATA%\AbstractGateway\auth\`, then the console opens.
 
@@ -3932,7 +4091,7 @@ How each component reaches a user's machine under the [script bootstrap](strateg
 | uv | Static binary | astral.sh `install.sh` / `install.ps1` | Skipped when already on the machine. Lives in `~/.local/bin` (`%USERPROFILE%\.local\bin`). |
 | Python 3.12 | python-build-standalone | `uv python install 3.12` | Isolated from any system Python. |
 | AbstractGateway (+ AbstractCore, AbstractRuntime, AbstractAgent, AbstractMemory as dependencies) | PyPI wheel, uv tool | `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"` | Exposes `abstractgateway` and `abstractgateway-config`; `--with-core-cli` also exposes `abstractcore`. |
-| Gateway service | LaunchAgent / systemd user unit / Startup entry | `abstractgateway service install` | When the installed gateway provides it; otherwise a background start (Windows: Startup-folder shortcut). |
+| Gateway service | LaunchAgent / systemd user unit / Startup entry | `abstractgateway service install` | Default (gateway 0.3.0+). `--no-service`, a Linux host without a user systemd session, or an older `--pin` start the gateway in the background instead (Windows: Startup-folder shortcut). |
 | Node.js (optional) | `nodejs-wheel` uv tool | `--with-apps` | Only when no Node 18+ is present; no admin, same bin directory. |
 
 ## Run on demand
@@ -4014,8 +4173,8 @@ it, and where code signing is still required.
 - `--with-ollama` runs Ollama's official installer, which **uses sudo**: it installs into
   `/usr/local`, creates an `ollama` user and a system `ollama.service`. The script prints this
   before running it. LM Studio's headless installer may ask for sudo to install `libatomic1`.
-- On ARM64 without a C compiler, the gateway install fails while building `psutil`; install `gcc`
-  from your distribution first.
+- On ARM64 without a C compiler, gateways before 0.3.0 (selected with `--pin`) fail while building
+  `psutil`; install `gcc` from your distribution first. The pinned gateway needs no compiler.
 
 ## Sudo and UAC prompts at a glance
 
@@ -4099,8 +4258,8 @@ Add `--json` for tooling and `--no-network` to skip the HTTP probes.
 - **Browser apps cannot connect**: check `ABSTRACTGATEWAY_URL` and that the gateway is healthy.
 - **Local engine not reachable**: start Ollama or the LM Studio server; the console's Engines tab
   and `abstractframework doctor` show what is reachable.
-- **Linux ARM64 build error for psutil**: install a C compiler (`sudo apt-get install -y gcc`) and
-  re-run.
+- **Linux ARM64 build error for psutil** (gateways before 0.3.0, selected with `--pin`): install a
+  C compiler (`sudo apt-get install -y gcc`) and re-run.
 
 ## Uninstall
 
@@ -6492,8 +6651,13 @@ the lifecycle folders described by the backlog process.
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
 | 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
-| 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
-| 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
+| 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.14.0) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
+| 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned (not started; the 0.2.0 wave kept the existing extras) | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
+| 0856 | [Validate the Windows bootstrap and gateway service on real machines](planned/0856_validate_windows_bootstrap_on_real_machines.md) | Planned | `install.ps1` has CI (`windows-latest`, `-NoService`) and container parse/dry-run evidence only; validate PS 5.1/7 on Windows 10 22H2 and 11 (x64/ARM64), the Startup service entry, winget installs, NTFS token permissions. |
+| 0857 | [crates.io trusted publishing for the console crates](planned/0857_crates_io_trusted_publishing_for_console_crates.md) | Planned | `abstractcore-console` 0.2.0 and `abstractgateway-console` 0.7.0 were published with a local token; configure OIDC trusted publishing in both release workflows. |
+| 0858 | [Console toggle for `allow_engine_install`](planned/0858_console_toggle_for_allow_engine_install.md) | Planned | Today only `POST /admin/runtime-config` changes it; add an audited admin switch in the web and terminal consoles. |
+| 0859 | [Launcher port defaults match the stack map](planned/0859_launcher_port_defaults_match_the_stack_map.md) | Planned | `apps_common.sh` / `gateway-flow*.sh` defaults differ from the documented stack ports; `local_pythonpath` is stale. |
+| 0860 | [ADR-0034: release order from the inventory tiers](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md) | Planned | The ADR's hand-written order is stale; `scripts/lib/packages.txt` + `deps.sh` are authoritative. |
 | 0848 | [Supervisor must not blame model inference for a blocked gateway](planned/0848_supervisor_must_not_blame_inference_for_a_blocked_gateway.md) | Planned (not started) | The unhealthy banner asserts a cause it cannot observe; it was wrong 4/4 on 2026-09-17 (the cause was a workflow publish rebuilding the host on the event loop). Point at `runtime/audit_log.jsonl` and the ledgers. |
 | 0849 | [Test suites must not reach the operator's live stack](planned/0849_test_suites_must_not_reach_the_operators_live_stack.md) | Planned (abstractassistant guarded; other packages not audited) | An assistant GUI test republished the live gateway's managed workflow twice, costing two ~60 s stalls. abstractassistant is now guarded; audit every other package. |
 | 0142 | [Gateway tenant isolation and shared runtime design](planned/0142_gateway_tenant_isolation_and_shared_runtime.md) | Planned | Define and implement tenant-aware Gateway/Runtime isolation; current shared Gateway deployments are single-user or trusted-cohort only. |
@@ -6609,7 +6773,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| 0162 | [Signed installer CI and distribution](proposed/installers/0162_signed_installer_ci_and_distribution.md) | Proposed | Move from prototype builds to signed/notarized native installer artifacts with checksums and rollback/support logs. |
+| 0162 | [Signed installer CI and distribution](proposed/installers/0162_signed_installer_ci_and_distribution.md) | Proposed (superseded by ADR-0038 for the bootstrap; still relevant to signed native apps only) | Move from prototype builds to signed/notarized native installer artifacts with checksums and rollback/support logs. |
 | 0163 | [CPU local inference install profile](proposed/installers/0163_cpu_local_inference_install_profile.md) | Proposed | Evaluate `abstractframework[cpu]` separately from Light; require package-by-package backend and dependency evidence before promotion. |
 
 ## Multimodal Capabilities Completed Track
@@ -6628,6 +6792,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0855 | [One-line install, first-run console and model/engine management](completed/0855_one_line_install_and_model_management_wave.md) | 2026-09-23 | Root 0.2.0: uv-based `install.sh`/`install.ps1` defaulting to gateway 0.3.0 (service + claim link), doctor probes, manifest v2, `CRATE_RELEASE_VERSIONS`, 30-package inventory with `abstractcore-console`, docs; pins core 2.14.0, runtime 0.4.33, gateway 0.3.0. |
 | 0198 | [Observer observability replay workbench](completed/runtime-artifact-observability/0198_observer_observability_replay_workbench.md) | 2026-06-06 | Added bounded artifact summaries and indexed session-turn discovery to Runtime history bundles, plus an Observe Replay tab and monitor-only Runtime Activity actions. |
 | 0199 | [AbstractFlow and AbstractAssistant vision LoRA and batch surface](completed/0199_abstractflow_and_abstractassistant_vision_lora_and_batch_surface.md) | 2026-06-14 | Flow now surfaces task-filtered provider/model discovery, `count`, ordered `seeds`, and stacked LoRA adapters in the media node authoring UI, while Assistant forwards the same route fields and adapter discovery through its Gateway thin-client path. |
 | 0197 | [Runtime artifact type OR filters and stable facets](completed/runtime-artifact-observability/0197_runtime_artifact_type_or_filter_facets.md) | 2026-06-06 | Type chips now compose as OR, keep available counts visible from base facets, and Gateway regression coverage verifies mixed-kind artifact filters return a union. |

@@ -4,45 +4,114 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-23
+
+Install the framework with one line, sign in to the gateway console with a one-time link, and
+manage local models and engines from the console, the terminal or the command line.
+
 ### Added
 
-- `scripts/lib/packages.txt`: one inventory of the 29 published packages (21 repositories) with
-  their registry names, sub-paths, dependency tiers and dependency edges, read by every workspace
-  script. `scripts/deps.sh` prints the tiers with their edges, reverse dependencies (`rdeps`) and
-  validates the inventory against the package files (`check`).
-- `scripts/push.sh` (dry run by default, `--yes` to push `main`, never forced) and
-  `scripts/pull.sh` (fetch + fast-forward only) for the whole workspace, grouped by tier.
-- `scripts/status.sh --registry` compares local versions with PyPI, npm and crates.io;
-  `--versions` and `--tiers` add the local versions and the dependency view.
-- `scripts/build.sh` builds every package in tier order: the seven AbstractUIC packages
-  individually, the npm apps, and the Rust crates `abstracttui`, `abstractcode` and
-  `abstractgateway-console`. New `--plan` and `AF_VENV_DIR`; `--python/--npm/--rust` combine; the
-  script exits non-zero when a selected build fails.
-- One-line bootstrap installers: `scripts/install.sh` (macOS, Linux) and `scripts/install.ps1`
-  (Windows 10 22H2+ / 11, PowerShell 5.1 and 7). They install uv and Python 3.12 when needed,
-  install the pinned gateway as a uv tool (`abstractgateway[<profile>,tray]`, profile picked from
-  the machine), start it on `127.0.0.1`, wait for `/api/health` and open `/console`. Options:
-  `--profile`, `--port`, `--with-apps` (Node.js through `nodejs-wheel`), `--with-ollama`,
+- **One-line install.** `scripts/install.sh` (macOS, Linux) and `scripts/install.ps1` (Windows 10
+  22H2+ / 11, PowerShell 5.1 and 7) install uv and Python 3.12 when needed, install the pinned
+  gateway as a uv tool (`abstractgateway[<profile>,tray]==0.3.0`, profile picked from the machine),
+  register it to start at login (`abstractgateway service install`), start it on `127.0.0.1`,
+  wait for `/api/health`, and open the console through a one-time sign-in link. No admin rights
+  and no system Python are needed:
+
+  ```bash
+  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  ```
+
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  ```
+
+  Options: `--profile`, `--port`, `--with-apps` (Node.js through `nodejs-wheel`), `--with-ollama`,
   `--with-lmstudio`, `--with-console`, `--with-code-cli`, `--with-core-cli`, `--no-service`,
-  `--no-open`, `--print` (dry run), `--uninstall [--purge]`. The gateway is registered as a login
-  service and the browser signed in with a one-time link when the installed gateway provides
-  `abstractgateway service` and `abstractgateway-config claim-url`. See [Install](docs/install.md).
+  `--no-open`, `--pin`, `--print` (dry run), `--uninstall [--purge]`. Re-running upgrades or
+  repairs in place. See [Install](docs/install.md#quick-start).
+- **First-run wizard.** Through the pinned gateway 0.3.0, a bare `abstractgateway serve` binds
+  `127.0.0.1`, creates the admin user and prints a one-time console link; the console's first-run
+  guide sets up a local engine, a default model that fits the machine, and the apps.
+- **Models and Engines in both entry points.** Through the pinned AbstractCore 2.14.0 and gateway
+  0.3.0, `abstractcore serve` and `abstractgateway serve` both offer **Models** (catalog with a fit
+  verdict for this machine, installed models with sizes, download, delete) and **Engines**
+  (detect and install Ollama, LM Studio, MLX, llama.cpp; every install shows its command first)
+  in their web consoles, their terminal consoles (`abstractcore-console`,
+  `abstractgateway-console`) and on the command line (`abstractcore models|engines`,
+  `abstractgateway models|engines`). `abstractcore serve` gains a web console at `/console`.
+- **Engine installs** from the console or the bootstrap flags (`--with-ollama`,
+  `--with-lmstudio`) use each vendor's official installer.
 - `abstractframework doctor` checks the Python range (3.10–3.13), macOS 14+ on Apple Silicon for the
   `apple` profile, uv, Node.js 18+ (system or `nodejs-wheel`), free disk, and reads the gateway
   health (`ABSTRACTGATEWAY_URL`), `abstractgateway-config status --json`, Ollama and LM Studio
-  reachability. New `--no-network` and `--timeout`; checks can report `info`.
-- CI job `bootstrap-smoke` installs the published gateway pin with the scripts on Ubuntu, macOS and
-  Windows.
-- ADR-0038: the one-line scripts and the gateway console are the install experience.
-- Documentation: [docs/workspace-scripts.md](docs/workspace-scripts.md).
+  reachability with read-only requests. New `--no-network` and `--timeout`; checks can report
+  `info`.
+- `CRATE_RELEASE_VERSIONS` lists the crates released with this version; `get_release_profile()`
+  returns them under `crates`.
+- Workspace scripts for source checkouts:
+  - `scripts/lib/packages.txt`: one inventory of the 30 published packages (21 repositories) with
+    registry names, sub-paths, dependency tiers and edges, read by every workspace script.
+    `scripts/deps.sh` prints the tiers with their edges and reverse dependencies (`rdeps`) and
+    validates the inventory against the package files (`check`).
+  - `scripts/push.sh` (dry run by default, `--yes` to push `main`, never forced) and
+    `scripts/pull.sh` (fetch + fast-forward only), grouped by tier.
+  - `scripts/status.sh --registry` compares local versions with PyPI, npm and crates.io;
+    `--versions` and `--tiers` add the local versions and the dependency view.
+  - `scripts/build.sh` builds every package in tier order, including the Rust crates
+    `abstracttui`, `abstractcore-console`, `abstractcode` and `abstractgateway-console`. New
+    `--plan` and `AF_VENV_DIR`; `--python/--npm/--rust` combine; the script exits non-zero when a
+    selected build fails.
+  - See [Workspace scripts](docs/workspace-scripts.md).
 
 ### Changed
 
+- The release profile pins the packages released on 2026-09-23. `pip install abstractframework`
+  (and the `apple` / `gpu` extras) installs exactly these versions:
+
+  | Registry | Package | 0.1.12 | 0.2.0 |
+  |---|---|---|---|
+  | PyPI | `abstractgateway` (`[apple]`, `[gpu]` in the profiles) | 0.2.30 | **0.3.0** |
+  | PyPI | `abstractcore` | 2.13.42 | **2.14.0** |
+  | PyPI | `AbstractRuntime` | 0.4.32 | **0.4.33** |
+  | PyPI | `abstractassistant` (`[apple]` on macOS, `[gpu]` in the profiles) | 0.5.0 | 0.5.0 |
+  | PyPI | `abstractagent` | 0.3.13 | 0.3.13 |
+  | PyPI | `AbstractMemory` | 0.3.0 | 0.3.0 |
+  | PyPI | `abstractsemantics` | 0.0.5 | 0.0.5 |
+  | PyPI | `abstractvoice` | 0.11.3 | 0.11.3 |
+  | PyPI | `abstractvision` | 0.3.29 | 0.3.29 |
+  | PyPI | `abstractmusic` | 0.1.15 | 0.1.15 |
+  | npm | `@abstractframework/flow` | 0.3.20 | 0.3.20 |
+  | npm | `@abstractframework/code` | 0.4.2 | 0.4.2 |
+  | npm | `@abstractframework/observer` | 0.1.12 | 0.1.12 |
+  | npm | `@abstractframework/continuum` | 0.2.0 | 0.2.0 |
+  | npm | `@abstractframework/entity` | 0.1.0 | 0.1.0 |
+  | crates.io | `abstractgateway-console` | 0.6.0 | **0.7.0** |
+  | crates.io | `abstractcore-console` | — | **0.2.0** (new) |
+  | crates.io | `abstractcode` | 0.5.1 | 0.5.1 |
+  | crates.io | `abstracttui` | 0.6.0 | 0.6.0 |
+  | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.2.30 | **0.3.0** |
+  | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.13.42 | **2.14.0** |
+
+  `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `abstractframework doctor`,
+  the bootstrap scripts and the generated `docs/installers/install-manifest.json` follow the same
+  matrix.
+- `abstractgateway serve` and `abstractcore serve` bind `127.0.0.1` by default when no auth is
+  configured (pinned packages). See the gateway and AbstractCore changelogs for the details.
 - Install manifest schema version 2: new `bootstrap` section (gateway pin, Python version, extras
   per profile, script URLs, flags); `post_install` is console-first (`abstractgateway serve` on
   `127.0.0.1`, `/console`, claim link, service) and no longer lists `abstractcore --config`.
-- `docs/installers/` describes the script bootstrap and console instead of a GUI installer manager
-  with signed per-app packages.
+- `docs/installers/` describes the script bootstrap and the gateway console as the install
+  experience (ADR-0038) instead of a GUI installer manager with signed per-app packages.
+- Linux ARM64 installs no longer need a C compiler with the pinned gateway. Older gateway pins
+  (`--pin 0.2.x`) still need `gcc` to build `psutil`; the installer warns during preflight.
+- The AbstractCore server container image is documented under its published name,
+  `ghcr.io/lpalbou/abstractcore-server`.
+
+### Known limitations
+
+- `install.ps1` is exercised in CI on Windows; the login entry created by
+  `abstractgateway service install` on Windows is experimental.
 
 ## [0.1.12] - 2026-09-23
 

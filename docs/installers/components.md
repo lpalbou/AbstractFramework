@@ -9,7 +9,7 @@ How each component reaches a user's machine under the [script bootstrap](strateg
 | uv | Static binary | astral.sh `install.sh` / `install.ps1` | Skipped when already on the machine. Lives in `~/.local/bin` (`%USERPROFILE%\.local\bin`). |
 | Python 3.12 | python-build-standalone | `uv python install 3.12` | Isolated from any system Python. |
 | AbstractGateway (+ AbstractCore, AbstractRuntime, AbstractAgent, AbstractMemory as dependencies) | PyPI wheel, uv tool | `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"` | Exposes `abstractgateway` and `abstractgateway-config`; `--with-core-cli` also exposes `abstractcore`. |
-| Gateway service | LaunchAgent / systemd user unit / Startup entry | `abstractgateway service install` | When the installed gateway provides it; otherwise a background start (Windows: Startup-folder shortcut). |
+| Gateway service | LaunchAgent / systemd user unit / Startup entry | `abstractgateway service install` | Default (gateway 0.3.0+). `--no-service`, a Linux host without a user systemd session, or an older `--pin` start the gateway in the background instead (Windows: Startup-folder shortcut). |
 | Node.js (optional) | `nodejs-wheel` uv tool | `--with-apps` | Only when no Node 18+ is present; no admin, same bin directory. |
 
 ## Run on demand

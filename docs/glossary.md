@@ -155,7 +155,23 @@ A thin-client browser UI for operations: monitor runs, inspect ledger history, w
 
 ### Gateway console
 
-The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`).
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens.
+
+### Core console
+
+The console for AbstractCore on its own. The web console is served at `/console` by `abstractcore serve` (Overview, Models, Engines, Providers); the terminal console is the `abstractcore-console` crate, which is also the library that provides the Models and Engines screens to the gateway's terminal console.
+
+### Claim link
+
+A one-time console sign-in link (`/console#claim=<code>`), single use, valid for 10 minutes and redeemable only from the same machine. `abstractgateway serve` and `abstractcore serve` print one on a first local start; `abstractgateway claim` and `abstractgateway-config claim-url` mint a new one.
+
+### First-run guide
+
+The gateway console's setup flow, opened once per data folder by the claim link and later from the **Setup** button: host summary, local engines, a default model that fits the machine, and the apps.
+
+### Models and Engines
+
+The local model and engine management shared by AbstractCore and the gateway: a model catalog with a fit verdict for this machine (`fits`, `tight`, `too_large`, `partial_offload`, `unknown`), installed models with sizes, download and delete jobs, and detection and installation of local engines (Ollama, LM Studio, MLX, llama.cpp, vLLM, transformers). Available as `abstractcore models|engines`, `abstractgateway models|engines`, and in the consoles.
 
 ---
 
@@ -165,9 +181,13 @@ The operator console for one gateway. The web console is built into `abstractgat
 
 One of the three ways to install the pinned Python stack: **Light** (`pip install abstractframework`, remote/endpoint inference only), **Apple** (`abstractframework[apple]`, adds MLX/Metal engines on macOS 14+) and **GPU** (`abstractframework[gpu]`, adds CUDA/ROCm engines). See [Install](install.md).
 
+### Bootstrap script
+
+The one-line installer (`scripts/install.sh` for macOS and Linux, `scripts/install.ps1` for Windows). It installs uv, Python 3.12 and the pinned gateway as a uv tool, registers and starts it, and opens the console with a claim link. See [Install](install.md#quick-start).
+
 ### Release pins
 
-The exact (`==`) versions a given `abstractframework` release installs, exposed as `RELEASE_VERSIONS` and checked by `abstractframework doctor`.
+The exact (`==`) versions a given `abstractframework` release installs, exposed as `RELEASE_VERSIONS` and checked by `abstractframework doctor`. The npm apps and crates released with it are listed in `NPM_RELEASE_VERSIONS` and `CRATE_RELEASE_VERSIONS`.
 
 ---
 

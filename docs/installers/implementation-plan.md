@@ -17,9 +17,12 @@ comes next.
   18+ (system or `nodejs-wheel`), disk, and read-only probes of the gateway, Ollama and LM Studio.
 - CI job `bootstrap-smoke` on Ubuntu, macOS and Windows.
 
-## Gateway features the scripts use when present
+## Gateway features the scripts use
 
-| Feature | Command | Without it |
+The pinned gateway (0.3.0) provides all of them. The scripts still detect each one, so an older
+gateway selected with `--pin` falls back as the last column says.
+
+| Feature | Command | Without it (older `--pin`) |
 |---|---|---|
 | Per-user service (LaunchAgent, `systemd --user`, Windows logon) | `abstractgateway service install --host 127.0.0.1 --port N`, `service uninstall` | Background start; Windows adds a Startup-folder shortcut |
 | One-time console sign-in link | `abstractgateway-config claim-url --base-url URL` | The admin token file path is shown |
@@ -31,8 +34,8 @@ comes next.
 - Validate `install.ps1` on physical Windows 10 22H2 and Windows 11 machines (x64 and ARM64),
   including the Startup shortcut, hidden-window start and winget installs.
 - Host the scripts at a short URL (`abstractframework.ai/install.sh`, `…/install.ps1`).
-- Console Models and Engines tabs (catalog, fit verdicts, downloads, engine installs) shared with
-  AbstractCore.
+- Validate `abstractgateway service install` end to end on each OS in CI (the smoke job runs with
+  `--no-service`).
 - Signed AbstractAssistant `.app`.
 
 ## Not planned in this model

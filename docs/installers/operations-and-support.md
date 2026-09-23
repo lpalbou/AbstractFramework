@@ -43,8 +43,8 @@ Add `--json` for tooling and `--no-network` to skip the HTTP probes.
 - **Browser apps cannot connect**: check `ABSTRACTGATEWAY_URL` and that the gateway is healthy.
 - **Local engine not reachable**: start Ollama or the LM Studio server; the console's Engines tab
   and `abstractframework doctor` show what is reachable.
-- **Linux ARM64 build error for psutil**: install a C compiler (`sudo apt-get install -y gcc`) and
-  re-run.
+- **Linux ARM64 build error for psutil** (gateways before 0.3.0, selected with `--pin`): install a
+  C compiler (`sudo apt-get install -y gcc`) and re-run.
 
 ## Uninstall
 

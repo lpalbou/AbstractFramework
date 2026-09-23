@@ -21,7 +21,7 @@
 # re-cloning (never rebases or merges local commits).
 #
 # The repository list is scripts/lib/packages.txt (21 repositories holding
-# 29 packages); the clone order is the dependency tier order.
+# 30 packages); the clone order is the dependency tier order.
 #
 # Prerequisites:
 #   - git

@@ -11,7 +11,7 @@ If you only want to *use* the framework, install the published packages instead:
 ## The package inventory
 
 `scripts/lib/packages.txt` is the single list every script reads. It has one row per published
-package (29 packages in 21 repositories):
+package (30 packages in 21 repositories):
 
 | Column | Meaning |
 |---|---|
@@ -47,8 +47,8 @@ difference. Run it after you add a dependency between two packages, then update 
 | Tier | Python (PyPI) | npm | Rust (crates.io) |
 |---|---|---|---|
 | 0 | abstractskill, abstractsemantics, AbstractMemory, abstractvision, abstractvoice, abstractmusic, abstractcamera | ui-kit, app-server, monitor-flow, monitor-gpu, monitor-memory, monitor-active-memory | abstracttui |
-| 1 | abstract3d | panel-chat, flow | abstractgateway-console, abstractcode |
-| 2 | abstractcore | observer, continuum, entity, code (web) | |
+| 1 | abstract3d | panel-chat, flow | abstractcore-console, abstractcode |
+| 2 | abstractcore | observer, continuum, entity, code (web) | abstractgateway-console |
 | 3 | AbstractRuntime | | |
 | 4 | abstractagent, abstractassistant | | |
 | 5 | abstractgateway | | |
@@ -100,8 +100,8 @@ source ./scripts/build.sh        # rebuild what you work on
   meta-package into one virtualenv. Third-party dependencies still come from PyPI.
 - **npm**: the seven AbstractUIC packages (installed once at the `abstractuic` workspace root, built
   per package), then the apps `flow`, `observer`, `continuum`, `entity` and `code` (web).
-- **Rust**: `cargo build` of `abstracttui`, `abstractcode` (`abstractcode/tui`) and
-  `abstractgateway-console` (`abstractgateway/console-tui`).
+- **Rust**: `cargo build` of `abstracttui`, `abstractcore-console` (`abstractcore/console-tui`),
+  `abstractcode` (`abstractcode/tui`) and `abstractgateway-console` (`abstractgateway/console-tui`).
 
 | Option | Effect |
 |---|---|

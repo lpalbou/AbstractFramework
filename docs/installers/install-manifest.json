@@ -105,7 +105,7 @@
         "summary": "Remove the service and uv tools (purge also deletes the data dir)."
       }
     ],
-    "gateway_version": "0.2.30",
+    "gateway_version": "0.3.0",
     "optional_extras": [
       "tray"
     ],
@@ -148,7 +148,7 @@
       "wait for GET /api/health",
       "abstractgateway-config claim-url (when supported) and open /console"
     ],
-    "tool_requirement": "abstractgateway[{extras}]==0.2.30",
+    "tool_requirement": "abstractgateway[{extras}]==0.3.0",
     "uninstall": [
       [
         "abstractgateway",
@@ -169,7 +169,7 @@
     "name": "AbstractFramework",
     "python_requires": ">=3.10",
     "registry": "pypi",
-    "version": "0.1.12"
+    "version": "0.2.0"
   },
   "minimum_installer_version": "0.2.0",
   "npm_apps": [
@@ -286,7 +286,7 @@
       "local_inference": false,
       "name": "Light",
       "pip_requirements": [
-        "abstractframework==0.1.12"
+        "abstractframework==0.2.0"
       ],
       "platforms": [
         "macos",
@@ -310,7 +310,7 @@
       "local_inference": true,
       "name": "Apple",
       "pip_requirements": [
-        "abstractframework[apple]==0.1.12"
+        "abstractframework[apple]==0.2.0"
       ],
       "platforms": [
         "macos"
@@ -334,7 +334,7 @@
       "local_inference": true,
       "name": "GPU",
       "pip_requirements": [
-        "abstractframework[gpu]==0.1.12"
+        "abstractframework[gpu]==0.2.0"
       ],
       "platforms": [
         "linux",
@@ -353,13 +353,13 @@
       "distribution": "abstractcore",
       "id": "abstractcore",
       "registry": "pypi",
-      "version": "2.13.42"
+      "version": "2.14.0"
     },
     {
       "distribution": "AbstractRuntime",
       "id": "abstractruntime",
       "registry": "pypi",
-      "version": "0.4.32"
+      "version": "0.4.33"
     },
     {
       "distribution": "abstractagent",
@@ -371,7 +371,7 @@
       "distribution": "abstractgateway",
       "id": "abstractgateway",
       "registry": "pypi",
-      "version": "0.2.30"
+      "version": "0.3.0"
     },
     {
       "distribution": "AbstractMemory",

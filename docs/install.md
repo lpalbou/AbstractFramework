@@ -2,8 +2,9 @@
 
 ## Quick start
 
-One line installs the gateway, starts it on `127.0.0.1:8080`, and opens its web console in your
-browser. No admin rights and no system Python are needed.
+One line installs the gateway, registers it to start at login, starts it on `127.0.0.1:8080`, and
+opens its web console in your browser, already signed in. No admin rights and no system Python are
+needed.
 
 macOS and Linux:
 
@@ -17,8 +18,10 @@ Windows 10 22H2+ / 11 (PowerShell):
 powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
 ```
 
-The console then walks you through engines (Ollama, LM Studio, or a cloud API key), a default model
-and the apps.
+The console's first-run guide then walks you through a local engine (Ollama, LM Studio, MLX,
+llama.cpp, with a one-click install that shows its exact command first) or a cloud API key, a
+default model picked from the models that fit your machine, and the apps. The **Models** and
+**Engines** tabs stay available afterwards.
 
 ### What the script does
 
@@ -27,14 +30,16 @@ and the apps.
    `light` otherwise.
 2. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 3. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.2.30"`.
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.3.0"`.
 4. Optionally installs Node.js for the browser apps, terminal tools, Ollama or LM Studio (flags
    below).
-5. Registers the gateway to start at login when the installed gateway supports
-   `abstractgateway service install`; otherwise starts it in the background.
-6. Waits for `/api/health`, then opens `http://127.0.0.1:8080/console`, signed in through a
-   one-time link when the gateway supports `abstractgateway-config claim-url`. Otherwise it shows
-   where the admin token is.
+5. Registers the gateway to start at login with `abstractgateway service install` (a LaunchAgent on
+   macOS, a `systemd --user` unit on Linux, a Startup shortcut on Windows) and starts it. With
+   `--no-service`, or on a Linux host without a user systemd session, it starts the gateway in the
+   background instead.
+6. Waits for `/api/health`, then opens `http://127.0.0.1:8080/console` through a one-time sign-in
+   link (`abstractgateway-config claim-url`, valid 10 minutes, this machine only). If no link can be
+   created, it shows where the admin token is.
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
 upgrades or repairs the install in place.
@@ -73,24 +78,26 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.2.30"   # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.3.0"    # [apple,tray] or [gpu,tray] for local engines
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
-ABSTRACTGATEWAY_USER_AUTH=1 abstractgateway serve --host 127.0.0.1 --port 8080
-# open http://127.0.0.1:8080/console and sign in as admin with the token the gateway prints
+abstractgateway service install --host 127.0.0.1 --port 8080   # or: abstractgateway serve
+abstractgateway-config claim-url --base-url http://127.0.0.1:8080  # prints a one-time console link
 ```
 
 ### Run at login
 
-Gateways that provide `abstractgateway service install` register the login service for you
-(LaunchAgent on macOS, `systemd --user` on Linux, a logon entry on Windows):
+`abstractgateway service install` registers the login service (LaunchAgent on macOS,
+`systemd --user` on Linux, a Startup shortcut on Windows, experimental) and starts the gateway:
 
 ```bash
 abstractgateway service install --host 127.0.0.1 --port 8080
+abstractgateway service status
 abstractgateway service uninstall
 ```
 
-With a gateway that does not, `install.sh` starts it in the background and `install.ps1` adds a
-Startup-folder shortcut. To start it at login yourself on Linux, a user unit is enough:
+The bootstrap scripts use it by default. Gateways older than 0.3.0 (installed with `--pin`) have no
+`service` command: `install.sh` then starts the gateway in the background and `install.ps1` adds a
+Startup-folder shortcut. To write a login entry yourself on Linux, a user unit is enough:
 
 ```ini
 # ~/.config/systemd/user/abstractgateway.service
@@ -148,8 +155,8 @@ whether local inference engines are installed.
 | Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 | GPU | Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 
-`abstractframework` 0.1.12 pins `abstractgateway==0.2.30`, `abstractassistant==0.5.0`,
-`abstractcore==2.13.42`, `AbstractRuntime==0.4.32`, `abstractagent==0.3.13`,
+`abstractframework` 0.2.0 pins `abstractgateway==0.3.0`, `abstractassistant==0.5.0`,
+`abstractcore==2.14.0`, `AbstractRuntime==0.4.33`, `abstractagent==0.3.13`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.3`,
 `abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
@@ -233,10 +240,12 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version released with 0.1.12 |
+| Tool | Command | Version released with 0.2.0 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open `http://127.0.0.1:8080/console` after `abstractgateway serve` | 0.2.30 |
-| Gateway terminal console | `cargo install abstractgateway-console` (Rust 1.87+), then `abstractgateway-console --url http://127.0.0.1:8080` | 0.6.0 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.3.0 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.14.0 |
+| Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.2.0 |
+| Gateway terminal console | `cargo install abstractgateway-console` (Rust 1.87+), then `abstractgateway-console --url http://127.0.0.1:8080` | 0.7.0 |
 | Flow Editor | `npx @abstractframework/flow` | 0.3.20 |
 | Code Web UI | `npx @abstractframework/code` | 0.4.2 |
 | Observer | `npx @abstractframework/observer` | 0.1.12 |
@@ -253,13 +262,13 @@ profiles install on their own: `pip install abstract3d`, `pip install abstractca
 Start the gateway, open its console, then any browser app against it:
 
 ```bash
-ABSTRACTGATEWAY_USER_AUTH=1 abstractgateway serve --host 127.0.0.1 --port 8080
-# console: http://127.0.0.1:8080/console (sign in as admin)
+abstractgateway serve            # binds 127.0.0.1:8080 and prints a one-time console link
 npx @abstractframework/flow
 ```
 
-Configure providers, API keys and default models in the console. `abstractcore --config` remains
-available for library-only use of AbstractCore. When you work from source, the workspace helper
+Configure providers, API keys, engines and default models in the console. For library-only use
+of AbstractCore, `abstractcore serve` opens the same Models and Engines screens in its own console,
+and `abstractcore --config` remains available in the terminal. When you work from source, the workspace helper
 scripts build and start the same services (see [Workspace scripts](workspace-scripts.md)).
 
 Gateway-hosted browser apps use Gateway user tokens and browser sessions. Do not use the bootstrap
@@ -276,15 +285,15 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.2.30
+  ghcr.io/lpalbou/abstractgateway:0.3.0
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
 local MLX/CUDA stacks. On first start it creates `default/admin` and writes the login token to
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
-NVIDIA host when you explicitly want the local GPU profile (pinned tag: `0.2.30-gpu`; this image is
+NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore:2.13.42`.
+`ghcr.io/lpalbou/abstractcore-server:2.14.0`.
 
 ## How installs are designed
 

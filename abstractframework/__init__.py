@@ -10,15 +10,15 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.1.12"
+__version__ = "0.2.0"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.13.42",
-    "abstractruntime": "0.4.32",
+    "abstractcore": "2.14.0",
+    "abstractruntime": "0.4.33",
     "abstractagent": "0.3.13",
-    "abstractgateway": "0.2.30",
+    "abstractgateway": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.11.3",
@@ -46,6 +46,15 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/observer": "0.1.12",
     "@abstractframework/continuum": "0.2.0",
     "@abstractframework/entity": "0.1.0",
+}
+
+# Terminal tools published on crates.io alongside this release (installed with `cargo install`,
+# or by the bootstrap scripts' --with-console / --with-code-cli flags).
+CRATE_RELEASE_VERSIONS: dict[str, str] = {
+    "abstractgateway-console": "0.7.0",
+    "abstractcore-console": "0.2.0",
+    "abstractcode": "0.5.1",
+    "abstracttui": "0.6.0",
 }
 
 CORE_DEFAULT_EXTRAS = [
@@ -90,6 +99,7 @@ def get_release_profile() -> dict[str, object]:
         "packages": RELEASE_VERSIONS.copy(),
         "distributions": PACKAGE_DISTRIBUTIONS.copy(),
         "npm_packages": NPM_RELEASE_VERSIONS.copy(),
+        "crates": CRATE_RELEASE_VERSIONS.copy(),
         "core_extras": list(CORE_DEFAULT_EXTRAS),
         "install_profiles": {
             "light": "pip install abstractframework",

@@ -39,8 +39,8 @@ it, and where code signing is still required.
 - `--with-ollama` runs Ollama's official installer, which **uses sudo**: it installs into
   `/usr/local`, creates an `ollama` user and a system `ollama.service`. The script prints this
   before running it. LM Studio's headless installer may ask for sudo to install `libatomic1`.
-- On ARM64 without a C compiler, the gateway install fails while building `psutil`; install `gcc`
-  from your distribution first.
+- On ARM64 without a C compiler, gateways before 0.3.0 (selected with `--pin`) fail while building
+  `psutil`; install `gcc` from your distribution first. The pinned gateway needs no compiler.
 
 ## Sudo and UAC prompts at a glance
 

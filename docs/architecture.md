@@ -17,7 +17,8 @@ Start here if you need a lightweight LLM library for scripts, notebooks, or exis
 - 9+ providers with identical API (local + cloud)
 - Universal tool calling, structured output, streaming
 - Media handling (images, PDFs, audio, video)
-- OpenAI-compatible HTTP server mode (`/v1`)
+- OpenAI-compatible HTTP server mode (`/v1`), with a web console at `/console`
+- Local model and engine management: browse models that fit this machine, download, delete, install engines
 - Multimodal via capability plugins (Voice, Vision, Music)
 
 The right first step when you mainly care about calling models/tools/media (in-process via Python or via `/v1`) and want the smallest surface area.
@@ -45,7 +46,8 @@ Apps / UIs (thin clients)
  Flow Editor (author workflows)
  AbstractCode (terminal + web), AbstractAssistant, your custom app
  AbstractContinuum console, AbstractEntity manager
- Gateway consoles: web /console, terminal abstractgateway-console
+ Gateway consoles: web /console (first-run guide, Models, Engines),
+                  terminal abstractgateway-console
                        │  HTTP/SSE
                        ▼
 AbstractGateway (control plane)
@@ -73,6 +75,8 @@ LLM + tools + multimodality
 ──────────────────────────────────────────────────────
  AbstractCore
  provider/model abstraction + routing defaults
+ host profile, model catalog + fit, engines, download/delete jobs
+   (CLI, /acore/* routes, web /console, terminal abstractcore-console)
  request/output normalization + call-scoped resolved-route truth
  tools, structured output, media input, embeddings, MCP
  capability plugins: voice / vision / music
@@ -96,17 +100,42 @@ flowchart LR
     subgraph crates["crates.io (cargo install)"]
         CLI["abstractcode"]
         CON["abstractgateway-console"]
+        CCON["abstractcore-console<br/>(app + Models/Engines screens library)"]
     end
     subgraph GHCR["GHCR images"]
-        IMG["abstractgateway · abstractcore"]
+        IMG["abstractgateway · abstractcore-server"]
     end
+    BOOT["install.sh / install.ps1<br/>(uv tool install abstractgateway)"]
+    BOOT -->|installs, starts, opens /console| GW
     AS -->|HTTP/SSE| GW
     APPS -->|HTTP/SSE| GW
     CLI -->|HTTP/SSE| GW
     CON -->|HTTP/SSE| GW
+    CON -->|embeds screens| CCON
+    CCON -->|abstractcore CLI| STACK
     GW --> STACK
     IMG -.->|same server, containerized| GW
 ```
+
+The Models and Engines features are implemented once, in AbstractCore, and inherited by the
+gateway:
+
+```mermaid
+flowchart TB
+    CORE["AbstractCore<br/>host profile · catalog + fit · engines · jobs"]
+    CORE --> CCLI["abstractcore models / engines (CLI)"]
+    CORE --> CAPI["abstractcore serve<br/>/acore/* + web /console"]
+    CORE --> CTUI["abstractcore-console<br/>screens 9 Models, 0 Engines"]
+    CORE -->|via AbstractRuntime| GAPI["abstractgateway<br/>/api/gateway/models, engines, jobs, host/profile"]
+    GAPI --> GWEB["gateway web /console<br/>embeds Core's Models and Engines screens"]
+    GAPI --> GTUI["abstractgateway-console<br/>mounts the abstractcore-console screens over HTTP"]
+    GAPI --> GCLI["abstractgateway models / engines (CLI)"]
+```
+
+Every console action shows its command-line equivalent. Download, delete and engine installs are
+admin-only jobs; engine installs from a console are enabled by default only for a server bound to
+loopback (`allow_engine_install` on the gateway, `ABSTRACTCORE_ALLOW_ENGINE_INSTALL` on the core
+server).
 
 See [Install AbstractFramework](install.md) for the versions released together and the commands
 for each registry.

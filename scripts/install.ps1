@@ -62,10 +62,10 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.2.30'
+$AfGatewayPinDefault = '0.3.0'
 $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.3.20', '@abstractframework/code@0.4.2', '@abstractframework/observer@0.1.12', '@abstractframework/continuum@0.2.0', '@abstractframework/entity@0.1.0')
-$AfCrateConsole = 'abstractgateway-console@0.6.0'
+$AfCrateConsole = 'abstractgateway-console@0.7.0'
 $AfCrateCodeCli = 'abstractcode@0.5.1'
 $AfDocs = 'https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md'
 $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1'
@@ -252,7 +252,11 @@ function Main {
     if ($Uninstall) {
         Write-Host 'AbstractFramework uninstall' -ForegroundColor White
         Write-Step 'Gateway service and processes'
-        if (Test-GatewaySupports 'service') {
+        # Only touch the login service when this install registered it (or when no state says
+        # otherwise): a -NoService install must not unregister a service set up separately.
+        if ($state['MODE'] -eq 'background' -or $state['MODE'] -eq 'none') {
+            Write-Info "no login service was registered by this install (mode: $($state['MODE']))"
+        } elseif (Test-GatewaySupports 'service') {
             Invoke-Native -Description 'remove the gateway service' -Argv @($gw, 'service', 'uninstall') | Out-Null
         }
         if ($shortcut -and (Test-Path -LiteralPath $shortcut)) {
@@ -504,7 +508,7 @@ function Main {
 
     # --- 5. service / start ----------------------------------------------------------------------
     $env:ABSTRACTGATEWAY_DATA_DIR = $DataDir
-    # The released 0.2.x gateway refuses to start without an auth mode; user auth with a
+    # Gateways before 0.3 (reachable with -Pin) refuse to start without an auth mode; user auth with a
     # bootstrapped admin is the loopback default from 0.3 on. Setting it is harmless there.
     $env:ABSTRACTGATEWAY_USER_AUTH = '1'
     $serviceOk = Test-GatewaySupports 'service'
@@ -617,14 +621,15 @@ function Main {
     Write-Host "  Mode:       $mode"
     Write-Host ''
     if ($mode -eq 'service') {
-        Write-Host '  Stop:       abstractgateway service stop'
-        Write-Host '  Start:      abstractgateway service start'
+        Write-Host '  Status:     abstractgateway service status'
+        Write-Host '  Stop:       abstractgateway service uninstall   (stops it and removes the login entry; data is kept)'
+        Write-Host "  Start:      abstractgateway service install --host 127.0.0.1 --port $Port"
     } else {
         Write-Host "  Stop:       Stop-Process -Id (Get-Content '$pidFile')"
         Write-Host '  Start:      re-run this installer (or sign out and in: the Startup shortcut starts it)'
     }
     Write-Host '  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)'
-    Write-Host '  Uninstall:  install.ps1 -Uninstall   (or: uv tool uninstall abstractgateway)'
+    Write-Host "  Uninstall:  install.ps1 -Uninstall   (or: $(if ($mode -eq 'service') { 'abstractgateway service uninstall; ' })uv tool uninstall abstractgateway)"
     Write-Host '  Check:      uvx abstractframework doctor'
     Write-Host '  Apps:       npx -y @abstractframework/flow   (also: code, observer, continuum, entity)'
     Write-Host "  Docs:       $AfDocs"

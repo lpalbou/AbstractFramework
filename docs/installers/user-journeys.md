@@ -21,14 +21,15 @@ These flows describe exactly what the bootstrap scripts do. Commands are in
    password to link `/usr/local/bin/ollama`), LM Studio (`--with-lmstudio`: the headless `llmster`
    daemon), terminal tools (`--with-console`, `--with-code-cli` through cargo).
 7. **Service**: `abstractgateway service install --host 127.0.0.1 --port 8080` registers a
-   per-user LaunchAgent, so the gateway starts at login. When the installed gateway has no
-   `service` command, the script starts it in the background instead.
+   per-user LaunchAgent and starts it, so the gateway also starts at login. With `--no-service`,
+   the script starts it in the background instead.
 8. **Health**: waits up to 60 seconds for `GET /api/health`.
 9. **Sign-in**: `abstractgateway-config claim-url` mints a one-time link valid for 10 minutes on
-   this machine; without it, the script prints the path of the admin token file
+   this machine; if no link can be created, the script prints the path of the admin token file
    (`~/Library/Application Support/AbstractGateway/auth/bootstrap-admin-token`).
-10. **Browser**: opens `http://127.0.0.1:8080/console` (with the claim link when available). The
-    first-run wizard walks through engines, a default model and the apps.
+10. **Browser**: opens the claim link (`http://127.0.0.1:8080/console#claim=…`). The first-run guide
+    walks through engines (detected on this Mac, with one-click installs), a default model that fits
+    the machine, and the apps; the **Models** and **Engines** tabs stay available afterwards.
 
 ## First install on Linux
 
@@ -45,8 +46,9 @@ Same one-liner and steps, with these differences:
   hint (`ssh -L 8080:127.0.0.1:8080 <host>`).
 - `--with-ollama` runs Ollama's Linux installer, which uses sudo, installs into `/usr/local` and
   creates a system service. The script announces this before running it.
-- Linux ARM64: the pinned AbstractCore caps `psutil` below 6, which has no aarch64 wheel, so a C
-  compiler is needed (`sudo apt-get install -y gcc`). The preflight warns when none is found.
+- Linux ARM64: gateways before 0.3.0 (selected with `--pin`) pull an AbstractCore that caps
+  `psutil` below 6, which has no aarch64 wheel, so a C compiler is needed
+  (`sudo apt-get install -y gcc`). The preflight warns when none is found.
 
 ## First install on Windows
 
@@ -61,8 +63,8 @@ Same one-liner and steps, with these differences:
 5. **Optional**: `-WithApps` (nodejs-wheel, no UAC), `-WithOllama` (`winget install Ollama.Ollama
    --scope user`, or Ollama's `install.ps1`), `-WithLmStudio` (`winget install
    ElementLabs.LMStudio --scope user`, or LM Studio's headless `install.ps1`).
-6. **Autostart**: `abstractgateway service install` when available; otherwise a shortcut in your
-   Startup folder that starts the gateway with a hidden window at sign-in (no admin).
+6. **Autostart**: `abstractgateway service install` (a Startup-folder entry, experimental on
+   Windows). With `-NoService` the gateway starts once in a hidden window instead.
 7. **Start, health, sign-in, browser**: hidden-window start, `/api/health`, claim link or the token
    file under `%LOCALAPPDATA%\AbstractGateway\auth\`, then the console opens.
 

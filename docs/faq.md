@@ -33,8 +33,8 @@ No.
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app against an existing gateway | `npx @abstractframework/<flow\|code\|observer\|continuum\|entity>` |
-| A terminal client | `cargo install abstractcode` or `cargo install abstractgateway-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.2.30` |
+| A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.3.0` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -186,6 +186,28 @@ Pasting the one-liner works under the default `Restricted` policy because
 bypass applies to that process only. If your organization sets the policy through Group Policy
 (`Get-ExecutionPolicy -List` shows `MachinePolicy` or `UserPolicy`), a saved `install.ps1` will not
 run; use the one-liner or ask your administrator. The installer reports this during preflight.
+
+### The sign-in link expired or I closed the tab
+
+The one-time link is valid for 10 minutes and works only from the same machine. Mint a new one with
+`abstractgateway claim --open` (or `abstractgateway-config claim-url`). The admin token also stays
+in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path.
+
+### How do I stop or restart the gateway?
+
+When the script registered the login service, `abstractgateway service status` shows it,
+`abstractgateway service uninstall` stops the gateway and removes the login entry (your data is
+kept), and `abstractgateway service install --host 127.0.0.1 --port 8080` registers and starts it
+again. With `--no-service`, the install summary prints the stop and start commands; re-running the
+installer starts it again.
+
+### How do I download a model or install Ollama later?
+
+Open the console's **Engines** tab (detect, install with the exact command shown first) and
+**Models** tab (models that fit this machine, download, delete). From a terminal:
+`abstractgateway engines status|install` and `abstractgateway models catalog|download|delete`.
+Engine installs from the console run on the gateway host and are enabled by default only when the
+gateway listens on loopback.
 
 ### How do I see what the script will do before running it?
 

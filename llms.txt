@@ -6,7 +6,8 @@ Most runtime behavior lives in the individual package repos (AbstractCore/Runtim
 AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a browser client (`npx @abstractframework/code`); both need a running gateway.
 
 Quick commands:
-- One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); `--print` dry run, `--uninstall` to remove
+- One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); installs uv + Python 3.12 + the pinned gateway as a uv tool, registers the login service, starts it on 127.0.0.1:8080 and opens `/console` through a one-time claim link; `--print` dry run, `--uninstall` to remove
+- Start either entry point and open the printed one-time link: `abstractcore serve` (http://127.0.0.1:8000/console#claim=…) or `abstractgateway serve` (http://127.0.0.1:8080/console#claim=…); both consoles have Models (catalog + fit verdict, download, delete) and Engines (detect, install) tabs, mirrored by `abstractcore models|engines` and `abstractgateway models|engines`
 - Install pinned stack: `pip install abstractframework`
 - Check install health: `abstractframework doctor`
 - Print installer manifest: `abstractframework manifest`
@@ -121,8 +122,8 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.1.12 pins (PyPI, `==`): abstractgateway 0.2.30, abstractassistant 0.5.0, abstractcore 2.13.42, AbstractRuntime 0.4.32, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.3, abstractvision 0.3.29, abstractmusic 0.1.15.
-- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.2.0, `entity` 0.1.0 (run with `npx`); crates `abstractcode` 0.5.1, `abstractgateway-console` 0.6.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.2.30`, `ghcr.io/lpalbou/abstractcore:2.13.42`.
+- abstractframework 0.2.0 pins (PyPI, `==`): abstractgateway 0.3.0, abstractassistant 0.5.0, abstractcore 2.14.0, AbstractRuntime 0.4.33, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.3, abstractvision 0.3.29, abstractmusic 0.1.15.
+- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.2.0, `entity` 0.1.0 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.7.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.3.0`, `ghcr.io/lpalbou/abstractcore-server:2.14.0`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context

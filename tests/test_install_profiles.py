@@ -323,6 +323,28 @@ def test_bootstrap_scripts_embed_the_manifest_pins() -> None:
         assert f"'{key.split(':', 1)[1]}@{version}'" in ps1
 
 
+def test_bootstrap_script_crates_match_crate_release_versions() -> None:
+    import subprocess
+
+    from abstractframework import CRATE_RELEASE_VERSIONS
+
+    out = subprocess.run(
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--print-versions"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    sh_crates = {
+        key.split(":", 1)[1]: version
+        for key, version in _script_pins(out).items()
+        if key.startswith("crates:")
+    }
+    # --with-console and --with-code-cli install exactly these two crates.
+    assert set(sh_crates) == {"abstractgateway-console", "abstractcode"}
+    for crate, version in sh_crates.items():
+        assert CRATE_RELEASE_VERSIONS[crate] == version
+
+
 def test_install_sh_reads_the_pin_from_the_manifest(tmp_path: Path) -> None:
     import subprocess
 

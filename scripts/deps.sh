@@ -3,7 +3,7 @@
 # AbstractFramework — package tiers and dependency edges
 # =============================================================================
 # Answers "what must be installed / released first, and why" from the single
-# package inventory scripts/lib/packages.txt (29 packages in 21 repositories:
+# package inventory scripts/lib/packages.txt (30 packages in 21 repositories:
 # Python on PyPI, npm packages and apps, Rust crates on crates.io).
 #
 # Usage:

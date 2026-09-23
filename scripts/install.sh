@@ -56,10 +56,10 @@ set -eu
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.2.30"
+AF_GATEWAY_PIN_DEFAULT="0.3.0"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.3.20 @abstractframework/code@0.4.2 @abstractframework/observer@0.1.12 @abstractframework/continuum@0.2.0 @abstractframework/entity@0.1.0"
-AF_CRATE_CONSOLE="abstractgateway-console@0.6.0"
+AF_CRATE_CONSOLE="abstractgateway-console@0.7.0"
 AF_CRATE_CODE_CLI="abstractcode@0.5.1"
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
 AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
@@ -286,7 +286,11 @@ if [ "$UNINSTALL" = 1 ]; then
     printf '%sAbstractFramework uninstall%s%s\n' "$C_B" "$C_0" "$([ "$PRINT" = 1 ] && echo ' (--print: nothing is changed)')"
     find_uv || true; tool_bin
     step "Gateway service and processes"
-    if gateway_supports service; then
+    # Only touch the login service when this install registered it (or when no state says
+    # otherwise): a --no-service install must not unregister a service set up separately.
+    if [ "$ST_MODE" = background ] || [ "$ST_MODE" = none ]; then
+        info "no login service was registered by this install (mode: $ST_MODE)"
+    elif gateway_supports service; then
         run "remove the gateway service" "$TOOL_BIN/abstractgateway" service uninstall
     elif [ "$ST_MODE" = service ]; then
         warn "the state file says a service was registered, but this gateway has no 'service' command; remove it by hand ($AF_DOCS)"
@@ -448,9 +452,12 @@ else
 fi
 BASE_URL="http://127.0.0.1:$PORT"
 
-# Linux ARM64: abstractcore 2.13 caps psutil below 6, and psutil 5.x ships no
-# aarch64 Linux wheel, so uv builds it from source and needs a C compiler.
-if [ "$OS_ID" = linux ] && { [ "$ARCH" = aarch64 ] || [ "$ARCH" = arm64 ]; } && ! have cc && ! have gcc; then
+# Linux ARM64: gateways before 0.3 pull abstractcore 2.13, which caps psutil below 6;
+# psutil 5.x ships no aarch64 Linux wheel, so uv builds it from source and needs a C
+# compiler. abstractcore 2.14 (gateway 0.3) allows psutil 6/7, which ship the wheel.
+_old_pin=0
+case "$PIN" in 0.1.*|0.2.*) _old_pin=1 ;; esac
+if [ "$_old_pin" = 1 ] && [ "$OS_ID" = linux ] && { [ "$ARCH" = aarch64 ] || [ "$ARCH" = arm64 ]; } && ! have cc && ! have gcc; then
     warn "Linux ARM64 without a C compiler: psutil must be built from source; install one first (Debian/Ubuntu: sudo apt-get install -y gcc)"
 fi
 
@@ -604,8 +611,8 @@ write_state() {
 }
 
 export ABSTRACTGATEWAY_DATA_DIR="$DATA_DIR"
-# The released 0.2.x gateway refuses to start without an auth mode; user auth with a
-# bootstrapped admin is the loopback default from 0.3 on. Setting it is harmless there.
+# Gateways before 0.3 (reachable with --pin) refuse to start without an auth mode; from
+# 0.3 on, user auth with a bootstrapped admin is the loopback default, so this is a no-op.
 export ABSTRACTGATEWAY_USER_AUTH=1
 
 MODE=none
@@ -715,8 +722,9 @@ printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): 
 printf '  %-11s %s\n' "Console:" "$BASE_URL/console" "Gateway:" "$GW_SPEC ($PROFILE profile)" \
     "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
 echo ""
-echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service stop" || echo "kill \$(cat $(q "$PID_FILE"))")"
-echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service start" || echo "re-run this installer, or: ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve --host 127.0.0.1 --port $PORT")"
+echo "  Status:     $([ "$MODE" = service ] && echo "abstractgateway service status" || echo "curl $BASE_URL/api/health")"
+echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service uninstall   (stops it and removes the login entry; data is kept)" || echo "kill \$(cat $(q "$PID_FILE"))")"
+echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --host 127.0.0.1 --port $PORT" || echo "re-run this installer, or: ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve --host 127.0.0.1 --port $PORT")"
 echo "  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"

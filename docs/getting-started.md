@@ -22,15 +22,16 @@ AbstractFramework is a **stack**:
 ## Fastest path: the one-line install
 
 If you want a running gateway and its web console without setting up Python yourself, use the
-bootstrap script. It installs uv, Python 3.12 and the pinned gateway in your user account, starts
-the gateway on `127.0.0.1:8080`, and opens `/console`:
+bootstrap script. It installs uv, Python 3.12 and the pinned gateway in your user account, registers
+it to start at login, starts it on `127.0.0.1:8080`, and opens `/console` already signed in:
 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
 ```
 
 On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`.
-Configure providers and models in the console, then continue with
+The console's first-run guide sets up a local engine or a cloud key and a default model (the
+**Models** tab lists the models that fit your machine and downloads them). Then continue with
 [Monitor runs](#4-monitor-runs-with-abstractobserver) or [AbstractFlow](#author-orchestration-with-abstractflow).
 Options and uninstall: [Install](install.md#quick-start). The sections below cover manual installs
 for library and developer use.
@@ -86,7 +87,20 @@ export OPENAI_API_KEY="sk-..."
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
-**Or use the interactive wizard** (persists config to `~/.abstractcore/config/`):
+**Or use a console.** `abstractcore serve` starts the server on `127.0.0.1:8000` and prints a
+one-time link to its web console, where the **Engines** tab detects and installs local engines
+(Ollama, LM Studio, MLX, llama.cpp) and the **Models** tab downloads a model that fits this machine.
+The same actions exist on the command line and in the terminal console:
+
+```bash
+abstractcore serve                      # open the printed http://127.0.0.1:8000/console#claim=… link
+abstractcore engines status             # which local engines are installed and running
+abstractcore models catalog             # models, with a fit verdict for this machine
+abstractcore models download ollama qwen3:4b-instruct
+cargo install abstractcore-console      # terminal console (Rust 1.87+)
+```
+
+The interactive terminal wizard persists config to `~/.abstractcore/config/`:
 
 ```bash
 abstractcore --config
@@ -133,7 +147,12 @@ for chunk in llm.generate("Write a poem.", stream=True):
 pip install abstractgateway
 ```
 
-### 2. Configure
+### 2. Configure (optional)
+
+With no configuration, `abstractgateway serve` binds `127.0.0.1:8080`, enables user auth, and keeps
+its data in the per-user data folder (macOS `~/Library/Application Support/AbstractGateway`, Linux
+`~/.local/share/abstractgateway`, Windows `%LOCALAPPDATA%\AbstractGateway`). Set the environment
+when you want another data folder, browser origins or bundle registry:
 
 ```bash
 export ABSTRACTGATEWAY_USER_AUTH=1
@@ -153,12 +172,15 @@ export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
-On first local start, Gateway creates `default/admin`, writes the browser-login
-token to `runtime/gateway/auth/bootstrap-admin-token`, and prints it in the
-terminal. Use that token with user `admin` in the built-in web console
-(`http://127.0.0.1:8080/console`), AbstractFlow,
-AbstractCode Web, or AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the
-legacy server/operator bearer-token path; it does not sign in browsers.
+On first local start, Gateway creates `default/admin`, keeps its token in
+`<data dir>/auth/bootstrap-admin-token` (readable by you only), and prints a one-time link:
+`First run: open http://127.0.0.1:8080/console#claim=…`. Open it to sign in to the web console and
+its first-run guide (engines, default model, apps); `abstractgateway claim --open` mints a new
+link. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCode Web or
+AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operator bearer-token
+path; it does not sign in browsers.
+
+To start the gateway at login, use `abstractgateway service install --host 127.0.0.1 --port 8080`.
 
 Verify:
 
