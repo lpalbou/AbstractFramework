@@ -26,6 +26,11 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# The packaging pattern `lib/` above also matches scripts/lib/ — re-include it:
+# it holds the shared shell helpers (repo_groups.sh, apps_common.sh, af_stack.sh)
+# that status.sh / commit.sh / the app launchers source.
+!/scripts/lib/
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -229,6 +234,7 @@ $RECYCLE.BIN/
 /abstractagent/
 /abstractflow/
 /abstractcode/
+/abstractcode-tui/
 /abstractgateway/
 /abstractmemory/
 /abstractsemantics/
@@ -238,6 +244,7 @@ $RECYCLE.BIN/
 /abstractmusic/
 /abstractobserver/
 /abstractuic/
+/abstractui/
 /abstractaudio/
 /abstractvideo/
 /abstract3d/
@@ -246,6 +253,10 @@ $RECYCLE.BIN/
 /abstractsound/
 /abstractspatial/
 /abstractskill/
+/abstractcamera/
+/abstractcontinuum/
+/abstractentity/
+/abstracttui/
 
 # GitHub Pages build outputs (local-only)
 /abstractcore-gh-pages/
@@ -261,6 +272,7 @@ $RECYCLE.BIN/
 # Independent projects present locally (not tracked here)
 /smartnote/
 /ai-space/
+/meshvault/
 
 # Node / npm artefacts (from npm-based sibling repos)
 node_modules/
@@ -269,3 +281,45 @@ package-lock.json
 # Local scratch / notes
 /untracked/
 AGENTS.md
+
+# Live entity homes + serving state (NEVER commit: entity memory, diary books, secrets)
+runtime-data/
+*.workflow_policy_secret
+
+# Agent session artifacts
+.cursor/
+.DS_Store
+
+# ---------------------------------------------------------------------------
+# Agent harness and local tooling (never versioned)
+#
+# Coding-agent configuration embeds absolute local paths, hook commands, seat
+# identities and API-key slots. None of it belongs in a public repository.
+# ---------------------------------------------------------------------------
+.agora/
+.codex/
+.claude/
+.cursor/
+.abstractcode/
+.mcp.json
+CLAUDE.md
+.venv/
+abstractcode-export-*.md
+
+# Local scratch at the workspace root
+/.bench-ws/
+/ideas/
+/shared/
+/todel*/
+/scripts/start-local-backup.sh
+/a2a/
+/plan_proof_out*/
+/incarnations/
+/rtype-build-*/
+/abstractcoder/
+/drafts/
+/research_report.md
+/index.html
+/.one_store_disk_probe.txt
+/scripts/install_*_launchd.sh
+/scripts/serve_8081_night_watch.sh
