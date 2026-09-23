@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import subprocess
 import tomllib
 from pathlib import Path
 from typing import Iterable
@@ -367,72 +368,122 @@ def test_install_sh_reads_the_pin_from_the_manifest(tmp_path: Path) -> None:
 
 # --- prebuilt wheels only: no C compiler / Xcode tools needed --------------------------------
 
-_NO_BUILD = ["webrtcvad", "llama-cpp-python", "stable-diffusion-cpp-python", "aec-audio-processing", "vllm"]
+_COMPILED_EXTRAS = ["llama-cpp-python", "stable-diffusion-cpp-python", "aec-audio-processing"]
+_ALWAYS = ["webrtcvad; sys_platform == 'never'", "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'"]
+_DEFAULT_OVERRIDES = _ALWAYS + [f"{p}; sys_platform == 'never'" for p in _COMPILED_EXTRAS]
+_SKIPPED = "Skipped compiled extras (llama.cpp GGUF, stable-diffusion.cpp, echo cancellation): re-run with {flag} after installing a C compiler."
 
 
-def _sh_overrides() -> list[str]:
+def _fake_bin(tmp_path: Path, *, compiler: bool) -> Path:
+    """xcode-select/cc stubs: `compiler=False` simulates a Mac without Xcode CLT."""
+    fake = tmp_path / ("cc-yes" if compiler else "cc-no")
+    fake.mkdir()
+    for name in ("xcode-select", "cc"):
+        if name == "cc" and not compiler:
+            continue
+        stub = fake / name
+        stub.write_text(f"#!/bin/sh\nexit {0 if compiler else 2}\n")
+        stub.chmod(0o755)
+    return fake
+
+
+def _local_profile() -> str:
+    import platform
+    import sys
+
+    if sys.platform == "darwin" and platform.machine() == "arm64":
+        return "apple"
+    if sys.platform.startswith("linux"):
+        return "gpu"
+    pytest.skip("install.sh profiles with compiled extras run on Apple Silicon or Linux")
+
+
+def _install_sh_print(tmp_path: Path, *extra: str, compiler: bool = True) -> subprocess.CompletedProcess[str]:
+    fake = _fake_bin(tmp_path, compiler=compiler)
+    return subprocess.run(
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--print", "--profile", _local_profile(), "--port", "18999", *extra],
+        capture_output=True,
+        text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
+    )
+
+
+def _printed_overrides(out: str) -> list[str]:
+    lines = out.splitlines()
+    head = next(i for i, line in enumerate(lines) if "uv-overrides.txt (written at install time" in line)
+    block = []
+    for line in lines[head + 1:]:
+        if not line.startswith("      "):
+            break
+        block.append(line.strip())
+    return block
+
+
+def _install_line(out: str) -> str:
+    return next(line for line in out.splitlines() if " tool install --python 3.12 " in line)
+
+
+def test_install_sh_default_installs_prebuilt_wheels_only(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, compiler=False)
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    assert _printed_overrides(out) == _DEFAULT_OVERRIDES
+    install = _install_line(out)
+    # uv splits an --overrides value at whitespace (macOS "Application Support"), so the
+    # install runs from the data dir with a relative file name
+    assert install.lstrip().startswith("$ cd ")
+    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides uv-overrides.txt " in install
+    no_build = ["webrtcvad", "vllm", *_COMPILED_EXTRAS]
+    assert " ".join(f"--no-build-package {p}" for p in no_build) in install
+    assert re.search(r" 'abstractgateway\[[a-z,]+\]==\S+'$", install.rstrip()), install
+    assert _SKIPPED.format(flag="--full") in out
+    assert not (tmp_path / "Library").exists() and not (tmp_path / ".local").exists()
+
+
+def test_install_sh_full_keeps_the_compiled_extras(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, "--full", compiler=True)
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    assert _printed_overrides(out) == _ALWAYS
+    install = _install_line(out)
+    assert "--no-build-package webrtcvad --no-build-package vllm 'abstractgateway[" in install
+    for pkg in _COMPILED_EXTRAS:
+        assert pkg not in install
+    assert "Skipped compiled extras" not in out
+
+
+def test_install_sh_full_stops_without_a_compiler(tmp_path: Path) -> None:
+    import sys
+
+    if sys.platform != "darwin":
+        pytest.skip("simulating a missing compiler needs the macOS xcode-select probe")
+    proc = _install_sh_print(tmp_path, "--full", compiler=False)
+    assert proc.returncode != 0
+    assert "xcode-select --install" in proc.stderr
+    assert " tool install " not in proc.stdout
+
+
+def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
-    match = re.search(r"cat <<'AF_OVERRIDES'\n(.*?)\nAF_OVERRIDES\n", sh, flags=re.S)
-    assert match is not None, "install.sh lost its uv overrides heredoc"
-    return match.group(1).splitlines()
-
-
-def _ps1_overrides() -> list[str]:
     ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
-    match = re.search(r"^\$AfUvOverrides = @'\r?\n(.*?)\r?\n'@", ps1, flags=re.S | re.M)
-    assert match is not None, "install.ps1 lost its uv overrides here-string"
-    return match.group(1).splitlines()
-
-
-def test_install_scripts_carry_the_same_prebuilt_wheel_overrides() -> None:
-    overrides = _sh_overrides()
-    assert overrides == _ps1_overrides()
-    assert "webrtcvad; sys_platform == 'never'" in overrides
-    # every native package without a PyPI wheel is either dropped or pinned to a wheel URL
-    named = {line.split(";", 1)[0].split("@", 1)[0].split(">", 1)[0].strip() for line in overrides}
-    assert named == set(_NO_BUILD)
-    for line in overrides:
-        if " @ " in line:
-            url = line.split(" @ ", 1)[1].split(" ;", 1)[0]
-            assert url.startswith("https://github.com/abetlen/llama-cpp-python/releases/download/")
-            assert re.search(r"\.whl#sha256=[0-9a-f]{64}$", url), f"unpinned wheel URL: {line}"
-
-    ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    sh_extras = re.search(r'^AF_COMPILED_EXTRAS="([^"]+)"$', sh, flags=re.M)
+    ps_extras = re.search(r"^\$AfCompiledExtras = @\((.*)\)$", ps1, flags=re.M)
+    assert sh_extras and ps_extras
+    assert sh_extras.group(1).split() == re.findall(r"'([^']+)'", ps_extras.group(1)) == _COMPILED_EXTRAS
+    assert 'AF_WITH_WHEELS="webrtcvad-wheels>=2.0.14"' in sh
     assert "$AfWithWheels = 'webrtcvad-wheels>=2.0.14'" in ps1
-    ps_nb = re.search(r"^\$AfNoBuildPackages = @\((.*)\)$", ps1, flags=re.M)
-    assert ps_nb is not None and re.findall(r"'([^']+)'", ps_nb.group(1)) == _NO_BUILD
+    for line in _ALWAYS:
+        assert f'echo "{line}"' in sh
+        assert f'"{line}"' in ps1
+    assert f"AF_SKIPPED_LINE=\"{_SKIPPED.format(flag='--full')}\"" in sh
+    assert f"$AfSkippedLine = '{_SKIPPED.format(flag='-Full')}'" in ps1
     # relative name + Push-Location: uv splits an --overrides value at whitespace
     assert "'--with', $AfWithWheels, '--overrides', 'uv-overrides.txt'" in ps1
     assert "Push-Location -LiteralPath $DataDir" in ps1
-    assert "@('--no-build-package', $p)" in ps1
-
-
-def test_install_sh_print_shows_the_prebuilt_wheel_install_command(tmp_path: Path) -> None:
-    import subprocess
-
-    out = subprocess.run(
-        ["sh", str(ROOT / "scripts" / "install.sh"), "--print", "--profile", "light", "--port", "18999", "--no-tray"],
-        check=True,
-        capture_output=True,
-        text=True,
-        env={"HOME": str(tmp_path), "PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
-    ).stdout
-    install = next(line for line in out.splitlines() if " tool install --python 3.12 " in line)
-    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides " in install
-    # uv splits an --overrides value at whitespace (macOS "Application Support"), so the
-    # install runs from the data dir with a relative file name
-    assert install.lstrip().startswith("$ cd ") and " --overrides uv-overrides.txt " in install
-    assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
-    assert re.search(r" abstractgateway==\S+$", install.rstrip()), install
-    for line in _sh_overrides():
-        assert line in out, f"--print does not show the override: {line}"
-    assert not (tmp_path / "Library").exists() and not (tmp_path / ".local").exists()
 
 
 @pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
 def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_path: Path) -> None:
-    import subprocess
-
     script = ROOT / "scripts" / "install.ps1"
     parse = subprocess.run(
         [
@@ -443,15 +494,19 @@ def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_pa
         check=True, capture_output=True, text=True,
     ).stdout.strip()
     assert parse == "0"
-    out = subprocess.run(
-        ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "light", "-Port", "18999", "-NoTray"],
-        check=True, capture_output=True, text=True,
-        env={**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad")},
-    ).stdout
-    install = next(line for line in out.splitlines() if " tool install --python 3.12 " in line)
-    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides " in install
-    assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
+    env = {**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad")}
+    argv = ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "gpu", "-Port", "18999"]
+    out = subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
+    assert _printed_overrides(out) == _DEFAULT_OVERRIDES
+    install = _install_line(out)
+    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides uv-overrides.txt " in install
+    no_build = ["webrtcvad", "vllm", *_COMPILED_EXTRAS]
+    assert " ".join(f"--no-build-package {p}" for p in no_build) in install
+    assert _SKIPPED.format(flag="-Full") in out
     assert not (tmp_path / "lad").exists(), "-Print must not write anything"
+    if __import__("shutil").which("cl.exe") is None:
+        full = subprocess.run(argv + ["-Full"], capture_output=True, text=True, env=env)
+        assert full.returncode != 0 and " tool install " not in full.stdout
 
 
 def _serve(routes: dict[str, object]):

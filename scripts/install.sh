@@ -36,6 +36,8 @@
 #   --with-core-cli          also expose the `abstractcore` command
 #   --with-ollama            run Ollama's official installer (may ask for sudo)
 #   --with-lmstudio          run LM Studio's headless installer (llmster)
+#   --full                   also build the compiled extras (llama.cpp GGUF,
+#                            stable-diffusion.cpp, echo cancellation); needs a C compiler
 #   --no-tray                skip the tray extra
 #   --no-service             do not register a login service; start in background
 #   --no-start               install only; do not start the gateway
@@ -66,40 +68,37 @@ AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
 AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
 
 # ---------------------------------------------------------------------------
-# Prebuilt wheels only: no C compiler (Xcode CLT, gcc, MSVC) is ever needed.
-# A few native dependencies of the gateway tree publish no wheel on PyPI, so a
-# plain install compiles them (and on a fresh Mac pops the Xcode tools dialog).
-# `uv tool install` gets these overrides (a requirement whose override marker is
-# never true is dropped from the resolution):
-#   webrtcvad          sdist only; `webrtcvad-wheels` (same module) comes in
-#                      through --with instead
-#   stable-diffusion-cpp-python  sdist only; that optional image backend is left
-#                      out (diffusers / MLX image backends are unaffected)
-#   aec-audio-processing  wheels for Windows and macOS 15+ (Darwin 24) only
-#   llama-cpp-python   sdist only on PyPI; the upstream prebuilt release wheels,
-#                      hash-pinned: CPU 0.3.35 on Linux/Windows, Metal 0.3.28 on
-#                      Apple Silicon (the 0.3.32-0.3.35 Metal wheels fail zip CRC
-#                      checks and uv refuses them)
-#   vllm               Linux only (no Windows build exists)
-# and --no-build-package for the same packages, so a gap fails fast with a clear
-# resolver error instead of starting a compiler. Pure-Python sdists (langdetect,
-# antlr4-python3-runtime, encodec, transformers-stream-generator) still build:
-# they need no compiler. install.ps1 carries the same list
-# (tests/test_install_profiles.py keeps the two in sync).
+# Prebuilt wheels only: by default no C compiler (Xcode CLT, gcc) is needed.
+# A few packages in the gateway tree publish no usable wheel on PyPI, so a plain
+# install compiles them (and on a fresh Mac pops the Xcode tools dialog).
+# `uv tool install` gets an overrides file (an override whose marker is never
+# true drops the package) and --no-build-package for the same packages, so a gap
+# fails fast with a resolver error instead of starting a compiler:
+#   webrtcvad    always dropped; `webrtcvad-wheels` (same module) via --with
+#   vllm         Linux only (no Windows build exists)
+#   the compiled extras, dropped unless --full: llama-cpp-python (llama.cpp
+#   GGUF), stable-diffusion-cpp-python (stable-diffusion.cpp), aec-audio-processing
+#   (echo cancellation). All three are optional and imported lazily; MLX on
+#   Apple Silicon does not need them. --full keeps them and builds them from
+#   source, so it requires a compiler.
+# Pure-Python sdists (langdetect, antlr4-python3-runtime, encodec,
+# transformers-stream-generator) still build: they need no compiler, which is
+# why there is no global --no-build. install.ps1 carries the same lists
+# (tests/test_install_profiles.py keeps them in sync).
 # ---------------------------------------------------------------------------
 AF_WITH_WHEELS="webrtcvad-wheels>=2.0.14"
-AF_NO_BUILD_PACKAGES="webrtcvad llama-cpp-python stable-diffusion-cpp-python aec-audio-processing vllm"
+AF_COMPILED_EXTRAS="llama-cpp-python stable-diffusion-cpp-python aec-audio-processing"
+AF_SKIPPED_LINE="Skipped compiled extras (llama.cpp GGUF, stable-diffusion.cpp, echo cancellation): re-run with --full after installing a C compiler."
 af_uv_overrides() {
-    cat <<'AF_OVERRIDES'
-webrtcvad; sys_platform == 'never'
-stable-diffusion-cpp-python; sys_platform == 'never'
-aec-audio-processing>=1.0.0; sys_platform == 'win32' or (sys_platform == 'darwin' and platform_release >= '24')
-llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.28-metal/llama_cpp_python-0.3.28-py3-none-macosx_11_0_arm64.whl#sha256=a318a2e55031fe64e3c1d959b8802b9008bb8a304002d123f45f60b4a20200c1 ; sys_platform == 'darwin' and platform_machine == 'arm64'
-llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl#sha256=d172f3d3c8cdd194c3c47c71cb077ed6e61354a2d0f939ceeac0c8fd29999596 ; sys_platform == 'linux' and platform_machine == 'x86_64'
-llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl#sha256=b5a4abd4d1d506d6f06b997c21d0532670a3f5350c9e6cfb3e54c33bf1322584 ; sys_platform == 'linux' and platform_machine == 'aarch64'
-llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-win_amd64.whl#sha256=31590ea000d5aff6f05f1e428048e72318a83709288159a5bd4dabec530080bb ; sys_platform == 'win32' and (platform_machine == 'AMD64' or platform_machine == 'x86_64')
-vllm>=0.6.0,<1.0.0; sys_platform == 'linux'
-AF_OVERRIDES
+    echo "webrtcvad; sys_platform == 'never'"
+    echo "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'"
+    if [ "$FULL" = 0 ]; then
+        for _p in $AF_COMPILED_EXTRAS; do echo "$_p; sys_platform == 'never'"; done
+    fi
+}
+af_no_build_packages() {
+    echo "webrtcvad vllm"
+    [ "$FULL" = 1 ] || echo "$AF_COMPILED_EXTRAS"
 }
 
 # ---------------------------------------------------------------------------
@@ -113,12 +112,12 @@ MANIFEST=""
 DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
 WITH_APPS=0; WITH_CONSOLE=0; WITH_CODE_CLI=0; WITH_CORE_CLI=0
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
-NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
+FULL=0; NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
 PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0
 
 usage() {
     if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
-        sed -n '2,50p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,52p' "$0" | sed 's/^# \{0,1\}//'
     else
         echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
         echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
@@ -149,6 +148,7 @@ while [ $# -gt 0 ]; do
         --with-core-cli) WITH_CORE_CLI=1 ;;
         --with-ollama) WITH_OLLAMA=1 ;;
         --with-lmstudio) WITH_LMSTUDIO=1 ;;
+        --full) FULL=1 ;;
         --no-tray) NO_TRAY=1 ;;
         --no-service) NO_SERVICE=1 ;;
         --no-start) NO_START=1 ;;
@@ -388,8 +388,17 @@ printf '%sAbstractFramework bootstrap%s  %s%s%s\n' "$C_B" "$C_0" "$C_D" \
 
 step "Preflight"
 ok "system: $OS_ID $ARCH$([ -n "$MACOS_VERSION" ] && echo " (macOS $MACOS_VERSION)")"
-if [ "$OS_ID" = macos ] && ! xcode-select -p >/dev/null 2>&1; then
-    info "no C compiler (Xcode CLT) – fine, all packages install as prebuilt wheels"
+HAS_CC=1
+if [ "$OS_ID" = macos ]; then xcode-select -p >/dev/null 2>&1 || HAS_CC=0
+elif ! have cc && ! have gcc; then HAS_CC=0; fi
+if [ "$HAS_CC" = 0 ]; then
+    if [ "$FULL" = 1 ]; then
+        if [ "$OS_ID" = macos ]; then die "--full builds llama.cpp, stable-diffusion.cpp and echo cancellation from source and needs a C compiler: run 'xcode-select --install', then re-run with --full"
+        else die "--full builds llama.cpp, stable-diffusion.cpp and echo cancellation from source and needs a C compiler: install one (Debian/Ubuntu: sudo apt-get install -y build-essential), then re-run with --full"; fi
+    fi
+    info "no C compiler ($([ "$OS_ID" = macos ] && echo 'Xcode CLT' || echo 'cc/gcc')) – fine, all packages install as prebuilt wheels"
+elif [ "$FULL" = 1 ]; then
+    ok "C compiler found: --full builds the compiled extras from source (several minutes)"
 fi
 DL="$(fetch_cmd)"
 [ -n "$DL" ] || die "need curl or wget"
@@ -542,7 +551,7 @@ BEFORE=""
 if [ "$PRINT" = 0 ]; then BEFORE="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"; fi
 OVERRIDES_FILE="$DATA_DIR/uv-overrides.txt"
 if [ "$PRINT" = 1 ]; then
-    info "$OVERRIDES_FILE (written at install time; prebuilt wheels only, see the top of install.sh):"
+    info "$OVERRIDES_FILE (written at install time; see the top of install.sh):"
     af_uv_overrides | sed 's/^/      /'
 else
     af_uv_overrides >"$OVERRIDES_FILE"
@@ -550,7 +559,7 @@ fi
 # uv splits an --overrides value at whitespace ("Application Support"), so the install
 # runs from the data dir and names the file relatively.
 set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS" --overrides uv-overrides.txt
-for _p in $AF_NO_BUILD_PACKAGES; do set -- "$@" --no-build-package "$_p"; done
+for _p in $(af_no_build_packages); do set -- "$@" --no-build-package "$_p"; done
 [ "$WITH_CORE_CLI" = 1 ] && set -- "$@" --with-executables-from abstractcore
 if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
     run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
@@ -783,6 +792,9 @@ echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service ins
 echo "  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"
+if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
+    echo "  $AF_SKIPPED_LINE"
+fi
 echo "  Apps:       npx -y @abstractframework/flow   (also: code, observer, continuum, entity)"
 echo "  Docs:       $AF_DOCS"
 if [ -n "$TWINS" ]; then

@@ -47,16 +47,25 @@ upgrades or repairs the install in place.
 
 ### No compiler needed
 
-The script never compiles anything, so you do not need Xcode Command Line Tools, gcc or the MSVC
-Build Tools. A few native dependencies publish no wheel on PyPI; the script passes uv a small
-overrides file (written to `uv-overrides.txt` in the gateway data directory, printed by `--print`)
-that swaps `webrtcvad` for `webrtcvad-wheels`, takes `llama-cpp-python` from its upstream prebuilt
-wheels (hash-pinned), keeps `aec-audio-processing` and `vllm` to the platforms that have wheels,
-and leaves out the optional stable-diffusion.cpp image backend. It also refuses to build those
-packages from source, so a gap fails with a clear error instead of starting a compiler. If macOS
-asks you to install the command line developer tools (an `xcode-select` prompt) during an install,
-you are running an older copy of the script or an older `--pin`: cancel the prompt, fetch the
-script again with the one-liner above and re-run it.
+By default the script never compiles anything, so you do not need Xcode Command Line Tools, gcc
+or the MSVC Build Tools. It passes uv a small overrides file (`uv-overrides.txt` in the gateway
+data directory; `--print` shows it) that swaps `webrtcvad` for `webrtcvad-wheels`, keeps `vllm`
+to Linux, and leaves out the three compiled extras below, and it refuses to build those packages
+from source, so a gap fails with a clear error instead of starting a compiler. If macOS asks you
+to install the command line developer tools (an `xcode-select` prompt) during an install, you are
+running an older copy of the script: cancel the prompt, fetch the script again with the one-liner
+above and re-run it.
+
+### Compiled extras
+
+Three optional engines publish no wheel on PyPI and are skipped by default: llama.cpp GGUF models
+in-process (`llama-cpp-python`), stable-diffusion.cpp image generation
+(`stable-diffusion-cpp-python`) and voice echo cancellation (`aec-audio-processing`). `--full`
+(Windows: `-Full`) keeps them and builds them from source, which takes several minutes and needs a
+C/C++ compiler (macOS: `xcode-select --install`; Debian/Ubuntu: `sudo apt-get install -y
+build-essential`; Windows: Visual Studio Build Tools with "Desktop development with C++"). Without
+a compiler, `--full` stops before installing anything. You do not need them for MLX on Apple
+Silicon, for Ollama, LM Studio or other endpoint engines, or for cloud providers.
 
 ### Options
 
@@ -70,6 +79,7 @@ script again with the one-liner above and re-run it.
 | `--with-console` | `-WithConsole` | Install the `abstractgateway-console` crate with cargo (terminal console; needs Rust) |
 | `--with-code-cli` | `-WithCodeCli` | Install the `abstractcode` crate with cargo (terminal client; needs Rust) |
 | `--with-core-cli` | `-WithCoreCli` | Also put the `abstractcore` command on PATH |
+| `--full` | `-Full` | Also build the [compiled extras](#compiled-extras) from source (needs a C compiler) |
 | `--no-service` | `-NoService` | Do not register a login service |
 | `--no-open` | `-NoOpen` | Do not open the browser |
 | `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |
@@ -170,9 +180,10 @@ whether local inference engines are installed.
 | Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 | GPU | Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 
-A plain `pip install` of the `apple` or `gpu` profile builds a few native packages from source
-(`llama-cpp-python`, `stable-diffusion-cpp-python`, `webrtcvad` until abstractvoice 0.11.4,
-`aec-audio-processing`), so it needs a C/C++ compiler. The one-line install above does not.
+A plain `pip install` of the `apple` or `gpu` profile builds the
+[compiled extras](#compiled-extras) (`llama-cpp-python`, `stable-diffusion-cpp-python`,
+`aec-audio-processing`) from source, so it needs a C/C++ compiler. The one-line install above
+does not.
 
 `abstractframework` 0.2.0 pins `abstractgateway==0.3.0`, `abstractassistant==0.5.0`,
 `abstractcore==2.14.0`, `AbstractRuntime==0.4.33`, `abstractagent==0.3.13`,

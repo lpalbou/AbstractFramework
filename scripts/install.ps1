@@ -21,6 +21,9 @@
          otherwise a Startup-folder shortcut plus a hidden background start
       6. waits for /api/health, then opens the console (one-time claim URL when supported)
 
+    -Full also builds the compiled extras (llama.cpp GGUF, stable-diffusion.cpp, echo
+    cancellation) from source; it needs the MSVC Build Tools.
+
     Environment twins: AF_PROFILE, AF_PORT, AF_PIN, AF_FROM, AF_DATA_DIR.
 
 .EXAMPLE
@@ -47,6 +50,7 @@ param(
     [switch]$WithCoreCli,
     [switch]$WithOllama,
     [switch]$WithLmStudio,
+    [switch]$Full,
     [switch]$NoTray,
     [switch]$NoService,
     [switch]$NoStart,
@@ -72,28 +76,28 @@ $AfDocs = 'https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.m
 $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1'
 
 # ---------------------------------------------------------------------------
-# Prebuilt wheels only: no C compiler (MSVC Build Tools) is ever needed. A few
-# native dependencies of the gateway tree publish no wheel on PyPI; `uv tool
-# install` gets these overrides (an override whose marker is never true drops
-# the package) plus --no-build-package for the same packages, so a gap fails
-# fast instead of starting a compiler. webrtcvad -> webrtcvad-wheels (--with);
-# stable-diffusion-cpp-python left out; aec-audio-processing only where wheels
-# exist; llama-cpp-python from the upstream hash-pinned release wheels (Metal
-# 0.3.28 on macOS: the 0.3.32-0.3.35 Metal wheels fail zip CRC checks); vllm
-# is Linux-only. Same list as install.sh (tests/test_install_profiles.py checks).
+# Prebuilt wheels only: by default no compiler (MSVC Build Tools) is needed.
+# `uv tool install` gets an overrides file (an override whose marker is never true
+# drops the package) and --no-build-package for the same packages, so a gap fails
+# fast instead of starting a compiler: webrtcvad is always dropped (webrtcvad-wheels
+# comes in through --with), vllm is Linux-only, and the compiled extras
+# (llama-cpp-python, stable-diffusion-cpp-python, aec-audio-processing; optional,
+# imported lazily) are dropped unless -Full, which builds them from source and so
+# needs a compiler. Same lists as install.sh (tests/test_install_profiles.py checks).
 # ---------------------------------------------------------------------------
 $AfWithWheels = 'webrtcvad-wheels>=2.0.14'
-$AfNoBuildPackages = @('webrtcvad', 'llama-cpp-python', 'stable-diffusion-cpp-python', 'aec-audio-processing', 'vllm')
-$AfUvOverrides = @'
-webrtcvad; sys_platform == 'never'
-stable-diffusion-cpp-python; sys_platform == 'never'
-aec-audio-processing>=1.0.0; sys_platform == 'win32' or (sys_platform == 'darwin' and platform_release >= '24')
-llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.28-metal/llama_cpp_python-0.3.28-py3-none-macosx_11_0_arm64.whl#sha256=a318a2e55031fe64e3c1d959b8802b9008bb8a304002d123f45f60b4a20200c1 ; sys_platform == 'darwin' and platform_machine == 'arm64'
-llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl#sha256=d172f3d3c8cdd194c3c47c71cb077ed6e61354a2d0f939ceeac0c8fd29999596 ; sys_platform == 'linux' and platform_machine == 'x86_64'
-llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl#sha256=b5a4abd4d1d506d6f06b997c21d0532670a3f5350c9e6cfb3e54c33bf1322584 ; sys_platform == 'linux' and platform_machine == 'aarch64'
-llama-cpp-python @ https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35/llama_cpp_python-0.3.35-py3-none-win_amd64.whl#sha256=31590ea000d5aff6f05f1e428048e72318a83709288159a5bd4dabec530080bb ; sys_platform == 'win32' and (platform_machine == 'AMD64' or platform_machine == 'x86_64')
-vllm>=0.6.0,<1.0.0; sys_platform == 'linux'
-'@
+$AfCompiledExtras = @('llama-cpp-python', 'stable-diffusion-cpp-python', 'aec-audio-processing')
+$AfSkippedLine = 'Skipped compiled extras (llama.cpp GGUF, stable-diffusion.cpp, echo cancellation): re-run with -Full after installing a C compiler.'
+function Get-UvOverrides([bool]$WithCompiledExtras) {
+    $lines = @("webrtcvad; sys_platform == 'never'", "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'")
+    if (-not $WithCompiledExtras) { foreach ($p in $AfCompiledExtras) { $lines += "$p; sys_platform == 'never'" } }
+    return $lines
+}
+function Get-NoBuildPackages([bool]$WithCompiledExtras) {
+    $pkgs = @('webrtcvad', 'vllm')
+    if (-not $WithCompiledExtras) { $pkgs += $AfCompiledExtras }
+    return $pkgs
+}
 
 $script:RanAsFile = [bool]$PSCommandPath
 $script:DryRun = [bool]($Print -or $WhatIfPreference)
@@ -353,6 +357,21 @@ function Main {
         }
     } catch { }
 
+    # A compiler is only needed for -Full (cl.exe on PATH, or MSVC found by vswhere).
+    $hasCc = Test-Command 'cl.exe'
+    if (-not $hasCc -and ${env:ProgramFiles(x86)}) {
+        $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+        if (Test-Path -LiteralPath $vswhere) {
+            try { $hasCc = [bool](& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath 2>$null) } catch { }
+        }
+    }
+    if (-not $hasCc) {
+        if ($Full) { Stop-Install '-Full builds llama.cpp, stable-diffusion.cpp and echo cancellation from source and needs a C compiler: install the Visual Studio Build Tools ("Desktop development with C++"), then re-run with -Full' }
+        Write-Info 'no C compiler (MSVC Build Tools) - fine, all packages install as prebuilt wheels'
+    } elseif ($Full) {
+        Write-Ok 'C compiler found: -Full builds the compiled extras from source (several minutes)'
+    }
+
     $hasNvidia = $false
     if (Test-Command 'nvidia-smi') { try { & nvidia-smi -L *> $null; $hasNvidia = ($LASTEXITCODE -eq 0) } catch { } }
     switch ($profileName) {
@@ -455,16 +474,16 @@ function Main {
     $before = Get-GatewayToolVersion
     $overridesFile = Join-Path $DataDir 'uv-overrides.txt'
     if ($script:DryRun) {
-        Write-Info "$overridesFile (written at install time; prebuilt wheels only, see the top of install.ps1):"
-        foreach ($l in ($AfUvOverrides -split "`r?`n")) { if ($l) { Write-Host "      $l" } }
+        Write-Info "$overridesFile (written at install time; see the top of install.ps1):"
+        foreach ($l in (Get-UvOverrides $Full)) { Write-Host "      $l" }
     } else {
         # UTF-8 without a BOM (Set-Content -Encoding UTF8 adds one on PowerShell 5.1).
-        [System.IO.File]::WriteAllText($overridesFile, (($AfUvOverrides -split "`r?`n") -join "`n") + "`n")
+        [System.IO.File]::WriteAllText($overridesFile, ((Get-UvOverrides $Full) -join "`n") + "`n")
     }
     # uv splits an --overrides value at whitespace (a user name with a space), so the
     # install runs from the data dir and names the file relatively.
     $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels, '--overrides', 'uv-overrides.txt')
-    foreach ($p in $AfNoBuildPackages) { $argv += @('--no-build-package', $p) }
+    foreach ($p in (Get-NoBuildPackages $Full)) { $argv += @('--no-build-package', $p) }
     if ($WithCoreCli) { $argv += @('--with-executables-from', 'abstractcore') }
     if ($before -and $Pin -eq 'latest' -and -not $From -and $state['PROFILE'] -eq $profileName) {
         Invoke-Native -Description 'upgrade abstractgateway' -Argv @($uv, 'tool', 'upgrade', 'abstractgateway') | Out-Null
@@ -673,6 +692,7 @@ function Main {
     Write-Host '  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)'
     Write-Host "  Uninstall:  install.ps1 -Uninstall   (or: $(if ($mode -eq 'service') { 'abstractgateway service uninstall; ' })uv tool uninstall abstractgateway)"
     Write-Host '  Check:      uvx abstractframework doctor'
+    if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     Write-Host '  Apps:       npx -y @abstractframework/flow   (also: code, observer, continuum, entity)'
     Write-Host "  Docs:       $AfDocs"
     if ($script:Twins.Count) {

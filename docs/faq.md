@@ -179,6 +179,13 @@ user account. Only optional vendor installers may: Ollama on Linux uses sudo (it
 service), Ollama on macOS may ask to link `/usr/local/bin/ollama`, and LM Studio on Linux may ask
 to install `libatomic1`. The script tells you before running them.
 
+### Do I need Xcode or a C compiler?
+
+No. The default install uses prebuilt wheels only. If macOS shows an "install the command line
+developer tools" prompt, cancel it and re-run the current one-liner: an older copy of the script
+compiled a few packages. You need a compiler only for `--full`, which adds llama.cpp GGUF,
+stable-diffusion.cpp and echo cancellation ([Compiled extras](install.md#compiled-extras)).
+
 ### Windows says scripts are disabled on this system
 
 Pasting the one-liner works under the default `Restricted` policy because
