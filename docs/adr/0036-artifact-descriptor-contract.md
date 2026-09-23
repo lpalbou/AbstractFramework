@@ -164,7 +164,7 @@ Focused validation command:
 
 ```bash
 cd abstractruntime
-/Users/albou/tmp/abstractframework/.venv/bin/python -m pytest tests/test_artifacts.py
+<workspace>/.venv/bin/python -m pytest tests/test_artifacts.py
 ```
 
 ## Packages Affected
