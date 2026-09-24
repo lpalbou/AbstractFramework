@@ -159,6 +159,19 @@ If you care about auditability and long-lived workflows, back up the gateway dat
 
 ## Installing with the one-line script
 
+### Why does macOS ask me to allow the installer?
+
+`AbstractFramework-Installer.pkg` is not signed with an Apple Developer ID, so macOS blocks the
+first double-click. Open **System Settings > Privacy & Security** and click **Open Anyway** next to
+the installer's name, once per download. The one-line install in Terminal does not show this
+step. See [Install on a Mac](install.md#install-on-a-mac).
+
+### Can other devices on my network use the gateway?
+
+Yes, when you choose it. The gateway listens on this computer only until you change its Network
+setting (`abstractgateway network set lan`, the console, or the menu-bar icon). See
+[Network setting](install.md#network-setting-who-can-reach-the-gateway).
+
 ### Why is `abstractgateway` not found after the install?
 
 The commands live in `~/.local/bin` (`%USERPROFILE%\.local\bin` on Windows). The script runs
@@ -182,8 +195,7 @@ to install `libatomic1`. The script tells you before running them.
 ### Do I need Xcode or a C compiler?
 
 No. The default install uses prebuilt wheels only. If macOS shows an "install the command line
-developer tools" prompt, cancel it and re-run the current one-liner: an older copy of the script
-compiled a few packages. llama.cpp GGUF models come from upstream's prebuilt wheel on Apple
+developer tools" prompt, cancel it and re-run the one-liner. llama.cpp GGUF models come from upstream's prebuilt wheel on Apple
 Silicon, Linux and Windows x64 ([llama.cpp GGUF models](install.md#llamacpp-gguf-models)). You
 need a compiler only for `--full`, which adds stable-diffusion.cpp and echo cancellation, and
 llama.cpp on machines without a prebuilt wheel ([Compiled extras](install.md#compiled-extras)).
@@ -206,8 +218,7 @@ in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path
 
 When the script registered the login service, `abstractgateway service status` shows it,
 `abstractgateway service uninstall` stops the gateway and removes the login entry (your data is
-kept), and `abstractgateway service install --host 127.0.0.1 --port 8080` registers and starts it
-again. With `--no-service`, the install summary prints the stop and start commands; re-running the
+kept), and `abstractgateway service install --port 8080` registers and starts it again. With `--no-service`, the install summary prints the stop and start commands; re-running the
 installer starts it again.
 
 ### How do I download a model or install Ollama later?
@@ -230,24 +241,7 @@ data as well. See [Install](install.md#upgrade-and-uninstall).
 
 ---
 
-## Troubleshooting
+## Something does not work
 
-### Provider calls fail
-
-- Verify provider environment variables (see **[Configuration](configuration.md)**).
-- For local backends, make sure the server is running.
-- Run `abstractcore --status` to check persisted config.
-
-### Observer can't connect to the gateway
-
-- Verify the gateway URL and auth token match.
-- Ensure `ABSTRACTGATEWAY_ALLOWED_ORIGINS` includes the Observer origin (for local dev: `http://localhost:*`).
-- Confirm the gateway is reachable: `curl http://127.0.0.1:8080/api/health`.
-
-### Voice models not found
-
-Prefetch explicitly (offline-first design):
-
-```bash
-abstractvoice-prefetch --stt small --piper en
-```
+Symptoms, checks and fixes (provider calls failing, a browser app that cannot connect, missing
+voice models, install errors) are in **[Troubleshooting](troubleshooting.md)**.

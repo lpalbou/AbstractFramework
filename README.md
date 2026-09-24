@@ -26,7 +26,9 @@ MLX, llama.cpp), downloads a model that fits your machine, and lists the apps.
 
 - **Mac, no Terminal:** download and double-click
   [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
-  A Terminal window shows each step; press Return at its one question.
+  The package is not signed with an Apple Developer ID, so the first time macOS blocks it: open
+  **System Settings > Privacy & Security**, click **Open Anyway** next to the installer's name and
+  confirm. A Terminal window then shows each step; press Return at its one question.
 - **macOS / Linux, one line:**
 
   ```bash
@@ -40,10 +42,11 @@ MLX, llama.cpp), downloads a model that fits your machine, and lists the apps.
   ```
 
 Every failure says what to do next; running the installer again repairs or upgrades in place. To
-remove it: `Uninstall AbstractFramework.command`, or
+remove it, double-click `Uninstall AbstractFramework.command` (in
+`~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
 `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`.
 Step by step, the failure table, options (`--with-apps`, `--with-ollama`, `--print`, …):
-[Install](docs/install.md).
+[Install](docs/install.md). Something not working: [Troubleshooting](docs/troubleshooting.md).
 
 Already have Python? Either entry point works the same way: start it, then open the link it prints.
 
@@ -128,7 +131,7 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 
 Out of the box this serves a ready set of workflows — a verify-gated coding
 agent, `deep-research`, and `co-scientist` among them. See
-[shipped workflows](abstractgateway/docs/shipped-workflows.md).
+[shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md).
 
 The `admin` user token is kept in `<data dir>/auth/bootstrap-admin-token`; use it to sign in to
 AbstractFlow, AbstractCode Web or AbstractObserver, or to the console without a claim link.
@@ -148,7 +151,7 @@ Container images are published for the gateway and the AbstractCore server:
 `ghcr.io/lpalbou/abstractgateway:0.4.2` and `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
 
 For artifact and runtime-resource investigation, see
-`docs/guide/runtime-artifacts.md`.
+[Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
 
 ---
 
@@ -161,7 +164,7 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 3. Export a `.flow` bundle into your own bundle directory and point `ABSTRACTGATEWAY_FLOWS_DIR` at it (or publish it through the Gateway API)
 4. Run it from any gateway-backed client (Observer, AbstractAssistant, Code Web UI, your app)
 
-**AbstractAgent** provides ready-made agent patterns (ReAct, CodeAct, MemAct) that can be used inside flows or standalone. The workflows Gateway ships with are authored the same way — their editable sources are documented in [shipped workflow sources](abstractflow/docs/shipped-workflow-sources.md).
+**AbstractAgent** provides ready-made agent patterns (ReAct, CodeAct, MemAct) that can be used inside flows or standalone. The workflows Gateway ships with are authored the same way — their editable sources are documented in [shipped workflow sources](https://github.com/lpalbou/AbstractFlow/blob/main/docs/shipped-workflow-sources.md).
 
 ---
 
@@ -175,50 +178,50 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 
 ## Package map
 
-The ecosystem, grouped by layer. Each name links to the package's own README.
+The ecosystem, grouped by layer. Each name links to the package's repository.
 
 ### Foundation
 
 | Package | What it is |
 |---|---|
-| [abstractcore](abstractcore/) | Unified LLM interface: 9+ providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
-| [abstractsemantics](abstractsemantics/) | Central semantics registry (predicates + entity types) with JSON-Schema helpers |
-| [abstractmemory](abstractmemory/) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
+| [abstractcore](https://github.com/lpalbou/AbstractCore) | Unified LLM interface: 9+ providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
+| [abstractsemantics](https://github.com/lpalbou/AbstractSemantics) | Central semantics registry (predicates + entity types) with JSON-Schema helpers |
+| [abstractmemory](https://github.com/lpalbou/AbstractMemory) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
 
 ### Durable execution
 
 | Package | What it is |
 |---|---|
-| [abstractruntime](abstractruntime/) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts; the VisualFlow compiler (visual graphs → executable workflows); the entity identity lane (homes, chat/life/visit drivers) |
-| [abstractagent](abstractagent/) | Agent patterns (ReAct / CodeAct / MemAct) composing Runtime + Core |
-| [abstractflow](abstractflow/) | Visual workflow editor + portable `.flow` bundles — author once, run anywhere |
+| [abstractruntime](https://github.com/lpalbou/AbstractRuntime) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts; the VisualFlow compiler (visual graphs → executable workflows); the entity identity lane (homes, chat/life/visit drivers) |
+| [abstractagent](https://github.com/lpalbou/AbstractAgent) | Agent patterns (ReAct / CodeAct / MemAct) composing Runtime + Core |
+| [abstractflow](https://github.com/lpalbou/AbstractFlow) | Visual workflow editor + portable `.flow` bundles — author once, run anywhere |
 
 ### Control plane
 
 | Package | What it is |
 |---|---|
-| [abstractgateway](abstractgateway/) | Deployable control plane: durable runs over HTTP/SSE, scheduling + run commands (cancel/steer), workflow catalog, artifact/ledger serving, multi-user auth with per-user runtimes, the summoned-entity lifecycle (create / summon / visit / state / blueprint), and the operator consoles (web + TUI) |
+| [abstractgateway](https://github.com/lpalbou/AbstractGateway) | Deployable control plane: durable runs over HTTP/SSE, scheduling + run commands (cancel/steer), workflow catalog, artifact/ledger serving, multi-user auth with per-user runtimes, the summoned-entity lifecycle (create / summon / visit / state / blueprint), and the operator consoles (web + TUI) |
 
 ### Multimodal capabilities
 
 | Package | What it is |
 |---|---|
-| [abstractvoice](abstractvoice/) | Voice I/O (TTS / STT), local and remote backends |
-| [abstractvision](abstractvision/) | Model-agnostic generative vision (images, optional video) |
-| [abstractmusic](abstractmusic/) | Text-to-music / text-to-audio (Core capability plugin) |
-| [abstract3d](abstract3d/) | Local-first 3D generation |
-| [abstractcamera](abstractcamera/) | Camera control and capture tools |
-| [abstractsound](abstractsound/), [abstractvideo](abstractvideo/), [abstractspatial](abstractspatial/), [abstractgeometry](abstractgeometry/), [abstractcognition](abstractcognition/) | Reserved capability packages (namespaces held; APIs landing incrementally) |
+| [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
+| [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic generative vision (images, optional video) |
+| [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio (Core capability plugin) |
+| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
+| `abstractsound`, `abstractvideo`, `abstractspatial`, `abstractgeometry`, `abstractcognition` | Reserved capability packages (namespaces held; APIs landing incrementally) |
 
 ### Apps and clients
 
 | App | What it does | Install |
 |---|---|---|
-| [AbstractCode](abstractcode/) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, `/workflow` support | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
-| [AbstractAssistant](abstractassistant/) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
-| [AbstractObserver](abstractobserver/) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
-| [AbstractEntity](abstractentity/) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
-| [AbstractContinuum](abstractcontinuum/) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
+| [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, `/workflow` support | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
+| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
+| [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
+| [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
+| [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
 | **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed) | `npx @abstractframework/code` |
@@ -228,9 +231,9 @@ The ecosystem, grouped by layer. Each name links to the package's own README.
 
 | Package | What it is |
 |---|---|
-| [abstracttui](abstracttui/) | Rust terminal-UI engine built on fine-grained reactive signals |
-| [abstractuic](abstractuic/) | Reusable UI kit for framework clients (React components + Web Components) |
-| [abstractskill](abstractskill/) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) |
+| [abstracttui](https://github.com/lpalbou/AbstractTUI) | Rust terminal-UI engine built on fine-grained reactive signals |
+| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Reusable UI kit for framework clients (React components + Web Components) |
+| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) |
 
 ---
 
@@ -314,9 +317,13 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/architecture.md](docs/architecture.md) | Layered model, durable execution primitives, comparisons |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |
-| [docs/faq.md](docs/faq.md) | Common questions, comparisons, troubleshooting |
-| [docs/api.md](docs/api.md) | Meta-package API (pins, helpers, re-exports) |
+| [docs/faq.md](docs/faq.md) | Common questions, comparisons, limits |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Symptoms, checks and fixes for install, sign-in, network and provider problems |
+| [docs/api.md](docs/api.md) | Meta-package API (pins, helpers, re-exports, `abstractframework doctor`) |
 | [docs/workspace-scripts.md](docs/workspace-scripts.md) | Working from source: package tiers, build, status, pull/commit/push scripts |
+| [CHANGELOG.md](CHANGELOG.md) | Release history of the meta-package and its pins |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to work on this repository and propose changes |
+| [SECURITY.md](SECURITY.md) | How to report a vulnerability |
 
 ---
 
@@ -347,4 +354,5 @@ abstractcore --install   # check every subsystem and download missing models and
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Credits: [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md). Community
+expectations: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

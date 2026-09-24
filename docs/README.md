@@ -7,7 +7,7 @@ A modular, open-source ecosystem for building **durable, observable, multimodal*
 This doc set focuses on two things:
 
 1. **How to pick the right entry point** (AbstractCore SDK vs AbstractGateway control plane)
-2. **How the pieces compose** (Core → Runtime → Gateway → Flow → Observer)
+2. **How the pieces compose** (clients → Gateway → Agent / Runtime → Core → providers)
 
 Most implementation lives in component repositories. This repo ships the `abstractframework` meta-package (a pinned install profile) and the cross-package docs you're reading now.
 
@@ -47,28 +47,25 @@ Read **[Getting Started](getting-started.md)** → "Gateway-first" section.
 
 ## How the pieces fit (one picture)
 
+```mermaid
+flowchart LR
+    CL["Clients<br/>Observer · Flow Editor · Code · Entity<br/>Continuum · Assistant · consoles"]
+    GW["AbstractGateway<br/>runs · schedules · catalog · ledger"]
+    AG["AbstractAgent"]
+    RT["AbstractRuntime<br/>durable kernel"]
+    CO["AbstractCore<br/>LLM · tools · media"]
+    PL["voice · vision · music<br/>plugins"]
+    PR[("providers and<br/>local engines")]
+    CL -->|HTTP/SSE| GW
+    GW --> AG --> RT
+    GW --> RT --> CO
+    AG --> CO
+    CO -.-> PL
+    CO --> PR
 ```
-Authoring                                Operations
-──────────────────────────────────────────────────────────────
 
- AbstractFlow (author workflows)      AbstractGateway (control plane)
- + Flow Editor (web UI)               - run control + scheduling
- - exports .flow bundles              - bundle discovery + SSE ledger
-               │                                │
-               └─────────────┬──────────────────┘
-                             ▼
-          AbstractAgent (ReAct / CodeAct / MemAct)
-                             │
-                             ▼
-                  AbstractRuntime (durable kernel)
-                  - runs, effects, waits
-                  - ledger + artifacts
-                             │
-                             ▼
-                  AbstractCore (LLM + tools + media)
-                  - provider abstraction + routing defaults
-                  - capability plugins: voice / vision / music
-```
+The full component diagram, with memory, semantics and the consoles, is in
+[Architecture](architecture.md#component-view).
 
 ---
 
@@ -76,17 +73,18 @@ Authoring                                Operations
 
 | Page | What it covers |
 |---|---|
-| **[Install](install.md)** | One-line install (`install.sh` / `install.ps1`), options and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
+| **[Install](install.md)** | Mac installer, one-line install (`install.sh` / `install.ps1`), options, Network setting and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
-| **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
+| **[Architecture](architecture.md)** | Component diagram, distribution by registry, durable execution primitives, comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
 | **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
-| **[FAQ](faq.md)** | Common questions, troubleshooting, comparisons |
-| **[API](api.md)** | The `abstractframework` meta-package API (pins + helpers + re-exports) |
+| **[FAQ](faq.md)** | Common questions, comparisons, limits |
+| **[Troubleshooting](troubleshooting.md)** | Symptoms, checks and fixes: installer blocked by macOS, sign-in links, ports, network access, providers |
+| **[API](api.md)** | The `abstractframework` meta-package API (pins, helpers, re-exports, `doctor`, `manifest`) |
 | **[Runtime artifacts and retrieval](guide/runtime-artifacts.md)** | Runtime, Gateway, Observer, ledger, and KG responsibility map for artifact/retrieval work |
-| **[Shipped workflows](../abstractgateway/docs/shipped-workflows.md)** | The workflows a packaged Gateway serves out of the box — coder, deep research, co-scientist — and how to run them |
+| **[Shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md)** | The workflows a packaged Gateway serves out of the box — coder, deep research, co-scientist — and how to run them |
 
 ---
 
@@ -99,52 +97,52 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 
 | Package | What it is |
 |---|---|
-| [abstractcore](../abstractcore/) | Unified LLM interface: providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
-| [abstractsemantics](../abstractsemantics/) | Shared semantics registry for predicates and entity types |
-| [abstractmemory](../abstractmemory/) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
+| [abstractcore](https://github.com/lpalbou/AbstractCore) | Unified LLM interface: providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
+| [abstractsemantics](https://github.com/lpalbou/AbstractSemantics) | Shared semantics registry for predicates and entity types |
+| [abstractmemory](https://github.com/lpalbou/AbstractMemory) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
 
 ### Durable execution
 
 | Package | What it is |
 |---|---|
-| [abstractruntime](../abstractruntime/) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts, and the entity identity lane |
-| [abstractagent](../abstractagent/) | ReAct, CodeAct, and MemAct patterns on top of Runtime + Core |
-| [abstractflow](../abstractflow/) | Visual workflow editor and portable `.flow` bundles |
+| [abstractruntime](https://github.com/lpalbou/AbstractRuntime) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts, and the entity identity lane |
+| [abstractagent](https://github.com/lpalbou/AbstractAgent) | ReAct, CodeAct, and MemAct patterns on top of Runtime + Core |
+| [abstractflow](https://github.com/lpalbou/AbstractFlow) | Visual workflow editor and portable `.flow` bundles |
 
 ### Control plane
 
 | Package | What it is |
 |---|---|
-| [abstractgateway](../abstractgateway/) | Deployable control plane: durable runs over HTTP/SSE, scheduling, workflow catalog, auth, artifact/ledger serving, and the summoned-entity door |
+| [abstractgateway](https://github.com/lpalbou/AbstractGateway) | Deployable control plane: durable runs over HTTP/SSE, scheduling, workflow catalog, auth, artifact/ledger serving, and the summoned-entity door |
 
 ### Multimodal capabilities
 
 | Package | What it is |
 |---|---|
-| [abstractvoice](../abstractvoice/) | Voice I/O (TTS / STT), local and remote backends |
-| [abstractvision](../abstractvision/) | Model-agnostic image generation |
-| [abstractmusic](../abstractmusic/) | Text-to-music / text-to-audio capability plugin |
-| [abstract3d](../abstract3d/) | Local-first 3D generation |
-| [abstractcamera](../abstractcamera/) | Camera control and capture tools |
+| [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
+| [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic image generation |
+| [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio capability plugin |
+| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
 
 ### Apps and clients
 
 | Package | What it is |
 |---|---|
-| [abstractcode](../abstractcode/) | Coding client with durable sessions and tool approvals: Rust terminal client (`cargo install abstractcode`) and browser client (`npx @abstractframework/code`) |
-| [abstractassistant](../abstractassistant/) | macOS tray client for gateway-native chat and voice |
-| [abstractobserver](../abstractobserver/) | Browser UI for monitoring, control, and scheduling |
-| [abstractentity](../abstractentity/) | Summoned-entity manager and chat/replay UI |
-| [abstractcontinuum](../abstractcontinuum/) | Continuous iterative development and deployment console |
+| [abstractcode](https://github.com/lpalbou/AbstractCode) | Coding client with durable sessions and tool approvals: Rust terminal client (`cargo install abstractcode`) and browser client (`npx @abstractframework/code`) |
+| [abstractassistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client for gateway-native chat and voice |
+| [abstractobserver](https://github.com/lpalbou/AbstractObserver) | Browser UI for monitoring, control, and scheduling |
+| [abstractentity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager and chat/replay UI |
+| [abstractcontinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console |
 | Consoles | Web consoles built into `abstractgateway serve` and `abstractcore serve` (`/console`, with Models and Engines tabs); terminal consoles `cargo install abstractgateway-console` and `cargo install abstractcore-console` |
 
 ### Shared libraries
 
 | Package | What it is |
 |---|---|
-| [abstracttui](../abstracttui/) | Reactive Rust terminal UI engine |
-| [abstractuic](../abstractuic/) | Shared React/Web Components UI kit |
-| [abstractskill](../abstractskill/) | Shared Agent Skills (`SKILL.md`) loader and activation library |
+| [abstracttui](https://github.com/lpalbou/AbstractTUI) | Reactive Rust terminal UI engine |
+| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Shared React/Web Components UI kit |
+| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared Agent Skills (`SKILL.md`) loader and activation library |
 
 ---
 
@@ -167,3 +165,6 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | [docs/scenarios/](scenarios/) | End-to-end walkthroughs by use case |
 | [docs/installers/](installers/README.md) | Install design: script bootstrap + gateway console, per-OS journeys, OS security, manifest, operations |
 | [docs/comparisons/](comparisons/) | Trade-offs vs other frameworks |
+| [docs/adr/](adr/README.md) | Architecture decision records |
+| [CHANGELOG.md](../CHANGELOG.md) | Release history of the meta-package and its pins |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) · [SECURITY.md](../SECURITY.md) | Contributing to this repository; reporting a vulnerability |

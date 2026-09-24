@@ -23,8 +23,10 @@ AbstractFramework is a **stack**:
 
 If you want AbstractFramework running on your computer without setting up Python yourself, use
 the installer. On a Mac, download and double-click
-[AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg);
-on macOS or Linux you can instead paste one line in Terminal:
+[AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg)
+(the first time, allow it with **Open Anyway** in **System Settings > Privacy & Security**: the
+package is not signed with an Apple Developer ID; see [Install](install.md#install-on-a-mac)).
+On macOS or Linux you can instead paste one line in Terminal:
 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --interactive
@@ -38,8 +40,9 @@ already signed in. The console's first-run guide sets up a local engine or a clo
 default model (the **Models** tab lists the models that fit your machine and downloads them). Then
 continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 [AbstractFlow](#author-orchestration-with-abstractflow). Step by step, what to do when something
-fails, and how to remove it: [Install](install.md). The sections below cover manual installs for
-library and developer use.
+fails, and how to remove it: [Install](install.md); fixes for common problems:
+[Troubleshooting](troubleshooting.md). The sections below cover manual installs for library and
+developer use.
 
 ---
 
@@ -185,7 +188,9 @@ link. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCo
 AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operator bearer-token
 path; it does not sign in browsers.
 
-To start the gateway at login, use `abstractgateway service install --host 127.0.0.1 --port 8080`.
+To start the gateway at login, use `abstractgateway service install --port 8080`. The login item
+listens where the gateway's Network setting says (this computer only until you change it; see
+[Network setting](install.md#network-setting-who-can-reach-the-gateway)).
 
 Verify:
 
@@ -227,7 +232,7 @@ The ecosystem's distribution unit is a **workflow bundle** (`.flow` file): a Vis
 You do not have to start from an empty registry. A packaged Gateway already
 serves a set of ready workflows — a verify-gated coding agent, `deep-research`,
 and `co-scientist` among them — listed in
-[AbstractGateway's shipped workflows](../abstractgateway/docs/shipped-workflows.md).
+[AbstractGateway's shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md).
 Author your own when you need something they do not cover.
 
 ### 1. Open the Flow Editor
@@ -307,5 +312,7 @@ assistant tray
 - **[Architecture](architecture.md)** — the layered model (Core / Runtime / Agent / Gateway / Flow / Observer)
 - **[Configuration](configuration.md)** — where defaults live and how to configure them
 - **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)
-- **[FAQ](faq.md)** — comparisons, offline operation, troubleshooting
+- **[API](api.md)** — the `abstractframework` helpers, `doctor` and `manifest` commands
+- **[FAQ](faq.md)** — comparisons, offline operation, limits
+- **[Troubleshooting](troubleshooting.md)** — symptoms and fixes
 - **[Workspace scripts](workspace-scripts.md)** — work from source: clone, build and sync every package in dependency order

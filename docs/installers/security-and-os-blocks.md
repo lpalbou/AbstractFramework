@@ -1,8 +1,9 @@
 # OS Security and Installation Blocks
 
 The bootstrap is a script, not a downloaded application, so the OS gates that block unsigned
-installers do not apply to it. This page explains what each OS checks, what the scripts do about
-it, and where code signing is still required.
+installers do not apply to the one-line install. The Mac installer package is a downloaded file,
+so Gatekeeper asks the user to allow it once. This page explains what each OS checks, what the
+scripts do about it, and where code signing applies.
 
 ## macOS (Gatekeeper)
 
@@ -10,9 +11,16 @@ it, and where code signing is still required.
   signature and notarization. Files fetched by `curl` carry no `com.apple.quarantine` attribute,
   so `curl … | sh` and the binaries it installs (uv, the uv-managed Python, wheels) run without a
   Gatekeeper prompt.
+- `AbstractFramework-Installer.pkg` is not signed with an Apple Developer ID. A browser download
+  is quarantined, so the first double-click is blocked; the user allows it once with **Open
+  Anyway** in **System Settings > Privacy & Security**. The package is payload-free: it copies the
+  two `.command` files into the user's Library and opens `install.sh` in Terminal, installing
+  nothing outside the home folder. `scripts/lib/build_macos_installer.sh` signs, notarizes and
+  staples it when a Developer ID Installer identity and a notarytool profile are provided.
 - The optional vendor installers (Ollama, LM Studio) are signed and notarized by their vendors.
-- The gateway binds `127.0.0.1`, so the macOS Application Firewall does not ask to accept incoming
-  connections.
+- The gateway binds `127.0.0.1` by default, so the macOS Application Firewall does not ask to
+  accept incoming connections. Choosing `lan` or `internet` in the Network setting binds all
+  interfaces, and the firewall may then ask once.
 
 ## Windows (SmartScreen and execution policy)
 
@@ -53,7 +61,9 @@ it, and where code signing is still required.
 
 ## Network exposure
 
-- The gateway binds `127.0.0.1` in every bootstrap path.
+- The gateway binds `127.0.0.1` in every bootstrap path. Exposure beyond this machine is an
+  explicit choice in the gateway's Network setting (`abstractgateway network set lan|internet`),
+  which turns user accounts on; see [Network setting](../install.md#network-setting-who-can-reach-the-gateway).
 - One-time sign-in links (`abstractgateway-config claim-url`) are single use, expire after 10
   minutes and are accepted only from a loopback client.
 - The admin token file is written with mode `0600`; the scripts print its path, not its content.
@@ -69,9 +79,11 @@ it, and where code signing is still required.
 
 ## Where code signing still applies
 
-Native double-click artifacts need signatures: the AbstractAssistant `.app` (Developer ID +
-notarization + stapling) and any future Windows `.exe`/`.msi` launcher (Authenticode). The
-bootstrap and everything it installs need no signature of ours.
+Native double-click artifacts need signatures to open without a prompt: the Mac installer package
+(Developer ID Installer + notarization; unsigned releases ask for **Open Anyway** once), the
+AbstractAssistant `.app` (Developer ID + notarization + stapling) and any future Windows
+`.exe`/`.msi` launcher (Authenticode). The one-line bootstrap and everything it installs need no
+signature of ours.
 
 ## GPU drivers
 

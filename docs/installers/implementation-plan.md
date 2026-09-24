@@ -24,7 +24,7 @@ gateway selected with `--pin` falls back as the last column says.
 
 | Feature | Command | Without it (older `--pin`) |
 |---|---|---|
-| Per-user service (LaunchAgent, `systemd --user`, Windows logon) | `abstractgateway service install --host 127.0.0.1 --port N`, `service uninstall` | Background start; Windows adds a Startup-folder shortcut |
+| Per-user service (LaunchAgent, `systemd --user`, Windows logon) | `abstractgateway service install --port N`, `service uninstall` | Background start; Windows adds a Startup-folder shortcut |
 | One-time console sign-in link | `abstractgateway-config claim-url --base-url URL` | The admin token file path is shown |
 | First-run wizard in `/console` | opened by the claim link | Console sign-in form |
 | Per-OS default data directory and loopback user auth | `abstractgateway serve` | The scripts set `ABSTRACTGATEWAY_DATA_DIR` and `ABSTRACTGATEWAY_USER_AUTH=1` |

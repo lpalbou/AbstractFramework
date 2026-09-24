@@ -2,6 +2,20 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [Unreleased]
+
+### Documentation
+
+- New [Troubleshooting](docs/troubleshooting.md) page (installer blocked by macOS, sign-in links,
+  ports, network access, providers), and root `CONTRIBUTING.md`, `SECURITY.md`,
+  `CODE_OF_CONDUCT.md` and `ACKNOWLEDGEMENTS.md`.
+- [Install](docs/install.md) states the one-time **Open Anyway** step for the unsigned Mac
+  installer as part of the install, lists every installer option, and documents the gateway's
+  Network setting (`abstractgateway network`). `service install` examples no longer pass `--host`,
+  which would store `localhost` over a chosen Network mode.
+- [Architecture](docs/architecture.md) has a Mermaid component diagram of the released packages.
+- README and docs link to each component's GitHub repository.
+
 ## [0.3.1] - 2026-09-24
 
 A patch release that pins abstractcore 2.15.1 and abstractgateway 0.4.2: download cancels are
@@ -18,8 +32,8 @@ totals it compared; one Install button per app; the Assistant appears as an app.
   AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29,
   abstractmusic 0.1.15, abstractassistant 0.5.0. Unchanged too: `abstractgateway-console` 0.8.0
   and the browser apps (continuum 0.3.0, entity 0.2.0, flow 0.3.20, code 0.4.2, observer 0.1.12).
-- The docs name the container images released with it: `ghcr.io/lpalbou/abstractgateway:0.4.2`
-  (and `0.4.2-gpu`) and `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
+- Container images released with it: `ghcr.io/lpalbou/abstractgateway:0.4.2` (and `0.4.2-gpu`)
+  and `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
 
 ### What the new pins bring
 
@@ -54,13 +68,10 @@ uninstaller), install failures explained in plain words, and the meta-package pi
 - Browser apps released with it (`--with-apps`, `npx`): `@abstractframework/continuum` 0.3.0 (was
   0.2.0) and `@abstractframework/entity` 0.2.0 (was 0.1.0); flow 0.3.20, code 0.4.2 and observer
   0.1.12 are unchanged.
-- The docs name the container images released with it: `ghcr.io/lpalbou/abstractgateway:0.4.1`
-  and `ghcr.io/lpalbou/abstractcore-server:2.15.0`.
-- `docs/backlog/planned/0859` states the real stack port map (observer 3001, continuum 3002,
-  code 3003, entity 3004, flow 3005), as `scripts/start-local.sh` and the gateway's
-  `STACK_PORTS` use.
-- `scripts/lib/packages.txt`: abstractgateway 0.4.1 depends on abstractcore directly
-  (`abstractcore>=2.15.0`), so its edge is `abstractcore:dep` (was `extra`).
+- Container images released with it: `ghcr.io/lpalbou/abstractgateway:0.4.1` and
+  `ghcr.io/lpalbou/abstractcore-server:2.15.0`.
+- Workspace scripts (`scripts/lib/packages.txt`): abstractgateway depends on abstractcore directly,
+  so `deps.sh` and `build.sh` order it after abstractcore.
 
 ### Added
 
@@ -95,8 +106,8 @@ uninstaller), install failures explained in plain words, and the meta-package pi
   `uv tool update-shell` warning. The health wait is 180 s (the first start loads the engines) with
   a progress line every 15 s.
 - **The gateway's Network setting decides where it listens, not the installer.** `install.sh` and
-  `install.ps1` no longer pass `--host 127.0.0.1` to `abstractgateway service install` (it reset a
-  "Local network" choice to localhost on every re-run); they pass `--port` only. Without a login
+  `install.ps1` pass only `--port` to `abstractgateway service install`, so re-running the
+  installer keeps a "Local network" choice. Without a login
   item (background mode) they store the setting first (`abstractgateway network set localhost
   --port N` when nothing is stored; a stored mode is kept and only the port aligned) and start plain
   `abstractgateway serve`. Gateways without the `network` command keep the old
@@ -115,14 +126,11 @@ uninstaller), install failures explained in plain words, and the meta-package pi
   Where no wheel exists (Intel Mac, musl Linux, Windows on ARM) or the wheel install fails, the
   script installs without it and prints `GGUF (llama.cpp) skipped: no prebuilt wheel for this
   machine; re-run with --full after installing a C compiler`. The summary's `GGUF:` line says what
-  was installed. `--full` builds llama.cpp from source, now in the light profile too. CI's
-  bootstrap smoke imports `llama_cpp` from the installed gateway on macOS, Linux and Windows and
-  checks GPU offload on macOS.
+  was installed. `--full` builds llama.cpp from source, in the light profile too.
 
 ### Known limitations
 
-These are unchanged from 0.2.1 (the same packages, checked with `uv pip install --dry-run
---no-build` against both releases). The one-line installer is not affected by the first two: it
+These are unchanged from 0.2.1. The one-line installer is not affected by the first two: it
 installs the gateway, not `abstractassistant`, and builds pure-Python source packages.
 
 - A plain `pip install abstractframework` on Linux builds `evdev` from source (a C compiler and
@@ -131,8 +139,9 @@ installs the gateway, not `abstractassistant`, and builds pure-Python source pac
   published as source only; they are pure Python and build without a compiler.
 - `abstractframework[gpu]` on Linux needs glibc 2.35 or later (Ubuntu 22.04+): `mlx[cuda13]`,
   pulled by `abstractvision[all-gpu]` through `mlx-gen`, has only `manylinux_2_35` wheels.
-- The macOS `.pkg` built by `scripts/lib/build_macos_installer.sh` is not signed yet, so
-  Gatekeeper asks the user to allow it ("Open Anyway").
+- `AbstractFramework-Installer.pkg` is not signed with an Apple Developer ID: macOS asks you to
+  allow it once (**Open Anyway** in **System Settings > Privacy & Security**). The one-line install
+  is not affected.
 
 ## [0.2.1] - 2026-09-24
 
@@ -191,7 +200,7 @@ manage local models and engines from the console, the terminal or the command li
   Options: `--profile`, `--port`, `--with-apps` (Node.js through `nodejs-wheel`), `--with-ollama`,
   `--with-lmstudio`, `--with-console`, `--with-code-cli`, `--with-core-cli`, `--no-service`,
   `--no-open`, `--pin`, `--print` (dry run), `--uninstall [--purge]`. Re-running upgrades or
-  repairs in place. See [Install](docs/install.md#quick-start).
+  repairs in place. See [Install](docs/install.md).
 - **First-run wizard.** Through the pinned gateway 0.3.0, a bare `abstractgateway serve` binds
   `127.0.0.1`, creates the admin user and prints a one-time console link; the console's first-run
   guide sets up a local engine, a default model that fits the machine, and the apps.

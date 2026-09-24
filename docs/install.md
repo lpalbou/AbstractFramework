@@ -10,22 +10,27 @@ libraries in their own environment go to [Install the Python framework](#install
 You need a Mac with macOS 13 or later (Apple Silicon gets the fast local engines; they need
 macOS 14), an internet connection, and about 5 GB of free disk space before models.
 
-1. **Download** [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
-   The release process attaches it to each GitHub release (built by
-   `scripts/lib/build_macos_installer.sh`); if the link does not work yet, use
-   [the one line below](#or-paste-one-line-in-terminal) instead.
-2. **Double-click it.** The macOS Installer opens. Click **Continue**, then **Install**. It installs
-   for you only, so it does not ask for your password.
-3. **A Terminal window opens** and shows each step as it happens. It asks one question:
+1. **Download** [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg)
+   (attached to every [GitHub release](https://github.com/lpalbou/AbstractFramework/releases)).
+2. **Allow it once.** The package is not signed with an Apple Developer ID, so the first
+   double-click shows a warning that macOS cannot verify the installer (*"… Not Opened"*, *"Apple
+   could not verify …"* or *"… from an unidentified developer"*, depending on your macOS version).
+   Close the warning (**Done** or **OK**), open **System Settings > Privacy & Security**, scroll
+   down to **Security**, click **Open Anyway** next to the installer's name, and confirm (macOS may
+   ask for your login password or Touch ID). This is the standard macOS step for software from
+   outside the App Store; you do it once per download.
+3. **Install.** The macOS Installer opens. Click **Continue**, then **Install**. It installs for you
+   only, so the Installer does not ask for your password.
+4. **A Terminal window opens** and shows each step as it happens. It asks one question:
 
    ```
    ? Start AbstractFramework automatically when you log in? (a per-user login item, no admin; the uninstaller removes it) [Y/n]
    ```
 
    Press **Return** for yes (recommended: it is then always there when you need it), or type `n`.
-4. **Wait** 2 to 15 minutes, depending on your connection. The last lines say
+5. **Wait** 2 to 15 minutes, depending on your connection. The last lines say
    `AbstractFramework is ready.` and your browser opens AbstractFramework.
-5. **In the browser**, the first-run guide helps you pick an engine (it detects what this Mac can
+6. **In the browser**, the first-run guide helps you pick an engine (it detects what this Mac can
    run and installs it with one click) and a model that fits your Mac. You can close the Terminal
    window.
 
@@ -39,14 +44,9 @@ uv's download cache (about 2.4 GB, reused by upgrades), your data in
 (`~/Library/LaunchAgents/ai.abstractframework.gateway.plist`). Models you download later come on
 top.
 
-**If macOS says the installer "cannot be opened because Apple cannot check it for malicious
-software"**, you have an unsigned build: open **System Settings > Privacy & Security**, scroll
-down, click **Open Anyway** next to the installer's name, and confirm. Signed releases do not show
-this message.
-
-The same installer also exists as a zip (`AbstractFramework-Installer-macOS.zip` on the release
-page) with two double-clickable files: **Install AbstractFramework.command** and **Uninstall
-AbstractFramework.command**. They do exactly what the package does.
+The package also leaves two double-clickable files in
+`~/Library/Application Support/AbstractFramework/Installer`: **Install AbstractFramework.command**
+(run it again to repair or upgrade) and **Uninstall AbstractFramework.command**.
 
 ### Or: paste one line in Terminal
 
@@ -69,8 +69,8 @@ powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpa
 ```
 
 It installs under your user account (no administrator rights), starts AbstractFramework at sign-in
-and opens it in your browser. The Windows script does not ask the start-at-login question yet; use
-`-NoService` to skip it.
+and opens it in your browser. The Windows script registers the start-at-login entry without asking;
+add `-NoService` to skip it.
 
 ## If something goes wrong
 
@@ -95,7 +95,7 @@ where it stopped.
 
 ## Remove AbstractFramework
 
-Double-click **Uninstall AbstractFramework.command** (from the zip, or in
+Double-click **Uninstall AbstractFramework.command** (in
 `~/Library/Application Support/AbstractFramework/Installer` after a package install), or paste:
 
 ```bash
@@ -121,7 +121,7 @@ The Mac package, the `.command` files and the one line all run the same script,
 
 1. Checks the machine (OS, CPU, macOS 14+ for Apple Silicon, Rosetta, NVIDIA/ROCm, the folders it
    writes, internet access to PyPI, free disk, a free port) and picks a profile: `apple` on Apple
-   Silicon, `gpu` when `nvidia-smi` or `rocminfo` works, `light` otherwise.
+   Silicon (macOS 14+), `gpu` when `nvidia-smi` or `rocminfo` works, `light` otherwise.
 2. Asks whether to start at login (only with `--interactive`; the default is yes, and a previous
    "no" is remembered).
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
@@ -131,8 +131,10 @@ The Mac package, the `.command` files and the one line all run the same script,
    (reinstalling it in place when it does not).
 5. Optionally installs Node.js for the browser apps, terminal tools, Ollama or LM Studio (flags
    below).
-6. Registers the gateway to start at login with `abstractgateway service install` (a LaunchAgent on
-   macOS, a `systemd --user` unit on Linux, a Startup shortcut on Windows) and starts it. With
+6. Registers the gateway to start at login with `abstractgateway service install --port N` (a
+   LaunchAgent on macOS, a `systemd --user` unit on Linux, a Startup shortcut on Windows) and starts
+   it. The login item runs plain `abstractgateway serve`, so the gateway's
+   [Network setting](#network-setting-who-can-reach-the-gateway) decides where it listens. With
    `--no-service` (or "no" to the question), or on a Linux host without a user systemd session, it
    starts the gateway in the background instead and removes a login item an earlier run
    registered.
@@ -141,9 +143,10 @@ The Mac package, the `.command` files and the one line all run the same script,
    If no link can be created, it shows where the admin token is.
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
-upgrades or repairs the install in place. The macOS package is built by
-`scripts/lib/build_macos_installer.sh`, which signs and notarizes it when given a Developer ID
-(see the header of that script).
+upgrades or repairs the install in place. The macOS package is payload-free: it copies the two
+`.command` files into `~/Library/Application Support/AbstractFramework/Installer` and opens
+`install.sh --interactive` in Terminal. It is built by
+[`scripts/lib/build_macos_installer.sh`](../scripts/lib/build_macos_installer.sh).
 
 ### No compiler needed
 
@@ -152,9 +155,8 @@ or the MSVC Build Tools. It passes uv a small overrides file (`uv-overrides.txt`
 data directory; `--print` shows it) that swaps `webrtcvad` for `webrtcvad-wheels`, keeps `vllm`
 to Linux, and leaves out the two compiled extras below, and it refuses to build those packages
 from source, so a gap fails with a clear error instead of starting a compiler. If macOS asks you
-to install the command line developer tools (an `xcode-select` prompt) during an install, you are
-running an older copy of the script: cancel the prompt, fetch the script again with the one-liner
-above and re-run it.
+to install the command line developer tools (an `xcode-select` prompt) during an install, cancel
+the prompt, fetch the script again with the one-liner above and re-run it.
 
 ### llama.cpp GGUF models
 
@@ -172,8 +174,9 @@ package page, pinned in `uv-constraints.txt` next to the overrides file):
 
 Where no wheel exists, or when the wheel install fails, the script installs everything else and
 says `GGUF (llama.cpp) skipped: no prebuilt wheel for this machine`; `--full` then builds it from
-source. The summary's `GGUF:` line says which wheel was installed. The Metal pin stays at 0.3.28
-because the 0.3.32-0.3.35 Metal wheels fail zip integrity checks and uv refuses them.
+source. The summary's `GGUF:` line says which wheel was installed. On Apple Silicon the Metal wheel
+is pinned to 0.3.28, the newest Metal wheel on that index that passes uv's archive integrity
+check.
 
 ### Compiled extras
 
@@ -199,12 +202,18 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--with-code-cli` | `-WithCodeCli` | Install the `abstractcode` crate with cargo (terminal client; needs Rust) |
 | `--with-core-cli` | `-WithCoreCli` | Also put the `abstractcore` command on PATH |
 | `--full` | `-Full` | Also build the [compiled extras](#compiled-extras) and llama.cpp from source (needs a C compiler) |
+| `--no-tray` | `-NoTray` | Leave out the menu-bar icon (`tray` extra) |
 | `--no-service` | `-NoService` | Do not register a login service |
+| `--no-start` | `-NoStart` | Install only; do not start the gateway |
 | `--no-open` | `-NoOpen` | Do not open the browser |
+| `--no-modify-path` | `-NoModifyPath` | Do not add `~/.local/bin` to your shell profile (`uv tool update-shell`) |
 | `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |
+| `--manifest PATH` | `-Manifest` | Read the gateway pin from this `install-manifest.json` |
 | `--data-dir DIR` | `-DataDir` | Gateway data directory |
-| `--interactive` | (not yet) | Ask whether to start at login (and, with `--uninstall`, whether to delete data and uv); the double-click installers pass it |
+| `--interactive` | — | Ask whether to start at login (and, with `--uninstall`, whether to delete data and uv); the double-click installers pass it |
 | `--print` | `-Print` (or `-WhatIf`) | Show the plan and every command; change nothing |
+| `--print-versions` | `-PrintVersions` | Print the pinned gateway, npm app and crate versions, then exit |
+| `-v`, `--verbose` | — | Show the full output of every command |
 | `--uninstall [--purge] [--remove-uv]` | `-Uninstall [-Purge]` | Remove the service and uv tools (purge also deletes the data; `--remove-uv` also removes uv, its Python and cache when the installer added uv) |
 
 Pass options through the one-liner like this:
@@ -235,10 +244,13 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080  # prints a on
 `systemd --user` on Linux, a Startup shortcut on Windows, experimental) and starts the gateway:
 
 ```bash
-abstractgateway service install --host 127.0.0.1 --port 8080
+abstractgateway service install --port 8080
 abstractgateway service status
 abstractgateway service uninstall
 ```
+
+The login item runs plain `abstractgateway serve`, so the host and port come from the Network
+setting below. Passing `--host` to `service install` stores the matching mode in that setting.
 
 The bootstrap scripts use it by default. Gateways older than 0.3.0 (installed with `--pin`) have no
 `service` command: `install.sh` then starts the gateway in the background and `install.ps1` adds a
@@ -249,7 +261,7 @@ Startup-folder shortcut. To write a login entry yourself on Linux, a user unit i
 [Service]
 Environment=ABSTRACTGATEWAY_USER_AUTH=1
 Environment=ABSTRACTGATEWAY_DATA_DIR=%h/.local/share/abstractgateway
-ExecStart=%h/.local/bin/abstractgateway serve --host 127.0.0.1 --port 8080
+ExecStart=%h/.local/bin/abstractgateway serve
 Restart=on-failure
 
 [Install]
@@ -260,10 +272,31 @@ Then `systemctl --user daemon-reload && systemctl --user enable --now abstractga
 use a LaunchAgent in `~/Library/LaunchAgents/` with the same absolute command and environment
 (launchd does not read your shell profile, so use absolute paths).
 
+### Network setting: who can reach the gateway
+
+The gateway listens on this computer only (`localhost`, `127.0.0.1:8080`) until you choose
+otherwise. Change it in the console's network panel, from the menu-bar icon's **Network** menu, or
+in a terminal:
+
+```bash
+abstractgateway network status                      # configured vs running mode, addresses, warnings
+abstractgateway network set lan                     # other devices on your local network
+abstractgateway network set localhost --port 8080   # back to this computer only
+abstractgateway network set internet --acknowledge-internet   # public; TLS and port forwarding are yours
+abstractgateway network restart --token <admin token>   # apply it to the running gateway now
+abstractgateway network addresses                   # every URL a client can use
+```
+
+A new mode or port applies at the next start: `network restart`, the console, the menu-bar icon's
+**Restart AbstractGateway…**, or the next login. Keep
+`localhost` unless you need another device to connect; see
+[Gateway security](guide/gateway-security.md) before choosing `internet`.
+
 ### Upgrade and uninstall
 
 - Upgrade: re-run the one-liner (or `uv tool upgrade abstractgateway`).
-- Uninstall: `curl -LsSf .../install.sh | sh -s -- --uninstall` (Windows: the script block with
+- Uninstall: [Remove AbstractFramework](#remove-abstractframework) above,
+  `curl -LsSf .../install.sh | sh -s -- --uninstall` (Windows: the script block with
   `-Uninstall`), or by hand: `abstractgateway service uninstall` (when registered), then
   `uv tool uninstall abstractgateway`. Your data stays in the data directory until you delete it
   (`--purge`). See [Operations and support](installers/operations-and-support.md) for locations.
@@ -459,6 +492,7 @@ The installer-facing contract is generated from the root release profile:
 ```bash
 abstractframework manifest
 abstractframework manifest --check docs/installers/install-manifest.json
+abstractframework manifest --write install-manifest.json
 ```
 
 The bootstrap scripts read `bootstrap.gateway_version` from it; other installers should consume

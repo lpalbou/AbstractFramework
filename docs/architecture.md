@@ -37,50 +37,75 @@ The composition root when you need a control plane (local or remote).
 
 ---
 
-## Layered view
+## Component view
 
+Every client talks to the gateway over HTTP/SSE. The gateway composes the Python packages below it
+in one process: agent patterns, the durable runtime, memory and AbstractCore, which reaches the
+model providers and local engines. Arrows point from a component to what it calls or depends on.
+
+```mermaid
+flowchart TB
+    subgraph CLIENTS["Apps and clients"]
+        OBS["AbstractObserver<br/>monitor · control · schedule"]
+        FLOWED["Flow Editor<br/>author .flow bundles"]
+        CODE["AbstractCode<br/>terminal client + Code Web UI"]
+        ENT["AbstractEntity<br/>summoned entities"]
+        CONT["AbstractContinuum<br/>development console"]
+        ASSIST["AbstractAssistant<br/>desktop menu-bar app"]
+        GCON["abstractgateway-console<br/>terminal operator console"]
+        APP["Your app"]
+    end
+
+    subgraph GATEWAY["AbstractGateway (control plane)"]
+        API["HTTP/SSE API<br/>runs · schedules · workflow catalog<br/>ledger + artifacts · users · network"]
+        WEB["web /console<br/>first-run guide · Models · Engines"]
+        TRAY["menu-bar icon<br/>status · Network"]
+    end
+
+    AGENT["AbstractAgent<br/>ReAct · CodeAct · MemAct"]
+    RT["AbstractRuntime<br/>runs · effects · waits · ledger · artifacts<br/>VisualFlow compiler"]
+    MEM["AbstractMemory<br/>durable agent memory"]
+    SEM["AbstractSemantics<br/>predicates + entity types"]
+    CORE["AbstractCore<br/>providers · tools · media · embeddings<br/>models + engines"]
+    PLUG["Capability plugins<br/>abstractvoice · abstractvision · abstractmusic"]
+    CSRV["abstractcore serve<br/>/v1 · /acore · web /console"]
+    CCON["abstractcore-console<br/>terminal console + shared screens"]
+    PROV[("LLM providers and local engines<br/>Ollama · LM Studio · MLX · llama.cpp · vLLM · cloud APIs")]
+
+    CLIENTS -->|HTTP/SSE| API
+    WEB --> API
+    TRAY --> API
+    GCON -->|embeds Models/Engines screens| CCON
+    API --> AGENT
+    API --> RT
+    API --> MEM
+    AGENT --> RT
+    AGENT --> CORE
+    RT --> CORE
+    RT --> MEM
+    RT --> SEM
+    CORE -.->|entry-point plugins| PLUG
+    CORE --> PROV
+    CSRV --> CORE
+    CCON -->|abstractcore CLI| CORE
 ```
-Apps / UIs (thin clients)
-──────────────────────────────────────────────────────
- AbstractObserver (monitor / control / schedule)
- Flow Editor (author workflows)
- AbstractCode (terminal + web), AbstractAssistant, your custom app
- AbstractContinuum console, AbstractEntity manager
- Gateway consoles: web /console (first-run guide, Models, Engines),
-                  terminal abstractgateway-console
-                       │  HTTP/SSE
-                       ▼
-AbstractGateway (control plane)
-──────────────────────────────────────────────────────
- run lifecycle (start / resume / cancel)
- scheduling (durable, survives restarts)
- private bundle discovery + shared workflow catalog
- artifact + ledger serving / streaming
-                       │
-                       ▼
-Composition layer
-──────────────────────────────────────────────────────
- AbstractAgent: ReAct, CodeAct, MemAct patterns
- AbstractFlow: visual workflows → portable .flow bundles
-                       │
-                       ▼
-Durable execution kernel
-──────────────────────────────────────────────────────
- AbstractRuntime
- runs, effects, waits
- ledger (append-only history) + artifacts (large payloads)
-                       │
-                       ▼
-LLM + tools + multimodality
-──────────────────────────────────────────────────────
- AbstractCore
- provider/model abstraction + routing defaults
- host profile, model catalog + fit, engines, download/delete jobs
-   (CLI, /acore/* routes, web /console, terminal abstractcore-console)
- request/output normalization + call-scoped resolved-route truth
- tools, structured output, media input, embeddings, MCP
- capability plugins: voice / vision / music
-```
+
+The layers, from the top:
+
+- **Apps and clients** are thin: they hold no durable state and rebuild their view by replaying
+  the ledger, then follow new events over SSE. The Flow Editor publishes `.flow` bundles to the
+  gateway; the others start, observe and steer runs.
+- **AbstractGateway** owns the run lifecycle (start, resume, cancel), durable schedules, private
+  bundle discovery and the shared workflow catalog, users and auth, the Network setting, and
+  ledger/artifact serving. Its web console and menu-bar icon are part of the same package.
+- **AbstractAgent** provides ready-made agent loops; **AbstractRuntime** is the durable kernel that
+  executes them and compiles VisualFlow graphs from `.flow` bundles into workflows.
+- **AbstractCore** is the LLM layer: provider and model abstraction, capability routing defaults,
+  tools, structured output, media, embeddings, MCP, and the local model and engine management
+  (catalog with a fit verdict, downloads, engine installs). Voice, image and music arrive as
+  capability plugins.
+- **AbstractCore on its own** (`abstractcore serve`) is the second entry point: an
+  OpenAI-compatible `/v1` server with its own console, without the durable layers.
 
 ## How the framework is distributed
 
@@ -204,8 +229,8 @@ Copy bundles to `ABSTRACTGATEWAY_FLOWS_DIR`. The gateway discovers them automati
 
 For hosted or multi-user gateways, admins can also promote immutable bundle
 versions into the Gateway workflow catalog. The catalog owns shared/default
-workflow pointers and ACLs; each catalog run still executes in the requesting
-user's runtime unless a future explicit system-run mode is added.
+workflow pointers and ACLs; each catalog run executes in the requesting user's
+runtime.
 
 ### 3) Run from any client
 
@@ -233,8 +258,8 @@ runtime value:
 
 Internally, the durable payload handle is the artifact ref. Server-side path
 access stays a Gateway-owned workspace capability rather than a generic server
-filesystem abstraction. Current UI surfaces may still say `Workspace` in some
-places until terminology alignment work lands.
+filesystem abstraction. Some UI surfaces label server files `Workspace`; it
+means the same Gateway-approved scope.
 
 ---
 
@@ -279,4 +304,12 @@ AbstractGateway is architecturally closer to these systems, but specialized for 
 - **[Getting Started](getting-started.md)** — run Core-first or Gateway-first
 - **[Configuration](configuration.md)** — minimal config, where defaults live
 - **[Glossary](glossary.md)** — shared definitions (run, ledger, effect, wait, bundle, interface contract)
+- **[API](api.md)** — the meta-package helpers and the functional API owner of each concern
+- **[Install](install.md)** — how each part reaches a machine, and the Network setting
+- **[Installer design](installers/README.md)** — the bootstrap + console install model
+- **[ADR index](adr/README.md)** — accepted cross-package decisions, including
+  [package dependency boundaries](adr/0032-package-dependency-boundaries-and-gateway-first-apps.md),
+  [install profiles](adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md) and
+  [the script bootstrap install](adr/0038-script-bootstrap-and-gateway-console-install.md)
+- **[Runtime artifacts and retrieval](guide/runtime-artifacts.md)** — who owns artifacts, ledger and retrieval
 - Per-project architecture docs live in the component repositories

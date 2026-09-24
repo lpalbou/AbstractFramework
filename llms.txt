@@ -6,7 +6,9 @@ Most runtime behavior lives in the individual package repos (AbstractCore/Runtim
 AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a browser client (`npx @abstractframework/code`); both need a running gateway.
 
 Quick commands:
+- Mac installer: download `https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg` and double-click it; the package is not signed with an Apple Developer ID, so the first time allow it with Open Anyway in System Settings > Privacy & Security; it runs `install.sh --interactive` in Terminal. Remove with `Uninstall AbstractFramework.command` or `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`
 - One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); installs uv + Python 3.12 + the pinned gateway as a uv tool, registers the login service, starts it on 127.0.0.1:8080 and opens `/console` through a one-time claim link; `--print` dry run, `--uninstall` to remove
+- Network exposure: the gateway listens on this computer only (`localhost`) until you run `abstractgateway network set lan|internet` (or use the console / menu-bar icon); `service install` takes `--port`, and the login item runs plain `serve` so the Network setting applies
 - Start either entry point and open the printed one-time link: `abstractcore serve` (http://127.0.0.1:8000/console#claim=…) or `abstractgateway serve` (http://127.0.0.1:8080/console#claim=…); both consoles have Models (catalog + fit verdict, download, delete) and Engines (detect, install) tabs, mirrored by `abstractcore models|engines` and `abstractgateway models|engines`
 - Install pinned stack: `pip install abstractframework`
 - Check install health: `abstractframework doctor`
@@ -83,11 +85,15 @@ Notes for LLMs working in this repo:
 
 - [README.md](README.md): Ecosystem overview and install paths.
 - [docs/README.md](docs/README.md): Docs index for this repo.
-- [docs/install.md](docs/install.md): One-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, uninstall), Light / Apple / GPU chooser, generated manifest contract.
+- [docs/install.md](docs/install.md): Mac installer (with the one-time Open Anyway step), one-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, Network setting, uninstall), Light / Apple / GPU chooser, generated manifest contract.
 - [docs/installers/README.md](docs/installers/README.md): Install design: script bootstrap + gateway console (strategy, per-OS journeys, components, OS security/sudo/UAC/execution policy, manifest, operations).
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
-- [abstractgateway/docs/shipped-workflows.md](abstractgateway/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
-- [docs/architecture.md](docs/architecture.md): How the stack fits together.
+- [AbstractGateway shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
+- [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid component and distribution diagrams).
+- [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, client configuration.
+- [docs/api.md](docs/api.md): Meta-package API: release pins, helpers, `abstractframework doctor` and `manifest`.
+- [docs/faq.md](docs/faq.md): Common questions, comparisons, limits.
+- [docs/troubleshooting.md](docs/troubleshooting.md): Symptoms, checks and fixes (installer blocked by macOS, sign-in links, ports, network access, providers, logs).
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
 - [docs/workspace-scripts.md](docs/workspace-scripts.md): Working from source: package inventory (scripts/lib/packages.txt), dependency tiers, build/status/pull/commit/push scripts.
 - [docs/adr/README.md](docs/adr/README.md): Cross-package ADR index and accepted platform contracts.
@@ -148,6 +154,11 @@ Notes for LLMs working in this repo:
 - [docs/claude/](docs/claude/): Research notes about Claude (non-Agent-Skills capability/skills scan).
 
 ## Optional
+
+- [CHANGELOG.md](CHANGELOG.md): Release history of the meta-package and its pins.
+- [CONTRIBUTING.md](CONTRIBUTING.md): Working on this repository (tests, doc regeneration, pull requests).
+- [SECURITY.md](SECURITY.md): Reporting a vulnerability.
+- [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md): Credits.
 
 - [AbstractCore](https://github.com/lpalbou/abstractcore): LLM providers, tools, structured output, media.
 - [AbstractRuntime](https://github.com/lpalbou/abstractruntime): Durable execution (runs, effects, waits, ledger, stores).

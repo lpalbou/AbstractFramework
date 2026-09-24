@@ -5,6 +5,13 @@ These flows describe exactly what the bootstrap scripts do. Commands are in
 
 ## First install on macOS
 
+With the Mac installer, the user downloads `AbstractFramework-Installer.pkg`, allows it once in
+**System Settings > Privacy & Security** (**Open Anyway**: the package is not signed with an Apple
+Developer ID), and clicks through the macOS Installer. Its postinstall copies the two `.command`
+files to `~/Library/Application Support/AbstractFramework/Installer` and opens
+`install.sh --interactive` in Terminal, which asks one question (start at login, default yes) and
+then runs the steps below. The one-line path:
+
 1. Paste in Terminal:
    `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
 2. **Preflight** (read-only): macOS version and CPU (`sw_vers`, `uname -m`), profile choice
@@ -20,10 +27,13 @@ These flows describe exactly what the bootstrap scripts do. Commands are in
    no Node 18+ exists), Ollama (`--with-ollama`: the official installer, which may ask for your
    password to link `/usr/local/bin/ollama`), LM Studio (`--with-lmstudio`: the headless `llmster`
    daemon), terminal tools (`--with-console`, `--with-code-cli` through cargo).
-7. **Service**: `abstractgateway service install --host 127.0.0.1 --port 8080` registers a
-   per-user LaunchAgent and starts it, so the gateway also starts at login. With `--no-service`,
-   the script starts it in the background instead.
-8. **Health**: waits up to 60 seconds for `GET /api/health`.
+7. **Service**: `abstractgateway service install --port 8080` registers a per-user LaunchAgent
+   and starts it, so the gateway also starts at login. The LaunchAgent runs plain
+   `abstractgateway serve`, so the gateway's Network setting (default `localhost`) decides where it
+   listens. With `--no-service` (or "no" to the question), the script stores the setting and starts
+   the gateway in the background instead.
+8. **Health**: waits up to 180 seconds for `GET /api/health` (the first start loads the local
+   engines), with a progress line every 15 seconds.
 9. **Sign-in**: `abstractgateway-config claim-url` mints a one-time link valid for 10 minutes on
    this machine; if no link can be created, the script prints the path of the admin token file
    (`~/Library/Application Support/AbstractGateway/auth/bootstrap-admin-token`).

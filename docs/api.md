@@ -53,6 +53,10 @@ The response type returned by `llm.generate(...)`.
 
 ## Release profile helpers
 
+### `__version__`
+
+The meta-package version (`0.3.1` for this release).
+
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.3.1:
@@ -127,6 +131,7 @@ Checks report `ok`, `warn`, `error` or `info` (`info` never fails the run).
 abstractframework doctor
 abstractframework doctor --json          # schema abstractframework_doctor_v2
 abstractframework doctor --no-network    # skip the gateway / engine probes
+abstractframework doctor --no-environment  # only check the Python package profile
 abstractframework doctor --timeout 5     # probe timeout in seconds (default 2)
 ```
 
@@ -135,9 +140,12 @@ abstractframework doctor --timeout 5     # probe timeout in seconds (default 2)
 Prints or validates the installer-facing manifest generated from the root release profile.
 
 ```bash
-abstractframework manifest
-abstractframework manifest --check docs/installers/install-manifest.json
+abstractframework manifest                                         # print it
+abstractframework manifest --check docs/installers/install-manifest.json   # compare a file with it
+abstractframework manifest --write install-manifest.json           # write it to a file
 ```
+
+Field reference: [release-and-manifest.md](installers/release-and-manifest.md).
 
 ---
 
@@ -158,7 +166,9 @@ abstractframework manifest --check docs/installers/install-manifest.json
 | Continuous development console | `@abstractframework/continuum` (npm) |
 | Summoned-entity manager | `@abstractframework/entity` (npm) |
 
-See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run.
+See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run,
+**[Architecture](architecture.md)** for how the packages connect, and
+**[Troubleshooting](troubleshooting.md)** when `doctor` reports a problem.
 
 Gateway-hosted workflow APIs distinguish private runtime bundles from the
 shared workflow catalog:

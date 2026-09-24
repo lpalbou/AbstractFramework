@@ -74,4 +74,5 @@ the machine before a download, and downloads run as background jobs with progres
 ## Out of scope
 
 Signed native launchers, enterprise MSI/pkg packages and offline bundles are not part of this
-model; see [implementation-plan.md](implementation-plan.md).
+model; see [implementation-plan.md](implementation-plan.md). The Mac installer package is not an
+exception: it carries no payload and only opens the same bootstrap script in Terminal.

@@ -47,9 +47,13 @@ disagree.
 5. Run `python -m pytest -q` and `bash scripts/tests/test_inventory.sh`. CI's `bootstrap-smoke`
    job installs the published pin on Ubuntu, macOS and Windows.
 
-## Signed artifacts
+## Release assets
 
-The bootstrap installs PyPI and npm packages and vendor installers, so the release pipeline
-publishes no signed installers. Native apps that need signing (the AbstractAssistant `.app`)
-publish their artifacts on their own release pages; see
+The bootstrap installs PyPI and npm packages and vendor installers. Each GitHub release of this
+repository carries `AbstractFramework-Installer.pkg`, built from the release tag by
+`scripts/lib/build_macos_installer.sh --version <version>` so the embedded `install.sh` carries
+that release's gateway pin; `releases/latest/download/AbstractFramework-Installer.pkg` serves the
+newest one. The package is unsigned unless the build is given a Developer ID
+(`AF_PKG_SIGN_IDENTITY`, `AF_NOTARY_PROFILE`). Native apps that need signing (the
+AbstractAssistant `.app`) publish their artifacts on their own release pages; see
 [security-and-os-blocks.md](security-and-os-blocks.md#where-code-signing-still-applies).

@@ -12,7 +12,7 @@ install itself is described in [user-journeys.md](user-journeys.md).
 | Gateway environment | `~/.local/share/uv/tools/abstractgateway` | same | `%APPDATA%\uv\data\tools\abstractgateway` |
 | Gateway data | `~/Library/Application Support/AbstractGateway` | `${XDG_DATA_HOME:-~/.local/share}/abstractgateway` | `%LOCALAPPDATA%\AbstractGateway` |
 | Admin token (0600) | `<data>/auth/bootstrap-admin-token` | same | same |
-| Logs | `<data>/logs/gateway.log`, `<data>/logs/install-*.log` | same | `<data>\logs\gateway.err.log`, `install-*.log` |
+| Logs | `<data>/logs/install-*.log`; background start `<data>/logs/gateway.log`; login item `~/Library/Logs/AbstractGateway/gateway.{out,err}.log` | `<data>/logs/install-*.log`, `<data>/logs/gateway.log` | `<data>\logs\gateway.err.log`, `install-*.log` |
 | Bootstrap state (port, mode, profile) | `<data>/bootstrap.env` | same | same |
 | AbstractCore config | `~/.abstractcore/config/abstractcore.json` | same | `%USERPROFILE%\.abstractcore\config\abstractcore.json` |
 
@@ -48,5 +48,9 @@ Add `--json` for tooling and `--no-network` to skip the HTTP probes.
 
 ## Uninstall
 
-`sh install.sh --uninstall [--purge]` or `install.ps1 -Uninstall [-Purge]`. Data is kept unless
-you purge it.
+`sh uninstall.sh` (or the **Uninstall AbstractFramework.command** file) asks before removing
+anything; `sh install.sh --uninstall [--purge] [--remove-uv]` or `install.ps1 -Uninstall [-Purge]`
+do the same without the questions. Data is kept unless you purge it. See
+[Remove AbstractFramework](../install.md#remove-abstractframework).
+
+More symptoms and fixes: [Troubleshooting](../troubleshooting.md).

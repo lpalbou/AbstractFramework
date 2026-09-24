@@ -6,8 +6,8 @@ If you're new, read these groups first:
 
 - **Durable execution**: run, ledger, effect, wait, artifact
 - **Workflows**: flow, bundle, interface contract
-- **Control plane**: gateway, schedule, observer, gateway console
-- **Distribution**: install profile, release pins
+- **Control plane**: gateway, schedule, observer, gateway console, Network setting
+- **Distribution**: Mac installer, bootstrap script, install profile, release pins
 
 ---
 
@@ -169,6 +169,24 @@ A one-time console sign-in link (`/console#claim=<code>`), single use, valid for
 
 The gateway console's setup flow, opened once per data folder by the claim link and later from the **Setup** button: host summary, local engines, a default model that fits the machine, and the apps.
 
+### Network setting
+
+The gateway's stored choice of who can reach it: `localhost` (this computer only, the default),
+`lan` or `internet`, plus the port and allowed browser origins. `abstractgateway serve` and the
+login item apply it at each start; change it with `abstractgateway network set`, the console or
+the menu-bar icon. See [Network setting](install.md#network-setting-who-can-reach-the-gateway).
+
+### Login item
+
+The per-user service that starts the gateway when you log in: a LaunchAgent on macOS
+(`~/Library/LaunchAgents/ai.abstractframework.gateway.plist`), a `systemd --user` unit on Linux, a
+Startup shortcut on Windows. Managed with `abstractgateway service install|status|uninstall`.
+
+### Menu-bar icon (tray)
+
+The gateway's status icon (the `tray` extra, installed by the installer): it opens the console,
+shows whether the gateway is running and changes the Network setting.
+
 ### Models and Engines
 
 The local model and engine management shared by AbstractCore and the gateway: a model catalog with a fit verdict for this machine (`fits`, `tight`, `too_large`, `partial_offload`, `unknown`), installed models with sizes, download and delete jobs, and detection and installation of local engines (Ollama, LM Studio, MLX, llama.cpp, vLLM, transformers). Available as `abstractcore models|engines`, `abstractgateway models|engines`, and in the consoles.
@@ -180,6 +198,14 @@ The local model and engine management shared by AbstractCore and the gateway: a 
 ### Install profile
 
 One of the three ways to install the pinned Python stack: **Light** (`pip install abstractframework`, remote/endpoint inference only), **Apple** (`abstractframework[apple]`, adds MLX/Metal engines on macOS 14+) and **GPU** (`abstractframework[gpu]`, adds CUDA/ROCm engines). See [Install](install.md).
+
+### Mac installer
+
+`AbstractFramework-Installer.pkg`, attached to each GitHub release. A payload-free package that
+copies **Install AbstractFramework.command** and **Uninstall AbstractFramework.command** to
+`~/Library/Application Support/AbstractFramework/Installer` and runs the bootstrap script in
+Terminal. It is not signed with an Apple Developer ID, so macOS asks you to allow it once
+(**Open Anyway**). See [Install on a Mac](install.md#install-on-a-mac).
 
 ### Bootstrap script
 
@@ -203,4 +229,4 @@ The durable record of what happened (ledger + artifacts). The source of truth.
 
 ### Knowledge graph (KG) memory
 
-Long-term memory stored as temporal triples (AbstractMemory), validated through the shared semantics registry (AbstractSemantics). Optional — not a hard dependency of the runtime kernel.
+Long-term memory provided by AbstractMemory: append-only temporal triples, and on top of them a usage-weighted memory graph with a journal (recall, formation, consolidation). Predicates and entity types come from the shared semantics registry (AbstractSemantics). AbstractRuntime and AbstractGateway depend on AbstractMemory.

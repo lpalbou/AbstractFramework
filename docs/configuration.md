@@ -47,7 +47,11 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 
 ## Gateway-first quick start
 
-### Required
+### Defaults and explicit settings
+
+A bare `abstractgateway serve` needs no configuration: it listens on `127.0.0.1:8080`, turns user
+auth on and keeps its data in the per-user data folder. Set the environment when you want those
+choices to be explicit, for example in a service definition:
 
 ```bash
 export ABSTRACTGATEWAY_USER_AUTH=1
@@ -58,7 +62,7 @@ When user auth is enabled, `abstractgateway serve` ensures `default/admin`
 exists and writes the first browser-login token to
 `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`. Users sign in with a
 Gateway user id and that user's token, then browser apps keep only an opaque
-Gateway session. `ABSTRACTGATEWAY_AUTH_TOKEN` is still available for legacy
+Gateway session. `ABSTRACTGATEWAY_AUTH_TOKEN` remains available for legacy
 server/operator bearer-token deployments, but it maps to `local-admin` and is
 not a browser sign-in token.
 
@@ -85,6 +89,25 @@ export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 ```bash
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
+
+`--host` and `--port` override the gateway's stored Network setting for this start. Without them,
+`serve` uses the setting (`localhost` on port 8080 until you change it).
+
+### Network exposure
+
+The Network setting decides who can reach the gateway: `localhost` (this computer only), `lan`
+(devices on your local network) or `internet` (public; you provide TLS and port forwarding). It is
+stored in the data directory and applied at each start, including starts from the login item:
+
+```bash
+abstractgateway network status
+abstractgateway network set lan --port 8080
+abstractgateway network set --allowed-origins https://gateway.example.com
+```
+
+The console's network panel and the menu-bar icon change the same setting. See
+[Network setting](install.md#network-setting-who-can-reach-the-gateway) and
+[Gateway security](guide/gateway-security.md).
 
 ---
 
@@ -214,8 +237,8 @@ $ABSTRACTGATEWAY_DATA_DIR/users/<tenant>/<runtime>/runtime/config/abstractcore.j
 
 User runtime defaults override the Gateway baseline only for that runtime, so
 one user's provider/model defaults do not mutate another user's defaults.
-Gateway no longer reads or writes `config/capability_defaults.json`; existing
-overlay files are ignored. Recreate those defaults with
+Gateway does not read `config/capability_defaults.json` overlay files; if you
+have one from an older deployment, recreate those defaults with
 `abstractgateway-config set-default ...`.
 
 ### Gateway provider connections
@@ -348,7 +371,7 @@ export ABSTRACTFLOW_GATEWAY_URL="http://127.0.0.1:8080"
 npx @abstractframework/code
 ```
 
-Set the gateway URL in the UI settings (http://localhost:3002).
+Open http://localhost:3002 and set the gateway URL in the UI settings.
 
 ---
 
@@ -382,3 +405,4 @@ This repo covers the overview. Each component repo owns its detailed configurati
 - **[Getting Started](getting-started.md)** — first run Core-first or Gateway-first
 - **[Architecture](architecture.md)** — what lives where and why
 - **[Glossary](glossary.md)** — capability routes, durable execution terms
+- **[Troubleshooting](troubleshooting.md)** — provider, connection and sign-in problems

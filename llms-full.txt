@@ -30,7 +30,9 @@ MLX, llama.cpp), downloads a model that fits your machine, and lists the apps.
 
 - **Mac, no Terminal:** download and double-click
   [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
-  A Terminal window shows each step; press Return at its one question.
+  The package is not signed with an Apple Developer ID, so the first time macOS blocks it: open
+  **System Settings > Privacy & Security**, click **Open Anyway** next to the installer's name and
+  confirm. A Terminal window then shows each step; press Return at its one question.
 - **macOS / Linux, one line:**
 
   ```bash
@@ -44,10 +46,11 @@ MLX, llama.cpp), downloads a model that fits your machine, and lists the apps.
   ```
 
 Every failure says what to do next; running the installer again repairs or upgrades in place. To
-remove it: `Uninstall AbstractFramework.command`, or
+remove it, double-click `Uninstall AbstractFramework.command` (in
+`~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
 `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`.
 Step by step, the failure table, options (`--with-apps`, `--with-ollama`, `--print`, …):
-[Install](docs/install.md).
+[Install](docs/install.md). Something not working: [Troubleshooting](docs/troubleshooting.md).
 
 Already have Python? Either entry point works the same way: start it, then open the link it prints.
 
@@ -132,7 +135,7 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 
 Out of the box this serves a ready set of workflows — a verify-gated coding
 agent, `deep-research`, and `co-scientist` among them. See
-[shipped workflows](abstractgateway/docs/shipped-workflows.md).
+[shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md).
 
 The `admin` user token is kept in `<data dir>/auth/bootstrap-admin-token`; use it to sign in to
 AbstractFlow, AbstractCode Web or AbstractObserver, or to the console without a claim link.
@@ -152,7 +155,7 @@ Container images are published for the gateway and the AbstractCore server:
 `ghcr.io/lpalbou/abstractgateway:0.4.2` and `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
 
 For artifact and runtime-resource investigation, see
-`docs/guide/runtime-artifacts.md`.
+[Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
 
 ---
 
@@ -165,7 +168,7 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 3. Export a `.flow` bundle into your own bundle directory and point `ABSTRACTGATEWAY_FLOWS_DIR` at it (or publish it through the Gateway API)
 4. Run it from any gateway-backed client (Observer, AbstractAssistant, Code Web UI, your app)
 
-**AbstractAgent** provides ready-made agent patterns (ReAct, CodeAct, MemAct) that can be used inside flows or standalone. The workflows Gateway ships with are authored the same way — their editable sources are documented in [shipped workflow sources](abstractflow/docs/shipped-workflow-sources.md).
+**AbstractAgent** provides ready-made agent patterns (ReAct, CodeAct, MemAct) that can be used inside flows or standalone. The workflows Gateway ships with are authored the same way — their editable sources are documented in [shipped workflow sources](https://github.com/lpalbou/AbstractFlow/blob/main/docs/shipped-workflow-sources.md).
 
 ---
 
@@ -179,50 +182,50 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 
 ## Package map
 
-The ecosystem, grouped by layer. Each name links to the package's own README.
+The ecosystem, grouped by layer. Each name links to the package's repository.
 
 ### Foundation
 
 | Package | What it is |
 |---|---|
-| [abstractcore](abstractcore/) | Unified LLM interface: 9+ providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
-| [abstractsemantics](abstractsemantics/) | Central semantics registry (predicates + entity types) with JSON-Schema helpers |
-| [abstractmemory](abstractmemory/) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
+| [abstractcore](https://github.com/lpalbou/AbstractCore) | Unified LLM interface: 9+ providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
+| [abstractsemantics](https://github.com/lpalbou/AbstractSemantics) | Central semantics registry (predicates + entity types) with JSON-Schema helpers |
+| [abstractmemory](https://github.com/lpalbou/AbstractMemory) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
 
 ### Durable execution
 
 | Package | What it is |
 |---|---|
-| [abstractruntime](abstractruntime/) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts; the VisualFlow compiler (visual graphs → executable workflows); the entity identity lane (homes, chat/life/visit drivers) |
-| [abstractagent](abstractagent/) | Agent patterns (ReAct / CodeAct / MemAct) composing Runtime + Core |
-| [abstractflow](abstractflow/) | Visual workflow editor + portable `.flow` bundles — author once, run anywhere |
+| [abstractruntime](https://github.com/lpalbou/AbstractRuntime) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts; the VisualFlow compiler (visual graphs → executable workflows); the entity identity lane (homes, chat/life/visit drivers) |
+| [abstractagent](https://github.com/lpalbou/AbstractAgent) | Agent patterns (ReAct / CodeAct / MemAct) composing Runtime + Core |
+| [abstractflow](https://github.com/lpalbou/AbstractFlow) | Visual workflow editor + portable `.flow` bundles — author once, run anywhere |
 
 ### Control plane
 
 | Package | What it is |
 |---|---|
-| [abstractgateway](abstractgateway/) | Deployable control plane: durable runs over HTTP/SSE, scheduling + run commands (cancel/steer), workflow catalog, artifact/ledger serving, multi-user auth with per-user runtimes, the summoned-entity lifecycle (create / summon / visit / state / blueprint), and the operator consoles (web + TUI) |
+| [abstractgateway](https://github.com/lpalbou/AbstractGateway) | Deployable control plane: durable runs over HTTP/SSE, scheduling + run commands (cancel/steer), workflow catalog, artifact/ledger serving, multi-user auth with per-user runtimes, the summoned-entity lifecycle (create / summon / visit / state / blueprint), and the operator consoles (web + TUI) |
 
 ### Multimodal capabilities
 
 | Package | What it is |
 |---|---|
-| [abstractvoice](abstractvoice/) | Voice I/O (TTS / STT), local and remote backends |
-| [abstractvision](abstractvision/) | Model-agnostic generative vision (images, optional video) |
-| [abstractmusic](abstractmusic/) | Text-to-music / text-to-audio (Core capability plugin) |
-| [abstract3d](abstract3d/) | Local-first 3D generation |
-| [abstractcamera](abstractcamera/) | Camera control and capture tools |
-| [abstractsound](abstractsound/), [abstractvideo](abstractvideo/), [abstractspatial](abstractspatial/), [abstractgeometry](abstractgeometry/), [abstractcognition](abstractcognition/) | Reserved capability packages (namespaces held; APIs landing incrementally) |
+| [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
+| [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic generative vision (images, optional video) |
+| [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio (Core capability plugin) |
+| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
+| `abstractsound`, `abstractvideo`, `abstractspatial`, `abstractgeometry`, `abstractcognition` | Reserved capability packages (namespaces held; APIs landing incrementally) |
 
 ### Apps and clients
 
 | App | What it does | Install |
 |---|---|---|
-| [AbstractCode](abstractcode/) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, `/workflow` support | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
-| [AbstractAssistant](abstractassistant/) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
-| [AbstractObserver](abstractobserver/) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
-| [AbstractEntity](abstractentity/) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
-| [AbstractContinuum](abstractcontinuum/) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
+| [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, `/workflow` support | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
+| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
+| [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
+| [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
+| [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
 | **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed) | `npx @abstractframework/code` |
@@ -232,9 +235,9 @@ The ecosystem, grouped by layer. Each name links to the package's own README.
 
 | Package | What it is |
 |---|---|
-| [abstracttui](abstracttui/) | Rust terminal-UI engine built on fine-grained reactive signals |
-| [abstractuic](abstractuic/) | Reusable UI kit for framework clients (React components + Web Components) |
-| [abstractskill](abstractskill/) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) |
+| [abstracttui](https://github.com/lpalbou/AbstractTUI) | Rust terminal-UI engine built on fine-grained reactive signals |
+| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Reusable UI kit for framework clients (React components + Web Components) |
+| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) |
 
 ---
 
@@ -318,9 +321,13 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/architecture.md](docs/architecture.md) | Layered model, durable execution primitives, comparisons |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |
-| [docs/faq.md](docs/faq.md) | Common questions, comparisons, troubleshooting |
-| [docs/api.md](docs/api.md) | Meta-package API (pins, helpers, re-exports) |
+| [docs/faq.md](docs/faq.md) | Common questions, comparisons, limits |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Symptoms, checks and fixes for install, sign-in, network and provider problems |
+| [docs/api.md](docs/api.md) | Meta-package API (pins, helpers, re-exports, `abstractframework doctor`) |
 | [docs/workspace-scripts.md](docs/workspace-scripts.md) | Working from source: package tiers, build, status, pull/commit/push scripts |
+| [CHANGELOG.md](CHANGELOG.md) | Release history of the meta-package and its pins |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to work on this repository and propose changes |
+| [SECURITY.md](SECURITY.md) | How to report a vulnerability |
 
 ---
 
@@ -351,7 +358,8 @@ abstractcore --install   # check every subsystem and download missing models and
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Credits: [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md). Community
+expectations: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 --- llms.txt ---
 # AbstractFramework
@@ -362,7 +370,9 @@ Most runtime behavior lives in the individual package repos (AbstractCore/Runtim
 AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a browser client (`npx @abstractframework/code`); both need a running gateway.
 
 Quick commands:
+- Mac installer: download `https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg` and double-click it; the package is not signed with an Apple Developer ID, so the first time allow it with Open Anyway in System Settings > Privacy & Security; it runs `install.sh --interactive` in Terminal. Remove with `Uninstall AbstractFramework.command` or `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`
 - One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); installs uv + Python 3.12 + the pinned gateway as a uv tool, registers the login service, starts it on 127.0.0.1:8080 and opens `/console` through a one-time claim link; `--print` dry run, `--uninstall` to remove
+- Network exposure: the gateway listens on this computer only (`localhost`) until you run `abstractgateway network set lan|internet` (or use the console / menu-bar icon); `service install` takes `--port`, and the login item runs plain `serve` so the Network setting applies
 - Start either entry point and open the printed one-time link: `abstractcore serve` (http://127.0.0.1:8000/console#claim=…) or `abstractgateway serve` (http://127.0.0.1:8080/console#claim=…); both consoles have Models (catalog + fit verdict, download, delete) and Engines (detect, install) tabs, mirrored by `abstractcore models|engines` and `abstractgateway models|engines`
 - Install pinned stack: `pip install abstractframework`
 - Check install health: `abstractframework doctor`
@@ -439,11 +449,15 @@ Notes for LLMs working in this repo:
 
 - [README.md](README.md): Ecosystem overview and install paths.
 - [docs/README.md](docs/README.md): Docs index for this repo.
-- [docs/install.md](docs/install.md): One-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, uninstall), Light / Apple / GPU chooser, generated manifest contract.
+- [docs/install.md](docs/install.md): Mac installer (with the one-time Open Anyway step), one-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, Network setting, uninstall), Light / Apple / GPU chooser, generated manifest contract.
 - [docs/installers/README.md](docs/installers/README.md): Install design: script bootstrap + gateway console (strategy, per-OS journeys, components, OS security/sudo/UAC/execution policy, manifest, operations).
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
-- [abstractgateway/docs/shipped-workflows.md](abstractgateway/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
-- [docs/architecture.md](docs/architecture.md): How the stack fits together.
+- [AbstractGateway shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
+- [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid component and distribution diagrams).
+- [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, client configuration.
+- [docs/api.md](docs/api.md): Meta-package API: release pins, helpers, `abstractframework doctor` and `manifest`.
+- [docs/faq.md](docs/faq.md): Common questions, comparisons, limits.
+- [docs/troubleshooting.md](docs/troubleshooting.md): Symptoms, checks and fixes (installer blocked by macOS, sign-in links, ports, network access, providers, logs).
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
 - [docs/workspace-scripts.md](docs/workspace-scripts.md): Working from source: package inventory (scripts/lib/packages.txt), dependency tiers, build/status/pull/commit/push scripts.
 - [docs/adr/README.md](docs/adr/README.md): Cross-package ADR index and accepted platform contracts.
@@ -504,6 +518,11 @@ Notes for LLMs working in this repo:
 - [docs/claude/](docs/claude/): Research notes about Claude (non-Agent-Skills capability/skills scan).
 
 ## Optional
+
+- [CHANGELOG.md](CHANGELOG.md): Release history of the meta-package and its pins.
+- [CONTRIBUTING.md](CONTRIBUTING.md): Working on this repository (tests, doc regeneration, pull requests).
+- [SECURITY.md](SECURITY.md): Reporting a vulnerability.
+- [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md): Credits.
 
 - [AbstractCore](https://github.com/lpalbou/abstractcore): LLM providers, tools, structured output, media.
 - [AbstractRuntime](https://github.com/lpalbou/abstractruntime): Durable execution (runs, effects, waits, ledger, stores).
@@ -1609,7 +1628,7 @@ A modular, open-source ecosystem for building **durable, observable, multimodal*
 This doc set focuses on two things:
 
 1. **How to pick the right entry point** (AbstractCore SDK vs AbstractGateway control plane)
-2. **How the pieces compose** (Core → Runtime → Gateway → Flow → Observer)
+2. **How the pieces compose** (clients → Gateway → Agent / Runtime → Core → providers)
 
 Most implementation lives in component repositories. This repo ships the `abstractframework` meta-package (a pinned install profile) and the cross-package docs you're reading now.
 
@@ -1649,28 +1668,25 @@ Read **[Getting Started](getting-started.md)** → "Gateway-first" section.
 
 ## How the pieces fit (one picture)
 
+```mermaid
+flowchart LR
+    CL["Clients<br/>Observer · Flow Editor · Code · Entity<br/>Continuum · Assistant · consoles"]
+    GW["AbstractGateway<br/>runs · schedules · catalog · ledger"]
+    AG["AbstractAgent"]
+    RT["AbstractRuntime<br/>durable kernel"]
+    CO["AbstractCore<br/>LLM · tools · media"]
+    PL["voice · vision · music<br/>plugins"]
+    PR[("providers and<br/>local engines")]
+    CL -->|HTTP/SSE| GW
+    GW --> AG --> RT
+    GW --> RT --> CO
+    AG --> CO
+    CO -.-> PL
+    CO --> PR
 ```
-Authoring                                Operations
-──────────────────────────────────────────────────────────────
 
- AbstractFlow (author workflows)      AbstractGateway (control plane)
- + Flow Editor (web UI)               - run control + scheduling
- - exports .flow bundles              - bundle discovery + SSE ledger
-               │                                │
-               └─────────────┬──────────────────┘
-                             ▼
-          AbstractAgent (ReAct / CodeAct / MemAct)
-                             │
-                             ▼
-                  AbstractRuntime (durable kernel)
-                  - runs, effects, waits
-                  - ledger + artifacts
-                             │
-                             ▼
-                  AbstractCore (LLM + tools + media)
-                  - provider abstraction + routing defaults
-                  - capability plugins: voice / vision / music
-```
+The full component diagram, with memory, semantics and the consoles, is in
+[Architecture](architecture.md#component-view).
 
 ---
 
@@ -1678,17 +1694,18 @@ Authoring                                Operations
 
 | Page | What it covers |
 |---|---|
-| **[Install](install.md)** | One-line install (`install.sh` / `install.ps1`), options and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
+| **[Install](install.md)** | Mac installer, one-line install (`install.sh` / `install.ps1`), options, Network setting and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
-| **[Architecture](architecture.md)** | Layered model, durable execution primitives, honest comparisons |
+| **[Architecture](architecture.md)** | Component diagram, distribution by registry, durable execution primitives, comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
 | **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
-| **[FAQ](faq.md)** | Common questions, troubleshooting, comparisons |
-| **[API](api.md)** | The `abstractframework` meta-package API (pins + helpers + re-exports) |
+| **[FAQ](faq.md)** | Common questions, comparisons, limits |
+| **[Troubleshooting](troubleshooting.md)** | Symptoms, checks and fixes: installer blocked by macOS, sign-in links, ports, network access, providers |
+| **[API](api.md)** | The `abstractframework` meta-package API (pins, helpers, re-exports, `doctor`, `manifest`) |
 | **[Runtime artifacts and retrieval](guide/runtime-artifacts.md)** | Runtime, Gateway, Observer, ledger, and KG responsibility map for artifact/retrieval work |
-| **[Shipped workflows](../abstractgateway/docs/shipped-workflows.md)** | The workflows a packaged Gateway serves out of the box — coder, deep research, co-scientist — and how to run them |
+| **[Shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md)** | The workflows a packaged Gateway serves out of the box — coder, deep research, co-scientist — and how to run them |
 
 ---
 
@@ -1701,52 +1718,52 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 
 | Package | What it is |
 |---|---|
-| [abstractcore](../abstractcore/) | Unified LLM interface: providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
-| [abstractsemantics](../abstractsemantics/) | Shared semantics registry for predicates and entity types |
-| [abstractmemory](../abstractmemory/) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
+| [abstractcore](https://github.com/lpalbou/AbstractCore) | Unified LLM interface: providers, tools, structured output, media, embeddings, `/v1` server, capability plugins |
+| [abstractsemantics](https://github.com/lpalbou/AbstractSemantics) | Shared semantics registry for predicates and entity types |
+| [abstractmemory](https://github.com/lpalbou/AbstractMemory) | Durable, append-only agent memory: usage-weighted graph + journal — recall, formation, consolidation (the entity mind engine) |
 
 ### Durable execution
 
 | Package | What it is |
 |---|---|
-| [abstractruntime](../abstractruntime/) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts, and the entity identity lane |
-| [abstractagent](../abstractagent/) | ReAct, CodeAct, and MemAct patterns on top of Runtime + Core |
-| [abstractflow](../abstractflow/) | Visual workflow editor and portable `.flow` bundles |
+| [abstractruntime](https://github.com/lpalbou/AbstractRuntime) | Durable execution kernel: runs, effects, waits, append-only ledger, artifacts, and the entity identity lane |
+| [abstractagent](https://github.com/lpalbou/AbstractAgent) | ReAct, CodeAct, and MemAct patterns on top of Runtime + Core |
+| [abstractflow](https://github.com/lpalbou/AbstractFlow) | Visual workflow editor and portable `.flow` bundles |
 
 ### Control plane
 
 | Package | What it is |
 |---|---|
-| [abstractgateway](../abstractgateway/) | Deployable control plane: durable runs over HTTP/SSE, scheduling, workflow catalog, auth, artifact/ledger serving, and the summoned-entity door |
+| [abstractgateway](https://github.com/lpalbou/AbstractGateway) | Deployable control plane: durable runs over HTTP/SSE, scheduling, workflow catalog, auth, artifact/ledger serving, and the summoned-entity door |
 
 ### Multimodal capabilities
 
 | Package | What it is |
 |---|---|
-| [abstractvoice](../abstractvoice/) | Voice I/O (TTS / STT), local and remote backends |
-| [abstractvision](../abstractvision/) | Model-agnostic image generation |
-| [abstractmusic](../abstractmusic/) | Text-to-music / text-to-audio capability plugin |
-| [abstract3d](../abstract3d/) | Local-first 3D generation |
-| [abstractcamera](../abstractcamera/) | Camera control and capture tools |
+| [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
+| [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic image generation |
+| [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio capability plugin |
+| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
 
 ### Apps and clients
 
 | Package | What it is |
 |---|---|
-| [abstractcode](../abstractcode/) | Coding client with durable sessions and tool approvals: Rust terminal client (`cargo install abstractcode`) and browser client (`npx @abstractframework/code`) |
-| [abstractassistant](../abstractassistant/) | macOS tray client for gateway-native chat and voice |
-| [abstractobserver](../abstractobserver/) | Browser UI for monitoring, control, and scheduling |
-| [abstractentity](../abstractentity/) | Summoned-entity manager and chat/replay UI |
-| [abstractcontinuum](../abstractcontinuum/) | Continuous iterative development and deployment console |
+| [abstractcode](https://github.com/lpalbou/AbstractCode) | Coding client with durable sessions and tool approvals: Rust terminal client (`cargo install abstractcode`) and browser client (`npx @abstractframework/code`) |
+| [abstractassistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client for gateway-native chat and voice |
+| [abstractobserver](https://github.com/lpalbou/AbstractObserver) | Browser UI for monitoring, control, and scheduling |
+| [abstractentity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager and chat/replay UI |
+| [abstractcontinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console |
 | Consoles | Web consoles built into `abstractgateway serve` and `abstractcore serve` (`/console`, with Models and Engines tabs); terminal consoles `cargo install abstractgateway-console` and `cargo install abstractcore-console` |
 
 ### Shared libraries
 
 | Package | What it is |
 |---|---|
-| [abstracttui](../abstracttui/) | Reactive Rust terminal UI engine |
-| [abstractuic](../abstractuic/) | Shared React/Web Components UI kit |
-| [abstractskill](../abstractskill/) | Shared Agent Skills (`SKILL.md`) loader and activation library |
+| [abstracttui](https://github.com/lpalbou/AbstractTUI) | Reactive Rust terminal UI engine |
+| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Shared React/Web Components UI kit |
+| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared Agent Skills (`SKILL.md`) loader and activation library |
 
 ---
 
@@ -1769,6 +1786,9 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | [docs/scenarios/](scenarios/) | End-to-end walkthroughs by use case |
 | [docs/installers/](installers/README.md) | Install design: script bootstrap + gateway console, per-OS journeys, OS security, manifest, operations |
 | [docs/comparisons/](comparisons/) | Trade-offs vs other frameworks |
+| [docs/adr/](adr/README.md) | Architecture decision records |
+| [CHANGELOG.md](../CHANGELOG.md) | Release history of the meta-package and its pins |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) · [SECURITY.md](../SECURITY.md) | Contributing to this repository; reporting a vulnerability |
 
 --- docs/install.md ---
 # Install AbstractFramework
@@ -1783,22 +1803,27 @@ libraries in their own environment go to [Install the Python framework](#install
 You need a Mac with macOS 13 or later (Apple Silicon gets the fast local engines; they need
 macOS 14), an internet connection, and about 5 GB of free disk space before models.
 
-1. **Download** [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
-   The release process attaches it to each GitHub release (built by
-   `scripts/lib/build_macos_installer.sh`); if the link does not work yet, use
-   [the one line below](#or-paste-one-line-in-terminal) instead.
-2. **Double-click it.** The macOS Installer opens. Click **Continue**, then **Install**. It installs
-   for you only, so it does not ask for your password.
-3. **A Terminal window opens** and shows each step as it happens. It asks one question:
+1. **Download** [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg)
+   (attached to every [GitHub release](https://github.com/lpalbou/AbstractFramework/releases)).
+2. **Allow it once.** The package is not signed with an Apple Developer ID, so the first
+   double-click shows a warning that macOS cannot verify the installer (*"… Not Opened"*, *"Apple
+   could not verify …"* or *"… from an unidentified developer"*, depending on your macOS version).
+   Close the warning (**Done** or **OK**), open **System Settings > Privacy & Security**, scroll
+   down to **Security**, click **Open Anyway** next to the installer's name, and confirm (macOS may
+   ask for your login password or Touch ID). This is the standard macOS step for software from
+   outside the App Store; you do it once per download.
+3. **Install.** The macOS Installer opens. Click **Continue**, then **Install**. It installs for you
+   only, so the Installer does not ask for your password.
+4. **A Terminal window opens** and shows each step as it happens. It asks one question:
 
    ```
    ? Start AbstractFramework automatically when you log in? (a per-user login item, no admin; the uninstaller removes it) [Y/n]
    ```
 
    Press **Return** for yes (recommended: it is then always there when you need it), or type `n`.
-4. **Wait** 2 to 15 minutes, depending on your connection. The last lines say
+5. **Wait** 2 to 15 minutes, depending on your connection. The last lines say
    `AbstractFramework is ready.` and your browser opens AbstractFramework.
-5. **In the browser**, the first-run guide helps you pick an engine (it detects what this Mac can
+6. **In the browser**, the first-run guide helps you pick an engine (it detects what this Mac can
    run and installs it with one click) and a model that fits your Mac. You can close the Terminal
    window.
 
@@ -1812,14 +1837,9 @@ uv's download cache (about 2.4 GB, reused by upgrades), your data in
 (`~/Library/LaunchAgents/ai.abstractframework.gateway.plist`). Models you download later come on
 top.
 
-**If macOS says the installer "cannot be opened because Apple cannot check it for malicious
-software"**, you have an unsigned build: open **System Settings > Privacy & Security**, scroll
-down, click **Open Anyway** next to the installer's name, and confirm. Signed releases do not show
-this message.
-
-The same installer also exists as a zip (`AbstractFramework-Installer-macOS.zip` on the release
-page) with two double-clickable files: **Install AbstractFramework.command** and **Uninstall
-AbstractFramework.command**. They do exactly what the package does.
+The package also leaves two double-clickable files in
+`~/Library/Application Support/AbstractFramework/Installer`: **Install AbstractFramework.command**
+(run it again to repair or upgrade) and **Uninstall AbstractFramework.command**.
 
 ### Or: paste one line in Terminal
 
@@ -1842,8 +1862,8 @@ powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpa
 ```
 
 It installs under your user account (no administrator rights), starts AbstractFramework at sign-in
-and opens it in your browser. The Windows script does not ask the start-at-login question yet; use
-`-NoService` to skip it.
+and opens it in your browser. The Windows script registers the start-at-login entry without asking;
+add `-NoService` to skip it.
 
 ## If something goes wrong
 
@@ -1868,7 +1888,7 @@ where it stopped.
 
 ## Remove AbstractFramework
 
-Double-click **Uninstall AbstractFramework.command** (from the zip, or in
+Double-click **Uninstall AbstractFramework.command** (in
 `~/Library/Application Support/AbstractFramework/Installer` after a package install), or paste:
 
 ```bash
@@ -1894,7 +1914,7 @@ The Mac package, the `.command` files and the one line all run the same script,
 
 1. Checks the machine (OS, CPU, macOS 14+ for Apple Silicon, Rosetta, NVIDIA/ROCm, the folders it
    writes, internet access to PyPI, free disk, a free port) and picks a profile: `apple` on Apple
-   Silicon, `gpu` when `nvidia-smi` or `rocminfo` works, `light` otherwise.
+   Silicon (macOS 14+), `gpu` when `nvidia-smi` or `rocminfo` works, `light` otherwise.
 2. Asks whether to start at login (only with `--interactive`; the default is yes, and a previous
    "no" is remembered).
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
@@ -1904,8 +1924,10 @@ The Mac package, the `.command` files and the one line all run the same script,
    (reinstalling it in place when it does not).
 5. Optionally installs Node.js for the browser apps, terminal tools, Ollama or LM Studio (flags
    below).
-6. Registers the gateway to start at login with `abstractgateway service install` (a LaunchAgent on
-   macOS, a `systemd --user` unit on Linux, a Startup shortcut on Windows) and starts it. With
+6. Registers the gateway to start at login with `abstractgateway service install --port N` (a
+   LaunchAgent on macOS, a `systemd --user` unit on Linux, a Startup shortcut on Windows) and starts
+   it. The login item runs plain `abstractgateway serve`, so the gateway's
+   [Network setting](#network-setting-who-can-reach-the-gateway) decides where it listens. With
    `--no-service` (or "no" to the question), or on a Linux host without a user systemd session, it
    starts the gateway in the background instead and removes a login item an earlier run
    registered.
@@ -1914,9 +1936,10 @@ The Mac package, the `.command` files and the one line all run the same script,
    If no link can be created, it shows where the admin token is.
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
-upgrades or repairs the install in place. The macOS package is built by
-`scripts/lib/build_macos_installer.sh`, which signs and notarizes it when given a Developer ID
-(see the header of that script).
+upgrades or repairs the install in place. The macOS package is payload-free: it copies the two
+`.command` files into `~/Library/Application Support/AbstractFramework/Installer` and opens
+`install.sh --interactive` in Terminal. It is built by
+[`scripts/lib/build_macos_installer.sh`](../scripts/lib/build_macos_installer.sh).
 
 ### No compiler needed
 
@@ -1925,9 +1948,8 @@ or the MSVC Build Tools. It passes uv a small overrides file (`uv-overrides.txt`
 data directory; `--print` shows it) that swaps `webrtcvad` for `webrtcvad-wheels`, keeps `vllm`
 to Linux, and leaves out the two compiled extras below, and it refuses to build those packages
 from source, so a gap fails with a clear error instead of starting a compiler. If macOS asks you
-to install the command line developer tools (an `xcode-select` prompt) during an install, you are
-running an older copy of the script: cancel the prompt, fetch the script again with the one-liner
-above and re-run it.
+to install the command line developer tools (an `xcode-select` prompt) during an install, cancel
+the prompt, fetch the script again with the one-liner above and re-run it.
 
 ### llama.cpp GGUF models
 
@@ -1945,8 +1967,9 @@ package page, pinned in `uv-constraints.txt` next to the overrides file):
 
 Where no wheel exists, or when the wheel install fails, the script installs everything else and
 says `GGUF (llama.cpp) skipped: no prebuilt wheel for this machine`; `--full` then builds it from
-source. The summary's `GGUF:` line says which wheel was installed. The Metal pin stays at 0.3.28
-because the 0.3.32-0.3.35 Metal wheels fail zip integrity checks and uv refuses them.
+source. The summary's `GGUF:` line says which wheel was installed. On Apple Silicon the Metal wheel
+is pinned to 0.3.28, the newest Metal wheel on that index that passes uv's archive integrity
+check.
 
 ### Compiled extras
 
@@ -1972,12 +1995,18 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--with-code-cli` | `-WithCodeCli` | Install the `abstractcode` crate with cargo (terminal client; needs Rust) |
 | `--with-core-cli` | `-WithCoreCli` | Also put the `abstractcore` command on PATH |
 | `--full` | `-Full` | Also build the [compiled extras](#compiled-extras) and llama.cpp from source (needs a C compiler) |
+| `--no-tray` | `-NoTray` | Leave out the menu-bar icon (`tray` extra) |
 | `--no-service` | `-NoService` | Do not register a login service |
+| `--no-start` | `-NoStart` | Install only; do not start the gateway |
 | `--no-open` | `-NoOpen` | Do not open the browser |
+| `--no-modify-path` | `-NoModifyPath` | Do not add `~/.local/bin` to your shell profile (`uv tool update-shell`) |
 | `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |
+| `--manifest PATH` | `-Manifest` | Read the gateway pin from this `install-manifest.json` |
 | `--data-dir DIR` | `-DataDir` | Gateway data directory |
-| `--interactive` | (not yet) | Ask whether to start at login (and, with `--uninstall`, whether to delete data and uv); the double-click installers pass it |
+| `--interactive` | — | Ask whether to start at login (and, with `--uninstall`, whether to delete data and uv); the double-click installers pass it |
 | `--print` | `-Print` (or `-WhatIf`) | Show the plan and every command; change nothing |
+| `--print-versions` | `-PrintVersions` | Print the pinned gateway, npm app and crate versions, then exit |
+| `-v`, `--verbose` | — | Show the full output of every command |
 | `--uninstall [--purge] [--remove-uv]` | `-Uninstall [-Purge]` | Remove the service and uv tools (purge also deletes the data; `--remove-uv` also removes uv, its Python and cache when the installer added uv) |
 
 Pass options through the one-liner like this:
@@ -2008,10 +2037,13 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080  # prints a on
 `systemd --user` on Linux, a Startup shortcut on Windows, experimental) and starts the gateway:
 
 ```bash
-abstractgateway service install --host 127.0.0.1 --port 8080
+abstractgateway service install --port 8080
 abstractgateway service status
 abstractgateway service uninstall
 ```
+
+The login item runs plain `abstractgateway serve`, so the host and port come from the Network
+setting below. Passing `--host` to `service install` stores the matching mode in that setting.
 
 The bootstrap scripts use it by default. Gateways older than 0.3.0 (installed with `--pin`) have no
 `service` command: `install.sh` then starts the gateway in the background and `install.ps1` adds a
@@ -2022,7 +2054,7 @@ Startup-folder shortcut. To write a login entry yourself on Linux, a user unit i
 [Service]
 Environment=ABSTRACTGATEWAY_USER_AUTH=1
 Environment=ABSTRACTGATEWAY_DATA_DIR=%h/.local/share/abstractgateway
-ExecStart=%h/.local/bin/abstractgateway serve --host 127.0.0.1 --port 8080
+ExecStart=%h/.local/bin/abstractgateway serve
 Restart=on-failure
 
 [Install]
@@ -2033,10 +2065,31 @@ Then `systemctl --user daemon-reload && systemctl --user enable --now abstractga
 use a LaunchAgent in `~/Library/LaunchAgents/` with the same absolute command and environment
 (launchd does not read your shell profile, so use absolute paths).
 
+### Network setting: who can reach the gateway
+
+The gateway listens on this computer only (`localhost`, `127.0.0.1:8080`) until you choose
+otherwise. Change it in the console's network panel, from the menu-bar icon's **Network** menu, or
+in a terminal:
+
+```bash
+abstractgateway network status                      # configured vs running mode, addresses, warnings
+abstractgateway network set lan                     # other devices on your local network
+abstractgateway network set localhost --port 8080   # back to this computer only
+abstractgateway network set internet --acknowledge-internet   # public; TLS and port forwarding are yours
+abstractgateway network restart --token <admin token>   # apply it to the running gateway now
+abstractgateway network addresses                   # every URL a client can use
+```
+
+A new mode or port applies at the next start: `network restart`, the console, the menu-bar icon's
+**Restart AbstractGateway…**, or the next login. Keep
+`localhost` unless you need another device to connect; see
+[Gateway security](guide/gateway-security.md) before choosing `internet`.
+
 ### Upgrade and uninstall
 
 - Upgrade: re-run the one-liner (or `uv tool upgrade abstractgateway`).
-- Uninstall: `curl -LsSf .../install.sh | sh -s -- --uninstall` (Windows: the script block with
+- Uninstall: [Remove AbstractFramework](#remove-abstractframework) above,
+  `curl -LsSf .../install.sh | sh -s -- --uninstall` (Windows: the script block with
   `-Uninstall`), or by hand: `abstractgateway service uninstall` (when registered), then
   `uv tool uninstall abstractgateway`. Your data stays in the data directory until you delete it
   (`--purge`). See [Operations and support](installers/operations-and-support.md) for locations.
@@ -2232,6 +2285,7 @@ The installer-facing contract is generated from the root release profile:
 ```bash
 abstractframework manifest
 abstractframework manifest --check docs/installers/install-manifest.json
+abstractframework manifest --write install-manifest.json
 ```
 
 The bootstrap scripts read `bootstrap.gateway_version` from it; other installers should consume
@@ -2264,8 +2318,10 @@ AbstractFramework is a **stack**:
 
 If you want AbstractFramework running on your computer without setting up Python yourself, use
 the installer. On a Mac, download and double-click
-[AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg);
-on macOS or Linux you can instead paste one line in Terminal:
+[AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg)
+(the first time, allow it with **Open Anyway** in **System Settings > Privacy & Security**: the
+package is not signed with an Apple Developer ID; see [Install](install.md#install-on-a-mac)).
+On macOS or Linux you can instead paste one line in Terminal:
 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --interactive
@@ -2279,8 +2335,9 @@ already signed in. The console's first-run guide sets up a local engine or a clo
 default model (the **Models** tab lists the models that fit your machine and downloads them). Then
 continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 [AbstractFlow](#author-orchestration-with-abstractflow). Step by step, what to do when something
-fails, and how to remove it: [Install](install.md). The sections below cover manual installs for
-library and developer use.
+fails, and how to remove it: [Install](install.md); fixes for common problems:
+[Troubleshooting](troubleshooting.md). The sections below cover manual installs for library and
+developer use.
 
 ---
 
@@ -2426,7 +2483,9 @@ link. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCo
 AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operator bearer-token
 path; it does not sign in browsers.
 
-To start the gateway at login, use `abstractgateway service install --host 127.0.0.1 --port 8080`.
+To start the gateway at login, use `abstractgateway service install --port 8080`. The login item
+listens where the gateway's Network setting says (this computer only until you change it; see
+[Network setting](install.md#network-setting-who-can-reach-the-gateway)).
 
 Verify:
 
@@ -2468,7 +2527,7 @@ The ecosystem's distribution unit is a **workflow bundle** (`.flow` file): a Vis
 You do not have to start from an empty registry. A packaged Gateway already
 serves a set of ready workflows — a verify-gated coding agent, `deep-research`,
 and `co-scientist` among them — listed in
-[AbstractGateway's shipped workflows](../abstractgateway/docs/shipped-workflows.md).
+[AbstractGateway's shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md).
 Author your own when you need something they do not cover.
 
 ### 1. Open the Flow Editor
@@ -2548,7 +2607,9 @@ assistant tray
 - **[Architecture](architecture.md)** — the layered model (Core / Runtime / Agent / Gateway / Flow / Observer)
 - **[Configuration](configuration.md)** — where defaults live and how to configure them
 - **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)
-- **[FAQ](faq.md)** — comparisons, offline operation, troubleshooting
+- **[API](api.md)** — the `abstractframework` helpers, `doctor` and `manifest` commands
+- **[FAQ](faq.md)** — comparisons, offline operation, limits
+- **[Troubleshooting](troubleshooting.md)** — symptoms and fixes
 - **[Workspace scripts](workspace-scripts.md)** — work from source: clone, build and sync every package in dependency order
 
 --- docs/architecture.md ---
@@ -2591,50 +2652,75 @@ The composition root when you need a control plane (local or remote).
 
 ---
 
-## Layered view
+## Component view
 
+Every client talks to the gateway over HTTP/SSE. The gateway composes the Python packages below it
+in one process: agent patterns, the durable runtime, memory and AbstractCore, which reaches the
+model providers and local engines. Arrows point from a component to what it calls or depends on.
+
+```mermaid
+flowchart TB
+    subgraph CLIENTS["Apps and clients"]
+        OBS["AbstractObserver<br/>monitor · control · schedule"]
+        FLOWED["Flow Editor<br/>author .flow bundles"]
+        CODE["AbstractCode<br/>terminal client + Code Web UI"]
+        ENT["AbstractEntity<br/>summoned entities"]
+        CONT["AbstractContinuum<br/>development console"]
+        ASSIST["AbstractAssistant<br/>desktop menu-bar app"]
+        GCON["abstractgateway-console<br/>terminal operator console"]
+        APP["Your app"]
+    end
+
+    subgraph GATEWAY["AbstractGateway (control plane)"]
+        API["HTTP/SSE API<br/>runs · schedules · workflow catalog<br/>ledger + artifacts · users · network"]
+        WEB["web /console<br/>first-run guide · Models · Engines"]
+        TRAY["menu-bar icon<br/>status · Network"]
+    end
+
+    AGENT["AbstractAgent<br/>ReAct · CodeAct · MemAct"]
+    RT["AbstractRuntime<br/>runs · effects · waits · ledger · artifacts<br/>VisualFlow compiler"]
+    MEM["AbstractMemory<br/>durable agent memory"]
+    SEM["AbstractSemantics<br/>predicates + entity types"]
+    CORE["AbstractCore<br/>providers · tools · media · embeddings<br/>models + engines"]
+    PLUG["Capability plugins<br/>abstractvoice · abstractvision · abstractmusic"]
+    CSRV["abstractcore serve<br/>/v1 · /acore · web /console"]
+    CCON["abstractcore-console<br/>terminal console + shared screens"]
+    PROV[("LLM providers and local engines<br/>Ollama · LM Studio · MLX · llama.cpp · vLLM · cloud APIs")]
+
+    CLIENTS -->|HTTP/SSE| API
+    WEB --> API
+    TRAY --> API
+    GCON -->|embeds Models/Engines screens| CCON
+    API --> AGENT
+    API --> RT
+    API --> MEM
+    AGENT --> RT
+    AGENT --> CORE
+    RT --> CORE
+    RT --> MEM
+    RT --> SEM
+    CORE -.->|entry-point plugins| PLUG
+    CORE --> PROV
+    CSRV --> CORE
+    CCON -->|abstractcore CLI| CORE
 ```
-Apps / UIs (thin clients)
-──────────────────────────────────────────────────────
- AbstractObserver (monitor / control / schedule)
- Flow Editor (author workflows)
- AbstractCode (terminal + web), AbstractAssistant, your custom app
- AbstractContinuum console, AbstractEntity manager
- Gateway consoles: web /console (first-run guide, Models, Engines),
-                  terminal abstractgateway-console
-                       │  HTTP/SSE
-                       ▼
-AbstractGateway (control plane)
-──────────────────────────────────────────────────────
- run lifecycle (start / resume / cancel)
- scheduling (durable, survives restarts)
- private bundle discovery + shared workflow catalog
- artifact + ledger serving / streaming
-                       │
-                       ▼
-Composition layer
-──────────────────────────────────────────────────────
- AbstractAgent: ReAct, CodeAct, MemAct patterns
- AbstractFlow: visual workflows → portable .flow bundles
-                       │
-                       ▼
-Durable execution kernel
-──────────────────────────────────────────────────────
- AbstractRuntime
- runs, effects, waits
- ledger (append-only history) + artifacts (large payloads)
-                       │
-                       ▼
-LLM + tools + multimodality
-──────────────────────────────────────────────────────
- AbstractCore
- provider/model abstraction + routing defaults
- host profile, model catalog + fit, engines, download/delete jobs
-   (CLI, /acore/* routes, web /console, terminal abstractcore-console)
- request/output normalization + call-scoped resolved-route truth
- tools, structured output, media input, embeddings, MCP
- capability plugins: voice / vision / music
-```
+
+The layers, from the top:
+
+- **Apps and clients** are thin: they hold no durable state and rebuild their view by replaying
+  the ledger, then follow new events over SSE. The Flow Editor publishes `.flow` bundles to the
+  gateway; the others start, observe and steer runs.
+- **AbstractGateway** owns the run lifecycle (start, resume, cancel), durable schedules, private
+  bundle discovery and the shared workflow catalog, users and auth, the Network setting, and
+  ledger/artifact serving. Its web console and menu-bar icon are part of the same package.
+- **AbstractAgent** provides ready-made agent loops; **AbstractRuntime** is the durable kernel that
+  executes them and compiles VisualFlow graphs from `.flow` bundles into workflows.
+- **AbstractCore** is the LLM layer: provider and model abstraction, capability routing defaults,
+  tools, structured output, media, embeddings, MCP, and the local model and engine management
+  (catalog with a fit verdict, downloads, engine installs). Voice, image and music arrive as
+  capability plugins.
+- **AbstractCore on its own** (`abstractcore serve`) is the second entry point: an
+  OpenAI-compatible `/v1` server with its own console, without the durable layers.
 
 ## How the framework is distributed
 
@@ -2758,8 +2844,8 @@ Copy bundles to `ABSTRACTGATEWAY_FLOWS_DIR`. The gateway discovers them automati
 
 For hosted or multi-user gateways, admins can also promote immutable bundle
 versions into the Gateway workflow catalog. The catalog owns shared/default
-workflow pointers and ACLs; each catalog run still executes in the requesting
-user's runtime unless a future explicit system-run mode is added.
+workflow pointers and ACLs; each catalog run executes in the requesting user's
+runtime.
 
 ### 3) Run from any client
 
@@ -2787,8 +2873,8 @@ runtime value:
 
 Internally, the durable payload handle is the artifact ref. Server-side path
 access stays a Gateway-owned workspace capability rather than a generic server
-filesystem abstraction. Current UI surfaces may still say `Workspace` in some
-places until terminology alignment work lands.
+filesystem abstraction. Some UI surfaces label server files `Workspace`; it
+means the same Gateway-approved scope.
 
 ---
 
@@ -2833,6 +2919,14 @@ AbstractGateway is architecturally closer to these systems, but specialized for 
 - **[Getting Started](getting-started.md)** — run Core-first or Gateway-first
 - **[Configuration](configuration.md)** — minimal config, where defaults live
 - **[Glossary](glossary.md)** — shared definitions (run, ledger, effect, wait, bundle, interface contract)
+- **[API](api.md)** — the meta-package helpers and the functional API owner of each concern
+- **[Install](install.md)** — how each part reaches a machine, and the Network setting
+- **[Installer design](installers/README.md)** — the bootstrap + console install model
+- **[ADR index](adr/README.md)** — accepted cross-package decisions, including
+  [package dependency boundaries](adr/0032-package-dependency-boundaries-and-gateway-first-apps.md),
+  [install profiles](adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md) and
+  [the script bootstrap install](adr/0038-script-bootstrap-and-gateway-console-install.md)
+- **[Runtime artifacts and retrieval](guide/runtime-artifacts.md)** — who owns artifacts, ledger and retrieval
 - Per-project architecture docs live in the component repositories
 
 --- docs/configuration.md ---
@@ -2885,7 +2979,11 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 
 ## Gateway-first quick start
 
-### Required
+### Defaults and explicit settings
+
+A bare `abstractgateway serve` needs no configuration: it listens on `127.0.0.1:8080`, turns user
+auth on and keeps its data in the per-user data folder. Set the environment when you want those
+choices to be explicit, for example in a service definition:
 
 ```bash
 export ABSTRACTGATEWAY_USER_AUTH=1
@@ -2896,7 +2994,7 @@ When user auth is enabled, `abstractgateway serve` ensures `default/admin`
 exists and writes the first browser-login token to
 `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`. Users sign in with a
 Gateway user id and that user's token, then browser apps keep only an opaque
-Gateway session. `ABSTRACTGATEWAY_AUTH_TOKEN` is still available for legacy
+Gateway session. `ABSTRACTGATEWAY_AUTH_TOKEN` remains available for legacy
 server/operator bearer-token deployments, but it maps to `local-admin` and is
 not a browser sign-in token.
 
@@ -2923,6 +3021,25 @@ export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 ```bash
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
+
+`--host` and `--port` override the gateway's stored Network setting for this start. Without them,
+`serve` uses the setting (`localhost` on port 8080 until you change it).
+
+### Network exposure
+
+The Network setting decides who can reach the gateway: `localhost` (this computer only), `lan`
+(devices on your local network) or `internet` (public; you provide TLS and port forwarding). It is
+stored in the data directory and applied at each start, including starts from the login item:
+
+```bash
+abstractgateway network status
+abstractgateway network set lan --port 8080
+abstractgateway network set --allowed-origins https://gateway.example.com
+```
+
+The console's network panel and the menu-bar icon change the same setting. See
+[Network setting](install.md#network-setting-who-can-reach-the-gateway) and
+[Gateway security](guide/gateway-security.md).
 
 ---
 
@@ -3052,8 +3169,8 @@ $ABSTRACTGATEWAY_DATA_DIR/users/<tenant>/<runtime>/runtime/config/abstractcore.j
 
 User runtime defaults override the Gateway baseline only for that runtime, so
 one user's provider/model defaults do not mutate another user's defaults.
-Gateway no longer reads or writes `config/capability_defaults.json`; existing
-overlay files are ignored. Recreate those defaults with
+Gateway does not read `config/capability_defaults.json` overlay files; if you
+have one from an older deployment, recreate those defaults with
 `abstractgateway-config set-default ...`.
 
 ### Gateway provider connections
@@ -3186,7 +3303,7 @@ export ABSTRACTFLOW_GATEWAY_URL="http://127.0.0.1:8080"
 npx @abstractframework/code
 ```
 
-Set the gateway URL in the UI settings (http://localhost:3002).
+Open http://localhost:3002 and set the gateway URL in the UI settings.
 
 ---
 
@@ -3220,6 +3337,7 @@ This repo covers the overview. Each component repo owns its detailed configurati
 - **[Getting Started](getting-started.md)** — first run Core-first or Gateway-first
 - **[Architecture](architecture.md)** — what lives where and why
 - **[Glossary](glossary.md)** — capability routes, durable execution terms
+- **[Troubleshooting](troubleshooting.md)** — provider, connection and sign-in problems
 
 --- docs/api.md ---
 # API (meta-package)
@@ -3276,6 +3394,10 @@ The response type returned by `llm.generate(...)`.
 ---
 
 ## Release profile helpers
+
+### `__version__`
+
+The meta-package version (`0.3.1` for this release).
 
 ### `RELEASE_VERSIONS`
 
@@ -3351,6 +3473,7 @@ Checks report `ok`, `warn`, `error` or `info` (`info` never fails the run).
 abstractframework doctor
 abstractframework doctor --json          # schema abstractframework_doctor_v2
 abstractframework doctor --no-network    # skip the gateway / engine probes
+abstractframework doctor --no-environment  # only check the Python package profile
 abstractframework doctor --timeout 5     # probe timeout in seconds (default 2)
 ```
 
@@ -3359,9 +3482,12 @@ abstractframework doctor --timeout 5     # probe timeout in seconds (default 2)
 Prints or validates the installer-facing manifest generated from the root release profile.
 
 ```bash
-abstractframework manifest
-abstractframework manifest --check docs/installers/install-manifest.json
+abstractframework manifest                                         # print it
+abstractframework manifest --check docs/installers/install-manifest.json   # compare a file with it
+abstractframework manifest --write install-manifest.json           # write it to a file
 ```
+
+Field reference: [release-and-manifest.md](installers/release-and-manifest.md).
 
 ---
 
@@ -3382,7 +3508,9 @@ abstractframework manifest --check docs/installers/install-manifest.json
 | Continuous development console | `@abstractframework/continuum` (npm) |
 | Summoned-entity manager | `@abstractframework/entity` (npm) |
 
-See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run.
+See **[Getting Started](getting-started.md)** for the two entry points and a first end-to-end run,
+**[Architecture](architecture.md)** for how the packages connect, and
+**[Troubleshooting](troubleshooting.md)** when `doctor` reports a problem.
 
 Gateway-hosted workflow APIs distinguish private runtime bundles from the
 shared workflow catalog:
@@ -3592,6 +3720,19 @@ If you care about auditability and long-lived workflows, back up the gateway dat
 
 ## Installing with the one-line script
 
+### Why does macOS ask me to allow the installer?
+
+`AbstractFramework-Installer.pkg` is not signed with an Apple Developer ID, so macOS blocks the
+first double-click. Open **System Settings > Privacy & Security** and click **Open Anyway** next to
+the installer's name, once per download. The one-line install in Terminal does not show this
+step. See [Install on a Mac](install.md#install-on-a-mac).
+
+### Can other devices on my network use the gateway?
+
+Yes, when you choose it. The gateway listens on this computer only until you change its Network
+setting (`abstractgateway network set lan`, the console, or the menu-bar icon). See
+[Network setting](install.md#network-setting-who-can-reach-the-gateway).
+
 ### Why is `abstractgateway` not found after the install?
 
 The commands live in `~/.local/bin` (`%USERPROFILE%\.local\bin` on Windows). The script runs
@@ -3615,8 +3756,7 @@ to install `libatomic1`. The script tells you before running them.
 ### Do I need Xcode or a C compiler?
 
 No. The default install uses prebuilt wheels only. If macOS shows an "install the command line
-developer tools" prompt, cancel it and re-run the current one-liner: an older copy of the script
-compiled a few packages. llama.cpp GGUF models come from upstream's prebuilt wheel on Apple
+developer tools" prompt, cancel it and re-run the one-liner. llama.cpp GGUF models come from upstream's prebuilt wheel on Apple
 Silicon, Linux and Windows x64 ([llama.cpp GGUF models](install.md#llamacpp-gguf-models)). You
 need a compiler only for `--full`, which adds stable-diffusion.cpp and echo cancellation, and
 llama.cpp on machines without a prebuilt wheel ([Compiled extras](install.md#compiled-extras)).
@@ -3639,8 +3779,7 @@ in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path
 
 When the script registered the login service, `abstractgateway service status` shows it,
 `abstractgateway service uninstall` stops the gateway and removes the login entry (your data is
-kept), and `abstractgateway service install --host 127.0.0.1 --port 8080` registers and starts it
-again. With `--no-service`, the install summary prints the stop and start commands; re-running the
+kept), and `abstractgateway service install --port 8080` registers and starts it again. With `--no-service`, the install summary prints the stop and start commands; re-running the
 installer starts it again.
 
 ### How do I download a model or install Ollama later?
@@ -3663,27 +3802,158 @@ data as well. See [Install](install.md#upgrade-and-uninstall).
 
 ---
 
-## Troubleshooting
+## Something does not work
+
+Symptoms, checks and fixes (provider calls failing, a browser app that cannot connect, missing
+voice models, install errors) are in **[Troubleshooting](troubleshooting.md)**.
+
+--- docs/troubleshooting.md ---
+# Troubleshooting
+
+Symptoms you may meet when installing or running AbstractFramework, how to confirm the cause, and
+how to fix it. Installation steps are in [Install](install.md); concepts and limits are in the
+[FAQ](faq.md); package-specific problems are covered in each component's own documentation.
+
+## First checks
+
+Start with the read-only health report:
+
+```bash
+uvx abstractframework doctor        # or `abstractframework doctor` inside a framework venv
+curl -sS http://127.0.0.1:8080/api/health
+```
+
+`doctor` checks Python, the pinned package versions, uv, Node.js, free disk, the gateway
+(`ABSTRACTGATEWAY_URL`, default `http://127.0.0.1:8080`) and whether Ollama and LM Studio answer.
+It changes nothing. See [API](api.md#abstractframework-doctor) for its options.
+
+Logs:
+
+| What | macOS | Linux | Windows |
+|---|---|---|---|
+| Install log | `~/Library/Application Support/AbstractGateway/logs/install-*.log` | `~/.local/share/abstractgateway/logs/install-*.log` | `%LOCALAPPDATA%\AbstractGateway\logs\install-*.log` |
+| Gateway started at login | `~/Library/Logs/AbstractGateway/gateway.out.log`, `gateway.err.log` | `journalctl --user -u abstractgateway` and `<data>/logs/` | `<data>\logs\gateway.err.log` |
+| Gateway started in the background | `<data>/logs/gateway.log` | `<data>/logs/gateway.log` | `<data>\logs\gateway.err.log` |
+
+`<data>` is the gateway data directory; all locations are listed in
+[Operations and support](installers/operations-and-support.md#locations).
+
+## Installing
+
+### macOS will not open `AbstractFramework-Installer.pkg`
+
+- **Cause**: the package is not signed with an Apple Developer ID, so Gatekeeper blocks the first
+  double-click of a downloaded copy.
+- **Fix**: close the warning, open **System Settings > Privacy & Security**, click **Open Anyway**
+  next to the installer's name, and confirm. The **Open Anyway** button appears after you have
+  tried to open the file once.
+- **Alternative**: paste the one-line install in Terminal; it is not subject to this step.
+- **Verify**: the macOS Installer opens and then a Terminal window shows the install steps.
+
+### The installer stopped with a message
+
+Every stop names its cause and the next step. The full list of messages and what to do is the
+table in [If something goes wrong](install.md#if-something-goes-wrong). After fixing the cause,
+run the installer again: it continues where it stopped.
+
+### macOS asks to install the command line developer tools
+
+- **Cause**: something tried to compile a package. The installer itself uses prebuilt wheels only.
+- **Fix**: cancel the prompt, fetch the script again with the one-liner in
+  [Install](install.md#or-paste-one-line-in-terminal), and re-run it.
+- You need a compiler only for `--full` ([Compiled extras](install.md#compiled-extras)) or for a
+  plain `pip install` of the `apple` / `gpu` profiles.
+
+### `abstractgateway: command not found`
+
+- **Cause**: the commands live in `~/.local/bin` (`%USERPROFILE%\.local\bin` on Windows), which is
+  added to your PATH for **new** terminals.
+- **Fix**: open a new terminal, or call `~/.local/bin/abstractgateway` directly.
+- **Verify**: `abstractgateway --version`.
+
+### Windows says scripts are disabled on this system
+
+- **Cause**: an execution policy set by Group Policy (`Get-ExecutionPolicy -List` shows
+  `MachinePolicy` or `UserPolicy`) blocks saved `.ps1` files.
+- **Fix**: paste the one-liner from [Install](install.md#windows), which runs a command rather than
+  a script file, or ask your administrator.
+
+## Starting and signing in
+
+### The browser page asks for a token, or the sign-in link expired
+
+- **Cause**: the one-time link (`/console#claim=…`) is single use, valid for 10 minutes and works
+  only on the gateway's computer.
+- **Fix**: `abstractgateway claim --open` opens a fresh link (or `abstractgateway-config claim-url`
+  prints one). Re-running the installer also opens one.
+- **Alternative**: sign in with the `admin` token stored in `<data>/auth/bootstrap-admin-token`.
+
+### The gateway does not answer
+
+- **Check**: `curl -sS http://127.0.0.1:8080/api/health` and, for a login item,
+  `abstractgateway service status`.
+- **Cause**: the first start loads the local engines and can take a few minutes; a gateway that
+  exits during start writes the reason to its log (see [First checks](#first-checks)).
+- **Fix**: wait for the first start to finish, restart the computer (the login item starts the
+  gateway), or run the installer again, which repairs an interrupted install.
+- **Verify**: `/api/health` answers and `http://127.0.0.1:8080/console` opens.
+
+### The gateway is on another port
+
+- **Cause**: port 8080 was taken (for example by `llama-server` or `mlx_lm.server`), so the
+  installer used the next free port and remembered it.
+- **Fix**: use the URL the install summary prints, or choose a port with `--port N` (Windows:
+  `-Port N`) and re-run. `abstractgateway network status` shows the running address.
+
+### No gateway after a restart
+
+- **Cause**: the gateway starts at login only when a login item was registered (answering "no" to
+  the start-at-login question, or `--no-service`, skips it).
+- **Fix**: `abstractgateway service install --port 8080`, or re-run the installer and answer yes.
+
+## Connecting clients
+
+### Another device cannot reach the gateway
+
+- **Cause**: the gateway listens on this computer only until you change its Network setting.
+- **Fix**: `abstractgateway network set lan`, then apply it (`abstractgateway network restart`,
+  the console, or the menu-bar icon). `abstractgateway network addresses` lists the URLs to use.
+  See [Network setting](install.md#network-setting-who-can-reach-the-gateway).
+
+### A browser app (Observer, Flow, Code Web) cannot connect
+
+- **Check**: the gateway URL in the app, then `curl http://127.0.0.1:8080/api/health`.
+- **Fix**: sign in with a Gateway user and that user's token (the `admin` token file on a fresh
+  install), not the legacy `ABSTRACTGATEWAY_AUTH_TOKEN`. For apps served from another origin,
+  include that origin in `ABSTRACTGATEWAY_ALLOWED_ORIGINS` (local development:
+  `http://localhost:*,http://127.0.0.1:*`) or `abstractgateway network set --allowed-origins …`.
+- See [Configuration](configuration.md#client-configuration-observer--flow-editor--code-web-ui).
+
+## Models and providers
 
 ### Provider calls fail
 
-- Verify provider environment variables (see **[Configuration](configuration.md)**).
-- For local backends, make sure the server is running.
-- Run `abstractcore --status` to check persisted config.
+- **Check**: `abstractcore --status` for the persisted configuration, and whether a local server
+  (Ollama, LM Studio) is running. The console's **Engines** tab and `abstractframework doctor` show
+  which engines answer.
+- **Fix**: set the provider's environment variables or configure it in a console
+  ([Configuration](configuration.md)); start the local server.
 
-### Observer can't connect to the gateway
+### Voice models are not found
 
-- Verify the gateway URL and auth token match.
-- Ensure `ABSTRACTGATEWAY_ALLOWED_ORIGINS` includes the Observer origin (for local dev: `http://localhost:*`).
-- Confirm the gateway is reachable: `curl http://127.0.0.1:8080/api/health`.
+- **Cause**: voice models download on demand and are not part of the install.
+- **Fix**: prefetch them once, then they work offline:
 
-### Voice models not found
+  ```bash
+  abstractvoice-prefetch --stt small --piper en
+  ```
 
-Prefetch explicitly (offline-first design):
+## Reporting a problem
 
-```bash
-abstractvoice-prefetch --stt small --piper en
-```
+When a step keeps failing, open an issue at
+[github.com/lpalbou/AbstractFramework/issues](https://github.com/lpalbou/AbstractFramework/issues)
+with the output of `abstractframework doctor --json` and the install log named in the error
+message. Report security problems privately as described in [SECURITY.md](../SECURITY.md).
 
 --- docs/glossary.md ---
 # Glossary
@@ -3694,8 +3964,8 @@ If you're new, read these groups first:
 
 - **Durable execution**: run, ledger, effect, wait, artifact
 - **Workflows**: flow, bundle, interface contract
-- **Control plane**: gateway, schedule, observer, gateway console
-- **Distribution**: install profile, release pins
+- **Control plane**: gateway, schedule, observer, gateway console, Network setting
+- **Distribution**: Mac installer, bootstrap script, install profile, release pins
 
 ---
 
@@ -3857,6 +4127,24 @@ A one-time console sign-in link (`/console#claim=<code>`), single use, valid for
 
 The gateway console's setup flow, opened once per data folder by the claim link and later from the **Setup** button: host summary, local engines, a default model that fits the machine, and the apps.
 
+### Network setting
+
+The gateway's stored choice of who can reach it: `localhost` (this computer only, the default),
+`lan` or `internet`, plus the port and allowed browser origins. `abstractgateway serve` and the
+login item apply it at each start; change it with `abstractgateway network set`, the console or
+the menu-bar icon. See [Network setting](install.md#network-setting-who-can-reach-the-gateway).
+
+### Login item
+
+The per-user service that starts the gateway when you log in: a LaunchAgent on macOS
+(`~/Library/LaunchAgents/ai.abstractframework.gateway.plist`), a `systemd --user` unit on Linux, a
+Startup shortcut on Windows. Managed with `abstractgateway service install|status|uninstall`.
+
+### Menu-bar icon (tray)
+
+The gateway's status icon (the `tray` extra, installed by the installer): it opens the console,
+shows whether the gateway is running and changes the Network setting.
+
 ### Models and Engines
 
 The local model and engine management shared by AbstractCore and the gateway: a model catalog with a fit verdict for this machine (`fits`, `tight`, `too_large`, `partial_offload`, `unknown`), installed models with sizes, download and delete jobs, and detection and installation of local engines (Ollama, LM Studio, MLX, llama.cpp, vLLM, transformers). Available as `abstractcore models|engines`, `abstractgateway models|engines`, and in the consoles.
@@ -3868,6 +4156,14 @@ The local model and engine management shared by AbstractCore and the gateway: a 
 ### Install profile
 
 One of the three ways to install the pinned Python stack: **Light** (`pip install abstractframework`, remote/endpoint inference only), **Apple** (`abstractframework[apple]`, adds MLX/Metal engines on macOS 14+) and **GPU** (`abstractframework[gpu]`, adds CUDA/ROCm engines). See [Install](install.md).
+
+### Mac installer
+
+`AbstractFramework-Installer.pkg`, attached to each GitHub release. A payload-free package that
+copies **Install AbstractFramework.command** and **Uninstall AbstractFramework.command** to
+`~/Library/Application Support/AbstractFramework/Installer` and runs the bootstrap script in
+Terminal. It is not signed with an Apple Developer ID, so macOS asks you to allow it once
+(**Open Anyway**). See [Install on a Mac](install.md#install-on-a-mac).
 
 ### Bootstrap script
 
@@ -3891,7 +4187,7 @@ The durable record of what happened (ledger + artifacts). The source of truth.
 
 ### Knowledge graph (KG) memory
 
-Long-term memory stored as temporal triples (AbstractMemory), validated through the shared semantics registry (AbstractSemantics). Optional — not a hard dependency of the runtime kernel.
+Long-term memory provided by AbstractMemory: append-only temporal triples, and on top of them a usage-weighted memory graph with a journal (recall, formation, consolidation). Predicates and entity types come from the shared semantics registry (AbstractSemantics). AbstractRuntime and AbstractGateway depend on AbstractMemory.
 
 --- docs/workspace-scripts.md ---
 # Workspace scripts (working from source)
@@ -4149,7 +4445,8 @@ the machine before a download, and downloads run as background jobs with progres
 ## Out of scope
 
 Signed native launchers, enterprise MSI/pkg packages and offline bundles are not part of this
-model; see [implementation-plan.md](implementation-plan.md).
+model; see [implementation-plan.md](implementation-plan.md). The Mac installer package is not an
+exception: it carries no payload and only opens the same bootstrap script in Terminal.
 
 --- docs/installers/user-journeys.md ---
 # User Journeys
@@ -4158,6 +4455,13 @@ These flows describe exactly what the bootstrap scripts do. Commands are in
 [Install](../install.md); the model is in [strategy.md](strategy.md).
 
 ## First install on macOS
+
+With the Mac installer, the user downloads `AbstractFramework-Installer.pkg`, allows it once in
+**System Settings > Privacy & Security** (**Open Anyway**: the package is not signed with an Apple
+Developer ID), and clicks through the macOS Installer. Its postinstall copies the two `.command`
+files to `~/Library/Application Support/AbstractFramework/Installer` and opens
+`install.sh --interactive` in Terminal, which asks one question (start at login, default yes) and
+then runs the steps below. The one-line path:
 
 1. Paste in Terminal:
    `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
@@ -4174,10 +4478,13 @@ These flows describe exactly what the bootstrap scripts do. Commands are in
    no Node 18+ exists), Ollama (`--with-ollama`: the official installer, which may ask for your
    password to link `/usr/local/bin/ollama`), LM Studio (`--with-lmstudio`: the headless `llmster`
    daemon), terminal tools (`--with-console`, `--with-code-cli` through cargo).
-7. **Service**: `abstractgateway service install --host 127.0.0.1 --port 8080` registers a
-   per-user LaunchAgent and starts it, so the gateway also starts at login. With `--no-service`,
-   the script starts it in the background instead.
-8. **Health**: waits up to 60 seconds for `GET /api/health`.
+7. **Service**: `abstractgateway service install --port 8080` registers a per-user LaunchAgent
+   and starts it, so the gateway also starts at login. The LaunchAgent runs plain
+   `abstractgateway serve`, so the gateway's Network setting (default `localhost`) decides where it
+   listens. With `--no-service` (or "no" to the question), the script stores the setting and starts
+   the gateway in the background instead.
+8. **Health**: waits up to 180 seconds for `GET /api/health` (the first start loads the local
+   engines), with a progress line every 15 seconds.
 9. **Sign-in**: `abstractgateway-config claim-url` mints a one-time link valid for 10 minutes on
    this machine; if no link can be created, the script prints the path of the admin token file
    (`~/Library/Application Support/AbstractGateway/auth/bootstrap-admin-token`).
@@ -4307,8 +4614,9 @@ The console's Engines tab offers the same installs later, with the command shown
 # OS Security and Installation Blocks
 
 The bootstrap is a script, not a downloaded application, so the OS gates that block unsigned
-installers do not apply to it. This page explains what each OS checks, what the scripts do about
-it, and where code signing is still required.
+installers do not apply to the one-line install. The Mac installer package is a downloaded file,
+so Gatekeeper asks the user to allow it once. This page explains what each OS checks, what the
+scripts do about it, and where code signing applies.
 
 ## macOS (Gatekeeper)
 
@@ -4316,9 +4624,16 @@ it, and where code signing is still required.
   signature and notarization. Files fetched by `curl` carry no `com.apple.quarantine` attribute,
   so `curl … | sh` and the binaries it installs (uv, the uv-managed Python, wheels) run without a
   Gatekeeper prompt.
+- `AbstractFramework-Installer.pkg` is not signed with an Apple Developer ID. A browser download
+  is quarantined, so the first double-click is blocked; the user allows it once with **Open
+  Anyway** in **System Settings > Privacy & Security**. The package is payload-free: it copies the
+  two `.command` files into the user's Library and opens `install.sh` in Terminal, installing
+  nothing outside the home folder. `scripts/lib/build_macos_installer.sh` signs, notarizes and
+  staples it when a Developer ID Installer identity and a notarytool profile are provided.
 - The optional vendor installers (Ollama, LM Studio) are signed and notarized by their vendors.
-- The gateway binds `127.0.0.1`, so the macOS Application Firewall does not ask to accept incoming
-  connections.
+- The gateway binds `127.0.0.1` by default, so the macOS Application Firewall does not ask to
+  accept incoming connections. Choosing `lan` or `internet` in the Network setting binds all
+  interfaces, and the firewall may then ask once.
 
 ## Windows (SmartScreen and execution policy)
 
@@ -4359,7 +4674,9 @@ it, and where code signing is still required.
 
 ## Network exposure
 
-- The gateway binds `127.0.0.1` in every bootstrap path.
+- The gateway binds `127.0.0.1` in every bootstrap path. Exposure beyond this machine is an
+  explicit choice in the gateway's Network setting (`abstractgateway network set lan|internet`),
+  which turns user accounts on; see [Network setting](../install.md#network-setting-who-can-reach-the-gateway).
 - One-time sign-in links (`abstractgateway-config claim-url`) are single use, expire after 10
   minutes and are accepted only from a loopback client.
 - The admin token file is written with mode `0600`; the scripts print its path, not its content.
@@ -4375,9 +4692,11 @@ it, and where code signing is still required.
 
 ## Where code signing still applies
 
-Native double-click artifacts need signatures: the AbstractAssistant `.app` (Developer ID +
-notarization + stapling) and any future Windows `.exe`/`.msi` launcher (Authenticode). The
-bootstrap and everything it installs need no signature of ours.
+Native double-click artifacts need signatures to open without a prompt: the Mac installer package
+(Developer ID Installer + notarization; unsigned releases ask for **Open Anyway** once), the
+AbstractAssistant `.app` (Developer ID + notarization + stapling) and any future Windows
+`.exe`/`.msi` launcher (Authenticode). The one-line bootstrap and everything it installs need no
+signature of ours.
 
 ## GPU drivers
 
@@ -4399,7 +4718,7 @@ install itself is described in [user-journeys.md](user-journeys.md).
 | Gateway environment | `~/.local/share/uv/tools/abstractgateway` | same | `%APPDATA%\uv\data\tools\abstractgateway` |
 | Gateway data | `~/Library/Application Support/AbstractGateway` | `${XDG_DATA_HOME:-~/.local/share}/abstractgateway` | `%LOCALAPPDATA%\AbstractGateway` |
 | Admin token (0600) | `<data>/auth/bootstrap-admin-token` | same | same |
-| Logs | `<data>/logs/gateway.log`, `<data>/logs/install-*.log` | same | `<data>\logs\gateway.err.log`, `install-*.log` |
+| Logs | `<data>/logs/install-*.log`; background start `<data>/logs/gateway.log`; login item `~/Library/Logs/AbstractGateway/gateway.{out,err}.log` | `<data>/logs/install-*.log`, `<data>/logs/gateway.log` | `<data>\logs\gateway.err.log`, `install-*.log` |
 | Bootstrap state (port, mode, profile) | `<data>/bootstrap.env` | same | same |
 | AbstractCore config | `~/.abstractcore/config/abstractcore.json` | same | `%USERPROFILE%\.abstractcore\config\abstractcore.json` |
 
@@ -4435,8 +4754,12 @@ Add `--json` for tooling and `--no-network` to skip the HTTP probes.
 
 ## Uninstall
 
-`sh install.sh --uninstall [--purge]` or `install.ps1 -Uninstall [-Purge]`. Data is kept unless
-you purge it.
+`sh uninstall.sh` (or the **Uninstall AbstractFramework.command** file) asks before removing
+anything; `sh install.sh --uninstall [--purge] [--remove-uv]` or `install.ps1 -Uninstall [-Purge]`
+do the same without the questions. Data is kept unless you purge it. See
+[Remove AbstractFramework](../install.md#remove-abstractframework).
+
+More symptoms and fixes: [Troubleshooting](../troubleshooting.md).
 
 --- docs/installers/release-and-manifest.md ---
 # Release and Install Manifest
@@ -4488,11 +4811,15 @@ disagree.
 5. Run `python -m pytest -q` and `bash scripts/tests/test_inventory.sh`. CI's `bootstrap-smoke`
    job installs the published pin on Ubuntu, macOS and Windows.
 
-## Signed artifacts
+## Release assets
 
-The bootstrap installs PyPI and npm packages and vendor installers, so the release pipeline
-publishes no signed installers. Native apps that need signing (the AbstractAssistant `.app`)
-publish their artifacts on their own release pages; see
+The bootstrap installs PyPI and npm packages and vendor installers. Each GitHub release of this
+repository carries `AbstractFramework-Installer.pkg`, built from the release tag by
+`scripts/lib/build_macos_installer.sh --version <version>` so the embedded `install.sh` carries
+that release's gateway pin; `releases/latest/download/AbstractFramework-Installer.pkg` serves the
+newest one. The package is unsigned unless the build is given a Developer ID
+(`AF_PKG_SIGN_IDENTITY`, `AF_NOTARY_PROFILE`). Native apps that need signing (the
+AbstractAssistant `.app`) publish their artifacts on their own release pages; see
 [security-and-os-blocks.md](security-and-os-blocks.md#where-code-signing-still-applies).
 
 --- docs/scenarios/README.md ---
