@@ -40,3 +40,8 @@ console toggle), 0859 (launcher port defaults), 0860 (ADR-0034 order list).
 
 - Release report: `untracked/mission-install/release-root-0.2.0.md` (local, not published).
 - Design and contracts: `untracked/mission-install/DESIGN.md`, `CONTRACTS.md` (local).
+
+## Follow-up status (2026-09-25 trace)
+
+All five follow-ups remain open after the 2026-09-24 waves (0856, 0857, 0858, 0859, 0860 carry
+2026-09-25 status notes). The next wave's records: 0863–0867.

@@ -40,3 +40,9 @@ fix for a later wave rather than release three patches now.
 - Upstream llama.cpp wheels: Metal 0.3.28 works on Apple Silicon (0.3.32–0.3.35 Metal wheels fail
   zip checks), CPU 0.3.35 works on Linux x86_64 and Windows. No Linux aarch64 or Intel macOS wheels.
 - Related: 0855 (install wave), 0856 (Windows validation), ADR-0038.
+
+## Status update 2026-09-25 (post-release trace)
+
+Still open at abstractcore 2.15.1 (`all-apple` / `all-gpu` still carry `llama-cpp-python`); the
+0.3.0 and 0.3.1 root dry-run matrices resolve only with the installer's rules. Related: 0881
+(`evdev` sdist on Linux via abstractassistant).

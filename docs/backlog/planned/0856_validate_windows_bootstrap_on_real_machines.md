@@ -38,3 +38,10 @@ or VM Windows 10 22H2 / Windows 11 machine (x64 and ARM64), and the gateway's Wi
 - [ ] Evidence (logs, screenshots) for Windows 10 22H2 x64 and Windows 11 x64/ARM64.
 - [ ] A `bootstrap-smoke` Windows leg that runs without `-NoService`, or a documented reason why not.
 - [ ] Windows service support no longer marked experimental, or the limits documented.
+
+## Status update 2026-09-25 (post-release trace)
+
+Not done. The 2026-09-24 waves changed `install.ps1` (plain `serve` registration, Network setting
+seeded at install) with read review only (no pwsh on the release machine); the Windows service
+path is still validated by doubles only. Still an owner follow-up in
+`untracked/release-2026-09-24/STATUS.md`.

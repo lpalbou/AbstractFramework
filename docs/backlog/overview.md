@@ -6,13 +6,49 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-- Planned: many legacy items plus active cross-package work.
-- Proposed: legacy proposed items exist.
-- Completed: historical completion ledger exists under `completed/`.
-- Deprecated: not yet normalized at the root level.
-- Recurrent: not yet normalized at the root level.
+On-disk item files on 2026-09-25 (recursive, topic tracks included; README, overview, template and
+`evidence/` files excluded). The legacy part of the backlog still breaks the one-ID-one-item rule,
+so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findings) and 0889.
+
+| State | Files | Notes |
+|---|---|---|
+| Planned | 116 | 72 flat + tracks: agency-parity 11, app-surfaces 7, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Proposed | 23 | Includes tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
+| Completed | 222 | Includes tracks runtime-artifact-observability 9, multimodal-capabilities 1. |
+| Deprecated | 0 | |
+| Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
+
+Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
 
 ## Next Recommended Work
+
+Release follow-ups (after the 2026-09-24 waves; see [Release Trace](#release-trace)):
+
+1. Owner actions and decision gates: sign and notarize the Mac installer
+   ([0868](planned/0868_sign_and_notarize_the_mac_installer.md)); rotate the leaked agora keys
+   ([0851](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md)); rule on the Apple
+   text tiers ([0869](planned/0869_apple_text_tier_boundaries_vs_the_fit_budget.md)) and on the
+   gateway roles ([0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)); crates.io
+   trusted publishing ([0857](planned/0857_crates_io_trusted_publishing_for_console_crates.md)).
+2. Public-surface leaks first: the gateway docs site publishes `docs/backlog/**`
+   ([0884](planned/docs-hygiene/0884_gateway_docs_site_excludes_the_backlog.md)); the console ships
+   maintainer HTML comments ([0885](planned/docs-hygiene/0885_gateway_console_ships_no_internal_html_comments.md)).
+3. Next abstractcore patch: default MLX id ([0874](planned/0874_core_default_mlx_model_id_names_a_missing_repo.md)) and
+   llms sources ([0882](planned/docs-hygiene/0882_core_llms_sources_cover_every_user_page.md)) — both
+   already committed on local `main`, unreleased — plus the tier ruling (0869).
+4. One-click completeness: console TUI release binaries
+   ([0876](planned/app-surfaces/0876_gateway_console_tui_release_binaries.md)), Assistant sign-in
+   handover ([0875](planned/app-surfaces/0875_assistant_one_time_sign_in_handover.md)), the
+   `allow_engine_install` switch the UI already points at
+   ([0858](planned/0858_console_toggle_for_allow_engine_install.md)), Linux `evdev`
+   ([0881](planned/app-surfaces/0881_assistant_linux_input_dependency_with_wheels.md)), compiled
+   packages out of the default extras ([0861](planned/0861_compiled_packages_out_of_the_default_extras.md)).
+5. Release tooling: planner scratch discovery ([0871](planned/0871_release_planner_must_skip_scratch_trees.md)),
+   ADR-0034 order ([0860](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md)), test
+   isolation for the remaining packages ([0849](planned/0849_test_suites_must_not_reach_the_operators_live_stack.md)),
+   backlog normalization ([0889](planned/0889_normalize_the_legacy_root_backlog.md)).
+
+Longer-running architecture work (unchanged since before the waves):
 
 1. Finish the second wave of the Core/Runtime route substrate: direct Core, local Runtime, remote Runtime, and Core server must consume the same resolved-route semantics and denial rules.
 2. Lock the Gateway action-descriptor contract over the implemented Core `request/output` and Runtime `resolved_actions` substrate instead of letting clients keep private capability taxonomies.
@@ -25,16 +61,16 @@ the lifecycle folders described by the backlog process.
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
 | 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
-| 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.14.0) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
+| 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
 | 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned (not started; the 0.2.0 wave kept the existing extras) | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
-| 0856 | [Validate the Windows bootstrap and gateway service on real machines](planned/0856_validate_windows_bootstrap_on_real_machines.md) | Planned | `install.ps1` has CI (`windows-latest`, `-NoService`) and container parse/dry-run evidence only; validate PS 5.1/7 on Windows 10 22H2 and 11 (x64/ARM64), the Startup service entry, winget installs, NTFS token permissions. |
-| 0857 | [crates.io trusted publishing for the console crates](planned/0857_crates_io_trusted_publishing_for_console_crates.md) | Planned | `abstractcore-console` 0.2.0 and `abstractgateway-console` 0.7.0 were published with a local token; configure OIDC trusted publishing in both release workflows. |
-| 0858 | [Console toggle for `allow_engine_install`](planned/0858_console_toggle_for_allow_engine_install.md) | Planned | Today only `POST /admin/runtime-config` changes it; add an audited admin switch in the web and terminal consoles. |
-| 0859 | [Launcher port defaults match the stack map](planned/0859_launcher_port_defaults_match_the_stack_map.md) | Planned | `apps_common.sh` / `gateway-flow*.sh` defaults differ from the documented stack ports; `local_pythonpath` is stale. |
-| 0860 | [ADR-0034: release order from the inventory tiers](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md) | Planned | The ADR's hand-written order is stale; `scripts/lib/packages.txt` + `deps.sh` are authoritative. |
+| 0856 | [Validate the Windows bootstrap and gateway service on real machines](planned/0856_validate_windows_bootstrap_on_real_machines.md) | Planned (not started; 0.3.x changed `install.ps1` with read review only) | `install.ps1` has CI (`windows-latest`, `-NoService`) and container parse/dry-run evidence only; validate PS 5.1/7 on Windows 10 22H2 and 11 (x64/ARM64), the Startup service entry, winget installs, NTFS token permissions. |
+| 0857 | [crates.io trusted publishing for the console crates](planned/0857_crates_io_trusted_publishing_for_console_crates.md) | Planned (still open: 0.8.0 token-published 2026-09-24) | `abstractcore-console` 0.2.0 and `abstractgateway-console` 0.7.0 / 0.8.0 were published with a local token; configure OIDC trusted publishing in both release workflows. |
+| 0858 | [Console toggle for `allow_engine_install`](planned/0858_console_toggle_for_allow_engine_install.md) | Planned (still open in gateway 0.4.2) | Only `POST /admin/runtime-config` changes it, yet console and network texts already point users at "Settings → allow_engine_install"; add the audited admin switch in the web and terminal consoles. |
+| 0859 | [Launcher port defaults match the stack map](planned/0859_launcher_port_defaults_match_the_stack_map.md) | Planned | `apps_common.sh` / `gateway-flow*.sh` defaults differ from the stack map the gateway adopted in 0.4.1; `local_pythonpath` is stale; then retire the gateway's legacy probe ports 3000/3007. |
+| 0860 | [ADR-0034: release order from the inventory tiers](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md) | Planned | The ADR's hand-written order is stale (core and runtime in one tier; the 2026-09-24 patch wave had to run core → runtime → gateway → root); `scripts/lib/packages.txt` + `deps.sh` are authoritative. |
 | 0861 | [Compiled packages out of the default `all-apple` / `all-gpu` extras](planned/0861_compiled_packages_out_of_the_default_extras.md) | Planned | `llama-cpp-python`, `stable-diffusion-cpp-python`, `aec-audio-processing` are source-only on PyPI; the pip route needs a compiler until they become opt-in (later wave, owner decision 2026-09-24). |
 | 0848 | [Supervisor must not blame model inference for a blocked gateway](planned/0848_supervisor_must_not_blame_inference_for_a_blocked_gateway.md) | Planned (not started) | The unhealthy banner asserts a cause it cannot observe; it was wrong 4/4 on 2026-09-17 (the cause was a workflow publish rebuilding the host on the event loop). Point at `runtime/audit_log.jsonl` and the ledgers. |
-| 0849 | [Test suites must not reach the operator's live stack](planned/0849_test_suites_must_not_reach_the_operators_live_stack.md) | Planned (abstractassistant guarded; other packages not audited) | An assistant GUI test republished the live gateway's managed workflow twice, costing two ~60 s stalls. abstractassistant is now guarded; audit every other package. |
+| 0849 | [Test suites must not reach the operator's live stack](planned/0849_test_suites_must_not_reach_the_operators_live_stack.md) | Planned (abstractassistant, abstractcore, abstractgateway guarded; runtime, agent and the rest open) | An assistant GUI test republished the live gateway's managed workflow twice, costing two ~60 s stalls. Core and gateway slice done 2026-09-24 ([0866](completed/0866_test_isolation_in_abstractcore_and_abstractgateway.md)); audit the remaining packages. |
 | 0142 | [Gateway tenant isolation and shared runtime design](planned/0142_gateway_tenant_isolation_and_shared_runtime.md) | Planned | Define and implement tenant-aware Gateway/Runtime isolation; current shared Gateway deployments are single-user or trusted-cohort only. |
 | 076 | [OpenAI Responses API integration](planned/076_openai_responses_api_integration.md) | Planned | Define a true Core Server `/v1/responses` contract, use native Responses transports where available, and require Core-owned first-class Responses adapters for MLX, HuggingFace, Anthropic, and non-native endpoint profiles. |
 | 0143 | [Shared Gateway per-principal runtime router](planned/0143_shared_gateway_per_principal_runtime_router.md) | In progress | Gateway principal auth, admin user CRUD, per-principal GatewayService routing, and Flow browser-session routing landed; broader app auth and route-family isolation remain open. |
@@ -49,7 +85,44 @@ the lifecycle folders described by the backlog process.
 | 0201-0207,0209-0210 | [Multimodal capability projection and workflow-callability track](planned/multimodal-capability-projection/README.md) | In progress | The first Core/Runtime substrate wave is landed: Core `request=` + resolved-route metadata and Runtime `resolved_actions` export. Gateway descriptors, replay envelopes, and client adoption still remain. |
 | 0212-0222 | [Agency parity track (Codex-0.89 gaps)](planned/agency-parity/README.md) | In progress | Implemented + tested: 0212 (prefix-cache stability), 0213 (context fidelity/thought retention), 0214 (parallel read-only tools), 0216 (edit_file safety + CRLF/dash-line follow-ups), 0217 (verifier + update_plan + inject_guidance + default RetryPolicy), 039 (arg coercion + PEP-563 schema-type fix), 0215 engine + generalized output offload, 0220 (persistent-shell tools — opt-in, approval-gated, live-verified on OVH gpt-oss-120b). LIVE evidence recorded 2026-07-08 (track README "Live evidence"): prefix stability 12/12 + OpenAI cached_tokens 60.9%, thought retention, 2.09× parallel tools, verifier live catch, edit_file traps 3/3. Remaining: 0218 (design-first context-budget survival), 0219 (retrieval/project memory — owned elsewhere), unified prompt-caching strategy (0221). ADR-0026 binding: no lossy truncation in the loop. |
 | 0232 | [Sandbox `execute_command` and fix workspace path containment](planned/0232_execute_command_sandboxing_and_workspace_path_containment.md) | Planned | P0 security. `execute_command` is raw `sh -c` with the full inherited environment and no filesystem containment, so a `write_file` refused by `workspace_only` succeeds via shell heredoc (observed live 2026-07-30); `~/.abstractcode/gateway.json` and `~/.codex/auth.json` are readable, subsuming the `fetch_url` approval gate. Path containment is string-based, so case-variant and Unicode-NFD denylist bypasses work on APFS and `workspace_allowed_paths` pointing at the workspaces base exposes 1,746 sibling workspaces. Proposes fail-loud workspace clamping, identity-based (`st_dev`,`st_ino`) containment with `openat`+`O_NOFOLLOW`, per-invocation OS sandbox (sandbox-exec/bubblewrap) with container fallback, environment scrubbing, and approval tiering that forbids auto-approving `execute_command` while unsandboxed. |
-| 0233 | [Real run cancellation: abort in-flight LLM calls](planned/0233_real_run_cancellation_abort_in_flight_llm_calls.md) | Planned | P1. `/cancel` is a state write only — `cancel_run` sets `status=CANCELLED` and returns while the tick thread stays blocked in `llm.generate()`, so the generation runs to completion and keeps burning GPU/paid tokens (observed: 5 overlapping generation pairs, largest 211s). Threads a cancellation token through abstractcore (HTTP abort, extending the existing `cancel_event`), abstractruntime, abstractgateway and abstractcode-tui, with an honest `cancelled_in_flight` ledger outcome and a client message that distinguishes 'marked cancelled' from 'stopped'. |
+| 0868 | [Sign and notarize the Mac installer](planned/0868_sign_and_notarize_the_mac_installer.md) | Planned (owner action: Developer ID) | The `.pkg` on releases v0.3.0/v0.3.1 is unsigned; sign, notarize, staple, replace the asset, then update the nine doc places that teach **Open Anyway**. |
+| 0869 | [Apple text tier boundaries vs the fit budget](planned/0869_apple_text_tier_boundaries_vs_the_fit_budget.md) | Planned (operator decision gate) | Flash-Next on stock 128 GiB Macs and 27B on 24 GiB Macs fail the fit check they ship with; rule on the boundaries (9B below 32 GiB proposed). |
+| 0870 | [Operator rulings for gateway roles (0862)](planned/0870_operator_rulings_for_gateway_roles_0862.md) | Planned (operator decision gate) | Viewer role? Members configure their own entities? Require or prompt for a member account off localhost? |
+| 0871 | [Release planner must skip scratch trees](planned/0871_release_planner_must_skip_scratch_trees.md) | Planned | `abstract_release_plan.py` walks `untracked/`, worktrees and runtime workspaces; scratch package copies can pollute a plan. |
+| 0872 | [Runtime `MODELS_ENGINES_MIN_ABSTRACTCORE` floor](planned/0872_runtime_models_engines_floor_matches_the_cancel_signature.md) | Planned | Constant says 2.14.0; the 0.4.34 cancel signature needs 2.15.1 (pyproject floor already 2.15.1). |
+| 0873 | [Root launchers stop exporting legacy backlog env](planned/0873_root_launchers_stop_exporting_legacy_backlog_env.md) | Planned | `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT` / `BACKLOG_EXEC_RUNNER` are stored settings since gateway 0.4.1; Continuum labels the exports "environment (legacy)". |
+| 0874 | [Core default MLX model id names a missing repo](planned/0874_core_default_mlx_model_id_names_a_missing_repo.md) | Planned (fix committed on local core `main`, unreleased) | `mlx-community/Qwen3-4B` does not exist; `…-4bit` does. |
+| 0889 | [Normalize the legacy root backlog](planned/0889_normalize_the_legacy_root_backlog.md) | Planned | 24 stale planned copies of completed items, 231 non-`NNNN_` filenames, reused IDs; blocks reliable counts. |
+| 0875-0881 | [App surfaces track](planned/app-surfaces/README.md) | Planned | Seams between the gateway's apps manager and each app (Assistant handover, console TUI binaries, Continuum flags/seat/dev port, Entity dead variable, Linux `evdev`). |
+| 0882-0888 | [Docs hygiene track](planned/docs-hygiene/README.md) | Planned | Code-vs-docs conflicts and publishing gaps from the 2026-09-25 coredoc pass. |
+
+## App Surfaces Planned Track
+
+Track README: [planned/app-surfaces/README.md](planned/app-surfaces/README.md).
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0875 | [Assistant one-time sign-in handover](planned/app-surfaces/0875_assistant_one_time_sign_in_handover.md) | Planned | Console/tray open the Assistant (gateway 0.4.2) but not signed in; reuse the TUI handover pattern. |
+| 0876 | [Gateway console TUI release binaries](planned/app-surfaces/0876_gateway_console_tui_release_binaries.md) | Planned | crates.io only today; add binaries + `SHA256SUMS` like abstractcode so the console installs it in one click. |
+| 0877 | [Continuum server settings as launch flags](planned/app-surfaces/0877_continuum_server_settings_as_launch_flags.md) | Planned | Env-only configuration; `--help` incomplete. |
+| 0878 | [Continuum hub seat default is a personal name](planned/app-surfaces/0878_continuum_hub_seat_default_is_a_personal_name.md) | Planned | Default seat `laurent`. |
+| 0879 | [App dev ports match the stack map](planned/app-surfaces/0879_app_dev_ports_match_the_stack_map.md) | Planned | Continuum dev on 3003 (Code's port, `--strictPort`), Entity dev on 3007. |
+| 0880 | [Entity `ABSTRACTENTITY_OBSERVER_URL` is dead](planned/app-surfaces/0880_entity_observer_url_is_a_dead_variable.md) | Planned | Injected by the server and root launchers, read by nothing. |
+| 0881 | [Assistant Linux input dependency with wheels](planned/app-surfaces/0881_assistant_linux_input_dependency_with_wheels.md) | Planned | `pynput` → `evdev` sdist on Linux; pre-existing gap in the root install matrix. |
+
+## Docs Hygiene Planned Track
+
+Track README: [planned/docs-hygiene/README.md](planned/docs-hygiene/README.md).
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 0882 | [Core llms sources cover every user page](planned/docs-hygiene/0882_core_llms_sources_cover_every_user_page.md) | Planned (fix committed on local core `main`, unreleased) | 20 user pages were missing from `llms-full.txt` at 2.15.1. |
+| 0883 | [Root llms-full generator file list](planned/docs-hygiene/0883_root_llms_full_generator_file_list.md) | Planned | Lacks troubleshooting, inlines 35 backlog/research files, no `--check`. |
+| 0884 | [Gateway docs site excludes the backlog](planned/docs-hygiene/0884_gateway_docs_site_excludes_the_backlog.md) | Planned | `mkdocs.yml` has no `exclude_docs`; `docs/backlog/**` is public. |
+| 0885 | [Gateway console ships no internal HTML comments](planned/docs-hygiene/0885_gateway_console_ships_no_internal_html_comments.md) | Planned | 35 comments in served console markup, some maintainer history. |
+| 0886 | [Docs sites redeploy on main](planned/docs-hygiene/0886_docs_sites_redeploy_on_main.md) | Planned | Core site stale since 2026-05-27 (no deploy job); runtime/gateway deploy on tags only. |
+| 0887 | [CHANGELOG histories without maintainer narrative](planned/docs-hygiene/0887_changelog_histories_without_maintainer_narrative.md) | Planned | ui-kit 0.1.9 history and Entity pre-release CHANGELOG. |
+| 0888 | [Runtime ROADMAP is stale](planned/docs-hygiene/0888_runtime_roadmap_is_stale.md) | Planned | Says v0.4.2; dead backlog link. |
 
 ## Gateway Control Plane Planned Track
 
@@ -136,7 +209,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0208 | [AbstractCore lightweight capability surface boundary](proposed/0208_abstractcore_lightweight_capability_surface_boundary.md) | Proposed | Preserve the Gateway/Core entrypoint split by keeping Gateway actions durable/high-level and only promoting a narrower Core-side discovery contract if direct Core demand proves it is needed. |
 | 0211 | [Public generate route override surface](proposed/0211_public_generate_route_override_surface.md) | Proposed | Keep structured temporary route overrides deferred until the internal resolved-route contract, topology parity, and Gateway policy ceilings are stable; if promoted later, prefer a separate advanced override surface over nesting route objects inside `request` or `output`. |
 | 0230 | [Spatial memory: rooms and objects as entity recall anchors](proposed/0230_spatial_memory_rooms_for_entities.md) | Proposed | Maintainer proposal (team vote): give each summoned entity an inhabitable space it can populate with valued objects/texts/sounds; wandering/passing objects becomes a place/object recall channel (like the participants channel), fighting inward loops and giving human-like rootedness. Layer 1 = object-anchor graph channel (2D/no 3D); later layers use meshvault/abstract3d/abstractvision/abstractmusic. Non-goal: anchors never become authoritative memory or identity. |
-| 0862 | [Gateway roles: admin, member (and maybe viewer), with admin-authorised choices](proposed/0862_gateway_roles_members_and_admin_authorised_choices.md) | Proposed (operator decisions pending) | Named roles and a gateway-wide provider/model allow/deny list that members choose within; clamp member `tool_policy` and workspace self-service; per-role route contract test; prompt for a daily-use member account when network mode leaves localhost (not at first run); member invite links. Records two authorization defects found (token-only session login; `PROTECT_READ=0` reads as admin). |
+| 0862 | [Gateway roles: admin, member (and maybe viewer), with admin-authorised choices](proposed/0862_gateway_roles_members_and_admin_authorised_choices.md) | Proposed (operator decisions pending: gate [0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)) | Named roles and a gateway-wide provider/model allow/deny list that members choose within; clamp member `tool_policy` and workspace self-service; per-role route contract test; prompt for a daily-use member account when network mode leaves localhost (not at first run); member invite links. The two authorization defects it recorded (token-only session login; `PROTECT_READ=0` reads as admin) are fixed in gateway 0.4.1. |
 
 ## Runtime Artifact Observability Proposed Track
 
@@ -149,7 +222,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| 0162 | [Signed installer CI and distribution](proposed/installers/0162_signed_installer_ci_and_distribution.md) | Proposed (superseded by ADR-0038 for the bootstrap; still relevant to signed native apps only) | Move from prototype builds to signed/notarized native installer artifacts with checksums and rollback/support logs. |
+| 0162 | [Signed installer CI and distribution](proposed/installers/0162_signed_installer_ci_and_distribution.md) | Proposed (macOS `.pkg` signing promoted as 0868; superseded by ADR-0038 for the bootstrap; still relevant to signed native apps only) | Move from prototype builds to signed/notarized native installer artifacts with checksums and rollback/support logs. |
 | 0163 | [CPU local inference install profile](proposed/installers/0163_cpu_local_inference_install_profile.md) | Proposed | Evaluate `abstractframework[cpu]` separately from Light; require package-by-package backend and dependency evidence before promotion. |
 
 ## Multimodal Capabilities Completed Track
@@ -164,10 +237,36 @@ binding: no lossy truncation inside the loop. Source analysis:
 |----|------|--------|-------|
 | 0176 | [Multimodal model acquisition guidance](proposed/multimodal-capabilities/0176_multimodal_model_acquisition_guidance.md) | Proposed | Explore CLI/doctor and later console guidance for downloading/loading configured local models without conflating acquisition with defaults. |
 
+## Release Trace
+
+Released on 2026-09-24 (two waves) and verified again on 2026-09-25 by the backlog trace (PyPI,
+npm, crates.io APIs; GitHub releases). Record: [0867](completed/0867_release_waves_2026_09_24_and_coredoc_pass.md).
+
+| Package | Version(s) | Tag → commit | Registry |
+|---|---|---|---|
+| abstractcore | 2.15.0, 2.15.1 | `v2.15.0` → `12528d3`, `v2.15.1` → `e91fe9b` | PyPI; GHCR `abstractcore-server:2.15.0` / `:2.15.1` |
+| AbstractRuntime | 0.4.34 | `v0.4.34` → `a2e0e94` | PyPI (workflow_dispatch from `main`) |
+| abstractgateway | 0.4.1, 0.4.2 (`v0.4.0` tag has no artifacts) | `v0.4.1` → `1075cde`, `v0.4.2` → `4b08b95` | PyPI; GHCR `abstractgateway:0.4.2` / `:latest` / `:0.4.2-gpu` |
+| abstractgateway-console (crate) | 0.8.0 | — | crates.io (local token; 0857) |
+| @abstractframework/ui-kit | 0.1.11 | `v0.1.11` → `ccd9184` | npm |
+| @abstractframework/continuum | 0.3.0 | `v0.3.0` → `8e89b8c` | npm (CI, provenance) |
+| @abstractframework/entity | 0.2.0 | `v0.2.0` → `d8ea226` | npm (CI, provenance) |
+| abstractframework (root) | 0.3.0, 0.3.1 | `v0.3.0` → `0565c43`, `v0.3.1` → `cb29dda` | PyPI; GitHub releases with `AbstractFramework-Installer.pkg` (unsigned; 0868) |
+
+Root 0.3.1 pins abstractcore 2.15.1, abstractgateway 0.4.2, AbstractRuntime 0.4.34. Docs pass
+2026-09-25 (docs-only `main` commits): runtime `696f386`, core `194c312`, gateway `3312bfe`, root
+`cfb4926`, continuum `7bc4616`, entity `f3b5a11`, uic `9a307b3`.
+
 ## Recent Completed Work
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0867 | [Release waves of 2026-09-24 and the 2026-09-25 docs pass](completed/0867_release_waves_2026_09_24_and_coredoc_pass.md) | 2026-09-25 | Trace of root 0.3.0 and patch 0.3.1 (versions, tags, registries, incidents) plus the coredoc commits; follow-ups 0868–0888. |
+| 0866 | [Test isolation in abstractcore and abstractgateway](completed/0866_test_isolation_in_abstractcore_and_abstractgateway.md) | 2026-09-24 | HOME/HF_HOME per test, socket + subprocess guards, `network`/`real_home` markers; full suites leave the real home untouched. Slice of 0849. |
+| 0865 | [Core catalog tiers, MTP companions and offline-first loading](completed/0865_core_catalog_tiers_companions_and_offline_first_loading.md) | 2026-09-24 | abstractcore 2.15.0/2.15.1: Apple memory tiers, companion downloads, `models verify`, no process-wide HF offline writes, cancel attribution. |
+| 0864 | [Gateway engines, apps, tray and network settings](completed/0864_gateway_engines_apps_tray_and_network_settings.md) | 2026-09-24 | abstractgateway 0.4.1/0.4.2: engines without a terminal, gateway-managed apps with signed-in open, Network setting, tray control centre, settings instead of env vars. |
+| 0863 | [First-run console and one-action Mac installer](completed/0863_first_run_console_and_one_action_mac_installer.md) | 2026-09-24 | Root 0.3.0/0.3.1: `.pkg` + `.command` + uninstaller, full-page setup guide; fresh install 76 s to a signed-in console. |
+| 0233 | [Real run cancellation: abort in-flight LLM calls](completed/0233_real_run_cancellation_abort_in_flight_llm_calls.md) | 2026-09-23 | Closed by the 2026-09-25 trace (was still planned): core 2.13.41 `cancel_event`, runtime 0.4.32 cancel reaches the effect, gateway 0.2.30 kill switch; decode stops within one token. |
 | 0855 | [One-line install, first-run console and model/engine management](completed/0855_one_line_install_and_model_management_wave.md) | 2026-09-23 | Root 0.2.0: uv-based `install.sh`/`install.ps1` defaulting to gateway 0.3.0 (service + claim link), doctor probes, manifest v2, `CRATE_RELEASE_VERSIONS`, 30-package inventory with `abstractcore-console`, docs; pins core 2.14.0, runtime 0.4.33, gateway 0.3.0. |
 | 0198 | [Observer observability replay workbench](completed/runtime-artifact-observability/0198_observer_observability_replay_workbench.md) | 2026-06-06 | Added bounded artifact summaries and indexed session-turn discovery to Runtime history bundles, plus an Observe Replay tab and monitor-only Runtime Activity actions. |
 | 0199 | [AbstractFlow and AbstractAssistant vision LoRA and batch surface](completed/0199_abstractflow_and_abstractassistant_vision_lora_and_batch_surface.md) | 2026-06-14 | Flow now surfaces task-filtered provider/model discovery, `count`, ordered `seeds`, and stacked LoRA adapters in the media node authoring UI, while Assistant forwards the same route fields and adapter discovery through its Gateway thin-client path. |
@@ -202,8 +301,35 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0140 | [Abstract Release Skill](completed/0140_abstract_release_skill.md) | 2026-05-24 | Added a read-only framework release orchestration skill with package discovery, release-wave planning, dependency-floor review, root profile pin drift checks, PyPI visibility gates, and approval/traceability guidance. |
 | 0139 | [Unified Framework Capability Defaults](completed/0139_unified_framework_capability_defaults.md) | 2026-05-24 | Core-owned routing defaults for input/output/embedding/rerank, Gateway control-plane access, atomic provider/model resolution, catalog-backed Flow defaults UI, and qwen3.6 text default. |
 
+## Hygiene Findings
+
+Scan of 2026-09-25 (details and fix plan in [0889](planned/0889_normalize_the_legacy_root_backlog.md)):
+
+- 24 filenames exist in both `planned/` and `completed/` (035, 036, 041, 042, 043, 102–120): the
+  planned copies are stale.
+- 231 item files lack a four-digit `NNNN_` prefix (three-digit legacy names, hub-era
+  `NNN-<package>-…` names, `2026-05-08_*` date prefixes in `proposed/` and `completed/`).
+- Reused IDs, e.g. `001`–`018` (legacy and hub-era), `0212`–`0214` (`planned/agency-parity/` and
+  `proposed/`).
+- `planned/agency-parity/` holds items marked "Done (tested)" without completion moves.
+- `scripts/gen_llms_full.py` inlines this overview and ~30 backlog items into the root
+  `llms-full.txt`, which therefore goes stale on every backlog edit (0883); it was not regenerated
+  by this trace (docs outside `docs/backlog/` are out of its scope).
+- ADR candidates flagged, not written: "no environment-variable instructions in user-facing text;
+  every setting has web, terminal and CLI doors" (applied across gateway 0.4.1, see 0864).
+
+## Planning Notes
+
+- 2026-09-25 post-release trace: closed 0233 (shipped 2026-09-23, never moved); recorded 0863–0867
+  for the 2026-09-24 waves; created 0868–0889 (two topic tracks: app-surfaces, docs-hygiene);
+  refreshed 0849, 0850, 0855, 0856, 0857, 0858, 0859, 0860, 0861, 0862, 0162 with dated status
+  notes; added `recurrent/` with the two minimum process tasks. Counts above replaced the previous
+  qualitative placeholders.
+
 ## Operating Notes
 
 - Use `docs/adr/` for durable architecture policy.
 - Use this backlog for execution traceability, validation evidence, and follow-up state.
 - New backlog item filenames should use `NNNN_<slug>.md`; date-prefixed legacy files should not be copied for new work.
+- Run the [recurrent passes](recurrent/README.md) after every release wave; the `abstract-release`
+  process expects a backlog trace (release record in `completed/`, follow-ups as items).

@@ -31,3 +31,12 @@ release workflow through OIDC, like the PyPI and npm packages.
 
 - [ ] The next patch of each crate publishes from CI with no local token.
 - [ ] Release docs describe the tag format and the trusted-publisher setup.
+
+## Status update 2026-09-25 (post-release trace)
+
+Still open. `abstractgateway-console` 0.8.0 (2026-09-24) was again published locally with cargo
+credentials: crates.io API shows `published_by: lpalbou` and no trusted-publishing data for 0.8.0
+and 0.7.0; the release ledger says the CI crate job has no trusted publisher for
+lpalbou/AbstractGateway (`release.yml`, environment `crates-io`). No STATUS addendum records the
+owner configuring it on the evening of 2026-09-24. The configuration itself cannot be read without
+the owner's crates.io session; verify with the next crate release from CI.

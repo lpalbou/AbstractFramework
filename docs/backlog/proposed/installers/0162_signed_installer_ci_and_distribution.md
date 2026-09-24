@@ -62,3 +62,9 @@ rollback, and support logs reduce failed installs and support load.
 ## Guidance for future agents
 Treat signing and rollback as release gates, not polish. A non-technical installer that trips OS
 security warnings is not production-ready.
+
+## Status update 2026-09-25 (post-release trace)
+
+The macOS half now has a concrete, committed next step: signing and notarizing the payload-free
+`AbstractFramework-Installer.pkg` shipped with root 0.3.0 / 0.3.1 → `planned/0868_sign_and_notarize_the_mac_installer.md`.
+This proposal keeps the broader CI/Windows/Linux signing idea.

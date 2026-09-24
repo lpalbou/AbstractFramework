@@ -1,10 +1,11 @@
 # 0233 — Real run cancellation: abort in-flight LLM calls
 
-**Status**: planned
+**Status**: completed
 **Priority**: P1 (wastes paid/GPU compute; operator-visible; blocks honest `/cancel`)
 **Component**: AbstractRuntime (`core/runtime.py` cancel path), AbstractCore (provider HTTP
 layer + `cancel_event`), AbstractGateway (`_apply_run_control`), AbstractCode-TUI (`/cancel`)
 **Created**: 2026-08-02
+**Completed**: 2026-09-23 (record written 2026-09-25)
 **Related**: ADR-0013 (durable run controls: pause/resume/cancel), ADR-0014 (runtime-authoritative
 timeouts), ADR-0027 (timeout policy)
 
@@ -85,3 +86,34 @@ A cancellation token threaded through the four layers, with abort at the HTTP bo
 Scope is deliberately cross-package; it cannot be fixed in one seat. Sequencing suggestion:
 abstractcore first (the token + HTTP abort is the load-bearing piece), then runtime, then the
 gateway/TUI reporting.
+
+## Completion report
+
+- Completed: 2026-09-23 (released that day); report written 2026-09-25 during the post-release
+  backlog trace. The item was still in `planned/` although the work shipped: backlog drift.
+- What landed (from the CHANGELOGs at the released tags):
+  - abstractcore 2.13.41: `generate(..., cancel_event=threading.Event)`; providers declaring
+    `supports_generation_cancel()` stop the running decode (MLX per sampled token; HTTP lanes close
+    the request); typed `GenerationCancelledError`, never retried; `unload_model()` cancels and
+    drains in-flight calls; the AbstractCore server cancels on client disconnect (499).
+    Doc: `abstractcore/docs/generation-cancel.md`.
+  - AbstractRuntime 0.4.32: `Runtime.cancel_run(...)` signals the running effect and passes the
+    event to AbstractCore; stopped steps are recorded `cancelled` (`StepStatus.CANCELLED`,
+    `EffectOutcome.cancelled`) with `cancelled_by`, never retried;
+    `core/effect_cancellation.py` (`inflight_effects()`, `request_model_effects_cancel`); eject
+    records `cancelled_by: "model_eject"`.
+  - abstractgateway 0.2.30: Stop cancels the run tree and the executing model call; kill switch
+    `stop_kill_switch_s` (default 10 s, `0` disables) injects `EffectKilled` into a call that
+    ignores its cancel; ledger steps carry `cancelled_by` / `killed_by`.
+- Validation: missions H and I (2026-09-23), orchestrator-verified — decode stops within one token,
+  run tree `CANCELLED` in ~60 ms; HTTP lanes (LM Studio, Ollama, llama.cpp server, vLLM, remote
+  AbstractCore) sever the socket so the server stops decoding (LM Studio 51% → 0% GPU); MLX eject
+  memory 4,110 → 769 MB. Evidence: `untracked/missionH/`, `untracked/missionI/`,
+  `untracked/missions-2026-09-22/SUMMARY.md` (second wave table).
+- Residual risks / follow-ups:
+  - The abstractcode terminal app does not know the `cancelled` step status (SUMMARY, third-wave
+    known limits). Owner: abstractcode; not tracked in this root backlog.
+  - Remote AbstractCore routes carry no phase events and cancel only by socket close.
+  - AbstractRuntime `MODELS_ENGINES_MIN_ABSTRACTCORE` still says 2.14.0 while the 0.4.34 cancel
+    signature needs 2.15.1: tracked by 0872.
+- ADR state: no new rule beyond ADR-0013 (durable run controls); ADR impact None.

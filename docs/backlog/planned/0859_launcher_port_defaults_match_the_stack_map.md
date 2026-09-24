@@ -22,3 +22,16 @@ older script is still found.) Also `local_pythonpath` still lists `abstractflow/
 - [ ] One port table in `docs/workspace-scripts.md`, used by every launcher.
 - [ ] Changed defaults announced in the CHANGELOG with the override variables.
 - [ ] `local_pythonpath` matches the inventory.
+
+## Status update 2026-09-25 (post-release trace)
+
+- The stack map above is correct and matches `scripts/start-local.sh` and abstractgateway 0.4.2
+  `apps_manager.STACK_PORTS` (the gateway adopted it in 0.4.1). The SUMMARY's remark that 0859's
+  map was stale refers to the pre-`6c265cf` text; no correction needed.
+- Unchanged at root `cfb4926`: `scripts/lib/apps_common.sh` (flow 3000, code 3002, continuum 3003,
+  entity 3007) and `scripts/gateway-flow.sh` / `gateway-flow-local.sh` (flow 3000, entity 3007,
+  code 3002, continuum 3003 in their printed URLs).
+- Added acceptance: once the launchers follow the map, remove the gateway's
+  `LEGACY_PROBE_PORTS = (3000, 3007)` (abstractgateway `apps_manager.py` l.109–113) in the next
+  gateway release, or record why it stays.
+- Related: 0873 (legacy backlog env exports in the same launchers), 0879 (app dev ports).

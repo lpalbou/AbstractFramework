@@ -19,3 +19,11 @@ including `abstractcore-console` at tier 1 and `abstractgateway-console` at tier
 
 - [ ] ADR-0034 revised (or superseded) with no hand-maintained package order.
 - [ ] `abstract-release` skill references the same source.
+
+## Status update 2026-09-25 (post-release trace)
+
+Still open: the ADR's "Standard Order" still lists abstractcore and abstractruntime together in
+Python Tier 1, while the 2026-09-24 patch wave had to run core 2.15.1 → runtime 0.4.34 (runtime
+floors core>=2.15.1) → gateway 0.4.2 → root 0.3.1. The ADR's own 2026-09-23 "Updated" note points
+at `packages.txt` / `deps.sh`, so the document contradicts itself. Related: 0871 (planner scratch
+discovery), 0867 (release trace).

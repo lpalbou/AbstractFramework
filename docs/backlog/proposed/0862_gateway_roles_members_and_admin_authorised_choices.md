@@ -345,3 +345,12 @@ mode leaves `localhost`.
   admin/user class and handler location, `probe_tokenonly.py`, `probe_read.py`).
 - Mission R network-exposure report: `untracked/missionR/REPORT.md`. Mission Q/S claim links:
   `untracked/missionQ/REPORT.md`, `untracked/missionS/REPORT.md`.
+
+## Status update 2026-09-25 (post-release trace)
+
+- Both defects under "Found while writing this" are fixed and released in abstractgateway 0.4.1
+  (missions BB and Z): token-only mode admits only admin accounts to the console and browser apps
+  (existing non-admin sessions end at next use, create-user 409, last-admin guard), and
+  `PROTECT_READ=0` is refused for `lan` / `internet`. Evidence: `untracked/missionBB/REPORT.md`
+  (45 tests, 10/10 mutants), `untracked/missionZ/REPORT.md`; gateway CHANGELOG 0.4.1 upgrade notes.
+- The three promotion rulings are now a board-visible operator gate: 0870.

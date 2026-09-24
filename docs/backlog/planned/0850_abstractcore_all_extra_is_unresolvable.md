@@ -66,3 +66,8 @@ Python-version issue.
 ## Receipts
 
 - Release-wave evidence: `untracked/release-2026-09-23/abstractcore-2.13.42.md` (local).
+
+## Status update 2026-09-25 (post-release trace)
+
+Still open at abstractcore 2.15.1: `pyproject.toml` `all` still lists both `llama-cpp-python` and
+`vllm>=0.6.0,<1.0.0` alongside the MLX stack. Neither 2026-09-24 wave touched the extras.
