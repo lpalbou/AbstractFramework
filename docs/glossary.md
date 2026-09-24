@@ -183,7 +183,7 @@ One of the three ways to install the pinned Python stack: **Light** (`pip instal
 
 ### Bootstrap script
 
-The one-line installer (`scripts/install.sh` for macOS and Linux, `scripts/install.ps1` for Windows). It installs uv, Python 3.12 and the pinned gateway as a uv tool, registers and starts it, and opens the console with a claim link. See [Install](install.md#quick-start).
+The one-line installer (`scripts/install.sh` for macOS and Linux, `scripts/install.ps1` for Windows). It installs uv, Python 3.12 and the pinned gateway as a uv tool, registers and starts it, and opens the console with a claim link. See [Install](install.md#advanced-what-the-installer-does).
 
 ### Release pins
 

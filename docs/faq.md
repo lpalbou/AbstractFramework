@@ -28,7 +28,7 @@ No.
 
 | Goal | Install |
 |---|---|
-| A running gateway + web console, no Python setup | the one-line bootstrap in [Install](install.md#quick-start) |
+| A running gateway + web console, no Python setup | the installer (a Mac package, or one line) in [Install](install.md) |
 | Smallest useful (LLM SDK only) | `pip install abstractcore` |
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |

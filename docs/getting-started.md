@@ -19,22 +19,27 @@ AbstractFramework is a **stack**:
 
 > **Prerequisites**: Python 3.10–3.13 for the manual installs below. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
 
-## Fastest path: the one-line install
+## Fastest path: the installer
 
-If you want a running gateway and its web console without setting up Python yourself, use the
-bootstrap script. It installs uv, Python 3.12 and the pinned gateway in your user account, registers
-it to start at login, starts it on `127.0.0.1:8080`, and opens `/console` already signed in:
+If you want AbstractFramework running on your computer without setting up Python yourself, use
+the installer. On a Mac, download and double-click
+[AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg);
+on macOS or Linux you can instead paste one line in Terminal:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --interactive
 ```
 
 On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`.
-The console's first-run guide sets up a local engine or a cloud key and a default model (the
-**Models** tab lists the models that fit your machine and downloads them). Then continue with
-[Monitor runs](#4-monitor-runs-with-abstractobserver) or [AbstractFlow](#author-orchestration-with-abstractflow).
-Options and uninstall: [Install](install.md#quick-start). The sections below cover manual installs
-for library and developer use.
+
+It installs uv, Python 3.12 and the pinned gateway in your user account (no admin password), asks
+whether to start it at login, starts it on `127.0.0.1:8080`, and opens its console in your browser
+already signed in. The console's first-run guide sets up a local engine or a cloud key and a
+default model (the **Models** tab lists the models that fit your machine and downloads them). Then
+continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
+[AbstractFlow](#author-orchestration-with-abstractflow). Step by step, what to do when something
+fails, and how to remove it: [Install](install.md). The sections below cover manual installs for
+library and developer use.
 
 ---
 

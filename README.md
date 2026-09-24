@@ -19,24 +19,31 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 
 ## Quick start
 
-One line installs the gateway (no admin rights, no system Python), registers it as a login
-service, starts it on `127.0.0.1:8080`, and opens its web console already signed in. A first-run
-guide then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits
-your machine, and lists the apps:
+The installer sets up the gateway in your user account (no admin password, no system Python),
+asks whether to start it at login, starts it on `127.0.0.1:8080`, and opens its web console in
+your browser already signed in. A first-run guide then sets up a local engine (Ollama, LM Studio,
+MLX, llama.cpp), downloads a model that fits your machine, and lists the apps.
 
-```bash
-# macOS / Linux
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
-```
+- **Mac, no Terminal:** download and double-click
+  [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
+  A Terminal window shows each step; press Return at its one question.
+- **macOS / Linux, one line:**
 
-```powershell
-# Windows 10 22H2+ / 11
-powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
-```
+  ```bash
+  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --interactive
+  ```
 
-Add `--with-apps`, `--with-ollama` or `--with-lmstudio` for Node.js and local engines, `--print` to
-see every command first, and `--uninstall` to remove it. Options, the equivalent commands and
-uninstall details: [Install](docs/install.md).
+- **Windows 10 22H2+ / 11** (PowerShell):
+
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  ```
+
+Every failure says what to do next; running the installer again repairs or upgrades in place. To
+remove it: `Uninstall AbstractFramework.command`, or
+`curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`.
+Step by step, the failure table, options (`--with-apps`, `--with-ollama`, `--print`, …):
+[Install](docs/install.md).
 
 Already have Python? Either entry point works the same way: start it, then open the link it prints.
 
