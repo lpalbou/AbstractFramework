@@ -15,6 +15,10 @@ All notable changes to AbstractFramework will be documented in this file.
   which would store `localhost` over a chosen Network mode.
 - [Architecture](docs/architecture.md) has a Mermaid component diagram of the released packages.
 - README and docs link to each component's GitHub repository.
+- `llms-full.txt` now carries the pages the docs index links, including Troubleshooting and the
+  installer implementation plan, and no longer includes backlog items or the Agent Skills research
+  notes. `python scripts/gen_llms_full.py --check` fails when it is stale or when a docs page is
+  missing from the index.
 
 ## [0.3.1] - 2026-09-24
 

@@ -1,112 +1,80 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
+import posixpath
+import re
 from pathlib import Path
 
 
-FILES: list[str] = [
+# Repository files that come first, before the user docs.
+PREAMBLE: list[str] = [
     "README.md",
     "llms.txt",
     "pyproject.toml",
     "abstractframework/__init__.py",
     "abstractframework/install_manifest.py",
     "abstractframework/cli.py",
-    "docs/README.md",
-    "docs/install.md",
-    "docs/getting-started.md",
-    "docs/architecture.md",
-    "docs/configuration.md",
-    "docs/api.md",
-    "docs/faq.md",
-    "docs/glossary.md",
-    "docs/workspace-scripts.md",
-    "docs/installers/README.md",
-    "docs/installers/strategy.md",
-    "docs/installers/user-journeys.md",
-    "docs/installers/components.md",
-    "docs/installers/security-and-os-blocks.md",
-    "docs/installers/operations-and-support.md",
-    "docs/installers/release-and-manifest.md",
-    "docs/scenarios/README.md",
-    "docs/scenarios/offline-coding-assistant.md",
-    "docs/scenarios/gateway-first-local-dev.md",
-    "docs/scenarios/specialized-agent-flow.md",
-    "docs/scenarios/workflow-bundle-lifecycle.md",
-    "docs/scenarios/telegram-permanent-contact.md",
-    "docs/scenarios/email-inbox-agent.md",
-    "docs/scenarios/phone-thin-client.md",
-    "docs/guide/README.md",
-    "docs/guide/agent-vs-llm.md",
-    "docs/guide/capability-plugins.md",
-    "docs/guide/deployment-topologies.md",
-    "docs/guide/deployment-web.md",
-    "docs/guide/deployment-iphone.md",
-    "docs/guide/gateway-security.md",
-    "docs/guide/capability-routing-defaults.md",
-    "docs/guide/runtime-scope.md",
-    "docs/guide/runtime-artifacts.md",
-    "docs/guide/flow-and-kg-memory.md",
-    "docs/guide/scheduled-workflows.md",
-    "docs/guide/prompt-caching.md",
-    "docs/guide/workflow-bundles.md",
-    "docs/guide/agent-skills.md",
-    "docs/guide/telegram-integration.md",
-    "docs/guide/email-integration.md",
-    "docs/guide/process-manager-env-vars.md",
-    "docs/backlog/overview.md",
-    "docs/backlog/completed/0141_flow_browser_session_gateway_auth.md",
-    "docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md",
-    "docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md",
-    "docs/backlog/planned/gateway-control-plane/README.md",
-    "docs/backlog/planned/gateway-control-plane/0145_gateway_admin_console_bootstrap.md",
-    "docs/backlog/planned/gateway-control-plane/0146_gateway_rbac_scope_policy_matrix.md",
-    "docs/backlog/planned/gateway-control-plane/0147_gateway_per_principal_config_secrets_defaults.md",
-    "docs/backlog/planned/gateway-control-plane/0148_gateway_workflow_registry_acl.md",
-    "docs/backlog/completed/0149_cross_app_gateway_auth_defaults_convergence.md",
-    "docs/backlog/planned/gateway-control-plane/0150_observer_manager_responsibility_split.md",
-    "docs/backlog/planned/gateway-control-plane/0153_gateway_browser_session_security_contract.md",
-    "docs/backlog/completed/0154_multi_user_security_release_blockers.md",
-    "docs/backlog/completed/0156_retained_runtime_admin_lifecycle.md",
-    "docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md",
-    "docs/backlog/planned/0164_gateway_docker_ghcr_deployment_track.md",
-    "docs/backlog/proposed/installers/README.md",
-    "docs/backlog/completed/0158_installer_repository_extraction.md",
-    "docs/backlog/completed/0159_generated_install_manifest_contract.md",
-    "docs/backlog/completed/0160_framework_doctor_and_launch_cli.md",
-    "docs/backlog/completed/0161_three_path_public_install_guide.md",
-    "docs/backlog/completed/0171_gateway_console_sandbox_client_grounding_and_media.md",
-    "docs/backlog/proposed/installers/0162_signed_installer_ci_and_distribution.md",
-    "docs/backlog/proposed/installers/0163_cpu_local_inference_install_profile.md",
-    "docs/backlog/proposed/gateway-control-plane/README.md",
-    "docs/backlog/proposed/gateway-control-plane/0151_runtime_explorer_contract.md",
-    "docs/backlog/proposed/gateway-control-plane/0152_abstractmanager_package_extraction.md",
-    "docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md",
-    "docs/backlog/planned/074_agent_skills_integration.md",
-    "docs/backlog/planned/074_agent_skills_integration_plan.md",
-    "docs/skills/claude-agent-skills-overview.md",
-    "docs/skills/claude-agent-skills-top-20.md",
-    "docs/skills/claude-agent-skills-sources.md",
-    "docs/skills/agent-skills-ecosystem-scan.md",
-    "docs/skills/agent-skills-ecosystem-sources.md",
-    "docs/skills/abstractframework-agent-skills-fit.md",
-    "docs/skills/abstractframework-architecture-deep-dive.md",
-    "docs/claude/README.md",
-    "docs/claude/claude-skills-overview.md",
-    "docs/claude/claude-skills-top-20.md",
-    "docs/claude/claude-skills-sources.md",
-    "docs/claude/abstractframework-fit.md",
 ]
 
+INDEX = "docs/README.md"
+# Folders under docs/ that are not user documentation (decisions, planning,
+# engineering notes, research); their pages never enter llms-full.txt.
+NON_USER_DIRS = ("adr", "backlog", "claude", "prompts", "reports", "research", "skills")
 
-def main() -> None:
-    repo_root = Path(__file__).resolve().parents[1]
-    out = repo_root / "llms-full.txt"
+_LINK = re.compile(r"\]\(([^\s)#]+)(?:#[^\s)]*)?\)")
 
+
+def _is_user_page(rel: str) -> bool:
+    parts = rel.split("/")
+    return parts[0] == "docs" and not (len(parts) > 2 and parts[1] in NON_USER_DIRS)
+
+
+def docs_pages(repo_root: Path) -> list[str]:
+    """The user pages, in the order `docs/README.md` links them.
+
+    The index is followed from `docs/README.md`: a linked page is included; a
+    linked folder, or a folder's `README.md`, is a sub-index whose own links
+    are followed the same way. Every top-level `docs/*.md` page must be
+    reachable, so a new page cannot be left out silently.
+    """
+
+    pages: list[str] = []
+
+    def visit(rel: str) -> None:
+        if rel in pages:
+            return
+        pages.append(rel)
+        if not rel.endswith("/README.md"):
+            return
+        base = posixpath.dirname(rel)
+        for dest in _LINK.findall((repo_root / rel).read_text(encoding="utf-8")):
+            if re.match(r"[A-Za-z][\w+.-]*:", dest) or dest.startswith("/"):
+                continue
+            target = posixpath.normpath(posixpath.join(base, dest))
+            if (repo_root / target).is_dir():
+                target = posixpath.join(target, "README.md")
+            if not target.endswith(".md") or not _is_user_page(target):
+                continue
+            if not (repo_root / target).is_file():
+                raise SystemExit(f"{rel} links to a missing page: {dest}")
+            visit(target)
+
+    visit(INDEX)
+    unlisted = sorted(
+        f"docs/{p.name}" for p in (repo_root / "docs").glob("*.md") if f"docs/{p.name}" not in pages
+    )
+    if unlisted:
+        raise SystemExit(f"{INDEX} does not link these pages: {', '.join(unlisted)}")
+    return pages
+
+
+def render(repo_root: Path) -> str:
     parts: list[str] = []
     parts.append("# AbstractFramework - llms-full\n")
     parts.append("> Full text of key files from this repo. Sections are separated by `--- <path> ---`.\n")
 
-    for rel in FILES:
+    for rel in PREAMBLE + docs_pages(repo_root):
         p = repo_root / rel
         if not p.exists():
             raise SystemExit(f"Missing file: {rel}")
@@ -114,8 +82,22 @@ def main() -> None:
         parts.append(p.read_text(encoding="utf-8"))
         if not parts[-1].endswith("\n"):
             parts.append("\n")
+    return "".join(parts)
 
-    out.write_text("".join(parts), encoding="utf-8")
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Regenerate llms-full.txt from the docs index.")
+    parser.add_argument("--check", action="store_true", help="fail when llms-full.txt is stale")
+    args = parser.parse_args()
+    repo_root = Path(__file__).resolve().parents[1]
+    out = repo_root / "llms-full.txt"
+    expected = render(repo_root)
+    if args.check:
+        if out.read_text(encoding="utf-8") != expected:
+            raise SystemExit("llms-full.txt is stale; run python scripts/gen_llms_full.py")
+        print("llms-full.txt is current")
+        return
+    out.write_text(expected, encoding="utf-8")
     print(f"Wrote {out} ({out.stat().st_size} bytes)")
 
 
