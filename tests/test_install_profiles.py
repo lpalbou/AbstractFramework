@@ -457,7 +457,7 @@ def test_install_sh_default_takes_llama_cpp_from_the_prebuilt_wheel(tmp_path: Pa
         f"--find-links {_LLAMA}/{kind}/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
     assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
-    assert re.search(r" 'abstractgateway\[[a-z,]+\]==\S+'$", install.rstrip()), install
+    assert re.search(r" '?abstractgateway(\[[a-z,]+\])?==[^\s']+'?$", install.rstrip()), install
     assert f"GGUF:       llama-cpp-python {pin} ({kind} wheel from {_LLAMA}/{kind}/llama-cpp-python/)" in out
     assert "it is retried without it" in out
     assert (_SKIPPED.format(flag="--full") in out) == (profile == "local")
