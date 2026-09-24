@@ -55,8 +55,8 @@ The response type returned by `llm.generate(...)`.
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.3.0:
-`abstractcore` 2.15.0, `abstractruntime` 0.4.33, `abstractagent` 0.3.13, `abstractgateway` 0.4.1,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.3.1:
+`abstractcore` 2.15.1, `abstractruntime` 0.4.34, `abstractagent` 0.3.13, `abstractgateway` 0.4.2,
 `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.4, `abstractvision` 0.3.29,
 `abstractmusic` 0.1.15, `abstractassistant` 0.5.0.
 

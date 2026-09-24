@@ -2,6 +2,40 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.3.1] - 2026-09-24
+
+A patch release that pins abstractcore 2.15.1 and abstractgateway 0.4.2: download cancels are
+recorded and a download that stops on its own says why; the "may not fit" warning states the
+totals it compared; one Install button per app; the Assistant appears as an app.
+
+### Changed (pins)
+
+- **abstractcore 2.15.1** (was 2.15.0), **abstractgateway 0.4.2** (was 0.4.1) and
+  **AbstractRuntime 0.4.34** (was 0.4.33; abstractgateway 0.4.2 requires it, and it passes who asked
+  for a download cancel to AbstractCore), in the base install and in the `apple` / `gpu` extras
+  (`abstractgateway[apple|gpu]==0.4.2`). The bootstrap scripts install
+  `abstractgateway[<profile>,tray]==0.4.2`. The other pins are unchanged: abstractagent 0.3.13,
+  AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29,
+  abstractmusic 0.1.15, abstractassistant 0.5.0. Unchanged too: `abstractgateway-console` 0.8.0,
+  the browser apps (continuum 0.3.0, entity 0.2.0, flow 0.3.20, code 0.4.2, observer 0.1.12) and
+  the container images (`ghcr.io/lpalbou/abstractgateway:0.4.1`,
+  `ghcr.io/lpalbou/abstractcore-server:2.15.0`).
+
+### What the new pins bring
+
+- **Downloads.** A download that stops on its own is never reported "cancelled": a cancel records
+  who asked for it (console, API, CLI, another process), and a download that ends says why in one
+  plain sentence (a dropped connection, a Hub error, a full disk, a restart). The download stops
+  when the process that started it exits. In the console, a stray click no longer cancels a
+  download: Cancel asks first ("Stop this download?").
+- **Fit warning.** A model's "may not fit" warning states the two totals its verdict compared: the
+  total need (weights plus working memory and cache) and the memory a model can use (the ceiling
+  minus the part kept free for the system).
+- **Apps.** Each app card has one **Install** button; the card then offers **Open** (and **Open in
+  Terminal** for Code, whose install brings the terminal app along).
+- **The Assistant is an app.** AbstractAssistant, the desktop menu-bar app, has its own card in
+  the gateway console: install it and open it from there (on the gateway's computer).
+
 ## [0.3.0] - 2026-09-24
 
 A Mac install that needs no Terminal knowledge (a `.pkg` or a double-click `.command`, and an

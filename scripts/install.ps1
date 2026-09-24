@@ -67,7 +67,7 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.4.1'
+$AfGatewayPinDefault = '0.4.2'
 $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.3.20', '@abstractframework/code@0.4.2', '@abstractframework/observer@0.1.12', '@abstractframework/continuum@0.3.0', '@abstractframework/entity@0.2.0')
 $AfCrateConsole = 'abstractgateway-console@0.8.0'
