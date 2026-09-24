@@ -16,10 +16,10 @@ totals it compared; one Install button per app; the Assistant appears as an app.
   (`abstractgateway[apple|gpu]==0.4.2`). The bootstrap scripts install
   `abstractgateway[<profile>,tray]==0.4.2`. The other pins are unchanged: abstractagent 0.3.13,
   AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29,
-  abstractmusic 0.1.15, abstractassistant 0.5.0. Unchanged too: `abstractgateway-console` 0.8.0,
-  the browser apps (continuum 0.3.0, entity 0.2.0, flow 0.3.20, code 0.4.2, observer 0.1.12) and
-  the container images (`ghcr.io/lpalbou/abstractgateway:0.4.1`,
-  `ghcr.io/lpalbou/abstractcore-server:2.15.0`).
+  abstractmusic 0.1.15, abstractassistant 0.5.0. Unchanged too: `abstractgateway-console` 0.8.0
+  and the browser apps (continuum 0.3.0, entity 0.2.0, flow 0.3.20, code 0.4.2, observer 0.1.12).
+- The docs name the container images released with it: `ghcr.io/lpalbou/abstractgateway:0.4.2`
+  (and `0.4.2-gpu`) and `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
 
 ### What the new pins bring
 

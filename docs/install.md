@@ -435,7 +435,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.4.1
+  ghcr.io/lpalbou/abstractgateway:0.4.2
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -443,7 +443,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.15.0`.
+`ghcr.io/lpalbou/abstractcore-server:2.15.1`.
 
 ## How installs are designed
 

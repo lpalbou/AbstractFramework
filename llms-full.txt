@@ -149,7 +149,7 @@ ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.4.1` and `ghcr.io/lpalbou/abstractcore-server:2.15.0`.
+`ghcr.io/lpalbou/abstractgateway:0.4.2` and `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
 
 For artifact and runtime-resource investigation, see
 `docs/guide/runtime-artifacts.md`.
@@ -296,8 +296,8 @@ and tested together.
 | crates.io | `abstractgateway-console` | 0.8.0 |
 | crates.io | `abstractcore-console` | 0.2.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.4.1 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.4.2 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.1 |
 
 Optional add-ons that are not part of any profile install separately:
 `pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and
@@ -479,7 +479,7 @@ Notes for LLMs working in this repo:
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
 - abstractframework 0.3.1 pins (PyPI, `==`): abstractgateway 0.4.2, abstractassistant 0.5.0, abstractcore 2.15.1, AbstractRuntime 0.4.34, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15.
-- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.3.0, `entity` 0.2.0 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.8.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.4.1`, `ghcr.io/lpalbou/abstractcore-server:2.15.0`.
+- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.3.0, `entity` 0.2.0 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.8.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.4.2`, `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
@@ -2208,7 +2208,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.4.1
+  ghcr.io/lpalbou/abstractgateway:0.4.2
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -2216,7 +2216,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.15.0`.
+`ghcr.io/lpalbou/abstractcore-server:2.15.1`.
 
 ## How installs are designed
 
@@ -3467,7 +3467,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app against an existing gateway | `npx @abstractframework/<flow\|code\|observer\|continuum\|entity>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.4.1` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.4.2` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
