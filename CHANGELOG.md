@@ -2,7 +2,25 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
-## [Unreleased]
+## [0.3.0] - 2026-09-24
+
+A Mac install that needs no Terminal knowledge (a `.pkg` or a double-click `.command`, and an
+uninstaller), install failures explained in plain words, and the meta-package pins abstractcore
+2.15.0 and abstractgateway 0.4.0.
+
+### Changed (pins)
+
+- **abstractcore 2.15.0** (was 2.14.0) and **abstractgateway 0.4.0** (was 0.3.0), in the base
+  install and in the `apple` / `gpu` extras (`abstractgateway[apple|gpu]==0.4.0`). The bootstrap
+  scripts install `abstractgateway[<profile>,tray]==0.4.0` and, with `--with-console`,
+  `abstractgateway-console` 0.8.0 (was 0.7.0). The other pins are unchanged: AbstractRuntime
+  0.4.33, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice
+  0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15, abstractassistant 0.5.0.
+- `docs/backlog/planned/0859` states the real stack port map (observer 3001, continuum 3002,
+  code 3003, entity 3004, flow 3005), as `scripts/start-local.sh` and the gateway's
+  `STACK_PORTS` use.
+- `scripts/lib/packages.txt`: abstractgateway 0.4.0 depends on abstractcore directly
+  (`abstractcore>=2.15.0`), so its edge is `abstractcore:dep` (was `extra`).
 
 ### Added
 

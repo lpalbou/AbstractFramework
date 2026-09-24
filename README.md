@@ -264,7 +264,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.2.1)
+### Release matrix (abstractframework 0.3.0)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -273,9 +273,9 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.3.0 |
+| PyPI | `abstractgateway` | 0.4.0 |
 | PyPI | `abstractassistant` | 0.5.0 |
-| PyPI | `abstractcore` | 2.14.0 |
+| PyPI | `abstractcore` | 2.15.0 |
 | PyPI | `AbstractRuntime` | 0.4.33 |
 | PyPI | `abstractagent` | 0.3.13 |
 | PyPI | `AbstractMemory` | 0.3.0 |
@@ -289,7 +289,7 @@ and tested together.
 | npm | `@abstractframework/continuum` | 0.2.0 |
 | npm | `@abstractframework/entity` | 0.1.0 |
 | crates.io | `abstractcode` | 0.5.1 |
-| crates.io | `abstractgateway-console` | 0.7.0 |
+| crates.io | `abstractgateway-console` | 0.8.0 |
 | crates.io | `abstractcore-console` | 0.2.0 |
 | crates.io | `abstracttui` | 0.6.0 |
 | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.3.0 (`gpu-latest` / `<version>-gpu` experimental) |

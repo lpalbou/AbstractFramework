@@ -49,7 +49,7 @@ core-console            | abstractcore      | lpalbou/AbstractCore        | rust
 abstractruntime         | abstractruntime   | lpalbou/AbstractRuntime     | python | .                     | pypi     | AbstractRuntime                        | 3    | abstractcore:dep,abstractmemory:dep,abstractsemantics:dep
 abstractagent           | abstractagent     | lpalbou/AbstractAgent       | python | .                     | pypi     | abstractagent                          | 4    | abstractcore:dep,abstractruntime:dep
 abstractassistant       | abstractassistant | lpalbou/AbstractAssistant   | python | .                     | pypi     | abstractassistant                      | 4    | abstractcore:dep,abstractruntime:dep,abstractvoice:dep
-abstractgateway         | abstractgateway   | lpalbou/AbstractGateway     | python | .                     | pypi     | abstractgateway                        | 5    | abstractruntime:dep,abstractagent:dep,abstractmemory:dep,abstractcore:extra
+abstractgateway         | abstractgateway   | lpalbou/AbstractGateway     | python | .                     | pypi     | abstractgateway                        | 5    | abstractruntime:dep,abstractagent:dep,abstractmemory:dep,abstractcore:dep
 gateway-console         | abstractgateway   | lpalbou/AbstractGateway     | rust   | console-tui           | crates   | abstractgateway-console                | 2    | abstracttui:dep,core-console:dep
 ui-kit                  | abstractuic       | lpalbou/AbstractUIC         | npm    | ui-kit                | npm      | @abstractframework/ui-kit              | 0    | -
 app-server              | abstractuic       | lpalbou/AbstractUIC         | npm    | app-server            | npm      | @abstractframework/app-server          | 0    | -

@@ -36,8 +36,8 @@ flowchart LR
   shows the whole plan without changing anything; the final summary lists the commands so the
   install can be reproduced by hand. Power users can skip the script entirely.
 - **The gateway owns the host integration.** Autostart is `abstractgateway service install`, and
-  browser sign-in is a one-time claim link from `abstractgateway-config claim-url` (both in the
-  pinned gateway, 0.3.0). With an older gateway selected through `--pin`, the script starts the
+  browser sign-in is a one-time claim link from `abstractgateway-config claim-url` (both in
+  gateway 0.3.0 and later). With an older gateway selected through `--pin`, the script starts the
   gateway in the background and shows the admin token file instead.
 - **Loopback first.** The gateway binds `127.0.0.1`. Remote hosts use an SSH tunnel or the
   container deployment.
