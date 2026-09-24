@@ -21,8 +21,8 @@
          otherwise a Startup-folder shortcut plus a hidden background start
       6. waits for /api/health, then opens the console (one-time claim URL when supported)
 
-    -Full also builds the compiled extras (llama.cpp GGUF, stable-diffusion.cpp, echo
-    cancellation) from source; it needs the MSVC Build Tools.
+    -Full also builds the compiled extras (stable-diffusion.cpp, echo cancellation) and
+    llama.cpp from source; it needs the MSVC Build Tools.
 
     Environment twins: AF_PROFILE, AF_PORT, AF_PIN, AF_FROM, AF_DATA_DIR.
 
@@ -81,21 +81,32 @@ $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main
 # drops the package) and --no-build-package for the same packages, so a gap fails
 # fast instead of starting a compiler: webrtcvad is always dropped (webrtcvad-wheels
 # comes in through --with), vllm is Linux-only, and the compiled extras
-# (llama-cpp-python, stable-diffusion-cpp-python, aec-audio-processing; optional,
-# imported lazily) are dropped unless -Full, which builds them from source and so
-# needs a compiler. Same lists as install.sh (tests/test_install_profiles.py checks).
+# (stable-diffusion-cpp-python, aec-audio-processing; optional, imported lazily)
+# are dropped unless -Full, which builds them from source and so needs a compiler.
+# llama-cpp-python (llama.cpp GGUF, every profile) comes from upstream's prebuilt
+# CPU wheel on x64 Windows: --find-links on the package page of abetlen's wheel
+# index, pinned through --constraints uv-constraints.txt, --no-build-package so the
+# sdist is never built. No wheel for Windows on ARM; there, and whenever the wheel
+# install fails, it is dropped and the summary says so. -Full builds it from source.
+# Same lists as install.sh (tests/test_install_profiles.py checks).
 # ---------------------------------------------------------------------------
 $AfWithWheels = 'webrtcvad-wheels>=2.0.14'
-$AfCompiledExtras = @('llama-cpp-python', 'stable-diffusion-cpp-python', 'aec-audio-processing')
-$AfSkippedLine = 'Skipped compiled extras (llama.cpp GGUF, stable-diffusion.cpp, echo cancellation): re-run with -Full after installing a C compiler.'
-function Get-UvOverrides([bool]$WithCompiledExtras) {
+$AfCompiledExtras = @('stable-diffusion-cpp-python', 'aec-audio-processing')
+$AfSkippedLine = 'Skipped compiled extras (stable-diffusion.cpp, echo cancellation): re-run with -Full after installing a C compiler.'
+$AfLlamaIndex = 'https://abetlen.github.io/llama-cpp-python/whl'
+$AfLlamaCpuPin = '0.3.35'
+$AfGgufSkipped = 'GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with -Full after installing a C compiler'
+function Get-UvOverrides([bool]$WithCompiledExtras, [bool]$Gguf) {
     $lines = @("webrtcvad; sys_platform == 'never'", "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'")
-    if (-not $WithCompiledExtras) { foreach ($p in $AfCompiledExtras) { $lines += "$p; sys_platform == 'never'" } }
+    if (-not $WithCompiledExtras) {
+        foreach ($p in $AfCompiledExtras) { $lines += "$p; sys_platform == 'never'" }
+        if (-not $Gguf) { $lines += "llama-cpp-python; sys_platform == 'never'" }
+    }
     return $lines
 }
 function Get-NoBuildPackages([bool]$WithCompiledExtras) {
     $pkgs = @('webrtcvad', 'vllm')
-    if (-not $WithCompiledExtras) { $pkgs += $AfCompiledExtras }
+    if (-not $WithCompiledExtras) { $pkgs += $AfCompiledExtras + @('llama-cpp-python') }
     return $pkgs
 }
 
@@ -472,30 +483,61 @@ function Main {
         return ''
     }
     $before = Get-GatewayToolVersion
-    $overridesFile = Join-Path $DataDir 'uv-overrides.txt'
-    if ($script:DryRun) {
-        Write-Info "$overridesFile (written at install time; see the top of install.ps1):"
-        foreach ($l in (Get-UvOverrides $Full)) { Write-Host "      $l" }
-    } else {
-        # UTF-8 without a BOM (Set-Content -Encoding UTF8 adds one on PowerShell 5.1).
-        [System.IO.File]::WriteAllText($overridesFile, ((Get-UvOverrides $Full) -join "`n") + "`n")
+    # llama.cpp GGUF: the prebuilt CPU wheel on x64 Windows (see the top of this script).
+    $ggufPin = ''; $ggufLinks = ''
+    $cpuArch = if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE }
+    if (-not $Full -and ($cpuArch -eq 'AMD64' -or -not $onWindows)) {
+        $ggufPin = $AfLlamaCpuPin; $ggufLinks = "$AfLlamaIndex/cpu/llama-cpp-python/"
     }
-    # uv splits an --overrides value at whitespace (a user name with a space), so the
-    # install runs from the data dir and names the file relatively.
-    $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels, '--overrides', 'uv-overrides.txt')
-    foreach ($p in (Get-NoBuildPackages $Full)) { $argv += @('--no-build-package', $p) }
-    if ($WithCoreCli) { $argv += @('--with-executables-from', 'abstractcore') }
-    if ($before -and $Pin -eq 'latest' -and -not $From -and $state['PROFILE'] -eq $profileName) {
-        Invoke-Native -Description 'upgrade abstractgateway' -Argv @($uv, 'tool', 'upgrade', 'abstractgateway') | Out-Null
-    } else {
+    # uv splits --overrides / --constraints values at whitespace (a user name with a
+    # space), so the install runs from the data dir and names both files relatively.
+    function Install-Gateway([bool]$Gguf, [switch]$Soft) {
+        $overrides = Get-UvOverrides $Full $Gguf
+        if ($script:DryRun) {
+            Write-Info "$(Join-Path $DataDir 'uv-overrides.txt') (written at install time; see the top of install.ps1):"
+            foreach ($l in $overrides) { Write-Host "      $l" }
+            if ($Gguf) { Write-Info "$(Join-Path $DataDir 'uv-constraints.txt'):"; Write-Host "      llama-cpp-python==$ggufPin" }
+        } else {
+            # UTF-8 without a BOM (Set-Content -Encoding UTF8 adds one on PowerShell 5.1).
+            [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-overrides.txt'), ($overrides -join "`n") + "`n")
+            if ($Gguf) { [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-constraints.txt'), "llama-cpp-python==$ggufPin`n") }
+        }
+        $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels)
+        if ($Gguf) { $argv += @('--with', "llama-cpp-python==$ggufPin", '--constraints', 'uv-constraints.txt', '--find-links', $ggufLinks) }
+        elseif ($Full) { $argv += @('--with', 'llama-cpp-python') }
+        $argv += @('--overrides', 'uv-overrides.txt')
+        foreach ($p in (Get-NoBuildPackages $Full)) { $argv += @('--no-build-package', $p) }
+        if ($WithCoreCli) { $argv += @('--with-executables-from', 'abstractcore') }
         if ($From) { $argv += '--reinstall' }
         $shownInstall = "Set-Location $(Format-Arg $DataDir); $(Format-Cmd ($argv + @($gwSpec)))"
+        $desc = if ($Gguf) { 'install abstractgateway with the llama.cpp cpu wheel' } else { 'install abstractgateway' }
         if (-not $script:DryRun) { Push-Location -LiteralPath $DataDir }
         try {
-            Invoke-Native -Description 'install abstractgateway' -Argv ($argv + @($gwSpec)) -Shown $shownInstall | Out-Null
+            return (Invoke-Native -Description $desc -Argv ($argv + @($gwSpec)) -Shown $shownInstall -Soft:$Soft)
         } finally {
             if (-not $script:DryRun) { Pop-Location }
         }
+    }
+    $ggufResult = ''
+    if ($before -and $Pin -eq 'latest' -and -not $From -and $state['PROFILE'] -eq $profileName) {
+        Invoke-Native -Description 'upgrade abstractgateway' -Argv @($uv, 'tool', 'upgrade', 'abstractgateway') | Out-Null
+        $ggufResult = 'as in the previous install (uv tool upgrade keeps it)'
+    } elseif ($Full) {
+        Install-Gateway $false | Out-Null
+        $ggufResult = 'llama-cpp-python built from source (-Full)'
+    } elseif ($ggufPin) {
+        if ($script:DryRun) { Write-Info "llama.cpp GGUF: llama-cpp-python $ggufPin, cpu wheel from $ggufLinks (if this install fails, it is retried without it)" }
+        if (Install-Gateway $true -Soft) {
+            $ggufResult = "llama-cpp-python $ggufPin (cpu wheel from $ggufLinks)"
+        } else {
+            Write-Warn2 $AfGgufSkipped
+            Install-Gateway $false | Out-Null
+            $ggufResult = "skipped (the prebuilt cpu wheel did not install; see $($script:LogFile))"
+        }
+    } else {
+        Write-Warn2 $AfGgufSkipped
+        Install-Gateway $false | Out-Null
+        $ggufResult = "skipped (no prebuilt wheel for Windows $cpuArch)"
     }
     $after = $before
     if (-not $script:DryRun) {
@@ -692,6 +734,7 @@ function Main {
     Write-Host '  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)'
     Write-Host "  Uninstall:  install.ps1 -Uninstall   (or: $(if ($mode -eq 'service') { 'abstractgateway service uninstall; ' })uv tool uninstall abstractgateway)"
     Write-Host '  Check:      uvx abstractframework doctor'
+    Write-Host "  GGUF:       $ggufResult"
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     Write-Host '  Apps:       npx -y @abstractframework/flow   (also: code, observer, continuum, entity)'
     Write-Host "  Docs:       $AfDocs"

@@ -85,6 +85,21 @@ jobs:
           PATH="$HOME/.local/bin:$PATH" PYTHONPATH=. python3 -m abstractframework doctor --json > doctor.json || true
           python3 -c "import json; c={x['id']: x for x in json.load(open('doctor.json'))['checks']}; assert c['gateway']['status'] == 'ok', c['gateway']; print('doctor sees the gateway:', c['gateway']['message'])"
 
+      # llama.cpp GGUF must come from upstream's prebuilt wheel (the script passes
+      # --no-build-package llama-cpp-python, so the runner's compiler is never used).
+      - name: GGUF from the prebuilt llama.cpp wheel (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then pin_var=AF_LLAMA_METAL_PIN; else pin_var=AF_LLAMA_CPU_PIN; fi
+          want="$(sed -n "s/^${pin_var}=\"\(.*\)\"$/\1/p" scripts/install.sh)"
+          test -n "$want"
+          uv="$(command -v uv || echo "$HOME/.local/bin/uv")"
+          py="$("$uv" tool dir)/abstractgateway/bin/python"
+          out="$("$py" -c "import llama_cpp; print(llama_cpp.__version__, llama_cpp.llama_supports_gpu_offload())")"
+          echo "llama_cpp: $out (expected version $want)"
+          test "${out%% *}" = "$want"
+          if [ "$RUNNER_OS" = macOS ]; then test "${out##* }" = True; fi
+
       - name: Re-run is idempotent (install.sh)
         if: runner.os != 'Windows'
         run: sh scripts/install.sh --no-service --no-open --no-modify-path --profile light --port 18080 | tee rerun.log && grep -q "already installed" rerun.log
@@ -123,6 +138,21 @@ jobs:
           if ($h.service -ne 'abstractgateway') { throw 'not a gateway' }
           $c = Invoke-WebRequest http://127.0.0.1:18080/console -UseBasicParsing
           if ($c.StatusCode -ne 200) { throw "console answered $($c.StatusCode)" }
+
+      - name: GGUF from the prebuilt llama.cpp wheel (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $want = [regex]::Match((Get-Content -Raw scripts/install.ps1), '(?m)^\$AfLlamaCpuPin = ''([^'']+)''').Groups[1].Value
+          if (-not $want) { throw 'no AfLlamaCpuPin in install.ps1' }
+          $uv = (Get-Command uv -ErrorAction SilentlyContinue).Source
+          if (-not $uv) { $uv = "$env:USERPROFILE\.local\bin\uv.exe" }
+          $toolDir = & $uv tool dir
+          $py = Join-Path $toolDir 'abstractgateway\Scripts\python.exe'
+          $out = & $py -c "import llama_cpp; print(llama_cpp.__version__, llama_cpp.llama_supports_gpu_offload())"
+          if ($LASTEXITCODE -ne 0) { throw 'import llama_cpp failed' }
+          Write-Output "llama_cpp: $out (expected version $want)"
+          if ($out.Split(' ')[0] -ne $want) { throw "llama_cpp $out, expected $want" }
 
       - name: Gateway log on failure (Windows)
         if: failure() && runner.os == 'Windows'

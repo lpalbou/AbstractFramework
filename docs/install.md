@@ -50,22 +50,41 @@ upgrades or repairs the install in place.
 By default the script never compiles anything, so you do not need Xcode Command Line Tools, gcc
 or the MSVC Build Tools. It passes uv a small overrides file (`uv-overrides.txt` in the gateway
 data directory; `--print` shows it) that swaps `webrtcvad` for `webrtcvad-wheels`, keeps `vllm`
-to Linux, and leaves out the three compiled extras below, and it refuses to build those packages
+to Linux, and leaves out the two compiled extras below, and it refuses to build those packages
 from source, so a gap fails with a clear error instead of starting a compiler. If macOS asks you
 to install the command line developer tools (an `xcode-select` prompt) during an install, you are
 running an older copy of the script: cancel the prompt, fetch the script again with the one-liner
 above and re-run it.
 
+### llama.cpp GGUF models
+
+Every profile, light included, gets in-process llama.cpp GGUF support (`llama-cpp-python`). PyPI
+has only its source, so the script takes upstream's prebuilt wheel from
+[abetlen's wheel index](https://abetlen.github.io/llama-cpp-python/whl/) (`--find-links` on the
+package page, pinned in `uv-constraints.txt` next to the overrides file):
+
+| Machine | Wheel |
+|---|---|
+| Apple Silicon Mac | `llama-cpp-python==0.3.28`, Metal (GPU offload) |
+| Linux x86_64 / aarch64 (glibc) | `llama-cpp-python==0.3.35`, CPU |
+| Windows x64 | `llama-cpp-python==0.3.35`, CPU |
+| Intel Mac, musl Linux, Windows on ARM | no prebuilt wheel: skipped |
+
+Where no wheel exists, or when the wheel install fails, the script installs everything else and
+says `GGUF (llama.cpp) skipped: no prebuilt wheel for this machine`; `--full` then builds it from
+source. The summary's `GGUF:` line says which wheel was installed. The Metal pin stays at 0.3.28
+because the 0.3.32-0.3.35 Metal wheels fail zip integrity checks and uv refuses them.
+
 ### Compiled extras
 
-Three optional engines publish no wheel on PyPI and are skipped by default: llama.cpp GGUF models
-in-process (`llama-cpp-python`), stable-diffusion.cpp image generation
-(`stable-diffusion-cpp-python`) and voice echo cancellation (`aec-audio-processing`). `--full`
-(Windows: `-Full`) keeps them and builds them from source, which takes several minutes and needs a
-C/C++ compiler (macOS: `xcode-select --install`; Debian/Ubuntu: `sudo apt-get install -y
-build-essential`; Windows: Visual Studio Build Tools with "Desktop development with C++"). Without
-a compiler, `--full` stops before installing anything. You do not need them for MLX on Apple
-Silicon, for Ollama, LM Studio or other endpoint engines, or for cloud providers.
+Two optional engines publish no wheel on PyPI and are skipped by default: stable-diffusion.cpp
+image generation (`stable-diffusion-cpp-python`) and voice echo cancellation
+(`aec-audio-processing`). `--full` (Windows: `-Full`) keeps them and builds them, and llama.cpp,
+from source, which takes several minutes and needs a C/C++ compiler (macOS:
+`xcode-select --install`; Debian/Ubuntu: `sudo apt-get install -y build-essential`; Windows:
+Visual Studio Build Tools with "Desktop development with C++"). Without a compiler, `--full` stops
+before installing anything. You do not need them for MLX on Apple Silicon, for llama.cpp GGUF
+models (above), for Ollama, LM Studio or other endpoint engines, or for cloud providers.
 
 ### Options
 
@@ -79,7 +98,7 @@ Silicon, for Ollama, LM Studio or other endpoint engines, or for cloud providers
 | `--with-console` | `-WithConsole` | Install the `abstractgateway-console` crate with cargo (terminal console; needs Rust) |
 | `--with-code-cli` | `-WithCodeCli` | Install the `abstractcode` crate with cargo (terminal client; needs Rust) |
 | `--with-core-cli` | `-WithCoreCli` | Also put the `abstractcore` command on PATH |
-| `--full` | `-Full` | Also build the [compiled extras](#compiled-extras) from source (needs a C compiler) |
+| `--full` | `-Full` | Also build the [compiled extras](#compiled-extras) and llama.cpp from source (needs a C compiler) |
 | `--no-service` | `-NoService` | Do not register a login service |
 | `--no-open` | `-NoOpen` | Do not open the browser |
 | `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |

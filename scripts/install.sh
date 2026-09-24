@@ -36,8 +36,8 @@
 #   --with-core-cli          also expose the `abstractcore` command
 #   --with-ollama            run Ollama's official installer (may ask for sudo)
 #   --with-lmstudio          run LM Studio's headless installer (llmster)
-#   --full                   also build the compiled extras (llama.cpp GGUF,
-#                            stable-diffusion.cpp, echo cancellation); needs a C compiler
+#   --full                   also build the compiled extras (stable-diffusion.cpp,
+#                            echo cancellation) and llama.cpp from source; needs a C compiler
 #   --no-tray                skip the tray extra
 #   --no-service             do not register a login service; start in background
 #   --no-start               install only; do not start the gateway
@@ -76,29 +76,43 @@ AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/
 # fails fast with a resolver error instead of starting a compiler:
 #   webrtcvad    always dropped; `webrtcvad-wheels` (same module) via --with
 #   vllm         Linux only (no Windows build exists)
-#   the compiled extras, dropped unless --full: llama-cpp-python (llama.cpp
-#   GGUF), stable-diffusion-cpp-python (stable-diffusion.cpp), aec-audio-processing
-#   (echo cancellation). All three are optional and imported lazily; MLX on
-#   Apple Silicon does not need them. --full keeps them and builds them from
+#   the compiled extras, dropped unless --full: stable-diffusion-cpp-python
+#   (stable-diffusion.cpp) and aec-audio-processing (echo cancellation). Both
+#   are optional and imported lazily. --full keeps them and builds them from
 #   source, so it requires a compiler.
+#   llama-cpp-python (llama.cpp GGUF, every profile): PyPI has only the sdist, so
+#   it comes from upstream's prebuilt wheels: --find-links on the package page of
+#   abetlen's wheel index (one flat page, not a second index for every package),
+#   pinned through --constraints uv-constraints.txt, with --no-build-package so
+#   the sdist is never built. Metal 0.3.28 on Apple Silicon (the 0.3.32-0.3.35
+#   Metal wheels fail zip CRC checks and uv refuses them), CPU 0.3.35 on glibc
+#   Linux x86_64/aarch64. No wheel for Intel Macs (newest is 0.3.2, below
+#   abstractcore's floor) or musl Linux: there, and whenever the wheel install
+#   fails, llama-cpp-python is dropped like the other extras and the summary
+#   says so. --full builds it from source instead.
 # Pure-Python sdists (langdetect, antlr4-python3-runtime, encodec,
 # transformers-stream-generator) still build: they need no compiler, which is
 # why there is no global --no-build. install.ps1 carries the same lists
 # (tests/test_install_profiles.py keeps them in sync).
 # ---------------------------------------------------------------------------
 AF_WITH_WHEELS="webrtcvad-wheels>=2.0.14"
-AF_COMPILED_EXTRAS="llama-cpp-python stable-diffusion-cpp-python aec-audio-processing"
-AF_SKIPPED_LINE="Skipped compiled extras (llama.cpp GGUF, stable-diffusion.cpp, echo cancellation): re-run with --full after installing a C compiler."
-af_uv_overrides() {
+AF_COMPILED_EXTRAS="stable-diffusion-cpp-python aec-audio-processing"
+AF_SKIPPED_LINE="Skipped compiled extras (stable-diffusion.cpp, echo cancellation): re-run with --full after installing a C compiler."
+AF_LLAMA_INDEX="https://abetlen.github.io/llama-cpp-python/whl"
+AF_LLAMA_METAL_PIN="0.3.28"
+AF_LLAMA_CPU_PIN="0.3.35"
+AF_GGUF_SKIPPED="GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with --full after installing a C compiler"
+af_uv_overrides() {  # $1 = 1 when llama-cpp-python comes from the prebuilt wheel
     echo "webrtcvad; sys_platform == 'never'"
     echo "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'"
     if [ "$FULL" = 0 ]; then
         for _p in $AF_COMPILED_EXTRAS; do echo "$_p; sys_platform == 'never'"; done
+        [ "$1" = 1 ] || echo "llama-cpp-python; sys_platform == 'never'"
     fi
 }
 af_no_build_packages() {
     echo "webrtcvad vllm"
-    [ "$FULL" = 1 ] || echo "$AF_COMPILED_EXTRAS"
+    [ "$FULL" = 1 ] || echo "$AF_COMPILED_EXTRAS llama-cpp-python"
 }
 
 # ---------------------------------------------------------------------------
@@ -210,6 +224,7 @@ run() {
     printf '  %s$ %s%s\n' "$C_D" "$_shown" "$C_0"
     twin "$_shown"
     _soft="$RUN_SOFT"; RUN_SOFT=0
+    RUN_RC=0
     [ "$PRINT" = 1 ] && return 0
     _rc=0
     if [ "$VERBOSE" = 1 ] || [ -z "$LOG_FILE" ]; then
@@ -218,6 +233,7 @@ run() {
         printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
         "$@" >>"$LOG_FILE" 2>&1 || _rc=$?
     fi
+    RUN_RC="$_rc"
     [ "$_rc" = 0 ] && return 0
     if [ "$_soft" = 1 ]; then
         warn "$_desc did not succeed (exit $_rc; details in ${LOG_FILE:-the output above}); continuing"
@@ -441,6 +457,17 @@ if [ "$NO_TRAY" = 0 ]; then
     fi
 fi
 
+# llama.cpp GGUF: the prebuilt wheel for this machine (see the top of this script).
+GGUF_PIN=""; GGUF_KIND=""; GGUF_LINKS=""
+if [ "$FULL" = 0 ]; then
+    case "$OS_ID/$ARCH" in
+        macos/arm64) GGUF_PIN="$AF_LLAMA_METAL_PIN"; GGUF_KIND=metal ;;
+        linux/x86_64|linux/aarch64|linux/arm64)
+            if ldd --version 2>&1 | grep -qi musl; then :; else GGUF_PIN="$AF_LLAMA_CPU_PIN"; GGUF_KIND=cpu; fi ;;
+    esac
+    [ -n "$GGUF_KIND" ] && GGUF_LINKS="$AF_LLAMA_INDEX/$GGUF_KIND/llama-cpp-python/"
+fi
+
 # Gateway requirement.
 if [ -n "$FROM" ]; then
     if [ -e "$FROM" ]; then
@@ -549,27 +576,56 @@ run "install Python $AF_PYTHON" "$UV" python install "$AF_PYTHON"
 step "AbstractGateway"
 BEFORE=""
 if [ "$PRINT" = 0 ]; then BEFORE="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"; fi
-OVERRIDES_FILE="$DATA_DIR/uv-overrides.txt"
-if [ "$PRINT" = 1 ]; then
-    info "$OVERRIDES_FILE (written at install time; see the top of install.sh):"
-    af_uv_overrides | sed 's/^/      /'
-else
-    af_uv_overrides >"$OVERRIDES_FILE"
-fi
-# uv splits an --overrides value at whitespace ("Application Support"), so the install
-# runs from the data dir and names the file relatively.
-set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS" --overrides uv-overrides.txt
-for _p in $(af_no_build_packages); do set -- "$@" --no-build-package "$_p"; done
-[ "$WITH_CORE_CLI" = 1 ] && set -- "$@" --with-executables-from abstractcore
-if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
-    run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
-else
+# install_gateway GGUF SOFT: GGUF=1 adds the llama.cpp wheel. uv splits --overrides and
+# --constraints values at whitespace ("Application Support"), so the install runs from
+# the data dir and names both files relatively.
+install_gateway() {
+    _gguf="$1"; _gsoft="$2"
+    if [ "$PRINT" = 1 ]; then
+        info "$DATA_DIR/uv-overrides.txt (written at install time; see the top of install.sh):"
+        af_uv_overrides "$_gguf" | sed 's/^/      /'
+        [ "$_gguf" = 1 ] && info "$DATA_DIR/uv-constraints.txt:" && echo "      llama-cpp-python==$GGUF_PIN"
+    else
+        af_uv_overrides "$_gguf" >"$DATA_DIR/uv-overrides.txt"
+        [ "$_gguf" = 1 ] && echo "llama-cpp-python==$GGUF_PIN" >"$DATA_DIR/uv-constraints.txt"
+    fi
+    set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS"
+    if [ "$_gguf" = 1 ]; then
+        set -- "$@" --with "llama-cpp-python==$GGUF_PIN" --constraints uv-constraints.txt --find-links "$GGUF_LINKS"
+    elif [ "$FULL" = 1 ]; then
+        set -- "$@" --with llama-cpp-python
+    fi
+    set -- "$@" --overrides uv-overrides.txt
+    for _p in $(af_no_build_packages); do set -- "$@" --no-build-package "$_p"; done
+    [ "$WITH_CORE_CLI" = 1 ] && set -- "$@" --with-executables-from abstractcore
     [ -n "$FROM" ] && set -- "$@" --reinstall
     _cwd="$(pwd)"
     RUN_SHOW="cd $(q "$DATA_DIR") && $(show_cmd "$@" "$GW_SPEC")"
     [ "$PRINT" = 1 ] || cd "$DATA_DIR"
-    run "install abstractgateway" "$@" "$GW_SPEC"
+    RUN_SOFT="$_gsoft" run "install abstractgateway$([ "$_gguf" = 1 ] && echo " with the llama.cpp $GGUF_KIND wheel")" "$@" "$GW_SPEC"
     [ "$PRINT" = 1 ] || cd "$_cwd" 2>/dev/null || cd "$HOME"
+    return "$RUN_RC"
+}
+GGUF_RESULT=""
+if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
+    run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
+    GGUF_RESULT="as in the previous install (uv tool upgrade keeps it)"
+elif [ "$FULL" = 1 ]; then
+    install_gateway 0 0
+    GGUF_RESULT="llama-cpp-python built from source (--full)"
+elif [ -n "$GGUF_PIN" ]; then
+    [ "$PRINT" = 1 ] && info "llama.cpp GGUF: llama-cpp-python $GGUF_PIN, $GGUF_KIND wheel from $GGUF_LINKS (if this install fails, it is retried without it)"
+    if install_gateway 1 1; then
+        GGUF_RESULT="llama-cpp-python $GGUF_PIN ($GGUF_KIND wheel from $GGUF_LINKS)"
+    else
+        warn "$AF_GGUF_SKIPPED"
+        install_gateway 0 0
+        GGUF_RESULT="skipped (the prebuilt $GGUF_KIND wheel did not install; see $LOG_FILE)"
+    fi
+else
+    warn "$AF_GGUF_SKIPPED"
+    install_gateway 0 0
+    GGUF_RESULT="skipped (no prebuilt wheel for $OS_ID $ARCH)"
 fi
 AFTER="$BEFORE"
 if [ "$PRINT" = 0 ]; then
@@ -792,6 +848,7 @@ echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service ins
 echo "  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"
+echo "  GGUF:       $GGUF_RESULT"
 if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
     echo "  $AF_SKIPPED_LINE"
 fi

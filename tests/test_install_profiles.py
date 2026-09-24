@@ -368,15 +368,20 @@ def test_install_sh_reads_the_pin_from_the_manifest(tmp_path: Path) -> None:
 
 # --- prebuilt wheels only: no C compiler / Xcode tools needed --------------------------------
 
-_COMPILED_EXTRAS = ["llama-cpp-python", "stable-diffusion-cpp-python", "aec-audio-processing"]
+_COMPILED_EXTRAS = ["stable-diffusion-cpp-python", "aec-audio-processing"]
 _ALWAYS = ["webrtcvad; sys_platform == 'never'", "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'"]
 _DEFAULT_OVERRIDES = _ALWAYS + [f"{p}; sys_platform == 'never'" for p in _COMPILED_EXTRAS]
-_SKIPPED = "Skipped compiled extras (llama.cpp GGUF, stable-diffusion.cpp, echo cancellation): re-run with {flag} after installing a C compiler."
+_NO_GGUF_OVERRIDES = _DEFAULT_OVERRIDES + ["llama-cpp-python; sys_platform == 'never'"]
+_NO_BUILD = ["webrtcvad", "vllm", *_COMPILED_EXTRAS, "llama-cpp-python"]
+_SKIPPED = "Skipped compiled extras (stable-diffusion.cpp, echo cancellation): re-run with {flag} after installing a C compiler."
+_GGUF_SKIPPED = "GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with {flag} after installing a C compiler"
+_LLAMA = "https://abetlen.github.io/llama-cpp-python/whl"
 
 
-def _fake_bin(tmp_path: Path, *, compiler: bool) -> Path:
-    """xcode-select/cc stubs: `compiler=False` simulates a Mac without Xcode CLT."""
-    fake = tmp_path / ("cc-yes" if compiler else "cc-no")
+def _fake_bin(tmp_path: Path, *, compiler: bool, machine: str | None = None) -> Path:
+    """xcode-select/cc stubs (`compiler=False` simulates a Mac without Xcode CLT) and an
+    optional `uname -m` override to simulate another CPU."""
+    fake = tmp_path / "fakebin"
     fake.mkdir()
     for name in ("xcode-select", "cc"):
         if name == "cc" and not compiler:
@@ -384,33 +389,41 @@ def _fake_bin(tmp_path: Path, *, compiler: bool) -> Path:
         stub = fake / name
         stub.write_text(f"#!/bin/sh\nexit {0 if compiler else 2}\n")
         stub.chmod(0o755)
+    if machine:
+        uname = fake / "uname"
+        real = __import__("shutil").which("uname")
+        uname.write_text(f'#!/bin/sh\ncase "$1" in -m) echo {machine} ;; *) {real} "$@" ;; esac\n')
+        uname.chmod(0o755)
     return fake
 
 
-def _local_profile() -> str:
+def _host() -> tuple[str, str, str]:
+    """(profile with local engines, expected llama.cpp pin, wheel kind) for this machine."""
     import platform
     import sys
 
-    if sys.platform == "darwin" and platform.machine() == "arm64":
-        return "apple"
-    if sys.platform.startswith("linux"):
-        return "gpu"
-    pytest.skip("install.sh profiles with compiled extras run on Apple Silicon or Linux")
+    machine = platform.machine()
+    if sys.platform == "darwin" and machine == "arm64":
+        return "apple", "0.3.28", "metal"
+    if sys.platform.startswith("linux") and machine in ("x86_64", "aarch64"):
+        return "gpu", "0.3.35", "cpu"
+    pytest.skip("install.sh wheel selection is tested on Apple Silicon and glibc Linux")
 
 
-def _install_sh_print(tmp_path: Path, *extra: str, compiler: bool = True) -> subprocess.CompletedProcess[str]:
-    fake = _fake_bin(tmp_path, compiler=compiler)
+def _install_sh_print(tmp_path: Path, *extra: str, profile: str | None = None, compiler: bool = True,
+                      machine: str | None = None) -> subprocess.CompletedProcess[str]:
+    fake = _fake_bin(tmp_path, compiler=compiler, machine=machine)
     return subprocess.run(
-        ["sh", str(ROOT / "scripts" / "install.sh"), "--print", "--profile", _local_profile(), "--port", "18999", *extra],
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--print", "--profile", profile or _host()[0], "--port", "18999", *extra],
         capture_output=True,
         text=True,
         env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
     )
 
 
-def _printed_overrides(out: str) -> list[str]:
+def _printed_block(out: str, marker: str) -> list[str]:
     lines = out.splitlines()
-    head = next(i for i, line in enumerate(lines) if "uv-overrides.txt (written at install time" in line)
+    head = next(i for i, line in enumerate(lines) if marker in line)
     block = []
     for line in lines[head + 1:]:
         if not line.startswith("      "):
@@ -419,37 +432,100 @@ def _printed_overrides(out: str) -> list[str]:
     return block
 
 
+def _printed_overrides(out: str) -> list[str]:
+    return _printed_block(out, "uv-overrides.txt (written at install time")
+
+
 def _install_line(out: str) -> str:
     return next(line for line in out.splitlines() if " tool install --python 3.12 " in line)
 
 
-def test_install_sh_default_installs_prebuilt_wheels_only(tmp_path: Path) -> None:
-    proc = _install_sh_print(tmp_path, compiler=False)
+@pytest.mark.parametrize("profile", ["light", "local"])
+def test_install_sh_default_takes_llama_cpp_from_the_prebuilt_wheel(tmp_path: Path, profile: str) -> None:
+    local, pin, kind = _host()
+    proc = _install_sh_print(tmp_path, profile=local if profile == "local" else "light", compiler=False)
     assert proc.returncode == 0, proc.stderr
     out = proc.stdout
     assert _printed_overrides(out) == _DEFAULT_OVERRIDES
+    assert _printed_block(out, "uv-constraints.txt:") == [f"llama-cpp-python=={pin}"]
     install = _install_line(out)
-    # uv splits an --overrides value at whitespace (macOS "Application Support"), so the
-    # install runs from the data dir with a relative file name
+    # uv splits --overrides/--constraints values at whitespace (macOS "Application
+    # Support"), so the install runs from the data dir with relative file names
     assert install.lstrip().startswith("$ cd ")
-    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides uv-overrides.txt " in install
-    no_build = ["webrtcvad", "vllm", *_COMPILED_EXTRAS]
-    assert " ".join(f"--no-build-package {p}" for p in no_build) in install
+    assert (
+        f"--with 'webrtcvad-wheels>=2.0.14' --with llama-cpp-python=={pin} --constraints uv-constraints.txt "
+        f"--find-links {_LLAMA}/{kind}/llama-cpp-python/ --overrides uv-overrides.txt "
+    ) in install
+    assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
     assert re.search(r" 'abstractgateway\[[a-z,]+\]==\S+'$", install.rstrip()), install
-    assert _SKIPPED.format(flag="--full") in out
+    assert f"GGUF:       llama-cpp-python {pin} ({kind} wheel from {_LLAMA}/{kind}/llama-cpp-python/)" in out
+    assert "it is retried without it" in out
+    assert (_SKIPPED.format(flag="--full") in out) == (profile == "local")
     assert not (tmp_path / "Library").exists() and not (tmp_path / ".local").exists()
 
 
-def test_install_sh_full_keeps_the_compiled_extras(tmp_path: Path) -> None:
+def test_install_sh_skips_gguf_where_no_wheel_exists(tmp_path: Path) -> None:
+    _host()
+    proc = _install_sh_print(tmp_path, profile="light", compiler=False, machine="riscv64")
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    assert _GGUF_SKIPPED.format(flag="--full") in out
+    assert _printed_overrides(out) == _NO_GGUF_OVERRIDES
+    install = _install_line(out)
+    assert "--find-links" not in install and "--constraints" not in install
+    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides uv-overrides.txt " in install
+    assert "GGUF:       skipped (no prebuilt wheel for " in out
+
+
+def test_install_sh_retries_without_llama_cpp_when_the_wheel_fails(tmp_path: Path) -> None:
+    """A real (non --print) run against a fake uv whose install fails when it is given the
+    llama.cpp wheel source: the script must warn, retry without llama-cpp-python, succeed."""
+    _host()
+    fake = _fake_bin(tmp_path, compiler=False)
+    tool_bin = tmp_path / "toolbin"
+    calls = tmp_path / "uv-calls.log"
+    uv = fake / "uv"
+    uv.write_text(
+        "#!/bin/sh\n"
+        f'echo "$*" >> "{calls}"\n'
+        'case "$1 $2" in\n'
+        '  "--version "*) echo "uv 0.0.0" ;;\n'
+        f'  "tool dir") echo "{tool_bin}" ;;\n'
+        '  "tool install")\n'
+        '    for a in "$@"; do [ "$a" = --find-links ] && { echo "simulated: no wheel" >&2; exit 2; }; done\n'
+        f'    mkdir -p "{tool_bin}" && printf "#!/bin/sh\\nexit 1\\n" > "{tool_bin}/abstractgateway" && chmod +x "{tool_bin}/abstractgateway" ;;\n'
+        "esac\n"
+        "exit 0\n"
+    )
+    uv.chmod(0o755)
+    proc = subprocess.run(
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--profile", "light", "--port", "18998",
+         "--no-start", "--no-service", "--no-open", "--no-modify-path"],
+        capture_output=True, text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb",
+             "XDG_DATA_HOME": str(tmp_path / "data")},
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    installs = [line for line in calls.read_text().splitlines() if line.startswith("tool install ")]
+    assert len(installs) == 2 and "--find-links" in installs[0] and "--find-links" not in installs[1]
+    assert _GGUF_SKIPPED.format(flag="--full") in proc.stdout
+    assert "GGUF:       skipped (the prebuilt " in proc.stdout
+    overrides = next((tmp_path / "data").rglob("uv-overrides.txt")) if (tmp_path / "data").exists() else next(tmp_path.rglob("uv-overrides.txt"))
+    assert overrides.read_text().splitlines() == _NO_GGUF_OVERRIDES
+
+
+def test_install_sh_full_builds_the_compiled_extras(tmp_path: Path) -> None:
     proc = _install_sh_print(tmp_path, "--full", compiler=True)
     assert proc.returncode == 0, proc.stderr
     out = proc.stdout
     assert _printed_overrides(out) == _ALWAYS
     install = _install_line(out)
-    assert "--no-build-package webrtcvad --no-build-package vllm 'abstractgateway[" in install
+    assert "--with llama-cpp-python --overrides uv-overrides.txt --no-build-package webrtcvad --no-build-package vllm 'abstractgateway[" in install
+    assert "--find-links" not in install
     for pkg in _COMPILED_EXTRAS:
         assert pkg not in install
     assert "Skipped compiled extras" not in out
+    assert "GGUF:       llama-cpp-python built from source (--full)" in out
 
 
 def test_install_sh_full_stops_without_a_compiler(tmp_path: Path) -> None:
@@ -477,9 +553,15 @@ def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
         assert f'"{line}"' in ps1
     assert f"AF_SKIPPED_LINE=\"{_SKIPPED.format(flag='--full')}\"" in sh
     assert f"$AfSkippedLine = '{_SKIPPED.format(flag='-Full')}'" in ps1
-    # relative name + Push-Location: uv splits an --overrides value at whitespace
-    assert "'--with', $AfWithWheels, '--overrides', 'uv-overrides.txt'" in ps1
+    assert f"$AfGgufSkipped = '{_GGUF_SKIPPED.format(flag='-Full')}'" in ps1
+    assert f'AF_LLAMA_INDEX="{_LLAMA}"' in sh and f"$AfLlamaIndex = '{_LLAMA}'" in ps1
+    sh_cpu = re.search(r'^AF_LLAMA_CPU_PIN="([^"]+)"$', sh, flags=re.M)
+    ps_cpu = re.search(r"^\$AfLlamaCpuPin = '([^']+)'$", ps1, flags=re.M)
+    assert sh_cpu and ps_cpu and sh_cpu.group(1) == ps_cpu.group(1)
+    # relative names + Push-Location: uv splits --overrides/--constraints values at whitespace
+    assert "'--constraints', 'uv-constraints.txt'" in ps1 and "@('--overrides', 'uv-overrides.txt')" in ps1
     assert "Push-Location -LiteralPath $DataDir" in ps1
+    assert "if (Install-Gateway $true -Soft) {" in ps1 and "Write-Warn2 $AfGgufSkipped" in ps1
 
 
 @pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
@@ -494,15 +576,20 @@ def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_pa
         check=True, capture_output=True, text=True,
     ).stdout.strip()
     assert parse == "0"
-    env = {**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad")}
+    env = {**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad"),
+           "PROCESSOR_ARCHITECTURE": "AMD64"}
     argv = ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "gpu", "-Port", "18999"]
     out = subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
     assert _printed_overrides(out) == _DEFAULT_OVERRIDES
+    assert _printed_block(out, "uv-constraints.txt:") == ["llama-cpp-python==0.3.35"]
     install = _install_line(out)
-    assert "--with 'webrtcvad-wheels>=2.0.14' --overrides uv-overrides.txt " in install
-    no_build = ["webrtcvad", "vllm", *_COMPILED_EXTRAS]
-    assert " ".join(f"--no-build-package {p}" for p in no_build) in install
+    assert (
+        "--with 'webrtcvad-wheels>=2.0.14' --with llama-cpp-python==0.3.35 --constraints uv-constraints.txt "
+        f"--find-links {_LLAMA}/cpu/llama-cpp-python/ --overrides uv-overrides.txt "
+    ) in install
+    assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
     assert _SKIPPED.format(flag="-Full") in out
+    assert f"GGUF:       llama-cpp-python 0.3.35 (cpu wheel from {_LLAMA}/cpu/llama-cpp-python/)" in out
     assert not (tmp_path / "lad").exists(), "-Print must not write anything"
     if __import__("shutil").which("cl.exe") is None:
         full = subprocess.run(argv + ["-Full"], capture_output=True, text=True, env=env)

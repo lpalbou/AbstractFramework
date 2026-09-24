@@ -2,6 +2,22 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **llama.cpp GGUF is back in the one-line install, without a compiler.** `install.sh` and
+  `install.ps1` take `llama-cpp-python` from upstream's prebuilt wheels for every profile, light
+  included: Metal 0.3.28 on Apple Silicon, CPU 0.3.35 on glibc Linux x86_64/aarch64 and Windows
+  x64 (`--find-links` on the package page of abetlen's wheel index, `--constraints
+  uv-constraints.txt`, `--no-build-package llama-cpp-python` so the PyPI sdist is never built).
+  Where no wheel exists (Intel Mac, musl Linux, Windows on ARM) or the wheel install fails, the
+  script installs without it and prints `GGUF (llama.cpp) skipped: no prebuilt wheel for this
+  machine; re-run with --full after installing a C compiler`. The summary's `GGUF:` line says what
+  was installed. `--full` builds llama.cpp from source, now in the light profile too. CI's
+  bootstrap smoke imports `llama_cpp` from the installed gateway on macOS, Linux and Windows and
+  checks GPU offload on macOS.
+
 ## [0.2.1] - 2026-09-24
 
 Patch release: the one-line install works on a machine without a C compiler, and the
