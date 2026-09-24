@@ -126,7 +126,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    "no" is remembered).
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.4.0"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.4.1"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not).
 5. Optionally installs Node.js for the browser apps, terminal tools, Ollama or LM Studio (flags
@@ -222,7 +222,7 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.4.0"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.4.1"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -305,7 +305,7 @@ A plain `pip install` of the `apple` or `gpu` profile builds the
 `aec-audio-processing`) from source, so it needs a C/C++ compiler. The one-line install above
 does not.
 
-`abstractframework` 0.3.0 pins `abstractgateway==0.4.0`, `abstractassistant==0.5.0`,
+`abstractframework` 0.3.0 pins `abstractgateway==0.4.1`, `abstractassistant==0.5.0`,
 `abstractcore==2.15.0`, `AbstractRuntime==0.4.33`, `abstractagent==0.3.13`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.4`,
 `abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
@@ -392,15 +392,15 @@ Run or install them next to the Python stack:
 
 | Tool | Command | Version released with 0.3.0 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.4.0 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.4.1 |
 | Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.15.0 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.2.0 |
 | Gateway terminal console | `cargo install abstractgateway-console` (Rust 1.87+), then `abstractgateway-console --url http://127.0.0.1:8080` | 0.8.0 |
 | Flow Editor | `npx @abstractframework/flow` | 0.3.20 |
 | Code Web UI | `npx @abstractframework/code` | 0.4.2 |
 | Observer | `npx @abstractframework/observer` | 0.1.12 |
-| Continuum console | `npx @abstractframework/continuum` | 0.2.0 |
-| Entity manager | `npx @abstractframework/entity` | 0.1.0 |
+| Continuum console | `npx @abstractframework/continuum` | 0.3.0 |
+| Entity manager | `npx @abstractframework/entity` | 0.2.0 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.5.1 |
 
 The browser apps need Node.js 18 or later and a running gateway. Optional Python add-ons outside the
@@ -435,7 +435,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.3.0
+  ghcr.io/lpalbou/abstractgateway:0.4.1
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -443,7 +443,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.14.0`.
+`ghcr.io/lpalbou/abstractcore-server:2.15.0`.
 
 ## How installs are designed
 

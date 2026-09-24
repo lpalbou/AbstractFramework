@@ -6,20 +6,26 @@ All notable changes to AbstractFramework will be documented in this file.
 
 A Mac install that needs no Terminal knowledge (a `.pkg` or a double-click `.command`, and an
 uninstaller), install failures explained in plain words, and the meta-package pins abstractcore
-2.15.0 and abstractgateway 0.4.0.
+2.15.0 and abstractgateway 0.4.1.
 
 ### Changed (pins)
 
-- **abstractcore 2.15.0** (was 2.14.0) and **abstractgateway 0.4.0** (was 0.3.0), in the base
-  install and in the `apple` / `gpu` extras (`abstractgateway[apple|gpu]==0.4.0`). The bootstrap
-  scripts install `abstractgateway[<profile>,tray]==0.4.0` and, with `--with-console`,
-  `abstractgateway-console` 0.8.0 (was 0.7.0). The other pins are unchanged: AbstractRuntime
-  0.4.33, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice
-  0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15, abstractassistant 0.5.0.
+- **abstractcore 2.15.0** (was 2.14.0) and **abstractgateway 0.4.1** (was 0.3.0; 0.4.0 was never
+  published), in the base install and in the `apple` / `gpu` extras
+  (`abstractgateway[apple|gpu]==0.4.1`). The bootstrap scripts install
+  `abstractgateway[<profile>,tray]==0.4.1` and, with `--with-console`, `abstractgateway-console`
+  0.8.0 (was 0.7.0). The other pins are unchanged: AbstractRuntime 0.4.33, abstractagent 0.3.13,
+  AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29,
+  abstractmusic 0.1.15, abstractassistant 0.5.0.
+- Browser apps released with it (`--with-apps`, `npx`): `@abstractframework/continuum` 0.3.0 (was
+  0.2.0) and `@abstractframework/entity` 0.2.0 (was 0.1.0); flow 0.3.20, code 0.4.2 and observer
+  0.1.12 are unchanged.
+- The docs name the container images released with it: `ghcr.io/lpalbou/abstractgateway:0.4.1`
+  and `ghcr.io/lpalbou/abstractcore-server:2.15.0`.
 - `docs/backlog/planned/0859` states the real stack port map (observer 3001, continuum 3002,
   code 3003, entity 3004, flow 3005), as `scripts/start-local.sh` and the gateway's
   `STACK_PORTS` use.
-- `scripts/lib/packages.txt`: abstractgateway 0.4.0 depends on abstractcore directly
+- `scripts/lib/packages.txt`: abstractgateway 0.4.1 depends on abstractcore directly
   (`abstractcore>=2.15.0`), so its edge is `abstractcore:dep` (was `extra`).
 
 ### Added
@@ -61,7 +67,7 @@ uninstaller), install failures explained in plain words, and the meta-package pi
   --port N` when nothing is stored; a stored mode is kept and only the port aligned) and start plain
   `abstractgateway serve`. Gateways without the `network` command keep the old
   `serve --host 127.0.0.1 --port N`. The login item itself runs plain `serve` from
-  abstractgateway 0.4.0.
+  abstractgateway 0.4.1.
 - The installer ends with a short plain-language summary (where AbstractFramework is, that it
   starts at login, the menu-bar icon, how to remove it) before the technical details.
 - `docs/install.md` is rewritten from a non-technical user's point of view (download, what you
@@ -78,6 +84,21 @@ uninstaller), install failures explained in plain words, and the meta-package pi
   was installed. `--full` builds llama.cpp from source, now in the light profile too. CI's
   bootstrap smoke imports `llama_cpp` from the installed gateway on macOS, Linux and Windows and
   checks GPU offload on macOS.
+
+### Known limitations
+
+These are unchanged from 0.2.1 (the same packages, checked with `uv pip install --dry-run
+--no-build` against both releases). The one-line installer is not affected by the first two: it
+installs the gateway, not `abstractassistant`, and builds pure-Python source packages.
+
+- A plain `pip install abstractframework` on Linux builds `evdev` from source (a C compiler and
+  kernel headers), through `abstractassistant` 0.5.0 → `pynput`.
+- `langdetect`, `antlr4-python3-runtime`, `encodec` and `transformers-stream-generator` are
+  published as source only; they are pure Python and build without a compiler.
+- `abstractframework[gpu]` on Linux needs glibc 2.35 or later (Ubuntu 22.04+): `mlx[cuda13]`,
+  pulled by `abstractvision[all-gpu]` through `mlx-gen`, has only `manylinux_2_35` wheels.
+- The macOS `.pkg` built by `scripts/lib/build_macos_installer.sh` is not signed yet, so
+  Gatekeeper asks the user to allow it ("Open Anyway").
 
 ## [0.2.1] - 2026-09-24
 

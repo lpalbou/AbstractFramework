@@ -56,7 +56,7 @@ The response type returned by `llm.generate(...)`.
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.3.0:
-`abstractcore` 2.15.0, `abstractruntime` 0.4.33, `abstractagent` 0.3.13, `abstractgateway` 0.4.0,
+`abstractcore` 2.15.0, `abstractruntime` 0.4.33, `abstractagent` 0.3.13, `abstractgateway` 0.4.1,
 `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.4, `abstractvision` 0.3.29,
 `abstractmusic` 0.1.15, `abstractassistant` 0.5.0.
 
@@ -69,8 +69,8 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 
 The npm apps released with this version, each runnable with `npx <package>`:
 `@abstractframework/flow` 0.3.20, `@abstractframework/code` 0.4.2,
-`@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.2.0 and
-`@abstractframework/entity` 0.1.0. They also appear as `npm_apps` in the install manifest.
+`@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.3.0 and
+`@abstractframework/entity` 0.2.0. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`
 

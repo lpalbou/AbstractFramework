@@ -6,7 +6,7 @@
 # Requires the gateway (start it first). Local-code twin: entity-local.sh
 #
 # Published on npm since @abstractframework/entity 0.1.0 (2026-09-23); pin a
-# version with ENTITY_NPM_SPEC=@abstractframework/entity@0.1.0.
+# version with ENTITY_NPM_SPEC=@abstractframework/entity@0.2.0.
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/apps_common.sh"
 

@@ -48,7 +48,7 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.4.0",
+    "abstractgateway==0.4.1",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
     "abstractassistant==0.5.0",
@@ -80,12 +80,12 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.4.0",
+    "abstractgateway[apple]==0.4.1",
     "abstractassistant[apple]==0.5.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.4.0",
+    "abstractgateway[gpu]==0.4.1",
     "abstractassistant[gpu]==0.5.0",
 ]
 

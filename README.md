@@ -145,7 +145,7 @@ ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.3.0` and `ghcr.io/lpalbou/abstractcore-server:2.14.0`.
+`ghcr.io/lpalbou/abstractgateway:0.4.1` and `ghcr.io/lpalbou/abstractcore-server:2.15.0`.
 
 For artifact and runtime-resource investigation, see
 `docs/guide/runtime-artifacts.md`.
@@ -273,7 +273,7 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.4.0 |
+| PyPI | `abstractgateway` | 0.4.1 |
 | PyPI | `abstractassistant` | 0.5.0 |
 | PyPI | `abstractcore` | 2.15.0 |
 | PyPI | `AbstractRuntime` | 0.4.33 |
@@ -286,14 +286,14 @@ and tested together.
 | npm | `@abstractframework/flow` | 0.3.20 |
 | npm | `@abstractframework/code` | 0.4.2 |
 | npm | `@abstractframework/observer` | 0.1.12 |
-| npm | `@abstractframework/continuum` | 0.2.0 |
-| npm | `@abstractframework/entity` | 0.1.0 |
+| npm | `@abstractframework/continuum` | 0.3.0 |
+| npm | `@abstractframework/entity` | 0.2.0 |
 | crates.io | `abstractcode` | 0.5.1 |
 | crates.io | `abstractgateway-console` | 0.8.0 |
 | crates.io | `abstractcore-console` | 0.2.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.3.0 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.14.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.4.1 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.0 |
 
 Optional add-ons that are not part of any profile install separately:
 `pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and

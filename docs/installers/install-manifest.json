@@ -105,7 +105,7 @@
         "summary": "Remove the service and uv tools (purge also deletes the data dir)."
       }
     ],
-    "gateway_version": "0.4.0",
+    "gateway_version": "0.4.1",
     "optional_extras": [
       "tray"
     ],
@@ -148,7 +148,7 @@
       "wait for GET /api/health",
       "abstractgateway-config claim-url (when supported) and open /console"
     ],
-    "tool_requirement": "abstractgateway[{extras}]==0.4.0",
+    "tool_requirement": "abstractgateway[{extras}]==0.4.1",
     "uninstall": [
       [
         "abstractgateway",
@@ -199,14 +199,14 @@
       "id": "continuum",
       "package": "@abstractframework/continuum",
       "registry": "npm",
-      "version": "0.2.0"
+      "version": "0.3.0"
     },
     {
       "command": "npx @abstractframework/entity",
       "id": "entity",
       "package": "@abstractframework/entity",
       "registry": "npm",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ],
   "post_install": {
@@ -371,7 +371,7 @@
       "distribution": "abstractgateway",
       "id": "abstractgateway",
       "registry": "pypi",
-      "version": "0.4.0"
+      "version": "0.4.1"
     },
     {
       "distribution": "AbstractMemory",

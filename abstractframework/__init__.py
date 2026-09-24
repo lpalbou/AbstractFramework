@@ -18,7 +18,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.15.0",
     "abstractruntime": "0.4.33",
     "abstractagent": "0.3.13",
-    "abstractgateway": "0.4.0",
+    "abstractgateway": "0.4.1",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.11.4",
@@ -44,8 +44,8 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.3.20",
     "@abstractframework/code": "0.4.2",
     "@abstractframework/observer": "0.1.12",
-    "@abstractframework/continuum": "0.2.0",
-    "@abstractframework/entity": "0.1.0",
+    "@abstractframework/continuum": "0.3.0",
+    "@abstractframework/entity": "0.2.0",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,

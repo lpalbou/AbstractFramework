@@ -4,7 +4,7 @@
 # execution, report/email inbox triage, managed process control.
 # Requires the gateway (start it first). Local-code twin: console-local.sh
 # Published on npm since @abstractframework/continuum 0.2.0 (2026-09-23);
-# pin a version with CONTINUUM_NPM_SPEC=@abstractframework/continuum@0.2.0.
+# pin a version with CONTINUUM_NPM_SPEC=@abstractframework/continuum@0.3.0.
 #
 # Port note: the cli.js self-default (3002) collides with the code app; this
 # launcher always passes PORT explicitly (default 3003, ABSTRACTCONTINUUM_PORT).
