@@ -1,0 +1,58 @@
+#!/bin/sh
+# Recorded test double for launchctl (scripts/tests/test_install_user_path.sh).
+# Put this directory first on PATH; `abstractgateway service install` and
+# install.sh --uninstall then call it instead of the real launchd, so no login
+# item is ever registered on the machine running the test.
+#   bootstrap gui/<uid> <plist>  starts ProgramArguments from the plist in the
+#                                background (env from EnvironmentVariables, HOME
+#                                from the caller, CI=1 so no tray icon appears)
+#   bootout gui/<uid>/<label>    kills that process (exit 3 when not loaded)
+#   print gui/<uid>/<label>      exit 0 when loaded, 113 otherwise
+# Every call is appended to $AF_LAUNCHD_DOUBLE_STATE/calls.log.
+set -eu
+STATE="${AF_LAUNCHD_DOUBLE_STATE:?launchctl double: set AF_LAUNCHD_DOUBLE_STATE to a scratch dir}"
+mkdir -p "$STATE"
+echo "$(date +%H:%M:%S) launchctl $*" >>"$STATE/calls.log"
+PB=/usr/libexec/PlistBuddy
+case "${1:-}" in
+    bootstrap)
+        plist="$3"
+        label="$($PB -c 'Print :Label' "$plist")"
+        set --
+        i=0
+        while a="$($PB -c "Print :ProgramArguments:$i" "$plist" 2>/dev/null)"; do set -- "$@" "$a"; i=$((i + 1)); done
+        envfile="$STATE/$label.env"
+        $PB -c 'Print :EnvironmentVariables' "$plist" 2>/dev/null | sed -n 's/^ *\([A-Za-z_][A-Za-z0-9_]*\) = \(.*\)$/\1=\2/p' >"$envfile"
+        out="$($PB -c 'Print :StandardOutPath' "$plist" 2>/dev/null || echo /dev/null)"
+        err="$($PB -c 'Print :StandardErrorPath' "$plist" 2>/dev/null || echo /dev/null)"
+        wd="$($PB -c 'Print :WorkingDirectory' "$plist" 2>/dev/null || echo "$HOME")"
+        mkdir -p "$(dirname "$out")" "$(dirname "$err")"
+        (
+            cd "$wd"
+            while IFS= read -r kv; do export "$kv"; done <"$envfile"
+            export HOME CI=1
+            nohup "$@" >>"$out" 2>>"$err" </dev/null &
+            echo $! >"$STATE/$label.pid"
+        )
+        echo "$(date +%H:%M:%S)   started $label pid $(cat "$STATE/$label.pid"): $*" >>"$STATE/calls.log"
+        ;;
+    bootout)
+        label="${2##*/}"
+        pidf="$STATE/$label.pid"
+        if [ -f "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then
+            p="$(cat "$pidf")"; kill "$p"
+            n=0; while kill -0 "$p" 2>/dev/null && [ "$n" -lt 40 ]; do sleep 0.25; n=$((n + 1)); done
+            rm -f "$pidf"
+            echo "$(date +%H:%M:%S)   stopped $label pid $p" >>"$STATE/calls.log"
+        else
+            echo "Boot-out failed: 3: No such process" >&2; exit 3
+        fi
+        ;;
+    print)
+        label="${2##*/}"
+        pidf="$STATE/$label.pid"
+        if [ -f "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then echo "$label = { state = running; pid = $(cat "$pidf") }"; exit 0; fi
+        echo "Could not find service \"$label\"" >&2; exit 113
+        ;;
+esac
+exit 0

@@ -4,8 +4,51 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **A Mac install that needs no Terminal knowledge.** `scripts/lib/build_macos_installer.sh`
+  builds `AbstractFramework-Installer.pkg` (payload-free, "install for me only", no password) and
+  `AbstractFramework-Installer-macOS.zip` (`Install AbstractFramework.command` and
+  `Uninstall AbstractFramework.command`). Both open the same `install.sh` in Terminal with a
+  banner, so every step stays visible and logged; the browser opens AbstractFramework, signed in,
+  at the end. The script signs and notarizes the `.pkg` when given a Developer ID
+  (`AF_PKG_SIGN_IDENTITY`, `AF_NOTARY_PROFILE`); without one it says the build is unsigned.
+- **`scripts/uninstall.sh`**: asks before removing anything, removes the login item, the running
+  gateway and the gateway tool, and asks separately whether to delete your data (`--purge`) and,
+  when the installer added uv, uv with its Python and download cache (`--remove-uv`, about
+  2.5 GB after an Apple Silicon install). `--yes` runs without questions.
+- **`install.sh --interactive`** asks whether to start AbstractFramework at login (default yes; a
+  previous "no" is remembered) and, on `--uninstall`, the data and uv questions. Questions go to
+  the terminal, so it works through `curl | sh`. Answering "no" after an earlier "yes" removes the
+  login item and starts the gateway in the background.
+
 ### Changed
 
+- **Every install failure says what to do next, in plain words.** `install.sh` checks internet
+  access to PyPI before changing anything (naming the proxy when one is set), recognises a
+  connection that drops mid-install, stops on folders it cannot write (with the exact
+  `sudo chown` fix), restarts itself natively when Terminal runs under Rosetta on Apple Silicon
+  (and explains the Terminal setting when piped), warns on macOS older than 13, and says why an
+  Apple Silicon Mac on macOS 13 gets the light profile. `install.ps1` has the same network check
+  and messages.
+- **Re-runs repair and stay quiet.** A gateway command that no longer starts (an interrupted or
+  damaged install) is reinstalled in place; a registered, running, unchanged login item is left
+  alone instead of restarted; an already-configured shell profile no longer produces a
+  `uv tool update-shell` warning. The health wait is 180 s (the first start loads the engines) with
+  a progress line every 15 s.
+- **The gateway's Network setting decides where it listens, not the installer.** `install.sh` and
+  `install.ps1` no longer pass `--host 127.0.0.1` to `abstractgateway service install` (it reset a
+  "Local network" choice to localhost on every re-run); they pass `--port` only. Without a login
+  item (background mode) they store the setting first (`abstractgateway network set localhost
+  --port N` when nothing is stored; a stored mode is kept and only the port aligned) and start plain
+  `abstractgateway serve`. Gateways without the `network` command keep the old
+  `serve --host 127.0.0.1 --port N`. The login item itself runs plain `serve` from
+  abstractgateway 0.4.0.
+- The installer ends with a short plain-language summary (where AbstractFramework is, that it
+  starts at login, the menu-bar icon, how to remove it) before the technical details.
+- `docs/install.md` is rewritten from a non-technical user's point of view (download, what you
+  will see, a table of every failure message and what to do, how to remove it); the one-line,
+  options and profile material follows under "Advanced". README and getting-started match.
 - **llama.cpp GGUF is back in the one-line install, without a compiler.** `install.sh` and
   `install.ps1` take `llama-cpp-python` from upstream's prebuilt wheels for every profile, light
   included: Metal 0.3.28 on Apple Silicon, CPU 0.3.35 on glibc Linux x86_64/aarch64 and Windows

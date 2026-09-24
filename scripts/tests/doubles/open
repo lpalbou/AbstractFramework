@@ -1,0 +1,5 @@
+#!/bin/sh
+# Recorded test double for macOS `open`: appends its arguments to
+# $AF_OPEN_DOUBLE_LOG instead of opening a browser or Terminal window.
+echo "open $*" >>"${AF_OPEN_DOUBLE_LOG:?open double: set AF_OPEN_DOUBLE_LOG}"
+exit 0

@@ -493,7 +493,8 @@ def test_install_sh_retries_without_llama_cpp_when_the_wheel_fails(tmp_path: Pat
         f'  "tool dir") echo "{tool_bin}" ;;\n'
         '  "tool install")\n'
         '    for a in "$@"; do [ "$a" = --find-links ] && { echo "simulated: no wheel" >&2; exit 2; }; done\n'
-        f'    mkdir -p "{tool_bin}" && printf "#!/bin/sh\\nexit 1\\n" > "{tool_bin}/abstractgateway" && chmod +x "{tool_bin}/abstractgateway" ;;\n'
+        # The gateway command must start (`--help` exits 0): install.sh checks it after the install.
+        f'    mkdir -p "{tool_bin}" && printf "#!/bin/sh\\nexit 0\\n" > "{tool_bin}/abstractgateway" && chmod +x "{tool_bin}/abstractgateway" ;;\n'
         "esac\n"
         "exit 0\n"
     )
@@ -512,6 +513,43 @@ def test_install_sh_retries_without_llama_cpp_when_the_wheel_fails(tmp_path: Pat
     assert "GGUF:       skipped (the prebuilt " in proc.stdout
     overrides = next((tmp_path / "data").rglob("uv-overrides.txt")) if (tmp_path / "data").exists() else next(tmp_path.rglob("uv-overrides.txt"))
     assert overrides.read_text().splitlines() == _NO_GGUF_OVERRIDES
+
+
+def test_install_sh_repairs_a_gateway_command_that_does_not_start(tmp_path: Path) -> None:
+    """An interrupted or damaged earlier install: uv reports the tool as installed (and does
+    nothing), but the command fails. install.sh must notice, reinstall with --reinstall, and
+    say it repaired it."""
+    _host()
+    fake = _fake_bin(tmp_path, compiler=False)
+    tool_bin = tmp_path / "toolbin"
+    calls = tmp_path / "uv-calls.log"
+    uv = fake / "uv"
+    uv.write_text(
+        "#!/bin/sh\n"
+        f'echo "$*" >> "{calls}"\n'
+        'case "$1 $2" in\n'
+        '  "--version "*) echo "uv 0.0.0" ;;\n'
+        f'  "tool dir") echo "{tool_bin}" ;;\n'
+        '  "tool list") echo "abstractgateway v0.3.0" ;;\n'
+        '  "tool install")\n'
+        '    rc=1; for a in "$@"; do [ "$a" = --reinstall ] && rc=0; done\n'
+        f'    mkdir -p "{tool_bin}" && printf "#!/bin/sh\\nexit $rc\\n" > "{tool_bin}/abstractgateway" && chmod +x "{tool_bin}/abstractgateway" ;;\n'
+        "esac\n"
+        "exit 0\n"
+    )
+    uv.chmod(0o755)
+    proc = subprocess.run(
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--profile", "light", "--port", "18998",
+         "--no-start", "--no-service", "--no-open", "--no-modify-path"],
+        capture_output=True, text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb",
+             "XDG_DATA_HOME": str(tmp_path / "data")},
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    installs = [line for line in calls.read_text().splitlines() if line.startswith("tool install ")]
+    assert "--reinstall" not in installs[0] and "--reinstall" in installs[-1]
+    assert "the installed gateway does not start" in proc.stdout
+    assert "abstractgateway 0.3.0 repaired (reinstalled in place)" in proc.stdout
 
 
 def test_install_sh_full_builds_the_compiled_extras(tmp_path: Path) -> None:

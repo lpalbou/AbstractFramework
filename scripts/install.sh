@@ -45,14 +45,42 @@
 #   --no-modify-path         do not run `uv tool update-shell`
 #   --print, --dry-run       show the plan and commands; change nothing
 #   --print-versions         print the pinned versions and exit
-#   --uninstall [--purge]    remove the service and the uv tools (--purge also
-#                            deletes the gateway data dir)
+#   --interactive            ask before the choices that matter (start at login;
+#                            on --uninstall: delete the data too). Questions go
+#                            to the terminal, so this works through curl | sh.
+#                            The double-click installers pass it.     [AF_INTERACTIVE=1]
+#   --uninstall [--purge] [--remove-uv]
+#                            remove the service and the uv tools (--purge also
+#                            deletes the gateway data dir; --remove-uv also removes
+#                            uv, its Pythons and its download cache when this
+#                            installer is what put uv there)
 #   -v, --verbose            show the full output of every command
 #   -h, --help               this help
 # =============================================================================
 
 if [ -n "${ZSH_VERSION:-}" ]; then emulate sh; fi
 set -eu
+
+# ---------------------------------------------------------------------------
+# Apple Silicon under Rosetta: a Terminal set to "Open using Rosetta" reports
+# x86_64, so uv would fetch an Intel Python and the Mac would get the light
+# profile with no MLX. Re-run natively when this script is a file; when it is
+# piped (curl | sh) there is nothing to re-run, so say how to fix Terminal.
+# ---------------------------------------------------------------------------
+if [ "$(uname -s)" = Darwin ] && [ "$(sysctl -n sysctl.proc_translated 2>/dev/null || echo 0)" = 1 ]; then
+    if [ -z "${AF_REEXEC_NATIVE:-}" ] && [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap" \
+        && arch -arm64 /usr/bin/true 2>/dev/null; then
+        echo "This Terminal runs in Intel (Rosetta) mode on an Apple Silicon Mac: restarting the installer natively."
+        echo "  \$ arch -arm64 /bin/sh $0 $*"
+        AF_REEXEC_NATIVE=1 exec arch -arm64 /bin/sh "$0" "$@"
+    fi
+    printf '\nERROR: this Terminal runs in Intel (Rosetta) mode on an Apple Silicon Mac, so the installer\n' >&2
+    printf 'would set up the slow Intel version without the Apple Silicon engines.\n' >&2
+    printf 'What to do: quit Terminal; in Finder open Applications > Utilities, select Terminal, choose\n' >&2
+    printf 'File > Get Info, untick "Open using Rosetta", open Terminal again and run the installer again.\n' >&2
+    printf '(Or paste: curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | arch -arm64 sh)\n' >&2
+    exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # Release pins. The gateway pin mirrors `bootstrap.gateway_version` in
@@ -127,11 +155,12 @@ DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
 WITH_APPS=0; WITH_CONSOLE=0; WITH_CODE_CLI=0; WITH_CORE_CLI=0
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
 FULL=0; NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
-PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0
+PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0
+INTERACTIVE="${AF_INTERACTIVE:-0}"
 
 usage() {
     if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
-        sed -n '2,52p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,59p' "$0" | sed 's/^# \{0,1\}//'
     else
         echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
         echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
@@ -176,6 +205,8 @@ while [ $# -gt 0 ]; do
             exit 0 ;;
         --uninstall) UNINSTALL=1 ;;
         --purge) PURGE=1 ;;
+        --remove-uv) REMOVE_UV=1 ;;
+        --interactive) INTERACTIVE=1 ;;
         -v|--verbose) VERBOSE=1 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -198,6 +229,20 @@ ok()   { printf '  %s✓%s %s\n' "$C_G" "$C_0" "$1"; }
 info() { printf '  %s·%s %s\n' "$C_C" "$C_0" "$1"; }
 warn() { printf '  %s!%s %s\n' "$C_Y" "$C_0" "$1"; }
 die()  { printf '\n%sERROR:%s %s\n' "$C_R" "$C_0" "$1" >&2; exit 1; }
+
+# ask_yes QUESTION DEFAULT(y|n): 0 for yes. Only with --interactive and a
+# terminal to ask on (/dev/tty, so it also works through `curl | sh`); otherwise
+# it answers DEFAULT and says so, so every choice is on the record.
+ask_yes() {
+    _def="$2"; _ans=""
+    if [ "$INTERACTIVE" = 1 ] && [ "$PRINT" = 0 ] && { : </dev/tty; } 2>/dev/null; then
+        printf '  %s?%s %s %s ' "$C_Y" "$C_0" "$1" "$([ "$_def" = y ] && echo '[Y/n]' || echo '[y/N]')" >/dev/tty
+        IFS= read -r _ans </dev/tty || _ans=""
+    else
+        info "$1 -> $([ "$_def" = y ] && echo yes || echo no) (default$([ "$INTERACTIVE" = 1 ] || echo '; --interactive asks'))"
+    fi
+    case "${_ans:-$_def}" in [Yy]*) return 0 ;; *) return 1 ;; esac
+}
 
 # Shell-quote one word for display.
 q() {
@@ -243,7 +288,15 @@ run() {
         printf '%s--- last lines of %s ---%s\n' "$C_D" "$LOG_FILE" "$C_0" >&2
         tail -n 25 "$LOG_FILE" >&2 || true
     fi
-    die "$_desc failed (command: $_shown)"
+    # Most failures on a clean machine are a dropped connection: say that in
+    # plain words instead of leaving the user with a resolver traceback.
+    if ! net_ok; then
+        die "$_desc failed because the internet connection dropped (command: $_shown).
+What to do: reconnect, then run the installer again; it continues where it stopped."
+    fi
+    die "$_desc failed (command: $_shown).
+What to do: run the installer again (it repairs a half-finished install). If it stops at the
+same step, report it with the log file: ${LOG_FILE:-the output above} ($AF_DOCS#if-something-goes-wrong)"
 }
 RUN_SOFT=0
 # run_sh DESCRIPTION 'shell pipeline' : for the vendor `curl ... | sh` one-liners.
@@ -256,6 +309,23 @@ http_get() {  # URL -> body on stdout; non-zero when unreachable
     if have curl; then curl -fsS --connect-timeout 2 --max-time 5 "$1" 2>/dev/null
     elif have wget; then wget -qO- --timeout=5 "$1" 2>/dev/null
     else return 1; fi
+}
+# net_ok: 0 when PyPI answers, through whatever proxy the environment sets.
+AF_NET_PROBE="https://pypi.org/simple/pip/"
+net_ok() {
+    if have curl; then curl -sS -o /dev/null --connect-timeout 5 --max-time 15 "$AF_NET_PROBE" 2>/dev/null
+    elif have wget; then wget -q -O /dev/null --timeout=10 "$AF_NET_PROBE" 2>/dev/null
+    else return 1; fi
+}
+offline_msg() {
+    _proxy="${HTTPS_PROXY:-${https_proxy:-${ALL_PROXY:-${all_proxy:-}}}}"
+    if [ -n "$_proxy" ]; then
+        echo "this computer cannot reach pypi.org through the proxy set in your environment ($_proxy).
+What to do: check that proxy (or remove the HTTPS_PROXY setting), then run the installer again."
+    else
+        echo "no internet connection: the installer could not reach pypi.org, where it downloads AbstractFramework.
+What to do: connect to the internet (Wi-Fi or cable), then run the installer again. Nothing was changed."
+    fi
 }
 fetch_cmd() {  # the downloader as a shell fragment, for `... | sh`
     if have curl; then echo "curl -LsSf"; elif have wget; then echo "wget -qO-"; else echo ""; fi
@@ -287,8 +357,9 @@ LOG_DIR="$DATA_DIR/logs"
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 
 # Previous run state (port, service mode, whether we installed Node).
-ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""
+ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""; ST_UV_BY_US=""
 if [ -f "$STATE_FILE" ]; then
+    ST_UV_BY_US="$(sed -n 's/^UV_BY_INSTALLER=//p' "$STATE_FILE" | tail -n 1)"
     ST_PORT="$(sed -n 's/^PORT=//p' "$STATE_FILE" | tail -n 1)"
     ST_MODE="$(sed -n 's/^MODE=//p' "$STATE_FILE" | tail -n 1)"
     ST_NODE_WHEEL="$(sed -n 's/^NODE_WHEEL=//p' "$STATE_FILE" | tail -n 1)"
@@ -316,7 +387,43 @@ gateway_supports() {  # gateway_supports service|claim-url
     case "$1" in
         service) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" service --help >/dev/null 2>&1 ;;
         claim-url) [ -x "$TOOL_BIN/abstractgateway-config" ] && "$TOOL_BIN/abstractgateway-config" claim-url --help >/dev/null 2>&1 ;;
+        network) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" network --help >/dev/null 2>&1 ;;
     esac
+}
+
+# seed_network_setting: before a background `serve` without --host/--port, make the
+# gateway's Network setting hold this install's port. Nothing stored yet -> `localhost`
+# (127.0.0.1, the bind the installer always used). A stored mode (e.g. `lan` chosen in
+# the tray) is KEPT; only its port is aligned to $PORT when it differs. Returns 1 when the
+# setting cannot be read: the caller then starts the old pinned command line, and says so.
+seed_network_setting() {
+    _net="$("$GW" network status --json 2>/dev/null | awk '
+        /^  "configured": \{/ { inb = 1; next }
+        inb && /^  \}/ { inb = 0 }
+        inb && /"mode":/ { v = $2; gsub(/[",]/, "", v); m = v }
+        inb && /"port":/ { v = $2; gsub(/[",]/, "", v); p = v }
+        inb && /"source":/ { v = $2; gsub(/[",]/, "", v); s = v }
+        inb && /"port_source":/ { v = $2; gsub(/[",]/, "", v); ps = v }
+        END { if (m != "") print m, p, s, ps }')" || _net=""
+    if [ -z "$_net" ]; then
+        warn "could not read the gateway's Network setting ('abstractgateway network status' failed); starting it pinned to 127.0.0.1:$PORT, so a Network choice will not apply until the next run"
+        return 1
+    fi
+    # shellcheck disable=SC2086
+    set -- $_net
+    if [ "$3" != stored ]; then
+        run "store the Network setting: this machine only (localhost), port $PORT" "$GW" network set localhost --port "$PORT"
+    elif [ "$4" != stored ] || [ "$2" != "$PORT" ]; then
+        # `internet` was acknowledged when it was chosen; only the port changes here.
+        if [ "$1" = internet ]; then
+            run "keep the Network setting '$1', port $PORT" "$GW" network set "$1" --port "$PORT" --acknowledge-internet
+        else
+            run "keep the Network setting '$1', port $PORT" "$GW" network set "$1" --port "$PORT"
+        fi
+    else
+        ok "Network setting kept: '$1' on port $PORT"
+    fi
+    return 0
 }
 
 pid_alive() { [ -f "$PID_FILE" ] && _p="$(cat "$PID_FILE" 2>/dev/null)" && [ -n "$_p" ] && kill -0 "$_p" 2>/dev/null; }
@@ -339,15 +446,40 @@ stop_background_gateway() {
 if [ "$UNINSTALL" = 1 ]; then
     printf '%sAbstractFramework uninstall%s%s\n' "$C_B" "$C_0" "$([ "$PRINT" = 1 ] && echo ' (--print: nothing is changed)')"
     find_uv || true; tool_bin
+    # Asked first, so the user answers once and every step below runs unattended.
+    if [ "$PURGE" = 0 ] && [ -d "$DATA_DIR" ]; then
+        _size="$(du -sh "$DATA_DIR" 2>/dev/null | awk '{print $1}')"
+        if ask_yes "Also delete your AbstractFramework data (settings, users, chats, run history: ${_size:-?} in $DATA_DIR)? This cannot be undone." n; then
+            PURGE=1
+        fi
+    fi
+    if [ "$ST_UV_BY_US" = 1 ] && [ "$REMOVE_UV" = 0 ] && [ -n "$UV" ]; then
+        _uvsize="$(du -sch "$("$UV" cache dir 2>/dev/null)" "$("$UV" python dir 2>/dev/null)" 2>/dev/null | tail -n 1 | awk '{print $1}')"
+        if ask_yes "Also remove uv, its Python and its download cache (${_uvsize:-?})? The installer added uv; anything else you installed with uv would stop working." n; then
+            REMOVE_UV=1
+        fi
+    fi
     step "Gateway service and processes"
     # Only touch the login service when this install registered it (or when no state says
     # otherwise): a --no-service install must not unregister a service set up separately.
+    UNIT_MAC="$HOME/Library/LaunchAgents/ai.abstractframework.gateway.plist"
+    UNIT_LINUX="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/abstractgateway.service"
     if [ "$ST_MODE" = background ] || [ "$ST_MODE" = none ]; then
         info "no login service was registered by this install (mode: $ST_MODE)"
     elif gateway_supports service; then
         run "remove the gateway service" "$TOOL_BIN/abstractgateway" service uninstall
+    elif [ "$OS_ID" = macos ] && [ -f "$UNIT_MAC" ]; then
+        # A half-removed install (the tool is gone, the login item is not): the
+        # same two steps `abstractgateway service uninstall` runs.
+        RUN_SOFT=1 run "stop the login item" launchctl bootout "gui/$(id -u)/ai.abstractframework.gateway"
+        run "remove the login item" rm -f "$UNIT_MAC"
+    elif [ "$OS_ID" = linux ] && [ -f "$UNIT_LINUX" ]; then
+        RUN_SOFT=1 run "stop the login service" systemctl --user disable --now abstractgateway.service
+        run "remove the login service" rm -f "$UNIT_LINUX"
     elif [ "$ST_MODE" = service ]; then
-        warn "the state file says a service was registered, but this gateway has no 'service' command; remove it by hand ($AF_DOCS)"
+        info "the state file says a service was registered, but none is installed now; nothing to remove"
+    else
+        info "no login service found"
     fi
     stop_background_gateway
     step "uv tools"
@@ -362,12 +494,33 @@ if [ "$UNINSTALL" = 1 ]; then
         info "uv not found; nothing to uninstall there"
     fi
     step "Data"
+    _inst="$HOME/Library/Application Support/AbstractFramework/Installer"
+    if [ "$OS_ID" = macos ] && [ -d "$_inst" ]; then
+        run "remove the copy of the installer left by the .pkg" rm -rf "$_inst"
+    fi
     if [ "$PURGE" = 1 ]; then
         run "delete the gateway data dir" rm -rf "$DATA_DIR"
+        # The LaunchAgent's stdout/stderr files (os_service.log_dir on macOS).
+        if [ "$OS_ID" = macos ] && [ -d "$HOME/Library/Logs/AbstractGateway" ]; then
+            run "delete the login item's logs" rm -rf "$HOME/Library/Logs/AbstractGateway"
+        fi
     else
         info "kept the gateway data dir: $DATA_DIR (delete it with --uninstall --purge)"
     fi
-    info "kept: uv ($([ -n "$UV" ] && echo "$UV" || echo 'not found')), Ollama, LM Studio, and any cargo tools"
+    if [ "$REMOVE_UV" = 1 ] && [ -n "$UV" ]; then
+        step "uv, its Python and its download cache"
+        if [ "$ST_UV_BY_US" != 1 ]; then
+            warn "uv was not installed by this installer (or the record of it is gone): removing it because --remove-uv was given"
+        fi
+        _uvdir="$(dirname "$UV")"
+        run "delete uv's download cache" "$UV" cache clean
+        run "remove the Pythons uv installed" "$UV" python uninstall --all
+        run "remove uv" rm -f "$UV" "$_uvdir/uvx" "${XDG_CONFIG_HOME:-$HOME/.config}/uv/uv-receipt.json"
+        info "kept: the PATH line uv added to your shell profile (harmless; delete it by hand if you like)"
+        info "kept: Ollama, LM Studio, and any cargo tools"
+    else
+        info "kept: uv ($([ -n "$UV" ] && echo "$UV" || echo 'not found'); --remove-uv removes it), Ollama, LM Studio, and any cargo tools"
+    fi
     printf '\n%sDone.%s\n' "$C_G" "$C_0"
     exit 0
 fi
@@ -404,6 +557,25 @@ printf '%sAbstractFramework bootstrap%s  %s%s%s\n' "$C_B" "$C_0" "$C_D" \
 
 step "Preflight"
 ok "system: $OS_ID $ARCH$([ -n "$MACOS_VERSION" ] && echo " (macOS $MACOS_VERSION)")"
+if [ "$OS_ID" = macos ] && [ "$MACOS_MAJOR" -lt 13 ] 2>/dev/null; then
+    warn "macOS $MACOS_VERSION is older than the versions AbstractFramework is tested on (13 and later). If the install fails, update macOS (System Settings > General > Software Update) and run the installer again."
+fi
+
+# Every path the install writes must be writable by this user: a folder left
+# owned by root (an earlier `sudo pip`/`sudo uv`) otherwise fails deep inside uv.
+check_writable() {  # DIR: its nearest existing ancestor must be writable
+    _d="$1"
+    while [ ! -e "$_d" ] && [ "$_d" != / ]; do _d="$(dirname "$_d")"; done
+    [ -w "$_d" ] && return 0
+    _owner="$(ls -ld "$_d" 2>/dev/null | awk '{print $3}')"
+    die "the folder $_d belongs to '$_owner', so the installer (running as '$(id -un)') cannot write there. This usually happens after a command was run with sudo.
+What to do: in Terminal run   sudo chown -R $(id -un) $(q "$_d")   (it asks for your password once), then run the installer again."
+}
+for _w in "$HOME" "${UV_TOOL_BIN_DIR:-${XDG_BIN_HOME:-$HOME/.local/bin}}" "${UV_TOOL_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/uv/tools}" "$DATA_DIR"; do
+    check_writable "$_w"
+done
+[ "$OS_ID" = macos ] && [ "$NO_SERVICE" = 0 ] && check_writable "$HOME/Library/LaunchAgents"
+ok "folders: everything installs under $HOME (no admin password needed)"
 HAS_CC=1
 if [ "$OS_ID" = macos ]; then xcode-select -p >/dev/null 2>&1 || HAS_CC=0
 elif ! have cc && ! have gcc; then HAS_CC=0; fi
@@ -417,7 +589,11 @@ elif [ "$FULL" = 1 ]; then
     ok "C compiler found: --full builds the compiled extras from source (several minutes)"
 fi
 DL="$(fetch_cmd)"
-[ -n "$DL" ] || die "need curl or wget"
+[ -n "$DL" ] || die "this computer has neither curl nor wget, so the installer cannot download anything.
+What to do: install curl with your system's package manager (Debian/Ubuntu: sudo apt-get install -y curl), then run the installer again."
+if net_ok; then ok "internet: pypi.org reachable"
+elif [ "$PRINT" = 1 ]; then warn "$(offline_msg | head -n 1)"
+else die "$(offline_msg)"; fi
 
 HAS_NVIDIA=0; HAS_ROCM=0
 if have nvidia-smi && nvidia-smi -L >/dev/null 2>&1; then HAS_NVIDIA=1; fi
@@ -429,6 +605,8 @@ case "$PROFILE" in
     auto|"")
         if [ -n "$ST_PROFILE" ]; then PROFILE="$ST_PROFILE"; _why="kept from the previous install"
         elif [ "$APPLE_OK" = 1 ]; then PROFILE=apple; _why="Apple Silicon, macOS $MACOS_VERSION"
+        elif [ "$OS_ID" = macos ] && [ "$ARCH" = arm64 ]; then PROFILE=light
+            _why="macOS $MACOS_VERSION: the Apple Silicon engines (MLX) need macOS 14 or later; update macOS and run the installer again to add them"
         elif [ "$HAS_NVIDIA" = 1 ]; then PROFILE=gpu; _why="nvidia-smi found a GPU"
         elif [ "$HAS_ROCM" = 1 ]; then PROFILE=gpu; _why="rocminfo found a GPU"
         else PROFILE=light; _why="no local accelerator stack detected"; fi
@@ -548,6 +726,19 @@ if [ "$OS_ID" = linux ]; then
     fi
 fi
 
+# Start at login: asked here, before anything is downloaded, so an interactive
+# user answers once and can walk away. Default yes (the gateway is the app's
+# presence on the machine); a previous "no" is remembered as the default.
+if [ "$NO_START" = 0 ] && [ "$NO_SERVICE" = 0 ] && { [ "$OS_ID" = macos ] || [ "$SYSTEMD_USER" = 1 ]; }; then
+    _login_def=y; [ "$ST_MODE" = background ] && _login_def=n
+    if ask_yes "Start AbstractFramework automatically when you log in? (a per-user login item, no admin; the uninstaller removes it)" "$_login_def"; then
+        ok "start at login: yes ($([ "$OS_ID" = macos ] && echo "LaunchAgent ~/Library/LaunchAgents/ai.abstractframework.gateway.plist" || echo "systemd --user unit abstractgateway.service"); turn off: re-run with --no-service)"
+    else
+        NO_SERVICE=1
+        ok "start at login: no (the gateway starts now in the background; re-run the installer to change this)"
+    fi
+fi
+
 # ---------------------------------------------------------------------------
 # 2. uv + Python
 # ---------------------------------------------------------------------------
@@ -558,11 +749,13 @@ if [ "$PRINT" = 0 ]; then
 fi
 
 step "uv (Python toolchain manager)"
+UV_BY_US="${ST_UV_BY_US:-0}"
 if find_uv; then
     ok "uv found: $UV ($("$UV" --version 2>/dev/null | awk '{print $2}'))"
 else
     info "installing uv from astral.sh into ~/.local/bin (no admin)"
     run_sh "install uv" "$DL https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh"
+    UV_BY_US=1
     if [ "$PRINT" = 1 ]; then UV="uv"; else find_uv || die "uv was installed but cannot be found (looked in \$UV_INSTALL_DIR, \$XDG_BIN_HOME, ~/.local/bin)"; ok "uv installed: $UV"; fi
 fi
 if [ "$PRINT" = 1 ] && [ "$UV" = uv ]; then TOOL_BIN="${UV_TOOL_BIN_DIR:-${XDG_BIN_HOME:-$HOME/.local/bin}}"; else tool_bin; fi
@@ -598,7 +791,7 @@ install_gateway() {
     set -- "$@" --overrides uv-overrides.txt
     for _p in $(af_no_build_packages); do set -- "$@" --no-build-package "$_p"; done
     [ "$WITH_CORE_CLI" = 1 ] && set -- "$@" --with-executables-from abstractcore
-    [ -n "$FROM" ] && set -- "$@" --reinstall
+    { [ -n "$FROM" ] || [ "$REINSTALL" = 1 ]; } && set -- "$@" --reinstall
     _cwd="$(pwd)"
     RUN_SHOW="cd $(q "$DATA_DIR") && $(show_cmd "$@" "$GW_SPEC")"
     [ "$PRINT" = 1 ] || cd "$DATA_DIR"
@@ -607,6 +800,7 @@ install_gateway() {
     return "$RUN_RC"
 }
 GGUF_RESULT=""
+REINSTALL=0
 if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
     run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
     GGUF_RESULT="as in the previous install (uv tool upgrade keeps it)"
@@ -627,25 +821,43 @@ else
     install_gateway 0 0
     GGUF_RESULT="skipped (no prebuilt wheel for $OS_ID $ARCH)"
 fi
+# Repair: an interrupted or damaged earlier install can leave uv reporting the
+# tool as installed while its command is missing or cannot start. uv then does
+# nothing, so check the command itself and reinstall in place when it fails.
+if [ "$PRINT" = 0 ] && ! "$TOOL_BIN/abstractgateway" --help >/dev/null 2>&1; then
+    warn "the installed gateway does not start (an earlier install was interrupted or damaged): reinstalling it"
+    REINSTALL=1
+    case "$GGUF_RESULT" in
+        "llama-cpp-python $GGUF_PIN ("*) install_gateway 1 0 ;;
+        *) install_gateway 0 0 ;;
+    esac
+fi
 AFTER="$BEFORE"
 if [ "$PRINT" = 0 ]; then
     AFTER="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"
-    [ -x "$TOOL_BIN/abstractgateway" ] || die "abstractgateway is not in $TOOL_BIN after the install"
+    "$TOOL_BIN/abstractgateway" --help >/dev/null 2>&1 || die "abstractgateway is still not usable in $TOOL_BIN after reinstalling it (log: $LOG_FILE).
+What to do: run the installer again; if it stops here again, report it with that log file ($AF_DOCS#if-something-goes-wrong)."
     if [ -z "$BEFORE" ]; then ok "installed abstractgateway $AFTER"
+    elif [ "$REINSTALL" = 1 ]; then ok "abstractgateway $AFTER repaired (reinstalled in place)"
     elif [ "$BEFORE" = "$AFTER" ] && [ -z "$FROM" ]; then ok "abstractgateway $AFTER already installed"
     else ok "abstractgateway $BEFORE -> $AFTER"; fi
 fi
 ST_SPEC=""
 [ -f "$STATE_FILE" ] && ST_SPEC="$(sed -n 's/^GATEWAY_SPEC=//p' "$STATE_FILE" | tail -n 1)"
 CHANGED=0
-if [ "$BEFORE" != "$AFTER" ] || [ -n "$FROM" ] || { [ -n "$ST_SPEC" ] && [ "$ST_SPEC" != "$GW_SPEC" ]; }; then CHANGED=1; fi
+if [ "$BEFORE" != "$AFTER" ] || [ -n "$FROM" ] || [ "$REINSTALL" = 1 ] || { [ -n "$ST_SPEC" ] && [ "$ST_SPEC" != "$GW_SPEC" ]; }; then CHANGED=1; fi
 GW="$TOOL_BIN/abstractgateway"
 GWCFG="$TOOL_BIN/abstractgateway-config"
 
 case ":$PATH:" in
     *":$TOOL_BIN:"*) ;;
     *)
-        if [ "$NO_MODIFY_PATH" = 0 ]; then
+        if [ "$NO_MODIFY_PATH" = 0 ] && grep -qsF "$TOOL_BIN" "$HOME/.zshenv" "$HOME/.zshrc" "$HOME/.bashrc" \
+            "$HOME/.bash_profile" "$HOME/.profile" "${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d/uv.env.fish"; then
+            # A re-run from a Terminal opened before the first install: the profile is
+            # already done (uv tool update-shell would fail with "already up-to-date").
+            ok "$TOOL_BIN is already on PATH in your shell profile (new Terminal windows have it)"
+        elif [ "$NO_MODIFY_PATH" = 0 ]; then
             RUN_SOFT=1 run "add $TOOL_BIN to PATH in your shell profile" "$UV" tool update-shell
             info "open a new terminal for the 'abstractgateway' command to be on PATH"
         else
@@ -727,6 +939,7 @@ write_state() {
         echo "# written by AbstractFramework install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ)"
         echo "PORT=$PORT"; echo "MODE=$MODE"; echo "PROFILE=$PROFILE"
         echo "NODE_WHEEL=$NODE_WHEEL"; echo "GATEWAY_SPEC=$GW_SPEC"; echo "GATEWAY_VERSION=$AFTER"
+        echo "UV_BY_INSTALLER=$UV_BY_US"
     } >"$STATE_FILE"
 }
 
@@ -736,6 +949,7 @@ export ABSTRACTGATEWAY_DATA_DIR="$DATA_DIR"
 export ABSTRACTGATEWAY_USER_AUTH=1
 
 MODE=none
+NET_SETTING=0   # 1 = the background gateway starts plain `serve` (the Network setting binds it)
 SERVICE_OK=0
 if gateway_supports service; then SERVICE_OK=1; fi
 USE_SERVICE=0
@@ -754,10 +968,28 @@ elif [ "$USE_SERVICE" = 1 ]; then
         info "(only when the installed gateway has 'abstractgateway service'; otherwise it starts in the background)"
     fi
     stop_background_gateway
-    run "register the gateway service" "$GW" service install --host 127.0.0.1 --port "$PORT"
+    if [ "$ST_MODE" = service ] && [ "$REUSE_RUNNING" = 1 ] && [ "$CHANGED" = 0 ]; then
+        ok "login item already registered and the gateway is running, unchanged"
+    else
+        # The installer waits for health and mints the sign-in link itself (below), so the
+        # service verb does neither when it supports skipping them (gateway 0.3.0+).
+        # No --host: the login item runs plain `serve` and the gateway's Network setting
+        # (localhost unless the user chose otherwise) binds it; passing 127.0.0.1 here would
+        # reset a "Local network" choice on every re-run. Older gateways default to 127.0.0.1.
+        set -- --port "$PORT"
+        if [ "$PRINT" = 0 ] && "$GW" service install --help 2>/dev/null | grep -q -- '--no-claim'; then
+            set -- "$@" --no-wait --no-claim
+        fi
+        run "register the gateway service" "$GW" service install "$@"
+    fi
     MODE=service
 else
     step "Start in the background"
+    if [ "$ST_MODE" = service ] && [ "$SERVICE_OK" = 1 ]; then
+        # Chosen "no" this time: the earlier login item would fight the background
+        # gateway for the port, so it goes first.
+        run "remove the login item registered by the previous install" "$GW" service uninstall
+    fi
     if [ "$NO_SERVICE" = 0 ] && [ "$PRINT" = 0 ] && [ "$SERVICE_OK" = 0 ]; then
         warn "gateway $AFTER has no 'abstractgateway service' command: it will not start at login"
         info "re-run this installer after the gateway upgrades, or set up a login item by hand: $AF_DOCS#run-at-login"
@@ -766,12 +998,21 @@ else
         ok "already running (pid $(cat "$PID_FILE")), unchanged"
     else
         stop_background_gateway
-        _cmd="ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") ABSTRACTGATEWAY_USER_AUTH=1 nohup $(q "$GW") serve --host 127.0.0.1 --port $PORT >>$(q "$GATEWAY_LOG") 2>&1 &"
+        # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
+        # flags on the command line would override it forever (a restart replays them).
+        # Older gateways keep the pinned command line they need.
+        if [ "$PRINT" = 1 ]; then
+            info "$(show_cmd abstractgateway network set localhost --port "$PORT")   (gateways with 'abstractgateway network', when no mode is stored yet; then plain 'serve')"
+        elif gateway_supports network && seed_network_setting; then
+            NET_SETTING=1
+        fi
+        if [ "$NET_SETTING" = 1 ]; then set -- serve; else set -- serve --host 127.0.0.1 --port "$PORT"; fi
+        _cmd="ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") ABSTRACTGATEWAY_USER_AUTH=1 nohup $(q "$GW") $(show_cmd "$@") >>$(q "$GATEWAY_LOG") 2>&1 &"
         printf '  %s$ %s%s\n' "$C_D" "$_cmd" "$C_0"
         twin "$_cmd"
         if [ "$PRINT" = 0 ]; then
             ( umask 077; : >>"$GATEWAY_LOG" )
-            nohup "$GW" serve --host 127.0.0.1 --port "$PORT" >>"$GATEWAY_LOG" 2>&1 </dev/null &
+            nohup "$GW" "$@" >>"$GATEWAY_LOG" 2>&1 </dev/null &
             echo $! >"$PID_FILE"
             ok "started (pid $(cat "$PID_FILE")), log: $GATEWAY_LOG"
         fi
@@ -788,16 +1029,27 @@ if [ "$NO_START" = 0 ]; then
     step "Health check"
     twin "curl $BASE_URL/api/health"
     if [ "$PRINT" = 1 ]; then
-        info "would wait up to 60 s for $BASE_URL/api/health"
+        info "would wait up to 180 s for $BASE_URL/api/health"
     else
-        _i=0
+        # The first start loads the local engine stacks (MLX, torch) from a cold disk
+        # cache: allow 3 minutes and say that it is still going.
+        _i=0; _wait=180
+        _svc_log="$HOME/Library/Logs/AbstractGateway"
+        [ "$OS_ID" = macos ] || _svc_log="journalctl --user -u abstractgateway"
+        _glog="$([ "$MODE" = service ] && echo "$_svc_log" || echo "$GATEWAY_LOG")"
         until http_get "$BASE_URL/api/health" | grep -q '"abstractgateway"'; do
             _i=$((_i + 1))
             if [ "$MODE" = background ] && ! pid_alive; then
                 tail -n 30 "$GATEWAY_LOG" >&2 || true
-                die "the gateway exited during startup (log: $GATEWAY_LOG)"
+                die "the gateway stopped while starting (log: $GATEWAY_LOG).
+What to do: run the installer again; if it stops here again, report it with that log file ($AF_DOCS#if-something-goes-wrong)."
             fi
-            [ "$_i" -ge 60 ] && { tail -n 30 "$GATEWAY_LOG" >&2 2>/dev/null || true; die "no answer from $BASE_URL/api/health after 60 s (log: $GATEWAY_LOG)"; }
+            if [ "$_i" -ge "$_wait" ]; then
+                [ "$MODE" = background ] && { tail -n 30 "$GATEWAY_LOG" >&2 2>/dev/null || true; }
+                die "the gateway did not answer at $BASE_URL within $_wait s (logs: $_glog).
+What to do: restart the computer (the login item starts it again) or run the installer again, then open $BASE_URL/console."
+            fi
+            [ $((_i % 15)) = 0 ] && info "still starting (${_i}s; the first start loads the engines and takes longer)"
             sleep 1
         done
         ok "gateway healthy at $BASE_URL (${_i}s)"
@@ -838,13 +1090,30 @@ fi
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
-printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): nothing was changed.' || echo 'AbstractFramework is installed.')" "$C_0"
+if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
+    # The plain-language part first: what a non-technical user needs to know.
+    printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
+    if [ "$NO_OPEN" = 0 ]; then
+        echo "  Your browser now shows it. Its address is $BASE_URL/console (bookmark it)."
+    else
+        echo "  Open $CONSOLE_URL in your browser."
+    fi
+    if [ "$MODE" = service ]; then
+        echo "  It starts by itself when you log in; nothing to launch."
+    else
+        echo "  It runs until you restart the computer; run the installer again to start it."
+    fi
+    case ",$EXTRAS," in *,tray,*) echo "  Its icon in the $([ "$OS_ID" = macos ] && echo 'menu bar' || echo 'system tray') opens the console and shows its status." ;; esac
+    echo "  First steps in the console: pick an engine and a model; it shows what fits this computer."
+    echo "  To remove it: run the uninstaller (Uninstall AbstractFramework.command), or: sh install.sh --uninstall"
+fi
+printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): nothing was changed.' || echo 'Details')" "$C_0"
 printf '  %-11s %s\n' "Console:" "$BASE_URL/console" "Gateway:" "$GW_SPEC ($PROFILE profile)" \
     "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
 echo ""
 echo "  Status:     $([ "$MODE" = service ] && echo "abstractgateway service status" || echo "curl $BASE_URL/api/health")"
 echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service uninstall   (stops it and removes the login entry; data is kept)" || echo "kill \$(cat $(q "$PID_FILE"))")"
-echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --host 127.0.0.1 --port $PORT" || echo "re-run this installer, or: ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve --host 127.0.0.1 --port $PORT")"
+echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --port $PORT" || echo "re-run this installer, or: ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve$([ "$NET_SETTING" = 1 ] || echo " --host 127.0.0.1 --port $PORT")")"
 echo "  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"

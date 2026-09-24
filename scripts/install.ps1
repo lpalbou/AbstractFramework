@@ -157,7 +157,10 @@ function Invoke-Native {
     }
     Write-Host "  --- last lines of $($script:LogFile) ---" -ForegroundColor DarkGray
     Get-Content -Path $script:LogFile -Tail 25 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
-    Stop-Install "$Description failed (command: $Shown)"
+    if (-not (Test-Net)) {
+        Stop-Install "$Description failed because the internet connection dropped (command: $Shown).`nWhat to do: reconnect, then run the installer again; it continues where it stopped."
+    }
+    Stop-Install "$Description failed (command: $Shown).`nWhat to do: run the installer again (it repairs a half-finished install). If it stops at the same step, report it with the log file: $($script:LogFile) ($AfDocs#if-something-goes-wrong)"
 }
 
 # Vendor one-liners (`irm ... | iex`) run in a child PowerShell with a per-process
@@ -185,6 +188,14 @@ function Get-Http([string]$Url, [int]$TimeoutSec = 5) {
         $r = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec $TimeoutSec -ErrorAction Stop
         return [string]$r.Content
     } catch { return $null }
+}
+
+# Plain-language network check (same probe and wording as install.sh).
+function Test-Net { return ($null -ne (Get-Http 'https://pypi.org/simple/pip/' 15)) }
+function Get-OfflineMessage {
+    $proxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { '' }
+    if ($proxy) { return "this computer cannot reach pypi.org through the proxy set in your environment ($proxy).`nWhat to do: check that proxy (or remove the HTTPS_PROXY setting), then run the installer again." }
+    return "no internet connection: the installer could not reach pypi.org, where it downloads AbstractFramework.`nWhat to do: connect to the internet (Wi-Fi or cable), then run the installer again. Nothing was changed."
 }
 
 function Test-Command([string]$Name) { return [bool](Get-Command $Name -ErrorAction SilentlyContinue) }
@@ -256,13 +267,39 @@ function Main {
     $gwCfg = Join-Path $toolBin "abstractgateway-config$exeSuffix"
 
     function Test-GatewaySupports([string]$What) {
-        $exe = if ($What -eq 'service') { $gw } else { $gwCfg }
+        $exe = if ($What -eq 'claim-url') { $gwCfg } else { $gw }
         if (-not (Test-Path -LiteralPath $exe)) { return $false }
         $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
         try {
-            if ($What -eq 'service') { & $exe service --help *> $null } else { & $exe claim-url --help *> $null }
+            if ($What -eq 'claim-url') { & $exe claim-url --help *> $null } else { & $exe $What --help *> $null }
             return ($LASTEXITCODE -eq 0)
         } catch { return $false } finally { $ErrorActionPreference = $old }
+    }
+    # Before a background `serve` without --host/--port: make the gateway's Network setting
+    # hold this install's port. Nothing stored yet -> `localhost` (127.0.0.1, the bind the
+    # installer always used). A stored mode (e.g. `lan` chosen in the tray) is KEPT; only its
+    # port is aligned to $Port. $false when the setting cannot be read: the caller then starts
+    # the old pinned command line, and says so.
+    function Set-NetworkSettingForStart {
+        $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        $cfg = $null
+        try { $cfg = ((& $gw network status --json 2>$null) -join "`n" | ConvertFrom-Json).configured } catch { $cfg = $null }
+        finally { $ErrorActionPreference = $old }
+        if (-not $cfg -or -not $cfg.mode) {
+            Write-Warn2 "could not read the gateway's Network setting ('abstractgateway network status' failed); starting it pinned to 127.0.0.1:$Port, so a Network choice will not apply until the next run"
+            return $false
+        }
+        if ("$($cfg.source)" -ne 'stored') {
+            Invoke-Native -Description 'store the Network setting' -Argv @($gw, 'network', 'set', 'localhost', '--port', "$Port") | Out-Null
+        } elseif ("$($cfg.port_source)" -ne 'stored' -or "$($cfg.port)" -ne "$Port") {
+            # `internet` was acknowledged when it was chosen; only the port changes here.
+            $argv = @($gw, 'network', 'set', "$($cfg.mode)", '--port', "$Port")
+            if ("$($cfg.mode)" -eq 'internet') { $argv += '--acknowledge-internet' }
+            Invoke-Native -Description "keep the Network setting '$($cfg.mode)', port $Port" -Argv $argv | Out-Null
+        } else {
+            Write-Ok "Network setting kept: '$($cfg.mode)' on port $Port"
+        }
+        return $true
     }
     function Get-OurPid {
         if (-not (Test-Path -LiteralPath $pidFile)) { return $null }
@@ -451,6 +488,10 @@ function Main {
     } else { Write-Ok "port $Port is free" }
     $baseUrl = "http://127.0.0.1:$Port"
 
+    if (Test-Net) { Write-Ok 'internet: pypi.org reachable' }
+    elseif ($script:DryRun) { Write-Warn2 ((Get-OfflineMessage) -split "`n")[0] }
+    else { Stop-Install (Get-OfflineMessage) }
+
     # --- 2. uv + Python -------------------------------------------------------------------
     Write-Step 'uv (Python toolchain manager)'
     if ($uv) {
@@ -616,6 +657,8 @@ function Main {
     $env:ABSTRACTGATEWAY_USER_AUTH = '1'
     $serviceOk = Test-GatewaySupports 'service'
     $mode = 'none'
+    # $startCmd feeds only the Startup-folder shortcut of gateways WITHOUT `abstractgateway service`,
+    # which predate the Network setting too: they keep --host/--port.
     $startCmd = "`$env:ABSTRACTGATEWAY_DATA_DIR='$DataDir'; `$env:ABSTRACTGATEWAY_USER_AUTH='1'; Start-Process -FilePath '$gw' -ArgumentList 'serve --host 127.0.0.1 --port $Port' -WindowStyle Hidden -RedirectStandardOutput '$gatewayLog' -RedirectStandardError '$gatewayErr'"
 
     if ($NoStart) {
@@ -627,7 +670,9 @@ function Main {
         if ($script:DryRun -and -not $serviceOk) { Write-Info "(only when the installed gateway has 'abstractgateway service'; otherwise a Startup-folder shortcut)" }
         Stop-OurGateway
         if ($shortcut -and (Test-Path -LiteralPath $shortcut) -and -not $script:DryRun) { Remove-Item -LiteralPath $shortcut -Force }
-        Invoke-Native -Description 'register the gateway service' -Argv @($gw, 'service', 'install', '--host', '127.0.0.1', '--port', "$Port") | Out-Null
+        # No --host: the login item runs plain `serve` and the gateway's Network setting binds it;
+        # 127.0.0.1 here would reset a "Local network" choice on every re-run.
+        Invoke-Native -Description 'register the gateway service' -Argv @($gw, 'service', 'install', '--port', "$Port") | Out-Null
         $mode = 'service'
     } else {
         if (-not $NoService -and $shortcut) {
@@ -654,10 +699,21 @@ function Main {
             Write-Ok "already running (pid $(Get-OurPid)), unchanged"
         } else {
             Stop-OurGateway
-            Write-Host "  `$ $startCmd" -ForegroundColor DarkGray
-            $script:Twins.Add($startCmd)
+            # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
+            # flags on the command line would override it forever (a restart replays them).
+            # Older gateways keep the pinned command line they need.
+            $netSetting = $false
+            if ($script:DryRun) {
+                Write-Info "abstractgateway network set localhost --port $Port   (gateways with 'abstractgateway network', when no mode is stored yet; then plain 'serve')"
+            } elseif ((Test-GatewaySupports 'network') -and (Set-NetworkSettingForStart)) {
+                $netSetting = $true
+            }
+            $serveArgs = if ($netSetting) { @('serve') } else { @('serve', '--host', '127.0.0.1', '--port', "$Port") }
+            $bgCmd = "`$env:ABSTRACTGATEWAY_DATA_DIR='$DataDir'; `$env:ABSTRACTGATEWAY_USER_AUTH='1'; Start-Process -FilePath '$gw' -ArgumentList '$($serveArgs -join ' ')' -WindowStyle Hidden -RedirectStandardOutput '$gatewayLog' -RedirectStandardError '$gatewayErr'"
+            Write-Host "  `$ $bgCmd" -ForegroundColor DarkGray
+            $script:Twins.Add($bgCmd)
             if (-not $script:DryRun) {
-                $proc = Start-Process -FilePath $gw -ArgumentList @('serve', '--host', '127.0.0.1', '--port', "$Port") `
+                $proc = Start-Process -FilePath $gw -ArgumentList $serveArgs `
                     -WindowStyle Hidden -RedirectStandardOutput $gatewayLog -RedirectStandardError $gatewayErr -PassThru
                 Set-Content -LiteralPath $pidFile -Value $proc.Id
                 Write-Ok "started (pid $($proc.Id)), log: $gatewayErr"
@@ -726,7 +782,7 @@ function Main {
     if ($mode -eq 'service') {
         Write-Host '  Status:     abstractgateway service status'
         Write-Host '  Stop:       abstractgateway service uninstall   (stops it and removes the login entry; data is kept)'
-        Write-Host "  Start:      abstractgateway service install --host 127.0.0.1 --port $Port"
+        Write-Host "  Start:      abstractgateway service install --port $Port"
     } else {
         Write-Host "  Stop:       Stop-Process -Id (Get-Content '$pidFile')"
         Write-Host '  Start:      re-run this installer (or sign out and in: the Startup shortcut starts it)'
