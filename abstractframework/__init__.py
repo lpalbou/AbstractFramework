@@ -44,8 +44,8 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.3.20",
     "@abstractframework/code": "0.4.2",
     "@abstractframework/observer": "0.1.12",
-    "@abstractframework/continuum": "0.3.0",
-    "@abstractframework/entity": "0.2.0",
+    "@abstractframework/continuum": "0.3.1",
+    "@abstractframework/entity": "0.2.1",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,

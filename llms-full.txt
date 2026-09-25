@@ -152,7 +152,7 @@ ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.4.2` and `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
+`ghcr.io/lpalbou/abstractgateway:0.4.3` and `ghcr.io/lpalbou/abstractcore-server:2.15.2`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -293,14 +293,14 @@ and tested together.
 | npm | `@abstractframework/flow` | 0.3.20 |
 | npm | `@abstractframework/code` | 0.4.2 |
 | npm | `@abstractframework/observer` | 0.1.12 |
-| npm | `@abstractframework/continuum` | 0.3.0 |
-| npm | `@abstractframework/entity` | 0.2.0 |
+| npm | `@abstractframework/continuum` | 0.3.1 |
+| npm | `@abstractframework/entity` | 0.2.1 |
 | crates.io | `abstractcode` | 0.5.1 |
 | crates.io | `abstractgateway-console` | 0.8.0 |
 | crates.io | `abstractcore-console` | 0.2.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.4.2 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.1 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.4.3 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.2 |
 
 Optional add-ons that are not part of any profile install separately:
 `pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and
@@ -493,7 +493,7 @@ Notes for LLMs working in this repo:
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
 - abstractframework 0.3.2 pins (PyPI, `==`): abstractgateway 0.4.3, abstractassistant 0.5.0, abstractcore 2.15.2, AbstractRuntime 0.4.35, abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15.
-- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.3.0, `entity` 0.2.0 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.8.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.4.2`, `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
+- Released with it: npm `@abstractframework/flow` 0.3.20, `code` 0.4.2, `observer` 0.1.12, `continuum` 0.3.1, `entity` 0.2.1 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.8.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.4.3`, `ghcr.io/lpalbou/abstractcore-server:2.15.2`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
@@ -704,8 +704,8 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.3.20",
     "@abstractframework/code": "0.4.2",
     "@abstractframework/observer": "0.1.12",
-    "@abstractframework/continuum": "0.3.0",
-    "@abstractframework/entity": "0.2.0",
+    "@abstractframework/continuum": "0.3.1",
+    "@abstractframework/entity": "0.2.1",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
@@ -2862,8 +2862,8 @@ Run or install them next to the Python stack:
 | Flow Editor | `npx @abstractframework/flow` | 0.3.20 |
 | Code Web UI | `npx @abstractframework/code` | 0.4.2 |
 | Observer | `npx @abstractframework/observer` | 0.1.12 |
-| Continuum console | `npx @abstractframework/continuum` | 0.3.0 |
-| Entity manager | `npx @abstractframework/entity` | 0.2.0 |
+| Continuum console | `npx @abstractframework/continuum` | 0.3.1 |
+| Entity manager | `npx @abstractframework/entity` | 0.2.1 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.5.1 |
 
 The browser apps need Node.js 18 or later and a running gateway. Optional Python add-ons outside the
@@ -2898,7 +2898,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.4.2
+  ghcr.io/lpalbou/abstractgateway:0.4.3
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -2906,7 +2906,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.15.1`.
+`ghcr.io/lpalbou/abstractcore-server:2.15.2`.
 
 ## How installs are designed
 
@@ -3756,7 +3756,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app against an existing gateway | `npx @abstractframework/<flow\|code\|observer\|continuum\|entity>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.4.2` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.4.3` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -4192,8 +4192,8 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 
 The npm apps released with this version, each runnable with `npx <package>`:
 `@abstractframework/flow` 0.3.20, `@abstractframework/code` 0.4.2,
-`@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.3.0 and
-`@abstractframework/entity` 0.2.0. They also appear as `npm_apps` in the install manifest.
+`@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.3.1 and
+`@abstractframework/entity` 0.2.1. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`
 

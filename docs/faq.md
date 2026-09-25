@@ -34,7 +34,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app against an existing gateway | `npx @abstractframework/<flow\|code\|observer\|continuum\|entity>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.4.2` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.4.3` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or

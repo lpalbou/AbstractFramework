@@ -148,7 +148,7 @@ ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.4.2` and `ghcr.io/lpalbou/abstractcore-server:2.15.1`.
+`ghcr.io/lpalbou/abstractgateway:0.4.3` and `ghcr.io/lpalbou/abstractcore-server:2.15.2`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -289,14 +289,14 @@ and tested together.
 | npm | `@abstractframework/flow` | 0.3.20 |
 | npm | `@abstractframework/code` | 0.4.2 |
 | npm | `@abstractframework/observer` | 0.1.12 |
-| npm | `@abstractframework/continuum` | 0.3.0 |
-| npm | `@abstractframework/entity` | 0.2.0 |
+| npm | `@abstractframework/continuum` | 0.3.1 |
+| npm | `@abstractframework/entity` | 0.2.1 |
 | crates.io | `abstractcode` | 0.5.1 |
 | crates.io | `abstractgateway-console` | 0.8.0 |
 | crates.io | `abstractcore-console` | 0.2.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.4.2 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.1 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.4.3 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.2 |
 
 Optional add-ons that are not part of any profile install separately:
 `pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and

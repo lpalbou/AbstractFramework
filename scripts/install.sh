@@ -89,7 +89,7 @@ fi
 # ---------------------------------------------------------------------------
 AF_GATEWAY_PIN_DEFAULT="0.4.3"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.3.20 @abstractframework/code@0.4.2 @abstractframework/observer@0.1.12 @abstractframework/continuum@0.3.0 @abstractframework/entity@0.2.0"
+AF_NPM_APPS="@abstractframework/flow@0.3.20 @abstractframework/code@0.4.2 @abstractframework/observer@0.1.12 @abstractframework/continuum@0.3.1 @abstractframework/entity@0.2.1"
 AF_CRATE_CONSOLE="abstractgateway-console@0.8.0"
 AF_CRATE_CODE_CLI="abstractcode@0.5.1"
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"

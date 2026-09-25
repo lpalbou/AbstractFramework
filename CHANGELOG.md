@@ -20,8 +20,12 @@ names a published repository.
   scripts install `abstractgateway[<profile>,tray]==0.4.3`. The other pins are unchanged:
   abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4,
   abstractvision 0.3.29, abstractmusic 0.1.15, abstractassistant 0.5.0. Unchanged too:
-  `abstractgateway-console` 0.8.0, ui-kit 0.1.11 and the browser apps (continuum 0.3.0,
-  entity 0.2.0, flow 0.3.20, code 0.4.2, observer 0.1.12).
+  `abstractgateway-console` 0.8.0, ui-kit 0.1.11 and the browser apps flow 0.3.20, code 0.4.2
+  and observer 0.1.12.
+- Browser apps released with it (`--with-apps`, `npx`): `@abstractframework/continuum` 0.3.1
+  (was 0.3.0) and `@abstractframework/entity` 0.2.1 (was 0.2.0).
+- Container images released with it: `ghcr.io/lpalbou/abstractgateway:0.4.3` (and `0.4.3-gpu`)
+  and `ghcr.io/lpalbou/abstractcore-server:2.15.2`.
 
 ### Documentation
 

@@ -432,8 +432,8 @@ Run or install them next to the Python stack:
 | Flow Editor | `npx @abstractframework/flow` | 0.3.20 |
 | Code Web UI | `npx @abstractframework/code` | 0.4.2 |
 | Observer | `npx @abstractframework/observer` | 0.1.12 |
-| Continuum console | `npx @abstractframework/continuum` | 0.3.0 |
-| Entity manager | `npx @abstractframework/entity` | 0.2.0 |
+| Continuum console | `npx @abstractframework/continuum` | 0.3.1 |
+| Entity manager | `npx @abstractframework/entity` | 0.2.1 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.5.1 |
 
 The browser apps need Node.js 18 or later and a running gateway. Optional Python add-ons outside the
@@ -468,7 +468,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.4.2
+  ghcr.io/lpalbou/abstractgateway:0.4.3
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -476,7 +476,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.15.1`.
+`ghcr.io/lpalbou/abstractcore-server:2.15.2`.
 
 ## How installs are designed
 

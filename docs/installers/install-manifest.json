@@ -199,14 +199,14 @@
       "id": "continuum",
       "package": "@abstractframework/continuum",
       "registry": "npm",
-      "version": "0.3.0"
+      "version": "0.3.1"
     },
     {
       "command": "npx @abstractframework/entity",
       "id": "entity",
       "package": "@abstractframework/entity",
       "registry": "npm",
-      "version": "0.2.0"
+      "version": "0.2.1"
     }
   ],
   "post_install": {
