@@ -7,12 +7,11 @@ import, a Rust ``include_str!``) so that installed packages stay self-contained.
 This script fails when a copy drifts, so a change to the canonical file is
 followed by a copy into every consumer.
 
-Usage: check_identity_sync.py [--strict] [extra/copy.json ...]
-  --strict   a missing copy is an error (default: reported, not fatal)
+Usage: check_identity_sync.py [--lenient] [extra/copy.json ...]
+  --lenient  a missing copy is reported but not fatal (default: a missing copy fails)
 """
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -29,21 +28,16 @@ KNOWN_COPIES = [
 
 
 def main(argv: list[str]) -> int:
-    strict = "--strict" in argv
-    extra = [Path(a) for a in argv if a != "--strict"]
-    canonical = json.loads(CANONICAL.read_text(encoding="utf-8"))
+    strict = "--lenient" not in argv
+    extra = [Path(a) for a in argv if a != "--lenient"]
+    canonical = CANONICAL.read_bytes()
     failures = 0
     for path in KNOWN_COPIES + extra:
         if not path.exists():
             print(f"missing  {path}")
             failures += int(strict)
             continue
-        try:
-            copy = json.loads(path.read_text(encoding="utf-8"))
-        except Exception as exc:  # noqa: BLE001 - report every parse failure
-            print(f"invalid  {path}: {exc}")
-            failures += 1
-            continue
+        copy = path.read_bytes()
         if copy == canonical:
             print(f"ok       {path}")
         else:
