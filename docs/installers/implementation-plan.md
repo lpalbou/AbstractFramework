@@ -19,7 +19,7 @@ comes next.
 
 ## Gateway features the scripts use
 
-The pinned gateway (0.4.3) provides all of them. The scripts still detect each one, so an older
+The pinned gateway (0.4.4) provides all of them. The scripts still detect each one, so an older
 gateway selected with `--pin` falls back as the last column says.
 
 | Feature | Command | Without it (older `--pin`) |

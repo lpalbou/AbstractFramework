@@ -4,6 +4,25 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-09-25
+
+A patch release: ejecting a model frees its memory from the whole gateway process, and the
+memory figures show what the process really holds.
+
+### Changed (pins)
+
+- **abstractcore 2.15.3** (was 2.15.2), **AbstractRuntime 0.4.36** (was 0.4.35) and
+  **abstractgateway 0.4.4** (was 0.4.3): ejecting a model frees its memory from the whole gateway
+  process (weights, prompt and KV caches, MLX cache) and the memory figures show what the process
+  really holds. Gateways started with earlier versions must be restarted once to reclaim memory
+  already held. The pins apply to the base install and to the `apple` / `gpu` extras
+  (`abstractgateway[apple|gpu]==0.4.4`); the bootstrap scripts install
+  `abstractgateway[<profile>,tray]==0.4.4`. The other pins are unchanged: abstractagent 0.3.13,
+  AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29,
+  abstractmusic 0.1.15, abstractassistant 0.5.0. Unchanged too: `abstractgateway-console` 0.8.0,
+  ui-kit 0.1.11 and the browser apps (continuum 0.3.1, entity 0.2.1, flow 0.3.20, code 0.4.2,
+  observer 0.1.12).
+
 ## [0.3.2] - 2026-09-25
 
 A patch release: installing the Assistant and the engines works when the data folder path
