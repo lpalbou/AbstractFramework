@@ -4,6 +4,25 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-25
+
+A patch release: installing the Assistant and the engines works when the data folder path
+contains a space (such as the macOS Application Support folder), and the default MLX model id
+names a published repository.
+
+### Changed (pins)
+
+- **abstractcore 2.15.2** (was 2.15.1; the default MLX model id names a published repository),
+  **AbstractRuntime 0.4.35** (was 0.4.34) and **abstractgateway 0.4.3** (was 0.4.2; installing the
+  Assistant and engines works when the data folder path contains a space, such as the macOS
+  Application Support folder; the console page carries no maintainer comments), in the base
+  install and in the `apple` / `gpu` extras (`abstractgateway[apple|gpu]==0.4.3`). The bootstrap
+  scripts install `abstractgateway[<profile>,tray]==0.4.3`. The other pins are unchanged:
+  abstractagent 0.3.13, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4,
+  abstractvision 0.3.29, abstractmusic 0.1.15, abstractassistant 0.5.0. Unchanged too:
+  `abstractgateway-console` 0.8.0, ui-kit 0.1.11 and the browser apps (continuum 0.3.0,
+  entity 0.2.0, flow 0.3.20, code 0.4.2, observer 0.1.12).
+
 ### Documentation
 
 - New [Troubleshooting](docs/troubleshooting.md) page (installer blocked by macOS, sign-in links,

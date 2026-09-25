@@ -126,7 +126,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    "no" is remembered).
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.4.2"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.4.3"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not).
 5. Optionally installs Node.js for the browser apps, terminal tools, Ollama or LM Studio (flags
@@ -231,7 +231,7 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.4.2"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.4.3"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -338,8 +338,8 @@ A plain `pip install` of the `apple` or `gpu` profile builds the
 `aec-audio-processing`) from source, so it needs a C/C++ compiler. The one-line install above
 does not.
 
-`abstractframework` 0.3.1 pins `abstractgateway==0.4.2`, `abstractassistant==0.5.0`,
-`abstractcore==2.15.1`, `AbstractRuntime==0.4.34`, `abstractagent==0.3.13`,
+`abstractframework` 0.3.2 pins `abstractgateway==0.4.3`, `abstractassistant==0.5.0`,
+`abstractcore==2.15.2`, `AbstractRuntime==0.4.35`, `abstractagent==0.3.13`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.4`,
 `abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
@@ -423,10 +423,10 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version released with 0.3.1 |
+| Tool | Command | Version released with 0.3.2 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.4.2 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.15.1 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.4.3 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.15.2 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.2.0 |
 | Gateway terminal console | `cargo install abstractgateway-console` (Rust 1.87+), then `abstractgateway-console --url http://127.0.0.1:8080` | 0.8.0 |
 | Flow Editor | `npx @abstractframework/flow` | 0.3.20 |
