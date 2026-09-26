@@ -82,9 +82,22 @@ triggers; controller; queries; gateway routes/shapes/errors; panel props/fixture
 
 ## Missions and order
 R first (release gate = restart correctness, not screens) → G integrates against R; U builds from frozen fixtures in parallel; F after G
-contracts stabilise; O and A after U + G; D alongside, finalised after; V last. Per-package planned items: abstractruntime,
-abstractgateway (+ console item), abstractuic, abstractflow, abstractobserver, abstractassistant, abstractcode (0930 phase) — each in its
-own docs/backlog (written 2026-09-26).
+contracts stabilise; O and A after U + G; D alongside, finalised after; V last. Per-package planned items (each repo's own numbering, written and committed 2026-09-26):
+abstractruntime 0847 (v1) + 0848 (v2 inbox); abstractgateway 0928 (façade + acceptance script) + 0929 (v2 event admission) + 0930
+(console); abstractuic 0029; abstractflow 0158 (supersedes its proposed 0119 direction); abstractobserver 0002 (adopts the ui-kit panel
+through the existing source aliases); abstractassistant 0852; abstractcode 0001 (phase after v1).
+Conflicts the package items recorded against the plan (to settle in the contracts pass before implementation): the run stores have no
+create-if-absent primitive (SQLite `save` overwrites, JSON replaces — a new primitive on all four stores, not just a `start` parameter);
+`on_schedule` computes "now + interval" and accepts ms/decimals, so `schedule@1`'s anchored whole-unit math is new; chat history drops
+child runs AND runs tagged as scheduled (`history_bundle.py:708-727/816`, `session_history.py:155-158`) — the new selector replaces both
+filters; a discussion must NOT be linked into the automation's run tree (tool ceilings intersect every ancestor, `core/tool_scope.py:20`);
+no entry-point group or shipped bundle exists in the runtime package yet; the gateway builds `manifest.metadata` itself
+(`routes/gateway.py:6933-6946`) so Flow cannot export `automation_defaults` until that changes; the gateway has no per-user preference
+store for the attention cursor; command types are hard-coded in three places (`routes/gateway.py:28465`, `runner.py:1756`, capabilities
+:17021); the error envelope `{error:{code,…}}` differs from the router's `HTTPException(detail=str)` style; `/automations` routes mount
+under `/api/gateway/` for the apps; no route lists sessions with `session_kind` (the Assistant needs one); Flow interfaces cannot declare
+an optional pin yet (`flowFamilies.ts:37-46`); ui-kit tests are `scripts/check_*.mjs` against built output and its fixtures live in
+`ui-kit/scripts/fixtures/` (the root identity-sync script already reads that folder).
 
 ## Open questions for the operator (precise)
 1. Discussion workspace: its own workspace with read access to the occurrence's, or shared read-write with the automation?
