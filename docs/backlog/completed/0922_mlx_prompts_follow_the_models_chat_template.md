@@ -44,3 +44,13 @@ at iteration 3; latency/prompt-cache proof unchanged.
   Left open: Outlines with thinking explicitly on decodes inside `<think>` (review D6).
 - Sampling on the native MTP lane verified correct (0924): the run-3 repetition is model behaviour at temperature 0.2 with retained
   reasoning (0925).
+
+## Completion report (2026-09-27)
+- **Completed:** 2026-09-27 (released as abstractcore 2.16.1, tag v2.16.1 → e333219, PyPI 23:00 CEST 2026-09-26; GHCR abstractcore-server:2.16.1).
+- **Original path:** planned/0922_mlx_prompts_follow_the_models_chat_template.md.
+- **Outcome:** commits 3b9f6bf (chat-template renderer on every MLX lane, serializer v2), e4b180e (malformed history arguments never disable
+  the renderer; `metadata.prompt_renderer`; tools-variable detection), 74405cc (renderer keys carried to the last streamed chunk).
+  Reviews 31 and 34 GO (untracked/missions-2026-09-25/REVIEW/31-core-mlx-chat-template.md). Hermetic re-run: iteration-3 tool calls 3/3
+  (was 0/5), digest 2/3 — the third run's loop is 0925 (operator gate), not this item. Sampling verified correct (0924).
+- **Residual:** Outlines with thinking explicitly on decodes inside `<think>` (review D6, low); `{{ message.tools }}` false positive in
+  tools-variable detection (harmless).

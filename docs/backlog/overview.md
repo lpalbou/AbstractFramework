@@ -12,9 +12,9 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 120 | 77 flat (0922, 0923, 0928–0930 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
-| Proposed | 45 | 37 flat (0905, 0916–0920, 0925–0927, 0931 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 238 | 228 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924 and the moves of 0875, 0900, 0857 and 0899 (2026-09-26). |
+| Planned | 119 | 76 flat (0928–0930, 0933 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
+| Completed | 242 | 232 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26) and 0918, 0922, 0923 (2026-09-27). |
 | Deprecated | 0 | |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -31,8 +31,8 @@ published by CI through trusted publishing). [0890](planned/0890_wire_bundled_fl
 is half done (gateway deep-research 0.1.8 shipped; the flow side is open). Local stacks: rerun
 `./scripts/start-local.sh --build` to run the released code.
 
-**Patch wave 2026-09-26 (go given 2026-09-26 evening, releasing):** runtime 0.5.1, core 2.16.1, agent 0.3.15, gateway 0.5.1, root 0.4.1 — see
-[Staged Patch Wave](#staged-patch-wave-2026-09-26-after-root-040--not-released); items 0918, 0922, 0923; decision gate 0925.
+**Patch wave RELEASED 2026-09-27 00:55 CEST** (record [0932](completed/0932_release_patch_wave_2026_09_26.md)): runtime 0.5.1, core 2.16.1,
+agent 0.3.15, gateway 0.5.1, assistant 0.6.1, root 0.4.1; closed 0918, 0922, 0923; new 0933 (gateway file-tail flake = real bug); decision gate 0925 still open.
 **Next wave: Automations v1 (0928)** — design approved 2026-09-26; per-package planned items exist in every repo's own backlog.
 
 Release follow-ups after the 2026-09-26 wave:
@@ -97,11 +97,10 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 0933 | [Gateway split mode: live-delta file tail misses the final line](planned/0933_gateway_live_delta_file_tail_misses_final_line_in_split_mode.md) | Planned (not started; pre-existing) | `_FileTail.read_lines` can close before the last line (`delta_end`); flaky test on CI; read once more before closing. |
 | 0928 | [Automations v1: runtime-native scheduled/triggered tasks](planned/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md) | Planned (design approved 2026-09-26; next minor wave) | An Automation IS a runtime root run; one controller bundle; deterministic occurrences; trigger registry (schedule, manual); growing/independent context; Discuss = forked durable session; `/automations` façade; Observer + Assistant. Effort 33–52 days. |
 | 0929 | [Automations v2: external triggers, durable inbox](planned/0929_automations_v2_external_triggers_durable_inbox.md) | Planned (after 0928) | Generic `event` source + `run.finished/failed` chaining with reliable admission. |
 | 0930 | [Automations: Code and console surfaces](planned/0930_automations_code_and_console_surfaces.md) | Planned (after 0928) | AbstractCode WUI section + TUI commands; console inventory. |
-| 0922 | [MLX prompts follow the model's chat template](planned/0922_mlx_prompts_follow_the_models_chat_template.md) | Planned (fixed on core main `3b9f6bf`+`e4b180e`; 2.16.1 staged `e333219`, unreleased) | Root cause of the scheduled digest stopping at iteration 3 on Qwen3.x MLX; iteration-3 calls 0/5 → 3/3; review 31 GO. |
-| 0923 | [A wait resumed twice runs the Agent node's child twice](planned/0923_runtime_resume_of_the_same_wait_must_run_once.md) | Planned (fixed on runtime main `61d38a1`+`7d58dcd`; 0.5.1 staged `2100d1f`; gateway `e1db300`+`1501075`, 0.5.1 staged `00d6c66`; unreleased) | Production-affecting race between the runner's two parent-resume paths; per-run resume lock + typed `StaleResumeError`; review 32/33. |
 | 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
 | 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
 | 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned (not started; the 0.2.0 wave kept the existing extras) | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
@@ -321,6 +320,12 @@ Root 0.3.1 pins abstractcore 2.15.1, abstractgateway 0.4.2, AbstractRuntime 0.4.
 2026-09-25 (docs-only `main` commits): runtime `696f386`, core `194c312`, gateway `3312bfe`, root
 `cfb4926`, continuum `7bc4616`, entity `f3b5a11`, uic `9a307b3`.
 
+### 2026-09-27 patch wave (root 0.4.1)
+
+Released 2026-09-26 22:30 – 2026-09-27 00:55 CEST. Record [0932](completed/0932_release_patch_wave_2026_09_26.md); log
+`untracked/release-2026-09-26/PATCH-RELEASE-LOG.md`. Tags: runtime `v0.5.1` → `8090efd`, core `v2.16.1` → `e333219`, agent `v0.3.15` → `6595453`,
+gateway `v0.5.1` → `00d6c66`, assistant `v0.6.1` → `641b653`, root `v0.4.1` → `7decd36`.
+
 ### 2026-09-26 wave (root 0.4.0)
 
 Released 2026-09-26 09:26–12:48 CEST with the operator's per-package go. Record:
@@ -345,9 +350,9 @@ The 2026-09-25 patch waves (root 0.3.2; core 2.15.2 / 2.15.3, runtime 0.4.35, ga
 0.2.1, continuum 0.3.1) are in `untracked/release-2026-09-24/STATUS.md` but still have no backlog
 record (see Hygiene Findings).
 
-## Staged Patch Wave (2026-09-26, after root 0.4.0) — NOT released
+## Staged Patch Wave (2026-09-26, after root 0.4.0) — released 2026-09-27 (0932)
 
-Local, unpushed, untagged release commits waiting for the operator's explicit per-release go (ledger
+Kept as the staging history. Original text: local, unpushed, untagged release commits waiting for the operator's explicit per-release go (ledger
 `untracked/release-2026-09-26/PATCH-STAGING.md`; reviews 29–34 under `untracked/missions-2026-09-25/REVIEW/`):
 AbstractRuntime 0.5.1 `2100d1f` (0923) → abstractcore 2.16.1 `e333219` (0922) → abstractagent 0.3.15 `6595453` (0918: re-prompt
 once on announced/unrunnable calls, `no_tool_call` stop, bounded nudge; crash fix for the 0.3.13/0.3.14 CodeAct/MemAct NameError) →
@@ -374,6 +379,10 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0932 | [Release trace: patch wave 2026-09-26/27 (root 0.4.1)](completed/0932_release_patch_wave_2026_09_26.md) | 2026-09-27 | runtime 0.5.1, core 2.16.1, agent 0.3.15, gateway 0.5.1, assistant 0.6.1, root 0.4.1; 24/24 matrix; real install; installer on the GH release. |
+| 0923 | [A wait resumed twice runs the Agent node's child twice](completed/0923_runtime_resume_of_the_same_wait_must_run_once.md) | 2026-09-27 | Moved from `planned/`. Runtime per-run resume lock + typed `StaleResumeError`; gateway lost-race handling. Shipped in 0.5.1/0.5.1. |
+| 0922 | [MLX prompts follow the model's chat template](completed/0922_mlx_prompts_follow_the_models_chat_template.md) | 2026-09-27 | Moved from `planned/`. Chat-template renderer on every MLX lane; iteration-3 calls 0/5 → 3/3. Shipped in core 2.16.1. |
+| 0918 | [Agent must not publish reasoning with tool markup as the answer](completed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md) | 2026-09-27 | Moved from `proposed/`. Re-prompt once, `no_tool_call` stop, crash fix. Shipped in agent 0.3.15. |
 | 0924 | [Verified: sampling reaches the sampler on every MLX lane](completed/0924_native_mtp_lane_sampling_verified.md) | 2026-09-26 | Verification record: temperature/top_p/top_k/seed applied on mlx-lm, native and native-batching lanes; identity table; no fix. |
 | 0921 | [Release wave 2026-09-26 (root 0.4.0)](completed/0921_release_wave_2026_09_26.md) | 2026-09-26 | 17 packages from 13 repos, per-package go; fix-forwards core `fa77136`/`f1735a1`/`ffbd1e6`/`1190cf1`, code `a636806`; relocks; 24/24 matrix + real scratch install; follow-ups 0918–0920. |
 | 0899 | [npm relock and kit floors after the kit publishes](completed/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) | 2026-09-26 | Moved from `planned/`. Relocks code `b243398`, observer `bf33805`, entity `16de0a3`, continuum `c2530d1`, tagged; published packs = local clean packs. |

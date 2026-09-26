@@ -34,3 +34,15 @@ the final answer. Re-prompting once with the VERBATIM reply gave 5/5 compliance;
 that the tools had run. abstractagent 3eb34e6 (0.3.15 candidate) implements: announcement/unrunnable detection → one re-prompt
 with the verbatim reply → visible error on a second failure; `tool_calls_from_reasoning` shown. Root cause of the announcements:
 0922 (MLX prompt template).
+
+## Completion report (2026-09-27)
+- **Completed:** 2026-09-27 (released as abstractagent 0.3.15, tag v0.3.15 → 6595453, PyPI 22:44 CEST 2026-09-26; abstractcore 2.16.0
+  already shipped the recovery of tool calls written inside the thinking block, ffbd1e6).
+- **Original path:** proposed/0918_… (promoted straight to completed by the release).
+- **Outcome:** abstractagent 3eb34e6 → 66c376d → a28ce85 → 1b54ce4: a reply that announces tool use without calling a tool, or whose tool
+  calls could not run, is re-prompted ONCE with the failed reply quoted verbatim in the corrective user message (Qwen3.5/3.6 templates
+  strip `<think>` from assistant history); `stop_reason.code = "no_tool_call"` (+ `budget_exhausted`) in all three loops; the
+  announcement or tool markup is never published as the answer; the long-reply nudge is bounded to once per step; detector patterns
+  extended (English only, agent backlog 0033); crash fix for 0.3.13/0.3.14 (CodeAct/MemAct NameError). Reviews 28 NO-GO → 29 GO → 30 GO.
+- **Residual:** CodeAct/MemAct return no `stop_reason` on plain iteration exhaustion (only `outcome: iteration_budget`); non-English
+  announcements are not detected.

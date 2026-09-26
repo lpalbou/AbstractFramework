@@ -43,3 +43,13 @@ After release: a scheduled Observer run's parent ledger shows exactly one `resum
 
 ## Related
 0922 (MLX chat template, same experiment), 0921 (release trace), 0925, 0926 (what the per-run lock does not cover).
+
+## Completion report (2026-09-27)
+- **Completed:** 2026-09-27 (released as AbstractRuntime 0.5.1 — tag v0.5.1 → 8090efd, release commit 2100d1f, PyPI 22:44 CEST 2026-09-26 —
+  and abstractgateway 0.5.1 — tag v0.5.1 → 00d6c66, PyPI 23:58 CEST; GHCR 0.5.1 / latest / 0.5.1-gpu).
+- **Original path:** planned/0923_runtime_resume_of_the_same_wait_must_run_once.md.
+- **Outcome:** runtime 61d38a1 (per-run lock from the waiting check through the save; a racing second resume is refused) + 7d58dcd (typed
+  `StaleResumeError` for "not waiting" and wait-key mismatch); gateway e1db300 + 1501075 (both parent-resume paths treat a
+  `StaleResumeError` as a lost race at DEBUG; the repair pass no longer swallows other errors). Reviews 32 and 33 GO (stress 50/50 one
+  resume; lock registry empty after 100 races). Gateway floors: runtime>=0.5.1, core>=2.16.1, agent>=0.3.15.
+- **Residual:** 0926 (writers of one run beyond resume — concurrent tick/cancel, split-mode processes — need a store-level compare-and-set).
