@@ -86,3 +86,11 @@ P1-5 (parity gate) and P1-7 (no silent no-stream).
 ## Receipts
 
 - None yet.
+
+## Addendum (2026-09-26, after runtime ea9adbe)
+
+- Harmony (gpt-oss) answers are routed per channel by the runtime (`final` streams as content, `analysis` as reasoning,
+  `to=` tool calls held back). Remaining gap in abstractcore: `UnifiedStreamProcessor` holds everything from the first
+  `<|channel|>` for harmony-marked architectures on lanes that pass raw harmony text through it, so on those lanes the answer
+  still arrives in one piece at the end (servers that separate reasoning themselves, such as LM Studio, are unaffected).
+  Evidence: untracked/missions-2026-09-25/S/REPORT.md ("S-rt ea9adbe"), REVIEW/17-streaming-clients-flow.md.
