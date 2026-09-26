@@ -1,6 +1,6 @@
 # 0922 — MLX prompts must follow the model's chat template (tool calls in history, tool responses, thinking opening)
 
-- **Status:** planned (fix in progress 2026-09-26; ships as abstractcore 2.16.1 on the operator's go)
+- **Status:** planned (fix committed 2026-09-26 on abstractcore main as 3b9f6bf, unreleased; ships as abstractcore 2.16.1 on the operator's go)
 - **Created:** 2026-09-26
 - **Area:** abstractcore (MLX provider)
 
@@ -23,3 +23,17 @@ at iteration 3; latency/prompt-cache proof unchanged.
 
 ## Related
 0918 (agent re-prompt when a reply announces tools without calling them — abstractagent 0.3.15 candidate 3eb34e6).
+
+## Progress (2026-09-26)
+- abstractcore 3b9f6bf: every MLX lane (mlx-lm, native MTP/APC, vision add-on, Outlines) renders through `tokenizer.apply_chat_template`;
+  earlier assistant turns keep their tool calls, tool results render as the template renders them, `tools=` reaches the template's tool
+  block, the generation prompt opens `<think>` when the template does; a later system message becomes a `<system_instruction>` user turn;
+  no-template tokenizer → built-in renderer (logged once); raising template → fallback + `#FALLBACK` warning; prompt-cache fragments carry
+  serializer `mlx-prompt-fragment/v2:chat-template:<sha>` so old KV artifacts rebuild. 25 golden tests against the real Qwen3.8 tokenizer.
+- Hermetic re-run of XP config A (gateway on 18891): iteration-3 visible tool calls 3/3 (was 0/5); digest 2/3. Run-3 looped on its own past
+  reasoning from iteration 9 (see 0925). Prompt cache: 4 cold starts then 76 `hit_restore`; E2E check 6 holds (A2 8.27 s, B2 TTFT 0.40 s).
+- Review 31 (untracked/missions-2026-09-25/REVIEW/31-core-mlx-chat-template.md): GO; rendered prompts byte-identical to the native
+  template 12/12 on Qwen3.5/3.6/3.8. Medium follow-up D1 to land in the same patch: one history tool call whose arguments are not a JSON
+  object makes the template raise and the whole run falls back to the old renderer for its remaining calls → wrap unparseable arguments
+  and report the renderer in each response's metadata. Lows: a template merely containing the word "tools" is assumed to render tool
+  definitions; image parts in history are dumped as JSON with base64; Outlines with thinking explicitly on decodes inside `<think>`.
