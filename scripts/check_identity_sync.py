@@ -23,6 +23,7 @@ SIBLINGS = ROOT.parent if (ROOT.parent / "abstractcore").is_dir() else ROOT
 FIXTURE_CANONICAL = SIBLINGS / "abstractuic" / "ui-kit" / "scripts" / "fixtures" / "gateway_version_rows.json"
 FIXTURE_COPIES = [
     SIBLINGS / "abstractcore" / "tests" / "utils" / "fixtures" / "gateway_version_rows.json",
+    SIBLINGS / "abstractgateway" / "console-tui" / "tests" / "fixtures" / "gateway_version_rows.json",
 ]
 KNOWN_COPIES = [
     SIBLINGS / "abstractcore" / "abstractcore" / "assets" / "abstractframework_identity.json",
