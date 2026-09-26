@@ -96,7 +96,7 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| 0922 | [MLX prompts follow the model's chat template](planned/0922_mlx_prompts_follow_the_models_chat_template.md) | Planned (fixed on core main `3b9f6bf`+`e4b180e`; 2.16.1 staged `3c2eae3`, unreleased) | Root cause of the scheduled digest stopping at iteration 3 on Qwen3.x MLX; iteration-3 calls 0/5 → 3/3; review 31 GO. |
+| 0922 | [MLX prompts follow the model's chat template](planned/0922_mlx_prompts_follow_the_models_chat_template.md) | Planned (fixed on core main `3b9f6bf`+`e4b180e`; 2.16.1 staged `e333219`, unreleased) | Root cause of the scheduled digest stopping at iteration 3 on Qwen3.x MLX; iteration-3 calls 0/5 → 3/3; review 31 GO. |
 | 0923 | [A wait resumed twice runs the Agent node's child twice](planned/0923_runtime_resume_of_the_same_wait_must_run_once.md) | Planned (fixed on runtime main `61d38a1`+`7d58dcd`; 0.5.1 staged `2100d1f`; gateway `e1db300`+`1501075`, 0.5.1 staged `00d6c66`; unreleased) | Production-affecting race between the runner's two parent-resume paths; per-run resume lock + typed `StaleResumeError`; review 32/33. |
 | 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
 | 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
@@ -344,7 +344,7 @@ record (see Hygiene Findings).
 
 Local, unpushed, untagged release commits waiting for the operator's explicit per-release go (ledger
 `untracked/release-2026-09-26/PATCH-STAGING.md`; reviews 29–34 under `untracked/missions-2026-09-25/REVIEW/`):
-AbstractRuntime 0.5.1 `2100d1f` (0923) → abstractcore 2.16.1 `3c2eae3` (0922) → abstractagent 0.3.15 `6595453` (0918: re-prompt
+AbstractRuntime 0.5.1 `2100d1f` (0923) → abstractcore 2.16.1 `e333219` (0922) → abstractagent 0.3.15 `6595453` (0918: re-prompt
 once on announced/unrunnable calls, `no_tool_call` stop, bounded nudge; crash fix for the 0.3.13/0.3.14 CodeAct/MemAct NameError) →
 abstractgateway 0.5.1 `00d6c66` (floors runtime>=0.5.1 / core>=2.16.1 / agent>=0.3.15; quiet lost-race log) → abstractframework
 0.4.1 `d08275b` (pins the four; image tags 0.5.1 / 2.16.1). Runtime and core are independent of each other; the gateway needs all

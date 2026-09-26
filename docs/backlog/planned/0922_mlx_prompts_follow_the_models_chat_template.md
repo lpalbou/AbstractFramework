@@ -1,6 +1,6 @@
 # 0922 — MLX prompts must follow the model's chat template (tool calls in history, tool responses, thinking opening)
 
-- **Status:** planned (fixes committed 2026-09-26 on abstractcore main as 3b9f6bf + e4b180e; release commit 3c2eae3 `Release abstractcore 2.16.1` staged locally, unpushed, untagged, waiting for the operator's go)
+- **Status:** planned (fixes committed 2026-09-26 on abstractcore main as 3b9f6bf + e4b180e; release commit e333219 `Release abstractcore 2.16.1` staged locally, unpushed, untagged, waiting for the operator's go)
 - **Created:** 2026-09-26
 - **Area:** abstractcore (MLX provider)
 
