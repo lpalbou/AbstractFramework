@@ -129,6 +129,23 @@ af_pkg_dep_ids() {
     echo "$out"
 }
 
+# Dependency ids of the package at index $1 that are taken from a REGISTRY
+# (edge kinds dep / dev), one per line. Source aliases (kind alias) and peers
+# (kind peer) are not installed by the consumer and are left out. The dev
+# build installs these from local packs so a sibling that is not published yet
+# (or is ahead of the registry) still builds.
+af_pkg_registry_dep_ids() {
+    local deps="${AF_PKG_DEPS[$1]}"
+    [[ "$deps" == "-" ]] && return 0
+    local item
+    local IFS=','
+    for item in $deps; do
+        case "${item#*:}" in
+            dep|dev) echo "${item%%:*}" ;;
+        esac
+    done
+}
+
 # --- repository queries ---------------------------------------------------------
 
 # Tier of a repository = the highest tier among its packages (the repo is

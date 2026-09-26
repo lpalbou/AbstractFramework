@@ -426,6 +426,26 @@ package_has_npm_script() {
 
 NPM_INSTALLED_ROOTS=" "
 
+# Pack every sibling kit the package at index $1 takes from the registry
+# (packages.txt edge kinds dep/dev) into $NPM_PACKS_DIR and print the tarball
+# paths, space-separated. The sibling must already be built (it is: the tiers
+# order the kits before their consumers). Fails loudly when a sibling is
+# missing or `npm pack` fails.
+NPM_PACKS_DIR="${AF_NPM_PACKS_DIR:-$ROOT_DIR/untracked/npm-packs}"
+pack_sibling_kits() {
+    local i="$1" dep_id dep_idx dep_dir tgz specs=""
+    for dep_id in $(af_pkg_registry_dep_ids "$i"); do
+        dep_idx="$(af_pkg_index "$dep_id")" || { printf "       ${C_RED}unknown sibling:${C_RESET} %s\n" "$dep_id"; return 1; }
+        dep_dir="$(af_pkg_dir "$dep_idx")"
+        [[ -f "$dep_dir/package.json" ]] || { printf "       ${C_RED}missing sibling:${C_RESET} %s (run ./scripts/clone.sh)\n" "$dep_dir"; return 1; }
+        mkdir -p "$NPM_PACKS_DIR"
+        tgz="$( (cd "$dep_dir" && npm pack --silent --pack-destination "$NPM_PACKS_DIR" 2>/dev/null) | tail -1)"
+        [[ -n "$tgz" && -f "$NPM_PACKS_DIR/$tgz" ]] || { printf "       ${C_RED}npm pack failed:${C_RESET} %s\n" "$dep_dir"; return 1; }
+        specs="${specs:+$specs }$NPM_PACKS_DIR/$tgz"
+    done
+    echo "$specs"
+}
+
 # Build one npm package from packages.txt (index $1).
 # - A package inside an npm WORKSPACE repo (AbstractUIC) is installed once at
 #   the workspace root and built with `npm run build --workspace <path>`.
@@ -461,11 +481,30 @@ build_npm_package() {
             if is_macos; then
                 macos_clear_quarantine "$install_root"
             fi
-            echo "       npm install  (${install_root#"$ROOT_DIR"/})"
-            if ! run_logged "$BUILD_LOG_DIR/npm-install-${AF_PKG_REPO[$i]}.log" "$install_root" \
-                    npm install --no-audit --no-fund; then
-                npm_ok=false
-                return 0
+            # Sibling kits the manifest takes from the registry (app-server,
+            # ui-kit, panel-chat, monitors) are installed from LOCAL packs of the
+            # checkouts built in the lower tiers, so a sibling that is not
+            # published yet — or is ahead of the registry — still builds. The
+            # manifest and its lockfile are left untouched (--no-save).
+            local sibling_specs=""
+            if [[ "$install_root" == "$pkg_dir" ]]; then
+                sibling_specs="$(pack_sibling_kits "$i")" || { npm_ok=false; return 0; }
+            fi
+            if [[ -n "$sibling_specs" ]]; then
+                echo "       npm install  (${install_root#"$ROOT_DIR"/}; siblings from local packs: $(echo "$sibling_specs" | xargs -n1 basename | tr '\n' ' '))"
+                # shellcheck disable=SC2086
+                if ! run_logged "$BUILD_LOG_DIR/npm-install-${AF_PKG_REPO[$i]}.log" "$install_root" \
+                        npm install --no-audit --no-fund --no-save $sibling_specs; then
+                    npm_ok=false
+                    return 0
+                fi
+            else
+                echo "       npm install  (${install_root#"$ROOT_DIR"/})"
+                if ! run_logged "$BUILD_LOG_DIR/npm-install-${AF_PKG_REPO[$i]}.log" "$install_root" \
+                        npm install --no-audit --no-fund; then
+                    npm_ok=false
+                    return 0
+                fi
             fi
             if is_macos && [[ -d "$install_root/node_modules" ]]; then
                 macos_clear_quarantine "$install_root/node_modules"

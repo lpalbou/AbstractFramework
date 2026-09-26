@@ -14,6 +14,7 @@ whole gateway process. This release replaces the 0.3.3 matrix, which was prepare
 published.
 
 ### Changed (pins)
+- The dev build (`scripts/build.sh`) installs the sibling kit packages an app takes from npm (app-server, ui-kit, panel-chat, monitors) from local packs of the checkouts, so an app builds locally even when its kit floor is ahead of the registry. The manifests and lockfiles are left untouched.
 
 - **abstractgateway 0.5.0** (was 0.4.3 on PyPI): the default agent workflow setting
   (`agents.default_workflow`, used by AbstractCode and the Assistant, changeable in the console or
