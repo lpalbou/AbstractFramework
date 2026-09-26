@@ -116,3 +116,10 @@ P1-5 (parity gate) and P1-7 (no silent no-stream).
   held until `</think>`; now streams as reasoning on the MLX (`9754270`), HF and GGUF (`7ad3e31`)
   lanes. Still held: raw-text OpenAI-compatible servers whose template opens the thinking block.
 - Record: `completed/0914_token_streaming_end_to_end.md`.
+
+## Addendum (2026-09-26, after abstractcore daea905)
+
+- Streamed vs non-streamed text still differs in two whitespace cases: trailing whitespace at the end of the answer after a
+  removed thinking block (`"Hello <think>x"` → `"Hello"` vs `"Hello "`, an existing test pins the streamed form), and blank-line
+  runs / leading whitespace written before the first block (cleaned only by the non-streamed split). Decide one rule and pin it.
+  Evidence: untracked/missions-2026-09-25/S/REPORT.md ("S-core daea905").
