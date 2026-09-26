@@ -19,6 +19,11 @@ ROOT = Path(__file__).resolve().parent.parent
 CANONICAL = ROOT / "identity" / "abstractframework.json"
 # Sibling repositories live side by side with this one.
 SIBLINGS = ROOT.parent if (ROOT.parent / "abstractcore").is_dir() else ROOT
+# Shared contract fixtures follow the same rule (canonical copy first, then the vendored copies).
+FIXTURE_CANONICAL = SIBLINGS / "abstractuic" / "ui-kit" / "scripts" / "fixtures" / "gateway_version_rows.json"
+FIXTURE_COPIES = [
+    SIBLINGS / "abstractcore" / "tests" / "utils" / "fixtures" / "gateway_version_rows.json",
+]
 KNOWN_COPIES = [
     SIBLINGS / "abstractcore" / "abstractcore" / "assets" / "abstractframework_identity.json",
     SIBLINGS / "abstractuic" / "ui-kit" / "src" / "abstractframework_identity.json",
@@ -30,9 +35,19 @@ KNOWN_COPIES = [
 def main(argv: list[str]) -> int:
     strict = "--lenient" not in argv
     extra = [Path(a) for a in argv if a != "--lenient"]
-    canonical = CANONICAL.read_bytes()
     failures = 0
-    for path in KNOWN_COPIES + extra:
+    for canonical_path, copies in ((CANONICAL, KNOWN_COPIES + extra), (FIXTURE_CANONICAL, FIXTURE_COPIES)):
+        if not canonical_path.exists():
+            print(f"missing  {canonical_path} (canonical)")
+            failures += int(strict)
+            continue
+        failures += _check_copies(canonical_path.read_bytes(), canonical_path, copies, strict)
+    return 1 if failures else 0
+
+
+def _check_copies(canonical: bytes, canonical_path: Path, copies: list[Path], strict: bool) -> int:
+    failures = 0
+    for path in copies:
         if not path.exists():
             print(f"missing  {path}")
             failures += int(strict)
@@ -41,9 +56,9 @@ def main(argv: list[str]) -> int:
         if copy == canonical:
             print(f"ok       {path}")
         else:
-            print(f"DRIFT    {path} (copy identity/abstractframework.json over it)")
+            print(f"DRIFT    {path} (copy {canonical_path} over it)")
             failures += 1
-    return 1 if failures else 0
+    return failures
 
 
 if __name__ == "__main__":
