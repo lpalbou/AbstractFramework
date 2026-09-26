@@ -13,10 +13,12 @@ temperature 0.2), the model repeated a byte-identical 3,941-token reply at itera
 its earlier reasoning; with that text moved to `reasoning_content` the output stayed byte-identical (2 seeds); with the reasoning dropped
 from the tool-call turns the model wrote the digest. Runs 1 and 2 (shorter, 6–7 LLM calls) finished with a digest.
 
-## Open question first
-Four independent samples at temperature 0.2 (no seed, seeds 11/12) were byte-identical, so the native MTP lane may decode greedily
-(0924, verification running). If so the identical repeats are partly a decoding artefact and the retention cost question stands on its
-own (token growth: 99.8k → 135k → 351k per run).
+## What the replay showed (2026-09-26, after 0924 verified that sampling is applied)
+Replaying run-3 iteration 11 with the reasoning kept in the assistant turns, no seed: at temperature 0.2, sample 1 copied the previous
+13,799-char reasoning byte for byte and kept thinking to the 6,000-token cap; sample 2 was byte-identical to the gateway's loop reply
+(3,941 tokens, same 3 calls). At temperature 0.7 both samples produced new text and new searches. So: when the prompt already contains
+the model's earlier reasoning, a low temperature makes it copy that reasoning with near-certain tokens whatever the seed; the retention
+is what sets the loop up, and the scheduled Observer task runs at 0.2. Token growth per run with retention: 99.8k → 135k → 351k.
 
 ## Options (the operator decides; none is a patch)
 1. Keep faithful retention (ADR-0026 as written): accept the loop risk on long tool runs and the token growth; rely on prompt caching.

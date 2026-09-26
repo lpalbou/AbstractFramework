@@ -12,9 +12,9 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 115 | 72 flat + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
-| Proposed | 41 | 33 flat (0905 and 0916–0920 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 237 | 227 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921 and the moves of 0875, 0900, 0857 and 0899 (2026-09-26). |
+| Planned | 117 | 74 flat (0922, 0923 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Proposed | 44 | 36 flat (0905, 0916–0920, 0925–0927 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
+| Completed | 238 | 228 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924 and the moves of 0875, 0900, 0857 and 0899 (2026-09-26). |
 | Deprecated | 0 | |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -30,6 +30,9 @@ and [0857](completed/0857_crates_io_trusted_publishing_for_console_crates.md) (c
 published by CI through trusted publishing). [0890](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md)
 is half done (gateway deep-research 0.1.8 shipped; the flow side is open). Local stacks: rerun
 `./scripts/start-local.sh --build` to run the released code.
+
+**Patch wave staged 2026-09-26 (not released):** runtime 0.5.1, core 2.16.1, agent 0.3.15, gateway 0.5.1, root 0.4.1 — see
+[Staged Patch Wave](#staged-patch-wave-2026-09-26-after-root-040--not-released); items 0918, 0922, 0923; decision gate 0925.
 
 Release follow-ups after the 2026-09-26 wave:
 
@@ -93,6 +96,8 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 0922 | [MLX prompts follow the model's chat template](planned/0922_mlx_prompts_follow_the_models_chat_template.md) | Planned (fixed on core main `3b9f6bf`+`e4b180e`; 2.16.1 staged `3c2eae3`, unreleased) | Root cause of the scheduled digest stopping at iteration 3 on Qwen3.x MLX; iteration-3 calls 0/5 → 3/3; review 31 GO. |
+| 0923 | [A wait resumed twice runs the Agent node's child twice](planned/0923_runtime_resume_of_the_same_wait_must_run_once.md) | Planned (fixed on runtime main `61d38a1`+`7d58dcd`; 0.5.1 staged `2100d1f`; gateway `e1db300`+`1501075`, 0.5.1 staged `00d6c66`; unreleased) | Production-affecting race between the runner's two parent-resume paths; per-run resume lock + typed `StaleResumeError`; review 32/33. |
 | 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
 | 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
 | 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned (not started; the 0.2.0 wave kept the existing extras) | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
@@ -230,6 +235,9 @@ binding: no lossy truncation inside the loop. Source analysis:
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 0925 | [Retained reasoning loops Qwen3.8 MLX on long tool runs](proposed/0925_agent_reasoning_retention_loops_on_long_tool_runs.md) | Proposed (OPERATOR DECISION GATE) | ADR-0026 protects the unbounded reasoning retention in ReAct tool-call turns; at temperature 0.2 the model copies its own past reasoning and loops (run-3: 351k tokens, cancelled). Keep / scope / delegate to the template. |
+| 0926 | [Writers of one run not serialized beyond resume](proposed/0926_run_writers_not_serialized_across_ticks_and_processes.md) | Proposed | Concurrent tick/cancel in-process and split-mode cross-process resumes need a store-level compare-and-set (review 32 (g)). |
+| 0927 | [MTP drafter not in use on native runs](proposed/0927_mtp_drafter_not_in_use_on_native_runs.md) | Proposed (verify first) | `draft_model` False on every instrumented native run of the `-mtp` build; establish the end-to-end MTP request path and measure. |
 | 0144 | [User profile metadata for selective model grounding](proposed/0144_user_profile_context_grounding.md) | Proposed | Discuss first/last name, birth date, inferred country, provenance, and query-time selective context injection before implementation. |
 | 0151 | [Runtime Explorer contract](proposed/gateway-control-plane/0151_runtime_explorer_contract.md) | Proposed | Reviewer consensus: start with a read-only Gateway envelope contract and Observer page for typed runtime resources; defer `abstractexplorer`, delete/export, raw workspace browsing, and admin cross-user exploration. |
 | 0152 | [AbstractManager package extraction](proposed/gateway-control-plane/0152_abstractmanager_package_extraction.md) | Proposed | Revisit a separate `abstractmanager` package only after console/config/workflow ACL surfaces prove real maintenance or reuse pressure. |
@@ -332,6 +340,16 @@ The 2026-09-25 patch waves (root 0.3.2; core 2.15.2 / 2.15.3, runtime 0.4.35, ga
 0.2.1, continuum 0.3.1) are in `untracked/release-2026-09-24/STATUS.md` but still have no backlog
 record (see Hygiene Findings).
 
+## Staged Patch Wave (2026-09-26, after root 0.4.0) — NOT released
+
+Local, unpushed, untagged release commits waiting for the operator's explicit per-release go (ledger
+`untracked/release-2026-09-26/PATCH-STAGING.md`; reviews 29–34 under `untracked/missions-2026-09-25/REVIEW/`):
+AbstractRuntime 0.5.1 `2100d1f` (0923) → abstractcore 2.16.1 `3c2eae3` (0922) → abstractagent 0.3.15 `6595453` (0918: re-prompt
+once on announced/unrunnable calls, `no_tool_call` stop, bounded nudge; crash fix for the 0.3.13/0.3.14 CodeAct/MemAct NameError) →
+abstractgateway 0.5.1 `00d6c66` (floors runtime>=0.5.1 / core>=2.16.1 / agent>=0.3.15; quiet lost-race log) → abstractframework
+0.4.1 `d08275b` (pins the four; image tags 0.5.1 / 2.16.1). Runtime and core are independent of each other; the gateway needs all
+three on PyPI; root last. Open operator decision: 0925.
+
 ## Staged Release (2026-09-25/26 wave) — released 2026-09-26
 
 Kept as the staging history; the wave shipped as recorded in 0921 (tags moved to the fix-forward and
@@ -351,6 +369,7 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0924 | [Verified: sampling reaches the sampler on every MLX lane](completed/0924_native_mtp_lane_sampling_verified.md) | 2026-09-26 | Verification record: temperature/top_p/top_k/seed applied on mlx-lm, native and native-batching lanes; identity table; no fix. |
 | 0921 | [Release wave 2026-09-26 (root 0.4.0)](completed/0921_release_wave_2026_09_26.md) | 2026-09-26 | 17 packages from 13 repos, per-package go; fix-forwards core `fa77136`/`f1735a1`/`ffbd1e6`/`1190cf1`, code `a636806`; relocks; 24/24 matrix + real scratch install; follow-ups 0918–0920. |
 | 0899 | [npm relock and kit floors after the kit publishes](completed/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) | 2026-09-26 | Moved from `planned/`. Relocks code `b243398`, observer `bf33805`, entity `16de0a3`, continuum `c2530d1`, tagged; published packs = local clean packs. |
 | 0857 | [crates.io trusted publishing for the console crates](completed/0857_crates_io_trusted_publishing_for_console_crates.md) | 2026-09-26 | Moved from `planned/`. `abstractgateway-console` 0.9.0 published by CI trusted publishing (run 36234261343); runbook text still missing. |

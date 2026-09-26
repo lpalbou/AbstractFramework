@@ -1,6 +1,6 @@
 # 0922 — MLX prompts must follow the model's chat template (tool calls in history, tool responses, thinking opening)
 
-- **Status:** planned (fix committed 2026-09-26 on abstractcore main as 3b9f6bf, unreleased; ships as abstractcore 2.16.1 on the operator's go)
+- **Status:** planned (fixes committed 2026-09-26 on abstractcore main as 3b9f6bf + e4b180e; release commit 3c2eae3 `Release abstractcore 2.16.1` staged locally, unpushed, untagged, waiting for the operator's go)
 - **Created:** 2026-09-26
 - **Area:** abstractcore (MLX provider)
 
@@ -37,3 +37,10 @@ at iteration 3; latency/prompt-cache proof unchanged.
   object makes the template raise and the whole run falls back to the old renderer for its remaining calls → wrap unparseable arguments
   and report the renderer in each response's metadata. Lows: a template merely containing the word "tools" is assumed to render tool
   definitions; image parts in history are dumped as JSON with base64; Outlines with thinking explicitly on decodes inside `<think>`.
+- abstractcore e4b180e (review-31 D1): a history tool call whose arguments are not a JSON object is passed to the template as
+  `{"raw_arguments": "<text>"}` so the run never drops to the built-in renderer; every response's `metadata["prompt_renderer"]` names
+  `chat_template | builtin | builtin_fallback` (+ `prompt_renderer_reason`); a template gets `tools=` only when it uses `tools` as a Jinja
+  variable (review D2). 5 more tests (3 real tokenizers × 3 argument shapes); 10 red when the wrapping is undone; suite 5227 passed.
+  Left open: Outlines with thinking explicitly on decodes inside `<think>` (review D6).
+- Sampling on the native MTP lane verified correct (0924): the run-3 repetition is model behaviour at temperature 0.2 with retained
+  reasoning (0925).
