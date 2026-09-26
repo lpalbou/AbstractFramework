@@ -94,3 +94,14 @@ P1-5 (parity gate) and P1-7 (no silent no-stream).
   `<|channel|>` for harmony-marked architectures on lanes that pass raw harmony text through it, so on those lanes the answer
   still arrives in one piece at the end (servers that separate reasoning themselves, such as LM Studio, are unaffected).
   Evidence: untracked/missions-2026-09-25/S/REPORT.md ("S-rt ea9adbe"), REVIEW/17-streaming-clients-flow.md.
+
+## Addendum (2026-09-26, after abstractcore 7dddf90 / 4d9260b)
+
+- Harmony channels are now split while streaming in abstractcore itself; raw harmony text reaches the processor on the MLX and
+  GGUF lanes (Ollama, LM Studio and vLLM split on the server; the transformers streamer strips framing without splitting).
+- Pre-existing, non-streamed: `split_harmony_response_text` does not cut `<|return|>` / `<|call|>`; a backend that emits them
+  would leak them into non-streamed text.
+- Truncated gpt-oss output (cut before any `final` channel) diverges: non-streamed returns the analysis text as content,
+  streamed returns empty content with that text as reasoning. Decide one rule.
+- The runtime's `usage_unavailable` refusal is being relaxed to release once a streamed call delivers usage (runtime follow-up).
+  Evidence: untracked/missions-2026-09-25/S/REPORT.md ("S-core").
