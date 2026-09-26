@@ -25,6 +25,10 @@ FIXTURE_COPIES = [
     SIBLINGS / "abstractcore" / "tests" / "utils" / "fixtures" / "gateway_version_rows.json",
     SIBLINGS / "abstractgateway" / "console-tui" / "tests" / "fixtures" / "gateway_version_rows.json",
 ]
+# The gateway console-tui vendors AbstractCore's console contract fixtures (canonical in abstractcore).
+CONSOLE_FIXTURE_NAMES = ("engines_status.json", "host_profile.json", "job_completed.json", "job_running.json", "model_catalog.json", "models_installed.json")
+CONSOLE_FIXTURE_CANONICAL_DIR = SIBLINGS / "abstractcore" / "console-tui" / "tests" / "fixtures"
+CONSOLE_FIXTURE_COPY_DIR = SIBLINGS / "abstractgateway" / "console-tui" / "tests" / "fixtures"
 KNOWN_COPIES = [
     SIBLINGS / "abstractcore" / "abstractcore" / "assets" / "abstractframework_identity.json",
     SIBLINGS / "abstractuic" / "ui-kit" / "src" / "abstractframework_identity.json",
@@ -37,7 +41,9 @@ def main(argv: list[str]) -> int:
     strict = "--lenient" not in argv
     extra = [Path(a) for a in argv if a != "--lenient"]
     failures = 0
-    for canonical_path, copies in ((CANONICAL, KNOWN_COPIES + extra), (FIXTURE_CANONICAL, FIXTURE_COPIES)):
+    groups = [(CANONICAL, KNOWN_COPIES + extra), (FIXTURE_CANONICAL, FIXTURE_COPIES)]
+    groups += [(CONSOLE_FIXTURE_CANONICAL_DIR / name, [CONSOLE_FIXTURE_COPY_DIR / name]) for name in CONSOLE_FIXTURE_NAMES]
+    for canonical_path, copies in groups:
         if not canonical_path.exists():
             print(f"missing  {canonical_path} (canonical)")
             failures += int(strict)
