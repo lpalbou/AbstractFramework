@@ -153,8 +153,8 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.4.0 pins (PyPI, `==`): abstractgateway 0.5.0, abstractassistant 0.6.0, abstractcore 2.16.0, AbstractRuntime 0.5.0, abstractagent 0.3.14, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15.
-- Released with it: npm `@abstractframework/flow` 0.3.21, `code` 0.5.0, `observer` 0.1.13, `continuum` 0.3.2, `entity` 0.2.2 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.9.0, `abstractcore-console` 0.2.0, `abstractcode` 0.6.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.5.0`, `ghcr.io/lpalbou/abstractcore-server:2.16.0`.
+- abstractframework 0.4.1 pins (PyPI, `==`): abstractgateway 0.5.1, abstractassistant 0.6.0, abstractcore 2.16.1, AbstractRuntime 0.5.1, abstractagent 0.3.15, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15.
+- Released with it: npm `@abstractframework/flow` 0.3.21, `code` 0.5.0, `observer` 0.1.13, `continuum` 0.3.2, `entity` 0.2.2 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.9.0, `abstractcore-console` 0.2.0, `abstractcode` 0.6.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.5.1`, `ghcr.io/lpalbou/abstractcore-server:2.16.1`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context

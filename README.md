@@ -146,7 +146,7 @@ ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.5.0` and `ghcr.io/lpalbou/abstractcore-server:2.16.0`.
+`ghcr.io/lpalbou/abstractgateway:0.5.1` and `ghcr.io/lpalbou/abstractcore-server:2.16.1`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -292,7 +292,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.4.0)
+### Release matrix (abstractframework 0.4.1)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -301,11 +301,11 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.5.0 |
+| PyPI | `abstractgateway` | 0.5.1 |
 | PyPI | `abstractassistant` | 0.6.0 |
-| PyPI | `abstractcore` | 2.16.0 |
-| PyPI | `AbstractRuntime` | 0.5.0 |
-| PyPI | `abstractagent` | 0.3.14 |
+| PyPI | `abstractcore` | 2.16.1 |
+| PyPI | `AbstractRuntime` | 0.5.1 |
+| PyPI | `abstractagent` | 0.3.15 |
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
@@ -321,8 +321,8 @@ and tested together.
 | crates.io | `abstractgateway-console` | 0.9.0 |
 | crates.io | `abstractcore-console` | 0.2.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.5.0 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.16.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.5.1 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.16.1 |
 
 Optional add-ons that are not part of any profile install separately:
 `pip install abstract3d` (0.3.1) and `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)

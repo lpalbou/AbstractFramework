@@ -4,6 +4,47 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-26
+
+A patch release for local MLX models and long-running flows.
+
+### Changed (pins)
+
+- **AbstractRuntime 0.5.1** (was 0.5.0): a wait is resumed at most once. A flow whose Agent or
+  subflow node waits on a child could run that child twice when the child finished exactly as the
+  runner ticked, doubling the run's time and tokens; a racing second resume is refused with a
+  typed `StaleResumeError`.
+- **abstractcore 2.16.1** (was 2.16.0): MLX prompts are rendered by the model's own chat template
+  on every MLX lane (mlx-lm, native MTP, vision, JSON-constrained). Earlier turns keep their tool
+  calls, tool results are rendered as the template renders them, and the generation prompt opens
+  thinking when the template does; agent loops on Qwen3.x MLX builds with thinking on used to stop
+  at the third iteration with a one-sentence announcement and no tool call. A malformed tool-call
+  argument in the history never disables that renderer, and each response's metadata names the
+  renderer used. Prompt-cache artifacts rendered by the previous renderer are rebuilt, not reused.
+- **abstractagent 0.3.15** (was 0.3.14): fixes a crash in 0.3.13 and 0.3.14 (CodeAct and MemAct
+  raised `NameError` when a delegated agent's profile set `thinking`). A reply that announces tool
+  use without calling a tool, or whose tool calls could not run, is re-prompted once with the
+  failed reply quoted, and ends with `stop_reason.code = "no_tool_call"` rather than being
+  published as the answer; the long-reply nudge is bounded to once per step.
+- **abstractgateway 0.5.1** (was 0.5.0): requires the three packages above; when two runner paths
+  race to resume the same parent, the losing attempt is logged at debug level instead of as an
+  error.
+- The pins apply to the base install and to the `apple` / `gpu` extras
+  (`abstractgateway[apple|gpu]==0.5.1`); the bootstrap scripts install
+  `abstractgateway[<profile>,tray]==0.5.1`. Unchanged: abstractassistant 0.6.0, abstractskill
+  0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision
+  0.3.29, abstractmusic 0.1.15, the browser apps (flow 0.3.21, code 0.5.0, observer 0.1.13,
+  continuum 0.3.2, entity 0.2.2), `abstractcode` 0.6.0 and `abstractgateway-console` 0.9.0.
+- Container images released with it: `ghcr.io/lpalbou/abstractgateway:0.5.1` (and `0.5.1-gpu`)
+  and `ghcr.io/lpalbou/abstractcore-server:2.16.1`.
+
+### Changed
+
+- The dev build (`scripts/build.sh`) installs the sibling kit packages an app takes from npm
+  (app-server, ui-kit, panel-chat, monitors) from local packs of the checkouts, so an app builds
+  locally even when its kit floor is ahead of the registry. The manifests and lockfiles are left
+  untouched.
+
 ## [0.4.0] - 2026-09-26
 
 A feature release of the whole framework. The gateway picks the agent workflow for AbstractCode
@@ -14,7 +55,6 @@ whole gateway process. This release replaces the 0.3.3 matrix, which was prepare
 published.
 
 ### Changed (pins)
-- The dev build (`scripts/build.sh`) installs the sibling kit packages an app takes from npm (app-server, ui-kit, panel-chat, monitors) from local packs of the checkouts, so an app builds locally even when its kit floor is ahead of the registry. The manifests and lockfiles are left untouched.
 
 - **abstractgateway 0.5.0** (was 0.4.3 on PyPI): the default agent workflow setting
   (`agents.default_workflow`, used by AbstractCode and the Assistant, changeable in the console or
