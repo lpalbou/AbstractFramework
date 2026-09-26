@@ -99,11 +99,16 @@ under `/api/gateway/` for the apps; no route lists sessions with `session_kind` 
 an optional pin yet (`flowFamilies.ts:37-46`); ui-kit tests are `scripts/check_*.mjs` against built output and its fixtures live in
 `ui-kit/scripts/fixtures/` (the root identity-sync script already reads that folder).
 
-## Open questions for the operator (precise)
-1. Discussion workspace: its own workspace with read access to the occurrence's, or shared read-write with the automation?
-2. Quiet occurrences: still listed ("checked 10:30, nothing new") with no badge — yes by default?
-3. Notification default: default-notify with `notify:false` to silence (recommended), or default-quiet with `notify:true` for urgent?
-4. Failure notifications: every failure, or after N consecutive failures?
+## Operator rulings, second set (2026-09-26; supersede the plan's notification convention)
+1. Discussion workspace = the automation's workspace mounted READ-ONLY; the discussion session is durable on the runtime. The workspace
+   guard needs a real read-only access mode (today's modes govern path reach, not permissions): writes/deletes/shell inside that root are
+   refused; reads and the target's other tools stay normal.
+2. Quiet occurrences stay listed without a badge (expected to be rare).
+3. Notification default is QUIET: the task is silent unless the workflow itself creates a notification at that tick (an explicit `notify`
+   output/payload or a notify node/tool; in-flow delivery through comms tools counts). Clients are thin and may be disconnected: attention
+   items are recorded gateway-side and shown when a client connects. Failures and human waits are attention regardless of this flag.
+4. Failures notify only when true: `policy.retry = {max_attempts, backoff}`; attempts are ledger-recorded; attention only when all retries
+   have failed; a temporary failure that self-corrects never notifies.
 
 ## Validation
 - Runtime: `tests/test_automation_{occurrence_recovery,commands,session_turns,discussion_isolation,index,replay_read_only}.py`.
