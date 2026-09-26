@@ -11,7 +11,6 @@ Each item is owned by the app's repository; the root backlog tracks them because
 the 2026-09-24 waves and the 2026-09-25 docs pass and cross package boundaries.
 
 ## Items
-- `0875_assistant_one_time_sign_in_handover.md`: the Assistant opens from the console without a sign-in.
 - `0876_gateway_console_tui_release_binaries.md`: `abstractgateway-console` has crates.io only, so no one-click terminal install.
 - `0877_continuum_server_settings_as_launch_flags.md`: Continuum's server is configured by environment variables only.
 - `0878_continuum_hub_seat_default_is_a_personal_name.md`: the Team page acts as seat `laurent` by default.
@@ -20,8 +19,13 @@ the 2026-09-24 waves and the 2026-09-25 docs pass and cross package boundaries.
 - `0881_assistant_linux_input_dependency_with_wheels.md`: `pynput` pulls the `evdev` sdist on Linux.
 
 ## Reading order
-0875 and 0876 first (they complete the one-click story), then 0881 (install matrix), then the
-small Continuum/Entity cleanups in any order.
+0876 first (it completes the one-click story), then 0881 (install matrix), then the small
+Continuum/Entity cleanups in any order.
+
+## Completed from this track
+- 2026-09-26: 0875 (Assistant signed-in hand-over) moved to
+  `completed/0875_assistant_one_time_sign_in_handover.md` by the 2026-09-25/26 mission wave
+  (record `completed/0911_assistant_handover_overlap_window_defaults_workflow_selector_raw_html.md`).
 
 ## Governing ADRs
 ADR-0038 (script bootstrap and gateway console install) for the install paths; otherwise none
@@ -36,4 +40,5 @@ instructions in user-facing text (operator rule applied in mission Z).
 
 ## Notes for future agents
 The gateway side of every handover exists (`POST /apps/tui-handover`, browser single-use codes in
-`apps_manager.py`); reuse it rather than inventing a second mechanism.
+`apps_manager.py`, and since 2026-09-26 the desktop hand-over file +
+`POST /apps/desktop-handover`); reuse them rather than inventing another mechanism.

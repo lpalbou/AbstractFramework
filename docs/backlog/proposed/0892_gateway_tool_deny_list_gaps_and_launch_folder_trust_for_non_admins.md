@@ -95,3 +95,14 @@ a non-localhost gateway.
 ## Receipts
 
 - None yet.
+
+## Status note (2026-09-26, after gateway `288f29f`, runtime `9818cad`)
+
+- Gap (1) closed: the data-folder snapshot was replaced by deny PREFIXES plus one allow (the run's
+  own folder), evaluated per call by the runtime (`6567ed4`); the enumeration helper is deleted
+  (gateway `609806d`). It was also the cause of the latency regression 0900 (closed).
+- Gap (3) closed: one workspace guard (`run_workspace_guard.py`, gateway `288f29f`) runs on every
+  start path, `/runs/schedule`, bridges and entity summons included; a child run can only add to the
+  host's deny list (runtime `9818cad`).
+- Still open: shell confinement (0232); `.netrc` / `.docker` in the built-in list; the operator
+  ruling on launch-folder trust for remote non-admins. Record: `completed/0910_conversation_workspace_browse_preview_one_guard_and_builtin_deny.md`.

@@ -33,3 +33,8 @@ Implementing items; rewriting history.
 ## Last run
 - 2026-09-25: post-release trace (0233 closed; 0863–0867 recorded; 0868–0889 created; 0889 opened
   for the legacy findings).
+- 2026-09-26: after the 2026-09-25/26 mission wave (0906–0915 recorded; 0875 and 0900 closed).
+  Counts recounted (planned 117, proposed 36, completed 234); new IDs 0890–0915 unique; legacy
+  findings unchanged (four-digit reuse 0212–0214, 24 planned/completed duplicates, 230 non-`NNNN_`
+  files → 0889). Drift flagged in the overview: 0872, 0874, 0884, 0888 look fixed by the unrecorded
+  2026-09-25 patch wave.
