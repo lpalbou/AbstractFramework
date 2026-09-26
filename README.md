@@ -146,7 +146,7 @@ ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.4.3` and `ghcr.io/lpalbou/abstractcore-server:2.15.2`.
+`ghcr.io/lpalbou/abstractgateway:0.5.0` and `ghcr.io/lpalbou/abstractcore-server:2.16.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -292,7 +292,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.3.3)
+### Release matrix (abstractframework 0.4.0)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -301,31 +301,32 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.4.4 |
-| PyPI | `abstractassistant` | 0.5.0 |
-| PyPI | `abstractcore` | 2.15.3 |
-| PyPI | `AbstractRuntime` | 0.4.36 |
-| PyPI | `abstractagent` | 0.3.13 |
+| PyPI | `abstractgateway` | 0.5.0 |
+| PyPI | `abstractassistant` | 0.6.0 |
+| PyPI | `abstractcore` | 2.16.0 |
+| PyPI | `AbstractRuntime` | 0.5.0 |
+| PyPI | `abstractagent` | 0.3.14 |
+| PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
 | PyPI | `abstractvoice` | 0.11.4 |
 | PyPI | `abstractvision` | 0.3.29 |
 | PyPI | `abstractmusic` | 0.1.15 |
-| npm | `@abstractframework/flow` | 0.3.20 |
-| npm | `@abstractframework/code` | 0.4.2 |
-| npm | `@abstractframework/observer` | 0.1.12 |
-| npm | `@abstractframework/continuum` | 0.3.1 |
-| npm | `@abstractframework/entity` | 0.2.1 |
-| crates.io | `abstractcode` | 0.5.1 |
-| crates.io | `abstractgateway-console` | 0.8.0 |
+| npm | `@abstractframework/flow` | 0.3.21 |
+| npm | `@abstractframework/code` | 0.5.0 |
+| npm | `@abstractframework/observer` | 0.1.13 |
+| npm | `@abstractframework/continuum` | 0.3.2 |
+| npm | `@abstractframework/entity` | 0.2.2 |
+| crates.io | `abstractcode` | 0.6.0 |
+| crates.io | `abstractgateway-console` | 0.9.0 |
 | crates.io | `abstractcore-console` | 0.2.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.4.3 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.2 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.5.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.16.0 |
 
 Optional add-ons that are not part of any profile install separately:
-`pip install abstract3d` (0.3.1) and `pip install abstractcamera` (0.2.0). `abstractskill` is
-installed with the gateway, which carries its curated skill shelf; install it on its own with
+`pip install abstract3d` (0.3.1) and `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)
+comes with the gateway, which carries its curated skill shelf; install it on its own with
 `pip install abstractskill`.
 
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,

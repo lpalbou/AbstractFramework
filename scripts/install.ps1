@@ -67,11 +67,11 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.4.4'
+$AfGatewayPinDefault = '0.5.0'
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.3.20', '@abstractframework/code@0.4.2', '@abstractframework/observer@0.1.12', '@abstractframework/continuum@0.3.1', '@abstractframework/entity@0.2.1')
-$AfCrateConsole = 'abstractgateway-console@0.8.0'
-$AfCrateCodeCli = 'abstractcode@0.5.1'
+$AfNpmApps = @('@abstractframework/flow@0.3.21', '@abstractframework/code@0.5.0', '@abstractframework/observer@0.1.13', '@abstractframework/continuum@0.3.2', '@abstractframework/entity@0.2.2')
+$AfCrateConsole = 'abstractgateway-console@0.9.0'
+$AfCrateCodeCli = 'abstractcode@0.6.0'
 $AfDocs = 'https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md'
 $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1'
 

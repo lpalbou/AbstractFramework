@@ -4,6 +4,54 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-26
+
+A feature release of the whole framework. The gateway picks the agent workflow for AbstractCode
+and the Assistant, AbstractCode can browse the conversation's workspace, the gateway serves a
+curated skill shelf, replies stream live into every client, the console opens the Assistant
+already signed in, and every app has an About dialog. Ejecting a model frees its memory from the
+whole gateway process. This release replaces the 0.3.3 matrix, which was prepared but never
+published.
+
+### Changed (pins)
+
+- **abstractgateway 0.5.0** (was 0.4.3 on PyPI): the default agent workflow setting
+  (`agents.default_workflow`, used by AbstractCode and the Assistant, changeable in the console or
+  with `abstractgateway config set`), the conversation workspace routes (browse and preview files,
+  with a built-in deny list for credential folders and the gateway data folder), the skill shelf
+  seeded from `abstractskill`, opening the Assistant signed in from the console, live replies
+  (`agents.streaming_default`), `GET /about`, the same-machine rule behind the app proxies, and
+  About in the web console and the terminal console. Ejecting a model frees its memory from the
+  whole gateway process and the memory figures show what the process really holds; gateways
+  started with an earlier version must be restarted once to reclaim memory already held. The
+  trust-proxy switch saved in the console now wins over `ABSTRACTGATEWAY_TRUST_PROXY`, which only
+  applies while nothing is saved.
+- **abstractcore 2.16.0** (was 2.15.2 in 0.3.2): framework identity for About screens
+  (`abstractcore.utils.identity`), process-wide model eject and memory reporting, embeddings
+  eject and reload, live-reply telemetry for MLX, and streamed and non-streamed replies that split
+  thinking from the answer the same way.
+- **AbstractRuntime 0.5.0** (was 0.4.35): live replies (`_runtime.stream`), workspace
+  built-in deny list, deferred model ejects with diagnostics.
+- **abstractagent 0.3.14** (was 0.3.13): delegated sub-agents inherit the live-reply switch.
+- **abstractskill 0.3.0** (new pin): the curated skill shelf ships inside the package.
+- **abstractassistant 0.6.0** (was 0.5.0): opens signed in when launched from the gateway
+  console, a workflow selector that follows the gateway default, live replies, About, and window
+  defaults.
+- The pins apply to the base install and to the `apple` / `gpu` extras
+  (`abstractgateway[apple|gpu]==0.5.0`, `abstractassistant[apple|gpu]==0.6.0`); the bootstrap
+  scripts install `abstractgateway[<profile>,tray]==0.5.0`. Unchanged: AbstractMemory 0.3.0,
+  abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15.
+- Browser apps released with it (`--with-apps`, `npx`): `@abstractframework/flow` 0.3.21,
+  `@abstractframework/code` 0.5.0, `@abstractframework/observer` 0.1.13,
+  `@abstractframework/continuum` 0.3.2 and `@abstractframework/entity` 0.2.2, built on
+  `@abstractframework/ui-kit` 0.1.12, `@abstractframework/app-server` 0.1.10 and
+  `@abstractframework/panel-chat` 0.1.17.
+- Terminal tools released with it: `abstractcode` 0.6.0 and `abstractgateway-console` 0.9.0
+  (`--with-code-cli`, `--with-console`); `abstractcore-console` 0.2.0 and `abstracttui` 0.6.0 are
+  unchanged.
+- Container images released with it: `ghcr.io/lpalbou/abstractgateway:0.5.0` (and `0.5.0-gpu`)
+  and `ghcr.io/lpalbou/abstractcore-server:2.16.0`.
+
 ### Documentation
 
 - New [Agent sessions](docs/agent-sessions.md) page: the gateway's default agent workflow and how
@@ -17,25 +65,6 @@ All notable changes to AbstractFramework will be documented in this file.
 - [Agent Skills](docs/guide/agent-skills.md) describes the shipped skills support; FAQ,
   Troubleshooting, Configuration and Glossary cover the new settings; gateway examples use launch
   flags (`serve --data-dir`, `network set --allowed-origins`).
-
-## [0.3.3] - 2026-09-25
-
-A patch release: ejecting a model frees its memory from the whole gateway process, and the
-memory figures show what the process really holds.
-
-### Changed (pins)
-
-- **abstractcore 2.15.3** (was 2.15.2), **AbstractRuntime 0.4.36** (was 0.4.35) and
-  **abstractgateway 0.4.4** (was 0.4.3): ejecting a model frees its memory from the whole gateway
-  process (weights, prompt and KV caches, MLX cache) and the memory figures show what the process
-  really holds. Gateways started with earlier versions must be restarted once to reclaim memory
-  already held. The pins apply to the base install and to the `apple` / `gpu` extras
-  (`abstractgateway[apple|gpu]==0.4.4`); the bootstrap scripts install
-  `abstractgateway[<profile>,tray]==0.4.4`. The other pins are unchanged: abstractagent 0.3.13,
-  AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29,
-  abstractmusic 0.1.15, abstractassistant 0.5.0. Unchanged too: `abstractgateway-console` 0.8.0,
-  ui-kit 0.1.11 and the browser apps (continuum 0.3.1, entity 0.2.1, flow 0.3.20, code 0.4.2,
-  observer 0.1.12).
 
 ## [0.3.2] - 2026-09-25
 

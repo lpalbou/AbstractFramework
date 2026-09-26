@@ -87,11 +87,11 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.4.4"
+AF_GATEWAY_PIN_DEFAULT="0.5.0"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.3.20 @abstractframework/code@0.4.2 @abstractframework/observer@0.1.12 @abstractframework/continuum@0.3.1 @abstractframework/entity@0.2.1"
-AF_CRATE_CONSOLE="abstractgateway-console@0.8.0"
-AF_CRATE_CODE_CLI="abstractcode@0.5.1"
+AF_NPM_APPS="@abstractframework/flow@0.3.21 @abstractframework/code@0.5.0 @abstractframework/observer@0.1.13 @abstractframework/continuum@0.3.2 @abstractframework/entity@0.2.2"
+AF_CRATE_CONSOLE="abstractgateway-console@0.9.0"
+AF_CRATE_CODE_CLI="abstractcode@0.6.0"
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
 AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
 

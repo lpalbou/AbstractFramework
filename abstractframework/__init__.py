@@ -10,21 +10,22 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.3.3"
+__version__ = "0.4.0"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.15.3",
-    "abstractruntime": "0.4.36",
-    "abstractagent": "0.3.13",
-    "abstractgateway": "0.4.4",
+    "abstractcore": "2.16.0",
+    "abstractruntime": "0.5.0",
+    "abstractagent": "0.3.14",
+    "abstractgateway": "0.5.0",
+    "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.11.4",
     "abstractvision": "0.3.29",
     "abstractmusic": "0.1.15",
-    "abstractassistant": "0.5.0",
+    "abstractassistant": "0.6.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -32,6 +33,7 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
     "abstractruntime": "AbstractRuntime",
     "abstractagent": "abstractagent",
     "abstractgateway": "abstractgateway",
+    "abstractskill": "abstractskill",
     "abstractmemory": "AbstractMemory",
     "abstractsemantics": "abstractsemantics",
     "abstractvoice": "abstractvoice",
@@ -41,19 +43,19 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.3.20",
-    "@abstractframework/code": "0.4.2",
-    "@abstractframework/observer": "0.1.12",
-    "@abstractframework/continuum": "0.3.1",
-    "@abstractframework/entity": "0.2.1",
+    "@abstractframework/flow": "0.3.21",
+    "@abstractframework/code": "0.5.0",
+    "@abstractframework/observer": "0.1.13",
+    "@abstractframework/continuum": "0.3.2",
+    "@abstractframework/entity": "0.2.2",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
 # or by the bootstrap scripts' --with-console / --with-code-cli flags).
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
-    "abstractgateway-console": "0.8.0",
+    "abstractgateway-console": "0.9.0",
     "abstractcore-console": "0.2.0",
-    "abstractcode": "0.5.1",
+    "abstractcode": "0.6.0",
     "abstracttui": "0.6.0",
 }
 

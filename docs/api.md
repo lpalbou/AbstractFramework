@@ -55,14 +55,14 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.3.3` for this release).
+The meta-package version (`0.4.0` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.3.3:
-`abstractcore` 2.15.3, `abstractruntime` 0.4.36, `abstractagent` 0.3.13, `abstractgateway` 0.4.4,
-`abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.4, `abstractvision` 0.3.29,
-`abstractmusic` 0.1.15, `abstractassistant` 0.5.0.
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.4.0:
+`abstractcore` 2.16.0, `abstractruntime` 0.5.0, `abstractagent` 0.3.14, `abstractgateway` 0.5.0,
+`abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.4, `abstractvision` 0.3.29,
+`abstractmusic` 0.1.15, `abstractassistant` 0.6.0.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -72,14 +72,14 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.3.20, `@abstractframework/code` 0.4.2,
-`@abstractframework/observer` 0.1.12, `@abstractframework/continuum` 0.3.1 and
-`@abstractframework/entity` 0.2.1. They also appear as `npm_apps` in the install manifest.
+`@abstractframework/flow` 0.3.21, `@abstractframework/code` 0.5.0,
+`@abstractframework/observer` 0.1.13, `@abstractframework/continuum` 0.3.2 and
+`@abstractframework/entity` 0.2.2. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.8.0, `abstractcore-console` 0.2.0, `abstractcode` 0.5.1 and the
+`abstractgateway-console` 0.9.0, `abstractcore-console` 0.2.0, `abstractcode` 0.6.0 and the
 `abstracttui` engine 0.6.0. The bootstrap scripts install `abstractgateway-console` and
 `abstractcode` at these versions with `--with-console` and `--with-code-cli`.
 
