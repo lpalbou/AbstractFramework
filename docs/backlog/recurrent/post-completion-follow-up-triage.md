@@ -32,3 +32,5 @@ Doing the follow-up work.
 ## Last run
 - 2026-09-25: reports `untracked/missions-2026-09-22/SUMMARY.md`,
   `untracked/release-2026-09-24/STATUS.md`, `untracked/coredoc-2026-09-25/STATUS.md` → 0868–0888.
+- 2026-09-26: `untracked/missions-2026-09-25/` (PLAN, CONTRACTS, S-DESIGN, track reports,
+  REVIEW/00–15) → 0890–0904.

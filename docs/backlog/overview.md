@@ -6,14 +6,14 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files on 2026-09-25 (recursive, topic tracks included; README, overview, template and
+On-disk item files on 2026-09-26 (recursive, topic tracks included; README, overview, template and
 `evidence/` files excluded). The legacy part of the backlog still breaks the one-ID-one-item rule,
 so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findings) and 0889.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 116 | 72 flat + tracks: agency-parity 11, app-surfaces 7, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
-| Proposed | 23 | Includes tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
+| Planned | 118 | 74 flat + tracks: agency-parity 11, app-surfaces 7, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Proposed | 36 | 28 flat + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
 | Completed | 222 | Includes tracks runtime-artifact-observability 9, multimodal-capabilities 1. |
 | Deprecated | 0 | |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
@@ -47,6 +47,14 @@ Release follow-ups (after the 2026-09-24 waves; see [Release Trace](#release-tra
    ADR-0034 order ([0860](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md)), test
    isolation for the remaining packages ([0849](planned/0849_test_suites_must_not_reach_the_operators_live_stack.md)),
    backlog normalization ([0889](planned/0889_normalize_the_legacy_root_backlog.md)).
+6. Wave 2026-09-25/26 (missions): release steps [0890](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md)
+   (wire bundled-flow pins, then rebuild the gateway's deep-research bundle) and
+   [0899](planned/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) (npm relock + kit floors after
+   the kit publishes); open risk to close before release [0900](proposed/0900_chat_turn_latency_regression_in_switch_v3.md)
+   (chat-turn latency 33–45 s vs 6–8 s); security follow-up [0892](proposed/0892_gateway_tool_deny_list_gaps_and_launch_folder_trust_for_non_admins.md)
+   (deny-list gaps + operator ruling on launch-folder trust for remote non-admins); operator gate
+   [0904](proposed/0904_refresh_the_audit_only_seat_missions.md) (stale "AUDIT ONLY" seat texts); the rest
+   are proposed (0891, 0893–0898, 0901–0903). Evidence: `untracked/missions-2026-09-25/`.
 
 Longer-running architecture work (unchanged since before the waves):
 
@@ -93,6 +101,8 @@ Longer-running architecture work (unchanged since before the waves):
 | 0873 | [Root launchers stop exporting legacy backlog env](planned/0873_root_launchers_stop_exporting_legacy_backlog_env.md) | Planned | `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT` / `BACKLOG_EXEC_RUNNER` are stored settings since gateway 0.4.1; Continuum labels the exports "environment (legacy)". |
 | 0874 | [Core default MLX model id names a missing repo](planned/0874_core_default_mlx_model_id_names_a_missing_repo.md) | Planned (fix committed on local core `main`, unreleased) | `mlx-community/Qwen3-4B` does not exist; `…-4bit` does. |
 | 0889 | [Normalize the legacy root backlog](planned/0889_normalize_the_legacy_root_backlog.md) | Planned | 24 stale planned copies of completed items, 231 non-`NNNN_` filenames, reused IDs; blocks reliable counts. |
+| 0890 | [Wire bundled-flow interface pins, then rebuild the gateway bundles](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md) | Planned (release step) | entity-chat/goodbye `success`/`meta`, multiagent-coding `passed` read as null; gateway `deep-research@0.1.7` predates the `prompt`/`success` wiring and its contract test pins the old outputs. |
+| 0899 | [npm relock and kit floors after the kit publishes](planned/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) | Planned (release step) | Code web lock pins ui-kit 0.1.10 / panel-chat 0.1.16 vs `^0.1.12` / `^0.1.17` (`npm ci` fails); observer/entity/continuum to `app-server ^0.1.10`; grep-prove the published builds. Crates.io stays 0857. |
 | 0875-0881 | [App surfaces track](planned/app-surfaces/README.md) | Planned | Seams between the gateway's apps manager and each app (Assistant handover, console TUI binaries, Continuum flags/seat/dev port, Entity dead variable, Linux `evdev`). |
 | 0882-0888 | [Docs hygiene track](planned/docs-hygiene/README.md) | Planned | Code-vs-docs conflicts and publishing gaps from the 2026-09-25 coredoc pass. |
 
@@ -209,6 +219,19 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0208 | [AbstractCore lightweight capability surface boundary](proposed/0208_abstractcore_lightweight_capability_surface_boundary.md) | Proposed | Preserve the Gateway/Core entrypoint split by keeping Gateway actions durable/high-level and only promoting a narrower Core-side discovery contract if direct Core demand proves it is needed. |
 | 0211 | [Public generate route override surface](proposed/0211_public_generate_route_override_surface.md) | Proposed | Keep structured temporary route overrides deferred until the internal resolved-route contract, topology parity, and Gateway policy ceilings are stable; if promoted later, prefer a separate advanced override surface over nesting route objects inside `request` or `output`. |
 | 0230 | [Spatial memory: rooms and objects as entity recall anchors](proposed/0230_spatial_memory_rooms_for_entities.md) | Proposed | Maintainer proposal (team vote): give each summoned entity an inhabitable space it can populate with valued objects/texts/sounds; wandering/passing objects becomes a place/object recall channel (like the participants channel), fighting inward loops and giving human-like rootedness. Layer 1 = object-anchor graph channel (2D/no 3D); later layers use meshvault/abstract3d/abstractvision/abstractmusic. Non-goal: anchors never become authoritative memory or identity. |
+| 0891 | [Flow: runtime-resolved handles as pins](proposed/0891_flow_runtime_resolved_handles_as_pins.md) | Proposed (pointer) | Root pointer to abstractflow `docs/backlog/proposed/0157`; 336 undrawable edges in 24 flows; "N hidden" badge is the interim. |
+| 0892 | [Gateway tool deny list gaps; launch-folder trust for remote non-admins](proposed/0892_gateway_tool_deny_list_gaps_and_launch_folder_trust_for_non_admins.md) | Proposed (operator ruling needed) | Data-folder deny entries are a run-start snapshot; shell not confined (0232); `/runs/schedule` covered only in the uncommitted S-gw tree; trust default on for non-admins (REVIEW/09 B2). |
+| 0893 | [Same-machine locality behind a reverse proxy](proposed/0893_same_machine_locality_behind_a_reverse_proxy.md) | Proposed | App-proxied requests are never local in trust-proxy mode; TUI treats a same-host LAN URL as remote until the first run; add a pre-run verdict route. |
+| 0894 | [Migrate Flow and Code web proxies onto app-server](proposed/0894_migrate_flow_and_code_web_proxies_onto_app_server.md) | Proposed | Needs WebSocket proxying, pre-login token check, status shape in app-server; Flow vite dev proxy lacks the forwarding headers. Realises 0155's trigger. |
+| 0895 | [MLX idle/TTL unload](proposed/0895_mlx_idle_ttl_unload.md) | Proposed (operator decision) | `ttl_s`/`keep_alive` now reported unsupported; no unloader exists. |
+| 0896 | [Verify MTP drafter eject](proposed/0896_verify_mtp_drafter_eject_on_a_host_with_the_companion.md) | Proposed | Companion `mlx-community/Qwen3.8-27B-MTP-4bit` not cached on this host; eject with a loaded drafter unmeasured. |
+| 0897 | [Standalone Local LLM clients register residency claims](proposed/0897_standalone_local_llm_clients_register_residency_claims.md) | Proposed | Only `MultiLocalAbstractCoreLLMClient` registers; another client's switch can eject a standalone client's model. |
+| 0898 | [Token streaming: paths that still do not stream](proposed/0898_token_streaming_gaps_after_the_first_wave.md) | Proposed | Remote core, entity chat, entity own-time loop, `usage_unavailable` servers; ```json tool blocks and MLX prompt-cache telemetry fixes uncommitted in core. |
+| 0900 | [Chat-turn latency regression in switch-v3](proposed/0900_chat_turn_latency_regression_in_switch_v3.md) | Proposed (open risk: close before release) | 33.1 s / 45.4 s vs 8.5 s / 6.5 s in switch-v2; bisect pending (REVIEW/16). |
+| 0901 | [Code web: delete the legacy `src/ui/app.tsx`](proposed/0901_code_web_delete_the_legacy_ui_app.md) | Proposed | 6,382 dead lines plus helpers only it uses; entry renders `workspace/app`. |
+| 0902 | [abstractskill pin history, wheel test, refresh pin](proposed/0902_abstractskill_bundle_pin_history_wheel_test_and_refresh_pin.md) | Proposed | Digest can change without a version bump; no wheel-content CI check; `entity-self-knowledge` pin stale. |
+| 0903 | [Identity sync check in the release checklist](proposed/0903_identity_sync_check_in_the_release_checklist.md) | Proposed | `scripts/check_identity_sync.py` is monorepo-only and run by no CI; make it a recurrent release gate. |
+| 0904 | [Refresh the "AUDIT ONLY" seat missions](proposed/0904_refresh_the_audit_only_seat_missions.md) | Proposed (operator decision gate) | Nine CLAUDE.md seat texts contradict the implementation work every agent was given. |
 | 0862 | [Gateway roles: admin, member (and maybe viewer), with admin-authorised choices](proposed/0862_gateway_roles_members_and_admin_authorised_choices.md) | Proposed (operator decisions pending: gate [0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)) | Named roles and a gateway-wide provider/model allow/deny list that members choose within; clamp member `tool_policy` and workspace self-service; per-role route contract test; prompt for a daily-use member account when network mode leaves localhost (not at first run); member invite links. The two authorization defects it recorded (token-only session login; `PROTECT_READ=0` reads as admin) are fixed in gateway 0.4.1. |
 
 ## Runtime Artifact Observability Proposed Track
@@ -325,6 +348,12 @@ Scan of 2026-09-25 (details and fix plan in [0889](planned/0889_normalize_the_le
   refreshed 0849, 0850, 0855, 0856, 0857, 0858, 0859, 0860, 0861, 0862, 0162 with dated status
   notes; added `recurrent/` with the two minimum process tasks. Counts above replaced the previous
   qualitative placeholders.
+
+- 2026-09-26 follow-up triage of the 2026-09-25/26 mission wave (`untracked/missions-2026-09-25/`:
+  PLAN, CONTRACTS, S-DESIGN, track reports, REVIEW/00–15): created 0890–0904 (two planned release
+  steps, thirteen proposed). 0894 realises the trigger of 0155 (three copies of the proxy forwarding
+  rules); fold 0155 into 0894 when promoting. REVIEW/16 (latency bisect) had not landed; fold it into
+  0900. The wave's own completion record is written at release time, not here.
 
 ## Operating Notes
 
