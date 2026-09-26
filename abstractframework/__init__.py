@@ -25,7 +25,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvoice": "0.11.4",
     "abstractvision": "0.3.29",
     "abstractmusic": "0.1.15",
-    "abstractassistant": "0.6.0",
+    "abstractassistant": "0.6.1",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {

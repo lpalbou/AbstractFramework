@@ -51,7 +51,7 @@ dependencies = [
     "abstractgateway==0.5.1",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.6.0",
+    "abstractassistant==0.6.1",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
     "abstractcore==2.16.1",
@@ -82,12 +82,12 @@ dependencies = [
 # then adds user-facing apps.
 apple = [
     "abstractgateway[apple]==0.5.1",
-    "abstractassistant[apple]==0.6.0; platform_system == \"Darwin\"",
+    "abstractassistant[apple]==0.6.1; platform_system == \"Darwin\"",
 ]
 
 gpu = [
     "abstractgateway[gpu]==0.5.1",
-    "abstractassistant[gpu]==0.6.0",
+    "abstractassistant[gpu]==0.6.1",
 ]
 
 [project.urls]

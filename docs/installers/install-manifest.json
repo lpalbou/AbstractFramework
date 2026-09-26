@@ -413,7 +413,7 @@
       "distribution": "abstractassistant",
       "id": "abstractassistant",
       "registry": "pypi",
-      "version": "0.6.0"
+      "version": "0.6.1"
     }
   ],
   "schema_version": 2,

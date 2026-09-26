@@ -29,11 +29,13 @@ A patch release for local MLX models and long-running flows.
 - **abstractgateway 0.5.1** (was 0.5.0): requires the three packages above; when two runner paths
   race to resume the same parent, the losing attempt is logged at debug level instead of as an
   error.
+- **abstractassistant 0.6.1** (was 0.6.0): the Settings window opens inside the screen; the
+  default screen edge gap is 12 px.
 - The pins apply to the base install and to the `apple` / `gpu` extras
-  (`abstractgateway[apple|gpu]==0.5.1`); the bootstrap scripts install
-  `abstractgateway[<profile>,tray]==0.5.1`. Unchanged: abstractassistant 0.6.0, abstractskill
-  0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision
-  0.3.29, abstractmusic 0.1.15, the browser apps (flow 0.3.21, code 0.5.0, observer 0.1.13,
+  (`abstractgateway[apple|gpu]==0.5.1`, `abstractassistant[apple|gpu]==0.6.1`); the bootstrap
+  scripts install `abstractgateway[<profile>,tray]==0.5.1`. Unchanged: abstractskill 0.3.0,
+  AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29,
+  abstractmusic 0.1.15, the browser apps (flow 0.3.21, code 0.5.0, observer 0.1.13,
   continuum 0.3.2, entity 0.2.2), `abstractcode` 0.6.0 and `abstractgateway-console` 0.9.0.
 - Container images released with it: `ghcr.io/lpalbou/abstractgateway:0.5.1` (and `0.5.1-gpu`)
   and `ghcr.io/lpalbou/abstractcore-server:2.16.1`.

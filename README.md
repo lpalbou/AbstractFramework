@@ -302,7 +302,7 @@ and tested together.
 | Registry | Package | Version |
 |---|---|---|
 | PyPI | `abstractgateway` | 0.5.1 |
-| PyPI | `abstractassistant` | 0.6.0 |
+| PyPI | `abstractassistant` | 0.6.1 |
 | PyPI | `abstractcore` | 2.16.1 |
 | PyPI | `AbstractRuntime` | 0.5.1 |
 | PyPI | `abstractagent` | 0.3.15 |

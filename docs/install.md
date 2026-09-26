@@ -338,7 +338,7 @@ A plain `pip install` of the `apple` or `gpu` profile builds the
 `aec-audio-processing`) from source, so it needs a C/C++ compiler. The one-line install above
 does not.
 
-`abstractframework` 0.4.1 pins `abstractgateway==0.5.1`, `abstractassistant==0.6.0`,
+`abstractframework` 0.4.1 pins `abstractgateway==0.5.1`, `abstractassistant==0.6.1`,
 `abstractcore==2.16.1`, `AbstractRuntime==0.5.1`, `abstractagent==0.3.15`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.4`,
 `abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
