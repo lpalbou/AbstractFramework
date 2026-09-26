@@ -133,6 +133,52 @@ See **[Getting Started](getting-started.md)** → "Gateway-first" section.
 
 ---
 
+## Which workflow answers when I chat with an agent?
+
+The gateway's default agent workflow for the client's interface, unless you pick another in the
+client. AbstractCode uses the shipped `basic-agent` until an admin chooses another
+(`agents.default_workflow.abstractcode.agent.v1`); the Assistant runs its built-in orchestrator
+unless the gateway names one. Clients that follow the gateway default pick up a change at the next
+turn. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
+
+## Where does the agent work, and can it read my credentials?
+
+In a folder on the gateway's computer: the conversation's own folder under the gateway's data
+folder, or the folder you started the AbstractCode terminal client from. AbstractCode's **Files**
+tab and `/files` show its absolute path and preview its files. Credential folders (`~/.ssh`,
+`~/.aws`, `~/.gnupg`, `~/.config/gcloud`, `~/.kube`, `~/Library/Keychains`), the framework's own
+settings folders and the gateway's data folder are denied to every run's file tools and never
+shown by the workspace browser. Shell commands a run may execute are not confined by that list,
+so keep shell tools behind approval. See
+[Agent sessions](agent-sessions.md#the-conversation-workspace).
+
+## Which replies stream live?
+
+With live replies on (the gateway's `agents.streaming_default`, or **Stream replies** in the
+client), the text and reasoning of every model call in the run stream, sub-agents included.
+Structured-output calls, a gateway that calls a remote AbstractCore server, providers that cannot
+stream or report usage while streaming, and entity chat do not; the client says why in one line,
+and the finished answer is the same either way. See
+[Agent sessions](agent-sessions.md#live-replies-streaming).
+
+## Does ejecting a model free its memory?
+
+Yes. Ejecting a model (console **Resources**, `abstractgateway models unload`) frees it from every
+holder in the gateway process, for MLX, llama.cpp GGUF, transformers and embedding models, caches
+included. Switching the default model ejects the previous one before the new one loads when nothing
+else uses it. The console's accelerator meter shows the memory the gateway process holds and how
+it was measured. See [Architecture](architecture.md#model-residency-and-eject) and
+[Troubleshooting](troubleshooting.md#the-gateway-still-holds-memory-after-an-eject).
+
+## Where do the About screens get their information?
+
+Every app renders the same framework identity (name, website, author, licence, links, contact)
+from one descriptor kept in this repository, `identity/abstractframework.json`, plus the
+versions the connected gateway reports at `GET /api/gateway/about`. See
+[Architecture](architecture.md#framework-identity-and-about-screens).
+
+---
+
 ## How does multimodality work?
 
 AbstractCore supports modalities via **capability plugins** (installed separately, discovered via entry points):
@@ -149,9 +195,9 @@ Plugins are configured on the machine that actually executes (local app host or 
 
 ## Where is data stored?
 
-- **Gateway**: `ABSTRACTGATEWAY_DATA_DIR` is the durability root (runs, ledger, artifacts, schedules). The bootstrap scripts set it to `~/Library/Application Support/AbstractGateway` (macOS), `~/.local/share/abstractgateway` (Linux) or `%LOCALAPPDATA%\AbstractGateway` (Windows).
+- **Gateway**: its data folder is the durability root (runs, ledger, artifacts, schedules, conversation workspaces, the seeded skill shelf, saved settings). By default it is `~/Library/Application Support/AbstractGateway` (macOS), `~/.local/share/abstractgateway` (Linux) or `%LOCALAPPDATA%\AbstractGateway` (Windows); `serve --data-dir` chooses another, and `abstractgateway-config status` prints the one in use.
 - **Core config**: `~/.abstractcore/config/` (persisted by `abstractcore --config`).
-- **Local apps**: typically `~/.abstractcode/`, `~/.abstractassistant/`, etc.
+- **Local apps**: `~/.abstractcode/` (terminal client preferences), `~/.abstractassistant/` (Assistant preferences, sign-in and chat snapshots), etc.
 
 If you care about auditability and long-lived workflows, back up the gateway data directory.
 

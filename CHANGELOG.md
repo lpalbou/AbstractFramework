@@ -4,6 +4,20 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Documentation
+
+- New [Agent sessions](docs/agent-sessions.md) page: the gateway's default agent workflow and how
+  AbstractCode and the Assistant follow it, the conversation workspace (browse and preview from
+  AbstractCode, the built-in deny list for credential folders and the gateway data folder), the
+  curated skill shelf, live replies, and opening the Assistant signed in from the console.
+- [Architecture](docs/architecture.md) adds diagrams of how a turn flows, the live-reply lane and
+  the framework identity flow, plus the app proxies' forwarded-address rule and model eject.
+- [CONTRIBUTING](CONTRIBUTING.md) documents the framework identity rule
+  (`identity/abstractframework.json` and `scripts/check_identity_sync.py`).
+- [Agent Skills](docs/guide/agent-skills.md) describes the shipped skills support; FAQ,
+  Troubleshooting, Configuration and Glossary cover the new settings; gateway examples use launch
+  flags (`serve --data-dir`, `network set --allowed-origins`).
+
 ## [0.3.3] - 2026-09-25
 
 A patch release: ejecting a model frees its memory from the whole gateway process, and the

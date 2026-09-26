@@ -47,7 +47,10 @@ abstractcore --config
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
-The gateway ships the `coding-agent:coder` workflow that AbstractCode uses by default.
+AbstractCode runs the gateway's default agent workflow: the shipped `basic-agent` until you
+choose another. For a verify-gated coder, make the shipped `coding-agent:coder` the default
+(`abstractgateway config set agents.default_workflow.abstractcode.agent.v1 coding-agent:coder`) or
+pick it in the client (`/workflow`, `abstractcode --workflow coding-agent:coder`).
 
 ## Step 4: Run AbstractCode
 
@@ -63,6 +66,9 @@ Prefer a browser? `npx @abstractframework/code` serves the same client on
 
 - Type a task and press Enter; reasoning cycles and tool cards stream in live.
 - Tools are approval-gated by default: approve or reject each call, from either client.
+- The agent works in a folder on the gateway host; `/files` (the **Files** tab in the browser)
+  shows its path and previews its files. Credential folders such as `~/.ssh` stay out of reach.
+- `/stream` turns on live replies when you want to watch answers as they are written.
 - Type `/help` for commands.
 
 ## What "durable" means here

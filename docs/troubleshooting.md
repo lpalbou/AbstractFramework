@@ -138,6 +138,72 @@ run the installer again: it continues where it stopped.
   abstractvoice-prefetch --stt small --piper en
   ```
 
+## Agent sessions
+
+### Runs are refused: the default agent workflow is unavailable
+
+- **Cause**: the gateway's saved `agents.default_workflow.<interface>` names a workflow that is no
+  longer on the gateway (removed or deprecated). The gateway refuses runs that ask for the default
+  (HTTP 409, naming the setting and its value) instead of running another workflow.
+- **Check**: `abstractgateway config get agents.default_workflow.abstractcode.agent.v1`, or the
+  console's **Workflows** → *Default agent workflow*, which shows the reason.
+- **Fix**: choose an available workflow there, or `abstractgateway config unset
+  agents.default_workflow.<interface>` to return to the built-in default. In the client, you can
+  also pick a named workflow for now (`/workflow`, the **Workflow** list).
+- See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
+
+### Replies do not stream
+
+- **Check**: the client's **Stream replies** choice (browser Settings, `/stream` in the terminal,
+  Assistant Settings → Models) and the gateway's `abstractgateway config get
+  agents.streaming_default`. A client on **Gateway default** follows the gateway, which is off
+  until saved.
+- **Cause**: when a call does not stream, the client shows why: structured output, a gateway that
+  calls a remote AbstractCore server, a provider that cannot stream or cannot report usage while
+  streaming, or a workflow step that turns streaming off. **On — not supported by this gateway**
+  means the gateway does not advertise live replies.
+- **Fix**: choose **On** in the client or save `agents.streaming_default on`; for the listed
+  causes, the finished answer still arrives complete.
+- See [Agent sessions](agent-sessions.md#live-replies-streaming).
+
+### No skills are listed
+
+- **Check**: the empty list shows the gateway's explanation and its shelf folder; the console's
+  **Apps** → *Skills shelf* shows where the shelf comes from.
+- **Cause**: a saved `skills.shelf` folder that does not exist or holds no `skills/` folder is
+  reported as unavailable (the gateway does not fall back to another shelf).
+- **Fix**: `abstractgateway config unset skills.shelf` to use the gateway's own copy of the curated
+  shelf, or save a folder that holds `skills/<name>/SKILL.md`. **Refresh the curated shelf** in the
+  console copies the shipped shelf again.
+
+### "Open folder" is missing from the Files view
+
+- **Cause**: the workspace is on the gateway's computer, and only an admin sitting at that
+  computer can have it opened there. A browser on another machine, even through an app proxy on
+  the gateway's computer, counts as remote.
+- **Fix**: copy the path shown (it is on the gateway host), or open it on the gateway's computer.
+- See [Architecture: app proxies](architecture.md#app-proxies-and-the-forwarded-address).
+
+### The Assistant opened from the console is not signed in
+
+- **Cause**: an Assistant that was already running cannot receive the one-time sign-in; the code
+  also expires after two minutes.
+- **Fix**: quit the Assistant, then click **Open** on its card in the gateway console again.
+- See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
+
+### The gateway still holds memory after an eject
+
+- **Check**: the console's **Resources** view. With no model listed, it says how much accelerator
+  memory the gateway process still holds, how that was measured, and what holds it. Ejects that
+  wait for an in-flight call, or that failed, are listed above the table with the reason.
+- **Cause**: a call still running on the old model, a model locked by another client (an eject
+  without force is refused), or memory no model library reports.
+- **Fix**: wait for the in-flight call, eject the named holder (with force for a locked model:
+  `abstractgateway models unload --provider <p> --model <m> --force` or the console's force
+  confirmation),
+  or restart the gateway.
+- **Verify**: the meter returns to the baseline and the resident-models table is empty.
+
 ## Reporting a problem
 
 When a step keeps failing, open an issue at

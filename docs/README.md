@@ -75,7 +75,8 @@ The full component diagram, with memory, semantics and the consoles, is in
 |---|---|
 | **[Install](install.md)** | Mac installer, one-line install (`install.sh` / `install.ps1`), options, Network setting and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
-| **[Architecture](architecture.md)** | Component diagram, distribution by registry, durable execution primitives, comparisons |
+| **[Agent sessions](agent-sessions.md)** | What every client shares when it chats with an agent: the gateway's default agent workflow, the conversation workspace and its built-in protection, skills, live replies, opening the Assistant signed in |
+| **[Architecture](architecture.md)** | Component diagram, distribution by registry, how a turn flows and the live-reply lane, app proxies, model eject, framework identity, durable execution primitives, comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
 | **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
@@ -141,8 +142,8 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | Package | What it is |
 |---|---|
 | [abstracttui](https://github.com/lpalbou/AbstractTUI) | Reactive Rust terminal UI engine |
-| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Shared React/Web Components UI kit |
-| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared Agent Skills (`SKILL.md`) loader and activation library |
+| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Shared React/Web Components UI kit: chat panel with live replies, the About dialog, the app-server proxy |
+| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared Agent Skills (`SKILL.md`) loader, trust gate, and the curated skill shelf the gateway serves |
 
 ---
 
@@ -151,9 +152,9 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | App | What it does |
 |---|---|
 | **AbstractCode** | Terminal agentic dev client (local, durable sessions) |
-| **AbstractAssistant** | macOS tray client (gateway-first, workflow picker, voice) |
+| **AbstractAssistant** | macOS tray client (gateway-first, gateway default or picked workflow, live replies, voice); **Open** in the gateway console starts it signed in |
 | **AbstractObserver** | Browser UI to monitor, control, and schedule gateway runs |
-| **Code Web UI** | Browser coding assistant (gateway-backed) |
+| **Code Web UI** | Browser coding assistant (gateway-backed): workflow selector, Files tab, live replies |
 
 ---
 

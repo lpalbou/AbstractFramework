@@ -10,21 +10,18 @@ This guide covers deploying a browser UI (Observer / Flow Editor / Code Web UI) 
 
 ## Minimum gateway settings (browser access)
 
-Set these on the gateway host:
+A bare start already has what browser apps need: user auth on, and browser
+origins `http://localhost:*` and `http://127.0.0.1:*` allowed.
 
 ```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+abstractgateway serve
 ```
 
-Start the gateway:
-
-```bash
-abstractgateway serve --host 127.0.0.1 --port 8080
-```
+For UIs served from another origin, allow it with
+`abstractgateway network set --allowed-origins https://ui.example.com`.
 
 Gateway creates `default/admin` if needed and writes the first browser-login
-token to `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`. Use that token
+token to `<data dir>/auth/bootstrap-admin-token`. Use that token
 for `/console` and browser apps, then create named users or rotate tokens from
 the console.
 
@@ -54,10 +51,18 @@ access control. If the UI is behind a reverse proxy that rewrites `Host`, enable
 `*_TRUST_PROXY_HEADERS=1` only after the proxy strips client-supplied forwarded
 headers.
 
+Each UI command starts a small local server that serves the page and relays
+its gateway calls. That app proxy writes the browser's real address in
+`X-Forwarded-For` (replacing anything the browser sent) and marks the request
+as proxied, so the gateway can tell a browser on its own computer from one on
+your network: local-only actions such as opening a run's folder are offered
+only to the former. See
+[Architecture: app proxies](../architecture.md#app-proxies-and-the-forwarded-address).
+
 ## Production notes (high-signal)
 
 - Terminate TLS at a reverse proxy and forward to `127.0.0.1:8080`.
-- Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
+- Allow only the exact UI origins you serve (`abstractgateway network set --allowed-origins`; avoid broad wildcards).
 - Keep the Gateway admin token secret and rotate it like any control-plane
   credential.
 - Hosted browser apps should keep only their app-scoped Gateway session cookie;

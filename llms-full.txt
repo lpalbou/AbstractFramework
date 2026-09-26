@@ -120,18 +120,16 @@ creates `default/admin` in the per-user data folder, and prints a one-time sign-
 web console and its first-run guide. `abstractgateway claim` mints a new link;
 `abstractgateway service install` starts the gateway at login.
 
-To choose the data folder, the allowed browser origins or your own workflow bundles, set the
-environment explicitly:
+Browser apps on `http://localhost:*` and `http://127.0.0.1:*` may always call it. To choose
+another data folder or allow another browser origin:
 
 ```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
-# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"   # serve your own bundle registry
-
-abstractgateway serve --host 127.0.0.1 --port 8080
+abstractgateway serve --data-dir "$PWD/runtime/gateway"
+abstractgateway network set --allowed-origins https://ui.example.com
 ```
+
+To serve your own workflow bundles instead of the shipped ones, start the gateway with
+`ABSTRACTGATEWAY_FLOWS_DIR` pointing at your bundle folder.
 
 Out of the box this serves a ready set of workflows — a verify-gated coding
 agent, `deep-research`, and `co-scientist` among them. See
@@ -156,6 +154,33 @@ Container images are published for the gateway and the AbstractCore server:
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
+
+### Agent sessions on the gateway
+
+Every client (AbstractCode in the terminal and the browser, AbstractAssistant, your own app)
+chats with agents through the same gateway rules:
+
+- **One default agent workflow.** The gateway decides which workflow answers each agent interface
+  (`agents.default_workflow.<interface>`; the shipped `basic-agent` for AbstractCode until you
+  choose another). Clients list **Gateway default** first and follow a change at the next turn.
+- **A workspace you can see, with built-in protection.** An agent works in a folder on the
+  gateway's computer; AbstractCode's **Files** tab and `/files` show its absolute path and
+  preview its files. Credential folders (`~/.ssh`, `~/.aws`, …) and the gateway's data folder are
+  denied to every run.
+- **Curated skills.** The skill shelf that ships with `abstractskill` is copied into the gateway's
+  data folder at each start, without overwriting your edits (`skills.shelf` points elsewhere).
+- **Live replies.** Watch answers as the model writes them: the gateway's
+  `agents.streaming_default` plus a **Stream replies** choice in each client.
+- **The Assistant, signed in for you.** **Open** in the gateway console starts the desktop
+  Assistant already signed in; no token to type.
+- **About everywhere.** Every app's About screen shows the framework identity and the versions
+  the connected gateway runs (`GET /api/gateway/about`).
+- **Clean model eject.** Ejecting a model frees it from the whole gateway process (MLX, GGUF,
+  transformers, embeddings); the console shows the memory the process holds and how it was
+  measured.
+
+Each setting is available in the web console, the terminal console and `abstractgateway config`.
+See [Agent sessions](docs/agent-sessions.md).
 
 ---
 
@@ -221,14 +246,14 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 
 | App | What it does | Install |
 |---|---|---|
-| [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, `/workflow` support | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
-| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
+| [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, the gateway's default workflow, workspace files, live replies | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
+| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, follows the gateway's default workflow or your pick, live replies, voice support | `pip install abstractassistant`, or **Open** in the gateway console (starts it signed in) |
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
 | **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
-| **Code Web UI** | Browser client of AbstractCode (gateway-backed) | `npx @abstractframework/code` |
+| **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | `npx @abstractframework/code` |
 | **Flow Editor** | Visual workflow authoring in the browser | `npx @abstractframework/flow` |
 
 ### Shared libraries
@@ -236,8 +261,8 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 | Package | What it is |
 |---|---|
 | [abstracttui](https://github.com/lpalbou/AbstractTUI) | Rust terminal-UI engine built on fine-grained reactive signals |
-| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Reusable UI kit for framework clients (React components + Web Components) |
-| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) |
+| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Reusable UI kit for framework clients (React components + Web Components): chat panel with live replies, the shared About dialog, the app-server proxy |
+| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) and the curated skill shelf the gateway serves |
 
 ---
 
@@ -303,8 +328,9 @@ and tested together.
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.2 |
 
 Optional add-ons that are not part of any profile install separately:
-`pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and
-`pip install abstractskill` (0.2.1).
+`pip install abstract3d` (0.3.1) and `pip install abstractcamera` (0.2.0). `abstractskill` is
+installed with the gateway, which carries its curated skill shelf; install it on its own with
+`pip install abstractskill`.
 
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
 `abstractframework doctor`, and the generated installer manifest contract.
@@ -318,7 +344,8 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/README.md](docs/README.md) | Documentation hub — pick your starting point |
 | [docs/install.md](docs/install.md) | Light / Apple / GPU install chooser and first checks |
 | [docs/getting-started.md](docs/getting-started.md) | Two entry points + first end-to-end run |
-| [docs/architecture.md](docs/architecture.md) | Layered model, durable execution primitives, comparisons |
+| [docs/agent-sessions.md](docs/agent-sessions.md) | Default agent workflow, the conversation workspace and its protection, skills, live replies, the Assistant hand-over |
+| [docs/architecture.md](docs/architecture.md) | Component diagram, how a turn flows, the live-reply lane, app proxies, model eject, framework identity, durable execution primitives |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | [docs/faq.md](docs/faq.md) | Common questions, comparisons, limits |
@@ -444,6 +471,30 @@ Notes for LLMs working in this repo:
   `docs-qa`, `abstractassistant-orchestrator`, and the `react-agent` /
   `codeact-agent` / `memact-agent` native loops. Setting
   `ABSTRACTGATEWAY_FLOWS_DIR` replaces that registry with a custom one.
+- Agent sessions (every client: AbstractCode terminal + web, AbstractAssistant, your app):
+  the gateway resolves `flow_id: "@default"` + `interface` to its
+  `agents.default_workflow.<interface>` at every run start (built-in: shipped
+  `basic-agent` for `abstractcode.agent.v1`; none for
+  `abstractassistant.agent.v1`, whose app then runs its built-in orchestrator;
+  an unresolvable default refuses the run, never falls back). Every run works in
+  a folder on the gateway host (the conversation folder under
+  `<data dir>/workspaces/`, or the terminal client's launch folder), browsable via
+  `GET /runs/{id}/workspace[/files|/content]` (AbstractCode Files tab, `/files`),
+  with a built-in deny list (credential folders, framework settings folders, the
+  gateway data folder) for every run and the browser. The curated skill shelf
+  ships in `abstractskill` and is seeded into `<data dir>/skills/registry` at each
+  start (`skills.shelf` overrides). Live replies: `input_data._runtime.stream`,
+  gateway default `agents.streaming_default`, `llm.delta` / `llm.delta_end`
+  events on the run SSE stream (not ledger records); structured output, remote
+  AbstractCore, entity chat do not stream. The console's **Open** starts the
+  Assistant signed in through a one-time hand-over file. Public
+  `GET /api/gateway/about` returns versions for About screens.
+- Framework identity: `identity/abstractframework.json` is canonical; byte-identical
+  copies live in abstractcore, the ui-kit, the AbstractCode terminal client and the
+  gateway terminal console; `python3 scripts/check_identity_sync.py` verifies them.
+- App proxies (AbstractCode web server, Flow Editor server, ui-kit app-server) overwrite
+  `X-Forwarded-For` with the browser's address and add `X-AbstractFramework-App-Proxy`;
+  the gateway believes the header only from a loopback peer, so LAN browsers stay remote.
 
 ## Start Here
 
@@ -452,8 +503,9 @@ Notes for LLMs working in this repo:
 - [docs/install.md](docs/install.md): Mac installer (with the one-time Open Anyway step), one-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, Network setting, uninstall), Light / Apple / GPU chooser, generated manifest contract.
 - [docs/installers/README.md](docs/installers/README.md): Install design: script bootstrap + gateway console (strategy, per-OS journeys, components, OS security/sudo/UAC/execution policy, manifest, operations).
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
+- [docs/agent-sessions.md](docs/agent-sessions.md): What every client shares when it chats with an agent: the gateway's default agent workflow (`agents.default_workflow.<interface>`), the conversation workspace on the gateway host and its built-in deny list, the curated skill shelf (`skills.shelf`), live replies (`agents.streaming_default` + per-client Stream replies; what does not stream), opening the Assistant signed in from the console.
 - [AbstractGateway shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
-- [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid component and distribution diagrams).
+- [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid diagrams: components, distribution, how a turn flows, the live-reply lane, the framework identity flow), app proxies and the forwarded-address rule, model residency and eject.
 - [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, client configuration.
 - [docs/api.md](docs/api.md): Meta-package API: release pins, helpers, `abstractframework doctor` and `manifest`.
 - [docs/faq.md](docs/faq.md): Common questions, comparisons, limits.
@@ -483,7 +535,7 @@ Notes for LLMs working in this repo:
 - [docs/guide/capability-routing-defaults.md](docs/guide/capability-routing-defaults.md): Provider/model/base URL defaults for input, output, embedding, and rerank routes.
 - [docs/guide/runtime-artifacts.md](docs/guide/runtime-artifacts.md): Runtime artifact descriptors, Gateway artifact search, Observer views, ledger/KG boundaries, and safe retrieval practice.
 - [docs/guide/workflow-bundles.md](docs/guide/workflow-bundles.md): `.flow` bundles and lifecycle.
-- [docs/guide/agent-skills.md](docs/guide/agent-skills.md): Agent Skills (SKILL.md) proposal and how it composes with flows.
+- [docs/guide/agent-skills.md](docs/guide/agent-skills.md): Agent Skills (SKILL.md): skills vs flows, the AbstractSkill library and curated shelf, the trust gate, attaching skills to a run.
 - [docs/guide/process-manager-env-vars.md](docs/guide/process-manager-env-vars.md): Write-only env var config from Observer.
 
 ## Release Profile (Pinned Versions)
@@ -498,24 +550,7 @@ Notes for LLMs working in this repo:
 
 ## Full Context
 
-- [llms-full.txt](llms-full.txt): Concatenated context for copy/paste into an LLM (`python scripts/gen_llms_full.py`).
-
-## Proposals / Research (non-canonical)
-
-- [docs/backlog/overview.md](docs/backlog/overview.md): Root backlog index and active cross-package work.
-- [docs/backlog/completed/0141_flow_browser_session_gateway_auth.md](docs/backlog/completed/0141_flow_browser_session_gateway_auth.md): Completed Flow browser-session Gateway auth isolation.
-- [docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md](docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md): Planned Gateway tenant isolation and shared runtime design.
-- [docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md](docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md): In-progress shared Gateway per-principal runtime router work.
-- [docs/backlog/planned/gateway-control-plane/README.md](docs/backlog/planned/gateway-control-plane/README.md): Gateway admin/config/workflow-permission control-plane backlog track.
-- [docs/backlog/proposed/gateway-control-plane/README.md](docs/backlog/proposed/gateway-control-plane/README.md): Proposed Explorer/Manager package-boundary follow-ups.
-- [docs/backlog/completed/0154_multi_user_security_release_blockers.md](docs/backlog/completed/0154_multi_user_security_release_blockers.md): Completed multi-user release-blocking security fixes.
-- [docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md](docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md): Completed Gateway-owned provider endpoint profiles and virtual `endpoint:*` discovery.
-- [docs/backlog/planned/0164_gateway_docker_ghcr_deployment_track.md](docs/backlog/planned/0164_gateway_docker_ghcr_deployment_track.md): Planned Gateway Docker/GHCR deployment track for light and GPU images.
-- [docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md](docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md): Proposed threshold for extracting shared hosted proxy helpers.
-- [docs/backlog/planned/074_agent_skills_integration.md](docs/backlog/planned/074_agent_skills_integration.md): Backlog item for Agent Skills integration.
-- [docs/backlog/planned/074_agent_skills_integration_plan.md](docs/backlog/planned/074_agent_skills_integration_plan.md): Phased plan for Agent Skills integration.
-- [docs/skills/](docs/skills/): Research notes (spec links + ecosystem scan) for Agent Skills.
-- [docs/claude/](docs/claude/): Research notes about Claude (non-Agent-Skills capability/skills scan).
+- [llms-full.txt](llms-full.txt): Concatenated context for copy/paste into an LLM (`python scripts/gen_llms_full.py`; `--check` fails when it is stale).
 
 ## Optional
 
@@ -1696,7 +1731,8 @@ The full component diagram, with memory, semantics and the consoles, is in
 |---|---|
 | **[Install](install.md)** | Mac installer, one-line install (`install.sh` / `install.ps1`), options, Network setting and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
-| **[Architecture](architecture.md)** | Component diagram, distribution by registry, durable execution primitives, comparisons |
+| **[Agent sessions](agent-sessions.md)** | What every client shares when it chats with an agent: the gateway's default agent workflow, the conversation workspace and its built-in protection, skills, live replies, opening the Assistant signed in |
+| **[Architecture](architecture.md)** | Component diagram, distribution by registry, how a turn flows and the live-reply lane, app proxies, model eject, framework identity, durable execution primitives, comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
 | **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
@@ -1762,8 +1798,8 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | Package | What it is |
 |---|---|
 | [abstracttui](https://github.com/lpalbou/AbstractTUI) | Reactive Rust terminal UI engine |
-| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Shared React/Web Components UI kit |
-| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared Agent Skills (`SKILL.md`) loader and activation library |
+| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Shared React/Web Components UI kit: chat panel with live replies, the About dialog, the app-server proxy |
+| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared Agent Skills (`SKILL.md`) loader, trust gate, and the curated skill shelf the gateway serves |
 
 ---
 
@@ -1772,9 +1808,9 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | App | What it does |
 |---|---|
 | **AbstractCode** | Terminal agentic dev client (local, durable sessions) |
-| **AbstractAssistant** | macOS tray client (gateway-first, workflow picker, voice) |
+| **AbstractAssistant** | macOS tray client (gateway-first, gateway default or picked workflow, live replies, voice); **Open** in the gateway console starts it signed in |
 | **AbstractObserver** | Browser UI to monitor, control, and schedule gateway runs |
-| **Code Web UI** | Browser coding assistant (gateway-backed) |
+| **Code Web UI** | Browser coding assistant (gateway-backed): workflow selector, Files tab, live replies |
 
 ---
 
@@ -1952,25 +1988,19 @@ pip install abstractgateway
 
 With no configuration, `abstractgateway serve` binds `127.0.0.1:8080`, enables user auth, and keeps
 its data in the per-user data folder (macOS `~/Library/Application Support/AbstractGateway`, Linux
-`~/.local/share/abstractgateway`, Windows `%LOCALAPPDATA%\AbstractGateway`). Set the environment
-when you want another data folder, browser origins or bundle registry:
+`~/.local/share/abstractgateway`, Windows `%LOCALAPPDATA%\AbstractGateway`). Choose another data
+folder with `serve --data-dir <folder>`. Browser apps on `http://localhost:*` and
+`http://127.0.0.1:*` may always call it; allow another origin with
+`abstractgateway network set --allowed-origins https://ui.example.com`.
 
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
-
-# Optional: set only for a custom bundle registry. When this is unset,
-# Gateway serves its shipped workflows (basic-agent, coding-agent,
-# deep-research, co-scientist, and more).
-# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
-```
+The gateway serves its shipped workflows (basic-agent, coding-agent, deep-research, co-scientist,
+and more). To serve your own bundle registry instead, start it with `ABSTRACTGATEWAY_FLOWS_DIR`
+pointing at your bundle folder.
 
 ### 3. Start the gateway
 
 ```bash
-abstractgateway serve --host 127.0.0.1 --port 8080
+abstractgateway serve
 ```
 
 On first local start, Gateway creates `default/admin`, keeps its token in
@@ -2010,8 +2040,9 @@ AbstractObserver is replay-first: it renders runs by replaying the ledger, then 
 Schedules are owned by the gateway (they survive restarts):
 
 ```bash
+TOKEN=$(cat "<data dir>/auth/bootstrap-admin-token")   # abstractgateway-config status prints <data dir>
 curl -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"bundle_id":"my-bundle","flow_id":"my-entrypoint","start_at":"now","interval":"24h"}'
 ```
@@ -2064,9 +2095,12 @@ publish bundles through the Gateway API from AbstractFlow.
 Once deployed, the bundle appears in:
 
 - **AbstractObserver** — workflow picker / run launcher
-- **AbstractAssistant** — workflow picker (per session)
-- **Code Web UI** — workflow picker
+- **AbstractCode** (terminal and browser) and **AbstractAssistant** — workflow pickers, for
+  workflows that implement their agent interface
 - **Your own client** — via the gateway bundle discovery API
+
+An admin can also make it the gateway's default agent workflow, which every client that follows
+the gateway default then runs at its next turn. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
 
 ---
 
@@ -2087,21 +2121,31 @@ abstractcode
 npx @abstractframework/code      # browser client on http://127.0.0.1:3002
 ```
 
-Sessions are durable: close and reopen, your full context is preserved. Type `/help` for commands.
+Sessions are durable: close and reopen, your full context is preserved. Each turn runs the
+gateway's default agent workflow unless you pick another (`/workflow`, `--workflow`). `/files`
+(the **Files** tab in the browser) shows the run's workspace on the gateway host, `/stream`
+chooses live replies, and `/about` shows the versions in use. Type `/help` for commands.
 
 ### AbstractAssistant (macOS tray)
 
-Gateway-first by default. Select a workflow per session from the tray UI:
+A desktop app on the gateway's computer. The simplest start is **Open** on its card in the
+gateway console: it starts the Assistant already signed in as you. To install and start it
+yourself:
 
 ```bash
 pip install abstractassistant
-assistant tray
+assistant                                   # the menu-bar app
+assistant run --prompt "Summarize today's news"   # one turn in the terminal
 ```
+
+Each turn runs the gateway's default workflow for the Assistant, or the workflow you pick in
+Settings → Models → **Workflow**. See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
 
 ---
 
 ## Next steps
 
+- **[Agent sessions](agent-sessions.md)** — default agent workflow, workspace, skills, live replies
 - **[Architecture](architecture.md)** — the layered model (Core / Runtime / Agent / Gateway / Flow / Observer)
 - **[Configuration](configuration.md)** — where defaults live and how to configure them
 - **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)
@@ -2152,45 +2196,54 @@ The composition root when you need a control plane (local or remote).
 
 ## Component view
 
-Every client talks to the gateway over HTTP/SSE. The gateway composes the Python packages below it
-in one process: agent patterns, the durable runtime, memory and AbstractCore, which reaches the
-model providers and local engines. Arrows point from a component to what it calls or depends on.
+Every client talks to the gateway over HTTP/SSE. The browser apps are served by a small local
+server that also relays their gateway calls (see [App proxies](#app-proxies-and-the-forwarded-address)).
+The gateway composes the Python packages below it in one process: agent patterns, the durable
+runtime, memory, skills and AbstractCore, which reaches the model providers and local engines.
+Arrows point from a component to what it calls or depends on.
 
 ```mermaid
 flowchart TB
-    subgraph CLIENTS["Apps and clients"]
-        OBS["AbstractObserver<br/>monitor · control · schedule"]
-        FLOWED["Flow Editor<br/>author .flow bundles"]
-        CODE["AbstractCode<br/>terminal client + Code Web UI"]
-        ENT["AbstractEntity<br/>summoned entities"]
-        CONT["AbstractContinuum<br/>development console"]
+    subgraph CLIENTS["Native clients"]
+        CODET["AbstractCode terminal<br/>(Rust)"]
         ASSIST["AbstractAssistant<br/>desktop menu-bar app"]
         GCON["abstractgateway-console<br/>terminal operator console"]
         APP["Your app"]
     end
 
+    subgraph BROWSER["Browser apps, each behind its local app proxy"]
+        CODEW["Code Web UI"]
+        FLOWED["Flow Editor<br/>author .flow bundles"]
+        UIAPPS["Observer · Entity · Continuum<br/>(ui-kit app-server)"]
+    end
+
     subgraph GATEWAY["AbstractGateway (control plane)"]
-        API["HTTP/SSE API<br/>runs · schedules · workflow catalog<br/>ledger + artifacts · users · network"]
-        WEB["web /console<br/>first-run guide · Models · Engines"]
-        TRAY["menu-bar icon<br/>status · Network"]
+        API["HTTP/SSE API<br/>runs · schedules · workflow catalog<br/>ledger + artifacts · users · network · /about"]
+        SESS["agent sessions<br/>default workflow · workspace guard<br/>skills shelf · live-reply hub"]
+        WEB["web /console<br/>first-run guide · Models · Engines · Resources"]
+        TRAY["menu-bar icon<br/>status · Network · open apps"]
     end
 
     AGENT["AbstractAgent<br/>ReAct · CodeAct · MemAct"]
-    RT["AbstractRuntime<br/>runs · effects · waits · ledger · artifacts<br/>VisualFlow compiler"]
+    RT["AbstractRuntime<br/>runs · effects · waits · ledger · artifacts<br/>VisualFlow compiler · model residency"]
     MEM["AbstractMemory<br/>durable agent memory"]
     SEM["AbstractSemantics<br/>predicates + entity types"]
-    CORE["AbstractCore<br/>providers · tools · media · embeddings<br/>models + engines"]
+    SKILL["AbstractSkill<br/>curated skill shelf · trust gate"]
+    CORE["AbstractCore<br/>providers · tools · media · embeddings<br/>models + engines · eject"]
     PLUG["Capability plugins<br/>abstractvoice · abstractvision · abstractmusic"]
     CSRV["abstractcore serve<br/>/v1 · /acore · web /console"]
     CCON["abstractcore-console<br/>terminal console + shared screens"]
     PROV[("LLM providers and local engines<br/>Ollama · LM Studio · MLX · llama.cpp · vLLM · cloud APIs")]
 
     CLIENTS -->|HTTP/SSE| API
+    BROWSER -->|"HTTP/SSE through the app proxy"| API
     WEB --> API
     TRAY --> API
-    GCON -->|embeds Models/Engines screens| CCON
+    TRAY -.->|"Open: starts it signed in"| ASSIST
+    API --> SESS
+    SESS --> SKILL
+    SESS --> RT
     API --> AGENT
-    API --> RT
     API --> MEM
     AGENT --> RT
     AGENT --> CORE
@@ -2199,6 +2252,7 @@ flowchart TB
     RT --> SEM
     CORE -.->|entry-point plugins| PLUG
     CORE --> PROV
+    GCON -->|embeds Models/Engines screens| CCON
     CSRV --> CORE
     CCON -->|abstractcore CLI| CORE
 ```
@@ -2207,16 +2261,22 @@ The layers, from the top:
 
 - **Apps and clients** are thin: they hold no durable state and rebuild their view by replaying
   the ledger, then follow new events over SSE. The Flow Editor publishes `.flow` bundles to the
-  gateway; the others start, observe and steer runs.
+  gateway; the others start, observe and steer runs. Every app has an About screen with the
+  framework identity (see [Framework identity](#framework-identity-and-about-screens)).
 - **AbstractGateway** owns the run lifecycle (start, resume, cancel), durable schedules, private
   bundle discovery and the shared workflow catalog, users and auth, the Network setting, and
-  ledger/artifact serving. Its web console and menu-bar icon are part of the same package.
+  ledger/artifact serving. For agent sessions it also resolves the default agent workflow, gives
+  every run a guarded workspace, seeds and serves the skill shelf, and relays live replies. Its
+  web console and menu-bar icon are part of the same package.
 - **AbstractAgent** provides ready-made agent loops; **AbstractRuntime** is the durable kernel that
-  executes them and compiles VisualFlow graphs from `.flow` bundles into workflows.
+  executes them, compiles VisualFlow graphs from `.flow` bundles into workflows, and tracks which
+  models are resident and who uses them.
+- **AbstractSkill** ships the curated skill shelf and the trust gate the gateway applies before a
+  skill reaches a run.
 - **AbstractCore** is the LLM layer: provider and model abstraction, capability routing defaults,
-  tools, structured output, media, embeddings, MCP, and the local model and engine management
-  (catalog with a fit verdict, downloads, engine installs). Voice, image and music arrive as
-  capability plugins.
+  tools, structured output, media, embeddings, MCP, streaming, and the local model and engine
+  management (catalog with a fit verdict, downloads, engine installs, eject). Voice, image and
+  music arrive as capability plugins.
 - **AbstractCore on its own** (`abstractcore serve`) is the second entry point: an
   OpenAI-compatible `/v1` server with its own console, without the durable layers.
 
@@ -2286,6 +2346,148 @@ Portable workflow execution does not require every client to be a generic workfl
 products expose workflow selection, while others intentionally bind to one published workflow or
 interface family for a specialized task. The invariant is that execution still happens as a durable
 Gateway/Runtime workflow.
+
+---
+
+## Agent sessions: how a turn flows
+
+When you send a message from AbstractCode, the Assistant or your own client, the gateway resolves
+everything the turn needs before the runtime runs it. What each step means for users is in
+[Agent sessions](agent-sessions.md).
+
+```mermaid
+flowchart LR
+    START["POST /runs/start<br/>flow_id @default + interface<br/>_runtime.stream · skills"]
+    subgraph GW["AbstractGateway"]
+        WF["default agent workflow<br/>agents.default_workflow.*"]
+        WS["workspace guard<br/>conversation folder + built-in deny list"]
+        SK["skill selection<br/>shelf + trust gate"]
+        STR["stream switch<br/>run value, else agents.streaming_default"]
+    end
+    RUN["AbstractRuntime run<br/>(AbstractAgent loop)"]
+    START --> WF --> WS --> SK --> STR --> RUN
+```
+
+- **Default workflow.** `flow_id: "@default"` with an `interface` is rewritten to the workflow the
+  gateway's setting names, at every run start. An unresolvable default refuses the run with the
+  setting's name and value; it never falls back silently. The response's `resolved_workflow`
+  names what ran.
+- **Workspace guard.** One guard runs at every run start, whatever started the run (HTTP routes,
+  schedules, bridges, entity summons): it assigns the conversation's folder when none was named,
+  refuses a folder inside the gateway's data folder (other than the caller's own conversation
+  folder), and adds the built-in deny list for credential folders and the data folder. The file
+  tools enforce the list without writing it into the prompt.
+- **Skills.** Names in `input_data.skills` pass through the same trust gate as the skill listing;
+  validated skills reach the run as a stable index plus a `read_skill` tool, and every decision is
+  recorded on the run.
+- **Stream switch.** `input_data._runtime.stream` (a boolean) wins; when absent, the gateway's
+  `agents.streaming_default` applies to interactive starts only. A workflow step can still turn
+  streaming off for its own model call.
+
+### The live-reply lane
+
+Live replies never touch the ledger. The runtime hands each text chunk to a sink the gateway
+registers; the gateway's hub forwards it on the run's existing SSE stream, next to the durable
+ledger records.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant G as Gateway SSE stream
+    participant H as Live-reply hub
+    participant R as AbstractRuntime
+    participant P as AbstractCore provider
+    C->>G: GET /runs/{id}/ledger/stream
+    R->>P: model call with streaming on
+    P-->>R: text chunks (answer / reasoning)
+    R-->>H: llm.delta (in memory, not a ledger record)
+    H-->>C: event llm.delta, no id line
+    R->>R: append the llm_call record to the ledger
+    G-->>C: ledger record, its id line is the ledger cursor
+    R-->>H: llm.delta_end
+    H-->>C: event llm.delta_end
+    Note over C: the durable record replaces the live text
+```
+
+- The hub is keyed by the root run, so a stream also carries the deltas of the sub-runs below it.
+- A client that connects or reconnects mid-answer first receives one snapshot per open call.
+- When the gateway serves its API and runs its runner in separate processes
+  (`serve --no-runner` plus `abstractgateway runner`), the runner writes the deltas to a file under
+  `<data dir>/live/` that only the gateway's user can read; the API process tails it, and the file
+  is deleted when the run ends.
+- A call that cannot stream still ends with `llm.delta_end` and a `reason` of `unavailable` plus
+  the cause, so clients can say why.
+
+## App proxies and the forwarded address
+
+Each browser app runs behind a small local server that serves the page and relays its gateway
+calls: the AbstractCode web server, the Flow Editor's server, and the ui-kit app-server used by
+Observer, Entity and Continuum. The gateway gives a few defaults only to the person at its own
+keyboard (opening a folder, installing apps and engines, the Assistant hand-over), so it must
+know where a relayed request really comes from. The rule has two halves:
+
+- **Every app proxy** overwrites `X-Forwarded-For` with the real socket address of the browser it
+  serves (it never appends to or passes on a value the browser sent), adds its marker header
+  `X-AbstractFramework-App-Proxy: <app>`, and drops `Forwarded`, `X-Forwarded-Host`,
+  `X-Forwarded-Proto` and `X-Real-IP`.
+- **The gateway** believes `X-Forwarded-For` only from a loopback peer. A request counts as "this
+  computer" when that derived address is loopback or one of the host's own addresses. A marked
+  request without `X-Forwarded-For`, a forwarded header from a non-loopback peer, and any
+  proxied request while the gateway trusts a reverse proxy are never "this computer".
+
+So a browser on another machine that reaches an app proxy on the gateway's computer is treated as
+remote, and a browser on the gateway's computer is treated as local. See
+[Gateway exposure security](guide/gateway-security.md).
+
+## Model residency and eject
+
+AbstractCore loads models in the gateway's process (MLX, llama.cpp GGUF engines, transformers and
+embedding models); AbstractRuntime records which clients use each model. Ejecting a model (the
+console's **Resources** view, `abstractgateway models unload`) frees it from every holder in the
+process, weights and caches included. A model locked by another client is refused unless the eject
+is forced. Switching the default model ejects the previous one before the new one loads, unless
+something still uses it; the console lists ejects that wait for an in-flight call or failed, with
+the reason.
+
+The accelerator meter shows the memory the gateway process holds and names how it was measured
+(the Mac's GPU counter for the process, the NVIDIA reserved bytes plus the llama.cpp estimate, or
+the sum of MLX and llama.cpp figures). When memory is held with no model listed, the console says
+so and names the holder. Reference:
+[AbstractGateway console: memory figures](https://github.com/lpalbou/AbstractGateway/blob/main/docs/console.md#memory-figures-on-resources).
+
+## Framework identity and About screens
+
+Every app shows the same identity in its About screen: app name and version, "Part of
+AbstractFramework", the website, author, licence and copyright, source, documentation, issue and
+feedback links, and a contact address, followed by the versions the connected gateway runs. The
+identity has one canonical descriptor in this repository, `identity/abstractframework.json`; each
+package that renders it carries a byte-identical copy so installed packages stay self-contained.
+
+```mermaid
+flowchart LR
+    ID["identity/abstractframework.json<br/>(this repository, canonical)"]
+    CHK["scripts/check_identity_sync.py<br/>byte comparison of every copy"]
+    subgraph COPIES["Vendored copies"]
+        PY["abstractcore<br/>abstractcore.utils.identity"]
+        UI["abstractuic ui-kit<br/>AfAboutDialog"]
+        CT["abstractcode terminal<br/>/about"]
+        GT["abstractgateway-console<br/>About (F1)"]
+    end
+    ABOUT["GET /api/gateway/about<br/>public, versions only"]
+    ROWS["gateway version rows<br/>ui-kit gatewayVersionRows =<br/>abstractcore gateway_version_rows"]
+    ID --> PY & UI & CT & GT
+    CHK -.->|verifies| COPIES
+    ABOUT --> ROWS
+    PY --> APY["Assistant · gateway menu-bar icon"]
+    UI --> AUI["Code Web · Flow · Observer · Entity<br/>Continuum · gateway web console"]
+    ROWS --> APY & AUI & CT & GT
+```
+
+`GET /api/gateway/about` needs no sign-in and returns only versions: the framework meta-package
+(or null when it is not installed on the gateway's computer), the gateway, and each installed
+framework package. Both formatters of the gateway rows are checked against one shared fixture.
+Contributors change the identity in one place; see
+[CONTRIBUTING](../CONTRIBUTING.md#framework-identity).
 
 ---
 
@@ -2415,6 +2617,7 @@ AbstractGateway is architecturally closer to these systems, but specialized for 
 ## Where to go deeper
 
 - **[Getting Started](getting-started.md)** — run Core-first or Gateway-first
+- **[Agent sessions](agent-sessions.md)** — default workflow, workspace, skills, live replies, Assistant hand-over
 - **[Configuration](configuration.md)** — minimal config, where defaults live
 - **[Glossary](glossary.md)** — shared definitions (run, ledger, effect, wait, bundle, interface contract)
 - **[API](api.md)** — the meta-package helpers and the functional API owner of each concern
@@ -2867,8 +3070,8 @@ Run or install them next to the Python stack:
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.5.1 |
 
 The browser apps need Node.js 18 or later and a running gateway. Optional Python add-ons outside the
-profiles install on their own: `pip install abstract3d`, `pip install abstractcamera`,
-`pip install abstractskill`.
+profiles install on their own: `pip install abstract3d`, `pip install abstractcamera`.
+`abstractskill` comes with the gateway, which carries its curated skill shelf.
 
 ## Start the gateway and apps
 
@@ -2929,6 +3132,199 @@ The bootstrap scripts read `bootstrap.gateway_version` from it; other installers
 this manifest instead of maintaining independent package pins. Field reference:
 [release-and-manifest.md](installers/release-and-manifest.md).
 
+--- docs/agent-sessions.md ---
+# Agent sessions on a gateway
+
+This page explains what happens when you chat with an agent through a gateway, from any client:
+which workflow answers, where the agent's files live and how they are protected, which skills it
+can use, how replies stream while the model writes them, and how the desktop Assistant signs in.
+It is the cross-package overview; each package owns the full reference, linked in every section.
+
+The same rules apply to every client: AbstractCode (terminal and browser), AbstractAssistant, the
+gateway's own consoles, and your own app through the gateway API. For how the packages connect,
+see [Architecture](architecture.md#agent-sessions-how-a-turn-flows); for first steps, see
+[Getting Started](getting-started.md).
+
+---
+
+## The default agent workflow
+
+A client that runs an agent names an **interface** (the input/output contract the workflow
+implements) rather than a fixed workflow. The gateway decides which workflow answers each
+interface with its setting `agents.default_workflow.<interface>`:
+
+| Interface | Used by | When nothing is saved |
+|---|---|---|
+| `abstractcode.agent.v1` | AbstractCode (terminal and browser) | the default entrypoint of the shipped `basic-agent` workflow |
+| `abstractassistant.agent.v1` | AbstractAssistant | none: the Assistant runs its built-in orchestrator |
+| any other interface a workflow declares | your own clients | none until an admin saves one |
+
+The gateway's Telegram bridge and its backlog advisor resolve their agent the same way.
+
+Change it in any of the three places the gateway offers (admin only, audit-logged):
+
+| Web console | Terminal console | Command line |
+|---|---|---|
+| **Workflows** → *Default agent workflow*, or *Make agent default* on an entrypoint | Runtimes → *Runtime knobs* → *Edit default agent workflows* | `abstractgateway config set agents.default_workflow.abstractcode.agent.v1 coding-agent:coder` |
+
+The value is `[catalog:]bundle[@version]:flow`. Without a version, the latest published version
+runs; `catalog:` picks a workflow from the shared workflow catalog.
+
+How clients follow it:
+
+- AbstractCode and the Assistant list **Gateway default → name @version** first in their workflow
+  pickers (`/workflow` and `--workflow default` in the terminal, the **Workflow** list in the
+  browser, Settings → Models → **Workflow** in the Assistant).
+- Choosing it saves "the gateway default", not a copy of today's workflow: the gateway resolves it
+  at every new turn, so a change on the gateway applies to the next turn of every conversation
+  that follows the default. A turn never changes workflow while it runs.
+- Picking a named workflow pins that workflow for the client.
+- A saved default that no longer resolves (a removed or deprecated workflow) is shown as
+  unavailable with the reason, and runs that ask for it are refused until an admin changes it.
+  The gateway never substitutes another workflow on its own.
+
+Your own client asks for the default with `flow_id: "@default"` plus `interface` on
+`POST /api/gateway/runs/start`; the response names the workflow that ran (`resolved_workflow`).
+Reference: [AbstractGateway configuration: default agent workflow](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md#default-agent-workflow).
+
+---
+
+## The conversation workspace
+
+An agent reads and writes files **on the gateway's computer**, in its run's workspace folder:
+
+- the conversation's own folder, which the gateway creates under
+  `<data dir>/workspaces/session-…`; or
+- the folder you started the AbstractCode terminal client from, when the gateway runs on the same
+  machine.
+
+You can see that folder from AbstractCode: the **Files** tab in the browser and `/files` in the
+terminal show its absolute path on the gateway host, the host name, the folder tree, and a
+preview of each file. **Open folder** (the terminal's `o`) is offered only to an admin sitting at
+the gateway's computer; everyone else sees the path, with a copy button, labelled as being on the
+gateway host. Another user's run is never visible: its workspace routes answer 404.
+
+### Built-in protection for every run
+
+Whatever starts a run (a client, a schedule, the Telegram, email or agora bridges, an entity
+summons), the gateway gives it a workspace folder and a built-in deny list. These folders of the
+gateway's user account are never listed or served by the workspace browser, and the agent's file
+tools cannot read or write them:
+
+- credential folders: `~/.ssh`, `~/.aws`, `~/.gnupg`, `~/.config/gcloud`, `~/.kube`,
+  `~/Library/Keychains`;
+- the framework's own settings: `~/.abstractgateway`, `~/.abstractcode`, `~/.abstractassistant`,
+  `~/.abstractcontinuum`, `~/.abstractcore`;
+- the gateway's data folder, except the run's own conversation folder inside it.
+
+A run also cannot choose a folder inside the gateway's data folder as its workspace (other than
+the conversation folder the gateway made for the same user). The deny list is applied on every
+file access without being written into the model's prompt, so the prompt stays identical from
+turn to turn.
+
+Limits to know:
+
+- An admin can turn the deny list off for runs (`abstractgateway config set workspace_builtin_deny
+  off`); the workspace browser keeps hiding those folders.
+- Shell commands that a run is allowed to execute are not confined by the deny list; keep shell
+  tools behind approval on machines that hold secrets.
+
+Reference: [AbstractGateway configuration: workspace policy](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md#workspace-policy-filesystem-scope)
+and [API: a run's workspace folder](https://github.com/lpalbou/AbstractGateway/blob/main/docs/api.md#a-runs-workspace-folder-browse-and-preview).
+
+---
+
+## Skills
+
+[Agent Skills](guide/agent-skills.md) (`SKILL.md` folders) are portable instructions an agent can
+read when a task calls for them. A curated shelf of reviewed skills ships inside the
+`abstractskill` package, which the gateway installs with itself.
+
+- At each start, the gateway copies the curated shelf into `<data dir>/skills/registry`: it adds
+  new skills and refreshes the files it wrote before, and never overwrites a file you edited
+  there. **Refresh the curated shelf** in the console runs the copy again on demand.
+- To use another folder, set `skills.shelf` (console **Apps** → *Skills shelf*, the terminal
+  console's runtime knobs, or `abstractgateway config set skills.shelf /path/to/registry`). A
+  folder that does not exist or holds no skills is reported as unavailable with the reason; the
+  gateway does not fall back to another shelf silently.
+- A trust gate decides what an agent may use: validated skills activate, unverified skills are
+  held, and skills under a do-not-use advisory never do. An edited skill counts as unverified
+  until it is validated again.
+- Attach skills to a run from AbstractCode (browser Settings, `/skills` in the terminal) or with
+  `input_data.skills` on `POST /runs/start`. When the gateway offers no skills, the clients show
+  the gateway's explanation and where its shelf is.
+
+Reference: [AbstractSkill](https://github.com/lpalbou/AbstractSkill) and
+[AbstractGateway configuration: skills shelf](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md#skills-shelf).
+
+---
+
+## Live replies (streaming)
+
+With live replies on, you watch the answer while the model writes it; the finished answer then
+replaces the live text, and it is the same answer you get without streaming.
+
+Two settings decide it:
+
+| Setting | Where | Values |
+|---|---|---|
+| The gateway's default, `agents.streaming_default` | console **Workflows** → *Stream replies by default*, the terminal console's runtime knobs, `abstractgateway config set agents.streaming_default on` | on or off (off until saved) |
+| Each client's **Stream replies** | AbstractCode browser Settings, `/stream` in the terminal client, Assistant Settings → Models; `assistant run --stream on\|off` for one turn | **Gateway default**, **On**, **Off** |
+
+A client left on **Gateway default** follows the gateway's setting. **Off** is always honoured.
+**On** takes effect only when the gateway advertises live replies; otherwise the client says so
+once and shows the finished answer.
+
+What streams: the text and the reasoning (shown apart) of every model call in the run, including
+the calls of sub-agents it starts. What does not stream, with a one-line note in the client:
+
+- calls that return structured output;
+- a gateway whose runtime calls a remote AbstractCore server instead of running models in process;
+- providers that cannot stream, or cannot report token usage while streaming;
+- a workflow step that turns streaming off for its model call;
+- entity chat and an entity's own-time loop.
+
+Scheduled runs and the Telegram and email bridges do not stream by default.
+
+Live text travels as `llm.delta` / `llm.delta_end` events on the run's existing SSE stream
+(`GET /api/gateway/runs/{run_id}/ledger/stream`). They are not ledger records: the ledger holds
+the same records with streaming on or off. A client that connects in the middle of an answer
+first receives the text written so far. Reference:
+[AbstractGateway API: live replies](https://github.com/lpalbou/AbstractGateway/blob/main/docs/api.md#4b-live-replies-token-deltas-on-the-same-stream).
+
+---
+
+## Opening the Assistant from the gateway
+
+AbstractAssistant is a desktop app that runs on the gateway's computer. Click **Open** on its card
+in the gateway console (or use the gateway's menu-bar icon): the gateway starts the Assistant
+already connected and signed in as you, with no token to type.
+
+How it works: the gateway writes a one-time code (valid for two minutes, usable once) into a file
+only your account can read, and starts the Assistant with `--gateway-url <address>
+--gateway-handover-file <file>`. The Assistant reads and deletes the file, trades the code for a
+sign-in on this computer, and remembers that sign-in in
+`~/.abstractassistant/gateway_connection.json` for later launches. No code or token is ever on its
+command line or in its environment.
+
+An Assistant that is already running cannot receive a code: if it is not signed in, quit it and
+click **Open** again. From another computer the console explains that the Assistant opens on the
+gateway's computer. Reference:
+[AbstractGateway apps](https://github.com/lpalbou/AbstractGateway/blob/main/docs/apps.md) and
+[AbstractAssistant](https://github.com/lpalbou/AbstractAssistant).
+
+---
+
+## Related pages
+
+- [Architecture](architecture.md): how the gateway, the apps, the runtime and AbstractCore connect,
+  with the live-reply lane and the app proxies.
+- [Configuration](configuration.md): where each setting lives.
+- [FAQ](faq.md) and [Troubleshooting](troubleshooting.md): recurring questions and fixes,
+  including model memory after an eject.
+- [Gateway exposure security](guide/gateway-security.md): what "this computer" means for a request
+  and who may open folders or apps.
+
 --- docs/configuration.md ---
 # Configuration
 
@@ -2982,17 +3378,14 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 ### Defaults and explicit settings
 
 A bare `abstractgateway serve` needs no configuration: it listens on `127.0.0.1:8080`, turns user
-auth on and keeps its data in the per-user data folder. Set the environment when you want those
-choices to be explicit, for example in a service definition:
-
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-```
+auth on and keeps its data in the per-user data folder. Choose another data folder with
+`serve --data-dir <folder>`. Browser apps on `http://localhost:*` and `http://127.0.0.1:*` may
+always call it; allow other origins with
+`abstractgateway network set --allowed-origins https://ui.example.com`.
 
 When user auth is enabled, `abstractgateway serve` ensures `default/admin`
 exists and writes the first browser-login token to
-`$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`. Users sign in with a
+`<data dir>/auth/bootstrap-admin-token`. Users sign in with a
 Gateway user id and that user's token, then browser apps keep only an opaque
 Gateway session. `ABSTRACTGATEWAY_AUTH_TOKEN` remains available for legacy
 server/operator bearer-token deployments, but it maps to `local-admin` and is
@@ -3005,16 +3398,12 @@ available providers. Deleted users leave retained runtime reservations;
 admins can transfer retained runtime data to an existing same-tenant user or
 purge the retained runtime directory before releasing the runtime id for reuse.
 
-### Recommended (bundle-based workflows)
+### Workflow bundles
 
-```bash
-export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
-
-# Optional: set only for a custom bundle registry. When unset, Gateway uses
-# the packaged shipped bundle directory containing basic-agent.
-# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
-```
+The gateway serves its shipped workflow bundles (`basic-agent`, `coding-agent`, `deep-research`,
+`co-scientist`, and more). To serve your own bundle registry instead, start it with
+`ABSTRACTGATEWAY_FLOWS_DIR` pointing at your bundle folder, or publish bundles through the
+gateway API from AbstractFlow.
 
 ### Start
 
@@ -3040,6 +3429,30 @@ abstractgateway network set --allowed-origins https://gateway.example.com
 The console's network panel and the menu-bar icon change the same setting. See
 [Network setting](install.md#network-setting-who-can-reach-the-gateway) and
 [Gateway security](guide/gateway-security.md).
+
+---
+
+## Agent session settings
+
+These gateway settings shape every agent conversation, whatever client starts it. Each one is
+available in the web console, the terminal console and the command line
+(`abstractgateway config get|set|unset <key>`); writes are admin-only and audit-logged, and the
+read shows where the value comes from. What they mean for users is in
+[Agent sessions](agent-sessions.md).
+
+| Setting | What it decides | When nothing is saved |
+|---|---|---|
+| `agents.default_workflow.<interface>` | The workflow that answers an agent interface (`[catalog:]bundle[@version]:flow`) | `abstractcode.agent.v1`: the shipped `basic-agent`; `abstractassistant.agent.v1`: none, the Assistant runs its built-in orchestrator |
+| `agents.streaming_default` | Whether interactive runs stream replies live when the client does not say | off |
+| `skills.shelf` | The folder the gateway reads skills from | the gateway's own copy of the curated shelf, `<data dir>/skills/registry`, refreshed at each start |
+| `workspace_builtin_deny` | Whether runs get the built-in deny list (credential folders, the gateway's data folder) | on; the workspace browser hides those folders either way |
+
+Each client keeps its own choices next to these: its workflow pick (or "Gateway default") and its
+**Stream replies** choice (Gateway default, On, Off). AbstractCode keeps them in
+`~/.abstractcode/prefs.json` for the terminal and in the browser for the web client; the Assistant
+in `~/.abstractassistant/preferences.json`.
+
+Reference: [AbstractGateway configuration](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md).
 
 ---
 
@@ -3155,7 +3568,7 @@ are Core-owned. When Gateway user auth is enabled, the Gateway baseline is
 stored as a Core config file:
 
 ```text
-$ABSTRACTGATEWAY_DATA_DIR/config/abstractcore.json
+<data dir>/config/abstractcore.json
 ```
 
 Per-user writes through
@@ -3164,7 +3577,7 @@ Per-user writes through
 as a runtime-scoped Core config file:
 
 ```text
-$ABSTRACTGATEWAY_DATA_DIR/users/<tenant>/<runtime>/runtime/config/abstractcore.json
+<data dir>/users/<tenant>/<runtime>/runtime/config/abstractcore.json
 ```
 
 User runtime defaults override the Gateway baseline only for that runtime, so
@@ -3229,12 +3642,19 @@ bundles should not contain raw secrets.
 
 ### Gateway data directory
 
-`ABSTRACTGATEWAY_DATA_DIR` is the durability root:
+The gateway's data folder (the per-user data folder by default, `serve --data-dir` to choose
+another; `abstractgateway-config status` prints it) is the durability root:
 
 - Run state
 - Ledger history
 - Artifacts (files, media, big payloads)
 - Schedules
+- Conversation workspaces (`workspaces/session-…`)
+- The seeded skill shelf (`skills/registry`)
+- Settings saved from the consoles and `abstractgateway config`
+
+With the built-in deny list on (the default), runs cannot use it outside their own conversation
+folder.
 
 **Back up this directory** if you care about long-lived runs and audit trails.
 
@@ -3244,7 +3664,7 @@ For production deployments, you can use SQLite for run metadata (artifacts stay 
 
 ```bash
 export ABSTRACTGATEWAY_STORE_BACKEND=sqlite
-export ABSTRACTGATEWAY_DB_PATH="$ABSTRACTGATEWAY_DATA_DIR/gateway.sqlite3"
+export ABSTRACTGATEWAY_DB_PATH="<data dir>/gateway.sqlite3"
 ```
 
 ### Core config directory
@@ -3495,6 +3915,7 @@ If you're new, read these groups first:
 - **Durable execution**: run, ledger, effect, wait, artifact
 - **Workflows**: flow, bundle, interface contract
 - **Control plane**: gateway, schedule, observer, gateway console, Network setting
+- **Agent sessions**: default agent workflow, conversation workspace, built-in deny list, skill shelf, live replies
 - **Distribution**: Mac installer, bootstrap script, install profile, release pins
 
 ---
@@ -3643,7 +4064,7 @@ A thin-client browser UI for operations: monitor runs, inspect ledger history, w
 
 ### Gateway console
 
-The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens.
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens, a **Resources** view of resident models and memory, and the agent session settings.
 
 ### Core console
 
@@ -3673,11 +4094,58 @@ Startup shortcut on Windows. Managed with `abstractgateway service install|statu
 ### Menu-bar icon (tray)
 
 The gateway's status icon (the `tray` extra, installed by the installer): it opens the console,
-shows whether the gateway is running and changes the Network setting.
+shows whether the gateway is running, changes the Network setting and opens the Assistant signed
+in.
 
 ### Models and Engines
 
 The local model and engine management shared by AbstractCore and the gateway: a model catalog with a fit verdict for this machine (`fits`, `tight`, `too_large`, `partial_offload`, `unknown`), installed models with sizes, download and delete jobs, and detection and installation of local engines (Ollama, LM Studio, MLX, llama.cpp, vLLM, transformers). Available as `abstractcore models|engines`, `abstractgateway models|engines`, and in the consoles.
+
+---
+
+## Agent sessions
+
+### Default agent workflow
+
+The workflow the gateway runs for an agent interface when a client asks for "Gateway default"
+(`flow_id: "@default"`), set with `agents.default_workflow.<interface>`. It is resolved at every
+run start. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
+
+### Conversation workspace
+
+The folder on the gateway's computer where a run's file tools work: the conversation's own folder
+under `<data dir>/workspaces/`, or the AbstractCode terminal client's launch folder. AbstractCode's
+**Files** tab and `/files` browse and preview it.
+
+### Built-in deny list
+
+The folders every run and the workspace browser are kept out of: credential folders such as
+`~/.ssh` and `~/.aws`, the framework's settings folders, and the gateway's data folder (except the
+run's own conversation folder).
+
+### Skill shelf
+
+The folder of `SKILL.md` skills and trust files a gateway serves (`skills.shelf`). By default it is
+the gateway's own copy of the curated shelf that ships with AbstractSkill, refreshed at each start
+without overwriting local edits.
+
+### Live replies
+
+The model's answer shown while it is written, carried as `llm.delta` / `llm.delta_end` events on a
+run's SSE stream; the durable ledger record replaces the live text. Controlled by the gateway's
+`agents.streaming_default` and each client's **Stream replies** choice.
+
+### App proxy
+
+The local server in front of a browser app (the AbstractCode web server, the Flow Editor's server,
+the ui-kit app-server) that serves the page and relays its gateway calls, writing the browser's
+real address in `X-Forwarded-For` so the gateway can tell local from remote callers.
+
+### Framework identity
+
+The descriptor `identity/abstractframework.json` (in this repository) that every About screen
+renders; each rendering package vendors a byte-identical copy, checked by
+`scripts/check_identity_sync.py`.
 
 ---
 
@@ -3855,6 +4323,52 @@ See **[Getting Started](getting-started.md)** → "Gateway-first" section.
 
 ---
 
+## Which workflow answers when I chat with an agent?
+
+The gateway's default agent workflow for the client's interface, unless you pick another in the
+client. AbstractCode uses the shipped `basic-agent` until an admin chooses another
+(`agents.default_workflow.abstractcode.agent.v1`); the Assistant runs its built-in orchestrator
+unless the gateway names one. Clients that follow the gateway default pick up a change at the next
+turn. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
+
+## Where does the agent work, and can it read my credentials?
+
+In a folder on the gateway's computer: the conversation's own folder under the gateway's data
+folder, or the folder you started the AbstractCode terminal client from. AbstractCode's **Files**
+tab and `/files` show its absolute path and preview its files. Credential folders (`~/.ssh`,
+`~/.aws`, `~/.gnupg`, `~/.config/gcloud`, `~/.kube`, `~/Library/Keychains`), the framework's own
+settings folders and the gateway's data folder are denied to every run's file tools and never
+shown by the workspace browser. Shell commands a run may execute are not confined by that list,
+so keep shell tools behind approval. See
+[Agent sessions](agent-sessions.md#the-conversation-workspace).
+
+## Which replies stream live?
+
+With live replies on (the gateway's `agents.streaming_default`, or **Stream replies** in the
+client), the text and reasoning of every model call in the run stream, sub-agents included.
+Structured-output calls, a gateway that calls a remote AbstractCore server, providers that cannot
+stream or report usage while streaming, and entity chat do not; the client says why in one line,
+and the finished answer is the same either way. See
+[Agent sessions](agent-sessions.md#live-replies-streaming).
+
+## Does ejecting a model free its memory?
+
+Yes. Ejecting a model (console **Resources**, `abstractgateway models unload`) frees it from every
+holder in the gateway process, for MLX, llama.cpp GGUF, transformers and embedding models, caches
+included. Switching the default model ejects the previous one before the new one loads when nothing
+else uses it. The console's accelerator meter shows the memory the gateway process holds and how
+it was measured. See [Architecture](architecture.md#model-residency-and-eject) and
+[Troubleshooting](troubleshooting.md#the-gateway-still-holds-memory-after-an-eject).
+
+## Where do the About screens get their information?
+
+Every app renders the same framework identity (name, website, author, licence, links, contact)
+from one descriptor kept in this repository, `identity/abstractframework.json`, plus the
+versions the connected gateway reports at `GET /api/gateway/about`. See
+[Architecture](architecture.md#framework-identity-and-about-screens).
+
+---
+
 ## How does multimodality work?
 
 AbstractCore supports modalities via **capability plugins** (installed separately, discovered via entry points):
@@ -3871,9 +4385,9 @@ Plugins are configured on the machine that actually executes (local app host or 
 
 ## Where is data stored?
 
-- **Gateway**: `ABSTRACTGATEWAY_DATA_DIR` is the durability root (runs, ledger, artifacts, schedules). The bootstrap scripts set it to `~/Library/Application Support/AbstractGateway` (macOS), `~/.local/share/abstractgateway` (Linux) or `%LOCALAPPDATA%\AbstractGateway` (Windows).
+- **Gateway**: its data folder is the durability root (runs, ledger, artifacts, schedules, conversation workspaces, the seeded skill shelf, saved settings). By default it is `~/Library/Application Support/AbstractGateway` (macOS), `~/.local/share/abstractgateway` (Linux) or `%LOCALAPPDATA%\AbstractGateway` (Windows); `serve --data-dir` chooses another, and `abstractgateway-config status` prints the one in use.
 - **Core config**: `~/.abstractcore/config/` (persisted by `abstractcore --config`).
-- **Local apps**: typically `~/.abstractcode/`, `~/.abstractassistant/`, etc.
+- **Local apps**: `~/.abstractcode/` (terminal client preferences), `~/.abstractassistant/` (Assistant preferences, sign-in and chat snapshots), etc.
 
 If you care about auditability and long-lived workflows, back up the gateway data directory.
 
@@ -4108,6 +4622,72 @@ run the installer again: it continues where it stopped.
   ```bash
   abstractvoice-prefetch --stt small --piper en
   ```
+
+## Agent sessions
+
+### Runs are refused: the default agent workflow is unavailable
+
+- **Cause**: the gateway's saved `agents.default_workflow.<interface>` names a workflow that is no
+  longer on the gateway (removed or deprecated). The gateway refuses runs that ask for the default
+  (HTTP 409, naming the setting and its value) instead of running another workflow.
+- **Check**: `abstractgateway config get agents.default_workflow.abstractcode.agent.v1`, or the
+  console's **Workflows** → *Default agent workflow*, which shows the reason.
+- **Fix**: choose an available workflow there, or `abstractgateway config unset
+  agents.default_workflow.<interface>` to return to the built-in default. In the client, you can
+  also pick a named workflow for now (`/workflow`, the **Workflow** list).
+- See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
+
+### Replies do not stream
+
+- **Check**: the client's **Stream replies** choice (browser Settings, `/stream` in the terminal,
+  Assistant Settings → Models) and the gateway's `abstractgateway config get
+  agents.streaming_default`. A client on **Gateway default** follows the gateway, which is off
+  until saved.
+- **Cause**: when a call does not stream, the client shows why: structured output, a gateway that
+  calls a remote AbstractCore server, a provider that cannot stream or cannot report usage while
+  streaming, or a workflow step that turns streaming off. **On — not supported by this gateway**
+  means the gateway does not advertise live replies.
+- **Fix**: choose **On** in the client or save `agents.streaming_default on`; for the listed
+  causes, the finished answer still arrives complete.
+- See [Agent sessions](agent-sessions.md#live-replies-streaming).
+
+### No skills are listed
+
+- **Check**: the empty list shows the gateway's explanation and its shelf folder; the console's
+  **Apps** → *Skills shelf* shows where the shelf comes from.
+- **Cause**: a saved `skills.shelf` folder that does not exist or holds no `skills/` folder is
+  reported as unavailable (the gateway does not fall back to another shelf).
+- **Fix**: `abstractgateway config unset skills.shelf` to use the gateway's own copy of the curated
+  shelf, or save a folder that holds `skills/<name>/SKILL.md`. **Refresh the curated shelf** in the
+  console copies the shipped shelf again.
+
+### "Open folder" is missing from the Files view
+
+- **Cause**: the workspace is on the gateway's computer, and only an admin sitting at that
+  computer can have it opened there. A browser on another machine, even through an app proxy on
+  the gateway's computer, counts as remote.
+- **Fix**: copy the path shown (it is on the gateway host), or open it on the gateway's computer.
+- See [Architecture: app proxies](architecture.md#app-proxies-and-the-forwarded-address).
+
+### The Assistant opened from the console is not signed in
+
+- **Cause**: an Assistant that was already running cannot receive the one-time sign-in; the code
+  also expires after two minutes.
+- **Fix**: quit the Assistant, then click **Open** on its card in the gateway console again.
+- See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
+
+### The gateway still holds memory after an eject
+
+- **Check**: the console's **Resources** view. With no model listed, it says how much accelerator
+  memory the gateway process still holds, how that was measured, and what holds it. Ejects that
+  wait for an in-flight call, or that failed, are listed above the table with the reason.
+- **Cause**: a call still running on the old model, a model locked by another client (an eject
+  without force is refused), or memory no model library reports.
+- **Fix**: wait for the in-flight call, eject the named holder (with force for a locked model:
+  `abstractgateway models unload --provider <p> --model <m> --force` or the console's force
+  confirmation),
+  or restart the gateway.
+- **Verify**: the meter returns to the baseline and the resident-models table is empty.
 
 ## Reporting a problem
 
@@ -4483,7 +5063,7 @@ Short, focused guides for common framework questions.
 - [Flow + KG memory (memory object)](flow-and-kg-memory.md)
 - [Scheduled workflows (durable jobs)](scheduled-workflows.md)
 - [Prompt caching (prompt/KV)](prompt-caching.md)
-- [Agent Skills (SKILL.md) — proposal](agent-skills.md)
+- [Agent Skills (SKILL.md)](agent-skills.md)
 - [WorkflowBundles (`.flow`) lifecycle](workflow-bundles.md)
 - [Telegram integration](telegram-integration.md)
 - [Email integration](email-integration.md)
@@ -5009,21 +5589,18 @@ This guide covers deploying a browser UI (Observer / Flow Editor / Code Web UI) 
 
 ## Minimum gateway settings (browser access)
 
-Set these on the gateway host:
+A bare start already has what browser apps need: user auth on, and browser
+origins `http://localhost:*` and `http://127.0.0.1:*` allowed.
 
 ```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+abstractgateway serve
 ```
 
-Start the gateway:
-
-```bash
-abstractgateway serve --host 127.0.0.1 --port 8080
-```
+For UIs served from another origin, allow it with
+`abstractgateway network set --allowed-origins https://ui.example.com`.
 
 Gateway creates `default/admin` if needed and writes the first browser-login
-token to `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`. Use that token
+token to `<data dir>/auth/bootstrap-admin-token`. Use that token
 for `/console` and browser apps, then create named users or rotate tokens from
 the console.
 
@@ -5053,10 +5630,18 @@ access control. If the UI is behind a reverse proxy that rewrites `Host`, enable
 `*_TRUST_PROXY_HEADERS=1` only after the proxy strips client-supplied forwarded
 headers.
 
+Each UI command starts a small local server that serves the page and relays
+its gateway calls. That app proxy writes the browser's real address in
+`X-Forwarded-For` (replacing anything the browser sent) and marks the request
+as proxied, so the gateway can tell a browser on its own computer from one on
+your network: local-only actions such as opening a run's folder are offered
+only to the former. See
+[Architecture: app proxies](../architecture.md#app-proxies-and-the-forwarded-address).
+
 ## Production notes (high-signal)
 
 - Terminate TLS at a reverse proxy and forward to `127.0.0.1:8080`.
-- Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
+- Allow only the exact UI origins you serve (`abstractgateway network set --allowed-origins`; avoid broad wildcards).
 - Keep the Gateway admin token secret and rotate it like any control-plane
   credential.
 - Hosted browser apps should keep only their app-scoped Gateway session cookie;
@@ -5100,31 +5685,22 @@ maintenance actions depending on your deployment.
 
 ## Recommended defaults (local dev)
 
-- Bind to loopback: `--host 127.0.0.1`
-- Enable Gateway user auth for browser apps and per-user runtime routing:
+A bare `abstractgateway serve` already applies them:
 
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-```
+- It listens on this computer only (`127.0.0.1:8080`) until you change the Network setting
+  (`abstractgateway network set lan|internet`).
+- Gateway user auth is on, with per-user runtime routing for browser apps.
+- The generated `default/admin` browser-login token is in `<data dir>/auth/bootstrap-admin-token`
+  for first setup; rotate it or create named users in `/console`.
+- Browser origins are limited to `http://localhost:*` and `http://127.0.0.1:*` (plus the
+  gateway's own LAN origins in a network mode); allow another exact origin with
+  `abstractgateway network set --allowed-origins https://ui.example.com`.
 
-- Use the generated `default/admin` browser-login token from
-  `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token` for first setup, then
-  rotate it or create named users in `/console`.
-- Use a strong `ABSTRACTGATEWAY_AUTH_TOKEN` only for legacy server/operator
-  bearer-token deployments; it is not a browser sign-in token.
+`ABSTRACTGATEWAY_AUTH_TOKEN` is only for legacy server/operator bearer-token deployments; it is
+not a browser sign-in token. When you use it, make it strong:
 
 ```bash
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
-```
-
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-```
-
-- Allow only localhost origins for browser UIs:
-
-```bash
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 ```
 
 ## If exposing beyond localhost (LAN, tunnels, internet)
@@ -5150,7 +5726,7 @@ Canonical server paths use:
 - `rel/path` for the main workspace root
 - `mount_alias/rel/path` for approved mounts
 
-If two allowed mounts share the same basename, Gateway now assigns
+If two allowed mounts share the same basename, Gateway assigns
 deterministic digest-suffixed mount aliases so the public path string is stable
 across Gateway discovery, import/export, and Runtime execution.
 
@@ -5249,10 +5825,10 @@ file helpers, and server workspace artifact import/export require an admin
 principal. Browser local files should use upload routes; server filesystem
 read/import/export is not exposed to ordinary hosted users.
 
-In hosted user-auth mode today, ordinary users can still upload `Local File`
-sources and reuse Artifacts, but server workspace helper routes and server
-workspace artifact import/export remain admin/operator controlled until a
-stronger per-principal workspace grant model lands.
+In hosted user-auth mode, ordinary users can upload `Local File` sources, reuse
+Artifacts, and browse and preview the workspace folders of their own runs
+(read-only, with the built-in deny list applied). Server workspace helper routes
+and server workspace artifact import/export are admin/operator controlled.
 
 Discovery metadata is permission-aware for these high-trust surfaces. Ordinary
 users see admin-only workspace artifact import/export and provider prompt-cache
@@ -5260,6 +5836,35 @@ control operations marked unavailable with `admin_required` metadata. Their
 session prompt-cache names are still usable, but the private hash includes the
 current principal scope so two users cannot collide by choosing the same
 session id, provider, and model.
+
+## "This computer": who gets local-only actions
+
+A few actions are offered only to the person at the gateway's computer: opening a run's folder,
+installing apps and engines from the console (by default), and the Assistant's sign-in hand-over.
+The gateway decides with one rule:
+
+- The caller's address is the socket peer, or, when that peer is this machine's loopback, the
+  address a local app proxy wrote in `X-Forwarded-For`. It counts as "this computer" when it is
+  loopback or one of the host's own addresses.
+- The browser apps' proxies (the AbstractCode web server, the Flow Editor's server, the ui-kit
+  app-server behind Observer, Entity and Continuum) overwrite `X-Forwarded-For` with the browser's
+  real address and mark their requests with `X-AbstractFramework-App-Proxy`.
+- `X-Forwarded-For` from a non-loopback peer is ignored; a marked request without it, or any
+  marked request while the gateway trusts a reverse proxy, is never "this computer".
+
+A browser on your LAN that reaches an app proxy running on the gateway's computer is therefore
+remote. See [Architecture: app proxies](../architecture.md#app-proxies-and-the-forwarded-address).
+
+## Run workspaces and the built-in deny list
+
+Every run works in a folder on the gateway's computer and gets a built-in deny list: credential
+folders (`~/.ssh`, `~/.aws`, `~/.gnupg`, `~/.config/gcloud`, `~/.kube`, `~/Library/Keychains`),
+the framework's settings folders and the gateway's data folder (except the run's own conversation
+folder). The workspace browser never lists or serves them, and the file tools refuse them. A run
+cannot choose a folder inside the data folder as its workspace, and another user's run workspace
+answers 404. Shell commands a run may execute are not confined by the list: keep shell tools
+behind approval on machines that hold secrets. See
+[Agent sessions](../agent-sessions.md#the-conversation-workspace).
 
 ## Verify quickly
 
@@ -5573,111 +6178,68 @@ cross-user reuse. Prefer stable `session_id` values so cache keys remain stable 
 
 
 --- docs/guide/agent-skills.md ---
-# Agent Skills (SKILL.md) — Proposal
+# Agent Skills (SKILL.md)
 
-This guide captures a **planned** integration of the Agent Skills (`SKILL.md`) format into AbstractFramework.
-Nothing in this document implies the feature is already shipped; it records a design direction so the knowledge
-is not lost.
+A **skill** is a shareable folder with a required `SKILL.md` (YAML frontmatter plus instructions)
+and optional `scripts/`, `references/` and `assets/`, following the
+[Agent Skills](https://agentskills.io/) format. Skills are built for **progressive disclosure**: an
+agent first sees only each skill's `name` and `description`, and reads the full instructions when a
+task calls for them.
 
-## What are “Agent Skills”?
+In AbstractFramework, skills are served by the gateway and used by agent runs. This guide explains
+how they fit with workflows and where to find each piece. The user-facing steps (which shelf is
+used, how to attach skills to a run) are in [Agent sessions: skills](../agent-sessions.md#skills).
 
-In the Agent Skills ecosystem, a **skill** is a shareable folder with a required `SKILL.md` (YAML frontmatter +
-instructions) plus optional `scripts/`, `references/`, and `assets/`. Skills are designed for **progressive disclosure**:
-systems load only `name`/`description` for discovery and fetch the full content only when a skill is activated.
+## Skills and flows
 
-Spec constraints worth carrying into AbstractFramework:
-- `name` is constrained (lowercase alphanumeric + hyphens, 1–64 chars) and must match the skill’s leaf directory name.
-- `allowed-tools` is **experimental** and is a space-delimited list of “pre-approved” tools in the originating ecosystem.
+- **Flows** (`.flow` bundles / VisualFlow) are executable programs: durable execution, explicit
+  waits, tool boundaries, replayable ledger history.
+- **Skills** are portable procedure packs: instructions plus optional resources, shareable across
+  agents and ecosystems.
 
-## Skills vs flows (what each is “for”)
+Flows run; skills are read. A skill never executes by being present: its instructions reach an
+agent as text, and anything it asks the agent to do still goes through the run's tools and
+approvals.
 
-- **Flows** (`.flow` bundles / VisualFlow) are **executable programs** in AbstractFramework:
-  durable execution, explicit waits, tool boundaries, replayable ledger history.
-- **Skills** (`SKILL.md`) are **portable procedure packs**:
-  prompt/instructions + optional scripts/resources, designed to be shared across agents/ecosystems.
+Not every procedure deserves a dedicated flow. Guidelines, checklists and style rules usually work
+best as skills attached to a general agent workflow; multi-step procedures with waits and
+approvals are better authored as flows.
 
-### Are flows “more advanced” than skills?
+## Where skills come from
 
-They’re “more advanced” in different dimensions:
+- **AbstractSkill** (`pip install abstractskill`) is the shared library: it parses and validates
+  `SKILL.md`, discovers skills on disk, computes stable content hashes, formats the compact skill
+  index an agent sees, and applies the trust gate. Its wheel also carries a **curated shelf** of
+  reviewed skills with their trust records.
+- **AbstractGateway** installs AbstractSkill with itself and serves a shelf: by default its own copy
+  of the curated shelf in `<data dir>/skills/registry`, refreshed at each start without overwriting
+  files you edited; or the folder its `skills.shelf` setting names.
 
-- **Execution**: flows are more advanced (they *run* as durable state machines).
-- **Portability**: skills are more advanced (they’re a widely adopted, tool-agnostic packaging standard).
+## Trust
 
-### Can every skill be modeled as a flow?
+Trust records bind to content hashes, not to paths:
 
-**Conceptually yes**: a skill is “a procedure + resources”, and a flow can orchestrate any procedure.
-In practice, the limit is **tooling/environment assumptions**, not the flow model:
-a skill may assume Playwright is installed, or a specific “container” tool surface exists.
+- **validated** skills (their content matches a trust record) can be attached to runs;
+- **unverified** skills (unknown, or edited since they were validated) are held;
+- skills under a **do-not-use advisory** never reach a run.
 
-Also, not every skill is *worth* turning into a dedicated flow:
-“guidelines/checklists/style” skills often work best as **prompt modules** attached to a generic agent flow.
+A skill's own tool declarations can only narrow what the run's tool policy allows, never widen it.
 
-## Proposed interaction model (v0)
+## Using skills in a run
 
-The key design choice is: **flows run; skills are activated/loaded** (and skill scripts only run as explicit tools).
+A client attaches skills by name (`input_data.skills` on `POST /api/gateway/runs/start`; the
+skills settings in AbstractCode). The gateway passes the names through the trust gate, gives the
+run a stable index of the active skills and a `read_skill` tool to open one, and records every
+decision on the run, including skills it held or refused. Sub-agents started by the run inherit the
+same skills.
 
-### 1) Run-attached skills (primary)
+## Reference
 
-- Clients/hosts attach an `available_skills` metadata set to a run (name/description only).
-- Users explicitly activate a skill (e.g. `/skill <name>`), which loads full `SKILL.md` and any resources.
-- Activation is logged durably (ledger record). For replay/resume safety, activation should snapshot skill content
-  (or at least record a content hash) so a long-running run doesn’t silently pick up a modified skill file.
-
-### 2) Bundle-declared skill dependencies (secondary)
-
-Flows may declare skill dependencies without changing the `.flow` format by using `manifest.metadata`, for example:
-
-- `skills.required`: skills that must be present on the host/gateway
-- `skills.defaults`: skills to auto-activate at run start
-
-This lets organizations ship a workflow that says “this workflow expects these skills”, while keeping skills
-as separately managed artifacts.
-
-### 3) Bundle-embedded skills (optional; later)
-
-WorkflowBundles support `assets/*`. If we want hermetic distribution (“workflow + skills in one file”),
-we can embed skills under bundle assets (e.g. `assets/skills/<id>/...`) and expose them via the gateway.
-
-## Implementation notes (what fits best with existing runtime/flow mechanics)
-
-The lowest-friction implementation in AbstractFramework is to add skills as **runtime-owned tools** in the
-AbstractRuntime ↔ AbstractCore integration (the same pattern already used for `open_attachment`):
-
-- `list_skills()` for metadata-only discovery (progressive disclosure).
-- `open_skill(...)` to load full `SKILL.md` (and optionally specific resources), snapshotting large payloads as artifacts
-  and recording a content hash.
-- optional `activate_skill(...)` to update durable run state (`_runtime.skills.active`) and apply `allowed-tools` as a
-  restriction (intersection with the run’s tool allowlist).
-
-Because these are tools, **flows can compose over skills immediately** using existing Tool/CallTool nodes, and agent
-loops can activate skills without introducing new effect types.
-
-Note: bundle-declared dependencies via `manifest.metadata.skills.*` are supported as a pattern, but VisualFlow JSON
-currently has no `metadata` field; making this authorable requires a UI/CLI surface (or a schema extension).
-
-## Safety and tool gating
-
-- Skills may include scripts. **Scripts must never run implicitly** “because a skill exists”.
-- Skills may declare `allowed-tools` (ecosystem field; experimental). In AbstractFramework the safe behavior is:
-  - treat it as a **restriction** when it can be mapped to AbstractFramework tool names (intersection with the run’s tool allowlist),
-  - if it cannot be mapped (unknown grammar/tool ids), emit `#FALLBACK` and **do not relax** the run’s tool policy,
-  - deny and log out-of-policy tool calls with actionable `#FALLBACK` warnings,
-  - keep run state JSON-safe (store bodies/resources as artifacts when large).
-
-## Where this fits (packages)
-
-- `abstractagent`: prompt injection of metadata; “activate skill” as an explicit step; optional schema-only built-in
-  (e.g. `open_skill`) so the runtime/host performs the read.
-- `abstractruntime`: runtime-owned “skill read/activate” handler that is durable + ledger-recorded + artifact-backed,
-  plus enforcement hooks for `allowed-tools`.
-- `abstractgateway`: optional “skills registry” (list/fetch/install/deprecate), parallel to `.flow` bundle distribution.
-- `abstractcore`: stays lean; any provider-specific “container skills” integration remains optional and gated.
-
-## References and next steps
-
-- Backlog item: `docs/backlog/planned/074_agent_skills_integration.md`
-- Implementation plan (phased): `docs/backlog/planned/074_agent_skills_integration_plan.md`
-- Research notes (spec + ecosystem scan): `docs/skills/`
+- [AbstractSkill](https://github.com/lpalbou/AbstractSkill): library API, the curated shelf, the
+  trust model and the seeding rules.
+- [AbstractGateway configuration: skills shelf](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md#skills-shelf)
+  and [API: run-level skills selection](https://github.com/lpalbou/AbstractGateway/blob/main/docs/api.md#run-level-skills-selection).
+- [Workflow bundles](workflow-bundles.md): how flows are packaged and distributed.
 
 --- docs/guide/workflow-bundles.md ---
 # WorkflowBundles (`.flow`) and Lifecycle
@@ -6137,7 +6699,10 @@ abstractcore --config
 abstractgateway serve --host 127.0.0.1 --port 8080
 ```
 
-The gateway ships the `coding-agent:coder` workflow that AbstractCode uses by default.
+AbstractCode runs the gateway's default agent workflow: the shipped `basic-agent` until you
+choose another. For a verify-gated coder, make the shipped `coding-agent:coder` the default
+(`abstractgateway config set agents.default_workflow.abstractcode.agent.v1 coding-agent:coder`) or
+pick it in the client (`/workflow`, `abstractcode --workflow coding-agent:coder`).
 
 ## Step 4: Run AbstractCode
 
@@ -6153,6 +6718,9 @@ Prefer a browser? `npx @abstractframework/code` serves the same client on
 
 - Type a task and press Enter; reasoning cycles and tool cards stream in live.
 - Tools are approval-gated by default: approve or reject each call, from either client.
+- The agent works in a folder on the gateway host; `/files` (the **Files** tab in the browser)
+  shows its path and previews its files. Credential folders such as `~/.ssh` stay out of reach.
+- `/stream` turns on live replies when you want to watch answers as they are written.
 - Type `/help` for commands.
 
 ## What "durable" means here

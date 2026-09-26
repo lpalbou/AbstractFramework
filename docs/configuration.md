@@ -50,17 +50,14 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 ### Defaults and explicit settings
 
 A bare `abstractgateway serve` needs no configuration: it listens on `127.0.0.1:8080`, turns user
-auth on and keeps its data in the per-user data folder. Set the environment when you want those
-choices to be explicit, for example in a service definition:
-
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-```
+auth on and keeps its data in the per-user data folder. Choose another data folder with
+`serve --data-dir <folder>`. Browser apps on `http://localhost:*` and `http://127.0.0.1:*` may
+always call it; allow other origins with
+`abstractgateway network set --allowed-origins https://ui.example.com`.
 
 When user auth is enabled, `abstractgateway serve` ensures `default/admin`
 exists and writes the first browser-login token to
-`$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`. Users sign in with a
+`<data dir>/auth/bootstrap-admin-token`. Users sign in with a
 Gateway user id and that user's token, then browser apps keep only an opaque
 Gateway session. `ABSTRACTGATEWAY_AUTH_TOKEN` remains available for legacy
 server/operator bearer-token deployments, but it maps to `local-admin` and is
@@ -73,16 +70,12 @@ available providers. Deleted users leave retained runtime reservations;
 admins can transfer retained runtime data to an existing same-tenant user or
 purge the retained runtime directory before releasing the runtime id for reuse.
 
-### Recommended (bundle-based workflows)
+### Workflow bundles
 
-```bash
-export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
-
-# Optional: set only for a custom bundle registry. When unset, Gateway uses
-# the packaged shipped bundle directory containing basic-agent.
-# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
-```
+The gateway serves its shipped workflow bundles (`basic-agent`, `coding-agent`, `deep-research`,
+`co-scientist`, and more). To serve your own bundle registry instead, start it with
+`ABSTRACTGATEWAY_FLOWS_DIR` pointing at your bundle folder, or publish bundles through the
+gateway API from AbstractFlow.
 
 ### Start
 
@@ -108,6 +101,30 @@ abstractgateway network set --allowed-origins https://gateway.example.com
 The console's network panel and the menu-bar icon change the same setting. See
 [Network setting](install.md#network-setting-who-can-reach-the-gateway) and
 [Gateway security](guide/gateway-security.md).
+
+---
+
+## Agent session settings
+
+These gateway settings shape every agent conversation, whatever client starts it. Each one is
+available in the web console, the terminal console and the command line
+(`abstractgateway config get|set|unset <key>`); writes are admin-only and audit-logged, and the
+read shows where the value comes from. What they mean for users is in
+[Agent sessions](agent-sessions.md).
+
+| Setting | What it decides | When nothing is saved |
+|---|---|---|
+| `agents.default_workflow.<interface>` | The workflow that answers an agent interface (`[catalog:]bundle[@version]:flow`) | `abstractcode.agent.v1`: the shipped `basic-agent`; `abstractassistant.agent.v1`: none, the Assistant runs its built-in orchestrator |
+| `agents.streaming_default` | Whether interactive runs stream replies live when the client does not say | off |
+| `skills.shelf` | The folder the gateway reads skills from | the gateway's own copy of the curated shelf, `<data dir>/skills/registry`, refreshed at each start |
+| `workspace_builtin_deny` | Whether runs get the built-in deny list (credential folders, the gateway's data folder) | on; the workspace browser hides those folders either way |
+
+Each client keeps its own choices next to these: its workflow pick (or "Gateway default") and its
+**Stream replies** choice (Gateway default, On, Off). AbstractCode keeps them in
+`~/.abstractcode/prefs.json` for the terminal and in the browser for the web client; the Assistant
+in `~/.abstractassistant/preferences.json`.
+
+Reference: [AbstractGateway configuration](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md).
 
 ---
 
@@ -223,7 +240,7 @@ are Core-owned. When Gateway user auth is enabled, the Gateway baseline is
 stored as a Core config file:
 
 ```text
-$ABSTRACTGATEWAY_DATA_DIR/config/abstractcore.json
+<data dir>/config/abstractcore.json
 ```
 
 Per-user writes through
@@ -232,7 +249,7 @@ Per-user writes through
 as a runtime-scoped Core config file:
 
 ```text
-$ABSTRACTGATEWAY_DATA_DIR/users/<tenant>/<runtime>/runtime/config/abstractcore.json
+<data dir>/users/<tenant>/<runtime>/runtime/config/abstractcore.json
 ```
 
 User runtime defaults override the Gateway baseline only for that runtime, so
@@ -297,12 +314,19 @@ bundles should not contain raw secrets.
 
 ### Gateway data directory
 
-`ABSTRACTGATEWAY_DATA_DIR` is the durability root:
+The gateway's data folder (the per-user data folder by default, `serve --data-dir` to choose
+another; `abstractgateway-config status` prints it) is the durability root:
 
 - Run state
 - Ledger history
 - Artifacts (files, media, big payloads)
 - Schedules
+- Conversation workspaces (`workspaces/session-…`)
+- The seeded skill shelf (`skills/registry`)
+- Settings saved from the consoles and `abstractgateway config`
+
+With the built-in deny list on (the default), runs cannot use it outside their own conversation
+folder.
 
 **Back up this directory** if you care about long-lived runs and audit trails.
 
@@ -312,7 +336,7 @@ For production deployments, you can use SQLite for run metadata (artifacts stay 
 
 ```bash
 export ABSTRACTGATEWAY_STORE_BACKEND=sqlite
-export ABSTRACTGATEWAY_DB_PATH="$ABSTRACTGATEWAY_DATA_DIR/gateway.sqlite3"
+export ABSTRACTGATEWAY_DB_PATH="<data dir>/gateway.sqlite3"
 ```
 
 ### Core config directory

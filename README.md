@@ -116,18 +116,16 @@ creates `default/admin` in the per-user data folder, and prints a one-time sign-
 web console and its first-run guide. `abstractgateway claim` mints a new link;
 `abstractgateway service install` starts the gateway at login.
 
-To choose the data folder, the allowed browser origins or your own workflow bundles, set the
-environment explicitly:
+Browser apps on `http://localhost:*` and `http://127.0.0.1:*` may always call it. To choose
+another data folder or allow another browser origin:
 
 ```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
-# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"   # serve your own bundle registry
-
-abstractgateway serve --host 127.0.0.1 --port 8080
+abstractgateway serve --data-dir "$PWD/runtime/gateway"
+abstractgateway network set --allowed-origins https://ui.example.com
 ```
+
+To serve your own workflow bundles instead of the shipped ones, start the gateway with
+`ABSTRACTGATEWAY_FLOWS_DIR` pointing at your bundle folder.
 
 Out of the box this serves a ready set of workflows — a verify-gated coding
 agent, `deep-research`, and `co-scientist` among them. See
@@ -152,6 +150,33 @@ Container images are published for the gateway and the AbstractCore server:
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
+
+### Agent sessions on the gateway
+
+Every client (AbstractCode in the terminal and the browser, AbstractAssistant, your own app)
+chats with agents through the same gateway rules:
+
+- **One default agent workflow.** The gateway decides which workflow answers each agent interface
+  (`agents.default_workflow.<interface>`; the shipped `basic-agent` for AbstractCode until you
+  choose another). Clients list **Gateway default** first and follow a change at the next turn.
+- **A workspace you can see, with built-in protection.** An agent works in a folder on the
+  gateway's computer; AbstractCode's **Files** tab and `/files` show its absolute path and
+  preview its files. Credential folders (`~/.ssh`, `~/.aws`, …) and the gateway's data folder are
+  denied to every run.
+- **Curated skills.** The skill shelf that ships with `abstractskill` is copied into the gateway's
+  data folder at each start, without overwriting your edits (`skills.shelf` points elsewhere).
+- **Live replies.** Watch answers as the model writes them: the gateway's
+  `agents.streaming_default` plus a **Stream replies** choice in each client.
+- **The Assistant, signed in for you.** **Open** in the gateway console starts the desktop
+  Assistant already signed in; no token to type.
+- **About everywhere.** Every app's About screen shows the framework identity and the versions
+  the connected gateway runs (`GET /api/gateway/about`).
+- **Clean model eject.** Ejecting a model frees it from the whole gateway process (MLX, GGUF,
+  transformers, embeddings); the console shows the memory the process holds and how it was
+  measured.
+
+Each setting is available in the web console, the terminal console and `abstractgateway config`.
+See [Agent sessions](docs/agent-sessions.md).
 
 ---
 
@@ -217,14 +242,14 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 
 | App | What it does | Install |
 |---|---|---|
-| [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, `/workflow` support | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
-| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, workflow picker per session, voice support | `pip install abstractassistant` |
+| [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, the gateway's default workflow, workspace files, live replies | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
+| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, follows the gateway's default workflow or your pick, live replies, voice support | `pip install abstractassistant`, or **Open** in the gateway console (starts it signed in) |
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
 | **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
-| **Code Web UI** | Browser client of AbstractCode (gateway-backed) | `npx @abstractframework/code` |
+| **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | `npx @abstractframework/code` |
 | **Flow Editor** | Visual workflow authoring in the browser | `npx @abstractframework/flow` |
 
 ### Shared libraries
@@ -232,8 +257,8 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 | Package | What it is |
 |---|---|
 | [abstracttui](https://github.com/lpalbou/AbstractTUI) | Rust terminal-UI engine built on fine-grained reactive signals |
-| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Reusable UI kit for framework clients (React components + Web Components) |
-| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) |
+| [abstractuic](https://github.com/lpalbou/AbstractUIC) | Reusable UI kit for framework clients (React components + Web Components): chat panel with live replies, the shared About dialog, the app-server proxy |
+| [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) and the curated skill shelf the gateway serves |
 
 ---
 
@@ -299,8 +324,9 @@ and tested together.
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.15.2 |
 
 Optional add-ons that are not part of any profile install separately:
-`pip install abstract3d` (0.3.1), `pip install abstractcamera` (0.2.0) and
-`pip install abstractskill` (0.2.1).
+`pip install abstract3d` (0.3.1) and `pip install abstractcamera` (0.2.0). `abstractskill` is
+installed with the gateway, which carries its curated skill shelf; install it on its own with
+`pip install abstractskill`.
 
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
 `abstractframework doctor`, and the generated installer manifest contract.
@@ -314,7 +340,8 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/README.md](docs/README.md) | Documentation hub — pick your starting point |
 | [docs/install.md](docs/install.md) | Light / Apple / GPU install chooser and first checks |
 | [docs/getting-started.md](docs/getting-started.md) | Two entry points + first end-to-end run |
-| [docs/architecture.md](docs/architecture.md) | Layered model, durable execution primitives, comparisons |
+| [docs/agent-sessions.md](docs/agent-sessions.md) | Default agent workflow, the conversation workspace and its protection, skills, live replies, the Assistant hand-over |
+| [docs/architecture.md](docs/architecture.md) | Component diagram, how a turn flows, the live-reply lane, app proxies, model eject, framework identity, durable execution primitives |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | [docs/faq.md](docs/faq.md) | Common questions, comparisons, limits |

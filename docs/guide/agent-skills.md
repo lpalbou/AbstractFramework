@@ -1,105 +1,62 @@
-# Agent Skills (SKILL.md) — Proposal
+# Agent Skills (SKILL.md)
 
-This guide captures a **planned** integration of the Agent Skills (`SKILL.md`) format into AbstractFramework.
-Nothing in this document implies the feature is already shipped; it records a design direction so the knowledge
-is not lost.
+A **skill** is a shareable folder with a required `SKILL.md` (YAML frontmatter plus instructions)
+and optional `scripts/`, `references/` and `assets/`, following the
+[Agent Skills](https://agentskills.io/) format. Skills are built for **progressive disclosure**: an
+agent first sees only each skill's `name` and `description`, and reads the full instructions when a
+task calls for them.
 
-## What are “Agent Skills”?
+In AbstractFramework, skills are served by the gateway and used by agent runs. This guide explains
+how they fit with workflows and where to find each piece. The user-facing steps (which shelf is
+used, how to attach skills to a run) are in [Agent sessions: skills](../agent-sessions.md#skills).
 
-In the Agent Skills ecosystem, a **skill** is a shareable folder with a required `SKILL.md` (YAML frontmatter +
-instructions) plus optional `scripts/`, `references/`, and `assets/`. Skills are designed for **progressive disclosure**:
-systems load only `name`/`description` for discovery and fetch the full content only when a skill is activated.
+## Skills and flows
 
-Spec constraints worth carrying into AbstractFramework:
-- `name` is constrained (lowercase alphanumeric + hyphens, 1–64 chars) and must match the skill’s leaf directory name.
-- `allowed-tools` is **experimental** and is a space-delimited list of “pre-approved” tools in the originating ecosystem.
+- **Flows** (`.flow` bundles / VisualFlow) are executable programs: durable execution, explicit
+  waits, tool boundaries, replayable ledger history.
+- **Skills** are portable procedure packs: instructions plus optional resources, shareable across
+  agents and ecosystems.
 
-## Skills vs flows (what each is “for”)
+Flows run; skills are read. A skill never executes by being present: its instructions reach an
+agent as text, and anything it asks the agent to do still goes through the run's tools and
+approvals.
 
-- **Flows** (`.flow` bundles / VisualFlow) are **executable programs** in AbstractFramework:
-  durable execution, explicit waits, tool boundaries, replayable ledger history.
-- **Skills** (`SKILL.md`) are **portable procedure packs**:
-  prompt/instructions + optional scripts/resources, designed to be shared across agents/ecosystems.
+Not every procedure deserves a dedicated flow. Guidelines, checklists and style rules usually work
+best as skills attached to a general agent workflow; multi-step procedures with waits and
+approvals are better authored as flows.
 
-### Are flows “more advanced” than skills?
+## Where skills come from
 
-They’re “more advanced” in different dimensions:
+- **AbstractSkill** (`pip install abstractskill`) is the shared library: it parses and validates
+  `SKILL.md`, discovers skills on disk, computes stable content hashes, formats the compact skill
+  index an agent sees, and applies the trust gate. Its wheel also carries a **curated shelf** of
+  reviewed skills with their trust records.
+- **AbstractGateway** installs AbstractSkill with itself and serves a shelf: by default its own copy
+  of the curated shelf in `<data dir>/skills/registry`, refreshed at each start without overwriting
+  files you edited; or the folder its `skills.shelf` setting names.
 
-- **Execution**: flows are more advanced (they *run* as durable state machines).
-- **Portability**: skills are more advanced (they’re a widely adopted, tool-agnostic packaging standard).
+## Trust
 
-### Can every skill be modeled as a flow?
+Trust records bind to content hashes, not to paths:
 
-**Conceptually yes**: a skill is “a procedure + resources”, and a flow can orchestrate any procedure.
-In practice, the limit is **tooling/environment assumptions**, not the flow model:
-a skill may assume Playwright is installed, or a specific “container” tool surface exists.
+- **validated** skills (their content matches a trust record) can be attached to runs;
+- **unverified** skills (unknown, or edited since they were validated) are held;
+- skills under a **do-not-use advisory** never reach a run.
 
-Also, not every skill is *worth* turning into a dedicated flow:
-“guidelines/checklists/style” skills often work best as **prompt modules** attached to a generic agent flow.
+A skill's own tool declarations can only narrow what the run's tool policy allows, never widen it.
 
-## Proposed interaction model (v0)
+## Using skills in a run
 
-The key design choice is: **flows run; skills are activated/loaded** (and skill scripts only run as explicit tools).
+A client attaches skills by name (`input_data.skills` on `POST /api/gateway/runs/start`; the
+skills settings in AbstractCode). The gateway passes the names through the trust gate, gives the
+run a stable index of the active skills and a `read_skill` tool to open one, and records every
+decision on the run, including skills it held or refused. Sub-agents started by the run inherit the
+same skills.
 
-### 1) Run-attached skills (primary)
+## Reference
 
-- Clients/hosts attach an `available_skills` metadata set to a run (name/description only).
-- Users explicitly activate a skill (e.g. `/skill <name>`), which loads full `SKILL.md` and any resources.
-- Activation is logged durably (ledger record). For replay/resume safety, activation should snapshot skill content
-  (or at least record a content hash) so a long-running run doesn’t silently pick up a modified skill file.
-
-### 2) Bundle-declared skill dependencies (secondary)
-
-Flows may declare skill dependencies without changing the `.flow` format by using `manifest.metadata`, for example:
-
-- `skills.required`: skills that must be present on the host/gateway
-- `skills.defaults`: skills to auto-activate at run start
-
-This lets organizations ship a workflow that says “this workflow expects these skills”, while keeping skills
-as separately managed artifacts.
-
-### 3) Bundle-embedded skills (optional; later)
-
-WorkflowBundles support `assets/*`. If we want hermetic distribution (“workflow + skills in one file”),
-we can embed skills under bundle assets (e.g. `assets/skills/<id>/...`) and expose them via the gateway.
-
-## Implementation notes (what fits best with existing runtime/flow mechanics)
-
-The lowest-friction implementation in AbstractFramework is to add skills as **runtime-owned tools** in the
-AbstractRuntime ↔ AbstractCore integration (the same pattern already used for `open_attachment`):
-
-- `list_skills()` for metadata-only discovery (progressive disclosure).
-- `open_skill(...)` to load full `SKILL.md` (and optionally specific resources), snapshotting large payloads as artifacts
-  and recording a content hash.
-- optional `activate_skill(...)` to update durable run state (`_runtime.skills.active`) and apply `allowed-tools` as a
-  restriction (intersection with the run’s tool allowlist).
-
-Because these are tools, **flows can compose over skills immediately** using existing Tool/CallTool nodes, and agent
-loops can activate skills without introducing new effect types.
-
-Note: bundle-declared dependencies via `manifest.metadata.skills.*` are supported as a pattern, but VisualFlow JSON
-currently has no `metadata` field; making this authorable requires a UI/CLI surface (or a schema extension).
-
-## Safety and tool gating
-
-- Skills may include scripts. **Scripts must never run implicitly** “because a skill exists”.
-- Skills may declare `allowed-tools` (ecosystem field; experimental). In AbstractFramework the safe behavior is:
-  - treat it as a **restriction** when it can be mapped to AbstractFramework tool names (intersection with the run’s tool allowlist),
-  - if it cannot be mapped (unknown grammar/tool ids), emit `#FALLBACK` and **do not relax** the run’s tool policy,
-  - deny and log out-of-policy tool calls with actionable `#FALLBACK` warnings,
-  - keep run state JSON-safe (store bodies/resources as artifacts when large).
-
-## Where this fits (packages)
-
-- `abstractagent`: prompt injection of metadata; “activate skill” as an explicit step; optional schema-only built-in
-  (e.g. `open_skill`) so the runtime/host performs the read.
-- `abstractruntime`: runtime-owned “skill read/activate” handler that is durable + ledger-recorded + artifact-backed,
-  plus enforcement hooks for `allowed-tools`.
-- `abstractgateway`: optional “skills registry” (list/fetch/install/deprecate), parallel to `.flow` bundle distribution.
-- `abstractcore`: stays lean; any provider-specific “container skills” integration remains optional and gated.
-
-## References and next steps
-
-- Backlog item: `docs/backlog/planned/074_agent_skills_integration.md`
-- Implementation plan (phased): `docs/backlog/planned/074_agent_skills_integration_plan.md`
-- Research notes (spec + ecosystem scan): `docs/skills/`
+- [AbstractSkill](https://github.com/lpalbou/AbstractSkill): library API, the curated shelf, the
+  trust model and the seeding rules.
+- [AbstractGateway configuration: skills shelf](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md#skills-shelf)
+  and [API: run-level skills selection](https://github.com/lpalbou/AbstractGateway/blob/main/docs/api.md#run-level-skills-selection).
+- [Workflow bundles](workflow-bundles.md): how flows are packaged and distributed.

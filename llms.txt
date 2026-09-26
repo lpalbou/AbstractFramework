@@ -80,6 +80,30 @@ Notes for LLMs working in this repo:
   `docs-qa`, `abstractassistant-orchestrator`, and the `react-agent` /
   `codeact-agent` / `memact-agent` native loops. Setting
   `ABSTRACTGATEWAY_FLOWS_DIR` replaces that registry with a custom one.
+- Agent sessions (every client: AbstractCode terminal + web, AbstractAssistant, your app):
+  the gateway resolves `flow_id: "@default"` + `interface` to its
+  `agents.default_workflow.<interface>` at every run start (built-in: shipped
+  `basic-agent` for `abstractcode.agent.v1`; none for
+  `abstractassistant.agent.v1`, whose app then runs its built-in orchestrator;
+  an unresolvable default refuses the run, never falls back). Every run works in
+  a folder on the gateway host (the conversation folder under
+  `<data dir>/workspaces/`, or the terminal client's launch folder), browsable via
+  `GET /runs/{id}/workspace[/files|/content]` (AbstractCode Files tab, `/files`),
+  with a built-in deny list (credential folders, framework settings folders, the
+  gateway data folder) for every run and the browser. The curated skill shelf
+  ships in `abstractskill` and is seeded into `<data dir>/skills/registry` at each
+  start (`skills.shelf` overrides). Live replies: `input_data._runtime.stream`,
+  gateway default `agents.streaming_default`, `llm.delta` / `llm.delta_end`
+  events on the run SSE stream (not ledger records); structured output, remote
+  AbstractCore, entity chat do not stream. The console's **Open** starts the
+  Assistant signed in through a one-time hand-over file. Public
+  `GET /api/gateway/about` returns versions for About screens.
+- Framework identity: `identity/abstractframework.json` is canonical; byte-identical
+  copies live in abstractcore, the ui-kit, the AbstractCode terminal client and the
+  gateway terminal console; `python3 scripts/check_identity_sync.py` verifies them.
+- App proxies (AbstractCode web server, Flow Editor server, ui-kit app-server) overwrite
+  `X-Forwarded-For` with the browser's address and add `X-AbstractFramework-App-Proxy`;
+  the gateway believes the header only from a loopback peer, so LAN browsers stay remote.
 
 ## Start Here
 
@@ -88,8 +112,9 @@ Notes for LLMs working in this repo:
 - [docs/install.md](docs/install.md): Mac installer (with the one-time Open Anyway step), one-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, Network setting, uninstall), Light / Apple / GPU chooser, generated manifest contract.
 - [docs/installers/README.md](docs/installers/README.md): Install design: script bootstrap + gateway console (strategy, per-OS journeys, components, OS security/sudo/UAC/execution policy, manifest, operations).
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
+- [docs/agent-sessions.md](docs/agent-sessions.md): What every client shares when it chats with an agent: the gateway's default agent workflow (`agents.default_workflow.<interface>`), the conversation workspace on the gateway host and its built-in deny list, the curated skill shelf (`skills.shelf`), live replies (`agents.streaming_default` + per-client Stream replies; what does not stream), opening the Assistant signed in from the console.
 - [AbstractGateway shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
-- [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid component and distribution diagrams).
+- [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid diagrams: components, distribution, how a turn flows, the live-reply lane, the framework identity flow), app proxies and the forwarded-address rule, model residency and eject.
 - [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, client configuration.
 - [docs/api.md](docs/api.md): Meta-package API: release pins, helpers, `abstractframework doctor` and `manifest`.
 - [docs/faq.md](docs/faq.md): Common questions, comparisons, limits.
@@ -119,7 +144,7 @@ Notes for LLMs working in this repo:
 - [docs/guide/capability-routing-defaults.md](docs/guide/capability-routing-defaults.md): Provider/model/base URL defaults for input, output, embedding, and rerank routes.
 - [docs/guide/runtime-artifacts.md](docs/guide/runtime-artifacts.md): Runtime artifact descriptors, Gateway artifact search, Observer views, ledger/KG boundaries, and safe retrieval practice.
 - [docs/guide/workflow-bundles.md](docs/guide/workflow-bundles.md): `.flow` bundles and lifecycle.
-- [docs/guide/agent-skills.md](docs/guide/agent-skills.md): Agent Skills (SKILL.md) proposal and how it composes with flows.
+- [docs/guide/agent-skills.md](docs/guide/agent-skills.md): Agent Skills (SKILL.md): skills vs flows, the AbstractSkill library and curated shelf, the trust gate, attaching skills to a run.
 - [docs/guide/process-manager-env-vars.md](docs/guide/process-manager-env-vars.md): Write-only env var config from Observer.
 
 ## Release Profile (Pinned Versions)
@@ -134,24 +159,7 @@ Notes for LLMs working in this repo:
 
 ## Full Context
 
-- [llms-full.txt](llms-full.txt): Concatenated context for copy/paste into an LLM (`python scripts/gen_llms_full.py`).
-
-## Proposals / Research (non-canonical)
-
-- [docs/backlog/overview.md](docs/backlog/overview.md): Root backlog index and active cross-package work.
-- [docs/backlog/completed/0141_flow_browser_session_gateway_auth.md](docs/backlog/completed/0141_flow_browser_session_gateway_auth.md): Completed Flow browser-session Gateway auth isolation.
-- [docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md](docs/backlog/planned/0142_gateway_tenant_isolation_and_shared_runtime.md): Planned Gateway tenant isolation and shared runtime design.
-- [docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md](docs/backlog/planned/0143_shared_gateway_per_principal_runtime_router.md): In-progress shared Gateway per-principal runtime router work.
-- [docs/backlog/planned/gateway-control-plane/README.md](docs/backlog/planned/gateway-control-plane/README.md): Gateway admin/config/workflow-permission control-plane backlog track.
-- [docs/backlog/proposed/gateway-control-plane/README.md](docs/backlog/proposed/gateway-control-plane/README.md): Proposed Explorer/Manager package-boundary follow-ups.
-- [docs/backlog/completed/0154_multi_user_security_release_blockers.md](docs/backlog/completed/0154_multi_user_security_release_blockers.md): Completed multi-user release-blocking security fixes.
-- [docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md](docs/backlog/completed/0157_gateway_provider_endpoint_profiles.md): Completed Gateway-owned provider endpoint profiles and virtual `endpoint:*` discovery.
-- [docs/backlog/planned/0164_gateway_docker_ghcr_deployment_track.md](docs/backlog/planned/0164_gateway_docker_ghcr_deployment_track.md): Planned Gateway Docker/GHCR deployment track for light and GPU images.
-- [docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md](docs/backlog/proposed/gateway-control-plane/0155_hosted_proxy_shared_helper_extraction.md): Proposed threshold for extracting shared hosted proxy helpers.
-- [docs/backlog/planned/074_agent_skills_integration.md](docs/backlog/planned/074_agent_skills_integration.md): Backlog item for Agent Skills integration.
-- [docs/backlog/planned/074_agent_skills_integration_plan.md](docs/backlog/planned/074_agent_skills_integration_plan.md): Phased plan for Agent Skills integration.
-- [docs/skills/](docs/skills/): Research notes (spec links + ecosystem scan) for Agent Skills.
-- [docs/claude/](docs/claude/): Research notes about Claude (non-Agent-Skills capability/skills scan).
+- [llms-full.txt](llms-full.txt): Concatenated context for copy/paste into an LLM (`python scripts/gen_llms_full.py`; `--check` fails when it is stale).
 
 ## Optional
 

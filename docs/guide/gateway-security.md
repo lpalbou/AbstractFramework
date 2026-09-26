@@ -5,31 +5,22 @@ maintenance actions depending on your deployment.
 
 ## Recommended defaults (local dev)
 
-- Bind to loopback: `--host 127.0.0.1`
-- Enable Gateway user auth for browser apps and per-user runtime routing:
+A bare `abstractgateway serve` already applies them:
 
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-```
+- It listens on this computer only (`127.0.0.1:8080`) until you change the Network setting
+  (`abstractgateway network set lan|internet`).
+- Gateway user auth is on, with per-user runtime routing for browser apps.
+- The generated `default/admin` browser-login token is in `<data dir>/auth/bootstrap-admin-token`
+  for first setup; rotate it or create named users in `/console`.
+- Browser origins are limited to `http://localhost:*` and `http://127.0.0.1:*` (plus the
+  gateway's own LAN origins in a network mode); allow another exact origin with
+  `abstractgateway network set --allowed-origins https://ui.example.com`.
 
-- Use the generated `default/admin` browser-login token from
-  `$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token` for first setup, then
-  rotate it or create named users in `/console`.
-- Use a strong `ABSTRACTGATEWAY_AUTH_TOKEN` only for legacy server/operator
-  bearer-token deployments; it is not a browser sign-in token.
+`ABSTRACTGATEWAY_AUTH_TOKEN` is only for legacy server/operator bearer-token deployments; it is
+not a browser sign-in token. When you use it, make it strong:
 
 ```bash
 export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
-```
-
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-```
-
-- Allow only localhost origins for browser UIs:
-
-```bash
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 ```
 
 ## If exposing beyond localhost (LAN, tunnels, internet)
@@ -55,7 +46,7 @@ Canonical server paths use:
 - `rel/path` for the main workspace root
 - `mount_alias/rel/path` for approved mounts
 
-If two allowed mounts share the same basename, Gateway now assigns
+If two allowed mounts share the same basename, Gateway assigns
 deterministic digest-suffixed mount aliases so the public path string is stable
 across Gateway discovery, import/export, and Runtime execution.
 
@@ -154,10 +145,10 @@ file helpers, and server workspace artifact import/export require an admin
 principal. Browser local files should use upload routes; server filesystem
 read/import/export is not exposed to ordinary hosted users.
 
-In hosted user-auth mode today, ordinary users can still upload `Local File`
-sources and reuse Artifacts, but server workspace helper routes and server
-workspace artifact import/export remain admin/operator controlled until a
-stronger per-principal workspace grant model lands.
+In hosted user-auth mode, ordinary users can upload `Local File` sources, reuse
+Artifacts, and browse and preview the workspace folders of their own runs
+(read-only, with the built-in deny list applied). Server workspace helper routes
+and server workspace artifact import/export are admin/operator controlled.
 
 Discovery metadata is permission-aware for these high-trust surfaces. Ordinary
 users see admin-only workspace artifact import/export and provider prompt-cache
@@ -165,6 +156,35 @@ control operations marked unavailable with `admin_required` metadata. Their
 session prompt-cache names are still usable, but the private hash includes the
 current principal scope so two users cannot collide by choosing the same
 session id, provider, and model.
+
+## "This computer": who gets local-only actions
+
+A few actions are offered only to the person at the gateway's computer: opening a run's folder,
+installing apps and engines from the console (by default), and the Assistant's sign-in hand-over.
+The gateway decides with one rule:
+
+- The caller's address is the socket peer, or, when that peer is this machine's loopback, the
+  address a local app proxy wrote in `X-Forwarded-For`. It counts as "this computer" when it is
+  loopback or one of the host's own addresses.
+- The browser apps' proxies (the AbstractCode web server, the Flow Editor's server, the ui-kit
+  app-server behind Observer, Entity and Continuum) overwrite `X-Forwarded-For` with the browser's
+  real address and mark their requests with `X-AbstractFramework-App-Proxy`.
+- `X-Forwarded-For` from a non-loopback peer is ignored; a marked request without it, or any
+  marked request while the gateway trusts a reverse proxy, is never "this computer".
+
+A browser on your LAN that reaches an app proxy running on the gateway's computer is therefore
+remote. See [Architecture: app proxies](../architecture.md#app-proxies-and-the-forwarded-address).
+
+## Run workspaces and the built-in deny list
+
+Every run works in a folder on the gateway's computer and gets a built-in deny list: credential
+folders (`~/.ssh`, `~/.aws`, `~/.gnupg`, `~/.config/gcloud`, `~/.kube`, `~/Library/Keychains`),
+the framework's settings folders and the gateway's data folder (except the run's own conversation
+folder). The workspace browser never lists or serves them, and the file tools refuse them. A run
+cannot choose a folder inside the data folder as its workspace, and another user's run workspace
+answers 404. Shell commands a run may execute are not confined by the list: keep shell tools
+behind approval on machines that hold secrets. See
+[Agent sessions](../agent-sessions.md#the-conversation-workspace).
 
 ## Verify quickly
 

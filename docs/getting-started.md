@@ -159,25 +159,19 @@ pip install abstractgateway
 
 With no configuration, `abstractgateway serve` binds `127.0.0.1:8080`, enables user auth, and keeps
 its data in the per-user data folder (macOS `~/Library/Application Support/AbstractGateway`, Linux
-`~/.local/share/abstractgateway`, Windows `%LOCALAPPDATA%\AbstractGateway`). Set the environment
-when you want another data folder, browser origins or bundle registry:
+`~/.local/share/abstractgateway`, Windows `%LOCALAPPDATA%\AbstractGateway`). Choose another data
+folder with `serve --data-dir <folder>`. Browser apps on `http://localhost:*` and
+`http://127.0.0.1:*` may always call it; allow another origin with
+`abstractgateway network set --allowed-origins https://ui.example.com`.
 
-```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
-export ABSTRACTGATEWAY_WORKFLOW_SOURCE=bundle
-export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
-
-# Optional: set only for a custom bundle registry. When this is unset,
-# Gateway serves its shipped workflows (basic-agent, coding-agent,
-# deep-research, co-scientist, and more).
-# export ABSTRACTGATEWAY_FLOWS_DIR="$PWD/bundles"
-```
+The gateway serves its shipped workflows (basic-agent, coding-agent, deep-research, co-scientist,
+and more). To serve your own bundle registry instead, start it with `ABSTRACTGATEWAY_FLOWS_DIR`
+pointing at your bundle folder.
 
 ### 3. Start the gateway
 
 ```bash
-abstractgateway serve --host 127.0.0.1 --port 8080
+abstractgateway serve
 ```
 
 On first local start, Gateway creates `default/admin`, keeps its token in
@@ -217,8 +211,9 @@ AbstractObserver is replay-first: it renders runs by replaying the ledger, then 
 Schedules are owned by the gateway (they survive restarts):
 
 ```bash
+TOKEN=$(cat "<data dir>/auth/bootstrap-admin-token")   # abstractgateway-config status prints <data dir>
 curl -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"bundle_id":"my-bundle","flow_id":"my-entrypoint","start_at":"now","interval":"24h"}'
 ```
@@ -271,9 +266,12 @@ publish bundles through the Gateway API from AbstractFlow.
 Once deployed, the bundle appears in:
 
 - **AbstractObserver** — workflow picker / run launcher
-- **AbstractAssistant** — workflow picker (per session)
-- **Code Web UI** — workflow picker
+- **AbstractCode** (terminal and browser) and **AbstractAssistant** — workflow pickers, for
+  workflows that implement their agent interface
 - **Your own client** — via the gateway bundle discovery API
+
+An admin can also make it the gateway's default agent workflow, which every client that follows
+the gateway default then runs at its next turn. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
 
 ---
 
@@ -294,21 +292,31 @@ abstractcode
 npx @abstractframework/code      # browser client on http://127.0.0.1:3002
 ```
 
-Sessions are durable: close and reopen, your full context is preserved. Type `/help` for commands.
+Sessions are durable: close and reopen, your full context is preserved. Each turn runs the
+gateway's default agent workflow unless you pick another (`/workflow`, `--workflow`). `/files`
+(the **Files** tab in the browser) shows the run's workspace on the gateway host, `/stream`
+chooses live replies, and `/about` shows the versions in use. Type `/help` for commands.
 
 ### AbstractAssistant (macOS tray)
 
-Gateway-first by default. Select a workflow per session from the tray UI:
+A desktop app on the gateway's computer. The simplest start is **Open** on its card in the
+gateway console: it starts the Assistant already signed in as you. To install and start it
+yourself:
 
 ```bash
 pip install abstractassistant
-assistant tray
+assistant                                   # the menu-bar app
+assistant run --prompt "Summarize today's news"   # one turn in the terminal
 ```
+
+Each turn runs the gateway's default workflow for the Assistant, or the workflow you pick in
+Settings → Models → **Workflow**. See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
 
 ---
 
 ## Next steps
 
+- **[Agent sessions](agent-sessions.md)** — default agent workflow, workspace, skills, live replies
 - **[Architecture](architecture.md)** — the layered model (Core / Runtime / Agent / Gateway / Flow / Observer)
 - **[Configuration](configuration.md)** — where defaults live and how to configure them
 - **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)

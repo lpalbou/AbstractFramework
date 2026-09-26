@@ -437,8 +437,8 @@ Run or install them next to the Python stack:
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.5.1 |
 
 The browser apps need Node.js 18 or later and a running gateway. Optional Python add-ons outside the
-profiles install on their own: `pip install abstract3d`, `pip install abstractcamera`,
-`pip install abstractskill`.
+profiles install on their own: `pip install abstract3d`, `pip install abstractcamera`.
+`abstractskill` comes with the gateway, which carries its curated skill shelf.
 
 ## Start the gateway and apps
 

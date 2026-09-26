@@ -14,7 +14,7 @@ Short, focused guides for common framework questions.
 - [Flow + KG memory (memory object)](flow-and-kg-memory.md)
 - [Scheduled workflows (durable jobs)](scheduled-workflows.md)
 - [Prompt caching (prompt/KV)](prompt-caching.md)
-- [Agent Skills (SKILL.md) — proposal](agent-skills.md)
+- [Agent Skills (SKILL.md)](agent-skills.md)
 - [WorkflowBundles (`.flow`) lifecycle](workflow-bundles.md)
 - [Telegram integration](telegram-integration.md)
 - [Email integration](email-integration.md)

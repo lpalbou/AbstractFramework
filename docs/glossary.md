@@ -7,6 +7,7 @@ If you're new, read these groups first:
 - **Durable execution**: run, ledger, effect, wait, artifact
 - **Workflows**: flow, bundle, interface contract
 - **Control plane**: gateway, schedule, observer, gateway console, Network setting
+- **Agent sessions**: default agent workflow, conversation workspace, built-in deny list, skill shelf, live replies
 - **Distribution**: Mac installer, bootstrap script, install profile, release pins
 
 ---
@@ -155,7 +156,7 @@ A thin-client browser UI for operations: monitor runs, inspect ledger history, w
 
 ### Gateway console
 
-The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens.
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens, a **Resources** view of resident models and memory, and the agent session settings.
 
 ### Core console
 
@@ -185,11 +186,58 @@ Startup shortcut on Windows. Managed with `abstractgateway service install|statu
 ### Menu-bar icon (tray)
 
 The gateway's status icon (the `tray` extra, installed by the installer): it opens the console,
-shows whether the gateway is running and changes the Network setting.
+shows whether the gateway is running, changes the Network setting and opens the Assistant signed
+in.
 
 ### Models and Engines
 
 The local model and engine management shared by AbstractCore and the gateway: a model catalog with a fit verdict for this machine (`fits`, `tight`, `too_large`, `partial_offload`, `unknown`), installed models with sizes, download and delete jobs, and detection and installation of local engines (Ollama, LM Studio, MLX, llama.cpp, vLLM, transformers). Available as `abstractcore models|engines`, `abstractgateway models|engines`, and in the consoles.
+
+---
+
+## Agent sessions
+
+### Default agent workflow
+
+The workflow the gateway runs for an agent interface when a client asks for "Gateway default"
+(`flow_id: "@default"`), set with `agents.default_workflow.<interface>`. It is resolved at every
+run start. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
+
+### Conversation workspace
+
+The folder on the gateway's computer where a run's file tools work: the conversation's own folder
+under `<data dir>/workspaces/`, or the AbstractCode terminal client's launch folder. AbstractCode's
+**Files** tab and `/files` browse and preview it.
+
+### Built-in deny list
+
+The folders every run and the workspace browser are kept out of: credential folders such as
+`~/.ssh` and `~/.aws`, the framework's settings folders, and the gateway's data folder (except the
+run's own conversation folder).
+
+### Skill shelf
+
+The folder of `SKILL.md` skills and trust files a gateway serves (`skills.shelf`). By default it is
+the gateway's own copy of the curated shelf that ships with AbstractSkill, refreshed at each start
+without overwriting local edits.
+
+### Live replies
+
+The model's answer shown while it is written, carried as `llm.delta` / `llm.delta_end` events on a
+run's SSE stream; the durable ledger record replaces the live text. Controlled by the gateway's
+`agents.streaming_default` and each client's **Stream replies** choice.
+
+### App proxy
+
+The local server in front of a browser app (the AbstractCode web server, the Flow Editor's server,
+the ui-kit app-server) that serves the page and relays its gateway calls, writing the browser's
+real address in `X-Forwarded-For` so the gateway can tell local from remote callers.
+
+### Framework identity
+
+The descriptor `identity/abstractframework.json` (in this repository) that every About screen
+renders; each rendering package vendors a byte-identical copy, checked by
+`scripts/check_identity_sync.py`.
 
 ---
 
