@@ -26,3 +26,11 @@ as outcome).
 ## Validation
 ReAct test with a fake provider emitting the operator's exact text: tools offered → three executions (covered in core);
 tools not offered / call cut off → the step ends with the named error, never a markup "answer".
+
+## Update (2026-09-26, after experiment XP)
+The experiment (untracked/missions-2026-09-25/XP/REPORT.md) did not reproduce calls inside an unclosed thinking block in 162
+generations, but reproduced a related failure every time: a one-sentence announcement ("Let me verify …") with no call accepted as
+the final answer. Re-prompting once with the VERBATIM reply gave 5/5 compliance; with the emptied record the model hallucinated
+that the tools had run. abstractagent 3eb34e6 (0.3.15 candidate) implements: announcement/unrunnable detection → one re-prompt
+with the verbatim reply → visible error on a second failure; `tool_calls_from_reasoning` shown. Root cause of the announcements:
+0922 (MLX prompt template).
