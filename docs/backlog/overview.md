@@ -12,8 +12,8 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 117 | 74 flat (0922, 0923 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
-| Proposed | 44 | 36 flat (0905, 0916–0920, 0925–0927 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
+| Planned | 120 | 77 flat (0922, 0923, 0928–0930 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Proposed | 45 | 37 flat (0905, 0916–0920, 0925–0927, 0931 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
 | Completed | 238 | 228 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924 and the moves of 0875, 0900, 0857 and 0899 (2026-09-26). |
 | Deprecated | 0 | |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
@@ -31,8 +31,9 @@ published by CI through trusted publishing). [0890](planned/0890_wire_bundled_fl
 is half done (gateway deep-research 0.1.8 shipped; the flow side is open). Local stacks: rerun
 `./scripts/start-local.sh --build` to run the released code.
 
-**Patch wave staged 2026-09-26 (not released):** runtime 0.5.1, core 2.16.1, agent 0.3.15, gateway 0.5.1, root 0.4.1 — see
+**Patch wave 2026-09-26 (go given 2026-09-26 evening, releasing):** runtime 0.5.1, core 2.16.1, agent 0.3.15, gateway 0.5.1, root 0.4.1 — see
 [Staged Patch Wave](#staged-patch-wave-2026-09-26-after-root-040--not-released); items 0918, 0922, 0923; decision gate 0925.
+**Next wave: Automations v1 (0928)** — design approved 2026-09-26; per-package planned items exist in every repo's own backlog.
 
 Release follow-ups after the 2026-09-26 wave:
 
@@ -96,6 +97,9 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 0928 | [Automations v1: runtime-native scheduled/triggered tasks](planned/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md) | Planned (design approved 2026-09-26; next minor wave) | An Automation IS a runtime root run; one controller bundle; deterministic occurrences; trigger registry (schedule, manual); growing/independent context; Discuss = forked durable session; `/automations` façade; Observer + Assistant. Effort 33–52 days. |
+| 0929 | [Automations v2: external triggers, durable inbox](planned/0929_automations_v2_external_triggers_durable_inbox.md) | Planned (after 0928) | Generic `event` source + `run.finished/failed` chaining with reliable admission. |
+| 0930 | [Automations: Code and console surfaces](planned/0930_automations_code_and_console_surfaces.md) | Planned (after 0928) | AbstractCode WUI section + TUI commands; console inventory. |
 | 0922 | [MLX prompts follow the model's chat template](planned/0922_mlx_prompts_follow_the_models_chat_template.md) | Planned (fixed on core main `3b9f6bf`+`e4b180e`; 2.16.1 staged `e333219`, unreleased) | Root cause of the scheduled digest stopping at iteration 3 on Qwen3.x MLX; iteration-3 calls 0/5 → 3/3; review 31 GO. |
 | 0923 | [A wait resumed twice runs the Agent node's child twice](planned/0923_runtime_resume_of_the_same_wait_must_run_once.md) | Planned (fixed on runtime main `61d38a1`+`7d58dcd`; 0.5.1 staged `2100d1f`; gateway `e1db300`+`1501075`, 0.5.1 staged `00d6c66`; unreleased) | Production-affecting race between the runner's two parent-resume paths; per-run resume lock + typed `StaleResumeError`; review 32/33. |
 | 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
@@ -235,6 +239,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 0931 | [Automations v3: connectors, calendar scheduling, summaries](proposed/0931_automations_v3_connectors_and_calendar_scheduling.md) | Proposed | File/email/build/journal sources as plugins; cron/tz; automatic summary turn; constrained fetching. |
 | 0925 | [Retained reasoning loops Qwen3.8 MLX on long tool runs](proposed/0925_agent_reasoning_retention_loops_on_long_tool_runs.md) | Proposed (OPERATOR DECISION GATE) | ADR-0026 protects the unbounded reasoning retention in ReAct tool-call turns; at temperature 0.2 the model copies its own past reasoning and loops (run-3: 351k tokens, cancelled). Keep / scope / delegate to the template. |
 | 0926 | [Writers of one run not serialized beyond resume](proposed/0926_run_writers_not_serialized_across_ticks_and_processes.md) | Proposed | Concurrent tick/cancel in-process and split-mode cross-process resumes need a store-level compare-and-set (review 32 (g)). |
 | 0927 | [MTP drafter not in use on native runs](proposed/0927_mtp_drafter_not_in_use_on_native_runs.md) | Proposed (verify first) | `draft_model` False on every instrumented native run of the `-mtp` build; establish the end-to-end MTP request path and measure. |
