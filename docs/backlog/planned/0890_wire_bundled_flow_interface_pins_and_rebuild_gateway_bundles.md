@@ -99,3 +99,13 @@ republish.
 ## Receipts
 
 - None yet.
+
+## Status update 2026-09-26 (after the release wave)
+
+Half done, stays planned. The gateway half shipped in abstractgateway 0.5.0 (`v0.5.0` → `3f08db2`):
+the wheel carries `flows/bundles/deep-research@0.1.8.flow` (sha256 `fe34bb5b…4805`, no 0.1.7 bundle)
+and the new contract test asserts the wired outputs. Still open: the three other flows (entity-chat,
+entity-goodbye, multiagent-coding) keep their unwired pins and `KNOWN_GAPS` is not empty in
+abstractflow 0.3.21; abstractflow's `scripts/pack_deep_research_bundle.py` /
+`build_deep_research_workflows.py` still name 0.1.7, so re-running them would write a stale file.
+Evidence: `STAGING-RESULT.md` deviation 8, `RELEASE-LOG.md` Phase C; record [0921](../completed/0921_release_wave_2026_09_26.md).

@@ -12,9 +12,9 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 117 | 74 flat + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
-| Proposed | 36 | 28 flat (0905 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 234 | 224 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915 and the moves of 0875 and 0900 (2026-09-26). |
+| Planned | 115 | 72 flat + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Proposed | 41 | 33 flat (0905 and 0916–0920 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
+| Completed | 237 | 227 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921 and the moves of 0875, 0900, 0857 and 0899 (2026-09-26). |
 | Deprecated | 0 | |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -22,23 +22,40 @@ Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis
 
 ## Next Recommended Work
 
-**Release state (2026-09-26): the 2026-09-25/26 mission wave is committed locally in every repo and
-the release is STAGED, waiting for the operator's go** (nothing tagged, pushed or published; see
-[Staged Release](#staged-release-2026-09-2526-wave-not-published)). Release steps that belong to that
-wave: [0890](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md) (wire the
-remaining bundled-flow pins, then rebuild the gateway's deep-research bundle and its contract test)
-and [0899](planned/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) (publish the FINAL kit
-tarballs, relock the npm apps, raise the app-server floor). [0900](completed/0900_chat_turn_latency_regression_in_switch_v3.md)
-(latency regression) is CLOSED: root cause and fix recorded by REVIEW/16, verified by the E2E pass.
+**Release state (2026-09-26): the 2026-09-25/26 mission wave is RELEASED** (root `abstractframework`
+0.4.0; record [0921](completed/0921_release_wave_2026_09_26.md), ledger
+`untracked/release-2026-09-26/STATUS.md`, see [Release Trace](#release-trace)). Its release steps
+closed: [0899](completed/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) (relocks tagged)
+and [0857](completed/0857_crates_io_trusted_publishing_for_console_crates.md) (console crate 0.9.0
+published by CI through trusted publishing). [0890](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md)
+is half done (gateway deep-research 0.1.8 shipped; the flow side is open). Local stacks: rerun
+`./scripts/start-local.sh --build` to run the released code.
 
-Release follow-ups (after the 2026-09-24 waves; see [Release Trace](#release-trace)):
+Release follow-ups after the 2026-09-26 wave:
+
+1. Owner actions: sign and notarize the Mac installer
+   ([0868](planned/0868_sign_and_notarize_the_mac_installer.md); the v0.4.0 `.pkg` is unsigned);
+   refresh the stale "AUDIT ONLY" seat texts ([0904](proposed/0904_refresh_the_audit_only_seat_missions.md));
+   decide whether observer gets GitHub releases (its `release.yml` has no release job).
+2. Flow side of [0890](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md):
+   wire entity-chat / entity-goodbye / multiagent-coding pins, empty `KNOWN_GAPS`, move the
+   deep-research generator scripts to 0.1.8.
+3. Wave follow-ups: [0918](proposed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md)
+   (tool calls in a thinking block; core half in 2.16.0),
+   [0919](proposed/0919_core_analyze_code_crashes_python39_on_unclosed_triple_quote.md) (`analyze_code`
+   on Python 3.9), [0920](proposed/0920_gateway_identity_card_flaky_minute_match.md) (identity-card
+   minute flake).
+4. The XP experiment outcome may lead to an abstractcore 2.16.1 patch (no evidence on disk yet; any
+   patch needs its own explicit operator go).
+
+Earlier release follow-ups (after the 2026-09-24 waves; still open unless noted):
 
 1. Owner actions and decision gates: sign and notarize the Mac installer
    ([0868](planned/0868_sign_and_notarize_the_mac_installer.md)); rotate the leaked agora keys
    ([0851](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md)); rule on the Apple
    text tiers ([0869](planned/0869_apple_text_tier_boundaries_vs_the_fit_budget.md)) and on the
    gateway roles ([0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)); crates.io
-   trusted publishing ([0857](planned/0857_crates_io_trusted_publishing_for_console_crates.md)).
+   trusted publishing ([0857](completed/0857_crates_io_trusted_publishing_for_console_crates.md), done 2026-09-26).
 2. Public-surface leaks first: the gateway docs site publishes `docs/backlog/**`
    ([0884](planned/docs-hygiene/0884_gateway_docs_site_excludes_the_backlog.md)); the console ships
    maintainer HTML comments ([0885](planned/docs-hygiene/0885_gateway_console_ships_no_internal_html_comments.md)).
@@ -48,7 +65,7 @@ Release follow-ups (after the 2026-09-24 waves; see [Release Trace](#release-tra
 4. One-click completeness: console TUI release binaries
    ([0876](planned/app-surfaces/0876_gateway_console_tui_release_binaries.md)); the Assistant
    sign-in handover is done ([0875](completed/0875_assistant_one_time_sign_in_handover.md), 2026-09-26,
-   unreleased); the `allow_engine_install` switch the UI already points at
+   released in abstractassistant 0.6.0); the `allow_engine_install` switch the UI already points at
    ([0858](planned/0858_console_toggle_for_allow_engine_install.md)), Linux `evdev`
    ([0881](planned/app-surfaces/0881_assistant_linux_input_dependency_with_wheels.md)), compiled
    packages out of the default extras ([0861](planned/0861_compiled_packages_out_of_the_default_extras.md)).
@@ -56,7 +73,7 @@ Release follow-ups (after the 2026-09-24 waves; see [Release Trace](#release-tra
    ADR-0034 order ([0860](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md)), test
    isolation for the remaining packages ([0849](planned/0849_test_suites_must_not_reach_the_operators_live_stack.md)),
    backlog normalization ([0889](planned/0889_normalize_the_legacy_root_backlog.md)).
-6. Wave 2026-09-25/26 (missions; completed records 0906–0915): release steps 0890 and 0899 (above);
+6. Wave 2026-09-25/26 (missions; completed records 0906–0915, release 0921): release step 0890 (flow side, above);
    security follow-up [0892](proposed/0892_gateway_tool_deny_list_gaps_and_launch_folder_trust_for_non_admins.md)
    (two of its three gaps closed 2026-09-26; still open: shell confinement 0232, `.netrc`/`.docker`,
    operator ruling on launch-folder trust for remote non-admins); operator gate
@@ -80,7 +97,6 @@ Longer-running architecture work (unchanged since before the waves):
 | 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
 | 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned (not started; the 0.2.0 wave kept the existing extras) | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
 | 0856 | [Validate the Windows bootstrap and gateway service on real machines](planned/0856_validate_windows_bootstrap_on_real_machines.md) | Planned (not started; 0.3.x changed `install.ps1` with read review only) | `install.ps1` has CI (`windows-latest`, `-NoService`) and container parse/dry-run evidence only; validate PS 5.1/7 on Windows 10 22H2 and 11 (x64/ARM64), the Startup service entry, winget installs, NTFS token permissions. |
-| 0857 | [crates.io trusted publishing for the console crates](planned/0857_crates_io_trusted_publishing_for_console_crates.md) | Planned (still open: 0.8.0 token-published 2026-09-24) | `abstractcore-console` 0.2.0 and `abstractgateway-console` 0.7.0 / 0.8.0 were published with a local token; configure OIDC trusted publishing in both release workflows. |
 | 0858 | [Console toggle for `allow_engine_install`](planned/0858_console_toggle_for_allow_engine_install.md) | Planned (still open in gateway 0.4.2) | Only `POST /admin/runtime-config` changes it, yet console and network texts already point users at "Settings → allow_engine_install"; add the audited admin switch in the web and terminal consoles. |
 | 0859 | [Launcher port defaults match the stack map](planned/0859_launcher_port_defaults_match_the_stack_map.md) | Planned | `apps_common.sh` / `gateway-flow*.sh` defaults differ from the stack map the gateway adopted in 0.4.1; `local_pythonpath` is stale; then retire the gateway's legacy probe ports 3000/3007. |
 | 0860 | [ADR-0034: release order from the inventory tiers](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md) | Planned | The ADR's hand-written order is stale (core and runtime in one tier; the 2026-09-24 patch wave had to run core → runtime → gateway → root); `scripts/lib/packages.txt` + `deps.sh` are authoritative. |
@@ -109,8 +125,7 @@ Longer-running architecture work (unchanged since before the waves):
 | 0873 | [Root launchers stop exporting legacy backlog env](planned/0873_root_launchers_stop_exporting_legacy_backlog_env.md) | Planned | `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT` / `BACKLOG_EXEC_RUNNER` are stored settings since gateway 0.4.1; Continuum labels the exports "environment (legacy)". |
 | 0874 | [Core default MLX model id names a missing repo](planned/0874_core_default_mlx_model_id_names_a_missing_repo.md) | Planned (fix committed on local core `main`, unreleased) | `mlx-community/Qwen3-4B` does not exist; `…-4bit` does. |
 | 0889 | [Normalize the legacy root backlog](planned/0889_normalize_the_legacy_root_backlog.md) | Planned | 24 stale planned copies of completed items, 231 non-`NNNN_` filenames, reused IDs; blocks reliable counts. |
-| 0890 | [Wire bundled-flow interface pins, then rebuild the gateway bundles](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md) | Planned (release step; still open 2026-09-26: `KNOWN_GAPS` non-empty) | entity-chat/goodbye `success`/`meta`, multiagent-coding `passed` read as null; gateway `deep-research@0.1.7` predates the `prompt`/`success` wiring and its contract test pins the old outputs. |
-| 0899 | [npm relock and kit floors after the kit publishes](planned/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) | Planned (release step) | Code web lock pins ui-kit 0.1.10 / panel-chat 0.1.16 vs `^0.1.12` / `^0.1.17` (`npm ci` fails); observer/entity/continuum to `app-server ^0.1.10`; grep-prove the published builds. Crates.io stays 0857. |
+| 0890 | [Wire bundled-flow interface pins, then rebuild the gateway bundles](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md) | Planned (half done 2026-09-26) | Gateway half shipped in 0.5.0 (`deep-research@0.1.8`, contract test on `prompt`/`success`); open: entity-chat/goodbye `success`/`meta`, multiagent-coding `passed` still null (`KNOWN_GAPS` non-empty), flow generator scripts still name 0.1.7. |
 | 0876-0881 | [App surfaces track](planned/app-surfaces/README.md) | Planned | Seams between the gateway's apps manager and each app (console TUI binaries, Continuum flags/seat/dev port, Entity dead variable, Linux `evdev`). 0875 completed 2026-09-26. |
 | 0882-0888 | [Docs hygiene track](planned/docs-hygiene/README.md) | Planned | Code-vs-docs conflicts and publishing gaps from the 2026-09-25 coredoc pass. |
 
@@ -240,6 +255,11 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0903 | [Identity sync check in the release checklist](proposed/0903_identity_sync_check_in_the_release_checklist.md) | Proposed | `scripts/check_identity_sync.py` is monorepo-only and run by no CI; make it a recurrent release gate. |
 | 0904 | [Refresh the "AUDIT ONLY" seat missions](proposed/0904_refresh_the_audit_only_seat_missions.md) | Proposed (operator decision gate) | Nine CLAUDE.md seat texts contradict the implementation work every agent was given. |
 | 0905 | [AbstractCore public docstrings carry session history](proposed/0905_core_public_docstrings_carry_session_history.md) | Proposed | ~63 `help()`-visible docstrings still cite thread ids and "operator directive" wording (REVIEW/22 a′); mission names/dates already removed (`a0f0377`). |
+| 0916 | [Flows dir setting; console TUI sign-in without env](proposed/0916_flows_dir_setting_and_console_tui_sign_in_without_env.md) | Proposed | `ABSTRACTGATEWAY_FLOWS_DIR` and the TUI's `ABSTRACTGATEWAY_AUTH_TOKEN` are still env-only; add a flag plus a stored setting. |
+| 0917 | [Clear a saved trust-proxy switch](proposed/0917_gateway_trust_proxy_clear_saved_value.md) | Proposed | Once saved, nothing removes it; add `network set --trust-proxy default` / `trust_proxy: null`. |
+| 0918 | [Tool calls left in a thinking block](proposed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md) | Proposed (operator ruling applied in core 2.16.0 `ffbd1e6`) | Clean calls execute; only unrunnable calls are surfaced; agent half open. |
+| 0919 | [`analyze_code` crashes Python 3.9](proposed/0919_core_analyze_code_crashes_python39_on_unclosed_triple_quote.md) | Proposed | CPython 3.9 `ast.parse` segfault on a truncated unclosed `"""`; test skipped on 3.9 (`f1735a1`). |
+| 0920 | [Identity card minute-match flake](proposed/0920_gateway_identity_card_flaky_minute_match.md) | Proposed | Dedup by clock minute; failed once on the 0.5.0 CI (3.13), green on rerun. |
 | 0862 | [Gateway roles: admin, member (and maybe viewer), with admin-authorised choices](proposed/0862_gateway_roles_members_and_admin_authorised_choices.md) | Proposed (operator decisions pending: gate [0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)) | Named roles and a gateway-wide provider/model allow/deny list that members choose within; clamp member `tool_policy` and workspace self-service; per-role route contract test; prompt for a daily-use member account when network mode leaves localhost (not at first run); member invite links. The two authorization defects it recorded (token-only session login; `PROTECT_READ=0` reads as admin) are fixed in gateway 0.4.1. |
 
 ## Runtime Artifact Observability Proposed Track
@@ -288,9 +308,34 @@ Root 0.3.1 pins abstractcore 2.15.1, abstractgateway 0.4.2, AbstractRuntime 0.4.
 2026-09-25 (docs-only `main` commits): runtime `696f386`, core `194c312`, gateway `3312bfe`, root
 `cfb4926`, continuum `7bc4616`, entity `f3b5a11`, uic `9a307b3`.
 
-## Staged Release (2026-09-25/26 wave, not published)
+### 2026-09-26 wave (root 0.4.0)
 
-Nothing below is tagged, pushed or published. Plan: `untracked/missions-2026-09-25/STAGING.md`
+Released 2026-09-26 09:26–12:48 CEST with the operator's per-package go. Record:
+[0921](completed/0921_release_wave_2026_09_26.md); ledger `untracked/release-2026-09-26/STATUS.md`;
+log `untracked/missions-2026-09-25/RELEASE-LOG.md`.
+
+| Package | Version | Tag → commit | Registry |
+|---|---|---|---|
+| abstractskill | 0.3.0 | `v0.3.0` → `efb1830` | PyPI; GH release |
+| abstractcore | 2.16.0 | `v2.16.0` → `1190cf1` (fix-forwards `fa77136`, `f1735a1`, `ffbd1e6`, `1190cf1` on `5dbcb02`) | PyPI; GHCR `abstractcore-server:2.16.0`; GH release |
+| AbstractRuntime | 0.5.0 | `v0.5.0` → `a1004cd` | PyPI (workflow_dispatch from `main`); GH release |
+| abstractagent | 0.3.14 | `v0.3.14` → `db42e54` | PyPI; GH release |
+| @abstractframework/ui-kit, panel-chat, app-server | 0.1.12, 0.1.17, 0.1.10 | `v0.1.12` → `f1b3e00` | npm (CI, provenance; app-server after the owner added its trusted publisher); GH release v0.1.12 |
+| @abstractframework/flow | 0.3.21 | `v0.3.21` → `1543c43` | npm (CI, provenance); GH release |
+| abstractcode (crate) / @abstractframework/code | 0.6.0 / 0.5.0 | `v0.6.0`, `web-v0.5.0` → `a636806` (relock `b243398`) | crates.io (trusted publishing) + 5 binaries; npm (CI, provenance) |
+| @abstractframework/observer, entity, continuum | 0.1.13, 0.2.2, 0.3.2 | `v0.1.13` → `bf33805`, `v0.2.2` → `16de0a3`, `v0.3.2` → `c2530d1` (relocks) | npm (CI, provenance); GH releases for entity and continuum only |
+| abstractassistant | 0.6.0 | `v0.6.0` → `4861218` | PyPI (workflow_dispatch); GH release |
+| abstractgateway + abstractgateway-console (crate) | 0.5.0 + 0.9.0 | `v0.5.0` → `3f08db2` | PyPI; crates.io (trusted publishing, closes 0857); GHCR `:0.5.0` / `:latest` / `:0.5.0-gpu`; GH release |
+| abstractframework (root) | 0.4.0 | `v0.4.0` → `3b9eb03` | PyPI (pins core 2.16.0, gateway 0.5.0, runtime 0.5.0, agent 0.3.14, skill 0.3.0, assistant 0.6.0); GH release with the unsigned `.pkg` (0868) |
+
+The 2026-09-25 patch waves (root 0.3.2; core 2.15.2 / 2.15.3, runtime 0.4.35, gateway 0.4.3, entity
+0.2.1, continuum 0.3.1) are in `untracked/release-2026-09-24/STATUS.md` but still have no backlog
+record (see Hygiene Findings).
+
+## Staged Release (2026-09-25/26 wave) — released 2026-09-26
+
+Kept as the staging history; the wave shipped as recorded in 0921 (tags moved to the fix-forward and
+relock commits named above). Original staging text: Plan: `untracked/missions-2026-09-25/STAGING.md`
 (draft for the operator's personal check; no release without the operator's explicit per-release
 go). Proposed order, each step's pins resolving on the previous ones: abstractskill 0.3.0 →
 abstractcore 2.16.0 → AbstractRuntime 0.5.0 (workflow_dispatch from `main`) → abstractagent 0.3.14 →
@@ -306,18 +351,21 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0921 | [Release wave 2026-09-26 (root 0.4.0)](completed/0921_release_wave_2026_09_26.md) | 2026-09-26 | 17 packages from 13 repos, per-package go; fix-forwards core `fa77136`/`f1735a1`/`ffbd1e6`/`1190cf1`, code `a636806`; relocks; 24/24 matrix + real scratch install; follow-ups 0918–0920. |
+| 0899 | [npm relock and kit floors after the kit publishes](completed/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) | 2026-09-26 | Moved from `planned/`. Relocks code `b243398`, observer `bf33805`, entity `16de0a3`, continuum `c2530d1`, tagged; published packs = local clean packs. |
+| 0857 | [crates.io trusted publishing for the console crates](completed/0857_crates_io_trusted_publishing_for_console_crates.md) | 2026-09-26 | Moved from `planned/`. `abstractgateway-console` 0.9.0 published by CI trusted publishing (run 36234261343); runbook text still missing. |
 | 0915 | [Adversarial review programme of the 2026-09-25/26 wave](completed/0915_adversarial_review_programme_of_the_2026_09_25_wave.md) | 2026-09-26 | 23 reviews (REVIEW/00–22) + E2E 23/23; the defects that mattered (gateway secrets served, proxied browsers counted local, argv hand-over, shelf corruption, locked models ejected, latency root cause, reverted fixes, silent edge loss). |
-| 0914 | [Token streaming end to end](completed/0914_token_streaming_end_to_end.md) | 2026-09-26 | `llm.delta`/`llm.delta_end` on the run stream from runtime to panel-chat, Code web/TUI and Assistant; MLX telemetry parity; thinking-stream root cause (first delta 5.75 s → 0.49 s). Unreleased. |
-| 0913 | [Clean model eject across backends and the default-switch leak](completed/0913_clean_model_eject_across_backends_and_default_switch_leak.md) | 2026-09-26 | MLX/HF/GGUF/embeddings eject, switch ejects before the new default loads, lock-aware ejects, memory basis in console/tray; M1 17.6 GB → 3 MB. Unreleased. |
-| 0912 | [Code TUI: MTP in `/model`, `/files`, `/about`, gateway default, help](completed/0912_code_tui_mtp_in_model_files_about_gateway_default_help.md) | 2026-09-26 | TUI 763 → 815 tests; truthful `--help` defaults. Unreleased. |
-| 0911 | [Assistant: hand-over, overlap fix, window defaults, workflow selector, raw-HTML fix](completed/0911_assistant_handover_overlap_window_defaults_workflow_selector_raw_html.md) | 2026-09-26 | 0600 hand-over file, transcript cross-write fixed, 650/28 defaults, raw HTML off. Closes 0875. Unreleased. |
-| 0910 | [Conversation workspace browse/preview, one guard, built-in deny](completed/0910_conversation_workspace_browse_preview_one_guard_and_builtin_deny.md) | 2026-09-26 | Files in Code web and TUI; data folder never served; one guard on every run start (`288f29f`). Unreleased. |
-| 0909 | [Default agent workflow](completed/0909_default_agent_workflow_gateway_setting_and_clients.md) | 2026-09-26 | `agents.default_workflow.<interface>`, `@default` resolved on the server, three doors, no client fallback. Unreleased. |
-| 0908 | [Framework identity, About screens, forwarded-address rule](completed/0908_framework_identity_about_screens_and_proxy_forwarded_address.md) | 2026-09-26 | One descriptor, About in every app, `gatewayVersionRows`; proxies overwrite `X-Forwarded-For` + app-proxy marker. Unreleased. |
-| 0907 | [Skills shipped with abstractskill, seeded by the gateway](completed/0907_skills_shipped_with_abstractskill_and_seeded_by_the_gateway.md) | 2026-09-26 | abstractskill 0.3.0 `seed_registry` (locked, never overwrites operator edits); gateway seeds at start. Unreleased. |
-| 0906 | [Flow interface pins, edge preservation, deep-research wiring](completed/0906_flow_interface_pins_edge_preservation_and_deep_research_wiring.md) | 2026-09-26 | Load→save lost 336 edges in 24 flows, now 0; deep-research reads `prompt`. Unreleased. |
+| 0914 | [Token streaming end to end](completed/0914_token_streaming_end_to_end.md) | 2026-09-26 | `llm.delta`/`llm.delta_end` on the run stream from runtime to panel-chat, Code web/TUI and Assistant; MLX telemetry parity; thinking-stream root cause (first delta 5.75 s → 0.49 s). Released 2026-09-26 (0921). |
+| 0913 | [Clean model eject across backends and the default-switch leak](completed/0913_clean_model_eject_across_backends_and_default_switch_leak.md) | 2026-09-26 | MLX/HF/GGUF/embeddings eject, switch ejects before the new default loads, lock-aware ejects, memory basis in console/tray; M1 17.6 GB → 3 MB. Released 2026-09-26 (0921). |
+| 0912 | [Code TUI: MTP in `/model`, `/files`, `/about`, gateway default, help](completed/0912_code_tui_mtp_in_model_files_about_gateway_default_help.md) | 2026-09-26 | TUI 763 → 815 tests; truthful `--help` defaults. Released 2026-09-26 (0921). |
+| 0911 | [Assistant: hand-over, overlap fix, window defaults, workflow selector, raw-HTML fix](completed/0911_assistant_handover_overlap_window_defaults_workflow_selector_raw_html.md) | 2026-09-26 | 0600 hand-over file, transcript cross-write fixed, 650/28 defaults, raw HTML off. Closes 0875. Released 2026-09-26 (0921). |
+| 0910 | [Conversation workspace browse/preview, one guard, built-in deny](completed/0910_conversation_workspace_browse_preview_one_guard_and_builtin_deny.md) | 2026-09-26 | Files in Code web and TUI; data folder never served; one guard on every run start (`288f29f`). Released 2026-09-26 (0921). |
+| 0909 | [Default agent workflow](completed/0909_default_agent_workflow_gateway_setting_and_clients.md) | 2026-09-26 | `agents.default_workflow.<interface>`, `@default` resolved on the server, three doors, no client fallback. Released 2026-09-26 (0921). |
+| 0908 | [Framework identity, About screens, forwarded-address rule](completed/0908_framework_identity_about_screens_and_proxy_forwarded_address.md) | 2026-09-26 | One descriptor, About in every app, `gatewayVersionRows`; proxies overwrite `X-Forwarded-For` + app-proxy marker. Released 2026-09-26 (0921). |
+| 0907 | [Skills shipped with abstractskill, seeded by the gateway](completed/0907_skills_shipped_with_abstractskill_and_seeded_by_the_gateway.md) | 2026-09-26 | abstractskill 0.3.0 `seed_registry` (locked, never overwrites operator edits); gateway seeds at start. Released 2026-09-26 (0921). |
+| 0906 | [Flow interface pins, edge preservation, deep-research wiring](completed/0906_flow_interface_pins_edge_preservation_and_deep_research_wiring.md) | 2026-09-26 | Load→save lost 336 edges in 24 flows, now 0; deep-research reads `prompt`. Released 2026-09-26 (0921). |
 | 0900 | [Chat-turn latency regression in switch-v3](completed/0900_chat_turn_latency_regression_in_switch_v3.md) | 2026-09-26 | Moved from `proposed/`. Root cause gateway `0ccbe73` (data folder enumerated into the system prompt); fixed as deny prefixes; E2E prompt byte-identical, 2,989 tokens. |
-| 0875 | [Assistant one-time sign-in handover](completed/0875_assistant_one_time_sign_in_handover.md) | 2026-09-26 | Moved from `planned/app-surfaces/`. Desktop hand-over file + loopback-only redeem; record 0911. Unreleased. |
+| 0875 | [Assistant one-time sign-in handover](completed/0875_assistant_one_time_sign_in_handover.md) | 2026-09-26 | Moved from `planned/app-surfaces/`. Desktop hand-over file + loopback-only redeem; record 0911. Released 2026-09-26 (0921). |
 | 0867 | [Release waves of 2026-09-24 and the 2026-09-25 docs pass](completed/0867_release_waves_2026_09_24_and_coredoc_pass.md) | 2026-09-25 | Trace of root 0.3.0 and patch 0.3.1 (versions, tags, registries, incidents) plus the coredoc commits; follow-ups 0868–0888. |
 | 0866 | [Test isolation in abstractcore and abstractgateway](completed/0866_test_isolation_in_abstractcore_and_abstractgateway.md) | 2026-09-24 | HOME/HF_HOME per test, socket + subprocess guards, `network`/`real_home` markers; full suites leave the real home untouched. Slice of 0849. |
 | 0865 | [Core catalog tiers, MTP companions and offline-first loading](completed/0865_core_catalog_tiers_companions_and_offline_first_loading.md) | 2026-09-24 | abstractcore 2.15.0/2.15.1: Apple memory tiers, companion downloads, `models verify`, no process-wide HF offline writes, cancel attribution. |
@@ -387,6 +435,12 @@ Scan of 2026-09-26 (after 0906–0915):
   `exclude_docs: backlog/`, on `main`, not yet deployed). Verify against the registries and close
   them in the next release trace; not closed here (outside this wave).
 
+Scan of 2026-09-26 (after the release, 0921):
+
+- 0921 has a unique four-digit prefix; 0857 and 0899 moved with `git mv`, and every link to their
+  old `planned/` paths (overview, 0908, 0914, 0915) now points at `completed/`. Counts recounted on
+  disk. The 2026-09-25 patch-wave gap above is unchanged.
+
 ## Planning Notes
 
 - 2026-09-25 post-release trace: closed 0233 (shipped 2026-09-23, never moved); recorded 0863–0867
@@ -406,6 +460,10 @@ Scan of 2026-09-26 (after 0906–0915):
   `completed/`; status notes appended to 0892 and 0898; counts recounted on disk (0905 included).
   **The release is staged and waits for the operator's go** (Staged Release section); 0890 and 0899
   stay planned as its release steps.
+
+- 2026-09-26 (third pass): **released**. Release trace 0921 written; 0857 and 0899 completed;
+  0890 annotated (half done, stays planned); proposed rows added for 0916–0920; release follow-ups
+  rewritten. Local stacks: rerun `./scripts/start-local.sh --build`.
 
 ## Operating Notes
 

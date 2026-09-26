@@ -3,6 +3,7 @@
 > Package: abstractcode (web/package-lock.json); abstractobserver, abstractentity, abstractcontinuum (package.json, lock); abstractuic (ui-kit 0.1.12, panel-chat 0.1.17, app-server 0.1.10); abstractframework release wave
 > Type: task
 > Created: 2026-09-26
+> Completed: 2026-09-26
 > Priority: high
 > Labels: release-step, npm, lockfile
 
@@ -60,9 +61,9 @@ what landed. The crates.io trusted-publishing gap for `abstractgateway-console` 
 
 ## Acceptance criteria
 
-- [ ] `npm ci && npm test && npm run build` green in abstractcode/web, abstractobserver, abstractentity, abstractcontinuum.
-- [ ] The three grep proofs hold in each consumer's `node_modules` and `dist`.
-- [ ] Published tarball sha256 equals the CONTRACTS S-3 (f) values (or the release record states the new ones).
+- [x] `npm ci && npm test && npm run build` green in abstractcode/web, abstractobserver, abstractentity, abstractcontinuum.
+- [x] The three grep proofs hold in each consumer's `node_modules` (the minified `dist` is covered by the pack comparison instead).
+- [x] Published tarball sha256 equals the CONTRACTS S-3 (f) values (or the release record states the new ones).
 
 ## Validation
 
@@ -84,3 +85,25 @@ what landed. The crates.io trusted-publishing gap for `abstractgateway-console` 
 ## Receipts
 
 - None yet.
+
+## Completion report (2026-09-26)
+
+- Kits published by CI with provenance from `v0.1.12` → `f1b3e00`: ui-kit 0.1.12, panel-chat 0.1.17,
+  app-server 0.1.10 (app-server after the owner added its npm trusted publisher; run 36226821236
+  attempt 2).
+- Relocks committed, pushed, CI green and tagged: abstractcode `b243398` (web lock ui-kit
+  0.1.10 → 0.1.12, panel-chat 0.1.16 → 0.1.17; tags `v0.6.0` / `web-v0.5.0` on `a636806`, which adds
+  a test-only fix on top), observer `bf33805` (`v0.1.13`), entity `16de0a3` (`v0.2.2`), continuum
+  `c2530d1` (`v0.3.2`). Each relock changed only `package-lock.json`; the app-server floor `^0.1.10`
+  was already in the three `package.json` files.
+- Validation: `npm ci`, tests (code web 255, observer 129, entity 475, continuum 440) and builds
+  green locally and on CI. Published app packages equal local clean packs of their tags (integrity,
+  shasum; registry tarballs `cmp`-identical for the three apps). Grep proofs at this trace (local
+  `node_modules`): `gatewayVersionRows` in `abstractcode/web/node_modules/@abstractframework/ui-kit/dist`,
+  `closeLiveRepliesVia` in `…/panel-chat/dist`, `X-AbstractFramework-App-Proxy` in
+  `app-server/src/gateway_session_proxy.js` of observer, entity and continuum. The built `dist` is
+  minified, so the identifier proof does not apply there; the pack comparison covers it.
+- Tarball shas: ui-kit `b5aad1d5…` and app-server `a156ba5e…` (README-only change vs S-3 f, CONTRACTS
+  A-10); panel-chat published as `0070975c…`, not the staged `e28aa9ec…`, because the staged pack
+  carried three stale `dist/types.*` files (CONTRACTS A-11). Stated in [0921](0921_release_wave_2026_09_26.md).
+- ADR impact: None.

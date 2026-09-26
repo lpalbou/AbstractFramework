@@ -82,7 +82,7 @@ shared hot files edited by several agents at once.
   ([0909](0909_default_agent_workflow_gateway_setting_and_clients.md), 0914).
 - **Stale same-version artifacts** (07 R1, 15 S1): two different ui-kit 0.1.12 and panel-chat
   0.1.17 tarballs; FINAL sha256 fixed in CONTRACTS S-3 (f) → release step
-  [0899](../planned/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md); `npm ci` could not
+  [0899](0899_npm_relock_and_kit_floors_after_the_kit_publishes.md); `npm ci` could not
   pass (03 B1).
 - **Answers swallowed or mislabelled** (18 C1, 20 H1/H2): a ```json answer became a tool call; a
   truncated gpt-oss analysis was presented as the answer; `<|return|>` leaked.

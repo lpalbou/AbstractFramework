@@ -67,7 +67,7 @@ counted as "this machine" for the engine-install and app-launch gates.
   [0893](../proposed/0893_same_machine_locality_behind_a_reverse_proxy.md); Flow/Code web proxies
   onto app-server → [0894](../proposed/0894_migrate_flow_and_code_web_proxies_onto_app_server.md);
   identity drift check as a release gate → [0903](../proposed/0903_identity_sync_check_in_the_release_checklist.md);
-  consumers' app-server floor `^0.1.10` and relock → [0899](../planned/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md).
+  consumers' app-server floor `^0.1.10` and relock → [0899](0899_npm_relock_and_kit_floors_after_the_kit_publishes.md).
   Shared doc note: apps say "a gateway version that serves GET /about" — pin the number at release.
 - ADR state: none written; the "one same-machine rule; proxies overwrite, never append" rule is a
   candidate if more proxies appear (0894).

@@ -88,7 +88,7 @@ in-memory hub, option B file sink for split mode), then CONTRACTS "S (final)" af
   OpenAI-compatible servers with prompt-opened thinking) →
   [0898](../proposed/0898_token_streaming_gaps_after_the_first_wave.md).
 - Release: publish exactly the FINAL panel-chat tarball, then relock Code web
-  ([0899](../planned/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md)); gateway requires
+  ([0899](0899_npm_relock_and_kit_floors_after_the_kit_publishes.md)); gateway requires
   the new runtime (named floor constant).
 - ADR state: none; the streaming contract lives in the runtime and gateway docs ("Live token
   streaming").
