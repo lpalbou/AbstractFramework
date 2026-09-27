@@ -136,7 +136,8 @@ out and back in); on macOS, a file shown with the `uchg` flag is unlocked with
 Each deleted location is checked once more a second later; a program that starts writing there
 again after that is not detected (an uninstaller cannot outwait a writer it does not know).
 A `--data-dir` given by hand is purged only when it holds a gateway file (`bootstrap.env`,
-`gateway.sqlite3`, `auth/users.json`, ...); the root, your home folder and any folder that
+`gateway.sqlite3`, `auth/users.json`, ...) or the note a previous, interrupted purge left in it
+(`.abstractgateway-purge-incomplete`); the root, your home folder and any folder that
 contains it are always refused (exit 2, nothing changed).
 
 ## Advanced: what the installer does

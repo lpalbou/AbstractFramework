@@ -1,6 +1,6 @@
 # 0934 — Uninstall: `--purge` races the still-running gateway ("Directory not empty") and misses other user-data locations
 
-- **Status:** planned (fix in progress 2026-09-27; adversarial verification pending; the one-liner fetches `scripts/uninstall.sh` from main, so the push is the deployment)
+- **Status:** completed (2026-09-27; deployed by pushing main — the one-liner fetches `scripts/uninstall.sh` and `install.sh` from main)
 - **Created:** 2026-09-27
 - **Area:** root `scripts/install.sh` (`--uninstall` path) and `scripts/uninstall.sh`; seam: abstractgateway `service uninstall`
 
@@ -55,3 +55,18 @@ refused; a location that reappears one second after the purge fails the run; the
 
 ## Related
 abstractassistant 0853 (gateway-first sessions), 0868 (installer signing), 0932 (release trace).
+
+## Completion report (2026-09-27)
+- **Completed:** 2026-09-27 ~09:00 CEST. **Original path:** planned/0934_….md.
+- **Commits (root main, pushed):** dee84f9 (stop the gateway process tree; per-location retry + verification + listing; purge covers every
+  user-data location; uninstall advice), 737a9cb (review-36 defects: recorded pids only from this install, `pwd -P` mount guard, exact
+  `node -r …/parent_watch.cjs` match, Assistant plist, absolute data dir, re-check after delete), 33df8f7 (review-38/D9: `/`, $HOME and its
+  ancestors refused; a hand-given data dir needs a gateway marker or the interrupted-purge note; stale pids trusted only under the scan
+  rules; `defaults delete ai.abstractcore.abstractassistant` with a recording test double).
+- **Evidence:** hermetic reproduction 3/3 before → clean after; `scripts/tests/test_install_user_path.sh` 84 passed (+22 checks, each red
+  without its fix); reviews 36 → 38 → 40 GO (untracked/missions-2026-09-25/REVIEW/36-uninstall-purge.md); the live
+  `raw.githubusercontent.com/…/main/scripts/install.sh` sha256 equals the checkout's after the push.
+- **Residual:** a writer that restarts more than a second after the purge is not detected (documented); Linux BusyBox `ps` lacks the
+  columns the scan reads (documented); `~/.abstractcode-tui` and the Assistant plist deletion depend on those apps' current paths.
+- **Follow-ups:** 0935 (Windows), abstractgateway 0934 (`service uninstall` waits for the tree), abstractassistant 0853 (deployed locally,
+  unreleased).
