@@ -4,38 +4,52 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-09-27
+
+A patch release for the uninstaller and two package updates.
+
 ### Fixed
 
-- **Uninstall no longer fails with "Directory not empty" and deletes all your data with
-  `--purge`.** Removing the login item (`launchctl bootout`) does not wait for the gateway to exit,
-  and several of its children run in their own session, so launchd never stops them (an entity's
-  own-time loop, model downloads, the apps it started, the tray); they kept writing into the data
-  dir while `rm -rf` ran. Step [1] now waits up to 20 s for the whole gateway process tree to exit,
-  then stops what is left (SIGTERM, then SIGKILL) and says which processes it stopped. Every
-  deletion is retried while something re-creates it, then checked; a folder that cannot be deleted
-  stops the uninstaller with a listing of what is left (with file flags on macOS) and the programs
-  holding it (`lsof`), and the advice is to run the uninstaller again, never the installer.
-- **`--purge` covers every place that holds your sessions and settings**: besides the gateway data
-  dir and its login-item logs, the gateway's download cache, the Assistant's sessions, snapshots
-  and preferences (`~/.abstractassistant`; after a purge and a reinstall the Assistant listed its
-  old sessions whose runs were gone), and AbstractCode's login and preferences (`~/.abstractcode`).
-  Model weights and shared caches are kept and named. The purge question names what it deletes;
-  `--print` lists each command; a second run prints "nothing to do". `install.sh` accepts `--yes`.
-- **Uninstall safety**: a pid from a stale pid file is signalled only when its command line still
-  runs from this install's tool environment or names this data dir (otherwise "stale pid file ...
-  left alone"); an app is matched only as `node -r <this data dir>/apps/_support/parent_watch.cjs`;
-  the uninstaller never matches its own pipeline. `--data-dir` is made absolute once (a relative
-  path was deleted from the current folder), and the root or home folder is refused. The mount
-  guard compares resolved paths (`/tmp` vs `/private/tmp`, a linked home). `--purge` also deletes
-  the Assistant's macOS preferences (`~/Library/Preferences/ai.abstractcore.abstractassistant.plist`),
-  and a location that comes back a second after it was deleted fails the run with a listing.
-  `--purge` refuses (exit 2, nothing changed) a data dir that is the root, the home folder or
-  any folder containing it, and a hand-given `--data-dir` holding no gateway file (`~/Library`,
-  `~/Documents`); an empty one is "nothing to do". A recorded pid is stopped only under the same
-  rules as the process scan, never for merely naming the data dir. The Assistant's cached
-  preferences are dropped with `defaults delete ai.abstractcore.abstractassistant`.
-  Known Linux limits: BusyBox `ps` (Alpine) lacks the columns the process scan reads, so the scan finds
-  nothing there and only the systemd stop applies; a relative `XDG_CACHE_HOME` is used as given.
+- **Uninstall stops the whole gateway before deleting.** Removing the login item does not wait for
+  the gateway to exit, and some of its children (an entity's own-time loop, model downloads, the
+  apps it started, the tray) kept writing into the data dir, so the uninstall failed with
+  "Directory not empty". The uninstaller now waits up to 20 s for the whole gateway process tree to
+  exit, then stops what is left and says which processes it stopped.
+- **Every deletion is verified.** Each location is deleted, retried while something re-creates it,
+  then checked; a folder that cannot be deleted (or comes back) stops the uninstaller with a
+  listing of what remains and the programs holding it. The failure text advises running the
+  uninstaller again, never the installer.
+- **`--purge` removes all your local data**: besides the gateway data dir, its login-item logs and
+  its download cache, it removes the Assistant's sessions, snapshots and preferences
+  (`~/.abstractassistant`, the macOS preferences file and the cached preferences) and
+  AbstractCode's login and preferences (`~/.abstractcode`). Model weights and shared caches are
+  kept and named. The purge question names what it deletes; `--print` lists each command; a
+  second run prints "nothing to do". `install.sh` accepts `--yes`.
+- **Uninstall safety**: `--purge` refuses (exit 2, nothing changed) a data dir that is the root,
+  your home folder or any folder above it, and a hand-given `--data-dir` that is not a gateway data
+  dir (for example `~/Library` or `~/Documents`). A process is stopped only when it runs from this
+  install's tool environment or is one of this data dir's apps; a stale pid file is left alone.
+  `--data-dir` is made absolute once, and paths are resolved before the mount guard
+  (`/tmp` vs `/private/tmp`, a linked home).
+- The one-line uninstaller and the installer package's "Uninstall AbstractFramework.command" both
+  carry these fixes. Known Linux limits: BusyBox `ps` (Alpine) lacks the columns the process scan
+  reads, so only the systemd stop applies there; a relative `XDG_CACHE_HOME` is used as given.
+
+### Changed (pins)
+
+- **abstractagent 0.3.16** (was 0.3.15): the announced-tool-use text heuristic added in 0.3.15 is
+  removed; the loops behave as in 0.3.14 plus the CodeAct/MemAct crash fix from 0.3.15.
+- **abstractassistant 0.7.0** (was 0.6.1): the session list and transcripts come from the gateway;
+  local files are a rebuildable cache. The first launch moves sessions the gateway does not know to
+  `sessions-legacy/` and deletes nothing. The list shows your own sessions by default, with an
+  "All gateway sessions" toggle.
+- The pins apply to the base install and to the `apple` / `gpu` extras
+  (`abstractassistant[apple|gpu]==0.7.0`). Unchanged: abstractgateway 0.5.1, abstractcore 2.16.1,
+  AbstractRuntime 0.5.1, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5,
+  abstractvoice 0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15, the browser apps, `abstractcode`
+  0.6.0 and `abstractgateway-console` 0.9.0.
+- Container images are unchanged: `ghcr.io/lpalbou/abstractgateway:0.5.1` and
+  `ghcr.io/lpalbou/abstractcore-server:2.16.1`.
 
 ## [0.4.1] - 2026-09-26
 

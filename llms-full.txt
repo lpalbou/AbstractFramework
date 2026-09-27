@@ -296,7 +296,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.4.1)
+### Release matrix (abstractframework 0.4.2)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -306,10 +306,10 @@ and tested together.
 | Registry | Package | Version |
 |---|---|---|
 | PyPI | `abstractgateway` | 0.5.1 |
-| PyPI | `abstractassistant` | 0.6.1 |
+| PyPI | `abstractassistant` | 0.7.0 |
 | PyPI | `abstractcore` | 2.16.1 |
 | PyPI | `AbstractRuntime` | 0.5.1 |
-| PyPI | `abstractagent` | 0.3.15 |
+| PyPI | `abstractagent` | 0.3.16 |
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
@@ -545,7 +545,7 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.4.1 pins (PyPI, `==`): abstractgateway 0.5.1, abstractassistant 0.6.1, abstractcore 2.16.1, AbstractRuntime 0.5.1, abstractagent 0.3.15, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15.
+- abstractframework 0.4.2 pins (PyPI, `==`): abstractgateway 0.5.1, abstractassistant 0.7.0, abstractcore 2.16.1, AbstractRuntime 0.5.1, abstractagent 0.3.16, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.11.4, abstractvision 0.3.29, abstractmusic 0.1.15.
 - Released with it: npm `@abstractframework/flow` 0.3.21, `code` 0.5.0, `observer` 0.1.13, `continuum` 0.3.2, `entity` 0.2.2 (run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.9.0, `abstractcore-console` 0.2.0, `abstractcode` 0.6.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.5.1`, `ghcr.io/lpalbou/abstractcore-server:2.16.1`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
@@ -574,7 +574,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.4.1"
+version = "0.4.2"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -621,12 +621,12 @@ dependencies = [
     "abstractgateway==0.5.1",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.6.1",
+    "abstractassistant==0.7.0",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
     "abstractcore==2.16.1",
     "AbstractRuntime==0.5.1",
-    "abstractagent==0.3.15",
+    "abstractagent==0.3.16",
     "abstractskill==0.3.0",
     "AbstractMemory==0.3.0",
     "abstractsemantics==0.0.5",
@@ -652,12 +652,12 @@ dependencies = [
 # then adds user-facing apps.
 apple = [
     "abstractgateway[apple]==0.5.1",
-    "abstractassistant[apple]==0.6.1; platform_system == \"Darwin\"",
+    "abstractassistant[apple]==0.7.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
     "abstractgateway[gpu]==0.5.1",
-    "abstractassistant[gpu]==0.6.1",
+    "abstractassistant[gpu]==0.7.0",
 ]
 
 [project.urls]
@@ -707,14 +707,14 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.16.1",
     "abstractruntime": "0.5.1",
-    "abstractagent": "0.3.15",
+    "abstractagent": "0.3.16",
     "abstractgateway": "0.5.1",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
@@ -722,7 +722,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvoice": "0.11.4",
     "abstractvision": "0.3.29",
     "abstractmusic": "0.1.15",
-    "abstractassistant": "0.6.1",
+    "abstractassistant": "0.7.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -2773,7 +2773,8 @@ out and back in); on macOS, a file shown with the `uchg` flag is unlocked with
 Each deleted location is checked once more a second later; a program that starts writing there
 again after that is not detected (an uninstaller cannot outwait a writer it does not know).
 A `--data-dir` given by hand is purged only when it holds a gateway file (`bootstrap.env`,
-`gateway.sqlite3`, `auth/users.json`, ...); the root, your home folder and any folder that
+`gateway.sqlite3`, `auth/users.json`, ...) or the note a previous, interrupted purge left in it
+(`.abstractgateway-purge-incomplete`); the root, your home folder and any folder that
 contains it are always refused (exit 2, nothing changed).
 
 ## Advanced: what the installer does
@@ -3000,8 +3001,8 @@ A plain `pip install` of the `apple` or `gpu` profile builds the
 `aec-audio-processing`) from source, so it needs a C/C++ compiler. The one-line install above
 does not.
 
-`abstractframework` 0.4.1 pins `abstractgateway==0.5.1`, `abstractassistant==0.6.1`,
-`abstractcore==2.16.1`, `AbstractRuntime==0.5.1`, `abstractagent==0.3.15`, `abstractskill==0.3.0`,
+`abstractframework` 0.4.2 pins `abstractgateway==0.5.1`, `abstractassistant==0.7.0`,
+`abstractcore==2.16.1`, `AbstractRuntime==0.5.1`, `abstractagent==0.3.16`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.11.4`,
 `abstractvision==0.3.29` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
@@ -3085,7 +3086,7 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version released with 0.4.1 |
+| Tool | Command | Version released with 0.4.2 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.5.1 |
 | Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.16.1 |
@@ -4783,14 +4784,14 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.4.1` for this release).
+The meta-package version (`0.4.2` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.4.1:
-`abstractcore` 2.16.1, `abstractruntime` 0.5.1, `abstractagent` 0.3.15, `abstractgateway` 0.5.1,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.4.2:
+`abstractcore` 2.16.1, `abstractruntime` 0.5.1, `abstractagent` 0.3.16, `abstractgateway` 0.5.1,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.11.4, `abstractvision` 0.3.29,
-`abstractmusic` 0.1.15, `abstractassistant` 0.6.1.
+`abstractmusic` 0.1.15, `abstractassistant` 0.7.0.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
