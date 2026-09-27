@@ -12,10 +12,10 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 133 | 90 flat (0929, 0930, 0933, 0935, 0937–0950 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Planned | 132 | 89 flat (0929, 0930, 0933, 0935, 0937–0950 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
 | Completed | 245 | 235 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26) and 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27). |
-| Deprecated | 0 | |
+| Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
@@ -70,8 +70,7 @@ Release follow-ups after the 2026-09-26 wave:
 Earlier release follow-ups (after the 2026-09-24 waves; still open unless noted):
 
 1. Owner actions and decision gates: sign and notarize the Mac installer
-   ([0868](planned/0868_sign_and_notarize_the_mac_installer.md)); rotate the leaked agora keys
-   ([0851](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md)); rule on the Apple
+   ([0868](planned/0868_sign_and_notarize_the_mac_installer.md)); rule on the Apple
    text tiers ([0869](planned/0869_apple_text_tier_boundaries_vs_the_fit_budget.md)) and on the
    gateway roles ([0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)); crates.io
    trusted publishing ([0857](completed/0857_crates_io_trusted_publishing_for_console_crates.md), done 2026-09-26).
@@ -130,7 +129,6 @@ Longer-running architecture work (unchanged since before the waves):
 | 0950 | [Qwen3-TTS sampler choice as launch flags](planned/0950_qwen3_tts_sampler_choice_as_launch_flags.md) | Planned (low) | The 0.12.0 settings fields reach the CLI, REPL, web example and plugin. |
 | 0929 | [Automations v2: external triggers, durable inbox](planned/0929_automations_v2_external_triggers_durable_inbox.md) | Planned (after 0928's release, 0941) | Generic `event` source + `run.finished/failed` chaining with reliable admission. |
 | 0930 | [Automations: Code and console surfaces](planned/0930_automations_code_and_console_surfaces.md) | Planned (after 0928's release, 0941) | AbstractCode WUI section + TUI commands; console inventory. Until then Code lists one session per independent occurrence (review 46 G3). |
-| 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
 | 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
 | 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned (not started; the 0.2.0 wave kept the existing extras) | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
 | 0856 | [Validate the Windows bootstrap and gateway service on real machines](planned/0856_validate_windows_bootstrap_on_real_machines.md) | Planned (not started; 0.3.x changed `install.ps1` with read review only) | `install.ps1` has CI (`windows-latest`, `-NoService`) and container parse/dry-run evidence only; validate PS 5.1/7 on Windows 10 22H2 and 11 (x64/ARM64), the Startup service entry, winget installs, NTFS token permissions. |

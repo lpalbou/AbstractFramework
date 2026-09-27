@@ -72,3 +72,13 @@ Every affected repository now ignores `.agora/ .codex/ .claude/ .cursor/ .mcp.js
 ## Receipts
 
 - Package release reports in `untracked/release-2026-09-23/` (local).
+
+## Deprecation
+
+- Deprecated: 2026-09-28
+- Original path: `docs/backlog/planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md`
+- Decision (operator, 2026-09-28): not to be done. "the agora was a temporary local server": the keys
+  only ever authenticated against a loopback hub that no longer runs, so neither rotation nor a history
+  rewrite protects anything.
+- Residual note: the fixture PAT check in Scope is moot for the same reason only if it was an agora
+  key; any real provider credential found in a history would be a new item.
