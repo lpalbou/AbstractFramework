@@ -546,7 +546,7 @@ else
     check "remote: --no-open does not start the console" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB2/abstractgateway-console.args"; echo $?)" "$OUT"
     # Nobody at the pseudo-terminal (CI, Terraform, ssh -t in a script): the offer times out.
     TB4="$WORK/rem4/tools/bin"
-    BG_TOOLBIN="$TB4" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22 AF_CONSOLE_WAIT=1" BG_PTY=1 BG_OPEN=1 bg_case rem4 1
+    BG_TOOLBIN="$TB4" BG_CARGO=1 BG_ARGS="--console-wait 1" BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 BG_OPEN=1 bg_case rem4 1
     check "remote: nobody answers the offer, the install still finishes and opens nothing" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB4/abstractgateway-console.args" && has "$OUT" "not opened; start it any time"; echo $?)" "$OUT"
     # Debian/Ubuntu /bin/sh is dash: a terminal on stdout but no controlling terminal must not
     # abort the finished install (a failed redirection on the special built-in ':' exits dash).

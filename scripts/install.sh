@@ -47,7 +47,9 @@
 #   --no-service             do not register a login service; start in background
 #   --no-start               install only; do not start the gateway
 #   --no-open                do not open the browser (on a remote or headless session:
-#                            do not start the terminal console at the end)
+#                            do not offer the terminal console at the end)
+#   --console-wait SECONDS   how long the end-of-install console offer waits for Enter on a
+#                            remote or headless session (default 25, at most 25)
 #   --no-modify-path         do not run `uv tool update-shell`
 #   --print, --dry-run       show the plan and commands; change nothing
 #   --print-versions         print the pinned versions and exit
@@ -172,12 +174,12 @@ DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
 WITH_APPS=0; WITH_CONSOLE=1; WITH_CODE_CLI=0; WITH_CORE_CLI=0
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
 FULL=0; NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
-PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0
+PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0; CONSOLE_WAIT=25
 INTERACTIVE="${AF_INTERACTIVE:-0}"
 
 usage() {
     if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
-        sed -n '2,67p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,70p' "$0" | sed 's/^# \{0,1\}//'
     else
         echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
         echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
@@ -214,6 +216,8 @@ while [ $# -gt 0 ]; do
         --no-service) NO_SERVICE=1 ;;
         --no-start) NO_START=1 ;;
         --no-open) NO_OPEN=1 ;;
+        --console-wait) need_arg "$@"; CONSOLE_WAIT="$2"; shift ;;
+        --console-wait=*) CONSOLE_WAIT="${1#*=}" ;;
         --no-modify-path) NO_MODIFY_PATH=1 ;;
         --print|--dry-run|-n) PRINT=1 ;;
         --print-versions)
@@ -1113,6 +1117,8 @@ is_our_gateway() {  # port -> 0 when an abstractgateway answers there
 REUSE_RUNNING=0
 if [ -z "$PORT" ]; then PORT="${ST_PORT:-8080}"; PORT_EXPLICIT=0; else PORT_EXPLICIT=1; fi
 case "$PORT" in ''|*[!0-9]*) die "--port must be a number (got '$PORT')" ;; esac
+case "$CONSOLE_WAIT" in ''|*[!0-9]*) die "--console-wait must be a number of seconds (got '$CONSOLE_WAIT')" ;; esac
+[ "$CONSOLE_WAIT" -le 25 ] || CONSOLE_WAIT=25
 if port_busy "$PORT"; then
     if [ "$PORT" = "$ST_PORT" ] && { pid_alive || { [ "$ST_MODE" = service ] && is_our_gateway "$PORT"; }; }; then
         REUSE_RUNNING=1
@@ -1669,15 +1675,19 @@ fi
 [ -n "$LOG_FILE" ] && printf '\n  %sFull log: %s%s\n' "$C_D" "$LOG_FILE" "$C_0"
 
 # Remote or headless: offer the terminal console, signed in, the way a Mac opens the web console.
-# It is ASKED (Enter within AF_CONSOLE_WAIT s), never assumed: a pseudo-terminal with nobody at it
+# It is ASKED (Enter within --console-wait s), never assumed: a pseudo-terminal with nobody at it
 # (CI, Terraform, `ssh -t` in a script) must not hang. `true`, not `:`, probes /dev/tty: a failed
-# redirection on the special built-in `:` exits dash. --no-open skips the offer.
-AF_CONSOLE_WAIT="${AF_CONSOLE_WAIT:-25}"   # seconds (tests lower it); stty counts tenths, max 25.5 s
+# redirection on the special built-in `:` exits dash. --no-open skips the offer; --console-wait
+# sets how long it waits.
 offer_console() {
     _old_tty="$(stty -g </dev/tty 2>/dev/null)" || return 1
+    # Keys typed during the install are still buffered: drop them, so only an answer counts.
+    stty -icanon -echo min 0 time 0 </dev/tty 2>/dev/null
+    dd bs=4096 count=1 </dev/tty >/dev/null 2>&1
     printf '\n%sPress Enter within %s s to open the terminal console%s (any other key, or waiting, skips it) ' \
-        "$C_B" "$AF_CONSOLE_WAIT" "$C_0" >/dev/tty
-    stty -icanon -echo min 0 time "$((AF_CONSOLE_WAIT * 10 > 255 ? 255 : AF_CONSOLE_WAIT * 10))" </dev/tty 2>/dev/null
+        "$C_B" "$CONSOLE_WAIT" "$C_0" >/dev/tty
+    # stty counts tenths of a second, at most 255.
+    stty time "$((CONSOLE_WAIT * 10))" </dev/tty 2>/dev/null
     _key="$(dd bs=1 count=1 </dev/tty 2>/dev/null | od -An -tu1 | tr -d ' ')"
     stty "$_old_tty" </dev/tty 2>/dev/null
     printf '\n' >/dev/tty

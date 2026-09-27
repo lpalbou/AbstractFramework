@@ -3385,7 +3385,8 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--no-tray` | `-NoTray` | Leave out the menu-bar icon (`tray` extra) |
 | `--no-service` | `-NoService` | Do not register a login service |
 | `--no-start` | `-NoStart` | Install only; do not start the gateway |
-| `--no-open` | `-NoOpen` | Do not open the browser (remote or headless session: do not open the terminal console) |
+| `--no-open` | `-NoOpen` | Do not open the browser (remote or headless session: do not offer the terminal console) |
+| `--console-wait SECONDS` | | How long the end-of-install terminal console offer waits for Enter on a remote or headless session (default 25) |
 | `--no-modify-path` | `-NoModifyPath` | Do not add `~/.local/bin` to your shell profile (`uv tool update-shell`) |
 | `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |
 | `--manifest PATH` | `-Manifest` | Read the gateway pin from this `install-manifest.json` |

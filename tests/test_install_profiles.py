@@ -857,3 +857,11 @@ def test_install_sh_retries_without_voice_when_its_wheels_are_missing(tmp_path: 
         assert "GGUF:       llama-cpp-python " in proc.stdout
     assert "Voice:      skipped: its packages did not install on this system" in proc.stdout
     assert "local voice (Supertonic, Whisper) did not install on this system: retrying without it" in proc.stdout
+
+
+def test_install_sh_console_wait_is_a_validated_flag(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, "--no-tray", "--console-wait", "abc", profile="light", compiler=True)
+    assert proc.returncode != 0
+    assert "--console-wait must be a number of seconds (got 'abc')" in proc.stderr
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    assert "AF_CONSOLE_WAIT" not in sh  # a launch flag, never an environment variable
