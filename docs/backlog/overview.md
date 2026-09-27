@@ -14,7 +14,7 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 |---|---|---|
 | Planned | 120 | 77 flat (0928–0930, 0933, 0935 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 243 | 233 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26) and 0918, 0922, 0923, 0934 (2026-09-27). |
+| Completed | 244 | 234 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26) and 0918, 0922, 0923, 0934, 0936 (2026-09-27). |
 | Deprecated | 0 | |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -31,6 +31,7 @@ published by CI through trusted publishing). [0890](planned/0890_wire_bundled_fl
 is half done (gateway deep-research 0.1.8 shipped; the flow side is open). Local stacks: rerun
 `./scripts/start-local.sh --build` to run the released code.
 
+**2026-09-27 10:07 CEST wave RELEASED** (record [0936](completed/0936_release_wave_2026_09_27.md)): agent 0.3.16, assistant 0.7.0, root 0.4.2 — Automations v1 (0928) is now in implementation.
 **Patch wave RELEASED 2026-09-27 00:55 CEST** (record [0932](completed/0932_release_patch_wave_2026_09_26.md)): runtime 0.5.1, core 2.16.1,
 agent 0.3.15, gateway 0.5.1, assistant 0.6.1, root 0.4.1; closed 0918, 0922, 0923; new 0933 (gateway file-tail flake = real bug); decision gate 0925 still open.
 **Next wave: Automations v1 (0928)** — design approved 2026-09-26; per-package planned items exist in every repo's own backlog.
@@ -380,6 +381,7 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0936 | [Release trace: 2026-09-27 wave (agent 0.3.16, assistant 0.7.0, root 0.4.2)](completed/0936_release_wave_2026_09_27.md) | 2026-09-27 | Heuristic removed from the agent; gateway-first Assistant sessions; first installer with the fixed uninstaller. |
 | 0934 | [Uninstall purge races the gateway and misses user data](completed/0934_uninstall_purge_races_the_gateway_and_misses_user_data.md) | 2026-09-27 | Moved from `planned/`. Process tree stopped first; verified purge of every user-data location; data-dir guards; live on main (dee84f9, 737a9cb, 33df8f7). |
 | 0932 | [Release trace: patch wave 2026-09-26/27 (root 0.4.1)](completed/0932_release_patch_wave_2026_09_26.md) | 2026-09-27 | runtime 0.5.1, core 2.16.1, agent 0.3.15, gateway 0.5.1, assistant 0.6.1, root 0.4.1; 24/24 matrix; real install; installer on the GH release. |
 | 0923 | [A wait resumed twice runs the Agent node's child twice](completed/0923_runtime_resume_of_the_same_wait_must_run_once.md) | 2026-09-27 | Moved from `planned/`. Runtime per-run resume lock + typed `StaleResumeError`; gateway lost-race handling. Shipped in 0.5.1/0.5.1. |

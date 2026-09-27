@@ -55,6 +55,5 @@ a28ce85 and 1b54ce4 — the announcement detector, the corrective re-prompt, the
 The tree equals v0.3.14 + the crash fix + version/changelog strings + backlog 0034. Suite 458 passed / 2 skipped. Evidence behind the
 decision: REVIEW/35 (0 misfires on 1,889 real answers, but 16/30 realistic "result delivered, follow-up promised" answers fire; a misfire
 replaces the answer with an error; no reachable switch on gateway workflow steps). The digest stop itself is fixed structurally in
-abstractcore 2.16.1 (0922). Released 0.3.15 still carries the heuristic; the removal ships when the operator decides (a Codex sweep of
-the revert is pending at the time of writing). Text heuristics already present in 0.3.14 (`_looks_like_deferred_action` followthrough
+abstractcore 2.16.1 (0922). The removal shipped as abstractagent 0.3.16 (tag v0.3.16 → 013048f, 2026-09-27 09:51 CEST; Codex sweep of the revert: clean). Text heuristics already present in 0.3.14 (`_looks_like_deferred_action` followthrough
 nudge, `circling_streak`) are listed for the operator's decision, not changed.
