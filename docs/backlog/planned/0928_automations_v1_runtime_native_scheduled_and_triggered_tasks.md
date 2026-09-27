@@ -3,6 +3,7 @@
 - **Status:** planned (design approved by the operator 2026-09-26; ships as the minor wave AFTER the 2026-09-26 patch wave)
 - **Created:** 2026-09-26
 - **Area:** abstractruntime, abstractgateway, abstractuic, abstractflow, abstractobserver, abstractassistant (v1); abstractcode + console (0930)
+- **Contracts:** untracked/design/automations-CONTRACTS.md (final, 2026-09-27; supersedes PLAN §3)
 - **Design:** untracked/design/automations-PLAN.md (co-built with Codex "Astra", 5 turns, untracked/design/astra/DIALOGUE.md); the
   superseded first draft untracked/design/automations.md holds the evidence from the four code explorations.
 
@@ -132,3 +133,9 @@ duplicated context (shared turn selector, persisted discussion seed); hidden/mis
 ## Related
 0929 (external triggers, v2), 0930 (Code + console), 0931 (connectors, v3), 0923 (double resume — the same crash window family),
 0925 (reasoning retention on long runs — matters for growing mode), 0918, 0922.
+
+## Contracts pass (2026-09-27)
+
+Final contracts: untracked/design/automations-CONTRACTS.md (root repo; rev 2 with Astra turn-6 amendments 1–11). They supersede the contract text copied above; earlier text is kept as history. Concrete changes for this item:
+
+The contracts pass settled every plan-versus-code conflict (C1–C16) and applied Astra's 11 review amendments. What changed vs the plan: explicit-id runs use a mandatory `create_if_absent` on every store, with identity including session and a creation-request digest. Controller transitions follow a recorded-decision/reconcile protocol with exactly checked ledger keys, one controller-writer process per store. `schedule@1` gets full typed adapter signatures, one-shot exhaustion and a new `binding_id` per trigger revision, and is labelled as fixed UTC intervals. Notifications are quiet by default: only a workflow `notify` output or a final failure after `policy.retry` (3 attempts, 30s×2 capped 10m) creates one attention record per occurrence, and interactive USER/EVENT waits always count. Discussions are root runs on the occurrence's workspace mounted read-only; this covers tools, VisualFlow writers and `execute_python`, and is anchored in the runtime. History for automations and discussions is strict, never unseeded. Errors use `{"detail":{"reason_code",…}}` via scoped handlers. `changed_since` is unsupported in v1, so clients poll full pages and page attention. `/runs` gains `session_kind`. The optional trigger pin is dropped. v1 decisions adopted from the review, which the operator may override: the notification boundary is the workflow output (agent targets are wrapped in a `{response, notify}` flow), and schedules are fixed UTC intervals, with calendar/tz in v3. Per-package items carry their own "Contracts pass (2026-09-27)" sections.
