@@ -6,15 +6,15 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files on 2026-09-26 (recursive, topic tracks included; README, overview, template and
+On-disk item files on 2026-09-27 (recursive, topic tracks included; README, overview, template and
 `evidence/` files excluded). The legacy part of the backlog still breaks the one-ID-one-item rule,
 so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findings) and 0889.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 120 | 77 flat (0928–0930, 0933, 0935 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Planned | 124 | 81 flat (0929, 0930, 0933, 0935, 0937–0941 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 244 | 234 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26) and 0918, 0922, 0923, 0934, 0936 (2026-09-27). |
+| Completed | 245 | 235 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26) and 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27). |
 | Deprecated | 0 | |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -31,10 +31,24 @@ published by CI through trusted publishing). [0890](planned/0890_wire_bundled_fl
 is half done (gateway deep-research 0.1.8 shipped; the flow side is open). Local stacks: rerun
 `./scripts/start-local.sh --build` to run the released code.
 
-**2026-09-27 10:07 CEST wave RELEASED** (record [0936](completed/0936_release_wave_2026_09_27.md)): agent 0.3.16, assistant 0.7.0, root 0.4.2 — Automations v1 (0928) is now in implementation.
+**Automations v1 BUILT, TESTED, AWAITING THE OPERATOR'S VALIDATION (2026-09-27)** (record [0928](completed/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md)).
+- Six packages hold local, unpushed commits with no version bump: runtime, gateway, abstractuic, flow, observer and assistant.
+- Adversarial reviews 41–54 are all GO after their fixes.
+- The E2E with the operator's MLX model passed all 9 items: the AAPL growing monitor and the memory monitor ran for real,
+  with restart, replay and discuss.
+- **Next: the operator tests; then the release wave [0941](planned/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md)**
+  (runtime → gateway with the raised runtime floor → ui-kit/panel-chat → flow → observer → assistant → root pins), each
+  step with its own explicit go.
+- Follow-ups: [0937](planned/0937_automations_store_level_exact_key_lookups_and_read_performance.md) (read performance),
+  [0938](planned/0938_runtime_start_session_starts_on_duck_typed_stores_documented_and_refused.md) (duck-typed stores),
+  [0939](planned/0939_json_run_store_recency_order_follows_updated_at_not_mtime.md) (JSON order after a restore),
+  [0940](planned/0940_observer_automate_form_refuses_server_owned_input_keys.md) (Observer Advanced keys).
+- Then 0929 (v2 external triggers) and 0930 (Code and console surfaces).
+
+**2026-09-27 10:07 CEST wave RELEASED** (record [0936](completed/0936_release_wave_2026_09_27.md)): agent 0.3.16, assistant 0.7.0, root 0.4.2.
 **Patch wave RELEASED 2026-09-27 00:55 CEST** (record [0932](completed/0932_release_patch_wave_2026_09_26.md)): runtime 0.5.1, core 2.16.1,
 agent 0.3.15, gateway 0.5.1, assistant 0.6.1, root 0.4.1; closed 0918, 0922, 0923; new 0933 (gateway file-tail flake = real bug); decision gate 0925 still open.
-**Next wave: Automations v1 (0928)** — design approved 2026-09-26; per-package planned items exist in every repo's own backlog.
+**Next wave: Automations v1 (0928)**. It is built and tested but unreleased; see the first paragraph above and 0941.
 
 Release follow-ups after the 2026-09-26 wave:
 
@@ -45,7 +59,7 @@ Release follow-ups after the 2026-09-26 wave:
 2. Flow side of [0890](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md):
    wire entity-chat / entity-goodbye / multiagent-coding pins, empty `KNOWN_GAPS`, move the
    deep-research generator scripts to 0.1.8.
-3. Wave follow-ups: [0918](proposed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md)
+3. Wave follow-ups: [0918](completed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md)
    (tool calls in a thinking block; core half in 2.16.0),
    [0919](proposed/0919_core_analyze_code_crashes_python39_on_unclosed_triple_quote.md) (`analyze_code`
    on Python 3.9), [0920](proposed/0920_gateway_identity_card_flaky_minute_match.md) (identity-card
@@ -100,9 +114,13 @@ Longer-running architecture work (unchanged since before the waves):
 |----|------|--------|-------|
 | 0935 | [Windows uninstall purge: silent failure, missing locations](planned/0935_windows_uninstall_purge_silent_failure_and_missing_locations.md) | Planned (not started) | `install.ps1` purge uses `-ErrorAction SilentlyContinue` and removes only the gateway data dir; port the 0934 fix. |
 | 0933 | [Gateway split mode: live-delta file tail misses the final line](planned/0933_gateway_live_delta_file_tail_misses_final_line_in_split_mode.md) | Planned (not started; pre-existing) | `_FileTail.read_lines` can close before the last line (`delta_end`); flaky test on CI; read once more before closing. |
-| 0928 | [Automations v1: runtime-native scheduled/triggered tasks](planned/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md) | Planned (design approved 2026-09-26; next minor wave) | An Automation IS a runtime root run; one controller bundle; deterministic occurrences; trigger registry (schedule, manual); growing/independent context; Discuss = forked durable session; `/automations` façade; Observer + Assistant. Effort 33–52 days. Contracts final 2026-09-27 (`untracked/design/automations-CONTRACTS.md`). |
-| 0929 | [Automations v2: external triggers, durable inbox](planned/0929_automations_v2_external_triggers_durable_inbox.md) | Planned (after 0928) | Generic `event` source + `run.finished/failed` chaining with reliable admission. |
-| 0930 | [Automations: Code and console surfaces](planned/0930_automations_code_and_console_surfaces.md) | Planned (after 0928) | AbstractCode WUI section + TUI commands; console inventory. |
+| 0941 | [Automations v1 release wave: floors, minor bumps, root pins](planned/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md) | Planned (after the operator's validation; per-release go) | runtime → gateway (floor `AbstractRuntime>=` the new runtime: W1) → ui-kit/panel-chat → flow → observer (relock) → assistant → root pins + manifest; release notes for custom stores and J50-1. |
+| 0937 | [Automations: store-level exact-key lookups and read performance](planned/0937_automations_store_level_exact_key_lookups_and_read_performance.md) | Planned | Review 45 M2: `list_attention` / `automation_records` about 0.3 s at 10k occurrences, and a JSONL key scan on every decision; do it with runtime 0047. |
+| 0938 | [`Runtime.start` on duck-typed stores](planned/0938_runtime_start_session_starts_on_duck_typed_stores_documented_and_refused.md) | Planned | A store with no index is refused (documented). An index without `session_kind` would attribute nothing (fail open, by reading); add a capability probe. |
+| 0939 | [JSON run store recency follows `updated_at`, not mtime](planned/0939_json_run_store_recency_order_follows_updated_at_not_mtime.md) | Planned | Review 43 F5: a restored backup reorders `list_run_index` windows (turn roots, growing history). |
+| 0940 | [Observer Automate form refuses server-owned input keys](planned/0940_observer_automate_form_refuses_server_owned_input_keys.md) | Planned | Review 54 O-2: the gateway allowlist (R52-1) removes the harm; the form must still say which typed keys will not be sent. |
+| 0929 | [Automations v2: external triggers, durable inbox](planned/0929_automations_v2_external_triggers_durable_inbox.md) | Planned (after 0928's release, 0941) | Generic `event` source + `run.finished/failed` chaining with reliable admission. |
+| 0930 | [Automations: Code and console surfaces](planned/0930_automations_code_and_console_surfaces.md) | Planned (after 0928's release, 0941) | AbstractCode WUI section + TUI commands; console inventory. Until then Code lists one session per independent occurrence (review 46 G3). |
 | 0851 | [Rotate agora API keys leaked in sibling repo histories](planned/0851_rotate_agora_keys_leaked_in_sibling_repo_histories.md) | Planned (operator decision gate) | Seven sibling repos pushed `.cursor/mcp.json` with agora keys; rotate them and decide per repo on history rewrite. High priority. |
 | 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
 | 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned (not started; the 0.2.0 wave kept the existing extras) | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
@@ -271,7 +289,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0905 | [AbstractCore public docstrings carry session history](proposed/0905_core_public_docstrings_carry_session_history.md) | Proposed | ~63 `help()`-visible docstrings still cite thread ids and "operator directive" wording (REVIEW/22 a′); mission names/dates already removed (`a0f0377`). |
 | 0916 | [Flows dir setting; console TUI sign-in without env](proposed/0916_flows_dir_setting_and_console_tui_sign_in_without_env.md) | Proposed | `ABSTRACTGATEWAY_FLOWS_DIR` and the TUI's `ABSTRACTGATEWAY_AUTH_TOKEN` are still env-only; add a flag plus a stored setting. |
 | 0917 | [Clear a saved trust-proxy switch](proposed/0917_gateway_trust_proxy_clear_saved_value.md) | Proposed | Once saved, nothing removes it; add `network set --trust-proxy default` / `trust_proxy: null`. |
-| 0918 | [Tool calls left in a thinking block](proposed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md) | Proposed (operator ruling applied in core 2.16.0 `ffbd1e6`) | Clean calls execute; only unrunnable calls are surfaced; agent half open. |
+| 0918 | [Tool calls left in a thinking block](completed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md) | Proposed (operator ruling applied in core 2.16.0 `ffbd1e6`) | Clean calls execute; only unrunnable calls are surfaced; agent half open. |
 | 0919 | [`analyze_code` crashes Python 3.9](proposed/0919_core_analyze_code_crashes_python39_on_unclosed_triple_quote.md) | Proposed | CPython 3.9 `ast.parse` segfault on a truncated unclosed `"""`; test skipped on 3.9 (`f1735a1`). |
 | 0920 | [Identity card minute-match flake](proposed/0920_gateway_identity_card_flaky_minute_match.md) | Proposed | Dedup by clock minute; failed once on the 0.5.0 CI (3.13), green on rerun. |
 | 0862 | [Gateway roles: admin, member (and maybe viewer), with admin-authorised choices](proposed/0862_gateway_roles_members_and_admin_authorised_choices.md) | Proposed (operator decisions pending: gate [0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)) | Named roles and a gateway-wide provider/model allow/deny list that members choose within; clamp member `tool_policy` and workspace self-service; per-role route contract test; prompt for a daily-use member account when network mode leaves localhost (not at first run); member invite links. The two authorization defects it recorded (token-only session login; `PROTECT_READ=0` reads as admin) are fixed in gateway 0.4.1. |
@@ -321,6 +339,13 @@ npm, crates.io APIs; GitHub releases). Record: [0867](completed/0867_release_wav
 Root 0.3.1 pins abstractcore 2.15.1, abstractgateway 0.4.2, AbstractRuntime 0.4.34. Docs pass
 2026-09-25 (docs-only `main` commits): runtime `696f386`, core `194c312`, gateway `3312bfe`, root
 `cfb4926`, continuum `7bc4616`, entity `f3b5a11`, uic `9a307b3`.
+
+### Automations v1 (0928): UNRELEASED
+
+Built and tested on 2026-09-27 as local, unpushed commits with no version bump (commit table in
+[0928](completed/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md)). The operator tests first; the wave
+is planned as [0941](planned/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md). The released versions are
+still the ones of the 2026-09-27 wave (root 0.4.2).
 
 ### 2026-09-27 patch wave (root 0.4.1)
 
@@ -381,6 +406,7 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0928 | [Automations v1: runtime-native scheduled/triggered tasks](completed/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md) | 2026-09-27 | Moved from `planned/`. **UNRELEASED** (the operator tests first; release 0941). Runtime `79d9bf6`…`d02578a` (2957/26), gateway `57f26b9`…tip (2503/0, acceptance 16/16), uic `9da01a0`…`1eb6d82`, flow `c5961d1`…`0d4bf76`, observer `56af9b4`…`9685fe0`, assistant `e3a0445`…`52d75df`; reviews 41–54 GO after fixes; E2E 9/9 with the real model; decisions D1 (tool approval, typed waits), session ids, turn roots, notify convention. Follow-ups 0937–0941. |
 | 0936 | [Release trace: 2026-09-27 wave (agent 0.3.16, assistant 0.7.0, root 0.4.2)](completed/0936_release_wave_2026_09_27.md) | 2026-09-27 | Heuristic removed from the agent; gateway-first Assistant sessions; first installer with the fixed uninstaller. |
 | 0934 | [Uninstall purge races the gateway and misses user data](completed/0934_uninstall_purge_races_the_gateway_and_misses_user_data.md) | 2026-09-27 | Moved from `planned/`. Process tree stopped first; verified purge of every user-data location; data-dir guards; live on main (dee84f9, 737a9cb, 33df8f7). |
 | 0932 | [Release trace: patch wave 2026-09-26/27 (root 0.4.1)](completed/0932_release_patch_wave_2026_09_26.md) | 2026-09-27 | runtime 0.5.1, core 2.16.1, agent 0.3.15, gateway 0.5.1, assistant 0.6.1, root 0.4.1; 24/24 matrix; real install; installer on the GH release. |
@@ -501,6 +527,12 @@ Scan of 2026-09-26 (after the release, 0921):
 - 2026-09-26 (third pass): **released**. Release trace 0921 written; 0857 and 0899 completed;
   0890 annotated (half done, stays planned); proposed rows added for 0916–0920; release follow-ups
   rewritten. Local stacks: rerun `./scripts/start-local.sh --build`.
+
+- 2026-09-27 (Automations v1 backlog pass): 0928 moved to `completed/` with its completion report (built, reviewed, E2E
+  passed, UNRELEASED). New planned 0937–0941 cover the accepted follow-ups and the release wave. 0929, 0930 and 0931
+  are unchanged (the next phases). Package records are completed in runtime (0847), gateway (0928), abstractuic (0029),
+  flow (0158), observer (0002) and assistant (0852). abstractagent 0034 and abstractcode 0001 stay planned with notes.
+  Counts recounted on disk: planned 120 → 124, completed 244 → 245.
 
 ## Operating Notes
 
