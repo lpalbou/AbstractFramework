@@ -101,7 +101,7 @@ Start here if you're building persistent AI applications — agents that run for
 
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
-- Scheduled workflows (cron-style, recurring)
+- Automations: a workflow that runs on a fixed interval or on demand, kept as a readable conversation ([Automations](docs/automations.md))
 - Multi-client: terminal, browser, tray, Telegram, email
 - Start on one device, continue on another
 
@@ -197,7 +197,7 @@ AbstractFlow lets you author complex agentic orchestration as portable `.flow` b
 
 - **Observe**: replay the full ledger of any run, or watch one live over SSE
 - **Control**: cancel, resume, or inspect runs from the browser
-- **Schedule**: durable schedules (cron-style) owned by the gateway — they survive restarts
+- **Automate**: create and manage automations (Launch → Automate, the Automations page); they run on the gateway and survive restarts. See [Automations](docs/automations.md)
 
 ---
 
@@ -342,6 +342,7 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/install.md](docs/install.md) | Light / Apple / GPU install chooser and first checks |
 | [docs/getting-started.md](docs/getting-started.md) | Two entry points + first end-to-end run |
 | [docs/agent-sessions.md](docs/agent-sessions.md) | Default agent workflow, the conversation workspace and its protection, skills, live replies, the Assistant hand-over |
+| [docs/automations.md](docs/automations.md) | Automations: how they work (controller run, occurrences, independent vs growing context), creating and managing them from the Assistant, the Observer or a workflow, notifications, limits |
 | [docs/architecture.md](docs/architecture.md) | Component diagram, how a turn flows, the live-reply lane, app proxies, model eject, framework identity, durable execution primitives |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |

@@ -4,6 +4,17 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Documentation
+
+- **Automations guide** ([docs/automations.md](docs/automations.md)): how automations work (a
+  durable controller run, one occurrence per tick, independent or growing context, quiet by
+  default, creation as the consent for tools), creating them from the Assistant, the Observer or a
+  workflow's automation defaults, two worked examples, reading and managing them in every client,
+  notifications and typed waits, restart safety, limits and troubleshooting. Automations need the
+  AbstractGateway and AbstractRuntime releases that follow 0.5.1. The README, docs index, Getting
+  Started, API, FAQ, Glossary and Troubleshooting link to it, and describe schedules as fixed UTC
+  intervals.
+
 ## [0.4.2] - 2026-09-27
 
 A patch release for the uninstaller and two package updates.

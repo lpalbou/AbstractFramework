@@ -127,9 +127,29 @@ See **[Getting Started](getting-started.md)** → "Author orchestration with Abs
 ## How do I monitor and schedule agentic work?
 
 - **Monitoring**: use **AbstractObserver** — replay ledger, stream live execution, inspect errors, control runs.
-- **Scheduling**: durable schedules are owned by the **gateway** (survive restarts). Create them from a client UI or via the gateway scheduling API.
+- **Recurring work**: create an **automation** — from the Observer (**Launch → Automate**), from an
+  Assistant conversation (**Schedule this conversation…**) or through `POST /api/gateway/automations`.
+  The gateway runs it, it survives restarts, and each run is readable as a conversation turn.
 
-See **[Getting Started](getting-started.md)** → "Gateway-first" section.
+See **[Automations](automations.md)** and **[Getting Started](getting-started.md)** → "Gateway-first" section.
+
+---
+
+## How do automations work?
+
+An automation is one durable run on the runtime (the controller). Each time its trigger fires, it
+starts one **occurrence**, a run of your workflow that clients show as a question/answer turn:
+
+- **Independent** context starts every occurrence fresh; **growing** context makes the occurrences
+  successive turns of one conversation, with a bounded history (40 messages, 24 000 characters).
+- Automations are **quiet by default**: you are notified when the workflow's output carries
+  `notify`, when a run fails after its last retry, or when a run waits for you.
+- Creating an automation is the consent for the framework tools its workflow uses; choose **Ask
+  each time** to approve every tool batch. MCP tools always ask.
+- Schedules are fixed UTC intervals (`5m`, `8h`, `7d`); there is no cron, time of day or external
+  trigger in v1.
+
+The full guide, with two worked examples and troubleshooting, is **[Automations](automations.md)**.
 
 ---
 

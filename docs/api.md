@@ -156,7 +156,8 @@ Field reference: [release-and-manifest.md](installers/release-and-manifest.md).
 | LLM calls, tools, structured output, media, embeddings, MCP | `abstractcore` |
 | Durable execution kernel (runs, ledger, effects, waits) | `abstractruntime` |
 | Agent patterns (ReAct, CodeAct, MemAct) | `abstractagent` |
-| Control plane (HTTP server, scheduling, bundle discovery, SSE) | `abstractgateway` |
+| Control plane (HTTP server, bundle discovery, SSE) | `abstractgateway` |
+| Automations (recurring and on-demand runs: the object, triggers, commands; the `/api/gateway/automations` API) | `abstractruntime` (`abstractruntime.automations`, `abstractruntime.triggers`) and `abstractgateway`; see [Automations](automations.md) |
 | Workflow authoring UI | `@abstractframework/flow` (npm) |
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
 | Coding client | `abstractcode` (crates.io) and `@abstractframework/code` (npm) |
@@ -185,6 +186,27 @@ shared workflow catalog:
   private runtime bundles. Catalog flow/schema inspection uses ACL-aware
   `/api/gateway/workflow-catalog/{bundle_id}/versions/{version}/flows/{flow_id}`
   routes.
+
+Gateway-hosted automations (on a gateway whose capabilities list
+`contracts.common.automations`; the guide is [Automations](automations.md)):
+
+- `POST /api/gateway/automations` creates an automation (idempotent per
+  `request_id`); `GET /api/gateway/automations` lists them (paged, newest
+  first; legacy schedules on the last page with `legacy: true`).
+- `GET|PATCH /api/gateway/automations/{id}` reads or revises one;
+  `POST /api/gateway/automations/{id}/commands` pauses, resumes, runs now,
+  stops the current run or archives (`automation.*`, idempotent per
+  `command_id`).
+- `GET /api/gateway/automations/{id}/occurrences`, `/attention` and
+  `POST …/seen` read the runs as chat turns and the attention items;
+  `POST …/discuss` forks a discussion from an occurrence.
+- `GET /api/gateway/trigger-sources` lists what can start an automation
+  (`schedule@1`, `manual@1`).
+- `GET /api/gateway/runs` rows carry `session_kind`, `role`, `automation_id`
+  and `occurrence_index`.
+
+The full reference is
+[AbstractGateway: Automations API](https://github.com/lpalbou/AbstractGateway/blob/main/docs/automations.md).
 
 Gateway-hosted user administration keeps retained runtime data explicit:
 

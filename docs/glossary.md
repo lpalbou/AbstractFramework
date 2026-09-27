@@ -6,7 +6,8 @@ If you're new, read these groups first:
 
 - **Durable execution**: run, ledger, effect, wait, artifact
 - **Workflows**: flow, bundle, interface contract
-- **Control plane**: gateway, schedule, observer, gateway console, Network setting
+- **Control plane**: gateway, observer, gateway console, Network setting
+- **Automations**: automation, trigger source, tick, occurrence, discussion
 - **Agent sessions**: default agent workflow, conversation workspace, built-in deny list, skill shelf, live replies
 - **Distribution**: Mac installer, bootstrap script, install profile, release pins
 
@@ -148,11 +149,11 @@ The control plane for durable runs: start/resume/cancel, persistence, scheduling
 
 ### Schedule
 
-A durable recurring trigger owned by the gateway ("run this workflow every 24h"). Schedules survive restarts.
+The `schedule@1` [trigger source](#trigger-source) of an automation: a fixed UTC interval (`every: "5m"`, `"8h"`, `"7d"`) from a start time, optionally bounded by `until` or `count`; no cron, time of day or time zone. Schedules created with the older `POST /api/gateway/runs/schedule` route are listed as *legacy* and keep their own controls. See [Automations](automations.md).
 
 ### Observer
 
-A thin-client browser UI for operations: monitor runs, inspect ledger history, watch live execution, control runs, and (when enabled) create schedules.
+A thin-client browser UI for operations: monitor runs, inspect ledger history, watch live execution, control runs, and create and manage automations (Launch → Automate, the Automations page).
 
 ### Gateway console
 
@@ -192,6 +193,32 @@ in.
 ### Models and Engines
 
 The local model and engine management shared by AbstractCore and the gateway: a model catalog with a fit verdict for this machine (`fits`, `tight`, `too_large`, `partial_offload`, `unknown`), installed models with sizes, download and delete jobs, and detection and installation of local engines (Ollama, LM Studio, MLX, llama.cpp, vLLM, transformers). Available as `abstractcore models|engines`, `abstractgateway models|engines`, and in the consoles.
+
+---
+
+## Automations
+
+See [Automations](automations.md) for how they work and how to manage them.
+
+### Automation
+
+A workflow that the gateway runs again and again on a trigger. It is one durable root run on the runtime, the *controller*, whose run id is the automation id; each firing starts an [occurrence](#occurrence). An automation is quiet by default, and creating one is the consent for the framework tools its workflow uses (unless it is created with "Ask each time").
+
+### Trigger source
+
+What fires an automation, as a versioned adapter: `schedule@1` (a fixed UTC interval, see [Schedule](#schedule)) and `manual@1` (only **Run now**). `GET /api/gateway/trigger-sources` lists the sources a gateway serves; packages add sources through the `abstractruntime.trigger_sources` entry-point group.
+
+### Tick
+
+One scheduled firing time of a `schedule@1` trigger, on a fixed grid (`start_at + k × every`). Ticks that come due while an occurrence is still running, or while the gateway is down, are coalesced into one occurrence for the latest tick.
+
+### Occurrence
+
+One run of an automation's workflow for one tick or one **Run now**: a child run of the controller with a deterministic id, shown in clients as one question/answer turn. In *independent* context each occurrence is its own one-turn session; in *growing* context occurrences are the successive turns of the session `automation:<id>`.
+
+### Discussion
+
+A conversation forked from an automation occurrence (**Discuss**): a new root run in its own session, seeded with the automation's history up to that occurrence, able to read the automation's folder but not change it, and never written back into the automation.
 
 ---
 

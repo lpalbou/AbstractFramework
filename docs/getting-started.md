@@ -206,17 +206,27 @@ browser session and does not persist the token in browser settings.
 
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
-### 5. Schedule recurring work
+### 5. Automate recurring work
 
-Schedules are owned by the gateway (they survive restarts):
+An automation runs a workflow on a fixed interval and keeps every run as a conversation. Create
+one from the Observer (**Launch → Automate**), from an Assistant conversation (**Schedule this
+conversation…**), or through the gateway API on a gateway that advertises the Automations API:
 
 ```bash
 TOKEN=$(cat "<data dir>/auth/bootstrap-admin-token")   # abstractgateway-config status prints <data dir>
-curl -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
+curl -X POST "http://127.0.0.1:8080/api/gateway/automations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"bundle_id":"my-bundle","flow_id":"my-entrypoint","start_at":"now","interval":"24h"}'
+  -d '{"request_id":"memory-watch-1","title":"Memory every 2 minutes",
+       "target":{"flow_id":"@default","interface":"abstractcode.agent.v1",
+                 "input_data":{"prompt":"Report the memory usage of this computer in one line."}},
+       "trigger":{"source_id":"schedule","source_version":1,"config":{"every":"2m"}},
+       "context":{"mode":"independent"}}'
 ```
+
+The automation survives restarts, runs each tick once, and stays quiet unless its workflow asks for
+attention. See [Automations](automations.md) for the mental model, worked examples, management
+and limits.
 
 ---
 

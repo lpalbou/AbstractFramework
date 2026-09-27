@@ -29,7 +29,7 @@ Start here if you're building persistent AI applications — agents that run for
 
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
-- Scheduled workflows (cron-style, recurring)
+- Automations: workflows that run on a fixed interval or on demand ([Automations](automations.md))
 - Multi-client: terminal, browser, tray, Telegram, email
 - Start on one device, continue on another
 
@@ -399,7 +399,7 @@ Any gateway-backed client can: list bundles/entrypoints, start a run, attach to 
 - Inspect any run (ledger replay)
 - Watch a run live (SSE)
 - Control runs (cancel, resume)
-- Schedule recurring runs
+- Create and manage automations (Launch → Automate, the Automations page); see [Automations](automations.md)
 
 ## File-like sources in hosted clients
 

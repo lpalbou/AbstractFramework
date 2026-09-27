@@ -204,6 +204,13 @@ run the installer again: it continues where it stopped.
   or restart the gateway.
 - **Verify**: the meter returns to the baseline and the resident-models table is empty.
 
+## Automations
+
+Automation errors (409 `automation_busy`, `invalid_state`, `revision_conflict`,
+`identity_conflict`; 422 `invalid_request`, `invalid_definition`, `unsupported_feature`,
+`unknown_trigger_source`), "running" versus "waiting", missing notifications, late or merged ticks
+and legacy schedules are covered in [Automations → Troubleshooting](automations.md#troubleshooting).
+
 ## Reporting a problem
 
 When a step keeps failing, open an issue at
