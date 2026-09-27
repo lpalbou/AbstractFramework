@@ -591,7 +591,8 @@ def test_install_sh_builds_the_terminal_console_by_default(tmp_path: Path) -> No
     # token yet, so the command names the file it will be read from.
     assert "ABSTRACTGATEWAY_AUTH_TOKEN" not in terminal
     assert "abstractgateway-console --url http://127.0.0.1:18999 --token <admin token: cat " in terminal
-    assert terminal.rstrip().endswith("auth/bootstrap-admin-token'>")
+    # The path is shell-quoted only when it needs it (macOS "Application Support").
+    assert re.search(r"auth/bootstrap-admin-token'?>$", terminal.rstrip())
 
 
 def test_install_sh_no_console_skips_it(tmp_path: Path) -> None:
