@@ -46,3 +46,15 @@ with the verbatim reply → visible error on a second failure; `tool_calls_from_
   extended (English only, agent backlog 0033); crash fix for 0.3.13/0.3.14 (CodeAct/MemAct NameError). Reviews 28 NO-GO → 29 GO → 30 GO.
 - **Residual:** CodeAct/MemAct return no `stop_reason` on plain iteration exhaustion (only `outcome: iteration_budget`); non-English
   announcements are not detected.
+
+## Addendum (2026-09-27): the announcement heuristic is reverted (unreleased)
+The text heuristic is withdrawn by the operator's decision: text heuristics that infer intent from wording are not accepted in the
+framework, and a fix must not target one model's occasional failure. abstractagent daf49be (local, unpushed, unreleased) reverts 3eb34e6,
+a28ce85 and 1b54ce4 — the announcement detector, the corrective re-prompt, the `no_tool_call` stop, the conclusion-path drop, the
+`check_unrunnable_calls` switch, the jinja2 test extra and the Qwen3.6 fixture — and keeps 66c376d (the CodeAct/MemAct crash fix).
+The tree equals v0.3.14 + the crash fix + version/changelog strings + backlog 0034. Suite 458 passed / 2 skipped. Evidence behind the
+decision: REVIEW/35 (0 misfires on 1,889 real answers, but 16/30 realistic "result delivered, follow-up promised" answers fire; a misfire
+replaces the answer with an error; no reachable switch on gateway workflow steps). The digest stop itself is fixed structurally in
+abstractcore 2.16.1 (0922). Released 0.3.15 still carries the heuristic; the removal ships when the operator decides (a Codex sweep of
+the revert is pending at the time of writing). Text heuristics already present in 0.3.14 (`_looks_like_deferred_action` followthrough
+nudge, `circling_streak`) are listed for the operator's decision, not changed.
