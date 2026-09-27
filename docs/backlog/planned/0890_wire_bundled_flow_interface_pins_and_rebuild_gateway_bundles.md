@@ -3,7 +3,7 @@
 > Package: abstractflow (examples/flows, scripts/build_*); abstractgateway (flows/bundles, pyproject.toml, tests); abstractframework release wave
 > Type: task
 > Created: 2026-09-26
-> Priority: high
+> Priority: low
 > Labels: flow, gateway, interfaces, release-step
 
 ## Summary
@@ -109,3 +109,30 @@ entity-goodbye, multiagent-coding) keep their unwired pins and `KNOWN_GAPS` is n
 abstractflow 0.3.21; abstractflow's `scripts/pack_deep_research_bundle.py` /
 `build_deep_research_workflows.py` still name 0.1.7, so re-running them would write a stale file.
 Evidence: `STAGING-RESULT.md` deviation 8, `RELEASE-LOG.md` Phase C; record [0921](../completed/0921_release_wave_2026_09_26.md).
+
+
+## Verification (2026-09-28, operator asked to confirm the issues are real)
+
+Verdict: **no user-visible bug; cosmetic clean-up only.** Priority lowered from high to low.
+
+- deep-research: **already fixed** — the gateway ships `deep-research@0.1.8.flow` (identical to the
+  abstractflow example, no unwired boundary pins; `tests/test_deep_research_bundle_contract.py`
+  asserts `prompt` and the wired `success` edge). Leftover: `abstractflow/scripts/pack_deep_research_bundle.py:27`
+  and `build_deep_research_workflows.py:19,1959` still name 0.1.7 (re-running them would write a stale bundle).
+- entity-chat (`success`, `meta` unwired) and entity-goodbye (`prompt`/`provider`/`model` in,
+  `success`/`meta` out unwired): the end pins do return `null` (hermetic run), but **no host reads
+  them** — the Entity app reads `answer`/`response` (`abstractentity/src/flow_lane.ts:110,125`), the TUI
+  reads `answer`/`degraded`/`moment_error` (`abstractcode-tui/src/convo.rs:564`), generic hosts test
+  `success is False` (null counts as success). entity-goodbye never calls an LLM, so its unwired
+  `provider`/`model` inputs are correctly unused. The earlier cited evidence
+  (`maintenance/notifier.py`) does not read flow outputs.
+- multiagent-coding: `provider`/`model` (and `build_command`/`run_command`) ARE used — read through
+  Get Var nodes (run vars), which an edge-only audit misses. Only `passed` is unwired; nobody reads it.
+- The gateway 0.6.0 wheel ships none of these three flows (entity-life / multiagent-coding bundles
+  are local, untracked). No gateway release needed.
+
+Remaining scope (one abstractflow release, any wave): wire entity-chat `success`/`meta` and
+entity-goodbye `success`/`meta` from values the flows already compute; feed multiagent-coding `passed`
+from `all_passed` (default false on `end_pre`); a documented test exemption for flows that never call
+an LLM instead of fake-wiring their `provider`/`model`; empty `KNOWN_GAPS` in `bundledFlows.test.ts`;
+bump the stale 0.1.7 script constants to 0.1.8.
