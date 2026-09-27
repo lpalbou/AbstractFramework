@@ -554,13 +554,16 @@ function Main {
         $ggufPin = $AfLlamaCpuPin; $ggufLinks = "$AfLlamaIndex/cpu/llama-cpp-python/"
     }
     # Local voice (see $AfWithVoice at the top).
+    # A hashtable, so the nested functions below can update it. Voice never fails an install: where
+    # its wheels are missing the same install is retried without it (Install-GatewayVoice).
     if ($onWindows -and $cpuArch -eq 'ARM64') {
-        $voiceSpec = $AfWithVoiceArm64
-        $voiceResult = 'Supertonic (text-to-speech), local on CPU; Whisper speech-to-text skipped: CTranslate2 has no Windows ARM64 wheel'
+        $voice = @{ Wanted = $AfWithVoiceArm64; Spec = $AfWithVoiceArm64
+            Ok = 'Supertonic (text-to-speech), local on CPU; Whisper speech-to-text skipped: CTranslate2 has no Windows ARM64 wheel' }
     } else {
-        $voiceSpec = $AfWithVoice
-        $voiceResult = 'Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU'
+        $voice = @{ Wanted = $AfWithVoice; Spec = $AfWithVoice
+            Ok = 'Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU' }
     }
+    $voice.Result = $voice.Ok
     # uv splits --overrides / --constraints values at whitespace (a user name with a
     # space), so the install runs from the data dir and names both files relatively.
     function Install-Gateway([bool]$Gguf, [switch]$Soft) {
@@ -574,7 +577,8 @@ function Main {
             [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-overrides.txt'), ($overrides -join "`n") + "`n")
             if ($Gguf) { [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-constraints.txt'), "llama-cpp-python==$ggufPin`n") }
         }
-        $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels, '--with', $voiceSpec)
+        $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels)
+        if ($voice.Spec) { $argv += @('--with', $voice.Spec) }
         if ($Gguf) { $argv += @('--with', "llama-cpp-python==$ggufPin", '--constraints', 'uv-constraints.txt', '--find-links', $ggufLinks) }
         elseif ($Full) { $argv += @('--with', 'llama-cpp-python') }
         $argv += @('--overrides', 'uv-overrides.txt')
@@ -590,25 +594,35 @@ function Main {
             if (-not $script:DryRun) { Pop-Location }
         }
     }
+    function Install-GatewayVoice([bool]$Gguf, [switch]$Soft) {
+        if ($voice.Wanted) {
+            $voice.Spec = $voice.Wanted
+            if (Install-Gateway $Gguf -Soft) { $voice.Result = $voice.Ok; return $true }
+            Write-Warn2 'local voice (Supertonic, Whisper) did not install on this system: retrying without it'
+            $voice.Spec = ''; $voice.Result = "skipped: its packages did not install on this system (see $($script:LogFile))"
+        }
+        return (Install-Gateway $Gguf -Soft:$Soft)
+    }
     $ggufResult = ''
     if ($before -and $Pin -eq 'latest' -and -not $From -and $state['PROFILE'] -eq $profileName) {
         Invoke-Native -Description 'upgrade abstractgateway' -Argv @($uv, 'tool', 'upgrade', 'abstractgateway') | Out-Null
         $ggufResult = 'as in the previous install (uv tool upgrade keeps it)'
+        $voice.Result = 'as in the previous install (uv tool upgrade keeps it)'
     } elseif ($Full) {
-        Install-Gateway $false | Out-Null
+        Install-GatewayVoice $false | Out-Null
         $ggufResult = 'llama-cpp-python built from source (-Full)'
     } elseif ($ggufPin) {
         if ($script:DryRun) { Write-Info "llama.cpp GGUF: llama-cpp-python $ggufPin, cpu wheel from $ggufLinks (if this install fails, it is retried without it)" }
-        if (Install-Gateway $true -Soft) {
+        if (Install-GatewayVoice $true -Soft) {
             $ggufResult = "llama-cpp-python $ggufPin (cpu wheel from $ggufLinks)"
         } else {
             Write-Warn2 $AfGgufSkipped
-            Install-Gateway $false | Out-Null
+            Install-GatewayVoice $false | Out-Null
             $ggufResult = "skipped (the prebuilt cpu wheel did not install; see $($script:LogFile))"
         }
     } else {
         Write-Warn2 $AfGgufSkipped
-        Install-Gateway $false | Out-Null
+        Install-GatewayVoice $false | Out-Null
         $ggufResult = "skipped (no prebuilt wheel for Windows $cpuArch)"
     }
     $after = $before
@@ -863,7 +877,7 @@ function Main {
     Write-Host "  Uninstall:  install.ps1 -Uninstall   (or: $(if ($mode -eq 'service') { 'abstractgateway service uninstall; ' })uv tool uninstall abstractgateway)"
     Write-Host '  Check:      uvx abstractframework doctor'
     Write-Host "  GGUF:       $ggufResult"
-    Write-Host "  Voice:      $voiceResult"
+    Write-Host "  Voice:      $($voice.Result)"
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     Write-Host "  Apps:       npx -y @abstractframework/flow --gateway-url $baseUrl   (also: code, observer, continuum, entity)"
     Write-Host "  Docs:       $AfDocs"

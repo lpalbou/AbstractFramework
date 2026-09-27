@@ -10,10 +10,13 @@ All notable changes to AbstractFramework will be documented in this file.
   speech-to-text (`abstractvoice[supertonic,stt]`), both CPU, from prebuilt wheels. The light
   profile (Linux without a GPU, Intel Macs) had neither, so the voice route AbstractCore
   recommends could not speak. Skipped where no wheels exist (musl Linux / Alpine, macOS before 13;
-  Whisper on Windows ARM64), and the summary's new `Voice:` line says what was installed.
+  Whisper on Windows ARM64). Voice never fails an install: where its packages do not install (for
+  example glibc older than 2.28) the gateway is installed without it. The summary's new `Voice:`
+  line says what was installed, and a re-run that adds voice restarts the gateway to load it.
 - On a remote or headless session (SSH, or Linux without a display) with a terminal, the installer
-  opens the terminal console at the end, signed in, the way a Mac opens the web console; over SSH
-  it no longer opens a browser on the remote machine. `--no-open` skips both.
+  offers the terminal console at the end ("Press Enter within 25 s"), signed in; nobody answering
+  skips it, so automation never blocks. Over SSH it no longer opens a browser on the remote
+  machine. `--no-open` skips both.
 
 ## [0.5.0] - 2026-09-27
 

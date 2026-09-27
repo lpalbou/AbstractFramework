@@ -419,9 +419,10 @@ LOG_DIR="$DATA_DIR/logs"
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 
 # Previous run state (port, service mode, whether we installed Node).
-ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""; ST_UV_BY_US=""; ST_RUST_BY_US=""
+ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""; ST_UV_BY_US=""; ST_RUST_BY_US=""; ST_VOICE=""
 if [ -f "$STATE_FILE" ]; then
     ST_RUST_BY_US="$(sed -n 's/^RUST_BY_INSTALLER=//p' "$STATE_FILE" | tail -n 1)"
+    ST_VOICE="$(sed -n 's/^VOICE_SPEC=//p' "$STATE_FILE" | tail -n 1)"
     ST_UV_BY_US="$(sed -n 's/^UV_BY_INSTALLER=//p' "$STATE_FILE" | tail -n 1)"
     ST_PORT="$(sed -n 's/^PORT=//p' "$STATE_FILE" | tail -n 1)"
     ST_MODE="$(sed -n 's/^MODE=//p' "$STATE_FILE" | tail -n 1)"
@@ -1065,6 +1066,7 @@ elif [ "$OS_ID" = macos ] && [ "$MACOS_MAJOR" -lt 13 ] 2>/dev/null; then
     VOICE_SPEC=""; VOICE_RESULT="skipped: ONNX Runtime publishes no wheels for macOS $MACOS_VERSION (13 or later needed)"
 fi
 [ -n "$VOICE_SPEC" ] || warn "local voice $VOICE_RESULT"
+VOICE_WANTED="$VOICE_SPEC"
 
 # Gateway requirement.
 if [ -n "$FROM" ]; then
@@ -1222,26 +1224,42 @@ install_gateway() {
     [ "$PRINT" = 1 ] || cd "$_cwd" 2>/dev/null || cd "$HOME"
     return "$RUN_RC"
 }
+# install_gateway_voice GGUF SOFT: install_gateway with local voice when it is wanted. Voice
+# is never what fails an install: where its wheels are missing (e.g. glibc older than 2.28) the
+# same install is retried without it and the summary says so.
+install_gateway_voice() {
+    if [ -n "$VOICE_WANTED" ]; then
+        VOICE_SPEC="$VOICE_WANTED"
+        if install_gateway "$1" 1; then
+            VOICE_RESULT="Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU"
+            return 0
+        fi
+        warn "local voice (Supertonic, Whisper) did not install on this system: retrying without it"
+        VOICE_SPEC=""; VOICE_RESULT="skipped: its packages did not install on this system (see $LOG_FILE)"
+    fi
+    install_gateway "$1" "$2"
+}
 GGUF_RESULT=""
 REINSTALL=0
 if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
     run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
     GGUF_RESULT="as in the previous install (uv tool upgrade keeps it)"
+    VOICE_SPEC="$ST_VOICE"; VOICE_RESULT="as in the previous install (uv tool upgrade keeps it)"
 elif [ "$FULL" = 1 ]; then
-    install_gateway 0 0
+    install_gateway_voice 0 0
     GGUF_RESULT="llama-cpp-python built from source (--full)"
 elif [ -n "$GGUF_PIN" ]; then
     [ "$PRINT" = 1 ] && info "llama.cpp GGUF: llama-cpp-python $GGUF_PIN, $GGUF_KIND wheel from $GGUF_LINKS (if this install fails, it is retried without it)"
-    if install_gateway 1 1; then
+    if install_gateway_voice 1 1; then
         GGUF_RESULT="llama-cpp-python $GGUF_PIN ($GGUF_KIND wheel from $GGUF_LINKS)"
     else
         warn "$AF_GGUF_SKIPPED"
-        install_gateway 0 0
+        install_gateway_voice 0 0
         GGUF_RESULT="skipped (the prebuilt $GGUF_KIND wheel did not install; see $LOG_FILE)"
     fi
 else
     warn "$AF_GGUF_SKIPPED"
-    install_gateway 0 0
+    install_gateway_voice 0 0
     GGUF_RESULT="skipped (no prebuilt wheel for $OS_ID $ARCH)"
 fi
 # Repair: an interrupted or damaged earlier install can leave uv reporting the
@@ -1268,7 +1286,8 @@ fi
 ST_SPEC=""
 [ -f "$STATE_FILE" ] && ST_SPEC="$(sed -n 's/^GATEWAY_SPEC=//p' "$STATE_FILE" | tail -n 1)"
 CHANGED=0
-if [ "$BEFORE" != "$AFTER" ] || [ -n "$FROM" ] || [ "$REINSTALL" = 1 ] || { [ -n "$ST_SPEC" ] && [ "$ST_SPEC" != "$GW_SPEC" ]; }; then CHANGED=1; fi
+if [ "$BEFORE" != "$AFTER" ] || [ -n "$FROM" ] || [ "$REINSTALL" = 1 ] || { [ -n "$ST_SPEC" ] && [ "$ST_SPEC" != "$GW_SPEC" ]; } \
+    || { [ -n "$BEFORE" ] && [ "$ST_VOICE" != "$VOICE_SPEC" ]; }; then CHANGED=1; fi
 GW="$TOOL_BIN/abstractgateway"
 GWCFG="$TOOL_BIN/abstractgateway-config"
 
@@ -1429,7 +1448,7 @@ write_state() {
         echo "# written by AbstractFramework install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ)"
         echo "PORT=$PORT"; echo "MODE=$MODE"; echo "PROFILE=$PROFILE"
         echo "NODE_WHEEL=$NODE_WHEEL"; echo "GATEWAY_SPEC=$GW_SPEC"; echo "GATEWAY_VERSION=$AFTER"
-        echo "UV_BY_INSTALLER=$UV_BY_US"; echo "RUST_BY_INSTALLER=$RUST_BY_US"
+        echo "UV_BY_INSTALLER=$UV_BY_US"; echo "RUST_BY_INSTALLER=$RUST_BY_US"; echo "VOICE_SPEC=$VOICE_SPEC"
     } >"$STATE_FILE"
 }
 
@@ -1649,13 +1668,32 @@ if [ -n "$TWINS" ]; then
 fi
 [ -n "$LOG_FILE" ] && printf '\n  %sFull log: %s%s\n' "$C_D" "$LOG_FILE" "$C_0"
 
-# Remote or headless: open the terminal console, signed in, the way a Mac opens the web console.
-# Only with a terminal to draw on (/dev/tty works through `curl | sh`); --no-open skips it.
+# Remote or headless: offer the terminal console, signed in, the way a Mac opens the web console.
+# It is ASKED (Enter within AF_CONSOLE_WAIT s), never assumed: a pseudo-terminal with nobody at it
+# (CI, Terraform, `ssh -t` in a script) must not hang. `true`, not `:`, probes /dev/tty: a failed
+# redirection on the special built-in `:` exits dash. --no-open skips the offer.
+AF_CONSOLE_WAIT="${AF_CONSOLE_WAIT:-25}"   # seconds (tests lower it); stty counts tenths, max 25.5 s
+offer_console() {
+    _old_tty="$(stty -g </dev/tty 2>/dev/null)" || return 1
+    printf '\n%sPress Enter within %s s to open the terminal console%s (any other key, or waiting, skips it) ' \
+        "$C_B" "$AF_CONSOLE_WAIT" "$C_0" >/dev/tty
+    stty -icanon -echo min 0 time "$((AF_CONSOLE_WAIT * 10 > 255 ? 255 : AF_CONSOLE_WAIT * 10))" </dev/tty 2>/dev/null
+    _key="$(dd bs=1 count=1 </dev/tty 2>/dev/null | od -An -tu1 | tr -d ' ')"
+    stty "$_old_tty" </dev/tty 2>/dev/null
+    printf '\n' >/dev/tty
+    [ "$_key" = 10 ] || [ "$_key" = 13 ]
+}
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ] && [ "$NO_OPEN" = 0 ] && [ "$REMOTE_SESSION" = 1 ] \
-    && [ "$CONSOLE_OK" = 1 ] && [ -n "$_tui_tok" ] && [ -t 1 ] && { : </dev/tty; } 2>/dev/null; then
-    printf '\n%sOpening the terminal console%s (q quits; open it again with the Terminal command above)\n' "$C_B" "$C_0"
-    sleep 2
-    "$CONSOLE_BIN" --url "$BASE_URL" --token "$_tui_tok" </dev/tty >/dev/tty 2>&1 || \
-        warn "the terminal console exited with an error; start it again with the Terminal command above"
+    && [ "$CONSOLE_OK" = 1 ] && [ -n "$_tui_tok" ] && [ -t 1 ] && { true </dev/tty; } 2>/dev/null; then
+    # Everything is installed: Ctrl+C here must not turn a finished install into exit 130.
+    trap : INT
+    if offer_console; then
+        "$CONSOLE_BIN" --url "$BASE_URL" --token "$_tui_tok" </dev/tty >/dev/tty 2>&1 || \
+            warn "the terminal console exited with an error; start it again with the Terminal command above"
+        stty sane </dev/tty 2>/dev/null || true
+    else
+        info "not opened; start it any time with the Terminal command above"
+    fi
+    trap - INT
 fi
 exit 0

@@ -157,7 +157,8 @@ The Mac package, the `.command` files and the one line all run the same script,
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]"`: Supertonic text-to-speech and Whisper speech-to-text,
    both on CPU (skipped on musl Linux and macOS before 13, where no wheels exist; Windows ARM64 gets
-   Supertonic only).
+   Supertonic only). If those packages do not install on a system (for example glibc older than
+   2.28), the gateway is installed without them and the summary says so.
 5. Builds the terminal console, `abstractgateway-console`, with `cargo install --locked` into the
    same folder as the `abstractgateway` command (crates.io has no prebuilt binary). When cargo is
    missing, macOS and Linux get Rust from [rustup](https://rustup.rs) (minimal profile, in
@@ -176,8 +177,8 @@ The Mac package, the `.command` files and the one line all run the same script,
    one-time sign-in link (`abstractgateway-config claim-url`, valid 10 minutes, this machine only).
    If no link can be created, it shows where the admin token is. The summary shows both ways to
    configure the gateway: the web console link and the terminal console command. On a remote or
-   headless session (SSH, or Linux without a display) it opens the terminal console instead,
-   signed in; `--no-open` skips it.
+   headless session (SSH, or Linux without a display) it offers the terminal console instead
+   ("Press Enter within 25 s", signed in); no answer skips it, and `--no-open` skips the offer.
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
 upgrades or repairs the install in place. The macOS package is payload-free: it copies the two
@@ -266,7 +267,7 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 ### Headless or remote machine
 
 On a server without a browser, configure the gateway from the terminal console, on the machine
-itself. When you install over SSH, the installer opens it for you at the end. Later, start it with
+itself. When you install over SSH, the installer offers to open it at the end. Later, start it with
 the command the installer's summary prints (your port and token filled in):
 
 ```bash

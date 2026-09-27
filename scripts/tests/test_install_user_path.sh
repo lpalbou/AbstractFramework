@@ -441,11 +441,16 @@ CARGO
     # BG_ENV: extra environment (e.g. SSH_CONNECTION); BG_PTY=1 runs the installer on a pseudo-terminal.
     # BG_OPEN=1 leaves --no-open out (the remote-session console launch is under test).
     local wrap=() open_flag=(--no-open)
-    # A minimal pty runner: pty.spawn() spins forever on macOS when stdin is /dev/null.
+    # BG_PTY=1: the installer runs on a pseudo-terminal that is its controlling terminal; with
+    # BG_PTY_ENTER=1 the runner presses Enter when the console offer appears. BG_PTY=2: stdout is a
+    # pseudo-terminal but the process has NO controlling terminal (/dev/tty cannot be opened).
+    # (pty.spawn() spins forever on macOS when stdin is /dev/null, hence these small runners.)
     [[ "${BG_PTY:-0}" == 1 ]] && wrap=(/usr/bin/python3 -c 'import os, pty, sys
+enter = sys.argv[1] == "1"
 pid, fd = pty.fork()
 if pid == 0:
-    os.execvp(sys.argv[1], sys.argv[1:])
+    os.execvp(sys.argv[2], sys.argv[2:])
+seen = b""
 while True:
     try:
         chunk = os.read(fd, 4096)
@@ -454,9 +459,26 @@ while True:
     if not chunk:
         break
     os.write(1, chunk)
-sys.exit(os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1]))')
+    seen = (seen + chunk)[-4096:]
+    if enter and b"Press Enter within" in seen:
+        os.write(fd, b"\r")
+        enter = False
+sys.exit(os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1]))' "${BG_PTY_ENTER:-0}")
+    [[ "${BG_PTY:-0}" == 2 ]] && wrap=(/usr/bin/python3 -c 'import os, subprocess, sys
+master, slave = os.openpty()
+proc = subprocess.Popen(sys.argv[1:], stdin=subprocess.DEVNULL, stdout=slave, stderr=slave, start_new_session=True)
+os.close(slave)
+while True:
+    try:
+        chunk = os.read(master, 4096)
+    except OSError:
+        break
+    if not chunk:
+        break
+    os.write(1, chunk)
+sys.exit(proc.wait())')
     [[ "${BG_OPEN:-0}" == 1 ]] && open_flag=()
-    run_in "$name" ${BG_ENV:-} -- ${wrap[@]+"${wrap[@]}"} sh "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" --no-service ${open_flag[@]+"${open_flag[@]}"} --no-modify-path ${BG_ARGS:---no-console}
+    run_in "$name" ${BG_ENV:-} -- ${wrap[@]+"${wrap[@]}"} "${BG_SHELL:-sh}" "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" --no-service ${open_flag[@]+"${open_flag[@]}"} --no-modify-path ${BG_ARGS:---no-console}
     local pid; pid="$(cat "$DATA_T/gateway.pid" 2>/dev/null)"
     [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
     for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 || break; sleep 0.5; done
@@ -514,13 +536,25 @@ if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
     check "port $BG_PORT is free for the remote-session cases" 1
 else
     TB="$WORK/rem/tools/bin"
-    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 BG_OPEN=1 bg_case rem 1
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 BG_PTY_ENTER=1 BG_OPEN=1 bg_case rem 1
     check "remote: installer succeeds on a terminal" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
     check "remote: the console is started with the gateway URL and the admin token" "$(grep -qx -- "--url http://127.0.0.1:$BG_PORT --token tok_remote_9" "$TB/abstractgateway-console.args"; echo $?)" "$OUT"
+    check "remote: the console is offered, not assumed" "$(has "$OUT" "Press Enter within 25 s to open the terminal console"; echo $?)" "$OUT"
     check "remote: no browser is opened over SSH" "$([[ ! -s "$WORK/rem/open.log" ]] && has "$OUT" "tunnel it first: ssh -L $BG_PORT:127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
     TB2="$WORK/rem2/tools/bin"
     BG_TOOLBIN="$TB2" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 bg_case rem2 1
     check "remote: --no-open does not start the console" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB2/abstractgateway-console.args"; echo $?)" "$OUT"
+    # Nobody at the pseudo-terminal (CI, Terraform, ssh -t in a script): the offer times out.
+    TB4="$WORK/rem4/tools/bin"
+    BG_TOOLBIN="$TB4" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22 AF_CONSOLE_WAIT=1" BG_PTY=1 BG_OPEN=1 bg_case rem4 1
+    check "remote: nobody answers the offer, the install still finishes and opens nothing" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB4/abstractgateway-console.args" && has "$OUT" "not opened; start it any time"; echo $?)" "$OUT"
+    # Debian/Ubuntu /bin/sh is dash: a terminal on stdout but no controlling terminal must not
+    # abort the finished install (a failed redirection on the special built-in ':' exits dash).
+    if command -v dash >/dev/null 2>&1; then
+        TB5="$WORK/rem5/tools/bin"
+        BG_TOOLBIN="$TB5" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=2 BG_SHELL=dash BG_OPEN=1 bg_case rem5 1
+        check "remote: dash without a controlling terminal exits 0 and opens nothing" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB5/abstractgateway-console.args"; echo $?)" "$OUT"
+    fi
     TB3="$WORK/rem3/tools/bin"
     BG_TOOLBIN="$TB3" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_OPEN=1 bg_case rem3 1
     check "remote: without a terminal (piped output) the console is not started" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB3/abstractgateway-console.args"; echo $?)" "$OUT"

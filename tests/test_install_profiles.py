@@ -508,7 +508,13 @@ def test_install_sh_retries_without_llama_cpp_when_the_wheel_fails(tmp_path: Pat
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     installs = [line for line in calls.read_text().splitlines() if line.startswith("tool install ")]
-    assert len(installs) == 2 and "--find-links" in installs[0] and "--find-links" not in installs[1]
+    # 1. both extras (fails) → 2. without voice, in case voice was the culprit (fails) →
+    # 3. without the llama.cpp wheel, voice restored (succeeds): voice is not lost to a GGUF failure.
+    assert len(installs) == 3
+    assert "--find-links" in installs[0] and "abstractvoice[supertonic,stt]" in installs[0]
+    assert "--find-links" in installs[1] and "abstractvoice" not in installs[1]
+    assert "--find-links" not in installs[2] and "abstractvoice[supertonic,stt]" in installs[2]
+    assert "Voice:      Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU" in proc.stdout
     assert _GGUF_SKIPPED.format(flag="--full") in proc.stdout
     assert "GGUF:       skipped (the prebuilt " in proc.stdout
     overrides = next((tmp_path / "data").rglob("uv-overrides.txt")) if (tmp_path / "data").exists() else next(tmp_path.rglob("uv-overrides.txt"))
@@ -660,7 +666,7 @@ def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
     # relative names + Push-Location: uv splits --overrides/--constraints values at whitespace
     assert "'--constraints', 'uv-constraints.txt'" in ps1 and "@('--overrides', 'uv-overrides.txt')" in ps1
     assert "Push-Location -LiteralPath $DataDir" in ps1
-    assert "if (Install-Gateway $true -Soft) {" in ps1 and "Write-Warn2 $AfGgufSkipped" in ps1
+    assert "if (Install-GatewayVoice $true -Soft) {" in ps1 and "Write-Warn2 $AfGgufSkipped" in ps1
 
 
 @pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
@@ -808,4 +814,46 @@ def test_install_ps1_installs_local_voice_supertonic_only_on_arm64() -> None:
     ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
     assert "$AfWithVoice = 'abstractvoice[supertonic,stt]'" in ps1
     assert "$AfWithVoiceArm64 = 'abstractvoice[supertonic]'" in ps1
-    assert "'--with', $AfWithWheels, '--with', $voiceSpec)" in ps1
+    assert "if ($voice.Spec) { $argv += @('--with', $voice.Spec) }" in ps1
+    # Voice never fails an install: one retry without it, then the normal install.
+    assert "function Install-GatewayVoice" in ps1
+    assert "Install-Gateway $Gguf -Soft) { $voice.Result = $voice.Ok; return $true }" in ps1
+
+
+def test_install_sh_retries_without_voice_when_its_wheels_are_missing(tmp_path: Path) -> None:
+    """Voice never fails an install (e.g. glibc older than 2.28 has no onnxruntime wheel): a fake uv
+    that refuses abstractvoice must end in a working install that keeps llama.cpp and says voice
+    was skipped."""
+    fake = _fake_bin(tmp_path, compiler=False)
+    tool_bin = tmp_path / "toolbin"
+    calls = tmp_path / "uv-calls.log"
+    uv = fake / "uv"
+    uv.write_text(
+        "#!/bin/sh\n"
+        f'echo "$*" >> "{calls}"\n'
+        'case "$1 $2" in\n'
+        '  "--version "*) echo "uv 0.0.0" ;;\n'
+        f'  "tool dir") echo "{tool_bin}" ;;\n'
+        '  "tool install")\n'
+        '    for a in "$@"; do case "$a" in abstractvoice*) echo "simulated: no onnxruntime wheel" >&2; exit 2 ;; esac; done\n'
+        f'    mkdir -p "{tool_bin}" && printf "#!/bin/sh\\nexit 0\\n" > "{tool_bin}/abstractgateway" && chmod +x "{tool_bin}/abstractgateway" ;;\n'
+        "esac\n"
+        "exit 0\n"
+    )
+    uv.chmod(0o755)
+    proc = subprocess.run(
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--profile", "light", "--port", "18997",
+         "--no-start", "--no-service", "--no-open", "--no-modify-path", "--no-console"],
+        capture_output=True, text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb",
+             "XDG_DATA_HOME": str(tmp_path / "data")},
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    installs = [line for line in calls.read_text().splitlines() if line.startswith("tool install ")]
+    assert len(installs) == 2
+    assert "abstractvoice[supertonic,stt]" in installs[0] and "abstractvoice" not in installs[1]
+    if _host()[1]:  # this machine has a llama.cpp wheel: the retry keeps it
+        assert "--find-links" in installs[1]
+        assert "GGUF:       llama-cpp-python " in proc.stdout
+    assert "Voice:      skipped: its packages did not install on this system" in proc.stdout
+    assert "local voice (Supertonic, Whisper) did not install on this system: retrying without it" in proc.stdout
