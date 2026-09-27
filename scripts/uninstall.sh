@@ -3,8 +3,15 @@
 # AbstractFramework uninstaller (macOS / Linux)
 # =============================================================================
 # Removes what install.sh set up: the login item (LaunchAgent / systemd user
-# unit), the running gateway, the `abstractgateway` uv tool (and nodejs-wheel
-# when the installer added it), and, only if you say so, your data.
+# unit), the running gateway and its whole process tree (it waits up to 20 s for
+# it to exit, then stops what is left), the `abstractgateway` uv tool (and
+# nodejs-wheel when the installer added it), and, only if you say so, your data:
+# the gateway data dir, its logs and download cache, the Assistant's sessions
+# (~/.abstractassistant) and AbstractCode's settings (~/.abstractcode). Model
+# weights and shared caches (~/.cache/huggingface, ~/.abstractcore) are kept.
+# Each deletion is checked; a folder that cannot be deleted stops it with a
+# listing of what is left and which programs hold it. A second run skips what
+# is already gone.
 #
 #   sh uninstall.sh                 # asks before removing, and about your data
 #   sh uninstall.sh --yes           # no questions; keeps your data
@@ -38,7 +45,7 @@ while [ $# -gt 0 ]; do
         --data-dir) [ $# -ge 2 ] || { echo "ERROR: --data-dir needs a value" >&2; exit 2; }
             AF_DATA_DIR="$2"; export AF_DATA_DIR; shift ;;
         --data-dir=*) AF_DATA_DIR="${1#*=}"; export AF_DATA_DIR ;;
-        -h|--help) sed -n '2,23p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,30p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "ERROR: unknown argument: $1 (see --help)" >&2; exit 2 ;;
     esac
     shift

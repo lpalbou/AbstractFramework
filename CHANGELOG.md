@@ -4,6 +4,24 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Uninstall no longer fails with "Directory not empty" and deletes all your data with
+  `--purge`.** Removing the login item (`launchctl bootout`) does not wait for the gateway to exit,
+  and several of its children run in their own session, so launchd never stops them (an entity's
+  own-time loop, model downloads, the apps it started, the tray); they kept writing into the data
+  dir while `rm -rf` ran. Step [1] now waits up to 20 s for the whole gateway process tree to exit,
+  then stops what is left (SIGTERM, then SIGKILL) and says which processes it stopped. Every
+  deletion is retried while something re-creates it, then checked; a folder that cannot be deleted
+  stops the uninstaller with a listing of what is left (with file flags on macOS) and the programs
+  holding it (`lsof`), and the advice is to run the uninstaller again, never the installer.
+- **`--purge` covers every place that holds your sessions and settings**: besides the gateway data
+  dir and its login-item logs, the gateway's download cache, the Assistant's sessions, snapshots
+  and preferences (`~/.abstractassistant`; after a purge and a reinstall the Assistant listed its
+  old sessions whose runs were gone), and AbstractCode's login and preferences (`~/.abstractcode`).
+  Model weights and shared caches are kept and named. The purge question names what it deletes;
+  `--print` lists each command; a second run prints "nothing to do". `install.sh` accepts `--yes`.
+
 ## [0.4.1] - 2026-09-26
 
 A patch release for local MLX models and long-running flows.

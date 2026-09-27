@@ -50,10 +50,13 @@
 #                            to the terminal, so this works through curl | sh.
 #                            The double-click installers pass it.     [AF_INTERACTIVE=1]
 #   --uninstall [--purge] [--remove-uv]
-#                            remove the service and the uv tools (--purge also
-#                            deletes the gateway data dir; --remove-uv also removes
-#                            uv, its Pythons and its download cache when this
-#                            installer is what put uv there)
+#                            stop the whole gateway process tree, remove the service
+#                            and the uv tools (--purge also deletes your data: the
+#                            gateway data dir, its logs and cache, the Assistant's
+#                            sessions, AbstractCode's settings; model weights stay;
+#                            --remove-uv also removes uv, its Pythons and its
+#                            download cache when this installer put uv there)
+#   -y, --yes                ask nothing (the default unless --interactive)
 #   -v, --verbose            show the full output of every command
 #   -h, --help               this help
 # =============================================================================
@@ -160,7 +163,7 @@ INTERACTIVE="${AF_INTERACTIVE:-0}"
 
 usage() {
     if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
-        sed -n '2,59p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,62p' "$0" | sed 's/^# \{0,1\}//'
     else
         echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
         echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
@@ -207,6 +210,7 @@ while [ $# -gt 0 ]; do
         --purge) PURGE=1 ;;
         --remove-uv) REMOVE_UV=1 ;;
         --interactive) INTERACTIVE=1 ;;
+        -y|--yes) INTERACTIVE=0 ;;
         -v|--verbose) VERBOSE=1 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -287,6 +291,12 @@ run() {
     if [ -n "$LOG_FILE" ] && [ "$VERBOSE" = 0 ]; then
         printf '%s--- last lines of %s ---%s\n' "$C_D" "$LOG_FILE" "$C_0" >&2
         tail -n 25 "$LOG_FILE" >&2 || true
+    fi
+    # An uninstall needs no network, and "run the installer again" would reinstall:
+    # say how to finish the removal instead.
+    if [ "$UNINSTALL" = 1 ]; then
+        die "$_desc failed (command: $_shown).
+What to do: $UNINSTALL_AGAIN"
     fi
     # Most failures on a clean machine are a dropped connection: say that in
     # plain words instead of leaving the user with a resolver traceback.
@@ -441,16 +451,221 @@ stop_background_gateway() {
 }
 
 # ---------------------------------------------------------------------------
+# Uninstall helpers
+# ---------------------------------------------------------------------------
+# The gateway process tree. `launchctl bootout` signals the login item and returns;
+# the serve process then shuts down for a while, and several of its children run in
+# their own session (start_new_session), so launchd never stops them: an entity's
+# own-time loop (-m abstractruntime.identity.life, writes into <data>/entities),
+# model download jobs (-m abstractcore.config.host_jobs), managed processes and apps
+# (node -r <data>/apps/_support/parent_watch.cjs), the tray (-m abstractgateway.tray).
+# Each keeps writing into the data dir, which is what made `rm -rf` fail with
+# "Directory not empty". Matched here: every process of this user whose command line
+# runs from this install's uv tool environment (all of the Python children use its
+# python), the `abstractgateway` command, or the data dir's app watcher; the pids the
+# gateway and the installer recorded; and all their descendants. A gateway run from
+# somewhere else (a source checkout) is not matched: step [3] lists what still holds
+# files instead of stopping it.
+AF_STOP_TIMEOUT="${AF_STOP_TIMEOUT:-20}"   # seconds to wait for a clean exit (tests lower it)
+AF_RM_TRIES="${AF_RM_TRIES:-5}"            # rm -rf attempts, 1 s apart
+TOOL_VENV=""; TOOL_VENV2=""
+tool_venv() {
+    _td=""
+    if [ -n "$UV" ] && [ -x "$UV" ]; then _td="$("$UV" tool dir 2>/dev/null || true)"; fi
+    [ -n "$_td" ] || _td="${UV_TOOL_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/uv/tools}"
+    TOOL_VENV="$_td/abstractgateway"
+    # The command in the bin dir is a link into the tool environment: follow it too.
+    if [ -L "$TOOL_BIN/abstractgateway" ]; then
+        _t="$(readlink "$TOOL_BIN/abstractgateway" 2>/dev/null || true)"
+        case "$_t" in /*/bin/abstractgateway) TOOL_VENV2="${_t%/bin/abstractgateway}" ;; esac
+    fi
+}
+# Pids the gateway (run/gateway-serve.json, run/apps/*.json) and a background start
+# by this installer (gateway.pid) recorded.
+gw_record_pids() {
+    for _f in "$DATA_DIR/run/gateway-serve.json" "$DATA_DIR"/run/apps/*.json; do
+        [ -f "$_f" ] && sed -n 's/.*"pid": *\([0-9][0-9]*\).*/\1/p' "$_f" 2>/dev/null | head -n 1
+    done
+    [ -f "$PID_FILE" ] && sed -n '1s/[^0-9]//gp' "$PID_FILE" 2>/dev/null
+    return 0
+}
+# gw_scan: one "PID<TAB>COMMAND" line per live process of the gateway tree.
+gw_scan() {
+    have ps || return 0
+    _seed="$(gw_record_pids | tr '\n' ' ')"
+    ps -A -o pid= -o ppid= -o uid= -o args= 2>/dev/null | \
+    AF_P1="${TOOL_VENV:+$TOOL_VENV/}" AF_P2="${TOOL_VENV2:+$TOOL_VENV2/}" AF_P3="$TOOL_BIN/abstractgateway " \
+    AF_P4="$DATA_DIR/apps/_support/parent_watch.cjs" AF_SEED=" $_seed " AF_UID="$(id -u)" AF_SELF="$$" awk '
+        {
+            pid = $1; ppid = $2; uid = $3; a = $0
+            sub(/^[ \t]*[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]*/, "", a)
+            if (uid != ENVIRON["AF_UID"] || pid == ENVIRON["AF_SELF"]) next
+            args[pid] = a; parent[pid] = ppid; n++; order[n] = pid
+            hit = 0
+            if (ENVIRON["AF_P1"] != "" && index(a, ENVIRON["AF_P1"])) hit = 1
+            if (ENVIRON["AF_P2"] != "" && index(a, ENVIRON["AF_P2"])) hit = 1
+            if (index(a " ", ENVIRON["AF_P3"])) hit = 1
+            if (index(a, ENVIRON["AF_P4"])) hit = 1
+            if (index(ENVIRON["AF_SEED"], " " pid " ") && tolower(a) ~ /abstract/) hit = 1
+            if (hit) inset[pid] = 1
+        }
+        END {
+            do { grew = 0
+                for (i = 1; i <= n; i++) { p = order[i]
+                    if (!(p in inset) && (parent[p] in inset)) { inset[p] = 1; grew = 1 } }
+            } while (grew)
+            for (i = 1; i <= n; i++) { p = order[i]; if (p in inset) printf "%s\t%s\n", p, substr(args[p], 1, 160) }
+        }'
+}
+# alive_of "PIDS": those still running.
+alive_of() { _al=""; for _x in $1; do kill -0 "$_x" 2>/dev/null && _al="$_al $_x"; done; echo "${_al# }"; }
+# stop_gateway_tree: wait for the tree to exit (up to AF_STOP_TIMEOUT s), then
+# SIGTERM, then SIGKILL; say what was running and how it ended.
+stop_gateway_tree() {
+    _list="$(gw_scan)"
+    if ! have ps; then  # no ps (a minimal container): the recorded pids are all we know
+        for _x in $(gw_record_pids); do
+            kill -0 "$_x" 2>/dev/null && _list="$_list
+$_x	(pid recorded by the gateway)"
+        done
+    fi
+    _pids="$(printf '%s\n' "$_list" | cut -f1 | tr '\n' ' ')"
+    # shellcheck disable=SC2086  # word splitting of a pid list
+    _pids="$(echo $_pids)"
+    if [ -z "$_pids" ]; then ok "no gateway process is running"; return 0; fi
+    info "gateway processes still running:"
+    printf '%s\n' "$_list" | sed '/^$/d; s/^/      /'
+    if [ "$PRINT" = 1 ]; then
+        printf '  %s$ kill -TERM %s   (only if still running after %s s; then kill -KILL)%s\n' "$C_D" "$_pids" "$AF_STOP_TIMEOUT" "$C_0"
+        twin "kill -TERM $_pids"
+        return 0
+    fi
+    _n=0; _max=$((AF_STOP_TIMEOUT * 2))
+    while :; do
+        # Re-scan: children re-parented to launchd/init lose their ppid link.
+        _pids="$(alive_of "$_pids $(gw_scan | cut -f1 | tr '\n' ' ')")"
+        _pids="$(printf '%s\n' $_pids | sort -un | tr '\n' ' ')"; _pids="$(echo $_pids)"
+        [ -z "$_pids" ] && break
+        [ "$_n" -ge "$_max" ] && break
+        [ "$_n" = 0 ] && info "waiting up to $AF_STOP_TIMEOUT s for them to exit"
+        sleep 0.5; _n=$((_n + 1))
+    done
+    if [ -z "$_pids" ]; then ok "the gateway process tree has exited"; return 0; fi
+    printf '  %s$ kill -TERM %s%s\n' "$C_D" "$_pids" "$C_0"; twin "kill -TERM $_pids"
+    kill -TERM $_pids 2>/dev/null || true
+    _n=0; while [ -n "$(alive_of "$_pids")" ] && [ "$_n" -lt 10 ]; do sleep 0.5; _n=$((_n + 1)); done
+    _left="$(alive_of "$_pids $(gw_scan | cut -f1 | tr '\n' ' ')")"
+    if [ -n "$_left" ]; then
+        printf '  %s$ kill -KILL %s%s\n' "$C_D" "$_left" "$C_0"; twin "kill -KILL $_left"
+        kill -KILL $_left 2>/dev/null || true
+        _n=0; while [ -n "$(alive_of "$_left")" ] && [ "$_n" -lt 6 ]; do sleep 0.5; _n=$((_n + 1)); done
+        _left="$(alive_of "$_left")"
+        if [ -n "$_left" ]; then
+            ps -o pid= -o user= -o args= -p "$(echo $_left | tr ' ' ',')" 2>/dev/null | sed 's/^/      /' >&2 || true
+            die "these gateway processes could not be stopped: $_left.
+What to do: quit them in Activity Monitor (or log out and back in), then $UNINSTALL_AGAIN"
+        fi
+    fi
+    ok "stopped the gateway processes: $_pids"
+}
+# mounts_under PATH: mount points inside PATH (rm -rf would delete into them).
+mounts_under() {
+    have mount || return 0
+    if [ "$OS_ID" = linux ]; then mount 2>/dev/null | sed -n 's/^.* on \(.*\) type .*$/\1/p'
+    else mount 2>/dev/null | sed -n 's/^.* on \(.*\) (.*)$/\1/p'; fi | while IFS= read -r _m; do
+        case "$_m" in "$1"/*) echo "$_m" ;; esac
+    done
+}
+PURGE_FAILED=""
+# purge_path DESCRIPTION PATH: delete PATH (retrying while something re-creates it),
+# then check it is gone; if not, list what is left and who holds it, and remember it.
+purge_path() {
+    _d="$1"; _p="$2"
+    if [ ! -e "$_p" ] && [ ! -L "$_p" ]; then info "$_d: nothing to do (not there: $_p)"; return 0; fi
+    if [ -L "$_p" ]; then
+        _t="$(readlink "$_p" 2>/dev/null || echo '?')"
+        run "remove the link $_p" rm -f "$_p"
+        warn "$_p was a link to $_t: removed the link, kept what it points to (delete that by hand if it is yours)"
+        return 0
+    fi
+    _mn="$(mounts_under "$_p")"
+    if [ -n "$_mn" ]; then
+        warn "$_d: not deleted: a volume is mounted inside $_p:"
+        printf '%s\n' "$_mn" | sed 's/^/      /'
+        PURGE_FAILED="$PURGE_FAILED
+  $_p   (a volume is mounted inside: eject it first)"
+        return 0
+    fi
+    printf '  %s$ %s%s\n' "$C_D" "$(show_cmd rm -rf "$_p")" "$C_0"; twin "$(show_cmd rm -rf "$_p")"
+    [ "$PRINT" = 1 ] && return 0
+    _i=1; _err=""
+    while :; do
+        _err="$(rm -rf "$_p" 2>&1 >/dev/null)" || true
+        if [ ! -e "$_p" ] && [ ! -L "$_p" ]; then
+            ok "$_d: deleted$([ "$_i" -gt 1 ] && echo " (attempt $_i)")"
+            return 0
+        fi
+        [ "$_i" -ge "$AF_RM_TRIES" ] && break
+        sleep 1; _i=$((_i + 1))
+    done
+    warn "$_d: could not delete $_p after $_i attempts:"
+    printf '%s\n' "$_err" | head -n 8 | sed 's/^/      /'
+    info "what is left there$([ "$OS_ID" = macos ] && echo ' (ls -lO shows file flags such as uchg)'):"
+    if [ "$OS_ID" = macos ]; then find "$_p" -exec ls -ldO {} + 2>/dev/null | head -n 40 | sed 's/^/      /'
+    else find "$_p" -exec ls -ld {} + 2>/dev/null | head -n 40 | sed 's/^/      /'; fi
+    if have lsof; then
+        _h="$(lsof -n +D "$_p" 2>/dev/null | head -n 20)"
+        if [ -n "$_h" ]; then info "programs holding files there (lsof +D):"; printf '%s\n' "$_h" | sed 's/^/      /'
+        else info "no program holds a file there (lsof +D)"; fi
+    fi
+    PURGE_FAILED="$PURGE_FAILED
+  $_p"
+}
+# Everything --purge deletes: "DESCRIPTION|PATH" lines. Model weights and shared
+# caches (~/.cache/huggingface, ~/.abstractcore, ~/.abstractframework, the libraries'
+# own dirs) are not in it.
+purge_targets() {
+    echo "the gateway data (settings, users, chats, run history, artifacts, memory)|$DATA_DIR"
+    if [ "$OS_ID" = macos ]; then
+        echo "the login item's logs|$HOME/Library/Logs/AbstractGateway"
+        echo "the gateway's download cache (engine installers)|$HOME/Library/Caches/AbstractGateway"
+    else
+        echo "the gateway's download cache (engine installers)|${XDG_CACHE_HOME:-$HOME/.cache}/abstractgateway"
+    fi
+    echo "the Assistant's sessions, snapshots and preferences|$HOME/.abstractassistant"
+    if [ "$OS_ID" = macos ]; then
+        for _f in "$HOME/Library/Logs/Assistant"/abstractassistant-*; do
+            [ -e "$_f" ] && echo "the Assistant's launcher log|$_f"
+        done
+    fi
+    echo "AbstractCode's login and preferences|$HOME/.abstractcode"
+    echo "AbstractCode's older preferences|$HOME/.abstractcode-tui"
+}
+UNINSTALL_AGAIN="run the uninstaller again (sh uninstall.sh --yes, or double-click Uninstall AbstractFramework.command); it skips what is already gone."
+
+# ---------------------------------------------------------------------------
 # Uninstall
 # ---------------------------------------------------------------------------
 if [ "$UNINSTALL" = 1 ]; then
     printf '%sAbstractFramework uninstall%s%s\n' "$C_B" "$C_0" "$([ "$PRINT" = 1 ] && echo ' (--print: nothing is changed)')"
-    find_uv || true; tool_bin
+    find_uv || true; tool_bin; tool_venv
     # Asked first, so the user answers once and every step below runs unattended.
-    if [ "$PURGE" = 0 ] && [ -d "$DATA_DIR" ]; then
-        _size="$(du -sh "$DATA_DIR" 2>/dev/null | awk '{print $1}')"
-        if ask_yes "Also delete your AbstractFramework data (settings, users, chats, run history: ${_size:-?} in $DATA_DIR)? This cannot be undone." n; then
-            PURGE=1
+    if [ "$PURGE" = 0 ]; then
+        _there=0; _kb=0
+        _targets="$(purge_targets)"
+        _oifs="$IFS"; IFS='
+'; set -f
+        for _t in $_targets; do
+            if [ -e "${_t#*|}" ]; then
+                _there=1; _kb=$((_kb + $(du -sk "${_t#*|}" 2>/dev/null | awk '{print $1 + 0}' | tail -n 1)))
+            fi
+        done
+        IFS="$_oifs"; set +f
+        if [ "$_there" = 1 ]; then
+            _size="$(echo "$_kb" | awk '{ if ($1 >= 1048576) printf "%.1fG", $1/1048576; else if ($1 >= 1024) printf "%.0fM", $1/1024; else printf "%dK", $1 }')"
+            if ask_yes "Also delete your AbstractFramework data (${_size:-?}): the gateway's settings, users, chats, run history and artifacts ($DATA_DIR), its logs and download cache, the Assistant's sessions and preferences (~/.abstractassistant) and AbstractCode's login and preferences (~/.abstractcode)? Model weights are kept. This cannot be undone." n; then
+                PURGE=1
+            fi
         fi
     fi
     if [ "$ST_UV_BY_US" = 1 ] && [ "$REMOVE_UV" = 0 ] && [ -n "$UV" ]; then
@@ -459,6 +674,7 @@ if [ "$UNINSTALL" = 1 ]; then
             REMOVE_UV=1
         fi
     fi
+    [ "$PURGE" = 1 ] && UNINSTALL_AGAIN="run the uninstaller again with --purge (sh uninstall.sh --yes --purge); it skips what is already gone."
     step "Gateway service and processes"
     # Only touch the login service when this install registered it (or when no state says
     # otherwise): a --no-service install must not unregister a service set up separately.
@@ -481,7 +697,10 @@ if [ "$UNINSTALL" = 1 ]; then
     else
         info "no login service found"
     fi
-    stop_background_gateway
+    # Removing the login item does not wait for the gateway to exit (launchd), and
+    # children in their own session outlive it: wait for the whole tree, then stop it.
+    stop_gateway_tree
+    [ "$PRINT" = 1 ] || rm -f "$PID_FILE"
     step "uv tools"
     if [ -n "$UV" ]; then
         if "$UV" tool list 2>/dev/null | grep -q '^abstractgateway '; then
@@ -495,17 +714,33 @@ if [ "$UNINSTALL" = 1 ]; then
     fi
     step "Data"
     _inst="$HOME/Library/Application Support/AbstractFramework/Installer"
-    if [ "$OS_ID" = macos ] && [ -d "$_inst" ]; then
-        run "remove the copy of the installer left by the .pkg" rm -rf "$_inst"
+    if [ "$OS_ID" = macos ] && [ -e "$_inst" ]; then
+        purge_path "the copy of the installer left by the .pkg" "$_inst"
+        [ "$PRINT" = 1 ] || rmdir "$HOME/Library/Application Support/AbstractFramework" 2>/dev/null || true
     fi
     if [ "$PURGE" = 1 ]; then
-        run "delete the gateway data dir" rm -rf "$DATA_DIR"
-        # The LaunchAgent's stdout/stderr files (os_service.log_dir on macOS).
-        if [ "$OS_ID" = macos ] && [ -d "$HOME/Library/Logs/AbstractGateway" ]; then
-            run "delete the login item's logs" rm -rf "$HOME/Library/Logs/AbstractGateway"
+        _targets="$(purge_targets)"
+        _oifs="$IFS"; IFS='
+'; set -f
+        for _t in $_targets; do
+            IFS="$_oifs"; set +f
+            purge_path "${_t%%|*}" "${_t#*|}"
+            IFS='
+'; set -f
+        done
+        IFS="$_oifs"; set +f
+        if [ "$OS_ID" = macos ] && [ "$PRINT" = 0 ]; then rmdir "$HOME/Library/Logs/Assistant" 2>/dev/null || true; fi
+        info "kept: model weights and shared caches (~/.cache/huggingface, ~/.abstractcore, ~/.abstractframework, ~/.cache/abstractvoice, LM Studio and Ollama models)"
+        if [ -n "$PURGE_FAILED" ]; then
+            die "the uninstaller could not delete:$PURGE_FAILED
+The entries still there, and any program holding them, are listed above.
+What to do: quit the programs listed (or log out and back in);$([ "$OS_ID" = macos ] && printf '%s' " if 'ls -lO' shows 'uchg',
+clear it with: chflags -R nouchg <folder>;") if a file belongs to another user (root), fix it with:
+sudo chown -R $(id -un) <folder>. Then $UNINSTALL_AGAIN"
         fi
     else
         info "kept the gateway data dir: $DATA_DIR (delete it with --uninstall --purge)"
+        info "kept: the Assistant's sessions (~/.abstractassistant) and AbstractCode's settings (~/.abstractcode); --purge deletes them"
     fi
     if [ "$REMOVE_UV" = 1 ] && [ -n "$UV" ]; then
         step "uv, its Python and its download cache"

@@ -104,15 +104,35 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 
 It asks before removing anything, then asks two more questions, both defaulting to no:
 
-- **Also delete your AbstractFramework data** (settings, users, chats, run history)? This cannot be
-  undone.
+- **Also delete your AbstractFramework data**? This cannot be undone. It deletes:
+
+  | What | macOS | Linux |
+  |---|---|---|
+  | Gateway data: settings, users, chats, run history, artifacts, memory, the tray's preferences | `~/Library/Application Support/AbstractGateway` | `~/.local/share/abstractgateway` |
+  | The login item's logs | `~/Library/Logs/AbstractGateway` | (in the data dir) |
+  | The gateway's download cache (engine installers) | `~/Library/Caches/AbstractGateway` | `~/.cache/abstractgateway` |
+  | The Assistant's sessions, snapshots and preferences | `~/.abstractassistant`, `~/Library/Logs/Assistant/abstractassistant-*` | `~/.abstractassistant` |
+  | AbstractCode's login and preferences | `~/.abstractcode`, `~/.abstractcode-tui` | same |
+
+  It keeps model weights and shared caches: `~/.cache/huggingface`, `~/.abstractcore` (its
+  config and its downloaded models), `~/.abstractframework`, `~/.cache/abstractvoice`, and the
+  models of LM Studio and Ollama. Delete those by hand if you want them gone.
 - **Also remove uv, its Python and its download cache** (about 2.5 GB)? Asked only when the
   installer is what added uv; answer no if you use uv for anything else.
 
-It always removes the login item, stops AbstractFramework and removes the gateway. It keeps Ollama
-and LM Studio (they have their own uninstallers) and the one PATH line uv added to your shell
-profile. Without questions: `sh uninstall.sh --yes` (keeps data), add `--purge` to delete the data
-and `--remove-uv` to remove uv. Windows: `install.ps1 -Uninstall [-Purge]`.
+It always removes the login item, stops AbstractFramework and removes the gateway (and the
+Assistant, which lives in the gateway's environment). Stopping means the whole gateway process
+tree: after the login item is removed it waits up to 20 seconds for every gateway process to exit
+(the server, the tray, an entity's own-time loop, model downloads, the apps it started), then
+stops the rest, and says which processes it stopped. It keeps Ollama and LM Studio (they have
+their own uninstallers) and the one PATH line uv added to your shell profile. Without questions:
+`sh uninstall.sh --yes` (keeps data), add `--purge` to delete the data and `--remove-uv` to remove
+uv; `--print` shows every command and changes nothing. Windows: `install.ps1 -Uninstall [-Purge]`.
+
+**If a folder cannot be deleted**, the uninstaller stops with an error that names the folder,
+lists what is left in it and the programs that hold files there. Quit those programs (or log
+out and back in); on macOS, a file shown with the `uchg` flag is unlocked with
+`chflags -R nouchg <folder>`. Then run the uninstaller again: it skips what is already gone.
 
 ## Advanced: what the installer does
 
@@ -214,7 +234,7 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--print` | `-Print` (or `-WhatIf`) | Show the plan and every command; change nothing |
 | `--print-versions` | `-PrintVersions` | Print the pinned gateway, npm app and crate versions, then exit |
 | `-v`, `--verbose` | — | Show the full output of every command |
-| `--uninstall [--purge] [--remove-uv]` | `-Uninstall [-Purge]` | Remove the service and uv tools (purge also deletes the data; `--remove-uv` also removes uv, its Python and cache when the installer added uv) |
+| `--uninstall [--purge] [--remove-uv]` | `-Uninstall [-Purge]` | Stop the gateway process tree, remove the service and uv tools (purge also deletes your data: see [Remove AbstractFramework](#remove-abstractframework); `--remove-uv` also removes uv, its Python and cache when the installer added uv) |
 
 Pass options through the one-liner like this:
 

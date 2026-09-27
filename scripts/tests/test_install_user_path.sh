@@ -19,6 +19,13 @@
 #   - the start-at-login question: default yes, a previous "no" stays the default
 #   - uninstall.sh removes a login item left without its tool (launchctl bootout
 #     through the double, plist deleted), keeps data unless --purge
+#   - uninstall with a live gateway tree (a writer every 50 ms and a detached,
+#     SIGTERM-proof worker): the tree is listed and stopped, the data dir (with a
+#     space) is gone and stays gone, --purge also deletes the Assistant's sessions,
+#     AbstractCode's settings, the gateway logs/cache and the installer copy and
+#     keeps model weights; a second run says "nothing to do"; --print changes
+#     nothing; answering no keeps everything; a folder that cannot be deleted
+#     (uchg on macOS, read-only on Linux) exits 1 naming it, with uninstall advice
 #   - Install AbstractFramework.command passes --interactive and user args, and
 #     says what to do when the installer fails
 #   - build_macos_installer.sh builds the zip (executable bits kept) and a
@@ -36,6 +43,8 @@ DOUBLES="$TEST_DIR/doubles"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/af_install_user_path.XXXXXX")"
 WORK="$(cd "$WORK" && pwd -P)"
 cleanup() {
+    pkill -9 -f "$WORK/" 2>/dev/null
+    [[ "$(uname -s)" == Darwin ]] && chflags -R nouchg "$WORK" 2>/dev/null
     chmod -R u+w "$WORK" 2>/dev/null
     if [[ "${KEEP_WORK:-0}" == "1" ]]; then echo "sandbox kept: $WORK"; else rm -rf "$WORK"; fi
 }
@@ -147,6 +156,95 @@ PLIST
     run_in uninst_noconfirm -- sh "$SCRIPTS_DIR/uninstall.sh"
     check "without a terminal or --yes it removes nothing" "$([[ $RC == 2 ]] && has "$OUT" "re-run with --yes"; echo $?)" "$OUT"
 fi
+
+echo "[7b] uninstall: a live gateway tree, --purge of every user-data location"
+# A fake installed gateway in the sandbox HOME: `service uninstall` returns at once
+# (as `launchctl bootout` does) while `serve` keeps a tree alive that writes into the
+# data dir every 50 ms: a writer child, and a detached worker (its own session, parent
+# gone, ignores SIGTERM) like the entity loop / download jobs. The data dir has a space.
+# Only processes whose command line holds the sandbox paths are ever signalled.
+mk_live_gateway() {  # mk_live_gateway HOME DATA_DIR
+    local h="$1" d="$2" v="$1/.local/share/uv/tools/abstractgateway"
+    mkdir -p "$v/bin" "$h/.local/bin" "$h/Library/LaunchAgents" "$d/runtime/artifacts" "$d/logs"
+    local i j
+    for i in $(seq 1 60); do mkdir -p "$d/runtime/artifacts/r$i"; for j in $(seq 1 25); do echo x >"$d/runtime/artifacts/r$i/a$j.json"; done; done
+    printf 'PORT=18829\nMODE=service\nPROFILE=light\n' >"$d/bootstrap.env"
+    cat >"$v/bin/worker-loop" <<'W'
+#!/bin/sh
+trap '' TERM
+while :; do mkdir -p "$1/entities/e1" 2>/dev/null; date >>"$1/entities/e1/own_time.log" 2>/dev/null; sleep 0.05; done
+W
+    cat >"$v/bin/abstractgateway" <<GW
+#!/bin/sh
+case "\$1 \${2:-}" in
+  "service --help") exit 0 ;;
+  "service uninstall") rm -f "$h/Library/LaunchAgents/ai.abstractframework.gateway.plist"; echo "Your data is kept: $d"; exit 0 ;;
+  serve*)
+    ( sh "$v/bin/worker-loop" "$d" </dev/null >/dev/null 2>&1 & )
+    while :; do mkdir -p "$d/runtime/artifacts/r\$((\$\$ % 60 + 1))" "$d/logs" 2>/dev/null
+      n=\$((\${n:-0} + 1)); echo \$n >"$d/runtime/artifacts/r\$((n % 60 + 1))/w\$n.json" 2>/dev/null; echo \$n >>"$d/logs/gateway.log" 2>/dev/null; sleep 0.05; done ;;
+esac
+exit 0
+GW
+    chmod +x "$v/bin/abstractgateway" "$v/bin/worker-loop"
+    ln -sf "$v/bin/abstractgateway" "$h/.local/bin/abstractgateway"
+    touch "$h/Library/LaunchAgents/ai.abstractframework.gateway.plist"
+}
+populate_user_data() {  # the other locations --purge covers, and two it must keep
+    local h="$1"
+    mkdir -p "$h/.abstractassistant/sessions/s1" "$h/.abstractcode" "$h/.cache/huggingface/hub" "$h/.abstractcore/config"
+    echo '{}' >"$h/.abstractassistant/sessions.json"; echo '{}' >"$h/.abstractassistant/sessions/s1/session.json"
+    echo '{}' >"$h/.abstractcode/prefs.json"; echo w >"$h/.cache/huggingface/hub/weights"; echo '{}' >"$h/.abstractcore/config/abstractcore.json"
+    if [[ "$IS_MAC" == 1 ]]; then
+        mkdir -p "$h/Library/Logs/AbstractGateway" "$h/Library/Caches/AbstractGateway/engines" "$h/Library/Logs/Assistant" \
+                 "$h/Library/Application Support/AbstractFramework/Installer"
+        echo l >"$h/Library/Logs/AbstractGateway/gateway.err.log"; echo l >"$h/Library/Logs/Assistant/abstractassistant-launcher.log"
+        echo i >"$h/Library/Application Support/AbstractFramework/Installer/install.sh"
+    else
+        mkdir -p "$h/.cache/abstractgateway/engines"
+    fi
+}
+sandbox_procs() { pgrep -f "$WORK/$1/" 2>/dev/null | tr '\n' ' '; }
+LH="$WORK/live/home"; LD="$WORK/live/my data"
+mk_live_gateway "$LH" "$LD"; populate_user_data "$LH"
+( cd "$WORK" && env -i HOME="$LH" PATH=/usr/bin:/bin sh -c "exec '$LH/.local/share/uv/tools/abstractgateway/bin/abstractgateway' serve" </dev/null >/dev/null 2>&1 & ) 2>/dev/null
+sleep 1
+check "the fake gateway tree runs (serve + detached worker)" "$([[ $(sandbox_procs live | wc -w) -ge 2 ]]; echo $?)"
+run_in live AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$LD"
+check "exits 0" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
+check "lists the running tree, then stops it (the SIGTERM-proof worker with SIGKILL)" "$(has "$OUT" "gateway processes still running" && has "$OUT" "kill -TERM" && has "$OUT" "kill -KILL" && has "$OUT" "stopped the gateway processes"; echo $?)" "$OUT"
+check "no sandbox gateway process is left" "$([[ -z "$(sandbox_procs live)" ]]; echo $?)" "$OUT"
+check "the data dir (path with a space) is gone and stays gone" "$(sleep 0.5; [[ ! -e "$LD" ]]; echo $?)" "$OUT"
+check "--purge deleted the Assistant's sessions and AbstractCode's settings" "$([[ ! -e "$LH/.abstractassistant" && ! -e "$LH/.abstractcode" ]]; echo $?)" "$OUT"
+if [[ "$IS_MAC" == 1 ]]; then
+    check "--purge deleted the gateway logs, its cache, the Assistant's log and the installer copy" "$([[ ! -e "$LH/Library/Logs/AbstractGateway" && ! -e "$LH/Library/Caches/AbstractGateway" && ! -e "$LH/Library/Logs/Assistant" && ! -e "$LH/Library/Application Support/AbstractFramework" ]]; echo $?)" "$OUT"
+else
+    check "--purge deleted the gateway cache" "$([[ ! -e "$LH/.cache/abstractgateway" ]]; echo $?)" "$OUT"
+fi
+check "model weights and abstractcore's config are kept" "$([[ -f "$LH/.cache/huggingface/hub/weights" && -f "$LH/.abstractcore/config/abstractcore.json" ]] && has "$OUT" "kept: model weights"; echo $?)" "$OUT"
+run_in live AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$LD"
+check "second run: exit 0, nothing to do, no error" "$([[ $RC == 0 ]] && has "$OUT" "nothing to do" && has "$OUT" "no gateway process is running" && ! has "$OUT" "ERROR"; echo $?)" "$OUT"
+pkill -9 -f "$WORK/live/" 2>/dev/null
+
+echo "[7c] uninstall --print and the 'keep my data' answer change nothing"
+PH="$WORK/printcase/home"; mkdir -p "$PH/$DATA_REL"; printf 'MODE=background\n' >"$PH/$DATA_REL/bootstrap.env"; populate_user_data "$PH"
+snap() { (cd "$1" && find . -exec ls -ld {} + | awk '{print $1, $5, $NF}' | sort); }
+before="$(snap "$PH")"
+run_in printcase -- sh "$SCRIPTS_DIR/uninstall.sh" --purge --print
+check "--print: exit 0, shows each rm -rf, changes nothing" "$([[ $RC == 0 ]] && has "$OUT" "rm -rf .*abstractassistant" && has "$OUT" "rm -rf .*$DATA_REL" && [[ "$(snap "$PH")" == "$before" ]]; echo $?)" "$OUT"
+run_in printcase -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
+check "no --purge (answer N): exit 0, the data and the Assistant's sessions are kept" "$([[ $RC == 0 && -f "$PH/$DATA_REL/bootstrap.env" && -f "$PH/.abstractassistant/sessions.json" && -f "$PH/.abstractcode/prefs.json" ]] && has "$OUT" "kept the gateway data dir" && has "$OUT" "Also delete your AbstractFramework data" && has "$OUT" "-> no (default"; echo $?)" "$OUT"
+
+echo "[7d] uninstall --purge: a folder that cannot be deleted is named, with what is left"
+BH="$WORK/blocked/home"; BD="$WORK/blocked/data dir"; mkdir -p "$BD/runtime/locked" "$BH"
+printf 'MODE=background\n' >"$BD/bootstrap.env"; echo x >"$BD/runtime/locked/ledger.jsonl"
+if [[ "$IS_MAC" == 1 ]]; then chflags uchg "$BD/runtime/locked/ledger.jsonl"; else chmod 555 "$BD/runtime/locked"; fi
+run_in blocked AF_RM_TRIES=2 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$BD"
+check "exit 1 with the explicit listing and uninstall advice (never 'run the installer again')" "$([[ $RC == 1 ]] && has "$OUT" "could not delete" && has "$OUT" "ledger.jsonl" && has "$OUT" "the uninstaller could not delete" && has "$OUT" "run the uninstaller again" && ! has "$OUT" "run the installer again"; echo $?)" "$OUT"
+[[ "$IS_MAC" == 1 ]] && check "the listing shows the uchg flag" "$(has "$OUT" "uchg"; echo $?)" "$OUT"
+if [[ "$IS_MAC" == 1 ]]; then chflags -R nouchg "$BD"; else chmod 755 "$BD/runtime/locked"; fi
+run_in blocked AF_RM_TRIES=2 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$BD"
+check "once unlocked, a second run finishes (exit 0, dir gone)" "$([[ $RC == 0 && ! -e "$BD" ]]; echo $?)" "$OUT"
 
 echo "[8] Install AbstractFramework.command"
 C="$WORK/cmd"; mkdir -p "$C"
