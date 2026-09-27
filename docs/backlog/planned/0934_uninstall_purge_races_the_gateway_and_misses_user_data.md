@@ -46,5 +46,12 @@ HF cache and weights (named in the output); `-y`; uninstall-specific advice. Tes
 purge is silent on failure and misses the Assistant/Code data (same repo, next item); gateway `service uninstall` should itself wait for
 the tree (abstractgateway backlog); Linux XDG-autostart gateways are not stopped by `service uninstall` (`os_service.py:880-890`).
 
+Review 36 (untracked/missions-2026-09-25/REVIEW/36-uninstall-purge.md): GO for pushing, with defects fixed in root 737a9cb: recorded pids are
+stopped only when their command line still points at this install (stale pid file → "left alone"); the mount guard resolves both sides
+with `pwd -P`; the app match requires `node -r <this data dir>/apps/_support/parent_watch.cjs`; `--purge` also deletes
+`~/Library/Preferences/ai.abstractcore.abstractassistant.plist`; a relative `--data-dir` is made absolute once and `/`, `$HOME`, empty are
+refused; a location that reappears one second after the purge fails the run; the scan skips the uninstaller's own descendants. Tests
+[7e] +9, 74 passed. Delta review 38 pending before the push.
+
 ## Related
 abstractassistant 0853 (gateway-first sessions), 0868 (installer signing), 0932 (release trace).
