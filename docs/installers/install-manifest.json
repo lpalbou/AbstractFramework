@@ -90,7 +90,7 @@
         "env": "",
         "ps": "-NoOpen",
         "sh": "--no-open",
-        "summary": "Do not open the browser."
+        "summary": "Do not open the browser (on a remote or headless session: do not open the terminal console)."
       },
       {
         "env": "",

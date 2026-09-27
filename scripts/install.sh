@@ -46,7 +46,8 @@
 #   --no-tray                skip the tray extra
 #   --no-service             do not register a login service; start in background
 #   --no-start               install only; do not start the gateway
-#   --no-open                do not open the browser
+#   --no-open                do not open the browser (on a remote or headless session:
+#                            do not start the terminal console at the end)
 #   --no-modify-path         do not run `uv tool update-shell`
 #   --print, --dry-run       show the plan and commands; change nothing
 #   --print-versions         print the pinned versions and exit
@@ -135,6 +136,11 @@ AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/
 # (tests/test_install_profiles.py keeps them in sync).
 # ---------------------------------------------------------------------------
 AF_WITH_WHEELS="webrtcvad-wheels>=2.0.14"
+# Local voice on every profile: Supertonic text-to-speech (ONNX Runtime) and Whisper
+# speech-to-text (faster-whisper: CTranslate2, PyAV). Both run on CPU and ship prebuilt wheels
+# for Linux (glibc) x86_64/aarch64, macOS 13+ and Windows x64; the apple and gpu profiles already
+# carry them. No wheels exist for musl Linux (Alpine) or macOS before 13: skipped there, said so.
+AF_WITH_VOICE="abstractvoice[supertonic,stt]"
 AF_COMPILED_EXTRAS="stable-diffusion-cpp-python aec-audio-processing"
 AF_SKIPPED_LINE="Skipped compiled extras (stable-diffusion.cpp, echo cancellation): re-run with --full after installing a C compiler."
 AF_LLAMA_INDEX="https://abetlen.github.io/llama-cpp-python/whl"
@@ -1051,6 +1057,15 @@ if [ "$FULL" = 0 ]; then
     [ -n "$GGUF_KIND" ] && GGUF_LINKS="$AF_LLAMA_INDEX/$GGUF_KIND/llama-cpp-python/"
 fi
 
+# Local voice (Supertonic + Whisper): see AF_WITH_VOICE at the top.
+VOICE_SPEC="$AF_WITH_VOICE"; VOICE_RESULT="Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU"
+if [ "$OS_ID" = linux ] && ldd --version 2>&1 | grep -qi musl; then
+    VOICE_SPEC=""; VOICE_RESULT="skipped: ONNX Runtime and CTranslate2 publish no wheels for musl Linux (Alpine)"
+elif [ "$OS_ID" = macos ] && [ "$MACOS_MAJOR" -lt 13 ] 2>/dev/null; then
+    VOICE_SPEC=""; VOICE_RESULT="skipped: ONNX Runtime publishes no wheels for macOS $MACOS_VERSION (13 or later needed)"
+fi
+[ -n "$VOICE_SPEC" ] || warn "local voice $VOICE_RESULT"
+
 # Gateway requirement.
 if [ -n "$FROM" ]; then
     if [ -e "$FROM" ]; then
@@ -1190,6 +1205,7 @@ install_gateway() {
         [ "$_gguf" = 1 ] && echo "llama-cpp-python==$GGUF_PIN" >"$DATA_DIR/uv-constraints.txt"
     fi
     set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS"
+    [ -n "$VOICE_SPEC" ] && set -- "$@" --with "$VOICE_SPEC"
     if [ "$_gguf" = 1 ]; then
         set -- "$@" --with "llama-cpp-python==$GGUF_PIN" --constraints uv-constraints.txt --find-links "$GGUF_LINKS"
     elif [ "$FULL" = 1 ]; then
@@ -1501,6 +1517,11 @@ write_state
 CONSOLE_URL="$BASE_URL/console"
 TOKEN_FILE="$DATA_DIR/auth/bootstrap-admin-token"
 CLAIMED=0; OPENED=0
+# A remote or headless session: SSH, or Linux with no graphical display. The installer then
+# opens the terminal console at the end instead of a browser.
+REMOTE_SESSION=0
+if [ -n "${SSH_CONNECTION:-}${SSH_TTY:-}" ]; then REMOTE_SESSION=1
+elif [ "$OS_ID" = linux ] && [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then REMOTE_SESSION=1; fi
 if [ "$NO_START" = 0 ]; then
     step "Health check"
     twin "curl $BASE_URL/api/health"
@@ -1551,6 +1572,10 @@ What to do: restart the computer (the login item starts it again) or run the ins
 
     if [ "$NO_OPEN" = 1 ] || [ "$PRINT" = 1 ]; then
         info "open: $CONSOLE_URL"
+    elif [ "$REMOTE_SESSION" = 1 ]; then
+        # Over SSH a browser would open on the remote machine's own screen, if it has one.
+        info "open: $CONSOLE_URL"
+        info "remote host? tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
     elif [ "$OS_ID" = macos ] && have open; then
         if open "$CONSOLE_URL" >/dev/null 2>&1; then OPENED=1; ok "opened the console in your browser"; else info "open: $CONSOLE_URL"; fi
     elif [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && have xdg-open; then
@@ -1611,6 +1636,7 @@ echo "  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"
 echo "  GGUF:       $GGUF_RESULT"
+echo "  Voice:      $VOICE_RESULT"
 if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
     echo "  $AF_SKIPPED_LINE"
 fi
@@ -1622,4 +1648,14 @@ if [ -n "$TWINS" ]; then
     printf '%s' "$TWINS"
 fi
 [ -n "$LOG_FILE" ] && printf '\n  %sFull log: %s%s\n' "$C_D" "$LOG_FILE" "$C_0"
+
+# Remote or headless: open the terminal console, signed in, the way a Mac opens the web console.
+# Only with a terminal to draw on (/dev/tty works through `curl | sh`); --no-open skips it.
+if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ] && [ "$NO_OPEN" = 0 ] && [ "$REMOTE_SESSION" = 1 ] \
+    && [ "$CONSOLE_OK" = 1 ] && [ -n "$_tui_tok" ] && [ -t 1 ] && { : </dev/tty; } 2>/dev/null; then
+    printf '\n%sOpening the terminal console%s (q quits; open it again with the Terminal command above)\n' "$C_B" "$C_0"
+    sleep 2
+    "$CONSOLE_BIN" --url "$BASE_URL" --token "$_tui_tok" </dev/tty >/dev/tty 2>&1 || \
+        warn "the terminal console exited with an error; start it again with the Terminal command above"
+fi
 exit 0

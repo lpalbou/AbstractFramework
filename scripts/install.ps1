@@ -97,6 +97,10 @@ $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main
 # Same lists as install.sh (tests/test_install_profiles.py checks).
 # ---------------------------------------------------------------------------
 $AfWithWheels = 'webrtcvad-wheels>=2.0.14'
+# Local voice on every profile: Supertonic text-to-speech (ONNX Runtime) and Whisper speech-to-text
+# (faster-whisper: CTranslate2). Windows ARM64 gets Supertonic only: CTranslate2 has no ARM64 wheel.
+$AfWithVoice = 'abstractvoice[supertonic,stt]'
+$AfWithVoiceArm64 = 'abstractvoice[supertonic]'
 $AfCompiledExtras = @('stable-diffusion-cpp-python', 'aec-audio-processing')
 $AfSkippedLine = 'Skipped compiled extras (stable-diffusion.cpp, echo cancellation): re-run with -Full after installing a C compiler.'
 $AfLlamaIndex = 'https://abetlen.github.io/llama-cpp-python/whl'
@@ -549,6 +553,14 @@ function Main {
     if (-not $Full -and ($cpuArch -eq 'AMD64' -or -not $onWindows)) {
         $ggufPin = $AfLlamaCpuPin; $ggufLinks = "$AfLlamaIndex/cpu/llama-cpp-python/"
     }
+    # Local voice (see $AfWithVoice at the top).
+    if ($onWindows -and $cpuArch -eq 'ARM64') {
+        $voiceSpec = $AfWithVoiceArm64
+        $voiceResult = 'Supertonic (text-to-speech), local on CPU; Whisper speech-to-text skipped: CTranslate2 has no Windows ARM64 wheel'
+    } else {
+        $voiceSpec = $AfWithVoice
+        $voiceResult = 'Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU'
+    }
     # uv splits --overrides / --constraints values at whitespace (a user name with a
     # space), so the install runs from the data dir and names both files relatively.
     function Install-Gateway([bool]$Gguf, [switch]$Soft) {
@@ -562,7 +574,7 @@ function Main {
             [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-overrides.txt'), ($overrides -join "`n") + "`n")
             if ($Gguf) { [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-constraints.txt'), "llama-cpp-python==$ggufPin`n") }
         }
-        $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels)
+        $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels, '--with', $voiceSpec)
         if ($Gguf) { $argv += @('--with', "llama-cpp-python==$ggufPin", '--constraints', 'uv-constraints.txt', '--find-links', $ggufLinks) }
         elseif ($Full) { $argv += @('--with', 'llama-cpp-python') }
         $argv += @('--overrides', 'uv-overrides.txt')
@@ -851,6 +863,7 @@ function Main {
     Write-Host "  Uninstall:  install.ps1 -Uninstall   (or: $(if ($mode -eq 'service') { 'abstractgateway service uninstall; ' })uv tool uninstall abstractgateway)"
     Write-Host '  Check:      uvx abstractframework doctor'
     Write-Host "  GGUF:       $ggufResult"
+    Write-Host "  Voice:      $voiceResult"
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     Write-Host "  Apps:       npx -y @abstractframework/flow --gateway-url $baseUrl   (also: code, observer, continuum, entity)"
     Write-Host "  Docs:       $AfDocs"

@@ -428,7 +428,7 @@ for a in "\$@"; do
   prev="\$a"
 done
 mkdir -p "\$root/bin"
-printf '#!/bin/sh\\necho "%s %s"\\n' "\$name" "\$ver" >"\$root/bin/\$name"
+printf '#!/bin/sh\\necho "\$*" >>"\$0.args"\\necho "%s %s"\\n' "\$name" "\$ver" >"\$root/bin/\$name"
 chmod +x "\$root/bin/\$name"
 exit 0
 CARGO
@@ -438,7 +438,25 @@ CARGO
     if [[ -n "$stored" ]]; then mkdir -p "$DATA_T"; echo "$stored" >"$NETF"; fi
     # BG_TOKEN: the admin token a real gateway writes into its data dir at first start.
     if [[ -n "${BG_TOKEN:-}" ]]; then mkdir -p "$DATA_T/auth"; printf '%s\n' "$BG_TOKEN" >"$DATA_T/auth/bootstrap-admin-token"; fi
-    run_in "$name" -- sh "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" --no-service --no-open --no-modify-path ${BG_ARGS:---no-console}
+    # BG_ENV: extra environment (e.g. SSH_CONNECTION); BG_PTY=1 runs the installer on a pseudo-terminal.
+    # BG_OPEN=1 leaves --no-open out (the remote-session console launch is under test).
+    local wrap=() open_flag=(--no-open)
+    # A minimal pty runner: pty.spawn() spins forever on macOS when stdin is /dev/null.
+    [[ "${BG_PTY:-0}" == 1 ]] && wrap=(/usr/bin/python3 -c 'import os, pty, sys
+pid, fd = pty.fork()
+if pid == 0:
+    os.execvp(sys.argv[1], sys.argv[1:])
+while True:
+    try:
+        chunk = os.read(fd, 4096)
+    except OSError:
+        break
+    if not chunk:
+        break
+    os.write(1, chunk)
+sys.exit(os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1]))')
+    [[ "${BG_OPEN:-0}" == 1 ]] && open_flag=()
+    run_in "$name" ${BG_ENV:-} -- ${wrap[@]+"${wrap[@]}"} sh "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" --no-service ${open_flag[@]+"${open_flag[@]}"} --no-modify-path ${BG_ARGS:---no-console}
     local pid; pid="$(cat "$DATA_T/gateway.pid" 2>/dev/null)"
     [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
     for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 || break; sleep 0.5; done
@@ -489,6 +507,23 @@ else
     check "console: an old cargo without rustup falls back to rustup, and its failure is soft" "$([[ $RC == 0 ]] && has "$OUT" "cargo 1.75.0 .* is older than the Rust 1.87" && has "$OUT" "sh.rustup.rs" && has "$OUT" "Terminal:  not installed: Rust could not be installed" && ! grep -q "cargo install" "$CARGOLOG"; echo $?)" "$OUT"
     BG_TOOLBIN="$WORK/con2/tools/bin" BG_CARGO=1 BG_ARGS="--no-console" bg_case con2 1
     check "console: --no-console builds nothing and says so" "$([[ $RC == 0 ]] && [[ ! -s "$CARGOLOG" ]] && has "$OUT" "Terminal:  not installed: skipped with --no-console"; echo $?)" "$OUT"
+fi
+
+echo "[12] remote or headless session: the terminal console opens at the end, signed in"
+if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    check "port $BG_PORT is free for the remote-session cases" 1
+else
+    TB="$WORK/rem/tools/bin"
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 BG_OPEN=1 bg_case rem 1
+    check "remote: installer succeeds on a terminal" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
+    check "remote: the console is started with the gateway URL and the admin token" "$(grep -qx -- "--url http://127.0.0.1:$BG_PORT --token tok_remote_9" "$TB/abstractgateway-console.args"; echo $?)" "$OUT"
+    check "remote: no browser is opened over SSH" "$([[ ! -s "$WORK/rem/open.log" ]] && has "$OUT" "tunnel it first: ssh -L $BG_PORT:127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
+    TB2="$WORK/rem2/tools/bin"
+    BG_TOOLBIN="$TB2" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 bg_case rem2 1
+    check "remote: --no-open does not start the console" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB2/abstractgateway-console.args"; echo $?)" "$OUT"
+    TB3="$WORK/rem3/tools/bin"
+    BG_TOOLBIN="$TB3" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_OPEN=1 bg_case rem3 1
+    check "remote: without a terminal (piped output) the console is not started" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB3/abstractgateway-console.args"; echo $?)" "$OUT"
 fi
 
 echo ""

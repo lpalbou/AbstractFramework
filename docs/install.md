@@ -154,7 +154,10 @@ The Mac package, the `.command` files and the one line all run the same script,
 4. Installs the gateway as an isolated uv tool, pinned to this release:
    `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.6.0"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
-   (reinstalling it in place when it does not).
+   (reinstalling it in place when it does not). Every profile also gets local voice,
+   `--with "abstractvoice[supertonic,stt]"`: Supertonic text-to-speech and Whisper speech-to-text,
+   both on CPU (skipped on musl Linux and macOS before 13, where no wheels exist; Windows ARM64 gets
+   Supertonic only).
 5. Builds the terminal console, `abstractgateway-console`, with `cargo install --locked` into the
    same folder as the `abstractgateway` command (crates.io has no prebuilt binary). When cargo is
    missing, macOS and Linux get Rust from [rustup](https://rustup.rs) (minimal profile, in
@@ -172,7 +175,9 @@ The Mac package, the `.command` files and the one line all run the same script,
 7. Waits up to 180 seconds for `/api/health`, then opens `http://127.0.0.1:8080/console` through a
    one-time sign-in link (`abstractgateway-config claim-url`, valid 10 minutes, this machine only).
    If no link can be created, it shows where the admin token is. The summary shows both ways to
-   configure the gateway: the web console link and the terminal console command.
+   configure the gateway: the web console link and the terminal console command. On a remote or
+   headless session (SSH, or Linux without a display) it opens the terminal console instead,
+   signed in; `--no-open` skips it.
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
 upgrades or repairs the install in place. The macOS package is payload-free: it copies the two
@@ -237,7 +242,7 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--no-tray` | `-NoTray` | Leave out the menu-bar icon (`tray` extra) |
 | `--no-service` | `-NoService` | Do not register a login service |
 | `--no-start` | `-NoStart` | Install only; do not start the gateway |
-| `--no-open` | `-NoOpen` | Do not open the browser |
+| `--no-open` | `-NoOpen` | Do not open the browser (remote or headless session: do not open the terminal console) |
 | `--no-modify-path` | `-NoModifyPath` | Do not add `~/.local/bin` to your shell profile (`uv tool update-shell`) |
 | `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |
 | `--manifest PATH` | `-Manifest` | Read the gateway pin from this `install-manifest.json` |
@@ -261,7 +266,8 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 ### Headless or remote machine
 
 On a server without a browser, configure the gateway from the terminal console, on the machine
-itself. The installer's summary prints this command with your data dir and port filled in:
+itself. When you install over SSH, the installer opens it for you at the end. Later, start it with
+the command the installer's summary prints (your port and token filled in):
 
 ```bash
 abstractgateway-console --url http://127.0.0.1:8080 --token <admin token>
