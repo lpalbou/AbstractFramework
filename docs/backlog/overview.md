@@ -12,7 +12,7 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 119 | 76 flat (0928–0930, 0933 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Planned | 120 | 77 flat (0928–0930, 0933, 0934 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
 | Completed | 242 | 232 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26) and 0918, 0922, 0923 (2026-09-27). |
 | Deprecated | 0 | |
@@ -97,6 +97,7 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 0934 | [Uninstall purge races the gateway and misses user data](planned/0934_uninstall_purge_races_the_gateway_and_misses_user_data.md) | Planned (fix in progress 2026-09-27) | `rm -rf` of the data dir races the still-running gateway tree → "Directory not empty"; purge misses `~/.abstractassistant`; wrong advice text. |
 | 0933 | [Gateway split mode: live-delta file tail misses the final line](planned/0933_gateway_live_delta_file_tail_misses_final_line_in_split_mode.md) | Planned (not started; pre-existing) | `_FileTail.read_lines` can close before the last line (`delta_end`); flaky test on CI; read once more before closing. |
 | 0928 | [Automations v1: runtime-native scheduled/triggered tasks](planned/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md) | Planned (design approved 2026-09-26; next minor wave) | An Automation IS a runtime root run; one controller bundle; deterministic occurrences; trigger registry (schedule, manual); growing/independent context; Discuss = forked durable session; `/automations` façade; Observer + Assistant. Effort 33–52 days. Contracts final 2026-09-27 (`untracked/design/automations-CONTRACTS.md`). |
 | 0929 | [Automations v2: external triggers, durable inbox](planned/0929_automations_v2_external_triggers_durable_inbox.md) | Planned (after 0928) | Generic `event` source + `run.finished/failed` chaining with reliable admission. |
