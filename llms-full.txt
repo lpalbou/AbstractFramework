@@ -148,7 +148,7 @@ Monitor runs from a browser, or from a terminal with the gateway console:
 npx @abstractframework/observer   # open http://localhost:3001
 
 cargo install abstractgateway-console   # Rust 1.87+; the installer builds it for you
-abstractgateway-console --url http://127.0.0.1:8080 --token-file <data dir>/auth/bootstrap-admin-token
+abstractgateway-console --url http://127.0.0.1:8080 --token <admin token>   # <data dir>/auth/bootstrap-admin-token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
@@ -3405,12 +3405,11 @@ On a server without a browser, configure the gateway from the terminal console, 
 itself. The installer's summary prints this command with your data dir and port filled in:
 
 ```bash
-abstractgateway-console --url http://127.0.0.1:8080 \
-  --token-file ~/.local/share/abstractgateway/auth/bootstrap-admin-token
+abstractgateway-console --url http://127.0.0.1:8080 --token <admin token>
 ```
 
-`--token-file` reads the admin token from the gateway's data dir, so the token never appears on the
-command line or in the environment. Or use the web console from your own computer through an SSH tunnel:
+The admin token is in `~/.local/share/abstractgateway/auth/bootstrap-admin-token` (the installer's
+summary prints the command with it filled in). Or use the web console from your own computer through an SSH tunnel:
 `ssh -L 8080:127.0.0.1:8080 <server>`, then open the link from
 `abstractgateway-config claim-url --base-url http://127.0.0.1:8080` in your browser.
 
@@ -3616,7 +3615,7 @@ Run or install them next to the Python stack:
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.6.0 |
 | Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.17.0 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.3.0 |
-| Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --url http://127.0.0.1:8080 --token-file <data dir>/auth/bootstrap-admin-token` | 0.10.0 |
+| Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --url http://127.0.0.1:8080 --token <admin token>` | 0.10.0 |
 | Flow Editor | `npx @abstractframework/flow` (`--gateway-url <url>` for another gateway) | 0.3.22 |
 | Code Web UI | `npx @abstractframework/code` | 0.5.0 |
 | Observer | `npx @abstractframework/observer` | 0.1.14 |

@@ -436,6 +436,8 @@ CARGO
     fi
     DATA_T="$WORK/$name/home/$DATA_REL"; NETF="$DATA_T/fake-network"
     if [[ -n "$stored" ]]; then mkdir -p "$DATA_T"; echo "$stored" >"$NETF"; fi
+    # BG_TOKEN: the admin token a real gateway writes into its data dir at first start.
+    if [[ -n "${BG_TOKEN:-}" ]]; then mkdir -p "$DATA_T/auth"; printf '%s\n' "$BG_TOKEN" >"$DATA_T/auth/bootstrap-admin-token"; fi
     run_in "$name" -- sh "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" --no-service --no-open --no-modify-path ${BG_ARGS:---no-console}
     local pid; pid="$(cat "$DATA_T/gateway.pid" 2>/dev/null)"
     [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
@@ -472,11 +474,11 @@ else
     TB="$WORK/con/tools/bin"
     CON_PIN="$(sed -n 's/^AF_CRATE_CONSOLE="abstractgateway-console@\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
     check "console: install.sh pins the terminal console" "$([[ -n "$CON_PIN" ]]; echo $?)"
-    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_sandbox_123" bg_case con 1
     check "console: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
     check "console: cargo builds the pinned crate into the tool bin dir" "$(grep -qx "cargo install --locked --force --root $WORK/con/tools abstractgateway-console --version $CON_PIN" "$CARGOLOG" && [[ -x "$TB/abstractgateway-console" ]]; echo $?)" "$CARGOLOG"
     check "console: summary gives the web console and its tunnel hint" "$(has "$OUT" "Web:  *http://127.0.0.1:$BG_PORT/console" && has "$OUT" "ssh -L $BG_PORT:127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
-    check "console: summary gives the terminal console command (token read from the data dir)" "$(has "$OUT" "Terminal:  abstractgateway-console --url http://127.0.0.1:$BG_PORT --token-file .*auth/bootstrap-admin-token'"; echo $?)" "$OUT"
+    check "console: summary gives the terminal console command with the admin token (--token)" "$(has "$OUT" "Terminal:  abstractgateway-console --url http://127.0.0.1:$BG_PORT --token tok_sandbox_123$"; echo $?)" "$OUT"
     check "console: no 'browser now shows' claim when no browser was opened" "$(! has "$OUT" "browser now shows"; echo $?)" "$OUT"
     # A re-run finds the pinned binary and does not build again.
     : >"$CARGOLOG"

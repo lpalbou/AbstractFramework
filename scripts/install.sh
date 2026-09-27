@@ -1564,10 +1564,12 @@ fi
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
-# The terminal console signs in with the admin token the gateway keeps in its data dir:
-# --token-file names the file, so the token never lands in argv, the environment or this output.
+# The terminal console signs in with the admin token (`--token`), printed ready to paste; the
+# gateway keeps it in its data dir. Before the gateway has written it, the command names that file.
 _tui_exe="$CONSOLE_NAME"; [ "$CONSOLE_BIN" = "$TOOL_BIN/$CONSOLE_NAME" ] || _tui_exe="$(q "$CONSOLE_BIN")"
-TUI_CMD="$_tui_exe --url $BASE_URL --token-file $(q "$TOKEN_FILE")"
+_tui_tok=""; [ "$PRINT" = 0 ] && [ -r "$TOKEN_FILE" ] && _tui_tok="$(tr -d '[:space:]' <"$TOKEN_FILE")"
+if [ -n "$_tui_tok" ]; then TUI_CMD="$_tui_exe --url $BASE_URL --token $_tui_tok"
+else TUI_CMD="$_tui_exe --url $BASE_URL --token <admin token: cat $(q "$TOKEN_FILE")>"; fi
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     # The plain-language part first: what a non-technical user needs to know.
     printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"

@@ -587,10 +587,11 @@ def test_install_sh_builds_the_terminal_console_by_default(tmp_path: Path) -> No
     # Next to `abstractgateway`: --root is the parent of the uv tool bin dir (~/.local/bin).
     assert f"install --locked --force --root {tmp_path}/.local abstractgateway-console --version {pin}" in out
     terminal = next(line for line in out.splitlines() if line.lstrip().startswith("Terminal:"))
-    # A launch flag names the token file: no token in argv or the environment.
+    # The token is a launch flag (--token), never an environment variable; a dry run has no
+    # token yet, so the command names the file it will be read from.
     assert "ABSTRACTGATEWAY_AUTH_TOKEN" not in terminal
-    assert "abstractgateway-console --url http://127.0.0.1:18999 --token-file " in terminal
-    assert terminal.rstrip().endswith("auth/bootstrap-admin-token'")
+    assert "abstractgateway-console --url http://127.0.0.1:18999 --token <admin token: cat " in terminal
+    assert terminal.rstrip().endswith("auth/bootstrap-admin-token'>")
 
 
 def test_install_sh_no_console_skips_it(tmp_path: Path) -> None:

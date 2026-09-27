@@ -816,10 +816,12 @@ function Main {
     Write-Host ''
     if ($script:DryRun) { Write-Host 'Plan printed (-Print): nothing was changed.' -ForegroundColor White }
     else { Write-Host 'AbstractFramework is installed.' -ForegroundColor Green }
-    # The terminal console signs in with the admin token the gateway keeps in its data dir:
-    # --token-file names the file, so the token never lands in the command line or this output.
+    # The terminal console signs in with the admin token (`--token`), printed ready to paste; the
+    # gateway keeps it in its data dir. Before the gateway has written it, the command names that file.
     $tokenPath = Join-Path $DataDir 'auth\bootstrap-admin-token'
-    $tuiCmd = "$(if (Test-Command $consoleName) { $consoleName } else { "& '$consoleExe'" }) --url $baseUrl --token-file '$tokenPath'"
+    $tuiExe = if (Test-Command $consoleName) { $consoleName } else { "& '$consoleExe'" }
+    $tuiTok = if (-not $script:DryRun -and (Test-Path -LiteralPath $tokenPath)) { (Get-Content -LiteralPath $tokenPath -Raw).Trim() } else { '' }
+    $tuiCmd = if ($tuiTok) { "$tuiExe --url $baseUrl --token $tuiTok" } else { "$tuiExe --url $baseUrl --token <admin token: Get-Content '$tokenPath'>" }
     if (-not $script:DryRun -and -not $NoStart) {
         Write-Host '  Configure it from either console (the same settings, both need this machine):'
         # An opened claim link is spent (the browser redeemed it): show the plain address then.

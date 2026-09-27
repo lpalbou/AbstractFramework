@@ -144,7 +144,7 @@ Monitor runs from a browser, or from a terminal with the gateway console:
 npx @abstractframework/observer   # open http://localhost:3001
 
 cargo install abstractgateway-console   # Rust 1.87+; the installer builds it for you
-abstractgateway-console --url http://127.0.0.1:8080 --token-file <data dir>/auth/bootstrap-admin-token
+abstractgateway-console --url http://127.0.0.1:8080 --token <admin token>   # <data dir>/auth/bootstrap-admin-token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
