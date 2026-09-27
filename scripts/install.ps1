@@ -16,7 +16,9 @@
       2. uv (https://docs.astral.sh/uv) if missing, then Python 3.12 through uv
       3. uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"
          (prebuilt wheels only: no compiler / MSVC Build Tools needed)
-      4. optional: Node.js (nodejs-wheel), terminal tools (cargo), Ollama, LM Studio
+      4. the terminal console (abstractgateway-console, built with cargo when Rust is
+         installed; -NoConsole skips it), then the optional parts: Node.js
+         (nodejs-wheel), AbstractCode's terminal client (cargo), Ollama, LM Studio
       5. `abstractgateway service install` when the installed gateway supports it,
          otherwise a Startup-folder shortcut plus a hidden background start
       6. waits for /api/health, then opens the console (one-time claim URL when supported)
@@ -45,7 +47,8 @@ param(
     [string]$Manifest = '',
     [string]$DataDir = '',
     [switch]$WithApps,
-    [switch]$WithConsole,
+    [switch]$WithConsole,   # the default now; kept for older command lines
+    [switch]$NoConsole,
     [switch]$WithCodeCli,
     [switch]$WithCoreCli,
     [switch]$WithOllama,
@@ -71,6 +74,9 @@ $AfGatewayPinDefault = '0.5.1'
 $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.3.21', '@abstractframework/code@0.5.0', '@abstractframework/observer@0.1.13', '@abstractframework/continuum@0.3.2', '@abstractframework/entity@0.2.2')
 $AfCrateConsole = 'abstractgateway-console@0.9.0'
+# Browser apps whose CLI takes the gateway address as a launch flag (--gateway-url);
+# the others start on http://127.0.0.1:8080 and take another address on their sign-in screen.
+$AfNpmGatewayFlagApps = @('@abstractframework/flow', '@abstractframework/continuum')
 $AfCrateCodeCli = 'abstractcode@0.6.0'
 $AfDocs = 'https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md'
 $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1'
@@ -350,12 +356,25 @@ function Main {
                 Invoke-Native -Description 'uninstall nodejs-wheel' -Argv @($uv, 'tool', 'uninstall', 'nodejs-wheel') | Out-Null
             }
         } else { Write-Info 'uv not found; nothing to uninstall there' }
+        # The terminal console this installer built (cargo install, into cargo's bin dir).
+        $cName = ($AfCrateConsole -split '@', 2)[0]
+        $cBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
+        $cExe = Join-Path $cBin "$cName$exeSuffix"
+        if (Test-Path -LiteralPath $cExe) {
+            Write-Step 'Terminal console'
+            $cCargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cBin "cargo$exeSuffix")) { Join-Path $cBin "cargo$exeSuffix" } else { $null }
+            if ($cCargo) { Invoke-Native -Description 'uninstall the terminal console' -Argv @($cCargo, 'uninstall', $cName) -Soft | Out-Null }
+            if ($script:DryRun -or (Test-Path -LiteralPath $cExe)) {
+                Write-Host "  `$ Remove-Item '$cExe'" -ForegroundColor DarkGray
+                if (-not $script:DryRun) { Remove-Item -LiteralPath $cExe -Force -ErrorAction SilentlyContinue }
+            }
+        }
         Write-Step 'Data'
         if ($Purge) {
             Write-Host "  `$ Remove-Item -Recurse -Force '$DataDir'" -ForegroundColor DarkGray
             if (-not $script:DryRun) { Remove-Item -LiteralPath $DataDir -Recurse -Force -ErrorAction SilentlyContinue }
         } else { Write-Info "kept the gateway data dir: $DataDir (delete it with -Uninstall -Purge)" }
-        Write-Info 'kept: uv, Ollama, LM Studio, and any cargo tools'
+        Write-Info 'kept: uv, Rust, Ollama, LM Studio, and any other cargo tools'
         Write-Host ''; Write-Host 'Done.' -ForegroundColor Green
         return
     }
@@ -612,19 +631,43 @@ function Main {
             $nodeWheel = '1'
         }
         Write-Info 'apps are not installed globally; each runs on demand (first launch downloads it):'
-        foreach ($s in $AfNpmApps) { Write-Host "      npx -y $s   # `$env:ABSTRACTGATEWAY_URL='$baseUrl'" -ForegroundColor Gray }
+        $others = @()
+        foreach ($s in $AfNpmApps) {
+            $pkg = $s.Substring(0, $s.LastIndexOf('@'))
+            if ($AfNpmGatewayFlagApps -contains $pkg) { Write-Host "      npx -y $s --gateway-url $baseUrl" -ForegroundColor Gray }
+            else { Write-Host "      npx -y $s" -ForegroundColor Gray; $others += $pkg }
+        }
+        if ($baseUrl -ne 'http://127.0.0.1:8080' -and $others.Count) { Write-Info "$($others -join ', ') start on http://127.0.0.1:8080: enter $baseUrl on their sign-in screen" }
     }
 
-    if ($WithConsole -or $WithCodeCli) {
-        Write-Step 'Terminal tools (crates.io)'
-        $crates = @()
-        if ($WithConsole) { $crates += $AfCrateConsole }
-        if ($WithCodeCli) { $crates += $AfCrateCodeCli }
-        foreach ($c in $crates) {
-            $i = $c.LastIndexOf('@'); $name = $c.Substring(0, $i); $v = $c.Substring($i + 1)
-            if (Test-Command 'cargo') { Invoke-Native -Description "cargo install $name" -Argv @('cargo', 'install', '--locked', $name, '--version', $v) | Out-Null }
-            else { Write-Warn2 "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked $name --version $v" }
+    # Terminal console: crates.io publishes no prebuilt binary, so cargo builds it. Rust on
+    # Windows needs the MSVC Build Tools (a large install that may ask for admin), so this
+    # script does not add Rust itself: without cargo it prints the two commands instead.
+    $consoleName, $consolePin = $AfCrateConsole -split '@', 2
+    $consoleOk = $false; $consoleWhy = 'skipped with -NoConsole'
+    $cargoBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
+    $cargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cargoBin "cargo$exeSuffix")) { Join-Path $cargoBin "cargo$exeSuffix" } else { $null }
+    $consoleExe = Join-Path $cargoBin "$consoleName$exeSuffix"
+    if (-not $NoConsole) {
+        Write-Step "Terminal console ($consoleName $consolePin)"
+        $have = $null
+        if (-not $script:DryRun -and (Test-Path -LiteralPath $consoleExe)) { try { $have = (& $consoleExe --version 2>$null | Select-Object -First 1) } catch { } }
+        if ($have -eq "$consoleName $consolePin") { Write-Ok "$consoleName $consolePin already installed: $consoleExe"; $consoleOk = $true }
+        elseif ($cargo) {
+            Write-Info 'compiling it from crates.io (a few minutes the first time)'
+            $built = Invoke-Native -Description 'build the terminal console' -Argv @($cargo, 'install', '--locked', '--force', $consoleName, '--version', $consolePin) -Soft
+            if ($script:DryRun -or $built) { $consoleOk = $true; if (-not $script:DryRun) { Write-Ok "installed $consoleName $consolePin`: $consoleExe" } }
+            else { $consoleWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
+        } else {
+            $consoleWhy = "Rust is not installed: install it from https://rustup.rs (it sets up the MSVC Build Tools), then run: cargo install --locked $consoleName --version $consolePin"
+            Write-Warn2 "terminal console skipped: $consoleWhy"
         }
+    }
+    if ($WithCodeCli) {
+        Write-Step 'AbstractCode terminal client (crates.io)'
+        $i = $AfCrateCodeCli.LastIndexOf('@'); $name = $AfCrateCodeCli.Substring(0, $i); $v = $AfCrateCodeCli.Substring($i + 1)
+        if ($cargo) { Invoke-Native -Description "cargo install $name" -Argv @($cargo, 'install', '--locked', $name, '--version', $v) | Out-Null; Write-Info "run it: $name --gateway $baseUrl" }
+        else { Write-Warn2 "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked $name --version $v" }
     }
 
     $hasWinget = Test-Command 'winget'
@@ -750,7 +793,7 @@ function Main {
         }
 
         Write-Step 'Console sign-in'
-        $claimed = $false
+        $claimed = $false; $opened = $false
         if (-not $script:DryRun -and (Test-GatewaySupports 'claim-url')) {
             $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
             try { $out = (& $gwCfg claim-url --base-url $baseUrl 2>$null) -join "`n" } finally { $ErrorActionPreference = $old }
@@ -765,7 +808,7 @@ function Main {
         }
         if ($NoOpen -or $script:DryRun -or -not $onWindows) { Write-Info "open: $consoleUrl" }
         else {
-            try { Start-Process $consoleUrl; Write-Ok 'opened the console in your browser' } catch { Write-Info "open: $consoleUrl" }
+            try { Start-Process $consoleUrl; $opened = $true; Write-Ok 'opened the console in your browser' } catch { Write-Info "open: $consoleUrl" }
         }
     }
 
@@ -773,7 +816,22 @@ function Main {
     Write-Host ''
     if ($script:DryRun) { Write-Host 'Plan printed (-Print): nothing was changed.' -ForegroundColor White }
     else { Write-Host 'AbstractFramework is installed.' -ForegroundColor Green }
+    # The terminal console signs in with the admin token the gateway keeps in its data dir:
+    # --token-file names the file, so the token never lands in the command line or this output.
+    $tokenPath = Join-Path $DataDir 'auth\bootstrap-admin-token'
+    $tuiCmd = "$(if (Test-Command $consoleName) { $consoleName } else { "& '$consoleExe'" }) --url $baseUrl --token-file '$tokenPath'"
+    if (-not $script:DryRun -and -not $NoStart) {
+        Write-Host '  Configure it from either console (the same settings, both need this machine):'
+        # An opened claim link is spent (the browser redeemed it): show the plain address then.
+        Write-Host "    Web:       $(if ($opened) { "$baseUrl/console" } else { $consoleUrl })"
+        if ($claimed -and $opened) { Write-Host "               signed in already in this browser; another browser needs a new link: abstractgateway-config claim-url --base-url $baseUrl" }
+        elseif ($claimed) { Write-Host "               one-time sign-in link (10 minutes); a new one: abstractgateway-config claim-url --base-url $baseUrl" }
+        else { Write-Host "               sign in as 'admin' with the token in $tokenPath" }
+        if ($consoleOk) { Write-Host "    Terminal:  $tuiCmd" } else { Write-Host "    Terminal:  not installed: $consoleWhy" }
+        Write-Host ''
+    }
     Write-Host "  Console:    $baseUrl/console"
+    Write-Host "  Terminal:   $(if ($consoleOk) { $tuiCmd } else { "not installed ($consoleWhy)" })"
     Write-Host "  Gateway:    $gwSpec ($profileName profile)"
     Write-Host "  Data dir:   $DataDir"
     Write-Host "  Logs:       $logDir"
@@ -792,7 +850,7 @@ function Main {
     Write-Host '  Check:      uvx abstractframework doctor'
     Write-Host "  GGUF:       $ggufResult"
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
-    Write-Host '  Apps:       npx -y @abstractframework/flow   (also: code, observer, continuum, entity)'
+    Write-Host "  Apps:       npx -y @abstractframework/flow --gateway-url $baseUrl   (also: code, observer, continuum, entity)"
     Write-Host "  Docs:       $AfDocs"
     if ($script:Twins.Count) {
         Write-Host ''

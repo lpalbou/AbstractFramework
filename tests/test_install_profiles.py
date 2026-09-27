@@ -340,7 +340,7 @@ def test_bootstrap_script_crates_match_crate_release_versions() -> None:
         for key, version in _script_pins(out).items()
         if key.startswith("crates:")
     }
-    # --with-console and --with-code-cli install exactly these two crates.
+    # The terminal console (default) and --with-code-cli install exactly these two crates.
     assert set(sh_crates) == {"abstractgateway-console", "abstractcode"}
     for crate, version in sh_crates.items():
         assert CRATE_RELEASE_VERSIONS[crate] == version
@@ -577,6 +577,61 @@ def test_install_sh_full_stops_without_a_compiler(tmp_path: Path) -> None:
     assert " tool install " not in proc.stdout
 
 
+def test_install_sh_builds_the_terminal_console_by_default(tmp_path: Path) -> None:
+    from abstractframework import CRATE_RELEASE_VERSIONS
+
+    pin = CRATE_RELEASE_VERSIONS["abstractgateway-console"]
+    proc = _install_sh_print(tmp_path, "--no-tray", profile="light", compiler=True)
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    # Next to `abstractgateway`: --root is the parent of the uv tool bin dir (~/.local/bin).
+    assert f"install --locked --force --root {tmp_path}/.local abstractgateway-console --version {pin}" in out
+    terminal = next(line for line in out.splitlines() if line.lstrip().startswith("Terminal:"))
+    # A launch flag names the token file: no token in argv or the environment.
+    assert "ABSTRACTGATEWAY_AUTH_TOKEN" not in terminal
+    assert "abstractgateway-console --url http://127.0.0.1:18999 --token-file " in terminal
+    assert terminal.rstrip().endswith("auth/bootstrap-admin-token'")
+
+
+def test_install_sh_no_console_skips_it(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, "--no-console", "--no-tray", profile="light", compiler=True)
+    assert proc.returncode == 0, proc.stderr
+    assert "abstractgateway-console --version" not in proc.stdout
+    assert "rustup" not in proc.stdout
+    assert "Terminal:   not installed (skipped with --no-console)" in proc.stdout
+
+
+def test_install_sh_console_needs_a_compiler(tmp_path: Path) -> None:
+    import sys
+
+    if sys.platform != "darwin":
+        pytest.skip("simulating a missing compiler needs the macOS xcode-select probe")
+    proc = _install_sh_print(tmp_path, "--no-tray", profile="light", compiler=False)
+    assert proc.returncode == 0, proc.stderr
+    assert "terminal console skipped: building it needs a C compiler: xcode-select --install" in proc.stdout
+    assert "cargo install" not in proc.stdout and "rustup" not in proc.stdout
+
+
+def test_install_sh_app_hints_use_the_gateway_launch_flag(tmp_path: Path) -> None:
+    from abstractframework import NPM_RELEASE_VERSIONS
+
+    proc = _install_sh_print(tmp_path, "--with-apps", "--no-console", "--no-tray", profile="light")
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    base = "http://127.0.0.1:18999"
+    # Launch flags, never an environment variable, carry the gateway address.
+    assert "ABSTRACTGATEWAY_URL" not in out
+    hints = _printed_block(out, "apps are not installed globally")
+    flagged = {"@abstractframework/flow", "@abstractframework/continuum"}
+    assert hints == [
+        f"npx -y {pkg}@{v} --gateway-url {base}" if pkg in flagged else f"npx -y {pkg}@{v}"
+        for pkg, v in NPM_RELEASE_VERSIONS.items()
+    ]
+    others = ", ".join(pkg for pkg in NPM_RELEASE_VERSIONS if pkg not in flagged)
+    assert f"{others} start on http://127.0.0.1:8080: enter {base} on their sign-in screen" in out
+    assert f"Apps:       npx -y @abstractframework/flow --gateway-url {base}" in out
+
+
 def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
@@ -584,6 +639,10 @@ def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
     ps_extras = re.search(r"^\$AfCompiledExtras = @\((.*)\)$", ps1, flags=re.M)
     assert sh_extras and ps_extras
     assert sh_extras.group(1).split() == re.findall(r"'([^']+)'", ps_extras.group(1)) == _COMPILED_EXTRAS
+    sh_flag = re.search(r'^AF_NPM_GATEWAY_FLAG_APPS="([^"]+)"$', sh, flags=re.M)
+    ps_flag = re.search(r"^\$AfNpmGatewayFlagApps = @\((.*)\)$", ps1, flags=re.M)
+    assert sh_flag and ps_flag and sh_flag.group(1).split() == re.findall(r"'([^']+)'", ps_flag.group(1))
+    assert "ABSTRACTGATEWAY_URL" not in sh and "ABSTRACTGATEWAY_URL" not in ps1
     assert 'AF_WITH_WHEELS="webrtcvad-wheels>=2.0.14"' in sh
     assert "$AfWithWheels = 'webrtcvad-wheels>=2.0.14'" in ps1
     for line in _ALWAYS:

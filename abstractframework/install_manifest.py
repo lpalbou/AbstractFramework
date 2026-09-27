@@ -34,8 +34,10 @@ BOOTSTRAP_FLAGS: list[dict[str, str]] = [
      "summary": "Gateway data dir (default: the per-OS user data dir)."},
     {"sh": "--with-apps", "ps": "-WithApps", "env": "",
      "summary": "Ensure Node.js >= 18 for the npx browser apps (uv tool install nodejs-wheel)."},
-    {"sh": "--with-console", "ps": "-WithConsole", "env": "",
-     "summary": "cargo install abstractgateway-console when cargo exists."},
+    {"sh": "--no-console", "ps": "-NoConsole", "env": "",
+     "summary": "Skip the terminal console. By default abstractgateway-console is built "
+                "with cargo (install.sh adds Rust through rustup when cargo is missing; "
+                "needs a C compiler)."},
     {"sh": "--with-code-cli", "ps": "-WithCodeCli", "env": "",
      "summary": "cargo install abstractcode (terminal client) when cargo exists."},
     {"sh": "--with-core-cli", "ps": "-WithCoreCli", "env": "",

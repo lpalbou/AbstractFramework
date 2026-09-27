@@ -362,14 +362,18 @@ echo "[10] background start (--no-service): the Network setting binds it (missio
 # no --port, the port of its (fake) Network setting, and answers /api/health. Port 18870.
 BG_PORT=18870
 # bg_case NAME NETWORK(1|0) [STORED "mode port"]: run the installer, leave OUT/GWLOG/NETF/DATA_T.
+# These cases skip the terminal console (--no-console) unless BG_ARGS says otherwise;
+# BG_TOOLBIN overrides the uv tool bin dir, BG_CARGO=1 adds a fake cargo (log: CARGOLOG).
 bg_case() {
     local name="$1" network="$2" stored="${3:-}"
-    local bin="$WORK/$name/bin" toolbin="$WORK/$name/toolbin"
+    local bin="$WORK/$name/bin" toolbin="${BG_TOOLBIN:-$WORK/$name/toolbin}"
     mkdir -p "$bin" "$toolbin" "$WORK/$name/home"
     GWLOG="$WORK/$name/gw.log"
     cat >"$bin/curl" <<CURL
 #!/bin/sh
 for a in "\$@"; do [ "\$a" = "https://pypi.org/simple/pip/" ] && exit 0; done
+# Never download Rust from a test: rustup's installer is refused like a dead network.
+for a in "\$@"; do [ "\$a" = "https://sh.rustup.rs" ] && exit 7; done
 exec /usr/bin/curl "\$@"
 CURL
     cat >"$bin/uv" <<UV
@@ -410,9 +414,29 @@ esac
 exit 0
 GW
     chmod +x "$bin/curl" "$bin/uv" "$toolbin/abstractgateway"
+    CARGOLOG="$WORK/$name/cargo.log"
+    if [[ "${BG_CARGO:-0}" == 1 ]]; then
+        # `install ... --root R NAME --version V` writes R/bin/NAME answering `--version`.
+        cat >"$bin/cargo" <<CARGO
+#!/bin/sh
+echo "cargo \$*" >>"$CARGOLOG"
+[ "\$1" = --version ] && { echo "cargo ${BG_CARGO_VERSION:-1.90.0} (fake)"; exit 0; }
+root=""; ver=""; prev=""; name=""
+for a in "\$@"; do
+  case "\$prev" in --root) root="\$a" ;; --version) ver="\$a" ;; esac
+  case "\$a" in abstractgateway-console) name="\$a" ;; esac
+  prev="\$a"
+done
+mkdir -p "\$root/bin"
+printf '#!/bin/sh\\necho "%s %s"\\n' "\$name" "\$ver" >"\$root/bin/\$name"
+chmod +x "\$root/bin/\$name"
+exit 0
+CARGO
+        chmod +x "$bin/cargo"
+    fi
     DATA_T="$WORK/$name/home/$DATA_REL"; NETF="$DATA_T/fake-network"
     if [[ -n "$stored" ]]; then mkdir -p "$DATA_T"; echo "$stored" >"$NETF"; fi
-    run_in "$name" -- sh "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" --no-service --no-open --no-modify-path
+    run_in "$name" -- sh "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" --no-service --no-open --no-modify-path ${BG_ARGS:---no-console}
     local pid; pid="$(cat "$DATA_T/gateway.pid" 2>/dev/null)"
     [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
     for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 || break; sleep 0.5; done
@@ -437,6 +461,30 @@ else
     check "old gateway: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
     check "old gateway: keeps the pinned argv, seeds nothing" "$(grep -qx "abstractgateway serve --host 127.0.0.1 --port $BG_PORT" "$GWLOG" && ! grep -q "network set\|network status" "$GWLOG" && [[ ! -e "$NETF" ]]; echo $?)" "$GWLOG"
     check "old gateway: the Start hint keeps --host/--port" "$(has "$OUT" "abstractgateway serve --host 127.0.0.1 --port $BG_PORT"; echo $?)" "$OUT"
+fi
+
+echo "[11] terminal console: built by default, both consoles in the summary"
+# The same fake gateway, a fake cargo, and a uv tool bin dir named .../bin, so the console
+# must be built with --root <its parent> and land next to `abstractgateway`.
+if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    check "port $BG_PORT is free for the terminal console cases" 1
+else
+    TB="$WORK/con/tools/bin"
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
+    check "console: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
+    check "console: cargo builds the pinned crate into the tool bin dir" "$(grep -qx "cargo install --locked --force --root $WORK/con/tools abstractgateway-console --version 0.9.0" "$CARGOLOG" && [[ -x "$TB/abstractgateway-console" ]]; echo $?)" "$CARGOLOG"
+    check "console: summary gives the web console and its tunnel hint" "$(has "$OUT" "Web:  *http://127.0.0.1:$BG_PORT/console" && has "$OUT" "ssh -L $BG_PORT:127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
+    check "console: summary gives the terminal console command (token read from the data dir)" "$(has "$OUT" "Terminal:  abstractgateway-console --url http://127.0.0.1:$BG_PORT --token-file .*auth/bootstrap-admin-token'"; echo $?)" "$OUT"
+    check "console: no 'browser now shows' claim when no browser was opened" "$(! has "$OUT" "browser now shows"; echo $?)" "$OUT"
+    # A re-run finds the pinned binary and does not build again.
+    : >"$CARGOLOG"
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
+    check "console: a re-run keeps the installed console (no cargo install)" "$([[ $RC == 0 ]] && ! grep -q "cargo install" "$CARGOLOG" && has "$OUT" "abstractgateway-console 0.9.0 already installed"; echo $?)" "$OUT"
+    # A distro cargo older than 1.87 and no rustup: rustup is tried (refused here), soft.
+    BG_TOOLBIN="$WORK/con3/tools/bin" BG_CARGO=1 BG_CARGO_VERSION=1.75.0 BG_ARGS=" " bg_case con3 1
+    check "console: an old cargo without rustup falls back to rustup, and its failure is soft" "$([[ $RC == 0 ]] && has "$OUT" "cargo 1.75.0 .* is older than the Rust 1.87" && has "$OUT" "sh.rustup.rs" && has "$OUT" "Terminal:  not installed: Rust could not be installed" && ! grep -q "cargo install" "$CARGOLOG"; echo $?)" "$OUT"
+    BG_TOOLBIN="$WORK/con2/tools/bin" BG_CARGO=1 BG_ARGS="--no-console" bg_case con2 1
+    check "console: --no-console builds nothing and says so" "$([[ $RC == 0 ]] && [[ ! -s "$CARGOLOG" ]] && has "$OUT" "Terminal:  not installed: skipped with --no-console"; echo $?)" "$OUT"
 fi
 
 echo ""

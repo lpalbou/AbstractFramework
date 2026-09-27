@@ -23,7 +23,7 @@ How each component reaches a user's machine under the [script bootstrap](strateg
 
 | Component | Flag | Installed with |
 |---|---|---|
-| Gateway terminal console | `--with-console` | `cargo install --locked abstractgateway-console` (needs Rust; the script prints the command when cargo is missing) |
+| Gateway terminal console | default (`--no-console` skips it) | `cargo install --locked abstractgateway-console` into the uv tool bin dir; macOS/Linux add Rust with rustup when cargo is missing or older than 1.87; needs a C compiler |
 | AbstractCode terminal client | `--with-code-cli` | `cargo install --locked abstractcode` |
 
 ## Third-party engines

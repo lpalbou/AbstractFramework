@@ -51,7 +51,7 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
-# or by the bootstrap scripts' --with-console / --with-code-cli flags).
+# or by the bootstrap scripts: the gateway console by default, abstractcode with --with-code-cli).
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstractgateway-console": "0.9.0",
     "abstractcore-console": "0.2.0",

@@ -80,8 +80,8 @@ The npm apps released with this version, each runnable with `npx <package>`:
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
 `abstractgateway-console` 0.9.0, `abstractcore-console` 0.2.0, `abstractcode` 0.6.0 and the
-`abstracttui` engine 0.6.0. The bootstrap scripts install `abstractgateway-console` and
-`abstractcode` at these versions with `--with-console` and `--with-code-cli`.
+`abstracttui` engine 0.6.0. The bootstrap scripts build `abstractgateway-console` at this version by default
+(`--no-console` skips it) and `abstractcode` with `--with-code-cli`.
 
 ### `CORE_DEFAULT_EXTRAS`
 

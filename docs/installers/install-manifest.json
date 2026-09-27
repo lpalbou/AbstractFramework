@@ -40,9 +40,9 @@
       },
       {
         "env": "",
-        "ps": "-WithConsole",
-        "sh": "--with-console",
-        "summary": "cargo install abstractgateway-console when cargo exists."
+        "ps": "-NoConsole",
+        "sh": "--no-console",
+        "summary": "Skip the terminal console. By default abstractgateway-console is built with cargo (install.sh adds Rust through rustup when cargo is missing; needs a C compiler)."
       },
       {
         "env": "",

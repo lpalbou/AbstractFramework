@@ -26,7 +26,8 @@ then runs the steps below. The one-line path:
 6. **Optional** (flags): Node for the apps (`--with-apps` installs the `nodejs-wheel` uv tool when
    no Node 18+ exists), Ollama (`--with-ollama`: the official installer, which may ask for your
    password to link `/usr/local/bin/ollama`), LM Studio (`--with-lmstudio`: the headless `llmster`
-   daemon), terminal tools (`--with-console`, `--with-code-cli` through cargo).
+   daemon), AbstractCode's terminal client (`--with-code-cli`, through cargo). The gateway
+   terminal console is built by default (`--no-console` skips it).
 7. **Service**: `abstractgateway service install --port 8080` registers a per-user LaunchAgent
    and starts it, so the gateway also starts at login. The LaunchAgent runs plain
    `abstractgateway serve`, so the gateway's Network setting (default `localhost`) decides where it
@@ -85,8 +86,9 @@ To pass options through the one-liner, use a script block:
 
 Browser apps (Flow, Code, Observer, Continuum, Entity) run on demand with
 `npx -y @abstractframework/<app>`; nothing is installed globally. They talk to the gateway at
-`ABSTRACTGATEWAY_URL` (default `http://127.0.0.1:8080`). `--with-apps` only makes sure Node 18+
-exists.
+`http://127.0.0.1:8080` by default. Flow and Continuum take another address as a launch flag
+(`--gateway-url <url>`), which the installer prints with your port filled in; Code, Observer and
+Entity take it on their sign-in screen. `--with-apps` only makes sure Node 18+ exists.
 
 ## Upgrade and repair
 

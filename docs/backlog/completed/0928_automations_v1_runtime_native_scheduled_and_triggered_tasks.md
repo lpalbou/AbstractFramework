@@ -207,6 +207,8 @@ What each package holds now:
 - **No trigger pin.** The optional `trigger` pin on On Flow Start and `triggerable.v1` were dropped (contracts).
 - **Discuss uses a read-only workspace.** The target's normal tools still run, but the automation's workspace is mounted
   read-only (ruling 8). A refused write returns the tool error to the model; the run still COMPLETES (accepted).
+  Superseded on 2026-09-27 by the operator's live-test ruling, see "Addendum (2026-09-27, live test)" below: the
+  discussion now has its own writable workspace and the automation's folder is mounted read-only inside it.
 - **The gateway runner drives controllers.** The ordinary gateway runner drives the controllers;
   `abstractruntime.automations.service.drive_automation` exists but the gateway does not use it.
 - **The ADR is not written.** The runtime item expected one ADR ("an automation is its controller root run; occurrences
@@ -387,6 +389,42 @@ Not verified by the E2E:
 - [0939](../planned/0939_json_run_store_recency_order_follows_updated_at_not_mtime.md): JSON store recency order.
 - [0940](../planned/0940_observer_automate_form_refuses_server_owned_input_keys.md): the Observer's Advanced `_` keys.
 - [0941](../planned/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md): the release wave.
+
+### Addendum (2026-09-27, live test)
+
+The operator tested the local deployment and ruled three changes; all are committed locally, unreleased, and covered by
+review job 56 (`untracked/missions-2026-09-25/REVIEW/56-rendering-discussion-fork.md`).
+
+1. **Rendering.** The Assistant's automation view renders occurrence text through the same `MessageCard` as the chat
+   (assistant `f487a06`, `1380c28`, `8463b9c`: task turns render markdown inside the user bubble through an explicit
+   `markdown_user_body` switch, typed chat prompts stay literal). The web apps render through panel-chat's shared
+   renderer (ui-kit `878fae0`, Observer `e2b5783`/`f7d9c1c`). The shared renderer had a CommonMark defect: a heading, a
+   code fence or a block quote directly after a text line stayed literal (ui-kit `d6a07f5` fixes it for chats too).
+2. **A discussion is a fork at a point in time.** Its seed is the automation's whole timeline through occurrence N
+   (`automation_timeline_messages`; occurrences found across sessions through the run index, last attempt each), so an
+   independent-mode automation no longer forks with a single data point, and N=1 and N=3 give different pasts
+   (runtime `997e72e`, `f830b48`).
+3. **Own writable workspace + read-only mount.** The gateway allocates the discussion's folder like a chat session's
+   (`/discuss` returns `workspace_root` and `mounted_workspace`; a client cannot name the folder) and the automation's
+   folder is mounted read-only through `_runtime.workspace_read_only_paths` (runtime `f830b48`: file write tools and
+   VisualFlow writers refuse paths under a mount, reads work, children can only add mounts; `8648930`: builtin allow =
+   own root + mount, deny prefixes unchanged; `Runtime.start` restamps later turns with the root's workspace policy).
+   The gateway keeps its own restamp because the host guard takes mounts only as an explicit argument, never from client
+   vars (gateway `d3cf337`, suite 2522, acceptance 16/16). Known limit, stated in every package's docs: shell commands
+   are not sandboxed by the mount; only file tools and workflow writers are refused.
+
+Live examples on the local gateway: the AAPL monitor is archived (history kept); "TotalEnergies (TTE.PA) share value
+monitor" `787b7fb6-d7bf-5e16-868e-ba8cf961da3d` runs every 5 minutes; the memory monitor is unchanged. Tips after the
+addendum: runtime `27522cd`, gateway `d3cf337`, ui-kit `12f736a`, Observer `a592397`, Assistant `2d40c97`. The local
+gateway and Assistant were restarted on these tips.
+
+Review 56/56b: GO for all five repos. Its findings were fixed the same day: F1 (a later discussion turn started directly on
+the runtime lost read access to the mount under host deny prefixes; `Runtime.start` now restamps the root's exact
+`workspace_builtin_allow`, runtime `56ee3a9`), F5 (the seed's summary line now counts against the budget, runtime
+`a59957a`), F2 (the Discuss help text and every docs set state that the mount binds the file tools only and shell
+commands are not sandboxed: ui-kit `6aaaa5a`, Observer `c3350a1`, Assistant `dcb8023`). Noted, no change: F3 (a JSON-only
+answer is an interactive viewer on the web and a code block in the Assistant), G-56-2 (an operator's stored default tool
+grant applies to discussions as to any chat; documented in gateway `2a5bccc`, which also closes an isolation hole in the gateway test suite: the default workspace root was machine state, so a tmp folder under the monorepo made one test pass or fail by environment).
 
 **Priority impact.** Automations v1 is built, tested and waiting for the operator's validation. The release wave (0941) is
 next once the operator gives an explicit per-release go. 0929 (v2 external triggers) and 0930 (Code and console) follow

@@ -65,10 +65,16 @@ page say so and stay disabled.
   occurrence runs the framework's tools that its workflow offers without asking. Choose **Ask each
   time** (`ask`) to make every tool batch wait for your approval. Questions the workflow itself
   asks (`ask_user`) always wait for you.
-- **Discussions are forks.** **Discuss** on a finished occurrence starts a new conversation seeded
-  with the automation's history up to that occurrence. It runs the same workflow, can read the
-  automation's folder but not change it, approves tools interactively like any chat, and never
-  writes anything back into the automation.
+- **Discussions are forks at a point in time.** **Discuss** on a finished occurrence starts a new
+  conversation whose context is the automation's whole history up to and including that
+  occurrence: every task and every answer, in order, exactly as the automation saw them (the
+  timeline comes from the controller's ledger, so it is the same for a growing and for an
+  independent automation). Discuss occurrence 3 and occurrence 7 of the same automation and you
+  get two forks with two different pasts. The discussion runs the same workflow in **its own
+  writable workspace**; the automation's folder is **mounted read-only** inside it, so the
+  discussion can read every file the automation produced but its file tools refuse to change one
+  (shell commands are not sandboxed, so approve them with that in mind). It approves tools
+  interactively like any chat and never writes anything back into the automation.
 
 ```mermaid
 flowchart TB
@@ -98,7 +104,7 @@ flowchart TB
   API --> AS
   API --> OB
   API --> AC
-  D["Discussion<br/>new root run, own session,<br/>read-only folder"]
+  D["Discussion<br/>new root run, own session,<br/>own workspace + automation<br/>folder mounted read-only"]
   O2 -. "Discuss" .-> D
 ```
 
@@ -378,7 +384,7 @@ Every control is a command, `POST /api/gateway/automations/{id}/commands` with a
 | **Edit** / **Revise…** | `PATCH` with `expected_revision` and `changes` | Title, interval and context in the apps; also `target` and `policy` through the API. Creates the next revision, used from the next run; an occurrence already running keeps the inputs it started with. A changed schedule never fires a past tick. |
 | **Stop current** | `automation.stop_current` | Cancels the run in progress (quietly). |
 | **Archive** | `automation.archive` | No further runs; the current one finishes. **The history is kept** and stays readable; the only remaining control is Discuss. |
-| **Discuss** | `POST …/discuss` `{request_id, occurrence_index, prompt}` | A new conversation seeded with the automation's history up to that occurrence; see [the mental model](#the-mental-model). Continue it like any chat (`POST /api/gateway/runs/start` with its `session_id`). |
+| **Discuss** | `POST …/discuss` `{request_id, occurrence_index, prompt}` | A new conversation forked at that occurrence: its context is the automation's whole timeline up to and including it; it works in its own writable workspace (`workspace_root` in the response) with the automation's folder mounted read-only (`mounted_workspace`); see [the mental model](#the-mental-model). Continue it like any chat (`POST /api/gateway/runs/start` with its `session_id`). |
 
 The Assistant and the Observer disable a control that does not apply and say why in its tooltip.
 

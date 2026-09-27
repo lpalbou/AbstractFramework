@@ -15,11 +15,14 @@
 #   3. `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"`
 #      (isolated, user-scoped; commands land in ~/.local/bin; prebuilt wheels
 #      only, so no C compiler / Xcode tools are needed)
-#   4. optional: Node.js for the browser apps, terminal tools, Ollama, LM Studio
+#   4. the terminal console (abstractgateway-console, built with cargo; Rust
+#      comes from rustup, user-scoped, when missing), then the optional parts:
+#      Node.js for the browser apps, AbstractCode's terminal client, Ollama, LM Studio
 #   5. registers the gateway as a user service when the installed gateway
 #      supports `abstractgateway service install`, otherwise starts it in the
 #      background; waits for /api/health
-#   6. opens the gateway console (one-time claim URL when supported)
+#   6. opens the web console (one-time claim URL when supported) and prints how to
+#      reach both consoles: the web one (`/console`) and the terminal one
 #
 # Options (environment twins in brackets):
 #   --profile auto|light|apple|gpu  install profile (default auto)          [AF_PROFILE]
@@ -31,7 +34,9 @@
 #   --data-dir DIR           gateway data dir (default: per-OS user data dir) [AF_DATA_DIR]
 #   --with-apps              make sure Node.js >= 18 exists for the npx apps
 #                            (uv tool install nodejs-wheel; no admin)
-#   --with-console           cargo install the terminal console (needs Rust)
+#   --no-console             skip the terminal console (by default it is built with
+#                            cargo: about 600 MB of Rust from rustup when cargo is
+#                            missing, and a C compiler)
 #   --with-code-cli          cargo install the AbstractCode terminal client
 #   --with-core-cli          also expose the `abstractcore` command
 #   --with-ollama            run Ollama's official installer (may ask for sudo)
@@ -94,6 +99,9 @@ AF_GATEWAY_PIN_DEFAULT="0.5.1"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.3.21 @abstractframework/code@0.5.0 @abstractframework/observer@0.1.13 @abstractframework/continuum@0.3.2 @abstractframework/entity@0.2.2"
 AF_CRATE_CONSOLE="abstractgateway-console@0.9.0"
+# Browser apps whose CLI takes the gateway address as a launch flag (--gateway-url);
+# the others start on http://127.0.0.1:8080 and take another address on their sign-in screen.
+AF_NPM_GATEWAY_FLAG_APPS="@abstractframework/flow @abstractframework/continuum"
 AF_CRATE_CODE_CLI="abstractcode@0.6.0"
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
 AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
@@ -155,7 +163,7 @@ PIN="${AF_PIN:-}"
 FROM="${AF_FROM:-}"
 MANIFEST=""
 DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
-WITH_APPS=0; WITH_CONSOLE=0; WITH_CODE_CLI=0; WITH_CORE_CLI=0
+WITH_APPS=0; WITH_CONSOLE=1; WITH_CODE_CLI=0; WITH_CORE_CLI=0
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
 FULL=0; NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
 PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0
@@ -163,7 +171,7 @@ INTERACTIVE="${AF_INTERACTIVE:-0}"
 
 usage() {
     if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
-        sed -n '2,62p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,67p' "$0" | sed 's/^# \{0,1\}//'
     else
         echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
         echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
@@ -189,7 +197,8 @@ while [ $# -gt 0 ]; do
         --data-dir) need_arg "$@"; DATA_DIR="$2"; shift ;;
         --data-dir=*) DATA_DIR="${1#*=}" ;;
         --with-apps) WITH_APPS=1 ;;
-        --with-console) WITH_CONSOLE=1 ;;
+        --with-console) WITH_CONSOLE=1 ;;   # the default; kept for older command lines
+        --no-console) WITH_CONSOLE=0 ;;
         --with-code-cli) WITH_CODE_CLI=1 ;;
         --with-core-cli) WITH_CORE_CLI=1 ;;
         --with-ollama) WITH_OLLAMA=1 ;;
@@ -404,8 +413,9 @@ LOG_DIR="$DATA_DIR/logs"
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 
 # Previous run state (port, service mode, whether we installed Node).
-ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""; ST_UV_BY_US=""
+ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""; ST_UV_BY_US=""; ST_RUST_BY_US=""
 if [ -f "$STATE_FILE" ]; then
+    ST_RUST_BY_US="$(sed -n 's/^RUST_BY_INSTALLER=//p' "$STATE_FILE" | tail -n 1)"
     ST_UV_BY_US="$(sed -n 's/^UV_BY_INSTALLER=//p' "$STATE_FILE" | tail -n 1)"
     ST_PORT="$(sed -n 's/^PORT=//p' "$STATE_FILE" | tail -n 1)"
     ST_MODE="$(sed -n 's/^MODE=//p' "$STATE_FILE" | tail -n 1)"
@@ -424,6 +434,25 @@ find_uv() {
     done
     return 1
 }
+# cargo: on PATH, or where rustup puts it (an earlier run of this installer).
+CARGO=""
+find_cargo() {
+    if have cargo; then CARGO="$(command -v cargo)"; return 0; fi
+    if [ -x "${CARGO_HOME:-$HOME/.cargo}/bin/cargo" ]; then CARGO="${CARGO_HOME:-$HOME/.cargo}/bin/cargo"; return 0; fi
+    return 1
+}
+# console_bin: where the terminal console goes. cargo builds it with --root <parent of the
+# uv tool bin dir>, so it lands next to `abstractgateway`; a bin dir not named .../bin falls
+# back to cargo's own ~/.cargo/bin.
+CONSOLE_NAME="${AF_CRATE_CONSOLE%@*}"; CONSOLE_PIN="${AF_CRATE_CONSOLE##*@}"
+CRATE_ROOT=""; CONSOLE_BIN=""
+console_bin() {
+    case "$TOOL_BIN" in
+        */bin) CRATE_ROOT="${TOOL_BIN%/bin}"; CONSOLE_BIN="$TOOL_BIN/$CONSOLE_NAME" ;;
+        *) CRATE_ROOT=""; CONSOLE_BIN="${CARGO_HOME:-$HOME/.cargo}/bin/$CONSOLE_NAME" ;;
+    esac
+}
+console_installed() { [ "$("$CONSOLE_BIN" --version 2>/dev/null)" = "$CONSOLE_NAME $CONSOLE_PIN" ]; }
 TOOL_BIN=""
 tool_bin() {
     if [ -n "$UV" ] && [ -x "$UV" ]; then TOOL_BIN="$("$UV" tool dir --bin 2>/dev/null || true)"; fi
@@ -828,6 +857,18 @@ if [ "$UNINSTALL" = 1 ]; then
     else
         info "uv not found; nothing to uninstall there"
     fi
+    # The terminal console this installer built (see console_bin).
+    console_bin
+    if [ -e "$CONSOLE_BIN" ]; then
+        step "Terminal console"
+        if find_cargo && grep -qs "^\"$CONSOLE_NAME " "${CRATE_ROOT:-${CARGO_HOME:-$HOME/.cargo}}/.crates.toml"; then
+            set -- "$CARGO" uninstall
+            [ -n "$CRATE_ROOT" ] && set -- "$@" --root "$CRATE_ROOT"
+            RUN_SOFT=1 run "uninstall the terminal console" "$@" "$CONSOLE_NAME"
+        fi
+        [ "$PRINT" = 0 ] && [ ! -e "$CONSOLE_BIN" ] || run "remove the terminal console" rm -f "$CONSOLE_BIN"
+    fi
+    [ "$ST_RUST_BY_US" = 1 ] && info "kept: Rust, which the installer added for the terminal console (remove it with: ${CARGO_HOME:-$HOME/.cargo}/bin/rustup self uninstall)"
     step "Data"
     _inst="$HOME/Library/Application Support/AbstractFramework/Installer"
     if [ "$OS_ID" = macos ] && [ -e "$_inst" ]; then
@@ -881,9 +922,9 @@ sudo chown -R $(id -un) <folder>. Then $UNINSTALL_AGAIN"
         run "remove the Pythons uv installed" "$UV" python uninstall --all
         run "remove uv" rm -f "$UV" "$_uvdir/uvx" "${XDG_CONFIG_HOME:-$HOME/.config}/uv/uv-receipt.json"
         info "kept: the PATH line uv added to your shell profile (harmless; delete it by hand if you like)"
-        info "kept: Ollama, LM Studio, and any cargo tools"
+        info "kept: Ollama, LM Studio, and any other cargo tools"
     else
-        info "kept: uv ($([ -n "$UV" ] && echo "$UV" || echo 'not found'); --remove-uv removes it), Ollama, LM Studio, and any cargo tools"
+        info "kept: uv ($([ -n "$UV" ] && echo "$UV" || echo 'not found'); --remove-uv removes it), Ollama, LM Studio, and any other cargo tools"
     fi
     printf '\n%sDone.%s\n' "$C_G" "$C_0"
     exit 0
@@ -1028,6 +1069,8 @@ ok "gateway: $GW_SPEC  ${C_D}(pin from $PIN_SOURCE)${C_0}"
 # Disk.
 case "$PROFILE" in apple) NEED_MB=8000 ;; gpu) NEED_MB=12000 ;; *) NEED_MB=1500 ;; esac
 [ "$WITH_APPS" = 1 ] && NEED_MB=$((NEED_MB + 300))
+# The terminal console: Rust from rustup (minimal profile) and cargo's build cache.
+[ "$WITH_CONSOLE" = 1 ] && [ "$HAS_CC" = 1 ] && ! find_cargo && NEED_MB=$((NEED_MB + 700))
 FREE_MB="$(df -Pk "$HOME" 2>/dev/null | awk 'NR==2 {print int($4/1024)}')"
 if [ -n "$FREE_MB" ]; then
     if [ "$FREE_MB" -lt 1000 ]; then die "only ${FREE_MB} MB free under $HOME (about ${NEED_MB} MB needed)"
@@ -1246,22 +1289,89 @@ if [ "$WITH_APPS" = 1 ]; then
         NODE_WHEEL=1
     fi
     info "apps are not installed globally; each runs on demand (first launch downloads it):"
+    _others=""
     for spec in $AF_NPM_APPS; do
-        printf '      npx -y %s   %s# ABSTRACTGATEWAY_URL=%s%s\n' "$spec" "$C_D" "$BASE_URL" "$C_0"
+        case " $AF_NPM_GATEWAY_FLAG_APPS " in
+            *" ${spec%@*} "*) printf '      npx -y %s --gateway-url %s\n' "$spec" "$BASE_URL" ;;
+            *) printf '      npx -y %s\n' "$spec"; _others="$_others${_others:+, }${spec%@*}" ;;
+        esac
     done
+    [ "$BASE_URL" = "http://127.0.0.1:8080" ] || [ -z "$_others" ] \
+        || info "$_others start on http://127.0.0.1:8080: enter $BASE_URL on their sign-in screen"
 fi
 
-if [ "$WITH_CONSOLE" = 1 ] || [ "$WITH_CODE_CLI" = 1 ]; then
-    step "Terminal tools (crates.io)"
-    for _sel in console code; do
-        if [ "$_sel" = console ]; then [ "$WITH_CONSOLE" = 1 ] || continue; _c="$AF_CRATE_CONSOLE"
-        else [ "$WITH_CODE_CLI" = 1 ] || continue; _c="$AF_CRATE_CODE_CLI"; fi
-        if have cargo; then
-            run "cargo install ${_c%@*}" cargo install --locked "${_c%@*}" --version "${_c##*@}"
-        else
-            warn "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked ${_c%@*} --version ${_c##*@}"
+# Terminal console: crates.io publishes no prebuilt binary, so cargo builds it (see
+# console_bin). When there is no cargo, or only one older than the crate's Rust 1.87 (the
+# distro packages are), Rust comes from rustup: user-scoped (~/.rustup, ~/.cargo), shell
+# profiles untouched, its cargo used by absolute path. The TLS stack (ring) compiles C, so
+# it needs a C compiler. A failure here never fails the install: the web console does
+# everything the terminal one does.
+CONSOLE_OK=0; CONSOLE_WHY="skipped with --no-console"
+RUST_BY_US="${ST_RUST_BY_US:-0}"
+RUSTUP_CARGO="${CARGO_HOME:-$HOME/.cargo}/bin/cargo"
+console_bin
+cargo_minor() { "$1" --version 2>/dev/null | awk '{ split($2, v, "."); print v[1] * 1000 + v[2] }'; }
+if [ "$WITH_CONSOLE" = 0 ]; then
+    [ "$PRINT" = 0 ] && console_installed && CONSOLE_OK=1
+else
+    step "Terminal console ($CONSOLE_NAME $CONSOLE_PIN)"
+    _rust_old=""
+    if [ "$PRINT" = 0 ] && console_installed; then
+        ok "$CONSOLE_NAME $CONSOLE_PIN already installed: $CONSOLE_BIN"
+        CONSOLE_OK=1
+    elif [ "$HAS_CC" = 0 ]; then
+        CONSOLE_WHY="building it needs a C compiler: $([ "$OS_ID" = macos ] && echo 'xcode-select --install' || echo 'sudo apt-get install -y build-essential (Debian/Ubuntu)')"
+        warn "terminal console skipped: $CONSOLE_WHY; then run the installer again"
+    else
+        find_cargo || true
+        if [ -n "$CARGO" ] && [ "$PRINT" = 0 ] && [ "$(cargo_minor "$CARGO")" -lt 1087 ] 2>/dev/null; then
+            _rust_old="$("$CARGO" --version 2>/dev/null | awk '{print $2}')"
+            if [ -x "$(dirname "$CARGO")/rustup" ]; then
+                CONSOLE_WHY="it needs Rust 1.87 or later and $CARGO is $_rust_old; update it (rustup update stable)"
+                warn "terminal console skipped: $CONSOLE_WHY, then run the installer again"
+                CARGO=""
+            else
+                info "cargo $_rust_old ($CARGO) is older than the Rust 1.87 the console needs: adding a current Rust with rustup"
+                CARGO=""; [ -x "$RUSTUP_CARGO" ] && [ "$(cargo_minor "$RUSTUP_CARGO")" -ge 1087 ] 2>/dev/null && CARGO="$RUSTUP_CARGO"
+                [ -n "$CARGO" ] || _rust_old="rustup"
+            fi
         fi
-    done
+        if [ -z "$CARGO" ] && { [ -z "$_rust_old" ] || [ "$_rust_old" = rustup ]; }; then
+            if ask_yes "Build the terminal console? It needs Rust: about 600 MB in ~/.rustup and ~/.cargo, no admin, a few minutes" y; then
+                info "installing Rust with rustup into ~/.rustup and ~/.cargo (no admin, shell profile untouched)"
+                RUN_SOFT=1 run_sh "install Rust (rustup)" "$DL https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path"
+                if [ "$PRINT" = 1 ]; then CARGO="$RUSTUP_CARGO"
+                elif [ -x "$RUSTUP_CARGO" ]; then CARGO="$RUSTUP_CARGO"; RUST_BY_US=1
+                else CONSOLE_WHY="Rust could not be installed (see $LOG_FILE)"; warn "terminal console skipped: $CONSOLE_WHY"; fi
+            else
+                CONSOLE_WHY="you chose not to install Rust; re-run the installer to add it"
+            fi
+        fi
+        if [ -n "$CARGO" ]; then
+            info "compiling it from crates.io (a few minutes the first time)"
+            set -- "$CARGO" install --locked --force
+            [ -n "$CRATE_ROOT" ] && set -- "$@" --root "$CRATE_ROOT"
+            RUN_SOFT=1 run "build the terminal console" "$@" "$CONSOLE_NAME" --version "$CONSOLE_PIN"
+            if [ "$PRINT" = 1 ]; then CONSOLE_OK=1
+            elif [ "$RUN_RC" = 0 ] && console_installed; then
+                CONSOLE_OK=1; ok "installed $CONSOLE_NAME $CONSOLE_PIN: $CONSOLE_BIN"
+            else
+                CONSOLE_WHY="the build failed (see $LOG_FILE)"
+                [ "$RUN_RC" = 0 ] && warn "cargo reported success but $CONSOLE_BIN does not answer --version"
+            fi
+        fi
+    fi
+fi
+
+if [ "$WITH_CODE_CLI" = 1 ]; then
+    step "AbstractCode terminal client (crates.io)"
+    _c="$AF_CRATE_CODE_CLI"
+    if [ -n "$CARGO" ] || find_cargo; then
+        run "cargo install ${_c%@*}" "$CARGO" install --locked "${_c%@*}" --version "${_c##*@}"
+        info "run it: ${_c%@*} --gateway $BASE_URL"
+    else
+        warn "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked ${_c%@*} --version ${_c##*@}"
+    fi
 fi
 
 if [ "$WITH_OLLAMA" = 1 ]; then
@@ -1303,7 +1413,7 @@ write_state() {
         echo "# written by AbstractFramework install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ)"
         echo "PORT=$PORT"; echo "MODE=$MODE"; echo "PROFILE=$PROFILE"
         echo "NODE_WHEEL=$NODE_WHEEL"; echo "GATEWAY_SPEC=$GW_SPEC"; echo "GATEWAY_VERSION=$AFTER"
-        echo "UV_BY_INSTALLER=$UV_BY_US"
+        echo "UV_BY_INSTALLER=$UV_BY_US"; echo "RUST_BY_INSTALLER=$RUST_BY_US"
     } >"$STATE_FILE"
 }
 
@@ -1389,6 +1499,8 @@ write_state
 # 6. Health + console
 # ---------------------------------------------------------------------------
 CONSOLE_URL="$BASE_URL/console"
+TOKEN_FILE="$DATA_DIR/auth/bootstrap-admin-token"
+CLAIMED=0; OPENED=0
 if [ "$NO_START" = 0 ]; then
     step "Health check"
     twin "curl $BASE_URL/api/health"
@@ -1420,7 +1532,6 @@ What to do: restart the computer (the login item starts it again) or run the ins
     fi
 
     step "Console sign-in"
-    CLAIMED=0
     if [ "$PRINT" = 0 ] && gateway_supports claim-url; then
         _claim="$("$GWCFG" claim-url --base-url "$BASE_URL" 2>>"$LOG_FILE" | grep -Eo 'https?://[^[:space:]]+' | tail -n 1)" || true
         if [ -n "$_claim" ]; then
@@ -1433,7 +1544,6 @@ What to do: restart the computer (the login item starts it again) or run the ins
     elif [ "$PRINT" = 1 ]; then
         info "$(show_cmd abstractgateway-config claim-url --base-url "$BASE_URL")   (when supported)"
     fi
-    TOKEN_FILE="$DATA_DIR/auth/bootstrap-admin-token"
     if [ "$CLAIMED" = 0 ]; then
         info "sign in as 'admin' with the token in: $TOKEN_FILE"
         info "    cat $(q "$TOKEN_FILE")"
@@ -1442,9 +1552,9 @@ What to do: restart the computer (the login item starts it again) or run the ins
     if [ "$NO_OPEN" = 1 ] || [ "$PRINT" = 1 ]; then
         info "open: $CONSOLE_URL"
     elif [ "$OS_ID" = macos ] && have open; then
-        if open "$CONSOLE_URL" >/dev/null 2>&1; then ok "opened the console in your browser"; else info "open: $CONSOLE_URL"; fi
+        if open "$CONSOLE_URL" >/dev/null 2>&1; then OPENED=1; ok "opened the console in your browser"; else info "open: $CONSOLE_URL"; fi
     elif [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && have xdg-open; then
-        if xdg-open "$CONSOLE_URL" >/dev/null 2>&1; then ok "opened the console in your browser"; else info "open: $CONSOLE_URL"; fi
+        if xdg-open "$CONSOLE_URL" >/dev/null 2>&1; then OPENED=1; ok "opened the console in your browser"; else info "open: $CONSOLE_URL"; fi
     else
         info "open: $CONSOLE_URL"
         info "remote host? tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
@@ -1454,13 +1564,29 @@ fi
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
+# The terminal console signs in with the admin token the gateway keeps in its data dir:
+# --token-file names the file, so the token never lands in argv, the environment or this output.
+_tui_exe="$CONSOLE_NAME"; [ "$CONSOLE_BIN" = "$TOOL_BIN/$CONSOLE_NAME" ] || _tui_exe="$(q "$CONSOLE_BIN")"
+TUI_CMD="$_tui_exe --url $BASE_URL --token-file $(q "$TOKEN_FILE")"
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     # The plain-language part first: what a non-technical user needs to know.
     printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
-    if [ "$NO_OPEN" = 0 ]; then
-        echo "  Your browser now shows it. Its address is $BASE_URL/console (bookmark it)."
+    [ "$OPENED" = 1 ] && echo "  Your browser now shows its web console. Its address is $BASE_URL/console (bookmark it)."
+    echo "  Configure it from either console (the same settings, both need this machine):"
+    # An opened claim link is spent (the browser redeemed it): show the plain address then.
+    echo "    Web:       $([ "$OPENED" = 1 ] && echo "$BASE_URL/console" || echo "$CONSOLE_URL")"
+    if [ "$CLAIMED" = 1 ] && [ "$OPENED" = 1 ]; then
+        echo "               signed in already in this browser; another browser needs a new link: abstractgateway-config claim-url --base-url $BASE_URL"
+    elif [ "$CLAIMED" = 1 ]; then
+        echo "               one-time sign-in link (10 minutes); a new one: abstractgateway-config claim-url --base-url $BASE_URL"
     else
-        echo "  Open $CONSOLE_URL in your browser."
+        echo "               sign in as 'admin' with the token in $TOKEN_FILE"
+    fi
+    [ "$OPENED" = 1 ] || echo "               from another computer, tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
+    if [ "$CONSOLE_OK" = 1 ]; then
+        echo "    Terminal:  $TUI_CMD"
+    else
+        echo "    Terminal:  not installed: $CONSOLE_WHY"
     fi
     if [ "$MODE" = service ]; then
         echo "  It starts by itself when you log in; nothing to launch."
@@ -1473,6 +1599,7 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
 fi
 printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): nothing was changed.' || echo 'Details')" "$C_0"
 printf '  %-11s %s\n' "Console:" "$BASE_URL/console" "Gateway:" "$GW_SPEC ($PROFILE profile)" \
+    "Terminal:" "$([ "$CONSOLE_OK" = 1 ] && echo "$TUI_CMD" || echo "not installed ($CONSOLE_WHY)")" \
     "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
 echo ""
 echo "  Status:     $([ "$MODE" = service ] && echo "abstractgateway service status" || echo "curl $BASE_URL/api/health")"
@@ -1485,7 +1612,7 @@ echo "  GGUF:       $GGUF_RESULT"
 if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
     echo "  $AF_SKIPPED_LINE"
 fi
-echo "  Apps:       npx -y @abstractframework/flow   (also: code, observer, continuum, entity)"
+echo "  Apps:       npx -y @abstractframework/flow --gateway-url $BASE_URL   (also: code, observer, continuum, entity)"
 echo "  Docs:       $AF_DOCS"
 if [ -n "$TWINS" ]; then
     echo ""
