@@ -28,5 +28,23 @@ Hermetic reproduction with a scratch data dir and a background writer (before: "
 nothing-to-do, answer-N keeps data, a path with spaces, an undeletable `uchg` file → explicit listing + non-zero exit; installer tests;
 `sh -n`/shellcheck; adversarial review.
 
+## Progress (2026-09-27)
+Fix committed locally as root dee84f9 (unpushed; adversarial review 36 pending). Cause confirmed by a hermetic reproduction (3/3 with a
+50 ms background writer): `launchctl bootout` returns before the gateway tree exits, and children started with `start_new_session=True`
+(entity own-time loop `abstractruntime identity/life.py:1896-1904`, host download jobs `abstractcore config/host_jobs.py:1620`,
+maintenance `process_manager.py:803`, apps `apps_manager.py:951` / `apps_desktop.py:436`, the tray `tray_supervisor.py:338`) keep
+writing; the old script killed only an installer-written `gateway.pid` a service install never has (the gateway records its pid in
+`run/gateway-serve.json`). Ruled out: `uchg` ("Operation not permitted"), permissions ("Permission denied"), root-owned files (the .pkg
+is payload-free and runs the installer as the user), symlinks, mounts. When the old deletion won the race it printed "Done." while the
+writer recreated the dir — a silent failure. Fix: step [1] stops the tree (uv tool env python, `$TOOL_BIN/abstractgateway`,
+`apps/_support/parent_watch.cjs`, pids from `run/gateway-serve.json` / `run/apps/*.json` / `gateway.pid` + descendants; 20 s wait, TERM,
+KILL, rescans; a source-checkout gateway is deliberately not matched); step [3] per-location retries + verification + `ls -lO`/`lsof +D`
+listing, refuses to cross a mount, keeps a symlink's target; `--purge` also removes `~/Library/Caches/AbstractGateway`,
+`~/.abstractassistant`, `~/Library/Logs/Assistant/abstractassistant-*`, `~/.abstractcode`, `~/.abstractcode-tui`; keeps `~/.abstractcore`,
+HF cache and weights (named in the output); `-y`; uninstall-specific advice. Tests: `scripts/tests/test_install_user_path.sh` 65 passed
+(+13; 5 red without the fix), other script suites green, `sh/bash/zsh/dash -n`. Follow-ups outside this fix: Windows `install.ps1:354-357`
+purge is silent on failure and misses the Assistant/Code data (same repo, next item); gateway `service uninstall` should itself wait for
+the tree (abstractgateway backlog); Linux XDG-autostart gateways are not stopped by `service uninstall` (`os_service.py:880-890`).
+
 ## Related
 abstractassistant 0853 (gateway-first sessions), 0868 (installer signing), 0932 (release trace).
