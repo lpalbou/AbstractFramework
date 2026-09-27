@@ -162,8 +162,8 @@ Evidence (all under the root repo's `untracked/`, not published):
 | Package | Mission | Commits (local `main`) | Tests at the tip | Reviews |
 |---|---|---|---|---|
 | abstractruntime | R1 + R2 | `79d9bf6` … `d02578a` (26 commits) | full suite **2957 passed / 26 skipped** | 43 GO; 44 GO (history, read-only) / NO-GO (discussion: F1, F2); 45 GO (controller core) / NO-GO (discussion: H2) + **H1 release blocker**; 45 addendum (D1) GO; job 50 GO (`e690b55`); job 51 GO (`af2de4a`: H1, F1, F2 fixed); job 53 GO (`b000036`, J51-1 fixed). J53-1/J53-2 fixed in `d02578a` (not re-reviewed). |
-| abstractgateway | G | `57f26b9` … tip at completion: <fill> (12 commits up to `8a8c8d3`; the R52-1 / W2 fix set was landing when this was written) | full suite **2503 passed / 0 failed**; `scripts/accept_automations_v1.py` **16/16** | 46 GO (G1, G2 → fixed `5161785`); 47 GO for E2E, conditional for apps (P2-1, P2-2, P2-3 → fixed `5161785` / runtime `e690b55`); 52 GO after **R52-1** (the `_runtime` allowlist, in the landing fix set); 52 addendum (`9975276`) GO with W1, W2 |
-| abstractuic | U | `9da01a0` … `1eb6d82` (8 commits) | `check_automation_fixtures` 151, `_client` 114, `_panel` 216 (at `2081d6a`, job 48) | 42 GO (F1–F7 → fixed `b70db16`); job 48 GO (D1, `2081d6a`). Fixtures regenerated from real gateway output in `a9b73ab`. |
+| abstractgateway | G | `57f26b9` … `4ece2f5` (14 commits; docs `9766e29`, `8a8c8d3`; kit re-vendors `6718d3c`, `ea71638`) | full suite **2514 passed**; `scripts/accept_automations_v1.py` **16/16** | 46 GO (G1, G2 → fixed `5161785`); 47 GO for E2E, conditional for apps (P2-1, P2-2, P2-3 → fixed `5161785` / runtime `e690b55`); 52 GO after **R52-1** (the `_runtime` allowlist → `4ece2f5`); 52 addendum (`9975276`) GO with W1, W2 (W2 → `4ece2f5`); **review 55 (the final delta `ea71638` + `4ece2f5`) pending** at completion |
+| abstractuic | U | `9da01a0` … `1eb6d82` (8 commits, docs `704f18d`) | `check_automation_fixtures` 151, `_client` 114, `_panel` 216 (at `2081d6a`, job 48) | 42 GO (F1–F7 → fixed `b70db16`); job 48 GO (D1, `2081d6a`). Fixtures regenerated from real gateway output in `a9b73ab`. |
 | abstractflow | F | `c5961d1` … `0d4bf76` (4 commits) | `npm test` 1392 passed at review (the 2 failures were an untracked audit copy; excluded in `9f174c9`) | 41 GO (A1, B1 → fixed `9f174c9`) |
 | abstractobserver | O | `56af9b4` … `9685fe0` (9 commits, docs `8f41b63`) | vitest **159/159**; headless-Chromium walk **17/17** against gateway `5161785` | 54 GO (O-1 → fixed `9685fe0`) |
 | abstractassistant | A | `e3a0445` … `d142d00` + docs `7248daf`, `05161da`, `52d75df` (12 commits) | suite 967; 27/27-step walk against a hermetic gateway (0 provider calls) | 49 GO on the operator's machine (A49-1 → gateway `2146145`/`f9269d9`; A49-2 → `cce2d67` + gateway `5161785`) |
@@ -259,8 +259,10 @@ What each package holds now:
   - A host-lookup failure is recorded, and the cursor holds if it cannot be recorded (G2).
 - **Bounds.** `every` ≤ 366 d, `count` ≤ 1,000,000, backoff bounded (M3 / G4 / P2-5).
 - **Creation.** `actor_id` is stamped at creation (P2-3; the gateway's claim step is gone). The gateway strips client
-  `_meta.*` and the read-only keys from `target.input_data` and keeps only an allowlist of `_runtime` keys (P2-1; R52-1 in
-  the landing fix set).
+  `_meta.*` and the read-only keys from `target.input_data` and keeps only an allowlist of `_runtime` keys (P2-1; R52-1,
+  gateway `4ece2f5`). The review-52 stall is fixed: a planted `_runtime.control = {paused: true}` stopped every other
+  automation because the runner re-queued a RUNNING-but-paused run for immediate ticks in a tight loop, starving the
+  others (`4ece2f5`).
 - **JSON store.** A per-process session index kept current across processes by a creation journal, warmed at gateway boot
   (H1, J51-1, J53, W2).
 
@@ -337,8 +339,8 @@ Not verified by the E2E:
   need the runtime release that carries this work. Part of 0941.
 - **J50-1 (low).** Command results recorded before `e690b55` have no digest, so a replay would be refused. No released
   gateway has automations, so this is a release-notes line only.
-- **R52-1 / W2.** In the gateway fix set landing at the time of writing (`tests/test_automations_review52.py`, uncommitted);
-  the gateway tip above is filled in when it lands.
+- **R52-1 / W2.** Fixed in gateway `4ece2f5` (`tests/test_automations_review52.py`). Review 55, of that final delta, was
+  still pending at completion.
 - **R52-2 (low).** ui-kit `parseEventPayload` (`panel_core.ts:389`) still accepts non-object JSON that the gateway refuses
   with 422. R52-3 (note): the reuse of a queued `command_id` reads "duplicate", not "conflict", until it is decided.
 - **Review 45 lows.**

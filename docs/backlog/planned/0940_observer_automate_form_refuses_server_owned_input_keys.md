@@ -30,12 +30,12 @@ user typed, and the Observer says nothing.
   goes through.
 
 ### Out of scope
-- The gateway allowlist itself (review 52 R52-1, landing in the gateway fix set).
+- The gateway allowlist itself (review 52 R52-1, gateway `4ece2f5`).
 
 ## Current code reality (2026-09-27)
 - Observer tip `9685fe0`: `clean_input_data` at `src/ui/automations.ts:117`.
-- Gateway working tree (R52-1, uncommitted at the time of writing): `automation_defaults.py` `CLIENT_RUNTIME_KEYS`,
-  `SERVER_INPUT_KEYS` and `strip_server_owned_input` (returns the dropped paths and logs them).
+- Gateway `4ece2f5` (R52-1): `automation_defaults.py` `CLIENT_RUNTIME_KEYS`, `SERVER_INPUT_KEYS` and
+  `strip_server_owned_input` (returns the dropped paths and logs them server-side).
 - If the gateway later answers a create carrying dropped keys with 422 instead of dropping them, this item shrinks to
   surfacing that 422 in the form.
 

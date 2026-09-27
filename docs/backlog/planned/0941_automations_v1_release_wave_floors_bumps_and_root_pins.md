@@ -26,8 +26,8 @@ without the operator's explicit go for that release: earlier authorisations neve
      `live_deltas.ABSTRACTRUNTIME_FLOOR` (a test keeps them equal).
    - This is review 52 addendum **W1**: boot calls `warm_session_index()`, and every create sends
      `policy.tool_approval`. Both fail on 0.5.1, with an `AttributeError` at boot and a 422 on create.
-   - Confirm that the R52-1 / W2 fix set is committed and that the acceptance script passes (16/16 or more) on the
-     released runtime.
+   - The R52-1 / W2 fix set is committed (`4ece2f5`). Confirm that review 55 (the final delta) is GO and that the
+     acceptance script passes (16/16 or more) on the released runtime.
    - The re-vendored kit theme/islands must match the kit version that step 3 publishes.
 3. **@abstractframework/ui-kit + panel-chat** (minor).
    - The automations client, panel, dialog and fixtures.
