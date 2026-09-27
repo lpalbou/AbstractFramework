@@ -77,7 +77,7 @@ if [[ "$IS_MAC" == 1 ]]; then DATA_REL="Library/Application Support/AbstractGate
 
 echo "[1] syntax"
 for f in install.sh uninstall.sh "Install AbstractFramework.command" "Uninstall AbstractFramework.command" \
-         lib/build_macos_installer.sh tests/doubles/launchctl tests/doubles/open; do
+         lib/build_macos_installer.sh tests/doubles/launchctl tests/doubles/open tests/doubles/defaults; do
     sh -n "$SCRIPTS_DIR/$f"; check "sh -n $f" "$?"
     if command -v zsh >/dev/null 2>&1; then zsh -n "$SCRIPTS_DIR/$f"; check "zsh -n $f" "$?"; fi
 done
@@ -221,6 +221,7 @@ check "--purge deleted the Assistant's sessions and AbstractCode's settings" "$(
 if [[ "$IS_MAC" == 1 ]]; then
     check "--purge deleted the gateway logs, its cache, the Assistant's log and the installer copy" "$([[ ! -e "$LH/Library/Logs/AbstractGateway" && ! -e "$LH/Library/Caches/AbstractGateway" && ! -e "$LH/Library/Logs/Assistant" && ! -e "$LH/Library/Application Support/AbstractFramework" ]]; echo $?)" "$OUT"
     check "D5: --purge deleted the Assistant's preferences plist, kept another app's" "$([[ ! -e "$LH/Library/Preferences/ai.abstractcore.abstractassistant.plist" && -f "$LH/Library/Preferences/com.example.other.plist" ]]; echo $?)" "$OUT"
+    check "D5: and dropped the cached domain (defaults delete, recorded by the double, printed)" "$(grep -q "defaults delete ai.abstractcore.abstractassistant" "$WORK/live/launchd/calls.log" && has "$OUT" '\$ defaults delete ai.abstractcore.abstractassistant'; echo $?)" "$OUT"
 else
     check "--purge deleted the gateway cache" "$([[ ! -e "$LH/.cache/abstractgateway" ]]; echo $?)" "$OUT"
 fi
@@ -247,7 +248,7 @@ check "exit 1 with the explicit listing and uninstall advice (never 'run the ins
 [[ "$IS_MAC" == 1 ]] && check "the listing shows the uchg flag" "$(has "$OUT" "uchg"; echo $?)" "$OUT"
 if [[ "$IS_MAC" == 1 ]]; then chflags -R nouchg "$BD"; else chmod 755 "$BD/runtime/locked"; fi
 run_in blocked AF_RM_TRIES=2 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$BD"
-check "once unlocked, a second run finishes (exit 0, dir gone)" "$([[ $RC == 0 && ! -e "$BD" ]]; echo $?)" "$OUT"
+check "once unlocked, a second run finishes (exit 0, dir gone; the failed run left its marker)" "$([[ $RC == 0 && ! -e "$BD" ]]; echo $?)" "$OUT"
 
 echo "[7e] uninstall: recorded pids, app watchers, mounts, relative and unsafe data dirs, re-created data"
 # D1: a stale pid file naming an unrelated process that happens to mention "abstract".
@@ -258,6 +259,14 @@ printf '{"pid": %s}\n' "$STALE_PID" >"$SD/run/gateway-serve.json"; echo "$STALE_
 run_in stale AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --data-dir "$SD"
 check "D1: a stale pid file's unrelated process is left alone, and said so" "$([[ $RC == 0 ]] && kill -0 "$STALE_PID" 2>/dev/null && has "$OUT" "stale pid file: pid $STALE_PID" && ! has "$OUT" "kill -TERM"; echo $?)" "$OUT"
 kill -9 "$STALE_PID" 2>/dev/null
+# ... even when it names the data dir: `tail -f <data>/logs/x` is not the gateway.
+mkdir -p "$SD/logs"; echo x >"$SD/logs/x"
+tail -f "$SD/logs/x" </dev/null >/dev/null 2>&1 &
+TAIL_PID=$!
+printf '{"pid": %s}\n' "$TAIL_PID" >"$SD/run/gateway-serve.json"; rm -f "$SD/gateway.pid"
+run_in stale AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --data-dir "$SD"
+check "D1: a stale pid naming a process that only mentions the data dir (tail -f) is left alone" "$([[ $RC == 0 ]] && kill -0 "$TAIL_PID" 2>/dev/null && has "$OUT" "stale pid file: pid $TAIL_PID" && ! has "$OUT" "kill -TERM"; echo $?)" "$OUT"
+kill -9 "$TAIL_PID" 2>/dev/null
 
 # D3: only `<node> -r <this data dir>/apps/_support/parent_watch.cjs` is an app of this gateway.
 AH="$WORK/appw/home"; AD="$WORK/appw/data"; mkdir -p "$AH" "$AD/apps/_support"
@@ -288,9 +297,9 @@ RH="$WORK/rel/home"; mkdir -p "$RH" "$WORK/rel/cwd" "$WORK/rel/rel-data"; printf
 run_in rel AF_STOP_TIMEOUT=1 -- sh -c "cd '$WORK/rel/cwd' && sh '$SCRIPTS_DIR/uninstall.sh' --yes --purge --data-dir ../rel-data"
 check "D6: a relative data dir is shown and deleted as an absolute path" "$([[ $RC == 0 && ! -e "$WORK/rel/rel-data" && -d "$WORK/rel/cwd" ]] && has "$OUT" "rm -rf $WORK/rel/rel-data" && ! has "$OUT" "rm -rf ../"; echo $?)" "$OUT"
 run_in refuse_home -- sh -c 'sh "$0" --purge --print --data-dir "$HOME"' "$SCRIPTS_DIR/uninstall.sh"
-check "D6: --data-dir \$HOME is refused" "$([[ $RC == 1 && -d "$HOME_T" ]] && has "$OUT" "refusing the data dir" && ! has "$OUT" "rm -rf"; echo $?)" "$OUT"
+check "D6: --data-dir \$HOME is refused" "$([[ $RC == 2 && -d "$HOME_T" ]] && has "$OUT" "refusing the data dir" && ! has "$OUT" "rm -rf"; echo $?)" "$OUT"
 run_in refuse_root -- sh "$SCRIPTS_DIR/uninstall.sh" --purge --print --data-dir /
-check "D6: --data-dir / is refused" "$([[ $RC == 1 ]] && has "$OUT" "refusing the data dir" && ! has "$OUT" "rm -rf"; echo $?)" "$OUT"
+check "D6: --data-dir / is refused" "$([[ $RC == 2 ]] && has "$OUT" "refusing the data dir" && ! has "$OUT" "rm -rf"; echo $?)" "$OUT"
 
 # D4: a writer the uninstaller does not recognise re-creates the data dir after its deletion.
 WH="$WORK/back/home"; WD="$WORK/back/data"; mkdir -p "$WH" "$WD"; printf 'MODE=background\n' >"$WD/bootstrap.env"
@@ -300,6 +309,29 @@ BACK_PID=$!
 run_in back AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$WD"
 check "D4: a data dir re-created after its deletion fails the run (exit 1) and is named" "$([[ $RC == 1 ]] && has "$OUT" "is back: a program is still writing there" && has "$OUT" "re-created after it was deleted"; echo $?)" "$OUT"
 kill -9 "$BACK_PID" 2>/dev/null
+
+echo "[7f] uninstall --purge refuses a folder that is not a gateway data dir (D9)"
+# ~/Library of the sandbox home: files, no gateway marker.
+run_in d9lib -- sh -c 'mkdir -p "$HOME/Library/Keep" && echo k >"$HOME/Library/Keep/file" && sh "$0" --yes --purge --data-dir "$HOME/Library"' "$SCRIPTS_DIR/uninstall.sh"
+check "D9: --data-dir ~/Library is refused (exit 2), nothing deleted" "$([[ $RC == 2 && -f "$HOME_T/Library/Keep/file" ]] && has "$OUT" "refusing to purge" && ! has "$OUT" "rm -rf"; echo $?)" "$OUT"
+# The parent of the home folder, with a sibling user folder in it.
+mkdir -p "$WORK/d9parent/other"; echo s >"$WORK/d9parent/other/file"
+run_in d9parent -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$WORK/d9parent"
+check "D9: the parent of the home folder is refused (exit 2), home and sibling kept" "$([[ $RC == 2 && -d "$HOME_T" && -f "$WORK/d9parent/other/file" ]] && has "$OUT" "contains your home folder"; echo $?)" "$OUT"
+run_in d9parent -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$WORK"
+check "D9: a folder further up (the sandbox root) is refused too" "$([[ $RC == 2 && -f "$WORK/d9parent/other/file" ]]; echo $?)" "$OUT"
+# A random folder with files, and an empty folder.
+mkdir -p "$WORK/d9rand/data/notes"; echo n >"$WORK/d9rand/data/notes/todo.txt"; echo r >"$WORK/d9rand/data/README"
+run_in d9rand -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$WORK/d9rand/data"
+check "D9: a folder with files but no gateway marker is refused (exit 2), nothing deleted" "$([[ $RC == 2 && -f "$WORK/d9rand/data/notes/todo.txt" && -f "$WORK/d9rand/data/README" ]] && has "$OUT" "refusing to purge"; echo $?)" "$OUT"
+mkdir -p "$WORK/d9empty/data"
+run_in d9empty -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$WORK/d9empty/data"
+check "D9: an empty folder is 'nothing to do' (exit 0)" "$([[ $RC == 0 ]] && has "$OUT" "nothing to do (empty folder"; echo $?)" "$OUT"
+# A real-shaped gateway data dir without the installer's bootstrap.env.
+mkdir -p "$WORK/d9real/data/auth" "$WORK/d9real/data/run" "$WORK/d9real/data/artifacts"
+echo '{}' >"$WORK/d9real/data/auth/users.json"; : >"$WORK/d9real/data/gateway.sqlite3"; echo a >"$WORK/d9real/data/artifacts/a"
+run_in d9real -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$WORK/d9real/data"
+check "D9: a real-shaped gateway data dir (sqlite, auth/users.json) is deleted" "$([[ $RC == 0 && ! -e "$WORK/d9real/data" ]]; echo $?)" "$OUT"
 
 echo "[8] Install AbstractFramework.command"
 C="$WORK/cmd"; mkdir -p "$C"

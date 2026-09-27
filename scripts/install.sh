@@ -357,6 +357,7 @@ if [ "$OS_ID" = macos ]; then
     MACOS_MAJOR="${MACOS_VERSION%%.*}"
 fi
 
+DATA_DIR_CUSTOM=0; [ -n "$DATA_DIR" ] && DATA_DIR_CUSTOM=1
 if [ -z "$DATA_DIR" ]; then
     if [ "$OS_ID" = macos ]; then DATA_DIR="$HOME/Library/Application Support/AbstractGateway"
     else DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/abstractgateway"; fi
@@ -383,10 +384,20 @@ abs_path() {
 DATA_DIR_GIVEN="$DATA_DIR"
 case "$DATA_DIR" in /*) DATA_DIR_ABS_GIVEN="${DATA_DIR%/}" ;; *) DATA_DIR_ABS_GIVEN="$PWD/${DATA_DIR%/}" ;; esac
 DATA_DIR="$(abs_path "$DATA_DIR")"
+# Never the root, the home folder or a folder that contains it (an uninstall --purge
+# deletes the data dir). Exit 2: a usage error, nothing was changed.
 _home_p="$(CDPATH='' cd -- "$HOME" 2>/dev/null && pwd -P || echo "$HOME")"
+_home_l="${HOME%/}"
 case "$DATA_DIR" in
-    ""|/|"$HOME"|"${HOME%/}"|"$_home_p") die "refusing the data dir '$DATA_DIR_GIVEN' (it resolves to '${DATA_DIR:-nothing}': the root folder or your home folder). Pass --data-dir with the gateway's own folder." ;;
+    ""|/|"$_home_l"|"$_home_p") _refuse="it is the root folder or your home folder" ;;
+    *) case "$_home_p/" in "$DATA_DIR"/*) _refuse="it contains your home folder" ;; *)
+       case "$_home_l/" in "$DATA_DIR"/*) _refuse="it contains your home folder" ;; *) _refuse="" ;; esac ;; esac ;;
 esac
+if [ -n "$_refuse" ]; then
+    printf '\nERROR: refusing the data dir %s (resolved: %s): %s.\nWhat to do: pass --data-dir with the gateway'"'"'s own folder (default: the per-OS user data dir). Nothing was changed.\n' \
+        "'$DATA_DIR_GIVEN'" "'${DATA_DIR:-nothing}'" "$_refuse" >&2
+    exit 2
+fi
 STATE_FILE="$DATA_DIR/bootstrap.env"
 PID_FILE="$DATA_DIR/gateway.pid"
 LOG_DIR="$DATA_DIR/logs"
@@ -518,11 +529,10 @@ gw_record_pids() {
 # gw_scan: one "PID<TAB>COMMAND" line per live process of the gateway tree.
 gw_scan() {
     have ps || return 0
-    _seed="$(gw_record_pids | tr '\n' ' ')"
     ps -A -o pid= -o ppid= -o uid= -o args= 2>/dev/null | \
     AF_P1="${TOOL_VENV:+$TOOL_VENV/}" AF_P2="${TOOL_VENV2:+$TOOL_VENV2/}" AF_P3="$TOOL_BIN/abstractgateway " \
     AF_P4="-r $DATA_DIR/apps/_support/parent_watch.cjs " AF_P5="-r $DATA_DIR_ABS_GIVEN/apps/_support/parent_watch.cjs " \
-    AF_D1="$DATA_DIR/" AF_D2="$DATA_DIR_ABS_GIVEN/" AF_SEED=" $_seed " AF_UID="$(id -u)" AF_SELF="$$" awk '
+    AF_UID="$(id -u)" AF_SELF="$$" awk '
         {
             pid = $1; ppid = $2; uid = $3; a = $0
             sub(/^[ \t]*[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]*/, "", a)
@@ -535,9 +545,9 @@ gw_scan() {
             # an app the gateway started: `<node> -r <this data dir>/apps/_support/parent_watch.cjs ...`
             split(a, w, " "); exe = w[1]; sub(/.*\//, "", exe)
             if (exe ~ /^node(js)?$/ && (index(a " ", ENVIRON["AF_P4"]) || index(a " ", ENVIRON["AF_P5"]))) hit = 1
-            # a recorded pid counts only when it still runs from this install or this data
-            # dir: a stale pid file may name an unrelated process that reused the pid
-            if (index(ENVIRON["AF_SEED"], " " pid " ") && (index(a, ENVIRON["AF_D1"]) || index(a, ENVIRON["AF_D2"]))) hit = 1
+            # A recorded pid (run/*.json, gateway.pid) earns nothing by itself: it is
+            # stopped only when it matches one of the rules above, since a stale pid file
+            # may name an unrelated process that reused the pid (stop_gateway_tree says so).
             if (hit) inset[pid] = 1
         }
         END {
@@ -561,10 +571,9 @@ alive_of() { _al=""; for _x in $1; do kill -0 "$_x" 2>/dev/null && _al="$_al $_x
 # SIGTERM, then SIGKILL; say what was running and how it ended.
 stop_gateway_tree() {
     _list="$(gw_scan)"
-    if ! have ps; then  # no ps (a minimal container): the recorded pids are all we know
+    if ! have ps; then  # no ps (a minimal container): a recorded pid cannot be checked
         for _x in $(gw_record_pids); do
-            kill -0 "$_x" 2>/dev/null && _list="$_list
-$_x	(pid recorded by the gateway)"
+            kill -0 "$_x" 2>/dev/null && warn "pid $_x is recorded in the data dir, but without 'ps' it cannot be checked to be the gateway; left alone"
         done
     fi
     _pids="$(printf '%s\n' "$_list" | cut -f1 | tr '\n' ' ')"
@@ -629,6 +638,18 @@ mounts_under() {
     done
 }
 PURGE_FAILED=""; PURGE_DONE=""
+# Files only a gateway data dir holds: the installer's state, the gateway's database,
+# serve record, auth store and settings, and the note a failed purge leaves behind so
+# the next run can finish it.
+AF_DATA_MARKERS="bootstrap.env gateway.sqlite3 run/gateway-serve.json auth/users.json config/runtime_config.json service.json first_run.json gateway.pid .abstractgateway-purge-incomplete"
+is_gateway_data_dir() {
+    for _m in $AF_DATA_MARKERS; do [ -e "$1/$_m" ] && return 0; done
+    return 1
+}
+mark_incomplete() {  # mark_incomplete PATH: only for the data dir, best effort
+    [ "$1" = "$DATA_DIR" ] && [ -d "$1" ] && : >"$1/.abstractgateway-purge-incomplete" 2>/dev/null
+    return 0
+}
 # holders PATH: the programs holding files under PATH (lsof +D), when lsof exists.
 holders() {
     have lsof || return 0
@@ -650,6 +671,7 @@ recheck_purged() {
             warn "$_p was deleted and is back: a program is still writing there. What it holds now:"
             find "$_p" 2>/dev/null | head -n 20 | sed 's/^/      /'
             holders "$_p"
+            mark_incomplete "$_p"
             PURGE_FAILED="$PURGE_FAILED
   $_p   (re-created after it was deleted: quit the program writing there)"
         fi
@@ -663,6 +685,9 @@ recheck_purged() {
 purge_path() {
     _d="$1"; _p="$2"
     if [ ! -e "$_p" ] && [ ! -L "$_p" ]; then info "$_d: nothing to do (not there: $_p)"; return 0; fi
+    if [ "$_p" = "$DATA_DIR" ] && [ "$DATA_DIR_CUSTOM" = 1 ] && [ -d "$_p" ] && [ ! -L "$_p" ] && [ -z "$(ls -A "$_p" 2>/dev/null)" ]; then
+        info "$_d: nothing to do (empty folder, left in place: $_p)"; return 0
+    fi
     if [ -L "$_p" ]; then
         _t="$(readlink "$_p" 2>/dev/null || echo '?')"
         run "remove the link $_p" rm -f "$_p"
@@ -697,6 +722,7 @@ purge_path() {
     if [ "$OS_ID" = macos ]; then find "$_p" -exec ls -ldO {} + 2>/dev/null | head -n 40 | sed 's/^/      /'
     else find "$_p" -exec ls -ld {} + 2>/dev/null | head -n 40 | sed 's/^/      /'; fi
     holders "$_p"
+    mark_incomplete "$_p"
     PURGE_FAILED="$PURGE_FAILED
   $_p"
 }
@@ -755,6 +781,15 @@ if [ "$UNINSTALL" = 1 ]; then
             REMOVE_UV=1
         fi
     fi
+    # A --data-dir given by hand must look like a gateway data dir before --purge deletes
+    # it (a typo such as ~/Documents must not be wiped). The per-OS default is the
+    # gateway's own folder, so it needs no marker (a half-deleted one may have none).
+    if [ "$PURGE" = 1 ] && [ "$DATA_DIR_CUSTOM" = 1 ] && [ -d "$DATA_DIR" ] && [ ! -L "$DATA_DIR" ] \
+        && [ -n "$(ls -A "$DATA_DIR" 2>/dev/null)" ] && ! is_gateway_data_dir "$DATA_DIR"; then
+        printf '\nERROR: refusing to purge %s: it holds none of the files a gateway data dir has\n(%s).\n' "$(q "$DATA_DIR")" "$AF_DATA_MARKERS" >&2
+        printf 'What to do: check --data-dir (it must be the gateway'"'"'s own folder). Nothing was changed.\n' >&2
+        exit 2
+    fi
     [ "$PURGE" = 1 ] && UNINSTALL_AGAIN="run the uninstaller again with --purge (sh uninstall.sh --yes --purge); it skips what is already gone."
     step "Gateway service and processes"
     # Only touch the login service when this install registered it (or when no state says
@@ -800,6 +835,8 @@ if [ "$UNINSTALL" = 1 ]; then
         [ "$PRINT" = 1 ] || rmdir "$HOME/Library/Application Support/AbstractFramework" 2>/dev/null || true
     fi
     if [ "$PURGE" = 1 ]; then
+        _had_prefs=0
+        [ -e "$HOME/Library/Preferences/ai.abstractcore.abstractassistant.plist" ] && _had_prefs=1
         _targets="$(purge_targets)"
         _oifs="$IFS"; IFS='
 '; set -f
@@ -810,6 +847,16 @@ if [ "$UNINSTALL" = 1 ]; then
 '; set -f
         done
         IFS="$_oifs"; set +f
+        # cfprefsd caches preferences and can write a deleted plist back: drop the domain
+        # too (soft: after the file is gone there may be nothing cached).
+        if [ "$OS_ID" = macos ] && [ "$_had_prefs" = 1 ]; then
+            printf '  %s$ defaults delete ai.abstractcore.abstractassistant%s\n' "$C_D" "$C_0"
+            twin "defaults delete ai.abstractcore.abstractassistant"
+            if [ "$PRINT" = 0 ]; then
+                if defaults delete ai.abstractcore.abstractassistant >/dev/null 2>&1; then ok "the Assistant's cached preferences: dropped"
+                else info "the Assistant's cached preferences: nothing cached"; fi
+            fi
+        fi
         recheck_purged
         if [ "$OS_ID" = macos ] && [ "$PRINT" = 0 ]; then rmdir "$HOME/Library/Logs/Assistant" 2>/dev/null || true; fi
         info "kept: model weights and shared caches (~/.cache/huggingface, ~/.abstractcore, ~/.abstractframework, ~/.cache/abstractvoice, LM Studio and Ollama models)"

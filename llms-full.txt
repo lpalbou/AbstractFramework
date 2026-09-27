@@ -2770,6 +2770,11 @@ uv; `--print` shows every command and changes nothing. Windows: `install.ps1 -Un
 lists what is left in it and the programs that hold files there. Quit those programs (or log
 out and back in); on macOS, a file shown with the `uchg` flag is unlocked with
 `chflags -R nouchg <folder>`. Then run the uninstaller again: it skips what is already gone.
+Each deleted location is checked once more a second later; a program that starts writing there
+again after that is not detected (an uninstaller cannot outwait a writer it does not know).
+A `--data-dir` given by hand is purged only when it holds a gateway file (`bootstrap.env`,
+`gateway.sqlite3`, `auth/users.json`, ...); the root, your home folder and any folder that
+contains it are always refused (exit 2, nothing changed).
 
 ## Advanced: what the installer does
 

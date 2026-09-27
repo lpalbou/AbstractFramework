@@ -29,6 +29,11 @@ All notable changes to AbstractFramework will be documented in this file.
   guard compares resolved paths (`/tmp` vs `/private/tmp`, a linked home). `--purge` also deletes
   the Assistant's macOS preferences (`~/Library/Preferences/ai.abstractcore.abstractassistant.plist`),
   and a location that comes back a second after it was deleted fails the run with a listing.
+  `--purge` refuses (exit 2, nothing changed) a data dir that is the root, the home folder or
+  any folder containing it, and a hand-given `--data-dir` holding no gateway file (`~/Library`,
+  `~/Documents`); an empty one is "nothing to do". A recorded pid is stopped only under the same
+  rules as the process scan, never for merely naming the data dir. The Assistant's cached
+  preferences are dropped with `defaults delete ai.abstractcore.abstractassistant`.
   Known Linux limits: BusyBox `ps` (Alpine) lacks the columns the process scan reads, so the scan finds
   nothing there and only the systemd stop applies; a relative `XDG_CACHE_HOME` is used as given.
 

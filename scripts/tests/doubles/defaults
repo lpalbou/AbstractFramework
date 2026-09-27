@@ -1,0 +1,11 @@
+#!/bin/sh
+# Recorded test double for macOS `defaults` (scripts/tests/test_install_user_path.sh).
+# cfprefsd serves the real user's preferences whatever HOME says, so the uninstaller's
+# `defaults delete ai.abstractcore.abstractassistant` must never reach the real one in a
+# test: this double records the call to $AF_LAUNCHD_DOUBLE_STATE/calls.log and refuses to
+# run without that variable.
+set -eu
+STATE="${AF_LAUNCHD_DOUBLE_STATE:?defaults double: set AF_LAUNCHD_DOUBLE_STATE to a scratch dir}"
+mkdir -p "$STATE"
+echo "$(date +%H:%M:%S) defaults $*" >>"$STATE/calls.log"
+exit 0
