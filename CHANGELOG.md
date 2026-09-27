@@ -4,16 +4,77 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-27
+
+Automations, a terminal console installed by default, and a headless setup path: installing and
+configuring AbstractFramework on a remote Linux server without a browser works like it does on a Mac.
+
+### Added
+
+- **Automations v1.** Run a workflow or the gateway's default agent again and again on a fixed UTC
+  interval or on request, read every run as a chat turn, and be notified only when a run asks for
+  you or fails. Create and manage them in the Assistant (session switcher, **Automations** tab), the
+  Observer (**Launch → Automate**, **Automations** page) or from a workflow's automation defaults in
+  the Flow editor. See [Automations](docs/automations.md).
+- **The terminal console is installed by default.** The installer builds `abstractgateway-console`
+  with cargo next to the `abstractgateway` command. On macOS and Linux, when cargo is missing or
+  older than Rust 1.87, it adds Rust with rustup, user-scoped (`~/.rustup`, `~/.cargo`, about
+  600 MB, shell profile untouched); Windows builds it when Rust is already installed. The build
+  needs a C compiler; without one, or if it fails, the installer says why and continues.
+  `--no-console` (`-NoConsole`) skips it; `--with-console` is accepted and has no effect. The
+  uninstaller removes the console it built and keeps Rust.
+- **Both consoles in the installer summary.** The summary shows the web console link and the
+  terminal console command, `abstractgateway-console --url <gateway> --token-file <data dir>/auth/bootstrap-admin-token`:
+  the token is read from the gateway's data dir and never appears on the command line or in the
+  environment.
+- **Headless or remote machine** ([Install](docs/install.md#headless-or-remote-machine)): configure
+  the gateway from the terminal console on the server, or tunnel the web console over SSH.
+- **The terminal console matches the web console** (`abstractgateway-console` 0.10.0): the setup
+  guide for a headless first run (Connection, Setup, Engines, Providers, Routes, Models, Apps,
+  Review), twelve screens including **Setup** and **A Apps**, the **F2** docs assistant, the **F3**
+  host panel, every sandbox mode, entity summon and workflow import, with the same admin rules.
+  `abstractcore-console` 0.3.0 adds Hugging Face search, parallel downloads, engine start/stop and
+  a video filter to the shared Models and Engines screens.
+- **Recommended defaults fit the machine** (AbstractCore 2.17.0): every recommended route is written
+  only where its engine runs, and a route this computer cannot run says why. Video joins the model
+  catalog and the recommendations (MLX-Gen Wan2.2 TI2V-5B on Apple silicon with enough memory), and
+  the web console has a **Video** filter and card.
+
+### Changed
+
+- **App hints use launch flags.** With `--with-apps`, the installer prints
+  `npx -y @abstractframework/flow@<version> --gateway-url <gateway>` (Continuum likewise); Code,
+  Observer and Entity take a gateway other than `http://127.0.0.1:8080` on their sign-in screen.
+  `--with-code-cli` prints `abstractcode --gateway <gateway>`.
+
+### Changed (pins)
+
+- **abstractgateway 0.6.0** (was 0.5.1): the Automations API, run lists attributed to automations,
+  web console video and host-aware routes, and the terminal console 0.10.0.
+- **abstractcore 2.17.0** (was 2.16.1): host-aware recommended defaults, video models and routes,
+  `route_unavailable` on routes this computer cannot run, a voice-clone fix for local engines.
+- **AbstractRuntime 0.6.0** (was 0.5.1): the durable automation controller and its occurrences.
+- **abstractassistant 0.8.0** (was 0.7.0): automations in the session switcher (schedule a
+  conversation, read runs as a chat, answer waiting runs, discuss a run); it finds a gateway the
+  installer moved off a busy port 8080.
+- **abstractvoice 0.12.0** (was 0.11.4): Qwen3-TTS checkpoint selection, directed speech and a
+  steadier codebook predictor.
+- **abstractvision 0.3.30** (was 0.3.29): unloading an MLX-Gen model returns its memory to the
+  operating system.
+- npm: **@abstractframework/flow 0.3.22** (automation defaults on workflows) and
+  **@abstractframework/observer 0.1.14** (Automate mode and the Automations page).
+- crates.io: **abstractgateway-console 0.10.0** and **abstractcore-console 0.3.0**.
+- The pins apply to the base install and to the `apple` / `gpu` extras. Unchanged:
+  abstractagent 0.3.16, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5,
+  abstractmusic 0.1.15, @abstractframework/code 0.5.0, continuum 0.3.2, entity 0.2.2,
+  `abstractcode` 0.6.0 and `abstracttui` 0.6.0.
+
 ### Documentation
 
-- **Automations guide** ([docs/automations.md](docs/automations.md)): how automations work (a
-  durable controller run, one occurrence per tick, independent or growing context, quiet by
-  default, creation as the consent for tools), creating them from the Assistant, the Observer or a
-  workflow's automation defaults, two worked examples, reading and managing them in every client,
-  notifications and typed waits, restart safety, limits and troubleshooting. Automations need the
-  AbstractGateway and AbstractRuntime releases that follow 0.5.1. The README, docs index, Getting
-  Started, API, FAQ, Glossary and Troubleshooting link to it, and describe schedules as fixed UTC
-  intervals.
+- **Automations guide** ([docs/automations.md](docs/automations.md)): how automations work, creating
+  them from each client, two worked examples, managing them, notifications and typed waits, restart
+  safety, limits and troubleshooting. A discussion about a run works in its own folder with the
+  automation's folder mounted read-only.
 
 ## [0.4.2] - 2026-09-27
 

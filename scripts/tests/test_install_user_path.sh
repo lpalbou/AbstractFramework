@@ -470,16 +470,18 @@ if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
     check "port $BG_PORT is free for the terminal console cases" 1
 else
     TB="$WORK/con/tools/bin"
+    CON_PIN="$(sed -n 's/^AF_CRATE_CONSOLE="abstractgateway-console@\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
+    check "console: install.sh pins the terminal console" "$([[ -n "$CON_PIN" ]]; echo $?)"
     BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
     check "console: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
-    check "console: cargo builds the pinned crate into the tool bin dir" "$(grep -qx "cargo install --locked --force --root $WORK/con/tools abstractgateway-console --version 0.9.0" "$CARGOLOG" && [[ -x "$TB/abstractgateway-console" ]]; echo $?)" "$CARGOLOG"
+    check "console: cargo builds the pinned crate into the tool bin dir" "$(grep -qx "cargo install --locked --force --root $WORK/con/tools abstractgateway-console --version $CON_PIN" "$CARGOLOG" && [[ -x "$TB/abstractgateway-console" ]]; echo $?)" "$CARGOLOG"
     check "console: summary gives the web console and its tunnel hint" "$(has "$OUT" "Web:  *http://127.0.0.1:$BG_PORT/console" && has "$OUT" "ssh -L $BG_PORT:127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
     check "console: summary gives the terminal console command (token read from the data dir)" "$(has "$OUT" "Terminal:  abstractgateway-console --url http://127.0.0.1:$BG_PORT --token-file .*auth/bootstrap-admin-token'"; echo $?)" "$OUT"
     check "console: no 'browser now shows' claim when no browser was opened" "$(! has "$OUT" "browser now shows"; echo $?)" "$OUT"
     # A re-run finds the pinned binary and does not build again.
     : >"$CARGOLOG"
     BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
-    check "console: a re-run keeps the installed console (no cargo install)" "$([[ $RC == 0 ]] && ! grep -q "cargo install" "$CARGOLOG" && has "$OUT" "abstractgateway-console 0.9.0 already installed"; echo $?)" "$OUT"
+    check "console: a re-run keeps the installed console (no cargo install)" "$([[ $RC == 0 ]] && ! grep -q "cargo install" "$CARGOLOG" && has "$OUT" "abstractgateway-console $CON_PIN already installed"; echo $?)" "$OUT"
     # A distro cargo older than 1.87 and no rustup: rustup is tried (refused here), soft.
     BG_TOOLBIN="$WORK/con3/tools/bin" BG_CARGO=1 BG_CARGO_VERSION=1.75.0 BG_ARGS=" " bg_case con3 1
     check "console: an old cargo without rustup falls back to rustup, and its failure is soft" "$([[ $RC == 0 ]] && has "$OUT" "cargo 1.75.0 .* is older than the Rust 1.87" && has "$OUT" "sh.rustup.rs" && has "$OUT" "Terminal:  not installed: Rust could not be installed" && ! grep -q "cargo install" "$CARGOLOG"; echo $?)" "$OUT"

@@ -33,8 +33,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ```
 
 The answer is `{"available": true, "version": 1, …}` on a gateway that runs them. The API ships in
-the AbstractGateway and AbstractRuntime releases that follow 0.5.1; the versions pinned by
-`abstractframework` 0.4.2 (gateway 0.5.1, runtime 0.5.1) do not include it. On a gateway without
+AbstractGateway 0.6.0 and AbstractRuntime 0.6.0, the versions pinned by `abstractframework` 0.5.0;
+earlier gateways do not include it. On a gateway without
 it, the Assistant shows no automation controls and the Observer's Automate mode and Automations
 page say so and stay disabled.
 

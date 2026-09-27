@@ -22,7 +22,9 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 The installer sets up the gateway in your user account (no admin password, no system Python),
 asks whether to start it at login, starts it on `127.0.0.1:8080`, and opens its web console in
 your browser already signed in. A first-run guide then sets up a local engine (Ollama, LM Studio,
-MLX, llama.cpp), downloads a model that fits your machine, and lists the apps.
+MLX, llama.cpp), downloads a model that fits your machine, and lists the apps. The installer also
+builds the terminal console, `abstractgateway-console`, which runs the same guide on a server without
+a browser ([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
 
 - **Mac, no Terminal:** download and double-click
   [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
@@ -141,12 +143,12 @@ Monitor runs from a browser, or from a terminal with the gateway console:
 ```bash
 npx @abstractframework/observer   # open http://localhost:3001
 
-cargo install abstractgateway-console   # Rust 1.87+
-ABSTRACTGATEWAY_AUTH_TOKEN=<token> abstractgateway-console --url http://127.0.0.1:8080
+cargo install abstractgateway-console   # Rust 1.87+; the installer builds it for you
+abstractgateway-console --url http://127.0.0.1:8080 --token-file <data dir>/auth/bootstrap-admin-token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.5.1` and `ghcr.io/lpalbou/abstractcore-server:2.16.1`.
+`ghcr.io/lpalbou/abstractgateway:0.6.0` and `ghcr.io/lpalbou/abstractcore-server:2.17.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -247,7 +249,7 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
-| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` | built into `abstractgateway`; `cargo install abstractgateway-console` |
+| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` (the same setup guide and twelve screens, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | `npx @abstractframework/code` |
 | **Flow Editor** | Visual workflow authoring in the browser | `npx @abstractframework/flow` |
@@ -292,7 +294,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.4.2)
+### Release matrix (abstractframework 0.5.0)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -301,28 +303,28 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.5.1 |
-| PyPI | `abstractassistant` | 0.7.0 |
-| PyPI | `abstractcore` | 2.16.1 |
-| PyPI | `AbstractRuntime` | 0.5.1 |
+| PyPI | `abstractgateway` | 0.6.0 |
+| PyPI | `abstractassistant` | 0.8.0 |
+| PyPI | `abstractcore` | 2.17.0 |
+| PyPI | `AbstractRuntime` | 0.6.0 |
 | PyPI | `abstractagent` | 0.3.16 |
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.11.4 |
-| PyPI | `abstractvision` | 0.3.29 |
+| PyPI | `abstractvoice` | 0.12.0 |
+| PyPI | `abstractvision` | 0.3.30 |
 | PyPI | `abstractmusic` | 0.1.15 |
-| npm | `@abstractframework/flow` | 0.3.21 |
+| npm | `@abstractframework/flow` | 0.3.22 |
 | npm | `@abstractframework/code` | 0.5.0 |
-| npm | `@abstractframework/observer` | 0.1.13 |
+| npm | `@abstractframework/observer` | 0.1.14 |
 | npm | `@abstractframework/continuum` | 0.3.2 |
 | npm | `@abstractframework/entity` | 0.2.2 |
 | crates.io | `abstractcode` | 0.6.0 |
-| crates.io | `abstractgateway-console` | 0.9.0 |
-| crates.io | `abstractcore-console` | 0.2.0 |
+| crates.io | `abstractgateway-console` | 0.10.0 |
+| crates.io | `abstractcore-console` | 0.3.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.5.1 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.16.1 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.6.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.17.0 |
 
 Optional add-ons that are not part of any profile install separately:
 `pip install abstract3d` (0.3.1) and `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)

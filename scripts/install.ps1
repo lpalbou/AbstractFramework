@@ -70,10 +70,10 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.5.1'
+$AfGatewayPinDefault = '0.6.0'
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.3.21', '@abstractframework/code@0.5.0', '@abstractframework/observer@0.1.13', '@abstractframework/continuum@0.3.2', '@abstractframework/entity@0.2.2')
-$AfCrateConsole = 'abstractgateway-console@0.9.0'
+$AfNpmApps = @('@abstractframework/flow@0.3.22', '@abstractframework/code@0.5.0', '@abstractframework/observer@0.1.14', '@abstractframework/continuum@0.3.2', '@abstractframework/entity@0.2.2')
+$AfCrateConsole = 'abstractgateway-console@0.10.0'
 # Browser apps whose CLI takes the gateway address as a launch flag (--gateway-url);
 # the others start on http://127.0.0.1:8080 and take another address on their sign-in screen.
 $AfNpmGatewayFlagApps = @('@abstractframework/flow', '@abstractframework/continuum')

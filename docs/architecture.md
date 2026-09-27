@@ -146,8 +146,9 @@ flowchart LR
     subgraph GHCR["GHCR images"]
         IMG["abstractgateway · abstractcore-server"]
     end
-    BOOT["install.sh / install.ps1<br/>(uv tool install abstractgateway)"]
+    BOOT["install.sh / install.ps1<br/>(uv tool install abstractgateway,<br/>cargo install abstractgateway-console)"]
     BOOT -->|installs, starts, opens /console| GW
+    BOOT -->|builds by default| CON
     AS -->|HTTP/SSE| GW
     APPS -->|HTTP/SSE| GW
     CLI -->|HTTP/SSE| GW

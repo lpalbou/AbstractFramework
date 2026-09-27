@@ -37,7 +37,10 @@ On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubuserco
 It installs uv, Python 3.12 and the pinned gateway in your user account (no admin password), asks
 whether to start it at login, starts it on `127.0.0.1:8080`, and opens its console in your browser
 already signed in. The console's first-run guide sets up a local engine or a cloud key and a
-default model (the **Models** tab lists the models that fit your machine and downloads them). Then
+default model (the **Models** tab lists the models that fit your machine and downloads them). The
+installer also builds the terminal console, `abstractgateway-console`, which offers the same guide
+on a server without a browser; the installer's summary prints its command (see
+[Headless or remote machine](install.md#headless-or-remote-machine)). Then
 continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 [AbstractFlow](#author-orchestration-with-abstractflow). Step by step, what to do when something
 fails, and how to remove it: [Install](install.md); fixes for common problems:

@@ -95,10 +95,10 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.5.1"
+AF_GATEWAY_PIN_DEFAULT="0.6.0"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.3.21 @abstractframework/code@0.5.0 @abstractframework/observer@0.1.13 @abstractframework/continuum@0.3.2 @abstractframework/entity@0.2.2"
-AF_CRATE_CONSOLE="abstractgateway-console@0.9.0"
+AF_NPM_APPS="@abstractframework/flow@0.3.22 @abstractframework/code@0.5.0 @abstractframework/observer@0.1.14 @abstractframework/continuum@0.3.2 @abstractframework/entity@0.2.2"
+AF_CRATE_CONSOLE="abstractgateway-console@0.10.0"
 # Browser apps whose CLI takes the gateway address as a launch flag (--gateway-url);
 # the others start on http://127.0.0.1:8080 and take another address on their sign-in screen.
 AF_NPM_GATEWAY_FLAG_APPS="@abstractframework/flow @abstractframework/continuum"
