@@ -1,0 +1,55 @@
+# 0948 — Wan2.2 A14B 8-bit as the video recommendation on 64–95 GiB Macs
+
+> Package: abstractcore
+> Type: task
+> Created: 2026-09-27
+> Priority: normal
+> Labels: video, catalog, apple-silicon, next-wave
+
+## Summary
+
+Since abstractcore 2.17.0 the recommended `output.video` route (Wan2.2 TI2V-5B) is written only on Macs where it
+fits (about 96 GiB and up: it needs ~58 GiB at AbstractVision's default canvas). Below that, video is
+`unavailable`. The operator states that Wan2.2 A14B runs on 64 GiB Macs, especially with the framework's own
+8-bit packages on Hugging Face (`AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit`,
+`AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit`). Make A14B 8-bit the recommendation on 64–95 GiB Macs, with a
+measured memory figure at the canvas it will actually be run at.
+
+## Why
+
+Operator, 2026-09-27: "wan 2.2 14b: i think you can enable it at 64gb ram, especially if people use the 8bit we
+created and published on huggingface." / "i am pretty sure it does [fit 64 GB]."
+
+## Current code reality (abstractcore 2.17.0, 6592d4b)
+
+- Catalog rows `wan2.2-t2v-a14b` / `wan2.2-i2v-a14b` exist (mlx-gen, 8-bit packages, 39.7 GiB); their `resident`
+  field was REMOVED in 6592d4b because the only published figure (~28 GiB) was measured at 384x224 with
+  `--low-ram`, not the default canvas; their fit therefore uses the file size → `tight` on 64 GiB, `fits` on
+  128 GiB (verified with `recommended_artifact_fit`).
+- The recommendation (`capability_defaults.py`, video selector) names TI2V-5B only; 64 GiB Macs get
+  `recommendation_unavailable` for `output.video`.
+
+## Scope
+
+### In scope
+
+- Measure A14B 8-bit peak memory on a 64 GiB Mac (or with an equivalent MLX memory cap on a larger one) at the
+  canvas the gateway/AbstractVision will use by default on such hosts; record it as `resident` with source.
+- If needed, a host-aware default canvas for video (smaller on 64 GiB) decided with the operator, applied in
+  AbstractVision/the gateway so the measurement and the run agree.
+- Recommendation per memory band: 64–95 GiB → A14B 8-bit (T2V, I2V or both — operator decision), ≥ 96 GiB →
+  TI2V-5B (or A14B if the operator prefers).
+
+### Out of scope
+
+- Non-Apple hosts (no local engine; see 0945 for cloud).
+
+## Acceptance criteria
+
+- [ ] A real A14B 8-bit run on a 64 GiB configuration at the chosen canvas (evidence: peak memory, time).
+- [ ] Plan/seed/apply/"Download all" per band; tests per synthetic host; Apple goldens updated deliberately.
+- [ ] Both consoles show the band's recommendation.
+
+## Receipts
+
+- Core tag-gate review 2026-09-27 (gate-core); release ledger.
