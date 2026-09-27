@@ -21,6 +21,16 @@ All notable changes to AbstractFramework will be documented in this file.
   old sessions whose runs were gone), and AbstractCode's login and preferences (`~/.abstractcode`).
   Model weights and shared caches are kept and named. The purge question names what it deletes;
   `--print` lists each command; a second run prints "nothing to do". `install.sh` accepts `--yes`.
+- **Uninstall safety**: a pid from a stale pid file is signalled only when its command line still
+  runs from this install's tool environment or names this data dir (otherwise "stale pid file ...
+  left alone"); an app is matched only as `node -r <this data dir>/apps/_support/parent_watch.cjs`;
+  the uninstaller never matches its own pipeline. `--data-dir` is made absolute once (a relative
+  path was deleted from the current folder), and the root or home folder is refused. The mount
+  guard compares resolved paths (`/tmp` vs `/private/tmp`, a linked home). `--purge` also deletes
+  the Assistant's macOS preferences (`~/Library/Preferences/ai.abstractcore.abstractassistant.plist`),
+  and a location that comes back a second after it was deleted fails the run with a listing.
+  Known Linux limits: BusyBox `ps` (Alpine) lacks the columns the process scan reads, so the scan finds
+  nothing there and only the systemd stop applies; a relative `XDG_CACHE_HOME` is used as given.
 
 ## [0.4.1] - 2026-09-26
 

@@ -361,6 +361,32 @@ if [ -z "$DATA_DIR" ]; then
     if [ "$OS_ID" = macos ]; then DATA_DIR="$HOME/Library/Application Support/AbstractGateway"
     else DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/abstractgateway"; fi
 fi
+# abs_path PATH: absolute, its parent folder resolved (pwd -P: /tmp -> /private/tmp, a
+# linked HOME); the last component is kept as given, so a data dir that is itself a link
+# stays a link. A relative --data-dir would otherwise be used (and deleted) from
+# whatever folder the command runs in.
+abs_path() {
+    _ap="$1"
+    case "$_ap" in /*) ;; *) _ap="$PWD/$_ap" ;; esac
+    while [ "$_ap" != / ] && [ "${_ap%/}" != "$_ap" ]; do _ap="${_ap%/}"; done
+    [ "$_ap" = / ] && { echo /; return 0; }
+    _dn="$(dirname "$_ap")"; _bn="$(basename "$_ap")"
+    if _dr="$(CDPATH='' cd -- "$_dn" 2>/dev/null && pwd -P)"; then
+        case "$_bn" in
+            .) _ap="$_dr" ;;
+            ..) _ap="$(dirname "$_dr")" ;;
+            *) _ap="${_dr%/}/$_bn" ;;
+        esac
+    fi
+    printf '%s\n' "$_ap"
+}
+DATA_DIR_GIVEN="$DATA_DIR"
+case "$DATA_DIR" in /*) DATA_DIR_ABS_GIVEN="${DATA_DIR%/}" ;; *) DATA_DIR_ABS_GIVEN="$PWD/${DATA_DIR%/}" ;; esac
+DATA_DIR="$(abs_path "$DATA_DIR")"
+_home_p="$(CDPATH='' cd -- "$HOME" 2>/dev/null && pwd -P || echo "$HOME")"
+case "$DATA_DIR" in
+    ""|/|"$HOME"|"${HOME%/}"|"$_home_p") die "refusing the data dir '$DATA_DIR_GIVEN' (it resolves to '${DATA_DIR:-nothing}': the root folder or your home folder). Pass --data-dir with the gateway's own folder." ;;
+esac
 STATE_FILE="$DATA_DIR/bootstrap.env"
 PID_FILE="$DATA_DIR/gateway.pid"
 LOG_DIR="$DATA_DIR/logs"
@@ -495,7 +521,8 @@ gw_scan() {
     _seed="$(gw_record_pids | tr '\n' ' ')"
     ps -A -o pid= -o ppid= -o uid= -o args= 2>/dev/null | \
     AF_P1="${TOOL_VENV:+$TOOL_VENV/}" AF_P2="${TOOL_VENV2:+$TOOL_VENV2/}" AF_P3="$TOOL_BIN/abstractgateway " \
-    AF_P4="$DATA_DIR/apps/_support/parent_watch.cjs" AF_SEED=" $_seed " AF_UID="$(id -u)" AF_SELF="$$" awk '
+    AF_P4="-r $DATA_DIR/apps/_support/parent_watch.cjs " AF_P5="-r $DATA_DIR_ABS_GIVEN/apps/_support/parent_watch.cjs " \
+    AF_D1="$DATA_DIR/" AF_D2="$DATA_DIR_ABS_GIVEN/" AF_SEED=" $_seed " AF_UID="$(id -u)" AF_SELF="$$" awk '
         {
             pid = $1; ppid = $2; uid = $3; a = $0
             sub(/^[ \t]*[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]*/, "", a)
@@ -505,14 +532,25 @@ gw_scan() {
             if (ENVIRON["AF_P1"] != "" && index(a, ENVIRON["AF_P1"])) hit = 1
             if (ENVIRON["AF_P2"] != "" && index(a, ENVIRON["AF_P2"])) hit = 1
             if (index(a " ", ENVIRON["AF_P3"])) hit = 1
-            if (index(a, ENVIRON["AF_P4"])) hit = 1
-            if (index(ENVIRON["AF_SEED"], " " pid " ") && tolower(a) ~ /abstract/) hit = 1
+            # an app the gateway started: `<node> -r <this data dir>/apps/_support/parent_watch.cjs ...`
+            split(a, w, " "); exe = w[1]; sub(/.*\//, "", exe)
+            if (exe ~ /^node(js)?$/ && (index(a " ", ENVIRON["AF_P4"]) || index(a " ", ENVIRON["AF_P5"]))) hit = 1
+            # a recorded pid counts only when it still runs from this install or this data
+            # dir: a stale pid file may name an unrelated process that reused the pid
+            if (index(ENVIRON["AF_SEED"], " " pid " ") && (index(a, ENVIRON["AF_D1"]) || index(a, ENVIRON["AF_D2"]))) hit = 1
             if (hit) inset[pid] = 1
         }
         END {
+            # never this uninstaller or its own pipeline (ps, awk, subshells)
+            mine[ENVIRON["AF_SELF"]] = 1
             do { grew = 0
                 for (i = 1; i <= n; i++) { p = order[i]
-                    if (!(p in inset) && (parent[p] in inset)) { inset[p] = 1; grew = 1 } }
+                    if (!(p in mine) && (parent[p] in mine)) { mine[p] = 1; grew = 1 } }
+            } while (grew)
+            for (p in mine) delete inset[p]
+            do { grew = 0
+                for (i = 1; i <= n; i++) { p = order[i]
+                    if (!(p in inset) && !(p in mine) && (parent[p] in inset)) { inset[p] = 1; grew = 1 } }
             } while (grew)
             for (i = 1; i <= n; i++) { p = order[i]; if (p in inset) printf "%s\t%s\n", p, substr(args[p], 1, 160) }
         }'
@@ -532,6 +570,13 @@ $_x	(pid recorded by the gateway)"
     _pids="$(printf '%s\n' "$_list" | cut -f1 | tr '\n' ' ')"
     # shellcheck disable=SC2086  # word splitting of a pid list
     _pids="$(echo $_pids)"
+    if have ps; then
+        for _x in $(gw_record_pids | sort -un); do
+            case " $_pids " in *" $_x "*) continue ;; esac
+            kill -0 "$_x" 2>/dev/null || continue
+            info "stale pid file: pid $_x now belongs to another program ($(ps -o args= -p "$_x" 2>/dev/null | cut -c1-80)); left alone"
+        done
+    fi
     if [ -z "$_pids" ]; then ok "no gateway process is running"; return 0; fi
     info "gateway processes still running:"
     printf '%s\n' "$_list" | sed '/^$/d; s/^/      /'
@@ -553,9 +598,11 @@ $_x	(pid recorded by the gateway)"
     if [ -z "$_pids" ]; then ok "the gateway process tree has exited"; return 0; fi
     printf '  %s$ kill -TERM %s%s\n' "$C_D" "$_pids" "$C_0"; twin "kill -TERM $_pids"
     kill -TERM $_pids 2>/dev/null || true
+    _signalled="$_pids"
     _n=0; while [ -n "$(alive_of "$_pids")" ] && [ "$_n" -lt 10 ]; do sleep 0.5; _n=$((_n + 1)); done
-    _left="$(alive_of "$_pids $(gw_scan | cut -f1 | tr '\n' ' ')")"
+    _left="$(alive_of "$(printf '%s\n' $_pids $(gw_scan | cut -f1) | sort -un | tr '\n' ' ')")"
     if [ -n "$_left" ]; then
+        _signalled="$(printf '%s\n' $_signalled $_left | sort -un | tr '\n' ' ')"; _signalled="$(echo $_signalled)"
         printf '  %s$ kill -KILL %s%s\n' "$C_D" "$_left" "$C_0"; twin "kill -KILL $_left"
         kill -KILL $_left 2>/dev/null || true
         _n=0; while [ -n "$(alive_of "$_left")" ] && [ "$_n" -lt 6 ]; do sleep 0.5; _n=$((_n + 1)); done
@@ -566,17 +613,51 @@ $_x	(pid recorded by the gateway)"
 What to do: quit them in Activity Monitor (or log out and back in), then $UNINSTALL_AGAIN"
         fi
     fi
-    ok "stopped the gateway processes: $_pids"
+    ok "stopped the gateway processes: $_signalled"
 }
 # mounts_under PATH: mount points inside PATH (rm -rf would delete into them).
+# Both sides are resolved (pwd -P), so /tmp vs /private/tmp or a linked HOME cannot hide
+# a mount; automounter maps (autofs) are skipped, never entered.
 mounts_under() {
     have mount || return 0
-    if [ "$OS_ID" = linux ]; then mount 2>/dev/null | sed -n 's/^.* on \(.*\) type .*$/\1/p'
-    else mount 2>/dev/null | sed -n 's/^.* on \(.*\) (.*)$/\1/p'; fi | while IFS= read -r _m; do
-        case "$_m" in "$1"/*) echo "$_m" ;; esac
+    _root="$(CDPATH='' cd -- "$1" 2>/dev/null && pwd -P || echo "$1")"
+    if [ "$OS_ID" = linux ]; then mount 2>/dev/null | grep -v autofs | sed -n 's/^.* on \(.*\) type .*$/\1/p'
+    else mount 2>/dev/null | grep -v autofs | sed -n 's/^.* on \(.*\) (.*)$/\1/p'; fi | while IFS= read -r _m; do
+        case "$_m" in "$1"/*|"$_root"/*) echo "$_m"; continue ;; esac
+        _mp="$(CDPATH='' cd -- "$_m" 2>/dev/null && pwd -P || true)"
+        case "$_mp" in "$_root"/*) echo "$_m" ;; esac
     done
 }
-PURGE_FAILED=""
+PURGE_FAILED=""; PURGE_DONE=""
+# holders PATH: the programs holding files under PATH (lsof +D), when lsof exists.
+holders() {
+    have lsof || return 0
+    _h="$(lsof -n +D "$1" 2>/dev/null | head -n 20)"
+    if [ -n "$_h" ]; then info "programs holding files there (lsof +D):"; printf '%s\n' "$_h" | sed 's/^/      /'
+    else info "no program holds a file there (lsof +D)"; fi
+}
+# recheck_purged: a second after the last deletion, nothing deleted may be back: a
+# program this uninstaller did not recognise as the gateway is still writing there.
+recheck_purged() {
+    [ "$PRINT" = 1 ] && return 0
+    [ -n "$PURGE_DONE" ] || return 0
+    sleep 1
+    _oifs2="$IFS"; IFS='
+'; set -f
+    for _p in $PURGE_DONE; do
+        IFS="$_oifs2"; set +f
+        if [ -e "$_p" ]; then
+            warn "$_p was deleted and is back: a program is still writing there. What it holds now:"
+            find "$_p" 2>/dev/null | head -n 20 | sed 's/^/      /'
+            holders "$_p"
+            PURGE_FAILED="$PURGE_FAILED
+  $_p   (re-created after it was deleted: quit the program writing there)"
+        fi
+        IFS='
+'; set -f
+    done
+    IFS="$_oifs2"; set +f
+}
 # purge_path DESCRIPTION PATH: delete PATH (retrying while something re-creates it),
 # then check it is gone; if not, list what is left and who holds it, and remember it.
 purge_path() {
@@ -603,6 +684,8 @@ purge_path() {
         _err="$(rm -rf "$_p" 2>&1 >/dev/null)" || true
         if [ ! -e "$_p" ] && [ ! -L "$_p" ]; then
             ok "$_d: deleted$([ "$_i" -gt 1 ] && echo " (attempt $_i)")"
+            PURGE_DONE="$PURGE_DONE$_p
+"
             return 0
         fi
         [ "$_i" -ge "$AF_RM_TRIES" ] && break
@@ -613,11 +696,7 @@ purge_path() {
     info "what is left there$([ "$OS_ID" = macos ] && echo ' (ls -lO shows file flags such as uchg)'):"
     if [ "$OS_ID" = macos ]; then find "$_p" -exec ls -ldO {} + 2>/dev/null | head -n 40 | sed 's/^/      /'
     else find "$_p" -exec ls -ld {} + 2>/dev/null | head -n 40 | sed 's/^/      /'; fi
-    if have lsof; then
-        _h="$(lsof -n +D "$_p" 2>/dev/null | head -n 20)"
-        if [ -n "$_h" ]; then info "programs holding files there (lsof +D):"; printf '%s\n' "$_h" | sed 's/^/      /'
-        else info "no program holds a file there (lsof +D)"; fi
-    fi
+    holders "$_p"
     PURGE_FAILED="$PURGE_FAILED
   $_p"
 }
@@ -634,6 +713,8 @@ purge_targets() {
     fi
     echo "the Assistant's sessions, snapshots and preferences|$HOME/.abstractassistant"
     if [ "$OS_ID" = macos ]; then
+        # The .app's bundle id (abstractassistant/packaging/macos/AbstractAssistant.spec).
+        echo "the Assistant's macOS preferences|$HOME/Library/Preferences/ai.abstractcore.abstractassistant.plist"
         for _f in "$HOME/Library/Logs/Assistant"/abstractassistant-*; do
             [ -e "$_f" ] && echo "the Assistant's launcher log|$_f"
         done
@@ -729,6 +810,7 @@ if [ "$UNINSTALL" = 1 ]; then
 '; set -f
         done
         IFS="$_oifs"; set +f
+        recheck_purged
         if [ "$OS_ID" = macos ] && [ "$PRINT" = 0 ]; then rmdir "$HOME/Library/Logs/Assistant" 2>/dev/null || true; fi
         info "kept: model weights and shared caches (~/.cache/huggingface, ~/.abstractcore, ~/.abstractframework, ~/.cache/abstractvoice, LM Studio and Ollama models)"
         if [ -n "$PURGE_FAILED" ]; then

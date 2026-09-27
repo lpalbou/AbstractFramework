@@ -200,6 +200,8 @@ populate_user_data() {  # the other locations --purge covers, and two it must ke
                  "$h/Library/Application Support/AbstractFramework/Installer"
         echo l >"$h/Library/Logs/AbstractGateway/gateway.err.log"; echo l >"$h/Library/Logs/Assistant/abstractassistant-launcher.log"
         echo i >"$h/Library/Application Support/AbstractFramework/Installer/install.sh"
+        mkdir -p "$h/Library/Preferences"; echo p >"$h/Library/Preferences/ai.abstractcore.abstractassistant.plist"
+        echo p >"$h/Library/Preferences/com.example.other.plist"
     else
         mkdir -p "$h/.cache/abstractgateway/engines"
     fi
@@ -218,6 +220,7 @@ check "the data dir (path with a space) is gone and stays gone" "$(sleep 0.5; [[
 check "--purge deleted the Assistant's sessions and AbstractCode's settings" "$([[ ! -e "$LH/.abstractassistant" && ! -e "$LH/.abstractcode" ]]; echo $?)" "$OUT"
 if [[ "$IS_MAC" == 1 ]]; then
     check "--purge deleted the gateway logs, its cache, the Assistant's log and the installer copy" "$([[ ! -e "$LH/Library/Logs/AbstractGateway" && ! -e "$LH/Library/Caches/AbstractGateway" && ! -e "$LH/Library/Logs/Assistant" && ! -e "$LH/Library/Application Support/AbstractFramework" ]]; echo $?)" "$OUT"
+    check "D5: --purge deleted the Assistant's preferences plist, kept another app's" "$([[ ! -e "$LH/Library/Preferences/ai.abstractcore.abstractassistant.plist" && -f "$LH/Library/Preferences/com.example.other.plist" ]]; echo $?)" "$OUT"
 else
     check "--purge deleted the gateway cache" "$([[ ! -e "$LH/.cache/abstractgateway" ]]; echo $?)" "$OUT"
 fi
@@ -245,6 +248,58 @@ check "exit 1 with the explicit listing and uninstall advice (never 'run the ins
 if [[ "$IS_MAC" == 1 ]]; then chflags -R nouchg "$BD"; else chmod 755 "$BD/runtime/locked"; fi
 run_in blocked AF_RM_TRIES=2 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$BD"
 check "once unlocked, a second run finishes (exit 0, dir gone)" "$([[ $RC == 0 && ! -e "$BD" ]]; echo $?)" "$OUT"
+
+echo "[7e] uninstall: recorded pids, app watchers, mounts, relative and unsafe data dirs, re-created data"
+# D1: a stale pid file naming an unrelated process that happens to mention "abstract".
+SH="$WORK/stale/home"; SD="$WORK/stale/data"; mkdir -p "$SH" "$SD/run"; printf 'MODE=background\n' >"$SD/bootstrap.env"
+/usr/bin/python3 -c 'import time; time.sleep(60)  # abstract' </dev/null >/dev/null 2>&1 &
+STALE_PID=$!
+printf '{"pid": %s}\n' "$STALE_PID" >"$SD/run/gateway-serve.json"; echo "$STALE_PID" >"$SD/gateway.pid"
+run_in stale AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --data-dir "$SD"
+check "D1: a stale pid file's unrelated process is left alone, and said so" "$([[ $RC == 0 ]] && kill -0 "$STALE_PID" 2>/dev/null && has "$OUT" "stale pid file: pid $STALE_PID" && ! has "$OUT" "kill -TERM"; echo $?)" "$OUT"
+kill -9 "$STALE_PID" 2>/dev/null
+
+# D3: only `<node> -r <this data dir>/apps/_support/parent_watch.cjs` is an app of this gateway.
+AH="$WORK/appw/home"; AD="$WORK/appw/data"; mkdir -p "$AH" "$AD/apps/_support"
+printf 'MODE=background\n' >"$AD/bootstrap.env"; echo "//" >"$AD/apps/_support/parent_watch.cjs"
+# a viewer whose command line names the file (not node): `less <data>/apps/_support/parent_watch.cjs`
+bash -c 'exec -a "less $0/apps/_support/parent_watch.cjs" sleep 60' "$AD" </dev/null >/dev/null 2>&1 &
+VIEWER_PID=$!
+# argv as the gateway starts an app: node -r <data>/apps/_support/parent_watch.cjs <bin.js>
+bash -c 'exec -a "node -r $0/apps/_support/parent_watch.cjs $0/app.js" sleep 60' "$AD" </dev/null >/dev/null 2>&1 &
+NODE_PID=$!
+sleep 0.3
+run_in appw AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --data-dir "$AD"
+check "D3: the app (node -r <data>/apps/_support/parent_watch.cjs) is stopped" "$(! kill -0 "$NODE_PID" 2>/dev/null; echo $?)" "$OUT"
+check "D3: another program naming parent_watch.cjs is left alone" "$(kill -0 "$VIEWER_PID" 2>/dev/null; echo $?)" "$OUT"
+kill -9 "$VIEWER_PID" "$NODE_PID" 2>/dev/null
+
+# D2: a volume mounted inside the data dir, listed by `mount` under a linked path.
+MH="$WORK/mnt/home"; MD="$WORK/mnt/data"; mkdir -p "$MH" "$MD/vol" "$WORK/mnt/bin"; ln -s "$WORK/mnt" "$WORK/mntlink"
+printf 'MODE=background\n' >"$MD/bootstrap.env"; echo keep >"$MD/vol/on-the-volume"
+if [[ "$IS_MAC" == 1 ]]; then MLINE="/dev/disk9s1 on $WORK/mntlink/data/vol (apfs, local, nodev)"
+else MLINE="/dev/sdz1 on $WORK/mntlink/data/vol type ext4 (rw,relatime)"; fi
+printf '#!/bin/sh\n/sbin/mount 2>/dev/null || /bin/mount 2>/dev/null\necho "%s"\n' "$MLINE" >"$WORK/mnt/bin/mount"; chmod +x "$WORK/mnt/bin/mount"
+run_in mnt AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$MD"
+check "D2: a mount inside the data dir (listed via a linked path) is refused, nothing deleted" "$([[ $RC == 1 && -f "$MD/vol/on-the-volume" ]] && has "$OUT" "a volume is mounted inside"; echo $?)" "$OUT"
+
+# D6: a relative --data-dir is resolved once; the root and the home folder are refused.
+RH="$WORK/rel/home"; mkdir -p "$RH" "$WORK/rel/cwd" "$WORK/rel/rel-data"; printf 'MODE=background\n' >"$WORK/rel/rel-data/bootstrap.env"
+run_in rel AF_STOP_TIMEOUT=1 -- sh -c "cd '$WORK/rel/cwd' && sh '$SCRIPTS_DIR/uninstall.sh' --yes --purge --data-dir ../rel-data"
+check "D6: a relative data dir is shown and deleted as an absolute path" "$([[ $RC == 0 && ! -e "$WORK/rel/rel-data" && -d "$WORK/rel/cwd" ]] && has "$OUT" "rm -rf $WORK/rel/rel-data" && ! has "$OUT" "rm -rf ../"; echo $?)" "$OUT"
+run_in refuse_home -- sh -c 'sh "$0" --purge --print --data-dir "$HOME"' "$SCRIPTS_DIR/uninstall.sh"
+check "D6: --data-dir \$HOME is refused" "$([[ $RC == 1 && -d "$HOME_T" ]] && has "$OUT" "refusing the data dir" && ! has "$OUT" "rm -rf"; echo $?)" "$OUT"
+run_in refuse_root -- sh "$SCRIPTS_DIR/uninstall.sh" --purge --print --data-dir /
+check "D6: --data-dir / is refused" "$([[ $RC == 1 ]] && has "$OUT" "refusing the data dir" && ! has "$OUT" "rm -rf"; echo $?)" "$OUT"
+
+# D4: a writer the uninstaller does not recognise re-creates the data dir after its deletion.
+WH="$WORK/back/home"; WD="$WORK/back/data"; mkdir -p "$WH" "$WD"; printf 'MODE=background\n' >"$WD/bootstrap.env"
+printf '#!/bin/sh\nwhile :; do sleep 0.3; mkdir -p "$AF_T_DIR" && date >>"$AF_T_DIR/again.log"; done\n' >"$WORK/back/writer"
+AF_T_DIR="$WD" sh "$WORK/back/writer" </dev/null >/dev/null 2>&1 &
+BACK_PID=$!
+run_in back AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge --data-dir "$WD"
+check "D4: a data dir re-created after its deletion fails the run (exit 1) and is named" "$([[ $RC == 1 ]] && has "$OUT" "is back: a program is still writing there" && has "$OUT" "re-created after it was deleted"; echo $?)" "$OUT"
+kill -9 "$BACK_PID" 2>/dev/null
 
 echo "[8] Install AbstractFramework.command"
 C="$WORK/cmd"; mkdir -p "$C"
