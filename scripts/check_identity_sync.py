@@ -5,7 +5,9 @@ The canonical descriptor is ``identity/abstractframework.json`` in this repo. Ea
 application vendors a byte-identical copy (Python package data, a TypeScript
 import, a Rust ``include_str!``) so that installed packages stay self-contained.
 This script fails when a copy drifts, so a change to the canonical file is
-followed by a copy into every consumer.
+followed by a copy into every consumer. The same rule covers shared contract
+fixtures and the automation controls' names, hints and run-now glyph
+(``abstractuic/ui-kit/src/automations/automation_controls.json``).
 
 Usage: check_identity_sync.py [--lenient] [extra/copy.json ...]
   --lenient  a missing copy is reported but not fatal (default: a missing copy fails)
@@ -48,6 +50,14 @@ POINTER_FIXTURE_COPY_DIRS = [
     SIBLINGS / "abstractcode" / "tui" / "tests" / "fixtures" / "gateway_pointer",
     SIBLINGS / "abstractgateway" / "console-tui" / "tests" / "fixtures" / "gateway_pointer",
 ]
+# Automation control names, hints and the run-now glyph (the shared "Run now" tooltip and icon, operator
+# 2026-09-28): canonical in abstractuic (the web panel's CONTROL_HINTS and the Observer read it); the Qt
+# Assistant and AbstractCode's terminal client vendor byte-identical copies.
+CONTROLS_CANONICAL = SIBLINGS / "abstractuic" / "ui-kit" / "src" / "automations" / "automation_controls.json"
+CONTROLS_COPIES = [
+    SIBLINGS / "abstractassistant" / "abstractassistant" / "assets" / "automation_controls.json",
+    SIBLINGS / "abstractcode" / "tui" / "assets" / "automation_controls.json",
+]
 KNOWN_COPIES = [
     SIBLINGS / "abstractcore" / "abstractcore" / "assets" / "abstractframework_identity.json",
     SIBLINGS / "abstractuic" / "ui-kit" / "src" / "abstractframework_identity.json",
@@ -60,7 +70,7 @@ def main(argv: list[str]) -> int:
     strict = "--lenient" not in argv
     extra = [Path(a) for a in argv if a != "--lenient"]
     failures = 0
-    groups = [(CANONICAL, KNOWN_COPIES + extra), (FIXTURE_CANONICAL, FIXTURE_COPIES)]
+    groups = [(CANONICAL, KNOWN_COPIES + extra), (FIXTURE_CANONICAL, FIXTURE_COPIES), (CONTROLS_CANONICAL, CONTROLS_COPIES)]
     groups += [(CONSOLE_FIXTURE_CANONICAL_DIR / name, [CONSOLE_FIXTURE_COPY_DIR / name]) for name in CONSOLE_FIXTURE_NAMES]
     groups += [(AUTOMATION_FIXTURE_CANONICAL_DIR / name, [d / name for d in AUTOMATION_FIXTURE_COPY_DIRS]) for name in AUTOMATION_FIXTURE_NAMES]
     groups += [(POINTER_FIXTURE_CANONICAL_DIR / name, [d / name for d in POINTER_FIXTURE_COPY_DIRS]) for name in POINTER_FIXTURE_NAMES]

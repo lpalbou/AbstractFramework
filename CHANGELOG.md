@@ -4,31 +4,64 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-28
+
+Every terminal command lands on your PATH, AbstractCode's terminal client says how to sign in, and
+Run now explains itself the same way in every client.
+
 ### Changed
 
-- **The installer puts every command line on PATH by default.** AbstractCode's terminal client,
-  `abstractcode`, is built whenever the terminal console is, with the same cargo and into the same
-  folder (`~/.local/bin`; before, `--with-code-cli` put it in `~/.cargo/bin`, often not on PATH);
-  `--no-code-cli` (`-NoCodeCli`) skips it and a failed build never fails the install. AbstractCore's
-  commands (`abstractcore`, `abstractcore-chat`, its apps) and `abstractvoice`, `abstractvision`,
-  `abstractmusic` are exposed from the gateway's own environment; `--no-core-cli` (`-NoCoreCli`)
-  leaves them out, and a package whose command name another program already has is left out
-  instead of failing the install. `--with-code-cli` and `--with-core-cli` stay accepted. The
-  summary prints `AbstractCode (terminal): abstractcode --gateway-url <url> --token <token>` and a
-  `Commands` list saying what each one is (`abstractgateway-config`: the gateway's admin
-  command); the uninstaller removes `abstractcode` too. Docs: [Commands you get](docs/install.md#commands-you-get).
-- **Signing AbstractCode's terminal client in.** The installer summary prints
+- **The installer puts every command line on PATH by default**, in one folder, uv's tool bin
+  directory (`~/.local/bin` on macOS and Linux, `%USERPROFILE%\.local\bin` on Windows), next to
+  `abstractgateway`:
+  - AbstractCode's terminal client, `abstractcode`, is built whenever the terminal console is, with
+    the same cargo. `--no-code-cli` (`-NoCodeCli`) skips it; a failed build never fails the install.
+    With `--no-console` it is built only when a cargo of Rust 1.87 or later already exists.
+  - The library commands come from the gateway's own environment: AbstractCore's (`abstractcore`,
+    `abstractcore-config`, `abstractcore-chat`, `abstractcore-endpoint` and its apps `summarizer`,
+    `extractor`, `judge`, `intent`, `deepsearch`, also as `abstractcore-<app>`), `abstractvoice`,
+    `abstractvoice-prefetch`, `abstractvision` and `abstractmusic`. `--no-core-cli` (`-NoCoreCli`)
+    leaves them out.
+  - A package's commands come all together or not at all: when another program already has one of
+    its names, that package is left out with a warning naming the file, and the rest installs.
+  - `--with-code-cli` and `--with-core-cli` stay accepted (they are the default now).
+  - The summary lists every command with what it does (`abstractgateway-config`: the gateway's
+    admin command). See [Commands you get](docs/install.md#commands-you-get).
+- **Signing AbstractCode's terminal client in.** The summary prints
   `Sign in (terminal, once): abstractcode login --token <token>` with your admin token, then
-  `abstractcode`, and the no-token way on the gateway's computer,
-  `abstractgateway apps tui-command code`; the installer does not save the token for you.
-  A re-run keeps an `abstractcode` newer than the pin (the gateway console's **Apps** page updates
-  it in the same folder). On Windows, `install.ps1` builds `abstractgateway-console` and
-  `abstractcode` into `%USERPROFILE%\.local\bin` next to `abstractgateway.exe`, like macOS and
-  Linux (an existing copy in `%USERPROFILE%\.cargo\bin` is left in place).
-- **Docs: every command the installer puts on PATH.** [Commands you get](docs/install.md#commands-you-get)
-  lists each exposed package's commands with what they do, AbstractCore's `summarizer`,
-  `extractor`, `judge`, `intent` and `deepsearch` included, explains that a package's commands come
-  all together (`--no-core-cli` opts out), and what happens when a name is already taken.
+  `abstractcode`, and the way without a token on the gateway's computer,
+  `abstractgateway apps tui-command code`. The installer never saves the token for you. Started
+  without a sign-in, `abstractcode` 0.7.1 says so and prints the same lines instead of opening
+  with an empty workflow.
+- **Terminal apps share one folder with the gateway** (AbstractGateway 0.7.1). The console's
+  **Apps** page installs and updates `abstractcode` in the same folder as the installer, so it runs
+  by name. A re-run of the installer keeps an `abstractcode` newer than its pin. On Windows,
+  `install.ps1` builds `abstractgateway-console` and `abstractcode` into `%USERPROFILE%\.local\bin`
+  (an existing copy in `%USERPROFILE%\.cargo\bin` is left in place).
+- **Uninstall** removes `abstractcode` like the console, and also the copy older gateways put in
+  `<data dir>/apps/bin` (removing that folder when it is empty; other files there are kept).
+
+### Added
+
+- **Run now reads the same everywhere** (ui-kit 0.1.16, Observer 0.2.1, Assistant 0.9.1,
+  AbstractCode 0.7.1). Every client draws Run now with the same play-in-a-circle icon and explains
+  it with the same text: it runs the automation once now instead of waiting; the next scheduled run
+  keeps its time (or starts right after this run if its time comes first); it does not count toward
+  a run limit; it works while paused, which stays paused; and it is not available while a run is in
+  progress. Pause, Resume, Stop, Edit, Archive and Discuss carry the same kind of hint. See
+  [Automations](docs/automations.md).
+
+### Changed (pins)
+
+- **abstractgateway 0.7.1** (was 0.7.0): terminal apps in the uv tool bin folder.
+- **abstractassistant 0.9.1** (was 0.9.0): the shared Run now icon and hints.
+- npm: **@abstractframework/observer 0.2.1** (shared Run now hints) and
+  **@abstractframework/code 0.6.1**.
+- crates.io: **abstractcode 0.7.1** (sign-in report, "not signed in" state, Run now line).
+- Unchanged: abstractcore 2.18.0, AbstractRuntime 0.7.1, abstractagent 0.3.17, abstractvoice 0.13.0,
+  abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvision 0.3.30,
+  abstractmusic 0.1.15, flow 0.4.0, continuum 0.4.0, entity 0.3.0, `abstractgateway-console` 0.11.0,
+  `abstractcore-console` 0.4.0 and `abstracttui` 0.6.0.
 
 ## [0.6.0] - 2026-09-28
 

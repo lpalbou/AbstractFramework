@@ -2630,14 +2630,19 @@ Every control is a command, `POST /api/gateway/automations/{id}/commands` with a
 | Control | Command | What happens |
 |---|---|---|
 | **Pause** | `automation.pause` | No scheduled run until you resume. A run in progress finishes. |
-| **Run now** | `automation.run_now` | One run at once, **also while paused** (the automation stays paused). Refused (409 `automation_busy`) while an occurrence is running or queued; there is no queue. |
+| **Run now** | `automation.run_now` | One run at once, instead of waiting for the schedule, **also while paused** (the automation stays paused). **The schedule does not move**: the next scheduled run keeps its time; if that time comes while this run is still going, the scheduled run starts as soon as it ends (missed times coalesce into one run). A manual run does not count toward a schedule's run limit (`count`); once that limit is reached the automation has ended and Run now is refused. In a Growing automation, later runs see it in their history. Refused (409 `automation_busy`) while an occurrence is running or queued; there is no queue. |
 | **Resume** | `automation.resume` | Back on the schedule from the next tick after now. It never fires on resume and never catches up the time spent paused. |
 | **Edit** / **Revise…** | `PATCH` with `expected_revision` and `changes` | Title, interval and context in the apps; also `target` and `policy` through the API. Creates the next revision, used from the next run; an occurrence already running keeps the inputs it started with. A changed schedule never fires a past tick. |
 | **Stop current** | `automation.stop_current` | Cancels the run in progress (quietly). |
 | **Archive** | `automation.archive` | No further runs; the current one finishes. **The history is kept** and stays readable; the only remaining control is Discuss. |
 | **Discuss** | `POST …/discuss` `{request_id, occurrence_index, prompt}` | A new conversation forked at that occurrence: its context is the automation's whole timeline up to and including it; it works in its own writable workspace (`workspace_root` in the response) with the automation's folder mounted read-only (`mounted_workspace`); see [the mental model](#the-mental-model). Continue it like any chat (`POST /api/gateway/runs/start` with its `session_id`). |
 
-The Assistant and the Observer disable a control that does not apply and say why in its tooltip.
+Every client explains each control in its tooltip with the same text, and draws Run now with the
+same play-in-a-circle icon: the Observer, the web panels and AbstractCode's browser client use the
+ui-kit's `CONTROL_HINTS`; the Assistant and AbstractCode's terminal client carry a byte-identical
+copy of the kit's `automation_controls.json` (`scripts/check_identity_sync.py` fails on drift).
+Run now's tooltip adds the next scheduled time when there is one. A control that does not apply is
+disabled, and its tooltip first says why.
 
 ## What notifies you, and when
 
@@ -4982,7 +4987,9 @@ real address in `X-Forwarded-For` so the gateway can tell local from remote call
 
 The descriptor `identity/abstractframework.json` (in this repository) that every About screen
 renders; each rendering package vendors a byte-identical copy, checked by
-`scripts/check_identity_sync.py`.
+`scripts/check_identity_sync.py`. The same script checks the shared contract fixtures and the
+automation controls' names, hints and Run now icon (`automation_controls.json`, canonical in the
+ui-kit).
 
 ---
 
