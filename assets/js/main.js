@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ── Nav scroll effect ── */
   const nav = document.querySelector('.nav');
@@ -54,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = entry.target;
         const target = el.dataset.count;
         if (!target) return;
+        if (reduceMotion) { el.textContent = target; counterObserver.unobserve(el); return; }
         const isPercent = target.includes('%');
         const num = parseInt(target);
         const suffix = target.replace(/[\d]/g, '');
@@ -202,11 +204,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     prevBtn.addEventListener('click', () => goTo(current - 1));
     nextBtn.addEventListener('click', () => goTo(current + 1));
-    let autoplay = setInterval(() => goTo(current + 1), 6000);
+    let autoplay = reduceMotion ? null : setInterval(() => goTo(current + 1), 6000);
     carousel.addEventListener('mouseenter', () => clearInterval(autoplay));
     carousel.addEventListener('mouseleave', () => {
-      autoplay = setInterval(() => goTo(current + 1), 6000);
+      if (!reduceMotion) autoplay = setInterval(() => goTo(current + 1), 6000);
     });
+    carousel.addEventListener('focusin', () => clearInterval(autoplay));
     let startX = 0;
     carousel.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
     carousel.addEventListener('touchend', e => {
@@ -217,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Parallax on hero bg ── */
   const heroBg = document.querySelector('.hero-bg-img');
-  if (heroBg) {
+  if (heroBg && !reduceMotion) {
     window.addEventListener('scroll', () => {
       const y = window.scrollY;
       if (y < window.innerHeight) {
@@ -231,22 +234,26 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cubeGrid) {
     const CUBE_SIZE = 48, COL_STEP = 90, ROW_STEP = 110;
     const cubesData = [
-      { id:'code',      layer:'app',        col:-2.5, row:0, label:'Code',      name:'AbstractCode',      layerName:'Application',       href:'code.html',      desc:'A coding agent that runs durably on the gateway, with a terminal client and a browser client. Tool approvals, workspace files, streamed replies and automations.' },
-      { id:'flow',      layer:'app',        col:-1.5, row:0, label:'Flow',      name:'AbstractFlow',      layerName:'Application',       href:'flow.html',      desc:'The visual workflow editor. Draw workflows in the browser, publish them to the gateway as portable .flow bundles.' },
-      { id:'observer',  layer:'app',        col:-0.5, row:0, label:'Observer',  name:'AbstractObserver',  layerName:'Application',       href:'observer.html',  desc:'Watch runs live, replay the ledger step by step, and create and manage automations.' },
-      { id:'assistant', layer:'app',        col:0.5,  row:0, label:'Assistant', name:'AbstractAssistant', layerName:'Application',       href:'assistant.html', desc:'A macOS menu-bar assistant with a palette, a voice mode, and your sessions and automations one key away.' },
-      { id:'continuum', layer:'app',        col:1.5,  row:0, label:'Continuum', name:'AbstractContinuum', layerName:'Application',       href:'continuum.html', desc:'A board-first console for continuous development and deployment work.' },
-      { id:'entity',    layer:'app',        col:2.5,  row:0, label:'Entity',    name:'AbstractEntity',    layerName:'Application',       href:'entity.html',    desc:'Create entities with a lasting memory of their own, talk with them, and read their diaries.' },
-      { id:'gateway',   layer:'control',    col:0,    row:1, label:'Gateway',   name:'AbstractGateway',   layerName:'Control Plane',     href:'gateway.html',   desc:'The control plane: durable runs over HTTP and SSE, automations, the web and terminal consoles, the apps at /apps/<app>/, and multi-user auth.' },
-      { id:'agent',     layer:'compose',    col:-0.5, row:2, label:'Agent',     name:'AbstractAgent',     layerName:'Composition',       href:'agent.html',     desc:'Agent patterns (ReAct, CodeAct, MemAct) built on AbstractRuntime and AbstractCore.' },
-      { id:'flowrt',    layer:'compose',    col:0.5,  row:2, label:'Bundles',   name:'Workflow bundles',  layerName:'Composition',       href:'flow.html',      desc:'Portable .flow bundles, compiled and run durably by AbstractRuntime on the gateway.' },
-      { id:'core',      layer:'foundation', col:-0.5, row:3, label:'Core',      name:'AbstractCore',      layerName:'Foundation',        href:'core.html',      desc:'One Python LLM API over ten provider types, local and cloud: tools, structured output, media, embeddings, an OpenAI-compatible server and a console.' },
-      { id:'runtime',   layer:'foundation', col:0.5,  row:3, label:'Runtime',   name:'AbstractRuntime',   layerName:'Foundation',        href:'runtime.html',   desc:'Durable execution: interrupt, checkpoint, resume, with an append-only ledger. Runs automations and keeps a whole-message history window.' },
-      { id:'voice',     layer:'plugin',     col:-1,   row:4, label:'Voice',     name:'AbstractVoice',     layerName:'Capability Plugin', href:'voice.html',     desc:'Text-to-speech, speech-to-text and voice cloning, local or remote, with engines that say why they cannot run.' },
-      { id:'vision',    layer:'plugin',     col:0,    row:4, label:'Vision',    name:'AbstractVision',    layerName:'Capability Plugin', href:'vision.html',    desc:'Image generation, editing and upscaling, text-to-video and image-to-video, through MLX-Gen, Diffusers, stable-diffusion.cpp or OpenAI-compatible services.' },
-      { id:'music',     layer:'plugin',     col:1,    row:4, label:'Music',     name:'AbstractMusic',     layerName:'Capability Plugin', href:'music.html',     desc:'Text-to-music and text-to-audio: ACE Music and ElevenLabs remotely, ACE-Step and Stable Audio locally.' },
-      { id:'memory',    layer:'knowledge',  col:-0.5, row:5, label:'Memory',    name:'AbstractMemory',    layerName:'Knowledge',         href:'memory.html',    desc:'Durable, append-only agent memory: temporal triples, and a memory system that forms, recalls and consolidates records from use.' },
-      { id:'semantics', layer:'knowledge',  col:0.5,  row:5, label:'Semantics', name:'AbstractSemantics', layerName:'Knowledge',         href:'semantics.html', desc:'The shared vocabulary: predicates, entity types and memory relations, with JSON Schema helpers.' },
+      { id:'code',      layer:'app',        col:-3, row:0, label:'Code',      name:'AbstractCode',      layerName:'Application',       href:'code.html',      desc:'A coding agent that runs durably on the gateway, with a terminal client and a browser client: tool approvals, workspace files, streamed replies and automations.' },
+      { id:'flow',      layer:'app',        col:-2, row:0, label:'Flow',      name:'AbstractFlow',      layerName:'Application',       href:'flow.html',      desc:'The visual workflow editor. Draw workflows in the browser and publish them to the gateway as portable .flow bundles.' },
+      { id:'observer',  layer:'app',        col:-1, row:0, label:'Observer',  name:'AbstractObserver',  layerName:'Application',       href:'observer.html',  desc:'Watch runs live, replay the ledger step by step, and create and manage automations.' },
+      { id:'assistant', layer:'app',        col:0,  row:0, label:'Assistant', name:'AbstractAssistant', layerName:'Application',       href:'assistant.html', desc:'A macOS menu-bar assistant with a palette, a voice mode, and your gateway sessions and automations one key away.' },
+      { id:'continuum', layer:'app',        col:1,  row:0, label:'Continuum', name:'AbstractContinuum', layerName:'Application',       href:'continuum.html', desc:'A board-first console for continuous development and deployment work.' },
+      { id:'entity',    layer:'app',        col:2,  row:0, label:'Entity',    name:'AbstractEntity',    layerName:'Application',       href:'entity.html',    desc:'Create entities with a lasting memory of their own, talk with them, and read their diaries.' },
+      { id:'consoles',  layer:'app',        col:3,  row:0, label:'Consoles',  name:'Web and terminal consoles', layerName:'Application', href:'console.html', desc:'The gateway web console and abstractgateway-console in a terminal: setup, models, engines, network, users and apps. abstractcore-console does the same for AbstractCore alone.' },
+      { id:'gateway',   layer:'control',    col:0,  row:1, label:'Gateway',   name:'AbstractGateway',   layerName:'Control Plane',     href:'gateway.html',   desc:'The controller: starts, resumes and cancels durable runs over HTTP and SSE, runs automations, manages users and network access, and serves the consoles and apps.' },
+      { id:'agent',     layer:'compose',    col:-1, row:2, label:'Agent',     name:'AbstractAgent',     layerName:'Composition',       href:'agent.html',     desc:'Agent patterns (ReAct, CodeAct, MemAct) built on AbstractRuntime and AbstractCore.' },
+      { id:'skill',     layer:'compose',    col:0,  row:2, label:'Skill',     name:'AbstractSkill',     layerName:'Composition',       href:'https://github.com/lpalbou/AbstractSkill', desc:'Agent Skills (SKILL.md): parsing, validation, the curated skill shelf and the trust gate the gateway applies before a skill reaches a run.' },
+      { id:'uikit',     layer:'compose',    col:1,  row:2, label:'UI kit',    name:'AbstractUIC',       layerName:'Composition',       href:'https://github.com/lpalbou/AbstractUIC', desc:'Reusable UI packages for the clients: React components, web components and a gateway session proxy (npm @abstractframework/ui-kit).' },
+      { id:'core',      layer:'foundation', col:-0.5, row:3, label:'Core',    name:'AbstractCore',      layerName:'Foundation',        href:'core.html',      desc:'One Python LLM API over ten provider types, local and cloud: tools, structured output, media, embeddings, capability plugins and an OpenAI-compatible server.' },
+      { id:'runtime',   layer:'foundation', col:0.5,  row:3, label:'Runtime', name:'AbstractRuntime',   layerName:'Foundation',        href:'runtime.html',   desc:'Where agentic operations run: durable runs, effects and waits, checkpoint and resume, with an append-only ledger.' },
+      { id:'voice',     layer:'plugin',     col:-2, row:4, label:'Voice',     name:'AbstractVoice',     layerName:'Capability Plugin', href:'voice.html',     desc:'Text-to-speech, speech-to-text and voice cloning, local or remote.' },
+      { id:'vision',    layer:'plugin',     col:-1, row:4, label:'Vision',    name:'AbstractVision',    layerName:'Capability Plugin', href:'vision.html',    desc:'Image generation, editing and upscaling, text-to-video and image-to-video, through MLX-Gen, Diffusers, stable-diffusion.cpp or OpenAI-compatible services.' },
+      { id:'music',     layer:'plugin',     col:0,  row:4, label:'Music',     name:'AbstractMusic',     layerName:'Capability Plugin', href:'music.html',     desc:'Text-to-music and text-to-audio: ACE Music and ElevenLabs remotely, ACE-Step and Stable Audio locally.' },
+      { id:'scene3d',   layer:'plugin',     col:1,  row:4, label:'3D',        name:'abstract3d',        layerName:'Capability Plugin', href:'3d.html',        desc:'Image-to-3D and text-to-3D with a validated local TripoSR backend and GLB output.' },
+      { id:'camera',    layer:'plugin',     col:2,  row:4, label:'Camera',    name:'AbstractCamera',    layerName:'Capability Plugin', href:'camera.html',    desc:'Camera control: tethered bodies, webcams and smart telescopes behind one manager, with camera tools for agents.' },
+      { id:'memory',    layer:'knowledge',  col:-0.5, row:5, label:'Memory',  name:'AbstractMemory',    layerName:'Knowledge',         href:'memory.html',    desc:'Durable, append-only agent memory: temporal triples, and a memory system that forms, recalls and consolidates records from use.' },
+      { id:'semantics', layer:'knowledge',  col:0.5,  row:5, label:'Semantics', name:'AbstractSemantics', layerName:'Knowledge',       href:'semantics.html', desc:'The shared vocabulary: predicates, entity types and memory relations, with JSON Schema helpers.' },
     ];
     const layerColors = { app:'#34d399', control:'#22d3ee', compose:'#818cf8', foundation:'#6366f1', plugin:'#f472b6', knowledge:'#fbbf24' };
 
@@ -281,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
       var el = document.createElement('div');
       el.className = 'layer-label';
       el.dataset.layer = ['app','control','compose','foundation','plugin','knowledge'][l.row];
-      el.style.cssText = 'left:'+(3.3*COL_STEP)+'px;top:'+(l.row*ROW_STEP+14)+'px;color:'+l.color;
+      el.style.cssText = 'left:'+(3.9*COL_STEP)+'px;top:'+(l.row*ROW_STEP+14)+'px;color:'+l.color;
       el.textContent = l.text;
       cubeGrid.appendChild(el);
     });
