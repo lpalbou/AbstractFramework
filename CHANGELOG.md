@@ -17,6 +17,14 @@ All notable changes to AbstractFramework will be documented in this file.
   summary prints `AbstractCode (terminal): abstractcode --gateway-url <url> --token <token>` and a
   `Commands` list saying what each one is (`abstractgateway-config`: the gateway's admin
   command); the uninstaller removes `abstractcode` too. Docs: [Commands you get](docs/install.md#commands-you-get).
+- **Signing AbstractCode's terminal client in.** The installer summary prints
+  `Sign in (terminal, once): abstractcode login --token <token>` with your admin token, then
+  `abstractcode`, and the no-token way on the gateway's computer,
+  `abstractgateway apps tui-command code`; the installer does not save the token for you.
+  A re-run keeps an `abstractcode` newer than the pin (the gateway console's **Apps** page updates
+  it in the same folder). On Windows, `install.ps1` builds `abstractgateway-console` and
+  `abstractcode` into `%USERPROFILE%\.local\bin` next to `abstractgateway.exe`, like macOS and
+  Linux (an existing copy in `%USERPROFILE%\.cargo\bin` is left in place).
 - **Docs: every command the installer puts on PATH.** [Commands you get](docs/install.md#commands-you-get)
   lists each exposed package's commands with what they do, AbstractCore's `summarizer`,
   `extractor`, `judge`, `intent` and `deepsearch` included, explains that a package's commands come

@@ -290,8 +290,7 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 
 ### Commands you get
 
-Everything lands in one folder, `~/.local/bin` (Windows: `%USERPROFILE%\.local\bin`; the Rust
-tools go to `%USERPROFILE%\.cargo\bin` there), which the installer adds to your shell profile: open
+Everything lands in one folder, `~/.local/bin` (Windows: `%USERPROFILE%\.local\bin`), which the installer adds to your shell profile: open
 a new terminal for it to be on PATH. The summary lists them under `Commands`.
 
 The gateway's own commands, and the two terminal clients built with cargo:
@@ -301,7 +300,24 @@ The gateway's own commands, and the two terminal clients built with cargo:
 | `abstractgateway` | The gateway itself: `serve`, `service` (start at login), `network` (who can reach it), `models`, `engines`, `apps` |
 | `abstractgateway-config` | The gateway's admin and configuration command: `status` (readiness without starting it), `claim-url` (a new one-time console sign-in link), `defaults` / `set-default` / `clear-default` (which provider and model each capability uses), `get` / `set` / `unset` (runtime settings), `bootstrap-admin`, `init` |
 | `abstractgateway-console` | The terminal console (`--gateway-url <url> --token <admin token>`); skipped with `--no-console` |
-| `abstractcode` | AbstractCode's terminal client (`--gateway-url <url> --token <admin token>`); skipped with `--no-code-cli` |
+| `abstractcode` | AbstractCode's terminal client (sign it in once, see below); skipped with `--no-code-cli` |
+
+**Sign `abstractcode` in.** It needs the gateway's admin token once. Choose one of:
+
+- `abstractcode login --token <admin token>`, then plain `abstractcode`. The installer summary
+  prints this line with your token, ready to paste (the installer does not save it for you).
+  `login` checks the token and keeps it in AbstractCode's own login store,
+  `~/.abstractcode/gateway.json` (readable by you only). Without `--gateway-url`, `abstractcode`
+  finds this computer's gateway through the gateway pointer, on whichever port it runs.
+- On the gateway's computer, SSH included: `abstractgateway apps tui-command code`. It prints a
+  one-time line (valid 2 minutes) that opens `abstractcode` signed in as you, without you handling
+  a token (add `--data-dir <dir>` for an install with a custom data directory; the summary shows
+  it).
+
+If `abstractcode` starts without a valid sign-in, it says so and names both ways. The admin token
+is in `<data dir>/auth/bootstrap-admin-token`; `abstractgateway-config status` prints the data
+directory. The gateway console's **Apps** page can update `abstractcode` in the same folder; a
+re-run of the installer keeps a newer version.
 
 The commands of AbstractCore and its voice, vision and music packages, from the gateway's own
 environment (`uv tool install --with-executables-from`), so they always match the versions the
@@ -459,7 +475,7 @@ A new mode or port applies at the next start: `network restart`, the console, th
   `-Uninstall`), or by hand: `abstractgateway service uninstall` (when registered), then
   `uv tool uninstall abstractgateway` (it also removes the AbstractCore, voice, vision and music
   commands it exposed) and `cargo uninstall --root ~/.local abstractgateway-console abstractcode`
-  (Windows: `cargo uninstall abstractgateway-console abstractcode`). The uninstaller does all of
+  (Windows: `cargo uninstall --root %USERPROFILE%\.local abstractgateway-console abstractcode`). The uninstaller does all of
   it. Your data stays in the data directory until you delete it
   (`--purge`). See [Operations and support](installers/operations-and-support.md) for locations.
 
