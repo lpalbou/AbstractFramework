@@ -77,14 +77,11 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.6.0'
+$AfGatewayPinDefault = '0.7.0'
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.3.22', '@abstractframework/code@0.5.0', '@abstractframework/observer@0.1.14', '@abstractframework/continuum@0.3.2', '@abstractframework/entity@0.2.2')
-$AfCrateConsole = 'abstractgateway-console@0.10.0'
-# Browser apps whose CLI takes the gateway address as a launch flag (--gateway-url);
-# the others start on http://127.0.0.1:8080 and take another address on their sign-in screen.
-$AfNpmGatewayFlagApps = @('@abstractframework/flow', '@abstractframework/continuum')
-$AfCrateCodeCli = 'abstractcode@0.6.0'
+$AfNpmApps = @('@abstractframework/flow@0.4.0', '@abstractframework/code@0.6.0', '@abstractframework/observer@0.2.0', '@abstractframework/continuum@0.4.0', '@abstractframework/entity@0.3.0')
+$AfCrateConsole = 'abstractgateway-console@0.11.0'
+$AfCrateCodeCli = 'abstractcode@0.7.0'
 $AfDocs = 'https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md'
 $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1'
 
@@ -747,13 +744,7 @@ function Main {
         }
         Write-Info "the browser apps open through the gateway: in the console's Apps page, Install, then Open (each at $baseUrl/apps/<app>/)"
         Write-Info 'advanced: run one on its own, outside the gateway (first launch downloads it):'
-        $others = @()
-        foreach ($s in $AfNpmApps) {
-            $pkg = $s.Substring(0, $s.LastIndexOf('@'))
-            if ($AfNpmGatewayFlagApps -contains $pkg) { Write-Host "      npx -y $s --gateway-url $baseUrl" -ForegroundColor Gray }
-            else { Write-Host "      npx -y $s" -ForegroundColor Gray; $others += $pkg }
-        }
-        if ($baseUrl -ne 'http://127.0.0.1:8080' -and $others.Count) { Write-Info "$($others -join ', ') start on http://127.0.0.1:8080: enter $baseUrl on their sign-in screen" }
+        foreach ($s in $AfNpmApps) { Write-Host "      npx -y $s --gateway-url $baseUrl" -ForegroundColor Gray }
     }
 
     # Terminal console: crates.io publishes no prebuilt binary, so cargo builds it. Rust on

@@ -106,14 +106,11 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.6.0"
+AF_GATEWAY_PIN_DEFAULT="0.7.0"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.3.22 @abstractframework/code@0.5.0 @abstractframework/observer@0.1.14 @abstractframework/continuum@0.3.2 @abstractframework/entity@0.2.2"
-AF_CRATE_CONSOLE="abstractgateway-console@0.10.0"
-# Browser apps whose CLI takes the gateway address as a launch flag (--gateway-url);
-# the others start on http://127.0.0.1:8080 and take another address on their sign-in screen.
-AF_NPM_GATEWAY_FLAG_APPS="@abstractframework/flow @abstractframework/continuum"
-AF_CRATE_CODE_CLI="abstractcode@0.6.0"
+AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.6.0 @abstractframework/observer@0.2.0 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"
+AF_CRATE_CONSOLE="abstractgateway-console@0.11.0"
+AF_CRATE_CODE_CLI="abstractcode@0.7.0"
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
 AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
 
@@ -1462,15 +1459,9 @@ if [ "$WITH_APPS" = 1 ]; then
     fi
     info "the browser apps open through the gateway: in the console's Apps page, Install, then Open (each at $BASE_URL/apps/<app>/)"
     info "advanced: run one on its own, outside the gateway (first launch downloads it):"
-    _others=""
     for spec in $AF_NPM_APPS; do
-        case " $AF_NPM_GATEWAY_FLAG_APPS " in
-            *" ${spec%@*} "*) printf '      npx -y %s --gateway-url %s\n' "$spec" "$BASE_URL" ;;
-            *) printf '      npx -y %s\n' "$spec"; _others="$_others${_others:+, }${spec%@*}" ;;
-        esac
+        printf '      npx -y %s --gateway-url %s\n' "$spec" "$BASE_URL"
     done
-    [ "$BASE_URL" = "http://127.0.0.1:8080" ] || [ -z "$_others" ] \
-        || info "$_others start on http://127.0.0.1:8080: enter $BASE_URL on their sign-in screen"
 fi
 
 # Terminal console: crates.io publishes no prebuilt binary, so cargo builds it (see

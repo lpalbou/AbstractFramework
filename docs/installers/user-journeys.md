@@ -84,11 +84,12 @@ To pass options through the one-liner, use a script block:
 
 ## Apps
 
-Browser apps (Flow, Code, Observer, Continuum, Entity) run on demand with
-`npx -y @abstractframework/<app>`; nothing is installed globally. They talk to the gateway at
-`http://127.0.0.1:8080` by default. Flow and Continuum take another address as a launch flag
-(`--gateway-url <url>`), which the installer prints with your port filled in; Code, Observer and
-Entity take it on their sign-in screen. `--with-apps` only makes sure Node 18+ exists.
+Browser apps (Flow, Code, Observer, Continuum, Entity) open through the gateway at
+`<gateway>/apps/<app>/`: the console's **Apps** page installs and opens them. To run one on its
+own, use `npx -y @abstractframework/<app> --gateway-url <url>`; nothing is installed globally, and
+the installer prints each command with your port filled in. Without the flag an app finds the
+local gateway through `~/.abstractframework/gateway.json`, or uses `http://127.0.0.1:8080`.
+`--with-apps` only makes sure Node 18+ exists.
 
 ## Upgrade and repair
 

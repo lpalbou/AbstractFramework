@@ -632,13 +632,9 @@ def test_install_sh_app_hints_use_the_gateway_launch_flag(tmp_path: Path) -> Non
     # The apps open through the gateway (/apps/<app>/); npx is the advanced, standalone way.
     assert f"the browser apps open through the gateway: in the console's Apps page, Install, then Open (each at {base}/apps/<app>/)" in out
     hints = _printed_block(out, "advanced: run one on its own, outside the gateway")
-    flagged = {"@abstractframework/flow", "@abstractframework/continuum"}
-    assert hints == [
-        f"npx -y {pkg}@{v} --gateway-url {base}" if pkg in flagged else f"npx -y {pkg}@{v}"
-        for pkg, v in NPM_RELEASE_VERSIONS.items()
-    ]
-    others = ", ".join(pkg for pkg in NPM_RELEASE_VERSIONS if pkg not in flagged)
-    assert f"{others} start on http://127.0.0.1:8080: enter {base} on their sign-in screen" in out
+    # Every released app takes the gateway address as a launch flag.
+    assert hints == [f"npx -y {pkg}@{v} --gateway-url {base}" for pkg, v in NPM_RELEASE_VERSIONS.items()]
+    assert "sign-in screen" not in out
     assert f"Apps:       {base}/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)" in out
     assert f"Standalone: npx -y @abstractframework/flow --gateway-url {base}   (advanced;" in out
 
@@ -650,9 +646,7 @@ def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
     ps_extras = re.search(r"^\$AfCompiledExtras = @\((.*)\)$", ps1, flags=re.M)
     assert sh_extras and ps_extras
     assert sh_extras.group(1).split() == re.findall(r"'([^']+)'", ps_extras.group(1)) == _COMPILED_EXTRAS
-    sh_flag = re.search(r'^AF_NPM_GATEWAY_FLAG_APPS="([^"]+)"$', sh, flags=re.M)
-    ps_flag = re.search(r"^\$AfNpmGatewayFlagApps = @\((.*)\)$", ps1, flags=re.M)
-    assert sh_flag and ps_flag and sh_flag.group(1).split() == re.findall(r"'([^']+)'", ps_flag.group(1))
+    assert "GATEWAY_FLAG_APPS" not in sh and "GatewayFlagApps" not in ps1
     assert "ABSTRACTGATEWAY_URL" not in sh and "ABSTRACTGATEWAY_URL" not in ps1
     assert 'AF_WITH_WHEELS="webrtcvad-wheels>=2.0.14"' in sh
     assert "$AfWithWheels = 'webrtcvad-wheels>=2.0.14'" in ps1

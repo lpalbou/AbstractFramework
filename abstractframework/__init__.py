@@ -10,22 +10,22 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.17.0",
-    "abstractruntime": "0.6.0",
-    "abstractagent": "0.3.16",
-    "abstractgateway": "0.6.0",
+    "abstractcore": "2.18.0",
+    "abstractruntime": "0.7.0",
+    "abstractagent": "0.3.17",
+    "abstractgateway": "0.7.0",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
-    "abstractvoice": "0.12.0",
+    "abstractvoice": "0.13.0",
     "abstractvision": "0.3.30",
     "abstractmusic": "0.1.15",
-    "abstractassistant": "0.8.0",
+    "abstractassistant": "0.9.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -43,19 +43,19 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.3.22",
-    "@abstractframework/code": "0.5.0",
-    "@abstractframework/observer": "0.1.14",
-    "@abstractframework/continuum": "0.3.2",
-    "@abstractframework/entity": "0.2.2",
+    "@abstractframework/flow": "0.4.0",
+    "@abstractframework/code": "0.6.0",
+    "@abstractframework/observer": "0.2.0",
+    "@abstractframework/continuum": "0.4.0",
+    "@abstractframework/entity": "0.3.0",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
 # or by the bootstrap scripts: the gateway console by default, abstractcode with --with-code-cli).
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
-    "abstractgateway-console": "0.10.0",
-    "abstractcore-console": "0.3.0",
-    "abstractcode": "0.6.0",
+    "abstractgateway-console": "0.11.0",
+    "abstractcore-console": "0.4.0",
+    "abstractcode": "0.7.0",
     "abstracttui": "0.6.0",
 }
 

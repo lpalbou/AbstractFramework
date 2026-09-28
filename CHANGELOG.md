@@ -4,21 +4,50 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-28
+
+Remote and headless machines work like a Mac: one address and one SSH tunnel reach the console, the
+API and every browser app; every client finds the local gateway on its own; AbstractCode creates and
+runs automations; history replay keeps whole messages up to 50,000 tokens and never cuts one.
+
 ### Added
 
+- **Browser apps open through the gateway at `/apps/<app>/`** (AbstractGateway 0.7.0). Flow, Code,
+  Observer, Continuum and Entity are served on the gateway's own address (HTTP, server-sent events
+  and WebSocket), signed in with the app's gateway session, so a LAN address, a reverse proxy or one
+  SSH tunnel reaches them all. The apps listen on `127.0.0.1` by default. The installer summary's
+  `Apps:` line and the docs point to `<gateway>/apps/<app>/`; the console's **Apps** page installs
+  and opens them. Running an app on its own with `npx … --gateway-url <url>` is the advanced
+  alternative (`Standalone:` line).
 - **Local gateway pointer.** After the health check the installer writes
   `~/.abstractframework/gateway.json` (Windows: `%USERPROFILE%\.abstractframework\gateway.json`),
-  mode 0600: the gateway's loopback URL, port and data directory, never a token. The Assistant,
-  AbstractCode's terminal client and the browser apps' servers read it to find a gateway on a port
-  other than 8080. The installer writes it for the install it just made, a custom `--data-dir`
-  included (replacing a pointer that names another data directory); `abstractgateway serve` then
-  keeps it current under its ownership rule. The uninstaller deletes it when it names the
-  uninstalled data directory.
+  mode 0600: the gateway's loopback URL, port and data directory, never a token. The Assistant (the
+  macOS app included), both terminal consoles, AbstractCode's terminal client and the browser apps'
+  servers read it to find a gateway on a port other than 8080, and follow it when the gateway moves.
+  The installer writes it for the install it just made, a custom `--data-dir` included (replacing a
+  pointer that names another data directory); `abstractgateway serve` then keeps it current under
+  its ownership rule. The uninstaller deletes it when it names the uninstalled data directory.
+- **Automations in AbstractCode** (`abstractcode` 0.7.0, `@abstractframework/code` 0.6.0). In the
+  terminal client, `/automations` lists and opens automations (runs as chat pairs, waits that need
+  you, the folder, pause/resume, run now, stop, revise, archive, Discuss) and `/schedule` creates
+  one; the browser client has the same in its **Automations** sidebar section. See
+  [Automations](docs/automations.md).
+- **Start at login from the consoles.** Both the web console (Gateway card, last setup step) and the
+  terminal console (F3, the Finish step) have a **Start at login** switch that changes the login item
+  without restarting the gateway.
+- **The terminal console on a headless machine** (`abstractgateway-console` 0.11.0): a Network
+  screen that shows the saved and the running setting and offers the restart, Apps that give the link
+  and the tunnel command instead of opening a browser, voice and engine states, and the local
+  gateway pointer. Neither terminal console tries to open a browser on a machine without a display.
 - `--ask-wait SECONDS` (Windows: `-AskWait`) sets how long a timed question waits (default 25, at
   most 25). `--console-wait` remains as an alias.
 
 ### Changed
 
+- **One flag for the gateway address: `--gateway-url`** in every app and terminal client
+  (`--url` for the gateway terminal console and `--gateway` for AbstractCode remain as aliases). The
+  installer summary and the docs use it; with `--with-apps` the installer prints
+  `npx -y @abstractframework/<app>@<version> --gateway-url <gateway>` for all five apps.
 - **Start at login is asked whenever a person is at a terminal**, not only with `--interactive`:
   `curl … | sh` asks it on your terminal (`/dev/tty`), Enter = yes. Nobody answering within
   `--ask-wait`, an install without a terminal (a script, CI, a provisioning tool) and `--yes` keep
@@ -28,24 +57,71 @@ All notable changes to AbstractFramework will be documented in this file.
   with a console's switch is kept. `install.ps1` asks the same question on an interactive console
   (it registered the login entry without asking). `--interactive` waits for answers without a time
   limit; `--no-service` still asks nothing.
-- **Browser apps open through the gateway.** The summary's `Apps:` line and the docs point to
-  `<gateway>/apps/<app>/` (the console's **Apps** page installs and opens them); running an app on
-  its own with `npx … --gateway-url <url>` is the advanced alternative (`Standalone:` line).
-- The terminal console and AbstractCode commands in the summary and the docs use `--gateway-url`,
-  the flag every app and terminal client shares.
-- Growing automations replay the most recent 50 000 tokens of whole turns (docs).
+- **On a remote or headless session** (SSH, or Linux without a display) with a terminal, the
+  installer offers the terminal console at the end ("Press Enter within 25 s"), signed in; nobody answering skips it, so automation never blocks.
+  Over SSH it no longer opens a browser on the remote machine. `--no-open` skips both.
+- **History replay keeps whole messages up to 50,000 tokens** (AbstractRuntime 0.7.0): growing
+  automations, session chats, run chat, the docs assistants and entity visits replay the newest whole
+  turns up to 50,000 tokens. No message is cut; the former 40-message, 24,000-character and
+  per-message caps are gone. Each run records how many earlier messages were not replayed, and the
+  clients say so.
+- **Voice says what it can do** (AbstractVoice 0.13.0, AbstractCore 2.18.0). Voice listings name
+  the providers that cannot run here and why, instead of an empty list; cloud voice providers are
+  listed as needing a key until one is configured; a capability route whose engine is not installed
+  reports `engine_missing` with the install command; an OpenAI key saved in the Providers screen
+  reaches voice. The installer adds local voice to every install profile: Supertonic text-to-speech
+  and Whisper speech-to-text (`abstractvoice[supertonic,stt]`), both CPU, from prebuilt wheels
+  (skipped where no wheels exist: musl Linux / Alpine, macOS before 13; Whisper on Windows ARM64).
+  Voice never fails an install: where its packages do not install the gateway is installed without
+  it. The summary's `Voice:` line says what was installed, and a re-run that adds voice restarts the
+  gateway to load it.
+- **Observer: Edit opens the form, and a calmer Automations page** (`@abstractframework/observer`
+  0.2.0). A row's **Edit** opens the automation's edit form at once, prefilled (title, task,
+  interval, context, tools); action buttons carry icons; a workspace folder can be browsed from the
+  browser; **Discuss** opens a chat with a fork of the automation; a run's **Ask** chat sends the
+  whole conversation.
+- **Apple silicon model fits account for the GPU memory limit** (AbstractCore 2.18.0): a model that
+  fits once macOS raises its limit reads `needs_gpu_limit` with the exact command.
 
-- The installer adds local voice to every install profile: Supertonic text-to-speech and Whisper
-  speech-to-text (`abstractvoice[supertonic,stt]`), both CPU, from prebuilt wheels. The light
-  profile (Linux without a GPU, Intel Macs) had neither, so the voice route AbstractCore
-  recommends could not speak. Skipped where no wheels exist (musl Linux / Alpine, macOS before 13;
-  Whisper on Windows ARM64). Voice never fails an install: where its packages do not install (for
-  example glibc older than 2.28) the gateway is installed without it. The summary's new `Voice:`
-  line says what was installed, and a re-run that adds voice restarts the gateway to load it.
-- On a remote or headless session (SSH, or Linux without a display) with a terminal, the installer
-  offers the terminal console at the end ("Press Enter within 25 s"), signed in; nobody answering
-  skips it, so automation never blocks. Over SSH it no longer opens a browser on the remote
-  machine. `--no-open` skips both.
+### Security
+
+- **DNS-rebinding protection in the browser apps**: an app treats a browser as on this machine only
+  when both its address and the page's host are loopback, so a rebinding page can neither reveal a
+  folder nor change the gateway address. Continuum's local-only pages answer on `localhost` or
+  `127.0.0.1` only. The gateway's app proxy refuses requests with another origin or an invalid host.
+- **Server-held keys are spent only for authenticated requests** (AbstractCore 2.18.0): with a
+  saved or environment OpenAI key, unauthenticated requests to the AbstractVoice audio routes, the
+  audio and vision discovery routes, OpenAI-backed vision generation and the capability discovery
+  routes get `401`, also with `ABSTRACTCORE_SERVER_ALLOW_UNAUTHENTICATED=1`; an explicit
+  `X-AbstractCore-Provider-API-Key` is spent instead. The music route follows the same rule while
+  the server holds a music backend key.
+- The local gateway pointer is written without following links, with mode 0600, and readers reject
+  a pointer that other users can write.
+
+### Changed (pins)
+
+- **abstractgateway 0.7.0** (was 0.6.0): apps through `/apps/<app>/`, the local gateway pointer,
+  start at login from the consoles, cloud voice providers listed, the history window on every chat
+  route, and the terminal console 0.11.0.
+- **abstractcore 2.18.0** (was 2.17.0): `engine_missing`, `needs_gpu_limit`, the saved OpenAI key
+  for voice, the key guards above, and `abstractcore-console` 0.4.0.
+- **AbstractRuntime 0.7.0** (was 0.6.0): the 50,000-token history window, recorded in each run.
+  Library callers of `session_chat_messages` and `automation_timeline_messages` should read its
+  changelog's Breaking note.
+- **abstractagent 0.3.17** (was 0.3.16): ReAct sends the runtime's history window when the host
+  asks for it.
+- **abstractvoice 0.13.0** (was 0.12.0): engine status and unavailable-provider reasons, Qwen3-ASR
+  on Transformers 5.x, Qwen3-TTS predictor and sampler flags.
+- **abstractassistant 0.9.0** (was 0.8.0): the macOS app finds a gateway through the local gateway
+  pointer; automation cards say their state in words.
+- npm: **@abstractframework/flow 0.4.0**, **code 0.6.0**, **observer 0.2.0**, **continuum 0.4.0**
+  and **entity 0.3.0**, all served through the gateway at `/apps/<app>/` and taking
+  `--gateway-url`.
+- crates.io: **abstractgateway-console 0.11.0**, **abstractcore-console 0.4.0** and
+  **abstractcode 0.7.0**.
+- The pins apply to the base install and to the `apple` / `gpu` extras. Unchanged:
+  abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvision 0.3.30,
+  abstractmusic 0.1.15 and `abstracttui` 0.6.0.
 
 ## [0.5.0] - 2026-09-27
 

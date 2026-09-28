@@ -35,7 +35,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ```
 
 The answer is `{"available": true, "version": 1, …}` on a gateway that runs them. The API ships in
-AbstractGateway 0.6.0 and AbstractRuntime 0.6.0, the versions pinned by `abstractframework` 0.5.0;
+AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later (`abstractframework` 0.5.0 and later);
 earlier gateways do not include it. On a gateway without
 it, the Assistant shows no automation controls and the Observer's Automate mode and Automations
 page say so and stay disabled.
@@ -117,7 +117,7 @@ occurrence and its sub-runs keep their own ledger, so each tick can be replayed 
 
 ## Creating an automation
 
-All three ways end in the same request, `POST /api/gateway/automations`.
+Every way ends in the same request, `POST /api/gateway/automations`.
 
 ### From the Assistant: "Schedule this conversation…"
 
@@ -148,6 +148,15 @@ and the workspace. **Create automation** opens the new automation on the Automat
 Pressing the button again with the same fields is a safe retry: the request carries the same
 `request_id`, so the gateway returns the same automation.
 
+### From AbstractCode: `/schedule` or Automations +
+
+In the terminal client, `/schedule [task]` opens four steps: the task (your last prompt, or the
+text after `/schedule`), when (UTC), context (Independent or Growing) and tools (run without
+asking, or ask before each tool call). Enter on the last step creates the automation and opens it.
+In the browser client, select **+** in the sidebar's **Automations** section; the dialog runs the
+toolbar's workflow, and **Advanced** holds the title, the first run time, "stop after this many
+runs" and "stop at".
+
 ### From a workflow's automation defaults
 
 In AbstractFlow, select a runnable workflow in the **Flow Library** and edit its **Automation**
@@ -163,7 +172,7 @@ POST /api/gateway/automations
  "target": {"bundle_ref": "memory-monitor@1.0.0", "flow_id": "memory"}}
 ```
 
-The Assistant and Observer forms fill their own fields and send them in full; the defaults apply
+The Assistant, Observer and AbstractCode forms fill their own fields and send them in full; the defaults apply
 to requests that leave `title` or `trigger` out.
 
 ### What every create request looks like
