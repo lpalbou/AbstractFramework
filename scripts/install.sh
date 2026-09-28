@@ -13,11 +13,13 @@
 #      profile), free disk, a free port, systemd user bus (Linux)
 #   2. uv (https://docs.astral.sh/uv) if missing, then Python 3.12 through uv
 #   3. `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"`
-#      (isolated, user-scoped; commands land in ~/.local/bin; prebuilt wheels
-#      only, so no C compiler / Xcode tools are needed)
-#   4. the terminal console (abstractgateway-console, built with cargo; Rust
-#      comes from rustup, user-scoped, when missing), then the optional parts:
-#      Node.js for the browser apps, AbstractCode's terminal client, Ollama, LM Studio
+#      (isolated, user-scoped; commands land in ~/.local/bin, AbstractCore's
+#      and its voice/vision/music commands too; prebuilt wheels only, so no
+#      C compiler / Xcode tools are needed)
+#   4. the terminal console (abstractgateway-console) and AbstractCode's terminal
+#      client (abstractcode), built with cargo into the same folder (Rust comes
+#      from rustup, user-scoped, when missing), then the optional parts: Node.js
+#      for the browser apps, Ollama, LM Studio
 #   5. start at login: asked when a person is at a terminal (Enter = yes); then
 #      registers the gateway as a user service (`abstractgateway service install`)
 #      or starts it in the background; waits for /api/health
@@ -38,9 +40,14 @@
 #                            (uv tool install nodejs-wheel; no admin)
 #   --no-console             skip the terminal console (by default it is built with
 #                            cargo: about 600 MB of Rust from rustup when cargo is
-#                            missing, and a C compiler)
-#   --with-code-cli          cargo install the AbstractCode terminal client
-#   --with-core-cli          also expose the `abstractcore` command
+#                            missing, and a C compiler); AbstractCode's terminal
+#                            client is then built only with a cargo already there
+#   --no-code-cli            skip AbstractCode's terminal client (abstractcode; by
+#                            default built with the console's cargo, into the same
+#                            folder; --with-code-cli, the old opt-in, is accepted)
+#   --no-core-cli            do not put AbstractCore's commands (abstractcore, its
+#                            apps) and abstractvoice, abstractvision, abstractmusic
+#                            on PATH (--with-core-cli, the old opt-in, is accepted)
 #   --with-ollama            run Ollama's official installer (may ask for sudo)
 #   --with-lmstudio          run LM Studio's headless installer (llmster)
 #   --full                   also build the compiled extras (stable-diffusion.cpp,
@@ -111,6 +118,30 @@ AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.6.0 @abstractframework/observer@0.2.0 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"
 AF_CRATE_CONSOLE="abstractgateway-console@0.11.0"
 AF_CRATE_CODE_CLI="abstractcode@0.7.0"
+# The user commands of the gateway's own environment exposed next to `abstractgateway` and
+# `abstractgateway-config` (uv tool install --with-executables-from; --no-core-cli leaves them
+# out): AbstractCore and its voice, vision and music packages. Not abstractruntime (its one
+# entry point is a worker the runtime starts) nor abstractagent (a deprecated stub). uv exposes
+# all of a package's executables or none, and refuses the WHOLE install when one of them
+# already exists, so af_cli_names lists every name each package declares (tests compare it
+# with the packages' pyproject.toml) and a package whose name another program has is left out.
+AF_CLI_PACKAGES="abstractcore abstractvoice abstractvision abstractmusic"
+af_cli_names() {
+    case "$1" in
+        abstractcore) echo "abstractcore abstractcore-config abstractcore-chat abstractcore-endpoint summarizer abstractcore-summarizer extractor abstractcore-extractor judge abstractcore-judge intent abstractcore-intent deepsearch abstractcore-deepsearch" ;;
+        abstractvoice) echo "abstractvoice abstractvoice-prefetch" ;;
+        abstractvision) echo "abstractvision" ;;
+        abstractmusic) echo "abstractmusic" ;;
+    esac
+}
+af_cli_about() {  # one line for the summary's command list
+    case "$1" in
+        abstractcore) echo "AbstractCore: --config, --status, models, engines, serve; also abstractcore-chat (a chat REPL), abstractcore-endpoint and its apps summarizer, extractor, judge, intent, deepsearch" ;;
+        abstractvoice) echo "voice in the terminal: a spoken chat, web, tts; abstractvoice-prefetch downloads voice models" ;;
+        abstractvision) echo "images in the terminal: cli (generate), download, provider-models" ;;
+        abstractmusic) echo "music in the terminal: t2m (text to music)" ;;
+    esac
+}
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
 AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
 
@@ -176,7 +207,7 @@ PIN="${AF_PIN:-}"
 FROM="${AF_FROM:-}"
 MANIFEST=""
 DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
-WITH_APPS=0; WITH_CONSOLE=1; WITH_CODE_CLI=0; WITH_CORE_CLI=0
+WITH_APPS=0; WITH_CONSOLE=1; WITH_CODE_CLI=1; WITH_CORE_CLI=1
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
 FULL=0; NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
 PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0; ASK_WAIT=25; ASK_NOTHING=0
@@ -184,7 +215,7 @@ INTERACTIVE="${AF_INTERACTIVE:-0}"
 
 usage() {
     if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
-        sed -n '2,78p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,85p' "$0" | sed 's/^# \{0,1\}//'
     else
         echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
         echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
@@ -212,8 +243,10 @@ while [ $# -gt 0 ]; do
         --with-apps) WITH_APPS=1 ;;
         --with-console) WITH_CONSOLE=1 ;;   # the default; kept for older command lines
         --no-console) WITH_CONSOLE=0 ;;
-        --with-code-cli) WITH_CODE_CLI=1 ;;
-        --with-core-cli) WITH_CORE_CLI=1 ;;
+        --with-code-cli) WITH_CODE_CLI=1 ;;   # the default; kept for older command lines
+        --no-code-cli) WITH_CODE_CLI=0 ;;
+        --with-core-cli) WITH_CORE_CLI=1 ;;   # the default; kept for older command lines
+        --no-core-cli) WITH_CORE_CLI=0 ;;
         --with-ollama) WITH_OLLAMA=1 ;;
         --with-lmstudio) WITH_LMSTUDIO=1 ;;
         --full) FULL=1 ;;
@@ -554,18 +587,42 @@ find_cargo() {
     if [ -x "${CARGO_HOME:-$HOME/.cargo}/bin/cargo" ]; then CARGO="${CARGO_HOME:-$HOME/.cargo}/bin/cargo"; return 0; fi
     return 1
 }
-# console_bin: where the terminal console goes. cargo builds it with --root <parent of the
-# uv tool bin dir>, so it lands next to `abstractgateway`; a bin dir not named .../bin falls
-# back to cargo's own ~/.cargo/bin.
+# console_bin: where the terminal console and AbstractCode's terminal client go. cargo builds
+# both with --root <parent of the uv tool bin dir>, so they land next to `abstractgateway`; a
+# bin dir not named .../bin falls back to cargo's own ~/.cargo/bin.
 CONSOLE_NAME="${AF_CRATE_CONSOLE%@*}"; CONSOLE_PIN="${AF_CRATE_CONSOLE##*@}"
-CRATE_ROOT=""; CONSOLE_BIN=""
+CODE_NAME="${AF_CRATE_CODE_CLI%@*}"; CODE_PIN="${AF_CRATE_CODE_CLI##*@}"
+CRATE_ROOT=""; CONSOLE_BIN=""; CODE_ROOT=""; CODE_BIN=""
 console_bin() {
     case "$TOOL_BIN" in
-        */bin) CRATE_ROOT="${TOOL_BIN%/bin}"; CONSOLE_BIN="$TOOL_BIN/$CONSOLE_NAME" ;;
-        *) CRATE_ROOT=""; CONSOLE_BIN="${CARGO_HOME:-$HOME/.cargo}/bin/$CONSOLE_NAME" ;;
+        */bin) CRATE_ROOT="${TOOL_BIN%/bin}" ;;
+        *) CRATE_ROOT="" ;;
     esac
+    CONSOLE_BIN="${CRATE_ROOT:-${CARGO_HOME:-$HOME/.cargo}}/bin/$CONSOLE_NAME"
+    # AbstractCode's terminal client: CODE_ROOT (cargo --root; "" = cargo's own ~/.cargo) is the
+    # ONE place that decides where it goes; build, summary and uninstall all follow it.
+    CODE_ROOT="$CRATE_ROOT"
+    CODE_BIN="${CODE_ROOT:-${CARGO_HOME:-$HOME/.cargo}}/bin/$CODE_NAME"
 }
-console_installed() { [ "$("$CONSOLE_BIN" --version 2>/dev/null)" = "$CONSOLE_NAME $CONSOLE_PIN" ]; }
+# crate_installed BIN NAME PIN: BIN answers --version with that crate at that pin.
+crate_installed() { [ "$("$1" --version 2>/dev/null)" = "$2 $3" ]; }
+console_installed() { crate_installed "$CONSOLE_BIN" "$CONSOLE_NAME" "$CONSOLE_PIN"; }
+# version_at_least A B: dotted numeric version A >= B (X.Y.Z; a missing part counts as 0).
+version_at_least() {
+    awk -v a="$1" -v b="$2" 'BEGIN {
+        if (a !~ /^[0-9]+(\.[0-9]+)*$/) exit 1
+        na = split(a, x, "."); nb = split(b, y, "."); n = na > nb ? na : nb
+        for (i = 1; i <= n; i++) { if (x[i] + 0 > y[i] + 0) exit 0; if (x[i] + 0 < y[i] + 0) exit 1 }
+        exit 0 }'
+}
+# code_installed: abstractcode at the pin OR LATER. The gateway's Apps page updates it in place in
+# the same folder, so a re-run must never downgrade it to the pin. Sets CODE_HAVE_V.
+CODE_HAVE_V=""
+code_installed() {
+    _cv="$("$CODE_BIN" --version 2>/dev/null)" || return 1
+    case "$_cv" in "$CODE_NAME "*) CODE_HAVE_V="${_cv#"$CODE_NAME "}" ;; *) return 1 ;; esac
+    version_at_least "$CODE_HAVE_V" "$CODE_PIN"
+}
 TOOL_BIN=""
 tool_bin() {
     if [ -n "$UV" ] && [ -x "$UV" ]; then TOOL_BIN="$("$UV" tool dir --bin 2>/dev/null || true)"; fi
@@ -970,18 +1027,33 @@ if [ "$UNINSTALL" = 1 ]; then
     else
         info "uv not found; nothing to uninstall there"
     fi
-    # The terminal console this installer built (see console_bin).
+    # The terminal console and AbstractCode's terminal client this installer built (see
+    # console_bin). The uv tool's exposed commands went with `uv tool uninstall` above.
     console_bin
-    if [ -e "$CONSOLE_BIN" ]; then
-        step "Terminal console"
-        if find_cargo && grep -qs "^\"$CONSOLE_NAME " "${CRATE_ROOT:-${CARGO_HOME:-$HOME/.cargo}}/.crates.toml"; then
+    uninstall_crate() {  # uninstall_crate NAME BIN ROOT "what it is" "step title"
+        _uc_name="$1"; _uc_bin="$2"; _uc_root="$3"; _uc_what="$4"
+        [ -e "$_uc_bin" ] || return 0
+        step "$5"
+        if find_cargo && grep -qs "^\"$_uc_name " "${_uc_root:-${CARGO_HOME:-$HOME/.cargo}}/.crates.toml"; then
             set -- "$CARGO" uninstall
-            [ -n "$CRATE_ROOT" ] && set -- "$@" --root "$CRATE_ROOT"
-            RUN_SOFT=1 run "uninstall the terminal console" "$@" "$CONSOLE_NAME"
+            [ -n "$_uc_root" ] && set -- "$@" --root "$_uc_root"
+            RUN_SOFT=1 run "uninstall $_uc_what" "$@" "$_uc_name"
         fi
-        [ "$PRINT" = 0 ] && [ ! -e "$CONSOLE_BIN" ] || run "remove the terminal console" rm -f "$CONSOLE_BIN"
-    fi
-    [ "$ST_RUST_BY_US" = 1 ] && info "kept: Rust, which the installer added for the terminal console (remove it with: ${CARGO_HOME:-$HOME/.cargo}/bin/rustup self uninstall)"
+        [ "$PRINT" = 0 ] && [ ! -e "$_uc_bin" ] || run "remove $_uc_what" rm -f "$_uc_bin"
+    }
+    uninstall_crate "$CONSOLE_NAME" "$CONSOLE_BIN" "$CRATE_ROOT" "the terminal console" "Terminal console"
+    uninstall_crate "$CODE_NAME" "$CODE_BIN" "$CODE_ROOT" "AbstractCode's terminal client" "AbstractCode terminal client"
+    # Gateways before 0.7.1 installed their terminal app into <data>/apps/bin (not on PATH). The
+    # data dir stays without --purge, so remove what the gateway put there: its installable terminal
+    # apps (apps_manager TUI_BY_APP: abstractcode; it never installs the console), and the folder
+    # only when that leaves it empty.
+    _stale="$DATA_DIR/apps/bin"
+    for _t in abstractcode; do
+        [ -e "$_stale/$_t" ] || continue
+        run "remove the terminal app an older gateway installed ($_t)" rm -f "$_stale/$_t"
+    done
+    [ "$PRINT" = 1 ] || rmdir "$_stale" 2>/dev/null || true
+    [ "$ST_RUST_BY_US" = 1 ] && info "kept: Rust, which the installer added for the terminal console and AbstractCode's terminal client (remove it with: ${CARGO_HOME:-$HOME/.cargo}/bin/rustup self uninstall)"
     step "Data"
     # Before the data dir goes (--purge): the pointer is matched against its resolved path.
     remove_pointer
@@ -1349,7 +1421,7 @@ install_gateway() {
     fi
     set -- "$@" --overrides uv-overrides.txt
     for _p in $(af_no_build_packages); do set -- "$@" --no-build-package "$_p"; done
-    [ "$WITH_CORE_CLI" = 1 ] && set -- "$@" --with-executables-from abstractcore
+    for _p in $CLI_FROM; do set -- "$@" --with-executables-from "$_p"; done
     { [ -n "$FROM" ] || [ "$REINSTALL" = 1 ]; } && set -- "$@" --reinstall
     _cwd="$(pwd)"
     RUN_SHOW="cd $(q "$DATA_DIR") && $(show_cmd "$@" "$GW_SPEC")"
@@ -1373,6 +1445,28 @@ install_gateway_voice() {
     fi
     install_gateway "$1" "$2"
 }
+# The packages whose commands this install exposes (AF_CLI_PACKAGES): each one whose names are
+# all free in the tool bin dir, or already the gateway tool's own (a re-run). A name that another
+# program has (a file, or another uv tool's command) would make uv refuse the whole install, so
+# that package is left out and the summary says which file is in the way.
+CLI_FROM=""; CLI_TAKEN=""
+if [ "$WITH_CORE_CLI" = 1 ]; then
+    _ours=""
+    [ -n "$UV" ] && [ -x "$UV" ] && _ours="$("$UV" tool list 2>/dev/null | awk '/^[^ -]/ { t = $1 } t == "abstractgateway" && $1 == "-" { print $2 }')"
+    for _p in $AF_CLI_PACKAGES; do
+        _taken=""
+        for _n in $(af_cli_names "$_p"); do
+            if [ -e "$TOOL_BIN/$_n" ] || [ -L "$TOOL_BIN/$_n" ]; then
+                printf '%s\n' "$_ours" | grep -qx "$_n" || { _taken="$TOOL_BIN/$_n"; break; }
+            fi
+        done
+        if [ -z "$_taken" ]; then CLI_FROM="${CLI_FROM:+$CLI_FROM }$_p"
+        else
+            CLI_TAKEN="${CLI_TAKEN:+$CLI_TAKEN }$_p"
+            warn "$_p commands not exposed: $_taken already exists (another program's); remove it and run the installer again to add them"
+        fi
+    done
+fi
 GGUF_RESULT=""
 REINSTALL=0
 if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
@@ -1464,78 +1558,109 @@ if [ "$WITH_APPS" = 1 ]; then
     done
 fi
 
-# Terminal console: crates.io publishes no prebuilt binary, so cargo builds it (see
-# console_bin). When there is no cargo, or only one older than the crate's Rust 1.87 (the
-# distro packages are), Rust comes from rustup: user-scoped (~/.rustup, ~/.cargo), shell
-# profiles untouched, its cargo used by absolute path. The TLS stack (ring) compiles C, so
-# it needs a C compiler. A failure here never fails the install: the web console does
-# everything the terminal one does.
+# Terminal console and AbstractCode's terminal client: crates.io publishes no prebuilt binary,
+# so cargo builds both, into the same folder (see console_bin). When there is no cargo, or only
+# one older than the crates' Rust 1.87 (the distro packages are), Rust comes from rustup:
+# user-scoped (~/.rustup, ~/.cargo), shell profiles untouched, its cargo used by absolute path;
+# only for the terminal console (--no-console adds no Rust: AbstractCode's client is then built
+# only with a cargo already there). The TLS stack (ring) compiles C, so it needs a C compiler.
+# A failure here never fails the install: the web console does everything the terminal one
+# does, and the gateway serves AbstractCode's browser client at /apps/code/.
 CONSOLE_OK=0; CONSOLE_WHY="skipped with --no-console"
+CODE_OK=0; CODE_WHY="skipped with --no-code-cli"
 RUST_BY_US="${ST_RUST_BY_US:-0}"
 RUSTUP_CARGO="${CARGO_HOME:-$HOME/.cargo}/bin/cargo"
 console_bin
 cargo_minor() { "$1" --version 2>/dev/null | awk '{ split($2, v, "."); print v[1] * 1000 + v[2] }'; }
+CONSOLE_HAVE=0; CODE_HAVE=0
+if [ "$PRINT" = 0 ]; then
+    console_installed && CONSOLE_HAVE=1
+    code_installed && CODE_HAVE=1
+fi
+# What still needs building, for the messages below.
+RUST_FOR=""
+[ "$WITH_CONSOLE" = 1 ] && [ "$CONSOLE_HAVE" = 0 ] && RUST_FOR="the terminal console"
+[ "$WITH_CODE_CLI" = 1 ] && [ "$CODE_HAVE" = 0 ] && RUST_FOR="${RUST_FOR:+$RUST_FOR and }AbstractCode's terminal client"
+# rust_cargo: CARGO = a cargo of Rust 1.87 or later, or RUST_WHY = why there is none. Decided
+# once for both crates, so each problem is reported once.
+RUST_DONE=0; RUST_WHY=""
+rust_cargo() {
+    if [ "$RUST_DONE" = 1 ]; then [ -n "$CARGO" ]; return; fi
+    RUST_DONE=1; CARGO=""
+    if [ "$HAS_CC" = 0 ]; then
+        RUST_WHY="building it needs a C compiler: $([ "$OS_ID" = macos ] && echo 'xcode-select --install' || echo 'sudo apt-get install -y build-essential (Debian/Ubuntu)')"
+        warn "$RUST_FOR skipped: $RUST_WHY; then run the installer again"
+        return 1
+    fi
+    find_cargo || true
+    if [ -n "$CARGO" ] && [ "$PRINT" = 0 ] && [ "$(cargo_minor "$CARGO")" -lt 1087 ] 2>/dev/null; then
+        _rust_old="$("$CARGO" --version 2>/dev/null | awk '{print $2}')"
+        if [ "$WITH_CONSOLE" = 0 ]; then
+            RUST_WHY="skipped with --no-console: it adds no Rust, and $CARGO is $_rust_old (1.87 or later needed)"
+            CARGO=""
+        elif [ -x "$(dirname "$CARGO")/rustup" ]; then
+            RUST_WHY="it needs Rust 1.87 or later and $CARGO is $_rust_old; update it (rustup update stable)"
+            warn "$RUST_FOR skipped: $RUST_WHY, then run the installer again"
+            CARGO=""
+        else
+            info "cargo $_rust_old ($CARGO) is older than the Rust 1.87 $RUST_FOR needs: adding a current Rust with rustup"
+            CARGO=""; [ -x "$RUSTUP_CARGO" ] && [ "$(cargo_minor "$RUSTUP_CARGO")" -ge 1087 ] 2>/dev/null && CARGO="$RUSTUP_CARGO"
+        fi
+    fi
+    if [ -z "$CARGO" ] && [ -z "$RUST_WHY" ]; then
+        if [ "$WITH_CONSOLE" = 0 ]; then
+            RUST_WHY="skipped with --no-console: it adds no Rust, and no cargo was found"
+        elif ask_yes "Build $RUST_FOR? It needs Rust: about 600 MB in ~/.rustup and ~/.cargo, no admin, a few minutes" y; then
+            info "installing Rust with rustup into ~/.rustup and ~/.cargo (no admin, shell profile untouched)"
+            RUN_SOFT=1 run_sh "install Rust (rustup)" "$DL https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path"
+            if [ "$PRINT" = 1 ]; then CARGO="$RUSTUP_CARGO"
+            elif [ -x "$RUSTUP_CARGO" ]; then CARGO="$RUSTUP_CARGO"; RUST_BY_US=1
+            else RUST_WHY="Rust could not be installed (see $LOG_FILE)"; warn "$RUST_FOR skipped: $RUST_WHY"; fi
+        else
+            RUST_WHY="you chose not to install Rust; re-run the installer to add it"
+        fi
+    fi
+    [ -n "$CARGO" ]
+}
+# build_crate "what it is" NAME PIN BIN ROOT: cargo install it with --root ROOT ("" = cargo's
+# own). Soft: a failure is one warning plus the command to run by hand; returns 1.
+build_crate() {
+    _bc_what="$1"; _bc_name="$2"; _bc_pin="$3"; _bc_bin="$4"; _bc_root="$5"
+    info "compiling it from crates.io (a few minutes the first time)"
+    set -- "$CARGO" install --locked --force
+    [ -n "$_bc_root" ] && set -- "$@" --root "$_bc_root"
+    set -- "$@" "$_bc_name" --version "$_bc_pin"
+    RUN_SOFT=1 run "build $_bc_what" "$@"
+    [ "$PRINT" = 1 ] && return 0
+    if [ "$RUN_RC" = 0 ] && crate_installed "$_bc_bin" "$_bc_name" "$_bc_pin"; then
+        ok "installed $_bc_name $_bc_pin: $_bc_bin"; return 0
+    fi
+    [ "$RUN_RC" = 0 ] && warn "cargo reported success but $_bc_bin does not answer --version"
+    info "build it by hand: $(show_cmd "$@")"
+    return 1
+}
 if [ "$WITH_CONSOLE" = 0 ]; then
-    [ "$PRINT" = 0 ] && console_installed && CONSOLE_OK=1
+    CONSOLE_OK="$CONSOLE_HAVE"
 else
     step "Terminal console ($CONSOLE_NAME $CONSOLE_PIN)"
-    _rust_old=""
-    if [ "$PRINT" = 0 ] && console_installed; then
-        ok "$CONSOLE_NAME $CONSOLE_PIN already installed: $CONSOLE_BIN"
-        CONSOLE_OK=1
-    elif [ "$HAS_CC" = 0 ]; then
-        CONSOLE_WHY="building it needs a C compiler: $([ "$OS_ID" = macos ] && echo 'xcode-select --install' || echo 'sudo apt-get install -y build-essential (Debian/Ubuntu)')"
-        warn "terminal console skipped: $CONSOLE_WHY; then run the installer again"
-    else
-        find_cargo || true
-        if [ -n "$CARGO" ] && [ "$PRINT" = 0 ] && [ "$(cargo_minor "$CARGO")" -lt 1087 ] 2>/dev/null; then
-            _rust_old="$("$CARGO" --version 2>/dev/null | awk '{print $2}')"
-            if [ -x "$(dirname "$CARGO")/rustup" ]; then
-                CONSOLE_WHY="it needs Rust 1.87 or later and $CARGO is $_rust_old; update it (rustup update stable)"
-                warn "terminal console skipped: $CONSOLE_WHY, then run the installer again"
-                CARGO=""
-            else
-                info "cargo $_rust_old ($CARGO) is older than the Rust 1.87 the console needs: adding a current Rust with rustup"
-                CARGO=""; [ -x "$RUSTUP_CARGO" ] && [ "$(cargo_minor "$RUSTUP_CARGO")" -ge 1087 ] 2>/dev/null && CARGO="$RUSTUP_CARGO"
-                [ -n "$CARGO" ] || _rust_old="rustup"
-            fi
-        fi
-        if [ -z "$CARGO" ] && { [ -z "$_rust_old" ] || [ "$_rust_old" = rustup ]; }; then
-            if ask_yes "Build the terminal console? It needs Rust: about 600 MB in ~/.rustup and ~/.cargo, no admin, a few minutes" y; then
-                info "installing Rust with rustup into ~/.rustup and ~/.cargo (no admin, shell profile untouched)"
-                RUN_SOFT=1 run_sh "install Rust (rustup)" "$DL https://sh.rustup.rs | sh -s -- -y --profile minimal --no-modify-path"
-                if [ "$PRINT" = 1 ]; then CARGO="$RUSTUP_CARGO"
-                elif [ -x "$RUSTUP_CARGO" ]; then CARGO="$RUSTUP_CARGO"; RUST_BY_US=1
-                else CONSOLE_WHY="Rust could not be installed (see $LOG_FILE)"; warn "terminal console skipped: $CONSOLE_WHY"; fi
-            else
-                CONSOLE_WHY="you chose not to install Rust; re-run the installer to add it"
-            fi
-        fi
-        if [ -n "$CARGO" ]; then
-            info "compiling it from crates.io (a few minutes the first time)"
-            set -- "$CARGO" install --locked --force
-            [ -n "$CRATE_ROOT" ] && set -- "$@" --root "$CRATE_ROOT"
-            RUN_SOFT=1 run "build the terminal console" "$@" "$CONSOLE_NAME" --version "$CONSOLE_PIN"
-            if [ "$PRINT" = 1 ]; then CONSOLE_OK=1
-            elif [ "$RUN_RC" = 0 ] && console_installed; then
-                CONSOLE_OK=1; ok "installed $CONSOLE_NAME $CONSOLE_PIN: $CONSOLE_BIN"
-            else
-                CONSOLE_WHY="the build failed (see $LOG_FILE)"
-                [ "$RUN_RC" = 0 ] && warn "cargo reported success but $CONSOLE_BIN does not answer --version"
-            fi
-        fi
-    fi
+    if [ "$CONSOLE_HAVE" = 1 ]; then
+        ok "$CONSOLE_NAME $CONSOLE_PIN already installed: $CONSOLE_BIN"; CONSOLE_OK=1
+    elif ! rust_cargo; then CONSOLE_WHY="$RUST_WHY"
+    elif build_crate "the terminal console" "$CONSOLE_NAME" "$CONSOLE_PIN" "$CONSOLE_BIN" "$CRATE_ROOT"; then CONSOLE_OK=1
+    else CONSOLE_WHY="the build failed (see $LOG_FILE)"; fi
 fi
-
-if [ "$WITH_CODE_CLI" = 1 ]; then
-    step "AbstractCode terminal client (crates.io)"
-    _c="$AF_CRATE_CODE_CLI"
-    if [ -n "$CARGO" ] || find_cargo; then
-        run "cargo install ${_c%@*}" "$CARGO" install --locked "${_c%@*}" --version "${_c##*@}"
-        info "run it: ${_c%@*} --gateway-url $BASE_URL"
-    else
-        warn "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked ${_c%@*} --version ${_c##*@}"
-    fi
+if [ "$WITH_CODE_CLI" = 0 ]; then
+    CODE_OK="$CODE_HAVE"
+else
+    step "AbstractCode terminal client ($CODE_NAME $CODE_PIN)"
+    if [ "$CODE_HAVE" = 1 ]; then
+        ok "$CODE_NAME $CODE_HAVE_V already installed ($CODE_PIN or later): $CODE_BIN"; CODE_OK=1
+    elif ! rust_cargo; then
+        CODE_WHY="$RUST_WHY"
+        # Under --no-console nothing above said it (the console step warns for both).
+        [ "$WITH_CONSOLE" = 0 ] && info "AbstractCode's terminal client skipped: $CODE_WHY"
+    elif build_crate "AbstractCode's terminal client" "$CODE_NAME" "$CODE_PIN" "$CODE_BIN" "$CODE_ROOT"; then CODE_OK=1
+    else CODE_WHY="the build failed (see $LOG_FILE)"; fi
 fi
 
 if [ "$WITH_OLLAMA" = 1 ]; then
@@ -1743,8 +1868,16 @@ fi
 # gateway keeps it in its data dir. Before the gateway has written it, the command names that file.
 _tui_exe="$CONSOLE_NAME"; [ "$CONSOLE_BIN" = "$TOOL_BIN/$CONSOLE_NAME" ] || _tui_exe="$(q "$CONSOLE_BIN")"
 _tui_tok=""; [ "$PRINT" = 0 ] && [ -r "$TOKEN_FILE" ] && _tui_tok="$(tr -d '[:space:]' <"$TOKEN_FILE")"
-if [ -n "$_tui_tok" ]; then TUI_CMD="$_tui_exe --gateway-url $BASE_URL --token $_tui_tok"
-else TUI_CMD="$_tui_exe --gateway-url $BASE_URL --token <admin token: cat $(q "$TOKEN_FILE")>"; fi
+_code_exe="$CODE_NAME"; [ "$CODE_BIN" = "$TOOL_BIN/$CODE_NAME" ] || _code_exe="$(q "$CODE_BIN")"
+if [ -n "$_tui_tok" ]; then _tok_arg="--token $_tui_tok"
+else _tok_arg="--token <admin token: cat $(q "$TOKEN_FILE")>"; fi
+TUI_CMD="$_tui_exe --gateway-url $BASE_URL $_tok_arg"
+# AbstractCode's terminal client signs in once with the admin token given directly (the installer
+# never saves it for you) and then follows the gateway pointer, so no --gateway-url. On this
+# machine `abstractgateway apps tui-command code` opens it signed in without handling a token (it
+# finds the gateway through its data dir: a custom one is passed on).
+CODE_LOGIN="$_code_exe login $_tok_arg"
+TUI_COMMAND="abstractgateway apps tui-command code"; [ "$DATA_DIR_CUSTOM" = 1 ] && TUI_COMMAND="$TUI_COMMAND --data-dir $(q "$DATA_DIR")"
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     # The plain-language part first: what a non-technical user needs to know.
     printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
@@ -1765,6 +1898,14 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     else
         echo "    Terminal:  not installed: $CONSOLE_WHY"
     fi
+    if [ "$CODE_OK" = 1 ]; then
+        echo "  AbstractCode, the coding client, in the terminal:"
+        echo "  Sign in (terminal, once): $CODE_LOGIN"
+        echo "    then run: $_code_exe"
+        echo "    or, on this machine, without a token: $TUI_COMMAND"
+    else
+        echo "  AbstractCode (terminal): not installed: $CODE_WHY"
+    fi
     if [ "$MODE" = service ]; then
         echo "  It starts by itself when you log in; nothing to launch."
     else
@@ -1783,7 +1924,19 @@ fi
 printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): nothing was changed.' || echo 'Details')" "$C_0"
 printf '  %-11s %s\n' "Console:" "$BASE_URL/console" "Gateway:" "$GW_SPEC ($PROFILE profile)" \
     "Terminal:" "$([ "$CONSOLE_OK" = 1 ] && echo "$TUI_CMD" || echo "not installed ($CONSOLE_WHY)")" \
+    "Code:" "$([ "$CODE_OK" = 1 ] && echo "$_code_exe   (sign in once: $CODE_LOGIN; or on this machine: $TUI_COMMAND)" || echo "not installed ($CODE_WHY)")" \
     "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
+echo ""
+# What each command on PATH is (the operator's first question is "abstractgateway-config, what
+# is that?"). The crates are listed by full path when they are not in the tool bin dir.
+cmd_line() { printf '      %-24s %s\n' "$1" "$2"; }
+echo "  Commands (in $TOOL_BIN):"
+cmd_line abstractgateway "the gateway: serve, service, network, models, engines, apps"
+cmd_line abstractgateway-config "the gateway's admin command: status, claim-url (a new console sign-in link), defaults and set-default (model routing), get/set runtime settings, bootstrap-admin"
+[ "$CONSOLE_OK" = 1 ] && cmd_line "$_tui_exe" "the terminal console (Terminal: above)"
+[ "$CODE_OK" = 1 ] && cmd_line "$_code_exe" "AbstractCode, the coding client, in the terminal (Code: above)"
+for _p in $CLI_FROM; do cmd_line "$_p" "$(af_cli_about "$_p")"; done
+[ -z "$CLI_TAKEN" ] || echo "  Not exposed (a command name is taken, see the warning above): $CLI_TAKEN"
 echo ""
 echo "  Status:     $([ "$MODE" = service ] && echo "abstractgateway service status" || echo "curl $BASE_URL/api/health")"
 echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service uninstall   (stops it and removes the login entry; data is kept)" || echo "kill \$(cat $(q "$PID_FILE"))")"

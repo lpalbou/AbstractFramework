@@ -15,10 +15,11 @@
       1. preflight: Windows build, arch, execution policy (Group Policy), disk, a free port
       2. uv (https://docs.astral.sh/uv) if missing, then Python 3.12 through uv
       3. uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"
-         (prebuilt wheels only: no compiler / MSVC Build Tools needed)
-      4. the terminal console (abstractgateway-console, built with cargo when Rust is
-         installed; -NoConsole skips it), then the optional parts: Node.js
-         (nodejs-wheel), AbstractCode's terminal client (cargo), Ollama, LM Studio
+         (prebuilt wheels only: no compiler / MSVC Build Tools needed), which also puts
+         AbstractCore's and its voice/vision/music commands on PATH (-NoCoreCli: not)
+      4. the terminal console (abstractgateway-console) and AbstractCode's terminal client
+         (abstractcode), built with cargo when Rust is installed (-NoConsole, -NoCodeCli
+         skip them), then the optional parts: Node.js (nodejs-wheel), Ollama, LM Studio
       5. start at login: asked when a person is at the console (Enter = yes, no answer
          within -AskWait seconds = the previous choice, or no on a first install; without
          a console it stays as it was, off on a first install, and the summary says how
@@ -55,8 +56,10 @@ param(
     [switch]$WithApps,
     [switch]$WithConsole,   # the default now; kept for older command lines
     [switch]$NoConsole,
-    [switch]$WithCodeCli,
-    [switch]$WithCoreCli,
+    [switch]$WithCodeCli,   # the default now; kept for older command lines
+    [switch]$NoCodeCli,     # skip AbstractCode's terminal client (abstractcode)
+    [switch]$WithCoreCli,   # the default now; kept for older command lines
+    [switch]$NoCoreCli,     # do not put AbstractCore's (and voice/vision/music) commands on PATH
     [switch]$WithOllama,
     [switch]$WithLmStudio,
     [switch]$Full,
@@ -82,6 +85,32 @@ $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.4.0', '@abstractframework/code@0.6.0', '@abstractframework/observer@0.2.0', '@abstractframework/continuum@0.4.0', '@abstractframework/entity@0.3.0')
 $AfCrateConsole = 'abstractgateway-console@0.11.0'
 $AfCrateCodeCli = 'abstractcode@0.7.0'
+# Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
+# the parent of the uv tool bin folder, so they land next to abstractgateway.exe (the folder the
+# gateway's Apps page also updates abstractcode in); cargo's own root when that folder is not
+# named ...\bin. .Code is the ONE place that decides where abstractcode goes; the build, the
+# version check, the summary and the uninstall all follow it.
+function Get-CrateRoots([string]$ToolBin) {
+    $root = if ($ToolBin -and (Split-Path -Leaf $ToolBin) -eq 'bin') { Split-Path -Parent $ToolBin } else { '' }
+    return @{ Console = $root; Code = $root }
+}
+# The user commands of the gateway's own environment exposed next to abstractgateway and
+# abstractgateway-config (uv tool install --with-executables-from; -NoCoreCli leaves them out),
+# with every name each package declares: uv exposes all of a package's executables or none and
+# refuses the WHOLE install when one already exists, so a package whose name another program has
+# is left out. Same list as install.sh (tests/test_install_profiles.py checks).
+$AfCliExecutables = [ordered]@{
+    'abstractcore' = @('abstractcore', 'abstractcore-config', 'abstractcore-chat', 'abstractcore-endpoint', 'summarizer', 'abstractcore-summarizer', 'extractor', 'abstractcore-extractor', 'judge', 'abstractcore-judge', 'intent', 'abstractcore-intent', 'deepsearch', 'abstractcore-deepsearch')
+    'abstractvoice' = @('abstractvoice', 'abstractvoice-prefetch')
+    'abstractvision' = @('abstractvision')
+    'abstractmusic' = @('abstractmusic')
+}
+$AfCliAbout = @{
+    'abstractcore' = 'AbstractCore: --config, --status, models, engines, serve; also abstractcore-chat (a chat REPL), abstractcore-endpoint and its apps summarizer, extractor, judge, intent, deepsearch'
+    'abstractvoice' = 'voice in the terminal: a spoken chat, web, tts; abstractvoice-prefetch downloads voice models'
+    'abstractvision' = 'images in the terminal: cli (generate), download, provider-models'
+    'abstractmusic' = 'music in the terminal: t2m (text to music)'
+}
 $AfDocs = 'https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md'
 $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1'
 
@@ -295,6 +324,7 @@ function Main {
     if ($Port -eq 0 -and $env:AF_PORT) { $Port = [int]$env:AF_PORT }
     if (-not $Pin -and $env:AF_PIN) { $Pin = $env:AF_PIN }
     if (-not $From -and $env:AF_FROM) { $From = $env:AF_FROM }
+    $dataDirCustom = [bool]($DataDir -or $env:AF_DATA_DIR -or $env:ABSTRACTGATEWAY_DATA_DIR)
     if (-not $DataDir) {
         if ($env:AF_DATA_DIR) { $DataDir = $env:AF_DATA_DIR }
         elseif ($env:ABSTRACTGATEWAY_DATA_DIR) { $DataDir = $env:ABSTRACTGATEWAY_DATA_DIR }
@@ -416,18 +446,40 @@ function Main {
                 Invoke-Native -Description 'uninstall nodejs-wheel' -Argv @($uv, 'tool', 'uninstall', 'nodejs-wheel') | Out-Null
             }
         } else { Write-Info 'uv not found; nothing to uninstall there' }
-        # The terminal console this installer built (cargo install, into cargo's bin dir).
-        $cName = ($AfCrateConsole -split '@', 2)[0]
+        # The terminal console and AbstractCode's terminal client this installer built (cargo
+        # install, into cargo's bin dir). The uv tool's exposed commands went with it above.
         $cBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
-        $cExe = Join-Path $cBin "$cName$exeSuffix"
-        if (Test-Path -LiteralPath $cExe) {
-            Write-Step 'Terminal console'
-            $cCargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cBin "cargo$exeSuffix")) { Join-Path $cBin "cargo$exeSuffix" } else { $null }
-            if ($cCargo) { Invoke-Native -Description 'uninstall the terminal console' -Argv @($cCargo, 'uninstall', $cName) -Soft | Out-Null }
+        $cCargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cBin "cargo$exeSuffix")) { Join-Path $cBin "cargo$exeSuffix" } else { $null }
+        $roots = Get-CrateRoots $toolBin
+        foreach ($crate in @(
+                @{ Spec = $AfCrateConsole; Root = $roots.Console; What = 'the terminal console'; Title = 'Terminal console' },
+                @{ Spec = $AfCrateCodeCli; Root = $roots.Code; What = 'AbstractCode''s terminal client'; Title = 'AbstractCode terminal client' })) {
+            $cName = ($crate.Spec -split '@', 2)[0]
+            $cExe = Join-Path $(if ($crate.Root) { Join-Path $crate.Root 'bin' } else { $cBin }) "$cName$exeSuffix"
+            if (-not (Test-Path -LiteralPath $cExe)) { continue }
+            Write-Step $crate.Title
+            $cArgv = @($cCargo, 'uninstall')
+            if ($crate.Root) { $cArgv += @('--root', $crate.Root) }
+            if ($cCargo) { Invoke-Native -Description "uninstall $($crate.What)" -Argv ($cArgv + @($cName)) -Soft | Out-Null }
             if ($script:DryRun -or (Test-Path -LiteralPath $cExe)) {
                 Write-Host "  `$ Remove-Item '$cExe'" -ForegroundColor DarkGray
                 if (-not $script:DryRun) { Remove-Item -LiteralPath $cExe -Force -ErrorAction SilentlyContinue }
             }
+        }
+        # Gateways before 0.7.1 installed their terminal app into <data>\apps\bin (not on PATH). The
+        # data dir stays without -Purge, so remove what the gateway put there: its installable terminal
+        # apps (apps_manager TUI_BY_APP: abstractcode; it never installs the console), and the folder
+        # only when that leaves it empty.
+        $staleApps = Join-Path $DataDir 'apps\bin'
+        foreach ($t in @('abstractcode')) {
+            $f = Join-Path $staleApps "$t$exeSuffix"
+            if (-not (Test-Path -LiteralPath $f)) { continue }
+            Write-Host "  `$ Remove-Item '$f'" -ForegroundColor DarkGray
+            $script:Twins.Add("Remove-Item '$f'")
+            if (-not $script:DryRun) { Remove-Item -LiteralPath $f -Force -ErrorAction SilentlyContinue }
+        }
+        if (-not $script:DryRun -and (Test-Path -LiteralPath $staleApps) -and -not (Get-ChildItem -LiteralPath $staleApps -Force | Select-Object -First 1)) {
+            Remove-Item -LiteralPath $staleApps -Force -ErrorAction SilentlyContinue
         }
         Write-Step 'Data'
         # Before the data dir goes (-Purge): the pointer is matched against its resolved path.
@@ -669,7 +721,7 @@ function Main {
         elseif ($Full) { $argv += @('--with', 'llama-cpp-python') }
         $argv += @('--overrides', 'uv-overrides.txt')
         foreach ($p in (Get-NoBuildPackages $Full)) { $argv += @('--no-build-package', $p) }
-        if ($WithCoreCli) { $argv += @('--with-executables-from', 'abstractcore') }
+        foreach ($p in $cliFrom) { $argv += @('--with-executables-from', $p) }
         if ($From) { $argv += '--reinstall' }
         $shownInstall = "Set-Location $(Format-Arg $DataDir); $(Format-Cmd ($argv + @($gwSpec)))"
         $desc = if ($Gguf) { 'install abstractgateway with the llama.cpp cpu wheel' } else { 'install abstractgateway' }
@@ -688,6 +740,32 @@ function Main {
             $voice.Spec = ''; $voice.Result = "skipped: its packages did not install on this system (see $($script:LogFile))"
         }
         return (Install-Gateway $Gguf -Soft:$Soft)
+    }
+    # The packages whose commands this install exposes ($AfCliExecutables): each one whose names
+    # are all free in the tool bin dir, or already the gateway tool's own (a re-run). A name that
+    # another program has (a file, or another uv tool's command) would make uv refuse the whole
+    # install, so that package is left out and the summary says so.
+    $cliFrom = @(); $cliTaken = @()
+    if (-not $NoCoreCli) {
+        $ours = @()
+        if ($uv -and (Test-Path -LiteralPath $uv)) {
+            $tool = $null
+            foreach ($l in @(& $uv tool list 2>$null)) {
+                if ($l -match '^(\S+) v') { $tool = $Matches[1] }
+                elseif ($tool -eq 'abstractgateway' -and $l -match '^- (\S+)') { $ours += $Matches[1] }
+            }
+        }
+        foreach ($p in $AfCliExecutables.Keys) {
+            $taken = $null
+            foreach ($n in $AfCliExecutables[$p]) {
+                $f = Join-Path $toolBin "$n$exeSuffix"
+                if ((Test-Path -LiteralPath $f) -and ($ours -notcontains $n) -and ($ours -notcontains "$n$exeSuffix")) { $taken = $f; break }
+            }
+            if ($taken) {
+                $cliTaken += $p
+                Write-Warn2 "$p commands not exposed: $taken already exists (another program's); remove it and run the installer again to add them"
+            } else { $cliFrom += $p }
+        }
     }
     $ggufResult = ''
     if ($before -and $Pin -eq 'latest' -and -not $From -and $state['PROFILE'] -eq $profileName) {
@@ -747,34 +825,69 @@ function Main {
         foreach ($s in $AfNpmApps) { Write-Host "      npx -y $s --gateway-url $baseUrl" -ForegroundColor Gray }
     }
 
-    # Terminal console: crates.io publishes no prebuilt binary, so cargo builds it. Rust on
-    # Windows needs the MSVC Build Tools (a large install that may ask for admin), so this
-    # script does not add Rust itself: without cargo it prints the two commands instead.
+    # Terminal console and AbstractCode's terminal client: crates.io publishes no prebuilt binary,
+    # so cargo builds both, into cargo's bin dir. Rust on Windows needs the MSVC Build Tools (a
+    # large install that may ask for admin), so this script does not add Rust itself: without
+    # cargo it says how, once. A failed build never fails the install (one warning, and the
+    # command to run by hand): the web console does everything the terminal one does, and the
+    # gateway serves AbstractCode's browser client at /apps/code/.
     $consoleName, $consolePin = $AfCrateConsole -split '@', 2
+    $codeName, $codePin = $AfCrateCodeCli -split '@', 2
     $consoleOk = $false; $consoleWhy = 'skipped with -NoConsole'
+    $codeOk = $false; $codeWhy = 'skipped with -NoCodeCli'
     $cargoBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
     $cargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cargoBin "cargo$exeSuffix")) { Join-Path $cargoBin "cargo$exeSuffix" } else { $null }
-    $consoleExe = Join-Path $cargoBin "$consoleName$exeSuffix"
-    if (-not $NoConsole) {
-        Write-Step "Terminal console ($consoleName $consolePin)"
+    $roots = Get-CrateRoots $toolBin
+    $consoleExe = Join-Path $(if ($roots.Console) { Join-Path $roots.Console 'bin' } else { $cargoBin }) "$consoleName$exeSuffix"
+    $codeExe = Join-Path $(if ($roots.Code) { Join-Path $roots.Code 'bin' } else { $cargoBin }) "$codeName$exeSuffix"
+    # Test-Crate: the binary answers --version with that crate at the pin; -AtLeast accepts a later
+    # version too (the gateway's Apps page updates abstractcode in place: never downgrade it).
+    $script:CrateVersion = ''
+    function Test-Crate([string]$Exe, [string]$Name, [string]$CratePin, [switch]$AtLeast) {
+        $script:CrateVersion = ''
+        if ($script:DryRun -or -not (Test-Path -LiteralPath $Exe)) { return $false }
+        try { $line = "$(& $Exe --version 2>$null | Select-Object -First 1)" } catch { return $false }
+        if (-not $line.StartsWith("$Name ")) { return $false }
+        $script:CrateVersion = $line.Substring($Name.Length + 1).Trim()
+        if (-not $AtLeast) { return ($script:CrateVersion -eq $CratePin) }
         $have = $null
-        if (-not $script:DryRun -and (Test-Path -LiteralPath $consoleExe)) { try { $have = (& $consoleExe --version 2>$null | Select-Object -First 1) } catch { } }
-        if ($have -eq "$consoleName $consolePin") { Write-Ok "$consoleName $consolePin already installed: $consoleExe"; $consoleOk = $true }
-        elseif ($cargo) {
-            Write-Info 'compiling it from crates.io (a few minutes the first time)'
-            $built = Invoke-Native -Description 'build the terminal console' -Argv @($cargo, 'install', '--locked', '--force', $consoleName, '--version', $consolePin) -Soft
-            if ($script:DryRun -or $built) { $consoleOk = $true; if (-not $script:DryRun) { Write-Ok "installed $consoleName $consolePin`: $consoleExe" } }
-            else { $consoleWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
-        } else {
-            $consoleWhy = "Rust is not installed: install it from https://rustup.rs (it sets up the MSVC Build Tools), then run: cargo install --locked $consoleName --version $consolePin"
-            Write-Warn2 "terminal console skipped: $consoleWhy"
-        }
+        if (-not [version]::TryParse($script:CrateVersion, [ref]$have)) { return $false }
+        return ($have -ge [version]$CratePin)
     }
-    if ($WithCodeCli) {
-        Write-Step 'AbstractCode terminal client (crates.io)'
-        $i = $AfCrateCodeCli.LastIndexOf('@'); $name = $AfCrateCodeCli.Substring(0, $i); $v = $AfCrateCodeCli.Substring($i + 1)
-        if ($cargo) { Invoke-Native -Description "cargo install $name" -Argv @($cargo, 'install', '--locked', $name, '--version', $v) | Out-Null; Write-Info "run it: $name --gateway-url $baseUrl" }
-        else { Write-Warn2 "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked $name --version $v" }
+    function Install-Crate([string]$What, [string]$Name, [string]$CratePin, [string]$Exe, [string]$Root = '') {
+        Write-Info 'compiling it from crates.io (a few minutes the first time)'
+        $argv = @($cargo, 'install', '--locked', '--force')
+        if ($Root) { $argv += @('--root', $Root) }
+        $argv += @($Name, '--version', $CratePin)
+        $built = Invoke-Native -Description "build $What" -Argv $argv -Soft
+        if ($script:DryRun) { return $true }
+        if ($built) { Write-Ok "installed $Name $CratePin`: $Exe"; return $true }
+        Write-Info "build it by hand: $(Format-Cmd $argv)"
+        return $false
+    }
+    $consoleHave = Test-Crate $consoleExe $consoleName $consolePin
+    $codeHave = Test-Crate $codeExe $codeName $codePin -AtLeast
+    $codeHaveVersion = $script:CrateVersion
+    $rustFor = @()
+    if (-not $NoConsole -and -not $consoleHave) { $rustFor += 'the terminal console' }
+    if (-not $NoCodeCli -and -not $codeHave) { $rustFor += "AbstractCode's terminal client" }
+    $noCargoWhy = 'Rust is not installed: install it from https://rustup.rs (it sets up the MSVC Build Tools), then run the installer again'
+    $rustWarned = $false
+    if ($NoConsole) { $consoleOk = $consoleHave }
+    else {
+        Write-Step "Terminal console ($consoleName $consolePin)"
+        if ($consoleHave) { Write-Ok "$consoleName $consolePin already installed: $consoleExe"; $consoleOk = $true }
+        elseif (-not $cargo) { $consoleWhy = $noCargoWhy; Write-Warn2 "$($rustFor -join ' and ') skipped: $noCargoWhy"; $rustWarned = $true }
+        elseif (Install-Crate 'the terminal console' $consoleName $consolePin $consoleExe $roots.Console) { $consoleOk = $true }
+        else { $consoleWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
+    }
+    if ($NoCodeCli) { $codeOk = $codeHave }
+    else {
+        Write-Step "AbstractCode terminal client ($codeName $codePin)"
+        if ($codeHave) { Write-Ok "$codeName $codeHaveVersion already installed ($codePin or later): $codeExe"; $codeOk = $true }
+        elseif (-not $cargo) { $codeWhy = $noCargoWhy; if (-not $rustWarned) { Write-Warn2 "$($rustFor -join ' and ') skipped: $noCargoWhy" } }
+        elseif (Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $roots.Code) { $codeOk = $true }
+        else { $codeWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
     }
 
     $hasWinget = Test-Command 'winget'
@@ -948,7 +1061,14 @@ function Main {
     $tokenPath = Join-Path $DataDir 'auth\bootstrap-admin-token'
     $tuiExe = if (Test-Command $consoleName) { $consoleName } else { "& '$consoleExe'" }
     $tuiTok = if (-not $script:DryRun -and (Test-Path -LiteralPath $tokenPath)) { (Get-Content -LiteralPath $tokenPath -Raw).Trim() } else { '' }
-    $tuiCmd = if ($tuiTok) { "$tuiExe --gateway-url $baseUrl --token $tuiTok" } else { "$tuiExe --gateway-url $baseUrl --token <admin token: Get-Content '$tokenPath'>" }
+    $codeShown = if (Test-Command $codeName) { $codeName } else { "& '$codeExe'" }
+    $codeTok = if ($tuiTok) { $tuiTok } else { "<admin token: Get-Content '$tokenPath'>" }
+    $tuiCmd = "$tuiExe --gateway-url $baseUrl --token $codeTok"
+    # AbstractCode's terminal client signs in once with the admin token given directly (the installer
+    # never saves it for you), then follows the gateway pointer, so no --gateway-url. On this machine
+    # `abstractgateway apps tui-command code` opens it signed in without handling a token.
+    $tuiCommand = 'abstractgateway apps tui-command code'
+    if ($dataDirCustom) { $tuiCommand += " --data-dir $(Format-Arg $DataDir)" }
     if (-not $script:DryRun -and -not $NoStart) {
         Write-Host '  Configure it from either console (the same settings, both need this machine):'
         # An opened claim link is spent (the browser redeemed it): show the plain address then.
@@ -957,14 +1077,31 @@ function Main {
         elseif ($claimed) { Write-Host "               one-time sign-in link (10 minutes); a new one: abstractgateway-config claim-url --base-url $baseUrl" }
         else { Write-Host "               sign in as 'admin' with the token in $tokenPath" }
         if ($consoleOk) { Write-Host "    Terminal:  $tuiCmd" } else { Write-Host "    Terminal:  not installed: $consoleWhy" }
+        if ($codeOk) {
+            Write-Host '  AbstractCode, the coding client, in the terminal:'
+            Write-Host "  Sign in (terminal, once): $codeShown login --token $codeTok"
+            Write-Host "    then run: $codeShown"
+            Write-Host "    or, on this machine, without a token: $tuiCommand"
+        } else { Write-Host "  AbstractCode (terminal): not installed: $codeWhy" }
         Write-Host ''
     }
     Write-Host "  Console:    $baseUrl/console"
     Write-Host "  Terminal:   $(if ($consoleOk) { $tuiCmd } else { "not installed ($consoleWhy)" })"
+    Write-Host "  Code:       $(if ($codeOk) { "$codeShown   (sign in once: $codeShown login --token $codeTok; or on this machine: $tuiCommand)" } else { "not installed ($codeWhy)" })"
     Write-Host "  Gateway:    $gwSpec ($profileName profile)"
     Write-Host "  Data dir:   $DataDir"
     Write-Host "  Logs:       $logDir"
     Write-Host "  Mode:       $mode"
+    Write-Host ''
+    # What each command on PATH is (the first question is "abstractgateway-config, what is that?").
+    Write-Host "  Commands (in $toolBin):"
+    $cmdLine = { param($n, $a) Write-Host ('      {0,-24} {1}' -f $n, $a) }
+    & $cmdLine 'abstractgateway' 'the gateway: serve, service, network, models, engines, apps'
+    & $cmdLine 'abstractgateway-config' 'the gateway''s admin command: status, claim-url (a new console sign-in link), defaults and set-default (model routing), get/set runtime settings, bootstrap-admin'
+    if ($consoleOk) { & $cmdLine $tuiExe 'the terminal console (Terminal: above)' }
+    if ($codeOk) { & $cmdLine $codeShown 'AbstractCode, the coding client, in the terminal (Code: above)' }
+    foreach ($p in $cliFrom) { & $cmdLine $p $AfCliAbout[$p] }
+    if ($cliTaken.Count) { Write-Host "  Not exposed (a command name is taken, see the warning above): $($cliTaken -join ' ')" }
     Write-Host ''
     if ($mode -eq 'service') {
         Write-Host '  Status:     abstractgateway service status'

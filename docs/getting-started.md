@@ -44,7 +44,34 @@ browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. T
 builds the terminal console, `abstractgateway-console`, which offers the same guide on a server
 without a browser (its **Network** screen, `N`, decides who can reach the gateway); over SSH the
 installer offers to open it at the end, and its summary prints the command (see
-[Headless or remote machine](install.md#headless-or-remote-machine)). Then
+[Headless or remote machine](install.md#headless-or-remote-machine)).
+
+The commands it puts on PATH (in `~/.local/bin`; open a new terminal), each listed in its summary:
+
+- `abstractgateway`: the gateway itself (`serve`, `service`, `network`, `models`, `engines`).
+- `abstractgateway-config`: the gateway's admin and configuration command: `status`, `claim-url`
+  (a new one-time console sign-in link), `set-default` (which model each capability uses),
+  `get` / `set` (runtime settings), `bootstrap-admin`.
+- `abstractgateway-console`: the terminal console; the summary prints it ready to paste, with
+  `--gateway-url` and `--token`.
+- `abstractcode`: AbstractCode's terminal client. Sign it in once with
+  `abstractcode login --token <admin token>` (the summary prints this line with your token), then
+  run `abstractcode`; or, on the gateway's computer, `abstractgateway apps tui-command code` opens
+  it signed in without a token.
+- AbstractCore's commands: `abstractcore` (also `abstractcore-config`: setup wizard, models,
+  engines, `serve`), `abstractcore-chat` (a chat in the terminal), `abstractcore-endpoint` (a
+  single-model `/v1` server), and its apps `summarizer` (summarize a document), `extractor`
+  (entities and relationships as a knowledge graph), `judge` (LLM-as-a-judge scoring), `intent`
+  (intent analysis) and `deepsearch` (a research agent that writes a sourced report), each also as
+  `abstractcore-<app>`.
+- `abstractvoice` (a spoken chat, `tts`, `web`) and `abstractvoice-prefetch` (download voice
+  models), `abstractvision` (generate or edit images and video: `t2i`, `i2i`, `t2v`, …) and
+  `abstractmusic` (`t2m`: text to music).
+
+A package puts all of the commands it declares on PATH (uv cannot pick a subset). `--no-console`,
+`--no-code-cli` and `--no-core-cli` leave them out, and a package whose command name another
+program already has is left out with a warning naming that file; see
+[Commands you get](install.md#commands-you-get). Then
 continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 [AbstractFlow](#author-orchestration-with-abstractflow). Step by step, what to do when something
 fails, and how to remove it: [Install](install.md); fixes for common problems:
@@ -298,8 +325,11 @@ the gateway default then runs at its next turn. See [Agent sessions](agent-sessi
 
 ### AbstractCode (terminal and browser)
 
-A coding client for durable agentic sessions on the gateway you started above. Install the Rust
-terminal client from crates.io (or download a prebuilt binary from the
+A coding client for durable agentic sessions on the gateway you started above. The installer
+already built the Rust terminal client, `abstractcode`; sign it in once with
+`abstractcode login --token <admin token>` (the installer summary prints the line with your token),
+or open it signed in on the gateway's computer with `abstractgateway apps tui-command code` (see
+[Commands you get](install.md#commands-you-get)). Otherwise install it from crates.io (or download a prebuilt binary from the
 [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases)), or run the
 browser client (the gateway console's **Apps** page opens it at `/apps/code/`, or run it with
 `npx`):

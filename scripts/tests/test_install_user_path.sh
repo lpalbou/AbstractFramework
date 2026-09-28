@@ -376,7 +376,8 @@ echo "[10] background start (--no-service): the Network setting binds it (missio
 BG_PORT=18870
 # bg_case NAME NETWORK(1|0) [STORED "mode port"]: run the installer, leave OUT/GWLOG/NETF/DATA_T.
 # These cases skip the terminal console (--no-console) unless BG_ARGS says otherwise;
-# BG_TOOLBIN overrides the uv tool bin dir, BG_CARGO=1 adds a fake cargo (log: CARGOLOG).
+# BG_TOOLBIN overrides the uv tool bin dir, BG_CARGO=1 adds a fake cargo (log: CARGOLOG;
+# BG_CARGO_FAIL=CRATE makes that crate's build fail), BG_UV_LIST is what `uv tool list` prints.
 # BG_SERVICE=1: the fake gateway has `abstractgateway service` (install starts the fake
 # server, as a login item would; its pid in SVCPID) and --no-service is not passed, so the
 # start-at-login question is under test (a fake `systemctl --user` on Linux).
@@ -397,7 +398,7 @@ CURL
 case "\$1 \${2:-}" in
   "--version "*) echo "uv 0.0.0" ;;
   "tool dir") echo "$toolbin" ;;
-  "tool list") echo "abstractgateway v9.9.9" ;;
+  "tool list") printf '%b\n' "${BG_UV_LIST:-abstractgateway v9.9.9}" ;;
 esac
 exit 0
 UV
@@ -446,7 +447,8 @@ GW
     fi
     CARGOLOG="$WORK/$name/cargo.log"
     if [[ "${BG_CARGO:-0}" == 1 ]]; then
-        # `install ... --root R NAME --version V` writes R/bin/NAME answering `--version`.
+        # `install ... --root R NAME --version V` writes R/bin/NAME answering `--version` and
+        # records it in R/.crates.toml, as cargo does; `uninstall --root R NAME` removes both.
         cat >"$bin/cargo" <<CARGO
 #!/bin/sh
 echo "cargo \$*" >>"$CARGOLOG"
@@ -454,12 +456,17 @@ echo "cargo \$*" >>"$CARGOLOG"
 root=""; ver=""; prev=""; name=""
 for a in "\$@"; do
   case "\$prev" in --root) root="\$a" ;; --version) ver="\$a" ;; esac
-  case "\$a" in abstractgateway-console) name="\$a" ;; esac
+  case "\$a" in abstractgateway-console|abstractcode) name="\$a" ;; esac
   prev="\$a"
 done
+if [ "\$1" = uninstall ]; then
+  rm -f "\$root/bin/\$name"; grep -v "^\\"\$name " "\$root/.crates.toml" >"\$root/.crates.new"; mv "\$root/.crates.new" "\$root/.crates.toml"; exit 0
+fi
+[ "\$name" = "${BG_CARGO_FAIL:-none}" ] && { echo "error: could not compile \$name" >&2; exit 101; }
 mkdir -p "\$root/bin"
 printf '#!/bin/sh\\necho "\$*" >>"\$0.args"\\necho "%s %s"\\n' "\$name" "\$ver" >"\$root/bin/\$name"
 chmod +x "\$root/bin/\$name"
+echo "\\"\$name \$ver (registry+https://github.com/rust-lang/crates.io-index)\\" = [\\"\$name\\"]" >>"\$root/.crates.toml"
 exit 0
 CARGO
         chmod +x "$bin/cargo"
@@ -573,7 +580,7 @@ assert d["data_dir"] == sys.argv[3] and d["written_by"] == "installer" and d["up
     check "old gateway: the Start hint keeps --host/--port" "$(has "$OUT" "abstractgateway serve --host 127.0.0.1 --port $BG_PORT"; echo $?)" "$OUT"
 fi
 
-echo "[11] terminal console: built by default, both consoles in the summary"
+echo "[11] terminal console and AbstractCode's terminal client: built by default, both in the summary"
 # The same fake gateway, a fake cargo, and a uv tool bin dir named .../bin, so the console
 # must be built with --root <its parent> and land next to `abstractgateway`.
 if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
@@ -582,21 +589,62 @@ else
     TB="$WORK/con/tools/bin"
     CON_PIN="$(sed -n 's/^AF_CRATE_CONSOLE="abstractgateway-console@\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
     check "console: install.sh pins the terminal console" "$([[ -n "$CON_PIN" ]]; echo $?)"
+    CODE_PIN="$(sed -n 's/^AF_CRATE_CODE_CLI="abstractcode@\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
+    check "code CLI: install.sh pins AbstractCode's terminal client" "$([[ -n "$CODE_PIN" ]]; echo $?)"
     BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_sandbox_123" bg_case con 1
     check "console: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
     check "console: cargo builds the pinned crate into the tool bin dir" "$(grep -qx "cargo install --locked --force --root $WORK/con/tools abstractgateway-console --version $CON_PIN" "$CARGOLOG" && [[ -x "$TB/abstractgateway-console" ]]; echo $?)" "$CARGOLOG"
     check "console: summary gives the web console and its tunnel hint" "$(has "$OUT" "Web:  *http://127.0.0.1:$BG_PORT/console" && has "$OUT" "ssh -L $BG_PORT:127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
     check "console: summary gives the terminal console command with the admin token (--token)" "$(has "$OUT" "Terminal:  abstractgateway-console --gateway-url http://127.0.0.1:$BG_PORT --token tok_sandbox_123$"; echo $?)" "$OUT"
     check "console: no 'browser now shows' claim when no browser was opened" "$(! has "$OUT" "browser now shows"; echo $?)" "$OUT"
+    check "code CLI: built by default with the same cargo and --root, next to the console" "$(grep -qx "cargo install --locked --force --root $WORK/con/tools abstractcode --version $CODE_PIN" "$CARGOLOG" && [[ -x "$TB/abstractcode" ]]; echo $?)" "$CARGOLOG"
+    # Sign-in: the token given directly, ready to paste, once; never saved by the installer; no
+    # --gateway-url (abstractcode follows the gateway pointer); the no-token way on this machine.
+    check "code CLI: summary says how to sign it in (login --token, then abstractcode; or tui-command)" "$(has "$OUT" "^  Sign in (terminal, once): abstractcode login --token tok_sandbox_123$" && has "$OUT" "^    then run: abstractcode$" && has "$OUT" "^    or, on this machine, without a token: abstractgateway apps tui-command code$" && has "$OUT" "Code:  *abstractcode   (sign in once: abstractcode login --token tok_sandbox_123; or on this machine: abstractgateway apps tui-command code)$" && ! has "$OUT" "abstractcode --gateway-url" && [[ ! -e "$WORK/con/home/.abstractcode" ]] && ! grep -qs login "$TB/abstractcode.args"; echo $?)" "$OUT"
+    check "summary: lists the commands and says what abstractgateway-config is" "$(has "$OUT" "Commands (in $TB" && has "$OUT" "^      abstractgateway-config   the gateway's admin command: status" && has "$OUT" "^      abstractcode  " && has "$OUT" "^      abstractcore  "; echo $?)" "$OUT"
+    check "core CLI: the library commands are exposed by default" "$(has "$OUT" "tool install .*--with-executables-from abstractcore --with-executables-from abstractvoice --with-executables-from abstractvision --with-executables-from abstractmusic "; echo $?)" "$OUT"
+    # --uninstall removes both binaries it built (cargo uninstall --root, as it built them).
+    run_in con AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/install.sh" --uninstall --yes
+    check "uninstall: removes the console and AbstractCode's terminal client from the tool bin dir" "$([[ $RC == 0 && ! -e "$TB/abstractgateway-console" && ! -e "$TB/abstractcode" ]] && grep -qx "cargo uninstall --root $WORK/con/tools abstractcode" "$CARGOLOG" && grep -qx "cargo uninstall --root $WORK/con/tools abstractgateway-console" "$CARGOLOG"; echo $?)" "$OUT"
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_sandbox_123" bg_case con 1
     # A re-run finds the pinned binary and does not build again.
     : >"$CARGOLOG"
     BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
     check "console: a re-run keeps the installed console (no cargo install)" "$([[ $RC == 0 ]] && ! grep -q "cargo install" "$CARGOLOG" && has "$OUT" "abstractgateway-console $CON_PIN already installed"; echo $?)" "$OUT"
+    check "code CLI: a re-run keeps it too" "$(has "$OUT" "abstractcode $CODE_PIN already installed"; echo $?)" "$OUT"
+    # The gateway updates abstractcode in place in the same folder: a newer one is kept (never
+    # downgraded to the pin); an older one is rebuilt at the pin.
+    : >"$CARGOLOG"; printf '#!/bin/sh\necho "abstractcode 9.10.0"\n' >"$TB/abstractcode"
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
+    check "code CLI: a newer abstractcode (the gateway's update) is kept, never downgraded" "$([[ $RC == 0 ]] && ! grep -q "install.* abstractcode " "$CARGOLOG" && has "$OUT" "abstractcode 9.10.0 already installed ($CODE_PIN or later)"; echo $?)" "$OUT"
+    : >"$CARGOLOG"; printf '#!/bin/sh\necho "abstractcode 0.6.9"\n' >"$TB/abstractcode"
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
+    check "code CLI: an older abstractcode is rebuilt at the pin" "$([[ $RC == 0 ]] && grep -qx "cargo install --locked --force --root $WORK/con/tools abstractcode --version $CODE_PIN" "$CARGOLOG"; echo $?)" "$OUT"
     # A distro cargo older than 1.87 and no rustup: rustup is tried (refused here), soft.
     BG_TOOLBIN="$WORK/con3/tools/bin" BG_CARGO=1 BG_CARGO_VERSION=1.75.0 BG_ARGS=" " bg_case con3 1
     check "console: an old cargo without rustup falls back to rustup, and its failure is soft" "$([[ $RC == 0 ]] && has "$OUT" "cargo 1.75.0 .* is older than the Rust 1.87" && has "$OUT" "sh.rustup.rs" && has "$OUT" "Terminal:  not installed: Rust could not be installed" && ! grep -q "cargo install" "$CARGOLOG"; echo $?)" "$OUT"
+    check "code CLI: the same Rust, the same reason" "$(has "$OUT" "AbstractCode (terminal): not installed: Rust could not be installed" && [[ "$(grep -c "skipped: Rust could not be installed" "$OUT")" == 1 ]]; echo $?)" "$OUT"
     BG_TOOLBIN="$WORK/con2/tools/bin" BG_CARGO=1 BG_ARGS="--no-console" bg_case con2 1
-    check "console: --no-console builds nothing and says so" "$([[ $RC == 0 ]] && [[ ! -s "$CARGOLOG" ]] && has "$OUT" "Terminal:  not installed: skipped with --no-console"; echo $?)" "$OUT"
+    check "console: --no-console skips the console; an existing cargo still builds AbstractCode's client" "$([[ $RC == 0 ]] && ! grep -q "abstractgateway-console" "$CARGOLOG" && grep -qx "cargo install --locked --force --root $WORK/con2/tools abstractcode --version $CODE_PIN" "$CARGOLOG" && has "$OUT" "Terminal:  not installed: skipped with --no-console"; echo $?)" "$OUT"
+    BG_TOOLBIN="$WORK/con4/tools/bin" BG_CARGO=1 BG_ARGS="--no-console --no-code-cli" bg_case con4 1
+    check "--no-console --no-code-cli: cargo is not even asked" "$([[ $RC == 0 ]] && [[ ! -s "$CARGOLOG" ]] && has "$OUT" "AbstractCode (terminal): not installed: skipped with --no-code-cli"; echo $?)" "$OUT"
+    BG_TOOLBIN="$WORK/con5/tools/bin" BG_CARGO=1 BG_ARGS="--no-code-cli" bg_case con5 1
+    check "--no-code-cli: the console is built, AbstractCode's client is not" "$([[ $RC == 0 && -x "$WORK/con5/tools/bin/abstractgateway-console" && ! -e "$WORK/con5/tools/bin/abstractcode" ]] && ! grep -q "abstractcode" "$CARGOLOG"; echo $?)" "$OUT"
+    BG_TOOLBIN="$WORK/con7/tools/bin" BG_CARGO=1 BG_ARGS="--with-code-cli" bg_case con7 1
+    check "--with-code-cli: kept as an alias of the default" "$([[ $RC == 0 && -x "$WORK/con7/tools/bin/abstractcode" ]] && grep -qx "cargo install --locked --force --root $WORK/con7/tools abstractcode --version $CODE_PIN" "$CARGOLOG"; echo $?)" "$OUT"
+    # A failed build never fails the install: one warning, the command to run by hand, the summary says why.
+    BG_TOOLBIN="$WORK/con6/tools/bin" BG_CARGO=1 BG_CARGO_FAIL=abstractcode BG_ARGS=" " bg_case con6 1
+    check "code CLI: a failed build is soft: exit 0, one warning, the manual command, the summary says why" "$([[ $RC == 0 && -x "$WORK/con6/tools/bin/abstractgateway-console" ]] && [[ "$(grep -c "^  ! " "$OUT")" == "$(( $(grep -c "^  ! " "$WORK/con5/out.txt") + 1 ))" ]] && [[ "$(grep -c "AbstractCode's terminal client did not succeed" "$OUT")" == 1 ]] && has "$OUT" "build it by hand: .*cargo install --locked --force --root $WORK/con6/tools abstractcode --version $CODE_PIN" && has "$OUT" "AbstractCode (terminal): not installed: the build failed"; echo $?)" "$OUT"
+    # A command name that another program already has in the tool bin dir: that package is left
+    # out (uv would refuse the whole install); names the gateway's own tool has are fine.
+    mkdir -p "$WORK/cli/tools/bin"; printf '#!/bin/sh\n' >"$WORK/cli/tools/bin/judge"; printf '#!/bin/sh\n' >"$WORK/cli/tools/bin/abstractvoice"
+    BG_TOOLBIN="$WORK/cli/tools/bin" BG_UV_LIST='abstractgateway v9.9.9\n- abstractgateway\n- abstractgateway-config\n- judge\nother-tool v1.0\n- abstractvision' bg_case cli 1
+    check "core CLI: a name owned by the gateway tool is not a conflict; another program's is, and is said" "$([[ $RC == 0 ]] && has "$OUT" "tool install .*--with-executables-from abstractcore --with-executables-from abstractvision --with-executables-from abstractmusic " && ! has "$OUT" "executables-from abstractvoice" && has "$OUT" "abstractvoice commands not exposed: $WORK/cli/tools/bin/abstractvoice already exists (another program's)"; echo $?)" "$OUT"
+    printf '#!/bin/sh\n' >"$WORK/cli/tools/bin/abstractvision"
+    BG_TOOLBIN="$WORK/cli/tools/bin" BG_UV_LIST='abstractgateway v9.9.9\n- abstractgateway\n- judge\nother-tool v1.0\n- abstractvision' bg_case cli 1
+    check "core CLI: a name another uv tool owns is a conflict too" "$([[ $RC == 0 ]] && has "$OUT" "abstractvision commands not exposed: $WORK/cli/tools/bin/abstractvision already exists (another program's)"; echo $?)" "$OUT"
+    BG_TOOLBIN="$WORK/cli2/tools/bin" BG_ARGS="--no-console --no-core-cli" bg_case cli2 1
+    check "--no-core-cli: only the gateway's own commands" "$([[ $RC == 0 ]] && ! has "$OUT" "executables-from" && ! has "$OUT" "^      abstractcore "; echo $?)" "$OUT"
 fi
 
 echo "[12] remote or headless session: the terminal console opens at the end, signed in"
@@ -664,6 +712,24 @@ OH="$WORK/ptr_keep/home"; mkdir -p "$OH/$DATA_REL" "$OH/.abstractframework"; pri
 printf '{\n  "data_dir": "/elsewhere/other-gateway",\n  "port": 9999,\n  "schema": 1,\n  "url": "http://127.0.0.1:9999"\n}\n' >"$OH/.abstractframework/gateway.json"
 run_in ptr_keep AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
 check "--uninstall: another gateway's pointer is kept, and said so" "$([[ $RC == 0 && -f "$OH/.abstractframework/gateway.json" ]] && has "$OUT" "kept the gateway pointer"; echo $?)" "$OUT"
+
+echo "[15] uninstall removes the terminal app gateways before 0.7.1 put in <data>/apps/bin (data kept)"
+# The gateway's Apps page installed abstractcode into <data>/apps/bin (not on PATH) before 0.7.1.
+# A non-purge uninstall removes it (only the binaries the gateway installs there: TUI_BY_APP ->
+# abstractcode), and the folder only when it is then empty.
+AH="$WORK/appsbin/home"; AD="$AH/$DATA_REL"; mkdir -p "$AD/apps/bin"; printf 'MODE=background\n' >"$AD/bootstrap.env"
+printf '#!/bin/sh\n' >"$AD/apps/bin/abstractcode"; chmod +x "$AD/apps/bin/abstractcode"
+run_in appsbin -- sh "$SCRIPTS_DIR/uninstall.sh" --print
+check "--print: shows the removal of <data>/apps/bin/abstractcode, deletes nothing" "$([[ $RC == 0 && -f "$AD/apps/bin/abstractcode" ]] && has "$OUT" "rm -f '$AD/apps/bin/abstractcode'"; echo $?)" "$OUT"
+run_in appsbin AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
+check "--uninstall: the gateway-installed abstractcode and the emptied folder are gone, the data is kept" "$([[ $RC == 0 && ! -e "$AD/apps/bin" && -d "$AD/apps" && -f "$AD/bootstrap.env" ]] && has "$OUT" "rm -f '$AD/apps/bin/abstractcode'"; echo $?)" "$OUT"
+BH="$WORK/appsbin2/home"; BD="$BH/$DATA_REL"; mkdir -p "$BD/apps/bin"; printf 'MODE=background\n' >"$BD/bootstrap.env"
+printf '#!/bin/sh\n' >"$BD/apps/bin/abstractcode"; printf 'mine\n' >"$BD/apps/bin/abstractgateway-console"
+run_in appsbin2 AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
+check "--uninstall: a file the gateway never installs there is kept, and so is the folder" "$([[ $RC == 0 && ! -e "$BD/apps/bin/abstractcode" && -f "$BD/apps/bin/abstractgateway-console" ]]; echo $?)" "$OUT"
+CH="$WORK/appsbin3/home"; CD="$CH/$DATA_REL"; mkdir -p "$CD"; printf 'MODE=background\n' >"$CD/bootstrap.env"
+run_in appsbin3 AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
+check "--uninstall: no <data>/apps/bin, nothing said about it" "$([[ $RC == 0 ]] && ! has "$OUT" "apps/bin"; echo $?)" "$OUT"
 
 echo ""
 echo "passed: $PASS  failed: $FAIL"

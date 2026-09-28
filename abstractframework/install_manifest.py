@@ -38,10 +38,14 @@ BOOTSTRAP_FLAGS: list[dict[str, str]] = [
      "summary": "Skip the terminal console. By default abstractgateway-console is built "
                 "with cargo (install.sh adds Rust through rustup when cargo is missing; "
                 "needs a C compiler)."},
-    {"sh": "--with-code-cli", "ps": "-WithCodeCli", "env": "",
-     "summary": "cargo install abstractcode (terminal client) when cargo exists."},
-    {"sh": "--with-core-cli", "ps": "-WithCoreCli", "env": "",
-     "summary": "Also expose the abstractcore command (--with-executables-from abstractcore)."},
+    {"sh": "--no-code-cli", "ps": "-NoCodeCli", "env": "",
+     "summary": "Skip AbstractCode's terminal client. By default abstractcode is built with "
+                "the terminal console's cargo, into the same folder (--with-code-cli, the "
+                "old opt-in, is accepted)."},
+    {"sh": "--no-core-cli", "ps": "-NoCoreCli", "env": "",
+     "summary": "Do not expose AbstractCore's commands (abstractcore, its apps) and "
+                "abstractvoice, abstractvision, abstractmusic next to the gateway's "
+                "(--with-core-cli, the old opt-in, is accepted)."},
     {"sh": "--with-ollama", "ps": "-WithOllama", "env": "",
      "summary": "Run Ollama's official installer (Linux/macOS may ask for sudo)."},
     {"sh": "--with-lmstudio", "ps": "-WithLmStudio", "env": "",

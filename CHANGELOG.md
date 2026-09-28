@@ -4,6 +4,32 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **The installer puts every command line on PATH by default.** AbstractCode's terminal client,
+  `abstractcode`, is built whenever the terminal console is, with the same cargo and into the same
+  folder (`~/.local/bin`; before, `--with-code-cli` put it in `~/.cargo/bin`, often not on PATH);
+  `--no-code-cli` (`-NoCodeCli`) skips it and a failed build never fails the install. AbstractCore's
+  commands (`abstractcore`, `abstractcore-chat`, its apps) and `abstractvoice`, `abstractvision`,
+  `abstractmusic` are exposed from the gateway's own environment; `--no-core-cli` (`-NoCoreCli`)
+  leaves them out, and a package whose command name another program already has is left out
+  instead of failing the install. `--with-code-cli` and `--with-core-cli` stay accepted. The
+  summary prints `AbstractCode (terminal): abstractcode --gateway-url <url> --token <token>` and a
+  `Commands` list saying what each one is (`abstractgateway-config`: the gateway's admin
+  command); the uninstaller removes `abstractcode` too. Docs: [Commands you get](docs/install.md#commands-you-get).
+- **Signing AbstractCode's terminal client in.** The installer summary prints
+  `Sign in (terminal, once): abstractcode login --token <token>` with your admin token, then
+  `abstractcode`, and the no-token way on the gateway's computer,
+  `abstractgateway apps tui-command code`; the installer does not save the token for you.
+  A re-run keeps an `abstractcode` newer than the pin (the gateway console's **Apps** page updates
+  it in the same folder). On Windows, `install.ps1` builds `abstractgateway-console` and
+  `abstractcode` into `%USERPROFILE%\.local\bin` next to `abstractgateway.exe`, like macOS and
+  Linux (an existing copy in `%USERPROFILE%\.cargo\bin` is left in place).
+- **Docs: every command the installer puts on PATH.** [Commands you get](docs/install.md#commands-you-get)
+  lists each exposed package's commands with what they do, AbstractCore's `summarizer`,
+  `extractor`, `judge`, `intent` and `deepsearch` included, explains that a package's commands come
+  all together (`--no-core-cli` opts out), and what happens when a name is already taken.
+
 ## [0.6.0] - 2026-09-28
 
 Remote and headless machines work like a Mac: one address and one SSH tunnel reach the console, the

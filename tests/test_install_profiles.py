@@ -340,7 +340,7 @@ def test_bootstrap_script_crates_match_crate_release_versions() -> None:
         for key, version in _script_pins(out).items()
         if key.startswith("crates:")
     }
-    # The terminal console (default) and --with-code-cli install exactly these two crates.
+    # The terminal console and AbstractCode's terminal client (both default) are exactly these two crates.
     assert set(sh_crates) == {"abstractgateway-console", "abstractcode"}
     for crate, version in sh_crates.items():
         assert CRATE_RELEASE_VERSIONS[crate] == version
@@ -382,7 +382,7 @@ def _fake_bin(tmp_path: Path, *, compiler: bool, machine: str | None = None) -> 
     """xcode-select/cc stubs (`compiler=False` simulates a Mac without Xcode CLT) and an
     optional `uname -m` override to simulate another CPU."""
     fake = tmp_path / "fakebin"
-    fake.mkdir()
+    fake.mkdir(parents=True)
     for name in ("xcode-select", "cc"):
         if name == "cc" and not compiler:
             continue
@@ -512,7 +512,7 @@ def test_install_sh_retries_without_llama_cpp_when_the_wheel_fails(tmp_path: Pat
     # 3. without the llama.cpp wheel, voice restored (succeeds): voice is not lost to a GGUF failure.
     assert len(installs) == 3
     assert "--find-links" in installs[0] and "abstractvoice[supertonic,stt]" in installs[0]
-    assert "--find-links" in installs[1] and "abstractvoice" not in installs[1]
+    assert "--find-links" in installs[1] and "abstractvoice[" not in installs[1]
     assert "--find-links" not in installs[2] and "abstractvoice[supertonic,stt]" in installs[2]
     assert "Voice:      Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU" in proc.stdout
     assert _GGUF_SKIPPED.format(flag="--full") in proc.stdout
@@ -564,7 +564,7 @@ def test_install_sh_full_builds_the_compiled_extras(tmp_path: Path) -> None:
     out = proc.stdout
     assert _printed_overrides(out) == _ALWAYS
     install = _install_line(out)
-    assert "--with llama-cpp-python --overrides uv-overrides.txt --no-build-package webrtcvad --no-build-package vllm 'abstractgateway[" in install
+    assert f"--with llama-cpp-python --overrides uv-overrides.txt --no-build-package webrtcvad --no-build-package vllm {_CLI_FROM} 'abstractgateway[" in install
     assert "--find-links" not in install
     for pkg in _COMPILED_EXTRAS:
         assert pkg not in install
@@ -616,8 +616,269 @@ def test_install_sh_console_needs_a_compiler(tmp_path: Path) -> None:
         pytest.skip("simulating a missing compiler needs the macOS xcode-select probe")
     proc = _install_sh_print(tmp_path, "--no-tray", profile="light", compiler=False)
     assert proc.returncode == 0, proc.stderr
-    assert "terminal console skipped: building it needs a C compiler: xcode-select --install" in proc.stdout
+    # One warning for both crates, and both summary rows say why.
+    assert proc.stdout.count("the terminal console and AbstractCode's terminal client skipped: building it needs a C compiler: xcode-select --install") == 1
+    assert "Code:       not installed (building it needs a C compiler: xcode-select --install)" in proc.stdout
     assert "cargo install" not in proc.stdout and "rustup" not in proc.stdout
+
+
+# The packages in the gateway's uv tool env whose user commands the installer exposes
+# (--with-executables-from), in this order. Left out on purpose: abstractruntime
+# (abstractruntime-mcp-worker is an internal worker the runtime spawns) and abstractagent
+# (react-agent is a deprecated stub that points at AbstractCode).
+_CLI_PACKAGES = ["abstractcore", "abstractvoice", "abstractvision", "abstractmusic"]
+_CLI_FROM = " ".join(f"--with-executables-from {p}" for p in _CLI_PACKAGES)
+_BASE = "http://127.0.0.1:18999"
+
+
+def _detail(out: str, label: str) -> str:
+    return next(line for line in out.splitlines() if line.startswith(f"  {label}"))
+
+
+def _sh_cli_executables(sh: str) -> dict[str, list[str]]:
+    block = re.search(r"^af_cli_names\(\) \{.*?^\}", sh, flags=re.M | re.S)
+    assert block, "install.sh defines af_cli_names()"
+    return {m.group(1): m.group(2).split() for m in re.finditer(r'^\s+(\w+)\) echo "([^"]+)" ;;$', block.group(0), flags=re.M)}
+
+
+def _fake_cargo(fake: Path) -> None:
+    cargo = fake / "cargo"
+    cargo.write_text('#!/bin/sh\n[ "$1" = --version ] && echo "cargo 1.90.0 (fake)"\nexit 0\n')
+    cargo.chmod(0o755)
+
+
+def test_install_sh_builds_the_code_cli_by_default_next_to_the_console(tmp_path: Path) -> None:
+    from abstractframework import CRATE_RELEASE_VERSIONS
+
+    pin = CRATE_RELEASE_VERSIONS["abstractcode"]
+    proc = _install_sh_print(tmp_path, "--no-tray", profile="light")
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    # The same cargo and the same --root as the terminal console: the same PATH folder.
+    assert f"install --locked --force --root {tmp_path}/.local abstractgateway-console --version" in out
+    assert f"install --locked --force --root {tmp_path}/.local abstractcode --version {pin}" in out
+    code = _detail(out, "Code:")
+    # Signed in once with the token given directly (never an environment variable, never saved by
+    # the installer); no --gateway-url, so it follows the gateway pointer.
+    assert code.startswith("  Code:       abstractcode   (sign in once: abstractcode login --token <admin token: cat ")
+    assert code.endswith("; or on this machine: abstractgateway apps tui-command code)")
+    assert "--gateway-url" not in code and "ABSTRACTGATEWAY_AUTH_TOKEN" not in code
+    assert "PLACEHOLDER" not in (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+
+
+def test_install_sh_tui_command_names_a_custom_data_dir(tmp_path: Path) -> None:
+    # `abstractgateway apps tui-command` finds the gateway and its token through the data dir:
+    # a custom one is passed on; the default one is not.
+    proc = _install_sh_print(tmp_path, "--no-tray", "--data-dir", str(tmp_path / "gwdata"), profile="light")
+    assert proc.returncode == 0, proc.stderr
+    assert _detail(proc.stdout, "Code:").endswith(f"abstractgateway apps tui-command code --data-dir {tmp_path}/gwdata)")
+
+
+def test_install_sh_with_code_cli_is_kept_as_an_alias_of_the_default(tmp_path: Path) -> None:
+    default = _install_sh_print(tmp_path / "a", "--no-tray", profile="light")
+    alias = _install_sh_print(tmp_path / "b", "--no-tray", "--with-code-cli", profile="light")
+    assert alias.returncode == 0, alias.stderr
+    # The same plan; only the free-disk reading may move between the two runs.
+    def plan(out: str, home: Path) -> list[str]:
+        return [line for line in out.replace(str(home), "H").splitlines() if "MB free" not in line]
+    assert plan(default.stdout, tmp_path / "a") == plan(alias.stdout, tmp_path / "b")
+
+
+def test_install_sh_no_code_cli_skips_only_it(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, "--no-tray", "--no-code-cli", profile="light")
+    assert proc.returncode == 0, proc.stderr
+    assert "abstractgateway-console --version" in proc.stdout
+    assert "abstractcode --version" not in proc.stdout
+    assert "Code:       not installed (skipped with --no-code-cli)" in proc.stdout
+
+
+def test_install_sh_no_console_without_cargo_skips_the_code_cli(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, "--no-tray", "--no-console", profile="light")
+    assert proc.returncode == 0, proc.stderr
+    assert "cargo install" not in proc.stdout and "rustup" not in proc.stdout
+    assert "Terminal:   not installed (skipped with --no-console)" in proc.stdout
+    assert "Code:       not installed (skipped with --no-console: it adds no Rust, and no cargo was found)" in proc.stdout
+
+
+def test_install_sh_no_console_with_cargo_still_builds_the_code_cli(tmp_path: Path) -> None:
+    fake = tmp_path / "fakebin"
+    proc = _install_sh_print(tmp_path, "--no-tray", "--no-console", profile="light")
+    assert "abstractcode --version" not in proc.stdout
+    _fake_cargo(fake)
+    proc = subprocess.run(
+        ["sh", str(ROOT / "scripts" / "install.sh"), "--print", "--profile", "light", "--port", "18999", "--no-tray", "--no-console"],
+        capture_output=True, text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "abstractgateway-console --version" not in proc.stdout
+    assert f"{fake}/cargo install --locked --force --root {tmp_path}/.local abstractcode --version" in proc.stdout
+    assert "rustup" not in proc.stdout
+
+
+def test_install_sh_exposes_the_library_commands_by_default(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, "--no-tray", "--no-console", profile="light")
+    assert proc.returncode == 0, proc.stderr
+    assert f" {_CLI_FROM} " in _install_line(proc.stdout)
+    alias = _install_sh_print(tmp_path / "alias", "--no-tray", "--no-console", "--with-core-cli", profile="light")
+    assert f" {_CLI_FROM} " in _install_line(alias.stdout)
+
+
+def test_install_sh_no_core_cli_exposes_only_the_gateway(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, "--no-tray", "--no-console", "--no-core-cli", profile="light")
+    assert proc.returncode == 0, proc.stderr
+    assert "--with-executables-from" not in _install_line(proc.stdout)
+    assert "    abstractcore " not in proc.stdout
+    assert "    abstractgateway-config " in proc.stdout
+
+
+def test_install_sh_leaves_out_a_package_whose_command_name_is_taken(tmp_path: Path) -> None:
+    # uv refuses the WHOLE install when an executable it would expose already exists
+    # ("Executable already exists: judge"): a package whose name is taken is left out, and said so.
+    taken = tmp_path / ".local" / "bin" / "judge"
+    taken.parent.mkdir(parents=True)
+    taken.write_text("#!/bin/sh\n")
+    proc = _install_sh_print(tmp_path, "--no-tray", "--no-console", profile="light")
+    assert proc.returncode == 0, proc.stderr
+    line = _install_line(proc.stdout)
+    assert "--with-executables-from abstractcore" not in line
+    assert " ".join(f"--with-executables-from {p}" for p in _CLI_PACKAGES[1:]) in line
+    assert f"abstractcore commands not exposed: {taken} already exists (another program's)" in proc.stdout
+
+
+def test_install_sh_summary_names_every_command(tmp_path: Path) -> None:
+    proc = _install_sh_print(tmp_path, "--no-tray", profile="light")
+    assert proc.returncode == 0, proc.stderr
+    block = _printed_block(proc.stdout, f"Commands (in {tmp_path}/.local/bin")
+    names = [line.split()[0] for line in block]
+    assert names == ["abstractgateway", "abstractgateway-config", "abstractgateway-console", "abstractcode", *_CLI_PACKAGES]
+    config = next(line for line in block if line.startswith("abstractgateway-config "))
+    # What `abstractgateway-config` is, from its subcommands (abstractgateway config_cli.py).
+    for word in ("admin", "status", "claim-url", "set-default", "runtime settings"):
+        assert word in config
+
+
+def test_install_sh_cli_names_match_the_packages(tmp_path: Path) -> None:
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    names = _sh_cli_executables(sh)
+    assert list(names) == _CLI_PACKAGES
+    assert re.search(rf'^AF_CLI_PACKAGES="{" ".join(_CLI_PACKAGES)}"$', sh, flags=re.M)
+    # Never one of the gateway's own commands, nor a crate the installer builds.
+    exposed = [n for ns in names.values() for n in ns]
+    assert len(exposed) == len(set(exposed))
+    assert not set(exposed) & {"abstractgateway", "abstractgateway-config", "abstractgateway-console", "abstractcode"}
+    # Every name a package declares ([project.scripts] of the sibling checkout), since uv
+    # exposes all of a package's executables or none. CI checks out the root repo alone.
+    checked = 0
+    for package, declared in names.items():
+        pyproject = ROOT / package / "pyproject.toml"
+        if not pyproject.exists():
+            continue
+        scripts = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"].get("scripts", {})
+        assert sorted(declared) == sorted(scripts), f"{package}: install.sh lists {declared}, pyproject has {sorted(scripts)}"
+        checked += 1
+    if not checked:
+        pytest.skip("no sibling package checkouts to compare the command names with")
+
+
+def test_install_ps1_carries_the_same_cli_lists_and_flags() -> None:
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    block = re.search(r"^\$AfCliExecutables = \[ordered\]@\{(.*?)^\}", ps1, flags=re.M | re.S)
+    assert block, "install.ps1 defines $AfCliExecutables"
+    ps_names = {m.group(1): re.findall(r"'([^']+)'", m.group(2)) for m in re.finditer(r"^\s+'([\w-]+)' = @\(([^)]*)\)$", block.group(1), flags=re.M)}
+    assert ps_names == _sh_cli_executables(sh)
+    for param in ("[switch]$NoCodeCli", "[switch]$NoCoreCli", "[switch]$WithCodeCli", "[switch]$WithCoreCli"):
+        assert param in ps1
+    assert "'--with-executables-from', $p" in ps1
+    assert "Code:       $(if ($codeOk)" in ps1
+    # Both crates go to the parent of the uv tool bin folder, like install.sh; $roots.Code is the
+    # one place that decides where abstractcode goes (build, version check, summary, uninstall).
+    assert "$roots = Get-CrateRoots $toolBin" in ps1
+    assert "@{ Spec = $AfCrateCodeCli; Root = $roots.Code; What = 'AbstractCode''s terminal client'" in ps1
+    assert "Install-Crate 'the terminal console' $consoleName $consolePin $consoleExe $roots.Console" in ps1
+    assert "Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $roots.Code" in ps1
+    assert "$codeHave = Test-Crate $codeExe $codeName $codePin -AtLeast" in ps1
+    assert "Write-Host \"  Sign in (terminal, once): $codeShown login --token $codeTok\"" in ps1
+    assert "Write-Host \"    or, on this machine, without a token: $tuiCommand\"" in ps1
+    assert "PLACEHOLDER" not in ps1 and "AbstractCode (terminal): $codeCmd" not in ps1
+    # A non-purge uninstall removes the terminal app gateways before 0.7.1 put in <data>\apps\bin
+    # (only abstractcode, the gateway's one installable terminal app), and the folder when empty.
+    assert "$staleApps = Join-Path $DataDir 'apps\\bin'" in ps1
+    assert "foreach ($t in @('abstractcode')) {" in ps1
+
+
+def test_install_sh_code_cli_target_is_one_variable(tmp_path: Path) -> None:
+    # Where abstractcode goes is decided by CODE_ROOT alone: moving it is a one-line change that
+    # the build, the summary and the command list all follow, and the console does not.
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    line = '    CODE_ROOT="$CRATE_ROOT"\n'
+    assert sh.count(line) == 1
+    moved = tmp_path / "install.sh"
+    moved.write_text(sh.replace(line, '    CODE_ROOT="$HOME/elsewhere"\n'), encoding="utf-8")
+    fake = _fake_bin(tmp_path, compiler=True)
+    proc = subprocess.run(
+        ["sh", str(moved), "--print", "--profile", "light", "--port", "18999", "--no-tray"],
+        capture_output=True, text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    assert f"install --locked --force --root {tmp_path}/.local abstractgateway-console --version" in out
+    assert f"install --locked --force --root {tmp_path}/elsewhere abstractcode --version" in out
+    assert _detail(out, "Code:").startswith(f"  Code:       {tmp_path}/elsewhere/bin/abstractcode   (sign in once: {tmp_path}/elsewhere/bin/abstractcode login --token ")
+    assert f"      {tmp_path}/elsewhere/bin/abstractcode " in out
+    (tmp_path / "elsewhere" / "bin").mkdir(parents=True)
+    (tmp_path / "elsewhere" / "bin" / "abstractcode").write_text("#!/bin/sh\n")
+    uninstall = subprocess.run(
+        ["sh", str(moved), "--uninstall", "--print", "--yes"],
+        capture_output=True, text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
+    )
+    assert uninstall.returncode == 0, uninstall.stderr
+    assert f"rm -f {tmp_path}/elsewhere/bin/abstractcode" in uninstall.stdout
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_builds_the_code_cli_and_exposes_the_commands_by_default(tmp_path: Path) -> None:
+    script = ROOT / "scripts" / "install.ps1"
+    env = {**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad"),
+           "PROCESSOR_ARCHITECTURE": "AMD64"}
+    for key in [k for k in env if k.upper().endswith(("_KEY", "_TOKEN"))]:
+        del env[key]
+    fake = tmp_path / "fakebin"
+    fake.mkdir()
+    _fake_cargo(fake)
+    env["PATH"] = f"{fake}{os.pathsep}{env['PATH']}"
+    argv = ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "light", "-Port", "18999"]
+    out = subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
+    assert re.search(r"cargo install --locked --force --root \S*\.local abstractcode --version ", out)
+    assert re.search(r"cargo install --locked --force --root \S*\.local abstractgateway-console --version ", out)
+    assert f" {_CLI_FROM} " in _install_line(out)
+    assert "AbstractCode (terminal)" not in out  # the plain block is for a real install
+    # The command is `abstractcode` when it is on PATH, else `& '<cargo bin>/abstractcode'`.
+    assert re.search(r"^  Code: +(abstractcode|& '[^']*abstractcode')   \(sign in once: \S.* login --token <admin token: Get-Content ", out, flags=re.M)
+    block = _printed_block(out, "Commands (in ")
+    assert [line.split()[0] for line in block][:2] == ["abstractgateway", "abstractgateway-config"]
+    opt_out = subprocess.run(argv + ["-NoCodeCli", "-NoCoreCli"], check=True, capture_output=True, text=True, env=env).stdout
+    assert "abstractcode --version" not in opt_out and "--with-executables-from" not in _install_line(opt_out)
+    assert "Code:       not installed (skipped with -NoCodeCli)" in opt_out
+    alias = subprocess.run(argv + ["-WithCodeCli", "-WithCoreCli"], check=True, capture_output=True, text=True, env=env).stdout
+    assert "abstractcode --version" in alias and f" {_CLI_FROM} " in _install_line(alias)
+
+
+def test_bootstrap_flags_list_the_cli_opt_outs() -> None:
+    from abstractframework.install_manifest import BOOTSTRAP_FLAGS
+
+    flags = {f["sh"]: f["ps"] for f in BOOTSTRAP_FLAGS}
+    assert flags["--no-code-cli"] == "-NoCodeCli" and flags["--no-core-cli"] == "-NoCoreCli"
+    assert "--with-code-cli" not in flags and "--with-core-cli" not in flags
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    install_md = (ROOT / "docs" / "install.md").read_text(encoding="utf-8")
+    for sh_flag, ps_flag in flags.items():
+        assert f"#   {sh_flag.split()[0]}" in sh, f"install.sh --help lists {sh_flag}"
+    for sh_flag, ps_flag in (("--no-code-cli", "-NoCodeCli"), ("--no-core-cli", "-NoCoreCli")):
+        assert f"| `{sh_flag}` | `{ps_flag}` |" in install_md
 
 
 def test_install_sh_app_hints_use_the_gateway_launch_flag(tmp_path: Path) -> None:
@@ -832,7 +1093,7 @@ def test_install_sh_retries_without_voice_when_its_wheels_are_missing(tmp_path: 
         '  "--version "*) echo "uv 0.0.0" ;;\n'
         f'  "tool dir") echo "{tool_bin}" ;;\n'
         '  "tool install")\n'
-        '    for a in "$@"; do case "$a" in abstractvoice*) echo "simulated: no onnxruntime wheel" >&2; exit 2 ;; esac; done\n'
+        '    for a in "$@"; do case "$a" in \'abstractvoice[\'*) echo "simulated: no onnxruntime wheel" >&2; exit 2 ;; esac; done\n'
         f'    mkdir -p "{tool_bin}" && printf "#!/bin/sh\\nexit 0\\n" > "{tool_bin}/abstractgateway" && chmod +x "{tool_bin}/abstractgateway" ;;\n'
         "esac\n"
         "exit 0\n"
@@ -848,7 +1109,7 @@ def test_install_sh_retries_without_voice_when_its_wheels_are_missing(tmp_path: 
     assert proc.returncode == 0, proc.stdout + proc.stderr
     installs = [line for line in calls.read_text().splitlines() if line.startswith("tool install ")]
     assert len(installs) == 2
-    assert "abstractvoice[supertonic,stt]" in installs[0] and "abstractvoice" not in installs[1]
+    assert "abstractvoice[supertonic,stt]" in installs[0] and "abstractvoice[" not in installs[1]
     if _host()[1]:  # this machine has a llama.cpp wheel: the retry keeps it
         assert "--find-links" in installs[1]
         assert "GGUF:       llama-cpp-python " in proc.stdout
