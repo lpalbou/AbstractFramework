@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractCamera 0.2.0 — camera control for Python and AbstractCore | AbstractFramework</title>
+  <meta name="description" content="AbstractCamera drives tethered Nikon Z and Sony Alpha bodies, the computer's webcam and DWARF smart telescopes behind one CameraManager, and adds a camera capability and eleven camera tools to AbstractCore.">
+  <link rel="canonical" href="https://abstractframework.ai/camera.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractCamera — camera control for AbstractCore">
+  <meta property="og:description" content="One CameraManager for tethered bodies, webcams and smart telescopes: live view, verified settings, captures, intervalometer and detection, plus camera tools for agents.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=5">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="./">Home</a></li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#getting-started">Get Started</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractCamera" target="_blank" rel="noopener noreferrer" class="nav-cta">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
+
+<div class="pkg-nav" aria-label="Packages and apps">
+  <div class="pkg-nav-inner">
+    <a href="core.html" class="pkg-nav-link">Core</a>
+    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
+    <a href="agent.html" class="pkg-nav-link">Agent</a>
+    <a href="flow.html" class="pkg-nav-link">Flow</a>
+    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
+    <a href="code.html" class="pkg-nav-link">Code</a>
+    <a href="observer.html" class="pkg-nav-link">Observer</a>
+    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
+    <a href="voice.html" class="pkg-nav-link">Voice</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
+    <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="3d.html" class="pkg-nav-link">3D</a>
+    <a href="camera.html" class="pkg-nav-link active" aria-current="page">Camera</a>
+    <a href="memory.html" class="pkg-nav-link">Memory</a>
+    <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+  </div>
+</div>
+
+<main id="main">
+
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:8rem 0 4rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> CAPABILITY PLUGIN &middot; Camera &middot; v0.2.0</div>
+    <h1>Abstract<span class="gradient">Camera</span></h1>
+    <p class="hero-sub">Camera control for Python. One thread-safe <code>CameraManager</code> drives tethered camera bodies over libgphoto2, the computer's own cameras and DWARF smart telescopes, with a simulator for development without hardware. Installed next to <a href="core.html">AbstractCore</a>, it adds a <code>camera</code> capability and a set of camera tools an agent can call.</p>
+    <div class="hero-actions">
+      <a href="#getting-started" class="btn btn-primary">Get Started</a>
+      <a href="https://github.com/lpalbou/AbstractCamera" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+      <a href="https://pypi.org/project/abstractcamera/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
+      <a href="https://github.com/lpalbou/AbstractCamera/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+    </div>
+    <div class="hero-code">
+<!-- PENDING-W2: E8 -->
+<pre><code>pip install abstractcamera       <span class="line-cmt"># webcam + simulator</span>
+abstractcamera list              <span class="line-cmt"># lists cameras without opening any device</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section id="overview" class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Overview</span>
+      <h2 class="section-title">One manager for every camera</h2>
+      <p class="section-desc">The manager owns everything that does not depend on the camera family: scheduling, the settings ledger, downloads, detection and the watchdog. Each family adapter owns that family's quirks. A <code>CameraHub</code> runs several cameras at once, one worker per camera (validated with four at the same time).</p>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card">
+        <h3>Tethered bodies</h3>
+        <p>Nikon Z (validated on a Z6 II) and Sony Alpha (validated on an A7R IV) over libgphoto2, and a generic PTP fallback for other bodies.</p>
+        <div class="mode-tags"><span class="mode-tag">Nikon Z</span><span class="mode-tag">Sony Alpha</span><span class="mode-tag">PTP</span></div>
+      </div>
+      <div class="mode-card">
+        <h3>Webcams and telescopes</h3>
+        <p>The computer's own camera through macOS AVFoundation (validated on a MacBook Pro camera), and DWARF smart telescopes over Wi-Fi, including the mount.</p>
+        <div class="mode-tags"><span class="mode-tag">AVFoundation</span><span class="mode-tag">DWARF</span></div>
+      </div>
+      <div class="mode-card">
+        <h3>Without hardware</h3>
+        <p>Set <code>ABSTRACTCAMERA_FAKE=1</code> and a simulator with Nikon Z6 II and Sony A7R IV personalities replaces every transport.</p>
+        <div class="mode-tags"><span class="mode-tag">simulator</span><span class="mode-tag">tests</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features" class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Features</span>
+      <h2 class="section-title">What you get</h2>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag modality">Capture</span></div>
+        <h3>Live view and capture</h3>
+        <p>Live view with measured frame rate, single, burst and movie capture, focus actions and automatic downloads into <code>~/Pictures/&lt;device&gt;/</code>.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag modality">Settings</span></div>
+        <h3>Verified settings</h3>
+        <p>Every settings write is confirmed against the body or reported as reverted. A webcam exposes only the dials it really has.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag modality">Sequences</span></div>
+        <h3>Intervalometer and detection</h3>
+        <p>An intervalometer with absolute deadlines and JSONL manifests; lightning, meteor and motion detection on live view with auto-capture and a rolling pre-capture buffer.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag foundation">Media</span></div>
+        <h3>Device downloads</h3>
+        <p><code>abstractcamera download</code> copies the media a device holds (USB cards or the DWARF album over Wi-Fi) into <code>~/Pictures/&lt;device&gt;/</code>; <code>--delete</code> frees the device after size-verified copies.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag composition">Tools</span></div>
+        <h3>Eleven camera tools</h3>
+        <p><code>camera_tools()</code> gives an agent <code>camera_*</code> tools, including a preview that looks without firing the shutter, each classified so approval layers know it captures the environment.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag foundation">Plugin</span></div>
+        <h3>AbstractCore capability</h3>
+        <p>Registered through the <code>abstractcore.capabilities_plugins</code> entry point: open and close cameras, capture photos and bounded clips, arm detection with auto-capture.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section id="getting-started" class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Get Started</span>
+      <h2 class="section-title">Install and connect</h2>
+    </div>
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="cam-install">Install</button>
+        <button class="tab-btn" data-tab="cam-python">Python</button>
+        <button class="tab-btn" data-tab="cam-tools">Agent tools</button>
+      </div>
+      <div class="tab-panel active" id="tab-cam-install">
+        <div class="code-block">
+<!-- PENDING-W2: E8 -->
+<pre><code>pip install abstractcamera                 <span class="line-cmt"># webcam + simulator (numpy + OpenCV)</span>
+pip install <span class="line-str">"abstractcamera[gphoto2]"</span>      <span class="line-cmt"># + tethered PTP bodies (libgphoto2)</span>
+pip install <span class="line-str">"abstractcamera[clips]"</span>        <span class="line-cmt"># + MP4 clip and movie encoding</span>
+pip install <span class="line-str">"abstractcamera[dwarf]"</span>        <span class="line-cmt"># + DWARF smart telescopes (Wi-Fi)</span>
+pip install <span class="line-str">"abstractcamera[all]"</span>          <span class="line-cmt"># everything</span></code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-cam-python">
+        <div class="code-block">
+<!-- PENDING-W2: E8 -->
+<pre><code><span class="line-kw">from</span> abstractcamera <span class="line-kw">import</span> CameraManager, list_cameras
+
+<span class="line-kw">for</span> camera <span class="line-kw">in</span> <span class="line-fn">list_cameras</span>():
+    print(camera[<span class="line-str">"id"</span>], camera[<span class="line-str">"name"</span>])
+
+manager = <span class="line-fn">CameraManager</span>()
+status = manager.<span class="line-fn">connect</span>()               <span class="line-cmt"># first PTP body, else the webcam</span>
+manager.<span class="line-fn">set_config_value</span>(<span class="line-str">"iso"</span>, <span class="line-str">"800"</span>)   <span class="line-cmt"># confirmed or reported reverted</span>
+manager.<span class="line-fn">request_trigger</span>()                <span class="line-cmt"># capture, then auto-download</span>
+jpeg, seq = manager.<span class="line-fn">get_latest_frame</span>()   <span class="line-cmt"># live view</span>
+manager.<span class="line-fn">disconnect</span>()</code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-cam-tools">
+        <div class="code-block">
+<!-- PENDING-W2: E8 -->
+<pre><code><span class="line-kw">from</span> abstractcamera.integrations.abstractcore_tools <span class="line-kw">import</span> camera_tools
+
+llm.<span class="line-fn">generate</span>(<span class="line-str">"Take a photo if something moves"</span>, tools=<span class="line-fn">camera_tools</span>())</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="callout reveal">
+      <div>Detection runs in the process that holds the camera. Waking a durable workflow on motion is something you build at a framework entry point (a gateway run or a flow); AbstractCamera ships no background service. Details: <a href="https://github.com/lpalbou/AbstractCamera/blob/main/docs/getting-started.md" target="_blank" rel="noopener noreferrer">getting started</a>, <a href="https://github.com/lpalbou/AbstractCamera/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">API</a>.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.75rem">
+        <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub Organization
+        </a>
+      </p>
+    </div>
+    <div class="footer-col">
+      <h4>Foundation</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
+      <a href="flow.html">AbstractFlow</a>
+    </div>
+    <div class="footer-col">
+      <h4>Applications</h4>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="console.html">Consoles</a>
+      <a href="automations.html">Automations</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Modalities &amp; Knowledge</h4>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="3d.html">abstract3d</a>
+      <a href="camera.html">AbstractCamera</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="install.html">Install</a>
+      <a href="index.html#start">Start here</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace Models</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm Packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker Images</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker</a> &middot;
+    <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace</a> &middot;
+    <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
+  </div>
+</footer>
+<script src="assets/js/main.js?v=5"></script>
+</body>
+</html>
