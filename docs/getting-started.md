@@ -54,11 +54,19 @@ The commands it puts on PATH (in `~/.local/bin`; open a new terminal), each list
   `get` / `set` (runtime settings), `bootstrap-admin`.
 - `abstractgateway-console`: the terminal console, and `abstractcode`: AbstractCode's terminal
   client; the summary prints both ready to paste, with `--gateway-url` and `--token`.
-- `abstractcore` (with `abstractcore-chat` and its apps `summarizer`, `extractor`, `judge`,
-  `intent`, `deepsearch`), `abstractvoice`, `abstractvision`, `abstractmusic`: the libraries'
-  own commands, from the gateway's environment.
+- AbstractCore's commands: `abstractcore` (also `abstractcore-config`: setup wizard, models,
+  engines, `serve`), `abstractcore-chat` (a chat in the terminal), `abstractcore-endpoint` (a
+  single-model `/v1` server), and its apps `summarizer` (summarize a document), `extractor`
+  (entities and relationships as a knowledge graph), `judge` (LLM-as-a-judge scoring), `intent`
+  (intent analysis) and `deepsearch` (a research agent that writes a sourced report), each also as
+  `abstractcore-<app>`.
+- `abstractvoice` (a spoken chat, `tts`, `web`) and `abstractvoice-prefetch` (download voice
+  models), `abstractvision` (generate or edit images and video: `t2i`, `i2i`, `t2v`, …) and
+  `abstractmusic` (`t2m`: text to music).
 
-`--no-console`, `--no-code-cli` and `--no-core-cli` leave them out; see
+A package puts all of the commands it declares on PATH (uv cannot pick a subset). `--no-console`,
+`--no-code-cli` and `--no-core-cli` leave them out, and a package whose command name another
+program already has is left out with a warning naming that file; see
 [Commands you get](install.md#commands-you-get). Then
 continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 [AbstractFlow](#author-orchestration-with-abstractflow). Step by step, what to do when something

@@ -17,6 +17,10 @@ All notable changes to AbstractFramework will be documented in this file.
   summary prints `AbstractCode (terminal): abstractcode --gateway-url <url> --token <token>` and a
   `Commands` list saying what each one is (`abstractgateway-config`: the gateway's admin
   command); the uninstaller removes `abstractcode` too. Docs: [Commands you get](docs/install.md#commands-you-get).
+- **Docs: every command the installer puts on PATH.** [Commands you get](docs/install.md#commands-you-get)
+  lists each exposed package's commands with what they do, AbstractCore's `summarizer`,
+  `extractor`, `judge`, `intent` and `deepsearch` included, explains that a package's commands come
+  all together (`--no-core-cli` opts out), and what happens when a name is already taken.
 
 ## [0.6.0] - 2026-09-28
 
