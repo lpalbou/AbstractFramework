@@ -9,7 +9,8 @@
 #   3. the bash loader (repo_groups.sh) and the Python helper read the same
 #      packages in the same dependency order
 #   4. scripts/install.sh and install.ps1 pins == docs/installers/install-manifest.json
-#      (bootstrap.gateway_version == the root pyproject gateway pin, npm apps);
+#      (bootstrap.gateway_version == the root pyproject gateway pin, the framework version,
+#      the release matrix of python packages, npm apps);
 #      their crate versions == the docs/install.md table
 #   5. the published launchers start npm packages that exist in packages.txt
 #
@@ -105,7 +106,13 @@ gw = manifest["bootstrap"]["gateway_version"]
 pkg_gw = next(p["version"] for p in manifest["python_packages"] if p["id"] == "abstractgateway")
 if gw != pkg_gw:
     problems.append(f"manifest bootstrap.gateway_version {gw} != python_packages abstractgateway {pkg_gw}")
-expected = {("pypi", "abstractgateway"): gw}
+expected = {("pypi", "abstractgateway"): gw, ("framework", "abstractframework"): manifest["framework"]["version"]}
+# The release matrix the installers pass to uv as constraints: every python package of the
+# release in the gateway's environment (not the Assistant, a separate app).
+matrix = {p["distribution"].lower(): p["version"] for p in manifest["python_packages"]
+          if p["id"] not in ("abstractgateway", "abstractassistant")}
+for name, ver in matrix.items():
+    expected[("pypi", name)] = ver
 for a in manifest["npm_apps"]:
     expected[("npm", a["package"].lower())] = a["version"]
 for key, ver in expected.items():
@@ -127,6 +134,13 @@ if not m or m.group(1) != gw:
 for (reg, name), ver in script.items():
     if reg in ("npm", "crates") and f"'{name}@{ver}'" not in ps1.lower():
         problems.append(f"install.ps1 does not pin {name}@{ver}")
+m = re.search(r"^\$AfFrameworkVersion = '([^']+)'", ps1, re.M)
+if not m or m.group(1) != manifest["framework"]["version"]:
+    problems.append(f"install.ps1 framework version {m and m.group(1)} != {manifest['framework']['version']}")
+m = re.search(r"^\$AfPyMatrix = @\(([^)]*)\)", ps1, re.M)
+ps_matrix = {e.split("==")[0].lower(): e.split("==")[1] for e in re.findall(r"'([^']+)'", m.group(1))} if m else {}
+if ps_matrix != matrix:
+    problems.append(f"install.ps1 $AfPyMatrix {ps_matrix} != the manifest's release matrix {matrix}")
 # crates vs the docs/install.md table
 install_md = (root / "docs/install.md").read_text()
 for (reg, name), ver in script.items():

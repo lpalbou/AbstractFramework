@@ -393,12 +393,21 @@ for a in "\$@"; do [ "\$a" = "https://pypi.org/simple/pip/" ] && exit 0; done
 for a in "\$@"; do [ "\$a" = "https://sh.rustup.rs" ] && exit 7; done
 exec /usr/bin/curl "\$@"
 CURL
+    # The fake uv: every call is logged (UVLOG); `pip freeze` prints the environment's packages
+    # (BG_FREEZE_BEFORE until an install, then BG_FREEZE_AFTER, when given).
+    UVLOG="$WORK/$name/uv.log"; : >"$UVLOG"
+    rm -f "$WORK/$name/freeze.now" "$WORK/$name/freeze.after"
+    [[ -n "${BG_FREEZE_BEFORE:-}" ]] && printf '%b' "$BG_FREEZE_BEFORE" >"$WORK/$name/freeze.now"
+    [[ -n "${BG_FREEZE_AFTER:-}" ]] && printf '%b' "$BG_FREEZE_AFTER" >"$WORK/$name/freeze.after"
     cat >"$bin/uv" <<UV
 #!/bin/sh
+echo "uv \$*" >>"$UVLOG"
 case "\$1 \${2:-}" in
   "--version "*) echo "uv 0.0.0" ;;
   "tool dir") echo "$toolbin" ;;
   "tool list") printf '%b\n' "${BG_UV_LIST:-abstractgateway v9.9.9}" ;;
+  "tool install") [ -f "$WORK/$name/freeze.after" ] && cp "$WORK/$name/freeze.after" "$WORK/$name/freeze.now" ;;
+  "pip freeze") [ -f "$WORK/$name/freeze.now" ] && cat "$WORK/$name/freeze.now" ;;
 esac
 exit 0
 UV
@@ -412,6 +421,7 @@ echo "abstractgateway \$*" >>"$GWLOG"
 for a in "\$@"; do [ "\$a" = --help ] && { [ "\$1" = service ] && [ "${BG_SERVICE:-0}" != 1 ] && exit 2; exit 0; }; done
 case "\$1 \${2:-}" in
   "service install")
+    [ "${BG_SERVICE_FAIL:-0}" = 1 ] && { echo "Bootstrap failed: 5: Input/output error" >&2; exit 1; }
     port=""; prev=""; for a in "\$@"; do [ "\$prev" = --port ] && port="\$a"; prev="\$a"; done
     nohup /usr/bin/python3 -c 'import http.server, sys
 class H(http.server.BaseHTTPRequestHandler):
@@ -442,8 +452,20 @@ esac
 exit 0
 GW
     chmod +x "$bin/curl" "$bin/uv" "$toolbin/abstractgateway"
-    if [[ "${BG_SERVICE:-0}" == 1 && "$IS_MAC" == 0 ]]; then
-        printf '#!/bin/sh\n[ "$1 $2" = "--user show-environment" ] && exit 0\nexit 0\n' >"$bin/systemctl"; chmod +x "$bin/systemctl"
+    # BG_LINUX=1: the installer believes it runs on Linux (a fake uname), with a systemd user
+    # session whose calls are logged (SYSTEMCTL_LOG); BG_UNIT_ACTIVE=1: the unit is running.
+    SYSTEMCTL_LOG="$WORK/$name/systemctl.log"; : >"$SYSTEMCTL_LOG"
+    if [[ "${BG_LINUX:-0}" == 1 ]]; then
+        printf '#!/bin/sh\ncase "$1" in -s) echo Linux ;; -m) echo x86_64 ;; *) /usr/bin/uname "$@" ;; esac\n' >"$bin/uname"; chmod +x "$bin/uname"
+    fi
+    if [[ "${BG_SERVICE:-0}" == 1 && ( "$IS_MAC" == 0 || "${BG_LINUX:-0}" == 1 ) ]]; then
+        cat >"$bin/systemctl" <<SCTL
+#!/bin/sh
+echo "systemctl \$*" >>"$SYSTEMCTL_LOG"
+[ "\$2" = is-active ] && exit \$([ "${BG_UNIT_ACTIVE:-0}" = 1 ] && echo 0 || echo 3)
+exit 0
+SCTL
+        chmod +x "$bin/systemctl"
     fi
     CARGOLOG="$WORK/$name/cargo.log"
     if [[ "${BG_CARGO:-0}" == 1 ]]; then
@@ -471,10 +493,24 @@ exit 0
 CARGO
         chmod +x "$bin/cargo"
     fi
-    DATA_T="$WORK/$name/home/$DATA_REL"; NETF="$DATA_T/fake-network"
+    local data_rel="$DATA_REL"; [[ "${BG_LINUX:-0}" == 1 ]] && data_rel=".local/share/abstractgateway"
+    DATA_T="${BG_DATA_T:-$WORK/$name/home/$data_rel}"; NETF="$DATA_T/fake-network"
     if [[ -n "$stored" ]]; then mkdir -p "$DATA_T"; echo "$stored" >"$NETF"; fi
     # BG_STATE: a previous install's bootstrap.env (printf %b); BG_POINTER: a gateway.json already there.
     if [[ -n "${BG_STATE:-}" ]]; then mkdir -p "$DATA_T"; printf '%b' "$BG_STATE" >"$DATA_T/bootstrap.env"; fi
+    # BG_PRERUN=1: the previous install's background gateway is running (pid in gateway.pid: PRE_PID).
+    PRE_PID=""
+    if [[ "${BG_PRERUN:-0}" == 1 ]]; then
+        mkdir -p "$DATA_T"
+        /usr/bin/python3 -c 'import http.server, sys
+class H(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200); self.end_headers(); self.wfile.write(b"{\"service\": \"abstractgateway\"}")
+    def log_message(self, *a): pass
+http.server.HTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()' "$BG_PORT" </dev/null >/dev/null 2>&1 &
+        PRE_PID=$!; echo "$PRE_PID" >"$DATA_T/gateway.pid"
+        for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 && break; sleep 0.3; done
+    fi
     PTR="$WORK/$name/home/.abstractframework/gateway.json"
     if [[ -n "${BG_POINTER:-}" ]]; then mkdir -p "$(dirname "$PTR")"; printf '%s\n' "$BG_POINTER" >"$PTR"; fi
     # BG_TOKEN: the admin token a real gateway writes into its data dir at first start.
@@ -535,6 +571,7 @@ sys.exit(proc.wait())')
         pid="$(cat "$f" 2>/dev/null)"
         [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
     done < <(find "$WORK/$name" -name gateway.pid 2>/dev/null; echo "$SVCPID")
+    [[ -n "$PRE_PID" ]] && kill "$PRE_PID" 2>/dev/null
     for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 || break; sleep 0.5; done
 }
 if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
@@ -746,6 +783,82 @@ else
     BG_UV_LIST='abstractgateway v0.7.0\n- abstractgateway' BG_STATE="$UP_STATE" bg_case up_default 1
     check "a plain re-run installs the release pin, without --upgrade" "$([[ $RC == 0 ]] && grep "tool install " "$OUT" | grep -q "abstractgateway\[[a-z,]*\]==$GW_PIN" && ! grep "tool install " "$OUT" | grep -q -- " --upgrade "; echo $?)" "$OUT"
     check "summary: the upgrade lines are the one-liner and --pin latest, not uv tool upgrade" "$(has "$OUT" "Upgrade:    curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh " && has "$OUT" "install.sh | sh -s -- --pin latest " && ! has "$OUT" "uv tool upgrade"; echo $?)" "$OUT"
+fi
+
+echo "[17] re-running the line upgrades in place: detection, remembered choices, release matrix, restart, changes"
+if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    check "port $BG_PORT is free for the re-run cases" 1
+else
+    GW_PIN="$(sed -n 's/^AF_GATEWAY_PIN_DEFAULT="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
+    FW="$(sed -n 's/^AF_FRAMEWORK_VERSION="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
+    MATRIX="$(sed -n 's/^AF_PY_MATRIX="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
+    check "install.sh names its release and matrix" "$([[ -n "$FW" && "$MATRIX" == *abstractcore==* ]]; echo $?)"
+    BG_UV_LIST='other-tool v1.0' bg_case up_first 1
+    check "first install: says there is nothing to upgrade" "$([[ $RC == 0 ]] && has "$OUT" "^No AbstractFramework install found: installing AbstractFramework $FW$"; echo $?)" "$OUT"
+    check "first install: records the release and the choices a re-run keeps" "$(grep -qx "FRAMEWORK_VERSION=$FW" "$DATA_T/bootstrap.env" && grep -qx "CONSOLE=0" "$DATA_T/bootstrap.env" && grep -qx "CORE_CLI=1" "$DATA_T/bootstrap.env" && grep -qx "TRAY=1" "$DATA_T/bootstrap.env" && grep -qx "FULL=0" "$DATA_T/bootstrap.env"; echo $?)" "$DATA_T/bootstrap.env"
+    check "first install: the release matrix goes to uv as constraints" "$([[ -n "$MATRIX" ]] || exit 1; for c in $MATRIX; do grep -qx "$c" "$DATA_T/uv-constraints.txt" || exit 1; done; grep "tool install " "$UVLOG" | grep -q -- "--constraints uv-constraints.txt"; echo $?)" "$DATA_T/uv-constraints.txt"
+
+    # A previous release, the console left out: a plain re-run (no options) upgrades, keeps the choice.
+    UP_OLD="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=0.6.0\nCONSOLE=0\nGATEWAY_SPEC=abstractgateway[tray]==0.7.0\n"
+    BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$UP_OLD" BG_CARGO=1 BG_ARGS=" " \
+        BG_FREEZE_BEFORE='abstractgateway==0.7.0\nabstractcore==2.17.0\nAbstractRuntime==0.7.0\nnumpy==1.26.0\n' \
+        BG_FREEZE_AFTER="abstractgateway==$GW_PIN\nabstractcore==2.18.0\nabstractruntime==0.7.1\nnumpy==2.0.0\n" bg_case up_old 1
+    check "re-run over a previous release: 'found: upgrading to'" "$([[ $RC == 0 ]] && has "$OUT" "^AbstractFramework 0.6.0 found: upgrading to AbstractFramework $FW$"; echo $?)" "$OUT"
+    check "re-run: the remembered --no-console is kept (said, and no console build)" "$(has "$OUT" "kept from the previous install: --no-console" && ! grep -q "abstractgateway-console" "$CARGOLOG" && grep -qx "CONSOLE=0" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
+    check "re-run: the libraries go to the release matrix (constraints), not only the gateway's floors" "$(grep -qx "abstractcore==$(printf '%s\n' $MATRIX | sed -n 's/^abstractcore==//p')" "$DATA_T/uv-constraints.txt" && grep "tool install " "$UVLOG" | grep -q -- "--constraints uv-constraints.txt"; echo $?)" "$UVLOG"
+    check "re-run: the summary lists what changed, old -> new" "$(has "$OUT" "^  Changes:$" && has "$OUT" "^      AbstractFramework  *0.6.0 -> $FW$" && has "$OUT" "^      abstractgateway  *0.7.0 -> $GW_PIN$" && has "$OUT" "^      abstractcore  *2.17.0 -> 2.18.0$" && has "$OUT" "^      abstractruntime  *0.7.0 -> 0.7.1$" && has "$OUT" "(and 1 other packages of the gateway's environment)"; echo $?)" "$OUT"
+    check "re-run: the plain block says it was upgraded" "$(has "$OUT" "^  Upgraded: AbstractFramework 0.6.0 -> $FW " && grep -qx "FRAMEWORK_VERSION=$FW" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
+
+    UP_SAME="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=$FW\nCONSOLE=0\nGATEWAY_SPEC=abstractgateway[tray]==$GW_PIN\nVOICE_SPEC=abstractvoice[supertonic,stt]\n"
+    BG_UV_LIST="abstractgateway v$GW_PIN" BG_STATE="$UP_SAME" BG_FREEZE_BEFORE="abstractgateway==$GW_PIN\nabstractcore==2.18.0\n" bg_case up_same 1
+    check "re-run at the release: 'already up to date', nothing changed" "$([[ $RC == 0 ]] && has "$OUT" "^AbstractFramework $FW found: already up to date" && has "$OUT" "^  Already up to date: AbstractFramework $FW; nothing changed.$" && has "$OUT" "^  Changes:    none$"; echo $?)" "$OUT"
+
+    # A library-only release (the gateway's version is the same): the running gateway still restarts.
+    BG_UV_LIST="abstractgateway v$GW_PIN" BG_STATE="$UP_SAME" BG_PRERUN=1 \
+        BG_FREEZE_BEFORE="abstractgateway==$GW_PIN\nabstractcore==2.17.9\n" BG_FREEZE_AFTER="abstractgateway==$GW_PIN\nabstractcore==2.18.0\n" bg_case up_libs 1
+    check "a library-only change restarts the running background gateway" "$([[ $RC == 0 ]] && grep -qx "abstractgateway serve" "$GWLOG" && ! has "$OUT" "unchanged" && has "$OUT" "abstractcore  *2.17.9 -> 2.18.0"; echo $?)" "$OUT"
+    BG_UV_LIST="abstractgateway v$GW_PIN" BG_STATE="$UP_SAME" BG_PRERUN=1 BG_FREEZE_BEFORE="abstractgateway==$GW_PIN\nabstractcore==2.18.0\n" bg_case up_nochange 1
+    check "nothing changed: the running gateway is left alone" "$([[ $RC == 0 ]] && ! grep -q "serve" "$GWLOG" && has "$OUT" "already running (pid $PRE_PID), unchanged"; echo $?)" "$OUT"
+
+    # Remembered choices: every option that changes what is installed, and the flag that turns one back on.
+    UP_OPTS="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=$FW\nCONSOLE=0\nCODE_CLI=0\nCORE_CLI=0\nTRAY=0\nFULL=0\n"
+    BG_STATE="$UP_OPTS" BG_CARGO=1 BG_ARGS=" " bg_case up_opts 1
+    check "remembered: --no-console --no-code-cli --no-core-cli --no-tray kept by a plain re-run" "$([[ $RC == 0 ]] && has "$OUT" "kept from the previous install: --no-console, --no-code-cli, --no-core-cli, --no-tray" && [[ ! -s "$CARGOLOG" ]] && ! grep "tool install " "$UVLOG" | grep -q -- "--with-executables-from" && grep "tool install " "$UVLOG" | grep -q "abstractgateway==$GW_PIN$"; echo $?)" "$OUT"
+    BG_STATE="$UP_OPTS" BG_ARGS="--no-console --with-core-cli --with-tray" bg_case up_opts2 1
+    check "remembered: --with-core-cli and --with-tray turn them back on, and are recorded" "$([[ $RC == 0 ]] && grep "tool install " "$UVLOG" | grep -q -- "--with-executables-from abstractcore" && grep -qx "CORE_CLI=1" "$DATA_T/bootstrap.env" && grep -qx "TRAY=1" "$DATA_T/bootstrap.env" && grep -qx "CODE_CLI=0" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
+    if [[ "$IS_MAC" == 1 ]]; then
+        check "remembered: --with-tray puts the tray extra back (macOS)" "$(grep "tool install " "$UVLOG" | grep -q "abstractgateway\[tray\]==$GW_PIN$"; echo $?)" "$UVLOG"
+    fi
+    mkdir -p "$WORK/up_full/home/$DATA_REL"; printf 'PORT=18829\nMODE=background\nPROFILE=light\nFULL=1\n' >"$WORK/up_full/home/$DATA_REL/bootstrap.env"
+    run_in up_full -- sh "$SCRIPTS_DIR/install.sh" --print --port 18829 --profile light
+    check "remembered: --full is kept by a re-run (--print: no llama.cpp wheel, the compiled extras kept)" "$(has "$OUT" "kept from the previous install: --full" && { has "$OUT" "tool install .*--with llama-cpp-python --constraints" || has "$OUT" "needs a C compiler"; }; echo $?)" "$OUT"
+
+    # A custom data dir is kept through the gateway pointer (it names the data dir that holds this installer's state).
+    BG_ARGS="--no-console --data-dir $WORK/up_dd/data" bg_case up_dd 1
+    BG_ARGS="--no-console" bg_case up_dd 1
+    check "a plain re-run keeps the custom --data-dir (found through the gateway pointer)" "$([[ $RC == 0 ]] && has "$OUT" "kept from the previous install: --data-dir $WORK/up_dd/data" && has "$OUT" "^AbstractFramework $FW found: already up to date" && [[ ! -e "$WORK/up_dd/home/$DATA_REL/bootstrap.env" ]]; echo $?)" "$OUT"
+
+    # --pin latest (the newest gateway): no release matrix, no release recorded.
+    BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$UP_OLD" BG_ARGS="--no-console --pin latest" bg_case up_latest2 1
+    check "--pin latest: says what it installs, no release matrix, no release recorded" "$([[ $RC == 0 ]] && has "$OUT" "found: upgrading to the newest abstractgateway (--pin latest)" && ! grep -qs "abstractcore==" "$DATA_T/uv-constraints.txt" && grep -qx "FRAMEWORK_VERSION=" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
+
+    # The Update button's run: --no-start installs, never touches the running gateway, and says a restart is due.
+    BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$UP_OLD" BG_ARGS="--no-console --no-start --yes" \
+        BG_FREEZE_BEFORE='abstractgateway==0.7.0\n' BG_FREEZE_AFTER="abstractgateway==$GW_PIN\n" bg_case up_nostart 1
+    check "--no-start: upgraded, the gateway not started or restarted, a restart is said to be due" "$([[ $RC == 0 ]] && has "$OUT" "AbstractFramework is installed (--no-start)" && has "$OUT" "^  Upgraded: AbstractFramework 0.6.0 -> $FW" && has "$OUT" "still runs the previous version until it restarts" && ! grep -q "serve\|service install" "$GWLOG" && grep -qx "MODE=background" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
+
+    # The login item cannot be registered (launchd's "Bootstrap failed: 5"): never leave the gateway stopped.
+    BG_SERVICE=1 BG_SERVICE_FAIL=1 BG_STATE="PORT=$BG_PORT\nMODE=service\nPROFILE=light\n" bg_case up_svcfail 1
+    check "service install fails: the gateway starts in the background instead, and it is said" "$([[ $RC == 0 ]] && has "$OUT" "starting the gateway in the background instead" && grep -qx "abstractgateway serve" "$GWLOG" && grep -qx "MODE=background" "$DATA_T/bootstrap.env" && has "$OUT" "Start at login could not be turned on"; echo $?)" "$OUT"
+
+    # Linux, a running systemd user unit: `service install` (enable --now) leaves it on the old code.
+    UP_SVC="PORT=$BG_PORT\nMODE=service\nPROFILE=light\nFRAMEWORK_VERSION=0.6.0\n"
+    BG_LINUX=1 BG_SERVICE=1 BG_UNIT_ACTIVE=1 BG_STATE="$UP_SVC" BG_FREEZE_BEFORE='abstractgateway==0.7.0\n' BG_FREEZE_AFTER="abstractgateway==$GW_PIN\n" bg_case up_systemd 1
+    check "systemd: a running unit is restarted after an upgrade (after service install)" "$([[ $RC == 0 ]] && grep -qx "abstractgateway service install --port $BG_PORT" "$GWLOG" && grep -qx "systemctl --user restart abstractgateway.service" "$SYSTEMCTL_LOG" && has "$OUT" "systemd user session available"; echo $?)" "$OUT"
+    BG_LINUX=1 BG_SERVICE=1 BG_UNIT_ACTIVE=1 BG_STATE="PORT=$BG_PORT\nMODE=service\nPROFILE=light\nFRAMEWORK_VERSION=$FW\nGATEWAY_SPEC=abstractgateway==$GW_PIN\nVOICE_SPEC=abstractvoice[supertonic,stt]\n" BG_UV_LIST="abstractgateway v$GW_PIN" BG_FREEZE_BEFORE="abstractgateway==$GW_PIN\n" bg_case up_systemd_same 1
+    check "systemd: nothing changed, no restart" "$([[ $RC == 0 ]] && ! grep -q "restart" "$SYSTEMCTL_LOG"; echo $?)" "$SYSTEMCTL_LOG"
+    BG_LINUX=1 BG_SERVICE=1 BG_UNIT_ACTIVE=0 BG_STATE="$UP_SVC" BG_FREEZE_BEFORE='abstractgateway==0.7.0\n' BG_FREEZE_AFTER="abstractgateway==$GW_PIN\n" bg_case up_systemd_idle 1
+    check "systemd: a unit that was not running is started by service install, not restarted" "$([[ $RC == 0 ]] && ! grep -q "restart" "$SYSTEMCTL_LOG" && grep -qx "abstractgateway service install --port $BG_PORT" "$GWLOG"; echo $?)" "$SYSTEMCTL_LOG"
 fi
 
 echo ""

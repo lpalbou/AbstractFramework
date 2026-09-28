@@ -386,6 +386,15 @@ _GGUF_SKIPPED = "GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; r
 _LLAMA = "https://abetlen.github.io/llama-cpp-python/whl"
 
 
+def _release_matrix() -> list[str]:
+    """The release's Python packages in the gateway's environment, exact (install-manifest.json
+    python_packages minus the gateway, which is the tool's own requirement, and the Assistant,
+    a separate app): what the installer passes to uv as constraints."""
+    manifest = json.loads((ROOT / "docs" / "installers" / "install-manifest.json").read_text(encoding="utf-8"))
+    return [f"{p['distribution']}=={p['version']}" for p in manifest["python_packages"]
+            if p["id"] not in ("abstractgateway", "abstractassistant")]
+
+
 def _fake_bin(tmp_path: Path, *, compiler: bool, machine: str | None = None) -> Path:
     """xcode-select/cc stubs (`compiler=False` simulates a Mac without Xcode CLT) and an
     optional `uname -m` override to simulate another CPU."""
@@ -455,7 +464,7 @@ def test_install_sh_default_takes_llama_cpp_from_the_prebuilt_wheel(tmp_path: Pa
     assert proc.returncode == 0, proc.stderr
     out = proc.stdout
     assert _printed_overrides(out) == _DEFAULT_OVERRIDES
-    assert _printed_block(out, "uv-constraints.txt:") == [f"llama-cpp-python=={pin}"]
+    assert _printed_block(out, "uv-constraints.txt:") == [*_release_matrix(), f"llama-cpp-python=={pin}"]
     install = _install_line(out)
     # uv splits --overrides/--constraints values at whitespace (macOS "Application
     # Support"), so the install runs from the data dir with relative file names
@@ -480,8 +489,10 @@ def test_install_sh_skips_gguf_where_no_wheel_exists(tmp_path: Path) -> None:
     assert _GGUF_SKIPPED.format(flag="--full") in out
     assert _printed_overrides(out) == _NO_GGUF_OVERRIDES
     install = _install_line(out)
-    assert "--find-links" not in install and "--constraints" not in install
-    assert "--with 'webrtcvad-wheels>=2.0.14' --with 'abstractvoice[supertonic,stt]' --overrides uv-overrides.txt " in install
+    assert "--find-links" not in install
+    # No llama.cpp pin: the constraints are the release matrix alone.
+    assert _printed_block(out, "uv-constraints.txt:") == _release_matrix()
+    assert "--with 'webrtcvad-wheels>=2.0.14' --with 'abstractvoice[supertonic,stt]' --constraints uv-constraints.txt --overrides uv-overrides.txt " in install
     assert "GGUF:       skipped (no prebuilt wheel for " in out
 
 
@@ -572,7 +583,7 @@ def test_install_sh_full_builds_the_compiled_extras(tmp_path: Path) -> None:
     out = proc.stdout
     assert _printed_overrides(out) == _ALWAYS
     install = _install_line(out)
-    assert f"--with llama-cpp-python --overrides uv-overrides.txt --no-build-package webrtcvad --no-build-package vllm {_CLI_FROM} 'abstractgateway[" in install
+    assert f"--with llama-cpp-python --constraints uv-constraints.txt --overrides uv-overrides.txt --no-build-package webrtcvad --no-build-package vllm {_CLI_FROM} 'abstractgateway[" in install
     assert "--find-links" not in install
     for pkg in _COMPILED_EXTRAS:
         assert pkg not in install
