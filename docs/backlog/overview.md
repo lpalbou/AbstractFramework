@@ -59,7 +59,7 @@ Release follow-ups after the 2026-09-26 wave:
 2. Wave 2 (2026-09-28, untracked/wave2/PLAN.md; root 0.6.0 staged on `wave2/root`): recorded completed
    0890, 0930 (AbstractCode half; the console half is 0971), 0943, 0946–0950, and 0941 (released with
    root 0.5.0 on 2026-09-27). Released so far: voice 0.13.0, core 2.18.0 (+ console crate 0.4.0), runtime
-   0.7.0, agent 0.3.17, AbstractUIC v0.1.14, abstractcode 0.7.0 / web 0.6.0; pending: gateway 0.7.0,
+   0.7.1, agent 0.3.17, AbstractUIC v0.1.14, abstractcode 0.7.0 / web 0.6.0; pending: gateway 0.7.0,
    ui-kit 0.1.15, flow 0.4.0, continuum 0.4.0, entity 0.3.0, observer 0.2.0, assistant 0.9.0, root 0.6.0.
    Follow-ups filed 0951–0976 (below); operator actions: [0952](planned/0952_monitor_memory_npm_trusted_publisher.md)
    (npm trusted publisher for monitor-memory) and the decision gate
@@ -373,7 +373,7 @@ Root 0.3.1 pins abstractcore 2.15.1, abstractgateway 0.4.2, AbstractRuntime 0.4.
 
 Ledger `untracked/wave2/PLAN.md`; root staging note `untracked/wave2/stage-root.md`. Released: abstractvoice
 `v0.13.0` → `1cdd727`; abstractcore `v2.18.0` → `238b693` (+ crate abstractcore-console 0.4.0, GHCR); AbstractRuntime
-0.7.0 (`2f64a40`, dispatch); abstractagent 0.3.17 (`98a96d7`, dispatch); AbstractUIC `v0.1.14` → `d12775f` (ui-kit 0.1.14,
+0.7.0 (`2f64a40`, dispatch) and 0.7.1 (`v0.7.1` → `ce4baa4`; image drop notice and image token estimate); abstractagent 0.3.17 (`98a96d7`, dispatch); AbstractUIC `v0.1.14` → `d12775f` (ui-kit 0.1.14,
 panel-chat 0.1.19, app-server 0.1.11, monitor-gpu 0.1.10; monitor-memory 0.1.10 failed, 0952); abstractcode `v0.7.0` /
 `web-v0.6.0` → `227e000`. Staged: abstractgateway 0.7.0 (`cbe2ef5`, console 0.11.0), AbstractUIC 0.1.15 (`45e9031`,
 ui-kit only), flow 0.4.0, continuum 0.4.0, entity 0.3.0, observer 0.2.0 (`541fb1e`), assistant 0.9.0 (`e981344`), root

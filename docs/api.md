@@ -60,7 +60,7 @@ The meta-package version (`0.6.0` for this release).
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.6.0:
-`abstractcore` 2.18.0, `abstractruntime` 0.7.0, `abstractagent` 0.3.17, `abstractgateway` 0.7.0,
+`abstractcore` 2.18.0, `abstractruntime` 0.7.1, `abstractagent` 0.3.17, `abstractgateway` 0.7.0,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.0, `abstractvision` 0.3.30,
 `abstractmusic` 0.1.15, `abstractassistant` 0.9.0.
 

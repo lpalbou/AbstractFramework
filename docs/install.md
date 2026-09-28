@@ -441,7 +441,7 @@ A plain `pip install` of the `apple` or `gpu` profile builds the
 does not.
 
 `abstractframework` 0.6.0 pins `abstractgateway==0.7.0`, `abstractassistant==0.9.0`,
-`abstractcore==2.18.0`, `AbstractRuntime==0.7.0`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
+`abstractcore==2.18.0`, `AbstractRuntime==0.7.1`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.0`,
 `abstractvision==0.3.30` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions

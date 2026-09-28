@@ -105,7 +105,8 @@ runs automations; history replay keeps whole messages up to 50,000 tokens and ne
   route, and the terminal console 0.11.0.
 - **abstractcore 2.18.0** (was 2.17.0): `engine_missing`, `needs_gpu_limit`, the saved OpenAI key
   for voice, the key guards above, and `abstractcore-console` 0.4.0.
-- **AbstractRuntime 0.7.0** (was 0.6.0): the 50,000-token history window, recorded in each run.
+- **AbstractRuntime 0.7.1** (was 0.6.0): the 50,000-token history window, recorded in each run;
+  images in replayed history stay images, and an image counts as a flat 512 tokens in the window.
   Library callers of `session_chat_messages` and `automation_timeline_messages` should read its
   changelog's Breaking note.
 - **abstractagent 0.3.17** (was 0.3.16): ReAct sends the runtime's history window when the host

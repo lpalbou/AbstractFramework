@@ -16,7 +16,7 @@ __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.18.0",
-    "abstractruntime": "0.7.0",
+    "abstractruntime": "0.7.1",
     "abstractagent": "0.3.17",
     "abstractgateway": "0.7.0",
     "abstractskill": "0.3.0",
