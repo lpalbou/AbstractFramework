@@ -466,6 +466,21 @@ function Main {
                 if (-not $script:DryRun) { Remove-Item -LiteralPath $cExe -Force -ErrorAction SilentlyContinue }
             }
         }
+        # Gateways before 0.7.1 installed their terminal app into <data>\apps\bin (not on PATH). The
+        # data dir stays without -Purge, so remove what the gateway put there: its installable terminal
+        # apps (apps_manager TUI_BY_APP: abstractcode; it never installs the console), and the folder
+        # only when that leaves it empty.
+        $staleApps = Join-Path $DataDir 'apps\bin'
+        foreach ($t in @('abstractcode')) {
+            $f = Join-Path $staleApps "$t$exeSuffix"
+            if (-not (Test-Path -LiteralPath $f)) { continue }
+            Write-Host "  `$ Remove-Item '$f'" -ForegroundColor DarkGray
+            $script:Twins.Add("Remove-Item '$f'")
+            if (-not $script:DryRun) { Remove-Item -LiteralPath $f -Force -ErrorAction SilentlyContinue }
+        }
+        if (-not $script:DryRun -and (Test-Path -LiteralPath $staleApps) -and -not (Get-ChildItem -LiteralPath $staleApps -Force | Select-Object -First 1)) {
+            Remove-Item -LiteralPath $staleApps -Force -ErrorAction SilentlyContinue
+        }
         Write-Step 'Data'
         # Before the data dir goes (-Purge): the pointer is matched against its resolved path.
         $ptrDir = Get-PointerDataDir $pointerFile

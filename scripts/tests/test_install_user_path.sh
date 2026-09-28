@@ -720,16 +720,16 @@ echo "[15] uninstall removes the terminal app gateways before 0.7.1 put in <data
 AH="$WORK/appsbin/home"; AD="$AH/$DATA_REL"; mkdir -p "$AD/apps/bin"; printf 'MODE=background\n' >"$AD/bootstrap.env"
 printf '#!/bin/sh\n' >"$AD/apps/bin/abstractcode"; chmod +x "$AD/apps/bin/abstractcode"
 run_in appsbin -- sh "$SCRIPTS_DIR/uninstall.sh" --print
-check "--print: shows the removal of <data>/apps/bin/abstractcode, deletes nothing" "$([[ $RC == 0 && -f "$AD/apps/bin/abstractcode" ]] && has "$OUT" "rm -f $AD/apps/bin/abstractcode"; echo $?)" "$OUT"
+check "--print: shows the removal of <data>/apps/bin/abstractcode, deletes nothing" "$([[ $RC == 0 && -f "$AD/apps/bin/abstractcode" ]] && has "$OUT" "rm -f '$AD/apps/bin/abstractcode'"; echo $?)" "$OUT"
 run_in appsbin AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
-check "--uninstall: the gateway-installed abstractcode and the emptied folder are gone, the data is kept" "$([[ $RC == 0 && ! -e "$AD/apps/bin" && -d "$AD/apps" && -f "$AD/bootstrap.env" ]] && has "$OUT" "the terminal app an older gateway installed"; echo $?)" "$OUT"
+check "--uninstall: the gateway-installed abstractcode and the emptied folder are gone, the data is kept" "$([[ $RC == 0 && ! -e "$AD/apps/bin" && -d "$AD/apps" && -f "$AD/bootstrap.env" ]] && has "$OUT" "rm -f '$AD/apps/bin/abstractcode'"; echo $?)" "$OUT"
 BH="$WORK/appsbin2/home"; BD="$BH/$DATA_REL"; mkdir -p "$BD/apps/bin"; printf 'MODE=background\n' >"$BD/bootstrap.env"
 printf '#!/bin/sh\n' >"$BD/apps/bin/abstractcode"; printf 'mine\n' >"$BD/apps/bin/abstractgateway-console"
 run_in appsbin2 AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
 check "--uninstall: a file the gateway never installs there is kept, and so is the folder" "$([[ $RC == 0 && ! -e "$BD/apps/bin/abstractcode" && -f "$BD/apps/bin/abstractgateway-console" ]]; echo $?)" "$OUT"
 CH="$WORK/appsbin3/home"; CD="$CH/$DATA_REL"; mkdir -p "$CD"; printf 'MODE=background\n' >"$CD/bootstrap.env"
 run_in appsbin3 AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
-check "--uninstall: no <data>/apps/bin, nothing said about it" "$([[ $RC == 0 ]] && ! has "$OUT" "an older gateway installed"; echo $?)" "$OUT"
+check "--uninstall: no <data>/apps/bin, nothing said about it" "$([[ $RC == 0 ]] && ! has "$OUT" "apps/bin"; echo $?)" "$OUT"
 
 echo ""
 echo "passed: $PASS  failed: $FAIL"

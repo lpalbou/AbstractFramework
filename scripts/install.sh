@@ -1043,6 +1043,16 @@ if [ "$UNINSTALL" = 1 ]; then
     }
     uninstall_crate "$CONSOLE_NAME" "$CONSOLE_BIN" "$CRATE_ROOT" "the terminal console" "Terminal console"
     uninstall_crate "$CODE_NAME" "$CODE_BIN" "$CODE_ROOT" "AbstractCode's terminal client" "AbstractCode terminal client"
+    # Gateways before 0.7.1 installed their terminal app into <data>/apps/bin (not on PATH). The
+    # data dir stays without --purge, so remove what the gateway put there: its installable terminal
+    # apps (apps_manager TUI_BY_APP: abstractcode; it never installs the console), and the folder
+    # only when that leaves it empty.
+    _stale="$DATA_DIR/apps/bin"
+    for _t in abstractcode; do
+        [ -e "$_stale/$_t" ] || continue
+        run "remove the terminal app an older gateway installed ($_t)" rm -f "$_stale/$_t"
+    done
+    [ "$PRINT" = 1 ] || rmdir "$_stale" 2>/dev/null || true
     [ "$ST_RUST_BY_US" = 1 ] && info "kept: Rust, which the installer added for the terminal console and AbstractCode's terminal client (remove it with: ${CARGO_HOME:-$HOME/.cargo}/bin/rustup self uninstall)"
     step "Data"
     # Before the data dir goes (--purge): the pointer is matched against its resolved path.
