@@ -5,7 +5,7 @@
 > Created: 2026-09-25
 > Priority: high
 > Labels: decision-gate, models, catalog, apple-silicon
-> Status: completed 2026-09-28. Answered by AbstractCore 2.18.1's fit rule (abstractcore `9026a04`, released in 2.18.1 `bd945f8`); root 0.6.2 pins abstractcore 2.18.1
+> Status: completed 2026-09-28. Operator ruling: the tiers stay as in 2.18.0; AbstractCore 2.18.1 (abstractcore `5cf2b6a`) aligns the fit estimate with the operator's 24 GB measurement; root 0.6.2 pins abstractcore 2.18.1
 
 ## Summary
 
@@ -40,26 +40,27 @@ explicitly left out of abstractcore 2.15.1 pending this decision (STATUS patch w
 
 ## Resolution (2026-09-28)
 
-The gate is answered by the rule AbstractCore 2.18.1 adopts, "recommendations must fit": each
-Apple silicon tier starts at the first memory size Apple ships where its model fits macOS's default
-GPU memory limit (core CHANGELOG `[2.18.1]`, `APPLE_TEXT_TIERS` in `config/model_catalog.py`):
+Operator ruling (2026-09-28, relayed by the lead): the tiers stay as they were in 2.18.0, below
+24 GiB Qwen3.5 9B, 24 to under 128 GiB Qwen3.8 27B, 128 GiB and up Qwen3.8 Flash-Next. Option 2
+(9B up to 32 GiB) and a 1.7B tier for 8 GB Macs are not adopted. Instead, AbstractCore 2.18.1
+(`5cf2b6a`; core CHANGELOG `[2.18.1]`, `docs/recommended-models.md`) makes the fit estimate match
+the operator's measurement on a 24 GB Mac mini: the default GPU memory limit is about 75% of RAM
+(24 GB -> ~17.8 GB measured), MLX keeps a flat 2 GiB working reserve, and the highest limit it
+suggests leaves macOS max(4 GiB, 12.5% of RAM). The command is printed and never run.
 
-| Unified memory | Recommended text model |
-|---|---|
-| below 16 GiB | Qwen3 1.7B 8-bit (new; the largest catalog text model that fits 8 GB) |
-| 16 to below 32 GiB | Qwen3.5 9B (option 2 on record: the 9B boundary moves from 24 to 32 GiB) |
-| 32 to below 128 GiB | Qwen3.8 27B |
-| 128 GiB and above | Qwen3.8 Flash-Next, verdict `needs_gpu_limit` with the exact `sudo sysctl iogpu.wired_limit_mb=…` shown (option 1, keep the tier, with the command instead of a bare warning; the console never runs it) |
+| Unified memory | Recommended text model | Verdict |
+|---|---|---|
+| below 24 GiB | Qwen3.5 9B | fits from 16 GB; "may not fit" on 8 GB |
+| 24 to below 128 GiB | Qwen3.8 27B | on 24 GB: fits with a small context (about 1.1k tokens), about 34k tokens after `sudo sysctl iogpu.wired_limit_mb=20480`; fits from 32 GB |
+| 128 GiB and above | Qwen3.8 Flash-Next | fits after raising the GPU memory limit: `sudo sysctl iogpu.wired_limit_mb=114688` (was 117760 with the RAM-minus-8-GiB rule) |
 
-Existing routes are unchanged (`apply-recommended` reports the new pick as `kept` unless `--force`).
-No verbatim operator quote was recorded in this item; the ruling was carried by the lead's
-2026-09-28 cascade GO (core 2.18.1 -> gateway 0.7.2 -> root 0.6.2).
+Existing routes are unchanged.
 
 ## Acceptance criteria
 
-- [x] Ruling recorded (the fit rule above, via the 2026-09-28 cascade GO).
-- [x] `APPLE_TEXT_TIERS` changed per the ruling; every tier's pick fits at its lower bound, and the
-      128 GiB tier carries the GPU-limit command (`needs_gpu_limit`).
+- [x] Ruling recorded (tiers unchanged; the fit estimate follows the 24 GB measurement).
+- [x] `APPLE_TEXT_TIERS` per the ruling; a tier whose pick does not fit comfortably says so with
+      the GPU-limit command (small context on 24 GB, `needs_gpu_limit` on 128 GB).
 - [x] Released in an abstractcore patch (2.18.1); the root pin follows in root 0.6.2 (0982).
       The gateway's tier test reads core's table (`tests/test_gateway_recommended_text_tiers.py`),
       green on 2.18.0 and 2.18.1.

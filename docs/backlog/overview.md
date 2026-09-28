@@ -14,7 +14,7 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 |---|---|---|
 | Planned | 151 | 108 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0962, 0964–0975, 0977–0979, 0981, 0983 included; 0869, 0952, 0963 completed 2026-09-28; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931, 0976 included; 0901 promoted to planned) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 259 | 249 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0869, 0890, 0930, 0941, 0943, 0946–0950, 0952, 0963, 0980, 0982 (2026-09-28; 0941 released 2026-09-27 with root 0.5.0, 0980 is the patch wave's root record, root 0.6.1; 0982 is root 0.6.2's record, and 0869 is answered by abstractcore 2.18.1). |
+| Completed | 259 | 249 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0869, 0890, 0930, 0941, 0943, 0946–0950, 0952, 0963, 0980, 0982 (2026-09-28; 0941 released 2026-09-27 with root 0.5.0, 0980 is the patch wave's root record, root 0.6.1; 0982 is root 0.6.2's record, and 0869 is closed by the operator's tier ruling, carried by abstractcore 2.18.1). |
 | Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -76,7 +76,7 @@ Earlier release follow-ups (after the 2026-09-24 waves; still open unless noted)
 
 1. Owner actions and decision gates: sign and notarize the Mac installer
    ([0868](planned/0868_sign_and_notarize_the_mac_installer.md)); the Apple text tiers
-   ([0869](completed/0869_apple_text_tier_boundaries_vs_the_fit_budget.md), answered by abstractcore 2.18.1's fit rule); rule on the
+   ([0869](completed/0869_apple_text_tier_boundaries_vs_the_fit_budget.md), closed: tiers unchanged by operator ruling, fit estimate in abstractcore 2.18.1); rule on the
    gateway roles ([0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)); crates.io
    trusted publishing ([0857](completed/0857_crates_io_trusted_publishing_for_console_crates.md), done 2026-09-26).
 2. Public-surface leaks first: the gateway docs site publishes `docs/backlog/**`
@@ -453,8 +453,8 @@ to the proposed versions. Completed records: 0906–0915 (below).
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
 | 0982 | [Patch 0.6.2: one upgrade path](completed/0982_patch_0_6_2_one_upgrade_path.md) | 2026-09-28 | Root record of 0.6.2 (staged on `wave4/root`): the line, the `.command`, and Update in the consoles and tray run one installer; remembered options, release matrix, restart everywhere; `--no-start` keeps the recorded port; pins core 2.18.1, gateway 0.7.2, console 0.11.1. |
-| 0983 | [Follow-ups after root 0.6.2](planned/0983_follow_ups_after_0_6_2.md) | Planned | GitHub API rate limit of the update check, core's stored image route on 8 GB Macs, hand-started gateway on the recorded port without `--no-start`, pwsh coverage, update log length. |
-| 0869 | [Apple text tier boundaries vs the fit budget](completed/0869_apple_text_tier_boundaries_vs_the_fit_budget.md) | 2026-09-28 | Moved from `planned/`. Answered by abstractcore 2.18.1's fit rule (1.7B below 16 GiB, 9B 16–32, 27B 32–128, Flash-Next 128+ with the GPU-limit command); root 0.6.2 pins it. |
+| 0983 | [Follow-ups after root 0.6.2](planned/0983_follow_ups_after_0_6_2.md) | Planned | GitHub API rate limit of the update check, core's stored image route on 8 GB Macs (done in core 2.18.1), hand-started gateway on the recorded port without `--no-start`, pwsh coverage, update log length. |
+| 0869 | [Apple text tier boundaries vs the fit budget](completed/0869_apple_text_tier_boundaries_vs_the_fit_budget.md) | 2026-09-28 | Moved from `planned/`. Operator ruling: tiers unchanged (9B below 24 GiB, 27B 24–128, Flash-Next 128+); abstractcore 2.18.1 aligns the fit estimate with the 24 GB measurement (sysctl 20480 on 24 GB, 114688 on 128 GB, printed, never run); root 0.6.2 pins it. |
 | 0980 | [Patch 0.6.1: commands on PATH, terminal sign-in, shared Run now hint](completed/0980_patch_0_6_1_commands_on_path_tui_sign_in_run_now_hints.md) | 2026-09-28 | Root record of the patch wave (staged on `wave3/root`): fix/installer-clis + fix/run-now-hint merged, pins gateway 0.7.1, assistant 0.9.1, code 0.7.1 / web 0.6.1, observer 0.2.1. |
 | 0981 | [Follow-ups after root 0.6.1](planned/0981_follow_ups_after_0_6_1.md) | Planned | Gate findings (gateway, AbstractCode, kit accessibility), docs contradicting code, small product bugs from the site screenshots, release-process gaps. |
 | 0963 | [Kit pointer reader: FIFO-safe open](completed/0963_kit_gateway_pointer_reader_fifo_safe_open.md) | 2026-09-28 | Moved from `planned/`. app-server 0.1.12 (AbstractUIC v0.1.15, on npm); the TUI, console and Assistant readers are FIFO-safe too. |

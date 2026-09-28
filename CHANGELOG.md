@@ -52,10 +52,17 @@ terminal console `abstractgateway-console` 0.11.1; every other version is unchan
   that work.
 - **Recommendations for every capability** (AbstractCore 2.18.1).
   `abstractcore models recommendations` shows the recommended model for text, image input, speech
-  output, speech input, image, video and music on every kind of machine (`--host`: this one), and
-  every recommendation fits the machine it is made for. The Apple silicon text tiers start where
-  their model fits; on a Mac too small for the recommended image model, the gateway's first-run
-  guide shows it as not available here, with the reason. See AbstractCore's
+  output, speech input, image, video and music on every kind of machine (`--host`: this one), with
+  the engine, the download size, the memory need and whether it fits. On Apple silicon the fit
+  estimate follows the measured GPU memory limit (about 75% of unified memory by default). The text
+  tiers are unchanged: Qwen3.5 9B below 24 GB (an 8 GB Mac is told it may not fit), Qwen3.8 27B
+  from 24 GB, Qwen3.8 Flash-Next from 128 GB. A model that runs only with a small context, such as
+  Qwen3.8 27B on a 24 GB Mac, says so and prints the `sudo sysctl iogpu.wired_limit_mb=…` command
+  that gives it more (20480 on 24 GB, 114688 for Flash-Next on 128 GB); nothing runs it for you.
+  The recommended image model is memory-gated: on an 8 GB Mac the gateway's first-run guide shows
+  it as not available here, with the reason, and a saved image or video route that does not fit is
+  flagged. The Wan2.2 video memory figures are AbstractVision/mlx-gen's measurements. See
+  AbstractCore's
   [Recommended models](https://github.com/lpalbou/abstractcore/blob/main/docs/recommended-models.md).
 
 ### Documentation

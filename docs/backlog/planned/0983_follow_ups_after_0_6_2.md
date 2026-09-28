@@ -18,11 +18,10 @@ the 0.6.2 staging.
    the check is cached 1 h). An exhausted limit reads "GitHub … answered HTTP 403", in band. Decide
    whether a shared NAT (office, CI) needs a documented troubleshooting entry or a different
    resolution path; never an exception either way.
-2. **Stored image route on an 8 GB Mac is not flagged (core).** A Mac that already has
-   `output.image` stored (seeded by core 2.18.0, or copied from a larger Mac) reads "configured":
-   `configured_routes_unavailable` never runs the memory gate, so mlx-gen would run out of memory at
-   first use. Fix in abstractcore: apply `_fit_gate_reason` to the three memory-gated routes there
-   (image, video, music).
+2. ~~**Stored image route on an 8 GB Mac is not flagged (core).**~~ **Done** in abstractcore 2.18.1
+   (`47b1ba9`): a saved image or video route whose catalog model does not fit is flagged
+   `route_unavailable` (grid, `config defaults`, `apply-recommended`) with the recommendation's
+   reason, from the same fit verdict; the saved routes are never changed. Root 0.6.2 pins 2.18.1.
 3. **Hand-started gateway on the recorded port, without `--no-start` (root installer).** A plain
    re-run still treats a gateway it did not start (no pid file, not the login item) as another
    program and moves to the next free port (`--no-start` keeps the port since 0.6.2). Consider
