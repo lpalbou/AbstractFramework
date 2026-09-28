@@ -802,6 +802,10 @@ def test_install_ps1_carries_the_same_cli_lists_and_flags() -> None:
     assert "Write-Host \"  Sign in (terminal, once): $codeShown login --token $codeTok\"" in ps1
     assert "Write-Host \"    or, on this machine, without a token: $tuiCommand\"" in ps1
     assert "PLACEHOLDER" not in ps1 and "AbstractCode (terminal): $codeCmd" not in ps1
+    # A non-purge uninstall removes the terminal app gateways before 0.7.1 put in <data>\apps\bin
+    # (only abstractcode, the gateway's one installable terminal app), and the folder when empty.
+    assert "$staleApps = Join-Path $DataDir 'apps\\bin'" in ps1
+    assert "foreach ($t in @('abstractcode')) {" in ps1
 
 
 def test_install_sh_code_cli_target_is_one_variable(tmp_path: Path) -> None:

@@ -713,6 +713,24 @@ printf '{\n  "data_dir": "/elsewhere/other-gateway",\n  "port": 9999,\n  "schema
 run_in ptr_keep AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
 check "--uninstall: another gateway's pointer is kept, and said so" "$([[ $RC == 0 && -f "$OH/.abstractframework/gateway.json" ]] && has "$OUT" "kept the gateway pointer"; echo $?)" "$OUT"
 
+echo "[15] uninstall removes the terminal app gateways before 0.7.1 put in <data>/apps/bin (data kept)"
+# The gateway's Apps page installed abstractcode into <data>/apps/bin (not on PATH) before 0.7.1.
+# A non-purge uninstall removes it (only the binaries the gateway installs there: TUI_BY_APP ->
+# abstractcode), and the folder only when it is then empty.
+AH="$WORK/appsbin/home"; AD="$AH/$DATA_REL"; mkdir -p "$AD/apps/bin"; printf 'MODE=background\n' >"$AD/bootstrap.env"
+printf '#!/bin/sh\n' >"$AD/apps/bin/abstractcode"; chmod +x "$AD/apps/bin/abstractcode"
+run_in appsbin -- sh "$SCRIPTS_DIR/uninstall.sh" --print
+check "--print: shows the removal of <data>/apps/bin/abstractcode, deletes nothing" "$([[ $RC == 0 && -f "$AD/apps/bin/abstractcode" ]] && has "$OUT" "rm -f $AD/apps/bin/abstractcode"; echo $?)" "$OUT"
+run_in appsbin AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
+check "--uninstall: the gateway-installed abstractcode and the emptied folder are gone, the data is kept" "$([[ $RC == 0 && ! -e "$AD/apps/bin" && -d "$AD/apps" && -f "$AD/bootstrap.env" ]] && has "$OUT" "the terminal app an older gateway installed"; echo $?)" "$OUT"
+BH="$WORK/appsbin2/home"; BD="$BH/$DATA_REL"; mkdir -p "$BD/apps/bin"; printf 'MODE=background\n' >"$BD/bootstrap.env"
+printf '#!/bin/sh\n' >"$BD/apps/bin/abstractcode"; printf 'mine\n' >"$BD/apps/bin/abstractgateway-console"
+run_in appsbin2 AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
+check "--uninstall: a file the gateway never installs there is kept, and so is the folder" "$([[ $RC == 0 && ! -e "$BD/apps/bin/abstractcode" && -f "$BD/apps/bin/abstractgateway-console" ]]; echo $?)" "$OUT"
+CH="$WORK/appsbin3/home"; CD="$CH/$DATA_REL"; mkdir -p "$CD"; printf 'MODE=background\n' >"$CD/bootstrap.env"
+run_in appsbin3 AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
+check "--uninstall: no <data>/apps/bin, nothing said about it" "$([[ $RC == 0 ]] && ! has "$OUT" "an older gateway installed"; echo $?)" "$OUT"
+
 echo ""
 echo "passed: $PASS  failed: $FAIL"
 [[ "$FAIL" == 0 ]]
