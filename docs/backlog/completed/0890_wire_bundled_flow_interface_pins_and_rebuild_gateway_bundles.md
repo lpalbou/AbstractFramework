@@ -5,7 +5,7 @@
 > Created: 2026-09-26
 > Priority: low
 > Labels: flow, gateway, interfaces, release-step
-> Status: completed 2026-09-28 — UNRELEASED (abstractflow branch `wave2/mount`; ships in the wave-2 release)
+> Status: completed 2026-09-28 — ships in abstractflow 0.4.0 (main `d59b6b0` contains `3ad9dbc`, `561f4bd`; publishing in the wave-2 release) and root abstractframework 0.6.0
 > Moved: `planned/0890_…` → `completed/0890_…` on 2026-09-28
 
 ## Summary

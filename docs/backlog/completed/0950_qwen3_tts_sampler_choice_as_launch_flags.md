@@ -5,6 +5,8 @@
 > Created: 2026-09-27
 > Priority: low
 > Labels: voice, qwen3-tts, flags, next-wave
+> Status: completed 2026-09-28 — released in abstractvoice 0.13.0 (tag `v0.13.0` → `1cdd727`)
+> Moved: `planned/0950_qwen3_tts_sampler_choice_as_launch_flags.md` → `completed/0950_qwen3_tts_sampler_choice_as_launch_flags.md` on 2026-09-28
 
 ## Summary
 
@@ -47,3 +49,9 @@ by the voice release worker (~1.5–2 h).
 abstractvoice branch `wave2/voice` (worktree `untracked/wave2/voice`), local commits, no version bump;
 stays planned until the release lands: `05f6748` the Qwen3-TTS predictor/sampler choice on every
 surface (CLI, REPL, web example, plugin settings); `339c09f` docs and CHANGELOG [Unreleased].
+
+## Completion (2026-09-28)
+
+Released in abstractvoice 0.13.0: the Qwen3-TTS codebook predictor and sampler choice on every surface (launch flags, REPL,
+web example, AbstractCore plugin settings), validated before Transformers loads (`1cdd727`). Pinned by root
+abstractframework 0.6.0.

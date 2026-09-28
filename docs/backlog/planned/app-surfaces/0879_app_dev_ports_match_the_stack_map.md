@@ -1,6 +1,6 @@
 # 0879 — App `npm run dev` ports match the stack port map
 
-> Package: abstractcontinuum (package.json), abstractentity (package.json)
+> Package: abstractcontinuum (package.json), abstractentity (package.json), abstractflow (bin/flags.js, package.json)
 > Type: bug
 > Created: 2026-09-25
 > Priority: low
@@ -39,3 +39,10 @@ The stack map (abstractgateway `apps_manager.STACK_PORTS`, `scripts/start-local.
 ## Receipts
 
 - `untracked/coredoc-2026-09-25/STATUS.md` (abstractcontinuum row); related 0859.
+
+## Status update 2026-09-28 (Flow joins this item)
+
+AbstractFlow 0.4.0 (`d59b6b0`) runs on port **3003** too: `bin/flags.js` `defaultPort: 3003` (the standalone
+`npx @abstractframework/flow` default) and `package.json` `"dev": "vite --host --port 3003"`. The stack map gives Flow
+3005 and Code 3003, so a standalone Flow and Code web collide. Scope added: Flow's standalone default and dev port.
+Package: abstractflow (bin/flags.js, package.json) added. Source: wave-2 ledger ("flow port 3003 vs code", apps gate).

@@ -5,6 +5,8 @@
 > Created: 2026-09-27
 > Priority: normal
 > Labels: catalog, fit, apple-silicon, tiers, next-wave
+> Status: completed 2026-09-28 — released in abstractcore 2.18.0 (tag `v2.18.0` → `238b693`); console rendering in abstractgateway 0.7.0
+> Moved: `planned/0947_large_mac_tier_fit_and_gpu_wired_limit.md` → `completed/0947_large_mac_tier_fit_and_gpu_wired_limit.md` on 2026-09-28
 
 ## Summary
 
@@ -59,3 +61,10 @@ stays planned until the release lands: `95085fa` the GPU wired limit in the fit 
 on in-process routes, the stale local-model tests and the console's no-browser-without-display fix);
 `2ed029c` the web console's `needs_gpu_limit` badge, docs and CHANGELOG. The gateway consoles render
 `needs_gpu_limit` (abstractgateway `wave2/console` `7b13635`).
+
+## Completion (2026-09-28)
+
+Released in abstractcore 2.18.0: fit verdict `needs_gpu_limit` with `fit.gpu_limit` (the exact `sudo sysctl
+iogpu.wired_limit_mb=<MB>` command); the 128 GiB tier's recommended text model reports it instead of `too_large`, and
+`--fits` keeps such models. The gateway consoles render it (abstractgateway 0.7.0, `cbe2ef5`, staged; `console_catalog`
+passes `needs_gpu_limit`, `b30fe54`). Pinned by root abstractframework 0.6.0.

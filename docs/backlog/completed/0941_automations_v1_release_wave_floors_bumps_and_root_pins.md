@@ -1,6 +1,8 @@
 # 0941 — Automations v1 release wave: floors (gateway → runtime with automations), minor bumps, root pins
 
-- **Status:** planned (release checklist; starts only after the operator has validated Automations v1 and given an explicit per-release go)
+- **Status:** completed 2026-09-27 — released with root abstractframework 0.5.0 (tag `v0.5.0` → `e455fa3`)
+- **Moved:** `planned/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md` → `completed/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md` on 2026-09-28
+- **Earlier status:** planned (release checklist; starts only after the operator has validated Automations v1 and given an explicit per-release go)
 - **Created:** 2026-09-27
 - **Area:** abstractruntime, abstractgateway (+ console re-vendor), abstractuic (ui-kit, panel-chat), abstractflow, abstractobserver, abstractassistant, abstractframework (root pins, install manifest)
 - **Parent:** [0928](../completed/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md) (completed, UNRELEASED)
@@ -17,7 +19,7 @@ without the operator's explicit go for that release: earlier authorisations neve
      `test_controller_bundle_packaged.py`.
    - Release notes:
      - the custom-store requirements (create-if-absent, a run index for sessions; see
-       [0938](0938_runtime_start_session_starts_on_duck_typed_stores_documented_and_refused.md));
+       [0938](../planned/0938_runtime_start_session_starts_on_duck_typed_stores_documented_and_refused.md));
      - the non-strict history read now raises on a failing index (review 44 F5);
      - J50-1 (command results recorded before `e690b55` have no digest; irrelevant because no released gateway has
        automations).
@@ -62,3 +64,14 @@ sessions through `root_only` turn roots; its kind filter is abstractcode 0001 / 
 - [ ] The gateway's runtime floor names the release that contains `b000036` and `3cc9900` (W1, P2-2).
 - [ ] Root pins resolve in a clean venv: `pip install abstractframework` + `abstractframework doctor`.
 - [ ] A release trace record in `completed/` with tags → commits and follow-ups.
+
+## Completion (recorded 2026-09-28)
+
+The Automations v1 release wave ran on 2026-09-27 after the operator's GO (ledger
+`untracked/release-2026-09-27/PLAN.md`), in this order, each lower package visible before its dependents:
+AbstractRuntime 0.6.0 (dispatch, PyPI), abstractuic v0.1.13 (ui-kit 0.1.13, panel-chat 0.1.18 on npm),
+abstractflow 0.3.22 (`v0.3.22` → `94be966`), abstractobserver 0.1.14 (`v0.1.14` → `18ea296`), abstractassistant 0.8.0
+(`4d55008`), abstractcore 2.17.0 (`v2.17.0` → `6592d4b`), abstractgateway 0.6.0 (`v0.6.0` → `6733b22`, floor
+`AbstractRuntime>=0.6.0`, console crate 0.10.0) and root abstractframework 0.5.0 (`v0.5.0` → `e455fa3`; matrix 24/24 against
+PyPI with `UV_NO_CACHE=1`; the `.pkg` built from the tag). This item was left in `planned/` by oversight and is closed
+here with that evidence.

@@ -5,6 +5,8 @@
 > Created: 2026-09-27
 > Priority: normal
 > Labels: installer, discovery, cross-language, contract
+> Status: completed 2026-09-28 — ships in the wave-2 release (kit, AbstractCode released; gateway 0.7.0, assistant 0.9.0, the apps and root 0.6.0 publish from their staged heads; the root branch `wave2/root` merges only after they are visible)
+> Moved: `planned/0943_local_gateway_pointer_file_for_non_python_clients.md` → `completed/0943_local_gateway_pointer_file_for_non_python_clients.md` on 2026-09-28
 
 ## Summary
 
@@ -254,3 +256,17 @@ Open against the acceptance criteria:
 - `scripts/check_identity_sync.py` reads the sibling repos' main checkouts, so it passes only once
   the abstractuic, abstractassistant and abstractcode branches merge (it passes today against the
   branch worktrees: 36 ok).
+
+## Completion (2026-09-28)
+
+- **Open points above, closed:** the gateway terminal console reads the pointer (after `--gateway-url`/`--url` and the
+  legacy variable, before 8080) and follows a restart on a new port (abstractgateway `cbe2ef5`, console 0.11.0; reader and
+  writer hardening `af39e6b`: no symlink follow, 0600, refuse other-user-writable). The canonical `CHECKSUMS.sha256` is in
+  abstractuic v0.1.14 and in every copy; root `check_identity_sync.py` passes on the pointer group (Assistant, AbstractCode
+  TUI, gateway console copies).
+- **Released:** AbstractUIC v0.1.14 (`d12775f`: app-server 0.1.11 reader), abstractcode 0.7.0 / web 0.6.0 (`227e000`).
+- **Staged, publishing in this wave:** abstractgateway 0.7.0 (`cbe2ef5`, `serve` writer + console reader), abstractassistant
+  0.9.0 (`e981344`, frozen `.app` reader), flow 0.4.0 / continuum 0.4.0 / entity 0.3.0 / observer 0.2.0 (apps follow the
+  pointer without `--gateway-url`), root 0.6.0 (installer writes it for the install it made; uninstall removes it).
+- **Evidence:** `scripts/tests/test_install_user_path.sh` pointer cases (123 passed, 2026-09-28, scratch HOME); readers'
+  fixture tests in each repo; `untracked/wave2/stage-root.md`.

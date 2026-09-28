@@ -5,6 +5,8 @@
 > Created: 2026-09-27
 > Priority: normal
 > Labels: video, catalog, apple-silicon, next-wave
+> Status: completed 2026-09-28 — released in abstractcore 2.18.0 (tag `v2.18.0` → `238b693`)
+> Moved: `planned/0948_wan_a14b_video_on_64gb_macs.md` → `completed/0948_wan_a14b_video_on_64gb_macs.md` on 2026-09-28
 
 ## Summary
 
@@ -60,3 +62,10 @@ abstractcore branch `wave2/core` (worktree `untracked/wave2/core`), local commit
 stays planned until the release lands: `8d86550` Wan2.2 T2V-A14B 8-bit measured resident (71.59 GiB
 MLX peak at 1280x720x81); `2ed029c` Wan2.2 I2V-A14B 8-bit measured resident (71.71 GiB at
 1280x720x81) and the A14B per-band fit tests.
+
+## Completion (2026-09-28)
+
+Released in abstractcore 2.18.0: Wan2.2 T2V-A14B and I2V-A14B 8-bit carry their measured resident memory (about 72 GiB at
+1280x720, 81 frames), so the fit reads `too_large` on 64 GiB Macs, `needs_gpu_limit` on 96 GiB Macs and `fits` from 128 GiB.
+The recommended video route is unchanged (Wan2.2 TI2V-5B from about 96 GiB): the measurement shows A14B 8-bit does not fit
+64–95 GiB Macs at the default canvas, so it is not recommended there. Pinned by root abstractframework 0.6.0.

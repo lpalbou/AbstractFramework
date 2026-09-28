@@ -3,8 +3,9 @@
 > Package: abstractcode (web/src/ui)
 > Type: improvement
 > Created: 2026-09-26
-> Priority: low
+> Priority: normal
 > Labels: code-web, cleanup, dead-code
+> Moved: `proposed/0901_…` → `planned/0901_…` on 2026-09-28 (wave-2 evidence: the legacy REPL was edited again in abstractcode `227e000`)
 
 ## Summary
 
@@ -69,3 +70,17 @@ left unused for C1 to delete"). Dead code that looks live costs every future cha
 ## Receipts
 
 - None yet.
+
+## Status update 2026-09-28 (promoted to planned)
+
+The wave-2 AbstractCode work had to change the legacy REPL again (`227e000`: it stopped sending the
+client transcript as `context` and uses `use_session_history`) although no user reaches it, and the
+0.7.0 tag gate listed its deletion as a follow-up. Current reality at abstractcode `227e000`
+(crate 0.7.0, web 0.6.0):
+
+- `web/src/ui/app.tsx` (6,368 lines) is still imported by nothing but `web/src/lib/dependency_hygiene.test.ts`.
+- `web/src/lib/storage.ts` and `web/src/lib/run_input.ts` are imported only by `web/src/ui/app.tsx` (and tests).
+- The CHANGELOG describes the legacy REPL's 0.6.0 change; its wording should say the legacy UI is removed once this lands.
+
+Scope added: delete `storage.ts` and `run_input.ts` with `app.tsx` (after checking no test-only import keeps them alive),
+and correct the CHANGELOG wording.

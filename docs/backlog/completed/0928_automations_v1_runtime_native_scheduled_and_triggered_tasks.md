@@ -145,7 +145,7 @@ The contracts pass settled every plan-versus-code conflict (C1–C16) and applie
 ## Completion report (2026-09-27)
 
 **Status: completed — UNRELEASED.** The operator tests it first; it ships in the next minor wave (release checklist:
-[0941](../planned/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md)). Every package change is a local commit on
+[0941](../completed/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md)). Every package change is a local commit on
 `main`: no version bump, no tag, no push. Built in one day by six missions (R runtime, G gateway, U abstractuic, F flow,
 O observer, A assistant), reviewed adversarially (REVIEW 41–54 plus jobs 48, 50, 51, 53), then tested end to end with the
 operator's own MLX model.
@@ -172,7 +172,7 @@ Evidence (all under the root repo's `untracked/`, not published):
 Per-package records: runtime 0847, gateway 0928, abstractuic 0029, flow 0158, observer 0002 and assistant 0852 are completed
 in their own backlogs. Unchanged: runtime 0848, gateway 0929 and 0930 (next phases), abstractagent 0034 (still planned; see
 residuals) and abstractcode 0001 (still planned). Root [0929](../planned/0929_automations_v2_external_triggers_durable_inbox.md),
-[0930](../planned/0930_automations_code_and_console_surfaces.md) and
+[0930](../completed/0930_automations_code_and_console_surfaces.md) and
 [0931](../proposed/0931_automations_v3_connectors_and_calendar_scheduling.md) are unchanged: they are the next phases and
 build on what this record describes.
 
@@ -388,7 +388,7 @@ Not verified by the E2E:
   duck-typed stores.
 - [0939](../planned/0939_json_run_store_recency_order_follows_updated_at_not_mtime.md): JSON store recency order.
 - [0940](../planned/0940_observer_automate_form_refuses_server_owned_input_keys.md): the Observer's Advanced `_` keys.
-- [0941](../planned/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md): the release wave.
+- [0941](../completed/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md): the release wave.
 
 ### Addendum (2026-09-27, live test)
 

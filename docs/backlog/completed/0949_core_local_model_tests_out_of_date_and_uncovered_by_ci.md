@@ -5,6 +5,8 @@
 > Created: 2026-09-27
 > Priority: normal
 > Labels: tests, ci, huggingface, llama-cpp, next-wave
+> Status: completed 2026-09-28 — released in abstractcore 2.18.0 (tag `v2.18.0` → `238b693`)
+> Moved: `planned/0949_core_local_model_tests_out_of_date_and_uncovered_by_ci.md` → `completed/0949_core_local_model_tests_out_of_date_and_uncovered_by_ci.md` on 2026-09-28
 
 ## Summary
 
@@ -53,3 +55,9 @@ these five failures are unrelated to torch versions — this item makes that ver
 abstractcore branch `wave2/core` (worktree `untracked/wave2/core`), local commits, no version bump;
 stays planned until the release lands: `95085fa` the stale local-model tests fixed; `2ed029c` the CI
 local-models job (CPU torch), required by the release workflow.
+
+## Completion (2026-09-28)
+
+Released in abstractcore 2.18.0: the stale local-model tests are fixed, and the CI job `local-models` runs the whole suite
+with CPU torch, Transformers and llama.cpp installed; the release workflow requires it (the tag gate's network-at-collection
+failure was fixed in `acab810` before the tag). Pinned by root abstractframework 0.6.0.

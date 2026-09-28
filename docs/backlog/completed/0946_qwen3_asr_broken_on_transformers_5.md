@@ -5,6 +5,8 @@
 > Created: 2026-09-27
 > Priority: high
 > Labels: voice, stt, regression, transformers, next-wave
+> Status: completed 2026-09-28 — released in abstractvoice 0.13.0 (tag `v0.13.0` → `1cdd727`)
+> Moved: `planned/0946_qwen3_asr_broken_on_transformers_5.md` → `completed/0946_qwen3_asr_broken_on_transformers_5.md` on 2026-09-28
 
 ## Summary
 
@@ -61,3 +63,10 @@ abstractvoice branch `wave2/voice` (worktree `untracked/wave2/voice`), local com
 stays planned until the release lands: `ccf64f0` Qwen3-ASR runs on Transformers 5.x, CI tests it on
 the floor and the latest Transformers; `339c09f` docs and CHANGELOG [Unreleased]. Evidence and the
 real-checkpoint proof: the voice worker's report (untracked/wave2/voice).
+
+## Completion (2026-09-28)
+
+Released in abstractvoice 0.13.0 (`ccf64f0` and the follow-up fixes up to `1cdd727`; CI and Release green, PyPI visible).
+Qwen3-ASR runs on Transformers 5.4 through current releases, and refuses older Transformers with a clear error; the real
+checkpoint proof is `untracked/wave2/voice/asr-proof.md`. Pinned by root abstractframework 0.6.0 (`abstractvoice==0.13.0`).
+Follow-ups: [0968](../planned/0968_voice_follow_ups_after_0_13_0.md).

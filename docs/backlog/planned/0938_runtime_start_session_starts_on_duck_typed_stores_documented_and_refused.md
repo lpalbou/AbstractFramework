@@ -27,7 +27,7 @@ a discussion session is always restamped read-only. The built-in stores answer t
 - A test with a minimal duck-typed store in each shape: no index; an index without `session_kind`; a full index.
 - Docs: `docs/automations.md` "Storage guarantees" already describes the no-index refusal (runtime `a7a1fae`). Add the
   second case, and add an "upgrading a custom store" note to the CHANGELOG and the release notes of the release that
-  ships v1 ([0941](0941_automations_v1_release_wave_floors_bumps_and_root_pins.md)).
+  ships v1 ([0941](../completed/0941_automations_v1_release_wave_floors_bumps_and_root_pins.md)).
 
 ### Out of scope
 - Making third-party stores work without an index: the refusal is the contract (fail closed).
