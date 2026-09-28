@@ -598,7 +598,9 @@ else
     check "console: summary gives the terminal console command with the admin token (--token)" "$(has "$OUT" "Terminal:  abstractgateway-console --gateway-url http://127.0.0.1:$BG_PORT --token tok_sandbox_123$"; echo $?)" "$OUT"
     check "console: no 'browser now shows' claim when no browser was opened" "$(! has "$OUT" "browser now shows"; echo $?)" "$OUT"
     check "code CLI: built by default with the same cargo and --root, next to the console" "$(grep -qx "cargo install --locked --force --root $WORK/con/tools abstractcode --version $CODE_PIN" "$CARGOLOG" && [[ -x "$TB/abstractcode" ]]; echo $?)" "$CARGOLOG"
-    check "code CLI: summary gives its command with the admin token (--token)" "$(has "$OUT" "AbstractCode (terminal): abstractcode --gateway-url http://127.0.0.1:$BG_PORT --token tok_sandbox_123$" && has "$OUT" "Code:  *abstractcode --gateway-url http://127.0.0.1:$BG_PORT --token tok_sandbox_123"; echo $?)" "$OUT"
+    # Sign-in: the token given directly, ready to paste, once; never saved by the installer; no
+    # --gateway-url (abstractcode follows the gateway pointer); the no-token way on this machine.
+    check "code CLI: summary says how to sign it in (login --token, then abstractcode; or tui-command)" "$(has "$OUT" "^  Sign in (terminal, once): abstractcode login --token tok_sandbox_123$" && has "$OUT" "^    then run: abstractcode$" && has "$OUT" "^    or, on this machine, without a token: abstractgateway apps tui-command code$" && has "$OUT" "Code:  *abstractcode   (sign in once: abstractcode login --token tok_sandbox_123; or on this machine: abstractgateway apps tui-command code)$" && ! has "$OUT" "abstractcode --gateway-url" && [[ ! -e "$WORK/con/home/.abstractcode" ]] && ! grep -qs login "$TB/abstractcode.args"; echo $?)" "$OUT"
     check "summary: lists the commands and says what abstractgateway-config is" "$(has "$OUT" "Commands (in $TB" && has "$OUT" "^      abstractgateway-config   the gateway's admin command: status" && has "$OUT" "^      abstractcode  " && has "$OUT" "^      abstractcore  "; echo $?)" "$OUT"
     check "core CLI: the library commands are exposed by default" "$(has "$OUT" "tool install .*--with-executables-from abstractcore --with-executables-from abstractvoice --with-executables-from abstractvision --with-executables-from abstractmusic "; echo $?)" "$OUT"
     # --uninstall removes both binaries it built (cargo uninstall --root, as it built them).
@@ -610,6 +612,14 @@ else
     BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
     check "console: a re-run keeps the installed console (no cargo install)" "$([[ $RC == 0 ]] && ! grep -q "cargo install" "$CARGOLOG" && has "$OUT" "abstractgateway-console $CON_PIN already installed"; echo $?)" "$OUT"
     check "code CLI: a re-run keeps it too" "$(has "$OUT" "abstractcode $CODE_PIN already installed"; echo $?)" "$OUT"
+    # The gateway updates abstractcode in place in the same folder: a newer one is kept (never
+    # downgraded to the pin); an older one is rebuilt at the pin.
+    : >"$CARGOLOG"; printf '#!/bin/sh\necho "abstractcode 9.10.0"\n' >"$TB/abstractcode"
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
+    check "code CLI: a newer abstractcode (the gateway's update) is kept, never downgraded" "$([[ $RC == 0 ]] && ! grep -q "install.* abstractcode " "$CARGOLOG" && has "$OUT" "abstractcode 9.10.0 already installed ($CODE_PIN or later)"; echo $?)" "$OUT"
+    : >"$CARGOLOG"; printf '#!/bin/sh\necho "abstractcode 0.6.9"\n' >"$TB/abstractcode"
+    BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " bg_case con 1
+    check "code CLI: an older abstractcode is rebuilt at the pin" "$([[ $RC == 0 ]] && grep -qx "cargo install --locked --force --root $WORK/con/tools abstractcode --version $CODE_PIN" "$CARGOLOG"; echo $?)" "$OUT"
     # A distro cargo older than 1.87 and no rustup: rustup is tried (refused here), soft.
     BG_TOOLBIN="$WORK/con3/tools/bin" BG_CARGO=1 BG_CARGO_VERSION=1.75.0 BG_ARGS=" " bg_case con3 1
     check "console: an old cargo without rustup falls back to rustup, and its failure is soft" "$([[ $RC == 0 ]] && has "$OUT" "cargo 1.75.0 .* is older than the Rust 1.87" && has "$OUT" "sh.rustup.rs" && has "$OUT" "Terminal:  not installed: Rust could not be installed" && ! grep -q "cargo install" "$CARGOLOG"; echo $?)" "$OUT"

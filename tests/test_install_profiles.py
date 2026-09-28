@@ -658,9 +658,20 @@ def test_install_sh_builds_the_code_cli_by_default_next_to_the_console(tmp_path:
     assert f"install --locked --force --root {tmp_path}/.local abstractgateway-console --version" in out
     assert f"install --locked --force --root {tmp_path}/.local abstractcode --version {pin}" in out
     code = _detail(out, "Code:")
-    # The token is the --token launch flag, never a token file or an environment variable.
-    assert f"abstractcode --gateway-url {_BASE} --token <admin token: cat " in code
-    assert "ABSTRACTGATEWAY_AUTH_TOKEN" not in code
+    # Signed in once with the token given directly (never an environment variable, never saved by
+    # the installer); no --gateway-url, so it follows the gateway pointer.
+    assert code.startswith("  Code:       abstractcode   (sign in once: abstractcode login --token <admin token: cat ")
+    assert code.endswith("; or on this machine: abstractgateway apps tui-command code)")
+    assert "--gateway-url" not in code and "ABSTRACTGATEWAY_AUTH_TOKEN" not in code
+    assert "PLACEHOLDER" not in (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+
+
+def test_install_sh_tui_command_names_a_custom_data_dir(tmp_path: Path) -> None:
+    # `abstractgateway apps tui-command` finds the gateway and its token through the data dir:
+    # a custom one is passed on; the default one is not.
+    proc = _install_sh_print(tmp_path, "--no-tray", "--data-dir", str(tmp_path / "gwdata"), profile="light")
+    assert proc.returncode == 0, proc.stderr
+    assert _detail(proc.stdout, "Code:").endswith(f"abstractgateway apps tui-command code --data-dir {tmp_path}/gwdata)")
 
 
 def test_install_sh_with_code_cli_is_kept_as_an_alias_of_the_default(tmp_path: Path) -> None:
@@ -777,9 +788,17 @@ def test_install_ps1_carries_the_same_cli_lists_and_flags() -> None:
     for param in ("[switch]$NoCodeCli", "[switch]$NoCoreCli", "[switch]$WithCodeCli", "[switch]$WithCoreCli"):
         assert param in ps1
     assert "'--with-executables-from', $p" in ps1
-    assert "AbstractCode (terminal): $codeCmd" in ps1 and "Code:       $(if ($codeOk)" in ps1
-    assert "@{ Spec = $AfCrateCodeCli; Root = $AfCodeCliRoot; What = 'AbstractCode''s terminal client'" in ps1
-    assert "Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $AfCodeCliRoot" in ps1
+    assert "Code:       $(if ($codeOk)" in ps1
+    # Both crates go to the parent of the uv tool bin folder, like install.sh; $roots.Code is the
+    # one place that decides where abstractcode goes (build, version check, summary, uninstall).
+    assert "$roots = Get-CrateRoots $toolBin" in ps1
+    assert "@{ Spec = $AfCrateCodeCli; Root = $roots.Code; What = 'AbstractCode''s terminal client'" in ps1
+    assert "Install-Crate 'the terminal console' $consoleName $consolePin $consoleExe $roots.Console" in ps1
+    assert "Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $roots.Code" in ps1
+    assert "$codeHave = Test-Crate $codeExe $codeName $codePin -AtLeast" in ps1
+    assert "Write-Host \"  Sign in (terminal, once): $codeShown login --token $codeTok\"" in ps1
+    assert "Write-Host \"    or, on this machine, without a token: $tuiCommand\"" in ps1
+    assert "PLACEHOLDER" not in ps1 and "AbstractCode (terminal): $codeCmd" not in ps1
 
 
 def test_install_sh_code_cli_target_is_one_variable(tmp_path: Path) -> None:
@@ -800,7 +819,7 @@ def test_install_sh_code_cli_target_is_one_variable(tmp_path: Path) -> None:
     out = proc.stdout
     assert f"install --locked --force --root {tmp_path}/.local abstractgateway-console --version" in out
     assert f"install --locked --force --root {tmp_path}/elsewhere abstractcode --version" in out
-    assert _detail(out, "Code:").startswith(f"  Code:       {tmp_path}/elsewhere/bin/abstractcode --gateway-url ")
+    assert _detail(out, "Code:").startswith(f"  Code:       {tmp_path}/elsewhere/bin/abstractcode   (sign in once: {tmp_path}/elsewhere/bin/abstractcode login --token ")
     assert f"      {tmp_path}/elsewhere/bin/abstractcode " in out
     (tmp_path / "elsewhere" / "bin").mkdir(parents=True)
     (tmp_path / "elsewhere" / "bin" / "abstractcode").write_text("#!/bin/sh\n")
@@ -826,11 +845,12 @@ def test_install_ps1_builds_the_code_cli_and_exposes_the_commands_by_default(tmp
     env["PATH"] = f"{fake}{os.pathsep}{env['PATH']}"
     argv = ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "light", "-Port", "18999"]
     out = subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
-    assert "cargo install --locked --force abstractcode --version " in out
+    assert re.search(r"cargo install --locked --force --root \S*\.local abstractcode --version ", out)
+    assert re.search(r"cargo install --locked --force --root \S*\.local abstractgateway-console --version ", out)
     assert f" {_CLI_FROM} " in _install_line(out)
     assert "AbstractCode (terminal)" not in out  # the plain block is for a real install
     # The command is `abstractcode` when it is on PATH, else `& '<cargo bin>/abstractcode'`.
-    assert re.search(r"^  Code: +(abstractcode|& '[^']*abstractcode') --gateway-url http://127.0.0.1:18999 --token <admin token: Get-Content ", out, flags=re.M)
+    assert re.search(r"^  Code: +(abstractcode|& '[^']*abstractcode')   \(sign in once: \S.* login --token <admin token: Get-Content ", out, flags=re.M)
     block = _printed_block(out, "Commands (in ")
     assert [line.split()[0] for line in block][:2] == ["abstractgateway", "abstractgateway-config"]
     opt_out = subprocess.run(argv + ["-NoCodeCli", "-NoCoreCli"], check=True, capture_output=True, text=True, env=env).stdout
