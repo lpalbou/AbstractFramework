@@ -19,9 +19,15 @@
       4. the terminal console (abstractgateway-console, built with cargo when Rust is
          installed; -NoConsole skips it), then the optional parts: Node.js
          (nodejs-wheel), AbstractCode's terminal client (cargo), Ollama, LM Studio
-      5. `abstractgateway service install` when the installed gateway supports it,
-         otherwise a Startup-folder shortcut plus a hidden background start
-      6. waits for /api/health, then opens the console (one-time claim URL when supported)
+      5. start at login: asked when a person is at the console (Enter = yes, no answer
+         within -AskWait seconds = the previous choice, or no on a first install; without
+         a console it stays as it was, off on a first install, and the summary says how
+         to turn it on); then `abstractgateway service install` (a Startup-folder
+         shortcut for gateways without it) or a hidden background start
+      6. waits for /api/health, writes the local gateway pointer
+         (%USERPROFILE%\.abstractframework\gateway.json: the address only, never a token),
+         then opens the console (one-time claim URL when supported); the browser apps
+         open through the gateway at /apps/<app>/
 
     -Full also builds the compiled extras (stable-diffusion.cpp, echo cancellation) and
     llama.cpp from source; it needs the MSVC Build Tools.
@@ -55,9 +61,10 @@ param(
     [switch]$WithLmStudio,
     [switch]$Full,
     [switch]$NoTray,
-    [switch]$NoService,
+    [switch]$NoService,   # do not start at login (asks nothing)
     [switch]$NoStart,
     [switch]$NoOpen,
+    [int]$AskWait = 25,   # seconds a timed question (start at login) waits for an answer (at most 25)
     [switch]$NoModifyPath,
     [switch]$Print,
     [switch]$PrintVersions,
@@ -210,6 +217,55 @@ function Get-OfflineMessage {
 
 function Test-Command([string]$Name) { return [bool](Get-Command $Name -ErrorAction SilentlyContinue) }
 
+# A person can be asked: an interactive console whose input and output are not redirected
+# (automation, CI, `powershell -NonInteractive`, piped input: nobody to ask).
+function Test-CanAsk {
+    try {
+        if (-not [Environment]::UserInteractive) { return $false }
+        if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) { return $false }
+        if ([Environment]::GetCommandLineArgs() | Where-Object { $_ -match '^-noni' }) { return $false }
+        [void][Console]::KeyAvailable
+        return $true
+    } catch { return $false }
+}
+# Ask on the console with a time limit: 'y', 'n', or '' when nobody answered (no console, or
+# nothing typed within -AskWait seconds: a console with nobody at it must never hang the install).
+function Read-TimedAnswer([string]$Question, [string]$Default, [string]$NoAnswer) {
+    if ($script:DryRun -or -not (Test-CanAsk)) { return '' }
+    while ([Console]::KeyAvailable) { [void][Console]::ReadKey($true) }   # keys typed before the question
+    $choices = if ($Default -eq 'y') { '[Y/n]' } else { '[y/N]' }
+    $enter = if ($Default -eq 'y') { 'yes' } else { 'no' }
+    Write-Host '  ? ' -ForegroundColor Yellow -NoNewline
+    Write-Host "$Question $choices (Enter = $enter; no answer within $script:AskSeconds s = $NoAnswer) " -NoNewline
+    $deadline = (Get-Date).AddSeconds($script:AskSeconds)
+    $answer = ''
+    while ((Get-Date) -lt $deadline) {
+        if (-not [Console]::KeyAvailable) { Start-Sleep -Milliseconds 100; continue }
+        $key = [Console]::ReadKey($true)
+        $c = [string]$key.KeyChar
+        if ($key.Key -eq 'Enter') { $answer = $Default; break }
+        if ($c -eq 'y') { $answer = 'y'; break }
+        if ($c -eq 'n') { $answer = 'n'; break }
+    }
+    Write-Host $(if ($answer -eq 'y') { 'yes' } elseif ($answer -eq 'n') { 'no' } else { '(no answer)' })
+    return $answer
+}
+
+# The local gateway pointer (root backlog 0943): where this computer's gateway listens, for the
+# clients that cannot ask Python (the terminal consoles, the browser apps, the Assistant). The
+# address only, never a token. Same ownership rule as the gateway's own writer
+# (abstractgateway/gateway_pointer.py) and install.sh: written when the file is absent and this
+# install uses the default data dir, or when it names this data dir (paths compared resolved,
+# case-insensitively); a file whose data_dir cannot be read is left alone.
+function Resolve-DirPath([string]$Path) {
+    try { $full = (Get-Item -LiteralPath $Path -Force -ErrorAction Stop).FullName } catch { $full = [IO.Path]::GetFullPath($Path) }
+    return $full.TrimEnd('\', '/')
+}
+function Get-PointerDataDir([string]$File) {
+    if (-not (Test-Path -LiteralPath $File -PathType Leaf)) { return '' }
+    try { return [string]((Get-Content -LiteralPath $File -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop).data_dir) } catch { return '' }
+}
+
 function Read-State([string]$Path) {
     $state = @{}
     if (Test-Path -LiteralPath $Path) {
@@ -254,6 +310,9 @@ function Main {
     $startupDir = [Environment]::GetFolderPath('Startup')
     $shortcut = if ($startupDir) { Join-Path $startupDir 'AbstractGateway.lnk' } else { '' }
     $state = Read-State $stateFile
+    $script:AskSeconds = [Math]::Max(0, [Math]::Min(25, $AskWait))
+    $pointerFile = Join-Path $homeDir '.abstractframework\gateway.json'
+    $defaultDataDir = Join-Path $localAppData 'AbstractGateway'
 
     # uv discovery (the official installer puts uv in %USERPROFILE%\.local\bin).
     $uv = $null
@@ -374,6 +433,12 @@ function Main {
             }
         }
         Write-Step 'Data'
+        # Before the data dir goes (-Purge): the pointer is matched against its resolved path.
+        $ptrDir = Get-PointerDataDir $pointerFile
+        if ($ptrDir -and ((Resolve-DirPath $ptrDir) -eq (Resolve-DirPath $DataDir))) {
+            Write-Host "  `$ Remove-Item '$pointerFile'" -ForegroundColor DarkGray
+            if (-not $script:DryRun) { Remove-Item -LiteralPath $pointerFile -Force -ErrorAction SilentlyContinue }
+        } elseif ($ptrDir) { Write-Info "kept the gateway pointer $pointerFile`: it belongs to the gateway with data directory $ptrDir" }
         if ($Purge) {
             Write-Host "  `$ Remove-Item -Recurse -Force '$DataDir'" -ForegroundColor DarkGray
             if (-not $script:DryRun) { Remove-Item -LiteralPath $DataDir -Recurse -Force -ErrorAction SilentlyContinue }
@@ -510,6 +575,30 @@ function Main {
         }
     } else { Write-Ok "port $Port is free" }
     $baseUrl = "http://127.0.0.1:$Port"
+
+    # Start at login: asked here, before anything is downloaded, whenever a person is at the
+    # console; Enter = yes on a first install, the previous choice on a re-run. Nobody to ask:
+    # a re-run keeps the previous choice (the login item's own state when the installed gateway
+    # reports it: the consoles have a switch for it), a first install leaves it off.
+    $loginWas = ''
+    if ($state['MODE'] -eq 'service') { $loginWas = 'y' } elseif ($state['MODE'] -eq 'background') { $loginWas = 'n' }
+    if ($state['MODE'] -and (Test-GatewaySupports 'service')) {
+        $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        try { $svc = [string](((& $gw service status --json --data-dir $DataDir 2>$null) -join "`n" | ConvertFrom-Json).state) } catch { $svc = '' }
+        finally { $ErrorActionPreference = $old }
+        if ($svc -eq 'on') { $loginWas = 'y' } elseif ($svc -eq 'off') { $loginWas = 'n' }
+    }
+    if (-not $NoStart -and -not $NoService) {
+        $noAnswer = if ($loginWas -eq 'y') { 'yes, as now' } elseif ($loginWas -eq 'n') { 'no, as now' } else { 'no' }
+        $ans = Read-TimedAnswer 'Start AbstractFramework automatically when you log in? (per-user, no admin; the uninstaller removes it)' $(if ($loginWas) { $loginWas } else { 'y' }) $noAnswer
+        if ($ans) { $why = 'your answer' }
+        elseif ($loginWas) { $ans = $loginWas; $why = 'kept from the previous install' }
+        elseif (-not (Test-CanAsk)) { $ans = 'n'; $why = 'no console to ask on, so a first install leaves it off' }
+        elseif ($script:DryRun) { $ans = 'y'; $why = '-Print: the install asks on this console, Enter = yes' }
+        else { $ans = 'n'; $why = "no answer within $($script:AskSeconds) s, so a first install leaves it off" }
+        if ($ans -eq 'y') { Write-Ok "start at login: yes ($why; turn it off with the Start at login switch in either console, or re-run with -NoService)" }
+        else { $NoService = $true; Write-Ok "start at login: no ($why; the gateway starts now in the background; the summary says how to turn it on)" }
+    }
 
     if (Test-Net) { Write-Ok 'internet: pypi.org reachable' }
     elseif ($script:DryRun) { Write-Warn2 ((Get-OfflineMessage) -split "`n")[0] }
@@ -656,7 +745,8 @@ function Main {
             Invoke-Native -Description 'install nodejs-wheel' -Argv @($uv, 'tool', 'install', 'nodejs-wheel') | Out-Null
             $nodeWheel = '1'
         }
-        Write-Info 'apps are not installed globally; each runs on demand (first launch downloads it):'
+        Write-Info "the browser apps open through the gateway: in the console's Apps page, Install, then Open (each at $baseUrl/apps/<app>/)"
+        Write-Info 'advanced: run one on its own, outside the gateway (first launch downloads it):'
         $others = @()
         foreach ($s in $AfNpmApps) {
             $pkg = $s.Substring(0, $s.LastIndexOf('@'))
@@ -764,6 +854,10 @@ function Main {
             }
         }
         Write-Step 'Start in the background (hidden window)'
+        if ($loginWas -eq 'y' -and $serviceOk) {
+            # Chosen "no" this time: the earlier login item would fight the background gateway for the port.
+            Invoke-Native -Description 'remove the login item registered by the previous install' -Argv @($gw, 'service', 'uninstall') | Out-Null
+        }
         if ($reuseRunning -and -not $changed -and (Get-OurPid)) {
             Write-Ok "already running (pid $(Get-OurPid)), unchanged"
         } else {
@@ -816,6 +910,27 @@ function Main {
                 Start-Sleep -Seconds 1
             }
             Write-Ok "gateway healthy at $baseUrl (${i}s)"
+            $ptrDir = Get-PointerDataDir $pointerFile
+            $mine = Resolve-DirPath $DataDir
+            if (-not $ptrDir -and (Test-Path -LiteralPath $pointerFile)) {
+                Write-Info "gateway pointer $pointerFile left unchanged: it names no data directory the installer can read"
+            } elseif ($ptrDir -and ((Resolve-DirPath $ptrDir) -ne $mine)) {
+                Write-Info "gateway pointer $pointerFile left unchanged: it belongs to the gateway with data directory $ptrDir"
+            } elseif (-not $ptrDir -and ($mine -ne (Resolve-DirPath $defaultDataDir))) {
+                Write-Info "gateway pointer not written: none yet and this install's data directory is not the default ($defaultDataDir); clients take --gateway-url $baseUrl"
+            } else {
+                try {
+                    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $pointerFile) | Out-Null
+                    $body = [ordered]@{ data_dir = $mine; port = $Port; schema = 1; updated_at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); url = $baseUrl; written_by = 'installer' }
+                    $tmp = "$pointerFile.$PID.tmp"
+                    [System.IO.File]::WriteAllText($tmp, ($body | ConvertTo-Json) + "`n", (New-Object System.Text.UTF8Encoding($false)))
+                    if (Test-Path -LiteralPath $pointerFile) { [System.IO.File]::Replace($tmp, $pointerFile, $null) } else { [System.IO.File]::Move($tmp, $pointerFile) }
+                    Write-Ok "gateway pointer: $pointerFile -> $baseUrl (the consoles and apps on this computer find the gateway there)"
+                } catch {
+                    Remove-Item -LiteralPath "$pointerFile.$PID.tmp" -Force -ErrorAction SilentlyContinue
+                    Write-Warn2 "could not write the gateway pointer $pointerFile; clients take --gateway-url $baseUrl"
+                }
+            }
         }
 
         Write-Step 'Console sign-in'
@@ -871,7 +986,8 @@ function Main {
         Write-Host "  Start:      abstractgateway service install --port $Port"
     } else {
         Write-Host "  Stop:       Stop-Process -Id (Get-Content '$pidFile')"
-        Write-Host '  Start:      re-run this installer (or sign out and in: the Startup shortcut starts it)'
+        Write-Host "  Start:      re-run this installer$(if ($shortcut -and (Test-Path -LiteralPath $shortcut)) { ' (or sign out and in: the Startup shortcut starts it)' })"
+        if ($serviceOk) { Write-Host '  At login:   off; turn it on with the Start at login switch in either console (web: the Gateway section; terminal: F3), or: abstractgateway service enable' }
     }
     Write-Host '  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)'
     Write-Host "  Uninstall:  install.ps1 -Uninstall   (or: $(if ($mode -eq 'service') { 'abstractgateway service uninstall; ' })uv tool uninstall abstractgateway)"
@@ -879,7 +995,8 @@ function Main {
     Write-Host "  GGUF:       $ggufResult"
     Write-Host "  Voice:      $($voice.Result)"
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
-    Write-Host "  Apps:       npx -y @abstractframework/flow --gateway-url $baseUrl   (also: code, observer, continuum, entity)"
+    Write-Host "  Apps:       $baseUrl/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
+    Write-Host "  Standalone: npx -y @abstractframework/flow --gateway-url $baseUrl   (advanced; also code, observer, continuum, entity)"
     Write-Host "  Docs:       $AfDocs"
     if ($script:Twins.Count) {
         Write-Host ''
