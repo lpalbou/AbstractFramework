@@ -782,7 +782,7 @@ function Main {
     if ($WithCodeCli) {
         Write-Step 'AbstractCode terminal client (crates.io)'
         $i = $AfCrateCodeCli.LastIndexOf('@'); $name = $AfCrateCodeCli.Substring(0, $i); $v = $AfCrateCodeCli.Substring($i + 1)
-        if ($cargo) { Invoke-Native -Description "cargo install $name" -Argv @($cargo, 'install', '--locked', $name, '--version', $v) | Out-Null; Write-Info "run it: $name --gateway $baseUrl" }
+        if ($cargo) { Invoke-Native -Description "cargo install $name" -Argv @($cargo, 'install', '--locked', $name, '--version', $v) | Out-Null; Write-Info "run it: $name --gateway-url $baseUrl" }
         else { Write-Warn2 "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked $name --version $v" }
     }
 
@@ -962,7 +962,7 @@ function Main {
     $tokenPath = Join-Path $DataDir 'auth\bootstrap-admin-token'
     $tuiExe = if (Test-Command $consoleName) { $consoleName } else { "& '$consoleExe'" }
     $tuiTok = if (-not $script:DryRun -and (Test-Path -LiteralPath $tokenPath)) { (Get-Content -LiteralPath $tokenPath -Raw).Trim() } else { '' }
-    $tuiCmd = if ($tuiTok) { "$tuiExe --url $baseUrl --token $tuiTok" } else { "$tuiExe --url $baseUrl --token <admin token: Get-Content '$tokenPath'>" }
+    $tuiCmd = if ($tuiTok) { "$tuiExe --gateway-url $baseUrl --token $tuiTok" } else { "$tuiExe --gateway-url $baseUrl --token <admin token: Get-Content '$tokenPath'>" }
     if (-not $script:DryRun -and -not $NoStart) {
         Write-Host '  Configure it from either console (the same settings, both need this machine):'
         # An opened claim link is spent (the browser redeemed it): show the plain address then.

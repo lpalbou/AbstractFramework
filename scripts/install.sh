@@ -1555,7 +1555,7 @@ if [ "$WITH_CODE_CLI" = 1 ]; then
     _c="$AF_CRATE_CODE_CLI"
     if [ -n "$CARGO" ] || find_cargo; then
         run "cargo install ${_c%@*}" "$CARGO" install --locked "${_c%@*}" --version "${_c##*@}"
-        info "run it: ${_c%@*} --gateway $BASE_URL"
+        info "run it: ${_c%@*} --gateway-url $BASE_URL"
     else
         warn "cargo not found: install Rust from https://rustup.rs, then run: cargo install --locked ${_c%@*} --version ${_c##*@}"
     fi
@@ -1766,8 +1766,8 @@ fi
 # gateway keeps it in its data dir. Before the gateway has written it, the command names that file.
 _tui_exe="$CONSOLE_NAME"; [ "$CONSOLE_BIN" = "$TOOL_BIN/$CONSOLE_NAME" ] || _tui_exe="$(q "$CONSOLE_BIN")"
 _tui_tok=""; [ "$PRINT" = 0 ] && [ -r "$TOKEN_FILE" ] && _tui_tok="$(tr -d '[:space:]' <"$TOKEN_FILE")"
-if [ -n "$_tui_tok" ]; then TUI_CMD="$_tui_exe --url $BASE_URL --token $_tui_tok"
-else TUI_CMD="$_tui_exe --url $BASE_URL --token <admin token: cat $(q "$TOKEN_FILE")>"; fi
+if [ -n "$_tui_tok" ]; then TUI_CMD="$_tui_exe --gateway-url $BASE_URL --token $_tui_tok"
+else TUI_CMD="$_tui_exe --gateway-url $BASE_URL --token <admin token: cat $(q "$TOKEN_FILE")>"; fi
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     # The plain-language part first: what a non-technical user needs to know.
     printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
@@ -1852,7 +1852,7 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ] && [ "$NO_OPEN" = 0 ] && [ "$REMOTE_S
     # Everything is installed: Ctrl+C here must not turn a finished install into exit 130.
     trap : INT
     if offer_console; then
-        "$CONSOLE_BIN" --url "$BASE_URL" --token "$_tui_tok" </dev/tty >/dev/tty 2>&1 || \
+        "$CONSOLE_BIN" --gateway-url "$BASE_URL" --token "$_tui_tok" </dev/tty >/dev/tty 2>&1 || \
             warn "the terminal console exited with an error; start it again with the Terminal command above"
         stty sane </dev/tty 2>/dev/null || true
     else

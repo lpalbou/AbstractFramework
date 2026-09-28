@@ -586,7 +586,7 @@ else
     check "console: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
     check "console: cargo builds the pinned crate into the tool bin dir" "$(grep -qx "cargo install --locked --force --root $WORK/con/tools abstractgateway-console --version $CON_PIN" "$CARGOLOG" && [[ -x "$TB/abstractgateway-console" ]]; echo $?)" "$CARGOLOG"
     check "console: summary gives the web console and its tunnel hint" "$(has "$OUT" "Web:  *http://127.0.0.1:$BG_PORT/console" && has "$OUT" "ssh -L $BG_PORT:127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
-    check "console: summary gives the terminal console command with the admin token (--token)" "$(has "$OUT" "Terminal:  abstractgateway-console --url http://127.0.0.1:$BG_PORT --token tok_sandbox_123$"; echo $?)" "$OUT"
+    check "console: summary gives the terminal console command with the admin token (--token)" "$(has "$OUT" "Terminal:  abstractgateway-console --gateway-url http://127.0.0.1:$BG_PORT --token tok_sandbox_123$"; echo $?)" "$OUT"
     check "console: no 'browser now shows' claim when no browser was opened" "$(! has "$OUT" "browser now shows"; echo $?)" "$OUT"
     # A re-run finds the pinned binary and does not build again.
     : >"$CARGOLOG"
@@ -606,26 +606,26 @@ else
     TB="$WORK/rem/tools/bin"
     BG_TOOLBIN="$TB" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 BG_PTY_ENTER=1 BG_OPEN=1 bg_case rem 1
     check "remote: installer succeeds on a terminal" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
-    check "remote: the console is started with the gateway URL and the admin token" "$(grep -qx -- "--url http://127.0.0.1:$BG_PORT --token tok_remote_9" "$TB/abstractgateway-console.args"; echo $?)" "$OUT"
+    check "remote: the console is started with the gateway URL and the admin token" "$(grep -qx -- "--gateway-url http://127.0.0.1:$BG_PORT --token tok_remote_9" "$TB/abstractgateway-console.args"; echo $?)" "$OUT"
     check "remote: the console is offered, not assumed" "$(has "$OUT" "Press Enter within 25 s to open the terminal console"; echo $?)" "$OUT"
     check "remote: no browser is opened over SSH" "$([[ ! -s "$WORK/rem/open.log" ]] && has "$OUT" "tunnel it first: ssh -L $BG_PORT:127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
     TB2="$WORK/rem2/tools/bin"
     BG_TOOLBIN="$TB2" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 bg_case rem2 1
-    check "remote: --no-open does not start the console" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB2/abstractgateway-console.args"; echo $?)" "$OUT"
+    check "remote: --no-open does not start the console" "$([[ $RC == 0 ]] && ! grep -q -- "--gateway-url" "$TB2/abstractgateway-console.args"; echo $?)" "$OUT"
     # Nobody at the pseudo-terminal (CI, Terraform, ssh -t in a script): the offer times out.
     TB4="$WORK/rem4/tools/bin"
     BG_TOOLBIN="$TB4" BG_CARGO=1 BG_ARGS="--console-wait 1" BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=1 BG_OPEN=1 bg_case rem4 1
-    check "remote: nobody answers the offer, the install still finishes and opens nothing" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB4/abstractgateway-console.args" && has "$OUT" "not opened; start it any time"; echo $?)" "$OUT"
+    check "remote: nobody answers the offer, the install still finishes and opens nothing" "$([[ $RC == 0 ]] && ! grep -q -- "--gateway-url" "$TB4/abstractgateway-console.args" && has "$OUT" "not opened; start it any time"; echo $?)" "$OUT"
     # Debian/Ubuntu /bin/sh is dash: a terminal on stdout but no controlling terminal must not
     # abort the finished install (a failed redirection on the special built-in ':' exits dash).
     if command -v dash >/dev/null 2>&1; then
         TB5="$WORK/rem5/tools/bin"
         BG_TOOLBIN="$TB5" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_PTY=2 BG_SHELL=dash BG_OPEN=1 bg_case rem5 1
-        check "remote: dash without a controlling terminal exits 0 and opens nothing" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB5/abstractgateway-console.args"; echo $?)" "$OUT"
+        check "remote: dash without a controlling terminal exits 0 and opens nothing" "$([[ $RC == 0 ]] && ! grep -q -- "--gateway-url" "$TB5/abstractgateway-console.args"; echo $?)" "$OUT"
     fi
     TB3="$WORK/rem3/tools/bin"
     BG_TOOLBIN="$TB3" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_OPEN=1 bg_case rem3 1
-    check "remote: without a terminal (piped output) the console is not started" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB3/abstractgateway-console.args"; echo $?)" "$OUT"
+    check "remote: without a terminal (piped output) the console is not started" "$([[ $RC == 0 ]] && ! grep -q -- "--gateway-url" "$TB3/abstractgateway-console.args"; echo $?)" "$OUT"
 fi
 
 echo "[13] start at login on a terminal (the fake gateway has 'abstractgateway service')"
