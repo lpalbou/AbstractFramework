@@ -18,11 +18,13 @@
 #   4. the terminal console (abstractgateway-console, built with cargo; Rust
 #      comes from rustup, user-scoped, when missing), then the optional parts:
 #      Node.js for the browser apps, AbstractCode's terminal client, Ollama, LM Studio
-#   5. registers the gateway as a user service when the installed gateway
-#      supports `abstractgateway service install`, otherwise starts it in the
-#      background; waits for /api/health
-#   6. opens the web console (one-time claim URL when supported) and prints how to
-#      reach both consoles: the web one (`/console`) and the terminal one
+#   5. start at login: asked when a person is at a terminal (Enter = yes); then
+#      registers the gateway as a user service (`abstractgateway service install`)
+#      or starts it in the background; waits for /api/health
+#   6. writes the local gateway pointer (~/.abstractframework/gateway.json: the
+#      address only, never a token), opens the web console (one-time claim URL when
+#      supported) and prints how to reach both consoles, the web one (`/console`)
+#      and the terminal one, and the apps (`/apps/<app>/` on the gateway)
 #
 # Options (environment twins in brackets):
 #   --profile auto|light|apple|gpu  install profile (default auto)          [AF_PROFILE]
@@ -44,19 +46,25 @@
 #   --full                   also build the compiled extras (stable-diffusion.cpp,
 #                            echo cancellation) and llama.cpp from source; needs a C compiler
 #   --no-tray                skip the tray extra
-#   --no-service             do not register a login service; start in background
+#   --no-service             do not start at login (asks nothing); start in background
 #   --no-start               install only; do not start the gateway
 #   --no-open                do not open the browser (on a remote or headless session:
 #                            do not offer the terminal console at the end)
-#   --console-wait SECONDS   how long the end-of-install console offer waits for Enter on a
-#                            remote or headless session (default 25, at most 25)
+#   --ask-wait SECONDS       how long a timed question waits for an answer: start at login,
+#                            and the terminal console offer at the end of a remote or
+#                            headless install (default 25, at most 25; alias --console-wait)
 #   --no-modify-path         do not run `uv tool update-shell`
 #   --print, --dry-run       show the plan and commands; change nothing
 #   --print-versions         print the pinned versions and exit
-#   --interactive            ask before the choices that matter (start at login;
-#                            on --uninstall: delete the data too). Questions go
-#                            to the terminal, so this works through curl | sh.
-#                            The double-click installers pass it.     [AF_INTERACTIVE=1]
+#   Start at login is asked whenever a person is at a terminal (/dev/tty, so it
+#   also works through curl | sh): Enter = yes, no answer within --ask-wait = the
+#   previous install's choice, or no on a first install. Without a terminal
+#   (automation) it stays as it was (off on a first install) and the summary says
+#   how to turn it on.
+#   --interactive            also ask the other choices (building the terminal console;
+#                            on --uninstall: delete the data too) and wait for every
+#                            answer without a time limit. The double-click installers
+#                            pass it.                                  [AF_INTERACTIVE=1]
 #   --uninstall [--purge] [--remove-uv]
 #                            stop the whole gateway process tree, remove the service
 #                            and the uv tools (--purge also deletes your data: the
@@ -64,7 +72,7 @@
 #                            sessions, AbstractCode's settings; model weights stay;
 #                            --remove-uv also removes uv, its Pythons and its
 #                            download cache when this installer put uv there)
-#   -y, --yes                ask nothing (the default unless --interactive)
+#   -y, --yes                ask nothing, not even start at login (it stays as it was)
 #   -v, --verbose            show the full output of every command
 #   -h, --help               this help
 # =============================================================================
@@ -174,12 +182,12 @@ DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
 WITH_APPS=0; WITH_CONSOLE=1; WITH_CODE_CLI=0; WITH_CORE_CLI=0
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
 FULL=0; NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
-PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0; CONSOLE_WAIT=25
+PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0; ASK_WAIT=25; ASK_NOTHING=0
 INTERACTIVE="${AF_INTERACTIVE:-0}"
 
 usage() {
     if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
-        sed -n '2,70p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,78p' "$0" | sed 's/^# \{0,1\}//'
     else
         echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
         echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
@@ -216,8 +224,8 @@ while [ $# -gt 0 ]; do
         --no-service) NO_SERVICE=1 ;;
         --no-start) NO_START=1 ;;
         --no-open) NO_OPEN=1 ;;
-        --console-wait) need_arg "$@"; CONSOLE_WAIT="$2"; shift ;;
-        --console-wait=*) CONSOLE_WAIT="${1#*=}" ;;
+        --ask-wait|--console-wait) need_arg "$@"; ASK_WAIT="$2"; shift ;;
+        --ask-wait=*|--console-wait=*) ASK_WAIT="${1#*=}" ;;
         --no-modify-path) NO_MODIFY_PATH=1 ;;
         --print|--dry-run|-n) PRINT=1 ;;
         --print-versions)
@@ -229,7 +237,7 @@ while [ $# -gt 0 ]; do
         --purge) PURGE=1 ;;
         --remove-uv) REMOVE_UV=1 ;;
         --interactive) INTERACTIVE=1 ;;
-        -y|--yes) INTERACTIVE=0 ;;
+        -y|--yes) INTERACTIVE=0; ASK_NOTHING=1 ;;
         -v|--verbose) VERBOSE=1 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -265,6 +273,47 @@ ask_yes() {
         info "$1 -> $([ "$_def" = y ] && echo yes || echo no) (default$([ "$INTERACTIVE" = 1 ] || echo '; --interactive asks'))"
     fi
     case "${_ans:-$_def}" in [Yy]*) return 0 ;; *) return 1 ;; esac
+}
+
+# tty_ok: a person can be asked: output goes to a terminal and /dev/tty opens (so it also
+# works through `curl | sh`). `true`, not `:`, probes /dev/tty: a failed redirection on the
+# special built-in `:` exits dash (Debian/Ubuntu /bin/sh).
+tty_ok() { [ -t 1 ] && { true </dev/tty; } 2>/dev/null; }
+
+# ask_timed QUESTION DEFAULT(y|n) WHAT-NO-ANSWER-MEANS: asks on /dev/tty and sets ANSWER to
+# y or n, or to "" when nobody answered: no terminal, --print, --yes, or nothing typed within
+# --ask-wait seconds (a pseudo-terminal with nobody at it, as in CI or `ssh -t` in a script,
+# must never hang the install). Enter = DEFAULT. --interactive waits without a time limit.
+ask_timed() {
+    ANSWER=""
+    [ "$PRINT" = 0 ] && [ "$ASK_NOTHING" = 0 ] && tty_ok || return 0
+    _at_old="$(stty -g </dev/tty 2>/dev/null)" || return 0
+    trap 'stty "$_at_old" </dev/tty 2>/dev/null; exit 130' INT TERM
+    # Keys typed before the question are still buffered: drop them, so only an answer counts.
+    stty -icanon -echo min 0 time 0 </dev/tty 2>/dev/null
+    dd bs=4096 count=1 </dev/tty >/dev/null 2>&1
+    if [ "$INTERACTIVE" = 1 ]; then
+        _at_hint="Enter = $([ "$2" = y ] && echo yes || echo no)"
+        stty min 1 time 0 </dev/tty 2>/dev/null
+    else
+        _at_hint="Enter = $([ "$2" = y ] && echo yes || echo no); no answer within $ASK_WAIT s = $3"
+        # stty counts tenths of a second, at most 255.
+        stty min 0 time "$((ASK_WAIT * 10))" </dev/tty 2>/dev/null
+    fi
+    printf '  %s?%s %s %s (%s) ' "$C_Y" "$C_0" "$1" "$([ "$2" = y ] && echo '[Y/n]' || echo '[y/N]')" "$_at_hint" >/dev/tty
+    while :; do
+        _at_k="$(dd bs=1 count=1 </dev/tty 2>/dev/null | od -An -tu1 | tr -d ' ')"
+        case "$_at_k" in
+            "") break ;;
+            10|13) ANSWER="$2"; break ;;
+            89|121) ANSWER=y; break ;;
+            78|110) ANSWER=n; break ;;
+        esac
+    done
+    stty "$_at_old" </dev/tty 2>/dev/null
+    trap - INT TERM
+    case "$ANSWER" in y) _at_said=yes ;; n) _at_said=no ;; *) _at_said="(no answer)" ;; esac
+    printf '%s\n' "$_at_said" >/dev/tty
 }
 
 # Shell-quote one word for display.
@@ -421,6 +470,76 @@ STATE_FILE="$DATA_DIR/bootstrap.env"
 PID_FILE="$DATA_DIR/gateway.pid"
 LOG_DIR="$DATA_DIR/logs"
 GATEWAY_LOG="$LOG_DIR/gateway.log"
+
+# ---------------------------------------------------------------------------
+# The local gateway pointer, ~/.abstractframework/gateway.json (root backlog 0943):
+# where this computer's gateway listens, for the clients that cannot ask Python (the
+# terminal consoles, the browser apps, the Assistant .app). The address only: never a
+# token, a pid or liveness. Written after the health check, atomically, mode 0600, under
+# the gateway's own ownership rule (abstractgateway/gateway_pointer.py), so a test or a
+# second install with its own --data-dir never takes it over:
+#   - the file is absent and this install uses the default data dir; or
+#   - the file's data_dir is this install's data dir.
+# Paths are compared resolved. A file whose data_dir this shell cannot read is left alone
+# (the gateway's serve, which parses JSON, replaces an unreadable one). `abstractgateway serve` overwrites it once bound (the
+# same rule); --uninstall deletes it only when it names this install's data dir.
+# ---------------------------------------------------------------------------
+POINTER_FILE="$HOME/.abstractframework/gateway.json"
+if [ "$OS_ID" = macos ]; then DEFAULT_DATA_DIR="$HOME/Library/Application Support/AbstractGateway"
+else
+    # The XDG spec (and the gateway's host_paths.user_data_dir): a relative XDG_DATA_HOME is ignored.
+    case "${XDG_DATA_HOME:-}" in /*) DEFAULT_DATA_DIR="$XDG_DATA_HOME/abstractgateway" ;; *) DEFAULT_DATA_DIR="$HOME/.local/share/abstractgateway" ;; esac
+fi
+real_dir() { (CDPATH='' cd -- "$1" 2>/dev/null && pwd -P) || abs_path "$1"; }
+# pointer_data_dir: the data_dir the pointer names (any JSON layout); empty when the file is
+# absent or names none this shell can read.
+pointer_data_dir() {
+    [ -f "$POINTER_FILE" ] && [ -r "$POINTER_FILE" ] || return 0
+    tr '\n\r' '  ' <"$POINTER_FILE" 2>/dev/null \
+        | sed -nE 's/.*"data_dir"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' | head -n 1 \
+        | sed 's/\\"/"/g; s/\\\\/\\/g'
+}
+json_str() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+# write_pointer: after the health check (the port is the one that answered).
+write_pointer() {
+    _pd="$(pointer_data_dir)"
+    if [ -z "$_pd" ] && { [ -e "$POINTER_FILE" ] || [ -L "$POINTER_FILE" ]; }; then
+        info "gateway pointer $POINTER_FILE left unchanged: it names no data directory the installer can read"
+        return 0
+    fi
+    if [ -n "$_pd" ] && [ "$(real_dir "$_pd")" != "$(real_dir "$DATA_DIR")" ]; then
+        info "gateway pointer $POINTER_FILE left unchanged: it belongs to the gateway with data directory $_pd"
+        return 0
+    fi
+    if [ -z "$_pd" ] && [ "$(real_dir "$DATA_DIR")" != "$(real_dir "$DEFAULT_DATA_DIR")" ]; then
+        info "gateway pointer not written: none yet and this install's data directory is not the default ($DEFAULT_DATA_DIR); clients take --gateway-url $BASE_URL"
+        return 0
+    fi
+    _ptmp="$POINTER_FILE.$$.tmp"
+    if mkdir -p "$(dirname "$POINTER_FILE")" 2>/dev/null \
+        && ( umask 077; printf '{\n  "data_dir": "%s",\n  "port": %s,\n  "schema": 1,\n  "updated_at": "%s",\n  "url": "%s",\n  "written_by": "installer"\n}\n' \
+               "$(json_str "$(real_dir "$DATA_DIR")")" "$PORT" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$BASE_URL" >"$_ptmp" ) 2>/dev/null \
+        && chmod 600 "$_ptmp" && mv -f "$_ptmp" "$POINTER_FILE"; then
+        ok "gateway pointer: $POINTER_FILE -> $BASE_URL (the consoles and apps on this computer find the gateway there)"
+    else
+        rm -f "$_ptmp" 2>/dev/null
+        warn "could not write the gateway pointer $POINTER_FILE; clients take --gateway-url $BASE_URL"
+    fi
+    return 0
+}
+# remove_pointer (--uninstall): only a pointer that names this install's data dir.
+remove_pointer() {
+    _pd="$(pointer_data_dir)"
+    if [ -z "$_pd" ]; then
+        [ -e "$POINTER_FILE" ] && info "kept $POINTER_FILE: it names no data directory"
+        return 0
+    fi
+    if [ "$(real_dir "$_pd")" = "$(real_dir "$DATA_DIR")" ]; then
+        run "remove the gateway pointer" rm -f "$POINTER_FILE"
+    else
+        info "kept the gateway pointer $POINTER_FILE: it belongs to the gateway with data directory $_pd"
+    fi
+}
 
 # Previous run state (port, service mode, whether we installed Node).
 ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""; ST_UV_BY_US=""; ST_RUST_BY_US=""; ST_VOICE=""
@@ -881,6 +1000,8 @@ if [ "$UNINSTALL" = 1 ]; then
     fi
     [ "$ST_RUST_BY_US" = 1 ] && info "kept: Rust, which the installer added for the terminal console (remove it with: ${CARGO_HOME:-$HOME/.cargo}/bin/rustup self uninstall)"
     step "Data"
+    # Before the data dir goes (--purge): the pointer is matched against its resolved path.
+    remove_pointer
     _inst="$HOME/Library/Application Support/AbstractFramework/Installer"
     if [ "$OS_ID" = macos ] && [ -e "$_inst" ]; then
         purge_path "the copy of the installer left by the .pkg" "$_inst"
@@ -911,7 +1032,7 @@ if [ "$UNINSTALL" = 1 ]; then
         fi
         recheck_purged
         if [ "$OS_ID" = macos ] && [ "$PRINT" = 0 ]; then rmdir "$HOME/Library/Logs/Assistant" 2>/dev/null || true; fi
-        info "kept: model weights and shared caches (~/.cache/huggingface, ~/.abstractcore, ~/.abstractframework, ~/.cache/abstractvoice, LM Studio and Ollama models)"
+        info "kept: model weights and shared caches (~/.cache/huggingface, ~/.abstractcore, ~/.abstractframework apart from its gateway.json, ~/.cache/abstractvoice, LM Studio and Ollama models)"
         if [ -n "$PURGE_FAILED" ]; then
             die "the uninstaller could not delete:$PURGE_FAILED
 The entries still there, and any program holding them, are listed above.
@@ -1114,13 +1235,25 @@ port_busy() {
 is_our_gateway() {  # port -> 0 when an abstractgateway answers there
     http_get "http://127.0.0.1:$1/api/health" | grep -q '"abstractgateway"'
 }
+# Start at login as the previous install left it (y, n, or empty on a first install): the
+# login item's own state when the installed gateway reports it (the consoles and the tray
+# have a switch for it), else the installer's state file.
+LOGIN_WAS=""
+case "$ST_MODE" in service) LOGIN_WAS=y ;; background) LOGIN_WAS=n ;; esac
+if [ -n "$ST_MODE" ]; then
+    find_uv >/dev/null 2>&1 || true; tool_bin
+    if gateway_supports service; then
+        _svc="$("$TOOL_BIN/abstractgateway" service status --json --data-dir "$DATA_DIR" 2>/dev/null | sed -n 's/^  "state": "\([a-z]*\)".*/\1/p' | head -n 1)" || _svc=""
+        case "$_svc" in on) LOGIN_WAS=y ;; off) LOGIN_WAS=n ;; esac
+    fi
+fi
 REUSE_RUNNING=0
 if [ -z "$PORT" ]; then PORT="${ST_PORT:-8080}"; PORT_EXPLICIT=0; else PORT_EXPLICIT=1; fi
 case "$PORT" in ''|*[!0-9]*) die "--port must be a number (got '$PORT')" ;; esac
-case "$CONSOLE_WAIT" in ''|*[!0-9]*) die "--console-wait must be a number of seconds (got '$CONSOLE_WAIT')" ;; esac
-[ "$CONSOLE_WAIT" -le 25 ] || CONSOLE_WAIT=25
+case "$ASK_WAIT" in ''|*[!0-9]*) die "--ask-wait must be a number of seconds (got '$ASK_WAIT')" ;; esac
+[ "$ASK_WAIT" -le 25 ] || ASK_WAIT=25
 if port_busy "$PORT"; then
-    if [ "$PORT" = "$ST_PORT" ] && { pid_alive || { [ "$ST_MODE" = service ] && is_our_gateway "$PORT"; }; }; then
+    if [ "$PORT" = "$ST_PORT" ] && { pid_alive || { [ "$LOGIN_WAS" = y ] && is_our_gateway "$PORT"; }; }; then
         REUSE_RUNNING=1
         ok "port $PORT: this install's gateway is already running (it will be restarted if the package changes)"
     elif [ "$PORT_EXPLICIT" = 1 ]; then
@@ -1156,16 +1289,28 @@ if [ "$OS_ID" = linux ]; then
     fi
 fi
 
-# Start at login: asked here, before anything is downloaded, so an interactive
-# user answers once and can walk away. Default yes (the gateway is the app's
-# presence on the machine); a previous "no" is remembered as the default.
-if [ "$NO_START" = 0 ] && [ "$NO_SERVICE" = 0 ] && { [ "$OS_ID" = macos ] || [ "$SYSTEMD_USER" = 1 ]; }; then
-    _login_def=y; [ "$ST_MODE" = background ] && _login_def=n
-    if ask_yes "Start AbstractFramework automatically when you log in? (a per-user login item, no admin; the uninstaller removes it)" "$_login_def"; then
-        ok "start at login: yes ($([ "$OS_ID" = macos ] && echo "LaunchAgent ~/Library/LaunchAgents/ai.abstractframework.gateway.plist" || echo "systemd --user unit abstractgateway.service"); turn off: re-run with --no-service)"
+# Start at login: asked here, before anything is downloaded, so the user answers once and
+# can walk away. Asked whenever a person is at a terminal; Enter = yes on a first install,
+# the previous choice on a re-run. Nobody to ask (automation, --yes, no answer in time):
+# a re-run keeps the previous choice, a first install leaves it off and the summary says
+# how to turn it on.
+SERVICE_POSSIBLE=0
+{ [ "$OS_ID" = macos ] || [ "$SYSTEMD_USER" = 1 ]; } && SERVICE_POSSIBLE=1
+if [ "$NO_START" = 0 ] && [ "$NO_SERVICE" = 0 ] && [ "$SERVICE_POSSIBLE" = 1 ]; then
+    if [ -n "$LOGIN_WAS" ]; then _lnone="$([ "$LOGIN_WAS" = y ] && echo 'yes, as now' || echo 'no, as now')"; else _lnone=no; fi
+    ask_timed "Start AbstractFramework automatically when you log in? (a per-user login item, no admin; the uninstaller removes it)" "${LOGIN_WAS:-y}" "$_lnone"
+    _lans="$ANSWER"
+    if [ -n "$_lans" ]; then _lwhy="your answer"
+    elif [ -n "$LOGIN_WAS" ]; then _lans="$LOGIN_WAS"; _lwhy="kept from the previous install"
+    elif [ "$ASK_NOTHING" = 1 ]; then _lans=n; _lwhy="--yes: nothing is asked, a first install leaves it off"
+    elif ! tty_ok; then _lans=n; _lwhy="no terminal to ask on, so a first install leaves it off"
+    elif [ "$PRINT" = 1 ]; then _lans=y; _lwhy="--print: the install asks on this terminal, Enter = yes"
+    else _lans=n; _lwhy="no answer within $ASK_WAIT s, so a first install leaves it off"; fi
+    if [ "$_lans" = y ]; then
+        ok "start at login: yes ($_lwhy; $([ "$OS_ID" = macos ] && echo "LaunchAgent ~/Library/LaunchAgents/ai.abstractframework.gateway.plist" || echo "systemd --user unit abstractgateway.service"); turn it off with the Start at login switch in either console, or re-run with --no-service)"
     else
         NO_SERVICE=1
-        ok "start at login: no (the gateway starts now in the background; re-run the installer to change this)"
+        ok "start at login: no ($_lwhy; the gateway starts now in the background; the summary says how to turn it on)"
     fi
 fi
 
@@ -1329,7 +1474,8 @@ if [ "$WITH_APPS" = 1 ]; then
         run "install nodejs-wheel" "$UV" tool install nodejs-wheel
         NODE_WHEEL=1
     fi
-    info "apps are not installed globally; each runs on demand (first launch downloads it):"
+    info "the browser apps open through the gateway: in the console's Apps page, Install, then Open (each at $BASE_URL/apps/<app>/)"
+    info "advanced: run one on its own, outside the gateway (first launch downloads it):"
     _others=""
     for spec in $AF_NPM_APPS; do
         case " $AF_NPM_GATEWAY_FLAG_APPS " in
@@ -1483,7 +1629,7 @@ elif [ "$USE_SERVICE" = 1 ]; then
         info "(only when the installed gateway has 'abstractgateway service'; otherwise it starts in the background)"
     fi
     stop_background_gateway
-    if [ "$ST_MODE" = service ] && [ "$REUSE_RUNNING" = 1 ] && [ "$CHANGED" = 0 ]; then
+    if [ "$LOGIN_WAS" = y ] && [ "$REUSE_RUNNING" = 1 ] && [ "$CHANGED" = 0 ]; then
         ok "login item already registered and the gateway is running, unchanged"
     else
         # The installer waits for health and mints the sign-in link itself (below), so the
@@ -1500,7 +1646,7 @@ elif [ "$USE_SERVICE" = 1 ]; then
     MODE=service
 else
     step "Start in the background"
-    if [ "$ST_MODE" = service ] && [ "$SERVICE_OK" = 1 ]; then
+    if [ "$LOGIN_WAS" = y ] && [ "$SERVICE_OK" = 1 ]; then
         # Chosen "no" this time: the earlier login item would fight the background
         # gateway for the port, so it goes first.
         run "remove the login item registered by the previous install" "$GW" service uninstall
@@ -1575,7 +1721,9 @@ What to do: restart the computer (the login item starts it again) or run the ins
             sleep 1
         done
         ok "gateway healthy at $BASE_URL (${_i}s)"
+        write_pointer
     fi
+    [ "$PRINT" = 1 ] && info "then write the gateway pointer $POINTER_FILE -> $BASE_URL (address only, no token; only when it is absent and this is the default data dir, or when it names this data dir)"
 
     step "Console sign-in"
     if [ "$PRINT" = 0 ] && gateway_supports claim-url; then
@@ -1643,7 +1791,13 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     if [ "$MODE" = service ]; then
         echo "  It starts by itself when you log in; nothing to launch."
     else
-        echo "  It runs until you restart the computer; run the installer again to start it."
+        echo "  It runs until you restart the computer."
+        if [ "$SERVICE_POSSIBLE" = 1 ] && [ "$SERVICE_OK" = 1 ]; then
+            echo "  Start at login is off. To turn it on: the Start at login switch in either console (web: the Gateway"
+            echo "    section; terminal: F3), or run: abstractgateway service enable"
+        else
+            echo "  Run the installer again to start it."
+        fi
     fi
     case ",$EXTRAS," in *,tray,*) echo "  Its icon in the $([ "$OS_ID" = macos ] && echo 'menu bar' || echo 'system tray') opens the console and shows its status." ;; esac
     echo "  First steps in the console: pick an engine and a model; it shows what fits this computer."
@@ -1665,7 +1819,8 @@ echo "  Voice:      $VOICE_RESULT"
 if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
     echo "  $AF_SKIPPED_LINE"
 fi
-echo "  Apps:       npx -y @abstractframework/flow --gateway-url $BASE_URL   (also: code, observer, continuum, entity)"
+echo "  Apps:       $BASE_URL/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
+echo "  Standalone: npx -y @abstractframework/flow --gateway-url $BASE_URL   (advanced; also code, observer, continuum, entity)"
 echo "  Docs:       $AF_DOCS"
 if [ -n "$TWINS" ]; then
     echo ""
@@ -1675,26 +1830,25 @@ fi
 [ -n "$LOG_FILE" ] && printf '\n  %sFull log: %s%s\n' "$C_D" "$LOG_FILE" "$C_0"
 
 # Remote or headless: offer the terminal console, signed in, the way a Mac opens the web console.
-# It is ASKED (Enter within --console-wait s), never assumed: a pseudo-terminal with nobody at it
-# (CI, Terraform, `ssh -t` in a script) must not hang. `true`, not `:`, probes /dev/tty: a failed
-# redirection on the special built-in `:` exits dash. --no-open skips the offer; --console-wait
-# sets how long it waits.
+# It is ASKED (Enter within --ask-wait s), never assumed: a pseudo-terminal with nobody at it
+# (CI, Terraform, `ssh -t` in a script) must not hang (tty_ok is the dash-safe probe). --no-open
+# and --yes skip the offer; --ask-wait sets how long it waits.
 offer_console() {
     _old_tty="$(stty -g </dev/tty 2>/dev/null)" || return 1
     # Keys typed during the install are still buffered: drop them, so only an answer counts.
     stty -icanon -echo min 0 time 0 </dev/tty 2>/dev/null
     dd bs=4096 count=1 </dev/tty >/dev/null 2>&1
     printf '\n%sPress Enter within %s s to open the terminal console%s (any other key, or waiting, skips it) ' \
-        "$C_B" "$CONSOLE_WAIT" "$C_0" >/dev/tty
+        "$C_B" "$ASK_WAIT" "$C_0" >/dev/tty
     # stty counts tenths of a second, at most 255.
-    stty time "$((CONSOLE_WAIT * 10))" </dev/tty 2>/dev/null
+    stty time "$((ASK_WAIT * 10))" </dev/tty 2>/dev/null
     _key="$(dd bs=1 count=1 </dev/tty 2>/dev/null | od -An -tu1 | tr -d ' ')"
     stty "$_old_tty" </dev/tty 2>/dev/null
     printf '\n' >/dev/tty
     [ "$_key" = 10 ] || [ "$_key" = 13 ]
 }
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ] && [ "$NO_OPEN" = 0 ] && [ "$REMOTE_SESSION" = 1 ] \
-    && [ "$CONSOLE_OK" = 1 ] && [ -n "$_tui_tok" ] && [ -t 1 ] && { true </dev/tty; } 2>/dev/null; then
+    && [ "$ASK_NOTHING" = 0 ] && [ "$CONSOLE_OK" = 1 ] && [ -n "$_tui_tok" ] && tty_ok; then
     # Everything is installed: Ctrl+C here must not turn a finished install into exit 130.
     trap : INT
     if offer_console; then

@@ -16,7 +16,14 @@
 #   - Rosetta: a piped run explains how to fix Terminal; a file run re-executes
 #     itself with `arch -arm64`
 #   - a root-owned ~/.local/bin -> exit 1 with the exact chown fix
-#   - the start-at-login question: default yes, a previous "no" stays the default
+#   - the start-at-login question: asked only on a terminal (Enter = yes, 'n' = no, no
+#     answer in --ask-wait = off on a first install); without a terminal a first install
+#     leaves it off and the summary says how to turn it on; a re-run keeps the previous
+#     choice; --yes and --no-service ask nothing; dash without a controlling terminal
+#   - the local gateway pointer (~/.abstractframework/gateway.json): written after the
+#     health check with written_by "installer", 0600, no token, only under the ownership
+#     rule (default data dir or a pointer naming this data dir); --uninstall deletes it only
+#     when it names this install's data dir
 #   - uninstall.sh removes a login item left without its tool (launchctl bootout
 #     through the double, plist deleted), keeps data unless --purge
 #   - uninstall with a live gateway tree (a writer every 50 ms and a detached,
@@ -118,18 +125,24 @@ run_in readonly -- sh "$SCRIPTS_DIR/install.sh" --print --port 18829
 check "exits 1 with the chown fix" "$([[ $RC == 1 ]] && has "$OUT" "sudo chown -R $(id -un)" && has "$OUT" ".local/bin"; echo $?)" "$OUT"
 chmod 755 "$WORK/readonly/home/.local/bin"
 
-echo "[6] start at login: the question and its defaults"
+echo "[6] start at login without a terminal: the defaults (the terminal cases are in [13])"
 run_in login_default -- sh "$SCRIPTS_DIR/install.sh" --print --port 18829
 if [[ "$IS_MAC" == 1 ]]; then
-    check "--print: default yes, stated" "$(has "$OUT" "when you log in?.*-> yes (default" && has "$OUT" "ai.abstractframework.gateway.plist"; echo $?)" "$OUT"
+    check "--print, no terminal, first install: off, said why" "$(has "$OUT" "start at login: no (no terminal to ask on" && has "$OUT" "Start in the background" && ! has "$OUT" "service install"; echo $?)" "$OUT"
+    mkdir -p "$WORK/login_prev_yes/home/$DATA_REL"
+    printf 'PORT=18829\nMODE=service\nPROFILE=light\n' >"$WORK/login_prev_yes/home/$DATA_REL/bootstrap.env"
+    run_in login_prev_yes -- sh "$SCRIPTS_DIR/install.sh" --print --port 18829
+    check "a previous 'yes' is kept without a terminal" "$(has "$OUT" "start at login: yes (kept from the previous install" && has "$OUT" "ai.abstractframework.gateway.plist"; echo $?)" "$OUT"
     # The login item must not pin --host: the gateway's Network setting binds it (mission T).
     check "--print: service install passes --port only, never --host" "$(has "$OUT" "service install --port 18829" && ! has "$OUT" "service install --host"; echo $?)" "$OUT"
     mkdir -p "$WORK/login_prev_no/home/$DATA_REL"
     printf 'PORT=18829\nMODE=background\nPROFILE=light\n' >"$WORK/login_prev_no/home/$DATA_REL/bootstrap.env"
     run_in login_prev_no -- sh "$SCRIPTS_DIR/install.sh" --print --port 18829
-    check "a previous 'no' is the default" "$(has "$OUT" "when you log in?.*-> no (default" && has "$OUT" "Start in the background"; echo $?)" "$OUT"
+    check "a previous 'no' is kept without a terminal" "$(has "$OUT" "start at login: no (kept from the previous install" && has "$OUT" "Start in the background"; echo $?)" "$OUT"
+    run_in login_yes -- sh "$SCRIPTS_DIR/install.sh" --print --port 18829 --yes
+    check "--yes asks nothing: a first install leaves it off" "$(has "$OUT" "start at login: no (--yes: nothing is asked" && has "$OUT" "Start in the background"; echo $?)" "$OUT"
     run_in login_flag -- sh "$SCRIPTS_DIR/install.sh" --print --port 18829 --no-service
-    check "--no-service asks nothing and starts in the background" "$(! has "$OUT" "when you log in?" && has "$OUT" "Start in the background"; echo $?)" "$OUT"
+    check "--no-service asks nothing and starts in the background" "$(! has "$OUT" "start at login:" && has "$OUT" "Start in the background"; echo $?)" "$OUT"
 fi
 
 if [[ "$IS_MAC" == 1 ]]; then
@@ -364,6 +377,9 @@ BG_PORT=18870
 # bg_case NAME NETWORK(1|0) [STORED "mode port"]: run the installer, leave OUT/GWLOG/NETF/DATA_T.
 # These cases skip the terminal console (--no-console) unless BG_ARGS says otherwise;
 # BG_TOOLBIN overrides the uv tool bin dir, BG_CARGO=1 adds a fake cargo (log: CARGOLOG).
+# BG_SERVICE=1: the fake gateway has `abstractgateway service` (install starts the fake
+# server, as a login item would; its pid in SVCPID) and --no-service is not passed, so the
+# start-at-login question is under test (a fake `systemctl --user` on Linux).
 bg_case() {
     local name="$1" network="$2" stored="${3:-}"
     local bin="$WORK/$name/bin" toolbin="${BG_TOOLBIN:-$WORK/$name/toolbin}"
@@ -385,15 +401,26 @@ case "\$1 \${2:-}" in
 esac
 exit 0
 UV
+    SVCPID="$WORK/$name/svc.pid"
     cat >"$toolbin/abstractgateway" <<GW
 #!/bin/sh
 D="\${ABSTRACTGATEWAY_DATA_DIR:-$WORK/$name/no-data-dir}"
 echo "abstractgateway \$*" >>"$GWLOG"
 # An old gateway has no \`network\` subcommand at all (argparse: invalid choice, exit 2).
 [ "\$1" = network ] && [ "$network" != 1 ] && { echo "invalid choice: 'network'" >&2; exit 2; }
+for a in "\$@"; do [ "\$a" = --help ] && { [ "\$1" = service ] && [ "${BG_SERVICE:-0}" != 1 ] && exit 2; exit 0; }; done
 case "\$1 \${2:-}" in
-  "network --help") exit 0 ;;
-  "service --help") exit 2 ;;
+  "service install")
+    port=""; prev=""; for a in "\$@"; do [ "\$prev" = --port ] && port="\$a"; prev="\$a"; done
+    nohup /usr/bin/python3 -c 'import http.server, sys
+class H(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200); self.end_headers(); self.wfile.write(b"{\"service\": \"abstractgateway\"}")
+    def log_message(self, *a): pass
+http.server.HTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()' "\$port" </dev/null >/dev/null 2>&1 &
+    echo \$! >"$SVCPID"; exit 0 ;;
+  "service uninstall") [ -f "$SVCPID" ] && kill "\$(cat "$SVCPID")" 2>/dev/null; exit 0 ;;
+  "service status") exit 0 ;;
   "network status")
     if [ -f "\$D/fake-network" ]; then read -r m p <"\$D/fake-network"; s=stored; else m=localhost; p=8080; s=default; fi
     printf '{\n  "configured": {\n    "mode": "%s",\n    "port": %s,\n    "source": "%s",\n    "port_source": "%s"\n  },\n  "effective": {\n    "mode": "decoy",\n    "port": 1,\n    "source": "decoy"\n  }\n}\n' "\$m" "\$p" "\$s" "\$s"
@@ -414,6 +441,9 @@ esac
 exit 0
 GW
     chmod +x "$bin/curl" "$bin/uv" "$toolbin/abstractgateway"
+    if [[ "${BG_SERVICE:-0}" == 1 && "$IS_MAC" == 0 ]]; then
+        printf '#!/bin/sh\n[ "$1 $2" = "--user show-environment" ] && exit 0\nexit 0\n' >"$bin/systemctl"; chmod +x "$bin/systemctl"
+    fi
     CARGOLOG="$WORK/$name/cargo.log"
     if [[ "${BG_CARGO:-0}" == 1 ]]; then
         # `install ... --root R NAME --version V` writes R/bin/NAME answering `--version`.
@@ -436,17 +466,28 @@ CARGO
     fi
     DATA_T="$WORK/$name/home/$DATA_REL"; NETF="$DATA_T/fake-network"
     if [[ -n "$stored" ]]; then mkdir -p "$DATA_T"; echo "$stored" >"$NETF"; fi
+    # BG_STATE: a previous install's bootstrap.env (printf %b); BG_POINTER: a gateway.json already there.
+    if [[ -n "${BG_STATE:-}" ]]; then mkdir -p "$DATA_T"; printf '%b' "$BG_STATE" >"$DATA_T/bootstrap.env"; fi
+    PTR="$WORK/$name/home/.abstractframework/gateway.json"
+    if [[ -n "${BG_POINTER:-}" ]]; then mkdir -p "$(dirname "$PTR")"; printf '%s\n' "$BG_POINTER" >"$PTR"; fi
     # BG_TOKEN: the admin token a real gateway writes into its data dir at first start.
     if [[ -n "${BG_TOKEN:-}" ]]; then mkdir -p "$DATA_T/auth"; printf '%s\n' "$BG_TOKEN" >"$DATA_T/auth/bootstrap-admin-token"; fi
     # BG_ENV: extra environment (e.g. SSH_CONNECTION); BG_PTY=1 runs the installer on a pseudo-terminal.
     # BG_OPEN=1 leaves --no-open out (the remote-session console launch is under test).
     local wrap=() open_flag=(--no-open)
     # BG_PTY=1: the installer runs on a pseudo-terminal that is its controlling terminal; with
-    # BG_PTY_ENTER=1 the runner presses Enter when the console offer appears. BG_PTY=2: stdout is a
-    # pseudo-terminal but the process has NO controlling terminal (/dev/tty cannot be opened).
+    # BG_PTY_ENTER=1 the runner presses Enter when the console offer appears; BG_PTY_ANSWER="TEXT KEY"
+    # (repeatable, separated by '|') types KEY ("enter" or one character) when TEXT appears.
+    # BG_PTY=2: stdout is a pseudo-terminal but the process has NO controlling terminal
+    # (/dev/tty cannot be opened).
     # (pty.spawn() spins forever on macOS when stdin is /dev/null, hence these small runners.)
+    local answers="${BG_PTY_ANSWER:-}"
+    [[ "${BG_PTY_ENTER:-0}" == 1 ]] && answers="${answers:+$answers|}Press Enter within enter"
     [[ "${BG_PTY:-0}" == 1 ]] && wrap=(/usr/bin/python3 -c 'import os, pty, sys
-enter = sys.argv[1] == "1"
+todo = []
+for item in filter(None, sys.argv[1].split("|")):
+    text, key = item.rsplit(" ", 1)
+    todo.append((text.encode(), b"\r" if key == "enter" else key.encode()))
 pid, fd = pty.fork()
 if pid == 0:
     os.execvp(sys.argv[2], sys.argv[2:])
@@ -460,10 +501,10 @@ while True:
         break
     os.write(1, chunk)
     seen = (seen + chunk)[-4096:]
-    if enter and b"Press Enter within" in seen:
-        os.write(fd, b"\r")
-        enter = False
-sys.exit(os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1]))' "${BG_PTY_ENTER:-0}")
+    if todo and todo[0][0] in seen:
+        os.write(fd, todo.pop(0)[1])
+        seen = b""
+sys.exit(os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1]))' "$answers")
     [[ "${BG_PTY:-0}" == 2 ]] && wrap=(/usr/bin/python3 -c 'import os, subprocess, sys
 master, slave = os.openpty()
 proc = subprocess.Popen(sys.argv[1:], stdin=subprocess.DEVNULL, stdout=slave, stderr=slave, start_new_session=True)
@@ -478,9 +519,15 @@ while True:
     os.write(1, chunk)
 sys.exit(proc.wait())')
     [[ "${BG_OPEN:-0}" == 1 ]] && open_flag=()
-    run_in "$name" ${BG_ENV:-} -- ${wrap[@]+"${wrap[@]}"} "${BG_SHELL:-sh}" "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" --no-service ${open_flag[@]+"${open_flag[@]}"} --no-modify-path ${BG_ARGS:---no-console}
-    local pid; pid="$(cat "$DATA_T/gateway.pid" 2>/dev/null)"
-    [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
+    local svc_flag=(--no-service)
+    [[ "${BG_SERVICE:-0}" == 1 ]] && svc_flag=()
+    run_in "$name" ${BG_ENV:-} -- ${wrap[@]+"${wrap[@]}"} "${BG_SHELL:-sh}" "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" ${svc_flag[@]+"${svc_flag[@]}"} ${open_flag[@]+"${open_flag[@]}"} --no-modify-path ${BG_ARGS:---no-console}
+    local pid f
+    # the background gateway (any data dir: BG_ARGS may pass --data-dir) and the login item's
+    while IFS= read -r f; do
+        pid="$(cat "$f" 2>/dev/null)"
+        [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
+    done < <(find "$WORK/$name" -name gateway.pid 2>/dev/null; echo "$SVCPID")
     for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 || break; sleep 0.5; done
 }
 if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
@@ -491,6 +538,27 @@ else
     check "new gateway: seeds localhost on the install port (nothing stored)" "$(grep -qx "abstractgateway network set localhost --port $BG_PORT" "$GWLOG" && [[ "$(cat "$NETF")" == "localhost $BG_PORT" ]]; echo $?)" "$GWLOG"
     check "new gateway: starts plain serve (no --host/--port)" "$(grep -qx "abstractgateway serve" "$GWLOG" && ! grep -q "serve --host" "$GWLOG"; echo $?)" "$GWLOG"
     check "new gateway: the Start hint is plain serve" "$(has "$OUT" "Start: .*abstractgateway serve$"; echo $?)" "$OUT"
+    # 0943: the pointer, written by the installer once the gateway answered (default data dir).
+    PTR_DD="$(cd "$DATA_T" && pwd -P)"
+    check "pointer: written after the health check, the contract's keys, written_by installer" "$(/usr/bin/python3 -c 'import json, sys
+d = json.load(open(sys.argv[1]))
+assert set(d) == {"schema", "url", "port", "data_dir", "updated_at", "written_by"}, d
+assert d["schema"] == 1 and d["url"] == "http://127.0.0.1:" + sys.argv[2] and d["port"] == int(sys.argv[2]), d
+assert d["data_dir"] == sys.argv[3] and d["written_by"] == "installer" and d["updated_at"].endswith("Z"), d' "$PTR" "$BG_PORT" "$PTR_DD" 2>&1; echo $?)" "$OUT"
+    check "pointer: mode 0600, no token, no temp file left" "$([[ "$(stat -f %Lp "$PTR" 2>/dev/null || stat -c %a "$PTR")" == 600 ]] && ! grep -qi token "$PTR" && [[ "$(ls -A "$(dirname "$PTR")")" == gateway.json ]]; echo $?)" "$OUT"
+    check "pointer: the installer says where it wrote it" "$(has "$OUT" "gateway pointer: $PTR -> http://127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
+    # Ownership: a pointer naming another gateway's data dir is left alone.
+    BG_POINTER='{"data_dir": "/elsewhere/other-gateway", "port": 9999, "schema": 1, "updated_at": "2026-01-01T00:00:00Z", "url": "http://127.0.0.1:9999", "written_by": "serve"}' bg_case bg_ptr_other 1
+    check "pointer: another gateway's pointer is left unchanged, and said so" "$([[ $RC == 0 ]] && grep -q '"port": 9999' "$PTR" && has "$OUT" "left unchanged: it belongs to the gateway with data directory /elsewhere/other-gateway"; echo $?)" "$OUT"
+    BG_POINTER='not json' bg_case bg_ptr_bad 1
+    check "pointer: one naming no readable data dir is left unchanged (serve repairs it)" "$([[ $RC == 0 ]] && [[ "$(cat "$PTR")" == "not json" ]] && has "$OUT" "names no data directory the installer can read"; echo $?)" "$OUT"
+    # ... and one naming this data dir (through a linked path) is taken over.
+    mkdir -p "$WORK/bg_ptr_mine/home/$DATA_REL"; ln -s "$WORK/bg_ptr_mine/home" "$WORK/bg_ptr_mine/homelink"
+    BG_POINTER="{\"data_dir\": \"$WORK/bg_ptr_mine/homelink/$DATA_REL\", \"port\": 9999, \"schema\": 1, \"updated_at\": \"x\", \"url\": \"http://127.0.0.1:9999\", \"written_by\": \"serve\"}" bg_case bg_ptr_mine 1
+    check "pointer: one naming this data dir (via a link) is rewritten with the install's port" "$([[ $RC == 0 ]] && grep -q "\"port\": $BG_PORT" "$PTR" && grep -q '"written_by": "installer"' "$PTR"; echo $?)" "$OUT"
+    # A custom --data-dir with no pointer yet: not the default data dir, so nothing is written.
+    BG_ARGS="--no-console --data-dir $WORK/bg_ptr_custom/data" bg_case bg_ptr_custom 1
+    check "pointer: a custom --data-dir without a pointer writes none, and says so" "$([[ $RC == 0 && ! -e "$PTR" ]] && has "$OUT" "gateway pointer not written: none yet and this install's data directory is not the default"; echo $?)" "$OUT"
 
     bg_case bg_lan 1 "lan $BG_PORT"
     check "stored lan: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
@@ -559,6 +627,43 @@ else
     BG_TOOLBIN="$TB3" BG_CARGO=1 BG_ARGS=" " BG_TOKEN="tok_remote_9" BG_ENV="SSH_CONNECTION=10.0.0.2_5000_10.0.0.1_22" BG_OPEN=1 bg_case rem3 1
     check "remote: without a terminal (piped output) the console is not started" "$([[ $RC == 0 ]] && ! grep -q -- "--url" "$TB3/abstractgateway-console.args"; echo $?)" "$OUT"
 fi
+
+echo "[13] start at login on a terminal (the fake gateway has 'abstractgateway service')"
+if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    check "port $BG_PORT is free for the start-at-login cases" 1
+else
+    BG_SERVICE=1 BG_PTY=1 BG_PTY_ANSWER="when you log in? enter" bg_case login_tty_enter 1
+    check "terminal + Enter: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
+    check "terminal + Enter: asked with the time limit, answered yes" "$(has "$OUT" "when you log in?.*\[Y/n\] (Enter = yes; no answer within 25 s = no)" && has "$OUT" "start at login: yes (your answer"; echo $?)" "$OUT"
+    check "terminal + Enter: the login service is registered (--port only), mode service" "$(grep -qx "abstractgateway service install --port $BG_PORT" "$GWLOG" && grep -qx "MODE=service" "$DATA_T/bootstrap.env" && ! has "$OUT" "Start at login is off"; echo $?)" "$GWLOG"
+    BG_SERVICE=1 BG_PTY=1 BG_PTY_ANSWER="when you log in? n" bg_case login_tty_no 1
+    check "terminal + 'n': no service, background start, the summary says how to turn it on" "$([[ $RC == 0 ]] && ! grep -q "service install" "$GWLOG" && grep -qx "MODE=background" "$DATA_T/bootstrap.env" && has "$OUT" "start at login: no (your answer" && has "$OUT" "Start at login is off"; echo $?)" "$OUT"
+    BG_SERVICE=1 BG_PTY=1 BG_ARGS="--no-console --ask-wait 1" bg_case login_tty_silent 1
+    check "terminal, nobody answers: the install finishes, a first install leaves it off" "$([[ $RC == 0 ]] && ! grep -q "service install" "$GWLOG" && has "$OUT" "no answer within 1 s, so a first install leaves it off"; echo $?)" "$OUT"
+    BG_SERVICE=1 bg_case login_notty 1
+    check "no terminal (automation): not enabled, never asked" "$([[ $RC == 0 ]] && ! grep -q "service install" "$GWLOG" && ! has "$OUT" "\[Y/n\]" && has "$OUT" "start at login: no (no terminal to ask on"; echo $?)" "$OUT"
+    check "no terminal: the summary says how to turn it on (either console's switch, or the command)" "$(has "$OUT" "Start at login is off. To turn it on: the Start at login switch in either console" && has "$OUT" "or run: abstractgateway service enable"; echo $?)" "$OUT"
+    BG_SERVICE=1 BG_STATE='PORT=18870\nMODE=service\nPROFILE=light\n' bg_case login_rerun 1
+    check "re-run without a terminal keeps the recorded 'yes'" "$([[ $RC == 0 ]] && grep -qx "abstractgateway service install --port $BG_PORT" "$GWLOG" && has "$OUT" "start at login: yes (kept from the previous install"; echo $?)" "$OUT"
+    BG_SERVICE=1 BG_STATE='PORT=18870\nMODE=service\nPROFILE=light\n' BG_PTY=1 BG_PTY_ANSWER="when you log in? n" bg_case login_rerun_no 1
+    check "re-run, answered 'n' on a terminal: the recorded 'yes' is the default, the answer wins" "$([[ $RC == 0 ]] && has "$OUT" "when you log in?.*\[Y/n\] (Enter = yes; no answer within 25 s = yes, as now)" && ! grep -q "service install" "$GWLOG" && grep -qx "abstractgateway service uninstall" "$GWLOG" && grep -qx "MODE=background" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
+    if command -v dash >/dev/null 2>&1; then
+        BG_SERVICE=1 BG_PTY=2 BG_SHELL=dash bg_case login_dash 1
+        check "dash, terminal output but no controlling terminal: exit 0, not enabled" "$([[ $RC == 0 ]] && ! grep -q "service install" "$GWLOG" && has "$OUT" "start at login: no (no terminal to ask on"; echo $?)" "$OUT"
+    fi
+fi
+
+echo "[14] uninstall removes the gateway pointer only when it names this install's data dir"
+UH="$WORK/ptr_uninst/home"; UD="$UH/$DATA_REL"; mkdir -p "$UD" "$UH/.abstractframework"; printf 'MODE=background\n' >"$UD/bootstrap.env"
+printf '{\n  "data_dir": "%s",\n  "port": 8080,\n  "schema": 1,\n  "updated_at": "x",\n  "url": "http://127.0.0.1:8080",\n  "written_by": "installer"\n}\n' "$(cd "$UD" && pwd -P)" >"$UH/.abstractframework/gateway.json"
+run_in ptr_uninst -- sh "$SCRIPTS_DIR/uninstall.sh" --purge --print
+check "--print: shows the rm of the pointer, deletes nothing" "$([[ $RC == 0 && -f "$UH/.abstractframework/gateway.json" ]] && has "$OUT" "rm -f $UH/.abstractframework/gateway.json"; echo $?)" "$OUT"
+run_in ptr_uninst AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes --purge
+check "--uninstall --purge: the pointer naming this data dir is gone, the folder's other files stay" "$([[ $RC == 0 && ! -e "$UH/.abstractframework/gateway.json" && -d "$UH/.abstractframework" ]]; echo $?)" "$OUT"
+OH="$WORK/ptr_keep/home"; mkdir -p "$OH/$DATA_REL" "$OH/.abstractframework"; printf 'MODE=background\n' >"$OH/$DATA_REL/bootstrap.env"
+printf '{\n  "data_dir": "/elsewhere/other-gateway",\n  "port": 9999,\n  "schema": 1,\n  "url": "http://127.0.0.1:9999"\n}\n' >"$OH/.abstractframework/gateway.json"
+run_in ptr_keep AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
+check "--uninstall: another gateway's pointer is kept, and said so" "$([[ $RC == 0 && -f "$OH/.abstractframework/gateway.json" ]] && has "$OUT" "kept the gateway pointer"; echo $?)" "$OUT"
 
 echo ""
 echo "passed: $PASS  failed: $FAIL"

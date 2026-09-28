@@ -629,7 +629,9 @@ def test_install_sh_app_hints_use_the_gateway_launch_flag(tmp_path: Path) -> Non
     base = "http://127.0.0.1:18999"
     # Launch flags, never an environment variable, carry the gateway address.
     assert "ABSTRACTGATEWAY_URL" not in out
-    hints = _printed_block(out, "apps are not installed globally")
+    # The apps open through the gateway (/apps/<app>/); npx is the advanced, standalone way.
+    assert f"the browser apps open through the gateway: in the console's Apps page, Install, then Open (each at {base}/apps/<app>/)" in out
+    hints = _printed_block(out, "advanced: run one on its own, outside the gateway")
     flagged = {"@abstractframework/flow", "@abstractframework/continuum"}
     assert hints == [
         f"npx -y {pkg}@{v} --gateway-url {base}" if pkg in flagged else f"npx -y {pkg}@{v}"
@@ -637,7 +639,8 @@ def test_install_sh_app_hints_use_the_gateway_launch_flag(tmp_path: Path) -> Non
     ]
     others = ", ".join(pkg for pkg in NPM_RELEASE_VERSIONS if pkg not in flagged)
     assert f"{others} start on http://127.0.0.1:8080: enter {base} on their sign-in screen" in out
-    assert f"Apps:       npx -y @abstractframework/flow --gateway-url {base}" in out
+    assert f"Apps:       {base}/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)" in out
+    assert f"Standalone: npx -y @abstractframework/flow --gateway-url {base}   (advanced;" in out
 
 
 def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
@@ -859,9 +862,12 @@ def test_install_sh_retries_without_voice_when_its_wheels_are_missing(tmp_path: 
     assert "local voice (Supertonic, Whisper) did not install on this system: retrying without it" in proc.stdout
 
 
-def test_install_sh_console_wait_is_a_validated_flag(tmp_path: Path) -> None:
-    proc = _install_sh_print(tmp_path, "--no-tray", "--console-wait", "abc", profile="light", compiler=True)
-    assert proc.returncode != 0
-    assert "--console-wait must be a number of seconds (got 'abc')" in proc.stderr
+def test_install_sh_ask_wait_is_a_validated_flag(tmp_path: Path) -> None:
+    for flag in ("--ask-wait", "--console-wait"):  # --console-wait: the earlier name, an alias
+        home = tmp_path / flag.strip("-")
+        home.mkdir()
+        proc = _install_sh_print(home, "--no-tray", flag, "abc", profile="light", compiler=True)
+        assert proc.returncode != 0
+        assert "--ask-wait must be a number of seconds (got 'abc')" in proc.stderr
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
-    assert "AF_CONSOLE_WAIT" not in sh  # a launch flag, never an environment variable
+    assert "AF_ASK_WAIT" not in sh and "AF_CONSOLE_WAIT" not in sh  # a launch flag, never an environment variable
