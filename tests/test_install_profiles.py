@@ -1150,9 +1150,11 @@ def test_install_sh_ask_wait_is_a_validated_flag(tmp_path: Path) -> None:
 # --- install.ps1: re-running the line upgrades in place (same contract as install.sh [17]) ------------
 
 
-def _ps1_print(tmp_path: Path, *extra: str) -> str:
+def _ps1_print(tmp_path: Path, *extra: str, path_prefix: Path | None = None) -> str:
     env = {**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad"),
            "PROCESSOR_ARCHITECTURE": "AMD64"}
+    if path_prefix is not None:
+        env["PATH"] = f"{path_prefix}{os.pathsep}{env.get('PATH', '')}"
     for key in [k for k in env if k.upper().endswith(("_KEY", "_TOKEN"))]:
         del env[key]
     argv = ["pwsh", "-NoProfile", "-File", str(ROOT / "scripts" / "install.ps1"), "-Print", "-Profile", "light", "-Port", "18999", *extra]
@@ -1202,6 +1204,57 @@ def test_install_ps1_pin_latest_has_no_release_matrix(tmp_path: Path) -> None:
     assert _printed_block(out, "uv-constraints.txt:") == ["llama-cpp-python==0.3.35"]
 
 
+def _pre_062_install(tmp_path: Path, *, everything: bool) -> Path:
+    """A 0.6.1-era install for install.ps1 -Print: bootstrap.env without the choices, a gateway uv
+    tool (a fake uv answers `tool list`/`tool dir`), its receipt, uv-overrides.txt and, with
+    everything=True, the terminal console and abstractcode next to the gateway's commands."""
+    tools, bin_ = tmp_path / "tools", tmp_path / ".local" / "bin"
+    (tools / "abstractgateway").mkdir(parents=True)
+    bin_.mkdir(parents=True)
+    fake = tmp_path / "fakeuv"
+    fake.mkdir()
+    uv = fake / "uv"
+    uv.write_text("#!/bin/sh\ncase \"$1 $2\" in\n  \"--version \"*) echo 'uv 0.0.0' ;;\n  \"tool list\") echo 'abstractgateway v0.7.0' ;;\n"
+                  f"  \"tool dir\") if [ \"$3\" = --bin ]; then echo '{bin_}'; else echo '{tools}'; fi ;;\nesac\nexit 0\n")
+    uv.chmod(0o755)
+    data = tmp_path / "lad" / "AbstractGateway"
+    data.mkdir(parents=True)
+    spec = "abstractgateway[tray]==0.7.0" if everything else "abstractgateway==0.7.0"
+    (data / "bootstrap.env").write_text(f"PORT=18999\nMODE=background\nPROFILE=light\nGATEWAY_SPEC={spec}\n")
+    extras = ', extras = ["tray"]' if everything else ""
+    core = '    { name = "abstractcore", install-path = "/x/abstractcore", from = "abstractcore" },\n' if everything else ""
+    (tools / "abstractgateway" / "uv-receipt.toml").write_text(
+        f'[tool]\nrequirements = [{{ name = "abstractgateway"{extras}, specifier = "==0.7.0" }}]\nentrypoints = [\n'
+        f'    {{ name = "abstractgateway", install-path = "/x/abstractgateway", from = "abstractgateway" }},\n{core}]\n')
+    never = "" if everything else "stable-diffusion-cpp-python; sys_platform == 'never'\naec-audio-processing; sys_platform == 'never'\n"
+    (data / "uv-overrides.txt").write_text("webrtcvad; sys_platform == 'never'\n" + never)
+    if everything:
+        (fake / "cl.exe").write_text("#!/bin/sh\nexit 0\n")  # -Full needs a C compiler
+        (fake / "cl.exe").chmod(0o755)
+        for name in ("abstractgateway-console", "abstractcode"):
+            (bin_ / name).write_text(f"#!/bin/sh\necho '{name} 0.0.1'\n")
+            (bin_ / name).chmod(0o755)
+    return fake
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_first_upgrade_from_before_0_6_2_reads_the_choices_from_disk(tmp_path: Path) -> None:
+    """Same rule as install.sh [19]: the choices a 0.6.1-era bootstrap.env does not record are read
+    from disk, so the first upgrade neither adds what was left out nor drops -Full."""
+    lean = _ps1_print(tmp_path / "lean", path_prefix=_pre_062_install(tmp_path / "lean", everything=False))
+    assert ("the previous install recorded no options (before AbstractFramework 0.6.2): read from disk: terminal console "
+            "absent, abstractcode absent, library commands not exposed, tray extra not installed, compiled extras not built") in lean
+    install = _install_line(lean)
+    assert "--with-executables-from" not in install and "[tray]" not in install, install
+    assert "Terminal console (" not in lean
+    full = _ps1_print(tmp_path / "full", path_prefix=_pre_062_install(tmp_path / "full", everything=True))
+    assert ("read from disk: terminal console present, abstractcode present, library commands exposed, tray extra "
+            "installed, compiled extras built (-Full)") in full
+    install = _install_line(full)
+    assert f" {_CLI_FROM} " in install and "abstractgateway[tray]==" in install, install
+    assert "--with llama-cpp-python " in install and "llama-cpp-python==" not in install, install
+
+
 def test_install_ps1_upgrades_like_install_sh() -> None:
     """Static parity (CI runs the pwsh tests above): the same state keys, the stop-before-update
     rule for locked files, the service fallback and the changes summary."""
@@ -1213,6 +1266,9 @@ def test_install_ps1_upgrades_like_install_sh() -> None:
     assert "starting the gateway in the background instead" in ps1 and "Start-BackgroundGateway" in ps1
     assert "found: upgrading to" in ps1 and "already up to date" in ps1 and "'  Changes:'" in ps1
     assert "pip freeze --python $toolVenv" in ps1
+    # A 0.6.1-era install's unrecorded choices are read from disk in both installers ([19]).
+    assert "recorded no options (before AbstractFramework 0.6.2): read from disk" in ps1
+    assert "if ((Test-Path -LiteralPath $stateFile) -and $prevGw) {" in ps1 and 'from = "abstractcore"' in ps1
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     for key in ("FRAMEWORK_VERSION=", "CONSOLE=", "CODE_CLI=", "CORE_CLI=", "TRAY=", "FULL="):
         assert f'echo "{key}' in sh, key

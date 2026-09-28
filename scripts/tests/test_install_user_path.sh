@@ -351,7 +351,7 @@ C="$WORK/cmd"; mkdir -p "$C"
 cp "$SCRIPTS_DIR/Install AbstractFramework.command" "$C/"
 printf '#!/bin/sh\necho "STUB install.sh $*"\nexit "${STUB_RC:-0}"\n' >"$C/install.sh"
 # curl doubles: one serves "the latest install.sh" for the one-liner's URL, one cannot reach GitHub.
-for n in cmd_ok cmd_fail cmd_offline; do mkdir -p "$WORK/$n/bin"; done
+for n in cmd_ok cmd_fail cmd_offline cmd_portal; do mkdir -p "$WORK/$n/bin"; done
 for n in cmd_ok cmd_fail; do
     cat >"$WORK/$n/bin/curl" <<'CURL'
 #!/bin/sh
@@ -363,10 +363,14 @@ CURL
     chmod +x "$WORK/$n/bin/curl"
 done
 printf '#!/bin/sh\nexit 6\n' >"$WORK/cmd_offline/bin/curl"; chmod +x "$WORK/cmd_offline/bin/curl"
+# A captive portal: curl succeeds, but the "script" is an HTML sign-in page.
+printf '#!/bin/sh\nout=""; prev=""\nfor a in "$@"; do [ "$prev" = -o ] && out="$a"; prev="$a"; done\nprintf "<html><body>Sign in to the network</body></html>\\n" >"$out"\n' >"$WORK/cmd_portal/bin/curl"; chmod +x "$WORK/cmd_portal/bin/curl"
 run_in cmd_ok -- sh "$C/Install AbstractFramework.command" --port 18829
 check "runs the LATEST install.sh (the one-liner's) with --interactive and the user's args, not its own copy" "$(has "$OUT" "LATEST install.sh --interactive --port 18829" && ! has "$OUT" "STUB install.sh" && has "$OUT" "All done"; echo $?)" "$OUT"
 run_in cmd_offline -- sh "$C/Install AbstractFramework.command" --port 18829
 check "GitHub unreachable: runs the copy next to it, and says so" "$(has "$OUT" "STUB install.sh --interactive --port 18829" && has "$OUT" "GitHub could not be reached"; echo $?)" "$OUT"
+run_in cmd_portal -- sh "$C/Install AbstractFramework.command" --port 18829
+check "a download that is not the installer (captive portal HTML): not run; the copy next to it runs, and it says so" "$(has "$OUT" "STUB install.sh --interactive --port 18829" && has "$OUT" "The download was not the installer" && ! has "$OUT" "Sign in to the network"; echo $?)" "$OUT"
 run_in cmd_fail STUB_RC=1 -- sh "$C/Install AbstractFramework.command"
 check "on failure: exit 1 and 'double-click this file again'" "$([[ $RC == 1 ]] && has "$OUT" "double-click this file again"; echo $?)" "$OUT"
 
@@ -393,6 +397,7 @@ BG_PORT=18870
 # These cases skip the terminal console (--no-console) unless BG_ARGS says otherwise;
 # BG_TOOLBIN overrides the uv tool bin dir, BG_CARGO=1 adds a fake cargo (log: CARGOLOG;
 # BG_CARGO_FAIL=CRATE makes that crate's build fail), BG_UV_LIST is what `uv tool list` prints.
+# BG_TOOLDIR: what `uv tool dir` prints (the tool environments; default: the bin dir, as before).
 # BG_SERVICE=1: the fake gateway has `abstractgateway service` (install starts the fake
 # server, as a login item would; its pid in SVCPID) and --no-service is not passed, so the
 # start-at-login question is under test (a fake `systemctl --user` on Linux).
@@ -419,7 +424,7 @@ CURL
 echo "uv \$*" >>"$UVLOG"
 case "\$1 \${2:-}" in
   "--version "*) echo "uv 0.0.0" ;;
-  "tool dir") echo "$toolbin" ;;
+  "tool dir") if [ "\${3:-}" != --bin ] && [ -n "${BG_TOOLDIR:-}" ]; then echo "${BG_TOOLDIR:-}"; else echo "$toolbin"; fi ;;
   "tool list") printf '%b\n' "${BG_UV_LIST:-abstractgateway v9.9.9}" ;;
   "tool install") [ -f "$WORK/$name/freeze.after" ] && cp "$WORK/$name/freeze.after" "$WORK/$name/freeze.now" ;;
   "pip freeze") [ -f "$WORK/$name/freeze.now" ] && cat "$WORK/$name/freeze.now" ;;
@@ -851,7 +856,7 @@ else
     fi
     mkdir -p "$WORK/up_full/home/$DATA_REL"; printf 'PORT=18829\nMODE=background\nPROFILE=light\nFULL=1\n' >"$WORK/up_full/home/$DATA_REL/bootstrap.env"
     run_in up_full -- sh "$SCRIPTS_DIR/install.sh" --print --port 18829 --profile light
-    check "remembered: --full is kept by a re-run (--print: no llama.cpp wheel, the compiled extras kept)" "$(has "$OUT" "kept from the previous install: --full" && { has "$OUT" "tool install .*--with llama-cpp-python --constraints" || has "$OUT" "needs a C compiler"; }; echo $?)" "$OUT"
+    check "remembered: --full is kept by a re-run (--print: no llama.cpp wheel, the compiled extras kept)" "$(has "$OUT" "kept from the previous install: .*--full" && { has "$OUT" "tool install .*--with llama-cpp-python --constraints" || has "$OUT" "needs a C compiler"; }; echo $?)" "$OUT"
 
     # A custom data dir is kept through the gateway pointer (it names the data dir that holds this installer's state).
     BG_ARGS="--no-console --data-dir $WORK/up_dd/data" bg_case up_dd 1
@@ -869,7 +874,7 @@ else
 
     # The login item cannot be registered (launchd's "Bootstrap failed: 5"): never leave the gateway stopped.
     BG_SERVICE=1 BG_SERVICE_FAIL=1 BG_STATE="PORT=$BG_PORT\nMODE=service\nPROFILE=light\n" bg_case up_svcfail 1
-    check "service install fails: the gateway starts in the background instead, and it is said" "$([[ $RC == 0 ]] && has "$OUT" "starting the gateway in the background instead" && grep -qx "abstractgateway serve" "$GWLOG" && grep -qx "MODE=background" "$DATA_T/bootstrap.env" && has "$OUT" "Start at login could not be turned on"; echo $?)" "$OUT"
+    check "service install fails: the gateway starts in the background instead, and it is said" "$([[ $RC == 0 ]] && has "$OUT" "starting the gateway in the background instead" && grep -qx "abstractgateway serve" "$GWLOG" && grep -qx "MODE=background" "$DATA_T/bootstrap.env" && has "$OUT" "Start at login is off: the login item could not be registered" && has "$OUT" "or run: abstractgateway service enable"; echo $?)" "$OUT"
 
     # Linux, a running systemd user unit: `service install` (enable --now) leaves it on the old code.
     UP_SVC="PORT=$BG_PORT\nMODE=service\nPROFILE=light\nFRAMEWORK_VERSION=0.6.0\n"
@@ -897,6 +902,35 @@ else
     BG_FOREIGN=1 BG_NO_PORT=1 BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$HELD_OLD" \
         BG_FREEZE_BEFORE='abstractgateway==0.7.0\n' BG_FREEZE_AFTER="abstractgateway==$GW_PIN\n" bg_case held_start 1
     check "without --no-start, a held recorded port still moves to the next free port (kept for future runs)" "$([[ $RC == 0 ]] && has "$OUT" "using $((BG_PORT + 1)) (kept for future runs)" && grep -qx "PORT=$((BG_PORT + 1))" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
+fi
+
+echo "[19] the first upgrade of an install made before 0.6.2: the unrecorded choices are read from disk"
+if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    check "port $BG_PORT is free for the pre-0.6.2 upgrade cases" 1
+else
+    GW_PIN="$(sed -n 's/^AF_GATEWAY_PIN_DEFAULT="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
+    # A 0.6.1-era bootstrap.env: no FRAMEWORK_VERSION, CONSOLE, CODE_CLI, CORE_CLI, TRAY or FULL.
+    PRE062="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nGATEWAY_SPEC=abstractgateway==0.7.0\n"
+    # (a) made with --no-console --no-core-cli --no-tray, no abstractcode, no --full: nothing of
+    # them on disk. A plain re-run (no options) must not add Rust/console, abstractcode, the tray
+    # or the library commands.
+    mkdir -p "$WORK/pre_min/tools/abstractgateway" "$WORK/pre_min/home/$DATA_REL"
+    printf '[tool]\nrequirements = [{ name = "abstractgateway", specifier = "==0.7.0" }, { name = "webrtcvad-wheels", specifier = ">=2.0.14" }]\nentrypoints = [\n    { name = "abstractgateway", install-path = "/x/abstractgateway", from = "abstractgateway" },\n]\n' >"$WORK/pre_min/tools/abstractgateway/uv-receipt.toml"
+    printf "webrtcvad; sys_platform == 'never'\nstable-diffusion-cpp-python; sys_platform == 'never'\naec-audio-processing; sys_platform == 'never'\n" >"$WORK/pre_min/home/$DATA_REL/uv-overrides.txt"
+    BG_TOOLDIR="$WORK/pre_min/tools" BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$PRE062" BG_CARGO=1 BG_ARGS=" " bg_case pre_min 1
+    check "pre-0.6.2, nothing extra on disk: says the options were read from disk" "$([[ $RC == 0 ]] && has "$OUT" "recorded no options (before AbstractFramework 0.6.2): read from disk: terminal console absent, abstractcode absent, library commands not exposed"; echo $?)" "$OUT"
+    check "pre-0.6.2, nothing extra on disk: no console or abstractcode build, no library commands, recorded" "$([[ $RC == 0 ]] && [[ ! -s "$CARGOLOG" ]] && ! grep "tool install " "$UVLOG" | grep -q -- "--with-executables-from" && grep -qx "CONSOLE=0" "$DATA_T/bootstrap.env" && grep -qx "CODE_CLI=0" "$DATA_T/bootstrap.env" && grep -qx "CORE_CLI=0" "$DATA_T/bootstrap.env" && grep -qx "FULL=0" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
+    if [[ "$IS_MAC" == 1 ]]; then
+        check "pre-0.6.2, no tray extra in the receipt (macOS): the tray is not added, TRAY=0 recorded" "$(grep "tool install " "$UVLOG" | grep -q " abstractgateway==$GW_PIN$" && grep -qx "TRAY=0" "$DATA_T/bootstrap.env"; echo $?)" "$UVLOG"
+    fi
+    # (b) made with the console, abstractcode, the library commands, the tray and --full: all kept.
+    mkdir -p "$WORK/pre_all/tools/abstractgateway" "$WORK/pre_all/home/$DATA_REL" "$WORK/pre_all/home/.cargo/bin"
+    printf '[tool]\nrequirements = [{ name = "abstractgateway", extras = ["tray"], specifier = "==0.7.0" }, { name = "llama-cpp-python" }]\nentrypoints = [\n    { name = "abstractgateway", install-path = "/x/abstractgateway", from = "abstractgateway" },\n    { name = "abstractcore", install-path = "/x/abstractcore", from = "abstractcore" },\n]\n' >"$WORK/pre_all/tools/abstractgateway/uv-receipt.toml"
+    printf "webrtcvad; sys_platform == 'never'\n" >"$WORK/pre_all/home/$DATA_REL/uv-overrides.txt"
+    for c in abstractgateway-console abstractcode; do printf '#!/bin/sh\necho "%s 0.0.1"\n' "$c" >"$WORK/pre_all/home/.cargo/bin/$c"; chmod +x "$WORK/pre_all/home/.cargo/bin/$c"; done
+    BG_TOOLDIR="$WORK/pre_all/tools" BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nGATEWAY_SPEC=abstractgateway[tray]==0.7.0\n" BG_CARGO=1 BG_ARGS=" " bg_case pre_all 1
+    check "pre-0.6.2, everything on disk: console, abstractcode, library commands, tray and --full kept and recorded" "$([[ $RC == 0 ]] && grep -qx "CONSOLE=1" "$DATA_T/bootstrap.env" && grep -qx "CODE_CLI=1" "$DATA_T/bootstrap.env" && grep -qx "CORE_CLI=1" "$DATA_T/bootstrap.env" && grep -qx "TRAY=1" "$DATA_T/bootstrap.env" && grep -qx "FULL=1" "$DATA_T/bootstrap.env" && has "$OUT" "compiled extras built (--full)"; echo $?)" "$OUT"
+    check "pre-0.6.2, everything on disk: the install keeps --full (no llama.cpp wheel pin) and the library commands" "$({ grep "tool install " "$UVLOG" | grep -q -- "--with llama-cpp-python --constraints" || has "$OUT" "needs a C compiler"; } && grep "tool install " "$UVLOG" | grep -q -- "--with-executables-from abstractcore" && grep -q "abstractgateway-console" "$CARGOLOG"; echo $?)" "$UVLOG"
 fi
 
 echo ""

@@ -39,7 +39,9 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 To upgrade, run the same line again (on a Mac, double-clicking **Install AbstractFramework.command**
 again does the same), or, on macOS and Linux, press **Update** in the web console, the terminal console or the menu-bar
 icon: each runs the same installer, which installs the latest AbstractFramework release, keeps your
-settings, options and data, and lists what changed. Gateway only, apps, and version checks:
+settings, options and data, and lists what changed. Coming from 0.6.1 or earlier, re-run the line
+once: it reads your earlier options from what is installed (or repeat them once), and the Update
+button of gateway 0.7.1 cannot upgrade. Gateway only, apps, and version checks:
 [Upgrade](docs/install.md#upgrade).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),

@@ -305,11 +305,13 @@ command without changing anything.
 
 ### How do I upgrade it?
 
-Run the install line again, or, on macOS and Linux, press **Update** in the web console, the terminal console or the
-menu-bar icon, which runs the same installer: it installs the latest AbstractFramework release,
-keeps your settings, options and data, restarts the gateway when anything changed, and lists what
-changed. `--pin latest` (`-Pin latest`) installs the newest gateway instead. See
-[Upgrade](install.md#upgrade).
+Run the install line again: it installs the latest AbstractFramework release, keeps your
+settings, options and data, restarts the gateway when anything changed, and lists what changed.
+On macOS and Linux, **Update** in the web console, the terminal console or the menu-bar icon runs
+the same installer with `--no-start`: the running gateway keeps serving, and the console or icon
+then offers the restart. Coming from 0.6.1 or earlier, re-run the line once (the Update button of
+gateway 0.7.1 cannot upgrade an installer install). `--pin latest` (`-Pin latest`) installs the
+newest gateway instead. See [Upgrade](install.md#upgrade).
 
 ### How do I remove it?
 

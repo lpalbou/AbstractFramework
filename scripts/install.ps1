@@ -377,12 +377,7 @@ function Main {
         return $Default
     }
     $script:KeptChoices = @()
-    $NoConsole = -not (Resolve-Choice $WithConsole $NoConsole $state['CONSOLE'] $true '-NoConsole' '-WithConsole')
-    $NoCodeCli = -not (Resolve-Choice $WithCodeCli $NoCodeCli $state['CODE_CLI'] $true '-NoCodeCli' '-WithCodeCli')
-    $NoCoreCli = -not (Resolve-Choice $WithCoreCli $NoCoreCli $state['CORE_CLI'] $true '-NoCoreCli' '-WithCoreCli')
-    $NoTray = -not (Resolve-Choice $WithTray $NoTray $state['TRAY'] $true '-NoTray' '-WithTray')
-    $Full = Resolve-Choice $Full $NoFull $state['FULL'] $false '-NoFull' '-Full'
-    $kept += $script:KeptChoices
+    # (Resolved once the previous install is known: see "an existing install" below.)
 
     # uv discovery (the official installer puts uv in %USERPROFILE%\.local\bin).
     $uv = $null
@@ -612,7 +607,56 @@ function Main {
         return @($lines | Where-Object { $_ -match '^[A-Za-z0-9._-]+==' } | ForEach-Object { ($_.Split(' ;')[0]).ToLower().Replace('_', '-') } | Sort-Object)
     }
     $envBefore = @(); if ($action -ne 'install') { $envBefore = Get-EnvSnapshot }
+    # An install made before AbstractFramework 0.6.2 recorded none of the choices a re-run keeps
+    # (bootstrap.env has no CONSOLE, CODE_CLI, CORE_CLI, TRAY or FULL). Each missing one is read from
+    # what that install left on disk, as install.sh does, so its first upgrade keeps them too; the new
+    # bootstrap.env then records them. The terminal console and abstractcode: present next to the
+    # gateway's commands or in cargo's own bin folder. The library commands: the uv receipt's
+    # entrypoints `from = "abstractcore"`. The tray: the tray extra in the receipt's gateway
+    # requirement (else the recorded GATEWAY_SPEC). -Full: uv-overrides.txt without the compiled
+    # extras' "never" lines (else the tool environment holds one of them).
+    $inferred = @()
+    if ((Test-Path -LiteralPath $stateFile) -and $prevGw) {
+        $cargoBinPrev = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
+        $rootsPrev = Get-CrateRoots $toolBin
+        $crateBinPrev = if ($rootsPrev.Console) { Join-Path $rootsPrev.Console 'bin' } else { $cargoBinPrev }
+        $receipt = if ($toolVenv) { Join-Path $toolVenv 'uv-receipt.toml' } else { '' }
+        $receiptText = if ($receipt -and (Test-Path -LiteralPath $receipt)) { [string](Get-Content -Raw -LiteralPath $receipt) } else { '' }
+        foreach ($c in @(@{ Key = 'CONSOLE'; Name = ($AfCrateConsole -split '@', 2)[0]; Label = 'terminal console' }, @{ Key = 'CODE_CLI'; Name = ($AfCrateCodeCli -split '@', 2)[0]; Label = 'abstractcode' })) {
+            if ($state[$c.Key]) { continue }
+            $has = (Test-Path -LiteralPath (Join-Path $crateBinPrev "$($c.Name)$exeSuffix")) -or (Test-Path -LiteralPath (Join-Path $cargoBinPrev "$($c.Name)$exeSuffix"))
+            $state[$c.Key] = $(if ($has) { '1' } else { '0' }); $inferred += "$($c.Label) $(if ($has) { 'present' } else { 'absent' })"
+        }
+        if (-not $state['CORE_CLI'] -and $receiptText) {
+            $has = $receiptText -match 'from = "abstractcore"'
+            $state['CORE_CLI'] = $(if ($has) { '1' } else { '0' }); $inferred += "library commands $(if ($has) { 'exposed' } else { 'not exposed' })"
+        }
+        if (-not $state['TRAY']) {
+            $gwReq = [regex]::Match($receiptText, '\{ *name = "abstractgateway"[^}]*\}').Value
+            if (-not $gwReq) { $gwReq = [string]$state['GATEWAY_SPEC'] }
+            if ($gwReq) {
+                $has = $gwReq -match 'tray'
+                $state['TRAY'] = $(if ($has) { '1' } else { '0' }); $inferred += "tray extra $(if ($has) { 'installed' } else { 'not installed' })"
+            }
+        }
+        if (-not $state['FULL']) {
+            $overridesPrev = Join-Path $DataDir 'uv-overrides.txt'
+            if (Test-Path -LiteralPath $overridesPrev) {
+                $has = -not ([string](Get-Content -Raw -LiteralPath $overridesPrev) -match "(?m)^$([regex]::Escape($AfCompiledExtras[0])); sys_platform == 'never'")
+            } else {
+                $has = [bool](@($envBefore | Where-Object { $AfCompiledExtras -contains ($_ -split '==', 2)[0] }).Count)
+            }
+            $state['FULL'] = $(if ($has) { '1' } else { '0' }); $inferred += "compiled extras $(if ($has) { 'built (-Full)' } else { 'not built' })"
+        }
+    }
+    $NoConsole = -not (Resolve-Choice $WithConsole $NoConsole $state['CONSOLE'] $true '-NoConsole' '-WithConsole')
+    $NoCodeCli = -not (Resolve-Choice $WithCodeCli $NoCodeCli $state['CODE_CLI'] $true '-NoCodeCli' '-WithCodeCli')
+    $NoCoreCli = -not (Resolve-Choice $WithCoreCli $NoCoreCli $state['CORE_CLI'] $true '-NoCoreCli' '-WithCoreCli')
+    $NoTray = -not (Resolve-Choice $WithTray $NoTray $state['TRAY'] $true '-NoTray' '-WithTray')
+    $Full = Resolve-Choice $Full $NoFull $state['FULL'] $false '-NoFull' '-Full'
+    $kept += $script:KeptChoices
     Write-Host $foundLine -ForegroundColor White
+    if ($inferred.Count) { Write-Info "the previous install recorded no options (before AbstractFramework 0.6.2): read from disk: $($inferred -join ', ')" }
     if ($kept.Count) { Write-Info "kept from the previous install: $($kept -join ', ') (give the opposite option to change it)" }
 
     Write-Step 'Preflight'
@@ -1104,7 +1148,7 @@ function Main {
         }
         if ($serviceFailed) {
             # Never leave the gateway stopped: it runs now, in the background.
-            Write-Warn2 "the login item could not be registered (details in $($script:LogFile)): starting the gateway in the background instead, so it runs now"
+            Write-Warn2 "the login item could not be registered (details in $($script:LogFile)): start at login is off; starting the gateway in the background instead, so it runs now"
             Write-Step 'Start in the background (hidden window)'
             Start-BackgroundGateway
             $mode = 'background'; $serviceFallback = $true
@@ -1235,7 +1279,7 @@ function Main {
     if ($script:DryRun) { Write-Host 'Plan printed (-Print): nothing was changed.' -ForegroundColor White }
     else { Write-Host 'AbstractFramework is installed.' -ForegroundColor Green }
     if ($upgradeLine) { Write-Host "  $upgradeLine" }
-    if ($serviceFallback) { Write-Host '  Start at login could not be turned on (see the warning above); the gateway runs in the background until you sign out.' }
+    if ($serviceFallback) { Write-Host '  Start at login is off: the login item could not be registered (see the warning above). The gateway runs in the background until you sign out; once the cause is fixed, turn start at login on (At login, below).' }
     if ($NoStart -and $changed -and $action -ne 'install' -and -not $script:DryRun) {
         Write-Host '  A gateway that is running still runs the previous version until it restarts: the console''s Restart'
         Write-Host '  (web: the Gateway section), the tray''s Restart, or re-run this installer without -NoStart.'

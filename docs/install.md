@@ -154,6 +154,17 @@ The line always runs the installer of the latest AbstractFramework release. It:
   `Upgraded: AbstractFramework 0.6.1 -> 0.6.2` or `Already up to date: AbstractFramework 0.6.2;
   nothing changed.`
 
+#### Upgrading from 0.6.1 or earlier
+
+Installs made by AbstractFramework 0.6.1 or earlier did not record your install options. The first
+re-run reads them from what is installed: whether the terminal console and `abstractcode` are
+there, whether the gateway has the tray extra and the AbstractCore commands, whether the compiled
+extras were built (`--full`), and a custom data directory through the gateway pointer. It prints
+what it found (`read from disk: …`) and records it for later runs. You can also repeat your
+original options once on that first run. The **Update** button of gateway 0.7.1 and earlier cannot
+upgrade an installer install: re-run the line once, and from gateway 0.7.2 on **Update** runs the
+installer.
+
 With `--no-start` (Windows: `-NoStart`) the installer upgrades without starting or restarting the
 gateway, and says when a restart is due. It keeps this install's port even when another program
 holds it.

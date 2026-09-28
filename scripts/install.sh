@@ -620,12 +620,16 @@ opt_choice() {  # opt_choice GIVEN RECORDED DEFAULT FLAG-WHEN-OFF FLAG-WHEN-ON: 
     [ "$2" = "$3" ] && return 0
     if [ "$2" = 0 ]; then KEPT="${KEPT:+$KEPT, }$4"; else KEPT="${KEPT:+$KEPT, }$5"; fi
 }
-opt_choice "$OPT_CONSOLE" "$ST_CONSOLE" 1 --no-console --with-console; WITH_CONSOLE="$CHOICE"
-opt_choice "$OPT_CODE_CLI" "$ST_CODE_CLI" 1 --no-code-cli --with-code-cli; WITH_CODE_CLI="$CHOICE"
-opt_choice "$OPT_CORE_CLI" "$ST_CORE_CLI" 1 --no-core-cli --with-core-cli; WITH_CORE_CLI="$CHOICE"
-opt_choice "$OPT_TRAY" "$ST_TRAY" 1 --no-tray --with-tray; WITH_TRAY="$CHOICE"
-opt_choice "$OPT_FULL" "$ST_FULL" 0 --no-full --full; FULL="$CHOICE"
-NO_TRAY=$((1 - WITH_TRAY))
+# resolve_choices: runs once the previous install is known (below, after its detection).
+resolve_choices() {
+    opt_choice "$OPT_CONSOLE" "$ST_CONSOLE" 1 --no-console --with-console; WITH_CONSOLE="$CHOICE"
+    opt_choice "$OPT_CODE_CLI" "$ST_CODE_CLI" 1 --no-code-cli --with-code-cli; WITH_CODE_CLI="$CHOICE"
+    opt_choice "$OPT_CORE_CLI" "$ST_CORE_CLI" 1 --no-core-cli --with-core-cli; WITH_CORE_CLI="$CHOICE"
+    opt_choice "$OPT_TRAY" "$ST_TRAY" 1 --no-tray --with-tray; WITH_TRAY="$CHOICE"
+    opt_choice "$OPT_FULL" "$ST_FULL" 0 --no-full --full; FULL="$CHOICE"
+    NO_TRAY=$((1 - WITH_TRAY))
+}
+WITH_CONSOLE=1; WITH_CODE_CLI=1; WITH_CORE_CLI=1; WITH_TRAY=1; FULL=0; NO_TRAY=0
 
 # ---------------------------------------------------------------------------
 # uv discovery
@@ -1248,7 +1252,60 @@ crate_snapshot() {
 ENV_BEFORE=""; CRATES_BEFORE=""
 if [ "$PRINT" = 0 ] && [ "$ACTION" != install ]; then ENV_BEFORE="$(env_snapshot)"; CRATES_BEFORE="$(crate_snapshot)"; fi
 
+# An install made before AbstractFramework 0.6.2 recorded none of the choices a re-run keeps
+# (bootstrap.env has no CONSOLE, CODE_CLI, CORE_CLI, TRAY or FULL). Each missing one is read from
+# what that install left on disk, so its first upgrade keeps them too; the new bootstrap.env then
+# records them, only while that install's gateway is still there (the uv tool). (A custom
+# --data-dir is found through the gateway pointer, above.)
+# The terminal console and abstractcode: present where this installer builds them (next to the
+# gateway's commands), or in cargo's own bin folder (installers before 0.6.1).
+# The library commands: the uv receipt's entrypoints `from = "abstractcore"` (--with-executables-from).
+# The tray: the tray extra in the receipt's gateway requirement (else the recorded GATEWAY_SPEC);
+# without it, off only where the installer would have added it (macOS, or a display).
+# --full: uv-overrides.txt without the compiled extras' "never" lines (else the tool environment
+# holds one of them).
+INFERRED=""
+if [ -f "$STATE_FILE" ] && [ -n "$PREV_GW" ]; then
+    _cargo_bin="${CARGO_HOME:-$HOME/.cargo}/bin"
+    _rcpt="$TOOL_VENV/uv-receipt.toml"; [ -f "$_rcpt" ] || _rcpt="$TOOL_VENV2/uv-receipt.toml"
+    [ -f "$_rcpt" ] || _rcpt=""
+    if [ -z "$ST_CONSOLE" ]; then
+        if [ -x "$CONSOLE_BIN" ] || [ -x "$_cargo_bin/$CONSOLE_NAME" ]; then ST_CONSOLE=1; else ST_CONSOLE=0; fi
+        INFERRED="${INFERRED:+$INFERRED, }terminal console $([ "$ST_CONSOLE" = 1 ] && echo present || echo absent)"
+    fi
+    if [ -z "$ST_CODE_CLI" ]; then
+        if [ -x "$CODE_BIN" ] || [ -x "$_cargo_bin/$CODE_NAME" ]; then ST_CODE_CLI=1; else ST_CODE_CLI=0; fi
+        INFERRED="${INFERRED:+$INFERRED, }abstractcode $([ "$ST_CODE_CLI" = 1 ] && echo present || echo absent)"
+    fi
+    if [ -z "$ST_CORE_CLI" ] && [ -n "$_rcpt" ]; then
+        if grep -q 'from = "abstractcore"' "$_rcpt"; then ST_CORE_CLI=1; else ST_CORE_CLI=0; fi
+        INFERRED="${INFERRED:+$INFERRED, }library commands $([ "$ST_CORE_CLI" = 1 ] && echo exposed || echo not exposed)"
+    fi
+    if [ -z "$ST_TRAY" ]; then
+        _gw_req=""
+        [ -n "$_rcpt" ] && _gw_req="$(grep -o '{ *name = "abstractgateway"[^}]*}' "$_rcpt" | head -n 1)"
+        [ -n "$_gw_req" ] || _gw_req="$([ -f "$STATE_FILE" ] && st_get GATEWAY_SPEC)"
+        if [ -n "$_gw_req" ]; then
+            if printf '%s' "$_gw_req" | grep -q 'tray'; then ST_TRAY=1
+            elif [ "$OS_ID" = macos ] || [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then ST_TRAY=0; fi
+            [ -n "$ST_TRAY" ] && INFERRED="${INFERRED:+$INFERRED, }tray extra $([ "$ST_TRAY" = 1 ] && echo installed || echo not installed)"
+        fi
+    fi
+    if [ -z "$ST_FULL" ]; then
+        _first_extra="${AF_COMPILED_EXTRAS%% *}"
+        if [ -f "$DATA_DIR/uv-overrides.txt" ]; then
+            if grep -q "^$_first_extra; sys_platform == 'never'" "$DATA_DIR/uv-overrides.txt"; then ST_FULL=0; else ST_FULL=1; fi
+        else
+            ST_FULL=0
+            for _p in $AF_COMPILED_EXTRAS; do env_snapshot | grep -q "^$_p==" && ST_FULL=1; done
+        fi
+        INFERRED="${INFERRED:+$INFERRED, }compiled extras $([ "$ST_FULL" = 1 ] && echo "built (--full)" || echo "not built")"
+    fi
+fi
+resolve_choices
+
 printf '%s%s%s\n' "$C_B" "$FOUND_LINE" "$C_0"
+[ -n "$INFERRED" ] && info "the previous install recorded no options (before AbstractFramework 0.6.2): read from disk: $INFERRED"
 [ -n "$KEPT" ] && info "kept from the previous install: $KEPT (give the opposite option to change it)"
 
 step "Preflight"
@@ -1906,7 +1963,7 @@ elif [ "$USE_SERVICE" = 1 ]; then
     if [ "$SERVICE_FAILED" = 1 ]; then
         # Never leave the gateway stopped: it runs now, in the background, and the summary
         # says how to turn start at login on once the cause is fixed.
-        warn "the login item could not be registered (details above and in $LOG_FILE): starting the gateway in the background instead, so it runs now"
+        warn "the login item could not be registered (details above and in $LOG_FILE): start at login is off; starting the gateway in the background instead, so it runs now"
         step "Start in the background"
         start_background
         MODE=background; SERVICE_FALLBACK=1
@@ -2064,7 +2121,7 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     # The plain-language part first: what a non-technical user needs to know.
     printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
     [ -n "$UPGRADE_LINE" ] && echo "  $UPGRADE_LINE"
-    [ "$SERVICE_FALLBACK" = 1 ] && echo "  Start at login could not be turned on (see the warning above); the gateway runs in the background until you restart the computer."
+    [ "$SERVICE_FALLBACK" = 1 ] && echo "  Start at login is off: the login item could not be registered (see the warning above). Once its cause is fixed, turn it on as below."
     [ "$OPENED" = 1 ] && echo "  Your browser now shows its web console. Its address is $BASE_URL/console (bookmark it)."
     echo "  Configure it from either console (the same settings, both need this machine):"
     # An opened claim link is spent (the browser redeemed it): show the plain address then.

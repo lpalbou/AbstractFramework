@@ -42,6 +42,12 @@ terminal console `abstractgateway-console` 0.11.1; every other version is unchan
   `5: Input/output error` when the login item is replaced: it waits until launchd has removed the
   previous job and retries. When the login item cannot be registered, the gateway starts in the
   background instead, so an upgrade never leaves it stopped.
+- **Upgrading from 0.6.1 or earlier.** Those installs did not record their options, so the first
+  re-run reads them from what is installed (the terminal console, `abstractcode`, the tray extra,
+  the AbstractCore commands, a `--full` build, a custom data directory through the gateway
+  pointer), says what it found and records it; you can also repeat your options once. The Update
+  button of AbstractGateway 0.7.1 and earlier cannot upgrade an installer install: re-run the line
+  once. See [Upgrading from 0.6.1 or earlier](docs/install.md#upgrading-from-061-or-earlier).
 - **`--no-start` (`-NoStart`)** upgrades without starting or restarting the gateway and says when a
   restart is due. It keeps this install's port even when a program the installer did not start
   holds it.

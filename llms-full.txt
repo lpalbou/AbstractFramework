@@ -43,7 +43,9 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 To upgrade, run the same line again (on a Mac, double-clicking **Install AbstractFramework.command**
 again does the same), or, on macOS and Linux, press **Update** in the web console, the terminal console or the menu-bar
 icon: each runs the same installer, which installs the latest AbstractFramework release, keeps your
-settings, options and data, and lists what changed. Gateway only, apps, and version checks:
+settings, options and data, and lists what changed. Coming from 0.6.1 or earlier, re-run the line
+once: it reads your earlier options from what is installed (or repeat them once), and the Update
+button of gateway 0.7.1 cannot upgrade. Gateway only, apps, and version checks:
 [Upgrade](docs/install.md#upgrade).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
@@ -3431,6 +3433,17 @@ The line always runs the installer of the latest AbstractFramework release. It:
   `Upgraded: AbstractFramework 0.6.1 -> 0.6.2` or `Already up to date: AbstractFramework 0.6.2;
   nothing changed.`
 
+#### Upgrading from 0.6.1 or earlier
+
+Installs made by AbstractFramework 0.6.1 or earlier did not record your install options. The first
+re-run reads them from what is installed: whether the terminal console and `abstractcode` are
+there, whether the gateway has the tray extra and the AbstractCore commands, whether the compiled
+extras were built (`--full`), and a custom data directory through the gateway pointer. It prints
+what it found (`read from disk: …`) and records it for later runs. You can also repeat your
+original options once on that first run. The **Update** button of gateway 0.7.1 and earlier cannot
+upgrade an installer install: re-run the line once, and from gateway 0.7.2 on **Update** runs the
+installer.
+
 With `--no-start` (Windows: `-NoStart`) the installer upgrades without starting or restarting the
 gateway, and says when a restart is due. It keeps this install's port even when another program
 holds it.
@@ -5531,11 +5544,13 @@ command without changing anything.
 
 ### How do I upgrade it?
 
-Run the install line again, or, on macOS and Linux, press **Update** in the web console, the terminal console or the
-menu-bar icon, which runs the same installer: it installs the latest AbstractFramework release,
-keeps your settings, options and data, restarts the gateway when anything changed, and lists what
-changed. `--pin latest` (`-Pin latest`) installs the newest gateway instead. See
-[Upgrade](install.md#upgrade).
+Run the install line again: it installs the latest AbstractFramework release, keeps your
+settings, options and data, restarts the gateway when anything changed, and lists what changed.
+On macOS and Linux, **Update** in the web console, the terminal console or the menu-bar icon runs
+the same installer with `--no-start`: the running gateway keeps serving, and the console or icon
+then offers the restart. Coming from 0.6.1 or earlier, re-run the line once (the Update button of
+gateway 0.7.1 cannot upgrade an installer install). `--pin latest` (`-Pin latest`) installs the
+newest gateway instead. See [Upgrade](install.md#upgrade).
 
 ### How do I remove it?
 
