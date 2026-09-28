@@ -829,7 +829,8 @@ def test_install_ps1_builds_the_code_cli_and_exposes_the_commands_by_default(tmp
     assert "cargo install --locked --force abstractcode --version " in out
     assert f" {_CLI_FROM} " in _install_line(out)
     assert "AbstractCode (terminal)" not in out  # the plain block is for a real install
-    assert re.search(r"^  Code: +\S*abstractcode\S* --gateway-url http://127.0.0.1:18999 --token <admin token: Get-Content ", out, flags=re.M)
+    # The command is `abstractcode` when it is on PATH, else `& '<cargo bin>/abstractcode'`.
+    assert re.search(r"^  Code: +(abstractcode|& '[^']*abstractcode') --gateway-url http://127.0.0.1:18999 --token <admin token: Get-Content ", out, flags=re.M)
     block = _printed_block(out, "Commands (in ")
     assert [line.split()[0] for line in block][:2] == ["abstractgateway", "abstractgateway-config"]
     opt_out = subprocess.run(argv + ["-NoCodeCli", "-NoCoreCli"], check=True, capture_output=True, text=True, env=env).stdout
