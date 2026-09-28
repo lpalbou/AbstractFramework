@@ -963,7 +963,7 @@ def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_pa
     argv = ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "gpu", "-Port", "18999"]
     out = subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
     assert _printed_overrides(out) == _DEFAULT_OVERRIDES
-    assert _printed_block(out, "uv-constraints.txt:") == ["llama-cpp-python==0.3.35"]
+    assert _printed_block(out, "uv-constraints.txt:") == [*_release_matrix(), "llama-cpp-python==0.3.35"]
     install = _install_line(out)
     assert (
         "--with 'webrtcvad-wheels>=2.0.14' --with 'abstractvoice[supertonic,stt]' --with llama-cpp-python==0.3.35 --constraints uv-constraints.txt "
@@ -1145,3 +1145,74 @@ def test_install_sh_ask_wait_is_a_validated_flag(tmp_path: Path) -> None:
         assert "--ask-wait must be a number of seconds (got 'abc')" in proc.stderr
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     assert "AF_ASK_WAIT" not in sh and "AF_CONSOLE_WAIT" not in sh  # a launch flag, never an environment variable
+
+
+# --- install.ps1: re-running the line upgrades in place (same contract as install.sh [17]) ------------
+
+
+def _ps1_print(tmp_path: Path, *extra: str) -> str:
+    env = {**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad"),
+           "PROCESSOR_ARCHITECTURE": "AMD64"}
+    for key in [k for k in env if k.upper().endswith(("_KEY", "_TOKEN"))]:
+        del env[key]
+    argv = ["pwsh", "-NoProfile", "-File", str(ROOT / "scripts" / "install.ps1"), "-Print", "-Profile", "light", "-Port", "18999", *extra]
+    return subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
+
+
+def _framework_version() -> str:
+    return json.loads((ROOT / "docs" / "installers" / "install-manifest.json").read_text(encoding="utf-8"))["framework"]["version"]
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_rerun_says_what_it_finds_and_keeps_the_choices(tmp_path: Path) -> None:
+    fw = _framework_version()
+    assert f"No AbstractFramework install found: installing AbstractFramework {fw}" in _ps1_print(tmp_path / "first")
+    data = tmp_path / "lad" / "AbstractGateway"
+    data.mkdir(parents=True)
+    (data / "bootstrap.env").write_text("PORT=18999\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=0.6.0\nCONSOLE=0\nCORE_CLI=0\nTRAY=0\n")
+    out = _ps1_print(tmp_path)
+    assert f"AbstractFramework 0.6.0 found: upgrading to AbstractFramework {fw}" in out
+    assert "kept from the previous install: -NoConsole, -NoCoreCli, -NoTray" in out
+    install = _install_line(out)
+    assert "--with-executables-from" not in install
+    assert re.search(r" '?abstractgateway==[0-9.]+'?$", install.rstrip()), install  # no [tray]
+    assert "Terminal console (" not in out
+    back = _ps1_print(tmp_path, "-WithCoreCli", "-WithTray")
+    assert f" {_CLI_FROM} " in _install_line(back) and "abstractgateway[tray]==" in _install_line(back)
+    (data / "bootstrap.env").write_text(f"PORT=18999\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION={fw}\n")
+    assert f"AbstractFramework {fw} found: already up to date" in _ps1_print(tmp_path)
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_keeps_a_custom_data_dir_through_the_pointer(tmp_path: Path) -> None:
+    custom = tmp_path / "gwdata"
+    custom.mkdir()
+    (custom / "bootstrap.env").write_text("PORT=18999\nMODE=background\nPROFILE=light\n")
+    (tmp_path / ".abstractframework").mkdir()
+    (tmp_path / ".abstractframework" / "gateway.json").write_text(json.dumps({"data_dir": str(custom), "port": 18999, "schema": 1}))
+    out = _ps1_print(tmp_path)
+    assert f"kept from the previous install: -DataDir {custom}" in out
+    assert f"Data dir:   {custom}" in out
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_pin_latest_has_no_release_matrix(tmp_path: Path) -> None:
+    out = _ps1_print(tmp_path, "-Pin", "latest")
+    assert "installing the newest abstractgateway (-Pin latest)" in out
+    assert _printed_block(out, "uv-constraints.txt:") == ["llama-cpp-python==0.3.35"]
+
+
+def test_install_ps1_upgrades_like_install_sh() -> None:
+    """Static parity (CI runs the pwsh tests above): the same state keys, the stop-before-update
+    rule for locked files, the service fallback and the changes summary."""
+    ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    for key in ("FRAMEWORK_VERSION=", "CONSOLE=", "CODE_CLI=", "CORE_CLI=", "TRAY=", "FULL="):
+        assert f'"{key}' in ps1, key
+    assert "Stop-RunningGateway" in ps1 and "$stoppedForUpdate = $true" in ps1
+    assert "run\\gateway-serve.json" in ps1
+    assert "starting the gateway in the background instead" in ps1 and "Start-BackgroundGateway" in ps1
+    assert "found: upgrading to" in ps1 and "already up to date" in ps1 and "'  Changes:'" in ps1
+    assert "pip freeze --python $toolVenv" in ps1
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    for key in ("FRAMEWORK_VERSION=", "CONSOLE=", "CODE_CLI=", "CORE_CLI=", "TRAY=", "FULL="):
+        assert f'echo "{key}' in sh, key
