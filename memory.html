@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractMemory — Documentation | AbstractFramework</title>
+  <title>AbstractMemory 0.3 — durable, append-only memory for agents | AbstractFramework</title>
+  <meta name="description" content="AbstractMemory is a Python library for durable, append-only agent memory: temporal triples over in-memory, SQLite or LanceDB stores, and a MemorySystem that forms, reconstructs and consolidates memories from use.">
+  <link rel="canonical" href="https://abstractframework.ai/memory.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractMemory — durable agent memory">
+  <meta property="og:description" content="Two layers: temporal, provenance-aware triples, and a MemorySystem with a journal for formation, recall, attention, identity, diary and consolidation.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -11,171 +19,207 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
 </head>
 <body>
-  <nav class="nav">
-    <a href="./" class="nav-brand">
-    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
-      AbstractFramework
-    </a>
-    <ul class="nav-links">
-      <li><a href="./">Home</a></li>
-      <li><a href="#overview">Overview</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#getting-started">Get Started</a></li>
-      <li><a href="#api">API</a></li>
-      <li><a href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
-    </ul>
-  </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html" aria-current="page">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
 
-<div class="pkg-nav">
+<div class="pkg-nav" aria-label="Packages and apps">
   <div class="pkg-nav-inner">
     <a href="core.html" class="pkg-nav-link">Core</a>
     <a href="runtime.html" class="pkg-nav-link">Runtime</a>
     <a href="agent.html" class="pkg-nav-link">Agent</a>
     <a href="flow.html" class="pkg-nav-link">Flow</a>
     <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
     <a href="code.html" class="pkg-nav-link">Code</a>
     <a href="observer.html" class="pkg-nav-link">Observer</a>
     <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
     <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
-    <a href="memory.html" class="pkg-nav-link active">Memory</a>
+    <a href="memory.html" class="pkg-nav-link active" aria-current="page">Memory</a>
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
   </div>
 </div>
+<main id="main">
 
 <!-- ═══════════════════ DOC HERO ═══════════════════ -->
 <section class="hero" style="min-height:auto;padding:8rem 0 4rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> KNOWLEDGE</div>
-    <h1>Abstract<span class="gradient">Memory</span></h1>
-    <p class="hero-sub">Append-only, temporal, provenance-aware triple assertions with deterministic structured queries. SQLite and LanceDB persistence with optional vector and semantic retrieval &mdash; the knowledge backbone for durable AI agents.</p>
+    <div class="hero-badge"><span class="dot"></span> KNOWLEDGE &middot; memory</div>
+    <h1>Abstract<span class="gradient">Memory</span> <span class="ver">v0.3.0</span></h1>
+    <p class="hero-sub">AbstractMemory is a Python library for durable, append-only agent memory. Layer 1 stores facts as temporal triples (subject, predicate, object), each with its time and provenance: where it came from. Layer 2, the <code>MemorySystem</code>, combines those triples with an append-only journal into a usage-weighted memory graph: it forms records, reconstructs working memory from a cue, and strengthens only what you actually use. Storage never decays and nothing is deleted.</p>
     <div class="hero-actions">
-      <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started
-      </a>
+      <a href="https://github.com/lpalbou/AbstractMemory" target="_blank" rel="noopener noreferrer" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
       <a href="https://pypi.org/project/AbstractMemory/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
-      <a href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
-      <a href="https://github.com/lpalbou/abstractmemory/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
-      <a href="https://github.com/lpalbou/abstractmemory/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+      <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
     <div class="hero-code">
-<pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> <span class="line-fn">InMemoryTripleStore</span>, <span class="line-fn">TripleAssertion</span>, <span class="line-fn">TripleQuery</span>
-
-store = <span class="line-fn">InMemoryTripleStore</span>()
-store.<span class="line-fn">add</span>([<span class="line-fn">TripleAssertion</span>(
-    subject=<span class="line-str">"Scrooge"</span>, predicate=<span class="line-str">"related_to"</span>,
-    object=<span class="line-str">"Christmas"</span>, scope=<span class="line-str">"session"</span>
-)])
-
-hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(subject=<span class="line-str">"scrooge"</span>))</code></pre>
+<pre><code>python -m pip install AbstractMemory
+python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   <span class="line-cmt"># LanceDB backend</span></code></pre>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
-<section class="section" id="overview">
+<!-- ═══════════════════ TWO LAYERS ═══════════════════ -->
+<section id="overview" class="section">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Overview</div>
-      <h2 class="section-title">Temporal Triple Store</h2>
-      <p class="section-desc">AbstractMemory stores knowledge as append-only semantic triples with temporal validity, provenance metadata, and confidence scoring. Every assertion records when it was observed, who asserted it, and under what context.</p>
+      <span class="section-label">Overview</span>
+      <h2 class="section-title">Two layers</h2>
+      <p class="section-desc">Reads are pure: rendering a memory does not strengthen it; only committed use does. AbstractMemory has no dependency on <a href="core.html">AbstractCore</a> or <a href="runtime.html">AbstractRuntime</a>, and SQLite persistence and vector scoring use only the standard library.</p>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card">
+        <h3>Layer 1: triple truth</h3>
+        <p>Append-only, temporal, provenance-aware triple assertions with deterministic structured queries and optional vector retrieval, over in-memory, SQLite or LanceDB stores.</p>
+        <div class="mode-tags"><span class="mode-tag">TripleAssertion</span><span class="mode-tag">TripleQuery</span><span class="mode-tag">TripleStore</span></div>
+      </div>
+      <div class="mode-card">
+        <h3>Layer 2: the memory system</h3>
+        <p>A <code>MemorySystem</code> over a store and a journal: typed record formation, stimulus-driven reconstruction, attention and decay, identity, valence, diary conventions, sleep and consolidation, and a replay stream.</p>
+        <div class="mode-tags"><span class="mode-tag">MemorySystem</span><span class="mode-tag">SQLiteJournal</span><span class="mode-tag">Stimulus</span></div>
+      </div>
+      <div class="mode-card">
+        <h3>Embeddings you choose</h3>
+        <p><code style="white-space:normal;overflow-wrap:anywhere">OpenAICompatTextEmbedder</code> for any OpenAI-compatible <code>/embeddings</code> endpoint, <code style="white-space:normal;overflow-wrap:anywhere">AbstractGatewayTextEmbedder</code> for an <a href="gateway.html">AbstractGateway</a> deployment, or your own <code>TextEmbedder</code>. Keep one embedding model per store.</p>
+        <div class="mode-tags"><span class="mode-tag">optional</span><span class="mode-tag">vector search</span></div>
+      </div>
+    </div>
+    <div class="callout reveal" style="margin-top:var(--space-2xl)">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>AbstractMemory comes with the <a href="install.html">one-line AbstractFramework installer</a>: AbstractGateway installs it with the LanceDB backend. It is the memory engine of the framework's long-lived <a href="entity.html">entities</a>, and AbstractRuntime's <code>MEMORY_KG_*</code> <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#effect" target="_blank" rel="noopener noreferrer">effects</a> (the assert, query and resolve requests a workflow makes against its knowledge graph) run on its triple stores.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ LAYER 2 ═══════════════════ -->
+<section id="memory-system" class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Layer 2</span>
+      <h2 class="section-title">The memory system</h2>
+      <p class="section-desc">Working memory is not stored; it emerges from use. Every journal record gets a monotonic <code>seq</code>, so any past state can be reproduced by reading <code>as_of</code> that point. The <a href="https://github.com/lpalbou/AbstractMemory/blob/main/docs/memory-system.md" target="_blank" rel="noopener noreferrer">memory system guide</a> explains the model in depth.</p>
     </div>
     <div class="components-grid reveal">
       <div class="comp-card">
-        <h3>Append-Only Assertions</h3>
-        <p>Knowledge is modeled as <code>TripleAssertion</code> records: subject, predicate, object triples with temporal metadata. Assertions are never mutated &mdash; new facts supersede old ones through temporal windows.</p>
+        <div class="comp-card-header"><span class="comp-tag memory">Formation</span></div>
+        <h3>Typed records</h3>
+        <p><code>remember</code> and <code>remember_many</code> form typed records (episodes, diary entries and more), idempotent by key. Forming a memory is not using it: formation leaves attention untouched.</p>
       </div>
       <div class="comp-card">
-        <h3>Provenance Tracking</h3>
-        <p>Every triple carries a <code>provenance</code> dict linking back to the span, artifact, or extraction pipeline that produced it. Full chain-of-evidence from source text to stored fact.</p>
+        <div class="comp-card-header"><span class="comp-tag memory">Recall</span></div>
+        <h3>Reconstruction</h3>
+        <p><code style="white-space:normal;overflow-wrap:anywhere">reconstruct(Stimulus(...))</code> is a pure read: exact, keyword/full-text and vector channels find matches, activation spreads to related memories over recorded links, and the result is a bounded shelf (by default 12 memories within a token budget). <code style="white-space:normal;overflow-wrap:anywhere">commit_selection</code> is the only path that strengthens a memory.</p>
       </div>
       <div class="comp-card">
-        <h3>Temporal Validity</h3>
-        <p>Optional <code>valid_from</code> and <code>valid_until</code> windows let you query for what was true at any point in time. The <code>active_at</code> query filter makes temporal reasoning natural.</p>
+        <div class="comp-card-header"><span class="comp-tag composition">Attention</span></div>
+        <h3>Attention and decay</h3>
+        <p>Activation over rank distance, with strengthen, weaken and refocus. Only retrieval strength changes; the stored memory never decays.</p>
       </div>
       <div class="comp-card">
-        <h3>No AbstractCore Dependency</h3>
-        <p>AbstractMemory has no runtime dependency on AbstractCore or AbstractRuntime. For embeddings, it calls an AbstractGateway endpoint via a thin HTTP adapter.</p>
+        <div class="comp-card-header"><span class="comp-tag foundation">Identity</span></div>
+        <h3>Identity and valence</h3>
+        <p>Identity cores for long-lived entities (value, purpose, trait, interest) that order ahead of other records, and signed appraisals on two channels, so mixed feelings are kept rather than summed away.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag app">Diary</span></div>
+        <h3>Diary conventions</h3>
+        <p>Notes, ideas, commitments, reflections, questions and problems. Open questions and problems stand until a later entry answers or resolves them, and entries can carry a verifiable content-hash chain.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag modality">Sleep</span></div>
+        <h3>Sleep and consolidation</h3>
+        <p>One night in a fixed order: resolution, maintenance, world models, dream. It is deterministic and makes no LLM calls; a dream only proposes, and waking evidence decides.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag composition">Reach</span></div>
+        <h3>Deliberate reach</h3>
+        <p><code>probe</code>, <code>probe_expand</code> and <code>familiarity</code> tell "I hold nothing here" from "I hold a lot" before answering; <code>situate</code> rebuilds the context of one past moment.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag foundation">Revision</span></div>
+        <h3>Belief revision without deletion</h3>
+        <p>Updates are new assertions. Revision uses closure records (retract, supersede), and forgetting is decay of retrieval strength plus closures and silencing: the substrate stays lossless.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag app">Operations</span></div>
+        <h3>Replay and operator tools</h3>
+        <p><code>export_replay</code> serves the journal in <code>seq</code> order for history scrub and live tail. Operator tools cover health checks, re-embedding and redigestion. <code>SQLiteJournal</code> can share one file with the store.</p>
       </div>
     </div>
+
+    <div class="code-block reveal" style="margin-top:var(--space-2xl)"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> (
+    MemorySystem, MemoryRecordInput, SQLiteTripleStore, SQLiteJournal, Stimulus,
+)
+
+store = <span class="line-fn">SQLiteTripleStore</span>(<span class="line-str">"memory.sqlite3"</span>)
+journal = <span class="line-fn">SQLiteJournal</span>(<span class="line-str">"memory.sqlite3"</span>)   <span class="line-cmt"># sidecar tables in the same file</span>
+system = <span class="line-fn">MemorySystem</span>(store=store, journal=journal)
+
+<span class="line-cmt"># Form a typed record (idempotent by key; forming is not using).</span>
+[record_id] = system.<span class="line-fn">remember_many</span>(
+    [<span class="line-fn">MemoryRecordInput</span>(kind=<span class="line-str">"episode"</span>, title=<span class="line-str">"Pool outage"</span>,
+                       digest=<span class="line-str">"The connection pool saturated at noon."</span>,
+                       keywords=(<span class="line-str">"pool"</span>, <span class="line-str">"outage"</span>))],
+    scope=<span class="line-str">"session"</span>, owner_id=<span class="line-str">"s1"</span>, idempotency_key=<span class="line-str">"turn-1"</span>,
+)
+
+<span class="line-cmt"># Reconstruct working memory for a cue (pure read), then commit what you used.</span>
+result = system.<span class="line-fn">reconstruct</span>(<span class="line-fn">Stimulus</span>(cue_text=<span class="line-str">"pool outage"</span>), scopes=[(<span class="line-str">"session"</span>, <span class="line-str">"s1"</span>)])
+system.<span class="line-fn">commit_selection</span>(result.trace_id, [h.record_id <span class="line-kw">for</span> h <span class="line-kw">in</span> result.handles[:<span class="line-var">2</span>]])</code></pre></div>
   </div>
 </section>
 
-<!-- ═══════════════════ FEATURES ═══════════════════ -->
-<section class="section" id="features">
+<!-- ═══════════════════ LAYER 1 ═══════════════════ -->
+<section id="triples" class="section">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Features</div>
-      <h2 class="section-title">Store, Query, Reason</h2>
-      <p class="section-desc">Multiple storage backends, deterministic structured queries, and optional vector search &mdash; all through a unified <code>TripleStore</code> protocol.</p>
+      <span class="section-label">Layer 1</span>
+      <h2 class="section-title">Temporal triples</h2>
+      <p class="section-desc">Knowledge as <code style="white-space:normal;overflow-wrap:anywhere">TripleAssertion</code> records: subject, predicate and object with scope, time, confidence and provenance. Assertions are immutable, and all three stores implement the same <code>TripleStore</code> protocol: <code>add()</code>, <code>query()</code>, <code>close()</code>.</p>
     </div>
-    <div class="components-grid reveal">
-      <div class="comp-card">
-        <h3>InMemoryTripleStore</h3>
-        <p>Zero-dependency, process-local store with optional embedder integration. Ideal for tests, prototypes, and short-lived sessions where persistence is not needed.</p>
+    <div class="showcase-grid reveal">
+      <div class="showcase-content" style="min-width:0">
+        <h3>Store, query, reason over time</h3>
+        <ul class="showcase-features">
+          <li><span class="icon">&#10003;</span> <span><strong>Canonical terms:</strong> subject, predicate and object are trimmed and lowercased (set <code style="white-space:normal;overflow-wrap:anywhere">attributes={"literal": True}</code> to keep the object's case)</span></li>
+          <li><span class="icon">&#10003;</span> <span><strong>Scopes:</strong> a free-form partition label, such as <code>run</code>, <code>session</code>, <code>global</code>, or the entity-home scopes <code>self</code>, <code>diary</code> and <code>life</code>, plus an optional <code>owner_id</code></span></li>
+          <li><span class="icon">&#10003;</span> <span><strong>Time:</strong> <code>observed_at</code>, an optional <code>valid_from</code> / <code>valid_until</code> window, and <code>since</code>, <code>until</code> and <code>active_at</code> filters</span></li>
+          <li><span class="icon">&#10003;</span> <span><strong>Semantic search:</strong> <code>query_text</code> needs a store embedder (there is no keyword fallback); <code>query_vector</code> takes your own vector; <code>min_score</code> sets a cosine threshold</span></li>
+          <li><span class="icon">&#10003;</span> <span><strong>Stores:</strong> <code style="white-space:normal;overflow-wrap:anywhere">InMemoryTripleStore</code> (volatile), <code style="white-space:normal;overflow-wrap:anywhere">SQLiteTripleStore</code> (one file, standard library, native vector search), <code style="white-space:normal;overflow-wrap:anywhere">LanceDBTripleStore</code> (optional <code>lancedb</code> extra)</span></li>
+        </ul>
       </div>
-      <div class="comp-card">
-        <h3>SQLiteTripleStore</h3>
-        <p>Persistent SQLite-backed store using only the Python standard library. Deterministic structured queries with automatic schema creation and indexed columns.</p>
-      </div>
-      <div class="comp-card">
-        <h3>LanceDBTripleStore</h3>
-        <p>Persistent LanceDB-backed store with native cosine-similarity vector search. Attach retrieval metadata to results and store canonical text plus embeddings.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Structured Queries</h3>
-        <p>Filter by subject, predicate, object, scope, owner, and temporal range. Deterministic ordering by <code>observed_at</code> with configurable ascending/descending sort.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Vector Search</h3>
-        <p>Semantic retrieval via <code>query_text</code> or <code>query_vector</code> on vector-capable stores. Cosine similarity with configurable <code>min_score</code> thresholds and retrieval metadata.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Term Canonicalization</h3>
-        <p>Subject, predicate, and object terms are automatically canonicalized (trim + lowercase) for consistent matching regardless of input casing.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Confidence Scoring</h3>
-        <p>Optional <code>confidence</code> float per assertion enables downstream filtering and ranking. Combine with provenance for evidence-weighted knowledge graphs.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Gateway Embeddings</h3>
-        <p>The <code>AbstractGatewayTextEmbedder</code> adapter calls an AbstractGateway embeddings endpoint via HTTP, keeping heavy model loading on the server side.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section class="section" id="getting-started">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">Getting Started</div>
-      <h2 class="section-title">Install and Use</h2>
-      <p class="section-desc">AbstractMemory requires Python 3.10+. LanceDB is an optional extra for persistent vector search.</p>
-    </div>
-    <div class="reveal">
-      <h3 style="color:var(--text);margin-bottom:1rem">Install</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># From PyPI</span>
-<span class="line-kw">pip install</span> AbstractMemory
-
-<span class="line-cmt"># With LanceDB vector search</span>
-<span class="line-kw">pip install</span> <span class="line-str">"AbstractMemory[lancedb]"</span>
-
-<span class="line-cmt"># From source (editable)</span>
-<span class="line-kw">pip install</span> -e <span class="line-str">".[dev]"</span></code></pre>
-      </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">Quick Example (In-Memory)</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> <span class="line-fn">InMemoryTripleStore</span>, <span class="line-fn">TripleAssertion</span>, <span class="line-fn">TripleQuery</span>
+      <div style="min-width:0">
+        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> InMemoryTripleStore, TripleAssertion, TripleQuery
 
 store = <span class="line-fn">InMemoryTripleStore</span>()
 store.<span class="line-fn">add</span>([
@@ -185,161 +229,112 @@ store.<span class="line-fn">add</span>([
         object=<span class="line-str">"Christmas"</span>,
         scope=<span class="line-str">"session"</span>,
         owner_id=<span class="line-str">"sess-1"</span>,
-        observed_at=<span class="line-str">"2026-01-01T00:00:00+00:00"</span>,
         provenance={<span class="line-str">"span_id"</span>: <span class="line-str">"span_123"</span>},
     )
 ])
 
-hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(
-    subject=<span class="line-str">"scrooge"</span>,    <span class="line-cmt"># canonicalized (case-insensitive)</span>
-    scope=<span class="line-str">"session"</span>,
-    owner_id=<span class="line-str">"sess-1"</span>,
-    limit=<span class="line-var">10</span>
-))
-<span class="line-kw">assert</span> hits[<span class="line-var">0</span>].object == <span class="line-str">"christmas"</span></code></pre>
-      </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">With LanceDB + Gateway Embeddings</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> (
-    <span class="line-fn">AbstractGatewayTextEmbedder</span>,
-    <span class="line-fn">LanceDBTripleStore</span>,
-    <span class="line-fn">TripleAssertion</span>,
-    <span class="line-fn">TripleQuery</span>,
-)
-
-embedder = <span class="line-fn">AbstractGatewayTextEmbedder</span>(
-    base_url=<span class="line-str">"http://localhost:8000"</span>,
-    auth_token=os.<span class="line-fn">getenv</span>(<span class="line-str">"ABSTRACTGATEWAY_AUTH_TOKEN"</span>),
-)
-
-store = <span class="line-fn">LanceDBTripleStore</span>(<span class="line-str">"data/kg"</span>, embedder=embedder)
-store.<span class="line-fn">add</span>([<span class="line-fn">TripleAssertion</span>(
-    subject=<span class="line-str">"e:scrooge"</span>, predicate=<span class="line-str">"is_a"</span>,
-    object=<span class="line-str">"person"</span>, scope=<span class="line-str">"global"</span>,
-)])
-
-hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(query_text=<span class="line-str">"scrooge"</span>, limit=<span class="line-var">5</span>))</code></pre>
+hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(subject=<span class="line-str">"scrooge"</span>, scope=<span class="line-str">"session"</span>, owner_id=<span class="line-str">"sess-1"</span>))
+<span class="line-kw">assert</span> hits[<span class="line-var">0</span>].object == <span class="line-str">"christmas"</span>      <span class="line-cmt"># terms are canonicalized</span>
+<span class="line-kw">assert</span> hits[<span class="line-var">0</span>].assertion_id <span class="line-kw">is not</span> <span class="line-var">None</span>   <span class="line-cmt"># read-side identity</span></code></pre></div>
       </div>
     </div>
+
+    <h3 class="reveal" style="margin:var(--space-2xl) 0 var(--space-md)">Semantic search with an embedder</h3>
+    <div class="code-block reveal"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> OpenAICompatTextEmbedder, SQLiteTripleStore, TripleAssertion, TripleQuery
+
+<span class="line-cmt"># any OpenAI-compatible /embeddings endpoint; base_url includes the version prefix</span>
+embedder = <span class="line-fn">OpenAICompatTextEmbedder</span>(<span class="line-str">"http://127.0.0.1:1234/v1"</span>, <span class="line-str">"your-embedding-model"</span>)
+store = <span class="line-fn">SQLiteTripleStore</span>(<span class="line-str">"kg.sqlite3"</span>, embedder=embedder)
+store.<span class="line-fn">add</span>([<span class="line-fn">TripleAssertion</span>(subject=<span class="line-str">"e:scrooge"</span>, predicate=<span class="line-str">"is_a"</span>, object=<span class="line-str">"person"</span>, scope=<span class="line-str">"global"</span>)])
+hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(query_text=<span class="line-str">"scrooge"</span>, limit=<span class="line-var">5</span>))
+print(hits[<span class="line-var">0</span>].attributes[<span class="line-str">"_retrieval"</span>])       <span class="line-cmt"># score, metric</span></code></pre></div>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:var(--space-md)">For an AbstractGateway deployment, use <code style="white-space:normal;overflow-wrap:anywhere">AbstractGatewayTextEmbedder(base_url=..., auth_token=...)</code>; it posts to <code style="white-space:normal;overflow-wrap:anywhere">/api/gateway/embeddings</code> by default.</p>
   </div>
 </section>
 
-<!-- ═══════════════════ API ═══════════════════ -->
-<section class="section" id="api">
+<!-- ═══════════════════ NEXT ═══════════════════ -->
+<section id="next" class="section" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">API Reference</div>
-      <h2 class="section-title">Data Model &amp; Store Protocol</h2>
-      <p class="section-desc">All stores implement the <code>TripleStore</code> protocol: <code>add()</code>, <code>query()</code>, and <code>close()</code>. The data model is built around <code>TripleAssertion</code> and <code>TripleQuery</code>.</p>
+      <span class="section-label">Where to next</span>
+      <h2 class="section-title">Keep going</h2>
     </div>
-
-    <div class="reveal">
-      <h3 style="color:var(--text);margin-bottom:1rem">TripleAssertion Fields</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Core triple</span>
-<span class="line-var">subject</span>: <span class="line-fn">str</span>       <span class="line-cmt"># Entity or value (canonicalized)</span>
-<span class="line-var">predicate</span>: <span class="line-fn">str</span>     <span class="line-cmt"># Relationship type (canonicalized)</span>
-<span class="line-var">object</span>: <span class="line-fn">str</span>        <span class="line-cmt"># Target entity or value (canonicalized)</span>
-
-<span class="line-cmt"># Scoping</span>
-<span class="line-var">scope</span>: <span class="line-fn">str</span>         <span class="line-cmt"># "run" | "session" | "global"</span>
-<span class="line-var">owner_id</span>: <span class="line-fn">str</span>      <span class="line-cmt"># Optional scope owner</span>
-
-<span class="line-cmt"># Temporal</span>
-<span class="line-var">observed_at</span>: <span class="line-fn">str</span>   <span class="line-cmt"># When observed (RFC-3339)</span>
-<span class="line-var">valid_from</span>: <span class="line-fn">str</span>    <span class="line-cmt"># Validity window start (optional)</span>
-<span class="line-var">valid_until</span>: <span class="line-fn">str</span>   <span class="line-cmt"># Validity window end (optional, exclusive)</span>
-
-<span class="line-cmt"># Metadata</span>
-<span class="line-var">confidence</span>: <span class="line-fn">float</span>  <span class="line-cmt"># 0.0 to 1.0 (optional)</span>
-<span class="line-var">provenance</span>: <span class="line-fn">dict</span>   <span class="line-cmt"># Span/artifact pointers</span>
-<span class="line-var">attributes</span>: <span class="line-fn">dict</span>   <span class="line-cmt"># Extractor evidence, retrieval metadata</span></code></pre>
-      </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">TripleQuery Filters</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Exact match (after canonicalization)</span>
-<span class="line-var">subject</span>, <span class="line-var">predicate</span>, <span class="line-var">object</span>
-<span class="line-var">scope</span>, <span class="line-var">owner_id</span>
-
-<span class="line-cmt"># Temporal range</span>
-<span class="line-var">since</span>      <span class="line-cmt"># observed_at >= since</span>
-<span class="line-var">until</span>      <span class="line-cmt"># observed_at <= until</span>
-<span class="line-var">active_at</span>  <span class="line-cmt"># valid_from <= active_at < valid_until</span>
-
-<span class="line-cmt"># Semantic / vector</span>
-<span class="line-var">query_text</span>    <span class="line-cmt"># Requires embedder (no keyword fallback)</span>
-<span class="line-var">query_vector</span>  <span class="line-cmt"># Bypass embedding generation</span>
-<span class="line-var">min_score</span>     <span class="line-cmt"># Cosine similarity threshold</span>
-
-<span class="line-cmt"># Result shaping</span>
-<span class="line-var">order</span>  <span class="line-cmt"># "asc" | "desc" by observed_at</span>
-<span class="line-var">limit</span>  <span class="line-cmt"># <= 0 means unbounded</span></code></pre>
-      </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">Embeddings Boundary</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># TextEmbedder protocol</span>
-<span class="line-kw">class</span> <span class="line-fn">TextEmbedder</span>:
-    <span class="line-kw">def</span> <span class="line-fn">embed_texts</span>(texts: <span class="line-fn">list</span>[<span class="line-fn">str</span>]) -> <span class="line-fn">list</span>[<span class="line-fn">list</span>[<span class="line-fn">float</span>]]: ...
-
-<span class="line-cmt"># Gateway adapter (HTTP)</span>
-<span class="line-fn">AbstractGatewayTextEmbedder</span>(
-    base_url=<span class="line-str">"http://localhost:8000"</span>,
-    auth_token=<span class="line-str">"..."</span>,
-    endpoint_path=<span class="line-str">"/api/gateway/embeddings"</span>,  <span class="line-cmt"># default</span>
-)</code></pre>
-      </div>
+    <div class="next-links reveal">
+      <a class="next-link" href="entity.html"><strong>Entities</strong><span>Long-lived entities whose mind runs on AbstractMemory.</span></a>
+      <a class="next-link" href="semantics.html"><strong>AbstractSemantics</strong><span>The shared predicates, entity types and memory relations.</span></a>
+      <a class="next-link" href="start-researcher.html"><strong>Researcher journey</strong><span>Memory, recall and replay as objects of study.</span></a>
+      <a class="next-link" href="runtime.html"><strong>AbstractRuntime</strong><span>The durable runtime whose memory effects write here.</span></a>
+      <a class="next-link" href="install.html"><strong>Install the framework</strong><span>One line on macOS, Linux and Windows.</span></a>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ FOOTER ═══════════════════ -->
+</main>
+
 <footer class="footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-brand">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#fg)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
-          AbstractMemory
-        </div>
-        <p style="color:var(--text-muted);max-width:280px;font-size:var(--text-sm)">Temporal triple store with provenance tracking and vector search. MIT Licensed.</p>
-      </div>
-      <div>
-        <h4>Documentation</h4>
-        <ul>
-          <li><a href="#overview">Overview</a></li>
-          <li><a href="#features">Features</a></li>
-          <li><a href="#getting-started">Getting Started</a></li>
-          <li><a href="#api">API Reference</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Ecosystem</h4>
-        <ul>
-          <li><a href="./">AbstractFramework</a></li>
-          <li><a href="abstractcore.html">AbstractCore</a></li>
-          <li><a href="abstractgateway.html">AbstractGateway</a></li>
-          <li><a href="abstractsemantics.html">AbstractSemantics</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Resources</h4>
-        <ul>
-          <li><a href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          <li><a href="https://pypi.org/project/AbstractMemory/" target="_blank" rel="noopener noreferrer">PyPI</a></li>
-          <li><a href="https://github.com/lpalbou/abstractmemory/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a></li>
-          <li><a href="https://github.com/lpalbou/abstractmemory/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
-        </ul>
-      </div>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
     </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Laurent-Philippe Albou. MIT License.</p>
+    <div class="footer-col">
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
     </div>
+    <div class="footer-col">
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=4"></script>
 </body>
 </html>

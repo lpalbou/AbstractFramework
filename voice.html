@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractVoice — Documentation | AbstractFramework</title>
+  <title>AbstractVoice — text-to-speech, speech-to-text and voice cloning for Python | AbstractFramework</title>
+  <meta name="description" content="AbstractVoice 0.13.0: one Python API for text-to-speech, speech-to-text and voice cloning. Remote OpenAI-compatible audio by default; Supertonic, Piper, Qwen3-TTS, OmniVoice, AudioDiT, OpenF5, Chroma, faster-whisper and Qwen3-ASR behind explicit extras.">
+  <link rel="canonical" href="https://abstractframework.ai/voice.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractVoice — voice I/O for AI applications">
+  <meta property="og:description" content="Text-to-speech, speech-to-text and voice cloning behind one API. Remote by default, local engines behind explicit extras, and it tells you which engines can run and how to install the rest.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -11,76 +19,84 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
 </head>
 <body>
-  <nav class="nav">
-    <a href="./" class="nav-brand">
-    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
-      AbstractFramework
-    </a>
-    <ul class="nav-links">
-      <li><a href="./">Home</a></li>
-      <li><a href="#overview">Overview</a></li>
-      <li><a href="#samples">Samples</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#getting-started">Get Started</a></li>
-      <li><a href="#api">API</a></li>
-      <li><a href="https://github.com/lpalbou/abstractvoice" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
-    </ul>
-  </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html" aria-current="page">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
 
-<div class="pkg-nav">
+<div class="pkg-nav" aria-label="Packages and apps">
   <div class="pkg-nav-inner">
     <a href="core.html" class="pkg-nav-link">Core</a>
     <a href="runtime.html" class="pkg-nav-link">Runtime</a>
     <a href="agent.html" class="pkg-nav-link">Agent</a>
     <a href="flow.html" class="pkg-nav-link">Flow</a>
     <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
     <a href="code.html" class="pkg-nav-link">Code</a>
     <a href="observer.html" class="pkg-nav-link">Observer</a>
     <a href="assistant.html" class="pkg-nav-link">Assistant</a>
-    <a href="voice.html" class="pkg-nav-link active">Voice</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
+    <a href="voice.html" class="pkg-nav-link active" aria-current="page">Voice</a>
     <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
     <a href="memory.html" class="pkg-nav-link">Memory</a>
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
   </div>
 </div>
+<main id="main">
 
-<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<!-- MAIN START -->
+<!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" id="top">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> CAPABILITY PLUGIN</div>
+    <div class="hero-badge"><span class="dot"></span> Multimodal capability &middot; AbstractCore plugin <span class="ver pink">v0.13.0</span></div>
     <h1>Abstract<span class="gradient">Voice</span></h1>
-    <p class="hero-sub">Modular Python voice I/O for AI applications. Text-to-speech, speech-to-text, and voice cloning with local-first defaults and remote provider support. One interface across Piper, Supertonic, OpenAI, OmniVoice, and more.</p>
+    <p class="hero-sub">Voice input and output for AI applications: text-to-speech, speech-to-text and optional voice cloning behind one Python API. The base install talks to OpenAI or any OpenAI-compatible audio server; local engines such as Supertonic, Piper, Qwen3-TTS, OmniVoice and Whisper come with explicit extras. Use it as a library, or install it next to <a href="core.html">AbstractCore</a> and it becomes <code>llm.voice</code> and <code>llm.audio</code>.</p>
     <div class="hero-actions">
-      <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started
-      </a>
-      <a href="https://pypi.org/project/abstractvoice/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-        PyPI
-      </a>
-      <a href="https://github.com/lpalbou/abstractvoice" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      <a href="https://github.com/lpalbou/AbstractVoice" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
       </a>
-      <a href="https://github.com/lpalbou/abstractvoice/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
-      <a href="https://github.com/lpalbou/abstractvoice/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+      <a href="https://pypi.org/project/abstractvoice/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
+      <a href="https://www.lpalbou.info/AbstractVoice/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractVoice/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractVoice/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
     <div class="hero-code">
-<pre><code><span class="kw">from</span> abstractvoice <span class="kw">import</span> <span class="fn">VoiceManager</span>
+<pre><code><span class="cmt"># Remote OpenAI audio (reads OPENAI_API_KEY)</span>
+pip install abstractvoice
 
-vm = <span class="fn">VoiceManager</span>(language=<span class="str">"en"</span>)
+<span class="cmt"># Local text-to-speech + speech-to-text on CPU</span>
+pip install <span class="str">"abstractvoice[supertonic,stt]"</span>
 
-<span class="cmt"># Speak aloud</span>
-vm.<span class="fn">speak</span>(<span class="str">"Hello from AbstractVoice."</span>)
-
-<span class="cmt"># Get audio bytes</span>
-wav = vm.<span class="fn">speak_to_bytes</span>(<span class="str">"Headless TTS."</span>, format=<span class="str">"wav"</span>)</code></pre>
+<span class="cmt"># Full local stack: Apple Silicon or GPU</span>
+pip install <span class="str">"abstractvoice[apple]"</span>
+pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
     </div>
   </div>
 </section>
@@ -90,22 +106,26 @@ wav = vm.<span class="fn">speak_to_bytes</span>(<span class="str">"Headless TTS.
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
-      <h2 class="section-title">Voice I/O for the Abstract Ecosystem</h2>
-      <p class="section-desc">AbstractVoice is a modular voice I/O library providing text-to-speech (TTS), speech-to-text (STT), and optional voice cloning. It integrates with AbstractCore as a capability plugin, enabling any AI application in the ecosystem to speak and listen.</p>
+      <h2 class="section-title">One voice API, remote or local</h2>
+      <p class="section-desc">You pick a provider (the engine), a model and a voice. The same calls work whether the audio comes from a hosted endpoint or from an engine running in your process.</p>
     </div>
     <div class="components-grid reveal">
       <div class="comp-card">
-        <h3>Remote-First Default</h3>
-        <p>The base install uses OpenAI-compatible TTS and STT by default. Point at any compatible endpoint via <code>OPENAI_BASE_URL</code> or pass <code>remote_base_url</code> directly. No GPU or local model required to get started.</p>
+        <h3>Remote by default</h3>
+        <p><code>pip install abstractvoice</code> is light: it installs no PyTorch and no local model. <code>VoiceManager()</code> uses OpenAI audio with <code>OPENAI_API_KEY</code>; the <code>openai-compatible</code> provider points the same calls at any compatible <code>/v1</code> audio server.</p>
       </div>
       <div class="comp-card">
-        <h3>Local Inference Stack</h3>
-        <p>Install <code>abstractvoice[apple]</code> or <code>[gpu]</code> for the full local experience: Supertonic ONNX TTS, Piper TTS, faster-whisper STT, VAD, microphone capture, and local voice cloning engines &mdash; all running in-process.</p>
+        <h3>Local engines, when you ask for them</h3>
+        <p>Each local engine sits behind its own extra, and <code>[apple]</code> / <code>[gpu]</code> install the local stack in one go. The interactive <code>abstractvoice</code> command (a spoken chat in the terminal) never downloads a model on its own: you fetch weights with <code>abstractvoice-prefetch</code>. In the library, <code>VoiceManager(allow_downloads=False)</code> gives the same guarantee.</p>
       </div>
       <div class="comp-card">
-        <h3>AbstractCore Plugin</h3>
-        <p>Discovered automatically via entry points when installed alongside AbstractCore. Exposes provider/model/voice discovery, TTS/STT execution, and voice cloning through the unified capability contract.</p>
+        <h3>It says what it can do</h3>
+        <p><code>engine_runtime_status(engine)</code> tells you whether an engine can run here, what is missing, and the install command, without importing the engine. Voice listings name each unavailable provider with a code (<code>runtime_missing</code>, <code>model_not_downloaded</code>, <code>not_configured</code>) and a reason.</p>
       </div>
+    </div>
+    <div class="callout ok reveal" style="max-width:900px;margin:2rem auto 0">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+      <div><strong>Included in the one-line installer.</strong> The <a href="install.html">AbstractFramework installer</a> adds <code>abstractvoice[supertonic,stt]</code> to the gateway: Supertonic text-to-speech and Whisper speech-to-text, both on CPU. This is skipped on musl Linux and on macOS before 13, where no wheels exist; Windows ARM64 gets Supertonic only. The <code>abstractvoice</code> and <code>abstractvoice-prefetch</code> commands are on your PATH (<code>~/.local/bin</code>), and the <a href="console.html">gateway consoles</a> use the same engine status to show a missing voice engine with its install command. To upgrade, re-run the same install line (on a Mac without Terminal, install the latest .pkg again), or use <strong>Update</strong> on the Gateway card of the console (terminal console: F3) or in the menu-bar icon: see <a href="install.html#upgrade">Upgrade</a>.</div>
     </div>
   </div>
 </section>
@@ -116,188 +136,134 @@ wav = vm.<span class="fn">speak_to_bytes</span>(<span class="str">"Headless TTS.
     <div class="section-header reveal">
       <div class="section-label">Samples</div>
       <h2 class="section-title">Generated with AbstractVoice</h2>
-      <p class="section-desc">Voice samples generated using the AbstractVoice TTS API. Same interface regardless of the underlying model or provider.</p>
+      <p class="section-desc">The same text-to-speech API with two providers: Supertonic 3 running locally, and OpenAI's hosted voices.</p>
     </div>
-    <h3 style="color:var(--text);font-size:1rem;margin-bottom:.5rem;text-align:center">Supertonic 3 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">— open-source, local ONNX inference</span></h3>
-    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;max-width:900px;margin:0 auto">
+    <h3 style="color:var(--text);font-size:1rem;margin-bottom:.5rem;text-align:center">Supertonic 3 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">— local ONNX engine, fixed voices M1&ndash;M5 and F1&ndash;F5</span></h3>
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;max-width:900px;margin:0 auto">
       <div class="comp-card" style="padding:1.5rem">
-        <h4 style="margin-bottom:.25rem;color:var(--text)">F1 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Female)</span></h4>
-        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Open-source female voice — welcome message</p>
+        <h4 style="margin-bottom:.75rem;color:var(--text)">F1 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(female)</span></h4>
         <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-supertonic-f1.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
-        <h4 style="margin-bottom:.25rem;color:var(--text)">M1 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Male)</span></h4>
-        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Open-source male voice — durability &amp; continuity</p>
+        <h4 style="margin-bottom:.75rem;color:var(--text)">M1 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(male)</span></h4>
         <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-supertonic-m1.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
-        <h4 style="margin-bottom:.25rem;color:var(--text)">M3 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Male)</span></h4>
-        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Open-source male voice — multimodal capabilities</p>
+        <h4 style="margin-bottom:.75rem;color:var(--text)">M3 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(male)</span></h4>
         <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-supertonic-m3.wav" type="audio/wav"></audio>
       </div>
     </div>
-    <p style="color:var(--text-muted);font-size:.78rem;margin-top:1rem;text-align:center">Generated via: <code>abstractvoice cli</code> then <code>/tts engine supertonic</code> — or programmatically with <code>SupertonicTTSAdapter</code></p>
+    <p style="color:var(--text-muted);font-size:.78rem;margin-top:1rem;text-align:center">Supertonic 3 weights come from <code>Supertone/supertonic-3</code> and carry their own license.</p>
 
-    <h3 style="color:var(--text);font-size:1rem;margin:2.5rem 0 .5rem;text-align:center">OpenAI TTS <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">— remote, via any OpenAI-compatible endpoint</span></h3>
-    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;max-width:900px;margin:0 auto">
+    <h3 style="color:var(--text);font-size:1rem;margin:2.5rem 0 .5rem;text-align:center">OpenAI text-to-speech <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">— remote, provider <code>openai</code></span></h3>
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;max-width:900px;margin:0 auto">
       <div class="comp-card" style="padding:1.5rem">
-        <h4 style="margin-bottom:.25rem;color:var(--text)">Nova <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Female)</span></h4>
-        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Warm, expressive female voice — welcome message</p>
+        <h4 style="margin-bottom:.75rem;color:var(--text)">Nova</h4>
         <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-nova.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
-        <h4 style="margin-bottom:.25rem;color:var(--text)">Onyx <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Male, Deep)</span></h4>
-        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Deep, authoritative male voice — ecosystem overview</p>
+        <h4 style="margin-bottom:.75rem;color:var(--text)">Onyx</h4>
         <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-onyx.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
-        <h4 style="margin-bottom:.25rem;color:var(--text)">Alloy <span style="font-size:.78rem;font-weight:400;color:var(--text-muted)">(Neutral)</span></h4>
-        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Balanced, neutral voice — durability &amp; observability</p>
+        <h4 style="margin-bottom:.75rem;color:var(--text)">Alloy</h4>
         <audio controls preload="metadata" style="width:100%"><source src="assets/audio/voice-alloy.wav" type="audio/wav"></audio>
       </div>
     </div>
-    <p style="color:var(--text-muted);font-size:.78rem;margin-top:1rem;text-align:center">Generated via: <code>abstractvoice tts "text" --voice nova</code></p>
+    <p style="color:var(--text-muted);font-size:.78rem;margin-top:1rem;text-align:center">Make your own with the one-shot command in <a href="#getting-started">Getting started</a>.</p>
   </div>
 </section>
 
-<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<!-- ═══════════════════ ENGINES ═══════════════════ -->
 <section class="section" id="features">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Features</div>
-      <h2 class="section-title">Complete Voice Pipeline</h2>
-      <p class="section-desc">From text-to-speech synthesis to real-time speech recognition and voice cloning, AbstractVoice covers the full voice I/O stack.</p>
+      <div class="section-label">Engines</div>
+      <h2 class="section-title">What runs where</h2>
+      <p class="section-desc">Every engine below is a provider id you can pass to <code>VoiceManager</code>, the CLI or AbstractCore. Only the two remote providers work with the base install; each local engine needs the extra shown. Model weights are licensed separately from AbstractVoice (MIT): check the source of each model you download.</p>
     </div>
-    <div class="components-grid reveal">
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead>
+          <tr><th>Provider</th><th>Does</th><th>Install</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>openai</code></td><td>Speech, transcription, cloning</td><td>base</td><td>Hosted OpenAI audio; needs <code>OPENAI_API_KEY</code> (or a key passed by the host). The base-install default.</td></tr>
+          <tr><td><code>openai-compatible</code></td><td>Speech, transcription, cloning</td><td>base</td><td>Any compatible <code>/v1</code> audio endpoint (<code>--api</code> / <code>remote_base_url</code>).</td></tr>
+          <tr><td><code>supertonic</code> (Supertonic 3)</td><td>Speech</td><td><code style="white-space:nowrap">[supertonic]</code></td><td>Local ONNX. Fixed voices M1&ndash;M5 and F1&ndash;F5, 31 languages. The recommended local text-to-speech. Not a cloning engine.</td></tr>
+          <tr><td><code>piper</code></td><td>Speech</td><td><code style="white-space:nowrap">[piper]</code></td><td>Local ONNX on CPU. Curated voices for en, fr, de, es, ru and zh. Licenses vary per voice.</td></tr>
+          <tr><td><code>qwen3-tts</code></td><td>Speech, voice design, cloning</td><td><code style="white-space:nowrap">[qwen3-tts]</code></td><td>Preset speakers (CustomVoice), voice from a description (1.7B VoiceDesign), cloning (Base). Python 3.10+, torch 2.4+, Transformers 5.9+; about 2.5&ndash;4.5 GB per checkpoint. Not installable on Intel Macs; not part of <code>[apple]</code> / <code>[gpu]</code>.</td></tr>
+          <tr><td><code>omnivoice</code></td><td>Speech, cloning</td><td><code style="white-space:nowrap">[omnivoice]</code></td><td>The default cloning engine. Python 3.10+, very large; uses Metal on Apple Silicon.</td></tr>
+          <tr><td><code>audiodit</code> (LongCat-AudioDiT-1B)</td><td>Speech, prompt-audio cloning</td><td><code style="white-space:nowrap">[audiodit]</code></td><td>torch / transformers; runs on Python 3.9 too.</td></tr>
+          <tr><td><code>f5_tts</code> (OpenF5 / F5-TTS)</td><td>Cloning</td><td><code style="white-space:nowrap">[cloning]</code></td><td>Python 3.10+; about 5.4 GB. The platform profiles include it on Python 3.11+ only.</td></tr>
+          <tr><td><code>chroma</code> (Chroma-4B)</td><td>Cloning</td><td><code style="white-space:nowrap">[chroma]</code></td><td>Very large and GPU-heavy.</td></tr>
+          <tr><td><code>faster-whisper</code></td><td>Transcription</td><td><code style="white-space:nowrap">[stt]</code></td><td>Whisper model sizes such as <code>small</code> or <code>large</code>.</td></tr>
+          <tr><td><code>transformers-asr</code></td><td>Transcription</td><td><code style="white-space:nowrap">[stt-hf]</code></td><td>Hugging Face models such as <code>openai/whisper-large-v3</code>, <code>openai/whisper-large-v3-turbo</code> and <code>Qwen/Qwen3-ASR-1.7B</code> (Qwen3-ASR needs Python 3.10+ and Transformers 5.4+).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="components-grid reveal" style="margin-top:2.5rem">
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
-          Text-to-Speech
-        </h3>
-        <p>Multiple TTS engines: Supertonic 3 ONNX (local, 10 voices), Piper (local, multilingual), OpenAI-compatible HTTP (remote), AudioDiT, and OmniVoice. Buffered or streamed delivery with audio chunk smoothing.</p>
+        <h3>Headless or played aloud</h3>
+        <p><code>speak()</code> plays through your speakers; <code>speak_to_bytes()</code>, <code>speak_to_file()</code> and <code>speak_to_audio_chunks()</code> return audio for servers and pipelines.</p>
       </div>
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-          Speech-to-Text
-        </h3>
-        <p>Local STT via faster-whisper with model size selection (tiny to large). Remote STT via OpenAI-compatible endpoints. Voice Activity Detection (VAD) with webrtcvad for accurate speech boundary detection.</p>
+        <h3>LLM text in, speech out</h3>
+        <p><code>open_tts_text_stream()</code> takes text as it arrives from a model, cuts it into short segments and starts speaking before the reply is complete.</p>
       </div>
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-          Voice Cloning
-        </h3>
-        <p>Clone voices from reference audio using F5-TTS, Chroma-4B, AudioDiT, or OmniVoice engines. Clones are stored locally with bundles for portability. Reference text auto-fallback via ADR 0003.</p>
-      </div>
-      <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-          Voice Profiles
-        </h3>
-        <p>Cross-engine voice profile abstraction with shipped presets per engine. Select voices by language, gender, or profile ID. Runtime TTS switching resets to provider/language defaults automatically.</p>
-      </div>
-      <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          Streaming Pipeline
-        </h3>
-        <p>LLM-to-TTS streaming bridge via <code>TextToSpeechStream</code>. Incremental text chunking with sentence and soft-boundary segmentation. Audio chunk fading to eliminate clicks at boundaries.</p>
-      </div>
-      <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-          Multilingual
-        </h3>
-        <p>Language-aware voice selection across engines. Piper supports 20+ languages with dedicated voice packs. OmniVoice provides omnilingual TTS with zero-shot cloning across languages.</p>
-      </div>
-      <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          Offline-First
-        </h3>
-        <p>REPL runs with <code>allow_downloads=False</code>. Downloads are explicit via <code>abstractvoice-prefetch</code>. Once models are cached, everything works without network access.</p>
-      </div>
-      <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Echo Cancellation
-        </h3>
-        <p>Optional acoustic echo cancellation (AEC) for true barge-in support. Stop-phrase detection for voice-controlled interruption. Configurable voice mode callbacks for speaking behavior.</p>
+        <h3>Microphone and barge-in</h3>
+        <p>Optional microphone listening with voice activity detection, a stop phrase, and acoustic echo cancellation (<code>[aec]</code>, Python 3.11+).</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section class="section" id="getting-started">
+<section class="section" id="getting-started" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Getting Started</div>
-      <h2 class="section-title">Install &amp; First Words</h2>
-      <p class="section-desc">Get up and running with AbstractVoice in minutes. Choose between remote-first (default) or full local inference.</p>
+      <div class="section-label">Getting started</div>
+      <h2 class="section-title">First words in a few minutes</h2>
+      <p class="section-desc">Requires Python 3.9 or later; several local engines need 3.10+.</p>
     </div>
 
     <div class="reveal" style="max-width:48rem;margin:0 auto">
-      <h3 style="margin-bottom:.75rem">Installation</h3>
+      <h3 style="margin-bottom:.75rem">Command line</h3>
       <div class="code-block">
-<pre><code><span class="line-cmt"># Base install (remote OpenAI-compatible TTS/STT)</span>
-<span class="line-kw">pip install</span> <span class="line-str">abstractvoice</span>
+<pre><code><span class="line-cmt"># One-shot: write a WAV with hosted OpenAI audio and exit</span>
+<span class="line-kw">OPENAI_API_KEY</span>=... <span class="line-kw">abstractvoice</span> <span class="line-str">--provider openai --model tts-1 --voice alloy \
+  --prompt "Hello from AbstractVoice." --output hello.wav</span>
 
-<span class="line-cmt"># Full local stack for macOS Apple Silicon</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractvoice[apple]"</span>
-
-<span class="line-cmt"># Full local stack for GPU (Linux/Windows)</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractvoice[gpu]"</span>
-
-<span class="line-cmt"># Granular extras</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractvoice[supertonic,stt,audio-io]"</span></code></pre>
-      </div>
-
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">Prefetch Models (Offline-Friendly)</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Download local TTS models</span>
+<span class="line-cmt"># Local: fetch the weights once, then chat without the network.</span>
+<span class="line-cmt"># The AbstractFramework installer already put these commands on PATH; otherwise:</span>
+<span class="line-kw">pip install</span> <span class="line-str">"abstractvoice[supertonic,stt]"</span>
 <span class="line-kw">abstractvoice-prefetch</span> <span class="line-str">--supertonic</span>
-<span class="line-kw">abstractvoice-prefetch</span> <span class="line-str">--piper en</span>
-
-<span class="line-cmt"># Download local STT model</span>
 <span class="line-kw">abstractvoice-prefetch</span> <span class="line-str">--stt small</span>
+<span class="line-kw">abstractvoice</span> <span class="line-str">--tts-engine supertonic --stt-engine faster_whisper</span>
 
-<span class="line-cmt"># Optional cloning backends</span>
-<span class="line-kw">abstractvoice-prefetch</span> <span class="line-str">--omnivoice</span>
-<span class="line-kw">abstractvoice-prefetch</span> <span class="line-str">--openf5</span></code></pre>
+<span class="line-cmt"># Browser example (needs abstractvoice[web])</span>
+<span class="line-kw">abstractvoice</span> <span class="line-str">web --port 5000</span></code></pre>
       </div>
 
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">Quick Start (Python)</h3>
+      <h3 style="margin-top:2rem;margin-bottom:.75rem">Python</h3>
       <div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractvoice <span class="line-kw">import</span> <span class="line-fn">VoiceManager</span>
 
-<span class="line-cmt"># Remote TTS (reads OPENAI_API_KEY from env)</span>
-<span class="line-var">vm</span> = <span class="line-fn">VoiceManager</span>(language=<span class="line-str">"en"</span>)
-<span class="line-var">vm</span>.<span class="line-fn">speak</span>(<span class="line-str">"Hello from AbstractVoice."</span>)
-
-<span class="line-cmt"># Get WAV bytes for headless usage</span>
-<span class="line-var">wav</span> = <span class="line-var">vm</span>.<span class="line-fn">speak_to_bytes</span>(<span class="line-str">"Headless TTS output."</span>, format=<span class="line-str">"wav"</span>)
-
-<span class="line-cmt"># Fully local TTS + STT</span>
-<span class="line-var">vm_local</span> = <span class="line-fn">VoiceManager</span>(
-    language=<span class="line-str">"en"</span>,
+<span class="line-cmt"># Local stack: pip install "abstractvoice[supertonic,stt,omnivoice]"</span>
+<span class="line-var">vm</span> = <span class="line-fn">VoiceManager</span>(
     tts_engine=<span class="line-str">"supertonic"</span>,
     stt_engine=<span class="line-str">"faster_whisper"</span>,
+    cloning_engine=<span class="line-str">"omnivoice"</span>,
 )
-<span class="line-var">vm_local</span>.<span class="line-fn">speak</span>(<span class="line-str">"Running entirely offline."</span>)</code></pre>
-      </div>
+<span class="line-var">vm</span>.<span class="line-fn">speak</span>(<span class="line-str">"Hello from the local stack."</span>)
 
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">CLI &amp; REPL</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Interactive REPL (remote by default)</span>
-<span class="line-kw">abstractvoice</span> <span class="line-str">--verbose</span>
+<span class="line-var">wav</span> = <span class="line-var">vm</span>.<span class="line-fn">speak_to_bytes</span>(<span class="line-str">"Headless speech."</span>, format=<span class="line-str">"wav"</span>)
+<span class="line-var">text</span> = <span class="line-var">vm</span>.<span class="line-fn">transcribe_file</span>(<span class="line-str">"speech.wav"</span>)
 
-<span class="line-cmt"># Fully local REPL</span>
-<span class="line-kw">abstractvoice</span> <span class="line-str">--tts-engine supertonic --stt-engine faster_whisper --verbose</span>
-
-<span class="line-cmt"># Local web UI (requires abstractvoice[web])</span>
-<span class="line-kw">abstractvoice</span> <span class="line-str">web --port 5000</span></code></pre>
+<span class="line-cmt"># Clone a voice from a short reference recording, then speak with it</span>
+<span class="line-var">voice_id</span> = <span class="line-var">vm</span>.<span class="line-fn">clone_voice</span>(<span class="line-str">"reference.wav"</span>, name=<span class="line-str">"my-voice"</span>)
+<span class="line-var">vm</span>.<span class="line-fn">speak</span>(<span class="line-str">"This is my cloned voice."</span>, voice=<span class="line-var">voice_id</span>)</code></pre>
       </div>
     </div>
   </div>
@@ -307,150 +273,142 @@ wav = vm.<span class="fn">speak_to_bytes</span>(<span class="str">"Headless TTS.
 <section class="section" id="api">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">API Reference</div>
-      <h2 class="section-title">Key Classes &amp; Methods</h2>
-      <p class="section-desc">The public API surface is centered on <code>VoiceManager</code> for direct usage and the AbstractCore capability plugin for ecosystem integration.</p>
+      <div class="section-label">More examples</div>
+      <h2 class="section-title">Streaming, availability and AbstractCore</h2>
     </div>
 
-    <div class="reveal" style="max-width:48rem;margin:0 auto">
-
-      <h3 style="margin-bottom:.75rem">VoiceManager &mdash; Core Fa&ccedil;ade</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractvoice <span class="line-kw">import</span> <span class="line-fn">VoiceManager</span>
-
-<span class="line-var">vm</span> = <span class="line-fn">VoiceManager</span>(
-    language=<span class="line-str">"en"</span>,
-    tts_engine=<span class="line-str">"openai"</span>,       <span class="line-cmt"># or "supertonic", "piper", "omnivoice"</span>
-    stt_engine=<span class="line-str">"openai"</span>,       <span class="line-cmt"># or "faster_whisper"</span>
-    remote_base_url=<span class="line-str">"..."</span>,    <span class="line-cmt"># optional OpenAI-compatible endpoint</span>
-)
-
-<span class="line-cmt"># TTS</span>
-<span class="line-var">vm</span>.<span class="line-fn">speak</span>(<span class="line-str">"Hello world"</span>)
-<span class="line-var">wav</span> = <span class="line-var">vm</span>.<span class="line-fn">speak_to_bytes</span>(<span class="line-str">"Hello"</span>, format=<span class="line-str">"wav"</span>)
-
-<span class="line-cmt"># Engine preload/unload (local engines only)</span>
-<span class="line-var">vm</span>.<span class="line-fn">preload_tts_engine</span>(engine=<span class="line-str">"supertonic"</span>)
-<span class="line-var">vm</span>.<span class="line-fn">preload_stt_engine</span>(engine=<span class="line-str">"faster_whisper"</span>)
-<span class="line-var">vm</span>.<span class="line-fn">unload_tts_engine</span>()
-<span class="line-var">vm</span>.<span class="line-fn">unload_stt_engine</span>()
-
-<span class="line-cmt"># Runtime TTS switching</span>
-<span class="line-var">vm</span>.<span class="line-fn">set_tts_engine</span>(<span class="line-str">"piper"</span>)</code></pre>
+    <div class="code-tabs reveal" style="max-width:48rem;margin:0 auto">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="voice-stream">Streaming</button>
+        <button class="tab-btn" data-tab="voice-status">Engine status</button>
+        <button class="tab-btn" data-tab="voice-core">AbstractCore</button>
       </div>
+      <div class="tab-panel active" id="tab-voice-stream">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Speak an LLM reply while it is still being generated</span>
+<span class="line-var">stream</span> = <span class="line-var">vm</span>.<span class="line-fn">open_tts_text_stream</span>()
+<span class="line-kw">for</span> <span class="line-var">delta</span> <span class="line-kw">in</span> <span class="line-var">llm_text_deltas</span>:   <span class="line-cmt"># text chunks from your model</span>
+    <span class="line-var">stream</span>.<span class="line-fn">push</span>(<span class="line-var">delta</span>)
+<span class="line-var">stream</span>.<span class="line-fn">close</span>()     <span class="line-cmt"># no more text</span>
+<span class="line-var">stream</span>.<span class="line-fn">join</span>()      <span class="line-cmt"># wait until the last segment is synthesized</span>
+<span class="line-cmt"># stream.cancel() stops early</span></code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-voice-status">
+        <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractvoice.engine_runtime <span class="line-kw">import</span> <span class="line-fn">engine_runtime_status</span>
 
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">AbstractCore Plugin Integration</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+<span class="line-cmt"># Checks installed packages only: nothing is imported or loaded</span>
+<span class="line-var">status</span> = <span class="line-fn">engine_runtime_status</span>(<span class="line-str">"qwen3-tts"</span>)
+<span class="line-fn">print</span>(<span class="line-var">status</span>.installed)        <span class="line-cmt"># False when torch/transformers are missing</span>
+<span class="line-fn">print</span>(<span class="line-var">status</span>.reason)           <span class="line-cmt"># plain-words explanation</span>
+<span class="line-fn">print</span>(<span class="line-var">status</span>.install_command)  <span class="line-cmt"># the pip command for the qwen3-tts extra</span></code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-voice-core">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># pip install abstractcore abstractvoice  (the plugin is discovered automatically)</span>
+<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
-<span class="line-var">llm</span> = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>)
+<span class="line-var">llm</span> = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
 
-<span class="line-cmt"># TTS via capability plugin</span>
-<span class="line-var">wav</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">tts</span>(
-    <span class="line-str">"Hello from AbstractCore"</span>,
-    provider=<span class="line-str">"openai"</span>,
-    model=<span class="line-str">"tts-1"</span>,
-    voice=<span class="line-str">"alloy"</span>,
-    format=<span class="line-str">"wav"</span>,
-)
+<span class="line-var">wav</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">tts</span>(<span class="line-str">"Hello"</span>, provider=<span class="line-str">"openai"</span>, model=<span class="line-str">"tts-1"</span>, voice=<span class="line-str">"alloy"</span>)
+<span class="line-var">text</span> = <span class="line-var">llm</span>.audio.<span class="line-fn">transcribe</span>(<span class="line-str">"speech.wav"</span>, provider=<span class="line-str">"faster-whisper"</span>, model=<span class="line-str">"small"</span>)
 
-<span class="line-cmt"># STT via capability plugin</span>
-<span class="line-var">text</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">stt</span>(audio_bytes, provider=<span class="line-str">"faster-whisper"</span>, model=<span class="line-str">"small"</span>)
-
-<span class="line-cmt"># Provider and voice discovery</span>
+<span class="line-cmt"># Discovery: what can run now, and why the others cannot</span>
 <span class="line-var">providers</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">available_providers</span>()
-<span class="line-var">voices</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">list_tts_voices</span>(provider=<span class="line-str">"supertonic"</span>)
-<span class="line-var">models</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">list_tts_models</span>(provider=<span class="line-str">"openai"</span>)
+<span class="line-fn">print</span>(<span class="line-var">providers</span>[<span class="line-str">"tts"</span>], <span class="line-var">providers</span>[<span class="line-str">"unavailable"</span>])
 
-<span class="line-cmt"># Voice cloning</span>
-<span class="line-var">llm</span>.voice.<span class="line-fn">clone_voice</span>(reference_audio=<span class="line-str">"ref.wav"</span>, name=<span class="line-str">"my-clone"</span>)
-
-<span class="line-cmt"># Resident model management (local engines)</span>
-<span class="line-var">llm</span>.voice.<span class="line-fn">load_resident_model</span>(provider=<span class="line-str">"supertonic"</span>)
-<span class="line-var">llm</span>.voice.<span class="line-fn">list_resident_models</span>()
-<span class="line-var">llm</span>.voice.<span class="line-fn">unload_resident_model</span>(provider=<span class="line-str">"supertonic"</span>)</code></pre>
-      </div>
-
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">Streaming TTS (LLM &rarr; Voice)</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractvoice.tts.text_to_speech_stream <span class="line-kw">import</span> <span class="line-fn">TextToSpeechStream</span>
-
-<span class="line-cmt"># Bridge incremental LLM text to TTS audio</span>
-<span class="line-var">stream</span> = <span class="line-fn">TextToSpeechStream</span>(tts_engine=<span class="line-var">vm</span>.tts_engine)
-
-<span class="line-cmt"># Feed tokens as they arrive from the LLM</span>
-<span class="line-kw">for</span> <span class="line-var">token</span> <span class="line-kw">in</span> llm_stream:
-    <span class="line-var">stream</span>.<span class="line-fn">feed</span>(<span class="line-var">token</span>)
-<span class="line-var">stream</span>.<span class="line-fn">finish</span>()</code></pre>
-      </div>
-
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">Available TTS Engines</h3>
-      <div class="components-grid" style="margin-top:1rem">
-        <div class="comp-card">
-          <h3>OpenAI / Compatible</h3>
-          <p>Remote HTTP TTS via <code>/audio/speech</code>. Default engine. Supports any OpenAI-compatible endpoint including local servers.</p>
-        </div>
-        <div class="comp-card">
-          <h3>Supertonic 3</h3>
-          <p>Local ONNX TTS with 10 fixed profiles (M1&ndash;M5, F1&ndash;F5). Fast, lightweight, no external SDK dependency. Recommended local base TTS.</p>
-        </div>
-        <div class="comp-card">
-          <h3>Piper</h3>
-          <p>Local multilingual TTS with downloadable voice packs. Supports 20+ languages. Voice selection by language, quality tier, and speaker ID.</p>
-        </div>
-        <div class="comp-card">
-          <h3>OmniVoice</h3>
-          <p>Omnilingual local TTS with zero-shot voice cloning. Recommended cloning backend. Heavy model &mdash; prefetch required.</p>
-        </div>
-        <div class="comp-card">
-          <h3>AudioDiT</h3>
-          <p>LongCat-AudioDiT TTS with prompt-audio cloning. MIT-licensed vendored model code. Optional heavy backend.</p>
+<span class="line-cmt"># Clone through the plugin</span>
+<span class="line-var">clone</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">clone</span>(<span class="line-str">"reference.wav"</span>, provider=<span class="line-str">"omnivoice"</span>, name=<span class="line-str">"my-voice"</span>)</code></pre>
         </div>
       </div>
+    </div>
+    <p class="reveal" style="color:var(--text-muted);font-size:.85rem;margin:1.25rem auto 0;max-width:48rem;text-align:center">With the <a href="core.html">AbstractCore</a> server running (<code>abstractcore serve</code>), the same engines answer <code>POST /v1/audio/speech</code> and <code>POST /v1/audio/transcriptions</code>.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ NEXT ═══════════════════ -->
+<section class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal"><div class="section-label">Where to next</div><h2 class="section-title">Keep going</h2></div>
+    <div class="next-links reveal">
+      <a class="next-link" href="install.html"><strong>Install AbstractFramework</strong><span>One line; local voice included.</span></a>
+      <a class="next-link" href="start-user.html"><strong>Start as a user</strong><span>Chat, voice and automations in your first hour.</span></a>
+      <a class="next-link" href="assistant.html"><strong>AbstractAssistant</strong><span>The macOS menu-bar client with voice.</span></a>
+      <a class="next-link" href="core.html"><strong>AbstractCore</strong><span>The host of the <code>llm.voice</code> and <code>llm.audio</code> capabilities.</span></a>
+      <a class="next-link" href="music.html"><strong>AbstractMusic</strong><span>Text-to-music with the same plugin model.</span></a>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ FOOTER ═══════════════════ -->
+</main>
+
 <footer class="footer">
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="./" class="nav-brand" style="margin-bottom:.5rem">
-        <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
         AbstractFramework
       </a>
-      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; Made with care for the AI community</p>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
     </div>
     <div class="footer-col">
-      <h4>Foundation</h4>
-      <a href="https://github.com/lpalbou/abstractcore" target="_blank" rel="noopener noreferrer">AbstractCore</a>
-      <a href="https://github.com/lpalbou/abstractruntime" target="_blank" rel="noopener noreferrer">AbstractRuntime</a>
-      <a href="https://github.com/lpalbou/abstractagent" target="_blank" rel="noopener noreferrer">AbstractAgent</a>
-      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">AbstractFlow</a>
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
     </div>
     <div class="footer-col">
-      <h4>Modalities</h4>
-      <a href="abstractvoice.html">AbstractVoice</a>
-      <a href="abstractvision.html">AbstractVision</a>
-      <a href="abstractmusic.html">AbstractMusic</a>
-      <a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a>
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
     </div>
     <div class="footer-col">
-      <h4>Applications</h4>
-      <a href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">AbstractGateway</a>
-      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">AbstractCode</a>
-      <a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">AbstractObserver</a>
-      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">AbstractAssistant</a>
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
     </div>
   </div>
   <div class="footer-bottom">
-    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
-    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
-    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=4"></script>
 </body>
 </html>

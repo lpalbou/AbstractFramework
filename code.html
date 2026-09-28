@@ -2,9 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractCode — Documentation | AbstractFramework</title>
-  <meta name="description" content="AbstractCode is a durable coding assistant available as a terminal TUI and a browser web app. Plan/review modes, MCP tools, persistent sessions, full audit trail.">
+  <title>AbstractCode — coding assistant in the terminal and the browser | AbstractFramework</title>
+  <meta name="description" content="AbstractCode is an agentic coding assistant that runs durably on AbstractGateway, with a Rust terminal client (abstractcode, put on PATH by the installer) and a web client (@abstractframework/code) you can use interchangeably.">
+  <link rel="canonical" href="https://abstractframework.ai/code.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractCode">
+  <meta property="og:description" content="A durable coding assistant on your gateway, with a terminal client and a web client you can use interchangeably.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -12,35 +19,47 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
 </head>
 <body>
-  <nav class="nav">
-    <a href="./" class="nav-brand">
-    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
-      AbstractFramework
-    </a>
-    <ul class="nav-links">
-      <li><a href="./">Home</a></li>
-      <li><a href="#overview">Overview</a></li>
-      <li><a href="#screenshots">Screenshots</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#getting-started">Get Started</a></li>
-      <li><a href="#api">API</a></li>
-      <li><a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
-    </ul>
-  </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html" aria-current="page">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
 
-<div class="pkg-nav">
+<div class="pkg-nav" aria-label="Packages and apps">
   <div class="pkg-nav-inner">
     <a href="core.html" class="pkg-nav-link">Core</a>
     <a href="runtime.html" class="pkg-nav-link">Runtime</a>
     <a href="agent.html" class="pkg-nav-link">Agent</a>
     <a href="flow.html" class="pkg-nav-link">Flow</a>
     <a href="gateway.html" class="pkg-nav-link">Gateway</a>
-    <a href="code.html" class="pkg-nav-link active">Code</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
+    <a href="code.html" class="pkg-nav-link active" aria-current="page">Code</a>
     <a href="observer.html" class="pkg-nav-link">Observer</a>
     <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
     <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
@@ -48,35 +67,36 @@
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
   </div>
 </div>
+<main id="main">
 
-<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" style="min-height:auto;padding:8rem 0 4rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> Application &middot; Coding Assistant</div>
+    <div class="hero-badge"><span class="dot"></span> Application &middot; Coding assistant &middot; terminal <span class="ver">v0.7.1</span> &middot; web <span class="ver green">v0.6.1</span></div>
     <h1>Abstract<span class="gradient">Code</span></h1>
-    <p class="hero-sub">A durable coding assistant &mdash; available as a terminal TUI and a browser web app. Plan and review modes, approval-gated tools, MCP integration, persistent sessions with full audit trail. Built on AbstractAgent + AbstractRuntime + AbstractCore.</p>
+    <p class="hero-sub">An agentic coding assistant that runs durably on your <a href="gateway.html" style="color:var(--accent-light)">AbstractGateway</a>, with two clients you can use interchangeably: a terminal application written in Rust and a browser application. The agent works on the gateway, so you can start a task in the terminal, close your laptop, and pick the same session up in the browser. The installer puts the terminal client on your PATH, and the <a href="console.html" style="color:var(--accent-light)">gateway console</a>'s <strong>Apps</strong> page installs and updates both; see <a href="install.html" style="color:var(--accent-light)">Install</a>.</p>
     <div class="hero-actions">
       <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get started
       </a>
-      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+      <a href="https://github.com/lpalbou/AbstractCode" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+      <a href="https://crates.io/crates/abstractcode" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">crates.io</a>
       <a href="https://www.npmjs.com/package/@abstractframework/code" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">npm</a>
-      <a href="https://github.com/lpalbou/abstractcode/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
-      <a href="https://github.com/lpalbou/abstractcode/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+      <a href="https://github.com/lpalbou/AbstractCode/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractCode/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
     <div class="hero-code">
-<pre><code><span class="line-kw">pip install</span> abstractcode
+<pre><code><span class="line-cmt"># Terminal client: the installer puts it on your PATH</span>
+abstractcode login --token <span class="line-var">&lt;admin token&gt;</span>   <span class="line-cmt"># once</span>
+abstractcode
+<span class="line-cmt"># or, on the gateway's computer, without handling a token:</span>
+abstractgateway apps tui-command code
 
-<span class="line-cmt"># Start the terminal TUI</span>
-abstractcode --provider <span class="line-str">ollama</span> --model <span class="line-str">qwen3:1.7b-q4_K_M</span>
-
-<span class="line-cmt"># Or with an OpenAI-compatible server</span>
-abstractcode --provider <span class="line-str">openai</span> --base-url <span class="line-str">http://127.0.0.1:1234/v1</span> --model <span class="line-str">qwen3-4b</span>
-
-<span class="line-cmt"># One-shot mode (scripting)</span>
-abstractcode --prompt <span class="line-str">"Summarize @README.md"</span></code></pre>
+<span class="line-cmt"># Web client (also on the console's Apps page)</span>
+<span class="line-kw">npx</span> @abstractframework/code \
+  --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
     </div>
   </div>
 </section>
@@ -86,65 +106,31 @@ abstractcode --prompt <span class="line-str">"Summarize @README.md"</span></code
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
-      <h2 class="section-title">What is AbstractCode?</h2>
-      <p class="section-desc">AbstractCode is a host UI for running durable agentic coding sessions. It connects the interactive agent experience to the full AbstractFramework stack: agents reason, tools execute with approval gates, and everything is persisted in a durable ledger.</p>
+      <h2 class="section-title">One agent on the gateway, two clients</h2>
+      <p class="section-desc">Both clients are thin. They start runs, stream the run <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#ledger" target="_blank" rel="noopener noreferrer">ledger</a> (the record of every step) live, show workflow and tool activity as it happens, answer tool approvals and agent questions, and steer a run while it is in flight. They talk to the gateway over HTTP and server-sent events (SSE) and send the same durable commands, so a run waiting for your approval in one client can be approved from the other.</p>
     </div>
 
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
-        <h3>Terminal TUI</h3>
-        <p>Full-screen terminal interface built with prompt_toolkit. Scrollable output, ANSI colors, mouse support, animated spinners, command history, and autocomplete. Status bar with live provider, model, and token usage.</p>
+        <h3>Terminal client <span class="ver">v0.7.1</span></h3>
+        <p>A Rust application on the <a href="https://github.com/lpalbou/AbstractTUI" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">AbstractTUI</a> engine: live reasoning cycles and tool cards, a multiline composer, approval modals, slash commands and 26 themes. The one-line installer builds it into <code>~/.local/bin</code>, next to <code>abstractgateway</code> (<code>--no-code-cli</code> skips it), and the console&rsquo;s Apps page installs and updates it in the same folder. Or install it with <code>cargo install abstractcode</code> (Rust 1.87+) or download a prebuilt binary from the <a href="https://github.com/lpalbou/AbstractCode/releases" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">GitHub releases</a>. macOS and Linux are the verified platforms.</p>
+        <div class="mode-tags"><span class="mode-tag">Rust</span><span class="mode-tag">crates.io</span><span class="mode-tag">abstractcode</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>Gateway-First Web App</h3>
-        <p>The browser host in <code>web/</code> connects to AbstractGateway under <code>/api/gateway/*</code>. Renders runs by replaying the durable ledger. Supports voice (push-to-talk + TTS), image understanding, and cross-device continuity.</p>
+        <h3>Web client <span class="ver green">v0.6.1</span></h3>
+        <p>A browser application (TypeScript, React) published as <code>@abstractframework/code</code>. The gateway (0.7.0 or later) can install, start and serve it at <code>/apps/code/</code> on its own address, or you can run it on its own with <code>npx</code> on <code>127.0.0.1:3002</code>.</p>
+        <div class="mode-tags"><span class="mode-tag">Browser</span><span class="mode-tag">npm</span><span class="mode-tag">/apps/code/</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>Durable Sessions</h3>
-        <p>Every session, tool call, and reasoning step is persisted. Resume paused runs, save named snapshots, browse full conversation history. Sessions survive crashes and restarts.</p>
+        <h3>Runs live on the gateway</h3>
+        <p>Runs, history, approvals and workspace files stay on AbstractGateway. Quit or close a client and the run keeps going; reopen it and prior turns replay from their ledgers, a live run reattaches and pending approvals come back.</p>
+        <div class="mode-tags"><span class="mode-tag">Durable</span><span class="mode-tag">HTTP + SSE</span><span class="mode-tag">Pre-alpha</span></div>
       </div>
     </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Architecture</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># How AbstractCode fits together</span>
-<span class="line-cmt">#</span>
-<span class="line-cmt"># User ──▸ FullScreenUI (prompt_toolkit)</span>
-<span class="line-cmt">#            └─▸ ReactShell (command router + UX)</span>
-<span class="line-cmt">#                  ├─▸ AbstractRuntime (durable execution)</span>
-<span class="line-cmt">#                  │     └─▸ AbstractCore (LLM providers + tools)</span>
-<span class="line-cmt">#                  ├─▸ PassthroughToolExecutor (approval boundary)</span>
-<span class="line-cmt">#                  └─▸ MappingToolExecutor (local tools or MCP)</span>
-<span class="line-cmt">#</span>
-<span class="line-cmt"># Web ──/api/gateway/*──▸ AbstractGateway ──▸ Runtime</span></code></pre>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════ SCREENSHOTS ═══════════════════ -->
-<section class="section" id="screenshots" style="background:var(--bg-surface)">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">In Action</div>
-      <h2 class="section-title">AbstractCode Screenshots</h2>
-      <p class="section-desc">Two interfaces, one engine. Terminal TUI for power users. Web UI for collaborative work. Both backed by AbstractRuntime for full auditability.</p>
-    </div>
-    <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem">
-      <div>
-        <img src="assets/img/abstractcode-tui.png" alt="AbstractCode TUI" loading="lazy" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-        <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.75rem">Terminal TUI &mdash; rich Textual interface with tool approvals</p>
-      </div>
-      <div>
-        <img src="assets/img/abstractcode-web.png" alt="AbstractCode Web" loading="lazy" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-        <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.75rem">Web UI &mdash; browser-based collaborative coding assistant</p>
-      </div>
-    </div>
-    <div class="reveal" style="margin-top:2rem;max-width:640px">
-      <img src="assets/img/abstractcode-auditability.png" alt="AbstractCode auditability" loading="lazy" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-      <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.75rem">Perfect auditability &mdash; every agent action logged in the append-only ledger</p>
-    </div>
+    <figure class="figure reveal" style="margin-top:2rem">
+      <img src="assets/img/shots/code-web.webp" alt="The AbstractCode web client at /apps/code/: the sidebar with New conversation, an Automations section listing three demo automations and the conversations; a start screen with four starter cards; the Workspace panel with Files, Activity and Artifacts tabs" loading="lazy" width="1600" height="1000">
+      <figcaption>The browser client: automations in the sidebar, the conversation workspace on the right.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -153,364 +139,320 @@ abstractcode --prompt <span class="line-str">"Summarize @README.md"</span></code
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Features</div>
-      <h2 class="section-title">Everything a Coding Assistant Needs</h2>
-      <p class="section-desc">From interactive tool approval to full conversation audit trails, AbstractCode provides a complete agentic coding experience.</p>
+      <h2 class="section-title">What you can do</h2>
+      <p class="section-desc">Everything below works in both clients unless it names one.</p>
     </div>
     <div class="components-grid">
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         </div>
-        <h3>Multiple Agents</h3>
-        <p>Built-in ReAct, CodeAct, and MemAct agents from AbstractAgent. Configurable iteration limits, context tokens, and per-provider model selection. Switch agents at runtime.</p>
+        <h3>Durable runs</h3>
+        <p>Pause, cancel, resume and reattach to a session that keeps running while the client is closed. In the terminal, <code>/pause</code> parks the run on the gateway and <code>/resume</code> continues it.</p>
       </div>
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
         </div>
-        <h3>Approval-Gated Tools</h3>
-        <p>Tool calls pause at a durable boundary and require approval by default. Interactive y/n/all/edit/quit flow with argument preview. Session-persistent auto-approve mode available.</p>
+        <h3>Approval-gated tools</h3>
+        <p>Tools stop and wait for you by default; approve or deny from either client. In the terminal, <code>/permissions read|write|all</code> sets the auto-approval level and per-tool pins override it. <code>all</code> is never the default.</p>
       </div>
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         </div>
-        <h3>Plan &amp; Review Modes</h3>
-        <p>Plan mode: the agent outputs a TODO plan before acting. Review mode: the agent self-checks its work before concluding. Both can be enabled via CLI flags or TUI commands.</p>
+        <h3>Steering</h3>
+        <p>Type while the agent works: your guidance is folded into its next reasoning cycle without restarting the run.</p>
       </div>
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4.5a2 2 0 012 2V14M6.5 10v4.5a2 2 0 002 2H14"/></svg>
         </div>
-        <h3>MCP Integration</h3>
-        <p>Connect to remote MCP servers for tool execution. Automatic tool synchronization. MCP tools integrate into the native tool allowlist and approval flow. Supports stdio-based servers.</p>
+        <h3>Workflows</h3>
+        <p>Run the gateway's default agent workflow, resolved by the gateway at every new turn, or pick a named agent bundle: <code>/workflow</code> or <code>--workflow &lt;bundle[:flow]|default&gt;</code> in the terminal, the workflow selector in the web toolbar.</p>
       </div>
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
-        <h3>Durable Persistence</h3>
-        <p>File-backed state with JSON storage. Run, ledger, and snapshot persistence in <code>~/.abstractcode/</code>. Resume sessions, save/load named snapshots. Optional in-memory mode.</p>
+        <h3>Live activity and streamed replies</h3>
+        <p>Reasoning cycles, tool cards that update in place, token counts and context metering, streamed from the run ledger. With a gateway that supports live replies, you can watch the answer as the model writes it (<code>/stream</code>, or <strong>Settings &rarr; Stream replies</strong>).</p>
       </div>
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
         </div>
-        <h3>Built-in Tool Suite</h3>
-        <p><code>list_files</code>, <code>search_files</code>, <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>, <code>execute_command</code>, <code>web_search</code>, <code>fetch_url</code>. All tools have approval gating and observation previews.</p>
+        <h3>Workspace files</h3>
+        <p>Browse and preview the files a run works on, with their absolute path on the gateway host: <code>/files</code> in the terminal, the <strong>Files</strong> tab in the browser.</p>
       </div>
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <h3>Full Audit Trail</h3>
-        <p>Every LLM call, tool execution, and reasoning step is recorded in the durable ledger. Inspect system prompts, user messages, responses, and raw JSON. <code>/logs runtime</code> and <code>/logs provider</code> commands.</p>
+        <h3>Automations</h3>
+        <p>Run a workflow on a schedule, then pause, run now, revise, archive, answer its approvals, browse its folder and discuss any run as a new conversation. The same automations appear in <a href="assistant.html" style="color:var(--accent-light)">AbstractAssistant</a> and <a href="observer.html" style="color:var(--accent-light)">AbstractObserver</a>. <a href="automations.html" style="color:var(--accent-light)">About automations</a>.</p>
       </div>
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4.5a2 2 0 012 2V14M6.5 10v4.5a2 2 0 002 2H14"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <h3>VisualFlow Workflows</h3>
-        <p>Run VisualFlow workflows locally (<code>abstractcode flow ...</code>) or as specialized agents (<code>--agent &lt;flow_ref&gt;</code>). Implements the <code>abstractcode.agent.v1</code> contract for host-workflow integration.</p>
+        <h3>Review mode</h3>
+        <p>Before a tool-call-free answer is accepted as final, a verifier re-reads the transcript and can ask for more work. It is on by default in the terminal (<code>/review</code>, <code>--no-review</code>).</p>
       </div>
 
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 10-16 0"/></svg>
         </div>
-        <h3>Context Management</h3>
-        <p>Conversation compaction with light, standard, and heavy modes. Focus-based summarization. <code>@path</code> file attachments. Workspace mounts and allowlists. Configurable max tokens and messages.</p>
+        <h3>Goals and entities (terminal)</h3>
+        <p><code>/goal &lt;text&gt;</code> starts a self-verifying run that cycles until its own checks pass or its budget runs out (it needs an <code>abstractcode.goal.v1</code> workflow on the gateway). <code>@name</code> opens a visit with a summoned entity; <code>/entities</code> lists them.</p>
       </div>
 
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ SCREENSHOTS ═══════════════════ -->
+<section id="screenshots" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Screenshots</div>
+      <h2 class="section-title">The two clients</h2>
+    </div>
+    <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem">
+      <figure class="figure">
+        <img src="assets/img/abstractcode-web.png" alt="AbstractCode web client: a user asks about an attached image named bateau.png and the agent describes a stylized sailboat" loading="lazy">
+        <figcaption>The web client: a chat turn about an attached image.</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/img/abstractcode-auditability.png" alt="AbstractCode web client Context panel showing one reasoning cycle with System, User, Tools, Response, Reasoning and Raw views" loading="lazy">
+        <figcaption>The web client's Context panel: one reasoning cycle and the exact model input.</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/img/abstractcode-tui.png" alt="AbstractCode in a terminal, listing the available tools with their parameters" loading="lazy">
+        <figcaption>The terminal client listing the agent's tools and their parameters (captured from an earlier version).</figcaption>
+      </figure>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section id="getting-started" style="background:var(--bg-surface)">
+<section id="getting-started">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Getting Started</div>
-      <h2 class="section-title">Start Coding in Seconds</h2>
-      <p class="section-desc">Install, configure a provider, and start an interactive session. Supports Ollama, OpenAI, Anthropic, LM Studio, and any OpenAI-compatible endpoint.</p>
+      <div class="section-label">Get started</div>
+      <h2 class="section-title">Connect a client to your gateway</h2>
+      <p class="section-desc">You need a reachable AbstractGateway and a gateway user token. The one-line <a href="install.html" style="color:var(--accent-light)">installer</a> sets up a local gateway at <code>http://127.0.0.1:8080</code> and already puts <code>abstractcode</code> on your PATH; the console's <strong>Apps</strong> page installs Code (the browser app and, where a ready-made download exists, the terminal app), opens it signed in, and offers <strong>Open in Terminal</strong>.</p>
     </div>
 
-    <div class="section-header reveal" style="margin-top:2rem">
-      <h3 class="section-title" style="font-size:1.5rem">Installation</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Base install</span>
-<span class="line-kw">pip install</span> abstractcode
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="terminal">Terminal</button>
+        <button class="tab-btn" data-tab="web">Web</button>
+        <button class="tab-btn" data-tab="headless">Headless</button>
+      </div>
+      <div class="tab-panel active" id="tab-terminal">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># already on PATH after the one-line install; otherwise:</span>
+<span class="line-kw">cargo install</span> abstractcode                <span class="line-cmt"># or a prebuilt binary from GitHub releases</span>
 
-<span class="line-cmt"># With VisualFlow support (run workflows locally)</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractcode[flow]"</span>
-
-<span class="line-cmt"># From source (development)</span>
-<span class="line-kw">pip install</span> -e <span class="line-str">".[dev]"</span></code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Interactive TUI</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Ollama (default provider, no API keys)</span>
-abstractcode --provider <span class="line-str">ollama</span> --model <span class="line-str">qwen3:1.7b-q4_K_M</span>
-
-<span class="line-cmt"># OpenAI-compatible (e.g. LM Studio)</span>
-abstractcode --provider <span class="line-str">openai</span> --base-url <span class="line-str">http://127.0.0.1:1234/v1</span> --model <span class="line-str">qwen3-4b</span>
-
-<span class="line-cmt"># CodeAct agent with auto-approve</span>
-abstractcode --agent <span class="line-str">codeact</span> --auto-approve
-
-<span class="line-cmt"># Plan + review modes</span>
-abstractcode --plan --review --provider <span class="line-str">ollama</span> --model <span class="line-str">qwen3:4b</span>
-
-<span class="line-cmt"># One-shot mode (for scripting)</span>
-abstractcode --prompt <span class="line-str">"Explain @src/main.py"</span> --provider <span class="line-str">ollama</span> --model <span class="line-str">qwen3:4b</span></code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Key TUI Commands</h3>
-    </div>
-    <div class="modes-grid reveal" style="grid-template-columns:1fr 1fr">
-      <div class="mode-card" style="text-align:left">
-        <h3>Task &amp; Status</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-fn">/help</span>                 <span class="line-cmt"># Full command list</span>
-<span class="line-fn">/task</span> &lt;description&gt;   <span class="line-cmt"># Start a new task</span>
-<span class="line-fn">/status</span>               <span class="line-cmt"># Current run status</span>
-<span class="line-fn">/resume</span>               <span class="line-cmt"># Resume last run</span>
-<span class="line-fn">/clear</span>                <span class="line-cmt"># Clear and start fresh</span>
-<span class="line-fn">/history</span> [N]          <span class="line-cmt"># Recent conversation</span></code></pre>
+<span class="line-cmt"># sign in once (the installer's summary prints this line with your token)</span>
+abstractcode login --token <span class="line-var">&lt;admin token&gt;</span>
+<span class="line-cmt"># or, on the gateway's computer (SSH included), a one-time line valid 2 minutes:</span>
+abstractgateway apps tui-command code
+<span class="line-cmt"># another gateway:</span>
+abstractcode login --gateway-url <span class="line-str">https://gateway.example.com</span> --token <span class="line-var">&lt;token&gt;</span>
+abstractcode doctor                          <span class="line-cmt"># reachability, auth, catalog</span>
+abstractcode                                 <span class="line-cmt"># launch the app</span>
+abstractcode --resume                        <span class="line-cmt"># reopen the last session</span>
+abstractcode --workflow <span class="line-str">default</span>             <span class="line-cmt"># the gateway's default agent workflow</span></code></pre>
         </div>
+        <div class="install-notes"><ul><li>Started without a valid sign-in, <code>abstractcode</code> says so and prints both ways to sign in instead of opening. The installer never saves the token for you; the admin token is in <code>&lt;data dir&gt;/auth/bootstrap-admin-token</code>.</li><li><code>login</code> checks the credentials against the gateway before saving them in <code>~/.abstractcode/gateway.json</code>. Without <code>--gateway-url</code> or a saved login, the client uses the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>), else <code>http://127.0.0.1:8080</code>. <code>--provider</code> and <code>--model</code> only override the gateway's route.</li></ul></div>
       </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Tools &amp; Config</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-fn">/tools</span>                <span class="line-cmt"># List available tools</span>
-<span class="line-fn">/auto-accept</span>          <span class="line-cmt"># Toggle auto-approve</span>
-<span class="line-fn">/mcp</span> add &lt;server&gt;     <span class="line-cmt"># Connect MCP server</span>
-<span class="line-fn">/executor</span> use &lt;id&gt;    <span class="line-cmt"># Set default executor</span>
-<span class="line-fn">/plan</span> [on|off]        <span class="line-cmt"># Toggle plan mode</span>
-<span class="line-fn">/review</span> ...           <span class="line-cmt"># Configure review</span></code></pre>
+      <div class="tab-panel" id="tab-web">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># From the gateway console: Apps &gt; Code &gt; Open  (http://127.0.0.1:8080/apps/code/)</span>
+
+<span class="line-cmt"># Or on its own (Node.js 18+), on http://127.0.0.1:3002</span>
+<span class="line-kw">npx</span> @abstractframework/code --gateway-url <span class="line-str">http://127.0.0.1:8080</span>
+<span class="line-kw">npx</span> @abstractframework/code --port <span class="line-var">3010</span>   <span class="line-cmt"># another port; without --gateway-url it uses the local gateway</span></code></pre>
         </div>
+        <div class="install-notes"><ul><li>Sign in with your gateway user and token: the web server exchanges the token for a gateway browser session and keeps only app-scoped session cookies. The server listens on <code>127.0.0.1</code> by default; to reach it from another machine, expose or tunnel the gateway's own address and use <code>/apps/code/</code>.</li></ul></div>
       </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Observability</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-fn">/logs runtime</span>         <span class="line-cmt"># Durable step trace</span>
-<span class="line-fn">/logs provider</span>        <span class="line-cmt"># Provider wire logs</span>
-<span class="line-fn">/memory</span>               <span class="line-cmt"># Token usage breakdown</span>
-<span class="line-fn">/compact</span> [mode]       <span class="line-cmt"># Compress conversation</span>
-<span class="line-fn">/snapshot</span> save &lt;name&gt; <span class="line-cmt"># Save named snapshot</span>
-<span class="line-fn">/snapshot</span> load &lt;name&gt; <span class="line-cmt"># Load a snapshot</span></code></pre>
+      <div class="tab-panel" id="tab-headless">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># One-shot run that prints transcript events as they arrive</span>
+abstractcode exec <span class="line-str">"Summarize the workspace layout"</span> --permissions <span class="line-str">read</span>
+
+<span class="line-cmt"># Stream the reply to stdout while the model writes it</span>
+abstractcode exec <span class="line-str">"List the TODO comments in src/"</span> --stream <span class="line-str">on</span></code></pre>
         </div>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Workflows</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-cmt"># Run a workflow as an agent</span>
-abstractcode --agent <span class="line-str">/path/to/flow.json</span>
-
-<span class="line-cmt"># Local VisualFlow runs</span>
-abstractcode flow run &lt;id&gt;
-abstractcode flow runs
-abstractcode flow attach &lt;run_id&gt;
-
-<span class="line-cmt"># Gateway control-plane</span>
-abstractcode gateway run &lt;flow_id&gt;</code></pre>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Web UI (Browser)</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># The web host connects to AbstractGateway</span>
-<span class="line-cmt"># Start the gateway first:</span>
-<span class="line-kw">export</span> <span class="line-var">ABSTRACTGATEWAY_AUTH_TOKEN</span>=<span class="line-str">"dev-token"</span>
-abstractgateway serve --port <span class="line-var">8081</span>
-
-<span class="line-cmt"># Launch the web app</span>
-npx @abstractframework/code
-
-<span class="line-cmt"># Open http://127.0.0.1:3002</span>
-<span class="line-cmt"># Set Gateway URL and Auth Token in settings</span>
-<span class="line-cmt"># Features: voice input/output, image understanding, cross-device continuity</span></code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Persistence &amp; State</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Default paths:</span>
-<span class="line-cmt"># State file:     ~/.abstractcode/state.json</span>
-<span class="line-cmt"># Durable stores: ~/.abstractcode/state.d/</span>
-<span class="line-cmt"># Settings:       ~/.abstractcode/state.config.json</span>
-
-<span class="line-cmt"># Custom state file</span>
-abstractcode --state-file <span class="line-str">/path/to/state.json</span>
-
-<span class="line-cmt"># Disable persistence (ephemeral session)</span>
-abstractcode --no-state
-
-<span class="line-cmt"># Snapshots</span>
-/snapshot save <span class="line-str">before-refactor</span>
-/snapshot load <span class="line-str">before-refactor</span>
-/snapshot list</code></pre>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════ API ═══════════════════ -->
-<section id="api">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">API Reference</div>
-      <h2 class="section-title">Integration Points</h2>
-      <p class="section-desc">AbstractCode is primarily a CLI/TUI application. These are the key integration surfaces for external use.</p>
-    </div>
-
-    <div class="modes-grid reveal" style="grid-template-columns:1fr 1fr">
-      <div class="mode-card" style="text-align:left">
-        <h3>CLI Entrypoint</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-cmt"># Primary interface</span>
-abstractcode --help
-
-<span class="line-cmt"># Subcommands</span>
-abstractcode flow --help
-abstractcode gateway --help
-abstractcode workflow --help</code></pre>
-        </div>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Python API</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-kw">from</span> abstractcode <span class="line-kw">import</span> <span class="line-fn">main</span>
-
-<span class="line-cmt"># Programmatic invocation</span>
-<span class="line-kw">raise</span> <span class="line-fn">SystemExit</span>(<span class="line-fn">main</span>([<span class="line-str">"--help"</span>]))
-
-<span class="line-cmt"># Module entry</span>
-<span class="line-cmt"># python -m abstractcode --help</span></code></pre>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Workflow Agent Contract</h3>
-      <p class="section-desc">Run VisualFlow workflows as first-class agents using the <code>abstractcode.agent.v1</code> interface contract.</p>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Run a workflow as an agent in the TUI</span>
-abstractcode --agent <span class="line-str">/path/to/workflow.json</span> --provider <span class="line-str">ollama</span> --model <span class="line-str">qwen3:4b</span>
-
-<span class="line-cmt"># Contract requirements:</span>
-<span class="line-cmt"># - Flow declares: interfaces: ["abstractcode.agent.v1"]</span>
-<span class="line-cmt"># - On Flow Start outputs: provider, model, prompt, tools</span>
-<span class="line-cmt"># - On Flow End inputs:    response, success, meta</span>
-<span class="line-cmt">#</span>
-<span class="line-cmt"># Variables injected at run start:</span>
-<span class="line-cmt"># - vars.prompt           (user task text)</span>
-<span class="line-cmt"># - vars.provider/model   (from --provider/--model)</span>
-<span class="line-cmt"># - vars.tools            (session allowlist)</span>
-<span class="line-cmt"># - vars.context.messages (conversation history)</span>
-<span class="line-cmt"># - vars._limits          (max_iterations, max_tokens, ...)</span></code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Environment Variables</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Agent &amp; Provider</span>
-<span class="line-var">ABSTRACTCODE_AGENT</span>           <span class="line-cmt"># Default agent (react|memact|codeact)</span>
-<span class="line-var">ABSTRACTCODE_BASE_URL</span>        <span class="line-cmt"># Provider base URL</span>
-<span class="line-var">ABSTRACTCODE_MAX_ITERATIONS</span>  <span class="line-cmt"># Default iteration limit</span>
-<span class="line-var">ABSTRACTCODE_MAX_TOKENS</span>      <span class="line-cmt"># Default context token limit</span>
-
-<span class="line-cmt"># State &amp; Persistence</span>
-<span class="line-var">ABSTRACTCODE_STATE_FILE</span>      <span class="line-cmt"># Default state file path</span>
-
-<span class="line-cmt"># Workspace &amp; Attachments</span>
-<span class="line-var">ABSTRACTCODE_WORKSPACE_MOUNTS</span>    <span class="line-cmt"># Newline-separated name=/path</span>
-<span class="line-var">ABSTRACTCODE_MAX_ATTACHMENT_BYTES</span> <span class="line-cmt"># Max file size (default 25MB)</span>
-
-<span class="line-cmt"># Gateway</span>
-<span class="line-var">ABSTRACTCODE_GATEWAY_URL</span>     <span class="line-cmt"># Gateway endpoint</span>
-<span class="line-var">ABSTRACTCODE_GATEWAY_TOKEN</span>   <span class="line-cmt"># Bearer token</span>
-<span class="line-var">ABSTRACTCODE_GPU_MONITOR</span>     <span class="line-cmt"># GPU meter (0|1|auto)</span>
-
-<span class="line-cmt"># Themes</span>
-<span class="line-var">ABSTRACTCODE_THEME</span>           <span class="line-cmt"># Theme preset name</span>
-<span class="line-var">ABSTRACTCODE_THEME_PRIMARY</span>   <span class="line-cmt"># Custom primary color</span></code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Keyboard Controls</h3>
-    </div>
-    <div class="modes-grid reveal" style="grid-template-columns:1fr 1fr 1fr">
-      <div class="mode-card" style="text-align:left">
-        <h3>Input</h3>
-        <p><strong>Enter</strong> &mdash; Submit<br>
-        <strong>Up/Down</strong> &mdash; History<br>
-        <strong>Ctrl+C/D</strong> &mdash; Exit</p>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Scrolling</h3>
-        <p><strong>PageUp/Down</strong> &mdash; Scroll output<br>
-        <strong>Home/End</strong> &mdash; Jump top/bottom<br>
-        <strong>Mouse wheel</strong> &mdash; Scroll</p>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>UI</h3>
-        <p><strong>Ctrl+L</strong> &mdash; Clear output<br>
-        <strong>Ctrl+Up/Down</strong> &mdash; Smooth scroll<br>
-        <strong>Mouse click</strong> &mdash; Position cursor</p>
+        <div class="install-notes"><ul><li>Exit codes: 0 completed answer, 1 failure, 2 usage or configuration error, 124 timeout, 130 cancelled. Without a raised <code>--permissions</code> level, mutating tools are denied with an explanation the model sees, and agent questions get a "no interactive user" answer so unattended runs never stall.</li></ul></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<!-- ═══════════════════ TERMINAL ═══════════════════ -->
+<section id="terminal" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Terminal client</div>
+      <h2 class="section-title">Slash commands you will use first</h2>
+      <p class="section-desc">Type a task and press Enter. <code>/help</code> lists every command; <code>?</code> shows the keys.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/workflow</code></td><td>Pick the agent: <strong>Gateway default</strong> first, then every published workflow implementing <code>abstractcode.agent.v1</code>.</td></tr>
+          <tr><td><code>/model</code></td><td>Pick provider and model, then reasoning effort and multi-token prediction.</td></tr>
+          <tr><td><code>/permissions read|write|all</code></td><td>Auto-approve proven read-only tools, then workspace file writes, then everything. Sticky per session.</td></tr>
+          <tr><td><code>/files</code></td><td>Browse the run's workspace on the gateway host and preview text, Markdown, JSON or images.</td></tr>
+          <tr><td><code>/goal &lt;text&gt;</code></td><td>Start a self-verifying goal loop; <code>/goal</code> shows status, <code>/goal stop</code> cancels it.</td></tr>
+          <tr><td><code>@name</code>, <code>/entities</code></td><td>Talk with a summoned entity hosted by the gateway; <code>Alt+E</code> cycles focus between the agent and open visits.</td></tr>
+          <tr><td><code>/automations</code></td><td>List the gateway's automations and open one: its runs, waits, folder and controls.</td></tr>
+          <tr><td><code>/schedule [task]</code></td><td>Create an automation that runs the current workflow, in four steps: task, when, context, tools.</td></tr>
+          <tr><td><code>/queue &lt;text&gt;</code>, <code>/sessions</code>, <code>/export</code></td><td>Queue the next task, reopen a recent session, write the conversation to Markdown or JSONL.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="reveal" style="margin:2.5rem 0 1rem">Keys in an open automation</h3>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Key</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><code>p</code></td><td>Pause or resume</td></tr>
+          <tr><td><code>g</code></td><td>Run now: "Run it once now, without waiting for the schedule; the next scheduled run keeps its time." Works while paused and does not count toward a run limit</td></tr>
+          <tr><td><code>x</code></td><td>Stop the current run</td></tr>
+          <tr><td><code>e</code></td><td>Revise title, interval and context</td></tr>
+          <tr><td><code>a</code>, then <code>a</code></td><td>Archive (stops it and hides it; history stays readable)</td></tr>
+          <tr><td><code>d</code></td><td>Discuss a run as a new conversation</td></tr>
+          <tr><td><code>w</code></td><td>Browse the automation's folder</td></tr>
+          <tr><td><code>y</code> / <code>n</code></td><td>Approve or deny a waiting tool call</td></tr>
+          <tr><td><code>h</code></td><td>Show archived automations (in the list)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ WEB ═══════════════════ -->
+<section id="web">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Web client</div>
+      <h2 class="section-title">Code in the browser</h2>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Workflow selector</h3>
+        <p>Choose <strong>Gateway default</strong> (the agent workflow your gateway's admin set as default), a published coding agent or, with <strong>Show all workflows</strong>, any registered workflow. Agent tasks use the composer; structured workflows use <strong>Inputs</strong>.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Automations sidebar</h3>
+        <p>The <strong>Automations</strong> section lists state, what runs now, the next run and attention. <strong>+</strong> creates one with the toolbar's workflow; each automation has its own page with its controls, its runs and its <strong>Automation folder</strong>. <strong>Discuss</strong> opens a run as a conversation.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Files, replies, About</h3>
+        <p>The <strong>Files</strong> tab shows the conversation's workspace on the gateway with previews, <strong>Settings &rarr; Stream replies</strong> shows replies as they are written, and <strong>About</strong> lists the app's and the gateway's versions. Questions and approvals appear in the conversation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ WHERE TO NEXT ═══════════════════ -->
+<section id="next" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Where to next</div>
+      <h2 class="section-title">Keep going</h2>
+    </div>
+    <div class="next-links reveal">
+      <a class="next-link" href="install.html"><strong>Install AbstractFramework</strong><span>One line sets up the gateway that AbstractCode talks to.</span></a>
+      <a class="next-link" href="start-developer.html"><strong>Developer journey</strong><span>From a first run to your own workflows.</span></a>
+      <a class="next-link" href="automations.html"><strong>Automations</strong><span>Scheduled workflows you manage from Code, the Assistant or the Observer.</span></a>
+      <a class="next-link" href="gateway.html"><strong>AbstractGateway</strong><span>The control plane where the agent runs.</span></a>
+      <a class="next-link" href="console.html"><strong>The consoles</strong><span>Install and open apps from the gateway's web and terminal consoles.</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
 <footer class="footer">
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="./" class="nav-brand" style="margin-bottom:.5rem">
-        <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
         AbstractFramework
       </a>
-      <p>Open-source AI infrastructure.</p>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
     </div>
     <div class="footer-col">
-      <h4>AbstractCode</h4>
-      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">GitHub</a>
-      <a href="https://www.npmjs.com/package/@abstractframework/code" target="_blank" rel="noopener noreferrer">npm</a>
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
     </div>
     <div class="footer-col">
-      <h4>Ecosystem</h4>
-      <a href="./">AbstractFramework</a>
-      <a href="abstractcore.html">AbstractCore</a>
-      <a href="abstractruntime.html">AbstractRuntime</a>
-      <a href="abstractgateway.html">AbstractGateway</a>
-      <a href="abstractflow.html">AbstractFlow</a>
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
     </div>
   </div>
   <div class="footer-bottom">
-    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
-    <a href="./">Home</a>
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=4"></script>
 </body>
 </html>

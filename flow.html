@@ -2,9 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractFlow — Documentation | AbstractFramework</title>
-  <meta name="description" content="AbstractFlow — diagram-based, durable AI workflows for AbstractFramework. Drag-and-drop nodes, portable .flow bundles, recursive subflows, and multi-agent orchestration. Works standalone or through AbstractGateway API routes.">
+  <title>AbstractFlow — the visual workflow editor | AbstractFramework</title>
+  <meta name="description" content="AbstractFlow is the browser editor for AbstractFramework workflows. Build LLM, agent, media, file and memory steps visually, set automation defaults and publish bundles to your AbstractGateway, which runs them.">
+  <link rel="canonical" href="https://abstractframework.ai/flow.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractFlow — the visual workflow editor">
+  <meta property="og:description" content="Author workflows in the browser and publish them to AbstractGateway. Served by the gateway at /apps/flow/ or run with npx.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -12,35 +19,47 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
 </head>
 <body>
-  <nav class="nav">
-    <a href="./" class="nav-brand">
-    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
-      AbstractFramework
-    </a>
-    <ul class="nav-links">
-      <li><a href="./">Home</a></li>
-      <li><a href="#overview">Overview</a></li>
-      <li><a href="#screenshots">Screenshots</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#getting-started">Get Started</a></li>
-      <li><a href="#api">API</a></li>
-      <li><a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
-    </ul>
-  </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html" aria-current="page">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
 
-<div class="pkg-nav">
+<div class="pkg-nav" aria-label="Packages and apps">
   <div class="pkg-nav-inner">
     <a href="core.html" class="pkg-nav-link">Core</a>
     <a href="runtime.html" class="pkg-nav-link">Runtime</a>
     <a href="agent.html" class="pkg-nav-link">Agent</a>
-    <a href="flow.html" class="pkg-nav-link active">Flow</a>
+    <a href="flow.html" class="pkg-nav-link active" aria-current="page">Flow</a>
     <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
     <a href="code.html" class="pkg-nav-link">Code</a>
     <a href="observer.html" class="pkg-nav-link">Observer</a>
     <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
     <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
@@ -48,33 +67,32 @@
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
   </div>
 </div>
+<main id="main">
 
-<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" style="min-height:auto;padding:8rem 0 4rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> Composition &middot; Visual Authoring</div>
+    <div class="hero-badge"><span class="dot"></span> Application &middot; Visual workflow editor <span class="ver green">v0.4.0</span></div>
     <h1>Abstract<span class="gradient">Flow</span></h1>
-    <p class="hero-sub">Diagram-based, durable AI workflows for AbstractFramework. Drag-and-drop visual editor with portable <code>.flow</code> bundles, recursive subflows, and multi-agent orchestration. Works standalone or through AbstractGateway API routes.</p>
+    <p class="hero-sub">AbstractFlow is the visual workflow editor for AbstractFramework. You build a workflow in your browser by wiring LLM, agent, media, file and memory nodes, then save, publish and run it on your <a href="gateway.html">AbstractGateway</a>, which stores it and runs it. AbstractFlow is a web app (<code>@abstractframework/flow</code>): a browser editor plus a small Node server that forwards <code>/api/*</code> to the gateway. The gateway's <a href="console.html">console</a> installs and opens it from its <strong>Apps</strong> page (<a href="install.html">Install</a>).</p>
     <div class="hero-actions">
-      <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started
+      <a href="#run" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get started
       </a>
-      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
-      <a href="https://pypi.org/project/abstractflow/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
-      <a href="https://www.lpalbou.info/AbstractFlow/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Full Docs</a>
-      <a href="https://github.com/lpalbou/abstractflow/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
-      <a href="https://github.com/lpalbou/abstractflow/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+      <a href="https://github.com/lpalbou/AbstractFlow" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+      <a href="https://www.npmjs.com/package/@abstractframework/flow" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">npm</a>
+      <a href="https://github.com/lpalbou/AbstractFlow/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractFlow/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
     <div class="hero-code">
-<pre><code><span class="line-cmt"># Launch the visual editor (no repo clone needed)</span>
-<span class="line-kw">pip install</span> abstractgateway abstractflow
-<span class="line-kw">export</span> <span class="line-var">ABSTRACTGATEWAY_AUTH_TOKEN</span>=<span class="line-str">dev-token</span>
-abstractgateway serve --port <span class="line-var">8080</span>
+<pre><code><span class="line-cmt"># Gateway console: Apps &gt; Flow Editor &gt; Open</span>
+<span class="line-cmt"># (served at /apps/flow/, already signed in)</span>
 
-<span class="line-cmt"># In a second terminal</span>
-npx @abstractframework/flow --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
+<span class="line-cmt"># Or on its own: http://127.0.0.1:3003/</span>
+npx @abstractframework/flow \
+  --gateway-url http://127.0.0.1:8080</code></pre>
     </div>
   </div>
 </section>
@@ -84,422 +102,272 @@ npx @abstractframework/flow --gateway-url <span class="line-str">http://127.0.0.
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
-      <h2 class="section-title">What is AbstractFlow?</h2>
-      <p class="section-desc">AbstractFlow is a workflow authoring and orchestration layer for the AbstractFramework ecosystem. It provides a programmatic Python API, a portable VisualFlow JSON format, and a browser-based visual editor (React) that works through AbstractGateway API routes.</p>
+      <h2 class="section-title">Author in the browser, run on the gateway</h2>
+      <p class="section-desc">The editor authors workflows; AbstractGateway and <a href="runtime.html">AbstractRuntime</a> do everything else: users and sessions, provider configuration, workflow storage, compilation, execution, run <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#ledger" target="_blank" rel="noopener noreferrer">ledgers</a> (the record of every step), artifacts and media catalogs.</p>
     </div>
-
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
-        <h3>Visual Editor</h3>
-        <p>A browser-based visual editor. Drag nodes from the palette, wire connections, configure providers and models per node. Works standalone or through AbstractGateway via pure API routes.</p>
+        <h3>A web app</h3>
+        <p>Open it from the gateway console, or start it with <code>npx</code>. There is nothing to install in Python: AbstractFlow ships no Python package and no local execution host.</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>Portable Workflows</h3>
-        <p>Workflows are defined as JSON documents following the VisualFlow schema (Pydantic models). Package as <code>.flow</code> bundles and deploy anywhere. Host-independent execution.</p>
+        <h3>Portable workflows</h3>
+        <p>Workflows are VisualFlow JSON documents. Publishing packs them into <code>.flow</code> <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#workflow-bundle-flow" target="_blank" rel="noopener noreferrer">workflow bundles</a> (a workflow, its subflows and metadata in one file) that any gateway can serve. Leave model pickers on <em>Auto (Gateway default)</em> and the gateway's defaults choose the model at run time.</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>Programmatic API</h3>
-        <p><code>Flow</code> and <code>FlowRunner</code> provide a programmatic API for building and running workflows in Python. Create nodes with lambdas, wire edges, and execute with durable stores. Alternatively, interact via AbstractGateway API routes from any language.</p>
+        <h3>Runs for every client</h3>
+        <p>A workflow can declare the interfaces it implements, such as <code>abstractcode.agent.v1</code>, so <a href="code.html">AbstractCode</a> and <a href="assistant.html">AbstractAssistant</a> can run it as an agent.</p>
       </div>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">How It Fits Together</h3>
-    </div>
-    <div class="reveal" style="max-width:720px;margin:0 auto">
-      <svg viewBox="0 0 720 340" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%">
-        <defs>
-          <filter id="fglow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          <linearGradient id="fgrad1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
-          <linearGradient id="fgrad2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
-        </defs>
-        <!-- Path 1: Visual Editor → Gateway → Runtime → Core -->
-        <text x="20" y="22" fill="#818cf8" font-size="11" font-weight="600" font-family="Inter,sans-serif" opacity=".6">PATH 1 — VIA GATEWAY API ROUTES</text>
-        <!-- Visual Editor -->
-        <rect x="20" y="36" width="150" height="70" rx="10" fill="rgba(99,102,241,0.1)" stroke="#6366f1" stroke-width="1.5" filter="url(#fglow)"/>
-        <text x="95" y="63" fill="#818cf8" font-size="13" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">Visual Editor</text>
-        <text x="95" y="82" fill="#818cf8" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">React UI</text>
-        <!-- Arrow 1 -->
-        <line x1="170" y1="71" x2="230" y2="71" stroke="url(#fgrad1)" stroke-width="2" stroke-dasharray="6 3"/>
-        <polygon points="230,66 240,71 230,76" fill="#06b6d4"/>
-        <text x="200" y="63" fill="#22d3ee" font-size="9" text-anchor="middle" font-family="JetBrains Mono,monospace">/api/*</text>
-        <!-- Gateway -->
-        <rect x="240" y="36" width="200" height="70" rx="10" fill="rgba(6,182,212,0.1)" stroke="#06b6d4" stroke-width="1.5" filter="url(#fglow)"/>
-        <text x="340" y="58" fill="#22d3ee" font-size="13" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">AbstractGateway</text>
-        <text x="340" y="74" fill="#22d3ee" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">discovery · runs · ledger</text>
-        <text x="340" y="88" fill="#22d3ee" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">artifacts · media · bundles</text>
-        <!-- Arrow 2 -->
-        <line x1="440" y1="71" x2="500" y2="71" stroke="url(#fgrad2)" stroke-width="2" stroke-dasharray="6 3"/>
-        <polygon points="500,66 510,71 500,76" fill="#10b981"/>
-        <!-- Runtime -->
-        <rect x="510" y="36" width="170" height="70" rx="10" fill="rgba(16,185,129,0.1)" stroke="#10b981" stroke-width="1.5" filter="url(#fglow)"/>
-        <text x="595" y="63" fill="#34d399" font-size="13" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">AbstractRuntime</text>
-        <text x="595" y="82" fill="#34d399" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">→ AbstractCore</text>
-        <!-- Divider -->
-        <line x1="40" y1="140" x2="680" y2="140" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-        <text x="360" y="138" fill="rgba(255,255,255,0.2)" font-size="10" text-anchor="middle" font-family="Inter,sans-serif">or</text>
-        <!-- Path 2: Host Process → Local -->
-        <text x="20" y="175" fill="#f59e0b" font-size="11" font-weight="600" font-family="Inter,sans-serif" opacity=".6">PATH 2 — VIA PYTHON CODE</text>
-        <!-- Host Process -->
-        <rect x="20" y="190" width="200" height="70" rx="10" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="1.5" filter="url(#fglow)"/>
-        <text x="120" y="217" fill="#fbbf24" font-size="13" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">Host Process</text>
-        <text x="120" y="236" fill="#fbbf24" font-size="10" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">CLI / server / notebook</text>
-        <!-- Arrow 3 -->
-        <line x1="220" y1="225" x2="300" y2="225" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6 3"/>
-        <polygon points="300,220 310,225 300,230" fill="#f59e0b"/>
-        <!-- FlowRunner -->
-        <rect x="310" y="190" width="220" height="70" rx="10" fill="rgba(245,158,11,0.08)" stroke="#f59e0b" stroke-width="1.5" filter="url(#fglow)"/>
-        <text x="420" y="214" fill="#fbbf24" font-size="12" font-weight="600" text-anchor="middle" font-family="JetBrains Mono,monospace">FlowRunner</text>
-        <text x="420" y="232" fill="#fbbf24" font-size="9.5" text-anchor="middle" font-family="JetBrains Mono,monospace" opacity=".7">execute_visual_flow()</text>
-        <text x="420" y="248" fill="#fbbf24" font-size="9" text-anchor="middle" font-family="Inter,sans-serif" opacity=".5">optional Runtime integration</text>
-        <!-- Shared output -->
-        <rect x="180" y="290" width="360" height="40" rx="8" fill="rgba(99,102,241,0.06)" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
-        <text x="360" y="315" fill="#818cf8" font-size="12" font-weight="500" text-anchor="middle" font-family="Inter,sans-serif">Portable .flow bundles — same format, both paths</text>
-        <!-- Arrows to shared -->
-        <line x1="340" y1="106" x2="340" y2="290" stroke="rgba(99,102,241,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
-        <line x1="420" y1="260" x2="400" y2="290" stroke="rgba(99,102,241,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
-      </svg>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ SCREENSHOTS ═══════════════════ -->
-<section class="section" id="screenshots" style="background:var(--bg-surface)">
+<section id="screenshots">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">In Action</div>
-      <h2 class="section-title">AbstractFlow Screenshots</h2>
-      <p class="section-desc">Visual workflow authoring inspired by UE4 Blueprint. Build multimodal, multi-agent orchestrations with drag-and-drop.</p>
+      <div class="section-label">In action</div>
+      <h2 class="section-title">Workflows you can read</h2>
+      <p class="section-desc">Nodes, pins and wires show what a workflow does, and the Run view shows what each step produced.</p>
     </div>
-    <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem">
-      <div>
-        <img src="assets/img/flow-dialogue-image.png" alt="AbstractFlow multimodal dialogue" loading="lazy" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-        <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.75rem">Multimodal dialogue flow &mdash; text, voice, and image at every turn</p>
-      </div>
-      <div>
-        <img src="assets/img/flow-ralph.png" alt="AbstractFlow Ralph loop" loading="lazy" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-        <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.75rem">Multi-agent self-check loop &mdash; specialized orchestration patterns</p>
-      </div>
+    <figure class="figure reveal" style="margin:0 0 2rem">
+      <img src="assets/img/shots/flow-map-reduce.webp" alt="The AbstractFlow 0.4.0 editor served at /apps/flow/: the node palette on the left and a map-reduce workflow on the canvas, with inputs, a for-each loop, a per-item LLM call, append and persist steps, a reduce LLM call and the result node" loading="lazy" width="1600" height="1000">
+      <figcaption>An example map-reduce workflow in the Flow editor, opened from the gateway at <code>/apps/flow/</code>.</figcaption>
+    </figure>
+    <div class="showcase-grid reveal" style="align-items:start">
+      <figure class="figure">
+        <img src="assets/img/flow-dialogue-image.png" alt="A workflow in the AbstractFlow editor: On Flow Start, Ask User, LLM Call, Generate Voice and Generate Image nodes, with a Concat node building the image prompt from the LLM response" loading="lazy">
+        <figcaption>A multimodal dialogue workflow: ask the user, answer with an LLM, then speak the answer and illustrate it.</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/img/flow-ralph.png" alt="A workflow in the AbstractFlow editor: an intent analyzer LLM call, an Agent node and a reviewer LLM call with a JSON schema, whose parsed verdict feeds an If/Else node" loading="lazy">
+        <figcaption>An example review loop: an agent does the work, a reviewer returns a structured verdict, and If/Else decides whether to go again.</figcaption>
+      </figure>
     </div>
-    <div class="reveal" style="margin-top:2rem;max-width:640px">
-      <img src="assets/img/flow-observability-1-turn.png" alt="AbstractFlow single turn observability" loading="lazy" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-      <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.75rem">Single-turn output &mdash; text response + generated voice + generated image in one turn</p>
-    </div>
+    <figure class="figure reveal" style="margin-top:2rem">
+      <img src="assets/img/flow-observability-1-turn.png" alt="The AbstractFlow Run view: the list of executed steps on the left, and the text, the generated audio and the generated image of one turn on the right, waiting for the user's next answer" loading="lazy">
+      <figcaption>The Run view of the dialogue workflow: each step with its status and timing, and the text, voice and image one turn produced.</figcaption>
+    </figure>
   </div>
 </section>
 
-<!-- ═══════════════════ FEATURES ═══════════════════ -->
-<section id="features">
+<!-- ═══════════════════ NODES ═══════════════════ -->
+<section id="nodes" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Features</div>
-      <h2 class="section-title">Visual Workflow Capabilities</h2>
-      <p class="section-desc">A rich node palette for building complex AI pipelines visually, with full durable execution support.</p>
+      <div class="section-label">Nodes</div>
+      <h2 class="section-title">What you can build with</h2>
+      <p class="section-desc">The palette groups nodes by family. Every media node runs through a capability the gateway advertises, and the editor shows a control only where the gateway supports it.</p>
     </div>
     <div class="components-grid">
-
       <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4.5a2 2 0 012 2V14M6.5 10v4.5a2 2 0 002 2H14"/></svg>
-        </div>
-        <h3>Node Types</h3>
-        <p>LLM Call, Agent, Tool Call, Code, Conditional, Loop, Subflow, On Flow Start/End, Emit Event, and media nodes (Generate Image, Generate Video, Generate Voice, Generate Music, Transcribe Audio).</p>
+        <h3>LLM Call and Agent</h3>
+        <p>A <strong>Reasoning</strong> control (Auto, or <code>off</code> to <code>xhigh</code> for models that support it) and an <strong>MTP depth</strong> setting, both with a run-scoped override. Response schemas are built on the <code>resp_schema</code> pin, and a structured <code>data</code> output feeds Break Object, Switch and other object-aware nodes.</p>
       </div>
-
       <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 10-16 0"/></svg>
-        </div>
-        <h3>Multi-Agent Orchestration</h3>
-        <p>Agent nodes with configurable provider, model, tools, and max iterations. Build self-correcting loops with intent analyzers, executors, and reviewers. Each agent can use a different model.</p>
+        <h3>Control and data</h3>
+        <p>If/Else, Switch, For, ForEach, While, Parallel and Sequence; Subflow for reusable pieces; array, string, object and JSON helpers; variables and math.</p>
       </div>
-
       <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        </div>
-        <h3>Recursive Subflows</h3>
-        <p>Compose complex pipelines from reusable sub-workflows. Each subflow runs as a durable child run with its own ledger. Subflow nodes can reference any flow in the registry.</p>
+        <h3>Code and expressions</h3>
+        <p>Code nodes and small Python expressions on data input pins, sandboxed with RestrictedPython, plus a <strong>Functions</strong> drawer of named helpers a flow can share across its expressions.</p>
       </div>
-
       <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
-        </div>
-        <h3>Code Nodes</h3>
-        <p>Execute Python code within flows using RestrictedPython sandboxing. Transform data, validate outputs, and implement custom logic directly in the visual editor.</p>
+        <h3>Media</h3>
+        <p>Generate Image, Edit Image, Restore / Upscale Image, Generate Video, Image To Video, Generate Voice, Generate Music, Transcribe Audio, Listen Voice and Analyze Media. Vision nodes take a batch <code>count</code>, ordered <code>seeds</code> and LoRA adapter stacks where the model supports them; artifact pins accept an upload right on the node.</p>
       </div>
-
       <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-        </div>
-        <h3>Workflow Bundles</h3>
-        <p>Package flows + subflows into portable <code>.flow</code> zip archives. Bundle, inspect, unpack via CLI. Deploy to any gateway with version management and metadata.</p>
+        <h3>Files and documents</h3>
+        <p>Read File, Write File, Read PDF, Write PDF, Write DOCX and Write Chart, plus artifact import and export.</p>
       </div>
-
       <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </div>
-        <h3>Media Generation Nodes</h3>
-        <p>Generate images, edit images, create videos, synthesize voice, and compose music directly in workflows. Media nodes use Gateway catalog discovery with auto or explicit provider selection.</p>
+        <h3>People, events and memory</h3>
+        <p>Ask User and Answer User; On Flow Start and On Flow End; On Event, On Schedule, Wait Event and Delay, which wait inside a run that has already started; knowledge-graph and memory nodes (KG Assert, KG Query, Memorize, Recall).</p>
       </div>
-
-      <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        </div>
-        <h3>Interface Contracts</h3>
-        <p>Flows can declare interface markers like <code>abstractcode.agent.v1</code> for host-specific IO contracts. Validation and scaffolding ensures flows meet contract requirements.</p>
-      </div>
-
-      <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <h3>Durable Waiting</h3>
-        <p>Flows can block on external input (<code>ask_user</code>, <code>wait_event</code>, <code>wait_until</code>). Waiting runs are persisted and resume exactly where they left off when input arrives.</p>
-      </div>
-
-      <div class="comp-card reveal">
-        <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </div>
-        <h3>Run Modal &amp; Artifacts</h3>
-        <p>The visual editor renders runs with step-by-step traces, media artifact previews (image, video, audio players), progress events for long media jobs, and raw JSON inspection.</p>
-      </div>
-
+    </div>
+    <div class="callout reveal" style="margin-top:2rem">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div><strong>Workflow Authoring Assistant.</strong> The star in the toolbar opens an assistant that writes or refines a whole workflow from your description, using the gateway's default text model. The editor applies only validated edits to your draft; Save, Publish and Run stay your decisions.</div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section id="getting-started" style="background:var(--bg-surface)">
+<!-- ═══════════════════ AUTOMATION DEFAULTS & PUBLISH ═══════════════════ -->
+<section id="publish">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Getting Started</div>
-      <h2 class="section-title">Two Ways to Use AbstractFlow</h2>
-      <p class="section-desc">Use the visual editor for diagram-based authoring, or build workflows programmatically. Both paths work through Python code or through AbstractGateway API routes from any language.</p>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:2rem">
-      <h3 class="section-title" style="font-size:1.5rem">Visual Editor (via Gateway API Routes)</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Terminal 1: Start the gateway</span>
-<span class="line-kw">pip install</span> abstractgateway abstractflow
-<span class="line-kw">export</span> <span class="line-var">ABSTRACTGATEWAY_AUTH_TOKEN</span>=<span class="line-str">dev-token</span>
-abstractgateway serve --port <span class="line-var">8080</span>
-
-<span class="line-cmt"># Terminal 2: Launch the editor UI</span>
-<span class="line-kw">export</span> <span class="line-var">ABSTRACTGATEWAY_AUTH_TOKEN</span>=<span class="line-str">dev-token</span>
-npx @abstractframework/flow --gateway-url <span class="line-str">http://127.0.0.1:8080</span>
-
-<span class="line-cmt"># Open http://localhost:3003</span>
-<span class="line-cmt"># Gateway capabilities: http://localhost:8080/api/gateway/discovery/capabilities</span></code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Programmatic API</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-kw">from</span> abstractflow <span class="line-kw">import</span> <span class="line-fn">Flow</span>, <span class="line-fn">FlowRunner</span>
-
-flow = <span class="line-fn">Flow</span>(<span class="line-str">"linear"</span>)
-flow.<span class="line-fn">add_node</span>(<span class="line-str">"double"</span>, <span class="line-kw">lambda</span> x: x * <span class="line-var">2</span>,
-              input_key=<span class="line-str">"value"</span>, output_key=<span class="line-str">"doubled"</span>)
-flow.<span class="line-fn">add_node</span>(<span class="line-str">"add_ten"</span>, <span class="line-kw">lambda</span> x: x + <span class="line-var">10</span>,
-              input_key=<span class="line-str">"doubled"</span>, output_key=<span class="line-str">"final"</span>)
-flow.<span class="line-fn">add_edge</span>(<span class="line-str">"double"</span>, <span class="line-str">"add_ten"</span>)
-flow.<span class="line-fn">set_entry</span>(<span class="line-str">"double"</span>)
-
-result = <span class="line-fn">FlowRunner</span>(flow).<span class="line-fn">run</span>({<span class="line-str">"value"</span>: <span class="line-var">5</span>})
-<span class="line-fn">print</span>(result)
-<span class="line-cmt"># {"success": True, "result": 20}</span></code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Execute a VisualFlow JSON</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-kw">import</span> json
-<span class="line-kw">from</span> abstractflow.visual <span class="line-kw">import</span> <span class="line-fn">VisualFlow</span>, <span class="line-fn">execute_visual_flow</span>
-
-<span class="line-kw">with</span> <span class="line-fn">open</span>(<span class="line-str">"my-flow.json"</span>, <span class="line-str">"r"</span>, encoding=<span class="line-str">"utf-8"</span>) <span class="line-kw">as</span> f:
-    vf = VisualFlow.<span class="line-fn">model_validate</span>(json.<span class="line-fn">load</span>(f))
-
-result = <span class="line-fn">execute_visual_flow</span>(vf, {<span class="line-str">"prompt"</span>: <span class="line-str">"Hello"</span>}, flows={vf.id: vf})
-<span class="line-fn">print</span>(result)</code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">CLI: Workflow Bundles</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Pack a bundle from a VisualFlow JSON</span>
-abstractflow bundle pack web/flows/ac-echo.json --out <span class="line-str">/tmp/ac-echo.flow</span>
-
-<span class="line-cmt"># Inspect bundle metadata</span>
-abstractflow bundle inspect <span class="line-str">/tmp/ac-echo.flow</span>
-
-<span class="line-cmt"># Unpack to a directory</span>
-abstractflow bundle unpack <span class="line-str">/tmp/ac-echo.flow</span> --dir <span class="line-str">/tmp/ac-echo</span></code></pre>
-    </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Install Profiles</h3>
+      <div class="section-label">Publish &amp; automate</div>
+      <h2 class="section-title">From draft to a workflow everyone can run</h2>
     </div>
     <div class="modes-grid reveal">
-      <div class="mode-card">
-        <h3>Base Package</h3>
-        <div class="code-block" style="margin:.5rem 0">
-<pre><code><span class="line-kw">pip install</span> abstractflow</code></pre>
-        </div>
-        <p>VisualFlow models, bundle helpers, CLI. Works standalone or through AbstractGateway API routes. Python 3.10+.</p>
+      <div class="mode-card" style="text-align:left">
+        <h3>Save and publish</h3>
+        <p>The editor stores your workflow on the gateway (<code>/api/gateway/visualflows/*</code>). <strong>Publish</strong> packs it into a <code>.flow</code> bundle in the gateway's registry, where Observer, Code, the Assistant and your own apps can run it.</p>
       </div>
-      <div class="mode-card">
-        <h3>Apple Profile</h3>
-        <div class="code-block" style="margin:.5rem 0">
-<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractflow[apple]"</span></code></pre>
-        </div>
-        <p>Full host profile with local execution, Agent nodes, MLX support, and all non-NVIDIA capabilities.</p>
+      <div class="mode-card" style="text-align:left">
+        <h3>Automation Defaults</h3>
+        <p>In the Flow Library, a runnable workflow's <strong>Automation</strong> row stores what an automation created from it starts with: the trigger (<strong>Schedule</strong> or <strong>Manual</strong>, listed by the gateway), its settings (a fixed UTC interval, no cron), <em>Independent</em> or <em>Growing</em> context, a title and default inputs. Publishing carries them into the bundle.</p>
       </div>
-      <div class="mode-card">
-        <h3>GPU Profile</h3>
-        <div class="code-block" style="margin:.5rem 0">
-<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractflow[gpu]"</span></code></pre>
-        </div>
-        <p>Full GPU-capable host profile with vLLM, HuggingFace, Diffusers, and CUDA support.</p>
+      <div class="mode-card" style="text-align:left">
+        <h3>Run and watch</h3>
+        <p>Run a workflow from the editor and follow each step, with previews of generated images, video and audio. You create and manage the automations themselves in <a href="observer.html">AbstractObserver</a>, <a href="assistant.html">AbstractAssistant</a> or <a href="code.html">AbstractCode</a>; see <a href="automations.html">Automations</a>.</p>
       </div>
+    </div>
+
+    <h3 class="reveal" style="margin:2.5rem 0 1rem">Packing a bundle from Python</h3>
+    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">Outside the editor, AbstractRuntime packs a bundle from VisualFlow JSON files. Upload the result with <code>POST /api/gateway/bundles/upload</code>, or place it in the directory named by <code>ABSTRACTGATEWAY_FLOWS_DIR</code>.</p>
+    <div class="code-block reveal">
+<pre><code><span class="line-kw">from</span> abstractruntime.workflow_bundle <span class="line-kw">import</span> <span class="line-fn">pack_workflow_bundle</span>
+
+<span class="line-fn">pack_workflow_bundle</span>(
+    root_flow_json=<span class="line-str">"/path/to/root.json"</span>,
+    out_path=<span class="line-str">"/path/to/bundles/my-bundle@0.1.0.flow"</span>,
+    bundle_id=<span class="line-str">"my-bundle"</span>,
+    bundle_version=<span class="line-str">"0.1.0"</span>,
+    flows_dir=<span class="line-str">"/path/to/flows"</span>,
+)</code></pre>
+    </div>
+
+    <div class="callout reveal" style="margin-top:2rem">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div><strong>The shipped workflows are editable.</strong> The coding agent, deep research and co-scientist workflows that the gateway serves out of the box are VisualFlow JSON files in this repository. <a href="https://github.com/lpalbou/AbstractFlow/blob/main/docs/shipped-workflow-sources.md" target="_blank" rel="noopener noreferrer">Shipped workflow sources</a> maps each bundle to its files, so you can open one in the editor, change it and publish it under your own bundle id.</div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ API ═══════════════════ -->
-<section id="api">
+<!-- ═══════════════════ RUN ═══════════════════ -->
+<section id="run" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">API Reference</div>
-      <h2 class="section-title">API Surface</h2>
-      <p class="section-desc">The public API is intentionally small. AbstractFlow delegates compilation and runtime execution to AbstractRuntime.</p>
+      <div class="section-label">Getting started</div>
+      <h2 class="section-title">Open the editor</h2>
+      <p class="section-desc">You need a running AbstractGateway (<code>abstractgateway serve</code>, or the <a href="install.html">installer</a>).</p>
     </div>
 
-    <div class="modes-grid reveal" style="grid-template-columns:1fr 1fr">
-      <div class="mode-card" style="text-align:left">
-        <h3>Programmatic Flows</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-kw">from</span> abstractflow <span class="line-kw">import</span> (
-    <span class="line-fn">Flow</span>,          <span class="line-cmt"># Flow IR</span>
-    <span class="line-fn">FlowNode</span>,      <span class="line-cmt"># Node definition</span>
-    <span class="line-fn">FlowEdge</span>,      <span class="line-cmt"># Edge definition</span>
-    <span class="line-fn">FlowRunner</span>,    <span class="line-cmt"># Execution + output</span>
-    <span class="line-fn">compile_flow</span>, <span class="line-cmt"># Compiler shim</span>
-)</code></pre>
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="console">Through the gateway</button>
+        <button class="tab-btn" data-tab="npx">On its own</button>
+      </div>
+      <div class="tab-panel active" id="tab-console">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Gateway console: Apps &gt; Flow Editor &gt; Install, then Open</span>
+<span class="line-cmt"># or from a terminal:</span>
+abstractgateway apps install flow --launch
+
+<span class="line-cmt"># The editor is at &lt;gateway address&gt;/apps/flow/ and opens signed in</span></code></pre>
         </div>
       </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Visual Flows</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-kw">from</span> abstractflow.visual <span class="line-kw">import</span> (
-    <span class="line-fn">VisualFlow</span>,          <span class="line-cmt"># Pydantic model</span>
-    <span class="line-fn">VisualNode</span>,          <span class="line-cmt"># Node schema</span>
-    <span class="line-fn">VisualEdge</span>,          <span class="line-cmt"># Edge schema</span>
-    <span class="line-fn">NodeType</span>,            <span class="line-cmt"># Node types enum</span>
-    <span class="line-fn">PinType</span>,             <span class="line-cmt"># Pin types enum</span>
-    <span class="line-fn">execute_visual_flow</span>, <span class="line-cmt"># Run + return</span>
-    <span class="line-fn">create_visual_runner</span>,<span class="line-cmt"># Advanced runner</span>
-)</code></pre>
-        </div>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Workflow Bundles</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-kw">from</span> abstractflow.workflow_bundle <span class="line-kw">import</span> (
-    <span class="line-fn">pack_workflow_bundle</span>,
-    <span class="line-fn">inspect_workflow_bundle</span>,
-    <span class="line-fn">unpack_workflow_bundle</span>,
-)</code></pre>
-        </div>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Interface Contracts</h3>
-        <div class="code-block" style="margin:.75rem 0;font-size:.82rem">
-<pre><code><span class="line-kw">from</span> abstractflow.visual.interfaces <span class="line-kw">import</span> (
-    <span class="line-var">ABSTRACTCODE_AGENT_V1</span>,
-    <span class="line-fn">validate_visual_flow_interface</span>,
-    <span class="line-fn">apply_visual_flow_interface_scaffold</span>,
-)</code></pre>
+      <div class="tab-panel" id="tab-npx">
+        <div class="code-block">
+<pre><code>npx @abstractframework/flow --gateway-url http://127.0.0.1:8080 --port 3003
+
+<span class="line-cmt"># or install the command</span>
+<span class="line-kw">npm install</span> -g @abstractframework/flow
+abstractflow-editor --gateway-url http://127.0.0.1:8080
+
+<span class="line-cmt"># open http://127.0.0.1:3003/ and sign in with a gateway user id and token</span></code></pre>
         </div>
       </div>
     </div>
 
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">Gateway Editor Contract</h3>
-      <p class="section-desc">The React editor discovers capabilities from the gateway and uses them for node configuration, media catalog selection, and run execution.</p>
+    <div class="table-wrap reveal" style="margin-top:2rem">
+      <table class="data-table">
+        <thead><tr><th>Flag</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>--gateway-url &lt;url&gt;</code></td><td>The gateway to talk to (aliases <code>--gateway</code>, <code>--url</code>). Without it: the saved login, then the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>), then <code>http://127.0.0.1:8080</code>. A gateway found this way is followed when it moves to another port.</td></tr>
+          <tr><td><code>--port &lt;n&gt;</code></td><td>The port to listen on (default <code>3003</code>).</td></tr>
+          <tr><td><code>--host &lt;addr&gt;</code></td><td>The address to listen on (default <code>127.0.0.1</code>). Use <code>0.0.0.0</code> only when other computers must reach this server directly; through the gateway no change is needed.</td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># The editor reads capabilities from:</span>
-<span class="line-kw">GET</span> /api/gateway/discovery/capabilities
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px">Each browser signs in with a gateway user id and that user's token. The editor exchanges the token for a gateway session kept in HTTP-only cookies and does not keep the token. Serving at <code>/apps/flow/</code> needs AbstractGateway 0.7.0 or later.</p>
+  </div>
+</section>
 
-<span class="line-cmt"># Key contracts:</span>
-<span class="line-cmt"># capabilities.contracts.flow_editor       — VisualFlow CRUD/publish</span>
-<span class="line-cmt"># capabilities.contracts.common            — runs, ledger, artifacts</span>
-<span class="line-cmt"># assistant.media.generated_image          — image generation nodes</span>
-<span class="line-cmt"># assistant.media.edited_image             — image editing nodes</span>
-<span class="line-cmt"># assistant.media.generated_video          — video generation nodes</span>
-<span class="line-cmt"># assistant.media.generated_voice          — voice synthesis nodes</span>
-<span class="line-cmt"># assistant.media.generated_music          — music generation nodes</span>
-<span class="line-cmt"># common.readiness                         — surface readiness overlay</span></code></pre>
+<!-- ═══════════════════ NEXT ═══════════════════ -->
+<section id="next">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Where to next</div>
+      <h2 class="section-title">Keep going</h2>
     </div>
-
-    <div class="section-header reveal" style="margin-top:3rem">
-      <h3 class="section-title" style="font-size:1.5rem">CLI Reference</h3>
-    </div>
-    <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Bundle management</span>
-abstractflow bundle pack &lt;root.json&gt; --out &lt;output.flow&gt; [--flows-dir &lt;dir&gt;]
-abstractflow bundle inspect &lt;bundle.flow&gt;
-abstractflow bundle unpack &lt;bundle.flow&gt; --dir &lt;output_dir&gt;
-
-<span class="line-cmt"># Start the editor backend (dev/compat)</span>
-abstractflow serve [--port <span class="line-var">3003</span>] [--gateway-url <span class="line-str">http://...</span>]</code></pre>
+    <div class="next-links reveal">
+      <a class="next-link" href="start-creator.html"><strong>Start as a creator</strong><span>Build your first workflow and share it.</span></a>
+      <a class="next-link" href="gateway.html"><strong>AbstractGateway</strong><span>Where published workflows run, and the ones it ships with.</span></a>
+      <a class="next-link" href="automations.html"><strong>Automations</strong><span>Run a published workflow on a schedule.</span></a>
+      <a class="next-link" href="runtime.html"><strong>AbstractRuntime</strong><span>The durable runs and bundle format behind every workflow.</span></a>
+      <a class="next-link" href="install.html"><strong>Install</strong><span>The gateway, its console and the apps in one step.</span></a>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ FOOTER ═══════════════════ -->
+</main>
+
 <footer class="footer">
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="./" class="nav-brand" style="margin-bottom:.5rem">
-        <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
         AbstractFramework
       </a>
-      <p>Open-source AI infrastructure.</p>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
     </div>
     <div class="footer-col">
-      <h4>AbstractFlow</h4>
-      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">GitHub</a>
-      <a href="https://pypi.org/project/abstractflow/" target="_blank" rel="noopener noreferrer">PyPI</a>
-      <a href="https://www.npmjs.com/package/@abstractframework/flow" target="_blank" rel="noopener noreferrer">npm</a>
-      <a href="https://www.lpalbou.info/AbstractFlow/" target="_blank" rel="noopener noreferrer">Full Docs</a>
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
     </div>
     <div class="footer-col">
-      <h4>Ecosystem</h4>
-      <a href="./">AbstractFramework</a>
-      <a href="abstractcore.html">AbstractCore</a>
-      <a href="abstractruntime.html">AbstractRuntime</a>
-      <a href="abstractgateway.html">AbstractGateway</a>
-      <a href="abstractcode.html">AbstractCode</a>
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
     </div>
   </div>
   <div class="footer-bottom">
-    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
-    <a href="./">Home</a>
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=4"></script>
 </body>
 </html>

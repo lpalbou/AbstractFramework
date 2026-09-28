@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractVision — Documentation | AbstractFramework</title>
+  <title>AbstractVision — image and video generation for Python | AbstractFramework</title>
+  <meta name="description" content="AbstractVision 0.3.30: one Python API for text-to-image, image editing, upscaling, text-to-video and image-to-video. OpenAI-compatible HTTP by default; Diffusers, stable-diffusion.cpp (GGUF) and MLX-Gen run locally.">
+  <link rel="canonical" href="https://abstractframework.ai/vision.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractVision — generative images and video">
+  <meta property="og:description" content="Text-to-image, image editing, SeedVR2 upscaling and Wan 2.2 video behind one API, with remote and local backends.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -11,76 +19,83 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
 </head>
 <body>
-  <nav class="nav">
-    <a href="./" class="nav-brand">
-    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
-      AbstractFramework
-    </a>
-    <ul class="nav-links">
-      <li><a href="./">Home</a></li>
-      <li><a href="#overview">Overview</a></li>
-      <li><a href="#gallery">Gallery</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#getting-started">Get Started</a></li>
-      <li><a href="#api">API</a></li>
-      <li><a href="https://github.com/lpalbou/abstractvision" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
-    </ul>
-  </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html" aria-current="page">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
 
-<div class="pkg-nav">
+<div class="pkg-nav" aria-label="Packages and apps">
   <div class="pkg-nav-inner">
     <a href="core.html" class="pkg-nav-link">Core</a>
     <a href="runtime.html" class="pkg-nav-link">Runtime</a>
     <a href="agent.html" class="pkg-nav-link">Agent</a>
     <a href="flow.html" class="pkg-nav-link">Flow</a>
     <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
     <a href="code.html" class="pkg-nav-link">Code</a>
     <a href="observer.html" class="pkg-nav-link">Observer</a>
     <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
-    <a href="vision.html" class="pkg-nav-link active">Vision</a>
+    <a href="vision.html" class="pkg-nav-link active" aria-current="page">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
     <a href="memory.html" class="pkg-nav-link">Memory</a>
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
   </div>
 </div>
+<main id="main">
 
-<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<!-- MAIN START -->
+<!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" id="top">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> CAPABILITY PLUGIN</div>
+    <div class="hero-badge"><span class="dot"></span> Multimodal capability &middot; AbstractCore plugin <span class="ver pink">v0.3.30</span></div>
     <h1>Abstract<span class="gradient">Vision</span></h1>
-    <p class="hero-sub">Model-agnostic generative vision API for images and video. Text-to-image, image-to-image, text-to-video, and image-to-video with backends for MLX-Gen, Diffusers, stable-diffusion.cpp, and OpenAI-compatible HTTP.</p>
+    <p class="hero-sub">Generative images and video behind one Python API: text-to-image, image editing, upscaling, text-to-video and image-to-video. The base install calls OpenAI or any OpenAI-compatible image server; Diffusers, stable-diffusion.cpp and MLX-Gen run models on your own machine through explicit extras. Installed next to <a href="core.html">AbstractCore</a>, it becomes <code>llm.vision</code>.</p>
     <div class="hero-actions">
-      <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started
-      </a>
-      <a href="https://pypi.org/project/abstractvision/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-        PyPI
-      </a>
-      <a href="https://github.com/lpalbou/abstractvision" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      <a href="https://github.com/lpalbou/AbstractVision" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
       </a>
-      <a href="https://github.com/lpalbou/abstractvision/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
-      <a href="https://github.com/lpalbou/abstractvision/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+      <a href="https://pypi.org/project/abstractvision/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
+      <a href="https://lpalbou.github.io/AbstractVision/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractVision/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractVision/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
     <div class="hero-code">
-<pre><code><span class="kw">from</span> abstractvision <span class="kw">import</span> <span class="fn">VisionManager</span>
+<pre><code><span class="cmt"># OpenAI-compatible HTTP backend</span>
+pip install abstractvision
 
-vm = <span class="fn">VisionManager</span>(backend=backend, store=<span class="fn">LocalAssetStore</span>())
+<span class="cmt"># Local MLX-Gen models (Apple Silicon)</span>
+pip install <span class="str">"abstractvision[models,mlx-gen]"</span>
 
-<span class="cmt"># Text to Image</span>
-img = vm.<span class="fn">generate_image</span>(<span class="str">"a red fox in snow"</span>)
-
-<span class="cmt"># Image to Image</span>
-edit = vm.<span class="fn">edit_image</span>(<span class="str">"make it watercolor"</span>, image=<span class="str">"input.png"</span>)</code></pre>
+<span class="cmt"># Local Diffusers + stable-diffusion.cpp</span>
+pip install <span class="str">"abstractvision[local]"</span></code></pre>
     </div>
   </div>
 </section>
@@ -90,22 +105,26 @@ edit = vm.<span class="fn">edit_image</span>(<span class="str">"make it watercol
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
-      <h2 class="section-title">Generative Vision for the Abstract Ecosystem</h2>
-      <p class="section-desc">AbstractVision provides a model-agnostic generative vision API covering images and video. It ships a capability registry, artifact-ref outputs, and backends for remote and local inference &mdash; from cloud APIs to Apple Silicon MLX quantized models.</p>
+      <h2 class="section-title">One API, the backend you choose</h2>
+      <p class="section-desc"><code>VisionManager</code> is a thin layer over a backend. You keep the same calls when you move from a hosted endpoint to a model on your laptop or GPU server.</p>
     </div>
     <div class="components-grid reveal">
       <div class="comp-card">
-        <h3>VisionManager Orchestrator</h3>
-        <p>Thin orchestration layer that delegates to pluggable backends. Supports <code>text_to_image</code>, <code>image_to_image</code>, <code>text_to_video</code>, and <code>image_to_video</code> with optional artifact-ref outputs for cross-process portability.</p>
+        <h3>Light base install</h3>
+        <p><code>pip install abstractvision</code> brings the API, the CLI, the capability registry, the AbstractCore plugin and a stdlib-only OpenAI-compatible HTTP backend. Torch, Diffusers and MLX come only with the extras you pick.</p>
       </div>
       <div class="comp-card">
-        <h3>Capability Registry</h3>
-        <p>Packaged <code>vision_model_capabilities.json</code> declares what each model supports. Query tasks, models, and capabilities programmatically. Curated entries with license and precision metadata per ADR 0005.</p>
+        <h3>Capability registry</h3>
+        <p>A packaged registry says which task each model supports, with its defaults. The CLI, the playground and the AbstractCore plugin use it to shape requests, and <code>abstractvision show-model</code> prints the contract of one model before you run it.</p>
       </div>
       <div class="comp-card">
-        <h3>AbstractCore Plugin</h3>
-        <p>Discovered automatically via entry points. Exposes <code>llm.vision.t2i(...)</code>, <code>llm.vision.i2i(...)</code>, provider catalog discovery, and model residency control for local backends through the unified capability contract.</p>
+        <h3>Artifact refs</h3>
+        <p>Give the manager a store and each result comes back as a small JSON ref (<code>{"$artifact": ...}</code>) instead of raw bytes, so it can travel between processes. <code>RuntimeArtifactStoreAdapter</code> writes into an <a href="runtime.html">AbstractRuntime</a> <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#artifact" target="_blank" rel="noopener noreferrer">artifact</a> store.</p>
       </div>
+    </div>
+    <div class="callout ok reveal" style="max-width:900px;margin:2rem auto 0">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+      <div><strong>Included in the one-line installer.</strong> The <a href="install.html">AbstractFramework installer</a> installs AbstractVision with the gateway: the OpenAI-compatible backend on every profile, plus Diffusers and stable-diffusion.cpp with the <code>apple</code> and <code>gpu</code> profiles, and MLX-Gen with the <code>apple</code> profile. The <code>abstractvision</code> command is on your PATH (<code>~/.local/bin</code>). To upgrade, re-run the same install line (on a Mac without Terminal, install the latest .pkg again), or use <strong>Update</strong> on the Gateway card of the console (terminal console: F3) or in the menu-bar icon: see <a href="install.html#upgrade">Upgrade</a>.</div>
     </div>
   </div>
 </section>
@@ -116,56 +135,56 @@ edit = vm.<span class="fn">edit_image</span>(<span class="str">"make it watercol
     <div class="section-header reveal">
       <div class="section-label">Gallery</div>
       <h2 class="section-title">Generated with AbstractVision</h2>
-      <p class="section-desc">All images below were generated locally on Apple Silicon using MLX-Gen (FLUX.2 turbo quantized models) through the AbstractVision API.</p>
+      <p class="section-desc">Images and video clips made through the AbstractVision API.</p>
     </div>
-    <div class="gallery-grid reveal" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem">
+    <div class="gallery-grid reveal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem">
       <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
-        <img src="assets/img/starship-snow.png" alt="Starship in snow" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
-        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text-to-Image &mdash; FLUX.2 klein4b q4/q8</p>
+        <img src="assets/img/starship-snow.png" alt="A large spaceship resting on a snowfield under a blue sky" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
+        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text to image</p>
       </div>
       <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
-        <img src="assets/img/starship-snow-pencil-sketch.png" alt="Pencil sketch edit" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
-        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Image-to-Image Edit &mdash; Qwen (pencil sketch)</p>
+        <img src="assets/img/starship-snow-pencil-sketch.png" alt="The same spaceship scene redrawn as a pencil sketch" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
+        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Image edit: the previous image as a pencil sketch</p>
       </div>
       <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
-        <img src="assets/img/gallery-cyberpunk.png" alt="Cyberpunk city" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
-        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text-to-Image &mdash; Cyberpunk cityscape</p>
+        <img src="assets/img/gallery-cyberpunk.png" alt="A rainy neon-lit city street at night between tall towers" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
+        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text to image: neon city</p>
       </div>
       <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
-        <img src="assets/img/gallery-samurai.png" alt="Samurai" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
-        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text-to-Image &mdash; Character illustration</p>
+        <img src="assets/img/gallery-samurai.png" alt="A samurai on a cliff under cherry blossoms at sunset" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
+        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text to image: illustration</p>
       </div>
       <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
-        <img src="assets/img/gallery/gallery-portrait.png" alt="Portrait" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
-        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text-to-Image &mdash; Portrait photography</p>
+        <img src="assets/img/gallery/gallery-portrait.png" alt="Studio portrait of a woman with long red hair" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
+        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text to image: portrait</p>
       </div>
       <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
-        <img src="assets/img/gallery/gallery-landscape.png" alt="Landscape" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
-        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text-to-Image &mdash; Landscape photography</p>
+        <img src="assets/img/gallery/gallery-landscape.png" alt="Snowy mountain peaks at sunrise reflected in a still lake" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
+        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text to image: landscape</p>
       </div>
     </div>
 
     <div class="reveal" style="margin-top:2rem">
-      <h3 style="margin-bottom:1rem">Video Generation</h3>
+      <h3 style="margin-bottom:1rem">Text to video</h3>
       <div class="carousel">
         <div class="carousel-track">
           <div class="carousel-slide">
             <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg">
               <source src="assets/video/t2v-example.mp4" type="video/mp4">
             </video>
-            <div class="carousel-caption">"A Star Trek vessel in slow orbit around earth with shimmering lights of metropoles" &mdash; Wan2.2 via MLX-Gen</div>
+            <div class="carousel-caption">"A Star Trek vessel in slow orbit around earth with shimmering lights of metropoles"</div>
           </div>
           <div class="carousel-slide">
             <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg">
               <source src="assets/video/t2v-river.mp4" type="video/mp4">
             </video>
-            <div class="carousel-caption">"A crystal clear river in the mountains" &mdash; Wan2.2 via MLX-Gen</div>
+            <div class="carousel-caption">"A crystal clear river in the mountains"</div>
           </div>
           <div class="carousel-slide">
             <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg">
               <source src="assets/video/t2v-space.mp4" type="video/mp4">
             </video>
-            <div class="carousel-caption">"A dynamic combat in space between two starships" &mdash; Wan2.2 via MLX-Gen</div>
+            <div class="carousel-caption">"A dynamic combat in space between two starships"</div>
           </div>
         </div>
         <button class="carousel-prev" aria-label="Previous">&#8592;</button>
@@ -176,289 +195,279 @@ edit = vm.<span class="fn">edit_image</span>(<span class="str">"make it watercol
   </div>
 </section>
 
-<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<!-- ═══════════════════ BACKENDS ═══════════════════ -->
 <section class="section" id="features">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Features</div>
-      <h2 class="section-title">Four Backends, Five Generation Modes</h2>
-      <p class="section-desc">Generate images and video with the backend that fits your hardware and workflow. Every backend normalizes parameters through the shared model capability registry.</p>
+      <div class="section-label">Backends</div>
+      <h2 class="section-title">Four backends, one set of tasks</h2>
+      <p class="section-desc">The tasks are <code>text_to_image</code>, <code>image_to_image</code>, <code>image_upscale</code>, <code>text_to_video</code> and <code>image_to_video</code>. Which ones you get depends on the backend.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead>
+          <tr><th>Backend</th><th>Install</th><th>Tasks</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>OpenAI-compatible HTTP <em>(default)</em></td><td>base</td><td>Text to image, image to image; video when you configure the endpoints</td><td>Works with OpenAI (default model <code>gpt-image-1</code>) or any compatible <code>/v1</code> server, local or remote.</td></tr>
+          <tr><td>Diffusers</td><td><code>[diffusers]</code></td><td>Text to image, image to image</td><td>Hugging Face pipelines on CUDA, Apple MPS or CPU. On Windows/Linux, install a CUDA build of PyTorch first to use an NVIDIA GPU. Local Diffusers text-to-video is experimental and disabled.</td></tr>
+          <tr><td>stable-diffusion.cpp (GGUF)</td><td><code>[sdcpp]</code> or automatic</td><td>Text to image, image to image</td><td>Installs <code>sd-cli</code> on first use (or uses the Python bindings). Curated FLUX and Qwen GGUF bundles find their VAE and text encoder automatically.</td></tr>
+          <tr><td>MLX-Gen</td><td><code>[mlx-gen]</code></td><td>All five</td><td>Validated on Apple Silicon first; the extra also installs on Linux where upstream <code>mlx-gen</code> / <code>mlx</code> support exists.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="color:var(--text-muted);font-size:.85rem;margin-top:1rem;text-align:center">Platform profiles: <code>[apple]</code> / <code>[all-apple]</code> (Diffusers on MPS, stable-diffusion.cpp, MLX-Gen) and <code>[gpu]</code> / <code>[all-gpu]</code> (Diffusers, stable-diffusion.cpp in <code>all-gpu</code>, and MLX-Gen when the platform markers match). <code>multi_view_image</code> is in the API, but no backend implements it yet.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ MLX-GEN ═══════════════════ -->
+<section class="section" id="mlx-gen" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">MLX-Gen</div>
+      <h2 class="section-title">Local images and video on Apple Silicon</h2>
+      <p class="section-desc"><a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a> is a local image and video generation runtime for Apple Silicon and MLX, started as a fork of mflux. AbstractVision 0.3.30 uses <code>mlx-gen</code> 0.38.x. Prepared q4 and q8 models are published in the <a href="https://huggingface.co/collections/AbstractFramework/mlx-gen/" target="_blank" rel="noopener noreferrer">AbstractFramework/mlx-gen collection</a> on Hugging Face.</p>
     </div>
     <div class="components-grid reveal">
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          Text-to-Image
-        </h3>
-        <p>Generate images from text prompts across all four backends. Supports Stable Diffusion, FLUX.2, Qwen Image, ERNIE, FIBO, and OpenAI models with configurable steps, guidance scale, and resolution.</p>
+        <h3>Text to image</h3>
+        <p>FLUX.2 (klein and base), Qwen Image, Z-Image, ERNIE Image Turbo, FIBO and the Bonsai ternary model. Pick q4 for memory, q8 for quality, by choosing the exact model id.</p>
       </div>
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Image-to-Image
-        </h3>
-        <p>Edit and transform existing images. Supported across MLX-Gen (FLUX.2 klein/base, Qwen Image Edit, FIBO Edit), Diffusers, and OpenAI-compatible backends. Mask inputs supported where the runtime allows.</p>
+        <h3>Image to image</h3>
+        <p>FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO and FIBO Edit, with multi-reference edits on FLUX.2 and Qwen Image Edit, masked edits on Qwen 2511 and structured control on base Qwen Image.</p>
       </div>
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-          Text-to-Video
-        </h3>
-        <p>Local video generation via MLX-Gen Wan 2.2 TI2V on Apple Silicon. Remote video via OpenAI-compatible HTTP endpoints. Frame/step progress reporting in shell and Python callbacks.</p>
+        <h3>Video</h3>
+        <p>Wan 2.2 TI2V-5B, plus the Wan 2.2 A14B text-to-video and first-frame image-to-video packages. Run TI2V-5B at 832&times;480 or above; A14B sizes must be multiples of 16.</p>
       </div>
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M10 9l5 3-5 3V9z"/></svg>
-          Image-to-Video
-        </h3>
-        <p>Animate a first-frame image into video. MLX-Gen Wan 2.2 TI2V provides local first-frame to video generation. Remote endpoints available through the OpenAI-compatible backend.</p>
+        <h3>Upscaling</h3>
+        <p>SeedVR2 3B and 7B single-image upscaling (<code>abstractvision upscale</code>). Start with <code>seedvr2-3b-8bit</code>, move to 7B when memory allows.</p>
       </div>
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          MLX-Gen Backend
-        </h3>
-        <p>Apple Silicon-optimized q4/q8 quantized model presets. FLUX.2, Qwen Image, Z-Image, ERNIE, and FIBO families. Wan 2.2 TI2V for video. Published in the AbstractFramework HF collection.</p>
+        <h3>LoRA</h3>
+        <p>One <code>lora_adapters</code> request shape across images and video; each route reports whether it supports LoRA.</p>
       </div>
       <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9l2.83-2.83"/></svg>
-          Diffusers Backend
-        </h3>
-        <p>Full HuggingFace Diffusers pipeline support. Stable Diffusion 1.x/XL/3.x, FLUX.2, Qwen Image Edit, and more. Device auto-detection (CUDA, MPS, CPU) with configurable precision.</p>
-      </div>
-      <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-          sd.cpp Backend
-        </h3>
-        <p>GGUF diffusion models via <code>sd-cli</code> or python bindings. Auto-installs <code>sd-cli</code> on first use. Curated FLUX/Qwen GGUF bundles with automatic VAE/text-encoder companion resolution.</p>
-      </div>
-      <div class="comp-card">
-        <h3>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-          Artifact Refs
-        </h3>
-        <p>Generated outputs return lightweight JSON artifact refs (<code>{"$artifact": ...}</code>) that travel across processes. <code>LocalAssetStore</code> for direct storage, <code>RuntimeArtifactStoreAdapter</code> for AbstractRuntime integration.</p>
+        <h3>More in <code>mlxgen</code></h3>
+        <p>The standalone <code>mlxgen</code> command adds video-to-video, Wan2.1-VACE, MiniMax-H3 video with sound, Bernini-R and SwiftVR restoration. See the <a href="https://www.lpalbou.info/mlx-gen/" target="_blank" rel="noopener noreferrer">MLX-Gen documentation</a>.</p>
       </div>
     </div>
+    <div class="callout warn reveal" style="max-width:900px;margin:2rem auto 0">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <div><strong>Plan memory for video.</strong> Wan q8 packages save disk and download, not memory: they load at BF16. The TI2V-5B q8 package is 16.9 GiB on disk (BF16: 21.2 GiB). Memory needed to generate, including overhead: TI2V-5B about 63.5 GiB at its default 1280&times;704 and about 34.3 GiB at 832&times;480 (121 frames; measured peak 32.7 GiB); T2V-A14B about 75.2 GiB at its default 1280&times;720, 49.7 GiB at 832&times;480 and 43.9 GiB at 640&times;352 (81 frames). These come from runs on an M5 Max with 128 GB; the frame size sets the need, not the frame count or the number of steps. The console&rsquo;s <a href="console.html#recommended" style="color:var(--accent-light)">recommendations table</a> says which size fits your Mac.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ HARDWARE ═══════════════════ -->
+<section class="section" id="hardware">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Hardware</div>
+      <h2 class="section-title">Starting points for Diffusers</h2>
+      <p class="section-desc">Practical picks from the repository's VRAM guide. Needs vary with resolution, dtype and pipeline; some models are gated on Hugging Face and need <code>HF_TOKEN</code>.</p>
+    </div>
+    <div class="table-wrap reveal" style="max-width:900px;margin:0 auto">
+      <table class="data-table">
+        <thead><tr><th>GPU memory</th><th>Model</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>&le; 16 GB</td><td><code>runwayml/stable-diffusion-v1-5</code></td><td>Small, stable, widely compatible</td></tr>
+          <tr><td>24&ndash;32 GB</td><td><code>black-forest-labs/FLUX.2-klein-4B</code></td><td>Newer, not gated (needs Diffusers from source)</td></tr>
+          <tr><td>32 GB</td><td><code>stabilityai/stable-diffusion-3.5-large-turbo</code></td><td>High quality at low step counts (gated)</td></tr>
+          <tr><td>64 GB</td><td><code>Qwen/Qwen-Image-2512</code></td><td>Strong prompt following and text rendering</td></tr>
+          <tr><td>128 GB</td><td><code>black-forest-labs/FLUX.2-dev</code></td><td>Very high quality; non-commercial license, gated</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="color:var(--text-muted);font-size:.85rem;margin-top:1rem;text-align:center">On Apple Silicon, <code>AbstractFramework/flux.2-klein-4b-4bit</code> through MLX-Gen is usually the most practical first model.</p>
   </div>
 </section>
 
 <!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section class="section" id="getting-started">
+<section class="section" id="getting-started" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Getting Started</div>
-      <h2 class="section-title">Install &amp; First Image</h2>
-      <p class="section-desc">Get generating in minutes. The base install is lightweight; local inference runtimes are explicit extras.</p>
+      <div class="section-label">Getting started</div>
+      <h2 class="section-title">First image, first clip</h2>
+      <p class="section-desc">Requires Python 3.9 or later (MLX-Gen: 3.10 or later). Downloads are explicit: generation reads from the Hugging Face cache unless you enable runtime downloads.</p>
     </div>
 
     <div class="reveal" style="max-width:48rem;margin:0 auto">
-      <h3 style="margin-bottom:.75rem">Installation</h3>
+      <h3 style="margin-bottom:.75rem">Command line (MLX-Gen)</h3>
       <div class="code-block">
-<pre><code><span class="line-cmt"># Base install (OpenAI-compatible HTTP backend)</span>
-<span class="line-kw">pip install</span> <span class="line-str">abstractvision</span>
-
-<span class="line-cmt"># Apple Silicon local (MLX-Gen + Diffusers + sd.cpp)</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractvision[all-apple]"</span>
-
-<span class="line-cmt"># GPU local (Diffusers + sd.cpp)</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractvision[all-gpu]"</span>
-
-<span class="line-cmt"># Individual backends</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractvision[mlx-gen]"</span>   <span class="line-cmt"># Apple Silicon MLX-Gen</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractvision[diffusers]"</span>  <span class="line-cmt"># HuggingFace Diffusers</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractvision[sdcpp]"</span>      <span class="line-cmt"># stable-diffusion.cpp</span></code></pre>
-      </div>
-
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">Download Models</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Browse available presets</span>
+<pre><code><span class="line-cmt"># Already on PATH with the AbstractFramework installer (apple profile); otherwise:</span>
+<span class="line-kw">pip install</span> <span class="line-str">"abstractvision[models,mlx-gen]"</span>
 <span class="line-kw">abstractvision</span> <span class="line-str">catalog --provider mlx-gen</span>
-
-<span class="line-cmt"># Download curated MLX q4 presets</span>
 <span class="line-kw">abstractvision</span> <span class="line-str">download AbstractFramework/flux.2-klein-4b-4bit --provider mlx-gen</span>
-<span class="line-kw">abstractvision</span> <span class="line-str">download AbstractFramework/qwen-image-edit-2511-4bit --provider mlx-gen</span>
 
-<span class="line-cmt"># Download FIBO for image editing</span>
-<span class="line-kw">abstractvision</span> <span class="line-str">download briaai/Fibo-Edit --provider mlx-gen</span>
+<span class="line-cmt"># Text to image</span>
+<span class="line-kw">abstractvision</span> <span class="line-str">t2i --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-4bit \
+  "a product photo of a matte black espresso machine" --steps 4 --guidance-scale 1.0</span>
 
-<span class="line-cmt"># Download Wan 2.2 for video generation</span>
-<span class="line-kw">abstractvision</span> <span class="line-str">download Wan-AI/Wan2.2-TI2V-5B-Diffusers --provider mlx-gen</span></code></pre>
+<span class="line-cmt"># Upscale 2x with SeedVR2</span>
+<span class="line-kw">abstractvision</span> <span class="line-str">download AbstractFramework/seedvr2-3b-8bit --provider mlx-gen</span>
+<span class="line-kw">abstractvision</span> <span class="line-str">upscale --provider mlx-gen --model AbstractFramework/seedvr2-3b-8bit \
+  --image ./input.png --resolution 2x --softness 0.25 --open</span>
+
+<span class="line-cmt"># Text to video with Wan 2.2 A14B</span>
+<span class="line-kw">abstractvision</span> <span class="line-str">download AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit --provider mlx-gen</span>
+<span class="line-kw">abstractvision</span> <span class="line-str">t2v --provider mlx-gen --model AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit \
+  "a red fox walking through a snowy forest, cinematic" --width 480 --height 240 \
+  --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0</span>
+
+<span class="line-cmt"># Interactive CLI and the local web playground</span>
+<span class="line-kw">abstractvision</span> <span class="line-str">cli</span>
+<span class="line-kw">abstractvision</span> <span class="line-str">playground --port 8091</span></code></pre>
       </div>
+    </div>
 
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">Quick Start (Python)</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">VisionManager</span>, <span class="line-fn">LocalAssetStore</span>
-<span class="line-kw">from</span> abstractvision.backends <span class="line-kw">import</span> (
-    <span class="line-fn">OpenAICompatibleBackendConfig</span>,
-    <span class="line-fn">OpenAICompatibleVisionBackend</span>,
-)
+    <div class="code-tabs reveal" style="max-width:48rem;margin:2rem auto 0">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="vision-remote">Python: remote</button>
+        <button class="tab-btn" data-tab="vision-local">Python: MLX-Gen</button>
+        <button class="tab-btn" data-tab="vision-core">AbstractCore</button>
+      </div>
+      <div class="tab-panel active" id="tab-vision-remote">
+        <div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">LocalAssetStore</span>, <span class="line-fn">VisionManager</span>
+<span class="line-kw">from</span> abstractvision.backends <span class="line-kw">import</span> <span class="line-fn">OpenAICompatibleBackendConfig</span>, <span class="line-fn">OpenAICompatibleVisionBackend</span>
 
-<span class="line-cmt"># Configure backend</span>
 <span class="line-var">backend</span> = <span class="line-fn">OpenAICompatibleVisionBackend</span>(
-    config=<span class="line-fn">OpenAICompatibleBackendConfig</span>(
-        base_url=<span class="line-str">"http://localhost:1234/v1"</span>,
-    )
+    config=<span class="line-fn">OpenAICompatibleBackendConfig</span>(base_url=<span class="line-str">"http://localhost:1234/v1"</span>)
 )
-
-<span class="line-cmt"># Create manager with artifact storage</span>
 <span class="line-var">vm</span> = <span class="line-fn">VisionManager</span>(backend=<span class="line-var">backend</span>, store=<span class="line-fn">LocalAssetStore</span>())
 
-<span class="line-cmt"># Generate an image (returns artifact ref)</span>
-<span class="line-var">result</span> = <span class="line-var">vm</span>.<span class="line-fn">generate_image</span>(<span class="line-str">"a cinematic photo of a red fox in snow"</span>)
-<span class="line-fn">print</span>(<span class="line-var">result</span>)  <span class="line-cmt"># {"$artifact": "...", "content_type": "image/png"}</span></code></pre>
+<span class="line-var">ref</span> = <span class="line-var">vm</span>.<span class="line-fn">generate_image</span>(<span class="line-str">"a cinematic photo of a red fox in snow"</span>)
+<span class="line-fn">print</span>(<span class="line-var">ref</span>)   <span class="line-cmt"># {"$artifact": "...", "content_type": "...", ...}</span>
+<span class="line-var">png_bytes</span> = <span class="line-var">vm</span>.store.<span class="line-fn">load_bytes</span>(<span class="line-var">ref</span>[<span class="line-str">"$artifact"</span>])</code></pre>
+        </div>
       </div>
+      <div class="tab-panel" id="tab-vision-local">
+        <div class="code-block">
+<pre><code><span class="line-kw">from</span> pathlib <span class="line-kw">import</span> <span class="line-fn">Path</span>
+<span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">VisionManager</span>
+<span class="line-kw">from</span> abstractvision.backends <span class="line-kw">import</span> <span class="line-fn">MLXGenBackendConfig</span>, <span class="line-fn">MLXGenVisionBackend</span>
 
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">CLI Commands</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># One-shot text-to-image (stores result, prints artifact ref)</span>
-<span class="line-kw">abstractvision</span> <span class="line-str">t2i "a studio photo of an espresso machine" --open</span>
+<span class="line-cmt"># Download each model first with `abstractvision download ... --provider mlx-gen`</span>
+<span class="line-var">images</span> = <span class="line-fn">VisionManager</span>(backend=<span class="line-fn">MLXGenVisionBackend</span>(
+    config=<span class="line-fn">MLXGenBackendConfig</span>(model=<span class="line-str">"AbstractFramework/flux.2-klein-9b-8bit"</span>)))
+<span class="line-var">image</span> = <span class="line-var">images</span>.<span class="line-fn">generate_image</span>(<span class="line-str">"a studio photo of a red toy race car"</span>,
+                              width=<span class="line-str">768</span>, height=<span class="line-str">512</span>, steps=<span class="line-str">12</span>, guidance_scale=<span class="line-str">1.0</span>)
 
-<span class="line-cmt"># One-shot image-to-image edit</span>
-<span class="line-kw">abstractvision</span> <span class="line-str">i2i --image ./input.png "make it watercolor" --open</span>
+<span class="line-cmt"># Edits and image-to-video take the source image as bytes</span>
+<span class="line-var">edit</span> = <span class="line-var">images</span>.<span class="line-fn">edit_image</span>(<span class="line-str">"turn it into a watercolor"</span>,
+                          image=<span class="line-fn">Path</span>(<span class="line-str">"subject.png"</span>).<span class="line-fn">read_bytes</span>())
 
-<span class="line-cmt"># Local MLX-Gen text-to-video</span>
-<span class="line-kw">abstractvision</span> <span class="line-str">t2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers \
-  "a red fox walking through snow" --frames 121 --fps 24 --steps 50 --open</span>
+<span class="line-var">video</span> = <span class="line-fn">VisionManager</span>(backend=<span class="line-fn">MLXGenVisionBackend</span>(
+    config=<span class="line-fn">MLXGenBackendConfig</span>(model=<span class="line-str">"AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit"</span>)))
+<span class="line-var">clip</span> = <span class="line-var">video</span>.<span class="line-fn">image_to_video</span>(
+    <span class="line-fn">Path</span>(<span class="line-str">"first-frame.png"</span>).<span class="line-fn">read_bytes</span>(),
+    prompt=<span class="line-str">"slow camera push-in"</span>,
+    width=<span class="line-str">432</span>, height=<span class="line-str">240</span>, num_frames=<span class="line-str">41</span>, fps=<span class="line-str">10</span>, steps=<span class="line-str">20</span>,
+    guidance_scale=<span class="line-str">3.5</span>, guidance_2=<span class="line-str">3.5</span>,
+)
+<span class="line-fn">Path</span>(<span class="line-str">"clip.mp4"</span>).<span class="line-fn">write_bytes</span>(<span class="line-var">clip</span>.data)   <span class="line-cmt"># no store: a GeneratedAsset</span></code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-vision-core">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># pip install abstractcore abstractvision  (the plugin is discovered automatically)</span>
+<span class="line-cmt"># Defaults to OpenAI images with OPENAI_API_KEY; set OPENAI_BASE_URL for a compatible server,</span>
+<span class="line-cmt"># or ABSTRACTVISION_BACKEND=mlx-gen | diffusers | sdcpp to run locally.</span>
+<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
-<span class="line-cmt"># Interactive CLI/REPL</span>
-<span class="line-kw">abstractvision</span> <span class="line-str">cli</span>
-
-<span class="line-cmt"># Local web playground</span>
-<span class="line-kw">abstractvision</span> <span class="line-str">playground --port 8091</span></code></pre>
+<span class="line-var">llm</span> = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+<span class="line-var">png_bytes</span> = <span class="line-var">llm</span>.vision.<span class="line-fn">t2i</span>(<span class="line-str">"a red square"</span>, width=<span class="line-str">512</span>, height=<span class="line-str">512</span>, steps=<span class="line-str">20</span>)
+<span class="line-var">models</span> = <span class="line-var">llm</span>.vision.<span class="line-fn">list_provider_models</span>(task=<span class="line-str">"text_to_image"</span>)</code></pre>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ API ═══════════════════ -->
-<section class="section" id="api">
+<!-- ═══════════════════ NEXT ═══════════════════ -->
+<section class="section">
   <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">API Reference</div>
-      <h2 class="section-title">Key Classes &amp; Methods</h2>
-      <p class="section-desc">The public API surface is built around <code>VisionManager</code> for direct usage, the capability registry for model discovery, and the AbstractCore plugin for ecosystem integration.</p>
-    </div>
-
-    <div class="reveal" style="max-width:48rem;margin:0 auto">
-
-      <h3 style="margin-bottom:.75rem">VisionManager &mdash; Orchestrator</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">VisionManager</span>, <span class="line-fn">LocalAssetStore</span>
-
-<span class="line-var">vm</span> = <span class="line-fn">VisionManager</span>(backend=<span class="line-var">backend</span>, store=<span class="line-fn">LocalAssetStore</span>())
-
-<span class="line-cmt"># Text-to-Image</span>
-<span class="line-var">result</span> = <span class="line-var">vm</span>.<span class="line-fn">generate_image</span>(<span class="line-str">"a watercolor lighthouse"</span>)
-
-<span class="line-cmt"># Image-to-Image</span>
-<span class="line-var">edit</span> = <span class="line-var">vm</span>.<span class="line-fn">edit_image</span>(<span class="line-str">"make it sunset"</span>, image=<span class="line-str">"photo.png"</span>)
-
-<span class="line-cmt"># Text-to-Video</span>
-<span class="line-var">video</span> = <span class="line-var">vm</span>.<span class="line-fn">generate_video</span>(<span class="line-str">"a fox in the snow"</span>)
-
-<span class="line-cmt"># Image-to-Video</span>
-<span class="line-var">clip</span> = <span class="line-var">vm</span>.<span class="line-fn">image_to_video</span>(<span class="line-str">"slow push-in"</span>, image=<span class="line-str">"frame.png"</span>)</code></pre>
-      </div>
-
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">Capability Registry</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">VisionModelCapabilitiesRegistry</span>
-
-<span class="line-var">reg</span> = <span class="line-fn">VisionModelCapabilitiesRegistry</span>()
-
-<span class="line-cmt"># Query model capabilities</span>
-<span class="line-var">reg</span>.<span class="line-fn">supports</span>(<span class="line-str">"runwayml/stable-diffusion-v1-5"</span>, <span class="line-str">"text_to_image"</span>)  <span class="line-cmt"># True</span>
-<span class="line-var">reg</span>.<span class="line-fn">supports</span>(<span class="line-str">"Qwen/Qwen-Image-Edit-2511"</span>, <span class="line-str">"image_to_image"</span>)  <span class="line-cmt"># True</span>
-
-<span class="line-cmt"># List tasks and models</span>
-<span class="line-var">reg</span>.<span class="line-fn">list_tasks</span>()
-<span class="line-var">reg</span>.<span class="line-fn">models_for_task</span>(<span class="line-str">"text_to_image"</span>)
-<span class="line-var">reg</span>.<span class="line-fn">models_for_task</span>(<span class="line-str">"image_to_image"</span>)</code></pre>
-      </div>
-
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">AbstractCore Plugin Integration</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
-
-<span class="line-var">llm</span> = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>)
-
-<span class="line-cmt"># Generate via capability plugin</span>
-<span class="line-var">img</span> = <span class="line-var">llm</span>.vision.<span class="line-fn">t2i</span>(<span class="line-str">"a studio product photo"</span>)
-
-<span class="line-cmt"># Provider catalog discovery</span>
-<span class="line-var">models</span> = <span class="line-var">llm</span>.vision.<span class="line-fn">list_provider_models</span>(provider=<span class="line-str">"openai"</span>)
-
-<span class="line-cmt"># Tool integration for agent workflows</span>
-<span class="line-kw">from</span> abstractvision.integrations.abstractcore <span class="line-kw">import</span> <span class="line-fn">make_vision_tools</span>
-<span class="line-var">tools</span> = <span class="line-fn">make_vision_tools</span>(vision_manager=<span class="line-var">vm</span>)</code></pre>
-      </div>
-
-      <h3 style="margin-top:2rem;margin-bottom:.75rem">Backend Support Matrix</h3>
-      <div class="components-grid" style="margin-top:1rem">
-        <div class="comp-card">
-          <h3>OpenAI-Compatible</h3>
-          <p>Default backend. Remote HTTP via <code>/v1/images/generations</code>. Works with OpenAI, local servers, and any compatible endpoint. Supports T2I, I2I, and optional T2V/I2V.</p>
-        </div>
-        <div class="comp-card">
-          <h3>MLX-Gen</h3>
-          <p>Apple Silicon q4/q8 optimized presets. FLUX.2, Qwen, Z-Image, ERNIE, FIBO families for images. Wan 2.2 TI2V for video. Cache-only defaults; downloads are explicit.</p>
-        </div>
-        <div class="comp-card">
-          <h3>Diffusers</h3>
-          <p>Full HuggingFace pipeline support. SD 1.x/XL/3.x, FLUX.2, Qwen Image Edit, ERNIE Image. Auto device selection (CUDA, MPS, CPU). Configurable precision and steps.</p>
-        </div>
-        <div class="comp-card">
-          <h3>sd.cpp (GGUF)</h3>
-          <p>GGUF diffusion via <code>sd-cli</code> or python bindings. Auto-installs binary on first use. Curated FLUX/Qwen GGUF bundles with companion resolution. Metal and CUDA acceleration.</p>
-        </div>
-      </div>
+    <div class="section-header reveal"><div class="section-label">Where to next</div><h2 class="section-title">Keep going</h2></div>
+    <div class="next-links reveal">
+      <a class="next-link" href="start-creator.html"><strong>Start as a creator</strong><span>Images, video, music and voice in your first hour.</span></a>
+      <a class="next-link" href="install.html"><strong>Install AbstractFramework</strong><span>One line on macOS, Linux and Windows.</span></a>
+      <a class="next-link" href="flow.html"><strong>AbstractFlow</strong><span>Chain generation steps in a visual workflow.</span></a>
+      <a class="next-link" href="core.html"><strong>AbstractCore</strong><span>The host of the <code>llm.vision</code> capability.</span></a>
+      <a class="next-link" href="music.html"><strong>AbstractMusic</strong><span>Text-to-music with the same plugin model.</span></a>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ FOOTER ═══════════════════ -->
+</main>
+
 <footer class="footer">
   <div class="footer-grid">
     <div class="footer-brand">
       <a href="./" class="nav-brand" style="margin-bottom:.5rem">
-        <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
         AbstractFramework
       </a>
-      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; Made with care for the AI community</p>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
     </div>
     <div class="footer-col">
-      <h4>Foundation</h4>
-      <a href="https://github.com/lpalbou/abstractcore" target="_blank" rel="noopener noreferrer">AbstractCore</a>
-      <a href="https://github.com/lpalbou/abstractruntime" target="_blank" rel="noopener noreferrer">AbstractRuntime</a>
-      <a href="https://github.com/lpalbou/abstractagent" target="_blank" rel="noopener noreferrer">AbstractAgent</a>
-      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">AbstractFlow</a>
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
     </div>
     <div class="footer-col">
-      <h4>Modalities</h4>
-      <a href="abstractvoice.html">AbstractVoice</a>
-      <a href="abstractvision.html">AbstractVision</a>
-      <a href="abstractmusic.html">AbstractMusic</a>
-      <a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a>
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
     </div>
     <div class="footer-col">
-      <h4>Applications</h4>
-      <a href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">AbstractGateway</a>
-      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">AbstractCode</a>
-      <a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">AbstractObserver</a>
-      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">AbstractAssistant</a>
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
     </div>
   </div>
   <div class="footer-bottom">
-    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
-    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
-    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=4"></script>
 </body>
 </html>

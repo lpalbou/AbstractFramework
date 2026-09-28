@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractObserver — Documentation | AbstractFramework</title>
+  <title>AbstractObserver — watch, launch and automate runs | AbstractFramework</title>
+  <meta name="description" content="AbstractObserver is the browser app for AbstractGateway runs: replay and stream run ledgers, launch workflows, and create, edit, pause and discuss automations. Served by the gateway at /apps/observer/.">
+  <link rel="canonical" href="https://abstractframework.ai/observer.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractObserver — watch, launch and automate runs">
+  <meta property="og:description" content="Replay and stream run ledgers, launch workflows and manage automations from your browser, through your AbstractGateway.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -11,35 +19,47 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
 </head>
 <body>
-  <nav class="nav">
-    <a href="./" class="nav-brand">
-    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
-      AbstractFramework
-    </a>
-    <ul class="nav-links">
-      <li><a href="./">Home</a></li>
-      <li><a href="#overview">Overview</a></li>
-      <li><a href="#screenshots">Screenshots</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#getting-started">Get Started</a></li>
-      <li><a href="#api">API</a></li>
-      <li><a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
-    </ul>
-  </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html" aria-current="page">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
 
-<div class="pkg-nav">
+<div class="pkg-nav" aria-label="Packages and apps">
   <div class="pkg-nav-inner">
     <a href="core.html" class="pkg-nav-link">Core</a>
     <a href="runtime.html" class="pkg-nav-link">Runtime</a>
     <a href="agent.html" class="pkg-nav-link">Agent</a>
     <a href="flow.html" class="pkg-nav-link">Flow</a>
     <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
     <a href="code.html" class="pkg-nav-link">Code</a>
-    <a href="observer.html" class="pkg-nav-link active">Observer</a>
+    <a href="observer.html" class="pkg-nav-link active" aria-current="page">Observer</a>
     <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
     <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
@@ -47,267 +67,304 @@
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
   </div>
 </div>
+<main id="main">
 
-<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" style="min-height:auto;padding:8rem 0 4rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> APPLICATION</div>
+    <div class="hero-badge"><span class="dot"></span> Application &middot; Observability <span class="ver green">v0.2.1</span></div>
     <h1>Abstract<span class="gradient">Observer</span></h1>
-    <p class="hero-sub">Gateway-only observability UI for AbstractFramework. A web-based monitoring dashboard that connects to AbstractGateway to discover workflows, launch and schedule runs, replay and stream durable ledgers, and control execution in real time.</p>
+    <p class="hero-sub">AbstractObserver is the browser app (also installable as a progressive web app) for the runs of your <a href="gateway.html">AbstractGateway</a>. You discover the gateway's workflows, launch runs or turn them into <a href="automations.html">automations</a>, follow each run by replaying and streaming its durable <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#ledger" target="_blank" rel="noopener noreferrer">ledger</a> (the record of every step), answer runs that wait for you, and control them with durable commands. The Observer executes nothing itself: every action is a gateway request. The gateway's <a href="console.html">console</a> installs and opens it from its <strong>Apps</strong> page (<a href="install.html">Install</a>).</p>
     <div class="hero-actions">
-      <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started
+      <a href="#run" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get started
       </a>
+      <a href="https://github.com/lpalbou/AbstractObserver" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
       <a href="https://www.npmjs.com/package/@abstractframework/observer" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">npm</a>
-      <a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
-      <a href="https://github.com/lpalbou/abstractobserver/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
-      <a href="https://github.com/lpalbou/abstractobserver/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+      <a href="https://github.com/lpalbou/AbstractObserver/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractObserver/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
     <div class="hero-code">
-<pre><code><span class="line-kw">npx</span> --yes --package @abstractframework/observer -- <span class="line-fn">abstractobserver</span>
+<pre><code><span class="line-cmt"># Gateway console: Apps &gt; Observer &gt; Open</span>
+<span class="line-cmt"># (served at /apps/observer/, already signed in)</span>
 
-<span class="line-cmt"># Open http://localhost:3001</span>
-<span class="line-cmt"># Configure Gateway URL in Settings</span></code></pre>
+<span class="line-cmt"># Or on its own: http://localhost:3001</span>
+npx @abstractframework/observer \
+  --gateway-url http://127.0.0.1:8080</code></pre>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ OVERVIEW ═══════════════════ -->
-<section class="section" id="overview">
+<section id="overview" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
-      <h2 class="section-title">Gateway-Only Observability</h2>
-      <p class="section-desc">AbstractObserver is a browser SPA and tiny Node.js CLI that connects to an AbstractGateway HTTP API. It does not execute workflows &mdash; it renders state by fetching and streaming a durable run ledger from the gateway.</p>
+      <h2 class="section-title">See every run, act on it</h2>
+      <p class="section-desc">The Observer is a browser app plus a small Node server that serves it and signs in to the gateway for it. It renders state from the gateway's durable ledger.</p>
     </div>
     <div class="components-grid reveal">
       <div class="comp-card">
-        <h3>UI-Only Architecture</h3>
-        <p>The browser talks to the gateway via HTTP fetch and SSE streaming. The CLI serves built static assets from <code>dist/</code> with SPA fallback. No proxy, no execution engine &mdash; pure observation.</p>
+        <h3>Replay first, then live</h3>
+        <p>The Observer pages through a run's ledger history, then opens a server-sent events stream for new records, so you see the whole run even when you arrive mid-way.</p>
       </div>
       <div class="comp-card">
-        <h3>Replay-First Design</h3>
-        <p>The UI pages through ledger history first, then opens an SSE stream to append new records. This ensures you see the full run history even when connecting mid-execution.</p>
+        <h3>Durable commands</h3>
+        <p>Pause, resume and cancel go to the gateway as durable commands. Questions, tool approvals and events a run waits for are answered in place.</p>
       </div>
       <div class="comp-card">
-        <h3>Durable Commands</h3>
-        <p>Submit durable commands (pause, resume, cancel) back to the gateway. Commands are persistent and survive network interruptions &mdash; the gateway ensures delivery.</p>
+        <h3>One sign-in dialog</h3>
+        <p>Sign-in is the shared AbstractFramework connection dialog (the same one <a href="flow.html">AbstractFlow</a> and the gateway console use): the gateway URL, a gateway user id and that user's token, exchanged for a gateway session. The token is not kept in the browser.</p>
       </div>
       <div class="comp-card">
-        <h3>Ecosystem Integration</h3>
-        <p>Part of the AbstractFramework ecosystem. Connects to AbstractGateway, which is backed by AbstractRuntime (durable runs + ledger) and AbstractCore (LLM + tools).</p>
+        <h3>Served by the gateway</h3>
+        <p>The gateway starts the Observer on <code>127.0.0.1</code> and serves it at <code>/apps/observer/</code> on its own address: one port for the console, the API and the apps, also on a remote server.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ PAGES ═══════════════════ -->
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Pages</div>
+      <h2 class="section-title">Board, Observe, Launch, Automations</h2>
+      <p class="section-desc">All pages share the same gateway connection.</p>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <h3>Board</h3>
+        <p>The landing page: kanban columns Pending, Working, Review and Done across every run. Cards move by state, the Review column has inline Approve, Deny and Answer, and an entities strip links to the <a href="entity.html">entity app</a>.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Observe</h3>
+        <p>A workflow and subworkflow navigator, overview, human timeline, raw ledger, provider calls, graph, digest and attachments, and <strong>Ask</strong> about the run, with optional voice (push-to-talk and text-to-speech through the gateway).</p>
+      </div>
+      <div class="comp-card">
+        <h3>Launch</h3>
+        <p><strong>Run once</strong>, or <strong>Automate</strong>: what to run, when (UTC intervals, or once at a time), independent or growing context, and tool approval. Workflow bundle upload and reload live here too.</p>
+      </div>
+      <div class="comp-card">
+        <h3>System</h3>
+        <p>Activity, Artifacts, Memory and Logs: runtime state across runs, an artifact explorer with inline media previews, knowledge-graph queries and the gateway's audit tail.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Docs assistant</h3>
+        <p><strong>Assistant</strong> in the top bar answers questions about the Observer itself from its documentation, one gateway session per conversation, with no tools.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Settings and About</h3>
+        <p>Connection status, theme and display preferences, and the versions of the Observer and of the connected gateway.</p>
+      </div>
+    </div>
+    <div class="callout reveal" style="margin-top:2rem">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>Backlog, Inbox and Processes live in <a href="continuum.html">AbstractContinuum</a>: the Observer observes and discusses runs; Continuum develops and deploys.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ AUTOMATIONS ═══════════════════ -->
+<section id="automations" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Automations</div>
+      <h2 class="section-title">Workflows that run for you</h2>
+      <p class="section-desc">"Search the AI news every 8 hours", "check the machine every 7 days". Create one with <strong>Launch &rarr; Automate</strong> (or <strong>+ New automation</strong>), then watch and change it on the <strong>Automations</strong> page. The gateway runs it and keeps every run. See <a href="automations.html">Automations</a>.</p>
+    </div>
+
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Control</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Pause</strong> / <strong>Resume</strong></td><td>Pause stops scheduled runs until you resume; a run in progress finishes, and Run now still works. Resume restarts the schedule at its next time after now; times missed while paused are skipped.</td></tr>
+          <tr><td><strong>Run now</strong></td><td>Runs it once now instead of waiting for the schedule. The next scheduled run keeps its time (or starts right after this run if its time comes first), the run does not count toward a run limit, and it works while paused (the automation stays paused). Not available while a run is in progress.</td></tr>
+          <tr><td><strong>Stop current</strong></td><td>Cancels the run in progress, or its pending retry. It ends as cancelled, with no failure notice, and the schedule continues.</td></tr>
+          <tr><td><strong>Edit</strong></td><td>Opens the Edit form, prefilled: title, task, interval, context and tools. Save applies from the next run.</td></tr>
+          <tr><td><strong>Discuss</strong></td><td>Opens a chat with a fork of the automation at a finished run: its history in context, its own workspace, the automation's files read-only.</td></tr>
+          <tr><td><strong>Archive</strong></td><td>Stops the automation for good, after a confirmation. A run in progress finishes, and the history stays readable.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="components-grid reveal" style="margin-top:2rem">
+      <div class="comp-card">
+        <h3>Independent or growing</h3>
+        <p><em>Independent</em> (the default): each run starts fresh. <em>Growing</em>: each run is a new turn of one conversation and sees the previous runs, bounded to the most recent 50,000 tokens of whole turns.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Runs as a conversation</h3>
+        <p>Each run shows as a chat pair: what triggered it and the instruction it received, then its answer, notification, failure or files. Runs stay quiet unless they need you, and a <strong>Needs attention</strong> section lists what you have not seen.</p>
+      </div>
+      <div class="comp-card">
+        <h3>Its files, from any browser</h3>
+        <p>The folder button next to <strong>Workspace</strong> browses the automation's folder on the gateway host, and opens or downloads each file through the gateway. A discussion has <strong>Its files</strong> and <strong>Automation files</strong>.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ SCREENSHOTS ═══════════════════ -->
-<section class="section" id="screenshots" style="background:var(--bg-surface)">
+<section id="screenshots">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">In Action</div>
-      <h2 class="section-title">AbstractObserver Screenshots</h2>
-      <p class="section-desc">Web-based observability dashboard for monitoring every AI operation across the gateway.</p>
+      <div class="section-label">Screenshots</div>
+      <h2 class="section-title">The Automations page</h2>
+      <p class="section-desc">AbstractObserver with demo automations: the list with each automation's interval, state and last result, an opened automation with its runs, and the Edit form.</p>
     </div>
-    <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem">
-      <div>
-        <img src="assets/img/abstractobserver-ledger.png" alt="AbstractObserver ledger" loading="lazy" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-        <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.75rem">Ledger view &mdash; every AI operation logged and browsable</p>
-      </div>
-      <div>
-        <img src="assets/img/abstractobserver-schedule.png" alt="AbstractObserver scheduling" loading="lazy" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-        <p style="color:var(--text-secondary);font-size:.82rem;margin-top:.75rem">Task scheduling &mdash; cron-like agentic task automation</p>
-      </div>
+    <div class="showcase-grid reveal" style="align-items:start">
+      <figure class="figure">
+        <img src="assets/img/shots/observer-automations.webp" alt="The Observer's Automations page: four demo automations on the left, and Inbox triage opened on the right with its interval, growing context, workspace folder, controls, attention items and runs shown as a conversation" loading="lazy" width="1440" height="900">
+        <figcaption>An automation opened: definition, controls, what needs you, and its runs.</figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/img/shots/observer-edit.webp" alt="The Observer's Edit automation form, prefilled with the title, task, a 30-minute interval, growing context and tool approval" loading="lazy" width="1440" height="900">
+        <figcaption>Edit opens the form prefilled: title, task, interval, context and tools.</figcaption>
+      </figure>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ FEATURES ═══════════════════ -->
-<section class="section" id="features">
+<!-- ═══════════════════ RUN ═══════════════════ -->
+<section id="run" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Features</div>
-      <h2 class="section-title">Observe, Launch, Control</h2>
-      <p class="section-desc">A complete monitoring dashboard for your AbstractGateway workflows with real-time observability across every stage of execution.</p>
+      <div class="section-label">Getting started</div>
+      <h2 class="section-title">Open the Observer</h2>
+      <p class="section-desc">You need a running AbstractGateway (<code>abstractgateway serve</code>, or the <a href="install.html">installer</a>). Running it on its own needs Node.js 18 or newer.</p>
     </div>
-    <div class="components-grid reveal">
-      <div class="comp-card">
-        <h3>Ledger Viewer</h3>
-        <p>Inspect the durable, append-only ledger of step records for any run. Replay history via paged HTTP, then stream new steps live via SSE for real-time monitoring.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Flow Graph</h3>
-        <p>Visualize workflow structure with an interactive flow graph rendered from bundle and workflow flow data. See the execution path and node connections at a glance.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Run Launcher</h3>
-        <p>Start runs on-demand or schedule them with cron-style recurrence. Select workflows from discovered gateway bundles, configure inputs, and launch with a single click.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Digest &amp; Stats</h3>
-        <p>Derived statistics and summary views per run, including per-subflow breakdowns. Generate and regenerate summaries with an outdated indicator when data changes.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Voice Chat</h3>
-        <p>Built-in run-scoped chat with optional voice: push-to-talk recording with gateway transcription and text-to-speech audio playback for hands-free interaction.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Knowledge Mindmap</h3>
-        <p>Query and visualize the knowledge graph with an interactive node layout. Adjust algorithm, spread, and force simulation for optimal graph exploration.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Process Manager</h3>
-        <p>High-trust process controls for start, stop, restart, and redeploy operations. Tail logs in real time and manage environment variables on managed services.</p>
-      </div>
-      <div class="comp-card">
-        <h3>PWA Support</h3>
-        <p>Installable as a Progressive Web App with service worker caching for faster reloads. Run data still streams from the gateway &mdash; the shell is cached locally.</p>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section class="section" id="getting-started">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">Getting Started</div>
-      <h2 class="section-title">Up and Running in Minutes</h2>
-      <p class="section-desc">AbstractObserver requires Node.js &ge;18 and a running AbstractGateway instance.</p>
-    </div>
-    <div class="reveal">
-      <h3 style="color:var(--text);margin-bottom:1rem">Install &amp; Run</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Run with npx (no install needed)</span>
-<span class="line-kw">npx</span> --yes --package @abstractframework/observer -- <span class="line-fn">abstractobserver</span>
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="through-gateway">Through the gateway</button>
+        <button class="tab-btn" data-tab="standalone">On its own</button>
+      </div>
+      <div class="tab-panel active" id="tab-through-gateway">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Gateway console: Apps &gt; Observer &gt; Install, then Open</span>
+<span class="line-cmt"># or from a terminal:</span>
+abstractgateway apps install observer --launch
+abstractgateway apps open observer     <span class="line-cmt"># a one-time signed-in link</span>
 
-<span class="line-cmt"># Or install globally</span>
+<span class="line-cmt"># The Observer is at &lt;gateway address&gt;/apps/observer/</span></code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-standalone">
+        <div class="code-block">
+<pre><code>npx @abstractframework/observer --gateway-url http://127.0.0.1:8080
+
+<span class="line-cmt"># or install the command</span>
 <span class="line-kw">npm install</span> -g @abstractframework/observer
-<span class="line-fn">abstractobserver</span>
+abstractobserver --gateway-url http://127.0.0.1:8080
 
-<span class="line-cmt"># Custom port and host</span>
-<span class="line-var">PORT</span>=8080 <span class="line-var">HOST</span>=127.0.0.1 <span class="line-fn">abstractobserver</span></code></pre>
-      </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">Connect to Gateway</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1rem">Open <code>http://localhost:3001</code>, go to <strong>Settings &rarr; Gateway</strong> and configure:</p>
-      <div class="components-grid" style="grid-template-columns:1fr 1fr">
-        <div class="comp-card">
-          <h3>Gateway URL</h3>
-          <p>Set to your gateway base URL (e.g. <code>http://localhost:8081</code>). Leave blank only for same-origin deployments behind a reverse proxy.</p>
+<span class="line-cmt"># open http://localhost:3001 and sign in with a gateway user id and token</span></code></pre>
         </div>
-        <div class="comp-card">
-          <h3>Auth Token</h3>
-          <p>Optional bearer token sent as <code>Authorization: Bearer &lt;token&gt;</code> to authenticate with the gateway.</p>
-        </div>
-      </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">Development from Source</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">git clone</span> https://github.com/lpalbou/abstractobserver
-<span class="line-kw">cd</span> abstractobserver
-<span class="line-kw">npm install</span>
-<span class="line-kw">npm run</span> dev     <span class="line-cmt"># Vite dev server on port 3001</span>
-<span class="line-kw">npm</span> test       <span class="line-cmt"># Run unit tests (Vitest)</span>
-<span class="line-kw">npm run</span> build   <span class="line-cmt"># Production build to dist/</span></code></pre>
       </div>
     </div>
+
+    <div class="table-wrap reveal" style="margin-top:2rem">
+      <table class="data-table">
+        <thead><tr><th>Flag</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>--gateway-url &lt;url&gt;</code></td><td>The gateway this server signs in to and proxies <code>/api</code> to (aliases <code>--gateway</code>, <code>--url</code>). Default: the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>, followed when it moves port), else <code>http://127.0.0.1:8080</code>.</td></tr>
+          <tr><td><code>--port &lt;n&gt;</code></td><td>The port to listen on (default <code>3001</code>).</td></tr>
+          <tr><td><code>--host &lt;addr&gt;</code></td><td>The address to listen on (default <code>127.0.0.1</code>). Pass <code>0.0.0.0</code> only to reach it directly from other machines, or open it through the gateway.</td></tr>
+          <tr><td><code>--monitor-gpu</code></td><td>Shows the optional GPU widget.</td></tr>
+          <tr><td><code>--entity-app-url &lt;url&gt;</code></td><td>Where the entity app lives, for the "Entities" links (default <code>http://127.0.0.1:3007</code>).</td></tr>
+          <tr><td><code>--gateway-dir &lt;dir&gt;</code></td><td>The base for relative run workspace paths.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px">Pin a version for deployments with <code>npx --yes --package @abstractframework/observer@0.2.1 -- abstractobserver</code>. <code>abstractobserver --help</code> lists the flags. The <code>PORT</code>, <code>HOST</code> and <code>ABSTRACTOBSERVER_*</code> environment variables are also read; a flag takes precedence over them.</p>
   </div>
 </section>
 
-<!-- ═══════════════════ API ═══════════════════ -->
-<section class="section" id="api">
+<!-- ═══════════════════ NEXT ═══════════════════ -->
+<section id="next">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">API Reference</div>
-      <h2 class="section-title">Gateway Endpoints</h2>
-      <p class="section-desc">AbstractObserver calls these AbstractGateway HTTP endpoints. The source of truth for paths and request shapes is <code>src/lib/gateway_client.ts</code>.</p>
+      <div class="section-label">Where to next</div>
+      <h2 class="section-title">Keep going</h2>
     </div>
-
-    <div class="reveal">
-      <h3 style="color:var(--text);margin-bottom:1rem">Core Endpoints (Observe + Launch)</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Workflow discovery</span>
-<span class="line-kw">GET</span>  <span class="line-str">/api/gateway/bundles</span>
-<span class="line-kw">GET</span>  <span class="line-str">/api/gateway/bundles/{bundle_id}</span>
-<span class="line-kw">GET</span>  <span class="line-str">/api/gateway/bundles/{bundle_id}/flows/{flow_id}</span>
-
-<span class="line-cmt"># Run management</span>
-<span class="line-kw">GET</span>  <span class="line-str">/api/gateway/runs</span>
-<span class="line-kw">GET</span>  <span class="line-str">/api/gateway/runs/{run_id}</span>
-<span class="line-kw">POST</span> <span class="line-str">/api/gateway/runs/start</span>
-<span class="line-kw">POST</span> <span class="line-str">/api/gateway/runs/schedule</span>
-
-<span class="line-cmt"># Ledger (durable source of truth)</span>
-<span class="line-kw">GET</span>  <span class="line-str">/api/gateway/runs/{run_id}/ledger</span>         <span class="line-cmt"># paged replay</span>
-<span class="line-kw">GET</span>  <span class="line-str">/api/gateway/runs/{run_id}/ledger/stream</span>  <span class="line-cmt"># SSE stream</span>
-
-<span class="line-cmt"># Run control (durable commands)</span>
-<span class="line-kw">POST</span> <span class="line-str">/api/gateway/commands</span>  <span class="line-cmt"># pause, resume, cancel</span></code></pre>
-      </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">CLI Configuration</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Environment variables</span>
-<span class="line-var">PORT</span>                              <span class="line-cmt"># HTTP port (default: 3001)</span>
-<span class="line-var">HOST</span>                              <span class="line-cmt"># Bind address (default: 0.0.0.0)</span>
-<span class="line-var">ABSTRACTOBSERVER_MONITOR_GPU</span>      <span class="line-cmt"># Enable GPU widget (on/off)</span>
-<span class="line-var">ABSTRACTOBSERVER_ENABLE_BACKLOG</span>   <span class="line-cmt"># Enable Backlog + Process Manager</span>
-
-<span class="line-cmt"># CLI flag</span>
-<span class="line-fn">abstractobserver</span> --monitor-gpu</code></pre>
-      </div>
+    <div class="next-links reveal">
+      <a class="next-link" href="start-automation.html"><strong>Start with automations</strong><span>Your first scheduled workflow, step by step.</span></a>
+      <a class="next-link" href="automations.html"><strong>Automations</strong><span>How automations work in every client.</span></a>
+      <a class="next-link" href="gateway.html"><strong>AbstractGateway</strong><span>The control plane the Observer talks to.</span></a>
+      <a class="next-link" href="continuum.html"><strong>AbstractContinuum</strong><span>Board, backlog, inbox and services for development work.</span></a>
+      <a class="next-link" href="install.html"><strong>Install</strong><span>The gateway, its console and the apps in one step.</span></a>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ FOOTER ═══════════════════ -->
+</main>
+
 <footer class="footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-brand">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#fg)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
-          AbstractObserver
-        </div>
-        <p style="color:var(--text-muted);max-width:280px;font-size:var(--text-sm)">Gateway-only observability UI for AbstractFramework runs. MIT Licensed.</p>
-      </div>
-      <div>
-        <h4>Documentation</h4>
-        <ul>
-          <li><a href="#overview">Overview</a></li>
-          <li><a href="#features">Features</a></li>
-          <li><a href="#getting-started">Getting Started</a></li>
-          <li><a href="#api">API Reference</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Ecosystem</h4>
-        <ul>
-          <li><a href="./">AbstractFramework</a></li>
-          <li><a href="abstractcore.html">AbstractCore</a></li>
-          <li><a href="abstractgateway.html">AbstractGateway</a></li>
-          <li><a href="abstractruntime.html">AbstractRuntime</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Resources</h4>
-        <ul>
-          <li><a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          <li><a href="https://www.npmjs.com/package/@abstractframework/observer" target="_blank" rel="noopener noreferrer">npm</a></li>
-          <li><a href="https://github.com/lpalbou/abstractobserver/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a></li>
-          <li><a href="https://github.com/lpalbou/abstractobserver/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
-        </ul>
-      </div>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
     </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Laurent-Philippe Albou. MIT License.</p>
+    <div class="footer-col">
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
     </div>
+    <div class="footer-col">
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=4"></script>
 </body>
 </html>

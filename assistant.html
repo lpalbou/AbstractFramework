@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractAssistant — Documentation | AbstractFramework</title>
+  <title>AbstractAssistant — the macOS menu-bar app for your gateway | AbstractFramework</title>
+  <meta name="description" content="AbstractAssistant is the gateway-native macOS menu-bar app: a compact chat palette, hands-free voice conversation, your sessions and automations from the gateway, tool approvals and a small CLI.">
+  <link rel="canonical" href="https://abstractframework.ai/assistant.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractAssistant — the macOS menu-bar app for your gateway">
+  <meta property="og:description" content="Chat, talk hands-free, and schedule conversations as automations from the menu bar. The gateway runs the workflows, models and tools.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -11,34 +19,47 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
 </head>
 <body>
-  <nav class="nav">
-    <a href="./" class="nav-brand">
-    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
-      AbstractFramework
-    </a>
-    <ul class="nav-links">
-      <li><a href="./">Home</a></li>
-      <li><a href="#overview">Overview</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#getting-started">Get Started</a></li>
-      <li><a href="#api">API</a></li>
-      <li><a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer" class="nav-cta">GitHub</a></li>
-    </ul>
-  </nav>
+  <a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html" aria-current="page">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
 
-<div class="pkg-nav">
+<div class="pkg-nav" aria-label="Packages and apps">
   <div class="pkg-nav-inner">
     <a href="core.html" class="pkg-nav-link">Core</a>
     <a href="runtime.html" class="pkg-nav-link">Runtime</a>
     <a href="agent.html" class="pkg-nav-link">Agent</a>
     <a href="flow.html" class="pkg-nav-link">Flow</a>
     <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
     <a href="code.html" class="pkg-nav-link">Code</a>
     <a href="observer.html" class="pkg-nav-link">Observer</a>
-    <a href="assistant.html" class="pkg-nav-link active">Assistant</a>
+    <a href="assistant.html" class="pkg-nav-link active" aria-current="page">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
     <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
@@ -46,265 +67,503 @@
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
   </div>
 </div>
+<main id="main">
 
-<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" style="min-height:auto;padding:8rem 0 4rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> APPLICATION</div>
+    <div class="hero-badge"><span class="dot"></span> Application &middot; macOS menu-bar app <span class="ver">v0.9.1</span></div>
     <h1>Abstract<span class="gradient">Assistant</span></h1>
-    <p class="hero-sub">A macOS-first tray app and CLI that hosts a local, durable agent. Gateway-first thin client with voice-enabled chat, tool approval workflows, multi-session support, and full voice mode &mdash; all driven from the system tray.</p>
+    <p class="hero-sub">The menu-bar app of AbstractFramework: a compact chat palette, a hands-free voice conversation mode and a small CLI. It is a thin client of <a href="gateway.html" style="color:var(--accent-light)">AbstractGateway</a>: the gateway runs the workflows, holds the provider connections and executes the tools, and the app keeps only your local preferences and caches. After you <a href="install.html" style="color:var(--accent-light)">install AbstractFramework</a>, the console's <strong>Apps</strong> page installs the Assistant and opens it already signed in.</p>
     <div class="hero-actions">
-      <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started
+      <a href="#install" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get started
       </a>
+      <a href="https://github.com/lpalbou/AbstractAssistant" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
       <a href="https://pypi.org/project/abstractassistant/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
-      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
-      <a href="https://github.com/lpalbou/abstractassistant/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
-      <a href="https://github.com/lpalbou/abstractassistant/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+      <a href="https://github.com/lpalbou/AbstractAssistant/tree/main/docs" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Docs</a>
+      <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
     <div class="hero-code">
-<pre><code><span class="line-kw">pip install</span> abstractassistant
+<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractassistant[voice]"</span>
 
-<span class="line-cmt"># Launch the tray app</span>
-<span class="line-fn">assistant</span>
-
-<span class="line-cmt"># Or run a single CLI turn</span>
-<span class="line-fn">assistant</span> run --prompt <span class="line-str">"What is in this repo?"</span></code></pre>
+<span class="line-cmt"># the menu-bar app</span>
+assistant
+<span class="line-cmt"># one turn in the terminal</span>
+assistant run --prompt <span class="line-str">"Summarize my notes"</span>
+<span class="line-cmt"># name the gateway and sign in</span>
+assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> \
+  --gateway-token <span class="line-var">&lt;token&gt;</span></code></pre>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ OVERVIEW ═══════════════════ -->
-<section class="section" id="overview">
+<section id="overview" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
-      <h2 class="section-title">Gateway-First Thin Client</h2>
-      <p class="section-desc">AbstractAssistant connects to AbstractGateway, discovers available providers and models there, and keeps only local UI and session state. The heavy lifting &mdash; agent loops, tool execution, and LLM calls &mdash; happens on the gateway.</p>
+      <h2 class="section-title">A thin desktop client of your gateway</h2>
+      <p class="section-desc">AbstractGateway owns workflow discovery, durable runs, provider connections, tool execution and policy, workspace policy and multimodal defaults. The Assistant keeps your preferences, window placement, downloads, a rebuildable cache of your sessions, and the overrides you choose for this app.</p>
     </div>
-    <div class="components-grid reveal">
-      <div class="comp-card">
-        <h3>Tray UI</h3>
-        <p>A macOS menu bar app with chat bubble, sessions, file attachments, tool approval dialogs, and voice controls. Runs as a lightweight system tray icon with click-to-chat interaction.</p>
+    <div class="code-block reveal">
+<pre><code>Tray / Palette / CLI  ──▸  AbstractGateway  ──▸  AbstractRuntime  ──▸  AbstractCore  ──▸  Providers</code></pre>
+    </div>
+
+    <div class="showcase-grid reveal">
+      <div class="showcase-img">
+        <figure class="figure">
+          <img src="assets/img/shots/assistant-palette.webp" alt="The AbstractAssistant palette in the dark theme: header with the chat name and the new chat, tools, schedule, speaker and settings buttons and a green connection dot; a question about steeping tea, the answer with its statistics chips (10 in, 5 out, 0 tools, 0 files, 37 ms), and the composer with attach, microphone and voice conversation buttons" width="634" height="632" loading="lazy">
+          <figcaption>The palette with a short conversation.</figcaption>
+        </figure>
       </div>
-      <div class="comp-card">
-        <h3>CLI Mode</h3>
-        <p>Run a single agentic turn in the terminal without the UI. Supports tool approval prompts, file attachments, and provider/model selection via CLI flags.</p>
+      <div class="showcase-content">
+        <h3>The palette</h3>
+        <p>Click the menu-bar icon, or press the summon shortcut (<kbd>&#8984;&#8679;Space</kbd> by default), and the palette opens. Its title says what the app is doing: Running, Reconnecting, Listening, Speaking or Not sent. The header names the current chat, which opens the switcher, and holds the buttons for a new chat, tool permissions, <strong>Schedule this conversation&hellip;</strong>, spoken replies and Settings. The dot on the right shows whether the gateway is reachable.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Each reply ends with its statistics: tokens, tools, files, duration and model, with detail views</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>While a run works, an activity card shows the current step, the elapsed time and recent tool calls, with pause, resume and stop</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>With <strong>Stream replies</strong> on, the answer appears while the model writes it, its reasoning folded under <strong>Thinking</strong></span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Attach files with the button or drag and drop; typed text during a run steers it</span></li>
+        </ul>
       </div>
-      <div class="comp-card">
-        <h3>Durable Tool Boundary</h3>
-        <p>Tool calls are surfaced as resumable durable waits. Safe read-only tools can auto-approve; writes, shell execution, and unknown tools require explicit user approval.</p>
+    </div>
+
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>The workflow each turn runs</h3>
+        <p>Each turn runs the gateway's default workflow for the Assistant (<code>abstractassistant.agent.v1</code>). When the gateway sets none, the app runs its built-in orchestrator, <code>abstractassistant-orchestrator</code>, which it publishes to your tenant catalog. You can pick another one in <strong>Settings &rarr; Models &amp; reasoning &rarr; Workflow</strong>.</p>
       </div>
-      <div class="comp-card">
-        <h3>Voice Integration</h3>
-        <p>Built-in TTS and STT via AbstractVoice. Full voice mode with mic-reactive listening, speaking animation, frequency-band meters, and tray-first voice controls.</p>
+      <div class="mode-card" style="text-align:left">
+        <h3>Providers stay on the gateway</h3>
+        <p>You connect local engines and cloud providers, and keep API keys, on the gateway (for example in the <a href="console.html" style="color:var(--accent-light)">console</a>). The Assistant needs no API key or model file. It reads the gateway's providers and models, and you can pin a different one for this app, per route.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Your sessions, from every device</h3>
+        <p>The switcher lists every chat on the gateway, whichever client started it: the Assistant on any Mac, <a href="code.html" style="color:var(--accent-light)">AbstractCode</a> or the <a href="observer.html" style="color:var(--accent-light)">Observer</a>. Sessions live on the gateway, so every device shows the same list.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ FEATURES ═══════════════════ -->
-<section class="section" id="features">
+<!-- ═══════════════════ INSTALL ═══════════════════ -->
+<section id="install">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Features</div>
-      <h2 class="section-title">Your AI, Always at Hand</h2>
-      <p class="section-desc">A comprehensive personal AI assistant that lives in your menu bar, with full voice, vision, and tool control capabilities.</p>
+      <div class="section-label">Install</div>
+      <h2 class="section-title">Open it from the console, or install it with pip</h2>
+      <p class="section-desc">You need Python 3.10 or later and an AbstractGateway you can reach. macOS is the primary target; Linux and Windows may work through the Qt shell but are not packaged to the same standard.</p>
     </div>
-    <div class="components-grid reveal">
-      <div class="comp-card">
-        <h3>Chat Bubble</h3>
-        <p>A lightweight chat interface that appears from the tray icon. Send messages, view responses with markdown rendering, and attach files with drag-and-drop.</p>
+
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="console">From the console</button>
+        <button class="tab-btn" data-tab="pip">With pip</button>
+        <button class="tab-btn" data-tab="app">macOS app bundle</button>
       </div>
-      <div class="comp-card">
-        <h3>Tool Approval UI</h3>
-        <p>Structured tool approval dialogs with tool name, key parameters, and approve/deny actions. Approve All mode auto-approves future tools for the session.</p>
+      <div class="tab-panel active" id="tab-console">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Gateway console &gt; Apps &gt; Assistant card: Install (when it is missing), then Open</span>
+<span class="line-cmt"># The same from a terminal on the gateway's computer:</span>
+abstractgateway apps install assistant
+abstractgateway apps launch assistant</code></pre>
+        </div>
+        <div class="install-notes"><ul>
+          <li><strong>Install</strong> adds <code>abstractassistant</code> to the gateway's own Python environment, with every <code>abstract*</code> package the gateway runs pinned to its current version, so installing the Assistant never changes the gateway. The <code>abstractframework</code> Python package already includes it.</li>
+          <li><strong>Open</strong> starts the Assistant on the gateway's computer, already signed in as you, and the app remembers that sign-in. The console can sign in only an Assistant it launches, so quit a running Assistant before you click <strong>Open</strong>. From another computer, the card says the Assistant runs on the gateway's computer.</li>
+          <li>The gateway's own menu-bar icon has a <strong>Launch Assistant</strong> entry that finds the app the same way.</li>
+        </ul></div>
       </div>
-      <div class="comp-card">
-        <h3>Multi-Session Support</h3>
-        <p>Create and switch between multiple sessions. Each session persists its transcript, last run ID, and context under the data directory.</p>
+      <div class="tab-panel" id="tab-pip">
+        <div class="code-block">
+<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractassistant[voice]"</span>   <span class="line-cmt"># [voice]: local microphone capture</span>
+
+assistant                                          <span class="line-cmt"># launch the menu-bar app</span>
+assistant run --prompt <span class="line-str">"What changed in the repo today?"</span>
+assistant run --prompt <span class="line-str">"Explain this error"</span> --stream on
+assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> --gateway-token <span class="line-var">&lt;token&gt;</span></code></pre>
+        </div>
+        <div class="install-notes"><ul>
+          <li>The base install covers text chat, spoken replies and gateway-backed media; the <code>voice</code> extra adds microphone capture for dictation and voice conversation. Speech-to-text and text-to-speech run on the gateway either way.</li>
+          <li><code>assistant run</code> prints the final answer once on stdout; <code>--stream on|off</code> overrides the saved <strong>Stream replies</strong> choice for that turn. The command is also installed as <code>abstractassistant</code>.</li>
+          <li><code>--gateway-url</code> alone is enough once you have signed in to that gateway: the app reuses the sign-in saved in <code>~/.abstractassistant/gateway_connection.json</code>.</li>
+        </ul></div>
       </div>
-      <div class="comp-card">
-        <h3>File Attachments</h3>
-        <p>Attach images, audio, video, PDFs, and documents. Audio files are pre-transcribed via AbstractVoice. Images go through the multimodal media pipeline.</p>
+      <div class="tab-panel" id="tab-app">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># From a checkout of the repository</span>
+<span class="line-kw">pip install</span> -e <span class="line-str">".[macos-app]"</span>
+build-macos-app                  <span class="line-cmt"># builds AbstractAssistant.app and installs it into /Applications</span>
+build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/macos/AbstractAssistant.app</span></code></pre>
+        </div>
+        <div class="install-notes"><ul><li>The bundle is unsigned and not notarized: an app you build yourself opens normally, but a copy sent to someone else is blocked by Gatekeeper. It is menu-bar only, so look for its icon in the menu bar, not the Dock.</li></ul></div>
       </div>
-      <div class="comp-card">
-        <h3>Full Voice Mode</h3>
-        <p>Hands-free interaction driven from tray states: listening, thinking, speaking. Mic-reactive pulse animation scales with voice volume and shifts color for visual feedback.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Media Settings</h3>
-        <p>Configure voice, TTS model, STT model, and image generation from gateway-discovered catalogs. Select voices, providers, and models from the settings dialog.</p>
-      </div>
-      <div class="comp-card">
-        <h3>Workflow Picker</h3>
-        <p>Select from gateway-discovered workflow entrypoints. Persisted per session so your preferred workflow is ready when you open the tray.</p>
-      </div>
-      <div class="comp-card">
-        <h3>macOS App Bundle</h3>
-        <p>Ship a helper that creates a native macOS app bundle under <code>/Applications</code> with proper icons and Launch Services integration.</p>
-      </div>
+    </div>
+
+    <div class="callout reveal" style="margin-top:2rem">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div><strong>How the Assistant finds your gateway.</strong> The first match wins: <code>--gateway-url</code>; the sign-in saved in <strong>Settings &rarr; Connection</strong>; this computer's gateway (with AbstractGateway in the same Python environment, the gateway's own rule; otherwise, as in the app bundle, the local pointer file <code>~/.abstractframework/gateway.json</code> that the installer and <code>abstractgateway serve</code> write); then <code>http://127.0.0.1:8080</code>. So a gateway that the installer moved off a busy port 8080 is still found. The pointer file never holds a token.</div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section class="section" id="getting-started">
+<!-- ═══════════════════ VOICE ═══════════════════ -->
+<section id="voice" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Getting Started</div>
-      <h2 class="section-title">Install and Launch</h2>
-      <p class="section-desc">AbstractAssistant requires Python 3.10+ and an AbstractGateway instance for tray mode. CLI mode can run standalone.</p>
+      <div class="section-label">Voice</div>
+      <h2 class="section-title">Talk to it, hands-free</h2>
+      <p class="section-desc">Microphone capture and playback happen on your Mac; speech-to-text and text-to-speech run on the gateway (the installer gives it local voice through <a href="voice.html" style="color:var(--accent-light)">AbstractVoice</a>). Every reply has a speaker button, the composer's microphone dictates into the message, and <kbd>&#8984;&#8679;V</kbd> starts a voice conversation.</p>
     </div>
-    <div class="reveal">
-      <h3 style="color:var(--text);margin-bottom:1rem">Install</h3>
-      <div class="code-block">
-<pre><code><span class="line-kw">pip install</span> abstractassistant
-
-<span class="line-cmt"># Verify installation</span>
-<span class="line-fn">assistant</span> --help</code></pre>
+    <div class="showcase-grid reverse reveal" style="margin-top:0">
+      <div class="showcase-img">
+        <figure class="figure">
+          <img src="assets/img/shots/assistant-voice.webp" alt="The palette during a voice conversation: the title reads Listening in green, and a strip above the composer shows a microphone glyph, a live level meter, the text Listening… and the pause and end buttons" width="634" height="632" loading="lazy">
+          <figcaption>Voice conversation mode: the strip above the composer.</figcaption>
+        </figure>
       </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">Launch with Gateway</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Start the gateway first</span>
-<span class="line-kw">export</span> <span class="line-var">ABSTRACTGATEWAY_FLOWS_DIR</span>=<span class="line-str">"$PWD/abstractgateway/flows/bundles"</span>
-<span class="line-kw">export</span> <span class="line-var">ABSTRACTGATEWAY_AUTH_TOKEN</span>=<span class="line-str">"your-shared-token"</span>
-<span class="line-fn">abstractgateway</span> serve --host 127.0.0.1 --port 8080
-
-<span class="line-cmt"># Launch the assistant (connects to gateway)</span>
-<span class="line-fn">assistant</span>
-
-<span class="line-cmt"># Or with explicit gateway override</span>
-<span class="line-fn">assistant</span> --gateway-url http://127.0.0.1:8080 --gateway-token <span class="line-str">"$ABSTRACTGATEWAY_AUTH_TOKEN"</span></code></pre>
+      <div class="showcase-content">
+        <h3>Listen, send, speak, listen again</h3>
+        <p>Start with <kbd>&#8984;&#8679;V</kbd> or the waveform button next to send. A strip above the composer shows a level meter and the state: <em>Listening&hellip;</em>, <em>Heard: &hellip;</em>, <em>Thinking&hellip; (mic paused)</em>, <em>Speaking&hellip;</em>. Each utterance becomes a turn after a short pause, and spoken replies stream from the gateway, so long answers start playing within about a second.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>The microphone pauses while the assistant works, so side conversation never steers a run</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Short, spoken-style replies by default; typing still works during a conversation</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Barge-in: keep the mic open with headphones and say "stop" to interrupt a reply</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Replies play on the Mac's current output device, or the one you pick in <strong>Settings &rarr; Voice</strong></span></li>
+        </ul>
       </div>
+    </div>
 
-      <h3 style="color:var(--text);margin:2rem 0 1rem">CLI Mode (No UI)</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Run a single agentic turn in the terminal</span>
-<span class="line-fn">assistant</span> run --prompt <span class="line-str">"What is in this repo and where do I start?"</span>
-
-<span class="line-cmt"># With provider override</span>
-<span class="line-fn">assistant</span> --provider ollama run --prompt <span class="line-str">"Explain this error"</span></code></pre>
-      </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">macOS App Bundle</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Create a native macOS app bundle</span>
-<span class="line-fn">create-app-bundle</span></code></pre>
-      </div>
+    <h3 class="reveal" style="margin:1rem 0 1rem">Keyboard shortcuts</h3>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>&#8984;&#8679;Space</kbd></td><td>Summon the palette from any app (the default; change it in <strong>Settings &rarr; Appearance</strong>). It works once the app may read the keyboard: <strong>System Settings &rarr; Privacy &amp; Security &rarr; Accessibility / Input Monitoring</strong>.</td></tr>
+          <tr><td><kbd>&#8984;&#8679;V</kbd></td><td>Start or end a voice conversation</td></tr>
+          <tr><td><kbd>&#8984;N</kbd> &middot; <kbd>&#8984;,</kbd></td><td>New chat &middot; Settings</td></tr>
+          <tr><td><kbd>&#8984;.</kbd></td><td>Stop the running reply</td></tr>
+          <tr><td><kbd>&#8984;1</kbd> &middot; <kbd>&#8984;2</kbd></td><td>Switcher tabs: Sessions &middot; Automations</td></tr>
+          <tr><td><kbd>Return</kbd> &middot; <kbd>Shift</kbd>+<kbd>Return</kbd></td><td>Send &middot; new line</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ API ═══════════════════ -->
-<section class="section" id="api">
+<!-- ═══════════════════ AUTOMATIONS ═══════════════════ -->
+<section id="automations">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">API Reference</div>
-      <h2 class="section-title">CLI &amp; Architecture</h2>
-      <p class="section-desc">AbstractAssistant exposes CLI commands, environment variables, and a durable agent host for tool-call boundary management.</p>
+      <div class="section-label">Sessions and automations</div>
+      <h2 class="section-title">Your chats and your automations, side by side</h2>
+      <p class="section-desc">Click the chat name in the header. The switcher has two tabs, <strong>Sessions | Automations</strong>, both fed by the gateway. An <a href="automations.html" style="color:var(--accent-light)">automation</a> runs a task on the gateway on a fixed UTC schedule; it keeps running while the Assistant is closed or the Mac sleeps.</p>
     </div>
 
-    <div class="reveal">
-      <h3 style="color:var(--text);margin-bottom:1rem">CLI Commands</h3>
-      <div class="code-block">
-<pre><code><span class="line-cmt"># Tray app (default command)</span>
-<span class="line-fn">assistant</span>
-
-<span class="line-cmt"># Single-turn CLI</span>
-<span class="line-fn">assistant</span> run --prompt <span class="line-str">"..."</span>
-
-<span class="line-cmt"># Global flags (before subcommand)</span>
-<span class="line-fn">assistant</span> --provider <span class="line-var">ollama</span> --data-dir <span class="line-var">~/.myassistant</span> run --prompt <span class="line-str">"..."</span></code></pre>
+    <div class="showcase-grid reveal" style="margin-top:0">
+      <div class="showcase-img" style="max-width:460px;justify-self:center">
+        <figure class="figure">
+          <img src="assets/img/shots/assistant-switcher-automations.webp" alt="The switcher on its Automations tab: Show archived and + New automation at the top, then four automations. Inbox triage, every 8 hours, Active; Downloads clean-up, every 7 days, marked waiting for you, Active; Weekly dependency check, every 7 days, next —, Paused; Morning research digest, every 24 hours, run #2, Active" width="460" height="560" loading="lazy">
+          <figcaption>The switcher's Automations tab.</figcaption>
+        </figure>
       </div>
-
-      <h3 style="color:var(--text);margin:2rem 0 1rem">Environment Variables</h3>
-      <div class="code-block">
-<pre><code><span class="line-var">ABSTRACTGATEWAY_URL</span>               <span class="line-cmt"># Gateway base URL (default: http://127.0.0.1:8080)</span>
-<span class="line-var">ABSTRACTGATEWAY_AUTH_TOKEN</span>         <span class="line-cmt"># Gateway auth token (required)</span>
-<span class="line-var">ABSTRACTGATEWAY_MAX_ATTACHMENT_BYTES</span> <span class="line-cmt"># Max attachment size (default: 25 MiB)</span></code></pre>
+      <div class="showcase-content">
+        <h3>One card per automation</h3>
+        <p>Each card shows when the automation last ran, its last result, the schedule, the next run, the run count and the workspace folder, which opens in Finder when it is on this Mac. A chip says "waiting for you" or "failed" only when it applies. The button on the right says the automation's state in words: <strong>Active &#9654;</strong> in green, <strong>Paused &#9208;</strong> in amber; click it to pause or resume.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>The same automations as AbstractCode and the Observer, whichever app created them</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>+ New automation</strong> for a new task; <strong>Show archived</strong> for the history</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>The tab label and <strong>Automations&hellip;</strong> in the menu-bar icon's menu count what needs you</span></li>
+        </ul>
       </div>
+    </div>
 
-      <h3 style="color:var(--text);margin:2rem 0 1rem">Core Modules</h3>
-      <div class="components-grid" style="grid-template-columns:1fr 1fr">
-        <div class="comp-card">
-          <h3><code>agent_host.py</code></h3>
-          <p>Durable agent backend with tool waits, approval flows, attachment handling, and run resume. The core execution boundary between UI and runtime.</p>
-        </div>
-        <div class="comp-card">
-          <h3><code>tool_policy.py</code></h3>
-          <p>Safe auto-approve vs require-approval tool policy. Read-only and search tools auto-approve; file writes, shell commands, and unknowns require user consent.</p>
-        </div>
-        <div class="comp-card">
-          <h3><code>session_index.py</code></h3>
-          <p>Multi-session registry stored at <code>sessions.json</code>. Tracks active session ID, creation timestamps, and session metadata.</p>
-        </div>
-        <div class="comp-card">
-          <h3><code>session_store.py</code></h3>
-          <p>Lightweight <code>session.json</code> snapshot store for transcript persistence. Saves last run ID for fast UX state restoration.</p>
+    <div class="showcase-grid reverse reveal">
+      <div class="showcase-img">
+        <figure class="figure">
+          <img src="assets/img/shots/assistant-automation.webp" alt="An automation opened in the palette: ← Chat, the title Morning research digest, the line every 24 hours (UTC) · Active · next in 23 h · Growing · 2 runs, the controls Pause, Resume, Run now with its play-in-a-circle icon, Stop current, Edit and Archive, then run #1 as a chat turn with its task and the answer listing three papers" width="634" height="572" loading="lazy">
+          <figcaption>An automation's runs read as a chat.</figcaption>
+        </figure>
+      </div>
+      <div class="showcase-content">
+        <h3>Open an automation</h3>
+        <p>Click a card and the palette shows the automation in place of the chat; <strong>&larr; Chat</strong> returns. Each run reads as a pair of chat turns: what fired it and the task, then the answer. Quiet runs are dimmed, notable results carry a <strong>Notified</strong> badge, and failures give the gateway's reason and the number of attempts.</p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Control</th><th>What it does</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Pause</strong> / <strong>Resume</strong></td><td>No scheduled run until you resume; resuming continues at the next scheduled time</td></tr>
+              <tr><td><strong>Run now</strong></td><td>One run immediately; the schedule does not move</td></tr>
+              <tr><td><strong>Stop current</strong></td><td>Stops the run in progress</td></tr>
+              <tr><td><strong>Edit</strong></td><td>Title, interval and context mode, from the next run</td></tr>
+              <tr><td><strong>Archive</strong></td><td>Nothing runs any more; the history is kept (confirmed in the palette)</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
+    </div>
 
-      <h3 style="color:var(--text);margin:2rem 0 1rem">Data Directory</h3>
-      <div class="code-block">
-<pre><code><span class="line-var">~/.abstractassistant/</span>
-  <span class="line-fn">session.json</span>       <span class="line-cmt"># Transcript snapshot + last run ID</span>
-  <span class="line-fn">sessions.json</span>      <span class="line-cmt"># Session registry + active session</span>
-  <span class="line-fn">runtime/</span>           <span class="line-cmt"># AbstractRuntime stores (ledger, artifacts)</span>
-  <span class="line-fn">sessions/</span>          <span class="line-cmt"># Per-session data directories</span></code></pre>
+    <div class="callout reveal">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4z"/></svg>
+      <div><strong>Run now, in the words of its tooltip</strong> (the same hint as in the web clients): &ldquo;Run it once now, without waiting for the schedule. The schedule does not move: the next scheduled run keeps its time, or starts right after this run if its time comes first. Does not count toward a run limit. Works while paused; it stays paused. Not available while a run is in progress.&rdquo; The tooltip then adds the next scheduled time and, for a Growing automation, &ldquo;Growing context: later runs see this run in their history.&rdquo; A disabled control's tooltip gives the reason first.</div>
+    </div>
+
+    <div class="showcase-grid reveal">
+      <div class="showcase-img" style="max-width:480px;justify-self:center">
+        <figure class="figure">
+          <img src="assets/img/shots/assistant-schedule.webp" alt="The Schedule this conversation window: What, with Workflow: AbstractAssistant Orchestrator, an optional title and the task prefilled with the conversation's last question; When (UTC) set to every 8 hours with an optional first-run time; Context: Independent or Growing; Tools: Tools run without asking or Ask each time; the preview line every 8 hours (UTC), first run now; Cancel and Schedule" width="535" height="536" loading="lazy">
+          <figcaption><strong>Schedule this conversation&hellip;</strong> (the clock button).</figcaption>
+        </figure>
+      </div>
+      <div class="showcase-content">
+        <h3>Schedule this conversation</h3>
+        <p>The clock button in the header opens <strong>Schedule this conversation&hellip;</strong>, prefilled with the conversation's workflow and its last question, which you can edit. <strong>+ New automation</strong> opens the same window empty.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>When (UTC)</strong>: every 5 minutes, 30 minutes, hour, 8 hours, 24 hours or 7 days, every N minutes, hours or days, or once at a date and time</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Context</strong>: Independent (each run starts fresh) or Growing (each run sees the previous runs)</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Tools</strong>: Tools run without asking (creating the automation is your approval) or Ask each time</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="showcase-grid reverse reveal">
+      <div class="showcase-img">
+        <figure class="figure">
+          <img src="assets/img/shots/assistant-waiting.webp" alt="The Downloads clean-up automation with a run waiting for you: the banner 1 occurrence(s) waiting for you, the task List my old downloads and suggest what to archive, and a highlighted answer turn that reads The run asks to use these tools, listing an execute_command call with its arguments, with Approve and Deny buttons" width="634" height="572" loading="lazy">
+          <figcaption>A run that waits for your approval.</figcaption>
+        </figure>
+      </div>
+      <div class="showcase-content">
+        <h3>Answer a run, discuss a result</h3>
+        <p>A run can stop and wait for you. It shows what it waits for: a question with its choices and a free-text answer, a tool approval with <strong>Approve</strong> / <strong>Deny</strong> (for automations set to Ask each time), or an event payload typed as JSON.</p>
+        <p><strong>Discuss</strong> under a finished run opens an ordinary chat seeded with the automation's history up to that run. It has its own writable workspace, with the automation's files mounted read-only, and it appears among your chats with the badge <em>about automation &lt;title&gt;</em>.</p>
+      </div>
+    </div>
+
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Tray notifications</h3>
+        <p>You get a notification once for each result the workflow marks as notable, each run that failed after all its retries, and each run waiting for you ("&lt;title&gt; is waiting for you", or "&lt;title&gt; needs your approval"). Ordinary results never notify, and nothing is repeated after a relaunch.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>When it checks</h3>
+        <p>The Assistant reads the automation list every 60 seconds while the palette is visible, and every 5 minutes while it is hidden, so a notification reaches you while you work in other apps. Opening an automation marks its new items as seen on every device.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>The workspace folder</h3>
+        <p>Every session and automation card has a folder icon for the workspace the gateway reports. It opens in Finder when the folder is on this Mac; until the gateway reports the folder, the icon is disabled and says so.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<!-- ═══════════════════ TOOLS & SETTINGS ═══════════════════ -->
+<section id="settings" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Tools and settings</div>
+      <h2 class="section-title">You decide what runs, and what this app overrides</h2>
+    </div>
+
+    <div class="showcase-grid reveal" style="margin-top:0">
+      <div class="showcase-img">
+        <figure class="figure">
+          <img src="assets/img/shots/assistant-approval.webp" alt="The tool approval sheet: execute_command needs your approval, highest risk in this batch Destructive, the call card with the chips Destructive and can delete, the command ls -la ~/Downloads, a Full call (JSON) toggle, and the buttons Decide later, Deny and Allow once" width="588" height="373" loading="lazy">
+          <figcaption>The tool approval sheet beside the palette.</figcaption>
+        </figure>
+      </div>
+      <div class="showcase-content">
+        <h3>Tool approvals</h3>
+        <p>When a workflow wants a tool you have not pre-approved, a sheet opens beside the palette. It lists each call with the gateway's risk tier and the command, path or query it will use. <strong>Allow once</strong> (<kbd>Return</kbd>) runs this batch, <strong>Deny</strong> (<kbd>&#8984;D</kbd>) refuses it, and <strong>Decide later</strong> (<kbd>Esc</kbd>) keeps the run waiting. The palette stays usable while the sheet is open.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>"Always allow &hellip; on this Mac" stops the questions for one tool</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>"Allow all enabled tools in this chat" trusts a single chat</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Per-tool Off / Auto / Ask in <strong>Settings &rarr; Tools &amp; permissions</strong></span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="showcase-grid reverse reveal">
+      <div class="showcase-img">
+        <figure class="figure">
+          <img src="assets/img/shots/assistant-settings.webp" alt="The Settings window on Tools &amp; permissions: the sidebar lists Connection, Models, Voice, Workspace, Tools, Appearance and About; the page shows the gateway's tool mode (approval), a tool filter, and the files toolset with analyze_code (Reads only, Auto), analyze_media (Reads only, Ask) and edit_file (Makes changes, Ask), and the buttons Use gateway defaults and Save" width="800" height="484" loading="lazy">
+          <figcaption>Settings &rarr; Tools &amp; permissions.</figcaption>
+        </figure>
+      </div>
+      <div class="showcase-content">
+        <h3>Seven Settings sections</h3>
+        <p><strong>Connection</strong>, <strong>Models &amp; reasoning</strong> (workflow, reasoning effort, reply streaming), <strong>Voice</strong>, <strong>Workspace</strong> (root and allowed folders), <strong>Tools &amp; permissions</strong>, <strong>Appearance &amp; window</strong> and <strong>About</strong>. Every value says whether it is the gateway default or this app's override.</p>
+        <p>Each route the Assistant drives (chat model, voice output and input, image generation, edit and upscale, video, image to video, music, sound effects) has its own Provider and Model lists. The first item is always <strong>Gateway default</strong>; any other choice is kept on this Mac and sent with each request, and the gateway's shared defaults never change.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ EXAMPLES ═══════════════════ -->
+<section id="examples">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Examples</div>
+      <h2 class="section-title">A few things to try</h2>
+    </div>
+    <div class="components-grid">
+      <div class="comp-card reveal">
+        <h3>Ask a question without typing</h3>
+        <ol style="list-style:decimal;padding-left:1.2rem;color:var(--text-secondary);display:grid;gap:.35rem">
+          <li>Press <kbd>&#8984;&#8679;V</kbd>. The strip reads <em>Listening&hellip;</em>.</li>
+          <li>Ask your question and pause; the strip shows <em>Heard: &hellip;</em>, then <em>Thinking&hellip; (mic paused)</em>.</li>
+          <li>The answer is spoken (<em>Speaking&hellip;</em>) and the loop listens again for a follow-up.</li>
+          <li>Press <kbd>&#8984;&#8679;V</kbd> or the strip's &#10005; to end.</li>
+        </ol>
+      </div>
+      <div class="comp-card reveal">
+        <h3>Turn a conversation into a daily digest</h3>
+        <ol style="list-style:decimal;padding-left:1.2rem;color:var(--text-secondary);display:grid;gap:.35rem">
+          <li>Ask the question once, for example "Summarise the most discussed machine-learning papers of the last 24 hours."</li>
+          <li>Click the clock button: <strong>Schedule this conversation&hellip;</strong> opens with that question as the task.</li>
+          <li>Under <strong>When (UTC)</strong>, pick <strong>every 24 hours</strong>; under <strong>Context</strong>, <strong>Growing</strong>.</li>
+          <li>Click <strong>Schedule</strong>. The automation opens in the palette, and its first run is due at once unless you set a first-run time.</li>
+        </ol>
+      </div>
+      <div class="comp-card reveal">
+        <h3>Approve a run from the notification</h3>
+        <ol style="list-style:decimal;padding-left:1.2rem;color:var(--text-secondary);display:grid;gap:.35rem">
+          <li>A notification says "Downloads clean-up needs your approval".</li>
+          <li>Choose <strong>Automations&hellip;</strong> in the menu-bar icon's menu (or <kbd>&#8984;2</kbd> in the switcher).</li>
+          <li>Click the card marked "waiting for you".</li>
+          <li>Read the tool call and its arguments, then click <strong>Approve</strong> or <strong>Deny</strong>.</li>
+        </ol>
+      </div>
+      <div class="comp-card reveal">
+        <h3>Discuss a result</h3>
+        <ol style="list-style:decimal;padding-left:1.2rem;color:var(--text-secondary);display:grid;gap:.35rem">
+          <li>Open the automation and scroll to the run you want.</li>
+          <li>Click <strong>Discuss</strong> under its answer and type your question in "What do you want to discuss about this result?".</li>
+          <li>Click <strong>Start</strong>. A new chat opens, seeded with the runs up to that one, and stays in your Sessions tab with the badge <em>about automation &lt;title&gt;</em>.</li>
+        </ol>
+      </div>
+      <div class="comp-card reveal">
+        <h3>Use another workflow or model for this app</h3>
+        <ol style="list-style:decimal;padding-left:1.2rem;color:var(--text-secondary);display:grid;gap:.35rem">
+          <li>Press <kbd>&#8984;,</kbd> and open <strong>Models &amp; reasoning</strong>.</li>
+          <li>Under <strong>Workflow</strong>, pick another assistant workflow; it applies from the next turn.</li>
+          <li>Under the <strong>Chat model</strong> route, choose a Provider and a Model. Pick <strong>Gateway default</strong> to follow the gateway again.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ LOCAL FILES ═══════════════════ -->
+<section id="local-files" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Local files</div>
+      <h2 class="section-title">What stays on this Mac</h2>
+      <p class="section-desc">The gateway is the source of truth for workflows, provider and model defaults, tools and their approval defaults, workspace policy, run history, sessions, automations and artifacts. The Assistant stores the rest under <code>~/.abstractassistant/</code>.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>File</th><th>Holds</th></tr></thead>
+        <tbody>
+          <tr><td><code>preferences.json</code></td><td>This app's overrides and preferences: model routes, reasoning effort, reply streaming, workspace grant, voice options, tool modes, hotkey, window size</td></tr>
+          <tr><td><code>gateway_connection.json</code></td><td>Gateway URL and sign-in state</td></tr>
+          <tr><td><code>session_cache.json</code>, <code>sessions/</code></td><td>A rebuildable cache of the gateway's sessions; the sessions themselves live on the gateway</td></tr>
+          <tr><td><code>automations_notified.json</code></td><td>Which automation notifications were already shown</td></tr>
+          <tr><td>downloads, cached audio</td><td>Files fetched from the gateway and spoken replies</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="margin-top:1.5rem;color:var(--text-secondary)">Guides in the repository: <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/docs/getting-started.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Getting started</a> &middot; <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/docs/voice.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Voice</a> &middot; <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/docs/automations.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Automations</a> &middot; <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/docs/settings.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Settings</a> &middot; <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/docs/INSTALLATION.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Installation</a> &middot; <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/docs/troubleshooting.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Troubleshooting</a> &middot; <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Changelog</a></p>
+  </div>
+</section>
+
+<!-- ═══════════════════ WHERE TO NEXT ═══════════════════ -->
+<section id="next">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Where to next</div>
+      <h2 class="section-title">Keep going</h2>
+    </div>
+    <div class="next-links reveal">
+      <a class="next-link" href="start-user.html"><strong>User journey</strong><span>Install, pick a model, and say hello from the menu bar.</span></a>
+      <a class="next-link" href="install.html"><strong>Install AbstractFramework</strong><span>One download or one line sets up the gateway and its console.</span></a>
+      <a class="next-link" href="console.html"><strong>Web &amp; terminal console</strong><span>The Apps page that installs and opens the Assistant.</span></a>
+      <a class="next-link" href="automations.html"><strong>Automations</strong><span>How scheduled conversations run, from the Assistant, Code or the Observer.</span></a>
+      <a class="next-link" href="gateway.html"><strong>AbstractGateway</strong><span>The control plane the Assistant talks to.</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
 <footer class="footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <div class="footer-brand">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M16 2L28 8v16L16 30L4 24V8L16 2z" fill="url(#fg)"/><path d="M16 8L24 12v8L16 24L8 20v-8L16 8z" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>
-          AbstractAssistant
-        </div>
-        <p style="color:var(--text-muted);max-width:280px;font-size:var(--text-sm)">macOS-first tray app and CLI for local, durable AI agents. MIT Licensed.</p>
-      </div>
-      <div>
-        <h4>Documentation</h4>
-        <ul>
-          <li><a href="#overview">Overview</a></li>
-          <li><a href="#features">Features</a></li>
-          <li><a href="#getting-started">Getting Started</a></li>
-          <li><a href="#api">API Reference</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Ecosystem</h4>
-        <ul>
-          <li><a href="./">AbstractFramework</a></li>
-          <li><a href="abstractcore.html">AbstractCore</a></li>
-          <li><a href="abstractgateway.html">AbstractGateway</a></li>
-          <li><a href="abstractruntime.html">AbstractRuntime</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Resources</h4>
-        <ul>
-          <li><a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-          <li><a href="https://pypi.org/project/abstractassistant/" target="_blank" rel="noopener noreferrer">PyPI</a></li>
-          <li><a href="https://github.com/lpalbou/abstractassistant/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a></li>
-          <li><a href="https://github.com/lpalbou/abstractassistant/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
-        </ul>
-      </div>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
     </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 Laurent-Philippe Albou. MIT License.</p>
+    <div class="footer-col">
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
     </div>
+    <div class="footer-col">
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=4"></script>
 </body>
 </html>
