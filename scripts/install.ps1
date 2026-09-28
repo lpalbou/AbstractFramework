@@ -85,9 +85,15 @@ $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.4.0', '@abstractframework/code@0.6.0', '@abstractframework/observer@0.2.0', '@abstractframework/continuum@0.4.0', '@abstractframework/entity@0.3.0')
 $AfCrateConsole = 'abstractgateway-console@0.11.0'
 $AfCrateCodeCli = 'abstractcode@0.7.0'
-# Where AbstractCode's terminal client goes: cargo --root, the ONE place that decides it ('' = cargo's
-# own bin dir, %USERPROFILE%\.cargo\bin, next to the terminal console); build, summary and uninstall follow it.
-$AfCodeCliRoot = ''
+# Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
+# the parent of the uv tool bin folder, so they land next to abstractgateway.exe (the folder the
+# gateway's Apps page also updates abstractcode in); cargo's own root when that folder is not
+# named ...\bin. .Code is the ONE place that decides where abstractcode goes; the build, the
+# version check, the summary and the uninstall all follow it.
+function Get-CrateRoots([string]$ToolBin) {
+    $root = if ($ToolBin -and (Split-Path -Leaf $ToolBin) -eq 'bin') { Split-Path -Parent $ToolBin } else { '' }
+    return @{ Console = $root; Code = $root }
+}
 # The user commands of the gateway's own environment exposed next to abstractgateway and
 # abstractgateway-config (uv tool install --with-executables-from; -NoCoreCli leaves them out),
 # with every name each package declares: uv exposes all of a package's executables or none and
@@ -318,6 +324,7 @@ function Main {
     if ($Port -eq 0 -and $env:AF_PORT) { $Port = [int]$env:AF_PORT }
     if (-not $Pin -and $env:AF_PIN) { $Pin = $env:AF_PIN }
     if (-not $From -and $env:AF_FROM) { $From = $env:AF_FROM }
+    $dataDirCustom = [bool]($DataDir -or $env:AF_DATA_DIR -or $env:ABSTRACTGATEWAY_DATA_DIR)
     if (-not $DataDir) {
         if ($env:AF_DATA_DIR) { $DataDir = $env:AF_DATA_DIR }
         elseif ($env:ABSTRACTGATEWAY_DATA_DIR) { $DataDir = $env:ABSTRACTGATEWAY_DATA_DIR }
@@ -443,9 +450,10 @@ function Main {
         # install, into cargo's bin dir). The uv tool's exposed commands went with it above.
         $cBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
         $cCargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cBin "cargo$exeSuffix")) { Join-Path $cBin "cargo$exeSuffix" } else { $null }
+        $roots = Get-CrateRoots $toolBin
         foreach ($crate in @(
-                @{ Spec = $AfCrateConsole; Root = ''; What = 'the terminal console'; Title = 'Terminal console' },
-                @{ Spec = $AfCrateCodeCli; Root = $AfCodeCliRoot; What = 'AbstractCode''s terminal client'; Title = 'AbstractCode terminal client' })) {
+                @{ Spec = $AfCrateConsole; Root = $roots.Console; What = 'the terminal console'; Title = 'Terminal console' },
+                @{ Spec = $AfCrateCodeCli; Root = $roots.Code; What = 'AbstractCode''s terminal client'; Title = 'AbstractCode terminal client' })) {
             $cName = ($crate.Spec -split '@', 2)[0]
             $cExe = Join-Path $(if ($crate.Root) { Join-Path $crate.Root 'bin' } else { $cBin }) "$cName$exeSuffix"
             if (-not (Test-Path -LiteralPath $cExe)) { continue }
@@ -814,11 +822,22 @@ function Main {
     $codeOk = $false; $codeWhy = 'skipped with -NoCodeCli'
     $cargoBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
     $cargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cargoBin "cargo$exeSuffix")) { Join-Path $cargoBin "cargo$exeSuffix" } else { $null }
-    $consoleExe = Join-Path $cargoBin "$consoleName$exeSuffix"
-    $codeExe = Join-Path $(if ($AfCodeCliRoot) { Join-Path $AfCodeCliRoot 'bin' } else { $cargoBin }) "$codeName$exeSuffix"
-    function Test-Crate([string]$Exe, [string]$Name, [string]$CratePin) {
+    $roots = Get-CrateRoots $toolBin
+    $consoleExe = Join-Path $(if ($roots.Console) { Join-Path $roots.Console 'bin' } else { $cargoBin }) "$consoleName$exeSuffix"
+    $codeExe = Join-Path $(if ($roots.Code) { Join-Path $roots.Code 'bin' } else { $cargoBin }) "$codeName$exeSuffix"
+    # Test-Crate: the binary answers --version with that crate at the pin; -AtLeast accepts a later
+    # version too (the gateway's Apps page updates abstractcode in place: never downgrade it).
+    $script:CrateVersion = ''
+    function Test-Crate([string]$Exe, [string]$Name, [string]$CratePin, [switch]$AtLeast) {
+        $script:CrateVersion = ''
         if ($script:DryRun -or -not (Test-Path -LiteralPath $Exe)) { return $false }
-        try { return ((& $Exe --version 2>$null | Select-Object -First 1) -eq "$Name $CratePin") } catch { return $false }
+        try { $line = "$(& $Exe --version 2>$null | Select-Object -First 1)" } catch { return $false }
+        if (-not $line.StartsWith("$Name ")) { return $false }
+        $script:CrateVersion = $line.Substring($Name.Length + 1).Trim()
+        if (-not $AtLeast) { return ($script:CrateVersion -eq $CratePin) }
+        $have = $null
+        if (-not [version]::TryParse($script:CrateVersion, [ref]$have)) { return $false }
+        return ($have -ge [version]$CratePin)
     }
     function Install-Crate([string]$What, [string]$Name, [string]$CratePin, [string]$Exe, [string]$Root = '') {
         Write-Info 'compiling it from crates.io (a few minutes the first time)'
@@ -832,7 +851,8 @@ function Main {
         return $false
     }
     $consoleHave = Test-Crate $consoleExe $consoleName $consolePin
-    $codeHave = Test-Crate $codeExe $codeName $codePin
+    $codeHave = Test-Crate $codeExe $codeName $codePin -AtLeast
+    $codeHaveVersion = $script:CrateVersion
     $rustFor = @()
     if (-not $NoConsole -and -not $consoleHave) { $rustFor += 'the terminal console' }
     if (-not $NoCodeCli -and -not $codeHave) { $rustFor += "AbstractCode's terminal client" }
@@ -843,15 +863,15 @@ function Main {
         Write-Step "Terminal console ($consoleName $consolePin)"
         if ($consoleHave) { Write-Ok "$consoleName $consolePin already installed: $consoleExe"; $consoleOk = $true }
         elseif (-not $cargo) { $consoleWhy = $noCargoWhy; Write-Warn2 "$($rustFor -join ' and ') skipped: $noCargoWhy"; $rustWarned = $true }
-        elseif (Install-Crate 'the terminal console' $consoleName $consolePin $consoleExe) { $consoleOk = $true }
+        elseif (Install-Crate 'the terminal console' $consoleName $consolePin $consoleExe $roots.Console) { $consoleOk = $true }
         else { $consoleWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
     }
     if ($NoCodeCli) { $codeOk = $codeHave }
     else {
         Write-Step "AbstractCode terminal client ($codeName $codePin)"
-        if ($codeHave) { Write-Ok "$codeName $codePin already installed: $codeExe"; $codeOk = $true }
+        if ($codeHave) { Write-Ok "$codeName $codeHaveVersion already installed ($codePin or later): $codeExe"; $codeOk = $true }
         elseif (-not $cargo) { $codeWhy = $noCargoWhy; if (-not $rustWarned) { Write-Warn2 "$($rustFor -join ' and ') skipped: $noCargoWhy" } }
-        elseif (Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $AfCodeCliRoot) { $codeOk = $true }
+        elseif (Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $roots.Code) { $codeOk = $true }
         else { $codeWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
     }
 
@@ -1026,10 +1046,14 @@ function Main {
     $tokenPath = Join-Path $DataDir 'auth\bootstrap-admin-token'
     $tuiExe = if (Test-Command $consoleName) { $consoleName } else { "& '$consoleExe'" }
     $tuiTok = if (-not $script:DryRun -and (Test-Path -LiteralPath $tokenPath)) { (Get-Content -LiteralPath $tokenPath -Raw).Trim() } else { '' }
-    $codeExeShown = if (Test-Command $codeName) { $codeName } else { "& '$codeExe'" }
-    $tokArg = if ($tuiTok) { "--token $tuiTok" } else { "--token <admin token: Get-Content '$tokenPath'>" }
-    $tuiCmd = "$tuiExe --gateway-url $baseUrl $tokArg"
-    $codeCmd = "$codeExeShown --gateway-url $baseUrl $tokArg"
+    $codeShown = if (Test-Command $codeName) { $codeName } else { "& '$codeExe'" }
+    $codeTok = if ($tuiTok) { $tuiTok } else { "<admin token: Get-Content '$tokenPath'>" }
+    $tuiCmd = "$tuiExe --gateway-url $baseUrl --token $codeTok"
+    # AbstractCode's terminal client signs in once with the admin token given directly (the installer
+    # never saves it for you), then follows the gateway pointer, so no --gateway-url. On this machine
+    # `abstractgateway apps tui-command code` opens it signed in without handling a token.
+    $tuiCommand = 'abstractgateway apps tui-command code'
+    if ($dataDirCustom) { $tuiCommand += " --data-dir $(Format-Arg $DataDir)" }
     if (-not $script:DryRun -and -not $NoStart) {
         Write-Host '  Configure it from either console (the same settings, both need this machine):'
         # An opened claim link is spent (the browser redeemed it): show the plain address then.
@@ -1039,16 +1063,16 @@ function Main {
         else { Write-Host "               sign in as 'admin' with the token in $tokenPath" }
         if ($consoleOk) { Write-Host "    Terminal:  $tuiCmd" } else { Write-Host "    Terminal:  not installed: $consoleWhy" }
         if ($codeOk) {
-            Write-Host "  AbstractCode (terminal): $codeCmd"
-            # PLACEHOLDER (TUI sign-in): how a fresh user signs AbstractCode's terminal client in; the
-            # lead fills it in from untracked/tui-signin-note.md. Replace before any release.
-            Write-Host '  Sign in (terminal): <PLACEHOLDER: TUI sign-in command>'
+            Write-Host '  AbstractCode, the coding client, in the terminal:'
+            Write-Host "  Sign in (terminal, once): $codeShown login --token $codeTok"
+            Write-Host "    then run: $codeShown"
+            Write-Host "    or, on this machine, without a token: $tuiCommand"
         } else { Write-Host "  AbstractCode (terminal): not installed: $codeWhy" }
         Write-Host ''
     }
     Write-Host "  Console:    $baseUrl/console"
     Write-Host "  Terminal:   $(if ($consoleOk) { $tuiCmd } else { "not installed ($consoleWhy)" })"
-    Write-Host "  Code:       $(if ($codeOk) { $codeCmd } else { "not installed ($codeWhy)" })"
+    Write-Host "  Code:       $(if ($codeOk) { "$codeShown   (sign in once: $codeShown login --token $codeTok; or on this machine: $tuiCommand)" } else { "not installed ($codeWhy)" })"
     Write-Host "  Gateway:    $gwSpec ($profileName profile)"
     Write-Host "  Data dir:   $DataDir"
     Write-Host "  Logs:       $logDir"
@@ -1060,7 +1084,7 @@ function Main {
     & $cmdLine 'abstractgateway' 'the gateway: serve, service, network, models, engines, apps'
     & $cmdLine 'abstractgateway-config' 'the gateway''s admin command: status, claim-url (a new console sign-in link), defaults and set-default (model routing), get/set runtime settings, bootstrap-admin'
     if ($consoleOk) { & $cmdLine $tuiExe 'the terminal console (Terminal: above)' }
-    if ($codeOk) { & $cmdLine $codeExeShown 'AbstractCode, the coding client, in the terminal (Code: above)' }
+    if ($codeOk) { & $cmdLine $codeShown 'AbstractCode, the coding client, in the terminal (Code: above)' }
     foreach ($p in $cliFrom) { & $cmdLine $p $AfCliAbout[$p] }
     if ($cliTaken.Count) { Write-Host "  Not exposed (a command name is taken, see the warning above): $($cliTaken -join ' ')" }
     Write-Host ''
