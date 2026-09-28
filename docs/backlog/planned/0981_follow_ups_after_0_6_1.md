@@ -54,6 +54,10 @@ Released: gateway 0.7.1 (7fcf33a), abstractcode 0.7.1 / web 0.6.1, Observer 0.2.
 - A file attached in Code web did not appear in its Files panel.
 - Continuum and the Code web client both default to port 3002 when run standalone (see also app-surfaces 0879).
 
+**ADR-0026 (found by the 0977 investigation)**
+- `_client_history_window` (gateway `routes/gateway.py:6723-6726`) silently drops any message whose content is not a string on `/runs/{id}/chat` and the three `/backlog/*` endpoints; nothing records the drop. Keep parts (or route images as attachments, see 0977) and record anything dropped.
+- On the vision attachment path the question reaches the model twice (plain text, then with the image) (`openai_compatible_provider.py:1036-1047`); check prompt cleanliness and caching.
+
 **Release process**
 - Root CI's abstractcode build step is soft, so green CI does not prove the crate is on crates.io; the root release workflow does not check sibling pins are visible on their registries.
 - `test_inventory.sh` fails against the real siblings: `packages.txt` misses three dependency edges.
