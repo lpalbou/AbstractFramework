@@ -4,6 +4,7 @@
 > Type: task
 > Created: 2026-09-28
 > Priority: normal
+> Completed: 2026-09-28
 > Labels: operator-action, npm, release, trusted-publishing
 
 ## Summary
@@ -31,7 +32,7 @@ Ledger: "monitor-memory 0.1.10 FAILED (npm E404 on PUT = no trusted publisher fo
 
 ## Acceptance criteria
 
-- [ ] `npm view @abstractframework/monitor-memory version` returns the version of the latest AbstractUIC release.
+- [x] `npm view @abstractframework/monitor-memory version` returns the version of the latest AbstractUIC release.
 
 ## Validation
 
@@ -40,3 +41,10 @@ Ledger: "monitor-memory 0.1.10 FAILED (npm E404 on PUT = no trusted publisher fo
 ## Receipts
 
 - Source: `untracked/wave2/PLAN.md` (wave-2 ledger); root staging note `untracked/wave2/stage-root.md`.
+
+## Completion report (2026-09-28)
+
+- The operator added the trusted publisher on npmjs.com (repository `lpalbou/AbstractUIC`, workflow `release.yml`, environment `npm`, permissions npm publish + stage publish).
+- Re-ran the failed job of the AbstractUIC `v0.1.15` release run (36389121418); it skipped the already-published packages and published `@abstractframework/monitor-memory@0.1.10` with provenance.
+- Validation: `npm view @abstractframework/monitor-memory versions` ends with `"0.1.9","0.1.10"`.
+- Not a duplicate of `@abstractframework/monitor-active-memory` (checked at the operator's request): monitor-memory is the dependency-free host RAM + GPU meter custom element (`<monitor-memory>`, polls `GET /api/gateway/host/metrics/memory`; embedded by the gateway console); monitor-active-memory is the React/ReactFlow Knowledge-Graph + Active Memory explorer used by Flow/Observer/Code. Only the names are close.

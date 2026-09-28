@@ -12,9 +12,9 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 149 | 106 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951–0975 included; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Planned | 149 | 106 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0975, 0977 included; 0952 completed 2026-09-28; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931, 0976 included; 0901 promoted to planned) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 254 | 244 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0890, 0930, 0941, 0943, 0946–0950 (2026-09-28; 0941 released 2026-09-27 with root 0.5.0, the others ship in the wave-2 release, root 0.6.0). |
+| Completed | 255 | 245 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0890, 0930, 0941, 0943, 0946–0950, 0952 (2026-09-28; 0941 released 2026-09-27 with root 0.5.0, the others ship in the wave-2 release, root 0.6.0). |
 | Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -61,7 +61,7 @@ Release follow-ups after the 2026-09-26 wave:
    root 0.5.0 on 2026-09-27). Released so far: voice 0.13.0, core 2.18.0 (+ console crate 0.4.0), runtime
    0.7.1, agent 0.3.17, AbstractUIC v0.1.14, abstractcode 0.7.0 / web 0.6.0; pending: gateway 0.7.0,
    ui-kit 0.1.15, flow 0.4.0, continuum 0.4.0, entity 0.3.0, observer 0.2.0, assistant 0.9.0, root 0.6.0.
-   Follow-ups filed 0951–0976 (below); operator actions: [0952](planned/0952_monitor_memory_npm_trusted_publisher.md)
+   Follow-ups filed 0951–0976 (below); operator actions: [0952](completed/0952_monitor_memory_npm_trusted_publisher.md) (done 2026-09-28)
    (npm trusted publisher for monitor-memory) and the decision gate
    [0961](planned/0961_agent_200k_tool_result_clamp_decision.md) (agent 200k tool-result clamp).
 3. Wave follow-ups: [0918](completed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md)
@@ -127,7 +127,7 @@ Longer-running architecture work (unchanged since before the waves):
 | 0945 | [Cloud MiniMax video backend](planned/0945_minimax_cloud_video_backend.md) | Planned (next wave) | Async task/poll/fetch provider for `output.video`: the video option for non-Apple hosts. |
 | 0929 | [Automations v2: external triggers, durable inbox](planned/0929_automations_v2_external_triggers_durable_inbox.md) | Planned (0928 released with root 0.5.0) | Generic `event` source + `run.finished/failed` chaining with reliable admission. |
 | 0951 | [Apps under `/apps/<id>/` share one origin: defense in depth](planned/0951_apps_proxy_same_origin_trust_domain.md) | Planned (wave-2 follow-up) | Per-app origins or CSP/sandboxing; today one trust domain by design. |
-| 0952 | [npm trusted publisher for `@abstractframework/monitor-memory`](planned/0952_monitor_memory_npm_trusted_publisher.md) | Planned (OPERATOR ACTION) | 0.1.10 publish failed with E404 (no trusted publisher); stays 0.1.9; not blocking. |
+| 0952 | [npm trusted publisher for `@abstractframework/monitor-memory`](completed/0952_monitor_memory_npm_trusted_publisher.md) | Completed 2026-09-28 | Operator added the publisher; 0.1.10 published by re-running the v0.1.15 release job. Not a duplicate of monitor-active-memory. |
 | 0953 | [AbstractMusic says which backends are remote](planned/0953_abstractmusic_remote_backend_status_api.md) | Planned | Replaces Core 2.18.0's interim key-name music guard. |
 | 0954 | [Every-route key test from schemas, every POST](planned/0954_core_every_route_key_test_from_schemas.md) | Planned | Core test uses hand-written bodies on a subset of routes. |
 | 0955 | [Discovery sends the caller key to every checked provider](planned/0955_core_discovery_caller_key_fan_out.md) | Planned (security) | Scope the caller key to the named provider. |
@@ -136,7 +136,8 @@ Longer-running architecture work (unchanged since before the waves):
 | 0958 | [Gateway's remaining bounds under ADR-0026](planned/0958_gateway_remaining_bounds_under_adr_0026.md) | Planned | Skill 16k, search excerpt 240, `instruction_max_chars` 400, email clamps, batch 1.8M, report 80k, template 250k, draft 400k. |
 | 0959 | [co-scientist figure title/caption cut](planned/0959_co_scientist_figure_title_and_caption_cut.md) | Planned (ADR-0026) | 110/300-character cut of model output. |
 | 0960 | [Shipped memory budgets and flow-document field lengths](planned/0960_shipped_flow_memory_budgets_and_document_field_lengths.md) | Planned (ADR-0026) | ltm-ai-kg budgets; flow-doc field lengths. |
-| 0961 | [Agent 200k tool-result clamp](planned/0961_agent_200k_tool_result_clamp_decision.md) | Planned (OPERATOR DECISION GATE) | `OVERSIZED_MESSAGE_CLAMP_CHARS` is a char cap on model input; keep as the one exception or remove. |
+| 0961 | [Agent 200k tool-result clamp](planned/0961_agent_200k_tool_result_clamp_decision.md) | Planned (OPERATOR DECISION GATE) | Per message, every role, every call (not only tool results); from the 2026-08-01 poisoned-session incident. Options: remove, keep as the one exception, or a model-aware bound. |
+| 0977 | [Agent payload seam stringifies multimodal content](planned/0977_agent_payload_seam_stringifies_multimodal_content.md) | Planned (bug, high) | `str(content)` turns image parts into base64 text before the 0961 clamp. |
 | 0962 | [Canonical pointer fixtures gain a mode case](planned/0962_canonical_gateway_pointer_fixtures_mode_case.md) | Planned (next AbstractUIC release) | Every reader refuses other-user-writable pointers; the shared table has no case. |
 | 0963 | [Kit pointer reader: FIFO-safe open](planned/0963_kit_gateway_pointer_reader_fifo_safe_open.md) | Planned | Open without `O_NONBLOCK` can hang. |
 | 0964 | [Entity docs assistant 404](planned/0964_entity_docs_assistant_404.md) | Planned | Move to the Observer's docs-qa pattern. |
