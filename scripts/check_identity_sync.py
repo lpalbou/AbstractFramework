@@ -39,12 +39,14 @@ AUTOMATION_FIXTURE_COPY_DIRS = [
     SIBLINGS / "abstractcode" / "tui" / "tests" / "fixtures" / "automations",
 ]
 # Local gateway pointer fixtures (~/.abstractframework/gateway.json, root backlog 0943): canonical in
-# abstractuic (the kit's reader), vendored by the Assistant's reader and AbstractCode's terminal reader.
+# abstractuic (the kit's reader), vendored by the Assistant's reader, AbstractCode's terminal reader and the
+# gateway terminal console's reader.
 POINTER_FIXTURE_NAMES = ("cases.json", "malformed.json", "non_loopback.json", "valid.json", "wrong_schema.json", "CHECKSUMS.sha256")
 POINTER_FIXTURE_CANONICAL_DIR = SIBLINGS / "abstractuic" / "ui-kit" / "scripts" / "fixtures" / "gateway_pointer"
 POINTER_FIXTURE_COPY_DIRS = [
     SIBLINGS / "abstractassistant" / "tests" / "basic" / "fixtures" / "gateway_pointer",
     SIBLINGS / "abstractcode" / "tui" / "tests" / "fixtures" / "gateway_pointer",
+    SIBLINGS / "abstractgateway" / "console-tui" / "tests" / "fixtures" / "gateway_pointer",
 ]
 KNOWN_COPIES = [
     SIBLINGS / "abstractcore" / "abstractcore" / "assets" / "abstractframework_identity.json",
