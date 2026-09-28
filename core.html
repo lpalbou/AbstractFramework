@@ -87,7 +87,8 @@
       <a href="https://github.com/lpalbou/AbstractCore/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractCore/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E4 -->
+<div class="hero-code">
 <pre><code>pip install <span class="line-str">"abstractcore[server]"</span>
 abstractcore serve
 <span class="line-cmt"># open the printed link: http://127.0.0.1:8000/console#claim=...</span></code></pre>
@@ -117,7 +118,8 @@ abstractcore serve
         </ul>
       </div>
       <div style="min-width:0">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+        <!-- PENDING-W2: E1 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
 <span class="line-cmt"># Local: Ollama running, `ollama pull qwen3:4b` done</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
@@ -167,7 +169,8 @@ llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</s
         </ul>
       </div>
       <div style="min-width:0">
-        <div class="code-block"><pre><code>abstractcore host profile                 <span class="line-cmt"># accelerator, memory ceiling, free disk</span>
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>abstractcore host profile                 <span class="line-cmt"># accelerator, memory ceiling, free disk</span>
 abstractcore models catalog --fits        <span class="line-cmt"># models that fit this machine</span>
 abstractcore models download ollama qwen3:8b
 abstractcore models list                  <span class="line-cmt"># installed models, with sizes</span>
@@ -277,14 +280,16 @@ abstractcore-console</code></pre></div>
         <button class="tab-btn" data-tab="embed">Embeddings</button>
       </div>
       <div class="tab-panel active" id="tab-stream">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+        <!-- PENDING-W2: E1 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
 <span class="line-kw">for</span> chunk <span class="line-kw">in</span> llm.<span class="line-fn">generate</span>(<span class="line-str">"Write a short poem about distributed systems."</span>, stream=<span class="line-var">True</span>):
     print(chunk.content <span class="line-kw">or</span> <span class="line-str">""</span>, end=<span class="line-str">""</span>, flush=<span class="line-var">True</span>)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-tools">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>, <span class="line-fn">tool</span>
+        <!-- PENDING-W2: E1 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>, <span class="line-fn">tool</span>
 
 <span class="line-kw">@</span><span class="line-fn">tool</span>
 <span class="line-kw">def</span> <span class="line-fn">get_weather</span>(city: <span class="line-var">str</span>) -> <span class="line-var">str</span>:
@@ -297,7 +302,8 @@ print(resp.content)
 print(resp.tool_calls)   <span class="line-cmt"># structured calls; your host decides how to run them</span></code></pre></div>
       </div>
       <div class="tab-panel" id="tab-structured">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> pydantic <span class="line-kw">import</span> <span class="line-fn">BaseModel</span>
+        <!-- PENDING-W2: E1 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> pydantic <span class="line-kw">import</span> <span class="line-fn">BaseModel</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
 <span class="line-kw">class</span> <span class="line-fn">Answer</span>(<span class="line-fn">BaseModel</span>):
@@ -309,7 +315,8 @@ answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"Summa
 print(answer.bullets)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-media">
-        <div class="code-block"><pre><code><span class="line-cmt"># pip install "abstractcore[vision,voice]" and configure the plugin backends first</span>
+        <!-- PENDING-W2: E2 -->
+<div class="code-block"><pre><code><span class="line-cmt"># pip install "abstractcore[vision,voice]" and configure the plugin backends first</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
@@ -323,7 +330,8 @@ speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"
 wav_bytes = speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-embed">
-        <div class="code-block"><pre><code><span class="line-cmt"># pip install "abstractcore[embeddings]"</span>
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-cmt"># pip install "abstractcore[embeddings]"</span>
 <span class="line-kw">from</span> abstractcore.embeddings <span class="line-kw">import</span> <span class="line-fn">EmbeddingManager</span>
 
 embedder = <span class="line-fn">EmbeddingManager</span>()   <span class="line-cmt"># local all-MiniLM-L6-v2 by default</span>
@@ -355,7 +363,8 @@ print(embedder.<span class="line-fn">compute_similarity</span>(<span class="line
         </ul>
       </div>
       <div style="min-width:0">
-        <div class="code-block"><pre><code>pip install <span class="line-str">"abstractcore[server]"</span>
+        <!-- PENDING-W2: E4 -->
+<div class="code-block"><pre><code>pip install <span class="line-str">"abstractcore[server]"</span>
 abstractcore serve        <span class="line-cmt"># 127.0.0.1:8000</span>
 export ABSTRACTCORE_AUTH_TOKEN=<span class="line-str">"$(abstractcore serve --print-token)"</span>
 
@@ -364,7 +373,8 @@ curl -X POST http://localhost:8000/v1/chat/completions \
   -H <span class="line-str">"Authorization: Bearer $ABSTRACTCORE_AUTH_TOKEN"</span> \
   -d <span class="line-str">'{"model": "ollama/qwen3:4b",
        "messages": [{"role": "user", "content": "Hello!"}]}'</span></code></pre></div>
-        <div class="code-block"><pre><code><span class="line-kw">import</span> os
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">import</span> os
 <span class="line-kw">from</span> openai <span class="line-kw">import</span> <span class="line-fn">OpenAI</span>
 
 client = <span class="line-fn">OpenAI</span>(base_url=<span class="line-str">"http://localhost:8000/v1"</span>,

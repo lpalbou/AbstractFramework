@@ -84,12 +84,13 @@
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Your first hour</div>
-      <h2 class="section-title">From nothing to something useful</h2>
+      <h2 class="section-title">Install, try it, make it yours</h2>
     </div>
     <div class="journey">
       <div class="j-step reveal"><div class="j-body">
         <h3>Read the shape of the system <span class="j-time">10 min</span></h3>
-        <p>Clients (the <a href="console.html">consoles</a>, browser apps, the <a href="assistant.html">Assistant</a>, <a href="code.html">AbstractCode</a>, your own app) talk to <strong>AbstractGateway</strong> over HTTP and SSE. The gateway runs workflows on <strong>AbstractRuntime</strong>, which records every step in an append-only ledger, and reaches models through <strong>AbstractCore</strong>: local engines on the gateway host or cloud providers.</p><div class="code-block"><pre><code>Tray / Palette / CLI / browser apps -&gt; AbstractGateway -&gt; AbstractRuntime -&gt; AbstractCore -&gt; Providers</code></pre></div>
+        <p>Clients (the <a href="console.html">consoles</a>, browser apps, the <a href="assistant.html">Assistant</a>, <a href="code.html">AbstractCode</a>, your own app) talk to <strong>AbstractGateway</strong> over HTTP and SSE. The gateway runs workflows on <strong>AbstractRuntime</strong>, which records every step in an append-only ledger, and reaches models through <strong>AbstractCore</strong>: local engines on the gateway host or cloud providers.</p><!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>Tray / Palette / CLI / browser apps -&gt; AbstractGateway -&gt; AbstractRuntime -&gt; AbstractCore -&gt; Providers</code></pre></div>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Choose a topology <span class="j-time">15 min</span></h3>
@@ -97,7 +98,8 @@
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Stand up a server <span class="j-time">15 min</span></h3>
-        <div class="code-block"><pre><code>docker run \
+        <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>docker run \
   -p 8080:8080 \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
@@ -110,7 +112,8 @@
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Check it <span class="j-time">10 min</span></h3>
-        <div class="code-block"><pre><code>uvx abstractframework doctor
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>uvx abstractframework doctor
 abstractgateway network status
 abstractgateway network addresses</code></pre></div><p><code>doctor</code> only reads: Python, uv, Node, disk, the gateway, and whether Ollama and LM Studio answer.</p>
       </div></div>

@@ -87,7 +87,8 @@
       <a href="https://github.com/lpalbou/AbstractMusic/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractMusic/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code><span class="cmt"># Remote generation (ACE Music)</span>
 pip install abstractmusic
 export ACEMUSIC_API_KEY=...
@@ -223,7 +224,8 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
 
     <div class="reveal" style="max-width:48rem;margin:0 auto">
       <h3 style="margin-bottom:.75rem">Command line</h3>
-      <div class="code-block">
+      <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># ElevenLabs Music</span>
 <span class="line-kw">abstractmusic</span> <span class="line-str">--backend elevenlabs t2m "cinematic instrumental synth cue" \
   --format mp3 --out out.mp3 --duration 30</span>
@@ -248,7 +250,8 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
         <button class="tab-btn" data-tab="music-core">AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-music-remote">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractmusic <span class="line-kw">import</span> <span class="line-fn">MusicManager</span>
 <span class="line-kw">from</span> abstractmusic.backends <span class="line-kw">import</span> <span class="line-fn">AceMusicBackend</span>, <span class="line-fn">AceMusicBackendConfig</span>
 
@@ -260,7 +263,8 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-music-local">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># pip install "abstractmusic[acestep]"</span>
 <span class="line-kw">from</span> abstractmusic <span class="line-kw">import</span> <span class="line-fn">MusicManager</span>
 <span class="line-kw">from</span> abstractmusic.backends <span class="line-kw">import</span> <span class="line-fn">AceStepBackend</span>, <span class="line-fn">AceStepBackendConfig</span>
@@ -277,7 +281,8 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-music-core">
-        <div class="code-block">
+        <!-- PENDING-W2: E1 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># pip install abstractcore abstractmusic  (the plugin is discovered automatically)</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 

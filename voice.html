@@ -88,7 +88,8 @@
       <a href="https://github.com/lpalbou/AbstractVoice/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractVoice/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code><span class="cmt"># Remote OpenAI audio (reads OPENAI_API_KEY)</span>
 pip install abstractvoice
 
@@ -231,7 +232,8 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
 
     <div class="reveal" style="max-width:48rem;margin:0 auto">
       <h3 style="margin-bottom:.75rem">Command line</h3>
-      <div class="code-block">
+      <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># One-shot: write a WAV with hosted OpenAI audio and exit</span>
 <span class="line-kw">OPENAI_API_KEY</span>=... <span class="line-kw">abstractvoice</span> <span class="line-str">--provider openai --model tts-1 --voice alloy \
   --prompt "Hello from AbstractVoice." --output hello.wav</span>
@@ -248,7 +250,8 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
       </div>
 
       <h3 style="margin-top:2rem;margin-bottom:.75rem">Python</h3>
-      <div class="code-block">
+      <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractvoice <span class="line-kw">import</span> <span class="line-fn">VoiceManager</span>
 
 <span class="line-cmt"># Local stack: pip install "abstractvoice[supertonic,stt,omnivoice]"</span>
@@ -285,7 +288,8 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
         <button class="tab-btn" data-tab="voice-core">AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-voice-stream">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># Speak an LLM reply while it is still being generated</span>
 <span class="line-var">stream</span> = <span class="line-var">vm</span>.<span class="line-fn">open_tts_text_stream</span>()
 <span class="line-kw">for</span> <span class="line-var">delta</span> <span class="line-kw">in</span> <span class="line-var">llm_text_deltas</span>:   <span class="line-cmt"># text chunks from your model</span>
@@ -296,7 +300,8 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-voice-status">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractvoice.engine_runtime <span class="line-kw">import</span> <span class="line-fn">engine_runtime_status</span>
 
 <span class="line-cmt"># Checks installed packages only: nothing is imported or loaded</span>
@@ -307,7 +312,8 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-voice-core">
-        <div class="code-block">
+        <!-- PENDING-W2: E1 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># pip install abstractcore abstractvoice  (the plugin is discovered automatically)</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 

@@ -86,7 +86,8 @@
       <a href="https://github.com/lpalbou/AbstractFlow/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractFlow/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code><span class="line-cmt"># Gateway console: Apps &gt; Flow Editor &gt; Open</span>
 <span class="line-cmt"># (served at /apps/flow/, already signed in)</span>
 
@@ -131,20 +132,24 @@ npx @abstractframework/flow \
       <p class="section-desc">Nodes, pins and wires show what a workflow does, and the Run view shows what each step produced.</p>
     </div>
     <figure class="figure reveal" style="margin:0 0 2rem">
+      <!-- PENDING-W2: SHOT flow-map-reduce -->
       <img src="assets/img/shots/flow-map-reduce.webp" alt="The AbstractFlow 0.4.0 editor served at /apps/flow/: the node palette on the left and a map-reduce workflow on the canvas, with inputs, a for-each loop, a per-item LLM call, append and persist steps, a reduce LLM call and the result node" loading="lazy" width="1600" height="1000">
       <figcaption>An example map-reduce workflow in the Flow editor, opened from the gateway at <code>/apps/flow/</code>.</figcaption>
     </figure>
     <div class="showcase-grid reveal" style="align-items:start">
       <figure class="figure">
+        <!-- PENDING-W2: SHOT flow-dialogue-image -->
         <img src="assets/img/flow-dialogue-image.png" alt="A workflow in the AbstractFlow editor: On Flow Start, Ask User, LLM Call, Generate Voice and Generate Image nodes, with a Concat node building the image prompt from the LLM response" loading="lazy">
         <figcaption>A multimodal dialogue workflow: ask the user, answer with an LLM, then speak the answer and illustrate it.</figcaption>
       </figure>
       <figure class="figure">
+        <!-- PENDING-W2: SHOT flow-ralph -->
         <img src="assets/img/flow-ralph.png" alt="A workflow in the AbstractFlow editor: an intent analyzer LLM call, an Agent node and a reviewer LLM call with a JSON schema, whose parsed verdict feeds an If/Else node" loading="lazy">
         <figcaption>An example review loop: an agent does the work, a reviewer returns a structured verdict, and If/Else decides whether to go again.</figcaption>
       </figure>
     </div>
     <figure class="figure reveal" style="margin-top:2rem">
+      <!-- PENDING-W2: SHOT flow-observability-1-turn -->
       <img src="assets/img/flow-observability-1-turn.png" alt="The AbstractFlow Run view: the list of executed steps on the left, and the text, the generated audio and the generated image of one turn on the right, waiting for the user's next answer" loading="lazy">
       <figcaption>The Run view of the dialogue workflow: each step with its status and timing, and the text, voice and image one turn produced.</figcaption>
     </figure>
@@ -216,7 +221,8 @@ npx @abstractframework/flow \
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Packing a bundle from Python</h3>
     <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">Outside the editor, AbstractRuntime packs a bundle from VisualFlow JSON files. Upload the result with <code>POST /api/gateway/bundles/upload</code>, or place it in the directory named by <code>ABSTRACTGATEWAY_FLOWS_DIR</code>.</p>
-    <div class="code-block reveal">
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal">
 <pre><code><span class="line-kw">from</span> abstractruntime.workflow_bundle <span class="line-kw">import</span> <span class="line-fn">pack_workflow_bundle</span>
 
 <span class="line-fn">pack_workflow_bundle</span>(
@@ -250,7 +256,8 @@ npx @abstractframework/flow \
         <button class="tab-btn" data-tab="npx">On its own</button>
       </div>
       <div class="tab-panel active" id="tab-console">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># Gateway console: Apps &gt; Flow Editor &gt; Install, then Open</span>
 <span class="line-cmt"># or from a terminal:</span>
 abstractgateway apps install flow --launch
@@ -259,7 +266,8 @@ abstractgateway apps install flow --launch
         </div>
       </div>
       <div class="tab-panel" id="tab-npx">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code>npx @abstractframework/flow --gateway-url http://127.0.0.1:8080 --port 3003
 
 <span class="line-cmt"># or install the command</span>

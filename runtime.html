@@ -83,7 +83,8 @@
       <a href="https://github.com/lpalbou/AbstractRuntime/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractRuntime/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code>pip install abstractruntime            <span class="line-cmt"># remote providers, no local engines</span>
 pip install <span class="line-str">"abstractruntime[apple]"</span>   <span class="line-cmt"># local engines on Apple silicon; [gpu] for NVIDIA</span></code></pre>
     </div>
@@ -111,7 +112,8 @@ pip install <span class="line-str">"abstractruntime[apple]"</span>   <span class
         </ul>
       </div>
       <div style="min-width:0">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> Effect, EffectType, Runtime, StepPlan, WorkflowSpec
+        <!-- PENDING-W2: E3 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> Effect, EffectType, Runtime, StepPlan, WorkflowSpec
 <span class="line-kw">from</span> abstractruntime.storage <span class="line-kw">import</span> InMemoryLedgerStore, InMemoryRunStore
 
 
@@ -252,7 +254,8 @@ state = rt.<span class="line-fn">resume</span>(
         </ul>
       </div>
       <div style="min-width:0">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> HISTORY_REPLAY_MAX_TOKENS, window_transcript
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> HISTORY_REPLAY_MAX_TOKENS, window_transcript
 
 messages = [
     {<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"hi"</span>},
@@ -283,7 +286,8 @@ print(history.report[<span class="line-str">"dropped_messages"</span>])</code></
         <button class="tab-btn" data-tab="live">Live streaming</button>
       </div>
       <div class="tab-panel active" id="tab-sched">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> create_scheduled_runtime, JsonFileRunStore, JsonlLedgerStore
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> create_scheduled_runtime, JsonFileRunStore, JsonlLedgerStore
 
 sr = <span class="line-fn">create_scheduled_runtime</span>(
     run_store=<span class="line-fn">JsonFileRunStore</span>(<span class="line-str">"./data"</span>),
@@ -297,13 +301,15 @@ run_id, state = sr.<span class="line-fn">run</span>(my_workflow)
 sr.<span class="line-fn">stop</span>()</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-core">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> create_local_runtime
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> create_local_runtime
 
 <span class="line-cmt"># LLM_CALL and TOOL_CALLS effects run through AbstractCore</span>
 rt = <span class="line-fn">create_local_runtime</span>(provider=<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-approval">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> (
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> (
     ApprovalToolExecutor,
     MappingToolExecutor,
     ToolApprovalPolicy,
@@ -315,7 +321,8 @@ tools = <span class="line-fn">ApprovalToolExecutor</span>(
 )</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-live">
-        <div class="code-block"><pre><code>events = []
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>events = []
 runtime.<span class="line-fn">set_live_delta_sink</span>(events.append)
 run_id = runtime.<span class="line-fn">start</span>(workflow=wf, vars={<span class="line-str">"_runtime"</span>: {<span class="line-str">"stream"</span>: <span class="line-var">True</span>}})
 runtime.<span class="line-fn">tick</span>(workflow=wf, run_id=run_id)

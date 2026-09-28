@@ -923,6 +923,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
         </ul>
       </div>
       <div class="showcase-img">
+        <!-- PENDING-W2: SHOT flow-observability-1-turn -->
         <img src="assets/img/flow-observability-1-turn.png" alt="One workflow turn that produced a text answer, a voice recording and a generated image, shown with their controls" loading="lazy">
       </div>
     </div>
@@ -1199,7 +1200,8 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
         <button class="tab-btn" data-tab="kg-api">Gateway API</button>
       </div>
       <div class="tab-panel active" id="tab-kg-python">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> <span class="line-fn">InMemoryTripleStore</span>, <span class="line-fn">TripleAssertion</span>, <span class="line-fn">TripleQuery</span>
 
 store = <span class="line-fn">InMemoryTripleStore</span>()
@@ -1218,7 +1220,8 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
         </div>
       </div>
       <div class="tab-panel" id="tab-kg-api">
-        <div class="code-block">
+        <!-- PENDING-W2: E6 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># Query the knowledge graph via gateway</span>
 curl http://localhost:<span class="line-var">8080</span>/api/gateway/kg/query \
   -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \

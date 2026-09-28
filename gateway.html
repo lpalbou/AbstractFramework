@@ -89,7 +89,8 @@
       <a href="https://github.com/lpalbou/AbstractGateway/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractGateway/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code><span class="line-kw">pip install</span> abstractgateway
 abstractgateway serve
 <span class="line-cmt"># prints http://127.0.0.1:8080/console#claim=…</span>
@@ -199,7 +200,8 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
       </table>
     </div>
 
-    <div class="code-block reveal" style="margin-top:1.5rem">
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal" style="margin-top:1.5rem">
 <pre><code>abstractgateway network set lan                   <span class="line-cmt"># let your local network reach the gateway</span>
 abstractgateway network restart                   <span class="line-cmt"># apply it now</span>
 abstractgateway network status                    <span class="line-cmt"># configured vs running, addresses, warnings</span>
@@ -252,7 +254,8 @@ abstractgateway network set --allowed-origins https://ui.example.com   <span cla
       <a class="app-chip" href="entity.html"><strong>Entity</strong><span class="where">/apps/entity/</span><p>Entities, their memory graph and diaries.</p></a>
       <a class="app-chip" href="assistant.html"><strong>Assistant</strong><span class="where">desktop app</span><p>Opens on the gateway's computer, signed in.</p></a>
     </div>
-    <div class="code-block reveal" style="margin-top:1.5rem">
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal" style="margin-top:1.5rem">
 <pre><code>abstractgateway apps install observer --launch   <span class="line-cmt"># Flow, Code, Observer, Continuum, Entity, Assistant</span>
 abstractgateway apps open observer               <span class="line-cmt"># a one-time signed-in link</span></code></pre>
     </div>
@@ -271,7 +274,8 @@ abstractgateway apps open observer               <span class="line-cmt"># a one-
       <h2 class="section-title">Local models that fit this machine</h2>
       <p class="section-desc">The console's <strong>Models</strong> and <strong>Engines</strong> tabs, and the matching commands, install a local engine and download a model that fits. They are <a href="core.html">AbstractCore</a>'s model browser and engine installer, shown inside the gateway.</p>
     </div>
-    <div class="code-block reveal">
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal">
 <pre><code>abstractgateway engines status --probe           <span class="line-cmt"># Ollama, LM Studio, MLX, llama.cpp, ...</span>
 abstractgateway engines install ollama --dry-run <span class="line-cmt"># the exact command, nothing runs</span>
 abstractgateway models catalog --fits            <span class="line-cmt"># models that fit this machine</span>
@@ -329,7 +333,8 @@ abstractgateway models loaded                    <span class="line-cmt"># what i
         </ul>
         <p style="color:var(--text-secondary);margin-top:1rem">You create and manage automations in <a href="observer.html">AbstractObserver</a>, <a href="assistant.html">AbstractAssistant</a> and <a href="code.html">AbstractCode</a> (terminal and web). See <a href="automations.html">Automations</a>.</p>
       </div>
-      <div class="code-block">
+      <!-- PENDING-W2: E6 -->
+<div class="code-block">
 <pre><code><span class="line-kw">GET</span>   /api/gateway/trigger-sources
 <span class="line-kw">POST</span>  /api/gateway/automations
 <span class="line-kw">GET</span>   /api/gateway/automations
@@ -353,7 +358,8 @@ abstractgateway models loaded                    <span class="line-cmt"># what i
       <h2 class="section-title">The client contract</h2>
       <p class="section-desc">Clients start runs, act with durable commands and render by replaying or streaming the ledger. The live OpenAPI spec is at <code>/openapi.json</code> and Swagger UI at <code>/docs</code>.</p>
     </div>
-    <div class="code-block reveal">
+    <!-- PENDING-W2: E6 -->
+<div class="code-block reveal">
 <pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
 curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
   -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"Hello"}}'</span> \
@@ -398,21 +404,24 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</
     <div class="modes-grid reveal">
       <div class="mode-card">
         <h3>Light server</h3>
-        <div class="code-block" style="margin:1rem 0">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block" style="margin:1rem 0">
 <pre><code><span class="line-kw">pip install</span> abstractgateway</code></pre>
         </div>
         <p>HTTP/SSE server, Runtime, Agent, hosted and OpenAI-compatible providers, remote media and LanceDB memory, without PyTorch or CUDA.</p>
       </div>
       <div class="mode-card">
         <h3>Apple Silicon</h3>
-        <div class="code-block" style="margin:1rem 0">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block" style="margin:1rem 0">
 <pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractgateway[apple]"</span></code></pre>
         </div>
         <p>The full native macOS profile with Apple-local engines and every non-NVIDIA capability.</p>
       </div>
       <div class="mode-card">
         <h3>GPU workstation</h3>
-        <div class="code-block" style="margin:1rem 0">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block" style="margin:1rem 0">
 <pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractgateway[gpu]"</span></code></pre>
         </div>
         <p>vLLM, Hugging Face, local Diffusers images, local voice, music and memory. Add <code>[tray]</code> to any profile for a menu-bar or system tray icon.</p>
@@ -420,7 +429,8 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</
     </div>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Docker</h3>
-    <div class="code-block reveal">
+    <!-- PENDING-W2: E7 -->
+<div class="code-block reveal">
 <pre><code><span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway:0.7.1
 <span class="line-cmt"># experimental full GPU image for NVIDIA hosts (best effort)</span>
 <span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway:gpu-latest
@@ -436,7 +446,8 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</
     <p class="reveal" style="color:var(--text-secondary);margin-top:1rem;max-width:860px">On first start the container creates <code>default/admin</code> and writes its token to <code>runtime/auth/bootstrap-admin-token</code>; use it to sign in to <code>/console</code>, then rotate it or create named users. On Apple Silicon, keep MLX inference native on macOS and point the container at it.</p>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Split API and runner, SQLite</h3>
-    <div class="code-block reveal">
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal">
 <pre><code><span class="line-cmt"># Process 1: the runner loop</span>
 abstractgateway runner
 <span class="line-cmt"># Process 2: the HTTP API only, on the same data directory</span>

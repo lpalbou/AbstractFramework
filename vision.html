@@ -87,7 +87,8 @@
       <a href="https://github.com/lpalbou/AbstractVision/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractVision/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code><span class="cmt"># OpenAI-compatible HTTP backend</span>
 pip install abstractvision
 
@@ -296,7 +297,8 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
 
     <div class="reveal" style="max-width:48rem;margin:0 auto">
       <h3 style="margin-bottom:.75rem">Command line (MLX-Gen)</h3>
-      <div class="code-block">
+      <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># Already on PATH with the AbstractFramework installer (apple profile); otherwise:</span>
 <span class="line-kw">pip install</span> <span class="line-str">"abstractvision[models,mlx-gen]"</span>
 <span class="line-kw">abstractvision</span> <span class="line-str">catalog --provider mlx-gen</span>
@@ -330,7 +332,8 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
         <button class="tab-btn" data-tab="vision-core">AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-vision-remote">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">LocalAssetStore</span>, <span class="line-fn">VisionManager</span>
 <span class="line-kw">from</span> abstractvision.backends <span class="line-kw">import</span> <span class="line-fn">OpenAICompatibleBackendConfig</span>, <span class="line-fn">OpenAICompatibleVisionBackend</span>
 
@@ -345,7 +348,8 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-vision-local">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> pathlib <span class="line-kw">import</span> <span class="line-fn">Path</span>
 <span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">VisionManager</span>
 <span class="line-kw">from</span> abstractvision.backends <span class="line-kw">import</span> <span class="line-fn">MLXGenBackendConfig</span>, <span class="line-fn">MLXGenVisionBackend</span>
@@ -372,7 +376,8 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-vision-core">
-        <div class="code-block">
+        <!-- PENDING-W2: E1 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># pip install abstractcore abstractvision  (the plugin is discovered automatically)</span>
 <span class="line-cmt"># Defaults to OpenAI images with OPENAI_API_KEY; set OPENAI_BASE_URL for a compatible server,</span>
 <span class="line-cmt"># or ABSTRACTVISION_BACKEND=mlx-gen | diffusers | sdcpp to run locally.</span>

@@ -81,7 +81,8 @@
       <a href="https://github.com/lpalbou/AbstractGateway/blob/main/docs/console.md" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Console reference</a>
       <a href="https://crates.io/crates/abstractgateway-console" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">crates.io</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code><span class="line-cmt"># web: start the gateway, open the one-time link it prints</span>
 abstractgateway serve          <span class="line-cmt"># http://127.0.0.1:8080/console#claim=…</span>
 abstractgateway claim --open   <span class="line-cmt"># a fresh link (valid 10 minutes, this machine only)</span>
@@ -115,6 +116,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin to
         </table>
       </div>
       <figure class="figure" id="shot-first-run">
+        <!-- PENDING-W2: SHOT console-first-run -->
         <img src="assets/img/shots/console-first-run.webp" alt="The gateway web console's first-run guide, step 1 of 5, showing this machine's memory, GPU, data folder and sign-in mode" loading="lazy" width="1600" height="1000">
         <figcaption>The first-run guide in the web console.</figcaption>
       </figure>
@@ -168,15 +170,18 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin to
       <div class="comp-card reveal"><div class="comp-card-header"><span class="comp-tag app">Users &amp; Sandbox</span></div><h3>Users, entities and a sandbox</h3><p>User records and token rotation, the summoned-entity roster, and a sandbox for quick chats and media generation against the configured defaults. A docs assistant in the top bar answers from the gateway's own documentation.</p></div>
     </div>
     <figure class="figure reveal" id="shot-models" style="margin-top:2.5rem">
+      <!-- PENDING-W2: SHOT console-models -->
       <img src="assets/img/shots/console-models.webp" alt="The web console's Models tab searched for llama: Llama 3.3 70B builds marked Tight and Needs GPU limit, with the sudo sysctl command that raises the Mac GPU memory limit, and Llama 4 Scout builds marked Too large" loading="lazy" width="1600" height="1100">
       <figcaption>Fit verdicts on a 128 GB Mac: Tight, Needs GPU limit (with the command to run) and Too large.</figcaption>
     </figure>
     <div class="showcase-grid reveal" style="margin-top:2rem;align-items:start">
       <figure class="figure">
+        <!-- PENDING-W2: SHOT console-network -->
         <img src="assets/img/shots/console-network.webp" alt="The web console's network choice: Localhost only selected, with Local network and Internet options and the list of addresses a client can use" loading="lazy" width="1600" height="1000">
         <figcaption>Who can reach the gateway: this computer, the local network or the internet.</figcaption>
       </figure>
       <figure class="figure">
+        <!-- PENDING-W2: SHOT console-apps -->
         <img src="assets/img/shots/console-apps.webp" alt="The web console's Apps tab: Node.js ready, then Observer, Continuum, Code, Entity, Flow Editor and Assistant cards with Open buttons" loading="lazy" width="1600" height="639">
         <figcaption>The Apps tab: each app opens at <code>/apps/&lt;app&gt;/</code>, signed in.</figcaption>
       </figure>
@@ -206,7 +211,8 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin to
         </ul>
       </div>
       <div>
-        <div class="code-block"><pre><code><span class="line-cmt"># on the server (the installer prints this line, filled in)</span>
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-cmt"># on the server (the installer prints this line, filled in)</span>
 abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;
 
 <span class="line-cmt"># choose the mode at launch</span>
@@ -219,10 +225,12 @@ abstractgateway-console --about --gateway-url http://127.0.0.1:8080</code></pre>
       </div>
     </div>
     <figure class="figure reveal" id="shot-tui" style="margin-top:2rem">
+      <!-- PENDING-W2: SHOT console-tui -->
       <img src="assets/img/shots/console-tui.webp" alt="The terminal console abstractgateway-console on its Setup screen: numbered screen tabs, this computer's memory and graphics, data folder, sign-in mode and start at login, and the eight guide steps" loading="lazy" width="1600" height="788">
       <figcaption>The terminal console's Setup screen.</figcaption>
     </figure>
     <figure class="figure reveal" style="margin-top:1.5rem">
+      <!-- PENDING-W2: SHOT console-tui-network -->
       <img src="assets/img/shots/console-tui-network.webp" alt="The terminal console's Network screen: Localhost only selected, Local network and Internet options, the address list and reverse-proxy settings" loading="lazy" width="1600" height="657">
       <figcaption>The Network screen (<code>N</code>): the saved mode, what is running, and every address.</figcaption>
     </figure>
@@ -237,7 +245,8 @@ abstractgateway-console --about --gateway-url http://127.0.0.1:8080</code></pre>
       <h2 class="section-title">The console's command-line twins</h2>
       <p class="section-desc">The one-line installer puts every terminal command in <code>~/.local/bin</code>, next to <code>abstractgateway</code>: the terminal console, AbstractCode's terminal client, and the AbstractCore, voice, vision and music commands. The console's Apps page installs and updates <code>abstractcode</code> in that same folder.</p>
     </div>
-    <div class="code-block reveal" style="max-width:860px;margin:0 auto"><pre><code>abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal" style="max-width:860px;margin:0 auto"><pre><code>abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;
 abstractcode login --token &lt;admin token&gt;     <span class="line-cmt"># once, then: abstractcode</span>
 abstractgateway apps tui-command code        <span class="line-cmt"># on the gateway's computer: a one-time signed-in line</span>
 abstractgateway-config claim-url             <span class="line-cmt"># a new one-time console sign-in link</span>
@@ -254,7 +263,8 @@ abstractcore models catalog --fits           <span class="line-cmt"># the Models
       <h2 class="section-title">AbstractCore has consoles too</h2>
       <p class="section-desc">If you use AbstractCore on its own, <code>abstractcore serve</code> opens the same Models and Engines screens in its own console, and <code>abstractcore-console</code> is its terminal version.</p>
     </div>
-    <div class="code-block reveal" style="max-width:820px;margin:0 auto"><pre><code>pip install abstractcore &amp;&amp; abstractcore serve   <span class="line-cmt"># http://127.0.0.1:8000/console#claim=…</span>
+    <!-- PENDING-W2: E4 -->
+<div class="code-block reveal" style="max-width:820px;margin:0 auto"><pre><code>pip install abstractcore &amp;&amp; abstractcore serve   <span class="line-cmt"># http://127.0.0.1:8000/console#claim=…</span>
 cargo install abstractcore-console                <span class="line-cmt"># Rust 1.87+</span>
 abstractcore models catalog --fits                <span class="line-cmt"># the same catalog from the command line</span></code></pre></div>
   </div>

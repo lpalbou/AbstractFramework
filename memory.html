@@ -81,7 +81,8 @@
       <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code>python -m pip install AbstractMemory
 python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   <span class="line-cmt"># LanceDB backend</span></code></pre>
     </div>
@@ -176,7 +177,8 @@ python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   
       </div>
     </div>
 
-    <div class="code-block reveal" style="margin-top:var(--space-2xl)"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> (
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal" style="margin-top:var(--space-2xl)"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> (
     MemorySystem, MemoryRecordInput, SQLiteTripleStore, SQLiteJournal, Stimulus,
 )
 
@@ -218,7 +220,8 @@ system.<span class="line-fn">commit_selection</span>(result.trace_id, [h.record_
         </ul>
       </div>
       <div style="min-width:0">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> InMemoryTripleStore, TripleAssertion, TripleQuery
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> InMemoryTripleStore, TripleAssertion, TripleQuery
 
 store = <span class="line-fn">InMemoryTripleStore</span>()
 store.<span class="line-fn">add</span>([
@@ -239,7 +242,8 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
     </div>
 
     <h3 class="reveal" style="margin:var(--space-2xl) 0 var(--space-md)">Semantic search with an embedder</h3>
-    <div class="code-block reveal"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> OpenAICompatTextEmbedder, SQLiteTripleStore, TripleAssertion, TripleQuery
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> OpenAICompatTextEmbedder, SQLiteTripleStore, TripleAssertion, TripleQuery
 
 <span class="line-cmt"># any OpenAI-compatible /embeddings endpoint; base_url includes the version prefix</span>
 embedder = <span class="line-fn">OpenAICompatTextEmbedder</span>(<span class="line-str">"http://127.0.0.1:1234/v1"</span>, <span class="line-str">"your-embedding-model"</span>)

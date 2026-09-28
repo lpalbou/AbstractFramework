@@ -87,7 +87,8 @@
       <a href="https://github.com/lpalbou/AbstractCode/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractCode/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code><span class="line-cmt"># Terminal client: the installer puts it on your PATH</span>
 abstractcode login --token <span class="line-var">&lt;admin token&gt;</span>   <span class="line-cmt"># once</span>
 abstractcode
@@ -128,6 +129,7 @@ abstractgateway apps tui-command code
       </div>
     </div>
     <figure class="figure reveal" style="margin-top:2rem">
+      <!-- PENDING-W2: SHOT code-web -->
       <img src="assets/img/shots/code-web.webp" alt="The AbstractCode web client at /apps/code/: the sidebar with New conversation, an Automations section listing three demo automations and the conversations; a start screen with four starter cards; the Workspace panel with Files, Activity and Artifacts tabs" loading="lazy" width="1600" height="1000">
       <figcaption>The browser client: automations in the sidebar, the conversation workspace on the right.</figcaption>
     </figure>
@@ -229,14 +231,17 @@ abstractgateway apps tui-command code
     </div>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem">
       <figure class="figure">
+        <!-- PENDING-W2: SHOT abstractcode-web -->
         <img src="assets/img/abstractcode-web.png" alt="AbstractCode web client: a user asks about an attached image named bateau.png and the agent describes a stylized sailboat" loading="lazy">
         <figcaption>The web client: a chat turn about an attached image.</figcaption>
       </figure>
       <figure class="figure">
+        <!-- PENDING-W2: SHOT abstractcode-auditability -->
         <img src="assets/img/abstractcode-auditability.png" alt="AbstractCode web client Context panel showing one reasoning cycle with System, User, Tools, Response, Reasoning and Raw views" loading="lazy">
         <figcaption>The web client's Context panel: one reasoning cycle and the exact model input.</figcaption>
       </figure>
       <figure class="figure">
+        <!-- PENDING-W2: SHOT abstractcode-tui -->
         <img src="assets/img/abstractcode-tui.png" alt="AbstractCode in a terminal, listing the available tools with their parameters" loading="lazy">
         <figcaption>The terminal client listing the agent's tools and their parameters (captured from an earlier version).</figcaption>
       </figure>
@@ -260,7 +265,8 @@ abstractgateway apps tui-command code
         <button class="tab-btn" data-tab="headless">Headless</button>
       </div>
       <div class="tab-panel active" id="tab-terminal">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># already on PATH after the one-line install; otherwise:</span>
 <span class="line-kw">cargo install</span> abstractcode                <span class="line-cmt"># or a prebuilt binary from GitHub releases</span>
 
@@ -278,7 +284,8 @@ abstractcode --workflow <span class="line-str">default</span>             <span 
         <div class="install-notes"><ul><li>Started without a valid sign-in, <code>abstractcode</code> says so and prints both ways to sign in instead of opening. The installer never saves the token for you; the admin token is in <code>&lt;data dir&gt;/auth/bootstrap-admin-token</code>.</li><li><code>login</code> checks the credentials against the gateway before saving them in <code>~/.abstractcode/gateway.json</code>. Without <code>--gateway-url</code> or a saved login, the client uses the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>), else <code>http://127.0.0.1:8080</code>. <code>--provider</code> and <code>--model</code> only override the gateway's route.</li></ul></div>
       </div>
       <div class="tab-panel" id="tab-web">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># From the gateway console: Apps &gt; Code &gt; Open  (http://127.0.0.1:8080/apps/code/)</span>
 
 <span class="line-cmt"># Or on its own (Node.js 18+), on http://127.0.0.1:3002</span>
@@ -288,7 +295,8 @@ abstractcode --workflow <span class="line-str">default</span>             <span 
         <div class="install-notes"><ul><li>Sign in with your gateway user and token: the web server exchanges the token for a gateway browser session and keeps only app-scoped session cookies. The server listens on <code>127.0.0.1</code> by default; to reach it from another machine, expose or tunnel the gateway's own address and use <code>/apps/code/</code>.</li></ul></div>
       </div>
       <div class="tab-panel" id="tab-headless">
-        <div class="code-block">
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-cmt"># One-shot run that prints transcript events as they arrive</span>
 abstractcode exec <span class="line-str">"Summarize the workspace layout"</span> --permissions <span class="line-str">read</span>
 

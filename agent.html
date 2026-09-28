@@ -81,7 +81,8 @@
       <a href="https://github.com/lpalbou/AbstractAgent/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractAgent/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code>pip install abstractagent
 <span class="line-cmt"># pulls in abstractcore[tools] and AbstractRuntime 0.7+</span></code></pre>
     </div>
@@ -125,7 +126,8 @@
         </ul>
       </div>
       <div style="min-width:0">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
+        <!-- PENDING-W2: E5 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
 
 <span class="line-cmt"># provider/model resolve from your AbstractCore config defaults</span>
 <span class="line-cmt"># (`abstractcore --config`) when omitted; pass them explicitly to pin.</span>
@@ -216,7 +218,8 @@ print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
         <button class="tab-btn" data-tab="hooks">Loop hooks</button>
       </div>
       <div class="tab-panel active" id="tab-persist">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
+        <!-- PENDING-W2: E5 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
 <span class="line-kw">from</span> abstractruntime.storage.json_files <span class="line-kw">import</span> JsonFileRunStore, JsonlLedgerStore
 
 run_store = <span class="line-fn">JsonFileRunStore</span>(<span class="line-str">".runs"</span>)
@@ -234,7 +237,8 @@ state = agent2.<span class="line-fn">run_to_completion</span>()
 print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-ask">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
+        <!-- PENDING-W2: E5 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
 
 agent = <span class="line-fn">create_react_agent</span>()
 agent.<span class="line-fn">start</span>(<span class="line-str">"Plan a team offsite; ask me anything you need to know"</span>)
@@ -248,7 +252,8 @@ state = agent.<span class="line-fn">run_to_completion</span>()
 print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-custom">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
+        <!-- PENDING-W2: E5 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
 <span class="line-kw">from</span> abstractcore.tools <span class="line-kw">import</span> <span class="line-fn">tool</span>
 
 <span class="line-kw">@</span><span class="line-fn">tool</span>(name=<span class="line-str">"my_tool"</span>, description=<span class="line-str">"Example tool"</span>)
@@ -261,7 +266,8 @@ state = agent.<span class="line-fn">run_to_completion</span>()
 print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-hooks">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> LoopHooks, HookEvent, ReactAgent
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> LoopHooks, HookEvent, ReactAgent
 <span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> create_local_runtime
 
 <span class="line-kw">def</span> <span class="line-fn">my_handler</span>(event: HookEvent):

@@ -107,14 +107,16 @@
             <li>Click <strong>Continue</strong>, then <strong>Install</strong>; it installs for you only, so it does not ask for your password. A Terminal window then shows each step and asks one question: <em>Start AbstractFramework automatically when you log in?</em> Press Return for yes.</li>
             <li>It also leaves <strong>Install AbstractFramework.command</strong> (repair) and <strong>Uninstall AbstractFramework.command</strong> in <code>~/Library/Application Support/AbstractFramework/Installer</code>.</li>
           </ul><p style="margin:.9rem 0 .2rem"><strong>With Terminal: one line.</strong> Paste it and press Return; it runs the same installer.</p></div>
-          <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+          <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
           <div class="install-notes"><ul>
             <li>macOS 13 or later (the Apple Silicon engines need macOS 14), about 5 GB of free disk before models, and an internet connection.</li>
             <li>With no answer to the start-at-login question within 25 seconds, it leaves start at login off. Pass options after <code>sh -s --</code>, for example <code>… | sh -s -- --with-ollama</code>. See <a href="#options">Options</a>.</li>
           </ul></div>
         </div>
         <div class="tab-panel" id="tab-i-linux">
-          <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+          <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
           <div class="install-notes"><ul>
             <li>Paste it in a terminal and press Return. It asks whether to start at login (a <code>systemd --user</code> service); Enter = yes, no answer within 25 seconds leaves it off. Your data lives in <code>~/.local/share/abstractgateway</code>.</li>
             <li>glibc distributions on x86_64 or aarch64; about 5 GB of free disk before models. The <code>gpu</code> profile is picked when <code>nvidia-smi</code> or <code>rocminfo</code> works.</li>
@@ -122,7 +124,8 @@
           </ul></div>
         </div>
         <div class="tab-panel" id="tab-i-win">
-          <div class="code-block"><pre><code>powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"</code></pre></div>
+          <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"</code></pre></div>
           <div class="install-notes"><ul>
             <li>Windows 10 22H2 or later, or Windows 11. Open PowerShell, paste the line and press Enter.</li>
             <li>It installs under your user account (no administrator rights), asks whether to start AbstractFramework at sign-in (Enter = yes) and opens it in your browser.</li>
@@ -130,7 +133,8 @@
           </ul></div>
         </div>
         <div class="tab-panel" id="tab-i-hand">
-          <div class="code-block"><pre><code><span class="line-cmt"># the same install, step by step</span>
+          <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code><span class="line-cmt"># the same install, step by step</span>
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv python install 3.12
 uv tool install --python 3.12 "abstractgateway[tray]==0.7.1"   <span class="line-cmt"># [apple,tray] or [gpu,tray] for local engines</span>
@@ -185,7 +189,8 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
     <div class="showcase-grid reveal" style="margin-top:2rem;align-items:start">
       <div>
         <h3 style="margin-bottom:.75rem">Sign the terminal app in</h3>
-        <div class="code-block"><pre><code>abstractcode login --token &lt;admin token&gt;   <span class="line-cmt"># once; the summary prints it with your token</span>
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>abstractcode login --token &lt;admin token&gt;   <span class="line-cmt"># once; the summary prints it with your token</span>
 abstractcode
 
 <span class="line-cmt"># or, on the gateway's computer, without handling a token:</span>
@@ -240,18 +245,21 @@ abstractgateway apps tui-command code</code></pre></div>
     <div class="journey">
       <div class="j-step reveal"><div class="j-body">
         <h3>Install over SSH</h3>
-        <div class="code-block"><pre><code>ssh -t &lt;server&gt;
+        <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>ssh -t &lt;server&gt;
 curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
         <p>It asks the start-at-login question in your SSH terminal, installs local voice like every install, and at the end offers to open the terminal console, signed in ("Press Enter within 25 s"). No answer skips it, so a scripted install never hangs. Over SSH it does not open a browser on the server.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Configure from the terminal console</h3>
-        <div class="code-block"><pre><code>abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;</code></pre></div>
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;</code></pre></div>
         <p>The installer's summary prints this command with your port and token filled in; the admin token is also in <code>~/.local/share/abstractgateway/auth/bootstrap-admin-token</code>. The console runs the same setup guide as the web console. Press <code>N</code> for <strong>Network</strong>, <code>A</code> for <strong>Apps</strong>, <code>F3</code> for the gateway host (restart, update, start at login).</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Reach the web console and apps through one tunnel</h3>
-        <div class="code-block"><pre><code>ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
 <span class="line-cmt"># on the server, print a one-time sign-in link for your browser:</span>
 abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></div>
         <p>Open the link in your browser, then open the apps from the console's <strong>Apps</strong> page: each one is served at <code>http://127.0.0.1:8080/apps/&lt;app&gt;/</code> (<code>observer</code>, <code>code</code>, <code>flow</code>, <code>continuum</code>, <code>entity</code>).</p>
@@ -271,7 +279,8 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
     <div class="showcase-grid reveal" style="align-items:start">
       <div>
         <h3 style="margin-bottom:.75rem">Network</h3>
-        <div class="code-block"><pre><code>abstractgateway network status
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>abstractgateway network status
 abstractgateway network set lan          <span class="line-cmt"># devices on your local network</span>
 abstractgateway network set localhost --port 8080
 abstractgateway network set internet --acknowledge-internet
@@ -281,7 +290,8 @@ abstractgateway network addresses</code></pre></div>
       </div>
       <div>
         <h3 style="margin-bottom:.75rem">Start at login</h3>
-        <div class="code-block"><pre><code>abstractgateway service enable     <span class="line-cmt"># start at the next login</span>
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>abstractgateway service enable     <span class="line-cmt"># start at the next login</span>
 abstractgateway service disable
 abstractgateway service install --port 8080
 abstractgateway service status
@@ -346,16 +356,19 @@ abstractgateway service uninstall  <span class="line-cmt"># data is kept</span><
     <div class="showcase-grid reveal" style="margin-top:2.5rem;align-items:start">
       <div>
         <h3 style="margin-bottom:.75rem">Check an install</h3>
-        <div class="code-block"><pre><code>uvx abstractframework doctor</code></pre></div>
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code>uvx abstractframework doctor</code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm)">Checks Python, uv, Node, disk, the gateway and whether Ollama and LM Studio answer. It only reads.</p>
       </div>
       <div>
         <h3 id="upgrade" style="margin-bottom:.75rem">Upgrade</h3>
-        <div class="code-block"><pre><code><span class="line-cmt"># re-run the same line you installed with</span>
+        <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code><span class="line-cmt"># re-run the same line you installed with</span>
 curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm)">The line always runs the installer of the latest release: it installs the gateway version that release pins, rebuilds the terminal apps when newer ones are pinned, and keeps your profile, port, start-at-login choice, network setting, data, models and apps. On Windows, run the PowerShell line again; on a Mac without Terminal, install the latest <code>.pkg</code> again. The gateway can also update itself from the <strong>Gateway</strong> card in the console (terminal console: <code>F3</code>) and from the menu-bar icon.</p>
         <h3 style="margin:1.25rem 0 .75rem">Remove</h3>
-        <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh</code></pre></div>
+        <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh</code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm)">It asks before deleting anything, keeps your data unless you say yes, and keeps model weights and shared caches. Windows: <code>install.ps1 -Uninstall [-Purge]</code>.</p>
       </div>
     </div>
@@ -379,22 +392,26 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
           <button class="tab-btn" data-tab="p-docker">Docker</button>
         </div>
         <div class="tab-panel active" id="tab-p-light">
-          <div class="code-block"><pre><code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+          <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate
 python -m pip install abstractframework
 abstractframework doctor
 abstractgateway serve     <span class="line-cmt"># prints a one-time console link</span></code></pre></div>
           <div class="install-notes"><ul><li>Remote-first: cloud APIs and endpoint servers (LM Studio, Ollama, vLLM, llama.cpp, OpenAI-compatible). Multimodal input and output, tools, durable runs and workflows all work.</li></ul></div>
         </div>
         <div class="tab-panel" id="tab-p-apple">
-          <div class="code-block"><pre><code>pip install "abstractframework[apple]"</code></pre></div>
+          <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>pip install "abstractframework[apple]"</code></pre></div>
           <div class="install-notes"><ul><li>macOS 14 or later on Apple Silicon. Local MLX and Metal engines next to the endpoint providers. A plain <code>pip install</code> of this profile builds a few compiled extras from source and needs a C/C++ compiler; the one-line installer does not.</li></ul></div>
         </div>
         <div class="tab-panel" id="tab-p-gpu">
-          <div class="code-block"><pre><code>pip install "abstractframework[gpu]"</code></pre></div>
+          <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>pip install "abstractframework[gpu]"</code></pre></div>
           <div class="install-notes"><ul><li>Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers. Voice cloning with F5-TTS needs Python 3.11+.</li></ul></div>
         </div>
         <div class="tab-panel" id="tab-p-docker">
-          <div class="code-block"><pre><code>docker run \
+          <!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>docker run \
   -p 8080:8080 \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \

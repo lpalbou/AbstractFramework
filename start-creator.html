@@ -84,12 +84,13 @@
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Your first hour</div>
-      <h2 class="section-title">From nothing to something useful</h2>
+      <h2 class="section-title">Install, try it, make it yours</h2>
     </div>
     <div class="journey">
       <div class="j-step reveal"><div class="j-body">
         <h3>Install with the right profile <span class="j-time">15 min</span></h3>
-        <p>The installer picks the profile for your machine: <code>apple</code> on an Apple Silicon Mac with macOS 14+, which brings the local MLX engines for images and video; <code>gpu</code> on Linux with an NVIDIA or AMD GPU; <code>light</code> elsewhere, where generation goes through a service.</p><div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+        <p>The installer picks the profile for your machine: <code>apple</code> on an Apple Silicon Mac with macOS 14+, which brings the local MLX engines for images and video; <code>gpu</code> on Linux with an NVIDIA or AMD GPU; <code>light</code> elsewhere, where generation goes through a service.</p><!-- PENDING-W2: E7 -->
+<div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Let the console choose models that fit <span class="j-time">10 min</span></h3>
@@ -97,7 +98,8 @@
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Make your first image <span class="j-time">10 min</span></h3>
-        <p>Open the console&rsquo;s <strong>Sandbox</strong> tab and generate an image against your defaults. From Python, the same thing is one call:</p><div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+        <p>Open the console&rsquo;s <strong>Sandbox</strong> tab and generate an image against your defaults. From Python, the same thing is one call:</p><!-- PENDING-W2: E2 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
 image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A red ceramic mug on a white table."</span>, output=<span class="line-str">"image"</span>)
 open(<span class="line-str">"mug.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)</code></pre></div><p>Edits take a source image (and optional style references) with the same <code>output="image"</code>. See <a href="vision.html">AbstractVision</a>.</p>
@@ -130,7 +132,8 @@ open(<span class="line-str">"mug.png"</span>, <span class="line-str">"wb"</span>
       <div class="try-card reveal">
         <span class="t-num">TRY 2</span>
         <h3>A soundtrack</h3>
-        <p>Generate a short loop:</p><div class="code-block"><pre><code>music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"A short calm piano loop."</span>,
+        <p>Generate a short loop:</p><!-- PENDING-W2: E3 -->
+<div class="code-block"><pre><code>music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"A short calm piano loop."</span>,
     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acemusic"</span>,
             <span class="line-str">"duration_s"</span>: <span class="line-var">8</span>, <span class="line-str">"format"</span>: <span class="line-str">"wav"</span>})</code></pre></div>
         <p><a href="music.html">Backends and licences</a></p>

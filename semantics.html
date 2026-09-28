@@ -81,7 +81,8 @@
       <a href="https://github.com/lpalbou/AbstractSemantics/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractSemantics/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <div class="hero-code">
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code>pip install abstractsemantics     <span class="line-cmt"># only dependency: PyYAML</span></code></pre>
     </div>
   </div>
@@ -177,7 +178,8 @@
         <button class="tab-btn" data-tab="yaml">Registry YAML</button>
       </div>
       <div class="tab-panel active" id="tab-schema">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry, build_kg_assertion_schema_v0
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry, build_kg_assertion_schema_v0
 
 reg = <span class="line-fn">load_semantics_registry</span>()
 print(len(reg.predicates), len(reg.entity_types))   <span class="line-cmt"># 44 18</span>
@@ -189,7 +191,8 @@ schema = <span class="line-fn">build_kg_assertion_schema_v0</span>(registry=reg,
 schema = <span class="line-fn">resolve_schema_ref</span>({<span class="line-str">"$ref"</span>: KG_ASSERTION_SCHEMA_REF_V0})</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-relations">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry
 
 reg = <span class="line-fn">load_semantics_registry</span>()
 print(sorted(reg.<span class="line-fn">memory_relation_ids</span>()))
@@ -199,14 +202,16 @@ supports = next(r <span class="line-kw">for</span> r <span class="line-kw">in</s
 print(supports.subject_role, <span class="line-str">"-&gt;"</span>, supports.object_role)  <span class="line-cmt"># evidence -&gt; claim</span></code></pre></div>
       </div>
       <div class="tab-panel" id="tab-normalize">
-        <div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry, normalize_kg_predicate
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry, normalize_kg_predicate
 
 reg = <span class="line-fn">load_semantics_registry</span>()
 <span class="line-fn">normalize_kg_predicate</span>(<span class="line-str">"schema:hasPart"</span>, registry=reg)      <span class="line-cmt"># 'dcterms:hasPart'</span>
 <span class="line-fn">normalize_kg_predicate</span>(<span class="line-str">"something:invented"</span>, registry=reg)  <span class="line-cmt"># None</span></code></pre></div>
       </div>
       <div class="tab-panel" id="tab-yaml">
-        <div class="code-block"><pre><code><span class="line-cmt"># semantics.yaml (excerpt of the shipped registry)</span>
+        <!-- PENDING-W2: E8 -->
+<div class="code-block"><pre><code><span class="line-cmt"># semantics.yaml (excerpt of the shipped registry)</span>
 version: 2
 prefixes:
   dcterms: <span class="line-str">"http://purl.org/dc/terms/"</span>
