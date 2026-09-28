@@ -4,6 +4,22 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`--pin latest` (`-Pin latest`) upgrades an existing install.** Over an install made with the
+  default pin it now runs `uv tool install --upgrade` with the same profile, voice and llama.cpp
+  setup, and installs the newest gateway and libraries on PyPI. Before, it ran
+  `uv tool upgrade abstractgateway`, which keeps the exact version the first install pinned and
+  changed nothing.
+- **The installer summary's upgrade lines** give the commands that work: the install line again
+  (the latest AbstractFramework release) and the same line with `--pin latest` (the newest gateway).
+
+### Documentation
+
+- **[Upgrade](docs/install.md#upgrade)**: upgrading everything, the gateway only, from the console or
+  the menu-bar icon, restarting the gateway, upgrading the apps and checking versions. README and
+  Getting started lead with an **Install** section: the Mac package and the one-line commands.
+
 ## [0.6.1] - 2026-09-28
 
 Every terminal command lands on your PATH, AbstractCode's terminal client says how to sign in, and

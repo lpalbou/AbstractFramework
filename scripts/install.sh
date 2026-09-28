@@ -1423,6 +1423,11 @@ install_gateway() {
     for _p in $(af_no_build_packages); do set -- "$@" --no-build-package "$_p"; done
     for _p in $CLI_FROM; do set -- "$@" --with-executables-from "$_p"; done
     { [ -n "$FROM" ] || [ "$REINSTALL" = 1 ]; } && set -- "$@" --reinstall
+    # --pin latest: re-resolve to the newest releases. Without --upgrade, uv keeps every
+    # package already installed that still satisfies the requirement, so a re-run over a
+    # pinned install would change nothing. (`uv tool upgrade` cannot do it either: it keeps
+    # the `==<pin>` the first install recorded and answers "Nothing to upgrade".)
+    [ "$PIN" = latest ] && [ -z "$FROM" ] && set -- "$@" --upgrade
     _cwd="$(pwd)"
     RUN_SHOW="cd $(q "$DATA_DIR") && $(show_cmd "$@" "$GW_SPEC")"
     [ "$PRINT" = 1 ] || cd "$DATA_DIR"
@@ -1469,11 +1474,7 @@ if [ "$WITH_CORE_CLI" = 1 ]; then
 fi
 GGUF_RESULT=""
 REINSTALL=0
-if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
-    run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
-    GGUF_RESULT="as in the previous install (uv tool upgrade keeps it)"
-    VOICE_SPEC="$ST_VOICE"; VOICE_RESULT="as in the previous install (uv tool upgrade keeps it)"
-elif [ "$FULL" = 1 ]; then
+if [ "$FULL" = 1 ]; then
     install_gateway_voice 0 0
     GGUF_RESULT="llama-cpp-python built from source (--full)"
 elif [ -n "$GGUF_PIN" ]; then
@@ -1941,7 +1942,8 @@ echo ""
 echo "  Status:     $([ "$MODE" = service ] && echo "abstractgateway service status" || echo "curl $BASE_URL/api/health")"
 echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service uninstall   (stops it and removes the login entry; data is kept)" || echo "kill \$(cat $(q "$PID_FILE"))")"
 echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --port $PORT" || echo "re-run this installer, or: ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve$([ "$NET_SETTING" = 1 ] || echo " --host 127.0.0.1 --port $PORT")")"
-echo "  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)"
+echo "  Upgrade:    curl -LsSf $AF_SCRIPT_URL | sh   (the latest AbstractFramework release; keeps your settings and data)"
+echo "              curl -LsSf $AF_SCRIPT_URL | sh -s -- --pin latest   (the newest abstractgateway on PyPI; see $AF_DOCS#upgrade)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"
 echo "  GGUF:       $GGUF_RESULT"

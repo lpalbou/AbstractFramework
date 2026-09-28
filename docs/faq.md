@@ -303,10 +303,16 @@ gateway listens on loopback.
 Add `--print` (Windows: `-Print` or `-WhatIf`). It runs the read-only checks and prints every
 command without changing anything.
 
+### How do I upgrade it?
+
+Run the install line again: it installs the latest AbstractFramework release and keeps your
+settings and data. `--pin latest` (`-Pin latest`) installs the newest gateway instead. See
+[Upgrade](install.md#upgrade).
+
 ### How do I remove it?
 
 Re-run the script with `--uninstall` (`-Uninstall`). Add `--purge` (`-Purge`) to delete the gateway
-data as well. See [Install](install.md#upgrade-and-uninstall).
+data as well. See [Remove AbstractFramework](install.md#remove-abstractframework).
 
 ---
 

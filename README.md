@@ -17,17 +17,7 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 
 ---
 
-## Quick start
-
-The installer sets up the gateway in your user account (no admin password, no system Python),
-with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
-at login (Enter = yes; an unattended install leaves it off and says how to turn it on), starts it
-on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
-then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
-machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
-installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
-a server without a browser and offers itself at the end of an install over SSH
-([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
+## Install
 
 - **Mac, no Terminal:** download and double-click
   [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
@@ -46,7 +36,21 @@ a server without a browser and offers itself at the end of an install over SSH
   powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
   ```
 
-Every failure says what to do next; running the installer again repairs or upgrades in place. To
+To upgrade, run the same line again (Mac package: install the latest package again): it installs
+the latest AbstractFramework release and keeps your settings and data. Gateway only, apps, and
+version checks: [Upgrade](docs/install.md#upgrade).
+
+The installer sets up the gateway in your user account (no admin password, no system Python),
+with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
+at login (Enter = yes; an unattended install leaves it off and says how to turn it on), starts it
+on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
+then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
+machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
+installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
+a server without a browser and offers itself at the end of an install over SSH
+([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
+
+Every failure says what to do next; running the installer again repairs the install in place. To
 remove it, double-click `Uninstall AbstractFramework.command` (in
 `~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
 `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`.

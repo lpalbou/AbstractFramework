@@ -731,6 +731,23 @@ CH="$WORK/appsbin3/home"; CD="$CH/$DATA_REL"; mkdir -p "$CD"; printf 'MODE=backg
 run_in appsbin3 AF_STOP_TIMEOUT=1 -- sh "$SCRIPTS_DIR/uninstall.sh" --yes
 check "--uninstall: no <data>/apps/bin, nothing said about it" "$([[ $RC == 0 ]] && ! has "$OUT" "apps/bin"; echo $?)" "$OUT"
 
+echo "[16] upgrade: --pin latest re-resolves a pinned install; the summary gives working upgrade commands"
+# A first install records `abstractgateway[...]==<pin>` in uv's receipt, so `uv tool upgrade`
+# answers "Nothing to upgrade" and a plain `uv tool install` keeps what is there. --pin latest
+# must therefore run `uv tool install --upgrade` with an unpinned spec, never `uv tool upgrade`.
+if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    check "port $BG_PORT is free for the upgrade cases" 1
+else
+    UP_STATE="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nGATEWAY_SPEC=abstractgateway[tray]==0.7.0\n"
+    BG_UV_LIST='abstractgateway v0.7.0\n- abstractgateway' BG_STATE="$UP_STATE" BG_ARGS="--no-console --pin latest" bg_case up_latest 1
+    check "--pin latest over a pinned install: uv tool install --upgrade, unpinned spec" "$([[ $RC == 0 ]] && grep "tool install " "$OUT" | grep -q -- " --upgrade " && grep "tool install " "$OUT" | grep -q "abstractgateway\[[a-z,]*\]'\?$" && ! grep "tool install " "$OUT" | grep -q "abstractgateway\[[a-z,]*\]=="; echo $?)" "$OUT"
+    check "--pin latest over a pinned install: never uv tool upgrade (a no-op on a pinned install)" "$(! has "$OUT" "tool upgrade"; echo $?)" "$OUT"
+    GW_PIN="$(sed -n 's/^AF_GATEWAY_PIN_DEFAULT="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
+    BG_UV_LIST='abstractgateway v0.7.0\n- abstractgateway' BG_STATE="$UP_STATE" bg_case up_default 1
+    check "a plain re-run installs the release pin, without --upgrade" "$([[ $RC == 0 ]] && grep "tool install " "$OUT" | grep -q "abstractgateway\[[a-z,]*\]==$GW_PIN" && ! grep "tool install " "$OUT" | grep -q -- " --upgrade "; echo $?)" "$OUT"
+    check "summary: the upgrade lines are the one-liner and --pin latest, not uv tool upgrade" "$(has "$OUT" "Upgrade:    curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh " && has "$OUT" "install.sh | sh -s -- --pin latest " && ! has "$OUT" "uv tool upgrade"; echo $?)" "$OUT"
+fi
+
 echo ""
 echo "passed: $PASS  failed: $FAIL"
 [[ "$FAIL" == 0 ]]

@@ -4,37 +4,28 @@ This guide helps you build a correct mental model quickly, then run something en
 
 > **Write once. Generate everything.** Durable, observable, multimodal AI systems — one unified interface, any provider, any model, local or cloud.
 
-AbstractFramework is a **stack**:
+## Install
 
-| Layer | Package | Role |
-|---|---|---|
-| SDK | **AbstractCore** | Provider/model abstraction, tools, structured output, media, embeddings |
-| Agent patterns | **AbstractAgent** | Ready-made loops: ReAct (tool-first), CodeAct (code execution), MemAct (memory-enhanced) |
-| Workflow authoring | **AbstractFlow** | Visual editor, portable `.flow` bundles, subflows |
-| Durable kernel | **AbstractRuntime** | Runs, effects, waits, ledger, artifacts |
-| Control plane | **AbstractGateway** | Persistence, scheduling, bundle discovery, SSE streaming |
-| Operations | **AbstractObserver** | Browser UI to monitor, control, and schedule runs |
+- **Mac, no Terminal:** download and double-click
+  [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
+  The first time, allow it with **Open Anyway** in **System Settings > Privacy & Security**: the
+  package is not signed with an Apple Developer ID (see [Install](install.md#install-on-a-mac)).
+- **macOS / Linux, one line** in Terminal:
 
-**Rule of thumb**: start with **Core** when you want a lightweight LLM library (SDK or `/v1`) for scripts/notebooks/apps; add **Gateway** when you need persistent runs, scheduling, and multi-client continuity.
+  ```bash
+  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  ```
 
-> **Prerequisites**: Python 3.10–3.13 for the manual installs below. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
+- **Windows 10 22H2+ / 11** (PowerShell):
 
-## Fastest path: the installer
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  ```
 
-If you want AbstractFramework running on your computer without setting up Python yourself, use
-the installer. On a Mac, download and double-click
-[AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg)
-(the first time, allow it with **Open Anyway** in **System Settings > Privacy & Security**: the
-package is not signed with an Apple Developer ID; see [Install](install.md#install-on-a-mac)).
-On macOS or Linux you can instead paste one line in Terminal:
+To upgrade later, run the same line again (Mac package: install the latest package again); see
+[Upgrade](install.md#upgrade).
 
-```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
-```
-
-On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`.
-
-It installs uv, Python 3.12 and the pinned gateway with local voice (Supertonic and Whisper) in
+The installer puts uv, Python 3.12 and the pinned gateway with local voice (Supertonic and Whisper) in
 your user account (no admin password), asks whether to start it at login (Enter = yes; an
 unattended install leaves it off and its summary says how to turn it on), starts it on
 `127.0.0.1:8080`, and opens its console in your browser already signed in. The console's first-run
@@ -77,6 +68,23 @@ continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 fails, and how to remove it: [Install](install.md); fixes for common problems:
 [Troubleshooting](troubleshooting.md). The sections below cover manual installs for library and
 developer use.
+
+---
+
+AbstractFramework is a **stack**:
+
+| Layer | Package | Role |
+|---|---|---|
+| SDK | **AbstractCore** | Provider/model abstraction, tools, structured output, media, embeddings |
+| Agent patterns | **AbstractAgent** | Ready-made loops: ReAct (tool-first), CodeAct (code execution), MemAct (memory-enhanced) |
+| Workflow authoring | **AbstractFlow** | Visual editor, portable `.flow` bundles, subflows |
+| Durable kernel | **AbstractRuntime** | Runs, effects, waits, ledger, artifacts |
+| Control plane | **AbstractGateway** | Persistence, scheduling, bundle discovery, SSE streaming |
+| Operations | **AbstractObserver** | Browser UI to monitor, control, and schedule runs |
+
+**Rule of thumb**: start with **Core** when you want a lightweight LLM library (SDK or `/v1`) for scripts/notebooks/apps; add **Gateway** when you need persistent runs, scheduling, and multi-client continuity.
+
+> **Prerequisites**: Python 3.10–3.13 for the manual installs below. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
 
 ---
 

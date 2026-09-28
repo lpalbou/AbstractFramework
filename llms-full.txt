@@ -21,17 +21,7 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 
 ---
 
-## Quick start
-
-The installer sets up the gateway in your user account (no admin password, no system Python),
-with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
-at login (Enter = yes; an unattended install leaves it off and says how to turn it on), starts it
-on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
-then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
-machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
-installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
-a server without a browser and offers itself at the end of an install over SSH
-([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
+## Install
 
 - **Mac, no Terminal:** download and double-click
   [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
@@ -50,7 +40,21 @@ a server without a browser and offers itself at the end of an install over SSH
   powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
   ```
 
-Every failure says what to do next; running the installer again repairs or upgrades in place. To
+To upgrade, run the same line again (Mac package: install the latest package again): it installs
+the latest AbstractFramework release and keeps your settings and data. Gateway only, apps, and
+version checks: [Upgrade](docs/install.md#upgrade).
+
+The installer sets up the gateway in your user account (no admin password, no system Python),
+with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
+at login (Enter = yes; an unattended install leaves it off and says how to turn it on), starts it
+on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
+then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
+machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
+installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
+a server without a browser and offers itself at the end of an install over SSH
+([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
+
+Every failure says what to do next; running the installer again repairs the install in place. To
 remove it, double-click `Uninstall AbstractFramework.command` (in
 `~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
 `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`.
@@ -409,6 +413,7 @@ AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a bro
 Quick commands:
 - Mac installer: download `https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg` and double-click it; the package is not signed with an Apple Developer ID, so the first time allow it with Open Anyway in System Settings > Privacy & Security; it runs `install.sh --interactive` in Terminal. Remove with `Uninstall AbstractFramework.command` or `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`
 - One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); installs uv + Python 3.12 + the pinned gateway (with local voice) as a uv tool, asks whether to start at login whenever a terminal exists (Enter = yes; no terminal or no answer within `--ask-wait` = off on a first install, kept on a re-run; the summary says how to turn it on), starts it on 127.0.0.1:8080, writes the local gateway pointer `~/.abstractframework/gateway.json` for this install (address only; `serve` keeps it current under its ownership rule) and opens `/console` through a one-time claim link; browser apps open through the gateway at `/apps/<app>/`; `--print` dry run, `--uninstall` to remove
+- Upgrade: run the same install line again (the latest AbstractFramework release; profile, port, start at login, data and apps kept; Mac package: install the latest .pkg again); add `sh -s -- --pin latest` (Windows `-Pin latest`) for the newest gateway on PyPI; `uv tool upgrade abstractgateway` does not upgrade an installer install (it keeps the exact pinned version); apps: console Apps page or `abstractgateway apps update <app>`; see docs/install.md#upgrade
 - Network exposure: the gateway listens on this computer only (`localhost`) until you run `abstractgateway network set lan|internet` (or use the console / menu-bar icon); `service install` takes `--port`, and the login item runs plain `serve` so the Network setting applies
 - Start either entry point and open the printed one-time link: `abstractcore serve` (http://127.0.0.1:8000/console#claim=…) or `abstractgateway serve` (http://127.0.0.1:8080/console#claim=…); both consoles have Models (catalog + fit verdict, download, delete) and Engines (detect, install) tabs, mirrored by `abstractcore models|engines` and `abstractgateway models|engines`
 - Install pinned stack: `pip install abstractframework`
@@ -1857,37 +1862,28 @@ This guide helps you build a correct mental model quickly, then run something en
 
 > **Write once. Generate everything.** Durable, observable, multimodal AI systems — one unified interface, any provider, any model, local or cloud.
 
-AbstractFramework is a **stack**:
+## Install
 
-| Layer | Package | Role |
-|---|---|---|
-| SDK | **AbstractCore** | Provider/model abstraction, tools, structured output, media, embeddings |
-| Agent patterns | **AbstractAgent** | Ready-made loops: ReAct (tool-first), CodeAct (code execution), MemAct (memory-enhanced) |
-| Workflow authoring | **AbstractFlow** | Visual editor, portable `.flow` bundles, subflows |
-| Durable kernel | **AbstractRuntime** | Runs, effects, waits, ledger, artifacts |
-| Control plane | **AbstractGateway** | Persistence, scheduling, bundle discovery, SSE streaming |
-| Operations | **AbstractObserver** | Browser UI to monitor, control, and schedule runs |
+- **Mac, no Terminal:** download and double-click
+  [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
+  The first time, allow it with **Open Anyway** in **System Settings > Privacy & Security**: the
+  package is not signed with an Apple Developer ID (see [Install](install.md#install-on-a-mac)).
+- **macOS / Linux, one line** in Terminal:
 
-**Rule of thumb**: start with **Core** when you want a lightweight LLM library (SDK or `/v1`) for scripts/notebooks/apps; add **Gateway** when you need persistent runs, scheduling, and multi-client continuity.
+  ```bash
+  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  ```
 
-> **Prerequisites**: Python 3.10–3.13 for the manual installs below. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
+- **Windows 10 22H2+ / 11** (PowerShell):
 
-## Fastest path: the installer
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  ```
 
-If you want AbstractFramework running on your computer without setting up Python yourself, use
-the installer. On a Mac, download and double-click
-[AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg)
-(the first time, allow it with **Open Anyway** in **System Settings > Privacy & Security**: the
-package is not signed with an Apple Developer ID; see [Install](install.md#install-on-a-mac)).
-On macOS or Linux you can instead paste one line in Terminal:
+To upgrade later, run the same line again (Mac package: install the latest package again); see
+[Upgrade](install.md#upgrade).
 
-```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
-```
-
-On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`.
-
-It installs uv, Python 3.12 and the pinned gateway with local voice (Supertonic and Whisper) in
+The installer puts uv, Python 3.12 and the pinned gateway with local voice (Supertonic and Whisper) in
 your user account (no admin password), asks whether to start it at login (Enter = yes; an
 unattended install leaves it off and its summary says how to turn it on), starts it on
 `127.0.0.1:8080`, and opens its console in your browser already signed in. The console's first-run
@@ -1930,6 +1926,23 @@ continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 fails, and how to remove it: [Install](install.md); fixes for common problems:
 [Troubleshooting](troubleshooting.md). The sections below cover manual installs for library and
 developer use.
+
+---
+
+AbstractFramework is a **stack**:
+
+| Layer | Package | Role |
+|---|---|---|
+| SDK | **AbstractCore** | Provider/model abstraction, tools, structured output, media, embeddings |
+| Agent patterns | **AbstractAgent** | Ready-made loops: ReAct (tool-first), CodeAct (code execution), MemAct (memory-enhanced) |
+| Workflow authoring | **AbstractFlow** | Visual editor, portable `.flow` bundles, subflows |
+| Durable kernel | **AbstractRuntime** | Runs, effects, waits, ledger, artifacts |
+| Control plane | **AbstractGateway** | Persistence, scheduling, bundle discovery, SSE streaming |
+| Operations | **AbstractObserver** | Browser UI to monitor, control, and schedule runs |
+
+**Rule of thumb**: start with **Core** when you want a lightweight LLM library (SDK or `/v1`) for scripts/notebooks/apps; add **Gateway** when you need persistent runs, scheduling, and multi-client continuity.
+
+> **Prerequisites**: Python 3.10–3.13 for the manual installs below. Node.js 18+ (only for browser UIs). An LLM backend — local (Ollama, LM Studio, vLLM, llama.cpp) or cloud (OpenAI, Anthropic, etc.).
 
 ---
 
@@ -3309,7 +3322,8 @@ top.
 
 The package also leaves two double-clickable files in
 `~/Library/Application Support/AbstractFramework/Installer`: **Install AbstractFramework.command**
-(run it again to repair or upgrade) and **Uninstall AbstractFramework.command**.
+(run it again to repair the install) and **Uninstall AbstractFramework.command**. To upgrade, see
+[Upgrade](#upgrade).
 
 ### Or: paste one line in Terminal
 
@@ -3361,6 +3375,128 @@ where it stopped.
 | `the gateway did not answer … within 180 s` | Restart the computer (the login item starts it) or run the installer again, then open `http://127.0.0.1:8080/console`. |
 | The browser page asks for a token | The one-time sign-in link lasts 10 minutes. Run the installer again: it opens a fresh link. |
 | Anything else | Run the installer again. If it stops at the same step, report it with the log file named at the end of the message (`~/Library/Application Support/AbstractGateway/logs/install-….log`). |
+
+## Upgrade
+
+### Upgrade everything (recommended)
+
+Run the line you installed with again:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+```
+
+On Windows:
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+```
+
+On a Mac without Terminal, download the latest
+[AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg)
+and install it again. The **Install AbstractFramework.command** file in
+`~/Library/Application Support/AbstractFramework/Installer` runs the installer of the release it
+came with: it repairs that install, it does not upgrade it.
+
+The line always runs the installer of the latest AbstractFramework release. It:
+
+- installs the gateway version that release pins ([Check your versions](#check-your-versions) shows
+  how to print it). The libraries the gateway uses (AbstractCore, AbstractRuntime, the voice, vision
+  and music packages) move up to at least the versions that gateway requires;
+- rebuilds the terminal console (`abstractgateway-console`) and AbstractCode's terminal client
+  (`abstractcode`) when the release pins newer versions, with the Rust toolchain from the first
+  install;
+- keeps your profile, port, start-at-login choice, Network setting, data, settings, downloaded
+  models and installed apps;
+- restarts the gateway when its package changed, and leaves a running gateway alone when nothing
+  changed. On Linux with start at login on, the `systemd --user` service keeps running the
+  previous version until you [restart it](#restart-the-gateway).
+
+If your first install used options that change what is installed or where (`--data-dir`,
+`--no-console`, `--no-code-cli`, `--no-core-cli`, `--no-tray`, `--full`), pass them again: only
+the profile, the port and the start-at-login choice are remembered.
+
+### Upgrade only the gateway
+
+A gateway release can reach PyPI before the next AbstractFramework release. To install the newest
+gateway with the same profile, voice and llama.cpp setup:
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --pin latest
+```
+
+On Windows:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -Pin latest
+```
+
+`--pin latest` moves the gateway and its libraries to their newest releases on PyPI; `--pin 0.7.1`
+installs one exact version. The installer restarts the gateway as above. A later run without
+`--pin` returns the gateway to the version the AbstractFramework release pins.
+
+Do not use `uv tool upgrade abstractgateway` for an installer install. The installer installs an
+exact version (`abstractgateway[<profile>,tray]==<version>`), uv keeps that constraint, and
+`uv tool upgrade` answers `Nothing to upgrade`. `uv tool install abstractgateway@latest` does move
+to the newest version, but it replaces the whole install with the bare package: the profile extras,
+the local voice packages, the AbstractCore, voice, vision and music commands and the prebuilt-wheel
+overrides the installer added are gone. Use the installer.
+
+### From the console or the menu-bar icon
+
+**Check now** (web console, **Resources > Gateway > Version**) and **Check for Updates…** (the
+menu-bar icon) ask PyPI whether a newer `abstractgateway` exists. They compare with the newest
+gateway, not with the AbstractFramework release.
+
+For a gateway installed with pip, pipx or in a virtual environment, **Update to …** installs the
+new version in the background and keeps the `apple`, `gpu` and `embeddings` extras. The running
+gateway keeps serving the old version until you restart it (**Restart gateway…** in the same panel,
+or **Restart Now** in the menu-bar icon's dialog). It updates the gateway package only: not the
+terminal console, not AbstractCode's terminal client, not the apps.
+
+For a gateway installed by the installer, **Update** runs `uv tool upgrade abstractgateway`, which
+cannot move past the installed version (see above) and reports that nothing changed. Use
+[the installer](#upgrade-everything-recommended) or [`--pin latest`](#upgrade-only-the-gateway)
+instead.
+
+### Restart the gateway
+
+An upgrade that installs a new gateway version while the gateway runs takes effect at its next
+start. To restart it now:
+
+- web console: **Resources > Gateway > Restart gateway…**; menu-bar icon: **Restart AbstractGateway…**;
+- terminal: `abstractgateway network restart --force --token <admin token>`;
+- Linux, start at login on: `systemctl --user restart abstractgateway`.
+
+Running workflows pause at their next step and continue after the restart.
+
+### Upgrade the apps
+
+The browser apps (Flow, Code, Observer, Continuum, Entity) and the desktop Assistant are installed
+by the gateway, so the installer does not change them. When npm has a newer version, the app's card
+on the console's **Apps** page offers **Update** under **Technical details**. In a terminal:
+
+```bash
+abstractgateway apps list                # installed and latest version of every app
+abstractgateway apps update code         # update one app; a running app restarts on the new version
+abstractgateway apps install-tui code    # update the terminal version the Apps page installed
+```
+
+The terminal console and an `abstractcode` built by the installer are upgraded by
+[re-running the installer](#upgrade-everything-recommended).
+
+### Check your versions
+
+```bash
+abstractgateway --version                    # the installed gateway
+uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.7.1])
+abstractgateway-console --version            # the terminal console
+abstractcode --version                       # AbstractCode's terminal client
+abstractgateway apps list                    # the apps: installed and latest
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --print-versions   # what the latest release installs
+```
+
+The web console shows the running gateway's version under **Resources > Gateway > Version**.
 
 ## Remove AbstractFramework
 
@@ -3477,7 +3613,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    skips the offer.
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
-upgrades or repairs the install in place. The macOS package is payload-free: it copies the two
+upgrades or repairs the install in place (see [Upgrade](#upgrade)). The macOS package is payload-free: it copies the two
 `.command` files into `~/Library/Application Support/AbstractFramework/Installer` and opens
 `install.sh --interactive` in Terminal. It is built by
 [`scripts/lib/build_macos_installer.sh`](../scripts/lib/build_macos_installer.sh).
@@ -3542,7 +3678,7 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--no-open` | `-NoOpen` | Do not open the browser (remote or headless session: do not offer the terminal console) |
 | `--ask-wait SECONDS` | `-AskWait SECONDS` | How long a timed question waits for an answer: start at login, and the terminal console offer at the end of a remote or headless install (default 25, at most 25; `--console-wait` is an alias) |
 | `--no-modify-path` | `-NoModifyPath` | Do not add `~/.local/bin` to your shell profile (`uv tool update-shell`) |
-| `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |
+| `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version (`--pin latest`: the newest on PyPI; see [Upgrade only the gateway](#upgrade-only-the-gateway)) or a local checkout |
 | `--manifest PATH` | `-Manifest` | Read the gateway pin from this `install-manifest.json` |
 | `--data-dir DIR` | `-DataDir` | Gateway data directory |
 | `--interactive` | — | Wait for every answer without a time limit, and also ask whether to build the terminal console (and, with `--uninstall`, whether to delete data and uv); the double-click installers pass it |
@@ -3733,7 +3869,8 @@ A new mode or port applies at the next start: `network restart`, the console, th
 
 ### Upgrade and uninstall
 
-- Upgrade: re-run the one-liner (or `uv tool upgrade abstractgateway`).
+- Upgrade: re-run the one-liner; see [Upgrade](#upgrade) (`uv tool upgrade abstractgateway` does
+  not upgrade an installer install: it keeps the installed version's pin).
 - Uninstall: [Remove AbstractFramework](#remove-abstractframework) above,
   `curl -LsSf .../install.sh | sh -s -- --uninstall` (Windows: the script block with
   `-Uninstall`), or by hand: `abstractgateway service uninstall` (when registered), then
@@ -5339,10 +5476,16 @@ gateway listens on loopback.
 Add `--print` (Windows: `-Print` or `-WhatIf`). It runs the read-only checks and prints every
 command without changing anything.
 
+### How do I upgrade it?
+
+Run the install line again: it installs the latest AbstractFramework release and keeps your
+settings and data. `--pin latest` (`-Pin latest`) installs the newest gateway instead. See
+[Upgrade](install.md#upgrade).
+
 ### How do I remove it?
 
 Re-run the script with `--uninstall` (`-Uninstall`). Add `--purge` (`-Purge`) to delete the gateway
-data as well. See [Install](install.md#upgrade-and-uninstall).
+data as well. See [Remove AbstractFramework](install.md#remove-abstractframework).
 
 ---
 
@@ -8315,10 +8458,12 @@ local gateway through `~/.abstractframework/gateway.json`, or uses `http://127.0
 
 ## Upgrade and repair
 
-Re-run the same one-liner. The script keeps the previous port and profile, installs the pin from
-the current manifest (a no-op when it is already installed), restarts the gateway only when the
-package changed, and re-checks health. `uv tool upgrade abstractgateway` and the tray's "Check for
-updates" are equivalent for uv-tool installs.
+Re-run the same one-liner. The script keeps the previous port, profile and start-at-login choice,
+installs the pin from the current manifest (a no-op when it is already installed), restarts the
+gateway only when the package changed, and re-checks health. `--pin latest` installs the newest
+gateway on PyPI instead. `uv tool upgrade abstractgateway` and the console's or tray's update do not
+upgrade an installer install: uv keeps the exact version the installer pinned. See
+[Upgrade](../install.md#upgrade).
 
 ## Uninstall
 

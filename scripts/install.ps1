@@ -723,6 +723,11 @@ function Main {
         foreach ($p in (Get-NoBuildPackages $Full)) { $argv += @('--no-build-package', $p) }
         foreach ($p in $cliFrom) { $argv += @('--with-executables-from', $p) }
         if ($From) { $argv += '--reinstall' }
+        # -Pin latest: re-resolve to the newest releases. Without --upgrade, uv keeps every
+        # package already installed that still satisfies the requirement, so a re-run over a
+        # pinned install would change nothing. (`uv tool upgrade` cannot do it either: it keeps
+        # the `==<pin>` the first install recorded and answers "Nothing to upgrade".)
+        if ($Pin -eq 'latest' -and -not $From) { $argv += '--upgrade' }
         $shownInstall = "Set-Location $(Format-Arg $DataDir); $(Format-Cmd ($argv + @($gwSpec)))"
         $desc = if ($Gguf) { 'install abstractgateway with the llama.cpp cpu wheel' } else { 'install abstractgateway' }
         if (-not $script:DryRun) { Push-Location -LiteralPath $DataDir }
@@ -768,11 +773,7 @@ function Main {
         }
     }
     $ggufResult = ''
-    if ($before -and $Pin -eq 'latest' -and -not $From -and $state['PROFILE'] -eq $profileName) {
-        Invoke-Native -Description 'upgrade abstractgateway' -Argv @($uv, 'tool', 'upgrade', 'abstractgateway') | Out-Null
-        $ggufResult = 'as in the previous install (uv tool upgrade keeps it)'
-        $voice.Result = 'as in the previous install (uv tool upgrade keeps it)'
-    } elseif ($Full) {
+    if ($Full) {
         Install-GatewayVoice $false | Out-Null
         $ggufResult = 'llama-cpp-python built from source (-Full)'
     } elseif ($ggufPin) {
@@ -1112,7 +1113,8 @@ function Main {
         Write-Host "  Start:      re-run this installer$(if ($shortcut -and (Test-Path -LiteralPath $shortcut)) { ' (or sign out and in: the Startup shortcut starts it)' })"
         if ($serviceOk) { Write-Host '  At login:   off; turn it on with the Start at login switch in either console (web: the Gateway section; terminal: F3), or: abstractgateway service enable' }
     }
-    Write-Host '  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)'
+    Write-Host "  Upgrade:    powershell -ExecutionPolicy ByPass -c `"irm $AfScriptUrl | iex`"   (the latest AbstractFramework release; keeps your settings and data)"
+    Write-Host "              & ([scriptblock]::Create((irm $AfScriptUrl))) -Pin latest   (the newest abstractgateway on PyPI; see $AfDocs#upgrade)"
     Write-Host "  Uninstall:  install.ps1 -Uninstall   (or: $(if ($mode -eq 'service') { 'abstractgateway service uninstall; ' })uv tool uninstall abstractgateway)"
     Write-Host '  Check:      uvx abstractframework doctor'
     Write-Host "  GGUF:       $ggufResult"
