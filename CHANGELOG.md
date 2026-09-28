@@ -4,20 +4,64 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-### Fixed
+## [0.6.2] - 2026-09-28
 
-- **`--pin latest` (`-Pin latest`) upgrades an existing install.** Over an install made with the
-  default pin it now runs `uv tool install --upgrade` with the same profile, voice and llama.cpp
-  setup, and installs the newest gateway and libraries on PyPI. Before, it ran
-  `uv tool upgrade abstractgateway`, which keeps the exact version the first install pinned and
-  changed nothing.
-- **The installer summary's upgrade lines** give the commands that work: the install line again
-  (the latest AbstractFramework release) and the same line with `--pin latest` (the newest gateway).
+One line installs, upgrades and repairs AbstractFramework, and **Update** in the consoles and the
+menu-bar icon runs that same line. Pins: AbstractGateway 0.7.2, AbstractCore 2.18.1 and the
+terminal console `abstractgateway-console` 0.11.1; every other version is unchanged from 0.6.1.
+
+### Changed
+
+- **One line installs, upgrades and repairs.** Re-running the install line (or double-clicking
+  **Install AbstractFramework.command** again) finds the existing install and says
+  `AbstractFramework 0.6.1 found: upgrading to AbstractFramework 0.6.2` or `already up to date`.
+  The summary lists what changed, old -> new, under **Changes**, and ends with `Upgraded: …` or
+  `Already up to date: …; nothing changed.` `install.ps1` does the same on Windows. See
+  [Upgrade](docs/install.md#upgrade).
+- **Update in the web console, the terminal console and the menu-bar icon runs the installer**
+  (AbstractGateway 0.7.2). For an install made by the AbstractFramework installer, the check
+  compares your AbstractFramework release with the latest one, and **Update** runs the latest
+  `install.sh` with `--no-start`. Before you confirm, it shows the installer's address, commit,
+  sha256 and the exact command. The result says what moved and offers the restart, says
+  **already up to date**, or shows why it didn't finish. On Windows, the check shows the PowerShell
+  line to paste. See [From the console or the menu-bar icon](docs/install.md#from-the-console-or-the-menu-bar-icon).
+- **Your install options are remembered.** A re-run keeps the profile, port, start at login, a
+  custom `--data-dir`, and `--no-console`, `--no-code-cli`, `--no-core-cli`, `--no-tray` and
+  `--full`, and says which ones it kept. `--with-console`, `--with-code-cli`, `--with-core-cli`,
+  `--with-tray` and `--no-full` (Windows: `-WithConsole`, `-WithCodeCli`, `-WithCoreCli`,
+  `-WithTray`, `-NoFull`) turn one back.
+- **The libraries land on the release's tested versions.** The installer installs AbstractCore,
+  AbstractRuntime, AbstractAgent, AbstractSkill, AbstractMemory, AbstractSemantics and the voice,
+  vision and music packages at exactly the versions of the AbstractFramework release, not only at
+  the gateway's minimums. `--print-versions` (`-PrintVersions`) lists the release and that matrix.
+  `--pin latest` still installs the newest gateway and libraries, and records no release.
+- **The gateway restarts whenever anything changed**, a library alone included: the macOS login
+  item through launchd, a running Linux `systemd --user` service with `systemctl --user restart`,
+  and a background gateway by starting it again. On Windows the installer stops the gateway before
+  it changes any file and starts it again afterwards. AbstractGateway 0.7.2 fixes the macOS
+  `5: Input/output error` when the login item is replaced: it waits until launchd has removed the
+  previous job and retries. When the login item cannot be registered, the gateway starts in the
+  background instead, so an upgrade never leaves it stopped.
+- **`--no-start` (`-NoStart`)** upgrades without starting or restarting the gateway and says when a
+  restart is due. It keeps this install's port even when a program the installer did not start
+  holds it.
+- **Install AbstractFramework.command runs the latest installer** from GitHub, so double-clicking
+  it again upgrades. It uses the copy it came with only when GitHub cannot be reached, and says so.
+- **`--pin latest` (`-Pin latest`) upgrades an existing install** with the same profile, voice and
+  llama.cpp setup (`uv tool install --upgrade`), and the summary's upgrade lines give the commands
+  that work.
+- **Recommendations for every capability** (AbstractCore 2.18.1).
+  `abstractcore models recommendations` shows the recommended model for text, image input, speech
+  output, speech input, image, video and music on every kind of machine (`--host`: this one), and
+  every recommendation fits the machine it is made for. The Apple silicon text tiers start where
+  their model fits; on a Mac too small for the recommended image model, the gateway's first-run
+  guide shows it as not available here, with the reason. See AbstractCore's
+  [Recommended models](https://github.com/lpalbou/abstractcore/blob/main/docs/recommended-models.md).
 
 ### Documentation
 
-- **[Upgrade](docs/install.md#upgrade)**: upgrading everything, the gateway only, from the console or
-  the menu-bar icon, restarting the gateway, upgrading the apps and checking versions. README and
+- **[Upgrade](docs/install.md#upgrade)**: upgrading everything, the gateway only, from the consoles
+  or the menu-bar icon, restarting the gateway, upgrading the apps and checking versions. README and
   Getting started lead with an **Install** section: the Mac package and the one-line commands.
 
 ## [0.6.1] - 2026-09-28

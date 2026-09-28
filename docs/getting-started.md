@@ -22,8 +22,8 @@ This guide helps you build a correct mental model quickly, then run something en
   powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
   ```
 
-To upgrade later, run the same line again (Mac package: install the latest package again); see
-[Upgrade](install.md#upgrade).
+To upgrade later, run the same line again, or, on macOS and Linux, press **Update** in a
+console or the menu-bar icon (it runs the same installer); see [Upgrade](install.md#upgrade).
 
 The installer puts uv, Python 3.12 and the pinned gateway with local voice (Supertonic and Whisper) in
 your user account (no admin password), asks whether to start it at login (Enter = yes; an

@@ -10,15 +10,15 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.18.0",
+    "abstractcore": "2.18.1",
     "abstractruntime": "0.7.1",
     "abstractagent": "0.3.17",
-    "abstractgateway": "0.7.1",
+    "abstractgateway": "0.7.2",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
@@ -53,7 +53,7 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
 # or by the bootstrap scripts: the gateway console and abstractcode by default).
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
-    "abstractgateway-console": "0.11.0",
+    "abstractgateway-console": "0.11.1",
     "abstractcore-console": "0.4.0",
     "abstractcode": "0.7.1",
     "abstracttui": "0.6.0",

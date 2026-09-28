@@ -514,8 +514,10 @@ CARGO
     # BG_STATE: a previous install's bootstrap.env (printf %b); BG_POINTER: a gateway.json already there.
     if [[ -n "${BG_STATE:-}" ]]; then mkdir -p "$DATA_T"; printf '%b' "$BG_STATE" >"$DATA_T/bootstrap.env"; fi
     # BG_PRERUN=1: the previous install's background gateway is running (pid in gateway.pid: PRE_PID).
+    # BG_FOREIGN=1: a gateway answers on the port but this installer did not start it (no gateway.pid,
+    # no login item: a hand-started `serve`); its pid is PRE_PID too.
     PRE_PID=""
-    if [[ "${BG_PRERUN:-0}" == 1 ]]; then
+    if [[ "${BG_PRERUN:-0}" == 1 || "${BG_FOREIGN:-0}" == 1 ]]; then
         mkdir -p "$DATA_T"
         /usr/bin/python3 -c 'import http.server, sys
 class H(http.server.BaseHTTPRequestHandler):
@@ -523,7 +525,7 @@ class H(http.server.BaseHTTPRequestHandler):
         self.send_response(200); self.end_headers(); self.wfile.write(b"{\"service\": \"abstractgateway\"}")
     def log_message(self, *a): pass
 http.server.HTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()' "$BG_PORT" </dev/null >/dev/null 2>&1 &
-        PRE_PID=$!; echo "$PRE_PID" >"$DATA_T/gateway.pid"
+        PRE_PID=$!; [[ "${BG_FOREIGN:-0}" == 1 ]] || echo "$PRE_PID" >"$DATA_T/gateway.pid"
         for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 && break; sleep 0.3; done
     fi
     PTR="$WORK/$name/home/.abstractframework/gateway.json"
@@ -579,7 +581,10 @@ sys.exit(proc.wait())')
     [[ "${BG_OPEN:-0}" == 1 ]] && open_flag=()
     local svc_flag=(--no-service)
     [[ "${BG_SERVICE:-0}" == 1 ]] && svc_flag=()
-    run_in "$name" ${BG_ENV:-} -- ${wrap[@]+"${wrap[@]}"} "${BG_SHELL:-sh}" "$SCRIPTS_DIR/install.sh" --profile light --port "$BG_PORT" ${svc_flag[@]+"${svc_flag[@]}"} ${open_flag[@]+"${open_flag[@]}"} --no-modify-path ${BG_ARGS:---no-console}
+    # BG_NO_PORT=1: no --port (the port comes from bootstrap.env, as for the gateway's Update run).
+    local port_flag=(--port "$BG_PORT")
+    [[ "${BG_NO_PORT:-0}" == 1 ]] && port_flag=()
+    run_in "$name" ${BG_ENV:-} -- ${wrap[@]+"${wrap[@]}"} "${BG_SHELL:-sh}" "$SCRIPTS_DIR/install.sh" --profile light ${port_flag[@]+"${port_flag[@]}"} ${svc_flag[@]+"${svc_flag[@]}"} ${open_flag[@]+"${open_flag[@]}"} --no-modify-path ${BG_ARGS:---no-console}
     local pid f
     # the background gateway (any data dir: BG_ARGS may pass --data-dir) and the login item's
     while IFS= read -r f; do
@@ -874,6 +879,24 @@ else
     check "systemd: nothing changed, no restart" "$([[ $RC == 0 ]] && ! grep -q "restart" "$SYSTEMCTL_LOG"; echo $?)" "$SYSTEMCTL_LOG"
     BG_LINUX=1 BG_SERVICE=1 BG_UNIT_ACTIVE=0 BG_STATE="$UP_SVC" BG_FREEZE_BEFORE='abstractgateway==0.7.0\n' BG_FREEZE_AFTER="abstractgateway==$GW_PIN\n" bg_case up_systemd_idle 1
     check "systemd: a unit that was not running is started by service install, not restarted" "$([[ $RC == 0 ]] && ! grep -q "restart" "$SYSTEMCTL_LOG" && grep -qx "abstractgateway service install --port $BG_PORT" "$GWLOG"; echo $?)" "$SYSTEMCTL_LOG"
+fi
+
+echo "[18] --no-start (the gateway's Update run) keeps the recorded port when a gateway it did not start holds it"
+if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    check "port $BG_PORT is free for the --no-start port cases" 1
+else
+    GW_PIN="$(sed -n 's/^AF_GATEWAY_PIN_DEFAULT="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
+    # A hand-started `serve` on the recorded port: no gateway.pid, no login item, so the installer
+    # cannot recognise it as its own. No --port, as the gateway's Update runs it.
+    HELD_OLD="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=0.6.0\nCONSOLE=0\nGATEWAY_SPEC=abstractgateway[tray]==0.7.0\n"
+    BG_FOREIGN=1 BG_NO_PORT=1 BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$HELD_OLD" BG_ARGS="--no-console --no-start --yes" \
+        BG_FREEZE_BEFORE='abstractgateway==0.7.0\n' BG_FREEZE_AFTER="abstractgateway==$GW_PIN\n" bg_case held_nostart 1
+    check "--no-start, recorded port held by a gateway it did not start: the recorded port is kept and recorded" "$([[ $RC == 0 ]] && grep -qx "PORT=$BG_PORT" "$DATA_T/bootstrap.env" && ! has "$OUT" "using $((BG_PORT + 1))" && has "$OUT" "port $BG_PORT (this install's) is in use by a process this installer did not start; kept"; echo $?)" "$OUT"
+    check "--no-start, recorded port held: the summary keeps the port and says a restart is due" "$(has "$OUT" "The install keeps port $BG_PORT" && has "$OUT" "still runs the previous version until it restarts" && ! grep -q "serve\|service install" "$GWLOG"; echo $?)" "$OUT"
+    # Without --no-start the installer starts a gateway, so a busy port still moves to the next free one.
+    BG_FOREIGN=1 BG_NO_PORT=1 BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$HELD_OLD" \
+        BG_FREEZE_BEFORE='abstractgateway==0.7.0\n' BG_FREEZE_AFTER="abstractgateway==$GW_PIN\n" bg_case held_start 1
+    check "without --no-start, a held recorded port still moves to the next free port (kept for future runs)" "$([[ $RC == 0 ]] && has "$OUT" "using $((BG_PORT + 1)) (kept for future runs)" && grep -qx "PORT=$((BG_PORT + 1))" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
 fi
 
 echo ""

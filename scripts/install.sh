@@ -121,17 +121,17 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.7.1"
+AF_GATEWAY_PIN_DEFAULT="0.7.2"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.6.1"
-AF_PY_MATRIX="abstractcore==2.18.0 AbstractRuntime==0.7.1 abstractagent==0.3.17 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.13.0 abstractvision==0.3.30 abstractmusic==0.1.15"
+AF_FRAMEWORK_VERSION="0.6.2"
+AF_PY_MATRIX="abstractcore==2.18.1 AbstractRuntime==0.7.1 abstractagent==0.3.17 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.13.0 abstractvision==0.3.30 abstractmusic==0.1.15"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.6.1 @abstractframework/observer@0.2.1 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"
-AF_CRATE_CONSOLE="abstractgateway-console@0.11.0"
+AF_CRATE_CONSOLE="abstractgateway-console@0.11.1"
 AF_CRATE_CODE_CLI="abstractcode@0.7.1"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
 # `abstractgateway-config` (uv tool install --with-executables-from; --no-core-cli leaves them
@@ -1407,6 +1407,10 @@ if [ -n "$ST_MODE" ]; then
     fi
 fi
 REUSE_RUNNING=0
+# PORT_HELD=1: --no-start, and this install's recorded port is taken by a process this installer
+# does not recognise as its own (a gateway started by hand, or another program). Nothing starts,
+# so the recorded port is kept: moving it would point the next start at a different port.
+PORT_HELD=0
 if [ -z "$PORT" ]; then PORT="${ST_PORT:-8080}"; PORT_EXPLICIT=0; else PORT_EXPLICIT=1; fi
 case "$PORT" in ''|*[!0-9]*) die "--port must be a number (got '$PORT')" ;; esac
 case "$ASK_WAIT" in ''|*[!0-9]*) die "--ask-wait must be a number of seconds (got '$ASK_WAIT')" ;; esac
@@ -1415,6 +1419,9 @@ if port_busy "$PORT"; then
     if [ "$PORT" = "$ST_PORT" ] && { pid_alive || { [ "$LOGIN_WAS" = y ] && is_our_gateway "$PORT"; }; }; then
         REUSE_RUNNING=1
         ok "port $PORT: this install's gateway is already running (it will be restarted if the package changes)"
+    elif [ "$NO_START" = 1 ] && [ -n "$ST_PORT" ] && [ "$PORT" = "$ST_PORT" ]; then
+        PORT_HELD=1
+        info "port $PORT (this install's) is in use by a process this installer did not start; kept (--no-start starts nothing)"
     elif [ "$PORT_EXPLICIT" = 1 ]; then
         die "port $PORT is already in use by another process; pick another one with --port"
     else
@@ -2104,6 +2111,11 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 1 ]; then
     if [ "$CHANGED" = 1 ] && [ "$ACTION" != install ]; then
         echo "  A gateway that is running still runs the previous version until it restarts: the console's"
         echo "  Restart (web: the Gateway section), the tray's Restart, or re-run this installer without --no-start."
+    fi
+    if [ "$PORT_HELD" = 1 ]; then
+        echo "  Port $PORT, this install's port, is in use by a program this installer did not start (for example a"
+        echo "  gateway started by hand). The install keeps port $PORT: restart that gateway to run this version, or stop"
+        echo "  the program before the gateway starts again."
     fi
 fi
 printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): nothing was changed.' || echo 'Details')" "$C_0"

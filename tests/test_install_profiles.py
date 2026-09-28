@@ -1216,3 +1216,18 @@ def test_install_ps1_upgrades_like_install_sh() -> None:
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     for key in ("FRAMEWORK_VERSION=", "CONSOLE=", "CODE_CLI=", "CORE_CLI=", "TRAY=", "FULL="):
         assert f'echo "{key}' in sh, key
+
+
+def test_install_ps1_no_start_keeps_the_recorded_port_like_install_sh() -> None:
+    """Static parity with test_install_user_path.sh [18]: under -NoStart, a recorded port held by a
+    process the installer did not start is kept (never moved to the next free port and recorded),
+    and the summary says so. The branch must come before the explicit-port and next-free branches."""
+    ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    held = ps1.index("elseif ($NoStart -and $state['PORT'] -and \"$Port\" -eq $state['PORT'])")
+    assert held < ps1.index("elseif ($explicitPort) { Stop-Install \"port $Port is already in use")
+    assert held < ps1.index("using $p (kept for future runs)")
+    assert "$portHeld = $true" in ps1 and "if ($portHeld -and -not $script:DryRun)" in ps1
+    assert "The install keeps port ${Port}" in ps1
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    held_sh = sh.index('elif [ "$NO_START" = 1 ] && [ -n "$ST_PORT" ] && [ "$PORT" = "$ST_PORT" ]; then')
+    assert held_sh < sh.index('using $_p (kept for future runs)')

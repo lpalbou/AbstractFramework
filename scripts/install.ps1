@@ -90,14 +90,14 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.7.1'
+$AfGatewayPinDefault = '0.7.2'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.6.1'
-$AfPyMatrix = @('abstractcore==2.18.0', 'AbstractRuntime==0.7.1', 'abstractagent==0.3.17', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.13.0', 'abstractvision==0.3.30', 'abstractmusic==0.1.15')
+$AfFrameworkVersion = '0.6.2'
+$AfPyMatrix = @('abstractcore==2.18.1', 'AbstractRuntime==0.7.1', 'abstractagent==0.3.17', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.13.0', 'abstractvision==0.3.30', 'abstractmusic==0.1.15')
 $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.4.0', '@abstractframework/code@0.6.1', '@abstractframework/observer@0.2.1', '@abstractframework/continuum@0.4.0', '@abstractframework/entity@0.3.0')
-$AfCrateConsole = 'abstractgateway-console@0.11.0'
+$AfCrateConsole = 'abstractgateway-console@0.11.1'
 $AfCrateCodeCli = 'abstractcode@0.7.1'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
 # the parent of the uv tool bin folder, so they land next to abstractgateway.exe (the folder the
@@ -709,9 +709,17 @@ function Main {
     $explicitPort = ($Port -ne 0)
     if (-not $explicitPort) { $Port = if ($state['PORT']) { [int]$state['PORT'] } else { 8080 } }
     $reuseRunning = $false
+    # $portHeld: -NoStart, and this install's recorded port is taken by a process this installer does
+    # not recognise as its own (a gateway started by hand, or another program). Nothing starts, so the
+    # recorded port is kept: moving it would point the next start at a different port.
+    $portHeld = $false
     if (Test-PortBusy $Port) {
         $ours = ("$Port" -eq $state['PORT']) -and ((Get-OurPid) -or ($state['MODE'] -eq 'service' -and ((Get-Http "http://127.0.0.1:$Port/api/health") -match 'abstractgateway')))
         if ($ours) { $reuseRunning = $true; Write-Ok "port ${Port}: this install's gateway is already running (restarted if the package changes)" }
+        elseif ($NoStart -and $state['PORT'] -and "$Port" -eq $state['PORT']) {
+            $portHeld = $true
+            Write-Info "port $Port (this install's) is in use by a process this installer did not start; kept (-NoStart starts nothing)"
+        }
         elseif ($explicitPort) { Stop-Install "port $Port is already in use by another process; pick another one with -Port" }
         else {
             $p = $Port + 1
@@ -1231,6 +1239,11 @@ function Main {
     if ($NoStart -and $changed -and $action -ne 'install' -and -not $script:DryRun) {
         Write-Host '  A gateway that is running still runs the previous version until it restarts: the console''s Restart'
         Write-Host '  (web: the Gateway section), the tray''s Restart, or re-run this installer without -NoStart.'
+    }
+    if ($portHeld -and -not $script:DryRun) {
+        Write-Host "  Port $Port, this install's port, is in use by a program this installer did not start (for example a"
+        Write-Host "  gateway started by hand). The install keeps port ${Port}: restart that gateway to run this version, or stop"
+        Write-Host '  the program before the gateway starts again.'
     }
     if ($changeLines.Count -or $changeOthers) {
         Write-Host '  Changes:'

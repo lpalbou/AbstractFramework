@@ -36,9 +36,11 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
   powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
   ```
 
-To upgrade, run the same line again (Mac package: install the latest package again): it installs
-the latest AbstractFramework release and keeps your settings and data. Gateway only, apps, and
-version checks: [Upgrade](docs/install.md#upgrade).
+To upgrade, run the same line again (on a Mac, double-clicking **Install AbstractFramework.command**
+again does the same), or, on macOS and Linux, press **Update** in the web console, the terminal console or the menu-bar
+icon: each runs the same installer, which installs the latest AbstractFramework release, keeps your
+settings, options and data, and lists what changed. Gateway only, apps, and version checks:
+[Upgrade](docs/install.md#upgrade).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
 with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
@@ -158,7 +160,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.7.1` and `ghcr.io/lpalbou/abstractcore-server:2.18.0`.
+`ghcr.io/lpalbou/abstractgateway:0.7.2` and `ghcr.io/lpalbou/abstractcore-server:2.18.1`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -304,7 +306,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.6.1)
+### Release matrix (abstractframework 0.6.2)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -313,9 +315,9 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.7.1 |
+| PyPI | `abstractgateway` | 0.7.2 |
 | PyPI | `abstractassistant` | 0.9.1 |
-| PyPI | `abstractcore` | 2.18.0 |
+| PyPI | `abstractcore` | 2.18.1 |
 | PyPI | `AbstractRuntime` | 0.7.1 |
 | PyPI | `abstractagent` | 0.3.17 |
 | PyPI | `abstractskill` | 0.3.0 |
@@ -330,11 +332,11 @@ and tested together.
 | npm | `@abstractframework/continuum` | 0.4.0 |
 | npm | `@abstractframework/entity` | 0.3.0 |
 | crates.io | `abstractcode` | 0.7.1 |
-| crates.io | `abstractgateway-console` | 0.11.0 |
+| crates.io | `abstractgateway-console` | 0.11.1 |
 | crates.io | `abstractcore-console` | 0.4.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.7.1 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.18.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.7.2 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.18.1 |
 
 Optional add-ons that are not part of any profile install separately:
 `pip install abstract3d` (0.3.1) and `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)

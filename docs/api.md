@@ -55,12 +55,12 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.6.1` for this release).
+The meta-package version (`0.6.2` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.6.1:
-`abstractcore` 2.18.0, `abstractruntime` 0.7.1, `abstractagent` 0.3.17, `abstractgateway` 0.7.1,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.6.2:
+`abstractcore` 2.18.1, `abstractruntime` 0.7.1, `abstractagent` 0.3.17, `abstractgateway` 0.7.2,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.0, `abstractvision` 0.3.30,
 `abstractmusic` 0.1.15, `abstractassistant` 0.9.1.
 
@@ -79,7 +79,7 @@ The npm apps released with this version, each runnable with `npx <package>`:
 ### `CRATE_RELEASE_VERSIONS`
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.11.0, `abstractcore-console` 0.4.0, `abstractcode` 0.7.1 and the
+`abstractgateway-console` 0.11.1, `abstractcore-console` 0.4.0, `abstractcode` 0.7.1 and the
 `abstracttui` engine 0.6.0. The bootstrap scripts build `abstractgateway-console` at this version by default
 (`--no-console` skips it) and `abstractcode` next to it (`--no-code-cli` skips it).
 

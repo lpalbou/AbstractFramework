@@ -47,8 +47,8 @@ top.
 
 The package also leaves two double-clickable files in
 `~/Library/Application Support/AbstractFramework/Installer`: **Install AbstractFramework.command**
-(run it again to repair the install) and **Uninstall AbstractFramework.command**. To upgrade, see
-[Upgrade](#upgrade).
+(double-click it again to upgrade or repair: it runs the latest installer) and
+**Uninstall AbstractFramework.command**. See [Upgrade](#upgrade).
 
 ### Or: paste one line in Terminal
 
@@ -105,7 +105,7 @@ where it stopped.
 
 ### Upgrade everything (recommended)
 
-Run the line you installed with again:
+The line you installed with also upgrades and repairs. Run it again:
 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
@@ -117,29 +117,46 @@ On Windows:
 powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
 ```
 
-On a Mac without Terminal, download the latest
+On a Mac without Terminal, double-click **Install AbstractFramework.command** in
+`~/Library/Application Support/AbstractFramework/Installer` again. It downloads and runs the latest
+`install.sh`, the script of the one line, so it upgrades the same way. When GitHub cannot be
+reached, it runs the copy of the installer it came with and says so. Installing the latest
 [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg)
-and install it again. The **Install AbstractFramework.command** file in
-`~/Library/Application Support/AbstractFramework/Installer` runs the installer of the release it
-came with: it repairs that install, it does not upgrade it.
+again does the same.
 
 The line always runs the installer of the latest AbstractFramework release. It:
 
-- installs the gateway version that release pins ([Check your versions](#check-your-versions) shows
-  how to print it). The libraries the gateway uses (AbstractCore, AbstractRuntime, the voice, vision
-  and music packages) move up to at least the versions that gateway requires;
+- finds the existing install and says what it does:
+  `AbstractFramework 0.6.1 found: upgrading to AbstractFramework 0.6.2`, or
+  `AbstractFramework 0.6.2 found: already up to date` (every part is still checked, and repaired
+  when needed);
+- installs the gateway version that release pins, and every library the gateway uses
+  (AbstractCore, AbstractRuntime, AbstractAgent, AbstractSkill, AbstractMemory, AbstractSemantics
+  and the voice, vision and music packages) at the exact version released and tested with it ([Check your versions](#check-your-versions) shows
+  how to print the list);
 - rebuilds the terminal console (`abstractgateway-console`) and AbstractCode's terminal client
   (`abstractcode`) when the release pins newer versions, with the Rust toolchain from the first
   install;
-- keeps your profile, port, start-at-login choice, Network setting, data, settings, downloaded
-  models and installed apps;
-- restarts the gateway when its package changed, and leaves a running gateway alone when nothing
-  changed. On Linux with start at login on, the `systemd --user` service keeps running the
-  previous version until you [restart it](#restart-the-gateway).
+- keeps your profile, port, start-at-login choice, data directory (a custom `--data-dir` too),
+  Network setting, settings, downloaded models and installed apps, and the options that change what
+  is installed: `--no-console`, `--no-code-cli`, `--no-core-cli`, `--no-tray` and `--full`. It
+  prints the options it kept. To change one, give the opposite option: `--with-console`,
+  `--with-code-cli`, `--with-core-cli`, `--with-tray` or `--no-full` (Windows: `-WithConsole`,
+  `-WithCodeCli`, `-WithCoreCli`, `-WithTray`, `-NoFull`);
+- restarts the gateway when anything in its environment changed, a library alone included, and
+  leaves a running gateway alone when nothing changed. The macOS login item is restarted through
+  launchd, a running Linux `systemd --user` service with `systemctl --user restart`, and a
+  background gateway is started again. On Windows the installer stops the running gateway before it
+  changes any file (Windows locks the files of a running program) and starts it again afterwards;
+- never leaves the gateway stopped: when the login item cannot be registered, the gateway starts in
+  the background and the summary says how to turn start at login on;
+- ends with what changed, old -> new, under **Changes** (`Changes: none` when nothing moved), and
+  `Upgraded: AbstractFramework 0.6.1 -> 0.6.2` or `Already up to date: AbstractFramework 0.6.2;
+  nothing changed.`
 
-If your first install used options that change what is installed or where (`--data-dir`,
-`--no-console`, `--no-code-cli`, `--no-core-cli`, `--no-tray`, `--full`), pass them again: only
-the profile, the port and the start-at-login choice are remembered.
+With `--no-start` (Windows: `-NoStart`) the installer upgrades without starting or restarting the
+gateway, and says when a restart is due. It keeps this install's port even when another program
+holds it.
 
 ### Upgrade only the gateway
 
@@ -157,8 +174,10 @@ On Windows:
 ```
 
 `--pin latest` moves the gateway and its libraries to their newest releases on PyPI; `--pin 0.7.1`
-installs one exact version. The installer restarts the gateway as above. A later run without
-`--pin` returns the gateway to the version the AbstractFramework release pins.
+installs one exact version. The libraries then follow the gateway's own requirements instead of the
+release's tested versions, and the install records no AbstractFramework release. The installer
+restarts the gateway as above. A later run without `--pin` returns every package to the versions
+the AbstractFramework release pins.
 
 Do not use `uv tool upgrade abstractgateway` for an installer install. The installer installs an
 exact version (`abstractgateway[<profile>,tray]==<version>`), uv keeps that constraint, and
@@ -169,27 +188,57 @@ overrides the installer added are gone. Use the installer.
 
 ### From the console or the menu-bar icon
 
-**Check now** (web console, **Resources > Gateway > Version**) and **Check for Updates…** (the
-menu-bar icon) ask PyPI whether a newer `abstractgateway` exists. They compare with the newest
-gateway, not with the AbstractFramework release.
+The gateway's **Update** runs the same installer as the line above. You find it in three places:
 
-For a gateway installed with pip, pipx or in a virtual environment, **Update to …** installs the
-new version in the background and keeps the `apple`, `gpu` and `embeddings` extras. The running
-gateway keeps serving the old version until you restart it (**Restart gateway…** in the same panel,
-or **Restart Now** in the menu-bar icon's dialog). It updates the gateway package only: not the
-terminal console, not AbstractCode's terminal client, not the apps.
+- the web console: **Resources > Gateway > Version**, then **Check now**;
+- the menu-bar icon: **Check for Updates…**;
+- the terminal console: **F3**, then `u` to check and `U` to update.
 
-For a gateway installed by the installer, **Update** runs `uv tool upgrade abstractgateway`, which
-cannot move past the installed version (see above) and reports that nothing changed. Use
-[the installer](#upgrade-everything-recommended) or [`--pin latest`](#upgrade-only-the-gateway)
-instead.
+For a gateway installed by the AbstractFramework installer on macOS or Linux:
+
+1. The check compares the AbstractFramework release you have with the latest one. It reads the
+   release from the install manifest on the framework repository's `main` branch. The version line
+   reads `AbstractFramework <yours> · gateway <version> · AbstractFramework <latest> available`.
+2. **Update to AbstractFramework <latest>** asks you to confirm and shows exactly what runs:
+   - the address of the installer,
+     `https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh`;
+   - the commit it comes from and the script's sha256;
+   - the command:
+     `/bin/sh install.sh --yes --no-start --no-open --no-modify-path --data-dir <data dir>`.
+
+   The gateway runs exactly the script you confirmed, and refuses to run a different one.
+3. The installer runs next to the running gateway: nothing is asked, start at login stays as it is,
+   and every package moves to the release's tested versions. The web console shows its output live
+   under **Update log**.
+4. The result is one of three:
+   - **installed**: what moved (`AbstractFramework <yours> -> <latest>`, then the gateway and the
+     libraries that changed), then a restart to finish (**Restart gateway…** in the web console,
+     **Restart Now** in the menu-bar icon's dialog, `R` in the terminal console);
+   - **already up to date**: the installer changed nothing, and no restart is needed;
+   - **didn't finish**: the installer's exit code and the last lines of its log (the full log is the
+     newest `<data dir>/logs/install-*.log`). The running gateway keeps running; re-run the line
+     above to finish by hand.
+
+On Windows, a running program's files are locked, so the gateway does not update itself. The check
+says which release is available and shows the PowerShell line to paste; that installer stops the
+gateway, upgrades and starts it again.
+
+**Update** is for the gateway's admin only, and it runs on the gateway's own machine, also when you
+use a console from another computer or over SSH.
+
+For a gateway installed with pip, pipx or in a virtual environment, the check compares with the
+newest `abstractgateway` on PyPI, and **Update to …** installs it in the background, keeping the
+`apple`, `gpu` and `embeddings` extras. It updates the gateway package only: not the terminal
+console, not AbstractCode's terminal client, not the apps. Restart the gateway to finish.
 
 ### Restart the gateway
 
-An upgrade that installs a new gateway version while the gateway runs takes effect at its next
-start. To restart it now:
+The installer restarts the gateway itself when anything changed, except with `--no-start` (the
+console's and the menu-bar icon's **Update**). A gateway updated while it runs keeps the previous
+version until its next start. To restart it now:
 
 - web console: **Resources > Gateway > Restart gateway…**; menu-bar icon: **Restart AbstractGateway…**;
+  terminal console: `R` in **F3**;
 - terminal: `abstractgateway network restart --force --token <admin token>`;
 - Linux, start at login on: `systemctl --user restart abstractgateway`.
 
@@ -214,7 +263,7 @@ The terminal console and an `abstractcode` built by the installer are upgraded b
 
 ```bash
 abstractgateway --version                    # the installed gateway
-uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.7.1])
+uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.7.2])
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
@@ -290,7 +339,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.7.1"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.7.2"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]"`: Supertonic text-to-speech and Whisper speech-to-text,
@@ -394,12 +443,13 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--with-ollama` | `-WithOllama` | Run Ollama's official installer (Linux uses sudo; the script tells you first) |
 | `--with-lmstudio` | `-WithLmStudio` | Install LM Studio (headless daemon on macOS/Linux, winget on Windows) |
 | `--no-console` | `-NoConsole` | Skip the terminal console (`abstractgateway-console`), which is otherwise built with cargo |
-| `--no-code-cli` | `-NoCodeCli` | Skip AbstractCode's terminal client (`abstractcode`), which is otherwise built with the console's cargo into the same folder (`--with-code-cli`, the old opt-in, is still accepted) |
-| `--no-core-cli` | `-NoCoreCli` | Do not put AbstractCore's commands (`abstractcore` and its apps) and `abstractvoice`, `abstractvision`, `abstractmusic` on PATH (`--with-core-cli`, the old opt-in, is still accepted) |
+| `--no-code-cli` | `-NoCodeCli` | Skip AbstractCode's terminal client (`abstractcode`), which is otherwise built with the console's cargo into the same folder |
+| `--no-core-cli` | `-NoCoreCli` | Do not put AbstractCore's commands (`abstractcore` and its apps) and `abstractvoice`, `abstractvision`, `abstractmusic` on PATH |
 | `--full` | `-Full` | Also build the [compiled extras](#compiled-extras) and llama.cpp from source (needs a C compiler) |
 | `--no-tray` | `-NoTray` | Leave out the menu-bar icon (`tray` extra) |
+| `--with-console`, `--with-code-cli`, `--with-core-cli`, `--with-tray`, `--no-full` | `-WithConsole`, `-WithCodeCli`, `-WithCoreCli`, `-WithTray`, `-NoFull` | Turn back what an earlier `--no-console`, `--no-code-cli`, `--no-core-cli`, `--no-tray` or `--full` changed (a re-run keeps those choices otherwise) |
 | `--no-service` | `-NoService` | Do not start at login (asks nothing; starts the gateway in the background) |
-| `--no-start` | `-NoStart` | Install only; do not start the gateway |
+| `--no-start` | `-NoStart` | Install or upgrade only; do not start or restart the gateway, and say when a restart is due (the gateway's **Update** uses it) |
 | `--no-open` | `-NoOpen` | Do not open the browser (remote or headless session: do not offer the terminal console) |
 | `--ask-wait SECONDS` | `-AskWait SECONDS` | How long a timed question waits for an answer: start at login, and the terminal console offer at the end of a remote or headless install (default 25, at most 25; `--console-wait` is an alias) |
 | `--no-modify-path` | `-NoModifyPath` | Do not add `~/.local/bin` to your shell profile (`uv tool update-shell`) |
@@ -409,7 +459,7 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--interactive` | — | Wait for every answer without a time limit, and also ask whether to build the terminal console (and, with `--uninstall`, whether to delete data and uv); the double-click installers pass it |
 | `-y`, `--yes` | — | Ask nothing, not even start at login (a first install leaves it off; a re-run keeps the previous choice) |
 | `--print` | `-Print` (or `-WhatIf`) | Show the plan and every command; change nothing |
-| `--print-versions` | `-PrintVersions` | Print the pinned gateway, npm app and crate versions, then exit |
+| `--print-versions` | `-PrintVersions` | Print the AbstractFramework release, the pinned gateway, its libraries, the npm apps and the crates, then exit |
 | `-v`, `--verbose` | — | Show the full output of every command |
 | `--uninstall [--purge] [--remove-uv]` | `-Uninstall [-Purge]` | Stop the gateway process tree, remove the service and uv tools (purge also deletes your data: see [Remove AbstractFramework](#remove-abstractframework); `--remove-uv` also removes uv, its Python and cache when the installer added uv) |
 
@@ -527,7 +577,7 @@ instead of starting a browser.
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.7.1"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.7.2"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -594,8 +644,9 @@ A new mode or port applies at the next start: `network restart`, the console, th
 
 ### Upgrade and uninstall
 
-- Upgrade: re-run the one-liner; see [Upgrade](#upgrade) (`uv tool upgrade abstractgateway` does
-  not upgrade an installer install: it keeps the installed version's pin).
+- Upgrade: re-run the one-liner, or use **Update** in a console or the menu-bar icon, which runs the
+  same installer; see [Upgrade](#upgrade) (`uv tool upgrade abstractgateway` does not upgrade an
+  installer install: it keeps the installed version's pin).
 - Uninstall: [Remove AbstractFramework](#remove-abstractframework) above,
   `curl -LsSf .../install.sh | sh -s -- --uninstall` (Windows: the script block with
   `-Uninstall`), or by hand: `abstractgateway service uninstall` (when registered), then
@@ -642,8 +693,8 @@ A plain `pip install` of the `apple` or `gpu` profile builds the
 `aec-audio-processing`) from source, so it needs a C/C++ compiler. The one-line install above
 does not.
 
-`abstractframework` 0.6.1 pins `abstractgateway==0.7.1`, `abstractassistant==0.9.1`,
-`abstractcore==2.18.0`, `AbstractRuntime==0.7.1`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
+`abstractframework` 0.6.2 pins `abstractgateway==0.7.2`, `abstractassistant==0.9.1`,
+`abstractcore==2.18.1`, `AbstractRuntime==0.7.1`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.0`,
 `abstractvision==0.3.30` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
@@ -727,12 +778,12 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version released with 0.6.1 |
+| Tool | Command | Version released with 0.6.2 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.7.1 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.18.0 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.7.2 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.18.1 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.4.0 |
-| Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.11.0 |
+| Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.11.1 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.4.0 |
 | Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.6.1 |
 | Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.2.1 |
@@ -781,7 +832,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.7.1
+  ghcr.io/lpalbou/abstractgateway:0.7.2
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -789,7 +840,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.18.0`.
+`ghcr.io/lpalbou/abstractcore-server:2.18.1`.
 
 ## How installs are designed
 

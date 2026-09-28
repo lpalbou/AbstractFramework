@@ -41,8 +41,9 @@ flowchart LR
   gateway in the background and shows the admin token file instead.
 - **Loopback first.** The gateway binds `127.0.0.1`. Remote hosts use an SSH tunnel or the
   container deployment.
-- **Idempotent.** Re-running the script upgrades or repairs in place and keeps the port, profile and
-  data directory from the previous run. `--uninstall` removes the service and the uv tools and keeps
+- **Idempotent.** Re-running the script upgrades or repairs in place and keeps the port, profile,
+  start-at-login choice, data directory and install options from the previous run. The gateway's
+  **Update** (consoles and menu-bar icon) runs the same script. `--uninstall` removes the service and the uv tools and keeps
   data unless `--purge` is given.
 
 ## Profiles
