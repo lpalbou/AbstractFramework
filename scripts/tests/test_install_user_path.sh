@@ -350,8 +350,23 @@ echo "[8] Install AbstractFramework.command"
 C="$WORK/cmd"; mkdir -p "$C"
 cp "$SCRIPTS_DIR/Install AbstractFramework.command" "$C/"
 printf '#!/bin/sh\necho "STUB install.sh $*"\nexit "${STUB_RC:-0}"\n' >"$C/install.sh"
+# curl doubles: one serves "the latest install.sh" for the one-liner's URL, one cannot reach GitHub.
+for n in cmd_ok cmd_fail cmd_offline; do mkdir -p "$WORK/$n/bin"; done
+for n in cmd_ok cmd_fail; do
+    cat >"$WORK/$n/bin/curl" <<'CURL'
+#!/bin/sh
+out=""; url=""; prev=""
+for a in "$@"; do [ "$prev" = -o ] && out="$a"; case "$a" in https://*) url="$a" ;; esac; prev="$a"; done
+[ "$url" = "https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh" ] || exit 22
+printf '#!/bin/sh\necho "LATEST install.sh $*"\nexit "${STUB_RC:-0}"\n' >"$out"
+CURL
+    chmod +x "$WORK/$n/bin/curl"
+done
+printf '#!/bin/sh\nexit 6\n' >"$WORK/cmd_offline/bin/curl"; chmod +x "$WORK/cmd_offline/bin/curl"
 run_in cmd_ok -- sh "$C/Install AbstractFramework.command" --port 18829
-check "runs the adjacent install.sh with --interactive and the user's args" "$(has "$OUT" "STUB install.sh --interactive --port 18829" && has "$OUT" "All done"; echo $?)" "$OUT"
+check "runs the LATEST install.sh (the one-liner's) with --interactive and the user's args, not its own copy" "$(has "$OUT" "LATEST install.sh --interactive --port 18829" && ! has "$OUT" "STUB install.sh" && has "$OUT" "All done"; echo $?)" "$OUT"
+run_in cmd_offline -- sh "$C/Install AbstractFramework.command" --port 18829
+check "GitHub unreachable: runs the copy next to it, and says so" "$(has "$OUT" "STUB install.sh --interactive --port 18829" && has "$OUT" "GitHub could not be reached"; echo $?)" "$OUT"
 run_in cmd_fail STUB_RC=1 -- sh "$C/Install AbstractFramework.command"
 check "on failure: exit 1 and 'double-click this file again'" "$([[ $RC == 1 ]] && has "$OUT" "double-click this file again"; echo $?)" "$OUT"
 
