@@ -2,14 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractFramework — Open-Source AI Infrastructure</title>
-  <meta name="description" content="Build durable, observable, multimodal AI systems. Open source, works offline, runs everywhere. One interface for text, voice, image, video and music generation.">
+  <title>AbstractFramework — Write once. Generate everything. Run anywhere.</title>
+  <meta name="description" content="A modular, open-source framework for durable, observable, multimodal AI. One Python API for any model, local or cloud; one runtime where agents pause, resume and replay; one gateway with thin clients on every device.">
+  <link rel="canonical" href="https://abstractframework.ai/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="AbstractFramework — Open-Source AI Infrastructure">
-  <meta property="og:description" content="Build durable, observable, multimodal AI systems. Open source, works offline, runs everywhere.">
-  <meta property="og:image" content="assets/img/flow-observability-1-turn.png">
-  <meta property="twitter:card" content="summary_large_image">
+  <meta property="og:url" content="https://abstractframework.ai/">
+  <meta property="og:title" content="AbstractFramework — Write once. Generate everything. Run anywhere.">
+  <meta property="og:description" content="Open-source framework for durable, observable, multimodal AI: one Python API for any model, one durable runtime, one gateway with thin clients on every device.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
@@ -17,19 +22,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css?v=2">
+  <link rel="stylesheet" href="assets/css/main.css?v=5">
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 
 <!-- ═══════════════════ NAV ═══════════════════ -->
-<nav class="nav">
+<nav class="nav" aria-label="Main">
   <a href="#" class="nav-brand">
     <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
     AbstractFramework
   </a>
-  <ul class="nav-links">
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow">
+        <div class="nav-dropdown-group">
+          <span class="nav-dropdown-label">Your first hour as a</span>
+          <a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a>
+          <a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a>
+          <a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a>
+          <a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a>
+          <a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a>
+          <a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a>
+        </div>
+      </div>
+    </li>
     <li><a href="#architecture">Architecture</a></li>
-    <li class="nav-dropdown"><a href="#components">Components <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l3 3 3-3"/></svg></a>
+    <li class="nav-dropdown"><a href="#components">Components <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
       <div class="nav-dropdown-menu">
         <div class="nav-dropdown-group">
           <span class="nav-dropdown-label">Foundation</span>
@@ -44,15 +63,21 @@
         <div class="nav-dropdown-group">
           <span class="nav-dropdown-label">Applications</span>
           <a href="gateway.html">AbstractGateway</a>
+          <a href="console.html">Consoles</a>
+          <a href="automations.html">Automations</a>
           <a href="code.html">AbstractCode</a>
           <a href="observer.html">AbstractObserver</a>
           <a href="assistant.html">AbstractAssistant</a>
+          <a href="continuum.html">AbstractContinuum</a>
+          <a href="entity.html">AbstractEntity</a>
         </div>
         <div class="nav-dropdown-group">
           <span class="nav-dropdown-label">Modalities</span>
           <a href="voice.html">AbstractVoice</a>
           <a href="vision.html">AbstractVision</a>
           <a href="music.html">AbstractMusic</a>
+          <a href="3d.html">abstract3d</a>
+          <a href="camera.html">AbstractCamera</a>
         </div>
         <div class="nav-dropdown-group">
           <span class="nav-dropdown-label">Knowledge</span>
@@ -65,60 +90,61 @@
     <li><a href="#showcase">Showcase</a></li>
     <li><a href="#deploy">Deploy</a></li>
     <li><a href="#getting-started">Get Started</a></li>
+    <li><a href="install.html">Install</a></li>
     <li><a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer" class="nav-cta">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
     </a></li>
     <li><a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta" style="margin-left:4px">
-      &#129303; Models
+      Models
     </a></li>
   </ul>
-  <button class="mobile-toggle" aria-label="Menu">&#9776;</button>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
 </nav>
+<main id="main">
 
 <!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" id="top">
-  <div class="hero-bg-img" style="position:absolute;inset:0;background:url('assets/img/hero-bg.png') center/cover no-repeat;opacity:0.25;z-index:0"></div>
+  <div class="hero-bg-img" style="position:absolute;inset:0;background:url('assets/img/hero-bg.png') center/cover no-repeat;opacity:0.25;z-index:0" aria-hidden="true"></div>
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> Open Source &middot; MIT Licensed &middot; 14+ Packages</div>
-    <h1>Write once.<br><span class="gradient">Generate everything.</span></h1>
-    <p class="hero-sub">A modular, open-source ecosystem for building durable, observable, multimodal AI systems. Text, voice, image, video, music &mdash; one unified interface, any provider, any model, local or cloud.</p>
+    <div class="hero-badge"><span class="dot"></span> Open Source &middot; MIT Licensed &middot; 20 Packages</div>
+    <h1>Write once.<br><span class="gradient">Generate everything.</span><br>Run anywhere.</h1>
+    <p class="hero-sub">A modular, open-source framework for durable, observable, multimodal AI. One Python API for any model, local or cloud. One runtime where agents pause, resume and replay. One gateway on your laptop, your network or the internet, with thin clients on every device.</p>
     <div class="hero-actions">
       <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         Get Started
       </a>
       <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         View on GitHub
       </a>
     </div>
     <div class="hero-code">
+<!-- PENDING-W2: E1 (text) + E2 (defaults form) -->
 <pre><code><span class="kw">from</span> abstractcore <span class="kw">import</span> <span class="fn">create_llm</span>
 
-llm = <span class="fn">create_llm</span>(<span class="str">"ollama"</span>, model=<span class="str">"qwen3:4b"</span>)
+llm = <span class="fn">create_llm</span>(<span class="str">"mlx"</span>, model=<span class="str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+<span class="cmt"># or any other provider: create_llm("ollama", model="qwen3:4b")</span>
 
 <span class="cmt"># Text</span>
 response = llm.<span class="fn">generate</span>(<span class="str">"Write a haiku about space."</span>)
 
-<span class="cmt"># Voice</span>
-wav = llm.voice.<span class="fn">tts</span>(response.content, format=<span class="str">"wav"</span>)
-
-<span class="cmt"># Image</span>
-img = llm.vision.<span class="fn">t2i</span>(<span class="str">"A nebula over mountains"</span>)
-
-<span class="cmt"># Same interface. Any provider. Any model.</span></code></pre>
+<span class="cmt"># Image, voice, music: one line each, once capability defaults are configured</span>
+image = llm.<span class="fn">generate</span>(<span class="str">"A nebula over mountains"</span>, output=<span class="str">"image"</span>)
+voice = llm.<span class="fn">generate</span>(response.content, output=<span class="str">"voice"</span>)
+music = llm.<span class="fn">generate</span>(<span class="str">"A calm piano loop"</span>, output=<span class="str">"music"</span>)</code></pre>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ STATS ═══════════════════ -->
 <div class="stats-bar reveal">
-  <div class="stat"><div class="stat-num">14+</div><div class="stat-label">Packages</div></div>
-  <div class="stat"><div class="stat-num">9+</div><div class="stat-label">LLM Providers</div></div>
-  <div class="stat"><div class="stat-num">5</div><div class="stat-label">Modalities</div></div>
-  <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Open Source</div></div>
+  <div class="stat"><div class="stat-num" data-count="20">20</div><div class="stat-label">Packages</div></div>
+  <div class="stat"><div class="stat-num" data-count="10">10</div><div class="stat-label">LLM Provider Types</div></div>
+  <div class="stat"><div class="stat-num" data-count="6">6</div><div class="stat-label">Modalities</div></div>
+  <div class="stat"><div class="stat-num" data-count="100%">100%</div><div class="stat-label">Open Source</div></div>
 </div>
 
 <!-- ═══════════════════ TWO ENTRY POINTS ═══════════════════ -->
@@ -127,7 +153,7 @@ img = llm.vision.<span class="fn">t2i</span>(<span class="str">"A nebula over mo
     <div class="section-header reveal">
       <div class="section-label">Two Paths</div>
       <h2 class="section-title">Choose Your Entry Point</h2>
-      <p class="section-desc">Start lightweight with just the LLM library, or go all-in with a full production gateway. Both paths lead to the same ecosystem.</p>
+      <p class="section-desc">Start with the LLM library in your own code, or run the gateway as a control plane with apps on every device. Both use the same packages underneath.</p>
     </div>
     <div class="entry-points reveal">
 
@@ -139,25 +165,26 @@ img = llm.vision.<span class="fn">t2i</span>(<span class="str">"A nebula over mo
           </div>
           <h3>AbstractCore</h3>
         </div>
-        <p>Start here if you need a lightweight LLM library for scripts, notebooks, or existing applications. No infrastructure required &mdash; just pip install and call. Add multimodal capabilities with plugins as you grow.</p>
+        <p>Start here if you need an LLM library for scripts, notebooks or your own application. No server: install it, pick a provider and a model, and call it. You choose the provider and model for each capability explicitly, per call, or once as a default.</p>
         <ul class="entry-features">
-          <li>9+ providers with identical API</li>
-          <li>Universal tool calling, structured output, streaming</li>
-          <li>Media handling (images, PDFs, audio, video)</li>
-          <li>OpenAI-compatible HTTP server mode</li>
-          <li>Multimodal via capability plugins (Voice, Vision, Music)</li>
+          <li>10 provider types behind one API, local and cloud</li>
+          <li>Tool calling, structured output, streaming, media input</li>
+          <li>Capability plugins: voice, vision, music, 3D, camera</li>
+          <li>An OpenAI-compatible <code>/v1</code> server with a web console</li>
+          <li>Model recommendations for this machine before you download</li>
         </ul>
         <div class="code-block" style="margin-top:1rem">
+<!-- PENDING-W2: E1 -->
 <pre><code><span class="line-kw">pip install</span> abstractcore</code></pre>
         </div>
         <div class="entry-scenario">
           <h4>When to use AbstractCore</h4>
-          <p>You're building a script, a notebook, or a custom tool. You want to talk to LLMs with minimal setup. You don't need persistent workflows or a server &mdash; just a clean API that works the same way across Ollama, OpenAI, Anthropic, or any other provider. Install, import, generate.</p>
+          <p>You are writing a script, a notebook or a tool. You want to talk to models with minimal setup and switch between local runtimes and cloud APIs without rewriting your code. You do not need persistent runs or a server.</p>
           <div class="code-block" style="margin-top:1rem">
-            <pre><code><span class="line-cmt"># That's it. 3 lines to talk to any LLM.</span>
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
-<span class="line-fn">print</span>(llm.<span class="line-fn">generate</span>(<span class="line-str">"Explain quantum computing simply."</span>).content)</code></pre>
+<!-- PENDING-W2: E1 -->
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+<span class="line-fn">print</span>(llm.<span class="line-fn">generate</span>(<span class="line-str">"Explain durable execution in 3 bullets."</span>).content)</code></pre>
           </div>
         </div>
         <div class="comp-links" style="margin-top:.75rem">
@@ -175,32 +202,35 @@ llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</s
           </div>
           <h3>AbstractGateway</h3>
         </div>
-        <p>Start here if you're building persistent AI applications &mdash; agents that run for hours, workflows that survive crashes, scheduled tasks. The gateway provides the durable execution layer, and thin clients (browser, terminal, mobile) connect to it.</p>
+        <p>Start here for agents that run for hours, workflows that survive restarts, automations, and several clients on several devices. The gateway is the control plane on the durable runtime. Its console's first-run guide and <strong>Use recommended defaults</strong> set the models for text, voice, images and video where this computer can run them.</p>
         <ul class="entry-features">
-          <li>Durable execution that survives crashes and restarts</li>
-          <li>Append-only tamper-evident ledger for full auditability</li>
-          <li>Scheduled workflows (cron-style, recurring)</li>
-          <li>Multi-client: terminal, browser, tray, Telegram, email</li>
+          <li>Durable runs that survive restarts, with an append-only ledger</li>
+          <li>Automations: recurring or on-demand runs kept as conversations</li>
+          <li>Web and terminal consoles, user accounts, network access</li>
+          <li>Thin clients: terminal, browser, menu bar, Telegram, email</li>
           <li>Start on one device, continue on another</li>
         </ul>
         <div class="code-block" style="margin-top:1rem">
+<!-- PENDING-W2: E7 -->
 <pre><code><span class="line-kw">pip install</span> abstractgateway
 <span class="line-cmt"># or</span>
-<span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway</code></pre>
+<span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre>
         </div>
         <div class="entry-scenario">
           <h4>When to use AbstractGateway</h4>
-          <p>You're building a product &mdash; a coding assistant, a monitoring dashboard, a chatbot. You need runs that survive crashes, scheduled tasks, multi-user access, and clients that work across devices. The gateway is your AI control plane: start a run on your laptop, continue it in the browser, inspect it from your phone.</p>
+          <p>You are building a product or running AI for yourself or a team: a coding agent, recurring reports, a chat that follows you across devices. You want runs that survive crashes, user accounts, and clients that are views of the same run.</p>
           <div class="code-block" style="margin-top:1rem">
-            <pre><code><span class="line-cmt"># Start once. Connect from anywhere.</span>
-abstractgateway serve --port 8080
+<!-- PENDING-W2: E6 -->
+<pre><code><span class="line-cmt"># Start once. Connect from anywhere.</span>
+abstractgateway serve
+<span class="line-cmt"># prints http://127.0.0.1:8080/console#claim=... (one-time sign-in link)</span>
 
-<span class="line-cmt"># Terminal agent</span>
-abstractcode --provider ollama --model qwen3:4b
+<span class="line-cmt"># Browser apps, served by the gateway itself</span>
+http://127.0.0.1:8080/apps/code/
+http://127.0.0.1:8080/apps/observer/
 
-<span class="line-cmt"># Browser UIs (separate devices, same runs)</span>
-npx @abstractframework/observer
-npx @abstractframework/flow</code></pre>
+<span class="line-cmt"># Terminal client</span>
+abstractcode</code></pre>
           </div>
         </div>
         <div class="comp-links" style="margin-top:.75rem">
@@ -211,20 +241,216 @@ npx @abstractframework/flow</code></pre>
       </div>
 
     </div>
+    <div class="callout reveal defaults-note" style="margin-top:2rem">
+      <div><strong>About the one-line form.</strong> <code>llm.generate("...", output="image")</code> is one line only once a default route is configured for that capability: from the gateway console (the first-run guide's <strong>Use recommended defaults</strong>, or the Multimodal tab), or with <code>abstractcore config set-default</code>. Without a default, name the provider and model in the call; both forms are shown in <a href="#multimodal">Multimodal</a>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ WHERE IT FITS ═══════════════════ -->
+<section id="where-it-fits" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">What It Is</div>
+      <h2 class="section-title">A Durable Orchestration Stack, in Three Layers</h2>
+      <p class="section-desc">Most agent libraries orchestrate inside your process. AbstractFramework adds durable runs, a replay-first ledger and a control plane with clients. Use one layer or all three.</p>
+    </div>
+    <div class="fit-layers reveal">
+      <div class="fit-layer l1">
+        <div class="fit-num">Layer 1 &middot; Library</div>
+        <h3>One API for every model and modality</h3>
+        <p>AbstractCore in your Python code: ten provider types, tools, structured output, media input, and capability plugins for voice, images, video, music, 3D and cameras.</p>
+        <div class="fit-pkgs"><span class="mode-tag">Core</span><span class="mode-tag">Voice</span><span class="mode-tag">Vision</span><span class="mode-tag">Music</span><span class="mode-tag">3D</span><span class="mode-tag">Camera</span></div>
+      </div>
+      <div class="fit-layer l2">
+        <div class="fit-num">Layer 2 &middot; Durable runtime</div>
+        <h3>Agents that pause, resume and replay</h3>
+        <p>AbstractRuntime runs agents and workflows as durable runs: every step, effect and wait goes to an append-only ledger. Agent patterns, portable <code>.flow</code> bundles, memory and skills build on it.</p>
+        <div class="fit-pkgs"><span class="mode-tag">Runtime</span><span class="mode-tag">Agent</span><span class="mode-tag">Flow bundles</span><span class="mode-tag">Memory</span><span class="mode-tag">Skill</span></div>
+      </div>
+      <div class="fit-layer l3">
+        <div class="fit-num">Layer 3 &middot; Control plane</div>
+        <h3>A gateway and thin clients</h3>
+        <p>AbstractGateway starts, resumes and cancels runs, schedules automations, manages users and network access, and serves the consoles and apps. Every client replays the same runs.</p>
+        <div class="fit-pkgs"><span class="mode-tag">Gateway</span><span class="mode-tag">Consoles</span><span class="mode-tag">Code</span><span class="mode-tag">Observer</span><span class="mode-tag">Assistant</span></div>
+      </div>
+    </div>
+    <div class="modes-grid reveal fit-compare">
+      <div class="mode-card" style="text-align:left"><h3>vs direct provider SDKs</h3><p>Fine when you use one provider and need no durable orchestration. AbstractCore adds provider portability between local and cloud, consistent tool and structured-output behavior across backends, media policies and capability plugins.</p></div>
+      <div class="mode-card" style="text-align:left"><h3>vs LangChain, LlamaIndex, PydanticAI</h3><p>AbstractFramework is stronger on durability and pause/resume as primitives, replay-first observability and portable <code>.flow</code> bundles. Those libraries have larger connector and RAG ecosystems; you can use them as tools inside AbstractFramework.</p></div>
+      <div class="mode-card" style="text-align:left"><h3>vs Temporal, job schedulers</h3><p>AbstractGateway is architecturally closer to these, specialised for LLM and tool loops: tool-approval waits, AI artifacts, and thin clients that replay runs over HTTP and SSE.</p></div>
+    </div>
   </div>
 </section>
 
 <!-- ═══════════════════ ARCHITECTURE ═══════════════════ -->
-<section id="architecture" style="background:var(--bg-surface)">
+<section id="architecture">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Architecture</div>
       <h2 class="section-title">Modular by Design</h2>
-      <p class="section-desc">Every package is independently installable. Hover each block to explore. Use one or compose the full stack.</p>
+      <p class="section-desc">Every package is independently installable. Hover or focus each block to explore; click it to open its page. Use one or compose the full stack.</p>
     </div>
     <div class="cubes-container">
-      <div class="iso-grid" id="cubeGrid"></div>
+      <div class="iso-grid" id="cubeGrid" role="list" aria-label="AbstractFramework packages by layer"></div>
     </div>
+    <div class="table-wrap layer-table reveal">
+      <table class="data-table">
+        <thead><tr><th>Layer</th><th>Packages</th></tr></thead>
+        <tbody>
+          <tr><td>Applications</td><td><a href="code.html">Code</a>, <a href="flow.html">Flow</a>, <a href="observer.html">Observer</a>, <a href="assistant.html">Assistant</a>, <a href="continuum.html">Continuum</a>, <a href="entity.html">Entity</a>, <a href="console.html">Consoles</a></td></tr>
+          <tr><td>Control plane</td><td><a href="gateway.html">AbstractGateway</a></td></tr>
+          <tr><td>Composition</td><td><a href="agent.html">AbstractAgent</a>, <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>, <a href="https://github.com/lpalbou/AbstractUIC" target="_blank" rel="noopener noreferrer">AbstractUIC</a></td></tr>
+          <tr><td>Foundation</td><td><a href="core.html">AbstractCore</a>, <a href="runtime.html">AbstractRuntime</a></td></tr>
+          <tr><td>Capability plugins</td><td><a href="voice.html">Voice</a>, <a href="vision.html">Vision</a>, <a href="music.html">Music</a>, <a href="3d.html">3D</a>, <a href="camera.html">Camera</a></td></tr>
+          <tr><td>Knowledge</td><td><a href="memory.html">AbstractMemory</a>, <a href="semantics.html">AbstractSemantics</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="arch-flow reveal">
+      <svg viewBox="0 0 640 470" role="img" aria-labelledby="af-title af-desc">
+        <title id="af-title">How a run flows between the clients, the gateway and the runtime</title>
+        <desc id="af-desc">Thin clients send commands to the gateway and receive the run's ledger over server-sent events. The gateway controls runs on the runtime, which records every step in an append-only ledger and calls models through AbstractCore.</desc>
+        <!-- clients -->
+        <g>
+          <rect class="af-box" x="10" y="14" width="140" height="62" rx="10" stroke="#10b981"/>
+          <text class="af-title" x="80" y="40" text-anchor="middle">Assistant</text>
+          <text class="af-sub" x="80" y="60" text-anchor="middle">menu bar, MacBook</text>
+          <rect class="af-box" x="167" y="14" width="140" height="62" rx="10" stroke="#10b981"/>
+          <text class="af-title" x="237" y="40" text-anchor="middle">Code terminal</text>
+          <text class="af-sub" x="237" y="60" text-anchor="middle">phone, over SSH</text>
+          <rect class="af-box" x="324" y="14" width="140" height="62" rx="10" stroke="#10b981"/>
+          <text class="af-title" x="394" y="40" text-anchor="middle">Code web</text>
+          <text class="af-sub" x="394" y="60" text-anchor="middle">any browser</text>
+          <rect class="af-box" x="481" y="14" width="149" height="62" rx="10" stroke="#10b981"/>
+          <text class="af-title" x="555" y="40" text-anchor="middle">Observer, Flow</text>
+          <text class="af-sub" x="555" y="60" text-anchor="middle">Continuum, Entity</text>
+          <text class="af-tag" x="10" y="100" fill="#34d399">THIN CLIENTS &middot; NO DURABLE STATE</text>
+        </g>
+        <!-- commands down, events up -->
+        <g>
+          <path class="af-line af-down" stroke="#22d3ee" d="M70 76 V178"/>
+          <path class="af-line af-up" stroke="#34d399" d="M90 76 V178"/>
+          <path class="af-line af-down" stroke="#22d3ee" d="M227 76 V178"/>
+          <path class="af-line af-up" stroke="#34d399" d="M247 76 V178"/>
+          <path class="af-line af-down" stroke="#22d3ee" d="M384 76 V178"/>
+          <path class="af-line af-up" stroke="#34d399" d="M404 76 V178"/>
+          <path class="af-line af-down" stroke="#22d3ee" d="M545 76 V178"/>
+          <path class="af-line af-up" stroke="#34d399" d="M565 76 V178"/>
+          <text class="af-tag" x="470" y="126" fill="#22d3ee" text-anchor="end">HTTP: start / resume / cancel / approve</text>
+          <text class="af-tag" x="470" y="142" fill="#34d399" text-anchor="end">SSE: ledger replay + live events</text>
+        </g>
+        <!-- gateway -->
+        <g>
+          <rect class="af-box" x="10" y="178" width="620" height="84" rx="12" stroke="#06b6d4"/>
+          <text class="af-title" x="30" y="206">AbstractGateway</text>
+          <text class="af-tag" x="160" y="206" fill="#22d3ee">CONTROLLER</text>
+          <text class="af-sub" x="30" y="228">Run lifecycle, schedules and automations, users and auth, the Network setting,</text>
+          <text class="af-sub" x="30" y="246">the web and terminal consoles, the apps at /apps/&lt;app&gt;/</text>
+        </g>
+        <path class="af-line af-down" stroke="#818cf8" d="M200 262 V300"/>
+        <path class="af-line af-up" stroke="#34d399" d="M220 262 V300"/>
+        <!-- runtime -->
+        <g>
+          <rect class="af-box" x="10" y="300" width="400" height="100" rx="12" stroke="#6366f1"/>
+          <text class="af-title" x="30" y="328">AbstractRuntime</text>
+          <text class="af-tag" x="160" y="328" fill="#818cf8">WHERE AGENTS RUN</text>
+          <text class="af-sub" x="30" y="350">Durable runs, effects and waits (tool approvals,</text>
+          <text class="af-sub" x="30" y="368">user input); checkpoint and resume; agents from</text>
+          <text class="af-sub" x="30" y="386">AbstractAgent and compiled .flow bundles</text>
+        </g>
+        <!-- ledger -->
+        <g>
+          <rect class="af-box" x="430" y="300" width="200" height="100" rx="12" stroke="#f59e0b"/>
+          <text class="af-title" x="446" y="326">Ledger</text>
+          <text class="af-sub" x="446" y="344">append-only, every step</text>
+          <g class="af-ledger">
+            <rect x="446" y="354" width="168" height="6" rx="3" fill="#fbbf24"/>
+            <rect x="446" y="364" width="150" height="6" rx="3" fill="#fbbf24"/>
+            <rect x="446" y="374" width="160" height="6" rx="3" fill="#fbbf24"/>
+            <rect x="446" y="384" width="120" height="6" rx="3" fill="#fbbf24"/>
+            <rect x="446" y="394" width="0" height="0" rx="3" fill="#fbbf24"/>
+          </g>
+        </g>
+        <path class="af-line af-down" stroke="#fbbf24" d="M410 350 H430"/>
+        <!-- core -->
+        <path class="af-line af-down" stroke="#818cf8" d="M210 400 V420"/>
+        <rect class="af-box" x="10" y="420" width="620" height="44" rx="12" stroke="#6366f1"/>
+        <text class="af-title" x="30" y="447">AbstractCore</text>
+        <text class="af-sub" x="140" y="447">providers, local and cloud &middot; voice, vision, music, 3D, camera plugins</text>
+      </svg>
+      <div class="arch-legend">
+        <div class="k-rt"><h4>Agentic operations run on the runtime</h4><p>AbstractRuntime executes every agent and workflow as a durable run. Each step, effect, wait and error is appended to the run's ledger, so a run survives restarts and can be replayed.</p></div>
+        <div class="k-gw"><h4>The gateway is the controller</h4><p>AbstractGateway starts, resumes and cancels runs, keeps durable schedules for automations, owns users, auth and the Network setting, and serves the consoles and the browser apps.</p></div>
+        <div class="k-cl"><h4>The apps are thin clients</h4><p>A client holds no durable state: it rebuilds its view by replaying the ledger, then follows new events over SSE. Several apps on several devices are live views of the same run.</p></div>
+      </div>
+    </div>
+    <p class="reserved-note reveal">Also on PyPI, reserved with no runtime yet: <code>abstractsound</code>, <code>abstractvideo</code>, <code>abstractspatial</code>, <code>abstractgeometry</code>, <code>abstractcognition</code>.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ DEPLOYMENT ═══════════════════ -->
+<section id="deploy" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Deployment</div>
+      <h2 class="section-title">Design on your laptop. Deploy anywhere. Same framework.</h2>
+      <p class="section-desc">The same gateway runs on this computer, a server on your network, a container or the internet. You choose who can reach it; the install profile decides which local engines it carries. Local and cloud models mix freely.</p>
+    </div>
+    <div class="modes-grid reveal" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
+      <div class="mode-card">
+        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <h3>This computer</h3>
+        <p>The default: <code>127.0.0.1:8080</code>, start at login if you want it, and a menu-bar icon on macOS.</p>
+        <div class="mode-tags"><span class="mode-tag">localhost</span><span class="mode-tag">macOS</span><span class="mode-tag">Linux</span><span class="mode-tag">Windows</span></div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg></div>
+        <h3>Local network</h3>
+        <p>Set the Network setting to <code>lan</code> and every device at home or in the office reaches the same gateway, with user accounts.</p>
+        <div class="mode-tags"><span class="mode-tag">lan</span><span class="mode-tag">user accounts</span></div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
+        <h3>Internet</h3>
+        <p>Set it to <code>internet</code> behind your own TLS and port forwarding or reverse proxy; user accounts are required.</p>
+        <div class="mode-tags"><span class="mode-tag">internet</span><span class="mode-tag">reverse proxy</span></div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/></svg></div>
+        <h3>Headless server or container</h3>
+        <p>Install over SSH and configure with the terminal console; one SSH tunnel reaches the console, the API and every app. Or run the GHCR container.</p>
+        <div class="mode-tags"><span class="mode-tag">SSH</span><span class="mode-tag">systemd --user</span><span class="mode-tag">GHCR</span></div>
+      </div>
+    </div>
+    <div class="modes-grid reveal" style="margin-top:1.5rem">
+      <div class="mode-card">
+        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <h3>Light</h3>
+        <p>Cloud APIs and endpoint servers: OpenAI, Anthropic, OpenRouter, Portkey, LM Studio, Ollama, vLLM and any OpenAI-compatible endpoint. Runs anywhere Python runs.</p>
+        <div class="mode-tags"><span class="mode-tag">OpenAI</span><span class="mode-tag">Anthropic</span><span class="mode-tag">OpenRouter</span><span class="mode-tag">Ollama</span></div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--green)" stroke="none" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></div>
+        <h3>Apple</h3>
+        <p>Adds the local MLX and Metal engines on Apple Silicon (macOS 14 or later) for text, images, video and voice, next to everything in Light.</p>
+        <div class="mode-tags"><span class="mode-tag">MLX</span><span class="mode-tag">MLX-Gen</span><span class="mode-tag">Metal</span></div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg></div>
+        <h3>GPU</h3>
+        <p>Adds the local engines for NVIDIA CUDA or AMD ROCm on Linux, next to everything in Light.</p>
+        <div class="mode-tags"><span class="mode-tag">vLLM</span><span class="mode-tag">HuggingFace</span><span class="mode-tag">Diffusers</span><span class="mode-tag">CUDA</span></div>
+      </div>
+    </div>
+    <div class="code-block reveal" style="max-width:720px;margin:1.5rem auto 0">
+<!-- PENDING-W2: E8 -->
+<pre><code><span class="line-cmt"># From your computer: one tunnel for the console, the API and every app</span>
+ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
+<span class="line-cmt"># then open http://127.0.0.1:8080/console</span></code></pre>
+    </div>
+    <p class="reveal" style="text-align:center;margin-top:1.25rem"><a class="comp-link" href="start-architect.html">Architect journey &rarr;</a> <a class="comp-link" href="install.html#headless">Headless install &rarr;</a></p>
   </div>
 </section>
 
@@ -234,99 +460,77 @@ npx @abstractframework/flow</code></pre>
     <div class="section-header reveal">
       <div class="section-label">Multimodal</div>
       <h2 class="section-title">One Interface for Every Modality</h2>
-      <p class="section-desc">Text, voice, image, video, music. Same <code>generate()</code> pattern. Capability plugins extend AbstractCore seamlessly &mdash; install a plugin and new modalities appear on your LLM instance.</p>
-    </div>
-
-    <div class="showcase-grid reveal">
-      <div style="flex:1">
-        <div class="multimodal-visual">
-          <div class="mm-flow">
-            <div class="mm-node input">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:4px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><br>
-              Request<br><small style="opacity:.7">text / voice / image</small>
-            </div>
-            <div class="mm-arrow">
-              <svg width="32" height="20" viewBox="0 0 32 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h28M24 4l6 6-6 6"/></svg>
-            </div>
-            <div class="mm-node process">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:4px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><br>
-              generate()<br><small style="opacity:.7">provider + model</small>
-            </div>
-            <div class="mm-arrow">
-              <svg width="32" height="20" viewBox="0 0 32 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h28M24 4l6 6-6 6"/></svg>
-            </div>
-            <div class="mm-node output">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:4px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><br>
-              Output<br><small style="opacity:.7">text / voice / image / video / music</small>
-            </div>
-          </div>
-          <p style="color:var(--text-muted);margin-top:1.5rem;font-size:.9rem">Automated fallbacks ensure capabilities work even when a model lacks native support. A text-only model gains vision through smart captioning. A model without tool support gets prompted tool syntax rewriting.</p>
-        </div>
-      </div>
-      <div>
-        <img src="assets/img/multimodal-visual.png" alt="Multimodal generation visual" loading="lazy" style="border-radius:var(--radius-lg);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
-      </div>
+      <p class="section-desc">Text, voice, image, video, music and 3D through the same <code>generate()</code> call. Capability plugins extend AbstractCore: install one and its output becomes available on your LLM instance. Three ways to call it:</p>
     </div>
 
     <div class="code-tabs reveal">
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="mm-python">Python</button>
-        <button class="tab-btn" data-tab="mm-api">OpenAI API</button>
+        <button class="tab-btn active" data-tab="mm-defaults">With configured defaults</button>
+        <button class="tab-btn" data-tab="mm-explicit">AbstractCore alone, explicit</button>
+        <button class="tab-btn" data-tab="mm-api">OpenAI-compatible server</button>
       </div>
-      <div class="tab-panel active" id="tab-mm-python">
+      <div class="tab-panel active" id="tab-mm-defaults">
+        <div class="install-notes" style="border-top:none"><ul><li>Defaults come from the gateway console (<strong>Use recommended defaults</strong> or the Multimodal tab) or from <code>abstractcore config set-default</code>. Once a capability has a default, its call is one line.</li></ul></div>
         <div class="code-block">
-<pre><code><span class="line-cmt"># ── Python SDK ──────────────────────────────────</span>
-<span class="line-cmt"># Direct library usage — no server needed</span>
-
-<span class="line-kw">pip install</span> abstractcore abstractvoice abstractvision
+<!-- PENDING-W2: E2 -->
+<pre><code><span class="line-cmt"># once, from a terminal (the gateway console writes the same defaults)</span>
+abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit
 
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-<span class="line-cmt"># 1. Text generation</span>
-text = llm.<span class="line-fn">generate</span>(<span class="line-str">"Tell me a story."</span>).content
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A lighthouse at sunset"</span>, output=<span class="line-str">"image"</span>)
+voice = llm.<span class="line-fn">generate</span>(<span class="line-str">"Welcome to AbstractFramework."</span>, output=<span class="line-str">"voice"</span>)
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"A calm piano loop"</span>, output=<span class="line-str">"music"</span>)</code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-mm-explicit">
+        <div class="install-notes" style="border-top:none"><ul><li>No defaults and no server: name the provider and the model for each capability in the call.</li></ul></div>
+        <div class="code-block">
+<!-- PENDING-W2: E3 -->
+<pre><code><span class="line-kw">pip install</span> abstractcore abstractvision abstractvoice abstractmusic
 
-<span class="line-cmt"># 2. Text-to-speech — offline, Piper/Whisper</span>
-wav_bytes = llm.voice.<span class="line-fn">tts</span>(text, format=<span class="line-str">"wav"</span>)
+<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-<span class="line-cmt"># 3. Text-to-image — local Diffusers / MLX-Gen / OpenAI</span>
-image = llm.vision.<span class="line-fn">t2i</span>(<span class="line-str">"A lighthouse at sunset"</span>)
-
-<span class="line-cmt"># 4. Vision (image understanding) — works even with text-only models</span>
-resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describe this image"</span>, media=[<span class="line-str">"photo.jpg"</span>])</code></pre>
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A lighthouse at sunset"</span>,
+    output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
+png_bytes = image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-mm-api">
+        <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code>.</li></ul></div>
         <div class="code-block">
-<pre><code><span class="line-cmt"># ── OpenAI-Compatible API ───────────────────────</span>
-<span class="line-cmt"># Start the server, then use standard endpoints</span>
+<!-- PENDING-W2: E4 -->
+<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractcore[server]"</span>
+abstractcore serve --port <span class="line-var">8000</span>
 
-abstractcore serve --port <span class="line-var">8080</span>
-
-<span class="line-cmt"># 1. Text generation</span>
-curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
+curl http://127.0.0.1:<span class="line-var">8000</span>/v1/chat/completions \
   -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"model": "qwen3:4b", "messages": [{"role": "user", "content": "Tell me a story."}]}'</span>
+  -d <span class="line-str">'{"model": "mlx/mlx-community/Qwen3.5-4B-4bit", "messages": [{"role": "user", "content": "Tell me a story."}]}'</span>
 
-<span class="line-cmt"># 2. Text-to-speech</span>
-curl http://localhost:<span class="line-var">8080</span>/v1/audio/speech \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"input": "Hello world", "voice": "default"}'</span> \
-  --output speech.wav
+curl http://127.0.0.1:<span class="line-var">8000</span>/v1/audio/speech -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"input": "Hello world"}'</span> --output speech.wav
 
-<span class="line-cmt"># 3. Text-to-image</span>
-curl http://localhost:<span class="line-var">8080</span>/v1/images/generations \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"prompt": "A lighthouse at sunset", "model": "flux.2-klein-4b"}'</span>
-
-<span class="line-cmt"># 4. Vision (image understanding)</span>
-curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"model": "qwen3:4b", "messages": [{"role": "user", "content": [
-    {"type": "text", "text": "Describe this image"},
-    {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}}
-  ]}]}'</span></code></pre>
+curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"prompt": "A lighthouse at sunset"}'</span></code></pre>
         </div>
+      </div>
+    </div>
+
+    <div class="mm-artifacts reveal">
+      <!-- PENDING-W2: E2/E3 artifacts (image, voice clip, music with their prompts) -->
+      <div class="mm-artifact">
+        <img src="assets/img/starship-snow.png" alt="A starship standing in a snowy landscape, generated with FLUX.2 Klein" loading="lazy">
+        <div class="a-body"><span class="a-kind">Image</span><p>FLUX.2 Klein 4B through MLX-Gen: "A starship in snow".</p></div>
+      </div>
+      <div class="mm-artifact">
+        <div class="a-audio" aria-hidden="true">&#9834;</div>
+        <div class="a-body"><span class="a-kind">Voice</span><p>Supertonic text-to-speech, voice F1.</p><audio controls preload="none" aria-label="Supertonic voice sample"><source src="assets/audio/voice-supertonic-f1.wav" type="audio/wav"></audio></div>
+      </div>
+      <div class="mm-artifact">
+        <div class="a-audio" aria-hidden="true">&#9835;</div>
+        <div class="a-body"><span class="a-kind">Music</span><p>AbstractMusic: "ambient electronic chill lofi beats, soft synthesizer pads, gentle piano melody".</p><audio controls preload="none" aria-label="Ambient electronic music sample"><source src="assets/audio/demo-ambient.wav" type="audio/wav"></audio></div>
       </div>
     </div>
   </div>
@@ -338,34 +542,32 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
     <div class="section-header reveal">
       <div class="section-label">Ecosystem</div>
       <h2 class="section-title">Every Piece, Purpose-Built</h2>
-      <p class="section-desc">14 packages. Each one independently useful. Together, a complete AI infrastructure.</p>
+      <p class="section-desc">20 packages. Each one independently useful. Together, a complete AI infrastructure. Versions are the released ones in framework 0.6.1.</p>
     </div>
     <div class="components-grid">
-
       <!-- AbstractCore -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <img src="assets/img/logos/core.png" alt="AbstractCore" width="24" height="24" style="border-radius:6px;background:transparent">
+          <img src="assets/img/logos/core.png" alt="" width="24" height="24" style="border-radius:6px;background:transparent">
           <span class="comp-tag foundation">Foundation</span>
         </div>
-        <h3>AbstractCore</h3>
-        <p>Unified LLM API. 9+ providers (OpenAI, Anthropic, Ollama, LMStudio, MLX, HuggingFace, vLLM, OpenRouter, Portkey). Tools, structured output, streaming, media, MCP, embeddings, prompt caching, OpenAI-compatible server.</p>
+        <h3>AbstractCore <span class="ver">2.18.0</span></h3>
+        <p>One Python API over ten provider types: OpenAI, Anthropic, OpenRouter, Portkey, Ollama, LM Studio, MLX, Hugging Face, vLLM and any OpenAI-compatible endpoint. Tools, structured output, streaming, media input, embeddings, capability plugins, an OpenAI-compatible server and a web console.</p>
         <div class="comp-links">
           <a class="comp-link" href="core.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractcore" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
           <a class="comp-link" href="https://pypi.org/project/abstractcore/" target="_blank" rel="noopener noreferrer">PyPI &rarr;</a>
-          <a class="comp-link" href="https://www.abstractcore.ai" target="_blank" rel="noopener noreferrer">Full Docs &rarr;</a>
         </div>
       </div>
 
       <!-- AbstractRuntime -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           <span class="comp-tag foundation">Foundation</span>
         </div>
-        <h3>AbstractRuntime</h3>
-        <p>Persistent graph runner with durable execution. Append-only ledger, deterministic replay, pause/resume, snapshots, provenance tracking. Every operation is auditable and workflows survive crashes and restarts.</p>
+        <h3>AbstractRuntime <span class="ver">0.7.1</span></h3>
+        <p>The durable kernel where agents and workflows run: effects and waits, checkpoint and resume, an append-only ledger, and a history window of whole messages up to 50,000 tokens.</p>
         <div class="comp-links">
           <a class="comp-link" href="runtime.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractruntime" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -376,11 +578,11 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractAgent -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 10-16 0"/><path d="M12 13v3"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan, #06b6d4)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 10-16 0"/><path d="M12 13v3"/></svg>
           <span class="comp-tag composition">Composition</span>
         </div>
-        <h3>AbstractAgent</h3>
-        <p>Agent patterns &mdash; ReAct, CodeAct, MemAct loops with durable runs. Configurable tool approval, max iterations, and full observability of every reasoning cycle.</p>
+        <h3>AbstractAgent <span class="ver">0.3.17</span></h3>
+        <p>Agent patterns: ReAct, CodeAct and MemAct loops, run durably by AbstractRuntime, with tool approval and full observability of every cycle.</p>
         <div class="comp-links">
           <a class="comp-link" href="agent.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractagent" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -388,14 +590,28 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
         </div>
       </div>
 
+      <!-- AbstractSkill -->
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan, #06b6d4)" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+          <span class="comp-tag composition">Composition</span>
+        </div>
+        <h3>AbstractSkill <span class="ver">0.3.0</span></h3>
+        <p>Agent Skills (<code>SKILL.md</code>): parsing and validation, the curated skill shelf the gateway seeds, and the trust gate applied before a skill reaches a run.</p>
+        <div class="comp-links">
+          <a class="comp-link" href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://pypi.org/project/abstractskill/" target="_blank" rel="noopener noreferrer">PyPI &rarr;</a>
+        </div>
+      </div>
+
       <!-- AbstractFlow -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4.5a2 2 0 012 2V14M6.5 10v4.5a2 2 0 002 2H14"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan, #06b6d4)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4.5a2 2 0 012 2V14M6.5 10v4.5a2 2 0 002 2H14"/></svg>
           <span class="comp-tag composition">Composition</span>
         </div>
-        <h3>AbstractFlow</h3>
-        <p>Diagram-based, durable AI workflows for AbstractFramework. Drag-and-drop nodes, export as portable <code>.flow</code> bundles, run as specialized agents anywhere. Works standalone or through AbstractGateway API routes.</p>
+        <h3>AbstractFlow <span class="ver">0.4.0</span></h3>
+        <p>The visual workflow editor. Draw workflows in the browser and publish them to the gateway as portable <code>.flow</code> bundles that every client can run.</p>
         <div class="comp-links">
           <a class="comp-link" href="flow.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -406,11 +622,11 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractGateway -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <img src="assets/img/logos/gateway.png" alt="AbstractGateway" width="29" height="29" style="border-radius:6px;background:transparent">
+          <img src="assets/img/logos/gateway.png" alt="" width="29" height="29" style="border-radius:6px;background:transparent">
           <span class="comp-tag app">Application</span>
         </div>
-        <h3>AbstractGateway</h3>
-        <p>HTTP control plane for production AI. Durable runs with SSE streaming, scheduled workflows, bundle discovery, multi-client support. SQLite or Postgres backends. Docker-ready.</p>
+        <h3>AbstractGateway <span class="ver">0.7.1</span></h3>
+        <p>The control plane: durable runs over HTTP and SSE, automations, users and auth, the Network setting, the web console and the browser apps on one address. SQLite or Postgres.</p>
         <div class="comp-links">
           <a class="comp-link" href="gateway.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -419,17 +635,34 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
         </div>
       </div>
 
+      <!-- Consoles -->
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M6 8l3 3-3 3M12 14h5M8 21h8M12 17v4"/></svg>
+          <span class="comp-tag app">Application</span>
+        </div>
+        <h3>Consoles <span class="ver">0.11.0 / 0.4.0</span></h3>
+        <p>The gateway web console, <code>abstractgateway-console</code> in a terminal (0.11.0) and <code>abstractcore-console</code> for AbstractCore alone (0.4.0): setup, models that fit this machine, engines, network and users.</p>
+        <div class="comp-links">
+          <a class="comp-link" href="console.html">Docs &rarr;</a>
+          <a class="comp-link" href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://crates.io/crates/abstractgateway-console" target="_blank" rel="noopener noreferrer">Gateway console &rarr;</a>
+          <a class="comp-link" href="https://crates.io/crates/abstractcore-console" target="_blank" rel="noopener noreferrer">Core console &rarr;</a>
+        </div>
+      </div>
+
       <!-- AbstractCode -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
           <span class="comp-tag app">Application</span>
         </div>
-        <h3>AbstractCode</h3>
-        <p>A durable coding assistant &mdash; available as a terminal TUI and a browser web app. Plan/review modes, MCP tools, persistent sessions. Full audit trail for every interaction.</p>
+        <h3>AbstractCode <span class="ver">0.7.1 / 0.6.1</span></h3>
+        <p>A coding agent that runs durably on the gateway, with a terminal client (0.7.1) and a browser client (0.6.1): tool approvals, workspace files, steering and automations.</p>
         <div class="comp-links">
           <a class="comp-link" href="code.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://crates.io/crates/abstractcode" target="_blank" rel="noopener noreferrer">crates.io &rarr;</a>
           <a class="comp-link" href="https://www.npmjs.com/package/@abstractframework/code" target="_blank" rel="noopener noreferrer">npm &rarr;</a>
         </div>
       </div>
@@ -437,11 +670,11 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractObserver -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           <span class="comp-tag app">Application</span>
         </div>
-        <h3>AbstractObserver</h3>
-        <p>Full observability dashboard. Browse every run, replay agent cycles, schedule workflows, monitor real-time activity. Every AI decision is transparent and inspectable.</p>
+        <h3>AbstractObserver <span class="ver">0.2.1</span></h3>
+        <p>Watch runs live, replay the ledger step by step, and create and manage automations, in the browser.</p>
         <div class="comp-links">
           <a class="comp-link" href="observer.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -452,11 +685,11 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractAssistant -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
           <span class="comp-tag app">Application</span>
         </div>
-        <h3>AbstractAssistant</h3>
-        <p>macOS tray assistant with voice mode. Gateway-first thin client with durable runs, workflow selection, real-time voice meter, and one-click voice interaction.</p>
+        <h3>AbstractAssistant <span class="ver">0.9.1</span></h3>
+        <p>A macOS menu-bar assistant: a palette with a voice mode, your gateway sessions from every device, automations and live run activity.</p>
         <div class="comp-links">
           <a class="comp-link" href="assistant.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -464,14 +697,44 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
         </div>
       </div>
 
+      <!-- AbstractContinuum -->
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h6M15 13h6"/></svg>
+          <span class="comp-tag app">Application</span>
+        </div>
+        <h3>AbstractContinuum <span class="ver">0.4.0</span></h3>
+        <p>A board-first console for continuous development and deployment work, served by the gateway.</p>
+        <div class="comp-links">
+          <a class="comp-link" href="continuum.html">Docs &rarr;</a>
+          <a class="comp-link" href="https://github.com/lpalbou/AbstractContinuum" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://www.npmjs.com/package/@abstractframework/continuum" target="_blank" rel="noopener noreferrer">npm &rarr;</a>
+        </div>
+      </div>
+
+      <!-- AbstractEntity -->
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/></svg>
+          <span class="comp-tag app">Application</span>
+        </div>
+        <h3>AbstractEntity <span class="ver">0.3.0</span></h3>
+        <p>Create entities with a lasting memory of their own, talk with them and read their diaries, served by the gateway.</p>
+        <div class="comp-links">
+          <a class="comp-link" href="entity.html">Docs &rarr;</a>
+          <a class="comp-link" href="https://github.com/lpalbou/AbstractEntity" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://www.npmjs.com/package/@abstractframework/entity" target="_blank" rel="noopener noreferrer">npm &rarr;</a>
+        </div>
+      </div>
+
       <!-- AbstractVoice -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           <span class="comp-tag modality">Modality Plugin</span>
         </div>
-        <h3>AbstractVoice</h3>
-        <p>Voice I/O for AbstractCore. TTS (Piper, OmniVoice, Supersonic, AudioDIT), STT (Whisper), voice cloning, multilingual. Works entirely offline on your hardware.</p>
+        <h3>AbstractVoice <span class="ver">0.13.0</span></h3>
+        <p>Text-to-speech, speech-to-text and voice cloning: Supertonic, Piper, Qwen3-TTS, OmniVoice, Whisper and more locally, OpenAI and OpenAI-compatible voice remotely.</p>
         <div class="comp-links">
           <a class="comp-link" href="voice.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractvoice" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -482,11 +745,11 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractVision -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           <span class="comp-tag modality">Modality Plugin</span>
         </div>
-        <h3>AbstractVision</h3>
-        <p>Image &amp; video generation for AbstractCore. Text-to-image, image editing, text-to-video, image-to-video. Powered by Diffusers, MLX-Gen, GGUF, and OpenAI-compatible backends.</p>
+        <h3>AbstractVision <span class="ver">0.3.30</span></h3>
+        <p>Image generation, editing and upscaling, text-to-video and image-to-video through MLX-Gen on Apple Silicon, Diffusers, stable-diffusion.cpp or OpenAI-compatible services.</p>
         <div class="comp-links">
           <a class="comp-link" href="vision.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractvision" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -497,11 +760,11 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractMusic -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
           <span class="comp-tag modality">Modality Plugin</span>
         </div>
-        <h3>AbstractMusic</h3>
-        <p>Music generation for AbstractCore. Text-to-music via ACE-Step v1.5 (local). Instrumental and vocal tracks, duration control, genre/style prompting.</p>
+        <h3>AbstractMusic <span class="ver">0.1.15</span></h3>
+        <p>Text-to-music and text-to-audio: ACE-Step and Stable Audio locally, ACE Music and ElevenLabs remotely.</p>
         <div class="comp-links">
           <a class="comp-link" href="music.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractmusic" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -509,14 +772,44 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
         </div>
       </div>
 
+      <!-- abstract3d -->
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg>
+          <span class="comp-tag modality">Modality Plugin</span>
+        </div>
+        <h3>abstract3d <span class="ver">0.3.1</span></h3>
+        <p>Image-to-3D and text-to-3D with a validated local TripoSR backend and GLB output, mesh operations and AI tools.</p>
+        <div class="comp-links">
+          <a class="comp-link" href="3d.html">Docs &rarr;</a>
+          <a class="comp-link" href="https://github.com/lpalbou/abstract3d" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://pypi.org/project/abstract3d/" target="_blank" rel="noopener noreferrer">PyPI &rarr;</a>
+        </div>
+      </div>
+
+      <!-- AbstractCamera -->
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span class="comp-tag modality">Modality Plugin</span>
+        </div>
+        <h3>AbstractCamera <span class="ver">0.2.0</span></h3>
+        <p>Camera control for tethered bodies, webcams and smart telescopes behind one manager, with camera tools an agent can call.</p>
+        <div class="comp-links">
+          <a class="comp-link" href="camera.html">Docs &rarr;</a>
+          <a class="comp-link" href="https://github.com/lpalbou/AbstractCamera" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://pypi.org/project/abstractcamera/" target="_blank" rel="noopener noreferrer">PyPI &rarr;</a>
+        </div>
+      </div>
+
       <!-- AbstractMemory -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h6"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h6"/></svg>
           <span class="comp-tag memory">Knowledge</span>
         </div>
-        <h3>AbstractMemory</h3>
-        <p>Temporal triple store with provenance-aware knowledge graph, vector search, and LanceDB backend. Gives agents persistent, queryable memory across sessions.</p>
+        <h3>AbstractMemory <span class="ver">0.3.0</span></h3>
+        <p>Durable, append-only agent memory: temporal, provenance-aware triples, and a memory system that forms, recalls and consolidates records from use.</p>
         <div class="comp-links">
           <a class="comp-link" href="memory.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -527,11 +820,11 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
       <!-- AbstractSemantics -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span class="comp-tag memory">Knowledge</span>
         </div>
-        <h3>AbstractSemantics</h3>
-        <p>Schema registry for predicates, entity types, and JSON Schema refs. Provides vocabulary validation so knowledge graphs and agent memory stay consistent.</p>
+        <h3>AbstractSemantics <span class="ver">0.0.5</span></h3>
+        <p>The shared vocabulary: predicates, entity types and memory relations in one editable registry, with a bounded JSON Schema builder for knowledge-graph output.</p>
         <div class="comp-links">
           <a class="comp-link" href="semantics.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractsemantics" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -539,21 +832,19 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
         </div>
       </div>
 
-      <!-- MLX-Gen -->
+      <!-- AbstractUIC -->
       <div class="comp-card reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>
-          <span class="comp-tag modality">Tooling</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <span class="comp-tag foundation">Tooling</span>
         </div>
-        <h3>MLX-Gen</h3>
-        <p>Generative image &amp; video model runtimes for Apple Silicon MLX. FLUX.2, Z-Image, Qwen, ERNIE, Wan2.2 T2V/I2V. Quantized models, LoRA, depth estimation. Powers AbstractVision on Mac.</p>
+        <h3>AbstractUIC <span class="ver">0.1.16</span></h3>
+        <p>Reusable UI packages for the clients: React components, web components and a gateway session proxy, published as <code>@abstractframework/ui-kit</code>.</p>
         <div class="comp-links">
-          <a class="comp-link" href="docs/mlx-gen.html">Docs &rarr;</a>
-          <a class="comp-link" href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
-          <a class="comp-link" href="https://pypi.org/project/mlx-gen/" target="_blank" rel="noopener noreferrer">PyPI &rarr;</a>
+          <a class="comp-link" href="https://github.com/lpalbou/AbstractUIC" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://www.npmjs.com/package/@abstractframework/ui-kit" target="_blank" rel="noopener noreferrer">npm &rarr;</a>
         </div>
       </div>
-
     </div>
   </div>
 </section>
@@ -564,54 +855,39 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
     <div class="section-header reveal">
       <div class="section-label">Visual Authoring</div>
       <h2 class="section-title">Blueprint Your AI Workflows</h2>
-      <p class="section-desc">Diagram-based visual authoring. Drag-and-drop nodes, wire connections, export portable <code>.flow</code> bundles that run anywhere in the ecosystem.</p>
+      <p class="section-desc">Wire LLM, agent, tool, branch, loop and subflow nodes in the browser, then publish the workflow to your gateway, where every client can run it and an automation can repeat it.</p>
     </div>
 
     <div class="showcase-grid reveal">
       <div class="showcase-img">
-        <img src="assets/img/flow-dialogue-image.png" alt="AbstractFlow visual editor showing a multimodal dialogue workflow" loading="lazy">
+        <!-- PENDING-W2: SHOT flow -->
+        <img src="assets/img/shots/flow-map-reduce.webp" alt="The AbstractFlow editor with a map-reduce workflow on its canvas" loading="lazy">
       </div>
       <div class="showcase-content">
-        <h3>Design Complex Pipelines Visually</h3>
-        <p>Create workflows that combine LLM calls, voice generation, image generation, conditionals, loops, and subflows. Every node is configurable with provider, model, and parameter controls.</p>
+        <h3>Design Pipelines Visually</h3>
+        <p>Combine LLM calls, agents, voice and image generation, conditionals, loops and subflows. Every node has its own provider, model and parameters.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> LLM, Agent, Tool, Conditional, Loop, and Subflow nodes</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Multi-agent orchestration with self-check loops</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Export as <code>.flow</code> bundle &mdash; share with the community</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Use flows as specialized agents in conversations</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> LLM, Agent, Tool, Conditional, Loop and Subflow nodes</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Structured outputs with a response-schema builder</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Portable <code>.flow</code> bundles, published to the gateway catalog</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Automation defaults stored on the workflow</li>
         </ul>
+        <div class="comp-links" style="margin-top:1rem"><a class="comp-link" href="flow.html">AbstractFlow &rarr;</a></div>
       </div>
     </div>
 
     <div class="showcase-grid reverse reveal">
       <div class="showcase-content">
         <h3>Multimodal Output at Every Turn</h3>
-        <p>A single workflow turn can produce text, narrated audio, and a generated image. All artifacts are tracked, stored, and replayable through the ledger.</p>
+        <p>A single workflow turn can produce text, narrated audio and a generated image. Every artifact is stored with the run and replayable from the ledger.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Text + voice + image generated per turn</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Full artifact provenance and storage</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Interactive audio player with scrubbing</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Every step inspectable with raw JSON</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Text, voice and image in one turn</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Artifacts stored with the run</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Every step inspectable with its raw JSON</li>
         </ul>
       </div>
       <div class="showcase-img">
-        <img src="assets/img/flow-observability-1-turn.png" alt="One turn producing text, voice audio, and a generated image" loading="lazy">
-      </div>
-    </div>
-
-    <div class="showcase-grid reveal">
-      <div class="showcase-img">
-        <img src="assets/img/flow-ralph.png" alt="Multi-agent orchestration flow with intent analyzer, agent, and reviewer" loading="lazy">
-      </div>
-      <div class="showcase-content">
-        <h3>Multi-Agent Orchestration</h3>
-        <p>Build self-correcting loops with specialized agents. An intent analyzer feeds an executor agent, whose output is reviewed and optionally revised before delivery. Compose arbitrarily complex reasoning chains.</p>
-        <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Intent Analyzer &rarr; Agent &rarr; Reviewer pipeline</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Conditional branching for iterative improvement</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> JSON Schema validation for structured outputs</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Each agent can use different provider/model</li>
-        </ul>
+        <img src="assets/img/flow-observability-1-turn.png" alt="One workflow turn that produced a text answer, a voice recording and a generated image, shown with their controls" loading="lazy">
       </div>
     </div>
   </div>
@@ -623,33 +899,21 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
     <div class="section-header reveal">
       <div class="section-label">Coding Assistant</div>
       <h2 class="section-title">AbstractCode &mdash; Terminal and Web</h2>
-      <p class="section-desc">A durable coding assistant that works in your terminal and browser. Every session, every tool call, every decision is persisted and auditable. Start in the terminal, continue in the browser.</p>
+      <p class="section-desc">A coding agent that runs durably on the gateway, with two interchangeable clients. Start a task in the terminal, close your laptop, and pick the same session up in the browser: tool approvals, workspace files and streamed replies in both.</p>
     </div>
     <div class="gallery reveal">
       <div class="gallery-item">
-        <img src="assets/img/abstractcode-tui.png" alt="AbstractCode terminal TUI" loading="lazy">
-        <div class="gallery-caption">Terminal TUI &mdash; full agent with tools, memory, and plan/review modes</div>
+        <!-- PENDING-W2: SHOT code-terminal -->
+        <img src="assets/img/shots/console-tui.webp" alt="PLACEHOLDER: terminal screenshot pending" loading="lazy">
+        <div class="gallery-caption">The terminal client, <code>abstractcode</code></div>
       </div>
       <div class="gallery-item">
-        <img src="assets/img/abstractcode-web.png" alt="AbstractCode web interface" loading="lazy">
-        <div class="gallery-caption">Web interface &mdash; same agent, browser-based, with image understanding</div>
+        <!-- PENDING-W2: SHOT code-web -->
+        <img src="assets/img/shots/code-web.webp" alt="The AbstractCode web client with a conversation" loading="lazy">
+        <div class="gallery-caption">The browser client, served at <code>/apps/code/</code></div>
       </div>
     </div>
-    <div class="showcase-grid reveal" style="margin-top:2rem">
-      <div class="showcase-img">
-        <img src="assets/img/abstractcode-auditability.png" alt="AbstractCode full auditability view" loading="lazy">
-      </div>
-      <div class="showcase-content">
-        <h3>Complete Auditability</h3>
-        <p>Every LLM call, every tool execution, every reasoning step is recorded in the ledger. Inspect system prompts, user messages, responses, tool calls, and raw JSON. Replay any conversation from history.</p>
-        <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Full message history with System/User/Tools/Response tabs</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Reasoning traces visible and inspectable</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Run context with token counts and timing</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Cross-device continuity via gateway</li>
-        </ul>
-      </div>
-    </div>
+    <div class="comp-links reveal" style="justify-content:center;margin-top:1.5rem"><a class="comp-link" href="code.html">AbstractCode &rarr;</a><a class="comp-link" href="start-developer.html">Developer journey &rarr;</a></div>
   </div>
 </section>
 
@@ -659,114 +923,141 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
     <div class="section-header reveal">
       <div class="section-label">Observability</div>
       <h2 class="section-title">AbstractObserver &mdash; See Everything</h2>
-      <p class="section-desc">Monitor every AI activity. Schedule agentic tasks. Browse the full ledger. Every decision your AI ever made is transparent, replayable, and auditable.</p>
+      <p class="section-desc">Watch runs live, replay the ledger step by step, and create and manage automations. Every decision a run made is transparent, replayable and auditable.</p>
     </div>
     <div class="showcase-grid reveal">
       <div class="showcase-img">
-        <img src="assets/img/abstractobserver-schedule.png" alt="AbstractObserver scheduling interface" loading="lazy">
+        <!-- PENDING-W2: SHOT observer-automations -->
+        <img src="assets/img/shots/observer-automations.webp" alt="The Observer's Automations page with an automation opened, showing its schedule, context mode, next run and runs as a conversation" loading="lazy">
       </div>
       <div class="showcase-content">
-        <h3>Schedule Agentic Tasks</h3>
-        <p>Set up recurring AI jobs with full cron-style scheduling. Daily news digests, code analysis, monitoring reports &mdash; with shared context across executions and durable history.</p>
+        <h3>Agents on a Schedule, With You in the Loop</h3>
+        <p>An automation runs a workflow or the gateway's default agent at a fixed interval or on demand. Every run is kept as a readable conversation, and you hear about it only when it needs you.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Immediate or scheduled execution</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Repeat forever, N times, or until a date</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Shared context across executions</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Provider and model selection per schedule</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Independent context, or growing context that builds on earlier runs</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Pause, resume, run now, edit and archive</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Discuss a result: a new chat forked from that run</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Notified only on <code>notify</code>, a final failure or a run waiting for you</li>
         </ul>
+        <div class="comp-links" style="margin-top:1rem"><a class="comp-link" href="automations.html">How automations work &rarr;</a></div>
       </div>
     </div>
     <div class="showcase-grid reverse reveal">
       <div class="showcase-content">
         <h3>Full Ledger Transparency</h3>
-        <p>Browse every step, every tool call, every LLM interaction in real-time. The ledger view shows the complete execution trace with timing, status, and full payloads.</p>
+        <p>Browse every step, tool call and LLM interaction as it happens. The ledger view shows the whole execution trace with timing, status and full payloads.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Real-time SSE streaming of execution events</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Step-by-step trace with JSON inspection</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Tool approval tracking and wait states</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Context compaction monitoring</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Live SSE streaming of run events</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Step-by-step trace with JSON inspection</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Tool approvals and wait states</li>
         </ul>
+        <div class="comp-links" style="margin-top:1rem"><a class="comp-link" href="observer.html">AbstractObserver &rarr;</a></div>
       </div>
       <div class="showcase-img">
-        <img src="assets/img/abstractobserver-ledger.png" alt="AbstractObserver ledger view" loading="lazy">
+        <!-- PENDING-W2: SHOT observer-ledger -->
+        <img src="assets/img/shots/observer-edit.webp" alt="PLACEHOLDER: Observer ledger screenshot pending" loading="lazy">
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ IMAGE & VIDEO GEN ═══════════════════ -->
+<!-- ═══════════════════ SHOWCASE: ASSISTANT ═══════════════════ -->
 <section style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
+      <div class="section-label">Menu Bar</div>
+      <h2 class="section-title">AbstractAssistant &mdash; One Key Away</h2>
+      <p class="section-desc">A macOS menu-bar palette with a voice mode, fed by the gateway: your sessions from every device, automations, and live run activity.</p>
+    </div>
+    <div class="gallery reveal">
+      <div class="gallery-item">
+        <!-- PENDING-W2: SHOT assistant-palette -->
+        <img src="assets/img/shots/assistant-palette.webp" alt="The AbstractAssistant palette with a conversation" loading="lazy">
+        <div class="gallery-caption">The palette and its session switcher</div>
+      </div>
+      <div class="gallery-item">
+        <!-- PENDING-W2: SHOT assistant-voice -->
+        <img src="assets/img/shots/assistant-voice.webp" alt="AbstractAssistant in voice mode" loading="lazy">
+        <div class="gallery-caption">Voice mode</div>
+      </div>
+    </div>
+    <div class="comp-links reveal" style="justify-content:center;margin-top:1.5rem"><a class="comp-link" href="assistant.html">AbstractAssistant &rarr;</a><a class="comp-link" href="start-user.html">User journey &rarr;</a></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ IMAGE & VIDEO GEN ═══════════════════ -->
+<section id="media">
+  <div class="container">
+    <div class="section-header reveal">
       <div class="section-label">Generative Media</div>
-      <h2 class="section-title">Images and Video, Locally</h2>
-      <p class="section-desc">Generate images and video on your hardware. MLX-Gen powers Apple Silicon with FLUX.2, Z-Image, Qwen, ERNIE, Wan2.2. Mixed quantization (q4/q8) for efficiency on consumer hardware.</p>
+      <h2 class="section-title">Images, Video and Music, Locally</h2>
+      <p class="section-desc">Generate on your hardware. On Apple Silicon, MLX-Gen runs FLUX.2, Qwen Image, Z-Image, ERNIE and Wan 2.2; on NVIDIA, Diffusers and stable-diffusion.cpp. Hardware needs are in the <a href="start-creator.html" style="color:var(--accent-light)">creator journey</a>.</p>
     </div>
     <div class="carousel reveal" id="gallery-carousel">
       <div class="carousel-track">
         <div class="carousel-slide">
-          <img src="assets/img/starship-snow.png" alt="FLUX.2 starship" loading="lazy">
-          <div class="carousel-caption">FLUX.2 Klein 4B q4/q8 &mdash; "A starship in snow"</div>
+          <img src="assets/img/starship-snow.png" alt="A starship standing in a snowy landscape, generated with FLUX.2 Klein" loading="lazy">
+          <div class="carousel-caption">FLUX.2 Klein 4B &mdash; "A starship in snow"</div>
         </div>
         <div class="carousel-slide">
-          <img src="assets/img/starship-snow-pencil-sketch.png" alt="Pencil sketch edit" loading="lazy">
-          <div class="carousel-caption">Qwen Image Edit &mdash; Pencil sketch transformation</div>
+          <img src="assets/img/starship-snow-pencil-sketch.png" alt="The same starship image turned into a pencil sketch by an image edit" loading="lazy">
+          <div class="carousel-caption">Qwen Image Edit &mdash; pencil-sketch edit of the image above</div>
         </div>
         <div class="carousel-slide">
-          <img src="assets/img/gallery-cyberpunk.png" alt="Cyberpunk city" loading="lazy">
-          <div class="carousel-caption">Z-Image Turbo 8bit &mdash; "Cyberpunk city at night"</div>
+          <img src="assets/img/gallery-cyberpunk.png" alt="A neon cyberpunk city street at night" loading="lazy">
+          <div class="carousel-caption">Z-Image Turbo &mdash; "Cyberpunk city at night"</div>
         </div>
         <div class="carousel-slide">
-          <img src="assets/img/gallery-samurai.png" alt="Samurai warrior" loading="lazy">
-          <div class="carousel-caption">Z-Image Turbo 8bit &mdash; "Samurai on cliff at dawn"</div>
+          <img src="assets/img/gallery-samurai.png" alt="A samurai standing on a cliff at dawn" loading="lazy">
+          <div class="carousel-caption">Z-Image Turbo &mdash; "Samurai on cliff at dawn"</div>
         </div>
       </div>
-      <button class="carousel-prev" aria-label="Previous">&#8249;</button>
-      <button class="carousel-next" aria-label="Next">&#8250;</button>
+      <button class="carousel-prev" aria-label="Previous image">&#8249;</button>
+      <button class="carousel-next" aria-label="Next image">&#8250;</button>
       <div class="carousel-dots"></div>
     </div>
     <div class="reveal" style="margin-top:2rem">
-      <h3 style="margin-bottom:1rem">Text-to-Video (Wan2.2)</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Local video generation via Wan2.2 TI2V 5B with first-frame image-to-video conditioning. Generated entirely on-device.</p>
+      <h3 style="margin-bottom:1rem">Text-to-Video (Wan 2.2)</h3>
+      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generated on-device with Wan 2.2 TI2V 5B through MLX-Gen.</p>
       <div class="carousel">
         <div class="carousel-track">
           <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
               <source src="assets/video/t2v-example.mp4" type="video/mp4">
             </video>
             <div class="carousel-caption">"A Star Trek vessel in slow orbit around earth with shimmering lights of metropoles"</div>
           </div>
           <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
               <source src="assets/video/t2v-river.mp4" type="video/mp4">
             </video>
             <div class="carousel-caption">"A crystal clear river in the mountains"</div>
           </div>
           <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg" aria-label="Generated video: two starships in combat">
               <source src="assets/video/t2v-space.mp4" type="video/mp4">
             </video>
             <div class="carousel-caption">"A dynamic combat in space between two starships"</div>
           </div>
         </div>
-        <button class="carousel-prev" aria-label="Previous">&#8592;</button>
-        <button class="carousel-next" aria-label="Next">&#8594;</button>
+        <button class="carousel-prev" aria-label="Previous video">&#8592;</button>
+        <button class="carousel-next" aria-label="Next video">&#8594;</button>
         <div class="carousel-dots"></div>
       </div>
     </div>
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Text-to-Music (ACE-Step / ACE Music)</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generate music from text prompts. Local via ACE-Step v1.5 on Apple Silicon, or remote via ACE Music API. Instrumental and vocal tracks with genre/style control.</p>
+      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Locally with ACE-Step 1.5, or remotely through the ACE Music API. Instrumental and vocal tracks with genre and style control.</p>
       <div class="audio-showcase">
         <div class="audio-player">
           <div class="audio-meta">
-            <span class="audio-icon">&#9835;</span>
+            <span class="audio-icon" aria-hidden="true">&#9835;</span>
             <div>
               <div class="audio-title">Ambient Electronic Chill</div>
               <div class="audio-prompt">Prompt: "ambient electronic chill lofi beats, soft synthesizer pads, gentle piano melody"</div>
             </div>
           </div>
-          <audio controls preload="metadata" style="width:100%;margin-top:12px">
+          <audio controls preload="metadata" style="width:100%;margin-top:12px" aria-label="Ambient electronic music sample">
             <source src="assets/audio/demo-ambient.wav" type="audio/wav">
           </audio>
         </div>
@@ -775,101 +1066,53 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
   </div>
 </section>
 
-<!-- ═══════════════════ DEPLOYMENT MODES ═══════════════════ -->
-<section id="deploy">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">Deployment</div>
-      <h2 class="section-title">Three Modes of Operation</h2>
-      <p class="section-desc">Choose how the framework runs based on your hardware, privacy requirements, and cost constraints. All modes use the same code and interfaces.</p>
-    </div>
-    <div class="modes-grid reveal">
-
-      <!-- Light -->
-      <div class="mode-card">
-        <div class="mode-icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        </div>
-        <h3>Light</h3>
-        <p>Remote inference only. Use cloud APIs from OpenAI, Anthropic, OpenRouter, Portkey, or any OpenAI-compatible endpoint. Minimal hardware requirements.</p>
-        <div class="mode-tags">
-          <span class="mode-tag">OpenAI</span>
-          <span class="mode-tag">Anthropic</span>
-          <span class="mode-tag">OpenRouter</span>
-          <span class="mode-tag">Portkey</span>
-        </div>
-      </div>
-
-      <!-- Apple -->
-      <div class="mode-card">
-        <div class="mode-icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--green)" stroke="none"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-        </div>
-        <h3>Apple</h3>
-        <p>Full local multimodal inference on Apple Silicon. Ollama, LMStudio, MLX, MLX-Gen for images/video. Unified memory enables running large models efficiently.</p>
-        <div class="mode-tags">
-          <span class="mode-tag">MLX</span>
-          <span class="mode-tag">MLX-Gen</span>
-          <span class="mode-tag">Ollama</span>
-          <span class="mode-tag">LMStudio</span>
-        </div>
-      </div>
-
-      <!-- GPU -->
-      <div class="mode-card">
-        <div class="mode-icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg>
-        </div>
-        <h3>GPU</h3>
-        <p>Local multimodal inference on NVIDIA or AMD GPUs. vLLM, HuggingFace Transformers, Diffusers. High-throughput production workloads with full CUDA/ROCm support.</p>
-        <div class="mode-tags">
-          <span class="mode-tag">vLLM</span>
-          <span class="mode-tag">HuggingFace</span>
-          <span class="mode-tag">Diffusers</span>
-          <span class="mode-tag">CUDA</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
 <!-- ═══════════════════ CROSS-DEVICE ═══════════════════ -->
-<section style="background:var(--bg-surface)">
+<section id="continuity" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Continuity</div>
       <h2 class="section-title">Start Anywhere. Continue Everywhere.</h2>
-      <p class="section-desc">Thanks to the durable runtime and gateway, conversations and tool histories replay across any device and any application. Start work on the terminal, continue in the browser, check on your phone.</p>
+      <p class="section-desc">Runs live on the gateway, not in the client, and every client shares one pool of gateway sessions. Start a conversation in AbstractAssistant on your MacBook Pro, continue it from your phone over SSH with the AbstractCode terminal client, and finish it in the AbstractCode web app in any browser.</p>
     </div>
-    <div class="multimodal-visual reveal">
-      <div class="mm-flow">
-        <div class="mm-node input">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:4px"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="12" x2="16" y2="12"/><polyline points="8 8 8 16"/></svg><br>
-          Terminal TUI
+    <!-- PENDING-W2: continuity shots (the same session in the Assistant, the terminal client and the web app) -->
+    <div class="devices reveal" aria-label="The same conversation shown in three clients">
+      <div class="device">
+        <div class="d-bar"><i></i><i></i><i></i><span>AbstractAssistant</span></div>
+        <div class="d-body">
+          <div class="msg u m1">Summarize the open issues in my project.</div>
+          <div class="msg a m2">Three open issues: two about install on Linux, one about voice...</div>
+          <div class="msg u m3">Draft a reply to the voice issue.</div>
+          <div class="msg a m4">Here is a draft reply...</div>
         </div>
-        <div class="mm-arrow">
-          <svg width="32" height="20" viewBox="0 0 32 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h28M24 4l6 6-6 6M8 4l-6 6 6 6"/></svg>
-        </div>
-        <div class="mm-node process">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:4px"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg><br>
-          Gateway + Ledger
-        </div>
-        <div class="mm-arrow">
-          <svg width="32" height="20" viewBox="0 0 32 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 10h28M24 4l6 6-6 6M8 4l-6 6 6 6"/></svg>
-        </div>
-        <div class="mm-node output">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:4px"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg><br>
-          Browser / Tray / Telegram
-        </div>
+        <div class="d-caption"><strong>MacBook Pro</strong> &middot; menu bar</div>
       </div>
-      <p style="color:var(--text-muted);margin-top:1.5rem;font-size:.9rem">The append-only ledger captures every operation. Any client connecting to the gateway can replay and continue any run from its full history. Gateway-first architecture ensures all runs are durable by default.</p>
+      <div class="device phone term">
+        <div class="d-bar"><span>ssh &middot; abstractcode</span></div>
+        <div class="d-body">
+          <div class="msg u m1">Summarize the open issues in my project.</div>
+          <div class="msg a m2">Three open issues: two about install on Linux, one about voice...</div>
+          <div class="msg u m3">Draft a reply to the voice issue.</div>
+          <div class="msg a m4">Here is a draft reply...</div>
+        </div>
+        <div class="d-caption"><strong>Phone</strong> &middot; terminal over SSH</div>
+      </div>
+      <div class="device">
+        <div class="d-bar"><i></i><i></i><i></i><span>127.0.0.1:8080/apps/code/</span></div>
+        <div class="d-body">
+          <div class="msg u m1">Summarize the open issues in my project.</div>
+          <div class="msg a m2">Three open issues: two about install on Linux, one about voice...</div>
+          <div class="msg u m3">Draft a reply to the voice issue.</div>
+          <div class="msg a m4">Here is a draft reply...</div>
+        </div>
+        <div class="d-caption"><strong>Browser</strong> &middot; AbstractCode web</div>
+      </div>
     </div>
+    <p class="reveal" style="color:var(--text-muted);margin-top:1.5rem;font-size:.9rem;text-align:center;max-width:820px;margin-inline:auto">Illustration. The append-only ledger captures every operation; any client that connects replays a run from its history and follows it live. On the gateway's own computer, SSH included, <code>abstractgateway apps tui-command code</code> prints a one-time line that opens <code>abstractcode</code> signed in.</p>
   </div>
 </section>
 
 <!-- ═══════════════════ KNOWLEDGE GRAPH ═══════════════════ -->
-<section id="knowledge" style="background:var(--bg-surface)">
+<section id="knowledge">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Knowledge</div>
@@ -884,10 +1127,10 @@ curl http://localhost:<span class="line-var">8080</span>/v1/chat/completions \
         <h3>Temporal Triple Store</h3>
         <p>Every fact is a triple (subject, predicate, object) with timestamps, confidence scores, and provenance. Facts expire. Facts can be observations or beliefs. The graph remembers <em>when</em> something was true, not just <em>that</em> it was true.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Append-only with validity windows (since/until)</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Provenance: who extracted it, from what span</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Multiple backends: InMemory, SQLite, LanceDB</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Vector search for semantic similarity queries</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Append-only with validity windows (since/until)</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Provenance: who extracted it, from what span</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Multiple backends: InMemory, SQLite, LanceDB</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Vector search for semantic similarity queries</li>
         </ul>
       </div>
     </div>
@@ -937,10 +1180,10 @@ reg = <span class="line-fn">load_semantics_registry</span>()
         <h3>Schema-Validated Semantics</h3>
         <p>AbstractSemantics provides the ontology: allowed predicates, entity types, CURIE prefixes. JSON Schema generation ensures every knowledge assertion is valid. No hallucinated predicates, no schema drift.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> YAML registry of predicates and entity types</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> JSON Schema builder for LLM structured output</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Framework-wide vocabulary consistency</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Override via env for custom ontologies</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> YAML registry of predicates and entity types</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> JSON Schema builder for LLM structured output</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Framework-wide vocabulary consistency</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Override via env for custom ontologies</li>
         </ul>
       </div>
       <div style="flex:1;display:flex;align-items:center;justify-content:center">
@@ -983,220 +1226,155 @@ reg = <span class="line-fn">load_semantics_registry</span>()
   </div>
 </section>
 
-<!-- ═══════════════════ PROVIDERS ═══════════════════ -->
-<section>
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">Providers</div>
-      <h2 class="section-title">One API. Every Provider.</h2>
-      <p class="section-desc">Switch between providers with a single line change. Same code, same tools, same structured output. From local open-source models to cloud APIs.</p>
-    </div>
-    <div class="code-tabs reveal">
-      <div class="tab-nav">
-        <button class="tab-btn active" data-tab="prov-python">Python</button>
-        <button class="tab-btn" data-tab="prov-api">OpenAI API</button>
-      </div>
-      <div class="tab-panel active" id="tab-prov-python">
-        <div class="code-block">
-<pre><code><span class="line-cmt"># Switch providers with zero code changes</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>,     model=<span class="line-str">"qwen3:4b-instruct"</span>)
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"lmstudio"</span>,   model=<span class="line-str">"qwen/qwen3-4b-2507"</span>)
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>,        model=<span class="line-str">"mlx-community/Qwen3-4B"</span>)
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"huggingface"</span>, model=<span class="line-str">"Qwen/Qwen3-4B-Instruct"</span>)
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>,     model=<span class="line-str">"gpt-4o-mini"</span>)
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"anthropic"</span>,  model=<span class="line-str">"claude-haiku-4-5"</span>)
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openrouter"</span>, model=<span class="line-str">"any/model"</span>)
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"vllm"</span>,       model=<span class="line-str">"your-model"</span>)
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"portkey"</span>,    model=<span class="line-str">"any/model"</span>)
-
-<span class="line-cmt"># Same interface everywhere</span>
-response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Hello"</span>, tools=[my_tool], response_model=MySchema)</code></pre>
-        </div>
-      </div>
-      <div class="tab-panel" id="tab-prov-api">
-        <div class="code-block">
-<pre><code><span class="line-cmt"># AbstractCore's server is OpenAI-compatible</span>
-<span class="line-cmt"># Point any OpenAI SDK or tool at it</span>
-
-<span class="line-kw">from</span> openai <span class="line-kw">import</span> <span class="line-fn">OpenAI</span>
-
-client = <span class="line-fn">OpenAI</span>(base_url=<span class="line-str">"http://localhost:8080/v1"</span>, api_key=<span class="line-str">"unused"</span>)
-
-response = client.chat.completions.<span class="line-fn">create</span>(
-    model=<span class="line-str">"qwen3:4b"</span>,
-    messages=[{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"Hello"</span>}],
-    tools=[my_tool_schema],
-)
-
-<span class="line-cmt"># Works with LangChain, LlamaIndex, Vercel AI SDK, etc.</span></code></pre>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
 <section id="getting-started" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Quick Start</div>
       <h2 class="section-title">Up and Running in Minutes</h2>
+      <p class="section-desc">The installer sets everything up in your user account, with local voice included, asks one question (start at login?) and opens the web console in your browser, already signed in. Running it again repairs or upgrades in place.</p>
     </div>
-    <div class="code-tabs reveal">
-      <div class="tab-nav">
-        <button class="tab-btn active" data-tab="start-core">Just AbstractCore</button>
-        <button class="tab-btn" data-tab="start-full">Full Framework</button>
-        <button class="tab-btn" data-tab="start-docker">Docker</button>
-      </div>
-      <div class="tab-panel active" id="tab-start-core">
-        <div class="code-block">
-<pre><code><span class="line-cmt"># Install the core LLM library</span>
-<span class="line-kw">pip install</span> abstractcore
-
-<span class="line-cmt"># Local provider (no API keys needed)</span>
-ollama serve && ollama pull qwen3:4b
-
-<span class="line-cmt"># Your first call</span>
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
-<span class="line-fn">print</span>(llm.<span class="line-fn">generate</span>(<span class="line-str">"Hello!"</span>).content)
-
-<span class="line-cmt"># Add multimodal capabilities</span>
-<span class="line-kw">pip install</span> abstractvoice abstractvision abstractmusic</code></pre>
+    <div class="install-wrap reveal">
+      <div class="code-tabs" data-autoplatform data-win="h-win" data-linux="h-linux" data-mac="h-mac">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="h-mac">macOS</button>
+          <button class="tab-btn" data-tab="h-linux">Linux</button>
+          <button class="tab-btn" data-tab="h-win">Windows</button>
+          <button class="tab-btn" data-tab="h-py">Python</button>
+          <button class="tab-btn" data-tab="h-docker">Docker</button>
         </div>
-      </div>
-      <div class="tab-panel" id="tab-start-full">
-        <div class="code-block">
-<pre><code><span class="line-cmt"># Install the entire framework</span>
-<span class="line-kw">pip install</span> <span class="line-str">"abstractframework[all]"</span>
-
-<span class="line-cmt"># Start the gateway</span>
-abstractgateway serve --port <span class="line-var">8080</span>
-
-<span class="line-cmt"># Launch browser UIs</span>
-npx @abstractframework/observer
-npx @abstractframework/flow
-npx @abstractframework/code
-
-<span class="line-cmt"># Or use the terminal agent</span>
-abstractcode --provider ollama --model qwen3:4b</code></pre>
+        <div class="tab-panel active" id="tab-h-mac">
+          <div class="install-notes" style="border-top:none"><ul>
+            <li><strong>Without Terminal:</strong> <a href="https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg">download AbstractFramework-Installer.pkg</a> and double-click it. It is not signed with an Apple Developer ID: the first time, open <strong>System Settings &gt; Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>. <a href="install.html#choose">Step by step</a></li>
+            <li><strong>With Terminal:</strong> paste this line; it runs the same installer.</li>
+          </ul></div>
+          <div class="code-block">
+<!-- PENDING-W2: E7 -->
+<pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+          <div class="install-notes"><ul><li>macOS 13 or later (the Apple Silicon engines need macOS 14); about 5 GB of free disk before models.</li></ul></div>
         </div>
-      </div>
-      <div class="tab-panel" id="tab-start-docker">
-        <div class="code-block">
-<pre><code><span class="line-cmt"># Pull and run the gateway</span>
-<span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway
-
-<span class="line-kw">docker run</span> -p <span class="line-var">8080</span>:<span class="line-var">8080</span> \
-  -v abstractdata:/data \
-  ghcr.io/lpalbou/abstractgateway
-
-<span class="line-cmt"># Then connect any thin client</span>
-npx @abstractframework/observer
-npx @abstractframework/code</code></pre>
+        <div class="tab-panel" id="tab-h-linux">
+          <div class="code-block">
+<!-- PENDING-W2: E7 -->
+<pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+          <div class="install-notes"><ul>
+            <li>glibc distributions, x86_64 or aarch64. Start at login is a <code>systemd --user</code> service.</li>
+            <li>Over SSH on a headless server it works the same and offers the terminal console at the end. <a href="install.html#headless">Headless install</a></li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-h-win">
+          <div class="code-block">
+<!-- PENDING-W2: E7 -->
+<pre><code>powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"</code></pre></div>
+          <div class="install-notes"><ul>
+            <li>Windows 10 22H2 or later, or Windows 11. Installs under your user account, no administrator rights.</li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-h-py">
+          <div class="code-block">
+<!-- PENDING-W2: E7 -->
+<pre><code>pip install abstractframework            <span class="line-cmt"># light: cloud and endpoint engines</span>
+pip install "abstractframework[apple]"   <span class="line-cmt"># + local Apple Silicon engines</span>
+pip install "abstractframework[gpu]"     <span class="line-cmt"># + local CUDA / ROCm engines</span>
+abstractgateway serve                    <span class="line-cmt"># prints a one-time console link</span></code></pre></div>
+          <div class="install-notes"><ul>
+            <li>Every framework library in your own environment, pinned together. Python 3.10 to 3.13. <a href="start-developer.html">Developer journey</a></li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-h-docker">
+          <div class="code-block">
+<!-- PENDING-W2: E7 -->
+<pre><code>docker run -p 8080:8080 -v "$PWD/runtime:/data" \
+  -e ABSTRACTGATEWAY_DATA_DIR=/data -e ABSTRACTGATEWAY_USER_AUTH=1 \
+  ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre></div>
+          <div class="install-notes"><ul>
+            <li>The light gateway container for servers; the admin login token is written to <code>runtime/auth/bootstrap-admin-token</code>. <a href="start-architect.html">Architect journey</a></li>
+          </ul></div>
         </div>
       </div>
     </div>
+    <p class="reveal" style="text-align:center;margin-top:1.5rem"><a class="comp-link" href="install.html">Everything about installing &rarr;</a></p>
+  </div>
+</section>
 
-    <!-- Hardware profiles -->
-    <div class="modes-grid reveal" style="margin-top:2rem">
-      <div class="mode-card">
-        <div class="mode-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--green)" stroke="none"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-        </div>
-        <h3>Apple Silicon Profile</h3>
-        <div class="code-block" style="margin:.5rem 0;font-size:.78rem">
-<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractframework[apple]"</span></code></pre>
-        </div>
-        <p>Optimized for M-series Macs with MLX, MLX-Gen, and unified memory.</p>
-      </div>
-      <div class="mode-card">
-        <div class="mode-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg>
-        </div>
-        <h3>GPU Profile</h3>
-        <div class="code-block" style="margin:.5rem 0;font-size:.78rem">
-<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractframework[gpu]"</span></code></pre>
-        </div>
-        <p>Full CUDA/ROCm support with vLLM, Diffusers, and HuggingFace.</p>
-      </div>
-      <div class="mode-card">
-        <div class="mode-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        </div>
-        <h3>Light Profile</h3>
-        <div class="code-block" style="margin:.5rem 0;font-size:.78rem">
-<pre><code><span class="line-kw">pip install</span> <span class="line-str">abstractframework</span></code></pre>
-        </div>
-        <p>Remote-only inference to avoid large local dependencies. Works anywhere Python runs.</p>
-      </div>
+<!-- ═══════════════════ START HERE ═══════════════════ -->
+<section id="start">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Start Here</div>
+      <h2 class="section-title">Your First Hour</h2>
+      <p class="section-desc">Six guided starts: what to install, what to click or type, and three things to try.</p>
+    </div>
+    <div class="persona-grid">
+      <a class="persona-card user reveal" href="start-user.html">
+        <div class="p-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green-light)" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+        <h3>User</h3>
+        <p class="p-who">You want a capable assistant on your own computer, with your data staying there.</p>
+        <ul><li>Chat with a local model</li><li>Talk to it by voice</li><li>Let it check things for you on a schedule</li></ul>
+        <span class="p-go">Start as a user &rarr;</span>
+      </a>
+      <a class="persona-card creator reveal" href="start-creator.html">
+        <div class="p-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="2" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.75 1.5-1.5 0-.4-.15-.74-.4-1-.25-.26-.4-.6-.4-1 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-4.97-4.5-9-10-9z"/></svg></div>
+        <h3>Artist / creator</h3>
+        <p class="p-who">You make images, video, music or voices, and want to run the models yourself.</p>
+        <ul><li>Generate images and short videos</li><li>Compose music from a prompt</li><li>Clone a voice you have the rights to</li></ul>
+        <span class="p-go">Start as a creator &rarr;</span>
+      </a>
+      <a class="persona-card dev reveal" href="start-developer.html">
+        <div class="p-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+        <h3>Developer</h3>
+        <p class="p-who">You build with LLMs and want one API across providers, durable runs and a real control plane.</p>
+        <ul><li>AbstractCore in three lines of Python</li><li>Start runs through the gateway API</li><li>Draw a workflow in Flow, code with AbstractCode</li></ul>
+        <span class="p-go">Start as a developer &rarr;</span>
+      </a>
+      <a class="persona-card arch reveal" href="start-architect.html">
+        <div class="p-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <h3>Architect / solution engineer</h3>
+        <p class="p-who">You decide where AI runs, who can reach it and where the data lives.</p>
+        <ul><li>Local, LAN, internet or headless Linux</li><li>Containers and multi-user auth</li><li>Security posture and data ownership</li></ul>
+        <span class="p-go">Start as an architect &rarr;</span>
+      </a>
+      <a class="persona-card research reveal" href="start-researcher.html">
+        <div class="p-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber-light)" stroke-width="2" aria-hidden="true"><path d="M9 2v6L4 18a2 2 0 002 3h12a2 2 0 002-3L15 8V2"/><path d="M8 2h8M7 14h10"/></svg></div>
+        <h3>Researcher</h3>
+        <p class="p-who">You investigate questions and want agents that search, cite and keep a trace of every step.</p>
+        <ul><li>Run deep-research and co-scientist</li><li>Inspect every call in the ledger</li><li>Give agents a lasting memory</li></ul>
+        <span class="p-go">Start as a researcher &rarr;</span>
+      </a>
+      <a class="persona-card ops reveal" href="start-automation.html">
+        <div class="p-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <h3>Automation owner</h3>
+        <p class="p-who">You want recurring checks and reports that run on their own and speak up only when needed.</p>
+        <ul><li>Your first automation in minutes</li><li>Independent or growing context</li><li>Notifications only when it matters</li></ul>
+        <span class="p-go">Start as an automation owner &rarr;</span>
+      </a>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ ROADMAP ═══════════════════ -->
-<section id="roadmap">
+<!-- ═══════════════════ RELEASES ═══════════════════ -->
+<section id="releases" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Roadmap</div>
-      <h2 class="section-title">Where We Are &amp; What's Next</h2>
-      <p class="section-desc">AbstractFramework is under active development. Here's what's shipped and what we're building next.</p>
+      <div class="section-label">Releases</div>
+      <h2 class="section-title">What Shipped</h2>
+      <p class="section-desc">The framework moves in coordinated releases: one version of <code>abstractframework</code> always installs the same, tested set of packages.</p>
     </div>
     <div class="roadmap-timeline reveal">
-      <div class="roadmap-item done">
-        <div class="roadmap-marker"></div>
-        <div class="roadmap-content">
-          <span class="roadmap-status">Shipped</span>
-          <h4>Foundation</h4>
-          <p>AbstractCore (9+ LLM providers), AbstractRuntime (durable execution), AbstractAgent (ReAct/CodeAct/MemAct)</p>
-        </div>
-      </div>
-      <div class="roadmap-item done">
-        <div class="roadmap-marker"></div>
-        <div class="roadmap-content">
-          <span class="roadmap-status">Shipped</span>
-          <h4>Multimodal Capabilities</h4>
-          <p>AbstractVoice (TTS/STT/cloning), AbstractVision (T2I/I2I/T2V/I2V via MLX-Gen), AbstractMusic (ACE-Step)</p>
-        </div>
-      </div>
-      <div class="roadmap-item done">
-        <div class="roadmap-marker"></div>
-        <div class="roadmap-content">
-          <span class="roadmap-status">Shipped</span>
-          <h4>Applications</h4>
-          <p>AbstractGateway (control plane), AbstractFlow (visual editor), AbstractCode (TUI + web), AbstractObserver (monitoring)</p>
-        </div>
-      </div>
-      <div class="roadmap-item done">
-        <div class="roadmap-marker"></div>
-        <div class="roadmap-content">
-          <span class="roadmap-status">Shipped</span>
-          <h4>Knowledge Layer</h4>
-          <p>AbstractMemory (temporal KG), AbstractSemantics (schema registry), agent memory effects</p>
-        </div>
-      </div>
-      <div class="roadmap-item active">
-        <div class="roadmap-marker"></div>
-        <div class="roadmap-content">
-          <span class="roadmap-status current">In Progress</span>
-          <h4>Ecosystem Maturation</h4>
-          <p>OpenAI Responses API support, Agent Skills integration, advanced prompt caching, expanded model registries, installer UX</p>
-        </div>
-      </div>
-      <div class="roadmap-item upcoming">
-        <div class="roadmap-marker"></div>
-        <div class="roadmap-content">
-          <span class="roadmap-status planned">Planned</span>
-          <h4>Scale &amp; Community</h4>
-          <p>Community skill marketplace, shared .flow bundle registry, multi-tenant gateway, enterprise deployment guides, expanded Docker profiles</p>
-        </div>
-      </div>
+      <div class="roadmap-item upcoming"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status planned">Coming</span><h4>Recommendations for every capability, updates from the console</h4><p>AbstractCore 2.18.1 adds <code>abstractcore models recommendations</code>: the recommended model for every capability on every kind of machine. AbstractGateway 0.7.2 runs the installer when you update from the console, the menu bar or the terminal console.</p></div></div>
+      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.1 &middot; 2026-09-28</span><h4>Every command on your PATH</h4><p>The installer builds <code>abstractcode</code> and exposes the AbstractCore, voice, vision and music commands next to the gateway; the terminal app says how to sign in; Run now explains itself the same way in every client.</p></div></div>
+      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.0 &middot; 2026-09-28</span><h4>Remote machines work like a Mac</h4><p>Apps served through the gateway at <code>/apps/&lt;app&gt;/</code>, the local gateway pointer, automations in AbstractCode, history that keeps whole messages up to 50,000 tokens, voice that says what it can do, DNS-rebinding protection.</p></div></div>
+      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.5.0 &middot; 2026-09-27</span><h4>Automations and a headless setup</h4><p>Automations in the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a>, the <a href="observer.html" style="color:var(--accent-light)">Observer</a> and <a href="flow.html" style="color:var(--accent-light)">Flow</a>; the terminal console installed by default; configuring a remote Linux server without a browser.</p></div></div>
+      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.4.0 &middot; 2026-09-26</span><h4>One agent workflow for every client</h4><p>The gateway picks the agent workflow, AbstractCode browses the workspace, a curated skill shelf, live replies in every client, and the console opens the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a> already signed in.</p></div></div>
+      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.3.0 &middot; 2026-09-24</span><h4>A Mac install without Terminal knowledge</h4><p>The <code>.pkg</code> and double-click installers and uninstaller, and install failures explained in plain words.</p></div></div>
+      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.2.0 &middot; 2026-09-23</span><h4>One-line install and the console</h4><p>Install with one line, sign in with a one-time link, and manage local models and engines from the console, the terminal or the command line.</p></div></div>
     </div>
+    <p class="reveal" style="text-align:center;margin-top:1.5rem"><a class="comp-link" href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Full changelog &rarr;</a></p>
   </div>
 </section>
 
 <!-- ═══════════════════ PHILOSOPHY ═══════════════════ -->
-<section>
+<section id="principles">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Philosophy</div>
@@ -1204,212 +1382,35 @@ npx @abstractframework/code</code></pre>
     </div>
     <div class="modes-grid reveal" style="grid-template-columns:repeat(3,1fr)">
       <div class="mode-card" style="text-align:left">
-        <div style="margin-bottom:1rem">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-        </div>
-        <h3>100% Open Source</h3>
-        <p>MIT licensed. No black boxes, no vendor lock-in. You own everything. Inspect, modify, and extend every line of code.</p>
+        <div style="margin-bottom:1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+        <h3>Open Source</h3>
+        <p>MIT licensed. No black boxes, no vendor lock-in. Inspect, modify and extend every line of code.</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <div style="margin-bottom:1rem">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        </div>
-        <h3>Local First</h3>
-        <p>Run entirely offline with open-source models. Privacy and cost control by default. Cloud APIs available when you need them.</p>
+        <div style="margin-bottom:1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
+        <h3>One Framework, Many Deployments</h3>
+        <p>Local and cloud inference, alone or mixed. The same framework on a laptop, a LAN server, a container or the internet.</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <div style="margin-bottom:1rem">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        </div>
+        <div style="margin-bottom:1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cyan, #06b6d4)" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <h3>Durable by Default</h3>
-        <p>Workflows survive crashes and restarts. Resume exactly where you left off. The append-only ledger ensures nothing is lost.</p>
+        <p>Runs on the gateway survive crashes and restarts and resume where they stopped. The append-only ledger keeps every step.</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <div style="margin-bottom:1rem">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </div>
-        <h3>Observable</h3>
-        <p>Every LLM call, tool execution, and decision is logged. Replay any run from history. No AI black boxes.</p>
+        <div style="margin-bottom:1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>Observable, Replay-First</h3>
+        <p>Every LLM call, tool call and decision is in the ledger. Any client rebuilds a run by replaying it, then follows it live.</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <div style="margin-bottom:1rem">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        </div>
+        <div style="margin-bottom:1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
         <h3>Composable</h3>
-        <p>Use one package or the full stack. Every component is independently installable and works with or without the others.</p>
+        <p>Use one package or the whole stack. Every component installs on its own and works with or without the others.</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <div style="margin-bottom:1rem">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-        </div>
-        <h3>Write Once, Run Everywhere</h3>
-        <p>Same code across providers. Same workflows across devices. Export and share <code>.flow</code> bundles with anyone.</p>
+        <div style="margin-bottom:1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <h3>Human in the Loop</h3>
+        <p>Tools wait for your approval, runs wait for your input, and Discuss turns any automation result into a conversation.</p>
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════ AI-READY DOCS ═══════════════════ -->
-<section id="ai-docs">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">AI-Ready Documentation</div>
-      <h2 class="section-title">Built for LLMs &amp; AI Agents</h2>
-      <p class="section-desc">Every AbstractFramework package ships <code>llms.txt</code> and <code>llms-full.txt</code> files following the <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt standard</a>. AI coding assistants, agents, and LLMs can consume up-to-date, structured documentation directly &mdash; no scraping, no hallucination.</p>
-    </div>
-
-    <div class="showcase-grid reveal">
-      <div class="showcase-content">
-        <h3>What Are llms.txt Files?</h3>
-        <p>The <a href="https://llmstxt.org" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt specification</a> defines a standard way for projects to provide LLM-friendly documentation. Instead of forcing AI tools to parse complex HTML, these curated Markdown files give LLMs exactly what they need:</p>
-        <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> <code>llms.txt</code> &mdash; Concise overview with key concepts and API surface</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> <code>llms-full.txt</code> &mdash; Complete documentation with all details expanded inline</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Works with Cursor, Windsurf, Copilot, Claude, ChatGPT, and any MCP-capable tool</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Available via <a href="https://context7.com" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Context7</a> and other documentation aggregators</li>
-        </ul>
-      </div>
-      <div>
-        <div class="code-block">
-<pre><code><span class="line-cmt"># Point any LLM at the raw documentation</span>
-<span class="line-cmt"># Always up-to-date from the source repo</span>
-
-<span class="line-cmt"># Concise overview (key concepts + API)</span>
-<span class="line-str">https://github.com/lpalbou/abstractcore/blob/main/llms.txt</span>
-
-<span class="line-cmt"># Full documentation (everything inline)</span>
-<span class="line-str">https://github.com/lpalbou/abstractcore/blob/main/llms-full.txt</span>
-
-<span class="line-cmt"># Same pattern for every package</span>
-<span class="line-str">https://github.com/lpalbou/abstract{package}/blob/main/llms.txt</span></code></pre>
-        </div>
-      </div>
-    </div>
-
-    <div class="reveal" style="margin-top:2rem">
-      <h3 style="margin-bottom:1rem">All Packages</h3>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:.88rem">
-          <thead>
-            <tr style="border-bottom:2px solid var(--border);text-align:left">
-              <th style="padding:.6rem .75rem;color:var(--text)">Package</th>
-              <th style="padding:.6rem .75rem;color:var(--text)">llms.txt</th>
-              <th style="padding:.6rem .75rem;color:var(--text)">llms-full.txt</th>
-            </tr>
-          </thead>
-          <tbody style="color:var(--text-secondary)">
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractCore</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractcore/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractcore/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractRuntime</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractruntime/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractruntime/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractAgent</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractagent/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractagent/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractFlow</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractflow/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractflow/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractGateway</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractgateway/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractgateway/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractCode</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractcode/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractcode/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractObserver</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractobserver/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractobserver/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractAssistant</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractassistant/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractassistant/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractVoice</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractvoice/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractvoice/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractVision</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractvision/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractvision/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractMusic</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractmusic/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractmusic/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr style="border-bottom:1px solid var(--border-light)"><td style="padding:.5rem .75rem">AbstractMemory</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractmemory/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractmemory/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-            <tr><td style="padding:.5rem .75rem">AbstractSemantics</td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractsemantics/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms.txt</a></td><td style="padding:.5rem .75rem"><a href="https://github.com/lpalbou/abstractsemantics/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">llms-full.txt</a></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════ COMPARISON ═══════════════════ -->
-<section id="comparison" style="background:var(--bg-surface)">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">How We Compare</div>
-      <h2 class="section-title">AbstractFramework vs. The Alternatives</h2>
-      <p class="section-desc">Understanding where AbstractFramework fits in the AI tooling landscape.</p>
-    </div>
-
-    <div class="comparison-table reveal">
-      <table>
-        <thead>
-          <tr>
-            <th>Capability</th>
-            <th class="highlight">AbstractFramework</th>
-            <th>LangChain</th>
-            <th>CrewAI</th>
-            <th>Haystack</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Durable execution (crash-safe)</td>
-            <td class="highlight"><span class="check">&#10003;</span> Built-in (Runtime)</td>
-            <td><span class="partial">~</span> Via LangGraph</td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-          </tr>
-          <tr>
-            <td>Append-only audit ledger</td>
-            <td class="highlight"><span class="check">&#10003;</span> Every operation</td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-          </tr>
-          <tr>
-            <td>Visual workflow editor</td>
-            <td class="highlight"><span class="check">&#10003;</span> AbstractFlow</td>
-            <td><span class="partial">~</span> LangFlow (3rd party)</td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="partial">~</span> Haystack Studio</td>
-          </tr>
-          <tr>
-            <td>Local multimodal (image, video, music)</td>
-            <td class="highlight"><span class="check">&#10003;</span> Vision + Voice + Music</td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-          </tr>
-          <tr>
-            <td>Apple Silicon optimized</td>
-            <td class="highlight"><span class="check">&#10003;</span> MLX, MLX-Gen</td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-          </tr>
-          <tr>
-            <td>Cross-device continuity</td>
-            <td class="highlight"><span class="check">&#10003;</span> Gateway + Ledger</td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-          </tr>
-          <tr>
-            <td>Knowledge graph memory</td>
-            <td class="highlight"><span class="check">&#10003;</span> Temporal triples</td>
-            <td><span class="partial">~</span> Basic memory</td>
-            <td><span class="partial">~</span> Basic memory</td>
-            <td><span class="no">&#10007;</span></td>
-          </tr>
-          <tr>
-            <td>OpenAI-compatible server</td>
-            <td class="highlight"><span class="check">&#10003;</span> Built-in</td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-            <td><span class="no">&#10007;</span></td>
-          </tr>
-          <tr>
-            <td>100% open source (MIT)</td>
-            <td class="highlight"><span class="check">&#10003;</span></td>
-            <td><span class="check">&#10003;</span> MIT</td>
-            <td><span class="check">&#10003;</span> MIT</td>
-            <td><span class="check">&#10003;</span> Apache 2.0</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="reveal" style="max-width:720px;margin:2rem auto 0;text-align:center">
-      <p style="color:var(--text-secondary);font-size:.95rem;line-height:1.7">
-        AbstractFramework is not a replacement for LangChain or CrewAI. It occupies a different niche: an <strong style="color:var(--text)">Agentic OS</strong> &mdash; durable, observable, multimodal AI infrastructure where every operation is auditable, workflows survive crashes, and the same code runs across providers, devices, and deployment modes. Not just an orchestration layer, but the operating system for your entire AI stack.
-      </p>
     </div>
   </div>
 </section>
@@ -1419,91 +1420,87 @@ npx @abstractframework/code</code></pre>
   <h2>Build the Future of AI Systems</h2>
   <p>AbstractFramework gives you the building blocks. What you build is up to you.</p>
   <div class="hero-actions" style="margin-top:0">
-    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-      Get Started on GitHub
-    </a>
-    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-      Install from PyPI
-    </a>
-    <a href="https://www.abstractcore.ai" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      AbstractCore Docs
-    </a>
-    <a href="https://github.com/lpalbou/abstractgateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="13" width="20" height="7" rx="1"/><path d="M6 13V5a2 2 0 012-2h8a2 2 0 012 2v8"/><circle cx="12" cy="16.5" r="1"/></svg>
-      Docker Hub
-    </a>
-    <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-      &#129303; HuggingFace Models
-    </a>
-    <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-      npm Packages
-    </a>
+    <a href="install.html" class="btn btn-primary">Install AbstractFramework</a>
+    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
+    <a href="https://github.com/lpalbou/abstractgateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Containers</a>
+    <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">HuggingFace Models</a>
+    <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">npm Packages</a>
   </div>
 </section>
+
+</main>
 
 <!-- ═══════════════════ FOOTER ═══════════════════ -->
 <footer class="footer">
   <div class="footer-grid">
     <div class="footer-brand">
-      <a href="#" class="nav-brand" style="margin-bottom:.5rem">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
         <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
         AbstractFramework
       </a>
       <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; Made with care for the AI community</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
       <p style="margin-top:.75rem">
         <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           GitHub Organization
         </a>
       </p>
     </div>
     <div class="footer-col">
       <h4>Foundation</h4>
-      <a href="https://github.com/lpalbou/abstractcore" target="_blank" rel="noopener noreferrer">AbstractCore</a>
-      <a href="https://github.com/lpalbou/abstractruntime" target="_blank" rel="noopener noreferrer">AbstractRuntime</a>
-      <a href="https://github.com/lpalbou/abstractagent" target="_blank" rel="noopener noreferrer">AbstractAgent</a>
-      <a href="https://github.com/lpalbou/abstractflow" target="_blank" rel="noopener noreferrer">AbstractFlow</a>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
+      <a href="flow.html">AbstractFlow</a>
     </div>
     <div class="footer-col">
       <h4>Applications</h4>
-      <a href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">AbstractGateway</a>
-      <a href="https://github.com/lpalbou/abstractcode" target="_blank" rel="noopener noreferrer">AbstractCode</a>
-      <a href="https://github.com/lpalbou/abstractobserver" target="_blank" rel="noopener noreferrer">AbstractObserver</a>
-      <a href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">AbstractAssistant</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="console.html">Consoles</a>
+      <a href="automations.html">Automations</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
     </div>
     <div class="footer-col">
       <h4>Modalities &amp; Knowledge</h4>
-      <a href="https://github.com/lpalbou/abstractvoice" target="_blank" rel="noopener noreferrer">AbstractVoice</a>
-      <a href="https://github.com/lpalbou/abstractvision" target="_blank" rel="noopener noreferrer">AbstractVision</a>
-      <a href="https://github.com/lpalbou/abstractmusic" target="_blank" rel="noopener noreferrer">AbstractMusic</a>
-      <a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a>
-      <a href="https://github.com/lpalbou/abstractmemory" target="_blank" rel="noopener noreferrer">AbstractMemory</a>
-      <a href="https://github.com/lpalbou/abstractsemantics" target="_blank" rel="noopener noreferrer">AbstractSemantics</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="3d.html">abstract3d</a>
+      <a href="camera.html">AbstractCamera</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
     </div>
     <div class="footer-col">
       <h4>Resources</h4>
+      <a href="install.html">Install</a>
+      <a href="#start">Start here</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
       <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace Models</a>
       <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm Packages</a>
-      <a href="https://github.com/lpalbou/abstractgateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker Images</a>
-      <a href="https://www.abstractcore.ai" target="_blank" rel="noopener noreferrer">AbstractCore Docs</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker Images</a>
+      <a href="llms.txt">llms.txt</a>
     </div>
   </div>
   <div class="footer-bottom">
     &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
-    <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
     <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a> &middot;
-    <a href="https://github.com/lpalbou/abstractgateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker</a> &middot;
     <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace</a> &middot;
     <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm</a> &middot;
-    <a href="mailto:contact@abstractframework.ai">contact@abstractframework.ai</a>
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=2"></script>
+<script src="assets/js/main.js?v=5"></script>
 </body>
 </html>
