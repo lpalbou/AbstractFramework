@@ -35,7 +35,7 @@ The real cause: the API key of the **airelays** endpoint profile had expired. No
 1. **Classify provider failures** at the runtime/gateway boundary: authentication (401/403, expired or invalid key), quota/billing (402/429 with quota), rate limit (429), model not found (404), server error (5xx), network/timeout. Auth, quota and model-not-found are **non-retryable**: fail at the first attempt.
 2. **Name everything in the failure record**: endpoint profile name (e.g. `airelays`), provider family, model, HTTP status, the provider's own error message (redacted of secrets), and the call that failed.
 3. **Say the fix** in plain words, per class: "The API key for endpoint profile 'airelays' was rejected (HTTP 401): it may have expired. Update it in Settings → Providers, then Run now." Link to the Providers screen in the web console (and the TUI equivalent).
-4. **Automation state**: after a non-retryable provider failure, mark the automation as needing attention ("Needs your action: provider key rejected") instead of silently waiting for the next tick; optionally pause it (operator decision: pause vs keep schedule).
+4. **Automation state (operator ruling 2026-09-28)**: the automation is **never paused** by a failure. It keeps its schedule and retries at the next iteration by default (a remote server may simply have been unreachable). What changes: within one occurrence, a non-retryable class (auth, quota, model not found) is not retried 3 times, and the automation is marked as needing attention ("Needs your action: the 'airelays' key was rejected") until a later run succeeds or the key is fixed.
 5. **One cause, one notice**: when several automations fail for the same endpoint profile, the list and the console show one grouped notice ("2 automations failed: the 'airelays' key was rejected").
 6. **Observer / kit panel / Code / Assistant**: show the classified message first (card title), the raw details behind "Run details", and make clear which run id holds the failed call.
 7. Replace "N provider call(s) have missing responses or errors" with a list naming each call's provider, model and error.
@@ -48,7 +48,7 @@ The real cause: the API key of the **airelays** endpoint profile had expired. No
 ## Acceptance criteria
 
 - [ ] With an endpoint profile whose key is invalid, an automation run fails after ONE attempt and its card reads, in one sentence, which endpoint profile's key was rejected and how to fix it.
-- [ ] The automation shows "needs your action" in Observer, Code (TUI + web), Assistant and the web console until the key is fixed or the automation is run successfully.
+- [ ] The automation shows "needs your action" in Observer, Code (TUI + web) and the Assistant until the key is fixed or a later run succeeds; it is NOT paused and its next scheduled run still happens.
 - [ ] Two automations on the same failing profile produce one grouped notice.
 - [ ] No secret appears in any message or log.
 
@@ -57,5 +57,7 @@ The real cause: the API key of the **airelays** endpoint profile had expired. No
 Hermetic: a fake OpenAI-compatible server returning 401/403/429/404/500 per case; an endpoint profile pointing at it; automations created through the gateway API and checked in Observer and the TUI. Tests red before the change.
 
 ## Receipts
+
+- Operator ruling 2026-09-28: "no it should retry at the next iteration by default (eg maybe a remote server wasn't accessible for instance)"; "automation errors should name the cause and the fix: yes".
 
 - Operator report and screenshot, 2026-09-28 15:23 (Observer Automations page).
