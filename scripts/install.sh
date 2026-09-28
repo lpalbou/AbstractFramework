@@ -592,13 +592,17 @@ find_cargo() {
 # bin dir not named .../bin falls back to cargo's own ~/.cargo/bin.
 CONSOLE_NAME="${AF_CRATE_CONSOLE%@*}"; CONSOLE_PIN="${AF_CRATE_CONSOLE##*@}"
 CODE_NAME="${AF_CRATE_CODE_CLI%@*}"; CODE_PIN="${AF_CRATE_CODE_CLI##*@}"
-CRATE_ROOT=""; CRATE_BIN=""; CONSOLE_BIN=""; CODE_BIN=""
+CRATE_ROOT=""; CONSOLE_BIN=""; CODE_ROOT=""; CODE_BIN=""
 console_bin() {
     case "$TOOL_BIN" in
-        */bin) CRATE_ROOT="${TOOL_BIN%/bin}"; CRATE_BIN="$TOOL_BIN" ;;
-        *) CRATE_ROOT=""; CRATE_BIN="${CARGO_HOME:-$HOME/.cargo}/bin" ;;
+        */bin) CRATE_ROOT="${TOOL_BIN%/bin}" ;;
+        *) CRATE_ROOT="" ;;
     esac
-    CONSOLE_BIN="$CRATE_BIN/$CONSOLE_NAME"; CODE_BIN="$CRATE_BIN/$CODE_NAME"
+    CONSOLE_BIN="${CRATE_ROOT:-${CARGO_HOME:-$HOME/.cargo}}/bin/$CONSOLE_NAME"
+    # AbstractCode's terminal client: CODE_ROOT (cargo --root; "" = cargo's own ~/.cargo) is the
+    # ONE place that decides where it goes; build, summary and uninstall all follow it.
+    CODE_ROOT="$CRATE_ROOT"
+    CODE_BIN="${CODE_ROOT:-${CARGO_HOME:-$HOME/.cargo}}/bin/$CODE_NAME"
 }
 # crate_installed BIN NAME PIN: BIN answers --version with that crate at that pin.
 crate_installed() { [ "$("$1" --version 2>/dev/null)" = "$2 $3" ]; }
@@ -1011,19 +1015,19 @@ if [ "$UNINSTALL" = 1 ]; then
     # The terminal console and AbstractCode's terminal client this installer built (see
     # console_bin). The uv tool's exposed commands went with `uv tool uninstall` above.
     console_bin
-    uninstall_crate() {  # uninstall_crate NAME "what it is" "step title"
-        _uc_name="$1"; _uc_what="$2"; _uc_bin="$CRATE_BIN/$1"
+    uninstall_crate() {  # uninstall_crate NAME BIN ROOT "what it is" "step title"
+        _uc_name="$1"; _uc_bin="$2"; _uc_root="$3"; _uc_what="$4"
         [ -e "$_uc_bin" ] || return 0
-        step "$3"
-        if find_cargo && grep -qs "^\"$_uc_name " "${CRATE_ROOT:-${CARGO_HOME:-$HOME/.cargo}}/.crates.toml"; then
+        step "$5"
+        if find_cargo && grep -qs "^\"$_uc_name " "${_uc_root:-${CARGO_HOME:-$HOME/.cargo}}/.crates.toml"; then
             set -- "$CARGO" uninstall
-            [ -n "$CRATE_ROOT" ] && set -- "$@" --root "$CRATE_ROOT"
+            [ -n "$_uc_root" ] && set -- "$@" --root "$_uc_root"
             RUN_SOFT=1 run "uninstall $_uc_what" "$@" "$_uc_name"
         fi
         [ "$PRINT" = 0 ] && [ ! -e "$_uc_bin" ] || run "remove $_uc_what" rm -f "$_uc_bin"
     }
-    uninstall_crate "$CONSOLE_NAME" "the terminal console" "Terminal console"
-    uninstall_crate "$CODE_NAME" "AbstractCode's terminal client" "AbstractCode terminal client"
+    uninstall_crate "$CONSOLE_NAME" "$CONSOLE_BIN" "$CRATE_ROOT" "the terminal console" "Terminal console"
+    uninstall_crate "$CODE_NAME" "$CODE_BIN" "$CODE_ROOT" "AbstractCode's terminal client" "AbstractCode terminal client"
     [ "$ST_RUST_BY_US" = 1 ] && info "kept: Rust, which the installer added for the terminal console and AbstractCode's terminal client (remove it with: ${CARGO_HOME:-$HOME/.cargo}/bin/rustup self uninstall)"
     step "Data"
     # Before the data dir goes (--purge): the pointer is matched against its resolved path.
@@ -1593,13 +1597,13 @@ rust_cargo() {
     fi
     [ -n "$CARGO" ]
 }
-# build_crate "what it is" NAME PIN BIN: cargo install it into CRATE_ROOT. Soft: a failure is
-# one warning plus the command to run by hand; returns 1.
+# build_crate "what it is" NAME PIN BIN ROOT: cargo install it with --root ROOT ("" = cargo's
+# own). Soft: a failure is one warning plus the command to run by hand; returns 1.
 build_crate() {
-    _bc_what="$1"; _bc_name="$2"; _bc_pin="$3"; _bc_bin="$4"
+    _bc_what="$1"; _bc_name="$2"; _bc_pin="$3"; _bc_bin="$4"; _bc_root="$5"
     info "compiling it from crates.io (a few minutes the first time)"
     set -- "$CARGO" install --locked --force
-    [ -n "$CRATE_ROOT" ] && set -- "$@" --root "$CRATE_ROOT"
+    [ -n "$_bc_root" ] && set -- "$@" --root "$_bc_root"
     set -- "$@" "$_bc_name" --version "$_bc_pin"
     RUN_SOFT=1 run "build $_bc_what" "$@"
     [ "$PRINT" = 1 ] && return 0
@@ -1617,7 +1621,7 @@ else
     if [ "$CONSOLE_HAVE" = 1 ]; then
         ok "$CONSOLE_NAME $CONSOLE_PIN already installed: $CONSOLE_BIN"; CONSOLE_OK=1
     elif ! rust_cargo; then CONSOLE_WHY="$RUST_WHY"
-    elif build_crate "the terminal console" "$CONSOLE_NAME" "$CONSOLE_PIN" "$CONSOLE_BIN"; then CONSOLE_OK=1
+    elif build_crate "the terminal console" "$CONSOLE_NAME" "$CONSOLE_PIN" "$CONSOLE_BIN" "$CRATE_ROOT"; then CONSOLE_OK=1
     else CONSOLE_WHY="the build failed (see $LOG_FILE)"; fi
 fi
 if [ "$WITH_CODE_CLI" = 0 ]; then
@@ -1630,7 +1634,7 @@ else
         CODE_WHY="$RUST_WHY"
         # Under --no-console nothing above said it (the console step warns for both).
         [ "$WITH_CONSOLE" = 0 ] && info "AbstractCode's terminal client skipped: $CODE_WHY"
-    elif build_crate "AbstractCode's terminal client" "$CODE_NAME" "$CODE_PIN" "$CODE_BIN"; then CODE_OK=1
+    elif build_crate "AbstractCode's terminal client" "$CODE_NAME" "$CODE_PIN" "$CODE_BIN" "$CODE_ROOT"; then CODE_OK=1
     else CODE_WHY="the build failed (see $LOG_FILE)"; fi
 fi
 
@@ -1866,6 +1870,9 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     fi
     if [ "$CODE_OK" = 1 ]; then
         echo "  AbstractCode (terminal): $CODE_CMD"
+        # PLACEHOLDER (TUI sign-in): how a fresh user signs AbstractCode's terminal client in; the
+        # lead fills it in from untracked/tui-signin-note.md. Replace before any release.
+        echo "  Sign in (terminal): <PLACEHOLDER: TUI sign-in command>"
     else
         echo "  AbstractCode (terminal): not installed: $CODE_WHY"
     fi

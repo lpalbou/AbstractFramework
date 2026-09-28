@@ -778,7 +778,39 @@ def test_install_ps1_carries_the_same_cli_lists_and_flags() -> None:
         assert param in ps1
     assert "'--with-executables-from', $p" in ps1
     assert "AbstractCode (terminal): $codeCmd" in ps1 and "Code:       $(if ($codeOk)" in ps1
-    assert "@{ Spec = $AfCrateCodeCli; What = 'AbstractCode''s terminal client'" in ps1
+    assert "@{ Spec = $AfCrateCodeCli; Root = $AfCodeCliRoot; What = 'AbstractCode''s terminal client'" in ps1
+    assert "Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $AfCodeCliRoot" in ps1
+
+
+def test_install_sh_code_cli_target_is_one_variable(tmp_path: Path) -> None:
+    # Where abstractcode goes is decided by CODE_ROOT alone: moving it is a one-line change that
+    # the build, the summary and the command list all follow, and the console does not.
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    line = '    CODE_ROOT="$CRATE_ROOT"\n'
+    assert sh.count(line) == 1
+    moved = tmp_path / "install.sh"
+    moved.write_text(sh.replace(line, '    CODE_ROOT="$HOME/elsewhere"\n'), encoding="utf-8")
+    fake = _fake_bin(tmp_path, compiler=True)
+    proc = subprocess.run(
+        ["sh", str(moved), "--print", "--profile", "light", "--port", "18999", "--no-tray"],
+        capture_output=True, text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
+    )
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    assert f"install --locked --force --root {tmp_path}/.local abstractgateway-console --version" in out
+    assert f"install --locked --force --root {tmp_path}/elsewhere abstractcode --version" in out
+    assert _detail(out, "Code:").startswith(f"  Code:       {tmp_path}/elsewhere/bin/abstractcode --gateway-url ")
+    assert f"      {tmp_path}/elsewhere/bin/abstractcode " in out
+    (tmp_path / "elsewhere" / "bin").mkdir(parents=True)
+    (tmp_path / "elsewhere" / "bin" / "abstractcode").write_text("#!/bin/sh\n")
+    uninstall = subprocess.run(
+        ["sh", str(moved), "--uninstall", "--print", "--yes"],
+        capture_output=True, text=True,
+        env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb"},
+    )
+    assert uninstall.returncode == 0, uninstall.stderr
+    assert f"rm -f {tmp_path}/elsewhere/bin/abstractcode" in uninstall.stdout
 
 
 @pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")

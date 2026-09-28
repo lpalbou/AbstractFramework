@@ -85,6 +85,9 @@ $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.4.0', '@abstractframework/code@0.6.0', '@abstractframework/observer@0.2.0', '@abstractframework/continuum@0.4.0', '@abstractframework/entity@0.3.0')
 $AfCrateConsole = 'abstractgateway-console@0.11.0'
 $AfCrateCodeCli = 'abstractcode@0.7.0'
+# Where AbstractCode's terminal client goes: cargo --root, the ONE place that decides it ('' = cargo's
+# own bin dir, %USERPROFILE%\.cargo\bin, next to the terminal console); build, summary and uninstall follow it.
+$AfCodeCliRoot = ''
 # The user commands of the gateway's own environment exposed next to abstractgateway and
 # abstractgateway-config (uv tool install --with-executables-from; -NoCoreCli leaves them out),
 # with every name each package declares: uv exposes all of a package's executables or none and
@@ -441,13 +444,15 @@ function Main {
         $cBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
         $cCargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cBin "cargo$exeSuffix")) { Join-Path $cBin "cargo$exeSuffix" } else { $null }
         foreach ($crate in @(
-                @{ Spec = $AfCrateConsole; What = 'the terminal console'; Title = 'Terminal console' },
-                @{ Spec = $AfCrateCodeCli; What = 'AbstractCode''s terminal client'; Title = 'AbstractCode terminal client' })) {
+                @{ Spec = $AfCrateConsole; Root = ''; What = 'the terminal console'; Title = 'Terminal console' },
+                @{ Spec = $AfCrateCodeCli; Root = $AfCodeCliRoot; What = 'AbstractCode''s terminal client'; Title = 'AbstractCode terminal client' })) {
             $cName = ($crate.Spec -split '@', 2)[0]
-            $cExe = Join-Path $cBin "$cName$exeSuffix"
+            $cExe = Join-Path $(if ($crate.Root) { Join-Path $crate.Root 'bin' } else { $cBin }) "$cName$exeSuffix"
             if (-not (Test-Path -LiteralPath $cExe)) { continue }
             Write-Step $crate.Title
-            if ($cCargo) { Invoke-Native -Description "uninstall $($crate.What)" -Argv @($cCargo, 'uninstall', $cName) -Soft | Out-Null }
+            $cArgv = @($cCargo, 'uninstall')
+            if ($crate.Root) { $cArgv += @('--root', $crate.Root) }
+            if ($cCargo) { Invoke-Native -Description "uninstall $($crate.What)" -Argv ($cArgv + @($cName)) -Soft | Out-Null }
             if ($script:DryRun -or (Test-Path -LiteralPath $cExe)) {
                 Write-Host "  `$ Remove-Item '$cExe'" -ForegroundColor DarkGray
                 if (-not $script:DryRun) { Remove-Item -LiteralPath $cExe -Force -ErrorAction SilentlyContinue }
@@ -810,14 +815,16 @@ function Main {
     $cargoBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
     $cargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cargoBin "cargo$exeSuffix")) { Join-Path $cargoBin "cargo$exeSuffix" } else { $null }
     $consoleExe = Join-Path $cargoBin "$consoleName$exeSuffix"
-    $codeExe = Join-Path $cargoBin "$codeName$exeSuffix"
+    $codeExe = Join-Path $(if ($AfCodeCliRoot) { Join-Path $AfCodeCliRoot 'bin' } else { $cargoBin }) "$codeName$exeSuffix"
     function Test-Crate([string]$Exe, [string]$Name, [string]$CratePin) {
         if ($script:DryRun -or -not (Test-Path -LiteralPath $Exe)) { return $false }
         try { return ((& $Exe --version 2>$null | Select-Object -First 1) -eq "$Name $CratePin") } catch { return $false }
     }
-    function Install-Crate([string]$What, [string]$Name, [string]$CratePin, [string]$Exe) {
+    function Install-Crate([string]$What, [string]$Name, [string]$CratePin, [string]$Exe, [string]$Root = '') {
         Write-Info 'compiling it from crates.io (a few minutes the first time)'
-        $argv = @($cargo, 'install', '--locked', '--force', $Name, '--version', $CratePin)
+        $argv = @($cargo, 'install', '--locked', '--force')
+        if ($Root) { $argv += @('--root', $Root) }
+        $argv += @($Name, '--version', $CratePin)
         $built = Invoke-Native -Description "build $What" -Argv $argv -Soft
         if ($script:DryRun) { return $true }
         if ($built) { Write-Ok "installed $Name $CratePin`: $Exe"; return $true }
@@ -844,7 +851,7 @@ function Main {
         Write-Step "AbstractCode terminal client ($codeName $codePin)"
         if ($codeHave) { Write-Ok "$codeName $codePin already installed: $codeExe"; $codeOk = $true }
         elseif (-not $cargo) { $codeWhy = $noCargoWhy; if (-not $rustWarned) { Write-Warn2 "$($rustFor -join ' and ') skipped: $noCargoWhy" } }
-        elseif (Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe) { $codeOk = $true }
+        elseif (Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $AfCodeCliRoot) { $codeOk = $true }
         else { $codeWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
     }
 
@@ -1031,7 +1038,12 @@ function Main {
         elseif ($claimed) { Write-Host "               one-time sign-in link (10 minutes); a new one: abstractgateway-config claim-url --base-url $baseUrl" }
         else { Write-Host "               sign in as 'admin' with the token in $tokenPath" }
         if ($consoleOk) { Write-Host "    Terminal:  $tuiCmd" } else { Write-Host "    Terminal:  not installed: $consoleWhy" }
-        if ($codeOk) { Write-Host "  AbstractCode (terminal): $codeCmd" } else { Write-Host "  AbstractCode (terminal): not installed: $codeWhy" }
+        if ($codeOk) {
+            Write-Host "  AbstractCode (terminal): $codeCmd"
+            # PLACEHOLDER (TUI sign-in): how a fresh user signs AbstractCode's terminal client in; the
+            # lead fills it in from untracked/tui-signin-note.md. Replace before any release.
+            Write-Host '  Sign in (terminal): <PLACEHOLDER: TUI sign-in command>'
+        } else { Write-Host "  AbstractCode (terminal): not installed: $codeWhy" }
         Write-Host ''
     }
     Write-Host "  Console:    $baseUrl/console"
