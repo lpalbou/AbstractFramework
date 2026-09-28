@@ -12,9 +12,9 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 150 | 107 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0975, 0977, 0978 included; 0952 completed 2026-09-28; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Planned | 150 | 107 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0962, 0964–0975, 0977–0979 included; 0952, 0963 completed 2026-09-28; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931, 0976 included; 0901 promoted to planned) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 255 | 245 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0890, 0930, 0941, 0943, 0946–0950, 0952 (2026-09-28; 0941 released 2026-09-27 with root 0.5.0, the others ship in the wave-2 release, root 0.6.0). |
+| Completed | 257 | 247 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0890, 0930, 0941, 0943, 0946–0950, 0952, 0963, 0980 (2026-09-28; 0941 released 2026-09-27 with root 0.5.0, 0980 is the patch wave's root record, root 0.6.1). |
 | Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -139,8 +139,8 @@ Longer-running architecture work (unchanged since before the waves):
 | 0961 | [Agent 200k tool-result clamp](planned/0961_agent_200k_tool_result_clamp_decision.md) | Planned (OPERATOR DECISION GATE) | Per message, every role, every call (not only tool results); from the 2026-08-01 poisoned-session incident. Options: remove, keep as the one exception, or a model-aware bound. |
 | 0977 | [Agent payload seam stringifies multimodal content](planned/0977_agent_payload_seam_stringifies_multimodal_content.md) | Planned (bug, high) | `str(content)` turns image parts into base64 text before the 0961 clamp. |
 | 0978 | [Automation failures name the cause and the fix](planned/0978_automation_failures_name_the_cause_and_fix.md) | Planned (high) | Operator example: expired `airelays` key showed only "HTTP 401 … see the run ledger"; classify provider errors, fail fast on auth, name profile + fix, needs-attention state, grouped notice. |
+| 0979 | [abstracttui: clear the screen before leaving the alternate screen](planned/0979_abstracttui_clear_screen_before_leaving_the_alternate_screen.md) | Planned (low) | Phone SSH clients keep the last frame in scrollback (the "duplicated header"); `ESC[2J ESC[H` before `ESC[?1049l`. |
 | 0962 | [Canonical pointer fixtures gain a mode case](planned/0962_canonical_gateway_pointer_fixtures_mode_case.md) | Planned (next AbstractUIC release) | Every reader refuses other-user-writable pointers; the shared table has no case. |
-| 0963 | [Kit pointer reader: FIFO-safe open](planned/0963_kit_gateway_pointer_reader_fifo_safe_open.md) | Planned | Open without `O_NONBLOCK` can hang. |
 | 0964 | [Entity docs assistant 404](planned/0964_entity_docs_assistant_404.md) | Planned | Move to the Observer's docs-qa pattern. |
 | 0965 | [One TS history-window helper in ui-kit](planned/0965_history_window_helper_in_ui_kit.md) | Planned | Replace per-app `len/4` / per-message fold copies. |
 | 0966 | [Apps CI pins the AbstractUIC ref](planned/0966_apps_ci_pins_the_abstractuic_ref.md) | Planned | Flow, Continuum, Entity clone the default branch. |
@@ -447,6 +447,8 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0980 | [Patch 0.6.1: commands on PATH, terminal sign-in, shared Run now hint](completed/0980_patch_0_6_1_commands_on_path_tui_sign_in_run_now_hints.md) | 2026-09-28 | Root record of the patch wave (staged on `wave3/root`): fix/installer-clis + fix/run-now-hint merged, pins gateway 0.7.1, assistant 0.9.1, code 0.7.1 / web 0.6.1, observer 0.2.1. |
+| 0963 | [Kit pointer reader: FIFO-safe open](completed/0963_kit_gateway_pointer_reader_fifo_safe_open.md) | 2026-09-28 | Moved from `planned/`. app-server 0.1.12 (AbstractUIC v0.1.15, on npm); the TUI, console and Assistant readers are FIFO-safe too. |
 | 0943 | [Local gateway pointer file for non-Python clients](completed/0943_local_gateway_pointer_file_for_non_python_clients.md) | 2026-09-28 | Moved from `planned/`. Kit v0.1.14 and AbstractCode 0.7.0 released; gateway 0.7.0, assistant 0.9.0, apps and root 0.6.0 publish in wave 2. |
 | 0946 | [Qwen3-ASR broken on Transformers 5.x](completed/0946_qwen3_asr_broken_on_transformers_5.md) | 2026-09-28 | Moved from `planned/`. Released in abstractvoice 0.13.0. |
 | 0947 | [128 GiB tier fit vs the GPU wired limit](completed/0947_large_mac_tier_fit_and_gpu_wired_limit.md) | 2026-09-28 | Moved from `planned/`. `needs_gpu_limit` in abstractcore 2.18.0; console rendering in gateway 0.7.0. |
