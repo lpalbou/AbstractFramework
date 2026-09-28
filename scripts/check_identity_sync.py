@@ -29,10 +29,22 @@ FIXTURE_COPIES = [
 CONSOLE_FIXTURE_NAMES = ("engines_status.json", "host_profile.json", "job_completed.json", "job_running.json", "model_catalog.json", "models_installed.json")
 CONSOLE_FIXTURE_CANONICAL_DIR = SIBLINGS / "abstractcore" / "console-tui" / "tests" / "fixtures"
 CONSOLE_FIXTURE_COPY_DIR = SIBLINGS / "abstractgateway" / "console-tui" / "tests" / "fixtures"
-# Automations contract fixtures (canonical in abstractuic; the Qt Assistant vendors byte-identical copies).
+# Automations contract fixtures (canonical in abstractuic; the Qt Assistant and AbstractCode's
+# terminal client vendor byte-identical copies).
 AUTOMATION_FIXTURE_NAMES = ("list.json", "occurrences.json", "trigger-sources.json", "commands.json", "errors.json", "attention.json", "CHECKSUMS.sha256")
 AUTOMATION_FIXTURE_CANONICAL_DIR = SIBLINGS / "abstractuic" / "ui-kit" / "scripts" / "fixtures" / "automations"
-AUTOMATION_FIXTURE_COPY_DIR = SIBLINGS / "abstractassistant" / "tests" / "basic" / "fixtures" / "automations"
+AUTOMATION_FIXTURE_COPY_DIRS = [
+    SIBLINGS / "abstractassistant" / "tests" / "basic" / "fixtures" / "automations",
+    SIBLINGS / "abstractcode" / "tui" / "tests" / "fixtures" / "automations",
+]
+# Local gateway pointer fixtures (~/.abstractframework/gateway.json, root backlog 0943): canonical in
+# abstractuic (the kit's reader), vendored by the Assistant's reader and AbstractCode's terminal reader.
+POINTER_FIXTURE_NAMES = ("cases.json", "malformed.json", "non_loopback.json", "valid.json", "wrong_schema.json")
+POINTER_FIXTURE_CANONICAL_DIR = SIBLINGS / "abstractuic" / "ui-kit" / "scripts" / "fixtures" / "gateway_pointer"
+POINTER_FIXTURE_COPY_DIRS = [
+    SIBLINGS / "abstractassistant" / "tests" / "basic" / "fixtures" / "gateway_pointer",
+    SIBLINGS / "abstractcode" / "tui" / "tests" / "fixtures" / "gateway_pointer",
+]
 KNOWN_COPIES = [
     SIBLINGS / "abstractcore" / "abstractcore" / "assets" / "abstractframework_identity.json",
     SIBLINGS / "abstractuic" / "ui-kit" / "src" / "abstractframework_identity.json",
@@ -47,7 +59,8 @@ def main(argv: list[str]) -> int:
     failures = 0
     groups = [(CANONICAL, KNOWN_COPIES + extra), (FIXTURE_CANONICAL, FIXTURE_COPIES)]
     groups += [(CONSOLE_FIXTURE_CANONICAL_DIR / name, [CONSOLE_FIXTURE_COPY_DIR / name]) for name in CONSOLE_FIXTURE_NAMES]
-    groups += [(AUTOMATION_FIXTURE_CANONICAL_DIR / name, [AUTOMATION_FIXTURE_COPY_DIR / name]) for name in AUTOMATION_FIXTURE_NAMES]
+    groups += [(AUTOMATION_FIXTURE_CANONICAL_DIR / name, [d / name for d in AUTOMATION_FIXTURE_COPY_DIRS]) for name in AUTOMATION_FIXTURE_NAMES]
+    groups += [(POINTER_FIXTURE_CANONICAL_DIR / name, [d / name for d in POINTER_FIXTURE_COPY_DIRS]) for name in POINTER_FIXTURE_NAMES]
     for canonical_path, copies in groups:
         if not canonical_path.exists():
             print(f"missing  {canonical_path} (canonical)")
