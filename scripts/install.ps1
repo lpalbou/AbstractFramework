@@ -33,6 +33,14 @@
     -Full also builds the compiled extras (stable-diffusion.cpp, echo cancellation) and
     llama.cpp from source; it needs the MSVC Build Tools.
 
+    Upgrade: run the same line again. It finds the existing install (bootstrap.env, the uv
+    tool), says "AbstractFramework <old> found: upgrading to <new>" (or "already up to date"),
+    keeps the profile, port, start at login, data dir and -NoConsole, -NoCodeCli, -NoCoreCli,
+    -NoTray, -Full (-WithConsole, -WithCodeCli, -WithCoreCli, -WithTray, -NoFull turn them
+    back), moves every library to the release's exact versions, stops a running gateway
+    before files change (Windows keeps a running program's files locked) and starts it again,
+    and lists what changed (old -> new).
+
     Environment twins: AF_PROFILE, AF_PORT, AF_PIN, AF_FROM, AF_DATA_DIR.
 
 .EXAMPLE
@@ -63,7 +71,9 @@ param(
     [switch]$WithOllama,
     [switch]$WithLmStudio,
     [switch]$Full,
+    [switch]$NoFull,      # turn off a -Full a previous run remembered
     [switch]$NoTray,
+    [switch]$WithTray,    # turn the tray back on after a previous -NoTray
     [switch]$NoService,   # do not start at login (asks nothing)
     [switch]$NoStart,
     [switch]$NoOpen,
@@ -81,6 +91,10 @@ param(
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
 $AfGatewayPinDefault = '0.7.1'
+# The AbstractFramework release these pins are, and its other Python packages in the gateway's
+# environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
+$AfFrameworkVersion = '0.6.1'
+$AfPyMatrix = @('abstractcore==2.18.0', 'AbstractRuntime==0.7.1', 'abstractagent==0.3.17', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.13.0', 'abstractvision==0.3.30', 'abstractmusic==0.1.15')
 $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.4.0', '@abstractframework/code@0.6.1', '@abstractframework/observer@0.2.1', '@abstractframework/continuum@0.4.0', '@abstractframework/entity@0.3.0')
 $AfCrateConsole = 'abstractgateway-console@0.11.0'
@@ -305,7 +319,9 @@ function Read-State([string]$Path) {
 
 function Main {
     if ($PrintVersions) {
+        Write-Output "framework abstractframework $AfFrameworkVersion"
         Write-Output "pypi abstractgateway $AfGatewayPinDefault"
+        foreach ($s in $AfPyMatrix) { $i = $s.IndexOf('=='); Write-Output "pypi $($s.Substring(0, $i)) $($s.Substring($i + 2))" }
         foreach ($s in $AfNpmApps) { $i = $s.LastIndexOf('@'); Write-Output "npm $($s.Substring(0, $i)) $($s.Substring($i + 1))" }
         foreach ($s in @($AfCrateConsole, $AfCrateCodeCli)) { $i = $s.LastIndexOf('@'); Write-Output "crates $($s.Substring(0, $i)) $($s.Substring($i + 1))" }
         return
@@ -325,10 +341,20 @@ function Main {
     if (-not $Pin -and $env:AF_PIN) { $Pin = $env:AF_PIN }
     if (-not $From -and $env:AF_FROM) { $From = $env:AF_FROM }
     $dataDirCustom = [bool]($DataDir -or $env:AF_DATA_DIR -or $env:ABSTRACTGATEWAY_DATA_DIR)
+    $pointerFile = Join-Path $homeDir '.abstractframework\gateway.json'
+    $kept = @()
     if (-not $DataDir) {
         if ($env:AF_DATA_DIR) { $DataDir = $env:AF_DATA_DIR }
         elseif ($env:ABSTRACTGATEWAY_DATA_DIR) { $DataDir = $env:ABSTRACTGATEWAY_DATA_DIR }
-        else { $DataDir = Join-Path $localAppData 'AbstractGateway' }
+        else {
+            $DataDir = Join-Path $localAppData 'AbstractGateway'
+            # The gateway pointer names the data dir of the install that wrote it: a custom one
+            # is kept when it holds this installer's state.
+            $ptrDir = Get-PointerDataDir $pointerFile
+            if ($ptrDir -and ((Resolve-DirPath $ptrDir) -ne (Resolve-DirPath $DataDir)) -and (Test-Path -LiteralPath (Join-Path $ptrDir 'bootstrap.env'))) {
+                $DataDir = $ptrDir; $dataDirCustom = $true; $kept += "-DataDir $ptrDir"
+            }
+        }
     }
     $stateFile = Join-Path $DataDir 'bootstrap.env'
     $pidFile = Join-Path $DataDir 'gateway.pid'
@@ -339,7 +365,24 @@ function Main {
     $shortcut = if ($startupDir) { Join-Path $startupDir 'AbstractGateway.lnk' } else { '' }
     $state = Read-State $stateFile
     $script:AskSeconds = [Math]::Max(0, [Math]::Min(25, $AskWait))
-    $pointerFile = Join-Path $homeDir '.abstractframework\gateway.json'
+    # The choices a re-run keeps: this command line's, else the previous install's, else the default.
+    function Resolve-Choice([bool]$On, [bool]$Off, [string]$Recorded, [bool]$Default, [string]$OffFlag, [string]$OnFlag) {
+        if ($Off) { return $false }
+        if ($On) { return $true }
+        if ($Recorded -eq '0' -or $Recorded -eq '1') {
+            $v = ($Recorded -eq '1')
+            if ($v -ne $Default) { $script:KeptChoices += $(if ($v) { $OnFlag } else { $OffFlag }) }
+            return $v
+        }
+        return $Default
+    }
+    $script:KeptChoices = @()
+    $NoConsole = -not (Resolve-Choice $WithConsole $NoConsole $state['CONSOLE'] $true '-NoConsole' '-WithConsole')
+    $NoCodeCli = -not (Resolve-Choice $WithCodeCli $NoCodeCli $state['CODE_CLI'] $true '-NoCodeCli' '-WithCodeCli')
+    $NoCoreCli = -not (Resolve-Choice $WithCoreCli $NoCoreCli $state['CORE_CLI'] $true '-NoCoreCli' '-WithCoreCli')
+    $NoTray = -not (Resolve-Choice $WithTray $NoTray $state['TRAY'] $true '-NoTray' '-WithTray')
+    $Full = Resolve-Choice $Full $NoFull $state['FULL'] $false '-NoFull' '-Full'
+    $kept += $script:KeptChoices
 
     # uv discovery (the official installer puts uv in %USERPROFILE%\.local\bin).
     $uv = $null
@@ -413,6 +456,33 @@ function Main {
                 Remove-Item -LiteralPath $pidFile -Force -ErrorAction SilentlyContinue
             }
         }
+    }
+
+    # The gateway of this install that is running now, whoever started it: the installer's
+    # background start (gateway.pid) or the login item (the serve record run\gateway-serve.json,
+    # checked to be an abstractgateway process: a stale record may name a reused pid).
+    function Get-RunningGatewayPids {
+        $pids = @()
+        $p = Get-OurPid; if ($p) { $pids += $p }
+        $rec = Join-Path $DataDir 'run\gateway-serve.json'
+        if (Test-Path -LiteralPath $rec) {
+            $rp = 0
+            try { $rp = [int]((Get-Content -LiteralPath $rec -Raw | ConvertFrom-Json).pid) } catch { $rp = 0 }
+            if ($rp -and ($pids -notcontains $rp) -and (Get-Process -Id $rp -ErrorAction SilentlyContinue)) {
+                $cmd = ''
+                try { $cmd = [string](Get-CimInstance Win32_Process -Filter "ProcessId=$rp" -ErrorAction Stop).CommandLine } catch { $cmd = '' }
+                if ($cmd -match 'abstractgateway') { $pids += $rp }
+            }
+        }
+        return $pids
+    }
+    function Stop-RunningGateway {
+        foreach ($p in @(Get-RunningGatewayPids)) {
+            Write-Host "  `$ Stop-Process -Id $p" -ForegroundColor DarkGray
+            $script:Twins.Add("Stop-Process -Id $p")
+            if (-not $script:DryRun) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }
+        }
+        if (-not $script:DryRun) { Remove-Item -LiteralPath $pidFile -Force -ErrorAction SilentlyContinue }
     }
 
     if (-not $script:DryRun) {
@@ -517,6 +587,34 @@ function Main {
     # --- 1. preflight -------------------------------------------------------------------
     $banner = if ($script:DryRun) { '(-Print: preflight only, nothing is installed)' } else { $AfScriptUrl }
     Write-Host 'AbstractFramework bootstrap  ' -ForegroundColor White -NoNewline; Write-Host $banner -ForegroundColor DarkGray
+
+    # --- an existing install: what is there, what this run brings (same wording as install.sh) ---
+    $isRelease = (-not $From) -and ($Pin -eq $AfGatewayPinDefault)
+    $toolVenv = ''
+    if ($uv -and (Test-Path -LiteralPath $uv)) { try { $toolVenv = Join-Path "$(& $uv tool dir 2>$null | Select-Object -First 1)" 'abstractgateway' } catch { $toolVenv = '' } }
+    $prevGw = ''
+    if ($uv -and (Test-Path -LiteralPath $uv)) {
+        $l = (& $uv tool list 2>$null) | Where-Object { $_ -match '^abstractgateway v' } | Select-Object -First 1
+        if ($l -match '^abstractgateway v(\S+)') { $prevGw = $Matches[1] }
+    }
+    $stFramework = [string]$state['FRAMEWORK_VERSION']
+    $target = if ($isRelease) { "AbstractFramework $AfFrameworkVersion" } elseif ($From) { "abstractgateway from $From (-From)" } elseif ($Pin -eq 'latest') { 'the newest abstractgateway (-Pin latest)' } else { "abstractgateway $Pin ($pinSource)" }
+    if (-not (Test-Path -LiteralPath $stateFile) -and -not $prevGw) { $action = 'install'; $foundLine = "No AbstractFramework install found: installing $target" }
+    elseif ($isRelease -and $stFramework -eq $AfFrameworkVersion) { $action = 'check'; $foundLine = "AbstractFramework $stFramework found: already up to date (every part is checked, and repaired if needed)" }
+    elseif ($stFramework) { $action = 'upgrade'; $foundLine = "AbstractFramework $stFramework found: upgrading to $target" }
+    elseif (Test-Path -LiteralPath $stateFile) { $action = 'upgrade'; $foundLine = "AbstractFramework found (abstractgateway $(if ($prevGw) { $prevGw } else { 'not installed' }); its release was not recorded): upgrading to $target" }
+    else { $action = 'upgrade'; $foundLine = "abstractgateway $prevGw found (a uv tool this installer has no record of): upgrading to $target" }
+    # Get-EnvSnapshot: "name==version" (lower-case names, _ as -) of the gateway's uv tool environment.
+    function Get-EnvSnapshot {
+        if ($script:DryRun -or -not $toolVenv -or -not (Test-Path -LiteralPath $uv)) { return @() }
+        $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        try { $lines = @(& $uv pip freeze --python $toolVenv 2>$null) } catch { $lines = @() } finally { $ErrorActionPreference = $old }
+        return @($lines | Where-Object { $_ -match '^[A-Za-z0-9._-]+==' } | ForEach-Object { ($_.Split(' ;')[0]).ToLower().Replace('_', '-') } | Sort-Object)
+    }
+    $envBefore = @(); if ($action -ne 'install') { $envBefore = Get-EnvSnapshot }
+    Write-Host $foundLine -ForegroundColor White
+    if ($kept.Count) { Write-Info "kept from the previous install: $($kept -join ', ') (give the opposite option to change it)" }
+
     Write-Step 'Preflight'
     $arch = if ($env:PROCESSOR_ARCHITECTURE) { $env:PROCESSOR_ARCHITECTURE } else { [string][System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture }
     $ver = [Environment]::OSVersion.Version
@@ -677,6 +775,21 @@ function Main {
     Invoke-Native -Description "install Python $AfPython" -Argv @($uv, 'python', 'install', $AfPython) | Out-Null
 
     # --- 3. gateway ---------------------------------------------------------------------------
+    # Windows keeps a running program's files locked, so uv cannot replace the gateway's while it
+    # runs: when this run changes the install, the running gateway stops first and starts again
+    # below. The same release and spec (a check or repair run): it keeps running.
+    $willChange = -not ($isRelease -and $stFramework -eq $AfFrameworkVersion -and $state['GATEWAY_SPEC'] -eq $gwSpec)
+    $stoppedForUpdate = $false
+    if ($willChange -and $onWindows -and @(Get-RunningGatewayPids).Count) {
+        if ($NoStart) {
+            Write-Warn2 'a gateway of this install is running and Windows locks its files: if the update fails, stop it (tray: Quit) and run the installer again'
+        } else {
+            Write-Step 'Stop the running gateway (Windows locks the files of a running program; it starts again below)'
+            Stop-RunningGateway
+            $stoppedForUpdate = $true
+            $reuseRunning = $false
+        }
+    }
     Write-Step 'AbstractGateway'
     function Get-GatewayToolVersion {
         if ($script:DryRun -or -not (Test-Path -LiteralPath $uv)) { return '' }
@@ -709,16 +822,27 @@ function Main {
         if ($script:DryRun) {
             Write-Info "$(Join-Path $DataDir 'uv-overrides.txt') (written at install time; see the top of install.ps1):"
             foreach ($l in $overrides) { Write-Host "      $l" }
-            if ($Gguf) { Write-Info "$(Join-Path $DataDir 'uv-constraints.txt'):"; Write-Host "      llama-cpp-python==$ggufPin" }
+        }
+        # The release matrix (when this run installs the release) and the llama.cpp wheel pin.
+        $constraints = @()
+        if ($isRelease) { $constraints += $AfPyMatrix }
+        if ($Gguf) { $constraints += "llama-cpp-python==$ggufPin" }
+        if ($script:DryRun) {
+            if ($constraints.Count) {
+                Write-Info "$(Join-Path $DataDir 'uv-constraints.txt'):$(if ($isRelease) { " the AbstractFramework $AfFrameworkVersion release matrix (exact versions)" })"
+                foreach ($l in $constraints) { Write-Host "      $l" }
+            }
         } else {
             # UTF-8 without a BOM (Set-Content -Encoding UTF8 adds one on PowerShell 5.1).
             [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-overrides.txt'), ($overrides -join "`n") + "`n")
-            if ($Gguf) { [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-constraints.txt'), "llama-cpp-python==$ggufPin`n") }
+            [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-constraints.txt'), ($constraints -join "`n") + "`n")
         }
         $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels)
         if ($voice.Spec) { $argv += @('--with', $voice.Spec) }
-        if ($Gguf) { $argv += @('--with', "llama-cpp-python==$ggufPin", '--constraints', 'uv-constraints.txt', '--find-links', $ggufLinks) }
+        if ($Gguf) { $argv += @('--with', "llama-cpp-python==$ggufPin") }
         elseif ($Full) { $argv += @('--with', 'llama-cpp-python') }
+        if ($constraints.Count) { $argv += @('--constraints', 'uv-constraints.txt') }
+        if ($Gguf) { $argv += @('--find-links', $ggufLinks) }
         $argv += @('--overrides', 'uv-overrides.txt')
         foreach ($p in (Get-NoBuildPackages $Full)) { $argv += @('--no-build-package', $p) }
         foreach ($p in $cliFrom) { $argv += @('--with-executables-from', $p) }
@@ -798,7 +922,10 @@ function Main {
         elseif ($before -eq $after -and -not $From) { Write-Ok "abstractgateway $after already installed" }
         else { Write-Ok "abstractgateway $before -> $after" }
     }
-    $changed = ($before -ne $after) -or [bool]$From -or ($state['GATEWAY_SPEC'] -and $state['GATEWAY_SPEC'] -ne $gwSpec)
+    # Any package of the gateway's environment that moved counts (a library-only release keeps
+    # the gateway's version).
+    $envAfter = @(Get-EnvSnapshot)
+    $changed = ($before -ne $after) -or [bool]$From -or ($state['GATEWAY_SPEC'] -and $state['GATEWAY_SPEC'] -ne $gwSpec) -or (($envBefore -join "`n") -ne ($envAfter -join "`n"))
 
     $pathParts = ($env:PATH -split [IO.Path]::PathSeparator)
     if ($pathParts -notcontains $toolBin) {
@@ -925,6 +1052,30 @@ function Main {
     # which predate the Network setting too: they keep --host/--port.
     $startCmd = "`$env:ABSTRACTGATEWAY_DATA_DIR='$DataDir'; `$env:ABSTRACTGATEWAY_USER_AUTH='1'; Start-Process -FilePath '$gw' -ArgumentList 'serve --host 127.0.0.1 --port $Port' -WindowStyle Hidden -RedirectStandardOutput '$gatewayLog' -RedirectStandardError '$gatewayErr'"
 
+    $serviceFallback = $false
+    # Start-BackgroundGateway: (re)start the gateway as a hidden background process, pid in gateway.pid.
+    function Start-BackgroundGateway {
+        Stop-RunningGateway
+        # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
+        # flags on the command line would override it forever (a restart replays them).
+        # Older gateways keep the pinned command line they need.
+        $netSetting = $false
+        if ($script:DryRun) {
+            Write-Info "abstractgateway network set localhost --port $Port   (gateways with 'abstractgateway network', when no mode is stored yet; then plain 'serve')"
+        } elseif ((Test-GatewaySupports 'network') -and (Set-NetworkSettingForStart)) {
+            $netSetting = $true
+        }
+        $serveArgs = if ($netSetting) { @('serve') } else { @('serve', '--host', '127.0.0.1', '--port', "$Port") }
+        $bgCmd = "`$env:ABSTRACTGATEWAY_DATA_DIR='$DataDir'; `$env:ABSTRACTGATEWAY_USER_AUTH='1'; Start-Process -FilePath '$gw' -ArgumentList '$($serveArgs -join ' ')' -WindowStyle Hidden -RedirectStandardOutput '$gatewayLog' -RedirectStandardError '$gatewayErr'"
+        Write-Host "  `$ $bgCmd" -ForegroundColor DarkGray
+        $script:Twins.Add($bgCmd)
+        if (-not $script:DryRun) {
+            $proc = Start-Process -FilePath $gw -ArgumentList $serveArgs `
+                -WindowStyle Hidden -RedirectStandardOutput $gatewayLog -RedirectStandardError $gatewayErr -PassThru
+            Set-Content -LiteralPath $pidFile -Value $proc.Id
+            Write-Ok "started (pid $($proc.Id)), log: $gatewayErr"
+        }
+    }
     if ($NoStart) {
         Write-Step 'Start'
         Write-Info '-NoStart: the gateway is installed but not started'
@@ -932,12 +1083,24 @@ function Main {
     } elseif (-not $NoService -and ($serviceOk -or $script:DryRun)) {
         Write-Step 'Login service (abstractgateway service)'
         if ($script:DryRun -and -not $serviceOk) { Write-Info "(only when the installed gateway has 'abstractgateway service'; otherwise a Startup-folder shortcut)" }
-        Stop-OurGateway
-        if ($shortcut -and (Test-Path -LiteralPath $shortcut) -and -not $script:DryRun) { Remove-Item -LiteralPath $shortcut -Force }
-        # No --host: the login item runs plain `serve` and the gateway's Network setting binds it;
-        # 127.0.0.1 here would reset a "Local network" choice on every re-run.
-        Invoke-Native -Description 'register the gateway service' -Argv @($gw, 'service', 'install', '--port', "$Port") | Out-Null
-        $mode = 'service'
+        $serviceFailed = $false
+        if ($loginWas -eq 'y' -and $reuseRunning -and -not $changed -and -not $stoppedForUpdate) {
+            Write-Ok 'login item already registered and the gateway is running, unchanged'
+        } else {
+            # `service install` starts the gateway now: one that still runs would hold the port.
+            Stop-RunningGateway
+            if ($shortcut -and (Test-Path -LiteralPath $shortcut) -and -not $script:DryRun) { Remove-Item -LiteralPath $shortcut -Force }
+            # No --host: the login item runs plain `serve` and the gateway's Network setting binds it;
+            # 127.0.0.1 here would reset a "Local network" choice on every re-run.
+            $serviceFailed = -not (Invoke-Native -Description 'register the gateway service' -Argv @($gw, 'service', 'install', '--port', "$Port") -Soft)
+        }
+        if ($serviceFailed) {
+            # Never leave the gateway stopped: it runs now, in the background.
+            Write-Warn2 "the login item could not be registered (details in $($script:LogFile)): starting the gateway in the background instead, so it runs now"
+            Write-Step 'Start in the background (hidden window)'
+            Start-BackgroundGateway
+            $mode = 'background'; $serviceFallback = $true
+        } else { $mode = 'service' }
     } else {
         if (-not $NoService -and $shortcut) {
             Write-Step 'Start at login (Startup-folder shortcut, no admin)'
@@ -966,26 +1129,7 @@ function Main {
         if ($reuseRunning -and -not $changed -and (Get-OurPid)) {
             Write-Ok "already running (pid $(Get-OurPid)), unchanged"
         } else {
-            Stop-OurGateway
-            # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
-            # flags on the command line would override it forever (a restart replays them).
-            # Older gateways keep the pinned command line they need.
-            $netSetting = $false
-            if ($script:DryRun) {
-                Write-Info "abstractgateway network set localhost --port $Port   (gateways with 'abstractgateway network', when no mode is stored yet; then plain 'serve')"
-            } elseif ((Test-GatewaySupports 'network') -and (Set-NetworkSettingForStart)) {
-                $netSetting = $true
-            }
-            $serveArgs = if ($netSetting) { @('serve') } else { @('serve', '--host', '127.0.0.1', '--port', "$Port") }
-            $bgCmd = "`$env:ABSTRACTGATEWAY_DATA_DIR='$DataDir'; `$env:ABSTRACTGATEWAY_USER_AUTH='1'; Start-Process -FilePath '$gw' -ArgumentList '$($serveArgs -join ' ')' -WindowStyle Hidden -RedirectStandardOutput '$gatewayLog' -RedirectStandardError '$gatewayErr'"
-            Write-Host "  `$ $bgCmd" -ForegroundColor DarkGray
-            $script:Twins.Add($bgCmd)
-            if (-not $script:DryRun) {
-                $proc = Start-Process -FilePath $gw -ArgumentList $serveArgs `
-                    -WindowStyle Hidden -RedirectStandardOutput $gatewayLog -RedirectStandardError $gatewayErr -PassThru
-                Set-Content -LiteralPath $pidFile -Value $proc.Id
-                Write-Ok "started (pid $($proc.Id)), log: $gatewayErr"
-            }
+            Start-BackgroundGateway
         }
         $mode = 'background'
     }
@@ -993,7 +1137,11 @@ function Main {
         @(
             "# written by AbstractFramework install.ps1 on $((Get-Date).ToUniversalTime().ToString('s'))Z",
             "PORT=$Port", "MODE=$mode", "PROFILE=$profileName", "NODE_WHEEL=$nodeWheel",
-            "GATEWAY_SPEC=$gwSpec", "GATEWAY_VERSION=$after"
+            "GATEWAY_SPEC=$gwSpec", "GATEWAY_VERSION=$after",
+            # The release this install is (empty after -Pin/-From), and the choices a re-run keeps.
+            "FRAMEWORK_VERSION=$(if ($isRelease) { $AfFrameworkVersion })",
+            "CONSOLE=$(if ($NoConsole) { 0 } else { 1 })", "CODE_CLI=$(if ($NoCodeCli) { 0 } else { 1 })",
+            "CORE_CLI=$(if ($NoCoreCli) { 0 } else { 1 })", "TRAY=$(if ($NoTray) { 0 } else { 1 })", "FULL=$(if ($Full) { 1 } else { 0 })"
         ) | Set-Content -LiteralPath $stateFile -Encoding ASCII
     }
 
@@ -1054,9 +1202,41 @@ function Main {
     }
 
     # --- summary -------------------------------------------------------------------------------------
+    # What this run changed: the release, the gateway, the release's libraries (old -> new), then
+    # how many other packages of the environment moved.
+    $changeLines = @(); $changeOthers = 0; $upgradeLine = ''
+    if (-not $script:DryRun -and $action -ne 'install') {
+        $b = @{}; foreach ($l in $envBefore) { $kv = $l -split '==', 2; $b[$kv[0]] = $kv[1] }
+        $a = @{}; foreach ($l in $envAfter) { $kv = $l -split '==', 2; $a[$kv[0]] = $kv[1] }
+        $named = @('abstractgateway') + @($AfPyMatrix | ForEach-Object { ($_ -split '==')[0].ToLower().Replace('_', '-') })
+        foreach ($k in $named) {
+            if ($b[$k] -ne $a[$k] -and ($b.ContainsKey($k) -or $a.ContainsKey($k))) {
+                $changeLines += ('{0,-24} {1} -> {2}' -f $k, $(if ($b.ContainsKey($k)) { $b[$k] } else { '(none)' }), $(if ($a.ContainsKey($k)) { $a[$k] } else { '(removed)' }))
+            }
+        }
+        foreach ($k in (@($b.Keys) + @($a.Keys) | Sort-Object -Unique)) { if ($named -notcontains $k -and $b[$k] -ne $a[$k]) { $changeOthers++ } }
+        if ($isRelease -and $stFramework -ne $AfFrameworkVersion) {
+            $changeLines = @(('{0,-24} {1} -> {2}' -f 'AbstractFramework', $(if ($stFramework) { $stFramework } else { '(not recorded)' }), $AfFrameworkVersion)) + $changeLines
+        }
+        $was = if ($stFramework) { $stFramework } else { '(not recorded)' }
+        if (-not $changeLines.Count -and -not $changeOthers) { $upgradeLine = "Already up to date: $(if ($isRelease) { "AbstractFramework $AfFrameworkVersion" } else { "abstractgateway $after" }); nothing changed." }
+        elseif ($isRelease) { $upgradeLine = "Upgraded: AbstractFramework $was -> $AfFrameworkVersion (what changed is listed below)." }
+        else { $upgradeLine = "Upgraded: $target (what changed is listed below)." }
+    }
     Write-Host ''
     if ($script:DryRun) { Write-Host 'Plan printed (-Print): nothing was changed.' -ForegroundColor White }
     else { Write-Host 'AbstractFramework is installed.' -ForegroundColor Green }
+    if ($upgradeLine) { Write-Host "  $upgradeLine" }
+    if ($serviceFallback) { Write-Host '  Start at login could not be turned on (see the warning above); the gateway runs in the background until you sign out.' }
+    if ($NoStart -and $changed -and $action -ne 'install' -and -not $script:DryRun) {
+        Write-Host '  A gateway that is running still runs the previous version until it restarts: the console''s Restart'
+        Write-Host '  (web: the Gateway section), the tray''s Restart, or re-run this installer without -NoStart.'
+    }
+    if ($changeLines.Count -or $changeOthers) {
+        Write-Host '  Changes:'
+        foreach ($l in $changeLines) { Write-Host "      $l" }
+        if ($changeOthers) { Write-Host "      (and $changeOthers other packages of the gateway's environment)" }
+    } elseif ($upgradeLine) { Write-Host '  Changes:    none' }
     # The terminal console signs in with the admin token (`--token`), printed ready to paste; the
     # gateway keeps it in its data dir. Before the gateway has written it, the command names that file.
     $tokenPath = Join-Path $DataDir 'auth\bootstrap-admin-token'
@@ -1089,6 +1269,7 @@ function Main {
     Write-Host "  Console:    $baseUrl/console"
     Write-Host "  Terminal:   $(if ($consoleOk) { $tuiCmd } else { "not installed ($consoleWhy)" })"
     Write-Host "  Code:       $(if ($codeOk) { "$codeShown   (sign in once: $codeShown login --token $codeTok; or on this machine: $tuiCommand)" } else { "not installed ($codeWhy)" })"
+    Write-Host "  Release:    $(if ($isRelease) { "AbstractFramework $AfFrameworkVersion" } else { "$target (not a recorded AbstractFramework release)" })"
     Write-Host "  Gateway:    $gwSpec ($profileName profile)"
     Write-Host "  Data dir:   $DataDir"
     Write-Host "  Logs:       $logDir"
