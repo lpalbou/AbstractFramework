@@ -4,6 +4,17 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Run now reads the same everywhere.** Every client draws Run now with the same play-in-a-circle
+  icon and explains it in its tooltip with the same text: it runs the automation once now instead
+  of waiting, the next scheduled run keeps its time (or starts right after this run if its time
+  comes first), it does not count toward a run limit, works while paused (which stays paused) and
+  is not available while a run is in progress. The text and icon live in the ui-kit's
+  `automation_controls.json`; `scripts/check_identity_sync.py` now also fails when the Assistant's
+  or AbstractCode terminal's copy drifts. Ships with ui-kit 0.1.16 and the next Observer,
+  Assistant and AbstractCode releases.
+
 ## [0.6.0] - 2026-09-28
 
 Remote and headless machines work like a Mac: one address and one SSH tunnel reach the console, the

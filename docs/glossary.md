@@ -264,7 +264,9 @@ real address in `X-Forwarded-For` so the gateway can tell local from remote call
 
 The descriptor `identity/abstractframework.json` (in this repository) that every About screen
 renders; each rendering package vendors a byte-identical copy, checked by
-`scripts/check_identity_sync.py`.
+`scripts/check_identity_sync.py`. The same script checks the shared contract fixtures and the
+automation controls' names, hints and Run now icon (`automation_controls.json`, canonical in the
+ui-kit).
 
 ---
 
