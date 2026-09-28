@@ -1,0 +1,1711 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractContinuum/main/llms-full.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractContinuum/main/llms-full.txt
+
+# AbstractContinuum — full documentation corpus
+
+> Aggregated from the core docs for LLM/tool consumption (package
+> `@abstractframework/continuum` 0.4.0). Canonical sources live in the
+> repository; this file is regenerated whenever the docs change.
+
+---
+
+<!-- source: README.md -->
+
+# AbstractContinuum
+
+Continuous iterative development and deployment console for AbstractFramework.
+
+Connect it to a Run Gateway and it becomes the framework's development
+cockpit (board-first, kanban/scrum-inspired — see
+[docs/design/redesign_2026_07.md](docs/design/redesign_2026_07.md)):
+
+- **Board** (landing page) — the work flow as a kanban: Triage → Ready →
+  In Progress → In Review → Done, with a Failed history lane. Cards carry
+  type / priority (P0–P3) / labels (sprints ride the `sprint-N` label
+  convention) / package chips and a Definition-of-Ready dot; the card
+  drawer holds the spec (view/edit + metadata), the item's runs, and the
+  QA review (acceptance-criteria checklist → promote / iterate / UAT).
+- **Executions** — the live ops view: queued / running / awaiting-QA
+  requests with live log tails (cursor-follow), one-click QA actions, and
+  a recently-finished strip.
+- **Backlog** — the full catalog power view (all kinds incl. recurrent /
+  deprecated / trash, search, batch execute, merge, AI assist + advisor).
+- **Agents & Entities** — the workforce: the configured execution agent
+  (Codex CLI, Claude Code, Cursor Agent or AbstractCode — a gateway
+  setting), the advisor agent, a
+  track record from execution history, and gateway entities with their
+  skills.
+- **Team** — an [agora](docs/configuration.md#team-page-agora-hub) hub
+  client for human + agent collaboration: channels and DMs with threaded
+  messages, a unified inbox of open asks, hub-wide search, channel files,
+  work claims, and live updates over WebSocket. It posts as one configured
+  operator seat through a server-side proxy (the seat key never reaches the
+  browser).
+- **Inbox** — triage bug reports, feature requests, and email; run triage
+  and apply decisions.
+- **Services** — control managed prod/UAT processes (start / stop /
+  restart / redeploy) and write-only environment variables. This surface is
+  high trust: see [SECURITY.md](SECURITY.md) before exposing it.
+- **Settings** — gateway sign-in, execution defaults (UAT or inplace), AI
+  and voice preferences, and **Gateway administration**: the backlog
+  folder, exec runner, executor and process manager, each shown with where
+  its value comes from (launch flag, setting, environment (legacy), or
+  default). Only a gateway admin can change them.
+
+Executing a Ready item is gated by an advisory **Definition of Ready**
+checklist (type, real summary, acceptance criteria, test commands — parsed
+from the spec, override always available and labeled); promoting from
+review shows the acceptance criteria as a **Definition of Done** checklist.
+
+The **(i) About** button in the top-right cluster shows the Continuum version
+and the versions your gateway reports; see [docs/faq.md](docs/faq.md).
+
+The observer app ([AbstractObserver](https://github.com/lpalbou/AbstractObserver))
+watches and discusses the running system; this app develops and deploys it.
+The pipeline is executor-agnostic: the gateway's `executor` setting picks
+the agent that runs items (`codex` by default; also `claude`,
+`cursor-agent`, `abstractcode`), and the UI reads the executor identity from
+the gateway's exec config (see [docs/architecture.md](docs/architecture.md)).
+
+## Install and run
+
+Requirements:
+
+- Node.js ≥ 18.
+- **AbstractGateway 0.4.1 or newer** (the supported gateway; default
+  `http://127.0.0.1:8080`). See
+  [AbstractGateway](https://github.com/lpalbou/AbstractGateway). Against an
+  older gateway the Board shows its *folder not available* panel.
+
+```bash
+npx @abstractframework/continuum
+# or install the CLI globally
+npm install -g @abstractframework/continuum
+abstractcontinuum
+```
+
+Open `http://localhost:3002` and sign in with a gateway user and token (the
+connection badge at the bottom of the sidebar). When your gateway manages
+Continuum (the gateway console's **Apps** screen), open it from there
+instead: the gateway serves it at `/apps/continuum/` on its own port, so a
+remote or headless machine needs one port and one tunnel for the console and
+every app. The token is exchanged
+server-side for an HttpOnly session cookie and never stored in the browser.
+
+The server is configured with launch flags or saved settings (full list in
+[docs/configuration.md](docs/configuration.md), or `abstractcontinuum --help`):
+
+```bash
+abstractcontinuum --port 3002 --gateway-url http://127.0.0.1:8080 --hub-seat alice
+abstractcontinuum config set hub_seat alice    # saved in ~/.abstractcontinuum/settings.json
+abstractcontinuum config get                   # every setting and where it comes from
+```
+
+- `--port` (default `3002`), `--host` (default `127.0.0.1`)
+- `--gateway-url` (aliases `--gateway`, `--url`) — the gateway this
+  deployment talks to (default: the gateway installed on this computer, from
+  `~/.abstractframework/gateway.json`, else `http://127.0.0.1:8080`)
+- `--hub-url` / `--hub-seat` / `--hub-token-file` — the agora hub, your seat
+  and its key for the Team page. The hub seat is also on the Settings page.
+
+A fresh gateway needs no backlog setup: it keeps its own backlog folder, and
+the Board opens on **Your backlog is empty** with **Create your first item**.
+To point the Board at a project, or to enable executions, see
+[docs/getting-started.md](docs/getting-started.md#your-backlog).
+
+Before exposing the console beyond localhost, read
+[docs/security.md](docs/security.md): a signed-in user can redeploy services.
+
+## Develop from source
+
+The source build resolves the shared UI kit (`@abstractframework/ui-kit`,
+`@abstractframework/panel-chat`) and the session proxy
+(`@abstractframework/app-server`) from a sibling
+[AbstractUIC](https://github.com/lpalbou/AbstractUIC) checkout:
+
+```bash
+git clone https://github.com/lpalbou/AbstractUIC.git abstractuic
+git clone https://github.com/lpalbou/AbstractContinuum.git abstractcontinuum
+cd abstractcontinuum
+npm install
+npm run dev        # vite dev server on :3002 (proxies /api to the gateway)
+npm test           # vitest (unit + jsdom component tests)
+npm run build      # production build into dist/
+npm start          # serve dist/ + the app-origin gateway session proxy on :3002
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
+
+## Documentation
+
+- [docs/README.md](docs/README.md) — documentation index
+- [docs/getting-started.md](docs/getting-started.md) — first run and first execution
+- [docs/architecture.md](docs/architecture.md) — components, data flow, design boundaries
+- [docs/api.md](docs/api.md) — the gateway API families this app consumes
+- [docs/configuration.md](docs/configuration.md) — server environment variables, gateway settings, browser settings
+- [docs/conventions.md](docs/conventions.md) — the work-item grammar the Board reads
+- [docs/security.md](docs/security.md) — trust model (read before deploying)
+- [docs/faq.md](docs/faq.md) / [docs/troubleshooting.md](docs/troubleshooting.md)
+- [CHANGELOG.md](CHANGELOG.md) — release history
+- [CONTRIBUTING.md](CONTRIBUTING.md) — development workflow
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+<!-- source: docs/getting-started.md -->
+
+# Getting started
+
+## Prerequisites
+
+- Node.js ≥ 18
+- A running Run Gateway: AbstractGateway 0.4.1 or newer (`abstractgateway`,
+  default `http://127.0.0.1:8080`). [api.md](api.md) lists what this app
+  calls on it.
+- Optional, for the Team page: an agora hub and a seat key (see
+  [configuration.md](configuration.md#team-page-agora-hub)). Set your seat
+  on **Settings → Team (agora hub) → Hub seat**, or with
+  `abstractcontinuum config set hub_seat <seat>`.
+
+## First run
+
+```bash
+npx @abstractframework/continuum --gateway-url http://127.0.0.1:8080
+```
+
+`--gateway-url` is only needed when your gateway is neither the one
+installed on this computer (Continuum reads its address from
+`~/.abstractframework/gateway.json`) nor on `http://127.0.0.1:8080`. To keep a setting, save it instead of repeating the
+flag: `abstractcontinuum config set gateway_url http://my-gateway:8080`
+(`abstractcontinuum --help` lists every flag;
+[configuration.md](configuration.md#server-abstractcontinuum--npm-start--binclijs)
+has the details).
+
+Open `http://localhost:3002`, click the connection badge (bottom of the
+sidebar), and enter the gateway URL, user, and token in the connect dialog.
+The token is exchanged server-side for a cookie session — it never lives in
+the browser. The server binds loopback (`127.0.0.1`) by default; before
+exposing it beyond localhost, read [security.md](security.md): this console
+can redeploy services.
+
+## First run from source (development)
+
+Clone [AbstractUIC](https://github.com/lpalbou/AbstractUIC) next to this
+repository as `abstractuic` (the source build resolves the shared UI kit
+and the session proxy from `../abstractuic`), then:
+
+```bash
+npm install
+npm run dev        # http://localhost:3002
+```
+
+The dev server mounts the same session, hub and settings routes as
+production (a Vite plugin) and reads the same settings file, so you sign in
+exactly the same way. For the production shape from source:
+`npm run build && npm start` (port 3002; pass flags after `--`, for example
+`npm start -- --hub-seat alice`).
+
+## Your backlog
+
+A fresh gateway needs no setup: it keeps its own backlog in
+`<gateway data dir>/backlog/` (created with a starter overview and item
+template the first time you open the Board), so the Board opens on
+**Your backlog is empty** with the folder path and **Create your first item**.
+
+To work on a project's backlog instead (any folder that contains
+`docs/backlog/`), a gateway admin sets **Settings → Gateway administration →
+Backlog folder → Change…**, or runs `abstractgateway config set
+triage_repo_root /path/to/project` on the gateway's computer. Executing items
+also needs the exec runner: **Settings → Gateway administration → Exec runner
+→ Enable** (or `abstractgateway config set backlog_exec_runner on`). See
+[configuration.md](configuration.md#gateway-side-features).
+
+## Your first execution
+
+1. Pick a **Ready** item on the **Board** (or **Backlog → Planned**), or
+   create one with **New**: the draft is prefilled from the backlog
+   template; guided fields and AI assist can flesh it out.
+2. Press **Execute**. The Definition-of-Ready checklist shows what the item
+   is missing (you can override it explicitly). Keep the default **UAT**
+   mode; confirm. The app opens the request on the **Executions** page.
+3. **Executions** — watch the request move queued → running with live event
+   logs (commands, tokens, outputs).
+4. When it reaches **awaiting QA**: click **Restart UAT** to deploy the
+   candidate to the shared UAT stack and try it; then either
+   **Approve → promote to prod** or **Iterate (send feedback)** with QA
+   notes — the agent re-runs on top of its candidate.
+
+Note: sessions persist for 30 days; use Sign out in Settings on shared
+machines.
+
+## Where to go next
+
+- [../README.md](../README.md) — the pages at a glance
+- [architecture.md](architecture.md) — how the pieces fit
+- [conventions.md](conventions.md) — how to write items the Board and the
+  Definition of Ready understand
+- [configuration.md](configuration.md) — every knob
+- [troubleshooting.md](troubleshooting.md) — when something misbehaves
+
+---
+
+<!-- source: docs/architecture.md -->
+
+# Architecture
+
+AbstractContinuum is a thin browser client over the Run Gateway's
+development-lane APIs. It holds no durable state of its own: the gateway
+owns the backlog files, exec requests, reports, email access, and managed
+processes; the app renders them and issues commands.
+
+## System shape
+
+```mermaid
+flowchart LR
+    subgraph Browser["Browser (React SPA — sidebar shell)"]
+        BO[Board page<br/>kanban + drawer]
+        EX[Executions page]
+        BL[Backlog page]
+        AG[Agents page]
+        TM[Team page<br/>agora hub client]
+        HC[HubClient<br/>src/lib/hub_client.ts]
+        IN[Inbox page]
+        PR[Services page]
+        SE[Settings page<br/>sign-in + Gateway administration]
+        GC[GatewayClient<br/>src/lib/gateway_client.ts]
+        SE --> GC
+        BO --> GC
+        EX --> GC
+        BL --> GC
+        AG --> GC
+        IN --> GC
+        PR --> GC
+        TM --> HC
+    end
+
+    subgraph AppServer["bin/cli.js (node)"]
+        SP[Gateway session proxy<br/>@abstractframework/app-server]
+        ST[Static dist/ serving]
+        HP[Hub proxy<br/>bin/hub_proxy.js<br/>seat key server-side]
+    end
+
+    subgraph Hub["agora hub (optional)"]
+        HA["channels, DMs, search,<br/>files, work, desk"]
+    end
+
+    subgraph Gateway["Run Gateway (AbstractGateway 0.4.1+)"]
+        BS["/backlog/status (backlog folder state)"]
+        AD["/admin/runtime-config (settings door),<br/>/admin/executors, /admin/data-homes"]
+        BK["/backlog/* (CRUD + template)"]
+        EP["/backlog/exec/* (requests, logs, QA)"]
+        RP["/reports/*, /triage/*, /email/*"]
+        PM["/processes/* (start/stop/redeploy, env)"]
+        SH["/runs, /attachments, /audio, /voice,<br/>/entities, /bundles, /discovery (shared reads)"]
+        AB["/about (versions for the About dialog)"]
+        WK[Exec worker<br/>executor: codex / claude /<br/>cursor-agent / abstractcode]
+    end
+
+    GC -- "/api/* + session cookies + CSRF" --> SP
+    SE -- "POST /api/connection/gateway" --> SP
+    SP -- "x-abstractgateway-session" --> BS & AD & BK & EP & RP & PM & SH & AB
+    AD -. "backlog folder, exec runner,<br/>executor, process manager" .-> BK & WK & PM
+    HC -- "/api/hub/* + /api/hub/ws" --> HP
+    HP -- "allowlisted routes + Bearer seat key" --> HA
+    EP --- WK
+    WK -- "candidate workspace → UAT → promote" --> Repos[(Framework repos<br/>prod + UAT trees)]
+```
+
+One transport mode: same-origin. The browser talks only to the app
+server (`bin/cli.js` in production, the equivalent vite plugin in dev).
+The session proxy signs in against the gateway, holds the session
+server-side, sets first-party cookies, and enforces CSRF on mutating
+requests. Tokens never reach browser storage. Every gateway path is reached
+as `/api/gateway/<path>` (for example `GET /api/gateway/backlog/status`).
+With `@abstractframework/app-server` 0.1.10 or newer, every request the proxy
+sends to the gateway also carries the browser's connection address
+(`X-Forwarded-For`) and the marker
+`X-AbstractFramework-App-Proxy: abstractcontinuum`; see
+[security.md](security.md#defense-layers).
+The Team page uses the same
+origin: `/api/hub/*` and the `/api/hub/ws` WebSocket are served by the hub
+proxy, which attaches the operator seat's key server-side.
+
+## Serving under the gateway (`/apps/continuum/`)
+
+The same server runs at `/` on its own port and behind the gateway's
+`/apps/continuum/`. It follows the `@abstractframework/app-server` mount
+contract.
+
+```mermaid
+flowchart LR
+    B[Browser] -- "/apps/continuum/…<br/>(gateway session cookie)" --> G[AbstractGateway<br/>app proxy]
+    G -- "path without /apps/continuum<br/>X-Forwarded-Prefix / -For / -Host / -Proto" --> S["bin/server.js<br/>(127.0.0.1)"]
+    S -- "X-AbstractFramework-App: continuum; mount=1" --> G
+    S --> RG[bin/request_gate.js<br/>browser address + Origin check]
+    RG --> HP[hub proxy + /api/hub/ws]
+    RG --> SR[Settings route]
+    S --> SP[session proxy<br/>cookies Path=/apps/continuum/]
+```
+
+- **Identity.** Every response, the WebSocket `101` included, carries
+  `X-AbstractFramework-App: continuum; mount=1`; the gateway relays only an
+  app that announces it.
+- **Base path.** The page is served with `<base href="/apps/continuum/">`
+  (or `/` standalone) and `base_path` in `window.__ABSTRACT_UI_CONFIG__`.
+  The build uses relative asset URLs (Vite `base: "./"`), every request the
+  UI makes is relative (`api/gateway/…`, `api/hub/…`,
+  `api/continuum/settings`, the relay at `api/hub/ws` resolved against
+  `document.baseURI`), and `npm run build` fails on any root-absolute
+  same-origin URL in `dist/` (`scripts/check_relative_urls.mjs`). The CSP
+  admits the one injected configuration script by its hash.
+- **Who is asking.** `bin/request_gate.js` asks the kit's
+  `requestContext(req)`: the socket peer, or, from a loopback peer (the
+  gateway), the browser address it forwarded. The Origin check compares the
+  browser's `Origin` with the host the browser addressed (the forwarded host
+  behind the gateway). A malformed forwarded header is refused with `400`.
+
+## Gateway settings and the backlog folder
+
+The gateway, not this app, owns the settings that decide which pages have
+data: the backlog folder (`triage_repo_root`), the exec runner
+(`backlog_exec_runner`), the `executor`, and the `process_manager`. They have
+three doors, all writing the same gateway setting: the gateway console
+(Apps → *Backlog settings*), `abstractgateway config get|set` on the
+gateway's computer, and this app's **Settings → Gateway administration**
+(`GET`/`POST /admin/runtime-config`, admin only). Each value carries its
+source (launch flag, setting, environment (legacy), or default), which
+Settings renders as a pill.
+
+The Board, Backlog and Executions pages read `GET /backlog/status` to decide
+what to show:
+
+```mermaid
+flowchart TD
+    S["GET /api/gateway/backlog/status"] --> A{available?}
+    A -- "no (folder missing, or gateway older than 0.4.1)" --> U["Folder not available panel<br/>admin: Use the gateway's own folder / Choose a folder…<br/>others: ask the gateway admin"]
+    A -- yes --> E{any items?}
+    E -- no --> Y["Your backlog is empty<br/>folder path + Copy + Create your first item"]
+    E -- yes --> B[Board columns]
+    U -- "admin action" --> C["POST /api/gateway/admin/runtime-config<br/>triage_repo_root = path, or null for the default"]
+    C --> S
+```
+
+A fresh gateway keeps its own backlog folder (`<gateway data dir>/backlog/`,
+created with a starter overview and item template on first use), so a new
+install lands on the empty state, never on the unavailable panel.
+
+## The execution pipeline
+
+The heart of the app is the exec pipeline. One request moves through:
+
+```mermaid
+stateDiagram-v2
+    [*] --> queued: execute (item or batch)
+    queued --> running: worker picks up
+    running --> awaiting_qa: success (BOTH modes — human decision required)
+    running --> failed: error / non-zero exit
+    awaiting_qa --> running: Iterate (send feedback)
+    awaiting_qa --> promoted: Approve (UAT — promote to prod;<br/>inplace — finalize: prod already mutated)
+    awaiting_qa --> awaiting_qa: Restart UAT (deploy candidate)
+    promoted --> [*]
+    failed --> [*]
+```
+
+Success always parks at `awaiting_qa` — inplace mode does NOT bypass the
+human decision; its Approve merely finalizes a request whose changes are
+already in prod (the QA panel says so explicitly). A `completed` status
+survives in the filters for legacy requests but no current gateway path
+produces it.
+
+The **Executions page** pins `use_exec_pipeline` to the live view: it
+polls active requests (2s), follows the selected request's log tail while
+it runs, and exposes the QA actions directly. The **Board** and the
+**Backlog page** use the same hook to execute items and to mark planned
+items that already have a live request (their **Execute** button reads
+*Processing…*).
+
+### Executor agnosticism
+
+The executing agent is a deliberate seam, not a hardcoded dependency. The
+gateway's `executor` setting chooses it from the registry that
+`/admin/executors` reports (`codex`, `claude`, `cursor-agent`,
+`abstractcode`, each with whether it is installed), and
+`/backlog/exec/config` names the active executor for the UI to render. Keep
+new UI copy executor-neutral and read identity from the config.
+
+## Module layout
+
+```text
+src/
+  app.tsx                     shell: sidebar nav, uic connect modal, probe
+  lib/
+    gateway_client.ts         typed gateway client (dev-lane families only)
+    gateway_types.ts          request/response types
+    hub_client.ts             agora hub client (via the /api/hub proxy)
+    hub_api_types.ts          types generated from vendor/hub/openapi.json
+    hub_contract.ts           compile-time pins against the hub contract
+    hub_ledger.ts             independent hub ledger verification
+    team_model.ts             Team page pure model (threads, filters, badges, LLM transcript)
+    history_window.ts         history window for LLM transcripts: newest whole messages up to 50k tokens (ADR-0026)
+    work_id.ts                work-item id + rendered-state derivations
+    entity_skills_model.ts    entity skills view model
+    voice_settings.ts         per-browser voice overrides
+    markdown_segments.ts      prose / mermaid splitting for rendering
+    session_run_id.ts, ids.ts small id helpers
+  ui/
+    board/
+      board_model.ts          metadata convention + DoR + column derivation (pure, pinned)
+      use_board_data.ts       list/request fetches + lazy metadata cache
+      use_work_claims.ts      hub work-claim rows joined onto board cards
+      board_page.tsx          kanban columns/cards/filters + execute gate
+      work_item_drawer.tsx    Spec / Runs / Review tabs
+      work_activity_panel.tsx hub work activity for hub-backed cards
+    backlog/
+      model.ts                pure helpers (unit-pinned)
+      hooks.ts                small shared hooks (media query, executor registry)
+      use_exec_pipeline.ts    exec pipeline state + polling
+      backlog_page.tsx        catalog table + composition root
+      exec_detail_pane.tsx    exec detail + QA panel
+      exec_events_view.tsx    live log/events viewer
+      execute_modals.tsx      execute / batch / merge confirms
+      new_task_modal.tsx      creation flow (template, guided, assist)
+      advisor_drawer.tsx      read-only backlog advisor (chat + voice)
+      advisor_attachments.ts  advisor attachments, inlined whole into the composer
+    team_page.tsx             Team page (agora hub client)
+    team_file_viewer.tsx      channel file viewer
+    agents_page.tsx           executor roster, entities, track record
+    entity_skills_panel.tsx   entity skills section
+    executions_page.tsx       live pipeline ops view
+    report_inbox.tsx          bug/feature reports + triage decisions
+    email_inbox.tsx           email accounts/messages/send
+    processes_page.tsx        managed process control + env vars (Services)
+    settings_page.tsx         connection, execution defaults, AI + voice preferences, hub seat, Gateway administration
+    voice_settings_panel.tsx  voice override controls
+    exec_event.ts             exec-log event classification
+    backlog_folder.tsx        backlog folder state panel (empty / not available + admin actions)
+    memo_markdown.tsx, mermaid_block.tsx   markdown + mermaid rendering
+    modal.tsx, multi_select.tsx, error_boundary.tsx   shared widgets
+bin/cli.js                    launch flags, `config` command, starts the server
+bin/server.js                 static serve (base href + CSP) + session proxy + hub proxy + Settings route, mountable at /apps/continuum/
+bin/request_gate.js           "browser on this computer?" + Origin check (kit requestContext)
+bin/settings.js               server settings: flags, settings file, precedence (+ gateway pointer), Settings route
+bin/hub_proxy.js              allowlisted agora hub proxy (HTTP + WebSocket)
+scripts/check_relative_urls.mjs  fails on a root-absolute same-origin URL in src/ or dist/
+vendor/hub/                   vendored hub OpenAPI + golden conformance vectors
+```
+
+### The Board model
+
+Columns derive from gateway state — no board-side storage:
+Triage = proposed files, Ready = planned files not inside a live request,
+In Progress / In Review = live exec requests (the busy set comes from the
+gateway's batch-aware `active_items` expansion — the same source the
+Backlog page uses), Done / Failed = recent terminal requests (attempts;
+the completed-file archive lives on the Backlog page). Work-item metadata
+(priority, labels — sprints are `sprint-N` labels) rides convention lines
+in the spec markdown header (`> Priority: P1`, `> Labels: ui, sprint-29`);
+see [conventions.md](conventions.md) for the grammar. The Definition of
+Ready is checked twice: advisory chips on the client, and the gateway's
+`dor=check` gate on execute, which refuses with `409` unless the operator
+records an explicit override.
+
+Design boundaries:
+
+- **Purpose boundary** — the observer observes and discusses; continuum
+  develops and deploys. Observation features do not grow here.
+- **Concern boundary** — `model.ts`, `board_model.ts` and `team_model.ts`
+  are pure (no React/network) and unit-pinned; hooks such as
+  `use_exec_pipeline` each own one concern; panes are presentational.
+- **Client boundary** — `gateway_client.ts` carries only the API families
+  this app uses (see [api.md](api.md)); entity and bundle reads serve the
+  Agents page and the advisor picker, and run-observation features (ledger
+  streams, knowledge-graph queries) belong in the observer.
+
+## Related
+
+- [api.md](api.md) — the exact endpoint families consumed
+- [configuration.md](configuration.md) — launch flags, settings file, gateway settings
+- [security.md](security.md) — trust model (process manager is high trust)
+- [conventions.md](conventions.md) — the work-item grammar the Board parses
+- [backlog/overview.md](backlog/overview.md) — work planning and history
+- `history.md` (repo root) — provenance of the 2026-07-12 split
+- `vendor/hub/` — the hub contract the Team page is typed and tested against
+
+---
+
+<!-- source: docs/api.md -->
+
+# API surface
+
+AbstractContinuum exposes no API of its own. This page documents the two
+surfaces that matter to integrators: the gateway API families the app
+consumes, and the session endpoints the bundled server provides.
+
+## Gateway API families consumed
+
+All calls go through `src/lib/gateway_client.ts` (types in
+`src/lib/gateway_types.ts`). Paths are relative to the gateway and reached
+as `/api/gateway/...` (proxied in same-origin mode).
+
+### Backlog CRUD
+
+| Method | Endpoint |
+| --- | --- |
+| `backlog_list(kind)` | `GET /backlog/{kind}` |
+| `backlog_content(kind, filename)` | `GET /backlog/{kind}/{filename}/content` |
+| `backlog_status()` | `GET /backlog/status` — the backlog folder's state (`available`, `path`, `source`, `is_default`, `writable`, reason when unavailable); drives the Board's empty state and *folder not available* panel |
+| `backlog_template()` | `GET /backlog/template` |
+| `backlog_create(...)` | `POST /backlog/create` |
+| `backlog_update(...)` | `POST /backlog/{kind}/{filename}/update` (sha-guarded) |
+| `backlog_move(...)` | `POST /backlog/move` |
+| `backlog_merge(...)` | `POST /backlog/merge` |
+| `backlog_upload_attachment(...)` | `POST /backlog/{kind}/{filename}/attachments/upload` |
+
+### Exec pipeline (agent executions)
+
+| Method | Endpoint |
+| --- | --- |
+| `backlog_execute(...)` | `POST /backlog/{kind}/{filename}/execute?execution_mode=&target_model=&target_reasoning_effort=&dor=check&override=true` — agent override validates against the gateway model allowlist (403 rendered verbatim); `dor=check` refuses 409 `{"error":"definition_of_ready_failed","checks":[...]}` unless `override=true` (recorded as `dor_overridden`) |
+| `backlog_execute_batch(...)` | `POST /backlog/execute_batch` (same `target_*`/`dor`/`override` fields in the body; DoR refusals name the failing members) |
+| `backlog_exec_config()` | `GET /backlog/exec/config` |
+| `backlog_exec_requests(...)` | `GET /backlog/exec/requests?status=&limit=` |
+| `backlog_exec_request(id)` | `GET /backlog/exec/requests/{id}` |
+| `backlog_exec_feedback(...)` | `POST /backlog/exec/requests/{id}/feedback` |
+| `backlog_exec_promote(...)` | `POST /backlog/exec/requests/{id}/promote` |
+| `backlog_exec_deploy_uat(...)` | `POST /backlog/exec/requests/{id}/uat/deploy` |
+| `backlog_exec_log_tail(...)` | `GET /backlog/exec/requests/{id}/logs/tail?name=&max_bytes=&after_bytes=` (cursor follow: delta + `next_offset` + rotation `reset` on gateways that support it) |
+| `backlog_exec_active_items(...)` | `GET /backlog/exec/active_items?status=&limit=` |
+
+### Gateway settings (Settings → Gateway administration)
+
+| Method | Endpoint |
+| --- | --- |
+| `admin_runtime_config()` | `GET /admin/runtime-config` — each setting's value and source (`flag`, `stored`, `env`, `default`) plus the gateway's label and help text |
+| `admin_runtime_config_update(patch)` | `POST /admin/runtime-config` — admin only; patch any of `triage_repo_root` (a path, or `null` for the gateway's own folder), `backlog_exec_runner`, `executor`, `process_manager`; the gateway validates and its refusal is shown as is |
+| `admin_executors()` | `GET /admin/executors` — the executor registry (which agents are installed) for the Executor picker and the Agents page |
+| `admin_data_homes()` | `GET /admin/data-homes` — the Data and caches panel |
+
+These are the same settings as `abstractgateway config get|set` and the
+gateway console's *Backlog settings*; see
+[configuration.md](configuration.md#gateway-side-features).
+
+### AI assistance
+
+| Method | Endpoint |
+| --- | --- |
+| `backlog_assist(...)` | `POST /backlog/assist` (draft a new item) |
+| `backlog_maintain(...)` | `POST /backlog/maintain` (refine an existing item) |
+| `backlog_advisor(...)` | `POST /backlog/advisor` (read-only agent chat) |
+| `discovery_providers()` / `discovery_provider_models(p)` / `discovery_model_capabilities(m)` | `GET /discovery/providers`, `GET /discovery/providers/{p}/models`, `GET /discovery/models/capabilities?model_name=` (provider/model pickers in Settings) |
+| `list_bundles()` | `GET /bundles` (advisor agent picker) |
+
+### Reports, triage, email
+
+| Method | Endpoint |
+| --- | --- |
+| `list_bug_reports()` / `list_feature_requests()` | `GET /reports/bugs` / `GET /reports/features` |
+| `get_bug_report_content(f)` / `get_feature_request_content(f)` | `GET /reports/{bugs\|features}/{f}/content` |
+| `bug_report_create(...)` / `feature_report_create(...)` | `POST /bugs/report` / `POST /features/report` |
+| `triage_run(...)` | `POST /triage/run` |
+| `list_triage_decisions(...)` | `GET /triage/decisions` |
+| `apply_triage_decision(...)` | `POST /triage/decisions/{id}/apply` |
+| `email_list_accounts()` | `GET /email/accounts` |
+| `email_list_messages(...)` | `GET /email/messages` |
+| `email_read_message(...)` | `GET /email/messages/{uid}` |
+| `email_send(...)` | `POST /email/send` |
+
+### About
+
+| Method | Endpoint |
+| --- | --- |
+| `gateway_about()` | `GET /about` — public; `{ abstractframework, abstractgateway, packages }`, read when the About dialog opens |
+
+### Managed processes (high trust — see [security.md](security.md))
+
+| Method | Endpoint |
+| --- | --- |
+| `list_processes()` | `GET /processes` |
+| `start_process(id)` / `stop_process(id)` / `restart_process(id)` / `redeploy_process(id)` | `POST /processes/{id}/{action}` |
+| `process_log_tail(id, ...)` | `GET /processes/{id}/logs/tail?max_bytes=` |
+| `list_process_env_vars()` / `update_process_env_vars(...)` | `GET`/`POST /processes/env` (write-only values) |
+
+### Shared reads
+
+| Method | Endpoint | Used for |
+| --- | --- | --- |
+| `list_runs({limit:1})` | `GET /runs` | authenticated reachability probe |
+| `download_run_artifact_content(run, artifact)` | `GET /runs/{run}/artifacts/{id}/content` | full exec logs, TTS audio |
+| `attachments_upload(...)` | `POST /attachments/upload` | voice recordings |
+| `audio_transcribe(...)` | `POST /runs/{run}/audio/transcribe` | advisor push-to-talk |
+| `voice_tts(...)` | `POST /runs/{run}/voice/tts` (and `/voice/tts/stream`) | advisor spoken replies |
+| `voice_voices(...)` / `capability_defaults()` | `GET /voice/voices`, `GET /config/capability-defaults` | voice settings |
+| `list_entities()` / `entity_state(name)` | `GET /entities`, `POST /entities/{name}/state` | Agents & Entities page |
+| `entity_skills(name)` / `put_entity_skills(name, ...)` | `GET`/`PUT /entities/{name}/skills` | entity skills panel |
+
+## Session endpoints (bundled server)
+
+`bin/server.js` (via `@abstractframework/app-server`, appId
+`abstractcontinuum`; every response carries
+`X-AbstractFramework-App: continuum; mount=1`, and behind the gateway every
+path below is under `/apps/continuum/`):
+
+- `GET /api/connection/gateway` — session status (`{ok, gateway_url, has_session, gateway}`)
+- `POST /api/connection/gateway` — sign in `{gateway_url?, gateway_user_id, gateway_token, persist?}`
+- `DELETE /api/connection/gateway` — sign out
+- everything else under `/api/` — proxied to the gateway with the
+  server-held session; mutating requests require the CSRF header
+  (`x-abstractcontinuum-csrf` or `x-abstract-csrf`)
+
+## Hub proxy endpoints (bundled server, Team page)
+
+`bin/hub_proxy.js` serves the Team page's agora hub transport:
+
+- `GET /api/hub/meta` — `{ok, hub_url, seat, seat_key_present}`
+- `/api/hub/<hub path>` — forwarded to the hub with the seat key attached
+  server-side, for an allowlisted set of routes only (channels, messages,
+  DMs, channel info/members/files/ledger/digest/store, search, work,
+  desk, owed asks, retraction, health); anything else is refused
+- `GET /api/hub/ws` (WebSocket upgrade) — live hub updates relayed with the
+  seat key attached server-side
+
+Browsers on this computer only unless Continuum runs with
+`--hub-allow-remote` (setting `hub_allow_remote`). Behind the gateway the
+browser's address is the one the gateway forwards, so a browser on another
+machine is refused (`403 hub_proxy_non_loopback`) even though the
+connection comes from the gateway. Browser requests whose `Origin` does not
+match the host the browser addressed are rejected; the WebSocket answers
+`403` for both, `400` for a malformed forwarded header. The hub
+contract the client is typed against is vendored in `vendor/hub/`.
+
+## Server settings endpoint (bundled server, Settings page)
+
+- `GET /api/continuum/settings` — `{settings, writable, settings_file}`:
+  every server setting as `{value, source}` (`source` is `flag`, `setting`,
+  `env`, `pointer` — the gateway installed on this computer — or
+  `default`); the hub token only as `{set, source}`
+- `PUT /api/continuum/settings` — `{"hub_seat": "<seat>"}` saves the seat
+  to the settings file (`null` removes it); answers the fresh view. Other
+  settings are refused here (`abstractcontinuum config set`)
+
+Browsers on this computer (the forwarded address behind the gateway) and
+same-origin browser requests only; writes need
+`Content-Type: application/json`.
+
+## Notes
+
+- Error contract: HTTP failures throw `Error("<method> failed: <detail>")`
+  where detail is the response body when readable, else the HTTP status.
+  Missing required arguments throw before any request is made, as
+  `Error("<method>: <field> is required")`.
+- The client is deliberately scoped to the families above: run-observation
+  families (ledger streams, knowledge-graph queries) live in the observer's
+  client, not here.
+- Setup and first run: [getting-started.md](getting-started.md); how these
+  families fit together: [architecture.md](architecture.md); failures such
+  as `csrf_required` or an unavailable backlog folder:
+  [troubleshooting.md](troubleshooting.md).
+
+---
+
+<!-- source: docs/configuration.md -->
+
+# Configuration
+
+Configuration lives in three places:
+
+- **The Continuum server** (`abstractcontinuum`): launch flags and a
+  settings file, below. The hub seat is also on the Settings page.
+- **The gateway**: the backlog folder, exec runner, executor, and process
+  manager are gateway settings, changed from Settings → Gateway
+  administration, the gateway console, or `abstractgateway config set`
+  (see [Gateway-side features](#gateway-side-features)).
+- **The browser**: per-browser preferences on the Settings page.
+
+Credentials never live in this repository or in browser storage: the
+gateway token is exchanged for a server-held session, and the hub seat key
+is read on the server.
+
+## Server (`abstractcontinuum` / `npm start` / `bin/cli.js`)
+
+Every server setting has a launch flag and a key in the settings file:
+
+```bash
+abstractcontinuum --hub-seat alice --gateway-url http://127.0.0.1:8080   # this run
+abstractcontinuum config set hub_seat alice                              # saved
+```
+
+When a setting is given more than once, the launch flag wins, then the
+settings file, then the environment (legacy), then the default.
+`abstractcontinuum config get` lists every setting with its value and
+where it comes from; the hub token is shown only as *set* or *not set*.
+
+### Settings file
+
+`~/.abstractcontinuum/settings.json` (`--settings-file <path>` picks
+another). It is a JSON object with the setting names below as keys, written
+by:
+
+- `abstractcontinuum config set <setting> <value>` and
+  `abstractcontinuum config unset <setting>` (same names as the flags;
+  `config path` prints the file's location);
+- `abstractcontinuum config set hub_token --from-file <path>`, which keeps
+  the token out of your shell history;
+- the Settings page, for the hub seat.
+
+The file and its folder are owner-only (`0600` / `0700`) because the file
+may hold the hub token. Continuum reads it at start and again whenever it
+changes, so a new hub seat, hub URL, hub token, key store or
+`hub_allow_remote` applies to the Team page without a restart. Port, bind
+address, gateway URL and the sign-in settings apply at the next start. A
+file that is not valid JSON stops the start with a message naming it.
+
+### Settings
+
+| Launch flag | Setting | Default | Purpose | Legacy environment |
+| --- | --- | --- | --- | --- |
+| `--port <n>` | `port` | `3002` | HTTP port | `PORT` |
+| `--host <address>` | `host` | `127.0.0.1` | Bind address (loopback by default; use `0.0.0.0` only behind your own access control) | `HOST` |
+| `--gateway-url <url>` (aliases `--gateway`, `--url`) | `gateway_url` | the gateway installed on this computer (`~/.abstractframework/gateway.json`), else `http://127.0.0.1:8080` | Gateway this deployment talks to | `ABSTRACTCONTINUUM_GATEWAY_URL`, `ABSTRACTGATEWAY_URL` |
+| `--hub-url <url>` | `hub_url` | `http://127.0.0.1:8765` | Agora hub for the Team page | `ABSTRACTCONTINUUM_HUB_URL`, `AGORA_HUB_URL` |
+| `--hub-seat <seat>` | `hub_seat` | `operator` | The seat the Team page reads and posts as — set it to your own seat (also on the Settings page) | `ABSTRACTCONTINUUM_HUB_SEAT` |
+| `--hub-token <token>`, `--hub-token-file <path>` | `hub_token` | none | Seat API key; overrides the key store. Prefer the file form: a flag value is visible in the process list | `ABSTRACTCONTINUUM_HUB_KEY` |
+| `--hub-keys <path>` | `hub_keys` | `~/.agora/keys.json` | Key store; the entry `"<hub_url>::<seat>"` supplies the seat key (re-read per request, so rotation needs no restart) | `ABSTRACTCONTINUUM_HUB_KEYS` |
+| `--hub-allow-remote` | `hub_allow_remote` | off | Let browsers on other machines use the hub proxy. Leave off unless you front the app with your own access control | `ABSTRACTCONTINUUM_HUB_ALLOW_REMOTE` |
+| `--allow-remote-gateway-config` | `allow_remote_gateway_config` | off | Let browsers on other machines change the gateway URL at sign-in (implies `allow_gateway_url_cookie`). Leave off unless you front the app with your own access control | `ABSTRACTCONTINUUM_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG`, `ABSTRACTGATEWAY_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG` |
+| `--allow-gateway-url-cookie` | `allow_gateway_url_cookie` | off | Honor a browser-supplied gateway-URL cookie on non-loopback hosts | `ABSTRACTCONTINUUM_ALLOW_BROWSER_GATEWAY_URL_COOKIE` |
+| `--trust-proxy-headers` | `trust_proxy_headers` | off | Trust `x-forwarded-host` for the loopback check (only behind a reverse proxy you control). Cookies get the `Secure` attribute whenever `x-forwarded-proto: https` is present, independent of this setting | `ABSTRACTCONTINUUM_TRUST_PROXY_HEADERS`, `ABSTRACTGATEWAY_TRUST_PROXY_HEADERS` |
+| `--settings-file <path>` | — | `~/.abstractcontinuum/settings.json` | Settings file to read and write | — |
+
+On/off settings take `--hub-allow-remote`, `--hub-allow-remote=off` or
+`--no-hub-allow-remote` on the command line, and `on`/`off` with
+`config set`.
+
+The last column is for existing setups only: those variables are still
+read when neither a flag nor a setting gives the value, and Settings and
+`config get` report them as *environment (legacy)*. Saving a setting
+replaces them.
+
+When no flag, setting or environment variable names a gateway, Continuum
+uses the gateway installed on this computer: `abstractgateway serve` and the
+AbstractFramework installer record its address in
+`~/.abstractframework/gateway.json`, and `config get` reports the value as
+*the gateway installed on this computer*. A running Continuum re-reads that
+file when the gateway refuses a connection, so it follows a gateway that
+moved to another port. A gateway URL you chose (flag, setting, environment)
+never moves.
+
+### Serving through the gateway (`/apps/continuum/`)
+
+A gateway that manages Continuum serves it at `/apps/continuum/` on the
+gateway's own address; the gateway starts Continuum on `127.0.0.1` with
+`--port`, `--host` and `--gateway-url` and relays every request, the Team
+page's WebSocket included. Nothing needs configuring: the same build serves
+at `/` on Continuum's own port and at `/apps/continuum/` through the
+gateway. Serving under `/apps/continuum/` needs AbstractGateway 0.7.0 or
+newer.
+
+- The page, its assets and every request it makes use addresses relative
+  to the page, so they stay under `/apps/continuum/`.
+- Continuum's cookies carry `Path=/apps/continuum/`.
+- The checks that only a browser on this computer passes (the hub proxy,
+  the Settings route, a browser-chosen gateway URL) judge the browser's
+  address as the gateway reports it, and the host name the browser
+  addressed: both must be loopback (`localhost` or `127.0.0.1`), so open
+  the gateway by a loopback address to use them. A browser on another machine that
+  opens Continuum through the gateway can use the gateway-backed pages;
+  the Team page's hub proxy refuses it unless you start Continuum with
+  `--hub-allow-remote`.
+
+## Team page (agora hub)
+
+The Team page talks to an agora hub through the server's `/api/hub/*`
+proxy, which forwards an allowlisted subset of the hub API and attaches one
+seat's API key server-side. The key never reaches the browser.
+
+Set your seat once, in any of three ways:
+
+- **Settings → Team (agora hub) → Hub seat**, then *Save*. The page shows
+  where the current seat comes from (*launch flag*, *setting*,
+  *environment (legacy)* or *default*); *Use default* removes the saved
+  seat. This works from the computer Continuum runs on only.
+- `abstractcontinuum config set hub_seat <seat>` in a terminal.
+- `abstractcontinuum --hub-seat <seat>` for one run (it wins over the
+  saved seat until Continuum restarts without it).
+
+The seat key comes from `--hub-token-file` / the `hub_token` setting, or
+from the seat's entry in the key store. Without a key, hub routes other
+than the keyless health check answer `503 hub_seat_unavailable` naming the
+seat and key store to provision; `GET /api/hub/meta` reports the hub URL,
+seat, and whether a key is present. `GET /api/continuum/settings` returns
+the server settings with their sources (the token as present or not), and
+`PUT` on it with `{"hub_seat": "<seat>"}` or `{"hub_seat": null}` is how
+the Settings page saves — loopback and same-origin only.
+
+## Gateway-side features
+
+The pages light up according to the connected gateway's settings. A fresh
+gateway needs none of them to show a working (empty) Board: it keeps its own
+backlog in `<gateway data dir>/backlog/`, created with a starter overview and
+item template on first use.
+
+| Gateway setting | Enables | Change it |
+| --- | --- | --- |
+| `triage_repo_root` (Backlog folder) | Where the Board / Backlog / Executions read and write items: a folder containing `docs/backlog`. Default: the gateway's own folder | Settings → Gateway administration (*Change…*, *Use the gateway's own folder*); gateway console Apps → *Backlog settings*; `abstractgateway config set triage_repo_root PATH`; `abstractgateway serve --backlog-root PATH` for one run |
+| `backlog_exec_runner` | The exec worker (Executions + backlog Processing views) | Settings (*Enable*); `abstractgateway config set backlog_exec_runner on`; `serve --exec-runner on` |
+| `executor` | The agent that runs queued items (`codex`, `claude`, `cursor-agent`, `abstractcode`) | Settings (Executor); `abstractgateway config set executor codex` |
+| `process_manager` | The Services page (high trust — see [security.md](security.md)); process control also needs the backlog folder set to the framework checkout it manages | Settings (*Enable*); `abstractgateway config set process_manager on` |
+
+All Settings entries above live under **Settings → Gateway administration**;
+`abstractgateway config get` prints the current values on the gateway's
+computer.
+
+Settings shows where each value comes from: *launch flag* (a saved value
+applies once the gateway restarts without the flag), *setting*,
+*environment (legacy)* (saving a value here replaces it) or *default*. Only
+a gateway admin can change them; the gateway validates every change and its
+refusal is shown as is.
+
+When the backlog folder is not available (a saved folder that was deleted or
+unmounted), the Board, Backlog and Executions pages show the folder and the
+reason; an admin gets **Use the gateway's own folder** and **Choose a
+folder…**, everyone else is told to ask the gateway admin.
+
+## Browser Settings page
+
+Persisted in `localStorage` under `abstractcontinuum_settings_v1`:
+
+| Setting | Purpose |
+| --- | --- |
+| Default execution mode | `UAT` (default, staged) or `Inplace` (edits prod) for the Execute dialog. |
+| Maintenance AI provider / model / reasoning effort | Provider, model and reasoning effort for backlog AI assist + maintenance chat (blank = gateway default). |
+| Backlog advisor agent | Gateway bundle id for the advisor (blank = `basic-agent`). |
+
+Voice overrides (Settings → voice panel) are stored separately under
+`abstractcontinuum_voice_override_v1`.
+
+Connection is NOT a settings field: the shared `GatewayConnectModal`
+(sidebar badge, or "Manage connection" in Settings) signs in through
+`POST /api/connection/gateway`; the token is exchanged once for HttpOnly
+session cookies and never stored browser-side.
+
+## Development
+
+`npm run dev` starts Vite on the same port as the server (`port`, default
+3002) with `/api` proxied to the configured gateway (see `vite.config.ts`);
+it reads the same settings file and mounts the same session, hub and
+settings routes as production. Vite takes no Continuum flags: use
+`abstractcontinuum config set` for dev settings, or `npm run dev -- --port
+<n>` for another port. Stop a running `npm start` first, or pick another
+port. The ui-kit and panel-chat packages resolve from a sibling
+`../abstractuic` checkout.
+
+---
+
+<!-- source: docs/security.md -->
+
+# Security model
+
+This page is the deep dive behind [SECURITY.md](../SECURITY.md). Read that
+first; this page explains the mechanics.
+
+## What this console can do
+
+AbstractContinuum is a **high-trust surface**. Through the gateway it can:
+
+| Surface | Capability | Blast radius |
+| --- | --- | --- |
+| Services page | start / stop / restart / **redeploy** managed prod and UAT services; set/unset their env vars | full service control on the gateway host |
+| Executions + Backlog | run code-executing agents against framework repos; **promote candidate output to prod**; deploy candidates to UAT | writes to production working trees |
+| Inbox | read and send email via configured accounts | outbound mail as the configured identity |
+| Team page | read and post in agora hub channels and DMs | messages authored as the configured operator seat |
+
+Whoever reaches this UI with a valid session can redeploy services. Deploy
+it accordingly: loopback or private networks by default, your own
+authenticating reverse proxy for anything broader, and gateway tokens only
+for people with deploy rights.
+
+## Defense layers
+
+1. **Gateway authentication** — every API family requires an authenticated
+   gateway principal; the app is a client, never a bypass.
+2. **App-origin session proxy** (`bin/cli.js`) — the browser never holds the
+   gateway token. Sign-in happens server-side; the session id lives in an
+   HttpOnly cookie scoped to this app's origin and path (`/apps/continuum/` behind the gateway); the proxy strips any
+   client-supplied `Authorization`/cookie headers before forwarding. With
+   `@abstractframework/app-server` 0.1.10 or newer, the proxy also sets
+   `X-Forwarded-For` to the browser's connection address (never a
+   browser-supplied value) and adds
+   `X-AbstractFramework-App-Proxy: abstractcontinuum` to every gateway-bound
+   request, so the gateway can tell whether the browser runs on its own
+   machine; a connection with no known address is refused with 400.
+3. **CSRF** — mutating requests must echo the CSRF token from the
+   non-HttpOnly `abstractcontinuum_gateway_csrf` cookie in
+   `x-abstractcontinuum-csrf` (or canonical `x-abstract-csrf`); the proxy
+   rejects mismatches with 403.
+4. **Gateway URL pinning** — browsers cannot redirect the proxy to another
+   gateway unless the browser runs on this computer or an operator
+   explicitly enabled remote config (see [configuration.md](configuration.md)).
+5. **Local-only routes judge the browser** — the hub proxy (which authors as
+   the operator seat), its WebSocket relay and the Settings route answer a
+   browser on this computer only. Behind the gateway's `/apps/continuum/`
+   every connection comes from the gateway, so the decision uses the
+   browser address the gateway forwards; forwarded headers are believed only
+   from a loopback peer, and a malformed one is refused.
+6. **Write-only env vars** — the gateway never returns managed env var
+   values; the UI can set/unset but never read them back.
+7. **Feature gating** — the process manager and exec worker exist only when
+   the gateway admin turned them on (the `process_manager` and
+   `backlog_exec_runner` settings, off by default; only a gateway admin can
+   change them, from Settings → Gateway administration or
+   `abstractgateway config set`).
+8. **Content-Security-Policy on the app document** — the Team page renders
+   untrusted content (hub messages, channel fs files, attachments) as
+   markdown. The renderer emits only React elements (no raw-HTML pass, no
+   `javascript:` links), and the prod server adds a CSP backstop:
+   `img-src 'self' data:` blocks remote-image beacons from untrusted
+   markdown, `script-src 'self'` plus the hash of the one configuration
+   script the server injects blocks any script injection class,
+   `object-src 'none'` and `frame-ancestors 'none'` close embed vectors.
+   Inline text previews are size-capped (256 KiB; larger files download)
+   so pathological input cannot freeze the tab. Note: the Vite dev server
+   (`npm run dev`, developer-only) does not send the CSP header — the operator
+   surface is always the prod server (`npm start` / `abstractcontinuum`).
+
+## Execution safety model
+
+Executions default to **UAT mode**: the agent works in a candidate
+workspace, the operator inspects it on the shared UAT stack, and only an
+explicit "Approve → promote to prod" writes to production (with conflict
+detection against a diverged prod base). **Inplace mode** edits prod
+directly and is labeled dangerous in the UI — use it only when you
+understand the risk.
+
+## Residual risks to keep in mind
+
+- Anyone with a session has, transitively, code execution on the gateway
+  host (via redeploy of services whose code an execution can change).
+  There is no per-page authorization: gateway access = full console.
+- The server binds loopback (`127.0.0.1`) by default; binding wider
+  (`--host 0.0.0.0`) is an explicit deployment choice. The hub proxy also
+  refuses non-loopback peers unless Continuum runs with `--hub-allow-remote`,
+  and rejects browser requests whose `Origin` does not match the host
+  (WebSocket handshakes included). The Vite dev server is deliberately open
+  (`allowedHosts: true`) and must never be the production surface.
+- The Team page acts as ONE hub seat for everyone who reaches the console:
+  the seat key is held server-side, and every message posted from the page
+  is authored by that seat.
+- Sessions persist for 30 days (the sign-in form always sets
+  `persist: true`); sign out explicitly on shared machines.
+- The sign-in POST itself carries no CSRF token (login-CSRF class). The
+  gateway-URL pinning bounds the damage — a forged login can only create a
+  session against the server-pinned gateway — but be aware of it when
+  fronting the app with additional auth.
+- Actor attribution for high-trust actions (who promoted, who redeployed)
+  is the gateway's responsibility; this console does not yet surface an
+  audit view. Check the gateway's audit/ledger facilities when you need
+  the trail.
+- There is no client-side bearer-token mode: the browser talks only to the
+  same-origin proxy, which holds credentials in HttpOnly cookies. App
+  startup removes any token an older build left in browser storage.
+- Email send uses whatever accounts the gateway configured; the console
+  does not add its own rate or recipient limits.
+
+---
+
+<!-- source: docs/conventions.md -->
+
+# Work-item conventions (the board's grammar)
+
+This is the canonical reference for the conventions AbstractContinuum's
+board and the gateway's backlog parser agree on. It exists so process
+teachings (the `backlog`/`coredoc` skills on the AbstractSkill shelf) and
+the rendering/enforcing surface cannot drift apart: **the deployment's
+parser is truth; this document describes it.**
+
+Changes to any grammar below must update this file in the same change
+as the parser or board code that implements them.
+
+## File layout and lifecycle
+
+Work items are markdown files under `docs/backlog/` in the gateway's backlog
+folder (the `triage_repo_root` setting; by default the gateway's own
+`<data dir>/backlog/`):
+
+| Directory | Board home | Meaning |
+| --- | --- | --- |
+| `proposed/` | Triage column | ideas, not yet ready |
+| `planned/` | Ready column | ready to execute (DoR applies) |
+| `completed/` | Done column (recent) | promoted/archived items |
+| `deprecated/` | Backlog page only | closed without execution (restorable) |
+| `trash/` | Backlog page only | discarded (restorable) |
+| `recurrent/` | Backlog page only | periodic process tasks — **no board home (ruled)** |
+
+Execution states ride exec requests, not directories: `queued` / `running`
+(In progress), `awaiting_qa` (In review), `promoted`/`completed`/`failed`
+(terminal). Promotion archives the planned file to `completed/`.
+
+## Title line (H1)
+
+```markdown
+# 0123-package: [TYPE] Short imperative title
+```
+
+- `0123` — item id (stable, list-assigned).
+- `package` — the owning package (`framework` for cross-cutting work).
+- `[TYPE]` — the ruled work-item enum, UPPERCASE in the H1.
+
+## Type vocabulary (ruled enum)
+
+`bug | feature | improvement | task` — per the semantics seat's
+`decision:workitem-type-enum`. The UI offers exactly these four; **read
+paths never coerce**: an unknown at-rest type renders as-written with a
+"labeled unknown" chip. Do not invent new types in items; propose enum
+changes to the semantics seat.
+
+> **Upstream normalization**: the gateway list parser accepts the full
+> type enum (`improvement` included). Unknown at-rest words normalize to
+> `task` upstream, so the console's labeled-unknown chip fires only for
+> values the gateway lets through.
+
+## Metadata lines (blockquote grammar — NOT a `## Metadata` section)
+
+The gateway parses **blockquote lines** in the file header. List
+sections like `## Metadata` with `- Created:` bullets are **not parsed**
+— an item written that way renders metadata-blind on the board.
+
+```markdown
+> Created: 2026-07-13 21:00:00 +0200
+> Type: bug
+> Priority: P1
+> Labels: ui, wave-doctoring, seat-memory
+```
+
+- `Priority`: `P0` (drop everything) … `P3` (someday). Absent = unranked
+  (sorts last within its column).
+- `Labels`: comma-separated free strings. Sprints are labels (`sprint-N`).
+
+## Definition of Ready (the execution gate, not advice)
+
+Execute is **gated**, client-side (advisory chips) and server-side (the
+gateway refuses `409 definition_of_ready_failed` unless an explicit
+override is recorded as `dor_overridden`). The checks:
+
+1. Type present (H1 `[TYPE]` or `> Type:` line), in the ruled enum
+   (`bug | feature | improvement | task`).
+2. A `## Summary` section with prose (non-placeholder).
+3. Acceptance criteria as markdown checkboxes (`- [ ] …`, non-placeholder).
+4. A Testing section naming how it will be verified (backticked commands;
+   `...`/`n/a` don't count — ADR-0019 levels).
+
+The gate is FOUR checks (matching the gateway parser `backlog_dor.py`):
+**priority is NOT a gate check** — it is advisory metadata the board
+renders as chips.
+
+Overrides are legitimate (the operator's judgment wins) but always
+explicit and recorded — never silent.
+
+## Definition of Done
+
+Acceptance checkboxes ticked + QA review (the drawer's Review tab) before
+promote. "Done" means validated — the promote flow is the verification
+surface, and an unreviewed promote carries its unconfirmed count on the
+button label.
+
+## Supervision vocabulary (room coordination on the board)
+
+| Label | Meaning | Board behavior |
+| --- | --- | --- |
+| `decision-gate` | an OPERATOR decision (his gates stay his) | renders as an amber "operator gate" card — never draggable, never promotable, never executable; resolved only by the operator's ruling |
+| `wave-<slug>` | a room wave (directive fanned to N seats) | normal task item; the Supervision toggle filters to these |
+| `seat-<owner>` | the seat(s) owning the row | chip + Supervision filter |
+
+Per-seat receipts inside a wave item are acceptance checkboxes carrying
+the hub message id:
+
+```markdown
+- [ ] gateway: writer wave shipped (c1234)
+- [x] continuum: supervision view live (c1240)
+```
+
+## Docs freshness
+
+A package's `llms.txt`/`llms-full.txt` are stale when they are **older than
+the newest `docs/*.md`** — regenerate the llms files in the same change that
+edits docs. Every package is expected to carry `README.md`, `docs/`,
+`llms.txt`, and `llms-full.txt`.
+
+## Sources
+
+- Parser: gateway backlog family (list-level metadata; DoR gate).
+- Board: `src/ui/board/board_model.ts` (metadata regexes, readiness,
+  gate semantics — test-pinned).
+- Type enum: the hub decision `decision:workitem-type-enum`.
+
+---
+
+<!-- source: docs/faq.md -->
+
+# FAQ
+
+**How is this different from AbstractObserver?**
+One honest purpose each: the observer *observes and discusses* the running
+system (runs, ledgers, artifacts, memory graphs, entities); continuum
+*develops and deploys* it (backlog, executions, triage, process control).
+They were one app until 2026-07-12 (`history.md` records the split).
+
+**Is this tied to Codex?**
+No. The executor is a gateway setting: Codex CLI (`codex`, the default),
+Claude Code (`claude`), Cursor Agent (`cursor-agent`) or AbstractCode
+(`abstractcode`). Pick it in Settings → Gateway administration → Executor,
+or with `abstractgateway config set executor <id>`; the UI reads the
+executor identity from `/backlog/exec/config`.
+
+**What is the difference between UAT and inplace execution?**
+UAT (default) runs the agent in a candidate workspace; you inspect the
+result on the shared UAT stack and explicitly promote to prod. Inplace runs
+directly in the production workspace — faster, dangerous, labeled as such.
+
+**Which gateway version do I need?**
+AbstractGateway 0.4.1 or newer. It serves the backlog folder state and the
+settings that Settings → Gateway administration edits; see
+[api.md](api.md).
+
+**Which version am I running?**
+Click the (i) About button in the top-right cluster. It shows the Continuum
+version (fixed at build time from the package version), the author and
+licence, links to the website, source, documentation, issue tracker and
+feedback, and the versions your gateway reports, read from
+`GET /api/gateway/about` each time the dialog opens. While the answer is on
+its way the dialog shows "Gateway: checking…"; when the gateway cannot answer
+it shows "Gateway: unavailable (…)" with the reason, for example
+`HTTP 404`. See [troubleshooting.md](troubleshooting.md#sign-in--connectivity).
+
+**Why is the Services page empty / why is Execute disabled?**
+Those features exist only when a gateway admin turns them on: the process
+manager and the exec runner are gateway settings (Settings → Gateway
+administration, or `abstractgateway config set process_manager on` /
+`backlog_exec_runner on`); see [configuration.md](configuration.md#gateway-side-features).
+
+**Where is my backlog stored?**
+In the gateway's backlog folder: by default the gateway's own
+`<data dir>/backlog/`, or any project folder containing `docs/backlog/` that
+an admin chooses. The Board's empty state shows the path. See
+[getting-started.md](getting-started.md#your-backlog) and
+[conventions.md](conventions.md) for the file layout.
+
+**Can I read an environment variable's value from the ENV tab?**
+No, by design. Managed env vars are write-only: the gateway never returns
+values to the browser. You can see whether a value is set and where it came
+from, and you can set/unset it.
+
+**Why does a planned item's Execute button say "Processing…"?**
+The item already has a live exec request, so it cannot be executed twice.
+Follow it on the **Executions** page (or in the Board's In Progress / In
+Review columns) until the request finishes.
+
+**Does the app store any secrets?**
+No. Sessions are server-held HttpOnly cookies; raw tokens are exchanged
+once at sign-in and never stored browser-side. See
+[security.md](security.md).
+
+---
+
+<!-- source: docs/troubleshooting.md -->
+
+# Troubleshooting
+
+Symptom-first. Each entry links to the page owning the full explanation.
+
+## Sign-in / connectivity
+
+**The banner says "Gateway unreachable or not signed in."**
+The app probes the gateway with a one-run list. Check that the gateway is
+running and that the server's gateway URL (`--gateway-url`, or
+`abstractcontinuum config get gateway_url`) or the URL you entered in the
+connect dialog points at it; `abstractcontinuum` prints the gateway it
+resolved at startup. Then sign in again from the connection badge at the bottom of
+the sidebar. See [getting-started.md](getting-started.md#first-run).
+
+**Sign-in succeeds but every action fails with 403 `csrf_required`.**
+Mutating requests need the CSRF header derived from the
+`abstractcontinuum_gateway_csrf` cookie. If you front the app with a proxy,
+make sure cookies pass through unmodified and that you did not strip
+`x-abstractcontinuum-csrf` / `x-abstract-csrf`. See
+[security.md](security.md).
+
+**"Browser-supplied Gateway URL changes are disabled for this non-local host."**
+You opened the app from a non-loopback host and tried to change the gateway
+URL at sign-in. Pin the URL server-side (`--gateway-url`, or
+`abstractcontinuum config set gateway_url <url>`) or explicitly enable
+remote config (`--allow-remote-gateway-config`) — see
+[configuration.md](configuration.md).
+
+**Opened through the gateway, the Team page says the hub proxy refuses a browser on another machine.**
+Continuum's hub proxy posts as your hub seat, so it answers a browser on the
+computer Continuum runs on. Opened at `/apps/continuum/` from another
+machine, the gateway reports that machine's address and the hub proxy
+refuses it. Open the Team page from the gateway's own computer, or start
+Continuum with `--hub-allow-remote` when you trust everyone who can reach
+it. See [configuration.md](configuration.md#serving-through-the-gateway-appscontinuum).
+
+**About shows "Gateway: unavailable (…)".**
+The dialog could not read `GET /api/gateway/about`; the reason in brackets
+says why. `HTTP 404` means the gateway does not serve the About route: upgrade
+it to a version with `GET /about`. `HTTP 401` or a network error means the
+session or the gateway is gone: follow the "Gateway unreachable" entry above.
+The rest of the app is unaffected. See [faq.md](faq.md).
+
+## Executions
+
+**Execute says the runner is disabled / not running / the executor is missing.**
+The gateway's exec worker is off or its executor is not installed. A gateway
+admin enables it in **Settings → Gateway administration → Exec runner** (it
+applies at once) and picks an installed **Executor**, or on the gateway's
+computer runs `abstractgateway config set backlog_exec_runner on` and
+`abstractgateway config set executor codex`. The agent program must be
+installed on the gateway's computer. See
+[configuration.md](configuration.md#gateway-side-features).
+
+**A planned item's Execute button says "Processing…".**
+The item already has a live exec request. Follow it on the **Executions**
+page; the button returns to **Execute** when the request finishes.
+
+**Promotion is blocked with conflicts.**
+Prod diverged from the candidate's base while the agent worked. Use
+**Iterate** to re-run the request on top of current prod, or resolve the
+listed files manually.
+
+**UAT URLs do not respond after "Restart UAT".**
+The detail pane shows a probe warning when UAT processes fail their URL
+check. Open **Services → UAT** and read the process logs; the process
+manager must be enabled for UAT deploys (**Settings → Gateway administration
+→ Process manager**, or `abstractgateway config set process_manager on`).
+
+**Live logs say "#TRUNCATION: log tail truncated".**
+Live logs are bounded: each fetch reads at most the last 160 KB, and the
+followed view keeps about 1 MB. The complete logs stay on the gateway with
+the exec request; switch between **events**, **stderr** and **last
+message** to read the part you need.
+
+## Inbox / services
+
+**Inbox shows only the Email tab.**
+Triage is a prop (`enable_triage`) wired on in this app; if you embed the
+page elsewhere, pass it explicitly. Email account features additionally
+depend on the gateway's email configuration.
+
+**The Services page says the process manager is disabled.**
+A gateway admin turns on **Settings → Gateway administration → Process
+manager** (or
+`abstractgateway config set process_manager on`) and sets the backlog folder
+to the framework checkout it manages — read [security.md](security.md)
+first: this enables remote service control.
+
+**The Board says "This gateway's backlog folder is not available".**
+The gateway's saved backlog folder no longer exists (or is not a folder). An
+admin clicks **Use the gateway's own folder** (the gateway creates it) or
+**Choose a folder…** (a folder containing `docs/backlog`; the gateway
+explains a refusal). A fresh gateway never shows this: it starts on its own
+folder, and the Board shows **Your backlog is empty**. The same panel
+appears when the gateway is older than 0.4.1: upgrade the gateway. See
+[getting-started.md](getting-started.md#your-backlog).
+
+## Team page
+
+**The Team page reports `hub_seat_unavailable`.**
+The server has no key for the configured seat. Check the seat on
+**Settings → Team (agora hub) → Hub seat** (or
+`abstractcontinuum config get hub_seat`) and either provision it in the key
+store (`--hub-keys`, default `~/.agora/keys.json`) or start Continuum with
+`--hub-token-file <path>`. `GET /api/hub/meta` shows the hub URL, seat,
+and whether a key was found. See
+[configuration.md](configuration.md#team-page-agora-hub).
+
+**The Team page works on localhost but not from another machine.**
+The hub proxy refuses non-loopback peers by default. Start Continuum with
+`--hub-allow-remote` (or `abstractcontinuum config set hub_allow_remote on`)
+only behind your own access control:
+everyone who reaches the page posts as the configured seat.
+
+## Development
+
+**`npm run dev` fails resolving `@abstractframework/ui-kit`.**
+The source build expects a sibling `../abstractuic` checkout (Vite aliases
++ `file:` dependency). Clone [AbstractUIC](https://github.com/lpalbou/AbstractUIC)
+next to this repo as `abstractuic` and run `npm install` again. The
+published npm package does not need it.
+
+**Tests fail with `scrollIntoView is not a function`.**
+jsdom lacks it; the suites stub `Element.prototype.scrollIntoView` in their
+`beforeEach` — copy that pattern into new component tests.
+
+---
+
+<!-- source: SECURITY.md -->
+
+# Security
+
+## Trust model — read this before deploying
+
+AbstractContinuum is a **high-trust operator console**. A signed-in user
+can:
+
+- start, stop, restart, and **redeploy production and UAT services** through
+  the gateway's process manager;
+- set and unset environment variables for managed processes (write-only:
+  values are never returned to the browser, but writes take effect on the
+  next process start);
+- launch code-executing agent runs against the framework's repositories and
+  **promote their output to prod**;
+- read and send email through configured accounts, and read bug/feature
+  reports.
+
+Anyone who reaches this UI with a valid gateway session effectively holds
+deploy and service-control rights over the machines the gateway manages.
+Treat access to this app like SSH access to the deployment host:
+
+- serve it only on networks you trust (localhost or a private network by
+  default; put your own authenticating reverse proxy in front for anything
+  else);
+- give gateway user tokens only to people who should be able to redeploy;
+- keep the gateway's process manager off (the `process_manager` setting,
+  off by default) on gateways that should not expose service control.
+
+## Session model
+
+The bundled server (`bin/cli.js`) uses the shared app-origin session proxy
+(`@abstractframework/app-server`):
+
+- Sign-in exchanges a gateway user token for a gateway session; the session
+  id and gateway URL land in first-party HttpOnly cookies
+  (`abstractcontinuum_gateway_*`, 30-day lifetime) that the proxy attaches
+  to every forwarded request. The user token itself is used once and never
+  stored anywhere.
+- Bearer tokens never appear in URLs and never touch browser storage —
+  there is no client-side token mode; app startup removes any token an
+  older build left in browser storage.
+- Mutating requests require the CSRF token (`x-abstractcontinuum-csrf` or
+  the canonical `x-abstract-csrf`) matching the CSRF cookie (deliberately
+  JS-readable so the client can echo it).
+- The proxy strips client-supplied `Authorization` and cookies before
+  forwarding to the gateway; the proxied session is the only credential.
+- With `@abstractframework/app-server` 0.1.10 or newer, every request the
+  proxy sends to the gateway carries `X-Forwarded-For` set to the address of
+  the browser's connection (browser-supplied `X-Forwarded-For`, `Forwarded`
+  and `X-Real-IP` headers are dropped) and the marker
+  `X-AbstractFramework-App-Proxy: abstractcontinuum`. The gateway uses them to
+  tell whether the browser runs on the gateway's own machine. A connection
+  whose address cannot be determined is refused with HTTP 400.
+- Browser-supplied gateway URLs are honored only from loopback hosts unless
+  explicitly enabled (see `docs/configuration.md`).
+
+Secrets stay in the environment: this repository contains no credentials.
+
+Deployment defaults to note: the server binds loopback (`127.0.0.1`) by
+default — binding wider with `--host` is an explicit choice; the Vite dev
+server is deliberately open (`allowedHosts: true`) and is not a production
+surface. The Team page posts to the agora hub as one operator seat whose
+key is held server-side. See `docs/security.md` for the full model and residual risks.
+
+## Reporting
+
+Report vulnerabilities privately to `contact@abstractframework.ai` rather
+than opening a public issue.
+
+---
+
+<!-- source: CONTRIBUTING.md -->
+
+# Contributing
+
+AbstractContinuum is a Vite + React + TypeScript app (snake_case files,
+strict TS, vitest). It is a thin client: all state lives on the Run
+Gateway; the app renders and commands it.
+
+## Setup
+
+```bash
+npm install
+npm run dev      # dev server on :3002, /api proxied to the configured gateway
+```
+
+The dev toolchain resolves `@abstractframework/ui-kit` and
+`@abstractframework/panel-chat` from a sibling `../abstractuic` checkout
+(see `vite.config.ts` aliases) and `@abstractframework/app-server` via a
+`file:` dependency. Clone `abstractuic` next to this repo.
+
+## Before you finish any change
+
+```bash
+npx tsc --noEmit   # typecheck
+npm test           # vitest: model pins + jsdom component tests
+npm run build      # production build must stay green
+```
+
+## Layout
+
+- `src/lib/` — the typed gateway client (development-lane API families
+  only; see `docs/api.md`).
+- `src/ui/backlog/` — the backlog + exec pipeline modules (keep files under
+  ~600 lines; `model.ts` stays pure and unit-pinned).
+- `src/ui/board/` — the Board (kanban model, drawer, work claims).
+- `src/ui/` — the other pages (executions, agents, team, report inbox,
+  email, services, settings), the backlog folder panel, and small shared
+  widgets.
+- `bin/cli.js` — static serving + the app-origin gateway session proxy.
+- `bin/hub_proxy.js` — the Team page's allowlisted agora hub proxy.
+- `vendor/hub/` — the vendored hub OpenAPI artifact and golden vectors that
+  `src/lib/hub_contract.ts` and `src/lib/hub_conformance.test.ts` pin
+  against (`npm run gen:hub-types` regenerates `src/lib/hub_api_types.ts`).
+
+## Conventions
+
+- One file, one concern; pure logic goes to `model.ts`-style modules with
+  unit tests; React modules stay presentational or single-hook.
+- Behavior changes need a test in the same change; refactors need pins
+  written BEFORE the refactor.
+- Degraded paths warn with `#FALLBACK`; UI truncation is labeled
+  `#TRUNCATION`.
+- Do not grow observation features here — the observer app owns watching
+  and discussing the running system; this app develops and deploys it.
+- Work items live in `docs/backlog/` (see `docs/backlog/overview.md`).
+- Documentation changes regenerate `llms.txt` / `llms-full.txt` in the same
+  change (see [docs/conventions.md](docs/conventions.md#docs-freshness)).
+
+## See also
+
+- [docs/architecture.md](docs/architecture.md) — components and boundaries
+- [docs/api.md](docs/api.md) — the gateway families the client may call
+- [CHANGELOG.md](CHANGELOG.md) — add a user-visible entry for behavior changes
+- [SECURITY.md](SECURITY.md) — the trust model your change must keep
+
+---
+
+<!-- source: CHANGELOG.md -->
+
+# Changelog
+
+All notable, user-visible changes to AbstractContinuum.
+
+## 0.4.0 — 2026-09-28
+
+Serving Continuum through the gateway at `/apps/continuum/` needs
+AbstractGateway 0.7.0 or newer. Standalone use on Continuum's own port works
+with AbstractGateway 0.4.1 or newer, as before. The server keeps listening on
+`127.0.0.1` by default.
+
+### Added
+
+- **Served through the gateway at `/apps/continuum/`.** A gateway that
+  manages Continuum opens it on the gateway's own address, so a remote or
+  headless machine needs one port and one tunnel for the console and every
+  app. Every response announces `X-AbstractFramework-App: continuum; mount=1`
+  (the WebSocket `101` too); the page is served with its `<base href>` and
+  `base_path`; cookies carry `Path=/apps/continuum/`. Standalone at `/` on
+  Continuum's own port works as before.
+- `--gateway` and `--url` are accepted as aliases of `--gateway-url`, the
+  spelling shared by every AbstractFramework app.
+- With no flag, setting or environment variable naming a gateway, Continuum
+  uses the gateway installed on this computer
+  (`~/.abstractframework/gateway.json`, reported as *the gateway installed on
+  this computer*) and follows it to a new port while running.
+
+### Changed
+
+- Every request the page makes is relative to the page (`api/gateway/…`,
+  `api/hub/…`, `api/continuum/settings`), and the build uses relative asset
+  URLs. `npm run build` fails on a root-absolute same-origin URL in `dist/`.
+- The Team page's hub proxy, its WebSocket relay and the Settings route judge
+  the browser's address as the gateway reports it: opened through the gateway
+  from another machine, they refuse the browser unless Continuum runs with
+  `--hub-allow-remote`. The Origin check compares with the host the browser
+  addressed. A malformed forwarded header is refused with `400`.
+- The app document's CSP admits the one configuration script the server
+  injects, by its hash.
+- A markdown link or image in a hub message that targets a root-absolute
+  `/api/…` address is shown as a blocked link (behind the gateway it would
+  reach the gateway's own API); hub attachment images embed through the
+  relative `api/hub/…` address.
+- Requires `@abstractframework/app-server` 0.1.11 or newer (the mount kit)
+  and is built against `@abstractframework/ui-kit` 0.1.14 (`joinBaseUrl` /
+  `GATEWAY_CONNECTION_PATH`).
+- **Team AI features read up to 50,000 tokens of the conversation (ADR-0026).**
+  *Summarize* and the channel assistant used to send at most 24,000 characters
+  of transcript: the oldest messages were dropped and any message longer than
+  12,000 characters was cut. The transcript is now the newest whole messages
+  up to 50,000 estimated tokens (the same history window as AbstractRuntime),
+  and no message is ever cut. The transcript's first line tells the model how
+  many messages it holds; when older messages are dropped, a labeled
+  `#TRUNCATION` line gives the count. The summary header and the assistant
+  drawer show what the model read, for example
+  "38 of 40 messages (2 oldest dropped by the 50,000-token history window)".
+- **Backlog advisor attachments are sent whole.** Attached files were limited
+  to the first 6 files and 20,000 characters each. Every picked file is now
+  inlined in full into the composer, where you can see it before you send.
+
+### Security
+
+- With `@abstractframework/app-server` 0.1.11 or newer, a request counts as
+  coming from this computer only when both its connection address and the
+  host name the browser addressed are loopback, so a page served from another
+  site under a name that resolves to `127.0.0.1` is treated as remote.
+
+## 0.3.2 — 2026-09-26
+
+### Added
+
+- **About AbstractContinuum.** The (i) button in the top-right cluster opens
+  the AbstractFramework About dialog: the Continuum version you are running,
+  the author and licence, links to the website, source, documentation,
+  issue tracker and feedback, and the versions your gateway reports
+  (AbstractGateway, AbstractFramework and its packages). If the gateway
+  cannot say, the dialog shows why ("Gateway: unavailable (HTTP 401: …)").
+  Needs AbstractGateway with the public `GET /about` route for the gateway
+  rows.
+
+### Changed
+
+- Requires `@abstractframework/app-server` 0.1.10 or newer (was 0.1.9), so the
+  forwarding-header protection below is always present.
+- `package.json` `homepage` points to https://abstractframework.ai and a
+  `bugs` URL is set, both from the shared AbstractFramework descriptor.
+
+### Security
+
+- With `@abstractframework/app-server` 0.1.10 or newer, the sign-in proxy
+  sends the browser's connection address as `X-Forwarded-For` (browser-supplied
+  forwarding headers are dropped) and the marker
+  `X-AbstractFramework-App-Proxy: abstractcontinuum` on every gateway-bound
+  request; a connection whose address is unknown is refused with HTTP 400.
+
+## 0.3.1 — 2026-09-25
+
+**Compatibility:** same as 0.3.0 (AbstractGateway 0.4.1 or newer). No
+action is needed unless you relied on the Team page's old personal hub-seat
+default: set your seat once — on the Settings page (Settings → Team (agora
+hub) → Hub seat), with `abstractcontinuum config set hub_seat <seat>`, or
+with `--hub-seat <seat>` for one run. Environment variables you already use
+keep working as a legacy fallback.
+
+### Changed
+
+- **Continuum's server is configured with launch flags or
+  `abstractcontinuum config`.** Every server setting has a flag (`--port`,
+  `--host`, `--gateway-url`, `--hub-url`, `--hub-seat`, `--hub-token-file`,
+  `--hub-allow-remote`, the sign-in proxy settings, …) and a saved setting
+  in `~/.abstractcontinuum/settings.json`, written with
+  `abstractcontinuum config set <setting> <value>` (`config get` shows every
+  value and where it comes from). The file is owner-only because it can
+  hold the hub token. Environment variables remain a legacy fallback.
+- **The hub seat is a setting on the Settings page** (Settings → Team
+  (agora hub) → Hub seat). It is saved on the Continuum server, survives
+  restarts and applies to the Team page at once. You can also run
+  `abstractcontinuum config set hub_seat <seat>`, or pass `--hub-seat` for
+  one run.
+- The Team page's hub seat defaults to `operator` instead of a personal
+  name. If you used the Team page without choosing a seat, set yours as
+  above.
+- `abstractcontinuum --help` lists every flag with its default and its
+  setting name.
+- `npm run dev` serves on port 3002 (Continuum's port on the stack map),
+  reads the same settings file, and proxies `/api` to the configured
+  gateway.
+
+## 0.3.0 — 2026-09-24
+
+**Compatibility:** needs AbstractGateway 0.4.1 or newer
+(`GET /api/gateway/backlog/status` and the gateway settings door). Against an
+older gateway the Board shows the *folder not available* panel.
+
+### Changed
+
+- **A fresh gateway shows an empty Board, not a setup box.** The gateway
+  keeps its own backlog folder by default, so the Board opens on **Your
+  backlog is empty** with the folder path, a Copy button and **Create your
+  first item** (the New task modal). The "Backlog browsing is not
+  configured … set ABSTRACTGATEWAY_TRIAGE_REPO_ROOT" callout is gone.
+- **Folder not available** (a saved folder that was deleted, or a gateway
+  older than the setting): the Board, Backlog and Executions pages show the
+  folder and the gateway's reason; an admin gets **Use the gateway's own
+  folder** and **Choose a folder…** (validated by the gateway, its refusal
+  shown as is); others are told to ask the gateway admin and where.
+- **Settings → Gateway administration** names each setting's source in words
+  (launch flag / setting / environment (legacy) / default), renders the
+  gateway's own label and help, adds **Use the gateway's own folder**, and
+  reads a vanished folder as *not available* with its reason.
+- **No environment-variable instructions in the app or its docs**: the
+  Executions, Execute dialog, UAT and Services hints name the gateway setting
+  and the `abstractgateway config set …` line instead.
+- **Migration:** a gateway configured through environment variables keeps
+  working; Settings shows those values as *environment (legacy)*, and saving
+  a value there replaces them.
+
+## 0.2.0 — 2026-09-23 — first public release
+
+First release published to npm as `@abstractframework/continuum`. Run it
+with `npx @abstractframework/continuum` (CLI: `abstractcontinuum`).
+
+AbstractContinuum is the AbstractFramework development and deployment
+console: a thin React client over a Run Gateway's development-lane APIs,
+served by a small Node server that holds the gateway session.
+
+### Added
+
+- **Board** (landing page) — kanban work flow (Triage → Ready → In Progress
+  → In Review → Done, plus a Failed history lane) derived from gateway state.
+  Cards carry type, priority (P0–P3), labels (sprints via `sprint-N`),
+  package chips, and a Definition-of-Ready indicator; the card drawer holds
+  the spec (view/edit + metadata), the item's runs, and the QA review
+  (acceptance-criteria checklist → promote / iterate / deploy to UAT).
+  Hub-backed cards show their work claims and activity.
+- **Executions** — live view of queued / running / awaiting-QA exec
+  requests with cursor-following log tails, one-click QA actions, and a
+  recently-finished strip.
+- **Backlog** — catalog view over every kind (planned, proposed, recurrent,
+  completed, deprecated, trash) with search, batch execute, merge, guided
+  item creation from the gateway template, AI assist, and a read-only
+  advisor with voice input and spoken replies.
+- **Agents & Entities** — the configured executor (Codex CLI today; the
+  executor is read from the gateway's exec config), the advisor agent, a
+  track record folded from execution history, and gateway entities with
+  their skills.
+- **Team** — an agora hub client: channels and DMs with threaded messages,
+  reactions and retraction, an inbox of open asks, hub-wide grouped search
+  (with semantic-search mode and coverage when the hub serves it), channel
+  files with markdown and Mermaid rendering, work claims, ledger
+  verification, and live updates over WebSocket. It posts as one operator
+  seat configured on the server.
+- **Inbox** — bug report, feature request, and email triage with decisions.
+- **Services** — managed prod/UAT process control (start / stop / restart /
+  redeploy) and write-only environment variables.
+- **Settings** — gateway sign-in through the shared connection dialog, AI
+  provider/model and reasoning-effort preferences, and per-browser voice
+  overrides.
+- **Server** (`abstractcontinuum`, `bin/cli.js`) — serves the built app and
+  proxies `/api/*` through the `@abstractframework/app-server` session proxy
+  (first-party HttpOnly cookies + CSRF; tokens never stored in the browser),
+  plus an allowlisted agora hub proxy under `/api/hub/*` that attaches the
+  seat key server-side. Sends a Content-Security-Policy on the app document.
+  `--help` and `--version` flags.
+
+### Security
+
+- The server binds loopback (`127.0.0.1`) by default; wider binds are an
+  explicit `HOST` choice. The hub proxy refuses non-loopback peers unless
+  `ABSTRACTCONTINUUM_HUB_ALLOW_REMOTE=1` and rejects cross-origin browser
+  requests, including WebSocket handshakes. See `docs/security.md`.
+
+### Compatibility
+
+- Requires Node.js ≥ 18 and a Run Gateway (`abstractgateway`) that serves
+  the development-lane API families listed in `docs/api.md`. Features the
+  gateway has not enabled (exec runner, process manager, backlog browsing)
+  render with the gateway setting that enables them.
+- The Team page's hub contract is typed and tested against the vendored
+  hub OpenAPI artifact in `vendor/hub/`.

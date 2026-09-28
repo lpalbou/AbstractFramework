@@ -1,99 +1,75 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractflow/main/llms.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractFlow/main/llms.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractflow/main/llms.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractFlow/main/llms.txt
 
 # AbstractFlow
 
-> Diagram-based, durable AI workflows for Python (portable VisualFlow JSON, Gateway-first reference web editor, optional local Runtime compatibility).
+> AbstractFlow is the web visual workflow editor for AbstractFramework, distributed as the npm package `@abstractframework/flow`. It serves a browser editor and a small Node server that forwards `/api/*` to AbstractGateway; the same server runs on its own at `/` (127.0.0.1:3003) or behind the Gateway at `/apps/flow/`.
 
-This repository ships:
-- the Python package `abstractflow/` (PyPI: `abstractflow`)
-- a reference visual editor app in `web/` (FastAPI backend + React UI)
+Do not assume a Python package, FastAPI backend, or local execution host exists in AbstractFlow. Execution, provider configuration, user auth, workflow persistence, runs, ledgers, artifacts, and runtime isolation are owned by AbstractGateway and AbstractRuntime.
 
-AbstractFlow is part of the AbstractFramework ecosystem:
-- https://github.com/lpalbou/AbstractFramework
-- normal editor runs go through AbstractGateway: https://github.com/lpalbou/abstractgateway
-- local compatibility delegates to AbstractRuntime: https://github.com/lpalbou/abstractruntime
-- provider/model/tool effects are owned by Gateway/Runtime/Core
+Repository map: `src/` (React/Vite editor), `bin/cli.js` + `bin/flags.js` (CLI, launch flags, Gateway URL resolution), `bin/server.js` (static server, base path, Gateway session proxy on `@abstractframework/app-server`), `examples/flows/` (sample and shipped VisualFlow JSON), `scripts/` (workflow generators and doc generators), `docs/`.
 
-Agent usage tips:
-- All linked paths are repo-root relative.
-- If you need the smallest useful context, read **Start Here** and skip **Optional**.
-- Prefer `docs/` for stable, user-facing behavior; treat the linked code files as source of truth.
-- This project is **Pre-alpha** (APIs may change); use tests as executable behavior specs.
-- To validate changes locally, run: `pytest -q`.
-- `llms-full.txt` is generated from this file and intended for offline/RAG use. It may exceed a single context window; chunk it if needed.
-- After updating docs or linked files, regenerate: `python scripts/generate_llms_full.py`.
+Key behavior:
 
-## Start Here
+- Gateway is the only execution boundary. Flow may capture browser-local files or microphone audio, but uploads them to Gateway as artifacts before start/resume.
+- The Flow server sets `X-Forwarded-For` (the browser's address) and `X-AbstractFramework-App-Proxy: abstractflow` on every Gateway-bound request and drops browser-supplied forwarding headers. Every response carries `X-AbstractFramework-App: flow; mount=1`; the editor uses relative URLs only, so it works at `/` and under `/apps/flow/`.
+- A workflow's `interfaces` list declares the contracts it implements. Declaring an interface adds its typed pins to `On Flow Start` / `On Flow End`; opening a workflow adds missing pins and shows unsaved changes; Run preflight warns about missing, unconnected, or mistyped interface pins. Eight interfaces carry pin contracts, including `abstractcode.agent.v1`, `abstractassistant.agent.v1`, and `abstractcode.goal.v1`.
+- Opening or importing a workflow keeps every stored connection. Connections the canvas cannot draw are kept, saved, and listed in an "N hidden" node badge; only connections to missing nodes are removed, with a notice.
+- A runnable workflow can store `automation_defaults` (trigger source and settings, context mode, title, default `input_data`) in Flow Library > Automation. Trigger sources are discovered from the Gateway (`GET /api/gateway/trigger-sources`, or the path in `contracts.common.automations.trigger_sources_endpoint`); settings are validated against the source's `config_schema` with a JSON Schema subset and schemas using other keywords are refused. Publish exports the field as `metadata.automation_defaults[<flow id>]`; Gateway fills a creation request's missing trigger, context, title and `input_data` from it. Automations are created in AbstractObserver or the Assistant.
+- `On Schedule`, `On Event` and `Delay` (`wait_until`) wait inside a running flow; they never start a flow and are not how automations are scheduled.
+- The About dialog shows the AbstractFlow version and the versions from `GET /api/gateway/about`.
+- Unconnected LLM Call and Agent `resp_schema` pins can be edited inline; schema-active nodes expose structured output on `data` while `response` stays textual.
+- Agent and LLM Call nodes expose an MTP depth setting and a `speculation` pin. Precedence: connected pin, node setting, run override, host default.
 
-- [README](README.md): What AbstractFlow is + install + quickstarts
-- [Docs index](docs/README.md): Documentation map
-- [Getting started](docs/getting-started.md): Programmatic + VisualFlow execution
-- [API reference](docs/api.md): Public Python API overview
-- [Architecture](docs/architecture.md): How authoring/execution fit together (diagram)
-- [FAQ](docs/faq.md): Common questions + operational details
+## Core Docs
 
-## Formats
+- [README.md](README.md): project overview, install, and feature summary
+- [docs/README.md](docs/README.md): documentation index
+- [docs/getting-started.md](docs/getting-started.md): start a Gateway, run the editor, sign in, local development
+- [docs/web-editor.md](docs/web-editor.md): editor features, sign-in, About, interfaces, automation defaults and trigger-source discovery, hidden connections, authoring assistant, media and file nodes
+- [docs/architecture.md](docs/architecture.md): components, boundaries, and diagrams
+- [docs/api.md](docs/api.md): CLI options, environment variables, proxy contract, frontend modules
+- [docs/visualflow.md](docs/visualflow.md): VisualFlow JSON format, interfaces and their boundary pins, `automation_defaults`, pin expressions
+- [docs/cli.md](docs/cli.md): the `abstractflow-editor` command
+- [docs/faq.md](docs/faq.md): short answers about scope and behavior
+- [docs/troubleshooting.md](docs/troubleshooting.md): sign-in, proxy, editor, and build symptoms with fixes
 
-- [VisualFlow format](docs/visualflow.md): Portable JSON workflow document
-- [VisualFlow schema](abstractflow/visual/models.py): Pydantic models (`VisualFlow`, `NodeType`, `PinType`, …)
-- [Interfaces/contracts](abstractflow/visual/interfaces.py): `VisualFlow.interfaces` markers + validation/scaffolding (e.g. `abstractcode.agent.v1`)
+## Workflow Authoring
 
-## Key Source (Python)
+- [docs/workflow-authoring-skill.md](docs/workflow-authoring-skill.md): command contract, validation rules, repair loop, and composition patterns for the Workflow Authoring Assistant
+- [docs/workflow-node-catalog.md](docs/workflow-node-catalog.md): every node template with pins, dynamic pin policy, Gateway capability requirements, and config fields
 
-- [Public API exports](abstractflow/__init__.py): what `from abstractflow import ...` provides
-- [FlowRunner](abstractflow/runner.py): execution + output normalization + durable “waiting” shape
-- [VisualFlow runtime wiring](abstractflow/visual/executor.py): `create_visual_runner`, registry + integrations, `execute_visual_flow`
-- [VisualSessionRunner](abstractflow/visual/session_runner.py): session-scoped custom events (`on_event` / `emit_event`)
-- [Workspace-scoped tools](abstractflow/visual/workspace_scoped_tools.py): default tool executor wiring (host-side)
-- [Compiler shim](abstractflow/compiler.py): re-exports from `abstractruntime.visualflow_compiler`
-- [WorkflowBundle helpers](abstractflow/workflow_bundle.py): `.flow` pack/inspect/unpack thin wrapper
+## Topic Deep Dives
 
-## Web Editor Host (FastAPI)
+- [docs/shipped-workflow-sources.md](docs/shipped-workflow-sources.md): editable flows and generators behind Gateway's coder, deep-research, and co-scientist bundles
+- [docs/deep-research.md](docs/deep-research.md): the `deep-research` workflow family
+- [docs/entity-brain.md](docs/entity-brain.md): the `entity-life` workflow family
 
-- [Web editor guide](docs/web-editor.md): Run backend/frontend, storage locations, gateway env vars
-- [Gateway client contract](web/frontend/src/utils/gatewayClient.ts): versioned capabilities, `common.readiness` overlay, endpoint descriptors
-- [Gateway catalog helpers](web/frontend/src/utils/gatewayCatalog.ts): canonical `gateway_catalog_v1` + legacy catalog normalization
-- [VisualFlow legacy compatibility](web/frontend/src/utils/visualFlowCompat.ts): imports old lowered music flows as native `generate_music`
-- [Run modal](web/frontend/src/components/RunFlowModal.tsx): Gateway run replay/stream rendering, media artifact previews, and `abstract.progress` progress display
-- [Artifact player](web/frontend/src/components/ArtifactPlayer.tsx): shared artifact content URL/object URL loader for previews and media players
-- [WebSocket execution](web/backend/routes/ws.py): compatibility-only `{type:"run"|"resume"|"control"}` protocol and event stream
-- [Flow CRUD + publish](web/backend/routes/flows.py): compatibility-only flow persistence (`ABSTRACTFLOW_FLOWS_DIR`) + bundle publishing
-- [Tool discovery](web/backend/routes/tools.py): compatibility-only `GET /api/tools`
-- [Runtime persistence paths](web/backend/services/paths.py): `ABSTRACTFLOW_RUNTIME_DIR` defaulting rules
-- [Execution workspaces](web/backend/services/execution_workspace.py): `ABSTRACTFLOW_BASE_EXECUTION` and workspace aliasing
-- [Backend app](web/backend/main.py): FastAPI app + static serving rules
+## Source Entry Points
 
-## CLI
+- [src/utils/gatewayClient.ts](src/utils/gatewayClient.ts): Gateway HTTP/SSE client
+- [src/utils/gatewayCatalog.ts](src/utils/gatewayCatalog.ts): provider/model/media catalog normalization
+- [src/utils/flowFamilies.ts](src/utils/flowFamilies.ts): known interfaces and their typed boundary pins
+- [src/utils/preflight.ts](src/utils/preflight.ts): Run preflight checks
+- [src/hooks/useFlow.ts](src/hooks/useFlow.ts): editor store and `loadFlow`
+- [src/utils/triggerSources.ts](src/utils/triggerSources.ts): trigger-source discovery
+- [src/utils/triggerBindings.ts](src/utils/triggerBindings.ts): `automation_defaults` shape and trigger-settings validation
+- [src/components/AutomationDefaultsModal.tsx](src/components/AutomationDefaultsModal.tsx): Flow Library Automation dialog
+- [src/components/RunFlowModal.tsx](src/components/RunFlowModal.tsx): run modal
+- [src/components/GatewayConnectionModal.tsx](src/components/GatewayConnectionModal.tsx): sign-in
+- [src/types/nodes.ts](src/types/nodes.ts): node templates
 
-- [CLI guide](docs/cli.md): WorkflowBundle commands + `abstractflow serve`
-- [CLI implementation](abstractflow/cli.py): `abstractflow bundle …` and `abstractflow serve`
+## Contributing
 
-## Manifests
-
-- [Python package manifest](pyproject.toml): dependencies/extras, CLI scripts, dynamic version wiring
-- [Version source](abstractflow/_version.py): release version single source of truth
-- [Docs site config](mkdocs.yml): MkDocs Material site and GitHub Pages nav
-- [Frontend manifest](web/frontend/package.json): npm package name and dev/build scripts
-
-## Tests (executable specs)
-
-- [Runner tests](tests/test_runner.py): FlowRunner behavior and output normalization
-- [Bundle tests](tests/test_workflow_bundle_pack.py): `.flow` packing semantics
-- [WS execution tests](tests/test_visual_ws_subflow.py): WebSocket run/resume + subflow behavior
-
-## Repo Policies
-
-- [Contributing](CONTRIBUTING.md): Dev setup, tests, and contribution guidelines
-- [Security policy](SECURITY.md): How to report vulnerabilities responsibly
-- [Acknowledgments](ACKNOWLEDGMENTS.md): dependency overview + upstream credits
-- [Changelog](CHANGELOG.md): user-visible changes
+- [CONTRIBUTING.md](CONTRIBUTING.md): setup (Node.js 20+, sibling AbstractUIC checkout), `npm run build`, `npm run lint`, `npm test`, `npm run docs:llms`
+- [SECURITY.md](SECURITY.md): vulnerability reporting
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): participation rules
 
 ## Optional
 
-- [Full context pack](llms-full.txt): Concatenated docs for offline use (generated)
-- [Pack generator](scripts/generate_llms_full.py): Regenerate `llms-full.txt`
-- [Sample flow: ac-echo](web/flows/ac-echo.json): small VisualFlow JSON used in CLI examples
+- [CHANGELOG.md](CHANGELOG.md): release history
+- [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md): credits
+- [llms-full.txt](llms-full.txt): the documentation set in one file

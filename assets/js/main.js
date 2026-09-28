@@ -12,9 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Smooth scroll for anchor links ── */
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
-      e.preventDefault();
-      const el = document.querySelector(a.getAttribute('href'));
+      const href = a.getAttribute('href');
+      if (href === '#') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      const el = document.querySelector(href);
       if (el) {
+        e.preventDefault();
+        history.replaceState(null, '', href);
         const offset = 80;
         const y = el.getBoundingClientRect().top + window.scrollY - offset;
         window.scrollTo({ top: y, behavior: 'smooth' });
@@ -82,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.setAttribute('aria-label', 'Copy code');
     btn.addEventListener('click', () => {
       const code = block.querySelector('code') || block.querySelector('pre') || block;
-      const text = code.textContent.trim();
+      const text = block.dataset.copy || code.textContent.trim();
       navigator.clipboard.writeText(text).then(() => {
         btn.textContent = 'Copied!';
         btn.classList.add('copied');
@@ -100,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.querySelector('.mobile-toggle');
   const links = document.querySelector('.nav-links');
   if (toggle && links) {
+    toggle.setAttribute('aria-expanded', 'false');
     toggle.addEventListener('click', () => {
       links.classList.toggle('open');
       toggle.setAttribute('aria-expanded', links.classList.contains('open'));
@@ -110,12 +114,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ── Image lightbox ── */
-  document.querySelectorAll('.showcase-img img, .gallery-item img').forEach(img => {
+  document.querySelectorAll('.showcase-img img, .gallery-item img, .get-card .shot img, .figure img, .j-body img').forEach(img => {
     img.style.cursor = 'zoom-in';
     img.addEventListener('click', () => {
       const overlay = document.createElement('div');
       overlay.className = 'lightbox-overlay';
-      overlay.innerHTML = `<img src="${img.src}" alt="${img.alt || ''}" />`;
+      const big = document.createElement('img');
+      big.src = img.currentSrc || img.src;
+      big.alt = img.alt || '';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-label', img.alt || 'Image');
+      overlay.appendChild(big);
       overlay.addEventListener('click', () => overlay.remove());
       document.addEventListener('keydown', function esc(e) {
         if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', esc); }
@@ -124,20 +133,48 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ── Tab system ── */
+  /* ── Tab system (ARIA tabs, arrow keys) ── */
   document.querySelectorAll('.code-tabs').forEach(tabs => {
-    const buttons = tabs.querySelectorAll('.tab-btn');
+    const nav = tabs.querySelector('.tab-nav');
+    const buttons = Array.from(tabs.querySelectorAll('.tab-btn'));
     const panels = tabs.querySelectorAll('.tab-panel');
-    buttons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const target = btn.dataset.tab;
-        buttons.forEach(b => b.classList.remove('active'));
-        panels.forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        const panel = tabs.querySelector('#tab-' + target);
-        if (panel) panel.classList.add('active');
+    if (nav) nav.setAttribute('role', 'tablist');
+    function activate(btn, focus) {
+      const target = btn.dataset.tab;
+      buttons.forEach(b => {
+        const on = b === btn;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + target));
+      if (focus) btn.focus();
+    }
+    buttons.forEach((btn, i) => {
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-controls', 'tab-' + btn.dataset.tab);
+      btn.id = btn.id || ('tabbtn-' + btn.dataset.tab);
+      const panel = tabs.querySelector('#tab-' + btn.dataset.tab);
+      if (panel) { panel.setAttribute('role', 'tabpanel'); panel.setAttribute('aria-labelledby', btn.id); }
+      btn.setAttribute('aria-selected', btn.classList.contains('active') ? 'true' : 'false');
+      btn.tabIndex = btn.classList.contains('active') ? 0 : -1;
+      btn.addEventListener('click', () => activate(btn, false));
+      btn.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const next = buttons[(i + (e.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length];
+          activate(next, true);
+        }
       });
     });
+    /* Pre-select a tab from the page's platform when asked to */
+    if (tabs.dataset.autoplatform !== undefined) {
+      const ua = navigator.userAgent || '';
+      const want = /Windows/i.test(ua) ? tabs.dataset.win
+        : (/Android/i.test(ua) ? null : (/Linux|X11|CrOS/i.test(ua) ? tabs.dataset.linux : null));
+      const btn = want && buttons.find(b => b.dataset.tab === want);
+      if (btn) activate(btn, false);
+    }
   });
 
   /* ── Carousel ── */
@@ -194,20 +231,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cubeGrid) {
     const CUBE_SIZE = 48, COL_STEP = 90, ROW_STEP = 110;
     const cubesData = [
-      { id:'code',      layer:'app',        col:-1.5, row:0, label:'Code',      name:'AbstractCode',         layerName:'Application',      href:'code.html',      desc:'Durable coding assistant with terminal TUI and browser UI. Every agent action is logged in an append-only ledger for perfect auditability.' },
-      { id:'flow',      layer:'app',        col:-0.5, row:0, label:'Flow',      name:'AbstractFlow',         layerName:'Application',      href:'flow.html',      desc:'Diagram-based, durable AI workflows for AbstractFramework. Author multi-agent orchestrations with drag-and-drop, share as portable .flow bundles.' },
-      { id:'assistant', layer:'app',        col:0.5,  row:0, label:'Assistant', name:'AbstractAssistant',     layerName:'Application',      href:'assistant.html', desc:'macOS tray application with full voice support. Gateway-first thin client \u2014 start a conversation from the tray, continue anywhere.' },
-      { id:'observer',  layer:'app',        col:1.5,  row:0, label:'Observer',  name:'AbstractObserver',      layerName:'Application',      href:'observer.html',  desc:'Web-based observability dashboard. Monitor every AI operation, browse ledger history, and schedule agentic tasks with cron-like automation.' },
-      { id:'gateway',   layer:'control',    col:0,    row:1, label:'Gateway',   name:'AbstractGateway',       layerName:'Control Plane',    href:'gateway.html',   desc:'Production HTTP control plane for durable AI runs. SSE streaming, workflow bundle deployment, scheduling, multi-client support. SQLite or Postgres.' },
-      { id:'agent',     layer:'compose',    col:-0.5, row:2, label:'Agent',     name:'AbstractAgent',         layerName:'Composition',      href:'agent.html',     desc:'Library of agent patterns \u2014 ReAct, CodeAct, MemAct \u2014 built on three clean layers: logic, adapters, and agent wrappers.' },
-      { id:'flowrt',    layer:'compose',    col:0.5,  row:2, label:'Flow',         name:'AbstractFlow',         layerName:'Composition',    href:'flow.html',      desc:'Executes portable .flow bundles as durable workflow graphs. Supports subflows, multi-agent orchestration, and loop patterns.' },
-      { id:'core',      layer:'foundation', col:-0.5, row:3, label:'Core',      name:'AbstractCore',          layerName:'Foundation',       href:'core.html',      desc:'Unified Python LLM API for 9+ providers \u2014 cloud and local. Streaming, tool calling, structured output, media handling, embeddings.' },
-      { id:'runtime',   layer:'foundation', col:0.5,  row:3, label:'Runtime',   name:'AbstractRuntime',       layerName:'Foundation',       href:'runtime.html',   desc:'Persistent graph runner with durable execution. Append-only ledger, checkpoint/resume, explicit waits, tamper-evident hash chains.' },
-      { id:'voice',     layer:'plugin',     col:-1,   row:4, label:'Voice',     name:'AbstractVoice',         layerName:'Capability Plugin', href:'voice.html',    desc:'Voice I/O abstraction \u2014 TTS, STT, voice cloning. Works with multiple providers and models. Offline-first on Apple Silicon.' },
-      { id:'vision',    layer:'plugin',     col:0,    row:4, label:'Vision',    name:'AbstractVision',        layerName:'Capability Plugin', href:'vision.html',   desc:'Generative vision API \u2014 text-to-image, image editing, text-to-video, image-to-video. Backends for MLX-Gen, Diffusers, and more.' },
-      { id:'music',     layer:'plugin',     col:1,    row:4, label:'Music',     name:'AbstractMusic',         layerName:'Capability Plugin', href:'music.html',    desc:'Text-to-music generation via ACE-Step 1.5 and Stable Audio. Generates WAV locally on Apple Silicon with MPS memory management.' },
-      { id:'memory',    layer:'knowledge',  col:-0.5, row:5, label:'Memory',    name:'AbstractMemory',        layerName:'Knowledge',        href:'memory.html',    desc:'Temporal, provenance-aware triple store. Every fact has timestamps, confidence scores, and source attribution. Vector search built-in.' },
-      { id:'semantics', layer:'knowledge',  col:0.5,  row:5, label:'Semantics', name:'AbstractSemantics',     layerName:'Knowledge',        href:'semantics.html', desc:'Schema registry for predicates and entity types. YAML-defined ontology with JSON Schema generation. No hallucinated predicates.' },
+      { id:'code',      layer:'app',        col:-2.5, row:0, label:'Code',      name:'AbstractCode',      layerName:'Application',       href:'code.html',      desc:'A coding agent that runs durably on the gateway, with a terminal client and a browser client. Tool approvals, workspace files, streamed replies and automations.' },
+      { id:'flow',      layer:'app',        col:-1.5, row:0, label:'Flow',      name:'AbstractFlow',      layerName:'Application',       href:'flow.html',      desc:'The visual workflow editor. Draw workflows in the browser, publish them to the gateway as portable .flow bundles.' },
+      { id:'observer',  layer:'app',        col:-0.5, row:0, label:'Observer',  name:'AbstractObserver',  layerName:'Application',       href:'observer.html',  desc:'Watch runs live, replay the ledger step by step, and create and manage automations.' },
+      { id:'assistant', layer:'app',        col:0.5,  row:0, label:'Assistant', name:'AbstractAssistant', layerName:'Application',       href:'assistant.html', desc:'A macOS menu-bar assistant with a palette, a voice mode, and your sessions and automations one key away.' },
+      { id:'continuum', layer:'app',        col:1.5,  row:0, label:'Continuum', name:'AbstractContinuum', layerName:'Application',       href:'continuum.html', desc:'A board-first console for continuous development and deployment work.' },
+      { id:'entity',    layer:'app',        col:2.5,  row:0, label:'Entity',    name:'AbstractEntity',    layerName:'Application',       href:'entity.html',    desc:'Create entities with a lasting memory of their own, talk with them, and read their diaries.' },
+      { id:'gateway',   layer:'control',    col:0,    row:1, label:'Gateway',   name:'AbstractGateway',   layerName:'Control Plane',     href:'gateway.html',   desc:'The control plane: durable runs over HTTP and SSE, automations, the web and terminal consoles, the apps at /apps/<app>/, and multi-user auth.' },
+      { id:'agent',     layer:'compose',    col:-0.5, row:2, label:'Agent',     name:'AbstractAgent',     layerName:'Composition',       href:'agent.html',     desc:'Agent patterns (ReAct, CodeAct, MemAct) built on AbstractRuntime and AbstractCore.' },
+      { id:'flowrt',    layer:'compose',    col:0.5,  row:2, label:'Bundles',   name:'Workflow bundles',  layerName:'Composition',       href:'flow.html',      desc:'Portable .flow bundles, compiled and run durably by AbstractRuntime on the gateway.' },
+      { id:'core',      layer:'foundation', col:-0.5, row:3, label:'Core',      name:'AbstractCore',      layerName:'Foundation',        href:'core.html',      desc:'One Python LLM API over ten provider types, local and cloud: tools, structured output, media, embeddings, an OpenAI-compatible server and a console.' },
+      { id:'runtime',   layer:'foundation', col:0.5,  row:3, label:'Runtime',   name:'AbstractRuntime',   layerName:'Foundation',        href:'runtime.html',   desc:'Durable execution: interrupt, checkpoint, resume, with an append-only ledger. Runs automations and keeps a whole-message history window.' },
+      { id:'voice',     layer:'plugin',     col:-1,   row:4, label:'Voice',     name:'AbstractVoice',     layerName:'Capability Plugin', href:'voice.html',     desc:'Text-to-speech, speech-to-text and voice cloning, local or remote, with engines that say why they cannot run.' },
+      { id:'vision',    layer:'plugin',     col:0,    row:4, label:'Vision',    name:'AbstractVision',    layerName:'Capability Plugin', href:'vision.html',    desc:'Image generation, editing and upscaling, text-to-video and image-to-video, through MLX-Gen, Diffusers, stable-diffusion.cpp or OpenAI-compatible services.' },
+      { id:'music',     layer:'plugin',     col:1,    row:4, label:'Music',     name:'AbstractMusic',     layerName:'Capability Plugin', href:'music.html',     desc:'Text-to-music and text-to-audio: ACE Music and ElevenLabs remotely, ACE-Step and Stable Audio locally.' },
+      { id:'memory',    layer:'knowledge',  col:-0.5, row:5, label:'Memory',    name:'AbstractMemory',    layerName:'Knowledge',         href:'memory.html',    desc:'Durable, append-only agent memory: temporal triples, and a memory system that forms, recalls and consolidates records from use.' },
+      { id:'semantics', layer:'knowledge',  col:0.5,  row:5, label:'Semantics', name:'AbstractSemantics', layerName:'Knowledge',         href:'semantics.html', desc:'The shared vocabulary: predicates, entity types and memory relations, with JSON Schema helpers.' },
     ];
     const layerColors = { app:'#34d399', control:'#22d3ee', compose:'#818cf8', foundation:'#6366f1', plugin:'#f472b6', knowledge:'#fbbf24' };
 
@@ -222,7 +261,11 @@ document.addEventListener('DOMContentLoaded', () => {
         + '<div class="cube-tooltip"><div class="tip-layer" style="color:'+layerColors[c.layer]+'">'+c.layerName+'</div>'
         + '<div class="tip-name">'+c.name+'</div><div class="tip-desc">'+c.desc+'</div></div>'
         + '<div class="cube-label">'+c.label+'</div>';
+      wrap.setAttribute('role', 'listitem');
+      wrap.tabIndex = 0;
+      wrap.setAttribute('aria-label', c.name + ' (' + c.layerName + '): ' + c.desc);
       wrap.addEventListener('click', function(){ window.location.href = c.href; });
+      wrap.addEventListener('keydown', function(e){ if (e.key === 'Enter') window.location.href = c.href; });
       cubeGrid.appendChild(wrap);
     });
 
@@ -238,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
       var el = document.createElement('div');
       el.className = 'layer-label';
       el.dataset.layer = ['app','control','compose','foundation','plugin','knowledge'][l.row];
-      el.style.cssText = 'left:'+(2.5*COL_STEP)+'px;top:'+(l.row*ROW_STEP+14)+'px;color:'+l.color;
+      el.style.cssText = 'left:'+(3.3*COL_STEP)+'px;top:'+(l.row*ROW_STEP+14)+'px;color:'+l.color;
       el.textContent = l.text;
       cubeGrid.appendChild(el);
     });
@@ -261,6 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
     cubeWraps.forEach(function(w){
       w.addEventListener('mouseenter', function(){ highlightCube(w.dataset.id); });
       w.addEventListener('mouseleave', clearCubeHighlight);
+      w.addEventListener('focus', function(){ highlightCube(w.dataset.id); });
+      w.addEventListener('blur', clearCubeHighlight);
     });
   }
 

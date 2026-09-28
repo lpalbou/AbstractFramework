@@ -1,8 +1,8 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractagent/main/llms.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractAgent/main/llms.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractagent/main/llms.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractAgent/main/llms.txt
 
 # AbstractAgent
 
@@ -15,8 +15,12 @@ Important notes (source-of-truth hints):
 - Docs entrypoint: `README.md` → `docs/getting-started.md` → `docs/README.md`
 - Runtime behavior lives in workflow adapters: `src/abstractagent/adapters/*_runtime.py`
 - Prompting/parsing logic stays runtime-agnostic: `src/abstractagent/logic/*` (no `abstractruntime` imports)
+- `src/abstractagent/adapters/generation_params.py` is the shared LLM param normalizer for temperature, seed, media policy, prompt-cache identity, streaming passthrough (`_runtime.stream`), Core `thinking` and `speculation` (MTP). Delegated children in ReAct, CodeAct and MemAct inherit `stream`, `speculation`, `thinking`, provider/model, sampling, `max_output_tokens`, `tool_prompt_examples` and `tool_policy` (see `docs/architecture.md`).
+- `src/abstractagent/adapters/loop_hooks.py` is the shared loop-hook layer (listen/steer/capture); see `docs/hooks.md`.
+- Version 0.3.17 requires `abstractcore[tools]>=2.13.41` and `AbstractRuntime>=0.7.0`; extras: `apple`, `gpu`, `test`, `dev`.
+- The loops stamp the runtime turn-grounding envelope into the durable user turn once (`abstractruntime.turn_grounding`) and place the loop tail with `transcripts.place_loop_tail`, keeping prompts byte-prefix stable across iterations and turns.
 - MemAct is not re-exported at the package top-level; import from `abstractagent.agents.memact` (see `docs/api.md`).
-- After changes, run tests: `pytest -q`
+- After changes, run tests: `pytest -q` (`python -P -m pytest -q` from a folder with sibling checkouts)
 
 ## Ecosystem
 
@@ -29,12 +33,15 @@ Important notes (source-of-truth hints):
 - [README](README.md): Installation + quick start
 - [Documentation index](docs/README.md): Map of all docs
 - [Getting started](docs/getting-started.md): Minimal usage + persistence example
-- [FAQ](docs/faq.md): Common questions and troubleshooting
+- [FAQ](docs/faq.md): Common questions, limits and delegation behaviour
+- [Troubleshooting](docs/troubleshooting.md): Symptom-first fixes (ToolExecutor, resume, Ollama context, HTTP 400, streaming)
 - [API](docs/api.md): Public API surface
 - [Agents](docs/agents.md): Agent types + API
 - [Tools](docs/tools.md): Default tools, allowlists, built-ins (adapter-mapped + runtime-owned)
+- [Loop hooks](docs/hooks.md): Listen/steer/capture hooks on the agent loops (`LoopHooks`, `HookEvent`) + emit-step stability contract
+- [Skills attachment](docs/skills-attachment.md): `_runtime.skills_block` / `system_prompt_extra` slots, cache contract, unattended recipe
 - [Persistence](docs/persistence.md): Pause/resume across restarts
-- [Architecture](docs/architecture.md): How logic/adapters/agents fit together (diagrams)
+- [Architecture](docs/architecture.md): How logic/adapters/agents fit together; ReAct graph with review nodes; delegated sub-agents and inherited `_runtime` controls (diagrams)
 - [ReAct pipeline](docs/react-pipeline.md): ReAct workflow details
 - [Development](docs/development.md): Local dev, tests, build
 
@@ -44,6 +51,7 @@ Important notes (source-of-truth hints):
 - [Security policy](SECURITY.md): How to report vulnerabilities responsibly
 - [Contributing](CONTRIBUTING.md): Dev setup + conventions
 - [Acknowledgements](ACKNOWLEDMENTS.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
 - [pyproject.toml](pyproject.toml): Dependencies, version, scripts
 - [License](LICENSE)
 
@@ -55,8 +63,10 @@ Important notes (source-of-truth hints):
 - [ReAct workflow](src/abstractagent/adapters/react_runtime.py): `create_react_workflow(...)`
 - [CodeAct workflow](src/abstractagent/adapters/codeact_runtime.py): `create_codeact_workflow(...)`
 - [MemAct workflow](src/abstractagent/adapters/memact_runtime.py): `create_memact_workflow(...)`
-- [Built-in tool schemas](src/abstractagent/logic/builtins.py): schema-only tool definitions (adapter-mapped + runtime-owned)
+- [Built-in tool schemas](src/abstractagent/logic/builtins.py): schema-only tool definitions (adapter-mapped + runtime-owned; incl. `read_skill`)
 - [Default tools bundle](src/abstractagent/tools/__init__.py): `ALL_TOOLS`
+- [Task reset](src/abstractagent/agents/task_reset.py): `reset_react_task(vars, task)` — between-runs vars transform for queued work (per-task state resets; door-owned state persists)
+- [Unattended recipe](src/abstractagent/agents/unattended.py): `unattended_runtime_overrides` (no `ask_user`, no-questions directive)
 
 ## Tests
 

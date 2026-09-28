@@ -1,8 +1,8 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractvision/main/llms-full.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractVision/main/llms-full.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractvision/main/llms-full.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractVision/main/llms-full.txt
 
 # AbstractVision — llms-full
 
@@ -23,6 +23,7 @@ Included files:
 - `README.md`
 - `docs/README.md`
 - `docs/getting-started.md`
+- `docs/mlx-gen-local-examples.md`
 - `docs/api.md`
 - `docs/architecture.md`
 - `docs/faq.md`
@@ -44,7 +45,7 @@ Included files:
 --- 8< --- FILE: llms.txt --- 8< ---
 # AbstractVision
 
-> Model-agnostic generative vision API (images, optional video) with a capability registry, artifact-ref outputs, and backends for OpenAI-compatible HTTP, Diffusers, stable-diffusion.cpp, and MLX-Gen.
+> Model-agnostic generative vision API (images, optional video) with packaged model/adapter capability registries, artifact-ref outputs, and backends for OpenAI-compatible HTTP, Diffusers, stable-diffusion.cpp, and MLX-Gen.
 
 This repository’s current source of truth is the code under `src/abstractvision/` (docs in `docs/`).
 
@@ -55,24 +56,27 @@ Maintenance tips:
 - Regenerate `llms-full.txt` after doc/packaging changes: `python scripts/generate_llms_full.py`.
 
 Agent quickstart (choose the path that matches your goal):
-- **Use the library (Python / CLI)**: start with `README.md` → `docs/getting-started.md` → `docs/api.md` → `docs/reference/backends.md`; shell commands are `abstractvision t2i` / `abstractvision i2i` / `abstractvision t2v` / `abstractvision i2v`, and the interactive path is `abstractvision cli` (legacy alias `abstractvision repl`) with `/t2i` / `/i2i` / `/t2v` / `/i2v`.
+- **Use the library (Python / CLI)**: start with `README.md` → `docs/getting-started.md` → `docs/api.md` → `docs/reference/backends.md`; shell commands are `abstractvision t2i` / `abstractvision i2i` / `abstractvision upscale` / `abstractvision t2v` / `abstractvision i2v`, and the interactive path is `abstractvision cli` (legacy alias `abstractvision repl`) with `/t2i` / `/i2i` / `/t2v` / `/i2v`.
 - **Integrate with AbstractCore/Runtime**: read `docs/reference/abstractcore-integration.md` and `docs/reference/artifacts.md` (includes local model residency control for in-process backends).
 - **Inspect provider model catalogs**: use `abstractvision provider-models`, `VisionManager.list_provider_models(...)`, or `llm.vision.list_provider_models(...)`; catalog listing is explicit and does not select the active model.
 - **Inspect local model/task metadata**: use `abstractvision catalog`, `abstractvision show-model`, or `GET /v1/vision/models`; runtime-backed local surfaces only expose tasks that the selected backend currently enables.
-- **Need the model curation policy**: read `docs/reference/capabilities-registry.md`, `docs/adr/0005_curated_capability_registry_and_download_catalog.md`, and `docs/adr/0006_operator_control_configuration_precedence_and_explicit_network_use.md`.
+- **Need the model/adapter curation policy**: read `docs/reference/capabilities-registry.md`, `docs/adr/0005_curated_capability_registry_and_download_catalog.md`, and `docs/adr/0006_operator_control_configuration_precedence_and_explicit_network_use.md`.
 - **Need a single file**: open `llms-full.txt` (generated bundle of the core docs).
 - **Need local Diffusers**: install `abstractvision[diffusers]`, set `ABSTRACTVISION_BACKEND=diffusers`, pre-download `runwayml/stable-diffusion-v1-5`, or set `ABSTRACTVISION_DIFFUSERS_ALLOW_DOWNLOAD=1`.
-- **Need local MLX-Gen**: install `abstractvision[mlx-gen]`, choose exact published model ids such as `AbstractFramework/qwen-image-2512-4bit` for `t2i`, `AbstractFramework/qwen-image-edit-2511-4bit` or `briaai/Fibo-Edit` for `i2i`, and `Wan-AI/Wan2.2-TI2V-5B-Diffusers` for `t2v`/`i2v`; pre-download with `abstractvision download ... --provider mlx-gen`.
+- **Need local MLX-Gen**: install `abstractvision[mlx-gen]`. This release is validated on Apple Silicon first; the extra also installs on Linux when upstream `mlx-gen` / `mlx` markers are available. Choose exact published model ids such as `AbstractFramework/qwen-image-2512-4bit` for `t2i`, `AbstractFramework/qwen-image-edit-2511-4bit` or `briaai/Fibo-Edit` for `i2i`, `AbstractFramework/seedvr2-3b-8bit` / `AbstractFramework/seedvr2-7b-8bit` for SeedVR2 `upscale`, and `AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit` / `AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit` for Wan A14B `t2v`/`i2v`; use typed `guidance_2` / CLI `--guidance-2` for the A14B second-stage guidance control, typed `control_image` / CLI `--control-image` for validated Qwen structured-control routes, and `mask` for validated Qwen/FIBO masked-edit routes; pre-download with `abstractvision download ... --provider mlx-gen`.
+- **Need LoRA adapters**: prefer the shared typed contract `lora_adapters=[LoRAAdapterSpec(...)]` in Python and repeated `--lora` / `--lora-scale` / `--lora-target-role` flags in the CLI. Use provider/model discovery to inspect `supports_lora`, `lora_status`, `lora_target_roles`, and `lora_validation_profile` before long runs.
 
 Reality checks (current shipped behavior, anchored in code):
-- Built-in backends implement `text_to_image`, `image_to_image`, and backend-dependent `text_to_video` / `image_to_video`.
-- Local MLX-Gen supports curated q4/q8 Apple Silicon image presets, official FIBO image snapshots, and Wan 2.2 TI2V `text_to_video` / first-frame `image_to_video`.
-- MLX-Gen Wan video progress is surfaced in shell/REPL output by default and through Python/Core `on_progress(event)` callbacks.
+- Built-in backends implement `text_to_image`, `image_to_image`, `image_upscale`, and backend-dependent `text_to_video` / `image_to_video`.
+- Local MLX-Gen supports curated q4/q8 image presets, official FIBO image snapshots, FLUX.2/Qwen multi-reference image edits, validated Qwen structured control and Qwen/FIBO masked edits, canonical SeedVR2 q8/q4 image upscaling packages, shared LoRA adapters, and Wan 2.2 TI2V plus task-specific Wan 2.2 A14B `text_to_video` / first-frame `image_to_video`.
+- Task-specific Wan A14B video declares typed `guidance_2` defaults in `vision_model_capabilities.json` (`3.0` for T2V, `3.5` for I2V); it is not transported through backend `extra`.
+- MLX-Gen progress is surfaced through Python/Core `on_progress(event)` callbacks, opt-in one-shot image generation/edit CLI `--progress`, and denoise-step video/upscale progress by default.
 - Local Diffusers `text_to_video` remains experimental and is temporarily disabled from the normal local surfaces.
 - OpenAI-compatible HTTP can also provide `text_to_video` / `image_to_video` when video endpoints are configured.
 - `multi_view_image` exists in the API but no built-in backend implements it yet.
 - Provider `/models` catalogs can be listed explicitly, including through the AbstractCore plugin boundary; they are not used for automatic model selection.
 - Backend normalization is shared across `VisionManager`, the playground API, and the AbstractCore plugin, so model-specific parameter constraints are enforced once in the backend layer instead of separately in each UI.
+- Image dimensions are provider/model-specific. `width`/`height` are optional request overrides; omit them to let the backend use its default or `auto` behavior, and do not assume `512x512` is universally accepted.
 
 ## Documentation
 
@@ -80,6 +84,7 @@ Reality checks (current shipped behavior, anchored in code):
 - [README.md](README.md): overview, install, quickstart
 - [docs/README.md](docs/README.md): docs index (map)
 - [docs/getting-started.md](docs/getting-started.md): first image (OpenAI-compatible HTTP / Diffusers / sdcpp) + Playground
+- [docs/mlx-gen-local-examples.md](docs/mlx-gen-local-examples.md): current MLX-Gen LoRA route proofs, exact commands, progress logs, and generated outputs
 - [docs/troubleshooting.md](docs/troubleshooting.md): symptom-oriented setup/runtime fixes for local backends, playground, and integration issues
 - [docs/api.md](docs/api.md): public Python API surface
 - [docs/architecture.md](docs/architecture.md): how components fit together (with diagrams)
@@ -106,14 +111,16 @@ Reality checks (current shipped behavior, anchored in code):
 ## Code entry points
 
 - [src/abstractvision/vision_manager.py](src/abstractvision/vision_manager.py): `VisionManager` orchestrator API
-- [src/abstractvision/types.py](src/abstractvision/types.py): request/response dataclasses (`ImageGenerationRequest`, `GeneratedAsset`, …)
+- [src/abstractvision/types.py](src/abstractvision/types.py): request/response dataclasses (`ImageGenerationRequest`, `ImageUpscaleRequest`, `GeneratedAsset`, …)
 - [src/abstractvision/errors.py](src/abstractvision/errors.py): error types (`CapabilityNotSupportedError`, …)
 - [src/abstractvision/backends/base_backend.py](src/abstractvision/backends/base_backend.py): `VisionBackend` contract
 - [src/abstractvision/backends/__init__.py](src/abstractvision/backends/__init__.py): lazy imports (keeps `import abstractvision` import-light)
 - [src/abstractvision/backends/openai_compatible.py](src/abstractvision/backends/openai_compatible.py): OpenAI-compatible HTTP backend (+ optional video)
 - [src/abstractvision/backends/huggingface_diffusers.py](src/abstractvision/backends/huggingface_diffusers.py): local Diffusers backend (local images; experimental local video groundwork)
 - [src/abstractvision/backends/stable_diffusion_cpp.py](src/abstractvision/backends/stable_diffusion_cpp.py): stable-diffusion.cpp backend (GGUF via `sd-cli` or python bindings)
+- [src/abstractvision/adapter_capabilities.py](src/abstractvision/adapter_capabilities.py): adapter capability registry loader + validator
 - [src/abstractvision/model_capabilities.py](src/abstractvision/model_capabilities.py): capability registry loader + validator
+- [src/abstractvision/lora_adapters.py](src/abstractvision/lora_adapters.py): shared LoRA parsing, matching, and backend handle helpers
 - [src/abstractvision/artifacts.py](src/abstractvision/artifacts.py): artifact refs + stores (`LocalAssetStore`, `RuntimeArtifactStoreAdapter`)
 - [src/abstractvision/cli.py](src/abstractvision/cli.py): CLI/REPL (`abstractvision`)
 - [src/abstractvision/playground_server.py](src/abstractvision/playground_server.py): self-contained playground server and `/v1/vision/*` jobs
@@ -147,14 +154,18 @@ Model-agnostic generative vision API (images, optional video) for Python and the
 ## What you get
 
 - A small orchestration API: [`VisionManager`](src/abstractvision/vision_manager.py)
-- A packaged capability registry (“what models can do”): [`VisionModelCapabilitiesRegistry`](src/abstractvision/model_capabilities.py) backed by [`vision_model_capabilities.json`](src/abstractvision/assets/vision_model_capabilities.json)
-- Shared model metadata that now also drives local catalog surfacing and backend request normalization across the CLI, playground, and AbstractCore paths
+- Packaged capability registries for model families and adapter defaults:
+  [`VisionModelCapabilitiesRegistry`](src/abstractvision/model_capabilities.py)
+  backed by [`vision_model_capabilities.json`](src/abstractvision/assets/vision_model_capabilities.json),
+  plus [`VisionAdapterCapabilitiesRegistry`](src/abstractvision/adapter_capabilities.py)
+  backed by [`vision_adapter_capabilities.json`](src/abstractvision/assets/vision_adapter_capabilities.json)
+- Shared model and adapter metadata that drives local catalog surfacing and backend request normalization across the CLI, playground, and AbstractCore paths
 - Optional artifact-ref outputs (small JSON refs): [`LocalAssetStore`](src/abstractvision/artifacts.py) and [`RuntimeArtifactStoreAdapter`](src/abstractvision/artifacts.py)
 - Built-in backends (execution engines): [`src/abstractvision/backends/`](src/abstractvision/backends/)
   - OpenAI-compatible HTTP: [`openai_compatible.py`](src/abstractvision/backends/openai_compatible.py)
   - Local Diffusers: [`huggingface_diffusers.py`](src/abstractvision/backends/huggingface_diffusers.py)
   - Local stable-diffusion.cpp / GGUF: [`stable_diffusion_cpp.py`](src/abstractvision/backends/stable_diffusion_cpp.py)
-  - Local MLX-Gen Apple Silicon backend for curated AbstractFramework MLX presets: [`mflux.py`](src/abstractvision/backends/mflux.py)
+  - Local MLX-Gen backend for curated AbstractFramework MLX presets and Wan video: [`mflux.py`](src/abstractvision/backends/mflux.py)
 - CLI for manual testing (`abstractvision cli`, legacy alias: `abstractvision repl`): [`abstractvision`](src/abstractvision/cli.py)
 - Self-contained local Playground UI/API: [`playground/vision_playground.html`](playground/vision_playground.html) (docs: [`playground/README.md`](playground/README.md))
 
@@ -174,7 +185,9 @@ flowchart LR
 
 - Development status: **Alpha** (0.x). The public API is stable-by-design, but breaking changes may still happen and will be called out in `CHANGELOG.md`.
 - Built-in backends implement images (`text_to_image`, `image_to_image`) plus backend-dependent video (`text_to_video`, `image_to_video`).
-- Local MLX-Gen supports `text_to_image` for curated FLUX.2, Qwen Image, Z-Image, ERNIE Image Turbo, and FIBO models; supports `image_to_image` for FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, and FIBO Edit models; and supports Wan 2.2 TI2V for local `text_to_video` and first-frame `image_to_video`.
+- Local MLX-Gen supports `text_to_image` for curated FLUX.2, Qwen Image, Z-Image, ERNIE Image Turbo, FIBO, and Bonsai ternary models; supports `image_to_image` for FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, and FIBO Edit models; and supports Wan 2.2 TI2V plus task-specific Wan 2.2 A14B packages for local `text_to_video` and first-frame `image_to_video`.
+- Local MLX-Gen `0.38.0+` exposes route-aware Qwen structured control on validated base-Qwen routes through `control_image` / `control_strength`, and route-aware masked edit on validated Qwen 2511 edit routes through `mask`.
+- Local MLX-Gen exposes a shared `lora_adapters` contract across `text_to_image`, `image_to_image`, `text_to_video`, and `image_to_video`. Route-level LoRA truth stays backend-owned and is surfaced through provider catalogs as `supports_lora`, `lora_status`, `lora_target_roles`, and `lora_validation_profile`.
 - Local Diffusers `text_to_video` remains experimental and is temporarily disabled from the normal local runtime surfaces pending [`docs/backlog/planned/0023_local_runtime_capability_quarantine_for_glm_mflux_and_t2v.md`](docs/backlog/planned/0023_local_runtime_capability_quarantine_for_glm_mflux_and_t2v.md).
 - Remote `text_to_video` / `image_to_video` are also supported through the OpenAI-compatible backend **when** endpoints are configured.
 - `multi_view_image` is part of the public API (`VisionManager.generate_angles`) but no built-in backend implements it yet.
@@ -202,13 +215,13 @@ Optional extras:
 | `abstractvision[diffusers]` | Install Torch/Diffusers and related packages for local Diffusers generation. |
 | `abstractvision[huggingface]` | Compatibility alias for callers that still request the historical Diffusers extra. |
 | `abstractvision[sdcpp]` | Install `stable-diffusion-cpp-python` for the pip binding fallback. |
-| `abstractvision[mlx-gen]` | Install the optional MLX-Gen Apple Silicon image/video runtime. |
-| `abstractvision[mflux]` | Compatibility alias for the MLX-Gen Apple Silicon image/video runtime. |
-| `abstractvision[local]` | Convenience for both local backend dependency sets, including `diffusers` and `sdcpp`. |
+| `abstractvision[mlx-gen]` | Install the optional MLX-Gen image/video runtime. This release is validated on Apple Silicon first; the extra also installs on Linux when upstream `mlx-gen` / `mlx` support is available. |
+| `abstractvision[mflux]` | Compatibility alias for the MLX-Gen runtime. |
+| `abstractvision[local]` | Convenience for the Diffusers + `sdcpp` local runtime stack. Add `abstractvision[mlx-gen]` or use `abstractvision[all]` / `abstractvision[all-apple]` when you also want MLX-Gen. |
 | `abstractvision[all]` | All runtime backend dependencies, without contributor tooling. |
 | `abstractvision[apple]` / `abstractvision[all-apple]` | Native macOS Python profile: Diffusers/Torch MPS, stable-diffusion.cpp bindings, and MLX-Gen. |
-| `abstractvision[gpu]` | GPU Diffusers/Torch profile. Install a CUDA/ROCm-enabled PyTorch wheel when needed. |
-| `abstractvision[all-gpu]` | Full GPU-relevant local vision profile: Diffusers plus stable-diffusion.cpp bindings. |
+| `abstractvision[gpu]` | GPU-oriented local profile: Diffusers/Torch plus MLX-Gen when the platform markers match. Install a CUDA/ROCm-enabled PyTorch wheel when needed. |
+| `abstractvision[all-gpu]` | Full GPU-oriented local vision profile: Diffusers, stable-diffusion.cpp bindings, and MLX-Gen when the platform markers match. |
 | `abstractvision[abstractcore]` | Compatibility marker only; AbstractCore is still supplied by the host application. |
 
 `stable-diffusion-cpp-python` is currently constrained below `0.4.6` because
@@ -256,7 +269,7 @@ Start here:
 
 ### First Apple-local MLX model
 
-For Apple Silicon local image generation, prefer the AbstractFramework
+For Apple-first local MLX-Gen image generation, prefer the AbstractFramework
 MLX-Gen q4 presets first. They are published in the
 [AbstractFramework/mlx-gen Hugging Face collection](https://huggingface.co/collections/AbstractFramework/mlx-gen/)
 and are the default recommendation for local memory efficiency. q8 variants are
@@ -272,7 +285,13 @@ cache-only unless you explicitly enable runtime downloads.
 pip install "abstractvision[models,mlx-gen]"
 abstractvision model-presets
 abstractvision catalog --provider mlx-gen
+abstractvision show-model AbstractFramework/qwen-image-edit-2511-8bit
+abstractvision show-model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit
+abstractvision adapters --provider mlx-gen --model AbstractFramework/qwen-image-edit-2509-8bit --task image_to_image
 # Tip: `--provider mlx-gen` implies `--target mlx` (you usually set one or the other).
+# Use `catalog` to browse available downloadable models, then `show-model` for the exact route
+# contract, defaults, tasks, and LoRA support truth of one selected model.
+# Use `adapters` to inspect locally cached overlays for one model/task route.
 abstractvision download AbstractFramework/flux.2-klein-4b-4bit --provider mlx-gen
 abstractvision download AbstractFramework/qwen-image-2512-4bit --provider mlx-gen
 abstractvision download AbstractFramework/qwen-image-edit-2511-4bit --provider mlx-gen
@@ -281,15 +300,26 @@ abstractvision download AbstractFramework/ernie-image-turbo-8bit --provider mlx-
 abstractvision download briaai/FIBO --provider mlx-gen
 abstractvision download briaai/Fibo-lite --provider mlx-gen
 abstractvision download briaai/Fibo-Edit --provider mlx-gen
+abstractvision download prism-ml/bonsai-image-ternary-4B-mlx-2bit --provider mlx-gen
 abstractvision download Wan-AI/Wan2.2-TI2V-5B-Diffusers --provider mlx-gen
+abstractvision download AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit --provider mlx-gen
+abstractvision download AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit --provider mlx-gen
+abstractvision download AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --provider mlx-gen
+abstractvision download AbstractFramework/seedvr2-3b-8bit --provider mlx-gen
 abstractvision t2i --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-4bit "a product photo of a matte black espresso machine" --steps 4 --guidance-scale 1.0
 abstractvision t2i --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit "a product photo of a matte black espresso machine" --steps 4 --guidance-scale 1.0
 abstractvision i2i --provider mlx-gen --model AbstractFramework/qwen-image-edit-2511-4bit --image ./input.png "replace the background with a clean white studio setup" --steps 20 --guidance-scale 2.5 --strength 0.75
+abstractvision i2i --provider mlx-gen --model AbstractFramework/qwen-image-edit-2511-4bit --image ./input.png --reference-image ./style.png "apply the style reference while preserving the subject" --progress
 abstractvision t2i --provider mlx-gen --model briaai/FIBO "a studio product photo of a white ceramic mug with the AbstractFramework logo" --steps 50 --guidance-scale 4.0
+abstractvision t2i --provider mlx-gen --model prism-ml/bonsai-image-ternary-4B-mlx-2bit "a bonsai tree in a quiet ceramic studio" --steps 4 --guidance-scale 1.0
 abstractvision i2i --provider mlx-gen --model briaai/Fibo-Edit --image ./input.png "remove the background and keep the object edges clean" --steps 20 --guidance-scale 4.0
-abstractvision t2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers "a red fox walking through a snowy forest, cinematic" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0
-abstractvision i2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers --image ./first-frame.png "slow camera push-in" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0
+abstractvision upscale --provider mlx-gen --model AbstractFramework/seedvr2-3b-8bit --image ./input.png --resolution 2x --softness 0.25 --open
+abstractvision t2v --provider mlx-gen --model AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit "a red fox walking through a snowy forest, cinematic" --width 480 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0
+abstractvision i2v --provider mlx-gen --model AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --image ./first-frame.png "slow camera push-in" --width 480 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 3.5 --guidance-2 3.5
 ```
+
+For a complete local MLX-Gen gallery with copy-paste commands and bundled
+generated outputs, see [MLX-Gen local examples](docs/mlx-gen-local-examples.md).
 
 Select q4 or q8 by using the exact published model id, for example
 `AbstractFramework/flux.2-klein-4b-4bit` or
@@ -300,22 +330,211 @@ The shipped MLX-Gen backend currently supports curated q4/q8 prepared folders
 for `flux2-klein-4b`, `flux2-klein-9b`, `flux2-klein-base-4b`,
 `flux2-klein-base-9b`, `qwen-image`, `qwen-image-edit`, `z-image`, and
 `z-image-turbo` families, plus the q4/q8 `ernie-image-turbo` prepared folders.
-MLX-Gen 0.18.6+ also runs official runtime snapshots such as `briaai/FIBO`,
-`briaai/Fibo-lite`, `briaai/Fibo-Edit`, `briaai/Fibo-Edit-RMBG`, and
-`Wan-AI/Wan2.2-TI2V-5B-Diffusers`. `image_to_image` is implemented for FLUX.2
-klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, and FIBO Edit models; FIBO
-Edit snapshots support mask inputs where the runtime supports them. Edit strength
-is passed as `strength` and normalized to MLX-Gen's `image_strength` parameter
-where the runtime supports it. Wan 2.2 TI2V uses the official snapshot through
-MLX-Gen 0.18.6+ for `text_to_video` and first-frame `image_to_video`; it is not
-an AbstractFramework q4/q8 prepared folder, so select it by its exact repo id.
+MLX-Gen `0.38.0+` also runs official runtime snapshots such as `briaai/FIBO`,
+`briaai/Fibo-lite`, `briaai/Fibo-Edit`, `briaai/Fibo-Edit-RMBG`,
+`prism-ml/bonsai-image-ternary-4B-mlx-2bit`, and
+`Wan-AI/Wan2.2-TI2V-5B-Diffusers`, the prepared TI2V package
+`AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit`, and prepared Wan 2.2 A14B video packages
+such as `AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit` and
+`AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit`. It also supports SeedVR2
+single-image upscaling through the official `ByteDance-Seed/SeedVR2-3B` and
+`ByteDance-Seed/SeedVR2-7B` bases plus the canonical
+`AbstractFramework/seedvr2-{3b,7b}-{8bit,4bit}` prepared packages. Use
+`AbstractFramework/seedvr2-3b-8bit` by default, `AbstractFramework/seedvr2-7b-8bit`
+when memory allows, and q4 variants only when memory is tight. The default
+upscale request uses `--resolution 2x` and `--softness 0.25`; pass an integer
+`--resolution` for a target shortest edge. `--scale` remains accepted as a
+friendly scale-factor alias when `--resolution` is omitted. `--quantize` is only
+needed for official/source weights. Bonsai is a pre-packed
+ternary 2-bit checkpoint, not a q4/q8 prepared folder; use its exact repo id
+and keep guidance at 1.0. The binary 1-bit Bonsai checkpoint is not surfaced
+because stock MLX cannot run it yet. `image_to_image` is implemented for FLUX.2
+klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, and FIBO Edit models.
+FLUX.2 and Qwen Image Edit can accept additional references with
+`--reference-image` (or Python `extra={"reference_images": [...]}`) for
+multi-reference edits. FIBO Edit snapshots support mask inputs where the runtime
+supports them, and `AbstractFramework/qwen-image-edit-2511-8bit` supports
+route-aware masked edits. `AbstractFramework/qwen-image-8bit` supports
+route-aware structured control through `abstractvision t2i
+--control-image ... --control-strength ...` (or Python `control_image=` /
+`control_strength=`). Edit/control inputs fail closed when the selected route
+does not advertise the matching runtime capability. Edit strength is passed as
+`strength` and normalized to MLX-Gen's `image_strength` parameter where the
+runtime supports it. For video,
+prefer the prepared TI2V-5B or task-specific Wan 2.2 A14B packages when memory
+allows. TI2V-5B should be run at `832x480` / `480x832` or above in practice;
+the bundled proof page validates the route at `832x480` with `flow_shift=3.0`.
+Wan A14B dimensions must be multiples of 16 and can still be smoke-tested at
+`480x240`. Wan A14B uses two guidance stages: `guidance_scale` is the primary/high-noise guidance,
+and `guidance_2` (`--guidance-2`) is the second-stage/low-noise guidance.
+Registry defaults are `4.0` + `3.0` for T2V and `3.5` + `3.5` for I2V; omit
+`guidance_2` for single-stage video models.
+
+### Shared LoRA adapters
+
+AbstractVision exposes one shared LoRA adapter request shape across Python,
+CLI, and the AbstractCore plugin:
+
+- Python: `lora_adapters=[LoRAAdapterSpec(...)]`
+- CLI: repeated `--lora`, `--lora-scale`, `--lora-weight-name`,
+  `--lora-subfolder`, `--lora-adapter-name`, and `--lora-target-role`
+- Zero adapters means a base-model run; repeated flags let you stack one or more adapters in order
+- Provider catalogs: `supports_lora`, `lora_status`, `lora_target_roles`,
+  `lora_validation_profile`
+
+Example CLI commands:
+
+```bash
+abstractvision t2i \
+  --provider mlx-gen \
+  --model AbstractFramework/qwen-image-2512-8bit \
+  --lora prithivMLmods/Qwen-Image-2512-Pixel-Art-LoRA:Qwen-Image-2512-Master-Pixel-Art-LoRA.safetensors \
+  --lora-scale 1.0 \
+  --steps 20 \
+  --guidance-scale 5.0 \
+  --progress \
+  "Pixel art astronaut floating above Earth"
+
+abstractvision t2v \
+  --provider mlx-gen \
+  --model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit \
+  --lora AlekseyCalvin/HSToric_Color_Wan2.2_5B_LoRA_BySilverAgePoets:HSToric_color_Wan22_5b_LoRA.safetensors \
+  --lora-scale 0.8 \
+  --lora-target-role transformer \
+  --width 832 \
+  --height 480 \
+  --frames 17 \
+  --fps 16 \
+  --steps 20 \
+  --flow-shift 3.0 \
+  --progress \
+  "HST style HD film, early 1900s, autochrome, analog cinema. A horse-drawn carriage crossing a snowy town square at dusk, pedestrians in wool coats, historical street lamps glowing, gentle cinematic motion."
+
+abstractvision i2i \
+  --provider mlx-gen \
+  --model AbstractFramework/qwen-image-edit-2509-8bit \
+  --image ./input.png \
+  --lora lightx2v/Qwen-Image-Lightning:Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-bf16.safetensors \
+  --lora dx8152/Qwen-Edit-2509-Multiple-angles:镜头转换.safetensors \
+  --lora-scale 1.0 \
+  --lora-scale 0.9 \
+  --steps 8 \
+  --guidance-scale 1.0 \
+  --progress \
+  "Use the source starfighter as the same object. Re-render it from behind and slightly above, banking left over the snowy canyon, keeping the same vehicle identity and environment."
+```
+
+Wan LoRA routes may require explicit target roles. TI2V-5B uses one role,
+`transformer`. A14B routes use two roles,
+`high_noise_transformer` and `low_noise_transformer`. AbstractVision passes the
+roles through unchanged instead of guessing.
+
+Quantization guidance for Lightning LoRAs:
+
+- The upstream LightX2V Qwen Lightning docs warn against pairing a BF16-trained
+  Lightning LoRA with the raw unscaled FP8 Qwen base
+  (`qwen_image_fp8_e4m3fn.safetensors`); that mix can produce grid artifacts.
+  Use the fp8-trained Lightning LoRA variant on that raw FP8 base, or use a
+  scaled FP8/BF16-compatible base with the BF16-trained Lightning LoRA instead.
+  See:
+  <https://github.com/ModelTC/LightX2V-Qwen-Image-Lightning#-using-lightning-loras-with-fp8-models>
+- AbstractVision does not currently surface that raw unscaled Qwen FP8 base as
+  a first-class local route. For local LoRA-heavy Qwen and Wan runs through the
+  MLX-Gen backend, prefer the curated `...-8bit` prepared model routes when
+  memory allows. q4 routes remain available for tighter memory budgets.
+
+Diffusers still accepts legacy `extra["loras"]`, `extra["loras_json"]`,
+`extra["lora"]`, and `extra["lora_json"]` payloads for compatibility, but new
+callers should use the typed shared contract.
+
+Inspect one exact route before long LoRA runs:
+
+```bash
+abstractvision show-model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit
+abstractvision adapters --provider mlx-gen --model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit --task text_to_video --json
+```
+
+### Batch generation
+
+AbstractVision also exposes a public batch surface above the exact single-run
+requests:
+
+- Python: `generate_image_batch(...)`, `edit_image_batch(...)`,
+  `generate_video_batch(...)`, `image_to_video_batch(...)`
+- CLI: `--count` plus optional explicit `--seeds`
+
+Examples:
+
+```bash
+abstractvision t2i \
+  --provider mlx-gen \
+  --model AbstractFramework/qwen-image-2512-8bit \
+  --count 2 \
+  --seeds 2512,2513 \
+  --lora prithivMLmods/Qwen-Image-2512-Pixel-Art-LoRA:Qwen-Image-2512-Master-Pixel-Art-LoRA.safetensors \
+  --lora-scale 1.0 \
+  --width 768 \
+  --height 768 \
+  --steps 20 \
+  --guidance-scale 5.0 \
+  --progress \
+  "Pixel art isometric research outpost on an icy exoplanet at blue hour, tiny service drones, crisp tiles, retro RPG palette"
+
+abstractvision t2v \
+  --provider mlx-gen \
+  --model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit \
+  --count 2 \
+  --seeds 6201,6202 \
+  --width 832 \
+  --height 480 \
+  --frames 9 \
+  --fps 8 \
+  --steps 4 \
+  --guidance-scale 4.0 \
+  --flow-shift 3.0 \
+  --progress \
+  "A paper lantern drifting across a quiet snowy street, slow stable camera, soft evening light"
+```
+
+SeedVR2 model selection:
+
+| Model id | Use when |
+| --- | --- |
+| `AbstractFramework/seedvr2-3b-8bit` | Default upscaler: lowest-friction q8 package. |
+| `AbstractFramework/seedvr2-7b-8bit` | Higher-quality 7B upscaling when memory allows. |
+| `AbstractFramework/seedvr2-3b-4bit` | Lower-memory 3B package. |
+| `AbstractFramework/seedvr2-7b-4bit` | Lower-memory 7B package. |
+| `ByteDance-Seed/SeedVR2-3B` / `ByteDance-Seed/SeedVR2-7B` | Official source weights; pass `--quantize 8` or `--quantize 4` when runtime quantization is needed. |
+
+If you already have a prepared MLX-Gen folder, pass the folder directly as the
+model. AbstractVision infers the SeedVR2 base from names such as
+`seedvr2-7b-8bit`:
+
+```bash
+abstractvision upscale \
+  --provider mlx-gen \
+  --model /path/to/seedvr2-7b-8bit \
+  --image ./input.png \
+  --resolution 2x \
+  --softness 0.25 \
+  --open
+```
 
 One-shot `t2i`, `i2i`, `t2v`, and `i2v` commands store results in the local
 asset store and print an artifact ref followed by the local content path. Use
 `--open` when you want the generated output opened after storage, or
 `--store-dir <dir>` to choose the asset store directory.
-MLX-Gen video commands report frame/step progress on stderr by default; pass
-`--no-progress` when you need quiet output.
+Image dimensions are provider/model-specific. `width`/`height` are optional
+request overrides; when omitted, AbstractVision lets the selected backend use
+its own default or `auto` behavior. Do not treat `512x512` as a universal
+default: some older/local models accept it, while newer OpenAI-compatible image
+models may only accept larger provider-declared sizes such as `1024x1024`,
+`1024x1536`, `1536x1024`, or `auto`. If you pass `--width`/`--height`, the
+backend may reject unsupported combinations.
+MLX-Gen video and upscale commands report denoise-step progress on stderr by
+default; video progress also includes frame context. Pass `--no-progress` when
+you need quiet output. MLX-Gen image generation/edit commands are quiet by
+default and accept `--progress` for step progress.
 
 Stable Diffusion does not currently have a curated MLX-Gen q4/q8 preset in
 AbstractVision, so full Diffusers downloads remain explicit.
@@ -456,23 +675,26 @@ from source (see [`docs/getting-started.md`](docs/getting-started.md)):
 ```
 
 Local Diffusers `text_to_video` remains experimental and is temporarily
-disabled from the normal bundled local surfaces. Use MLX-Gen Wan 2.2 TI2V for
+disabled from the normal bundled local surfaces. Use MLX-Gen Wan 2.2 A14B for
 local Apple Silicon `text_to_video` / `image_to_video`, or use the
 OpenAI-compatible backend for remote video endpoints.
 
-For Apple Silicon local generation through MLX-Gen:
+For local MLX-Gen generation (Apple-first validation):
 
 ```text
 /backend mlx-gen AbstractFramework/flux.2-klein-4b-4bit
 /t2i "a product photo of a matte black espresso machine" --steps 4 --guidance-scale 1.0 --open
+/backend mlx-gen prism-ml/bonsai-image-ternary-4B-mlx-2bit
+/t2i "a bonsai tree in a quiet ceramic studio" --steps 4 --guidance-scale 1.0 --open
 /backend mlx-gen AbstractFramework/qwen-image-edit-2511-4bit
 /i2i --image ./input.png "replace the background with a clean white studio setup" --steps 20 --guidance-scale 2.5 --strength 0.75 --open
-/backend mlx-gen Wan-AI/Wan2.2-TI2V-5B-Diffusers
-/t2v "a red fox walking through a snowy forest, cinematic" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
-/i2v --image ./first-frame.png "slow camera push-in" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
+/backend mlx-gen AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit
+/t2v "a red fox walking through a snowy forest, cinematic" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0 --open
+/backend mlx-gen AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit
+/i2v --image ./first-frame.png "slow camera push-in" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 3.5 --guidance-2 3.5 --open
 ```
 
-`/t2v` and `/i2v` show MLX-Gen video progress by default; add
+`/t2v` and `/i2v` show MLX-Gen denoise-step video progress by default; add
 `--no-progress` to suppress progress output in scripts.
 
 OpenAI-compatible server example:
@@ -617,8 +839,9 @@ This folder contains the user-facing documentation for `abstractvision`.
 - [API reference](api.md)
 - [Architecture decisions](adr/README.md)
 - [Backends](reference/backends.md)
+- [MLX-Gen local examples](mlx-gen-local-examples.md) (current LoRA route proofs, progress logs, and generated assets)
 - [Configuration (CLI/REPL env vars + flags)](reference/configuration.md)
-- [Capability registry (`vision_model_capabilities.json`)](reference/capabilities-registry.md)
+- [Capability registries (models + adapters)](reference/capabilities-registry.md)
 - [Artifacts (artifact refs + stores)](reference/artifacts.md)
 - [AbstractCore integration (capability plugin + tools)](reference/abstractcore-integration.md)
 - Agent-oriented docs: [`../llms.txt`](../llms.txt) and [`../llms-full.txt`](../llms-full.txt)
@@ -635,19 +858,23 @@ AbstractVision is part of the **AbstractFramework** ecosystem and is designed to
 
 Public API surface: [`VisionManager`](../src/abstractvision/vision_manager.py) exposes:
 - `generate_image` (`text_to_image`), `edit_image` (`image_to_image`)
+- `generate_image_batch`, `edit_image_batch` (repeatable orchestration with explicit seed planning)
 - `generate_video` (`text_to_video`), `image_to_video` (`image_to_video`) (backend-dependent)
+- `generate_video_batch`, `image_to_video_batch` (repeatable orchestration with explicit seed planning)
 - `generate_angles` (`multi_view_image`) (API exists; no built-in backend implements it yet)
 
 Built-in backends implement:
 - **Images**: Diffusers, stable-diffusion.cpp, MLX-Gen, OpenAI-compatible HTTP ([`../src/abstractvision/backends/`](../src/abstractvision/backends/))
-- **Current local policy**: MLX-Gen supports curated q4/q8 Apple Silicon image presets, official FIBO image snapshots, and Wan 2.2 TI2V video; local Diffusers `text_to_video` is experimental and temporarily disabled from normal local surfaces.
+- **Current local policy**: MLX-Gen supports curated q4/q8 image presets, validated Qwen structured control and Qwen/FIBO masked edits, official FIBO image snapshots, SeedVR2 upscaling, shared LoRA adapters, and Wan 2.2 TI2V/A14B video. This release is validated on Apple Silicon first; the MLX-Gen install extra also exposes Linux support when upstream `mlx-gen` / `mlx` markers are available. Local Diffusers `text_to_video` is experimental and temporarily disabled from normal local surfaces.
 - **Video**:
-  - MLX-Gen for Wan 2.2 TI2V local `text_to_video` and first-frame `image_to_video`
+  - MLX-Gen for Wan 2.2 local `text_to_video` and first-frame `image_to_video`
   - OpenAI-compatible HTTP for optional `text_to_video` / `image_to_video` when endpoints are configured ([`openai_compatible.py`](../src/abstractvision/backends/openai_compatible.py))
 
-If you’re looking for “what can model X do?”, the single source of truth is the packaged registry:
-[`../src/abstractvision/assets/vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json) (loaded by `VisionModelCapabilitiesRegistry` in [`../src/abstractvision/model_capabilities.py`](../src/abstractvision/model_capabilities.py)).
-The curation and cross-platform support policy for that registry is governed by
+If you’re looking for “what can model X do?” or “which adapter defaults/compatibilities are packaged?”, the packaged registries are the source of truth:
+[`../src/abstractvision/assets/vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json) (loaded by `VisionModelCapabilitiesRegistry` in [`../src/abstractvision/model_capabilities.py`](../src/abstractvision/model_capabilities.py)) and
+[`../src/abstractvision/assets/vision_adapter_capabilities.json`](../src/abstractvision/assets/vision_adapter_capabilities.json) (loaded by `VisionAdapterCapabilitiesRegistry` in [`../src/abstractvision/adapter_capabilities.py`](../src/abstractvision/adapter_capabilities.py)).
+Exact runtime route truth still comes from the selected backend.
+The curation and cross-platform support policy for those registries is governed by
 [ADR 0005](adr/0005_curated_capability_registry_and_download_catalog.md).
 
 ## Internal engineering notes
@@ -672,7 +899,7 @@ This guide helps you generate your first image using AbstractVision with the bui
 
 - **OpenAI-compatible HTTP**: call a local/remote server that exposes OpenAI-shaped image endpoints
 - **Diffusers (local Python)**: Stable Diffusion / Qwen Image / FLUX 2 / other supported Diffusers pipelines
-- **MLX-Gen (local Apple Silicon)**: q4/q8 AbstractFramework MLX-optimized image generation via the optional MLX-Gen runtime, official MLX-Gen 0.18.6+ FIBO image models, and Wan 2.2 TI2V `text_to_video` / first-frame `image_to_video`
+- **MLX-Gen (local, Apple-first)**: q4/q8 AbstractFramework MLX-optimized image generation via the optional MLX-Gen runtime, official FIBO image models, canonical SeedVR2 image upscaling packages, shared LoRA adapters, and Wan 2.2 TI2V/A14B video routes. The current AbstractVision release is validated on Apple Silicon first; the extra also installs on Linux when upstream `mlx-gen` / `mlx` support is available.
 - **stable-diffusion.cpp (local GGUF)**: GGUF diffusion models via `sd-cli` (recommended for GPU backends like **Metal**/**CUDA**) or via pip-installable python bindings (often **CPU-only** fallback)
 - **Playground (web, optional)**: self-contained AbstractVision UI/API for local model loading and jobs (`/v1/vision/*`)
 
@@ -684,7 +911,7 @@ See also:
 - Architecture: [docs/architecture.md](architecture.md)
 - Backends: [docs/reference/backends.md](reference/backends.md)
 - Configuration (CLI/REPL env vars): [docs/reference/configuration.md](reference/configuration.md)
-- Capability registry: [docs/reference/capabilities-registry.md](reference/capabilities-registry.md)
+- Capability registries: [docs/reference/capabilities-registry.md](reference/capabilities-registry.md)
 - Artifacts: [docs/reference/artifacts.md](reference/artifacts.md)
 - AbstractCore integration: [docs/reference/abstractcore-integration.md](reference/abstractcore-integration.md)
 
@@ -698,7 +925,7 @@ From PyPI:
 pip install abstractvision
 ```
 
-AbstractVision’s base install is lightweight. It includes the shared API, capability registry, artifact helpers, CLI, AbstractCore plugin entry point, and stdlib OpenAI-compatible HTTP backend. Local inference runtimes are explicit extras: install `abstractvision[diffusers]` for Torch/Diffusers, `abstractvision[sdcpp]` for the stable-diffusion.cpp python binding fallback, `abstractvision[mlx-gen]` for Apple Silicon MLX-Gen, or `abstractvision[all-apple]` for the full native macOS stack. `abstractvision[mflux]` remains available as a compatibility alias for older install instructions.
+AbstractVision’s base install is lightweight. It includes the shared API, packaged capability registries, artifact helpers, CLI, AbstractCore plugin entry point, and stdlib OpenAI-compatible HTTP backend. Local inference runtimes are explicit extras: install `abstractvision[diffusers]` for Torch/Diffusers, `abstractvision[sdcpp]` for the stable-diffusion.cpp python binding fallback, `abstractvision[mlx-gen]` for MLX-Gen, or `abstractvision[all-apple]` for the full native macOS stack. `abstractvision[mflux]` remains available as a compatibility alias for older install instructions.
 
 If you see “missing pipeline class” errors for newer model families, install the `diffusers-dev` extra (or compatibility alias `huggingface-dev`) to get compatible dependencies, then install Diffusers from source (`main`).
 
@@ -755,15 +982,15 @@ Optional extras:
 | `openai-compatible` | Empty local/remote OpenAI-shaped endpoint intent marker; the HTTP backend is stdlib-only today. |
 | `diffusers` | Installs Torch/Diffusers and related packages for local Diffusers generation. |
 | `sdcpp` | Installs `stable-diffusion-cpp-python` for the stable-diffusion.cpp pip binding fallback. |
-| `mlx-gen` | Installs the optional MLX-Gen runtime for Apple Silicon MLX image/video generation. |
+| `mlx-gen` | Installs the optional MLX-Gen runtime. This release is validated on Apple Silicon first; the extra also installs on Linux when upstream `mlx-gen` / `mlx` markers are available. |
 | `mflux` | Compatibility alias for the MLX-Gen runtime. |
 | `apple` | Native macOS profile: Diffusers/Torch MPS, stable-diffusion.cpp bindings, and MLX-Gen. |
-| `gpu` | GPU-friendly profile for Diffusers/Torch (does not include MLX-Gen). |
+| `gpu` | GPU-friendly profile for Diffusers/Torch and MLX-Gen when the platform markers match. |
 | `huggingface` | Compatibility alias for the historical Diffusers backend dependency set. |
-| `local` | Convenience extra for both local backend dependency sets, including `sdcpp`. |
+| `local` | Convenience extra for the Diffusers + `sdcpp` local runtime stack. Add `mlx-gen` separately, or use `all` / `all-apple`, when you also want MLX-Gen. |
 | `all` | All runtime backend dependencies, without contributor tooling. |
 | `all-apple` | Aggregate native macOS profile: Diffusers/Torch MPS, stable-diffusion.cpp, and MLX-Gen. |
-| `all-gpu` | Aggregate GPU profile (Diffusers + stable-diffusion.cpp bindings). |
+| `all-gpu` | Aggregate GPU profile (Diffusers + stable-diffusion.cpp bindings + MLX-Gen when the platform markers match). |
 | `abstractcore` | Empty compatibility marker; install AbstractCore in the host application environment. |
 
 Contributor-only extras:
@@ -789,7 +1016,7 @@ python scripts/download_model_sets.py --set sd15_diffusers
 AbstractVision can run “locally” via three main routes:
 
 - **Diffusers backend**: uses Torch device selection (`cuda` / `mps` / `cpu`).
-- **MLX-Gen backend (`mlx-gen`)**: Apple Silicon MLX generation through the optional MLX-Gen runtime. q4 AbstractFramework model repos are the default recommendation; q8 variants are separate exact model ids for quality-focused runs.
+- **MLX-Gen backend (`mlx-gen`)**: Apple-first MLX generation through the optional MLX-Gen runtime. q4 AbstractFramework model repos are the default recommendation; q8 variants are separate exact model ids for quality-focused runs.
 - **stable-diffusion.cpp backend (`sdcpp`)**: runs GGUF diffusion models using:
   - `sd-cli` (**recommended** when you want GPU backends like **Metal** or **CUDA**)
   - or `stable-diffusion-cpp-python` (convenient, but often **CPU-only**, especially on macOS)
@@ -977,12 +1204,15 @@ If your server also supports video endpoints, configure them via `ABSTRACTVISION
 
 ---
 
-## 2.2) Apple Silicon MLX-Gen (q4 first)
+## 2.2) MLX-Gen local (q4 first)
 
-Use this path on Apple Silicon when you want local MLX-optimized image/video models
-without running a separate server. AbstractVision uses the `mlx-gen` Python API
-in-process and expects prepared model folders to exist in the Hugging Face
-cache. It does not silently download weights during generation.
+Use this path when you want local MLX-optimized image/video models without
+running a separate server. The current AbstractVision release is validated on
+Apple Silicon first. The `abstractvision[mlx-gen]` extra also installs on Linux
+when upstream `mlx-gen` / `mlx` support is available. AbstractVision uses the
+`mlx-gen` Python API in-process and expects prepared model folders to exist in
+the Hugging Face cache. It does not silently download weights during
+generation.
 
 ```bash
 pip install "abstractvision[models,mlx-gen]"
@@ -995,7 +1225,11 @@ abstractvision download AbstractFramework/ernie-image-turbo-8bit --provider mlx-
 abstractvision download briaai/FIBO --provider mlx-gen
 abstractvision download briaai/Fibo-lite --provider mlx-gen
 abstractvision download briaai/Fibo-Edit --provider mlx-gen
+abstractvision download prism-ml/bonsai-image-ternary-4B-mlx-2bit --provider mlx-gen
 abstractvision download Wan-AI/Wan2.2-TI2V-5B-Diffusers --provider mlx-gen
+abstractvision download AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit --provider mlx-gen
+abstractvision download AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --provider mlx-gen
+abstractvision download AbstractFramework/seedvr2-3b-8bit --provider mlx-gen
 ```
 
 The default prepared choices are q4 repos from the
@@ -1005,6 +1239,17 @@ when quality is paramount and memory permits it. Quantization is part of the
 published model folder, not a generation-time parameter.
 Qwen and ERNIE q4 folders can mix q4 and q8 components, but remain the default
 prepared choice.
+Bonsai ternary is different: `prism-ml/bonsai-image-ternary-4B-mlx-2bit` is a
+pre-packed MLX checkpoint consumed directly by MLX-Gen. Use the exact repo id,
+keep guidance at 1.0, and do not use it for image-to-image.
+SeedVR2 uses the official `ByteDance-Seed/SeedVR2-3B` and
+`ByteDance-Seed/SeedVR2-7B` bases plus canonical prepared packages:
+`AbstractFramework/seedvr2-3b-8bit` is the default upscaler,
+`AbstractFramework/seedvr2-7b-8bit` is the larger q8 variant, and q4 variants
+are available for tighter memory. The default upscale request uses
+`--resolution 2x` and `--softness 0.25`; pass `--resolution <pixels>` for a
+target short edge. `--scale 2x` remains accepted when `--resolution` is omitted.
+Runtime `--quantize` is only needed for official/source weights.
 
 One-shot shell commands store the output in the local asset store and print the
 artifact ref followed by the local content path. Add `--open` to open the output
@@ -1014,6 +1259,13 @@ Text-to-image from the shell:
 
 ```bash
 abstractvision t2i --provider mlx-gen --model AbstractFramework/qwen-image-2512-4bit "a studio product photo of a white ceramic mug with the AbstractFramework logo" --steps 20 --guidance-scale 1.0 --open
+abstractvision t2i --provider mlx-gen --model prism-ml/bonsai-image-ternary-4B-mlx-2bit "a bonsai tree in a quiet ceramic studio" --steps 4 --guidance-scale 1.0 --open
+```
+
+Structured control from the shell:
+
+```bash
+abstractvision t2i --provider mlx-gen --model AbstractFramework/qwen-image-8bit --control-image ./pose.png --control-strength 0.85 "fashion editorial portrait, same pose, soft daylight, neutral studio backdrop" --steps 20 --guidance-scale 4.0 --open
 ```
 
 Image-to-image/edit from the shell:
@@ -1023,15 +1275,132 @@ abstractvision i2i --provider mlx-gen --model AbstractFramework/qwen-image-edit-
 abstractvision i2i --provider mlx-gen --model briaai/Fibo-Edit --image ./input.png "remove the background and keep the object edges clean" --steps 20 --guidance-scale 4.0 --open
 ```
 
+Masked edit from the shell:
+
+```bash
+abstractvision i2i --provider mlx-gen --model AbstractFramework/qwen-image-edit-2511-8bit --image ./input.png --mask ./mask.png "replace only the masked region with a brushed steel panel" --steps 20 --guidance-scale 4.0 --open
+```
+
+Image upscaling from the shell:
+
+```bash
+abstractvision upscale --provider mlx-gen --model AbstractFramework/seedvr2-3b-8bit --image ./input.png --resolution 2x --softness 0.25 --open
+```
+
 Text-to-video and first-frame image-to-video from the shell:
 
 ```bash
-abstractvision t2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers "a red fox walking through a snowy forest, cinematic" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
-abstractvision i2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers --image ./first-frame.png "slow camera push-in" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
+abstractvision t2v --provider mlx-gen --model AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit "a red fox walking through a snowy forest, cinematic" --width 480 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0 --open
+abstractvision i2v --provider mlx-gen --model AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --image ./first-frame.png "slow camera push-in" --width 480 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 3.5 --guidance-2 3.5 --open
 ```
 
-MLX-Gen video commands print frame/step progress while the video is running.
-Use `--no-progress` for quiet scripts.
+Wan 2.2 A14B uses 16px width/height multiples; `480x240` is valid for low-cost
+local checks, while larger native sizes are more appropriate for quality review.
+For MLX-Gen Qwen structured control, use the validated base route
+`AbstractFramework/qwen-image-8bit` and pass `--control-image` plus optional
+`--control-strength`. For masked edits, use the validated Qwen edit route
+`AbstractFramework/qwen-image-edit-2511-8bit` (or FIBO Edit) and pass
+`--mask`.
+
+Shared LoRA adapters:
+
+```bash
+abstractvision t2i \
+  --provider mlx-gen \
+  --model AbstractFramework/qwen-image-2512-8bit \
+  --lora prithivMLmods/Qwen-Image-2512-Pixel-Art-LoRA:Qwen-Image-2512-Master-Pixel-Art-LoRA.safetensors \
+  --lora-scale 1.0 \
+  --steps 20 \
+  --guidance-scale 5.0 \
+  --progress \
+  "Pixel art astronaut floating above Earth"
+
+abstractvision i2i \
+  --provider mlx-gen \
+  --model AbstractFramework/qwen-image-edit-2511-8bit \
+  --image ./input.png \
+  --lora fal/Qwen-Image-Edit-2511-Multiple-Angles-LoRA:qwen-image-edit-2511-multiple-angles-lora.safetensors \
+  --lora-scale 0.9 \
+  --steps 6 \
+  --guidance-scale 4.0 \
+  --progress \
+  "Use the source subject as the same object. <sks> back view low-angle shot wide shot."
+
+abstractvision t2v \
+  --provider mlx-gen \
+  --model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit \
+  --lora AlekseyCalvin/HSToric_Color_Wan2.2_5B_LoRA_BySilverAgePoets:HSToric_color_Wan22_5b_LoRA.safetensors \
+  --lora-scale 0.8 \
+  --lora-target-role transformer \
+  --width 832 \
+  --height 480 \
+  --frames 17 \
+  --fps 16 \
+  --steps 20 \
+  --flow-shift 3.0 \
+  --progress \
+  "HST style HD film, early 1900s, autochrome, analog cinema. A horse-drawn carriage crossing a snowy town square at dusk, pedestrians in wool coats, historical street lamps glowing, gentle cinematic motion."
+```
+
+Use provider/model discovery to check the route before a long LoRA run.
+Use `abstractvision catalog --provider mlx-gen` to browse downloadable models,
+then `abstractvision show-model <model-id>` for the exact runtime route
+contract. Use `abstractvision adapters --provider mlx-gen --model <model-id> --task <task>`
+to list locally cached overlays for one route. MLX-Gen route rows surface
+`supports_lora`, `lora_status`, `lora_target_roles`, and
+`lora_validation_profile`.
+
+Batch generation:
+
+```bash
+abstractvision t2i \
+  --provider mlx-gen \
+  --model AbstractFramework/qwen-image-2512-8bit \
+  --count 2 \
+  --seeds 2512,2513 \
+  --lora prithivMLmods/Qwen-Image-2512-Pixel-Art-LoRA:Qwen-Image-2512-Master-Pixel-Art-LoRA.safetensors \
+  --lora-scale 1.0 \
+  --width 768 \
+  --height 768 \
+  --steps 20 \
+  --guidance-scale 5.0 \
+  --progress \
+  "Pixel art isometric research outpost on an icy exoplanet at blue hour, tiny service drones, crisp tiles, retro RPG palette"
+```
+
+Video examples (5s MP4):
+
+<div class="af_media_carousel" aria-label="AbstractVision text-to-video examples">
+  <button class="af_media_carousel__btn af_media_carousel__btn--prev" type="button" aria-label="Previous video">‹</button>
+  <div class="af_media_carousel__track" tabindex="0">
+    <figure class="af_media_carousel__item">
+      <video class="af_media_carousel__video" controls muted playsinline loop preload="metadata">
+        <source src="../assets/videos/video-river.mp4" type="video/mp4" />
+      </video>
+      <figcaption class="af_media_carousel__caption"><strong>River</strong> — smooth, clean motion (5s)</figcaption>
+    </figure>
+    <figure class="af_media_carousel__item">
+      <video class="af_media_carousel__video" controls muted playsinline loop preload="metadata">
+        <source src="../assets/videos/video-space.mp4" type="video/mp4" />
+      </video>
+      <figcaption class="af_media_carousel__caption"><strong>Space</strong> — cinematic scene (5s)</figcaption>
+    </figure>
+    <figure class="af_media_carousel__item">
+      <video class="af_media_carousel__video" controls muted playsinline loop preload="metadata">
+        <source src="../assets/videos/t2v-example.mp4" type="video/mp4" />
+      </video>
+      <figcaption class="af_media_carousel__caption"><strong>T2V example</strong> — prior sample (5s)</figcaption>
+    </figure>
+  </div>
+  <button class="af_media_carousel__btn af_media_carousel__btn--next" type="button" aria-label="Next video">›</button>
+</div>
+
+MLX-Gen image generation/edit commands accept `--progress` for step progress.
+MLX-Gen upscale and video commands print denoise-step progress by default;
+video events also include frame context while the video is running. Use
+`--no-progress` for quiet video or upscaling scripts. A complete local example
+gallery with commands and bundled outputs is available in
+[MLX-Gen local examples](mlx-gen-local-examples.md).
 
 Interactive CLI/REPL (`abstractvision cli`; `abstractvision repl` remains an
 alias) uses the same backend and request normalization:
@@ -1046,9 +1415,13 @@ alias) uses the same backend and request normalization:
 /backend mlx-gen briaai/FIBO
 /t2i "a studio product photo of a white ceramic mug with the AbstractFramework logo" --steps 50 --guidance-scale 4.0 --open
 
-/backend mlx-gen Wan-AI/Wan2.2-TI2V-5B-Diffusers
-/t2v "a red fox walking through a snowy forest, cinematic" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
-/i2v --image ./first-frame.png "slow camera push-in" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
+/backend mlx-gen prism-ml/bonsai-image-ternary-4B-mlx-2bit
+/t2i "a bonsai tree in a quiet ceramic studio" --steps 4 --guidance-scale 1.0 --open
+
+/backend mlx-gen AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit
+/t2v "a red fox walking through a snowy forest, cinematic" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0 --open
+/backend mlx-gen AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit
+/i2v --image ./first-frame.png "slow camera push-in" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 3.5 --guidance-2 3.5 --open
 ```
 
 Interactive `/t2v` and `/i2v` use the same default progress display; add
@@ -1106,11 +1479,11 @@ defaults to the input image size for image-to-image edits to avoid unexpected me
 resolution, pass `--width`/`--height` flags in the REPL (forwarded via `request.extra`) or set them in the playground
 Extra JSON field.
 
-LoRA example (REPL; note: `loras_json` is forwarded via `request.extra`):
+LoRA example (REPL; prefer the shared adapter flags):
 
 ```text
 /backend diffusers Qwen/Qwen-Image-Edit-2511 mps bfloat16
-/i2i --image ./input.png "make it watercolor" --steps 8 --guidance-scale 1 --loras_json '[{"source":"lightx2v/Qwen-Image-Edit-2511-Lightning","scale":1.0}]' --open
+/i2i --image ./input.png "make it watercolor" --steps 8 --guidance-scale 1 --lora lightx2v/Qwen-Image-Edit-2511-Lightning --lora-scale 1.0 --open
 ```
 
 Rapid-AIO example (distilled transformer override; Qwen Image Edit):
@@ -1324,13 +1697,391 @@ For the endpoint list, see `playground/README.md`.
 
 The packaged local Diffusers `text_to_video` groundwork remains experimental and
 is currently disabled from the normal local surfaces. The practical local Apple
-Silicon video path is MLX-Gen Wan 2.2 TI2V.
+Silicon video path is MLX-Gen Wan 2.2, preferably the task-specific A14B
+packages when memory allows.
 
 Current policy:
-- use `abstractvision t2v/i2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers` for local Apple Silicon video;
+- use `abstractvision t2v --provider mlx-gen --model AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit` and `abstractvision i2v --provider mlx-gen --model AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit` for local Apple Silicon Wan A14B video;
 - use the OpenAI-compatible backend when video is served remotely; and
 - keep Diffusers local video behind the experimental follow-up in [`docs/backlog/planned/0023_local_runtime_capability_quarantine_for_glm_mflux_and_t2v.md`](backlog/planned/0023_local_runtime_capability_quarantine_for_glm_mflux_and_t2v.md).
 --- >8 --- END FILE: docs/getting-started.md --- >8 ---
+
+--- 8< --- FILE: docs/mlx-gen-local-examples.md --- 8< ---
+# MLX-Gen local examples
+
+This page records the current bundled proof runs for the MLX-Gen backend in
+AbstractVision.
+
+All assets referenced here were generated through AbstractVision with
+`mlx-gen 0.18.19` and copied into
+[`docs/assets/mlx-gen-lora-examples/`](assets/mlx-gen-lora-examples/).
+
+## What this page validates
+
+- AbstractVision uses one shared LoRA adapter contract across
+  `text_to_image`, `image_to_image`, `text_to_video`, and `image_to_video`:
+  `LoRAAdapterSpec(...)` / `lora_adapters=[...]`.
+- The same surface supports base runs, single-adapter runs, and stacked-adapter
+  runs.
+- AbstractVision exposes a simple public batch surface above the exact
+  single-request dataclasses:
+  `generate_image_batch(...)`, `edit_image_batch(...)`,
+  `generate_video_batch(...)`, and `image_to_video_batch(...)`, plus CLI
+  `--count` / `--seeds`.
+- Provider-model discovery surfaces route truth through `supports_lora`,
+  `lora_status`, `lora_target_roles`, and `lora_validation_profile`.
+- Installed adapter discovery is backend-owned and lists optional overlays only;
+  full-model component files are excluded from the adapter inventory.
+- The MLX-Gen surface exposes route-aware Qwen masked edit and
+  structured control through typed request fields instead of `extra`-only
+  escape hatches.
+- The public TI2V-5B visual proofs in this bundle use `832x480`.
+- The public task-specific Wan A14B proofs in this bundle use `480x240`.
+- The LoRA-heavy proof runs on this page use curated 8-bit MLX-Gen routes. For
+  local Qwen and Wan Lightning work, q8 is the preferred prepared route when
+  memory allows; q4 remains available for tighter memory budgets.
+- The current AbstractVision MLX runtime floor is
+  `mlx-gen>=0.38.0,<0.39.0`.
+
+This package release is validated on Apple Silicon first. The MLX-Gen install
+extra also exposes the upstream Linux/CUDA path when `mlx[cuda13]` markers
+apply, but the proof assets on this page are Apple validations.
+
+## Install and discovery
+
+Install the MLX-Gen extra:
+
+```bash
+pip install "abstractvision[mlx-gen]"
+```
+
+Inspect the local MLX-Gen catalog before long runs:
+
+```bash
+abstractvision catalog --provider mlx-gen
+abstractvision show-model AbstractFramework/qwen-image-edit-2509-8bit
+abstractvision show-model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit
+abstractvision show-model AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit
+abstractvision adapters --provider mlx-gen --model AbstractFramework/qwen-image-edit-2509-8bit --task image_to_image
+abstractvision adapters --provider mlx-gen --model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit --task text_to_video
+abstractvision adapters --provider mlx-gen --model AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --task image_to_video
+```
+
+Use `catalog` to browse downloadable models. Use `show-model` when you need
+the exact runtime route contract, including default parameters such as
+`flow_shift`. Use `adapters` when you need locally cached overlays that match
+one route.
+
+If you manually experiment outside the curated AbstractVision routes, note the
+upstream LightX2V Qwen Lightning guidance: do not pair a BF16-trained Qwen
+Lightning LoRA with the raw unscaled FP8 Qwen base
+(`qwen_image_fp8_e4m3fn.safetensors`). That upstream mix can produce grid
+artifacts. Reference:
+<https://github.com/ModelTC/LightX2V-Qwen-Image-Lightning#-using-lightning-loras-with-fp8-models>
+
+Bundled discovery artifacts:
+
+- [provider_adapters_qwen2512_t2i.json](assets/mlx-gen-lora-examples/provider_adapters_qwen2512_t2i.json)
+- [provider_adapters_qwen2509_i2i.json](assets/mlx-gen-lora-examples/provider_adapters_qwen2509_i2i.json)
+- [provider_adapters_wan_ti2v_t2v.json](assets/mlx-gen-lora-examples/provider_adapters_wan_ti2v_t2v.json)
+- [provider_adapters_wan_a14b_t2v.json](assets/mlx-gen-lora-examples/provider_adapters_wan_a14b_t2v.json)
+- [provider_adapters_wan_a14b_i2v.json](assets/mlx-gen-lora-examples/provider_adapters_wan_a14b_i2v.json)
+- [show_model_wan_ti2v_5b.txt](assets/mlx-gen-lora-examples/show_model_wan_ti2v_5b.txt)
+- [show_model_wan_a14b_t2v.txt](assets/mlx-gen-lora-examples/show_model_wan_a14b_t2v.txt)
+- [summary.json](assets/mlx-gen-lora-examples/summary.json)
+
+## Route-aware Qwen extras
+
+The public request surface exposes the validated Qwen MLX-Gen
+extras directly:
+
+- masked edit:
+  `abstractvision i2i --provider mlx-gen --model AbstractFramework/qwen-image-edit-2511-8bit --image ./input.png --mask ./mask.png "repair the marked area"`
+- structured control:
+  `abstractvision t2i --provider mlx-gen --model AbstractFramework/qwen-image-8bit --control-image ./edges.png --control-strength 0.9 "pagoda at sunrise"`
+
+Those inputs fail closed when the selected route does not advertise the matching
+runtime capability. `0.85` is the packaged default when
+`--control-strength` is omitted; `0.9` above matches the current upstream proof
+setting rather than the default.
+
+## Shared adapter contract
+
+In Python, use the typed request surface:
+
+```python
+from abstractvision import LoRAAdapterSpec, VisionManager
+from abstractvision.backends import MLXGenBackendConfig, MLXGenVisionBackend
+
+backend = MLXGenVisionBackend(
+    config=MLXGenBackendConfig(model="AbstractFramework/qwen-image-2512-8bit")
+)
+t2i = VisionManager(backend=backend, model_id="AbstractFramework/qwen-image-2512-8bit")
+assets = t2i.generate_image_batch(
+    "Pixel art isometric research outpost on an icy exoplanet at blue hour",
+    count=2,
+    seeds=[2512, 2513],
+    width=768,
+    height=768,
+    steps=20,
+    guidance_scale=5.0,
+    lora_adapters=[
+        LoRAAdapterSpec(
+            source="prithivMLmods/Qwen-Image-2512-Pixel-Art-LoRA:Qwen-Image-2512-Master-Pixel-Art-LoRA.safetensors",
+            scale=1.0,
+        )
+    ],
+)
+
+edit_backend = MLXGenVisionBackend(
+    config=MLXGenBackendConfig(model="AbstractFramework/qwen-image-edit-2509-8bit")
+)
+i2i = VisionManager(backend=edit_backend, model_id="AbstractFramework/qwen-image-edit-2509-8bit")
+edited = i2i.edit_image(
+    "Re-render the same vehicle from behind and slightly above.",
+    image=open("./input.png", "rb").read(),
+    steps=8,
+    guidance_scale=1.0,
+    lora_adapters=[
+        LoRAAdapterSpec(
+            source="lightx2v/Qwen-Image-Lightning:Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-bf16.safetensors",
+            scale=1.0,
+        ),
+        LoRAAdapterSpec(
+            source="dx8152/Qwen-Edit-2509-Multiple-angles:镜头转换.safetensors",
+            scale=0.9,
+        ),
+    ],
+)
+```
+
+In the CLI, the equivalent surface is repeated `--lora*` flags. Passing no
+LoRA flags keeps the base-model route. Passing one or more adapter flags stacks
+them in order.
+
+## Proof bundle
+
+The proof manifest for the runs below is
+[summary.json](assets/mlx-gen-lora-examples/summary.json).
+
+![MLX-Gen proof table](assets/mlx-gen-lora-examples/proof_table.png)
+
+| Proof | Model | Feature exercised | Output |
+| --- | --- | --- | --- |
+| Batch T2I x2 | `AbstractFramework/qwen-image-2512-8bit` | `--count 2`, explicit seeds, one LoRA | [contact sheet](assets/mlx-gen-lora-examples/t2i_qwen2512_pixel_art_batch_contact_sheet.png) |
+| Stacked I2I | `AbstractFramework/qwen-image-edit-2509-8bit` | two LoRAs stacked on one edit run | [input](assets/mlx-gen-lora-examples/i2i_qwen2509_stacked_loras_input.png) / [PNG](assets/mlx-gen-lora-examples/i2i_qwen2509_stacked_loras.png) |
+| TI2V visual proof | `AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit` | validated `832x480` TI2V LoRA route | [MP4](assets/mlx-gen-lora-examples/t2v_wan_ti2v5b_hstoric_832x480.mp4) / [contact sheet](assets/mlx-gen-lora-examples/t2v_wan_ti2v5b_hstoric_832x480_contact_sheet.png) |
+| Batch T2V x2 | `AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit` | `--count 2`, explicit seeds, zero LoRAs | [contact sheet](assets/mlx-gen-lora-examples/t2v_batch_wan_ti2v5b_832x480_contact_sheet.png) |
+| A14B T2V | `AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit` | task-specific route, paired Lightning LoRAs | [MP4](assets/mlx-gen-lora-examples/t2v_wan_a14b_lightning_480x240.mp4) / [contact sheet](assets/mlx-gen-lora-examples/t2v_wan_a14b_lightning_480x240_contact_sheet.png) |
+| A14B I2V | `AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit` | task-specific route, paired Lightning LoRAs | [input](assets/mlx-gen-lora-examples/i2v_wan_a14b_lightning_480x240_input.png) / [MP4](assets/mlx-gen-lora-examples/i2v_wan_a14b_lightning_480x240.mp4) |
+
+The public first-frame `image_to_video` proof in this bundle uses the
+task-specific Wan A14B route. TI2V-5B `image_to_video` remains supported
+through the same runtime surface, but the bundle keeps only the validated
+public proofs that held up visually at the supported sizes.
+
+## Exact commands used
+
+### Batch text to image: Qwen Image 2512 + pixel-art LoRA
+
+```bash
+PYTHONPATH=src python -m abstractvision.cli t2i \
+  --provider mlx-gen \
+  --model AbstractFramework/qwen-image-2512-8bit \
+  --store-dir <store> \
+  --width 768 \
+  --height 768 \
+  --steps 20 \
+  --guidance-scale 5.0 \
+  --count 2 \
+  --seeds 2512,2513 \
+  --lora prithivMLmods/Qwen-Image-2512-Pixel-Art-LoRA:Qwen-Image-2512-Master-Pixel-Art-LoRA.safetensors \
+  --lora-scale 1.0 \
+  --progress \
+  "Pixel art isometric research outpost on an icy exoplanet at blue hour, tiny service drones, crisp tiles, retro RPG palette"
+```
+
+Outputs:
+
+- [seed 2512](assets/mlx-gen-lora-examples/t2i_qwen2512_pixel_art_batch_seed2512.png)
+- [seed 2513](assets/mlx-gen-lora-examples/t2i_qwen2512_pixel_art_batch_seed2513.png)
+- [progress log](assets/mlx-gen-lora-examples/t2i_batch_qwen2512_pixel_art.progress.log)
+
+### Image to image: Qwen Image Edit 2509 + stacked LoRAs
+
+```bash
+PYTHONPATH=src python -m abstractvision.cli i2i \
+  --provider mlx-gen \
+  --model AbstractFramework/qwen-image-edit-2509-8bit \
+  --store-dir <store> \
+  --image ./input.png \
+  --steps 8 \
+  --guidance-scale 1.0 \
+  --seed 9701 \
+  --lora lightx2v/Qwen-Image-Lightning:Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-bf16.safetensors \
+  --lora dx8152/Qwen-Edit-2509-Multiple-angles:镜头转换.safetensors \
+  --lora-scale 1.0 \
+  --lora-scale 0.9 \
+  --progress \
+  "Use the source starfighter as the same object. Re-render it from behind and slightly above, banking left over the snowy canyon, keeping the same vehicle identity and environment."
+```
+
+Artifacts:
+
+- [input image](assets/mlx-gen-lora-examples/i2i_qwen2509_stacked_loras_input.png)
+- [edited image](assets/mlx-gen-lora-examples/i2i_qwen2509_stacked_loras.png)
+- [metadata](assets/mlx-gen-lora-examples/i2i_qwen2509_stacked_loras.meta.json)
+- [progress log](assets/mlx-gen-lora-examples/i2i_qwen2509_stacked_loras.progress.log)
+
+### Text to video: TI2V-5B + HSToric LoRA at 832x480
+
+```bash
+HF_HUB_OFFLINE=1 PYTHONPATH=src python -m abstractvision.cli t2v \
+  --provider mlx-gen \
+  --model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit \
+  --store-dir <store> \
+  --width 832 \
+  --height 480 \
+  --frames 17 \
+  --steps 20 \
+  --guidance-scale 4.0 \
+  --flow-shift 3.0 \
+  --fps 16 \
+  --seed 6301 \
+  --lora AlekseyCalvin/HSToric_Color_Wan2.2_5B_LoRA_BySilverAgePoets:HSToric_color_Wan22_5b_LoRA.safetensors \
+  --lora-target-role transformer \
+  --lora-scale 0.8 \
+  --progress \
+  "HST style HD film, early 1900s, autochrome, analog cinema. A horse-drawn carriage crossing a snowy town square at dusk, pedestrians in wool coats, historical street lamps glowing, gentle cinematic motion."
+```
+
+<video controls muted playsinline preload="metadata" style="max-width: 100%; border-radius: 8px;">
+  <source src="assets/mlx-gen-lora-examples/t2v_wan_ti2v5b_hstoric_832x480.mp4" type="video/mp4" />
+</video>
+
+![TI2V-5B 832x480 contact sheet](assets/mlx-gen-lora-examples/t2v_wan_ti2v5b_hstoric_832x480_contact_sheet.png)
+
+Progress proof:
+[t2v_wan_ti2v5b_hstoric_832x480.progress.log](assets/mlx-gen-lora-examples/t2v_wan_ti2v5b_hstoric_832x480.progress.log)
+
+### Batch text to video: TI2V-5B x2
+
+```bash
+HF_HUB_OFFLINE=1 PYTHONPATH=src python -m abstractvision.cli t2v \
+  --provider mlx-gen \
+  --model AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit \
+  --store-dir <store> \
+  --width 832 \
+  --height 480 \
+  --frames 9 \
+  --steps 8 \
+  --guidance-scale 4.0 \
+  --flow-shift 3.0 \
+  --fps 8 \
+  --count 2 \
+  --seeds 6251,6252 \
+  --progress \
+  "A compact silver spaceship rests in a frozen canyon at dawn. Blue engines begin to glow, loose snow drifts across the landing pad, and the camera holds a stable wide composition with gentle atmospheric motion."
+```
+
+Artifacts:
+
+- [seed 6251 MP4](assets/mlx-gen-lora-examples/t2v_batch_wan_ti2v5b_832x480_seed6251.mp4)
+- [seed 6252 MP4](assets/mlx-gen-lora-examples/t2v_batch_wan_ti2v5b_832x480_seed6252.mp4)
+- [contact sheet](assets/mlx-gen-lora-examples/t2v_batch_wan_ti2v5b_832x480_contact_sheet.png)
+- [progress log](assets/mlx-gen-lora-examples/t2v_batch_wan_ti2v5b_832x480.progress.log)
+
+### Text to video: task-specific Wan A14B + Lightning pair at 480x240
+
+```bash
+HF_HUB_OFFLINE=1 PYTHONPATH=src python -m abstractvision.cli t2v \
+  --provider mlx-gen \
+  --model AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit \
+  --store-dir <store> \
+  --negative "oversaturated colors, overexposed, static shot, blurry details, subtitles, text, watermark, painting, illustration, ugly, deformed, broken anatomy, extra limbs, cluttered background, frozen frame, low quality, jpeg artifacts" \
+  --width 480 \
+  --height 240 \
+  --frames 41 \
+  --steps 4 \
+  --guidance-scale 1 \
+  --guidance-2 1 \
+  --flow-shift 5 \
+  --fps 20 \
+  --seed 8401 \
+  --lora lightx2v/Wan2.2-Lightning:Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V1.1/high_noise_model.safetensors \
+  --lora lightx2v/Wan2.2-Lightning:Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V1.1/low_noise_model.safetensors \
+  --lora-target-role high_noise_transformer \
+  --lora-target-role low_noise_transformer \
+  --lora-scale 1 \
+  --lora-scale 1 \
+  --progress \
+  "A cinematic wide-angle movie shot of a massive futuristic starship taking off from a frozen tundra. The ship features sleek dark metallic armor. Two massive warp nacelles pulse with bright blue plasma. Violent snow squalls whip around the hull. The camera slowly tilts up as the thrusters ignite and massive clouds of snow blast away from the launch pad. Photorealistic, highly detailed, dramatic lighting."
+```
+
+<video controls muted playsinline preload="metadata" style="max-width: 100%; border-radius: 8px;">
+  <source src="assets/mlx-gen-lora-examples/t2v_wan_a14b_lightning_480x240.mp4" type="video/mp4" />
+</video>
+
+![Wan A14B T2V 480x240 contact sheet](assets/mlx-gen-lora-examples/t2v_wan_a14b_lightning_480x240_contact_sheet.png)
+
+Progress proof:
+[t2v_wan_a14b_lightning_480x240.progress.log](assets/mlx-gen-lora-examples/t2v_wan_a14b_lightning_480x240.progress.log)
+
+### Image to video: task-specific Wan A14B + Lightning pair at 480x240
+
+```bash
+HF_HUB_OFFLINE=1 PYTHONPATH=src python -m abstractvision.cli i2v \
+  --provider mlx-gen \
+  --model AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit \
+  --store-dir <store> \
+  --image ./input.png \
+  --negative "oversaturated colors, overexposed, static shot, blurry details, subtitles, text, watermark, painting, illustration, ugly, deformed, broken anatomy, extra limbs, cluttered background, frozen frame, low quality, jpeg artifacts" \
+  --width 480 \
+  --height 240 \
+  --frames 41 \
+  --steps 4 \
+  --guidance-scale 1 \
+  --guidance-2 1 \
+  --flow-shift 5 \
+  --fps 20 \
+  --seed 8402 \
+  --lora lightx2v/Wan2.2-Lightning:Wan2.2-I2V-A14B-4steps-lora-rank64-Seko-V1/high_noise_model.safetensors \
+  --lora lightx2v/Wan2.2-Lightning:Wan2.2-I2V-A14B-4steps-lora-rank64-Seko-V1/low_noise_model.safetensors \
+  --lora-target-role high_noise_transformer \
+  --lora-target-role low_noise_transformer \
+  --lora-scale 1 \
+  --lora-scale 1 \
+  --progress \
+  "Starting from the input image, the silver spaceship powers up and lifts off from the frozen ground. Blue engines brighten, snow blasts outward, vapor rolls under the hull, and the camera holds the same wide icy canyon framing while the ship rises smoothly."
+```
+
+Source image:
+
+![Wan A14B I2V source image](assets/mlx-gen-lora-examples/i2v_wan_a14b_lightning_480x240_input.png)
+
+<video controls muted playsinline preload="metadata" style="max-width: 100%; border-radius: 8px;">
+  <source src="assets/mlx-gen-lora-examples/i2v_wan_a14b_lightning_480x240.mp4" type="video/mp4" />
+</video>
+
+![Wan A14B I2V 480x240 contact sheet](assets/mlx-gen-lora-examples/i2v_wan_a14b_lightning_480x240_contact_sheet.png)
+
+Progress proof:
+[i2v_wan_a14b_lightning_480x240.progress.log](assets/mlx-gen-lora-examples/i2v_wan_a14b_lightning_480x240.progress.log)
+
+## Progress semantics
+
+The bundled logs show the normalized MLX-Gen semantics that AbstractVision
+preserves:
+
+- image generation and image edit report denoise-step progress (`0/20`,
+  `1/20`, ..., `20/20`, `complete`);
+- video generation reports denoise-step progress while keeping frame counts as
+  context (`1/20 denoise frame 0/17`, ..., `20/20 decode`, `convert`,
+  `generated`).
+
+That is the progress contract AbstractVision forwards to Python callers, the
+AbstractCore plugin, and higher-level runtime and gateway consumers.
+--- >8 --- END FILE: docs/mlx-gen-local-examples.md --- >8 ---
 
 --- 8< --- FILE: docs/api.md --- 8< ---
 # API reference
@@ -1348,10 +2099,13 @@ See also:
 The package exports the following symbols from `abstractvision` (see [`../src/abstractvision/__init__.py`](../src/abstractvision/__init__.py)):
 
 - `VisionManager`
+- `ProviderAdapterInfo`
 - `ProviderModelInfo`
+- `VisionAdapterCapabilitiesRegistry`
 - `VisionModelCapabilitiesRegistry`
 - `LocalAssetStore`
 - `RuntimeArtifactStoreAdapter`
+- `LoRAAdapterSpec`
 - `is_artifact_ref`
 - `__version__`
 
@@ -1362,9 +2116,14 @@ The package exports the following symbols from `abstractvision` (see [`../src/ab
 `VisionManager` exposes one method per task (implementation: [`../src/abstractvision/vision_manager.py`](../src/abstractvision/vision_manager.py)):
 
 - `generate_image(...)` → `text_to_image`
+- `generate_image_batch(...)` → repeated `text_to_image` orchestration with explicit seed planning
 - `edit_image(...)` → `image_to_image`
+- `edit_image_batch(...)` → repeated `image_to_image` orchestration with explicit seed planning
+- `upscale_image(...)` → `image_upscale`
 - `generate_video(...)` → `text_to_video` (backend-dependent)
+- `generate_video_batch(...)` → repeated `text_to_video` orchestration with explicit seed planning
 - `image_to_video(...)` → `image_to_video` (backend-dependent)
+- `image_to_video_batch(...)` → repeated `image_to_video` orchestration with explicit seed planning
 - `generate_angles(...)` → `multi_view_image` (API exists; no built-in backend implements it yet)
 
 Task names are also used by the capability registry ([`../src/abstractvision/assets/vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json)).
@@ -1377,7 +2136,7 @@ Built-in backends live in [`../src/abstractvision/backends/`](../src/abstractvis
 - `OpenAICompatibleVisionBackend` (HTTP)
 - `HuggingFaceDiffusersVisionBackend` (local Diffusers images; local Diffusers `text_to_video` groundwork is currently quarantined)
 - `StableDiffusionCppVisionBackend` (local stable-diffusion.cpp / GGUF)
-- `MLXGenVisionBackend` / compatibility alias `MFluxVisionBackend` (local Apple Silicon MLX-Gen bridge for curated AbstractFramework q4/q8 MLX presets, official FIBO snapshots, and Wan video)
+- `MLXGenVisionBackend` / compatibility alias `MFluxVisionBackend` (local Apple-first MLX-Gen bridge for curated AbstractFramework q4/q8 MLX presets, official FIBO snapshots, shared LoRA adapters, and Wan video)
 
 Backend config classes are re-exported from `abstractvision.backends` via lazy imports (see [`../src/abstractvision/backends/__init__.py`](../src/abstractvision/backends/__init__.py)).
 
@@ -1399,6 +2158,19 @@ When AbstractVision is loaded as an AbstractCore capability plugin, the plugin s
 same explicit catalog surface as `llm.vision.list_provider_models(task="text_to_image")`. It
 returns JSON-safe dictionaries so Core/Gateway route code can avoid private backend reach-throughs.
 
+Adapter inventory is exposed through the same explicit pattern:
+
+```python
+for adapter in backend.list_provider_adapters(
+    model="AbstractFramework/qwen-image-edit-2509-8bit",
+    task="image_to_image",
+):
+    print(adapter.id)
+```
+
+`ProviderAdapterInfo` rows are explicit discovery outputs. They do not mutate
+the configured generation route.
+
 ### Outputs: bytes vs artifact refs
 
 `VisionManager` returns:
@@ -1407,6 +2179,12 @@ returns JSON-safe dictionaries so Core/Gateway route code can avoid private back
 - an artifact ref `dict` when `VisionManager.store` is configured (via `MediaStore.store_bytes(...)`)
 
 Artifact helpers and stores are defined in [`../src/abstractvision/artifacts.py`](../src/abstractvision/artifacts.py).
+
+Image sizes are backend/model-specific. `width` and `height` arguments are
+optional request overrides; omitting them lets the backend use its default or
+`auto` behavior. Passing an unsupported size is expected to fail at the selected
+provider/backend boundary rather than being silently rewritten by
+AbstractVision.
 
 ## VisionManager (orchestrator)
 
@@ -1440,7 +2218,7 @@ png_bytes = store.load_bytes(ref["$artifact"])
 Install `abstractvision[diffusers]` before using this backend.
 
 ```python
-from abstractvision import VisionManager
+from abstractvision import LoRAAdapterSpec, VisionManager
 from abstractvision.backends import HuggingFaceDiffusersBackendConfig, HuggingFaceDiffusersVisionBackend
 
 backend = HuggingFaceDiffusersVisionBackend(
@@ -1456,11 +2234,24 @@ asset = vm.generate_image("a watercolor painting of a lighthouse", width=512, he
 
 Note: `allow_download=False` is the default. Pre-download model weights separately, or set `allow_download=True` only when you want runtime downloads.
 
-`generate_video(...)` and `image_to_video(...)` are part of the public API. Local Diffusers video remains experimental and disabled from the normal local surfaces, while MLX-Gen 0.18.6+ supports Wan `text_to_video` and first-frame `image_to_video`. Generated MP4 outputs still require an `ffmpeg` executable on `PATH` whenever a backend returns frame sequences for local packaging.
+`upscale_image(...)`, `generate_video(...)`, and `image_to_video(...)` are part
+of the public API. MLX-Gen `0.38.0+` supports SeedVR2 `image_upscale`, Wan
+`text_to_video`, and first-frame `image_to_video`, including A14B task-specific
+checkpoints. Local Diffusers video remains experimental and disabled from the
+normal local surfaces. Generated MP4 outputs still require an `ffmpeg`
+executable on `PATH` whenever a backend returns frame sequences for local
+packaging.
+
+For MLX-Gen text-to-image, `ImageGenerationRequest` includes typed
+`control_image` and `control_strength` fields for the validated structured-control
+route `AbstractFramework/qwen-image-8bit`. The control image is a structure guide
+such as edges, sketch, or pose, not a source-image edit input. These are not
+generic cross-backend hints: unsupported backends reject them explicitly.
 
 ### Local example (MLX-Gen backend)
 
-Install `abstractvision[mlx-gen]` and pre-download the exact model repo first, for example `abstractvision download Wan-AI/Wan2.2-TI2V-5B-Diffusers --provider mlx-gen`.
+Install `abstractvision[mlx-gen]` and pre-download the exact model repo first,
+for example `abstractvision download AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit --provider mlx-gen`.
 
 ```python
 from pathlib import Path
@@ -1468,42 +2259,149 @@ from pathlib import Path
 from abstractvision import VisionManager
 from abstractvision.backends import MLXGenBackendConfig, MLXGenVisionBackend
 
-backend = MLXGenVisionBackend(
-    config=MLXGenBackendConfig(model="Wan-AI/Wan2.2-TI2V-5B-Diffusers")
-)
-vm = VisionManager(backend=backend)
-
 def on_progress(event):
-    print(f"{event.phase}: frame {event.frame}/{event.total_frames}")
+    if event.total_frames:
+        print(f"{event.phase}: frame {event.frame}/{event.total_frames}")
+    else:
+        print(f"{event.phase}: step {event.step}/{event.total_steps}")
 
-asset = vm.generate_video(
+image_backend = MLXGenVisionBackend(
+    config=MLXGenBackendConfig(model="AbstractFramework/flux.2-klein-9b-8bit")
+)
+image_vm = VisionManager(backend=image_backend)
+
+image_asset = image_vm.generate_image(
+    "a studio product photo of a red toy race car",
+    width=768,
+    height=512,
+    steps=12,
+    guidance_scale=1.0,
+    lora_adapters=[
+        LoRAAdapterSpec(
+            source="prithivMLmods/Qwen-Image-2512-Pixel-Art-LoRA:Qwen-Image-2512-Master-Pixel-Art-LoRA.safetensors",
+            scale=1.0,
+        )
+    ],
+    on_progress=on_progress,
+)
+
+edit_asset = image_vm.edit_image(
+    "compose the subject using the second image as a style and layout reference",
+    image=Path("./subject.png").read_bytes(),
+    steps=12,
+    guidance_scale=1.0,
+    lora_adapters=[
+        LoRAAdapterSpec(
+            source="fal/Qwen-Image-Edit-2511-Multiple-Angles-LoRA:qwen-image-edit-2511-multiple-angles-lora.safetensors",
+            scale=0.9,
+        )
+    ],
+    on_progress=on_progress,
+    extra={"reference_images": [Path("./style-reference.png").read_bytes()]},
+)
+
+upscale_backend = MLXGenVisionBackend(config=MLXGenBackendConfig(model="AbstractFramework/seedvr2-3b-8bit"))
+upscale_vm = VisionManager(backend=upscale_backend)
+
+upscaled_asset = upscale_vm.upscale_image(
+    image=Path("./subject.png").read_bytes(),
+    resolution="2x",
+    softness=0.25,
+    seed=2405,
+    on_progress=on_progress,
+)
+
+t2v_backend = MLXGenVisionBackend(
+    config=MLXGenBackendConfig(model="AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit")
+)
+t2v_vm = VisionManager(backend=t2v_backend)
+
+asset = t2v_vm.generate_video(
     "a red fox walking through a snowy forest, cinematic",
-    num_frames=121,
-    fps=24,
-    steps=50,
-    guidance_scale=5.0,
+    width=432,
+    height=240,
+    num_frames=41,
+    fps=10,
+    steps=20,
+    guidance_scale=4.0,
+    guidance_2=3.0,
+    lora_adapters=[
+        LoRAAdapterSpec(
+            source="AlekseyCalvin/HSToric_Color_Wan2.2_5B_LoRA_BySilverAgePoets:HSToric_color_Wan22_5b_LoRA.safetensors",
+            scale=0.9,
+            target_role="transformer",
+        )
+    ],
     on_progress=on_progress,
     extra={"max_sequence_length": 256},
 )
 
-first_frame_asset = vm.image_to_video(
+i2v_backend = MLXGenVisionBackend(
+    config=MLXGenBackendConfig(model="AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit")
+)
+i2v_vm = VisionManager(backend=i2v_backend)
+
+first_frame_asset = i2v_vm.image_to_video(
     image=Path("./first-frame.png").read_bytes(),
     prompt="slow camera push-in",
-    num_frames=121,
-    fps=24,
-    steps=50,
-    guidance_scale=5.0,
+    width=432,
+    height=240,
+    num_frames=41,
+    fps=10,
+    steps=20,
+    guidance_scale=3.5,
+    guidance_2=3.5,
+    lora_adapters=[
+        LoRAAdapterSpec(
+            source="AlekseyCalvin/HSToric_Color_Wan2.2_5B_LoRA_BySilverAgePoets:HSToric_color_Wan22_5b_LoRA.safetensors",
+            scale=0.9,
+            target_role="transformer",
+        )
+    ],
     on_progress=on_progress,
     extra={"max_sequence_length": 256},
 )
 ```
 
-For MLX-Gen Wan, `on_progress` receives an
-`abstractvision.VideoProgressEvent` with `phase`, `frame`, `total_frames`,
-`step`, `total_steps`, and normalized `progress` fields. The lower-level
-`backend.generate_video_with_progress(...)` and
+Wan 2.2 A14B has two guidance controls. Use `guidance_scale` for the
+primary/high-noise stage and `guidance_2` for the second/low-noise stage. The
+registry default is `guidance_2=3.0` for text-to-video A14B and `3.5` for
+image-to-video A14B. Other video models should omit `guidance_2` unless their
+registry task declares it.
+
+For TI2V-5B, use `flow_shift` directly when you need to override the route
+default. The bundled visual proof uses `832x480` with `flow_shift=3.0`.
+
+For MLX-Gen, `on_progress` receives an `abstractvision.VideoProgressEvent`.
+Image generation/editing/upscaling events carry `phase`, `step`, `total_steps`,
+and denoise-step `progress`. Wan video events add `frame`, `total_frames`, and
+`frame_progress`. The lower-level `backend.generate_image_with_progress(...)`,
+`backend.edit_image_with_progress(...)`, `backend.upscale_image_with_progress(...)`,
+`backend.generate_video_with_progress(...)`, and
 `backend.image_to_video_with_progress(...)` methods keep the existing
 two-argument `(current, total)` callback for backend-agnostic progress bars.
+For MLX-Gen, that callback reports denoise step counts; use
+`on_progress(event)` when a UI also needs video frame context.
+
+## Shared LoRA adapters
+
+AbstractVision exposes a typed LoRA contract across Python, CLI, and the
+AbstractCore plugin through `LoRAAdapterSpec` plus the request field
+`lora_adapters=[...]`.
+
+Each adapter can carry:
+
+- `source`
+- `scale`
+- `weight_name`
+- `subfolder`
+- `adapter_name`
+- `target_role`
+
+Wan TI2V-5B uses one role, `transformer`. Wan A14B routes require explicit
+`high_noise_transformer` / `low_noise_transformer` assignment. Provider catalogs
+surface exact-route LoRA truth through `supports_lora`, `lora_status`,
+`lora_target_roles`, and `lora_validation_profile`.
 
 ## Passing advanced backend parameters (`extra`)
 
@@ -1515,14 +2413,17 @@ asset_or_ref = vm.generate_image(
     steps=8,
     guidance_scale=1.0,
     extra={
-        # Example keys used by some Diffusers flows:
-        "loras_json": [{"source": "lightx2v/Qwen-Image-Edit-2511-Lightning", "scale": 1.0}],
+        # Compatibility-only keys used by older Diffusers flows:
         "rapid_aio_repo": "linoyts/Qwen-Image-Edit-Rapid-AIO",
     },
 )
 ```
 
-Backends may ignore unknown keys; consult the backend implementation and [docs/reference/backends.md](reference/backends.md).
+Backends may ignore unknown keys; consult the backend implementation and
+[docs/reference/backends.md](reference/backends.md). New callers should prefer
+the typed shared `lora_adapters` field instead of `extra["loras*"]`. Legacy
+Diffusers compatibility payloads such as `loras_json` still work, but they are
+no longer the preferred public contract.
 
 ## Capability registry (what models can do)
 
@@ -1579,7 +2480,7 @@ See also:
 - FAQ: [docs/faq.md](faq.md)
 - ADR index: [docs/adr/README.md](adr/README.md)
 - Backends: [docs/reference/backends.md](reference/backends.md)
-- Capability registry: [docs/reference/capabilities-registry.md](reference/capabilities-registry.md)
+- Capability registries: [docs/reference/capabilities-registry.md](reference/capabilities-registry.md)
 - Artifacts: [docs/reference/artifacts.md](reference/artifacts.md)
 - AbstractCore integration: [docs/reference/abstractcore-integration.md](reference/abstractcore-integration.md)
 
@@ -1610,10 +2511,10 @@ It is not the owner of “LLM image/video input attachments” (multimodal input
   - Optionally stores outputs and returns artifact refs when `store` is set.
 - **Backend contract**: [`VisionBackend`](../src/abstractvision/backends/base_backend.py)
   - Implementations live in [`../src/abstractvision/backends/`](../src/abstractvision/backends/).
-- **Capability registry**: [`VisionModelCapabilitiesRegistry`](../src/abstractvision/model_capabilities.py)
-  - Loads packaged data: [`vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json).
-  - Governs the model catalog, task metadata, and curated download surfaces as a product surface,
-    not just as incidental documentation metadata. See [ADR 0005](adr/0005_curated_capability_registry_and_download_catalog.md).
+- **Capability registries**:
+  - [`VisionModelCapabilitiesRegistry`](../src/abstractvision/model_capabilities.py) loads [`vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json) and governs the model catalog, task metadata, and curated download surfaces.
+  - [`VisionAdapterCapabilitiesRegistry`](../src/abstractvision/adapter_capabilities.py) loads [`vision_adapter_capabilities.json`](../src/abstractvision/assets/vision_adapter_capabilities.json) and governs package-owned adapter defaults, compatibility hints, and adapter discovery metadata.
+  - See [ADR 0005](adr/0005_curated_capability_registry_and_download_catalog.md).
 - **Artifact outputs**: [`MediaStore`](../src/abstractvision/artifacts.py), [`LocalAssetStore`](../src/abstractvision/artifacts.py), [`RuntimeArtifactStoreAdapter`](../src/abstractvision/artifacts.py)
   - Artifact ref helper: `is_artifact_ref()` (see [`../src/abstractvision/artifacts.py`](../src/abstractvision/artifacts.py)).
 - **CLI/REPL**: `abstractvision` entrypoint ([`../src/abstractvision/cli.py`](../src/abstractvision/cli.py))
@@ -1646,7 +2547,7 @@ AbstractVision separates two kinds of “can I do this?” checks:
    - Implemented by `VisionModelCapabilitiesRegistry.require_support(...)` ([`../src/abstractvision/model_capabilities.py`](../src/abstractvision/model_capabilities.py))
    - Used by `VisionManager._require_model_support(...)` when `VisionManager.model_id` is set ([`../src/abstractvision/vision_manager.py`](../src/abstractvision/vision_manager.py))
 
-2) **Backend-level gating** (best-effort): “Does this configured backend support task Y / mask edits?”
+2) **Backend-level gating** (best-effort): “Does this configured backend support task Y / mask edits / control images?”
    - Backends may implement `get_capabilities()` returning `VisionBackendCapabilities` ([`../src/abstractvision/types.py`](../src/abstractvision/types.py))
    - Enforced by `VisionManager._require_backend_support(...)` and mask checks in `VisionManager.edit_image(...)` ([`../src/abstractvision/vision_manager.py`](../src/abstractvision/vision_manager.py))
 
@@ -1658,8 +2559,8 @@ The public API includes `text_to_video`, `image_to_video`, and `multi_view_image
   - OpenAI-compatible HTTP backend ([`../src/abstractvision/backends/openai_compatible.py`](../src/abstractvision/backends/openai_compatible.py))
   - Diffusers backend ([`../src/abstractvision/backends/huggingface_diffusers.py`](../src/abstractvision/backends/huggingface_diffusers.py))
   - stable-diffusion.cpp backend ([`../src/abstractvision/backends/stable_diffusion_cpp.py`](../src/abstractvision/backends/stable_diffusion_cpp.py))
-  - MLX-Gen backend for curated Apple Silicon MLX presets ([`../src/abstractvision/backends/mflux.py`](../src/abstractvision/backends/mflux.py))
-- Local MLX-Gen supports `text_to_image` for curated q4/q8 FLUX.2, Qwen Image, Z-Image, ERNIE Image Turbo, and official FIBO snapshots; supports `image_to_image` for FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, and FIBO Edit models; and supports Wan 2.2 TI2V for `text_to_video` and first-frame `image_to_video`.
+  - MLX-Gen backend for curated Apple-first local MLX presets ([`../src/abstractvision/backends/mflux.py`](../src/abstractvision/backends/mflux.py))
+- Local MLX-Gen supports `text_to_image` for curated q4/q8 FLUX.2, Qwen Image, Z-Image, ERNIE Image Turbo, and official FIBO snapshots; supports `image_to_image` for FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, and FIBO Edit models; supports validated Qwen structured control and Qwen/FIBO masked edits through route-aware runtime checks; and supports Wan 2.2 TI2V plus task-specific Wan 2.2 A14B packages for `text_to_video` and first-frame `image_to_video`.
 - Local Diffusers `text_to_video` remains experimental and is temporarily disabled from the normal local surfaces.
 - OpenAI-compatible HTTP can also support `text_to_video` / `image_to_video` when `text_to_video_path` / `image_to_video_path` are configured ([`../src/abstractvision/backends/openai_compatible.py`](../src/abstractvision/backends/openai_compatible.py)).
 - No built-in backend implements `multi_view_image` yet (they raise `CapabilityNotSupportedError` in `generate_angles(...)`).
@@ -1707,10 +2608,10 @@ Current plugin behavior (evidence in [`../src/abstractvision/integrations/abstra
   1) Implement `VisionBackend` ([`../src/abstractvision/backends/base_backend.py`](../src/abstractvision/backends/base_backend.py))
   2) Add capability reporting via `get_capabilities()` when you can (optional)
   3) Add tests under [`../tests/`](../tests/)
-- Update the registry:
-  1) Edit [`../src/abstractvision/assets/vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json)
-  2) Validate by running the test suite (validator is wired into the registry loader)
-  3) Use `abstractvision show-model <id>` to sanity-check task/param printing ([`../src/abstractvision/cli.py`](../src/abstractvision/cli.py))
+- Update the registries:
+  1) Edit [`../src/abstractvision/assets/vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json) for model/task/download metadata or [`../src/abstractvision/assets/vision_adapter_capabilities.json`](../src/abstractvision/assets/vision_adapter_capabilities.json) for adapter defaults/compatibility hints
+  2) Validate by running the test suite (validators are wired into both registry loaders)
+  3) Use `abstractvision show-model <id>` and `abstractvision adapters --provider mlx-gen --model <id> --task <task> --json` to sanity-check the effective packaged metadata ([`../src/abstractvision/cli.py`](../src/abstractvision/cli.py))
 --- >8 --- END FILE: docs/architecture.md --- >8 ---
 
 --- 8< --- FILE: docs/faq.md --- 8< ---
@@ -1728,7 +2629,7 @@ See also:
 AbstractVision is a small, model-agnostic API for **generative vision outputs** (images, optional video) with:
 - a small orchestrator ([`VisionManager`](../src/abstractvision/vision_manager.py))
 - pluggable execution engines (“backends”) in [`../src/abstractvision/backends/`](../src/abstractvision/backends/)
-- a packaged capability registry ([`vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json))
+- packaged capability registries ([`vision_model_capabilities.json`](../src/abstractvision/assets/vision_model_capabilities.json), [`vision_adapter_capabilities.json`](../src/abstractvision/assets/vision_adapter_capabilities.json))
 - optional artifact-ref outputs via stores ([`../src/abstractvision/artifacts.py`](../src/abstractvision/artifacts.py))
 
 ## How does AbstractVision fit into AbstractFramework?
@@ -1747,7 +2648,7 @@ Where AbstractVision fits:
 ## What does AbstractVision support today?
 
 - Built-in backends implement **images**: `text_to_image` and `image_to_image`.
-- Local MLX-Gen supports curated q4/q8 Apple Silicon image presets, official FIBO image snapshots, and Wan 2.2 TI2V `text_to_video` / first-frame `image_to_video`.
+- Local MLX-Gen supports curated q4/q8 image presets, validated Qwen structured control and Qwen/FIBO masked edits, official FIBO image snapshots, SeedVR2 upscaling, shared LoRA adapters, and Wan 2.2 TI2V plus task-specific Wan 2.2 A14B `text_to_video` / first-frame `image_to_video`. This release is validated on Apple Silicon first; the MLX-Gen install extra also exposes Linux support when upstream `mlx-gen` / `mlx` markers are available.
 - Local Diffusers `text_to_video` remains experimental and is temporarily disabled from the normal local runtime surfaces.
 - OpenAI-compatible HTTP can also provide `text_to_video` / `image_to_video` **when** video endpoints are configured.
 - `multi_view_image` exists in the public API (`VisionManager.generate_angles`) but no built-in backend implements it yet (they raise `CapabilityNotSupportedError`).
@@ -1758,7 +2659,7 @@ Details: [docs/reference/backends.md](reference/backends.md).
 
 - **OpenAI-compatible HTTP** ([`../src/abstractvision/backends/openai_compatible.py`](../src/abstractvision/backends/openai_compatible.py)): call a server that exposes OpenAI-shaped image endpoints (and optional video endpoints).
 - **Diffusers (local)** ([`../src/abstractvision/backends/huggingface_diffusers.py`](../src/abstractvision/backends/huggingface_diffusers.py)): run Diffusers pipelines locally (heavy deps). Local `text_to_video` groundwork exists but is currently quarantined from the normal local surfaces.
-- **MLX-Gen (local Apple Silicon)** ([`../src/abstractvision/backends/mflux.py`](../src/abstractvision/backends/mflux.py)): run MLX-optimized image models, FIBO snapshots, and Wan 2.2 TI2V locally.
+- **MLX-Gen (local, Apple-first)** ([`../src/abstractvision/backends/mflux.py`](../src/abstractvision/backends/mflux.py)): run MLX-optimized image models, validated Qwen structured-control and masked-edit routes, FIBO snapshots, shared LoRA adapters, SeedVR2 upscaling, and Wan 2.2 video locally.
 - **stable-diffusion.cpp (local GGUF)** ([`../src/abstractvision/backends/stable_diffusion_cpp.py`](../src/abstractvision/backends/stable_diffusion_cpp.py)): run GGUF diffusion models via `sd-cli` or `stable-diffusion-cpp-python`.
 
 ## What model should I start with (local)?
@@ -1790,8 +2691,8 @@ For interactive local generation, use `abstractvision cli` (legacy alias: `abstr
 
 Current local video note:
 - local Diffusers `t2v` is currently experimental and disabled from the normal bundled local surfaces;
-- local MLX-Gen `t2v` / `i2v` is available through `Wan-AI/Wan2.2-TI2V-5B-Diffusers`;
-- MLX-Gen video progress is shown by default in the shell and interactive CLI and is available to Python/Core callers through `on_progress(event)`;
+- local MLX-Gen `t2v` / `i2v` is available through task-specific Wan A14B packages such as `AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit` and `AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit`;
+- MLX-Gen denoise-step video progress is shown by default in the shell and interactive CLI and is available to Python/Core callers through `on_progress(event)`;
 - remote `text_to_video` / `image_to_video` still depend on the OpenAI-compatible backend being configured with video endpoints.
 
 ## Where do generated outputs go?
@@ -1854,19 +2755,46 @@ python -c "import torch; print('cuda', torch.cuda.is_available())"
 AbstractVision exposes an `extra` dict on requests ([`../src/abstractvision/types.py`](../src/abstractvision/types.py)), and the REPL forwards unknown `--flags` into `request.extra` ([`../src/abstractvision/cli.py`](../src/abstractvision/cli.py)).
 
 Examples:
-- Diffusers backend: accepts extra keys like `loras_json` and `rapid_aio_repo` (used by Qwen Image Edit flows; see [docs/getting-started.md](getting-started.md) and [`../src/abstractvision/backends/huggingface_diffusers.py`](../src/abstractvision/backends/huggingface_diffusers.py)).
+- Shared LoRA contract: use `lora_adapters=[LoRAAdapterSpec(...)]` in Python, or repeated `--lora` / `--lora-scale` / `--lora-target-role` in the CLI.
+- Diffusers backend: still accepts compatibility keys like `loras_json` and `rapid_aio_repo` (used by older Qwen Image Edit flows; see [docs/getting-started.md](getting-started.md) and [`../src/abstractvision/backends/huggingface_diffusers.py`](../src/abstractvision/backends/huggingface_diffusers.py)).
 - stable-diffusion.cpp backend:
   - CLI mode forwards flags to `sd-cli`
   - python-binding mode maps supported keys to binding kwargs and ignores unsupported keys ([`../src/abstractvision/backends/stable_diffusion_cpp.py`](../src/abstractvision/backends/stable_diffusion_cpp.py))
 
-## What does the capability registry mean (and what does it not mean)?
+## How do I know whether a model route supports LoRA?
 
-The registry answers “what a model *claims* to support” (task keys/params) and can be used for **optional gating**:
+Use provider/model discovery:
+
+- `abstractvision catalog --provider mlx-gen` to browse downloadable models
+- `abstractvision show-model <model-id>` for the exact runtime route contract
+- `abstractvision adapters --provider mlx-gen --model <model-id> --task <task>` for locally cached overlays that match one route
+- `VisionManager.list_provider_models(...)`
+- `VisionManager.list_provider_adapters(...)`
+- `llm.vision.list_provider_models(...)` through the AbstractCore plugin
+
+MLX-Gen route rows surface:
+
+- `supports_lora`
+- `lora_status`
+- `lora_target_roles`
+- `lora_validation_profile`
+
+Wan TI2V-5B uses one target role, `transformer`. Wan A14B routes require
+explicit `high_noise_transformer` / `low_noise_transformer` assignment.
+
+## What do the capability registries mean (and what do they not mean)?
+
+The model registry answers “what a model *claims* to support” (task keys/params) and can be used for **optional gating**:
 
 - `VisionModelCapabilitiesRegistry.supports(...)` / `.require_support(...)` ([`../src/abstractvision/model_capabilities.py`](../src/abstractvision/model_capabilities.py))
 - `VisionManager(model_id=...)` uses it to fail fast before calling a backend ([`../src/abstractvision/vision_manager.py`](../src/abstractvision/vision_manager.py))
 
-It does **not** guarantee your configured backend can execute the task; backend support is a separate constraint ([docs/reference/backends.md](reference/backends.md)).
+The adapter registry answers “what package-owned adapter defaults and compatibility hints are curated for one adapter family?”:
+
+- `VisionAdapterCapabilitiesRegistry.match_profile(...)` ([`../src/abstractvision/adapter_capabilities.py`](../src/abstractvision/adapter_capabilities.py))
+- `abstractvision adapters --provider mlx-gen --model <model-id> --task <task> --json` to inspect recommended parameters, docs links, and compatibility notes for locally cached overlays
+
+Neither registry guarantees that one exact configured backend route can execute the request. Runtime route support is a separate backend-owned constraint ([docs/reference/backends.md](reference/backends.md)).
 
 ## I only need the HTTP backend. Do I have to install Torch/Diffusers?
 
@@ -1908,7 +2836,7 @@ See also:
 |---|---|---|---|
 | OpenAI-compatible HTTP | [`openai_compatible.py`](../../src/abstractvision/backends/openai_compatible.py) | `text_to_image`, `image_to_image` (+ optional `text_to_video`, `image_to_video`) | Stdlib-only (`urllib`). Video is **opt-in** via configured paths. |
 | Diffusers (local) | [`huggingface_diffusers.py`](../../src/abstractvision/backends/huggingface_diffusers.py) | `text_to_image`, `image_to_image` | Requires `abstractvision[diffusers]`. Supports cache-only/offline mode. Local `text_to_video` groundwork exists but is currently experimental and disabled from the normal local surfaces. |
-| MLX-Gen (local, Apple Silicon) | [`mflux.py`](../../src/abstractvision/backends/mflux.py) | `text_to_image`, `image_to_image`, `text_to_video`, `image_to_video` | Requires `abstractvision[mlx-gen]` (or compatibility extra `abstractvision[mflux]`, or `abstractvision[all-apple]`). Uses downloaded AbstractFramework q4/q8 MLX-Gen image preset snapshots plus official FIBO/Wan runtime snapshots from the Hugging Face cache; `ABSTRACTVISION_MODEL_DIR` is legacy migration input only. |
+| MLX-Gen (local, Apple-first) | [`mflux.py`](../../src/abstractvision/backends/mflux.py) | `text_to_image`, `image_to_image`, `text_to_video`, `image_to_video` | Requires `abstractvision[mlx-gen]` (or compatibility extra `abstractvision[mflux]`, or `abstractvision[all-apple]`). The current AbstractVision release is validated on Apple Silicon first; the install extra also exposes Linux support when upstream `mlx-gen` / `mlx` markers are available. Uses downloaded AbstractFramework q4/q8 MLX-Gen image preset snapshots plus official FIBO/Wan runtime snapshots from the Hugging Face cache; `ABSTRACTVISION_MODEL_DIR` is legacy migration input only. |
 | stable-diffusion.cpp (local GGUF/checkpoints) | [`stable_diffusion_cpp.py`](../../src/abstractvision/backends/stable_diffusion_cpp.py) | `text_to_image`, `image_to_image` | Uses external `sd-cli` if present, else `abstractvision[sdcpp]` python bindings. Start with single-file Stable Diffusion models; curated Qwen/FLUX GGUF presets now auto-resolve required VAE + LLM companions from the cache. |
 
 Notes:
@@ -2009,13 +2937,15 @@ Runtime behavior notes:
 - Local video export still requires an `ffmpeg` executable on `PATH` whenever a local backend emits frames for MP4 packaging.
 - This backend is where model-specific defaults and constraints such as packaged step counts, guidance defaults, dimension constraints, and unsupported-parameter dropping are enforced for all callers.
 
-## MLX-Gen backend (local Apple Silicon)
+## MLX-Gen backend (local Apple-first)
 
 **When to use**
-- You are on Apple Silicon and want local quantized MLX generation through the optional MLX-Gen runtime.
+- You want local quantized MLX generation through the optional MLX-Gen runtime. This release is validated on Apple Silicon first, and the install extra also exposes the upstream Linux/CUDA path when `mlx[cuda13]` markers apply.
 - You want the AbstractFramework-published q4/q8 prepared folders from the [AbstractFramework/mlx-gen Hugging Face collection](https://huggingface.co/collections/AbstractFramework/mlx-gen/).
-- You want the official MLX-Gen 0.18.6+ FIBO snapshots (`briaai/FIBO`, `briaai/Fibo-lite`, `briaai/Fibo-Edit`, `briaai/Fibo-Edit-RMBG`).
-- You want local Wan 2.2 TI2V video generation (`text_to_video` and first-frame `image_to_video`) through MLX-Gen 0.18.6+.
+- You want the official MLX-Gen `0.38.0+` FIBO snapshots (`briaai/FIBO`, `briaai/Fibo-lite`, `briaai/Fibo-Edit`, `briaai/Fibo-Edit-RMBG`).
+- You want the official Prism ML Bonsai ternary 2-bit checkpoint (`prism-ml/bonsai-image-ternary-4B-mlx-2bit`) for very small local `text_to_image`.
+- You want SeedVR2 single-image upscaling through canonical `AbstractFramework/seedvr2-{3b,7b}-{8bit,4bit}` packages or the official `ByteDance-Seed/SeedVR2-*` bases.
+- You want local Wan 2.2 video generation through MLX-Gen `0.38.0+`, including the prepared TI2V package and the task-specific A14B `text_to_video` / first-frame `image_to_video` packages.
 
 Install:
 - `pip install "abstractvision[mlx-gen]"` (or `pip install "abstractvision[all-apple]"`)
@@ -2038,15 +2968,33 @@ Model presets:
   - `abstractvision download briaai/Fibo-lite --provider mlx-gen`
   - `abstractvision download briaai/Fibo-Edit --provider mlx-gen`
   - `abstractvision download briaai/Fibo-Edit-RMBG --provider mlx-gen`
+  - `abstractvision download prism-ml/bonsai-image-ternary-4B-mlx-2bit --provider mlx-gen`
   - `abstractvision download Wan-AI/Wan2.2-TI2V-5B-Diffusers --provider mlx-gen`
-- q4 repos are the default recommendation for memory efficiency. Use the exact
+  - `abstractvision download AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit --provider mlx-gen`
+  - `abstractvision download AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --provider mlx-gen`
+  - `abstractvision download AbstractFramework/seedvr2-3b-8bit --provider mlx-gen`
+  - `abstractvision download AbstractFramework/seedvr2-7b-8bit --provider mlx-gen`
+- q4 repos are the default recommendation for most generation/edit models. Use the exact
   matching `AbstractFramework/...-8bit` model id when quality is paramount. Qwen
   and ERNIE q4 prepared folders can mix q4 and q8 components, but remain the
   default prepared choice.
 - `abstractvision t2i`, `abstractvision i2i`, and Python callers select q4/q8
   by exact model id. Quantization is metadata of the published folder, not a
   generation-time parameter.
-- Current shipped backend coverage includes `text_to_image` for FLUX.2 klein/base, Qwen Image, Z-Image, Z-Image Turbo, ERNIE Image Turbo, FIBO, and Fibo-lite. `image_to_image` edits are implemented for FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, Fibo-lite, Fibo-Edit, and Fibo-Edit-RMBG; FIBO Edit snapshots support masks where the runtime supports them.
+- `abstractvision upscale` defaults to `--provider mlx-gen --model AbstractFramework/seedvr2-3b-8bit --resolution 2x --softness 0.25`.
+  Use `--resolution <pixels>` for a target short edge,
+  `AbstractFramework/seedvr2-7b-8bit` when memory allows, and q4 SeedVR2
+  packages only when memory is tight. `--scale 2x` remains accepted when
+  `--resolution` is omitted. `--quantize` is reserved for official/source-weight runs.
+- SeedVR2 model chooser:
+  - `AbstractFramework/seedvr2-3b-8bit`: default q8 package.
+  - `AbstractFramework/seedvr2-7b-8bit`: higher-quality 7B package when memory allows.
+  - `AbstractFramework/seedvr2-3b-4bit` / `AbstractFramework/seedvr2-7b-4bit`: lower-memory packages.
+  - `ByteDance-Seed/SeedVR2-3B` / `ByteDance-Seed/SeedVR2-7B`: official source weights; pass `--quantize 8` or `--quantize 4` if runtime quantization is needed.
+- Prepared local folders work as model values. For example:
+  `abstractvision upscale --provider mlx-gen --model /path/to/seedvr2-7b-8bit --image ./input.png --resolution 2x --softness 0.25 --open`.
+- Bonsai ternary is a pre-packed low-bit MLX artifact, not a q4/q8 prepared folder. Use the exact repo id; guidance is fixed at 1.0 and negative prompts are ignored. The binary 1-bit Bonsai checkpoint is not surfaced because stock MLX cannot run it yet.
+- Current shipped backend coverage includes `text_to_image` for FLUX.2 klein/base, Qwen Image, Z-Image, Z-Image Turbo, ERNIE Image Turbo, FIBO, Fibo-lite, and Bonsai ternary. `image_to_image` edits are implemented for FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, Fibo-lite, Fibo-Edit, and Fibo-Edit-RMBG; FIBO Edit snapshots support masks where the runtime supports them. `image_upscale` is implemented for SeedVR2.
 
 One-shot shell commands:
 
@@ -2054,15 +3002,51 @@ One-shot shell commands:
 abstractvision t2i --provider mlx-gen --model AbstractFramework/qwen-image-2512-4bit "a studio product photo of a white ceramic mug with the AbstractFramework logo" --steps 20 --guidance-scale 1.0 --open
 abstractvision i2i --provider mlx-gen --model AbstractFramework/qwen-image-edit-2511-4bit --image ./input.png "replace the background with a clean white studio setup" --steps 20 --guidance-scale 2.5 --strength 0.75 --open
 abstractvision t2i --provider mlx-gen --model briaai/FIBO "a studio product photo of a white ceramic mug with the AbstractFramework logo" --steps 50 --guidance-scale 4.0 --open
+abstractvision t2i --provider mlx-gen --model prism-ml/bonsai-image-ternary-4B-mlx-2bit "a bonsai tree in a quiet ceramic studio" --steps 4 --guidance-scale 1.0 --open
 abstractvision i2i --provider mlx-gen --model briaai/Fibo-Edit --image ./input.png "remove the background and keep the object edges clean" --steps 20 --guidance-scale 4.0 --open
-abstractvision t2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers "a red fox walking through a snowy forest, cinematic" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
-abstractvision i2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers --image ./first-frame.png "slow camera push-in" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
+abstractvision upscale --provider mlx-gen --model AbstractFramework/seedvr2-3b-8bit --image ./input.png --resolution 2x --softness 0.25 --open
+abstractvision upscale --provider mlx-gen --model /path/to/seedvr2-7b-8bit --image ./input.png --resolution 2x --softness 0.25 --open
+abstractvision t2v --provider mlx-gen --model AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit "a red fox walking through a snowy forest, cinematic" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0 --open
+abstractvision i2v --provider mlx-gen --model AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --image ./first-frame.png "slow camera push-in" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 3.5 --guidance-2 3.5 --open
 ```
 
-MLX-Gen Wan video progress is surfaced as normalized progress events. Shell
-commands and the interactive CLI render frame/step progress by default; Python
-and AbstractCore callers can pass `on_progress(event)` to receive the same
-events.
+MLX-Gen image, edit, and Wan video progress is surfaced as normalized progress
+events. Shell image commands accept `--progress`; shell video commands and the
+interactive CLI render denoise-step progress with frame context by default.
+Python and AbstractCore callers can pass `on_progress(event)` to receive the
+same events. Image events carry denoise-step `progress`; video events also carry
+`frame`, `total_frames`, and `frame_progress`.
+
+MLX-Gen LoRA support uses the shared AbstractVision `lora_adapters`
+contract across Python, CLI, and AbstractCore. Catalog rows surface backend
+truth for each exact route through:
+
+- `supports_lora`
+- `lora_status`
+- `lora_target_roles`
+- `lora_validation_profile`
+
+Wan LoRA callers must respect route-specific target roles. TI2V-5B uses
+`transformer`. A14B routes require explicit
+`high_noise_transformer` / `low_noise_transformer` assignment.
+
+Quantization guidance:
+
+- The upstream LightX2V Qwen Lightning docs warn against mixing a BF16-trained
+  Lightning LoRA with the raw unscaled FP8 Qwen base
+  (`qwen_image_fp8_e4m3fn.safetensors`); that pairing can produce grid
+  artifacts. Use the fp8-trained Lightning LoRA variant on that raw FP8 base,
+  or use a scaled FP8/BF16-compatible base with the BF16-trained Lightning
+  LoRA instead. Reference:
+  <https://github.com/ModelTC/LightX2V-Qwen-Image-Lightning#-using-lightning-loras-with-fp8-models>
+- AbstractVision's normal local MLX-Gen routes are curated q4/q8 prepared
+  folders rather than that raw upstream FP8 base. For local LoRA-heavy Qwen and
+  Wan runs, prefer the curated `...-8bit` routes when memory allows; q4 remains
+  the lighter fallback.
+
+Use `abstractvision show-model <model-id>` for one route's defaults and
+`abstractvision adapters --provider mlx-gen --model <model-id> --task <task>`
+for the locally cached overlay inventory on that route.
 
 Interactive CLI/REPL commands:
 
@@ -2073,9 +3057,12 @@ Interactive CLI/REPL commands:
 /i2i --image ./input.png "replace the background with a clean white studio setup" --steps 20 --guidance-scale 2.5 --strength 0.75 --open
 /backend mlx-gen briaai/FIBO
 /t2i "a studio product photo of a white ceramic mug with the AbstractFramework logo" --steps 50 --guidance-scale 4.0 --open
-/backend mlx-gen Wan-AI/Wan2.2-TI2V-5B-Diffusers
-/t2v "a red fox walking through a snowy forest, cinematic" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
-/i2v --image ./first-frame.png "slow camera push-in" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
+/backend mlx-gen prism-ml/bonsai-image-ternary-4B-mlx-2bit
+/t2i "a bonsai tree in a quiet ceramic studio" --steps 4 --guidance-scale 1.0 --open
+/backend mlx-gen AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit
+/t2v "a red fox walking through a snowy forest, cinematic" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0 --open
+/backend mlx-gen AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit
+/i2v --image ./first-frame.png "slow camera push-in" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 3.5 --guidance-2 3.5 --open
 ```
 
 Config/env:
@@ -2091,8 +3078,11 @@ Non-curated MLX-Gen models:
 
 Runtime behavior notes:
 - MLX-Gen request normalization is backend-level, so model constraints such as fixed guidance for turbo/distilled families, minimum step counts, and unsupported negative prompts are handled the same way through the CLI/REPL, playground API, and AbstractCore.
-- Local MLX-Gen `image_to_image` is supported for FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, and FIBO Edit models. Edit strength is passed as `strength` and normalized to MLX-Gen's `image_strength` parameter where the runtime supports it.
-- Local MLX-Gen video is implemented for `Wan-AI/Wan2.2-TI2V-5B-Diffusers`. Defaults are 1280x704, 121 frames, 50 steps, 24 fps, and guidance 5.0; lower values are useful only for smoke tests.
+- Local MLX-Gen `image_to_image` is supported for FLUX.2 klein/base, Qwen Image Edit, ERNIE Image Turbo, FIBO, and FIBO Edit models. Route-aware masked edit is available on `AbstractFramework/qwen-image-edit-2511-8bit`, `briaai/Fibo-Edit`, and `briaai/Fibo-Edit-RMBG`; unsupported routes fail closed instead of silently dropping the mask.
+- Local MLX-Gen `text_to_image` exposes route-aware structured control on `AbstractFramework/qwen-image-8bit` through typed `control_image` / `control_strength` (CLI: `--control-image` / `--control-strength`). Structured control is not silently reinterpreted as image edit.
+- Edit strength is passed as `strength` and normalized to MLX-Gen's `image_strength` parameter where the runtime supports it.
+- Local MLX-Gen video is implemented for `Wan-AI/Wan2.2-TI2V-5B-Diffusers`, `AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit`, and the task-specific Wan A14B packages `AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit` / `AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit`. TI2V-5B should be run at `832x480` / `480x832` or above in practice. Wan A14B dimensions must be multiples of 16 and can still be smoke-tested at `480x240`.
+- Task-specific Wan A14B uses two guidance controls. `guidance_scale` controls the primary/high-noise stage and `guidance_2` controls the second-stage/low-noise stage. `guidance_2` is a typed video request field, CLI/REPL flag `--guidance-2`, and registry parameter default; it is not passed through `extra`.
 - Wan requests can pass `max_sequence_length` through Python `extra={...}` or CLI/REPL `--max-sequence-length`.
 - Generation does not silently download model files. Missing-cache errors tell you which `abstractvision download ... --provider mlx-gen` or `mlxgen` preparation step is needed.
 
@@ -2119,7 +3109,7 @@ Notes:
   `/backend sdcpp <diffusion_model.gguf> <vae.safetensors> <llm.gguf> [sd_cli_path]`.
 - One-shot CLI, playground, and the AbstractCore plugin can also accept curated `sdcpp` model keys such as
   `flux2-klein-base-4b` or `qwen-image` after `abstractvision download ... --provider sdcpp`.
-- Python code and AbstractCore plugin configuration can also pass component paths such as `clip_l`, `clip_g`, `t5xxl`, `llm_vision`, plus `extra_args`, `timeout_s`, and `cwd`.
+- Python code and AbstractCore plugin configuration can also pass component paths such as `clip_l`, `clip_g`, `t5xxl`, `llm_vision`, plus `extra_args` and `cwd`. Local image generation is not killed by a default timeout.
 
 Code pointers:
 - Config: `StableDiffusionCppBackendConfig` ([`../../src/abstractvision/backends/stable_diffusion_cpp.py`](../../src/abstractvision/backends/stable_diffusion_cpp.py))
@@ -2146,17 +3136,25 @@ Implemented in [`../../src/abstractvision/cli.py`](../../src/abstractvision/cli.
 - `abstractvision models` — list known registry model ids
 - `abstractvision tasks` — list known tasks
 - `abstractvision show-model <id>` — print a model’s tasks + params
+- `abstractvision adapters --provider mlx-gen --model <id> --task <task>` — list backend-discovered cached adapters for one exact route
 - `abstractvision provider-models --openai --task text_to_image` — explicitly query the official OpenAI `/models` catalog
 - `abstractvision provider-models --base-url http://localhost:1234/v1 --task text_to_image` — explicitly query an OpenAI-compatible provider catalog
 - `abstractvision cli` — interactive testing (supports `openai`, `diffusers`, `mlx-gen`, `sdcpp`; legacy alias: `abstractvision repl`; `mflux` is accepted as a compatibility alias)
 - `abstractvision playground [--host 127.0.0.1] [--port 8091]` — self-contained local web UI and `/v1/vision/*` API
 - `abstractvision serve [--host 127.0.0.1] [--port 8091]` — alias for `abstractvision playground`
-- `abstractvision t2i ...` / `abstractvision i2i ...` / `abstractvision t2v ...` / `abstractvision i2v ...` — one-shot commands using the configured provider/backend (`openai`/`openai-compatible` by default; also supports local `diffusers`, `mlx-gen`, and `sdcpp`; MLX-Gen 0.18.6+ provides Wan `t2v`/`i2v`)
+- `abstractvision t2i ...` / `abstractvision i2i ...` / `abstractvision t2v ...` / `abstractvision i2v ...` — one-shot commands using the configured provider/backend (`openai`/`openai-compatible` by default; also supports local `diffusers`, `mlx-gen`, and `sdcpp`; MLX-Gen provides image progress, shared LoRA adapters, multi-reference edits, SeedVR2 upscaling, and Wan `t2v`/`i2v`, including A14B task-specific checkpoints)
+- `abstractvision upscale ...` — one-shot SeedVR2 image upscaling; defaults to `--provider mlx-gen --model AbstractFramework/seedvr2-3b-8bit --resolution 2x --softness 0.25` and supports `--scale`, `--resolution`, `--softness`, `--seed`, optional source-weight `--quantize`, and `--vae-tiling`
 
 Note:
 - `abstractvision t2i` / `abstractvision i2i` / `abstractvision t2v` / `abstractvision i2v` default to the OpenAI-compatible HTTP backend, but they also support local providers via `--provider diffusers|mlx-gen|sdcpp` (legacy alias: `--backend`; `mflux` remains accepted).
 - Local Diffusers requires `abstractvision[diffusers]`. stable-diffusion.cpp python binding fallback requires `abstractvision[sdcpp]`; external `sd-cli` can be used without the binding.
 - One-shot image commands write to `ABSTRACTVISION_STORE_DIR` or `--store-dir` and print JSON artifact metadata followed by the local content path. They do not take an `--output` path flag.
+- One-shot generation/edit/video commands support `--count` plus optional `--seeds` for reproducible batch orchestration above the exact single-run request surface.
+- `width`/`height` are optional request overrides, not global defaults. Leave
+  them unset to let the selected provider/model choose its default or `auto`
+  size. Some models accept quick-test sizes such as `512x512`; others only
+  accept provider-declared sizes such as `1024x1024`, `1024x1536`,
+  `1536x1024`, or `auto`.
 
 Examples:
 
@@ -2164,12 +3162,15 @@ Examples:
 abstractvision t2i --provider mlx-gen --model AbstractFramework/qwen-image-2512-4bit "a studio product photo of a white ceramic mug" --steps 20 --guidance-scale 1.0 --open
 abstractvision i2i --provider mlx-gen --model AbstractFramework/qwen-image-edit-2511-4bit --image ./input.png "replace the background with a clean white studio setup" --steps 20 --guidance-scale 2.5 --strength 0.75 --open
 abstractvision t2i --provider mlx-gen --model briaai/FIBO "a studio product photo of a white ceramic mug" --steps 50 --guidance-scale 4.0 --open
+abstractvision t2i --provider mlx-gen --model prism-ml/bonsai-image-ternary-4B-mlx-2bit "a bonsai tree in a quiet ceramic studio" --steps 4 --guidance-scale 1.0 --open
 abstractvision i2i --provider mlx-gen --model briaai/Fibo-Edit --image ./input.png "remove the background and keep the object edges clean" --steps 20 --guidance-scale 4.0 --open
-abstractvision t2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers "a red fox walking through a snowy forest, cinematic" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
-abstractvision i2v --provider mlx-gen --model Wan-AI/Wan2.2-TI2V-5B-Diffusers --image ./first-frame.png "slow camera push-in" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
+abstractvision upscale --provider mlx-gen --model AbstractFramework/seedvr2-3b-8bit --image ./input.png --resolution 2x --softness 0.25 --open
+abstractvision t2v --provider mlx-gen --model AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit "a red fox walking through a snowy forest, cinematic" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0 --open
+abstractvision i2v --provider mlx-gen --model AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --image ./first-frame.png "slow camera push-in" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 3.5 --guidance-2 3.5 --open
 ```
 
-For MLX-Gen Wan, one-shot `t2v` and `i2v` show frame/step progress on stderr
+For MLX-Gen Wan, one-shot `t2v` and `i2v` show denoise-step progress with
+frame context on stderr by default. `upscale` also shows denoise-step progress
 by default. Add `--no-progress` when you need quiet shell output.
 
 ## Interactive CLI backend selection
@@ -2185,7 +3186,7 @@ Inside `abstractvision cli`:
 
 Run `/help` in the interactive CLI to see the full command list (generated by `_repl_help()` in [`../../src/abstractvision/cli.py`](../../src/abstractvision/cli.py)).
 
-Interactive generation commands include `/t2i`, `/i2i`, `/t2v`, and `/i2v`. The local Diffusers `text_to_video` path remains experimental and disabled from the normal local surfaces, while MLX-Gen Wan supports local `t2v` and `i2v`.
+Interactive generation commands include `/t2i`, `/i2i`, `/t2v`, and `/i2v`. The local Diffusers `text_to_video` path remains experimental and disabled from the normal local surfaces, while MLX-Gen Wan supports local `t2v` and `i2v`. Interactive image commands follow the same size rule as one-shot commands: omit width and height unless you intentionally want a specific backend-supported size.
 
 Examples:
 
@@ -2196,13 +3197,16 @@ Examples:
 /i2i --image ./input.png "replace the background with a clean white studio setup" --steps 20 --guidance-scale 2.5 --strength 0.75 --open
 /backend mlx-gen briaai/FIBO
 /t2i "a studio product photo of a white ceramic mug" --steps 50 --guidance-scale 4.0 --open
-/backend mlx-gen Wan-AI/Wan2.2-TI2V-5B-Diffusers
-/t2v "a red fox walking through a snowy forest, cinematic" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
-/i2v --image ./first-frame.png "slow camera push-in" --frames 121 --fps 24 --steps 50 --guidance-scale 5.0 --open
+/backend mlx-gen prism-ml/bonsai-image-ternary-4B-mlx-2bit
+/t2i "a bonsai tree in a quiet ceramic studio" --steps 4 --guidance-scale 1.0 --open
+/backend mlx-gen AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit
+/t2v "a red fox walking through a snowy forest, cinematic" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 4.0 --guidance-2 3.0 --open
+/backend mlx-gen AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit
+/i2v --image ./first-frame.png "slow camera push-in" --width 432 --height 240 --frames 41 --fps 10 --steps 20 --guidance-scale 3.5 --guidance-2 3.5 --open
 ```
 
-Interactive `/t2v` and `/i2v` also show video progress by default and accept
-`--no-progress`.
+Interactive `/t2v` and `/i2v` also show denoise-step video progress by default
+and accept `--no-progress`.
 
 Important runtime note:
 - Model-specific request adjustments are not implemented only in the interactive UI. The shared backend normalization hooks are applied by `VisionManager` and by the playground API server, so the same parameter corrections reach `abstractvision cli`, the legacy `repl` alias, one-shot CLI commands, the playground, and the AbstractCore plugin.
@@ -2219,7 +3223,7 @@ The interactive CLI state object (`_ReplState` in [`../../src/abstractvision/cli
   - if unset and `OPENAI_BASE_URL` is set, the interactive CLI/playground default to `openai`
   - if unset and no base URL is configured, no backend is selected until you use `/backend ...` or load a model explicitly
 - `ABSTRACTVISION_STORE_DIR` — local artifact output directory (default: `~/.abstractvision/assets`)
-- `ABSTRACTVISION_TIMEOUT_S` — HTTP timeout for OpenAI-compatible backend (default: `300`)
+- `ABSTRACTVISION_TIMEOUT_S` — optional timeout for OpenAI-compatible catalog/control calls. Image and video generation calls do not have a default timeout.
 - `ABSTRACTVISION_MODEL` — preferred model selector for the current backend/provider (alias: `ABSTRACTVISION_MODEL_ID`)
 - `ABSTRACTVISION_MODEL_ID` — model id for the current backend in the interactive CLI (legacy):
   - `openai`: sent as `model` in HTTP requests (optional; server-dependent)
@@ -2257,13 +3261,40 @@ Playground-only Diffusers vars:
 - `ABSTRACTVISION_DIFFUSERS_REVISION` — optional model revision
 - `ABSTRACTVISION_DIFFUSERS_VARIANT` — optional model variant
 
-### MLX-Gen backend (Apple Silicon)
+### MLX-Gen backend (Apple-first)
 
-- `ABSTRACTVISION_MFLUX_MODEL` — exact published MLX-Gen repo id, local model path, or custom repo id (examples: `AbstractFramework/flux.2-klein-4b-4bit`, `AbstractFramework/ernie-image-turbo-8bit`, `briaai/FIBO`, `briaai/Fibo-Edit`, `Wan-AI/Wan2.2-TI2V-5B-Diffusers`, `/path/to/preset-dir`)
-- `ABSTRACTVISION_MFLUX_BASE_MODEL` — optional base family for local paths or custom repos (`flux2-klein-4b`, `flux2-klein-9b`, `flux2-klein-base-4b`, `flux2-klein-base-9b`, `z-image`, `z-image-turbo`, `qwen-image`, `qwen-image-edit-2511`, `ernie-image-turbo`, `fibo`, `fibo-lite`, `fibo-edit`, `fibo-edit-rmbg`, `wan2.2-ti2v-5b`)
+- `ABSTRACTVISION_MFLUX_MODEL` — exact published MLX-Gen repo id, local model path, or custom repo id (examples: `AbstractFramework/flux.2-klein-4b-4bit`, `AbstractFramework/ernie-image-turbo-8bit`, `briaai/FIBO`, `prism-ml/bonsai-image-ternary-4B-mlx-2bit`, `briaai/Fibo-Edit`, `Wan-AI/Wan2.2-TI2V-5B-Diffusers`, `AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit`, `AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit`, `/path/to/preset-dir`)
+- `ABSTRACTVISION_MFLUX_BASE_MODEL` — optional base family for local paths or custom repos (`flux2-klein-4b`, `flux2-klein-9b`, `flux2-klein-base-4b`, `flux2-klein-base-9b`, `bonsai-image-ternary`, `z-image`, `z-image-turbo`, `qwen-image`, `qwen-image-edit-2511`, `ernie-image-turbo`, `fibo`, `fibo-lite`, `fibo-edit`, `fibo-edit-rmbg`, `wan2.2-ti2v-5b`, `wan2.2-t2v-a14b`, `wan2.2-i2v-a14b`)
 - `ABSTRACTVISION_MFLUX_ALLOW_DOWNLOAD` — `0` (default) or `1` to permit runtime downloads when a preset/repo is missing from the local cache
 - `ABSTRACTVISION_MODEL_DIR` — legacy preset root only; curated downloads now land in the Hugging Face cache
+- `ABSTRACTVISION_MLX_GEN_LORA_PATHS` / `ABSTRACTVISION_MFLUX_LORA_PATHS` — optional default LoRA adapters applied by the MLX-Gen backend when a request does not carry its own `lora_adapters`
+- `ABSTRACTVISION_MLX_GEN_LORA_SCALES` / `ABSTRACTVISION_MFLUX_LORA_SCALES` — optional default LoRA scales aligned with the configured default paths
+- `ABSTRACTVISION_MLX_GEN_LORA_TARGET_ROLES` / `ABSTRACTVISION_MFLUX_LORA_TARGET_ROLES` — optional default target roles aligned with the configured default paths; primarily useful for Wan routes
 - Canonical provider/model routing is `mlx-gen` / `mlx-gen/<exact-huggingface-repo>`, for example `mlx-gen/AbstractFramework/flux.2-klein-4b-4bit`. Legacy `mflux` provider values, routed ids, and env var names are accepted for compatibility, but the model id itself should be the exact published repo id.
+
+MLX-Gen LoRA notes:
+
+- CLI callers should prefer repeated `--lora`, `--lora-scale`, and
+  `--lora-target-role` flags.
+- Python and AbstractCore callers should prefer the shared typed
+  `lora_adapters` request field.
+- Catalog discovery surfaces exact-route LoRA truth through `supports_lora`,
+  `lora_status`, `lora_target_roles`, and `lora_validation_profile`.
+- For LightX2V Qwen Lightning adapters, do not manually pair a BF16-trained
+  Lightning LoRA with the raw unscaled FP8 Qwen base
+  (`qwen_image_fp8_e4m3fn.safetensors`); upstream documents grid artifacts for
+  that mix. See:
+  <https://github.com/ModelTC/LightX2V-Qwen-Image-Lightning#-using-lightning-loras-with-fp8-models>
+- For local LoRA-heavy Qwen and Wan runs through MLX-Gen, prefer curated
+  `...-8bit` model ids when memory allows. q4 remains the lighter fallback.
+
+Capability asset overrides:
+
+- `ABSTRACTVISION_MODEL_CAPABILITIES_PATH` — optional filesystem path to a replacement `vision_model_capabilities.json`
+- `ABSTRACTVISION_ADAPTER_CAPABILITIES_PATH` — optional filesystem path to a replacement `vision_adapter_capabilities.json`
+
+These let operators update curated model/adapter metadata and default
+parameters without changing Python code.
 
 ### stable-diffusion.cpp backend
 
@@ -2289,13 +3320,14 @@ Tip:
 --- >8 --- END FILE: docs/reference/configuration.md --- >8 ---
 
 --- 8< --- FILE: docs/reference/capabilities-registry.md --- 8< ---
-# Capability registry (`vision_model_capabilities.json`)
+# Capability registries (`vision_model_capabilities.json`, `vision_adapter_capabilities.json`)
 
-AbstractVision keeps a single packaged “source of truth” for what model families can do and how
-AbstractVision understands their downloadable runtime variants:
+AbstractVision keeps two packaged capability assets:
 
 - Asset: [`../../src/abstractvision/assets/vision_model_capabilities.json`](../../src/abstractvision/assets/vision_model_capabilities.json)
 - Loader + validator: `VisionModelCapabilitiesRegistry` / `validate_capabilities_json()` in [`../../src/abstractvision/model_capabilities.py`](../../src/abstractvision/model_capabilities.py)
+- Asset: [`../../src/abstractvision/assets/vision_adapter_capabilities.json`](../../src/abstractvision/assets/vision_adapter_capabilities.json)
+- Loader + validator: `VisionAdapterCapabilitiesRegistry` / `validate_adapter_capabilities_json()` in [`../../src/abstractvision/adapter_capabilities.py`](../../src/abstractvision/adapter_capabilities.py)
 
 See also:
 - CLI/REPL inspection commands: [docs/reference/configuration.md](configuration.md)
@@ -2304,10 +3336,10 @@ See also:
 
 ## Policy boundary
 
-The registry is not just descriptive metadata. In this repo it is the authoritative compatibility
-inventory that feeds:
+The packaged assets are not just descriptive metadata. In this repo they feed:
 
 - model discovery;
+- adapter discovery hints and default parameter recommendations;
 - task and parameter introspection;
 - curated download surfacing;
 - backend request normalization.
@@ -2320,6 +3352,12 @@ Under [ADR 0005](../adr/0005_curated_capability_registry_and_download_catalog.md
   runtime-native choice for a target engine;
 - explicit about download-only or backend-not-supported states.
 
+Important boundary:
+
+- `vision_model_capabilities.json` is the curated package view of model-family tasks, downloadable variants, and model-level defaults.
+- `vision_adapter_capabilities.json` is the curated package view of adapter families, compatible base-model aliases, and adapter default/recommended parameters.
+- Backend/runtime route truth still stays backend-owned. For example, MLX-Gen decides whether one exact local route currently supports `mask`, `control_image`, or LoRA target roles at runtime.
+
 ## What the registry is used for
 
 - **Discovery**: list known task keys and model ids.
@@ -2331,10 +3369,32 @@ Under [ADR 0005](../adr/0005_curated_capability_registry_and_download_catalog.md
   - The playground API surfaces that structured metadata as `task_specs` so local tooling can enable edit-only flows without re-encoding model rules elsewhere.
 - **Request normalization hints**:
   - additive parameter metadata such as `default`, `const`, `min`, `multiple_of`, `supported`, and `auto_derived_from_input` can be consumed by backends to keep model-specific defaults and constraints in one packaged source of truth.
+- **Adapter-aware request normalization hints**:
+  - adapter profiles carry package-owned defaults such as recommended `steps`, `guidance_scale`, documentation links, and quantization notes.
 
 Important:
 - The registry describes **model capability intent**.
 - Your configured backend still needs to implement the task at runtime (see backend support matrix in [docs/reference/backends.md](backends.md)).
+
+## Override paths
+
+Both registries can be redirected to local JSON files without changing Python code:
+
+- `ABSTRACTVISION_MODEL_CAPABILITIES_PATH`
+- `ABSTRACTVISION_ADAPTER_CAPABILITIES_PATH`
+
+You can also pass `asset_path=...` directly when constructing either registry.
+That keeps the code/package boundary stable while letting operators update
+curated model/adapter metadata independently.
+
+Practical workflow:
+
+1. Copy the packaged JSON you want to override.
+2. Edit the local copy.
+3. Point the matching env var at that file.
+4. Verify the effective metadata with:
+   - `abstractvision show-model <model-id>`
+   - `abstractvision adapters --provider mlx-gen --model <model-id> --task <task> --json`
 
 ## Curation rules
 
@@ -2354,6 +3414,7 @@ When editing the registry:
 
 ```python
 from abstractvision import VisionModelCapabilitiesRegistry
+from abstractvision.adapter_capabilities import VisionAdapterCapabilitiesRegistry
 
 reg = VisionModelCapabilitiesRegistry()
 print(reg.schema_version())
@@ -2361,6 +3422,13 @@ print(reg.list_tasks())
 
 assert reg.supports("runwayml/stable-diffusion-v1-5", "text_to_image")
 print(reg.models_for_task("text_to_image"))
+
+adapter_reg = VisionAdapterCapabilitiesRegistry()
+profile = adapter_reg.match_profile(
+    repo_id="lightx2v/Qwen-Image-2512-Lightning",
+    relative_path="Qwen-Image-2512-Lightning-4steps-V1.0-bf16.safetensors",
+)
+print(profile.to_profile_dict()["recommended_parameters"])
 ```
 
 ## JSON shape (high level)
@@ -2733,7 +3801,7 @@ Current behavior:
 - Compatible HTTP: set `OPENAI_BASE_URL` to a local/remote compatible `/v1` server. Set `ABSTRACTVISION_BACKEND=openai-compatible` when you want to force compatible-endpoint semantics.
 - Legacy `abstractvision:openai-compatible`: keeps compatible-endpoint defaults when that backend id is selected directly.
 - Local Diffusers: install `abstractvision[diffusers]`, then set `ABSTRACTVISION_BACKEND=diffusers` with `runwayml/stable-diffusion-v1-5` or another supported Diffusers model. It is cache-only/offline unless `ABSTRACTVISION_DIFFUSERS_ALLOW_DOWNLOAD=1` is set. Local `text_to_video` groundwork exists but is currently experimental and disabled from the normal local plugin surfaces.
-- Local MLX-Gen (Apple Silicon): install `abstractvision[mlx-gen]` (or `abstractvision[all-apple]`), then set `ABSTRACTVISION_BACKEND=mlx-gen`. Download exact model repos such as `abstractvision download AbstractFramework/flux.2-klein-4b-4bit --provider mlx-gen`, `abstractvision download AbstractFramework/ernie-image-turbo-8bit --provider mlx-gen`, `abstractvision download briaai/FIBO --provider mlx-gen`, or `abstractvision download Wan-AI/Wan2.2-TI2V-5B-Diffusers --provider mlx-gen` (stored in the Hugging Face cache; `ABSTRACTVISION_MODEL_DIR` is only a legacy import root). Use routed exact model ids such as `mlx-gen/AbstractFramework/flux.2-klein-4b-4bit` or `mlx-gen/Wan-AI/Wan2.2-TI2V-5B-Diffusers`. q4 repos are the memory-efficient default recommendation when a q4/q8 AbstractFramework pair exists; q8 repos remain available for quality-focused runs. Quantization is metadata of the selected model folder, not an AbstractCore request parameter. Legacy `mflux` provider values remain accepted as aliases.
+- Local MLX-Gen (Apple-first): install `abstractvision[mlx-gen]` (or `abstractvision[all-apple]`), then set `ABSTRACTVISION_BACKEND=mlx-gen`. The current AbstractVision release is validated on Apple Silicon first; the install extra also exposes Linux support when upstream `mlx-gen` / `mlx` markers are available. Download exact model repos such as `abstractvision download AbstractFramework/flux.2-klein-4b-4bit --provider mlx-gen`, `abstractvision download AbstractFramework/ernie-image-turbo-8bit --provider mlx-gen`, `abstractvision download briaai/FIBO --provider mlx-gen`, `abstractvision download prism-ml/bonsai-image-ternary-4B-mlx-2bit --provider mlx-gen`, `abstractvision download AbstractFramework/seedvr2-3b-8bit --provider mlx-gen`, `abstractvision download AbstractFramework/seedvr2-7b-8bit --provider mlx-gen`, `abstractvision download Wan-AI/Wan2.2-TI2V-5B-Diffusers --provider mlx-gen`, `abstractvision download AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit --provider mlx-gen`, or `abstractvision download AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit --provider mlx-gen` (stored in the Hugging Face cache; `ABSTRACTVISION_MODEL_DIR` is only a legacy import root). Use routed exact model ids such as `mlx-gen/AbstractFramework/flux.2-klein-4b-4bit`, `mlx-gen/prism-ml/bonsai-image-ternary-4B-mlx-2bit`, `mlx-gen/AbstractFramework/seedvr2-3b-8bit`, `mlx-gen/AbstractFramework/seedvr2-7b-8bit`, `mlx-gen/AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit`, or `mlx-gen/AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit`. q4 repos are the memory-efficient default recommendation for most generation/edit models; SeedVR2 defaults to canonical q8 packages and offers q4 packages for tighter memory. Bonsai ternary is already pre-packed at 2-bit and is selected by its exact repo id. Legacy `mflux` provider values remain accepted as aliases.
 - stable-diffusion.cpp: set `ABSTRACTVISION_BACKEND=sdcpp` and configure either a model path or a curated model key such as `flux2-klein-base-4b`. Use an external `sd-cli`, or install `abstractvision[sdcpp]` for the python binding fallback.
 - The plugin reads AbstractCore owner config keys when present, then falls back to `ABSTRACTVISION_*` env vars.
 - Gateway/Core should pass process-level config or `owner.config` and report readiness; they should not mutate AbstractVision environment variables per request.
@@ -2745,10 +3813,11 @@ Key config keys (owner.config):
 - `vision_device` / `vision_torch_dtype` / `vision_allow_download` / `vision_auto_retry_fp32` (Diffusers)
 - `vision_base_url` / `vision_api_key` (OpenAI or compatible HTTP)
 - `vision_mflux_model` / `vision_mflux_base_model` / `vision_mflux_allow_download` (MLX-Gen; env/config names keep MFLUX compatibility)
+- `vision_mlx_gen_lora_paths` / `vision_mflux_lora_paths`, `vision_mlx_gen_lora_scales` / `vision_mflux_lora_scales`, and `vision_mlx_gen_lora_target_roles` / `vision_mflux_lora_target_roles` for backend-default MLX-Gen LoRA adapters
 - `vision_model_dir` (legacy preset import root used by MLX-Gen compatibility/migration helpers; new downloads land in the Hugging Face cache)
 - `vision_sdcpp_model` / `vision_sdcpp_diffusion_model` / `vision_sdcpp_bin` (stable-diffusion.cpp; `vision_sdcpp_model` may be a curated model key such as `flux2-klein-base-4b`)
 - `vision_sdcpp_vae` / `vision_sdcpp_llm` / `vision_sdcpp_llm_vision` / `vision_sdcpp_clip_l` / `vision_sdcpp_clip_g` / `vision_sdcpp_t5xxl` / `vision_sdcpp_extra_args` (stable-diffusion.cpp component mode)
-- `vision_timeout_s` (optional)
+- `vision_timeout_s` (optional; applies to OpenAI-compatible catalog/control behavior, not image/video generation deadlines)
 - `vision_models_path` (optional provider catalog path; default `/models`)
 - Optional video endpoint keys:
   - `vision_text_to_video_path`
@@ -2783,6 +3852,8 @@ Per-call routing can select the same backend/model ids used by the
 repo id; there is no separate quantization parameter.
 
 ```python
+from pathlib import Path
+
 from abstractcore import create_llm
 
 llm = create_llm("openai", model="gpt-4o-mini")
@@ -2793,6 +3864,7 @@ png_bytes = llm.vision.t2i(
     model="AbstractFramework/qwen-image-2512-4bit",
     steps=20,
     guidance_scale=1.0,
+    on_progress=lambda event: print(f"{event.phase}: step {event.step}/{event.total_steps}"),
 )
 
 edited_png = llm.vision.i2i(
@@ -2803,19 +3875,36 @@ edited_png = llm.vision.i2i(
     steps=20,
     guidance_scale=2.5,
     strength=0.75,
+    on_progress=lambda event: print(f"{event.phase}: step {event.step}/{event.total_steps}"),
+)
+
+multi_ref_png = llm.vision.i2i(
+    "compose the subject using the second image as style and layout reference",
+    image="./subject.png",
+    provider="mlx-gen",
+    model="AbstractFramework/qwen-image-edit-2511-4bit",
+    reference_images=[Path("./style-reference.png").read_bytes()],
+    steps=20,
+    guidance_scale=2.5,
 )
 
 def on_video_progress(event):
-    print(f"{event.phase}: frame {event.frame}/{event.total_frames}")
+    print(
+        f"{event.phase}: step {event.step}/{event.total_steps}, "
+        f"frame {event.frame}/{event.total_frames}"
+    )
 
 mp4_bytes = llm.vision.t2v(
     "a red fox walking through a snowy forest, cinematic",
     provider="mlx-gen",
-    model="Wan-AI/Wan2.2-TI2V-5B-Diffusers",
-    num_frames=121,
-    fps=24,
-    steps=50,
-    guidance_scale=5.0,
+    model="AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit",
+    width=432,
+    height=240,
+    num_frames=41,
+    fps=10,
+    steps=20,
+    guidance_scale=4.0,
+    guidance_2=3.0,
     max_sequence_length=256,
     on_progress=on_video_progress,
 )
@@ -2824,11 +3913,14 @@ first_frame_mp4 = llm.vision.i2v(
     "./first-frame.png",
     prompt="slow camera push-in",
     provider="mlx-gen",
-    model="Wan-AI/Wan2.2-TI2V-5B-Diffusers",
-    num_frames=121,
-    fps=24,
-    steps=50,
-    guidance_scale=5.0,
+    model="AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit",
+    width=432,
+    height=240,
+    num_frames=41,
+    fps=10,
+    steps=20,
+    guidance_scale=3.5,
+    guidance_2=3.5,
     max_sequence_length=256,
     on_progress=on_video_progress,
 )
@@ -2838,9 +3930,45 @@ first_frame_mp4 = llm.vision.i2v(
 artifact ref dict when an `artifact_store` is supplied. Without an artifact
 store the plugin returns bytes; with `artifact_store=...` it returns the stored
 artifact ref, matching the runtime/gateway artifact path.
-`llm.vision.t2v(...)` and `llm.vision.i2v(...)` forward `on_progress` to local
-video backends; MLX-Gen Wan emits normalized `VideoProgressEvent` objects with
-frame and diffusion-step counters.
+Typed per-call keyword arguments such as `control_image`, `control_strength`,
+`lora_adapters`, `guidance_2`, and `on_progress` survive the plugin boundary.
+Unknown per-call keyword arguments
+such as `reference_images` and `max_sequence_length` are preserved in the
+AbstractVision request `extra` dict for local backends.
+`llm.vision.t2i(...)`, `llm.vision.i2i(...)`, `llm.vision.t2v(...)`, and
+`llm.vision.i2v(...)` forward `on_progress` to MLX-Gen. Image/edit events
+include diffusion-step progress; Wan video events use diffusion-step
+`progress` and also include frame counters and `frame_progress`.
+
+For task-specific Wan A14B video models, `guidance_2` is a typed request
+parameter for the second-stage/low-noise guidance path. Pass it directly to
+`t2v(...)` / `i2v(...)`; do not wrap it in `extra`.
+
+For MLX-Gen base-Qwen structured control, pass `control_image=<bytes>` and
+optional `control_strength=<float>` directly to `t2i(...)`. Unsupported
+backends reject those fields explicitly instead of silently ignoring them.
+
+The same applies to LoRA adapters. Prefer the shared typed contract:
+
+```python
+from abstractvision import LoRAAdapterSpec
+
+png = llm.vision.t2i(
+    "Pixel art astronaut floating above Earth",
+    provider="mlx-gen",
+    model="AbstractFramework/qwen-image-2512-8bit",
+    lora_adapters=[
+        LoRAAdapterSpec(
+            source="prithivMLmods/Qwen-Image-2512-Pixel-Art-LoRA:Qwen-Image-2512-Master-Pixel-Art-LoRA.safetensors",
+            scale=1.0,
+        )
+    ],
+)
+```
+
+Wan LoRA calls may also need `target_role` in each adapter spec. TI2V-5B uses
+`transformer`. A14B routes require explicit
+`high_noise_transformer` / `low_noise_transformer` roles.
 
 ```bash
 # OpenAI API.
@@ -2871,9 +3999,60 @@ provider metadata is retained in a bounded `raw` field for diagnostics. This met
 inspection only: it does not mutate the configured backend or select a generation model.
 
 Backends that do not implement provider catalog listing raise a clear AbstractVision error instead
-of returning a misleading empty catalog. Local Diffusers and stable-diffusion.cpp model discovery
+of returning a misleading empty catalog. When multiple backends are enabled, the plugin probes
+their catalogs concurrently so discovery waits for the slowest backend instead of the sum of
+serial scans. Local Diffusers and stable-diffusion.cpp model discovery
 remain separate local-backend concerns, while MLX-Gen and Diffusers provider listings reflect
 cache-backed snapshots rather than a separate `~/models` download tree.
+
+The same capability object also exposes installed adapter discovery for routes
+that support LoRAs:
+
+```python
+adapters = llm.vision.list_provider_adapters(
+    provider="mlx-gen",
+    model="AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit",
+    task="text_to_video",
+)
+for adapter in adapters:
+    print(adapter["id"], adapter.get("suggested_target_roles"))
+```
+
+Adapter truth stays backend-owned. The plugin serializes
+`ProviderAdapterInfo` into JSON-safe dictionaries, but it does not invent
+compatibility metadata on its own.
+
+### Batch generation through Core
+
+The plugin exposes explicit batch helpers in addition to the singular task
+methods:
+
+- `llm.vision.t2i_batch(...)`
+- `llm.vision.i2i_batch(...)`
+- `llm.vision.t2v_batch(...)`
+- `llm.vision.i2v_batch(...)`
+
+These methods use the same typed request contract as the singular calls:
+stacked `lora_adapters=[...]`, explicit `seeds=[...]`, optional base `seed`
+expansion, and typed video controls such as `guidance_2` / `flow_shift`.
+
+```python
+videos = llm.vision.t2v_batch(
+    "A compact silver spaceship lifts off from an icy canyon at dawn.",
+    provider="mlx-gen",
+    model="AbstractFramework/wan2.2-ti2v-5b-diffusers-8bit",
+    count=2,
+    seeds=[6251, 6252],
+    flow_shift=3.0,
+    lora_adapters=[
+        LoRAAdapterSpec(
+            source="owner/wan-style:video.safetensors",
+            scale=0.9,
+            target_role="transformer",
+        )
+    ],
+)
+```
 
 ### Local Model Residency Control
 
@@ -2885,7 +4064,7 @@ llm.vision.load_resident_model(
     {"task": "text_to_image", "provider": "mlx-gen", "model": "AbstractFramework/flux.2-klein-4b-4bit"}
 )
 llm.vision.load_resident_model(
-    {"task": "text_to_video", "provider": "mlx-gen", "model": "Wan-AI/Wan2.2-TI2V-5B-Diffusers"}
+    {"task": "text_to_video", "provider": "mlx-gen", "model": "AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit"}
 )
 
 loaded = llm.vision.list_loaded_models()
@@ -2933,11 +4112,28 @@ Current examples:
 ## 2) Tool helpers (`make_vision_tools`)
 
 `make_vision_tools(...)` builds AbstractCore `@tool` callables for:
+- adapter discovery for the selected model
 - text→image
+- batch text→image
 - image→image
+- batch image→image
+- image upscaling
 - multi-view image
 - text→video
+- batch text→video
 - image→video
+- batch image→video
+
+The helper surface now stays aligned with the main AbstractCore capability
+plugin surface:
+
+- `lora_adapters=[...]` is accepted on text→image, image→image, text→video,
+  and image→video tool calls.
+- batch tools accept `count` plus optional explicit `seeds=[...]`.
+- image-edit tools accept `reference_images=[...]`, where each item can be an
+  artifact ref dict or a `{"b64": "..."}` payload.
+- `vision_list_adapters(task=...)` returns the currently discovered compatible
+  adapter inventory for the selected model.
 
 Important:
 - Tool outputs are designed to be **artifact refs**, so `VisionManager.store` must be set ([`../../src/abstractvision/integrations/abstractcore.py`](../../src/abstractvision/integrations/abstractcore.py)).
@@ -3226,10 +4422,98 @@ Thanks to everyone who reports issues, suggests improvements, and contributes fi
 
 ## Unreleased
 
+## 0.3.30 - 2026-09-27
+
+- MLX-Gen: unloading a model now returns MLX's cached Metal memory to the operating system. Previously the released weights could stay reserved in the MLX allocator cache, so a process with no loaded model could still hold most of the model's memory. No API change.
+
+## 0.3.29 - 2026-09-23
+
+- Runtime dependency: raise the optional MLX-Gen runtime floor to `mlx-gen>=0.38.0,<0.39.0` in every extra that installs it (`mlx-gen`, `mflux`, `apple`, `gpu`, `all`, `all-apple`, `all-gpu`). The MLX-Gen 0.38 line requires Python 3.10+, `transformers>=5`, and `Pillow>=12.1.1`; the AbstractVision backend call surface is unchanged.
+
+## 0.3.28 - 2026-06-16
+
+- MLX-Gen capabilities: align advertised `supports_mask` with the backend family gate so FLUX.2 models do not report mask support from inpaint-only route metadata when masked edits are implemented only for Qwen Image Edit and FIBO Edit families.
+- AbstractCore plugin: probe provider catalogs concurrently so `list_provider_models` waits for the slowest backend instead of the sum of serial scans.
+
+## 0.3.27 - 2026-06-16
+
+- Runtime dependency: raise the optional MLX-Gen runtime floor to `mlx-gen>=0.18.19,<0.19.0`.
+- MLX-Gen Qwen routes: expose validated base-Qwen structured control through typed `control_image` / `control_strength` and validated Qwen 2511 masked edit through `mask`, with explicit fail-closed backend gating instead of older family-only assumptions.
+- Adapter capability registry: add packaged `vision_adapter_capabilities.json` plus `VisionAdapterCapabilitiesRegistry` so package-owned adapter defaults, compatibilities, docs links, and quantization guidance are data-driven instead of hard-coded in Python branches.
+- CLI, provider catalog, and docs: surface structured-control parameters, adapter recommendations, registry override paths, and the updated MLX-Gen Qwen route guidance consistently across the CLI, REPL, AbstractCore integration, troubleshooting docs, and AI-readable indexes.
+
+## 0.3.26 - 2026-06-13
+
+- AbstractCore plugin surface: expose `list_provider_adapters(...)` plus first-class batch methods for `t2i`, `i2i`, `t2v`, and `i2v`, keeping stacked LoRA adapters, explicit seed planning, and route-specific video controls on the same typed boundary used by direct `VisionManager` callers.
+- AbstractCore tool helpers: bring `make_vision_tools(...)` up to the same contract with adapter discovery, stacked LoRA adapters, batch helpers, and multi-reference image-edit inputs.
+- Core-hosted proof: expand regression coverage so the plugin contract is explicitly validated for installed-adapter discovery, image batch seed expansion, and video batch forwarding.
+- Packaging docs: clarify that `abstractvision[local]` covers the Diffusers + `sdcpp` runtime stack, while MLX-Gen stays explicit through `abstractvision[mlx-gen]` or the aggregate `all` / `all-apple` profiles.
+
+## 0.3.25 - 2026-06-13
+
+- Provider discovery: fix SeedVR2 local prepared-folder discovery for bare local folder names such as `seedvr2-7b-8bit` and `seedvr2-7b-4bit`, so clean environments surface both exact local upscaler variants without relying on a populated Hugging Face cache.
+
+## 0.3.24 - 2026-06-13
+
+- Provider discovery: fix SeedVR2 local prepared-folder discovery so `AbstractFramework/seedvr2-7b-8bit` and `AbstractFramework/seedvr2-7b-4bit` both surface correctly from a configured local model directory even when no Hugging Face cache is available, while keeping the canonical base alias aligned with the preferred local variant.
+
+## 0.3.23 - 2026-06-13
+
+- Runtime dependency: raise the MLX-Gen optional runtime floor to `mlx-gen>=0.18.18,<0.19.0` and expose the same upstream install surface that now includes Linux/CUDA markers in addition to Apple Silicon.
+- Shared LoRA contract: add `LoRAAdapterSpec` plus typed `lora_adapters` request fields across `ImageGenerationRequest`, `ImageEditRequest`, `VideoGenerationRequest`, and `ImageToVideoRequest`.
+- MLX-Gen integration: route typed LoRA adapters through local `t2i`, `i2i`, `t2v`, and `i2v`, keep backend-default adapters as a separate config path, and preserve adapter provenance in generated metadata.
+- CLI/Core integration: add first-class repeated `--lora*` flags for one-shot MLX-Gen image/video commands and forward `lora_adapters` plus typed `guidance_2` through the AbstractCore plugin surface.
+- Provider discovery: surface MLX-Gen route-level LoRA truth (`supports_lora`, `lora_status`, `lora_target_roles`, `lora_validation_profile`) through catalog/provider-model discovery instead of duplicating compatibility truth in the packaged registry.
+- Batch generation: add and document first-class batch orchestration through `VisionManager.generate_image_batch(...)`, `edit_image_batch(...)`, `generate_video_batch(...)`, `image_to_video_batch(...)`, plus CLI `--count` / `--seeds`.
+- Adapter inventory hygiene: add route-aware installed-adapter discovery through `abstractvision adapters ...` / `VisionManager.list_provider_adapters(...)` and filter full-model component snapshots out of that inventory so only optional overlays are surfaced as adapters.
+- Wan video validation: reject undersized TI2V-5B requests below `832x480` / `480x832` in the MLX-Gen backend boundary and publish only validated `832x480` TI2V and `480x240` task-specific Wan A14B proof assets.
+- Docs/tests: add a bundled MLX-Gen proof page with current batch image/video runs, stacked-adapter image-edit evidence, validated TI2V-5B and Wan A14B visual proofs, progress logs, provider-adapter discovery evidence, and expanded regression coverage for exact Qwen edit routing, CLI propagation, plugin propagation, Diffusers compatibility bridging, adapter inventory filtering, and packaging markers.
+
+## 0.3.22 - 2026-06-07
+
+- Runtime dependency: raise the MLX-Gen optional runtime floor to `mlx-gen>=0.18.14,<0.19.0` so Apple Silicon installs pick up SeedVR2 large-output VAE decode stability, official base-model support, canonical q8/q4 packages, and the latest image-edit fixes.
+- Image upscaling: add first-class `ImageUpscaleRequest`, `VisionManager.upscale_image(...)`, backend `upscale_image_with_progress(...)`, and canonical `image_upscale` capability metadata.
+- MLX-Gen SeedVR2: surface official `ByteDance-Seed/SeedVR2-3B` and `ByteDance-Seed/SeedVR2-7B` base models plus canonical `AbstractFramework/seedvr2-{3b,7b}-{8bit,4bit}` packages. Short selectors such as `seedvr2-3b` resolve to the recommended 8-bit package, while exact q4/q8 model ids remain exact.
+- CLI/Core integration: add one-shot `abstractvision upscale` with default `mlx-gen/AbstractFramework/seedvr2-3b-8bit`, AbstractCore plugin tool support, and residency/catalog support for upscaler-only models.
+- Progress events: relay SeedVR2 denoise-step progress through the same normalized progress event surface used by image/video generation, with `task="image_upscale"`.
+
+## 0.3.21 - 2026-06-04
+
+- Wan A14B guidance controls: promote MLX-Gen `guidance_2` to a first-class `VideoGenerationRequest` / `ImageToVideoRequest` field, CLI `--guidance-2` flag, REPL flag, playground job parameter, and AbstractCore tool parameter.
+- Model registry: declare `guidance_2` defaults for Wan 2.2 A14B text-to-video and image-to-video tasks so discovery, tool defaults, and provider catalogs agree.
+- OpenAI-compatible video: forward typed `guidance_2` to custom text-to-video and image-to-video endpoints that support the Wan-style two-stage guidance contract.
+
+## 0.3.20 - 2026-06-04
+
+- Runtime dependency: raise the MLX-Gen optional runtime floor to `mlx-gen>=0.18.10,<0.19.0` so Apple Silicon installs pick up the current capability planner, shared image/video progress events, and multi-reference edit routing.
+- MLX-Gen progress: surface image generation and image edit progress through backend `*_with_progress(...)`, Python/Core `on_progress(event)` callbacks, and opt-in one-shot CLI `--progress` flags while preserving video progress availability for shell, Python, and AbstractCore callers.
+- MLX-Gen progress semantics: align normalized video progress, the CLI display, and backend progress-bar callbacks with MLX-Gen denoise-step progress while retaining video frame counters as contextual event fields.
+- MLX-Gen multi-reference edits: allow FLUX.2 and Qwen Image Edit requests to pass additional reference images through `extra.reference_images` / CLI `--reference-image`, and mark the supported model task metadata accordingly.
+- Docs/tests: document image/edit/video progress across CLI, Python, and AbstractCore plugin calls; add propagation coverage for manager, CLI, plugin, Flux.2 multi-reference edit paths, and MLX-Gen denoise-step video progress normalization.
+- Examples: add a bundled MLX-Gen local example gallery with copy-paste image/edit/video commands, generated PNG/MP4 outputs, contact sheet, manifest, and AbstractCore plugin progress-event capture.
+
+## 0.3.19 - 2026-06-03
+
+- Docs: clarify MLX-Gen `0.18.8` setup, Wan 2.2 A14B text-to-video/image-to-video usage, and generated-media configuration references.
+- AI-readable docs: refresh `llms.txt` and `llms-full.txt` for the current AbstractVision Apple profile and video model surface.
+
+## 0.3.18 - 2026-05-31
+
+- Runtime dependency: raise the MLX-Gen optional runtime floor to `mlx-gen>=0.18.8,<0.19.0` so Apple Silicon installs pick up Wan 2.2 A14B text-to-video and image-to-video support.
+- Wan A14B catalog: expose `Wan-AI/Wan2.2-T2V-A14B-Diffusers` and `Wan-AI/Wan2.2-I2V-A14B-Diffusers` through the canonical `mlx-gen` provider with task-specific defaults and capability metadata.
+- Core propagation: prepare AbstractVision `0.3.18` so AbstractCore can depend on the corrected MLX-Gen runtime contract.
+
+## 0.3.17 - 2026-05-29
+
+- Docs: update the docs-site favicon and add an embedded text-to-video example carousel (5s MP4) to `docs/getting-started.md`.
+- Runtime dependency: raise the MLX-Gen optional runtime floor to `mlx-gen>=0.18.7,<0.19.0` so Apple Silicon installs pick up the latest Wan video/model fixes.
+- Core propagation: prepare the next AbstractVision package version (`0.3.17`) so AbstractCore can depend on the corrected MLX-Gen runtime contract.
+
 ## 0.3.16 - 2026-05-26
 
 - MLX-Gen video progress: surface Wan `text_to_video` / `image_to_video` progress events through one-shot `abstractvision t2v` / `i2v`, interactive `/t2v` / `/i2v`, and Python/Core `on_progress(event)` callbacks.
 - Backend API: add normalized `VideoProgressEvent` objects with phase, frame, total frame, step, total step, and progress fields while preserving backend `*_with_progress(...)` two-argument callbacks for generic progress bars.
+- Capability filtering: keep Diffusers task support aligned with backend-specific registry requirements so MLX-Gen-only edit paths do not leak into Diffusers capability reports.
 - AbstractCore integration: forward `on_progress` through plugin `t2v` / `i2v` requests so gateway/runtime callers can observe local MLX-Gen video runs without hardcoded backend plumbing.
 - Docs/tests: document video progress usage across shell, REPL, Python, and AbstractCore examples; expand regression coverage for MLX-Gen progress bridging and quiet CLI flags.
 
@@ -3419,6 +4703,20 @@ build-backend = "setuptools.build_meta"
 name = "abstractvision"
 dynamic = ["version"]
 description = "Model-agnostic generative vision abstractions (image/video) for the Abstract ecosystem"
+keywords = [
+  "vision",
+  "image-generation",
+  "text-to-image",
+  "image-to-video",
+  "text-to-video",
+  "mlx-gen",
+  "mlx",
+  "diffusers",
+  "stable-diffusion",
+  "abstractcore",
+  "generative-ai",
+  "openai-compatible",
+]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -3493,13 +4791,13 @@ sdcpp = [
 # Native Apple image generation via MLX-Gen. Kept optional because it pulls
 # Apple-specific local runtime dependencies.
 mlx-gen = [
-  "mlx-gen>=0.18.6,<0.19.0; platform_system == 'Darwin' and python_version >= '3.10'",
+  "mlx-gen>=0.38.0,<0.39.0; (platform_system == 'Darwin' or platform_system == 'Linux') and python_version >= '3.10'",
 ]
 
 # Compatibility extra for callers that still install the historical MFLUX extra.
 # It intentionally installs MLX-Gen, not the retired standalone mflux package.
 mflux = [
-  "mlx-gen>=0.18.6,<0.19.0; platform_system == 'Darwin' and python_version >= '3.10'",
+  "mlx-gen>=0.38.0,<0.39.0; (platform_system == 'Darwin' or platform_system == 'Linux') and python_version >= '3.10'",
 ]
 
 # Native Apple Python install profile. Docker cannot expose Apple's Metal stack,
@@ -3518,7 +4816,7 @@ apple = [
   "peft>=0.10.0",
   "gguf>=0.10.0",
   "stable-diffusion-cpp-python>=0.4.2,<0.4.6",
-  "mlx-gen>=0.18.6,<0.19.0; platform_system == 'Darwin' and python_version >= '3.10'",
+  "mlx-gen>=0.38.0,<0.39.0; (platform_system == 'Darwin' or platform_system == 'Linux') and python_version >= '3.10'",
   "Pillow>=9.0",
 ]
 
@@ -3535,6 +4833,7 @@ gpu = [
   "einops>=0.7.0",
   "peft>=0.10.0",
   "gguf>=0.10.0",
+  "mlx-gen>=0.38.0,<0.39.0; (platform_system == 'Darwin' or platform_system == 'Linux') and python_version >= '3.10'",
   "Pillow>=9.0",
 ]
 
@@ -3588,7 +4887,7 @@ all = [
   "peft>=0.10.0",
   "gguf>=0.10.0",
   "stable-diffusion-cpp-python>=0.4.2,<0.4.6",
-  "mlx-gen>=0.18.6,<0.19.0; platform_system == 'Darwin' and python_version >= '3.10'",
+  "mlx-gen>=0.38.0,<0.39.0; (platform_system == 'Darwin' or platform_system == 'Linux') and python_version >= '3.10'",
   "Pillow>=9.0",
 ]
 
@@ -3608,7 +4907,7 @@ all-apple = [
   "peft>=0.10.0",
   "gguf>=0.10.0",
   "stable-diffusion-cpp-python>=0.4.2,<0.4.6",
-  "mlx-gen>=0.18.6,<0.19.0; platform_system == 'Darwin' and python_version >= '3.10'",
+  "mlx-gen>=0.38.0,<0.39.0; (platform_system == 'Darwin' or platform_system == 'Linux') and python_version >= '3.10'",
   "Pillow>=9.0",
 ]
 
@@ -3626,6 +4925,7 @@ all-gpu = [
   "peft>=0.10.0",
   "gguf>=0.10.0",
   "stable-diffusion-cpp-python>=0.4.2,<0.4.6",
+  "mlx-gen>=0.38.0,<0.39.0; (platform_system == 'Darwin' or platform_system == 'Linux') and python_version >= '3.10'",
   "Pillow>=9.0",
 ]
 

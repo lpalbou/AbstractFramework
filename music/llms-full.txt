@@ -1,8 +1,8 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractmusic/main/llms-full.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractMusic/main/llms-full.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractmusic/main/llms-full.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractMusic/main/llms-full.txt
 
 # AbstractMusic
 
@@ -18,10 +18,10 @@ docs and package metadata are canonical.
 - [docs/README.md](docs/README.md): docs tree index.
 - [docs/getting-started.md](docs/getting-started.md): install and first-run workflows.
 - [docs/repl.md](docs/repl.md): REPL commands, engine/model switching rules, downloads/offline toggle, and duration limits.
-- [docs/architecture.md](docs/architecture.md): core contracts and dependency boundaries.
+- [docs/architecture.md](docs/architecture.md): core contracts, component and discovery diagrams, and dependency boundaries.
 - [docs/api.md](docs/api.md): public API, request fields, planner hooks, registry, and backend kinds.
 - [docs/models.md](docs/models.md): reviewed model list and license/precision policy.
-- [docs/faq.md](docs/faq.md): common questions and limits.
+- [docs/faq.md](docs/faq.md): common questions, prompt-rewriting rules, and limits.
 - [docs/troubleshooting.md](docs/troubleshooting.md): user-visible failure modes and recovery steps.
 - [docs/release.md](docs/release.md): release workflow and publishing setup.
 - [CHANGELOG.md](CHANGELOG.md): release history.
@@ -146,6 +146,13 @@ Heavy imports must remain lazy. The base package stays focused on contracts, man
 artifact helpers, docs, CLI/plugin shells, and provider metadata. Runtime engines live behind
 optional extras.
 
+Discovery is bounded by the same rule and never imports `torch`, `transformers`, or `diffusers`.
+`abstractmusic.availability` answers availability with the standard library only: local providers
+by checking the Hugging Face cache for weights (mirroring `huggingface_hub` cache-root resolution,
+honouring the checked-out revision and shard index files), remote providers by probing their
+endpoints concurrently under a 5-second deadline. The page includes Mermaid diagrams for the
+component layout and the discovery flow.
+
 ---
 
 ## docs/api.md
@@ -162,10 +169,23 @@ The AbstractCore plugin exposes discovery methods such as `available_providers(.
 `list_models(...)`, `list_provider_models(...)`, `list_operations(...)`, and
 `capability_catalog(...)` from packaged metadata without loading model weights. Discovery uses
 backend-oriented provider ids such as `acemusic`, `elevenlabs`, `acestep`, `stable-audio`,
-`stable-audio-3`, and `diffusers`, and only returns providers/models whose runtime is usable in the
-current environment. It also exposes an optional residency surface (`load_resident_model`,
-`list_loaded_models`, `list_resident_models`, `unload_resident_model`) for local backends; remote
-providers remain stateless.
+`stable-audio-3`, and `diffusers`, and only returns what can run right now: local providers need
+their runtime installed and their weights already in the Hugging Face cache, remote providers need a
+key plus an endpoint that answers a probe (all remote providers probed in parallel under a 5s
+deadline, via `abstractmusic.availability`). Discovery never imports `torch`, `transformers`, or
+`diffusers`. `provider_details(...)` lists every known provider with a `usable` flag, the reason it
+is not usable, and which of its models are already cached. The plugin also exposes an optional
+residency surface (`load_resident_model`, `list_loaded_models`, `list_resident_models`,
+`unload_resident_model`) for local backends; remote providers remain stateless.
+
+`abstractmusic.audio_analysis` exposes the canonical validation gate set
+`evaluate_music_quality_gates(candidate, reference)` (validity, noise texture, collapse, pitch
+variety, reference floor, repetition) and `is_probably_noise_texture(...)`, a warning-grade
+screen for wind/whoosh generative failures; the `acestep` backend reports that screen as
+`audio_stats.probably_noise_texture` in generation metadata. The gate set does not measure tempo
+stability, so pair it with listening review; `inspect_tempo_trajectory_file/bytes(...)` is a
+diagnostic windowed beat-period trajectory for inspecting rhythm problems (read as dominant onset
+rate, not exact tempo).
 
 Built-in backend kinds include `acemusic`, `elevenlabs`, `acestep`, `diffusers`, `musicgen`,
 `stable-audio`, and `stable-audio-3`.
@@ -184,8 +204,13 @@ Reviewed model entries include:
   ElevenLabs Music endpoints rather than voice/TTS.
 - `ACE-Step/acestep-v15-xl-turbo-diffusers`: recommended local path through `acestep` for local
   generation, MIT, text-to-music with lyrics.
-- Additional official ACE-Step checkpoints surfaced under `acestep` are
-  `ACE-Step/Ace-Step1.5`, `ACE-Step/acestep-v15-base`, and `ACE-Step/acestep-v15-sft`.
+- Additional loadable ACE-Step checkpoints under `acestep` are
+  `ACE-Step/acestep-v15-xl-sft-diffusers` and `ACE-Step/acestep-v15-xl-base-diffusers`
+  (Diffusers layout, not guidance-distilled, 50-step defaults; smoke-validated with raw short
+  prompts — avoid `--enhance-prompt` with them, as long template captions degraded guided
+  checkpoints in 30-second validation runs). `ACE-Step/Ace-Step1.5`, `ACE-Step/acestep-v15-base`, and
+  `ACE-Step/acestep-v15-sft` use the native ACE-Step repository layout that `AceStepPipeline`
+  cannot load; they remain catalog-only.
 - `facebook/musicgen-small`: optional Transformers backend, CC BY-NC 4.0.
 - `stabilityai/stable-audio-open-small`: optional gated short-clip backend under the Stability AI
   Community License.
@@ -209,6 +234,13 @@ prefer official 16-bit artifacts.
 Common user-visible issues:
 
 - Missing generation packages usually means the backend extra was not installed.
+- Output that sounds like wind or noise from the guided XL checkpoints usually means a long
+  template caption reached the model: keep `--enhance-prompt` off for XL sft/base, verify with
+  `--print-plan`, and check `audio_stats.probably_noise_texture` in generation metadata.
+- If AbstractCore discovery lists no music providers, call `provider_details(...)` for the reason
+  per provider: `not-installed`, `no-local-weights`, `not-configured`, `unauthorized`,
+  `unreachable`, or `unavailable`. `metadata.models` lists what the provider supports and
+  `metadata.cached_models` lists what is already downloaded.
 - Missing default remote generation credentials means `ACEMUSIC_API_KEY` is not set. Use
   `ACEMUSIC_BASE_URL` only for compatible custom endpoints.
 - If ACE Music returns the wrong duration, use tagged `<prompt>...</prompt>` mode and WAV outputs

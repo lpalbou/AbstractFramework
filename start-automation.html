@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Start as an automation owner: recurring agent tasks that speak up only when needed | AbstractFramework</title>
+  <meta name="description" content="A first hour with AbstractFramework automations: create a recurring agent task, choose independent or growing context, get notified only when it matters, and manage it from the Observer, the Assistant or AbstractCode.">
+  <link rel="canonical" href="https://abstractframework.ai/start-automation.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Start as an automation owner: recurring agent tasks that speak up only when needed">
+  <meta property="og:description" content="A first hour with AbstractFramework automations: create a recurring agent task, choose independent or growing context, get notified only when it matters, and manage it from the Observer, the Assistant or AbstractCode.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html" aria-current="page">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
+<main id="main">
+
+<section class="hero" style="min-height:auto;padding:8rem 0 3rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Start here &middot; Automation owner</div>
+    <h1>Start as an <span class="gradient">automation owner</span></h1>
+    <p class="hero-sub">Hand recurring checks, digests and reports to an agent. Each automation runs on the gateway at a fixed interval or on request, keeps every run as a readable chat turn, and speaks up only when a run needs you.</p>
+    <div class="hero-actions"><a href="automations.html" class="btn btn-primary">How automations work</a><a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/automations.md" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Automations guide</a></div>
+    <nav class="persona-switch" aria-label="Other starting points"><a href="start-user.html">User</a><a href="start-creator.html">Artist / creator</a><a href="start-developer.html">Developer</a><a href="start-architect.html">Architect</a><a href="start-researcher.html">Researcher</a><a href="start-automation.html" aria-current="page">Automation owner</a></nav>
+  </div>
+</section>
+
+<section id="first-hour" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Your first hour</div>
+      <h2 class="section-title">From nothing to something useful</h2>
+    </div>
+    <div class="journey">
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Install and set a model <span class="j-time">20 min</span></h3>
+        <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div><p>Finish the first-run guide with a model that fits (or a cloud provider). Automations run unattended, so pick a model that answers reliably; a tick takes as long as your workflow does.</p>
+      </div></div>
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Create your first automation <span class="j-time">10 min</span></h3>
+        <p>Open the <a href="observer.html">Observer</a> from the console&rsquo;s Apps page. Choose <strong>Launch</strong>, switch to <strong>Automate</strong>, pick <strong>Gateway default</strong>, and write the task:</p><div class="code-block"><pre><code>Check the free disk space on this computer and report it in one line.</code></pre></div><p>Set <strong>Repeat every 30 minutes</strong>, <strong>Independent</strong> context, tools run without asking, then <strong>Create automation</strong>.</p>
+      </div></div>
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Read it like a chat <span class="j-time">5 min</span></h3>
+        <p>The Automations page shows each run as a trigger turn and an answer turn. <strong>Run now</strong> fires one immediately: the schedule does not move, it does not count toward a run limit, and it works while paused. <strong>Open run ledger</strong> shows every step the agent took.</p>
+      </div></div>
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Decide what deserves your attention <span class="j-time">15 min</span></h3>
+        <p>Results are quiet by default. You are notified when a run fails after its last retry, when it waits for you, or when the workflow&rsquo;s output carries <code>notify</code>. To alert on a threshold, publish a small workflow in <a href="flow.html">Flow</a> that returns <code>{response, notify}</code>; the gateway decides from that field, never from the wording of the answer.</p>
+      </div></div>
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Manage it from anywhere <span class="j-time">10 min</span></h3>
+        <p>Pause, resume, run now, stop the current run, edit (title, interval, context), archive, or <strong>Discuss</strong> a result in a forked chat, from the Observer, the <a href="assistant.html">Assistant</a>&rsquo;s Automations tab or <a href="code.html">AbstractCode</a>:</p><div class="code-block"><pre><code>/automations          <span class="line-cmt"># in the AbstractCode terminal client</span>
+/schedule &lt;task&gt;      <span class="line-cmt"># create one from the current workflow</span></code></pre></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="try">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Three things to try</div>
+      <h2 class="section-title">Then make it yours</h2>
+    </div>
+    <div class="try-grid">
+      <div class="try-card reveal">
+        <span class="t-num">TRY 1</span>
+        <h3>Market watch (growing)</h3>
+        <p>"Search the web for the current price of &lt;a share&gt; and report it with the change since the previous check." Every 5 minutes, growing context: each tick sees the previous ones.</p>
+        
+      </div>
+      <div class="try-card reveal">
+        <span class="t-num">TRY 2</span>
+        <h3>Memory monitor (independent, notify)</h3>
+        <p>A workflow that runs <code>memory_pressure</code> and returns <code>notify: true</code> only under a threshold. Every 2 minutes; silent until it matters.</p>
+        <p><a href="automations.html">Worked examples</a></p>
+      </div>
+      <div class="try-card reveal">
+        <span class="t-num">TRY 3</span>
+        <h3>Weekly report you can question</h3>
+        <p>Every 7 days, summarise the week&rsquo;s changes in a folder. When a report surprises you, <strong>Discuss</strong> it: the new chat sees the automation&rsquo;s history and can read its files, without changing them.</p>
+        
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="notes" style="background:var(--bg-surface)">
+  <div class="container" style="max-width:900px">
+    <div class="section-header reveal">
+      <div class="section-label">Good to know</div>
+      <h2 class="section-title">Honest notes</h2>
+    </div>
+    <div class="callout warn reveal"><svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber-light)" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>Intervals are fixed and in UTC.</strong> "Every 24 hours" means 24 hours after the previous tick, not "daily at 08:00"; there is no cron expression or time zone. Write weeks as <code>7d</code>.</div></div><div class="callout warn reveal"><svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber-light)" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>Creating an automation approves its tools.</strong> With the default approval, the framework's tools run without asking on every tick. Choose <strong>Ask each time</strong> if every tool batch should wait for you. Third-party MCP tools always ask.</div></div><div class="callout reveal"><svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div><strong>Busy models slow ticks down.</strong> At most one run of an automation runs at a time; ticks that come due meanwhile are coalesced. Several automations sharing one local model queue behind each other. Growing automations replay the newest whole turns up to 50,000 tokens; ask for a short running summary in each answer when something must be remembered longer.</div></div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="container">
+    <div class="section-header reveal"><div class="section-label">Where to next</div><h2 class="section-title">Keep going</h2></div>
+    <div class="next-links reveal"><a class="next-link" href="automations.html"><strong>Automations</strong><span>The mental model, controls, notifications and limits.</span></a><a class="next-link" href="observer.html"><strong>AbstractObserver</strong><span>Launch &rarr; Automate and the Automations page.</span></a><a class="next-link" href="assistant.html"><strong>AbstractAssistant</strong><span>Automations and notifications in the menu bar.</span></a><a class="next-link" href="code.html"><strong>AbstractCode</strong><span><code>/schedule</code> and <code>/automations</code>.</span></a></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
+    </div>
+    <div class="footer-col">
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
+  </div>
+</footer>
+<script src="assets/js/main.js?v=4"></script>
+</body>
+</html>

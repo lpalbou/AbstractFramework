@@ -1,8 +1,8 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractagent/main/llms-full.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractAgent/main/llms-full.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractagent/main/llms-full.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractAgent/main/llms-full.txt
 
 # AbstractAgent (full)
 
@@ -19,9 +19,13 @@ but is commonly used as a “bigger context window” companion.
 Important notes (source-of-truth hints):
 - Runtime behavior lives in workflow adapters: `src/abstractagent/adapters/*_runtime.py`
 - Keep prompting/parsing runtime-agnostic: `src/abstractagent/logic/*` (no `abstractruntime` imports)
+- `src/abstractagent/adapters/generation_params.py` is the shared LLM param normalizer for temperature, seed, media policy, prompt-cache identity, streaming passthrough (`_runtime.stream`), Core `thinking` and `speculation` (MTP). Delegated children in ReAct, CodeAct and MemAct inherit `stream`, `speculation`, `thinking`, provider/model, sampling, `max_output_tokens`, `tool_prompt_examples` and `tool_policy` (see `docs/architecture.md`).
+- `src/abstractagent/adapters/loop_hooks.py` is the shared loop-hook layer (listen/steer/capture); see `docs/hooks.md`.
 - Docs entrypoint: `README.md` → `docs/getting-started.md` → `docs/README.md`
+- Version 0.3.17 requires `abstractcore[tools]>=2.13.41` and `AbstractRuntime>=0.7.0`; extras: `apple`, `gpu`, `test`, `dev`.
+- The loops stamp the runtime turn-grounding envelope into the durable user turn once (`abstractruntime.turn_grounding`) and place the loop tail with `transcripts.place_loop_tail`, keeping prompts byte-prefix stable across iterations and turns.
 - MemAct is not re-exported at the package top-level; import from `abstractagent.agents.memact` (see `docs/api.md`).
-- After changes, run tests: `pytest -q`
+- After changes, run tests: `pytest -q` (`python -P -m pytest -q` from a folder with sibling checkouts)
 
 ## Ecosystem
 
@@ -34,12 +38,15 @@ Important notes (source-of-truth hints):
 - [README](README.md): Installation + quick start
 - [Documentation index](docs/README.md): Map of all docs
 - [Getting started](docs/getting-started.md): Minimal usage + persistence example
-- [FAQ](docs/faq.md): Common questions and troubleshooting
+- [FAQ](docs/faq.md): Common questions, limits and delegation behaviour
+- [Troubleshooting](docs/troubleshooting.md): Symptom-first fixes (ToolExecutor, resume, Ollama context, HTTP 400, streaming)
 - [API](docs/api.md): Public API surface
 - [Agents](docs/agents.md): Agent types + API
 - [Tools](docs/tools.md): Default tools, allowlists, built-ins (adapter-mapped + runtime-owned)
+- [Loop hooks](docs/hooks.md): Listen/steer/capture hooks on the agent loops (`LoopHooks`, `HookEvent`) + emit-step stability contract + parse-payload common core
+- [Skills attachment](docs/skills-attachment.md): `_runtime.skills_block` / `system_prompt_extra` slots, cache contract, `read_skill` progressive disclosure, unattended recipe
 - [Persistence](docs/persistence.md): Pause/resume across restarts
-- [Architecture](docs/architecture.md): How logic/adapters/agents fit together (diagrams)
+- [Architecture](docs/architecture.md): How logic/adapters/agents fit together; ReAct graph with review nodes; delegated sub-agents and inherited `_runtime` controls (diagrams)
 - [ReAct pipeline](docs/react-pipeline.md): ReAct workflow details
 - [Development](docs/development.md): Local dev, tests, build
 
@@ -49,6 +56,7 @@ Important notes (source-of-truth hints):
 - [Security policy](SECURITY.md): How to report vulnerabilities responsibly
 - [Contributing](CONTRIBUTING.md): Dev setup + conventions
 - [Acknowledgements](ACKNOWLEDMENTS.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
 - [pyproject](pyproject.toml): Dependencies, version, scripts
 - [License](LICENSE)
 
@@ -65,7 +73,16 @@ Important notes (source-of-truth hints):
 - [CodeAct workflow adapter](src/abstractagent/adapters/codeact_runtime.py): `create_codeact_workflow`
 - [MemAct workflow adapter](src/abstractagent/adapters/memact_runtime.py): `create_memact_workflow`
 
-- [LLM param normalization](src/abstractagent/adapters/generation_params.py): temperature/seed/audio policies
+- [LLM param normalization](src/abstractagent/adapters/generation_params.py): temperature/seed/audio policies, prompt-cache identity, streaming passthrough (`_runtime.stream`), Core `thinking` and `speculation`, `context_usage_warning`; verifier execution grounding (`EXECUTOR_TAGS`/`executor_tool_names`/`verifier_execution_preference` — tools declaring tags=["executor"] are named in verifier prompts with "unexecuted is unverified"); lane-honest guidance wrappers (`guidance_wrapper` — visit lanes under `suppress_loop_tail` get host-voiced attribution, task lane byte-unchanged)
+- [Transcripts](src/abstractagent/adapters/transcripts.py): provider-safe transcript sanitation, tool-call id stamping (`ensure_tool_call_ids`, `synthetic_call_id`), loop-tail placement (`place_loop_tail`)
+- [Native-loop registry](src/abstractagent/adapters/native_loop_registry.py): `audit_native_loop_manifest`, `materialize_native_loop_spec`, `build_native_loop_manifest`, `pack_native_loop_bundle` (gateway `.flow` bundles)
+- [Loop hooks](src/abstractagent/adapters/loop_hooks.py): `LoopHooks`, `HookEvent`, `DEFAULT_EVENT_MAP` (listen/steer/capture)
+- [Circling detection](src/abstractagent/adapters/progress.py): `circling_streak` — pure read-only near-restatement detector over recent outputs (0017 detector half; policy-free, host-consumable)
+- [Emit-step inventory](src/abstractagent/adapters/emit_inventory.py): declared per-adapter raw step names (drift-tested; stability contract in docs/hooks.md)
+- [Factory defaults](src/abstractagent/agents/defaults.py): provider/model resolution (AbstractCore config global defaults; loud `#FALLBACK` packaged pair)
+- [Unattended recipe](src/abstractagent/agents/unattended.py): `unattended_runtime_overrides` / `unattended_allowlist` (exclude `ask_user` + no-questions directive)
+- [Task reset](src/abstractagent/agents/task_reset.py): `reset_react_task(vars, task, carry_messages=, handoff_note=)` — between-runs vars transform for queued work: per-task state resets (scratchpad/_temp/counters/steering inbox), door-owned `_runtime` persists (deep-copied), messages carry by default; input never mutated
+- [Tool allowlist notes](src/abstractagent/adapters/tool_allowlist.py): loud pruning of unresolvable grants (`allowlist_pruned`)
 - [Attachment/media plumbing](src/abstractagent/adapters/media.py): `extract_media_from_context`
 
 - [ReAct logic](src/abstractagent/logic/react.py): `ReActLogic` (system prompt + response parsing)
@@ -85,13 +102,31 @@ Important notes (source-of-truth hints):
 
 - [ReAct workflow contract](tests/test_react_workflow_system_prompt_and_tools_override.py)
 - [ReAct followthrough retry](tests/test_react_loop_followthrough_retry.py)
+- [Reasoning and thinking profiles](tests/test_reasoning_first_citizen_agent.py): parse reasoning parity; delegate substrate `thinking` in ReAct, CodeAct and MemAct
 - [ReAct context transcript](tests/test_react_loop_context_transcript_levels.py)
 - [ReAct max-iterations conclusion](tests/test_react_max_iterations_concludes.py)
 - [delegate_agent behavior](tests/test_react_delegate_agent_tool.py)
+- [Delegated stream inheritance](tests/test_agent_stream_inheritance.py): ReAct, CodeAct and MemAct children inherit `_runtime.stream` (True, False, unset)
 - [CodeAct logic](tests/test_codeact_logic.py)
 - [CodeAct verifier policy](tests/test_codeact_runtime_verifier_policy.py)
 - [MemAct workflow](tests/test_memact_workflow.py)
 - [MemAct session memory](tests/test_memact_session_memory.py)
+- [Loop hooks contract](tests/test_loop_hooks.py)
+- [Prompt prefix stability](tests/test_react_prompt_prefix_stability.py)
+- [Phase-grant boundary](tests/test_react_phase_grant_boundary.py)
+- [Entity dress conformance](tests/test_react_entity_dress_conformance.py)
+- [Verifier failure containment](tests/test_review_failure_containment.py): absorbed review/finalize failures degrade to accept
+- [Emit-inventory drift](tests/test_emit_inventory_drift.py): declared step names match emit call sites
+- [Visit-workflow merge (caller side)](tests/test_react_visit_merge.py): `ReactMiddle` built from the public API
+- [Plain tool observation](tests/test_react_act_only_observation.py): served content rests plainly; the retired `$act_only` ref layer stays dead (resurrection guard)
+- [Gated-remainder wave pins](tests/test_gated_remainder_wave_2026_07_14.py): A1 fence gate, `read_skill`, side-effect classifier, `reset_react_task`, parse common core, turn-boundary resets
+- [Audit-residue claim pins](tests/test_claim_0029_residue_2026_07_14.py): explicit budgets beat defaults, honest budget terminals, compose spin guard, marked truncation, repeat-guard bookkeeping, steering discard on failed runs
+- [0026 follow-up pins](tests/test_loop_hooks_0026_follow_ups.py): 3-loop `init`/`tool_proposed` parity, `inbox_undelivered` terminal honesty, conclusion both-halves, composition-handoff exemption
+- [prompt-cache telemetry pins](tests/test_parse_prompt_cache_capture.py): additive `parse.prompt_cache` struct surfaced when the provider reports one, absent otherwise
+- [circling detector](tests/test_progress_detection.py): restatement runs detected, progress unflagged, oscillation via windowing, fences/markers excluded, short outputs transparent
+- [verifier execution preference](tests/test_verifier_execution_preference.py): executor-tag classification, prompt byte-identity without the tag, forced-probe execution end-to-end, review-budget bound (forced batches never re-arm; model activity still does)
+- [stuck-streak termination](tests/test_stuck_streak_termination.py): 3 identical batches / A-B-A-B oscillation force the named conclusion (0017 work half); interleaved work clean, knob disable, visit-lane chrome-free, turn fence
+- [visit-lane honesty pins](tests/test_c2447_visit_lane_honesty.py): 3-loop tail suppression, tools_ran capture, turn-fenced repeat guard, chrome-free conclusions, lane-honest guidance wrappers (task byte-identity + visit wrapper + metadata anchor)
 
 ## Optional
 

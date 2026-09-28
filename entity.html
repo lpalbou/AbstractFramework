@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractEntity — create entities and watch what they remember | AbstractFramework</title>
+  <meta name="description" content="AbstractEntity is the entity app of AbstractFramework: create entities, talk with them, watch what they remember as a live memory graph, and read their diaries. Served by the gateway at /apps/entity/.">
+  <link rel="canonical" href="https://abstractframework.ai/entity.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractEntity">
+  <meta property="og:description" content="Create entities, talk with them, watch their memory graph and read their diaries.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html" aria-current="page">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
+
+<div class="pkg-nav" aria-label="Packages and apps">
+  <div class="pkg-nav-inner">
+    <a href="core.html" class="pkg-nav-link">Core</a>
+    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
+    <a href="agent.html" class="pkg-nav-link">Agent</a>
+    <a href="flow.html" class="pkg-nav-link">Flow</a>
+    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
+    <a href="code.html" class="pkg-nav-link">Code</a>
+    <a href="observer.html" class="pkg-nav-link">Observer</a>
+    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link active" aria-current="page">Entity</a>
+    <a href="voice.html" class="pkg-nav-link">Voice</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
+    <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="memory.html" class="pkg-nav-link">Memory</a>
+    <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+  </div>
+</div>
+<main id="main">
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:8rem 0 4rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Application &middot; Entities <span class="ver">v0.3.0</span></div>
+    <h1>Abstract<span class="gradient">Entity</span></h1>
+    <p class="hero-sub">The entity app of AbstractFramework: the place where you create entities, talk with them, watch what they remember as a live memory graph, and read their diaries. It runs as a small local web app in front of your <a href="gateway.html" style="color:var(--accent-light)">AbstractGateway</a>, which serves it at <code>/apps/entity/</code>; open it from the <a href="console.html" style="color:var(--accent-light)">console</a>'s <strong>Apps</strong> page (see <a href="install.html" style="color:var(--accent-light)">Install</a>).</p>
+    <div class="hero-actions">
+      <a href="#getting-started" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get started
+      </a>
+      <a href="https://github.com/lpalbou/AbstractEntity" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+      <a href="https://www.npmjs.com/package/@abstractframework/entity" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">npm</a>
+      <a href="https://github.com/lpalbou/AbstractEntity/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractEntity/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+    </div>
+    <div class="hero-code">
+<pre><code><span class="line-cmt"># Console &gt; Apps &gt; Entity &gt; Open</span>
+
+<span class="line-cmt"># Or on its own (Node.js 18+), port 3007</span>
+<span class="line-kw">npx</span> @abstractframework/entity \
+  --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section id="overview" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Overview</div>
+      <h2 class="section-title">What is an entity?</h2>
+      <p class="section-desc">An entity is an AI companion with a lasting memory of its own. You give it a name; from then on it remembers what you talk about, keeps a diary, sleeps to sort its memories and grows over time. It lives on your AbstractGateway (its memory is stored there, in its own folder), and it keeps one identity for its whole life.</p>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Your first entity</h3>
+        <p>Open the app, type a name (for example <em>Pollux</em>) and press <strong>Create entity</strong>. The name is all it needs: the entity starts from the standard starting document. Then say hello in the <strong>Chat</strong> tab.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>One name, one life</h3>
+        <p>A name belongs to one entity for its whole life: creating an entity whose name already exists opens the existing one. The <strong>Advanced: starting document</strong> fold takes your own starting document (YAML).</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>A thin client</h3>
+        <p>The gateway owns each entity's life: it creates the entity, summons it (brings the same self back into a session), runs visits (conversations) and reports its state. The app keeps no server state of its own: every view is read from the gateway, and the memory views are computed from the replay stream of <a href="memory.html">AbstractMemory</a>, the memory engine.</p>
+      </div>
+    </div>
+    <figure class="figure reveal" style="margin-top:2rem">
+      <img src="assets/img/shots/entity-list.webp" alt="The AbstractEntity 0.3.0 Summoned entities page at /apps/entity/ with one newly created demo entity, Vega, shown asleep, and its visit, work, personal and sleep modes" loading="lazy" width="1600" height="556">
+      <figcaption>The entities list with a newly created demo entity.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">In the app</div>
+      <h2 class="section-title">The entities list and the entity page</h2>
+    </div>
+
+    <div class="modes-grid reveal" style="margin-bottom:2rem">
+      <div class="mode-card" style="text-align:left">
+        <h3>Entities list (Summoned entities)</h3>
+        <p>Create entities, open one, watch them all at once (<strong>watch all</strong>), convene two of them into one conversation (<strong>convene a meet</strong>), and open the <strong>blueprint</strong> page that shows how every entity's memory and daily cycle work.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Entity page</h3>
+        <p>The memory graph, the chat, and a set of reading tabs over the same life. Replay, live tail and scrubbing back in time show the same picture.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Demo life offline</h3>
+        <p>Without a reachable gateway the app opens a bundled demo life, so you can explore the memory graph offline.</p>
+      </div>
+    </div>
+
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Surface</th><th>What it shows</th></tr></thead>
+        <tbody>
+          <tr><td>Memory graph</td><td>The entity's memories as a live force-directed graph, with search, lenses (identity, recent, warm, feelings, diary, dreams, questions), replay, time scrub and live tail</td></tr>
+          <tr><td>Chat</td><td>Visits: talk with the entity, see its reasoning cycles and tool use, adjust its model, files, tools and system prompt in <strong>Settings</strong></td></tr>
+          <tr><td>Card</td><td>The entity's identity card: values, purposes, likes, open questions, interests, key moments and life so far</td></tr>
+          <tr><td>Detail</td><td>One memory: its verbatim text, feelings and associations</td></tr>
+          <tr><td>Book</td><td>The diary as a day-grouped journal; sealed entries stay sealed</td></tr>
+          <tr><td>Lessons</td><td>What the entity has learned and kept</td></tr>
+          <tr><td>World</td><td>The entity's short orientation cards about people, systems and ideas it has met</td></tr>
+          <tr><td>Health</td><td>Memory counts, recall coverage, sessions, model usage and on-disk footprint</td></tr>
+          <tr><td>Wave</td><td>The cognition wave: the expressive character of the entity's own words over time (not its inner state)</td></tr>
+          <tr><td>Ledger</td><td>The continuous life ledger, a running record of events: memories formed, recalled, committed, appraised, diary and maintenance</td></tr>
+          <tr><td>Meet console</td><td>Two entities in one conversation: steer it, watch both sides, read it afterwards</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section id="getting-started" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Get started</div>
+      <h2 class="section-title">Open the Entity app</h2>
+      <p class="section-desc">From the <a href="console.html">gateway console</a>, the Entity card's button reads <strong>Create your first entity</strong> while the gateway has none; it opens the app signed in, straight on the creation form. Serving the app at <code>/apps/entity/</code> needs AbstractGateway 0.7.0 or newer.</p>
+    </div>
+
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="gw">Through the gateway</button>
+        <button class="tab-btn" data-tab="npx">On its own</button>
+      </div>
+      <div class="tab-panel active" id="tab-gw">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Gateway console &gt; Apps &gt; Entity &gt; Open</span>
+http://127.0.0.1:8080/apps/entity/</code></pre>
+        </div>
+        <div class="install-notes"><ul><li>The gateway serves the app on its own address, so a remote or headless machine needs one port and one tunnel for the console and every app (see <a href="install.html#headless">headless installs</a>).</li></ul></div>
+      </div>
+      <div class="tab-panel" id="tab-npx">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># run without installing</span>
+<span class="line-kw">npx</span> @abstractframework/entity
+
+<span class="line-cmt"># or install the abstractentity command globally</span>
+<span class="line-kw">npm install</span> -g @abstractframework/entity
+abstractentity --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
+        </div>
+        <div class="install-notes"><ul><li>The app serves on <code>http://127.0.0.1:3007</code> (flags <code>--port</code>, <code>--host</code>, <code>--gateway-url</code> with aliases <code>--gateway</code> and <code>--url</code>). Without <code>--gateway-url</code> it uses the gateway installed on this computer, else <code>http://127.0.0.1:8080</code>. Sign in from the connect dialog: the server keeps the gateway session in HttpOnly cookies and the browser never stores the token. <code>http://127.0.0.1:3007/#new</code> opens the creation form directly.</li></ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ WHERE TO NEXT ═══════════════════ -->
+<section id="next">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Where to next</div>
+      <h2 class="section-title">Keep going</h2>
+    </div>
+    <div class="next-links reveal">
+      <a class="next-link" href="start-researcher.html"><strong>Researcher journey</strong><span>Memory, entities and what they keep over time.</span></a>
+      <a class="next-link" href="install.html"><strong>Install AbstractFramework</strong><span>One line sets up the gateway that hosts your entities.</span></a>
+      <a class="next-link" href="memory.html"><strong>AbstractMemory</strong><span>One of the services that make entities live.</span></a>
+      <a class="next-link" href="code.html"><strong>AbstractCode</strong><span>Talk with an entity from the terminal with <code>@name</code>.</span></a>
+      <a class="next-link" href="gateway.html"><strong>AbstractGateway</strong><span>Where entities live and the app is served.</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
+    </div>
+    <div class="footer-col">
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
+  </div>
+</footer>
+<script src="assets/js/main.js?v=4"></script>
+</body>
+</html>

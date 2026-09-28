@@ -1,8 +1,8 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractsemantics/main/llms.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractSemantics/main/llms.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractsemantics/main/llms.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractSemantics/main/llms.txt
 
 # abstractsemantics
 
@@ -24,7 +24,10 @@ Companion file:
 
 Key behavior notes (source of truth: `src/abstractsemantics/`):
 - Default registry is packaged as `abstractsemantics/semantics.yaml` (override via `ABSTRACTSEMANTICS_REGISTRY_PATH` in `src/abstractsemantics/registry.py`).
+- The registry declares three separate id sets: `predicates` and `entity_types` (CURIEs, feeding the structured-output enums) and `memory_relations` (plain words, feeding memory-record edge validation). `predicates` and `memory_relations` are disjoint.
+- `predicates`/`entity_types` load leniently (malformed items are skipped with a warning); `memory_relations` problems fail the load.
 - `$ref` resolution uses schema builder defaults (`resolve_schema_ref()` calls `build_kg_assertion_schema_v0()` with default args; predicate aliases are off unless you build directly in `src/abstractsemantics/schema.py`).
+- `normalize_kg_predicate()` is the ingestion-boundary counterpart to the alias offer: canonical ids pass through, known aliases map to canonical, anything else returns `None`.
 
 ## Start here
 
@@ -32,10 +35,11 @@ Key behavior notes (source of truth: `src/abstractsemantics/`):
 - [Getting started](docs/getting-started.md): install, load registry, build schema, `$ref` resolution
 - [Documentation index](docs/README.md): table of contents for all docs
 - [Architecture](docs/architecture.md): components + diagrams
-- [Registry format](docs/registry.md): YAML format and loader behavior
+- [Registry format](docs/registry.md): YAML format, section rules, and loader behavior
 - [KG assertion JSON Schema](docs/schema.md): schema builder + `$ref` resolution
-- [FAQ](docs/faq.md): common questions and troubleshooting
 - [API reference](docs/api.md): public API surface
+- [FAQ](docs/faq.md): common questions and design boundaries
+- [Troubleshooting](docs/troubleshooting.md): error messages, causes, and fixes
 - [Development](docs/development.md): tests, packaging, and release checklist
 
 ## Source (core)
@@ -55,8 +59,9 @@ Key behavior notes (source of truth: `src/abstractsemantics/`):
 
 - [Changelog](CHANGELOG.md): release notes
 - [Contributing](CONTRIBUTING.md): development and PR guidelines
+- [Code of conduct](CODE_OF_CONDUCT.md): expected participant behavior
 - [Security policy](SECURITY.md): responsible vulnerability reporting
-- [Acknowledgments](ACKNOWLEDMENTS.md): credits and upstream projects/standards
+- [Acknowledgments](ACKNOWLEDGMENTS.md): credits and upstream projects/standards
 - [License](LICENSE): license terms
 
 ## Ecosystem (external)

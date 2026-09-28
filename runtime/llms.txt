@@ -1,20 +1,20 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractruntime/main/llms.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractRuntime/main/llms.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractruntime/main/llms.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractRuntime/main/llms.txt
 
 # AbstractRuntime
 
 > Durable workflow runtime (interrupt → checkpoint → resume) with an append-only execution ledger.
 
 - Python: 3.10+ (see `pyproject.toml`)
-- Version: 0.4.24
+- Version: 0.7.1
 - Ecosystem: [AbstractFramework](https://github.com/lpalbou/AbstractFramework) umbrella, integrates with [AbstractCore](https://github.com/lpalbou/abstractcore)
 - Hard invariant: `RunState.vars` must be JSON-serializable (`src/abstractruntime/core/models.py`)
-- Current AbstractCore baseline: `abstractruntime[abstractcore]` installs `abstractcore>=2.13.29`
-- Multimodal extra: `abstractruntime[multimodal]` installs `abstractcore[remote,vision,voice,audio,music]>=2.13.29`
-- Config boundary: Runtime does not read `ABSTRACTGATEWAY_*`; Gateway-owned config should be translated into explicit Runtime inputs or Runtime-owned env names.
+- Current AbstractCore baseline: base `abstractruntime` installs `abstractcore[remote,tools,vision,voice,audio,music]>=2.18.0`
+- Install profiles: base `abstractruntime` is remote-light with MCP, generated media routing, and Runtime-owned permissive PDF read/write nodes; `abstractruntime[apple]` and `abstractruntime[gpu]` add local inferencer stacks.
+- Config boundary: Runtime does not read `ABSTRACTGATEWAY_*`; Gateway-owned config should be translated into explicit Runtime inputs or Runtime-owned env names. Hosts can attach `resolve_provider_endpoint_profile(provider_id)` to the LLM client; Runtime treats it as an optional resolver hook, injects transient provider/base URL/key params for the call, and redacts secret-like params from persisted observability.
 
 ## Start here
 
@@ -23,6 +23,7 @@
 - [API reference](docs/api.md): public imports + pointers to source-of-truth modules
 - [Architecture](docs/architecture.md): component map + durability invariants (includes diagrams)
 - [Docs index](docs/README.md): full documentation map
+- [Overview](docs/proposal.md): design goals, core concepts, and scope boundaries
 
 ## Key code (source of truth)
 
@@ -41,16 +42,30 @@
 
 ## Integrations
 
-- [AbstractCore integration](docs/integrations/abstractcore.md): `LLM_CALL` / `TOOL_CALLS` / `MODEL_RESIDENCY`, local/remote/hybrid, prompt-cache and residency host controls, local-only prompt-cache export/import admin, durable bloc/KV prompt-cache controls, discovery snapshot queries, durable run-scoped image/edit-image/text-to-video/image-to-video/voice/music/STT execution, media inputs, generated media outputs, progress ledger events, provider-key headers, and tool approval waits
-- Prompt-cache tracks: use `LLM_CALL.params.prompt_cache_key`, `run.vars["_runtime"]["prompt_cache"]`, or `ABSTRACTRUNTIME_PROMPT_CACHE` for best-effort text/chat session reuse; use `LLM_CALL.params.prompt_cache_binding` for durable exact bloc-backed reuse; and use `get_abstractcore_host_facade(runtime).list_prompt_cache_exports(...)`, `prompt_cache_export(...)`, and `prompt_cache_import(...)` only for host-local operator/admin export-import workflows around live local provider caches. Runtime does not auto-derive prompt-cache keys for image/video/voice/music/STT output selectors. Local Runtime stores one content-addressed bloc per root plus provider/model-specific derived KV artifacts. Gateway prompt-cache env belongs in Gateway.
+- [Cancellation, pause and tool ceiling](docs/api.md#runtime-start--tick--resume): `Runtime.cancel_run(...)` stops the in-flight effect (recorded `cancelled`, never retried), a model unload cancels the calls using it first, `tick(..., step_gate=...)` pauses at step boundaries, and an explicit `allowed_tools` list is a run-tree ceiling approval policy cannot widen.
+- [Live token streaming](docs/integrations/abstractcore.md#live-token-streaming): `Runtime.set_live_delta_sink(sink)` plus run input `_runtime.stream: true` delivers `llm.delta` / `llm.delta_end` events (content and reasoning channels, `parent_run_id`) while an answer is generated; nothing reaches the ledger, children inherit the switch, and every call that cannot stream with a complete record says why (`reason: unavailable` + `detail`).
+- [Unloading and switching models](docs/integrations/abstractcore.md#unloading-and-switching-models): a default switch unloads the previous in-process model (MLX, HuggingFace, embeddings) unless another owner in the process claims it (pool, override, lock, building, default); a model still generating is unloaded when its call ends; diagnostics `pending_ejects` / `last_switch_ejects`; any listed row unloads by `runtime_id` (`local:<task>:<provider>:<model>`, including `local:embedding:<provider>:<model>`); `ttl_s` / `keep_alive` on in-process or already-loaded models are reported under `unsupported_options`.
+- [Workspace-scoped tools](docs/integrations/abstractcore.md#workspace-scoped-tools): `workspace_root`, `workspace_access_mode`, `workspace_allowed_paths`, `workspace_ignored_paths`, and the host-only `workspace_builtin_deny_prefixes` / `workspace_builtin_allow` (enforced, never shown to the model) scope file and shell tools; child runs inherit them.
+- [Execution controls](docs/integrations/abstractcore.md#execution-controls-and-local-concurrency): inherited run/node MTP controls, scoped Core defaults, actual-host execution discovery, instance-aware scheduling, per-response outcomes and cache-group batching limits.
+
+- [AbstractCore integration](docs/integrations/abstractcore.md): `LLM_CALL` / `TOOL_CALLS` / `MODEL_RESIDENCY`, local/remote/hybrid, prompt-cache and residency host controls, host memory snapshots and per-session prompt-cache listing/clearing, host-wide provider-server rows in residency listings, model-residency locks (residency-required: locking a non-resident pair refuses with `model_not_resident`; unlock never requires residency) with `force`-gated unload and context-estimate relays, modality/host-identity fields and truthful `pinned`-aliases-`locked` lock state on local residency rows, local-only prompt-cache export/import admin, durable bloc/KV prompt-cache controls, discovery snapshot queries including `list_provider_models(..., capability_route=...)` and `list_vision_adapters(...)`, durable run-scoped image/edit-image/upscale-image/text-to-video/image-to-video/voice/streamed-voice/music/STT execution, batch `count`/`n`, `seeds`, ordered `lora_adapters`, video `flow_shift`, media inputs, generated media outputs, progress ledger events, provider-key headers, host endpoint-profile resolver hooks, and tool approval waits
+- VisualFlow LLM Call and Agent nodes forward Core generation controls such as `thinking`; Provider Models nodes can apply Core `capability_route` filters during runtime discovery.
+- Prompt-cache tracks: use `LLM_CALL.params.prompt_cache_key`, `run.vars["_runtime"]["prompt_cache"]`, or `ABSTRACTRUNTIME_PROMPT_CACHE` for best-effort text/chat session reuse; use `LLM_CALL.params.prompt_cache_binding` for durable exact bloc-backed reuse; and use `get_abstractcore_host_facade(runtime).list_prompt_cache_exports(...)`, `prompt_cache_export(...)`, and `prompt_cache_import(...)` only for host-local operator/admin export-import workflows around live local provider caches. Runtime does not auto-derive prompt-cache keys for image/video/voice/music/STT output selectors. Derived session keys are stamped with session attribution after each generate so hosts can use `list_session_prompt_caches(...)` / `clear_session_prompt_caches(...)` per session; caller-owned keys are never stamped, and completing a run does not clear session caches. Local Runtime stores one content-addressed bloc per root plus provider/model-specific derived KV artifacts. Gateway prompt-cache env belongs in Gateway.
 - Durable bloc lifecycle: Runtime exposes `list_blocs(...)`, `list_bloc_kv_artifacts(...)`, `delete_bloc_kv_artifact(...)`, `prune_bloc_kv_artifacts(...)`, and `delete_bloc(...)`, with `dry_run`, `clear_loaded`, and `force` safety controls on the host facade.
 - Runtime-owned Core surfaces: `get_abstractcore_discovery_facade(...)`, `get_abstractcore_host_facade(...)`, and `get_abstractcore_run_facade(...)`
 - Host-local operator wrappers: the host facade and `abstractruntime.integrations.abstractcore.comms_facade` expose email helpers (`list_email_accounts`, `list_emails`, `read_email`, `send_email`), and `abstractruntime.integrations.abstractcore.telegram_facade` exposes Telegram bootstrap/global-client/send wrappers without requiring hosts to import AbstractCore directly.
 - Durable outbound comms: when an email or Telegram send belongs to a run, use `get_abstractcore_run_facade(...).send_email(...)` or `send_telegram_message(...)` so Runtime records the request and outcome in a child run; replay should show the recorded result, not resend the message. If the child run waits for approval or passthrough execution, resume it through `resume_tool_calls(...)`.
-- [Artifacts](docs/api.md#artifacts-store-by-reference): JSON-safe refs for large payloads; generated images/audio/voice/music are stored here rather than embedded in `RunState.vars`
+- [Artifacts](docs/artifacts.md): Runtime artifact identity, JSON-safe refs, canonical descriptors, generated-media provenance, tool-output offload thresholds, catalog search/stats, access counters, and Gateway/Observer retrieval boundaries.
+- [Sessions and history](docs/api.md#sessions-and-history): `session_chat_messages(...)` replays a session's completed turns under one window, the most recent `HISTORY_REPLAY_MAX_TOKENS` (50,000) estimated tokens of whole messages, and returns a `ReplayedHistory` whose `.report` records replayed and dropped messages and tokens; `fold_history_window(...)` applies the same window to any turns, `window_transcript(...)` to a transcript you already hold, and `announce_dropped(...)` writes the window's `#TRUNCATION` notice.
+- [Artifacts API](docs/api.md#artifacts-store-by-reference): `ArtifactStore`, `ArtifactDescriptor`, `ArtifactAccessStats`, `search()`, `count()`, `facet_counts()`, and `stats()` for Runtime-owned catalog queries.
+- VisualFlow document/file nodes: `read_file`/`write_file` use workspace-scoped paths (`rel/path` or `mount_alias/rel/path` in Gateway-hosted runs), `read_pdf` extracts text/metadata with `pypdf`, `write_pdf` renders text or Markdown-style content to real PDF bytes with `reportlab`, `list_folder_files` enumerates workspace folders, `import_workspace_file` snapshots a server file into an artifact, `read_artifact` projects saved file content, and `export_artifact` writes a durable artifact back to a workspace path. Local Runtime-only runs without workspace scope still fall back to the process working directory for relative file-node paths.
 - Remote multimodal guardrail: remote/hybrid media generation uses AbstractCore Server endpoints, does not inherit the chat model for media endpoints, routes image edits through Core `/images/edits`, routes video generation through Core `/videos/*`, rejects unsupported input media and non-file STT inputs instead of ignoring them, and redacts data URLs from persisted provider-request metadata
 - [MCP worker](docs/mcp-worker.md): `abstractruntime-mcp-worker` CLI (stdio/HTTP)
 - [Comms toolset](docs/tools-comms.md): opt-in email/WhatsApp/Telegram gating
+- [Automations](docs/automations.md): an automation is a durable controller run that starts its target as deterministic child runs (occurrences) on `schedule@1` (fixed UTC intervals, coalesced missed ticks) or `manual@1`; `create_automation`, `apply_automation_command` (pause, resume, run_now, revise, stop_current, archive; idempotent per `command_id`), independent or growing context, `start_discussion` (fork at any occurrence N, seeded with the timeline 1..N, own writable workspace, the automation's workspace mounted read-only via `_runtime.workspace_read_only_paths`: file writes refused inside, reads and commands allowed), `policy.tool_approval` (`auto` or `ask`), typed `pending_waits`, `notify` attention items and retries; storage guarantees: `create_if_absent`, `run_mutation_lock`, turn roots and `session_kind` in the run index, one writer process per store, `Runtime.start` refusing session starts it cannot attribute
+- [Tool approval](docs/tool-approval.md): tool risk tiers, the run-policy rank ceiling, and per-call refiners
+- [Entity runtime](docs/entity-runtime.md): per-entity runtimes, homes, the one-writer lease, act-only diary privacy, and durable visit waits
+- [Models, engines and host jobs](docs/integrations/abstractcore.md#models-engines-and-host-jobs-config-facade): `config_facade` passthroughs for hosts; `host_job_cancel(job_id, *, by="api", user=None)` records who cancelled a job
 
 ## Durability & observability
 
@@ -71,7 +86,7 @@
 - [Security policy](SECURITY.md): responsible vulnerability reporting
 - [Acknowledgments](ACKNOWLEDGMENTS.md): dependency credits (from `pyproject.toml`)
 - [Changelog](CHANGELOG.md): release notes
-- [Roadmap](ROADMAP.md): near-term priorities
+- [Roadmap](ROADMAP.md): current status and longer-term direction
 - [ADRs](docs/adr/README.md): design rationale
 
 ## Optional

@@ -1,8 +1,8 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractsemantics/main/llms-full.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractSemantics/main/llms-full.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractsemantics/main/llms-full.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractSemantics/main/llms-full.txt
 
 # abstractsemantics (full context)
 > Single-file, LLM-friendly snapshot generated from `llms.txt`. It embeds the contents of all repository-local links in the manifest (including `## Optional`), excluding `llms-full.txt` itself.
@@ -17,8 +17,9 @@ Included files, in order:
 - `docs/architecture.md`
 - `docs/registry.md`
 - `docs/schema.md`
-- `docs/faq.md`
 - `docs/api.md`
+- `docs/faq.md`
+- `docs/troubleshooting.md`
 - `docs/development.md`
 - `src/abstractsemantics/semantics.yaml`
 - `src/abstractsemantics/__init__.py`
@@ -29,8 +30,9 @@ Included files, in order:
 - `tests/test_schema.py`
 - `CHANGELOG.md`
 - `CONTRIBUTING.md`
+- `CODE_OF_CONDUCT.md`
 - `SECURITY.md`
-- `ACKNOWLEDMENTS.md`
+- `ACKNOWLEDGMENTS.md`
 - `LICENSE`
 - `docs/guide/semantics/semantic-triple-prompt-v4-optimized.md`
 - `scripts/generate_llms_full.py`
@@ -59,7 +61,10 @@ Companion file:
 
 Key behavior notes (source of truth: `src/abstractsemantics/`):
 - Default registry is packaged as `abstractsemantics/semantics.yaml` (override via `ABSTRACTSEMANTICS_REGISTRY_PATH` in `src/abstractsemantics/registry.py`).
+- The registry declares three separate id sets: `predicates` and `entity_types` (CURIEs, feeding the structured-output enums) and `memory_relations` (plain words, feeding memory-record edge validation). `predicates` and `memory_relations` are disjoint.
+- `predicates`/`entity_types` load leniently (malformed items are skipped with a warning); `memory_relations` problems fail the load.
 - `$ref` resolution uses schema builder defaults (`resolve_schema_ref()` calls `build_kg_assertion_schema_v0()` with default args; predicate aliases are off unless you build directly in `src/abstractsemantics/schema.py`).
+- `normalize_kg_predicate()` is the ingestion-boundary counterpart to the alias offer: canonical ids pass through, known aliases map to canonical, anything else returns `None`.
 
 ## Start here
 
@@ -67,10 +72,11 @@ Key behavior notes (source of truth: `src/abstractsemantics/`):
 - [Getting started](docs/getting-started.md): install, load registry, build schema, `$ref` resolution
 - [Documentation index](docs/README.md): table of contents for all docs
 - [Architecture](docs/architecture.md): components + diagrams
-- [Registry format](docs/registry.md): YAML format and loader behavior
+- [Registry format](docs/registry.md): YAML format, section rules, and loader behavior
 - [KG assertion JSON Schema](docs/schema.md): schema builder + `$ref` resolution
-- [FAQ](docs/faq.md): common questions and troubleshooting
 - [API reference](docs/api.md): public API surface
+- [FAQ](docs/faq.md): common questions and design boundaries
+- [Troubleshooting](docs/troubleshooting.md): error messages, causes, and fixes
 - [Development](docs/development.md): tests, packaging, and release checklist
 
 ## Source (core)
@@ -90,8 +96,9 @@ Key behavior notes (source of truth: `src/abstractsemantics/`):
 
 - [Changelog](CHANGELOG.md): release notes
 - [Contributing](CONTRIBUTING.md): development and PR guidelines
+- [Code of conduct](CODE_OF_CONDUCT.md): expected participant behavior
 - [Security policy](SECURITY.md): responsible vulnerability reporting
-- [Acknowledgments](ACKNOWLEDMENTS.md): credits and upstream projects/standards
+- [Acknowledgments](ACKNOWLEDGMENTS.md): credits and upstream projects/standards
 - [License](LICENSE): license terms
 
 ## Ecosystem (external)
@@ -119,6 +126,7 @@ This package intentionally contains **definitions**, not storage:
 - prefix mappings (CURIE namespaces)
 - predicate allowlists (optional inverse pointers)
 - entity-type allowlists
+- memory-relation declarations (plain-word edge vocabulary with direction roles)
 
 ## AbstractFramework ecosystem
 
@@ -128,7 +136,7 @@ This package intentionally contains **definitions**, not storage:
 - **AbstractCore** (core primitives/contracts): https://github.com/lpalbou/abstractcore
 - **AbstractRuntime** (execution + ingestion boundary): https://github.com/lpalbou/abstractruntime
 
-In practice, this repo provides the shared **allowed ids** (predicates and entity types) and a small JSON Schema helper that downstream components (including runtimes) can use for validation and structured outputs.
+In practice, this repo provides the shared **allowed ids** (predicates, entity types, and memory relations) and a small JSON Schema helper that downstream components (including runtimes) can use for validation and structured outputs.
 
 ## Status
 
@@ -136,6 +144,7 @@ Small, dependency-light package (only PyYAML) with a tiny public API:
 - the default registry is shipped as package data (`abstractsemantics/semantics.yaml`; in this repo: `src/abstractsemantics/semantics.yaml`)
 - the loader returns immutable dataclasses (`SemanticsRegistry`)
 - the v0 schema builder produces a deterministic JSON Schema dict
+- `normalize_kg_predicate()` maps extractor-emitted predicates to canonical ids at your ingestion boundary
 
 This package makes no network calls and does not store/query data (see `src/abstractsemantics/registry.py` and `src/abstractsemantics/schema.py`).
 
@@ -155,6 +164,12 @@ pip install -e ".[dev]"
 
 Requires Python `>=3.10` (see `pyproject.toml`).
 
+For framework-wide dependency manifests, the no-op compatibility extras
+`abstractsemantics[apple]`, `abstractsemantics[gpu]`,
+`abstractsemantics[all-apple]`, and `abstractsemantics[all-gpu]` are available.
+They do not add dependencies because this package owns semantics definitions,
+not hardware runtimes.
+
 ## Quickstart
 
 Load the default registry and build the v0 structured-output schema:
@@ -166,6 +181,28 @@ reg = load_semantics_registry()
 print(len(reg.predicates), len(reg.entity_types))
 
 schema = build_kg_assertion_schema_v0(registry=reg, include_predicate_aliases=True)
+```
+
+Read the memory-relation vocabulary and the validation set for memory-record writes:
+
+```python
+from abstractsemantics import load_semantics_registry
+
+reg = load_semantics_registry()
+print(sorted(reg.memory_relation_ids()))
+print(sorted(reg.memory_record_predicate_ids()))
+
+supports = next(r for r in reg.memory_relations if r.id == "supports")
+print(supports.subject_role, "->", supports.object_role)  # evidence -> claim
+```
+
+Normalize an extractor-emitted predicate before persisting it:
+
+```python
+from abstractsemantics import normalize_kg_predicate
+
+normalize_kg_predicate("schema:hasPart", registry=reg)  # 'dcterms:hasPart'
+normalize_kg_predicate("something:invented", registry=reg)  # None
 ```
 
 Resolve a stable `$ref` (useful when a downstream system stores schema references rather than full dicts):
@@ -217,14 +254,17 @@ Start with:
 - `docs/architecture.md` (what exists in this repo, with diagrams)
 - `docs/registry.md` (registry YAML format)
 - `docs/schema.md` (KG assertion JSON Schema + `$ref`)
-- `docs/faq.md` (common questions and troubleshooting)
+- `docs/api.md` (public API surface)
+- `docs/faq.md` (common questions)
+- `docs/troubleshooting.md` (symptoms, causes, and fixes)
 
 ## Project
 
 - Changelog: `CHANGELOG.md`
 - Contributing: `CONTRIBUTING.md`
+- Code of conduct: `CODE_OF_CONDUCT.md`
 - Security: `SECURITY.md`
-- Acknowledgments: `ACKNOWLEDMENTS.md`
+- Acknowledgments: `ACKNOWLEDGMENTS.md`
 
 ## License
 
@@ -266,7 +306,28 @@ List the allowed ids:
 ```python
 print(sorted(reg.predicate_ids())[:10])
 print(sorted(reg.entity_type_ids())[:10])
+print(sorted(reg.memory_relation_ids()))
 ```
+
+## Read the memory-relation vocabulary
+
+`memory_relations` is the plain-word edge vocabulary for memory records. Each entry names the role of both endpoints, so a writer can validate direction without restating the semantics:
+
+```python
+for rel in reg.memory_relations:
+    print(rel.id, ":", rel.subject_role, "->", rel.object_role)
+```
+
+Use `memory_record_predicate_ids()` as the validation set for memory-record writes. It is the declared relations plus the digest predicate:
+
+```python
+from abstractsemantics import MEMORY_DIGEST_PREDICATE
+
+allowed = reg.memory_record_predicate_ids()
+assert MEMORY_DIGEST_PREDICATE in allowed
+```
+
+See [Registry format](registry.md) for the rules this section is validated against.
 
 ## Build the v0 “KG assertion” JSON Schema
 
@@ -332,15 +393,30 @@ reg = load_semantics_registry(Path("/absolute/path/to/semantics.yaml"))
 
 If you pass an explicit `path`, the environment variable is ignored (`load_semantics_registry()` uses `path or resolve_semantics_registry_path()`).
 
-The loader is tolerant (skips invalid items) but requires at least one valid predicate id; see [Registry format](registry.md).
+A custom registry is held to the same rules as the shipped one: malformed `predicates`/`entity_types` items are skipped with a warning and at least one valid predicate id is required, while `memory_relations` problems fail the load. See [Registry format](registry.md) for the full list, and [Troubleshooting](troubleshooting.md) if a load fails.
+
+## Normalize predicates at your boundary
+
+If you enable predicate aliases in the schema, normalize what comes back before you persist it, so one predicate has one spelling at rest:
+
+```python
+from abstractsemantics import normalize_kg_predicate
+
+normalize_kg_predicate("schema:hasPart", registry=reg)  # 'dcterms:hasPart'
+normalize_kg_predicate("dcterms:hasPart", registry=reg)  # 'dcterms:hasPart'
+normalize_kg_predicate("something:invented", registry=reg)  # None
+```
+
+A `None` result means the predicate is not recognized. Refuse it or label it as unknown; it is never mapped to a guessed meaning. Pass `registry=reg` in a loop — omitting it reloads the YAML from disk on every call.
 
 ## Next
 
 - [Architecture](architecture.md)
 - [Registry format](registry.md)
 - [KG assertion JSON Schema](schema.md)
-- [FAQ](faq.md)
 - [API reference](api.md)
+- [FAQ](faq.md)
+- [Troubleshooting](troubleshooting.md)
 
 ---
 
@@ -356,18 +432,22 @@ The loader is tolerant (skips invalid items) but requires at least one valid pre
 - [Getting started](getting-started.md): install, load registry, build schema, `$ref` resolution
 - [API reference](api.md): public API surface (what `abstractsemantics.__init__` exports)
 - [Architecture](architecture.md): components, data flow, and diagrams
-- [Registry format](registry.md): YAML shape and loader behavior
+- [Registry format](registry.md): YAML shape, section rules, and loader behavior
 - [KG assertion JSON Schema](schema.md): schema builder and `$ref` resolver
-- [FAQ](faq.md): common questions and troubleshooting
+- [FAQ](faq.md): common questions and design boundaries
+- [Troubleshooting](troubleshooting.md): symptoms, causes, and fixes
 - [Development](development.md): tests, builds, release checklist
 
 ## I want to…
 
 - **Load the default registry** or override it with `ABSTRACTSEMANTICS_REGISTRY_PATH`: see [Getting started](getting-started.md).
 - **Edit/extend the YAML registry** (ids, labels, inverses, parents): see [Registry format](registry.md).
+- **Use the memory-relation vocabulary** (plain-word edge ids and their direction roles): see [Registry format](registry.md) and [Getting started](getting-started.md).
 - **Build a bounded “KG assertion” JSON Schema** for structured outputs: see [KG assertion JSON Schema](schema.md).
+- **Normalize an extractor-emitted predicate** before persisting it: see [Getting started](getting-started.md) and [API reference](api.md).
 - **Resolve a stable `$ref`** like `abstractsemantics:kg_assertion_schema_v0`: see [Getting started](getting-started.md) and [KG assertion JSON Schema](schema.md).
 - **Understand how this fits in AbstractFramework** (and what it does *not* do): see [Architecture](architecture.md).
+- **Fix a registry that will not load**: see [Troubleshooting](troubleshooting.md).
 
 ## AbstractFramework ecosystem
 
@@ -383,8 +463,9 @@ This repo ships the definitions (registry ids) and a schema helper; integration 
 
 - [Changelog](../CHANGELOG.md)
 - [Contributing](../CONTRIBUTING.md)
+- [Code of conduct](../CODE_OF_CONDUCT.md)
 - [Security policy](../SECURITY.md)
-- [Acknowledgments](../ACKNOWLEDMENTS.md)
+- [Acknowledgments](../ACKNOWLEDGMENTS.md)
 - [License](../LICENSE)
 
 ## Source of truth (code)
@@ -407,7 +488,7 @@ AbstractFramework is a multi-repo ecosystem. In that ecosystem:
 
 - **AbstractCore** defines shared primitives/contracts used across components.
 - **AbstractRuntime** is typically the place where workflows execute and ingestion validation happens.
-- **abstractsemantics** (this repo) provides the shared *allowed ids* (predicates and entity types) plus a small JSON Schema helper for structured outputs.
+- **abstractsemantics** (this repo) provides the shared *allowed ids* (predicates, entity types, and memory relations) plus a small JSON Schema helper for structured outputs.
 
 Links:
 - AbstractFramework: https://github.com/lpalbou/AbstractFramework
@@ -422,11 +503,27 @@ Core files:
 - JSON Schema helpers: `src/abstractsemantics/schema.py`
 - Public exports: `src/abstractsemantics/__init__.py`
 
+## The three vocabularies
+
+The registry declares three separate id sets, and the distinction is the main thing to understand about this package:
+
+| Section | Spelling | Feeds |
+| --- | --- | --- |
+| `predicates` | CURIEs (`dcterms:hasPart`) | the KG-extraction structured-output enum |
+| `entity_types` | CURIEs (`schema:Person`) | the `subject_type`/`object_type` enums in the same schema |
+| `memory_relations` | plain words (`derived_from`) | the validation set for memory-record edge writes |
+
+`predicates` and `memory_relations` are kept disjoint on purpose. The first list is shown to an extraction model, and two spellings of one relation in front of a model is the confusion the split avoids. Standard-ontology CURIEs for a memory relation live in its `equivalent` list as export metadata, never as a second spelling at rest.
+
+`entity_types` here are NER-sense classes for KG nodes. They are unrelated to the framework's *summoned entities*, which are named persistent identities owned by the gateway and runtime lanes.
+
 ## Data flow
 
 1. `load_semantics_registry()` reads YAML (default file or `ABSTRACTSEMANTICS_REGISTRY_PATH`) and returns `SemanticsRegistry`.
 2. `build_kg_assertion_schema_v0()` uses the registry ids to build a deterministic JSON Schema dict.
 3. Consumers can reference the schema by `$ref` and resolve it via `resolve_schema_ref()`.
+4. `normalize_kg_predicate()` maps an extractor-emitted predicate back to a canonical registry id at the ingestion boundary.
+5. Memory-record writers validate edge predicates against `memory_record_predicate_ids()` and edge direction against each relation's `subject_role`/`object_role`.
 
 ## Diagram (components + flow)
 
@@ -438,39 +535,61 @@ flowchart LR
     Reg[SemanticsRegistry]
     Builder[schema.build_kg_assertion_schema_v0()]
     Ref[schema.resolve_schema_ref()]
+    Norm[schema.normalize_kg_predicate()]
   end
 
   YAML --> Loader --> Reg --> Builder
   Ref --> Builder
+  Reg --> Norm
   Builder --> JsonSchema[JSON Schema dict]
 
   subgraph Consumers[Typical consumers (external)]
     Runtime[AbstractRuntime / ingestion validation]
+    Memory[Memory-record writers]
     Other[Other tools (UIs, pipelines, storage layers)]
   end
 
   Reg --> Runtime
+  Reg --> Memory
   Reg --> Other
+  Norm --> Runtime
   JsonSchema --> Runtime
   JsonSchema --> Other
 ```
 
+## Validation model
+
+The loader applies two different standards, chosen by what each section feeds.
+
+```mermaid
+flowchart TD
+  Load[load_semantics_registry()] --> Parse{Section}
+  Parse -->|predicates / entity_types| Soft[Lenient: skip malformed items, warn once per section, keep first duplicate id]
+  Parse -->|memory_relations| Hard[Strict: raise on CURIE-shaped id, predicate collision, missing direction role, or duplicate id]
+  Soft --> Enum[Structured-output enums fail soft]
+  Hard --> Journal[Append-only journal writers must never engrave a typo]
+```
+
+`predicates` and `entity_types` feed model-facing enums, where a missing id degrades a result. `memory_relations` feeds writers that record edges permanently, where a wrong id is unrecoverable — so load is the last cheap place to fail. Structural failures apply to every registry, including one supplied through `ABSTRACTSEMANTICS_REGISTRY_PATH`.
+
 ## Design notes (grounded in code)
 
 - Registry ids are treated as opaque strings (typically CURIEs). This package does not expand ids into full IRIs; it just loads and exposes them (`SemanticsRegistry.prefixes`, `PredicateDef.id`, `EntityTypeDef.id`).
-- Loader is tolerant by design: unknown keys are ignored and invalid items are skipped (see parsing in `registry.load_semantics_registry()`).
+- Unknown top-level keys are ignored, so a registry can carry extra sections without breaking the loader.
 - The v0 KG schema is intentionally small and bounded (see the `max_*` args in `schema.build_kg_assertion_schema_v0()`), and it enforces:
   - `predicate` ∈ registry predicate ids (optionally plus a small alias set)
   - `subject_type` / `object_type` ∈ registry entity-type ids
   - short evidence fields (`maxLength` caps)
+- Alias handling is split: `build_kg_assertion_schema_v0(include_predicate_aliases=True)` decides what is *offered* to a model, and `normalize_kg_predicate()` decides what is *accepted* at the boundary. Both check the same registry, so every offered spelling normalizes.
 
 ## See also
 
 - [Getting started](getting-started.md)
 - [Registry format](registry.md)
 - [KG assertion JSON Schema](schema.md)
-- [FAQ](faq.md)
 - [API reference](api.md)
+- [FAQ](faq.md)
+- [Troubleshooting](troubleshooting.md)
 
 ---
 
@@ -495,6 +614,7 @@ If `ABSTRACTSEMANTICS_REGISTRY_PATH` is set and points to a non-existent file, `
 - `prefixes`: mapping `prefix -> namespace_iri` (strings only)
 - `predicates`: list of predicate definitions (must contain at least 1 valid entry)
 - `entity_types`: list of entity-type definitions (may be empty, but some workflows require it)
+- `memory_relations`: list of memory-record edge relations (plain-word ids; see below)
 
 Unknown keys are ignored.
 
@@ -521,6 +641,13 @@ Invalid items are skipped. If no valid predicates remain, `load_semantics_regist
 
 ## Entity-type definitions
 
+Naming note: `entity_types` are NER-sense classes for KG extraction (what
+kind of thing a knowledge-graph node is). They are unrelated to the
+framework's *summoned entities* (named persistent identities with homes and
+phases) — that vocabulary lives in the gateway/runtime lanes, and the
+preferred term there is "summoned entity" precisely because "named entity"
+collides with NER here.
+
 Each item under `entity_types` becomes an `EntityTypeDef` dataclass instance with:
 
 - `id` (required): string, typically a CURIE like `schema:Person`
@@ -529,6 +656,77 @@ Each item under `entity_types` becomes an `EntityTypeDef` dataclass instance wit
 - `description` (optional): string
 
 Invalid items are skipped. The registry loader does not currently require entity types to be present; however, `build_kg_assertion_schema_v0()` raises `ValueError` if the provided registry has no entity types.
+
+## Memory-relation definitions
+
+Each item under `memory_relations` becomes a `MemoryRelationDef` dataclass instance with:
+
+- `id` (required): a **plain word** (e.g. `summarizes`, `written_amid`) — deliberately NOT a CURIE
+- `label` (optional): string
+- `description` (optional): string
+- `equivalent` (optional): list of standard-ontology CURIEs (equal-or-broader terms) carried as export/interop metadata only
+
+- `subject_role` (required): short noun naming the subject endpoint (e.g. `evidence`)
+- `object_role` (required): short noun naming the object endpoint (e.g. `claim`)
+
+This vocabulary is the declared edge-relation set for AbstractMemory's typed
+memory records. The rules below govern it:
+
+- **Plain words are the canonical spelling at rest.** Memory journals are
+  append-only and match predicate strings exactly, with no alias resolution
+  at read time, so a recorded word can never be renamed. `equivalent` CURIEs
+  are hints for export and interop — never a second spelling at rest.
+- **Equivalents are many-to-one and lossy.** Several plain words may share
+  one broader CURIE (`summarizes`, `from_session`, and `derived_from` all
+  specialize `prov:wasDerivedFrom`). The mapping is not reversible and must
+  not be used to import back to plain words.
+- **One most-specific equivalent per entry.** `refines` lists
+  `prov:wasRevisionOf` alone and not its superproperty `prov:wasDerivedFrom`,
+  which a PROV-aware importer infers.
+- **Disjoint from `predicates`.** The `predicates` list feeds the
+  KG-extraction structured-output enum, and memory relations must never
+  appear there. Some `equivalent` CURIEs (`schema:mentions`,
+  `schema:previousItem`, `cito:supports`, `dcterms:isPartOf`) do also exist
+  as `predicates` ids — that is intentional and safe, because validation
+  accepts only plain-word ids and `equivalent` is export-only.
+- **Additive only.** Ids are never renamed or removed, because journals
+  record them permanently. Declaring a relation grants permission to write
+  it: a declared id immediately joins the validation set, so a word is
+  declared when its writer ships, not in anticipation.
+- **Each description defines the authoritative direction**, and
+  `subject_role`/`object_role` carry it in machine-readable form. For
+  formation-time writers, the subject is the newly formed record. Writers
+  that accept caller-asserted endpoints validate them against the declared
+  roles.
+- **The validation set** is `SemanticsRegistry.memory_record_predicate_ids()`:
+  the declared relation ids plus the digest predicate
+  (`MEMORY_DIGEST_PREDICATE = "dcterms:abstract"`). Memory-record writes are
+  checked against it.
+
+### Validation
+
+Unlike `predicates` and `entity_types`, this section is validated strictly:
+a malformed entry raises instead of being skipped, because a declared
+relation is written into append-only storage where a typo cannot be undone.
+The load fails when a relation:
+
+- has an id containing a `:` (ids must be plain words);
+- has an id that is also a `predicates` id;
+- omits `subject_role` or `object_role`;
+- is declared more than once.
+
+These rules apply to every registry, including one supplied through
+`ABSTRACTSEMANTICS_REGISTRY_PATH`. See [Troubleshooting](troubleshooting.md)
+for the exact messages.
+
+### Scope boundary
+
+This registry owns the at-rest **predicate** vocabulary. It deliberately does
+not declare closed sets that belong to the packages that write them —
+AbstractMemory's record-kind and `diary_type` sets, or the entity phase keys
+and mode enums owned by the gateway and runtime. Import those from their
+owning package rather than copying them here, so there is only ever one
+authority for each set.
 
 ## Minimal example
 
@@ -618,7 +816,7 @@ schema = build_kg_assertion_schema_v0(
 
 `build_kg_assertion_schema_v0()`:
 
-- restricts `predicate` to `registry.predicates[*].id` (and optionally a small alias list: `KG_PREDICATE_ALIASES_V0`)
+- restricts `predicate` to `registry.predicates[*].id` (and optionally a small alias list: `KG_PREDICATE_ALIASES_V0`, derived from the keys of the alias→canonical map `KG_PREDICATE_ALIAS_MAP_V0`)
 - restricts `attributes.subject_type` and `attributes.object_type` to `registry.entity_types[*].id`
 - requires each assertion to include:
   - `subject`, `predicate`, `object`
@@ -629,6 +827,31 @@ schema = build_kg_assertion_schema_v0(
   - if `min_assertions_when_nonempty > 0`, the schema allows either an empty list OR at least N assertions (an `anyOf` guard)
 
 If the registry has no predicate ids or no entity-type ids, it raises `ValueError`.
+
+## Normalizing aliases at the ingestion boundary
+
+If you enable `include_predicate_aliases=True`, normalize every
+extractor-emitted predicate before persisting (one spelling per predicate at
+rest):
+
+```python
+from abstractsemantics import load_semantics_registry, normalize_kg_predicate
+
+reg = load_semantics_registry()  # load ONCE — registry=None re-reads the YAML per call
+for assertion in assertions:
+    canonical = normalize_kg_predicate(assertion["predicate"], reg)
+    if canonical is None:
+        ...  # refuse loudly or store as labeled-unknown — never guess a meaning
+    else:
+        assertion["predicate"] = canonical
+```
+
+`normalize_kg_predicate()` passes canonical registry ids through, maps known
+aliases via `KG_PREDICATE_ALIAS_MAP_V0`, and returns `None` for everything
+else. Matching is whitespace-stripped then exact (case-sensitive — CURIEs
+are case-sensitive; folding would guess). Only aliases with a determinate
+canonical mapping are offered in the enum, so every spelling the schema
+offers is guaranteed to normalize.
 
 ## Schema shape (high level)
 
@@ -684,6 +907,71 @@ See `src/abstractsemantics/schema.py` for the authoritative dict.
 - [Registry format](registry.md)
 - [FAQ](faq.md)
 - [API reference](api.md)
+
+---
+
+## docs/api.md
+
+# API reference
+
+> Prefer importing from `abstractsemantics` (re-exported from `src/abstractsemantics/__init__.py`). Direct submodule imports may change.
+
+## Registry
+
+- `SemanticsRegistry`: frozen dataclass with fields `version`, `prefixes`, `predicates`, `entity_types`, `memory_relations`
+  - `predicate_ids() -> set[str]`
+  - `entity_type_ids() -> set[str]`
+  - `memory_relation_ids() -> set[str]`
+  - `memory_record_predicate_ids() -> set[str]` — declared memory relations plus `MEMORY_DIGEST_PREDICATE`; the validation set for AbstractMemory record writes
+- `MEMORY_DIGEST_PREDICATE: str` — `"dcterms:abstract"`, the digest predicate for memory records
+- `resolve_semantics_registry_path() -> pathlib.Path`
+  - default: `abstractsemantics/semantics.yaml` (in this repo: `src/abstractsemantics/semantics.yaml`)
+  - override: `ABSTRACTSEMANTICS_REGISTRY_PATH`
+- `load_semantics_registry(path: pathlib.Path | None = None) -> SemanticsRegistry`
+
+### Registry entry shapes (returned objects)
+
+While `SemanticsRegistry` and `MemoryRelationDef` are re-exported at top-level, the registry loader returns immutable dataclass instances for the other entries too (defined in `src/abstractsemantics/registry.py`):
+
+- `PredicateDef`: `id`, `label?`, `inverse?`, `description?`
+- `EntityTypeDef`: `id`, `label?`, `parent?`, `description?`
+- `MemoryRelationDef`: `id` (plain word), `label?`, `description?`, `equivalent` (tuple of standard CURIEs, interop metadata only), `subject_role?`/`object_role?` (machine-readable edge direction — short role nouns, e.g. `supports`: subject_role `evidence`, object_role `claim`; direction-validating writers consume these instead of hardcoding semantics)
+
+`PredicateDef`/`EntityTypeDef` are not part of the explicitly re-exported top-level API. For compatibility, prefer treating them as simple records and rely on the documented fields (especially `id`).
+
+You can treat these as simple, frozen objects with attributes:
+
+```python
+from abstractsemantics import load_semantics_registry
+
+reg = load_semantics_registry()
+first = reg.predicates[0]
+print(first.id, first.label)
+```
+
+## JSON Schema helpers
+
+- `KG_ASSERTION_SCHEMA_REF_V0: str`
+- `build_kg_assertion_schema_v0(...) -> dict`
+  - important args: `include_predicate_aliases`, `max_assertions`, `min_assertions_when_nonempty`
+- `normalize_kg_predicate(predicate, registry=None) -> str | None`: ingestion-boundary normalization — canonical ids pass through, known aliases map to canonical (`KG_PREDICATE_ALIAS_MAP_V0`), anything else returns `None` (caller refuses or labels; never guesses)
+- `KG_PREDICATE_ALIAS_MAP_V0: dict[str, str]`: alias → canonical registry id (single source; the offered `KG_PREDICATE_ALIASES_V0` tuple derives from its keys)
+- `resolve_schema_ref(schema: dict) -> dict | None`
+
+### Evidence (tests)
+
+For concrete, executable examples that anchor expected behavior:
+
+- Registry loading: `tests/test_registry.py`
+- Schema construction and `$ref` resolution: `tests/test_schema.py`
+
+## Related docs
+
+- [Getting started](getting-started.md)
+- [Architecture](architecture.md)
+- [Registry format](registry.md)
+- [KG assertion JSON Schema](schema.md)
+- [FAQ](faq.md)
 
 ---
 
@@ -771,11 +1059,19 @@ See [KG assertion JSON Schema](schema.md).
 
 ## What are “predicate aliases” and should I enable them?
 
-`src/abstractsemantics/schema.py` defines a small alias list (`KG_PREDICATE_ALIASES_V0`) for predicate strings that LLMs often emit by default.
+`src/abstractsemantics/schema.py` defines a small alias→canonical map
+(`KG_PREDICATE_ALIAS_MAP_V0`) for predicate spellings that LLMs often emit by
+default; the offered alias list (`KG_PREDICATE_ALIASES_V0`) is derived from
+its keys.
 
 - aliases are **not** part of the canonical registry YAML
-- enabling aliases (`include_predicate_aliases=True`) makes the schema accept those additional strings
-- downstream ingestion/normalization is still the right place to map aliases to canonical ids
+- enabling aliases (`include_predicate_aliases=True`) makes the schema accept those additional spellings
+- if you enable aliases, you **must** normalize at your ingestion boundary
+  with `normalize_kg_predicate()` before persisting — one spelling per
+  predicate at rest; it passes canonical ids through, maps known aliases,
+  and returns `None` for anything else (refuse or label; never guess)
+- only aliases with a determinate canonical mapping are offered — ambiguous
+  or invented spellings are deliberately absent
 
 See [KG assertion JSON Schema](schema.md).
 
@@ -845,62 +1141,188 @@ Please follow the responsible disclosure guidance in [`SECURITY.md`](../SECURITY
 
 ---
 
-## docs/api.md
+## docs/troubleshooting.md
 
-# API reference
+# Troubleshooting
 
-> Prefer importing from `abstractsemantics` (re-exported from `src/abstractsemantics/__init__.py`). Direct submodule imports may change.
+> Symptoms you may hit when loading a registry, building the KG assertion schema, or normalizing predicates — with the cause and the fix for each.
 
-## Registry
+Most failures here come from a hand-edited registry YAML. The loader names the file it was reading in every error message, so start by opening the path in the message.
 
-- `SemanticsRegistry`: frozen dataclass with fields `version`, `prefixes`, `predicates`, `entity_types`
-  - `predicate_ids() -> set[str]`
-  - `entity_type_ids() -> set[str]`
-- `resolve_semantics_registry_path() -> pathlib.Path`
-  - default: `abstractsemantics/semantics.yaml` (in this repo: `src/abstractsemantics/semantics.yaml`)
-  - override: `ABSTRACTSEMANTICS_REGISTRY_PATH`
-- `load_semantics_registry(path: pathlib.Path | None = None) -> SemanticsRegistry`
+## Import and installation
 
-### Registry entry shapes (returned objects)
+### `ImportError: cannot import name 'MEMORY_DIGEST_PREDICATE' from 'abstractsemantics'`
 
-While only `SemanticsRegistry` is re-exported at top-level, the registry loader returns immutable dataclass instances for entries too (defined in `src/abstractsemantics/registry.py`):
+The same import error appears for `MemoryRelationDef`, `KG_PREDICATE_ALIAS_MAP_V0`, and `normalize_kg_predicate`.
 
-- `PredicateDef`: `id`, `label?`, `inverse?`, `description?`
-- `EntityTypeDef`: `id`, `label?`, `parent?`, `description?`
+An older `abstractsemantics` is installed in the active environment and shadows the version you expect. This is common in a source checkout, where `site-packages` wins over `src/`.
 
-These entry classes are not part of the explicitly re-exported top-level API. For compatibility, prefer treating them as simple records and rely on the documented fields (especially `id`).
+Check which copy is being imported and what version it is:
 
-You can treat these as simple, frozen objects with attributes:
-
-```python
-from abstractsemantics import load_semantics_registry
-
-reg = load_semantics_registry()
-first = reg.predicates[0]
-print(first.id, first.label)
+```bash
+python -c "import abstractsemantics, importlib.metadata as m; print(abstractsemantics.__file__, m.version('abstractsemantics'))"
 ```
 
-## JSON Schema helpers
+Install the checkout in editable mode, or upgrade the dependency:
 
-- `KG_ASSERTION_SCHEMA_REF_V0: str`
-- `build_kg_assertion_schema_v0(...) -> dict`
-  - important args: `include_predicate_aliases`, `max_assertions`, `min_assertions_when_nonempty`
-- `resolve_schema_ref(schema: dict) -> dict | None`
+```bash
+pip install -e ".[dev]"
+```
 
-### Evidence (tests)
+These names require `0.0.5` or later. See [Getting started](getting-started.md) for setup.
 
-For concrete, executable examples that anchor expected behavior:
+### Type checker reports `Any` for registry objects
 
-- Registry loading: `tests/test_registry.py`
-- Schema construction and `$ref` resolution: `tests/test_schema.py`
+Upgrade to `0.0.5` or later. Earlier versions shipped without a `py.typed` marker, so the annotations were not visible to consumers.
 
-## Related docs
+## Registry loading
 
-- [Getting started](getting-started.md)
-- [Architecture](architecture.md)
-- [Registry format](registry.md)
-- [KG assertion JSON Schema](schema.md)
-- [FAQ](faq.md)
+### `FileNotFoundError: ABSTRACTSEMANTICS_REGISTRY_PATH does not exist: <path>`
+
+The environment variable is set to a path that is not there. The message shows the resolved absolute path — relative values resolve against the current working directory, so a value that works from the repo root will not work from a subdirectory. Use an absolute path.
+
+### `FileNotFoundError: ABSTRACTSEMANTICS_REGISTRY_PATH is not a file: <path>`
+
+The variable points at a directory. Point it at the YAML file itself, not the folder holding it.
+
+### `ValueError: Invalid YAML in semantics registry <path>: duplicate mapping key 'predicates' (line N)`
+
+The file declares the same key twice at one level. This usually happens after pasting a second section into the file. Only one of the two blocks would have taken effect, so the loader refuses instead of silently discarding a vocabulary. Merge the two blocks into one and reload.
+
+YAML merge keys (`<<:`) are unaffected and remain valid.
+
+### `ValueError: Invalid YAML in semantics registry <path>: <parser error>`
+
+A syntax error such as a bad indent or an unclosed quote. The message includes the line and column reported by the YAML parser.
+
+### `ValueError: Semantics registry has no predicates: <path>`
+
+No `predicates` entry survived parsing. Either the section is missing or empty, or every item was skipped as malformed — check for a `UserWarning` naming the skip count just before the error. Each item must be a mapping with a non-empty string `id`:
+
+```yaml
+predicates:
+  - id: "dcterms:hasPart"
+    label: "has part"
+```
+
+## Memory-relation declarations
+
+These failures raise on load rather than degrading, because a declared relation immediately joins `memory_record_predicate_ids()` and its consumers write edges into append-only journals. See [Registry format](registry.md) for the section's full rules.
+
+### `ValueError: ... memory relation id '<id>' must be a plain word (no CURIE prefix)`
+
+A `memory_relations` id contains a `:`. Plain words are the canonical spelling at rest for this vocabulary. Put the standard-ontology term in `equivalent` instead:
+
+```yaml
+memory_relations:
+  - id: "derived_from"
+    equivalent: ["prov:wasDerivedFrom"]
+    subject_role: "derived record"
+    object_role: "source"
+```
+
+### `ValueError: ... memory relation id '<id>' collides with a KG predicate id`
+
+The same plain word is declared as both a `predicates` id and a `memory_relations` id. The two vocabularies must stay disjoint, because `predicates` is what an extraction model is shown. Rename the memory relation, or drop the entry from whichever section should not own it.
+
+A CURIE-shaped id trips the plain-word rule above first, so you will see this message only when a `predicates` entry itself uses a plain word.
+
+A CURIE appearing in an `equivalent` list *may* also be a `predicates` id — that is expected and does not trigger this error.
+
+### `ValueError: ... memory relation '<id>' must declare both subject_role and object_role`
+
+Every entry needs both role fields. They are short nouns naming each endpoint, and writers use them to validate direction:
+
+```yaml
+  - id: "supports"
+    subject_role: "evidence"
+    object_role: "claim"
+```
+
+### `ValueError: ... duplicate memory relation id(s) ['<id>'] — this section is load-fatal`
+
+The same relation is declared twice. Unlike `predicates`, this section does not keep the first occurrence, because that would silently pick which of two conflicting direction declarations wins. Remove the duplicate.
+
+## Load warnings
+
+A valid registry loads with no warnings. If you want them to fail your test suite:
+
+```python
+import warnings
+
+with warnings.catch_warnings():
+    warnings.simplefilter("error")
+    reg = load_semantics_registry()
+```
+
+### `skipped N malformed item(s) in '<section>'`
+
+`N` items in `predicates` or `entity_types` were not mappings with a non-empty string `id`, and were dropped. The load succeeded without them, so the usual symptom is a downstream enum missing a value you expected. A wrong indent level is the common cause.
+
+### `unparseable version '<value>' — reading as 0`
+
+The `version` key is not an integer. The registry still loads with version `0`. An absent or explicitly null `version` is treated as `0` without a warning.
+
+### `duplicate id(s) in '<section>' — keeping the first occurrence`
+
+The same id appears more than once in `predicates` or `entity_types`. The first wins, so every consumer resolves the same entry. Remove the later duplicates, keeping the definition you want.
+
+## Schema building
+
+### `ValueError: Semantics registry provided no entity type ids`
+
+`build_kg_assertion_schema_v0()` needs both predicates and entity types, even though `load_semantics_registry()` only requires predicates. Add an `entity_types` section to the registry you passed.
+
+### `ValueError: Semantics registry provided no predicate ids`
+
+The registry reached the builder with an empty predicate list. If you built `SemanticsRegistry` yourself rather than loading it, populate `predicates`.
+
+### `ValueError: max_assertions and min_assertions_when_nonempty must be >= 0`
+
+A negative bound was passed. Use `max_assertions=0` for "no maximum" — negative values are rejected rather than silently treated as unbounded.
+
+### `ValueError: evidence length bounds must be >= 0`
+
+`max_evidence_quote_len` or `max_original_context_len` was negative, which is not valid `maxLength` in JSON Schema.
+
+### `resolve_schema_ref()` returns `None`
+
+The `$ref` string did not match a known reference. The only supported value is `KG_ASSERTION_SCHEMA_REF_V0` (`"abstractsemantics:kg_assertion_schema_v0"`); check for a typo or surrounding whitespace.
+
+`resolve_schema_ref()` also always builds with default arguments and the default registry. If you need custom bounds, aliases, or a custom registry, call `build_kg_assertion_schema_v0()` directly. See [KG assertion JSON Schema](schema.md).
+
+## Predicate normalization
+
+### `normalize_kg_predicate()` returns `None` for a predicate you expected to work
+
+Three causes, in order of likelihood:
+
+1. **Case or spelling.** Matching is exact and case-sensitive, because CURIEs are case-sensitive. `Dcterms:hasPart` does not match `dcterms:hasPart`. Leading and trailing whitespace is stripped for you.
+2. **Not an alias.** Only aliases in `KG_PREDICATE_ALIAS_MAP_V0` are mapped. Print it to see the current set. Aliases without a single determinate canonical target are deliberately absent, so an unrecognized spelling is returned as `None` rather than guessed.
+3. **Custom registry.** The canonical target must exist in the registry you passed. An alias whose target is missing from a custom registry returns `None`.
+
+`None` is a normal result, not an error. Refuse the assertion or label it unknown — see [FAQ](faq.md).
+
+### A spelling the schema offered is then rejected at the boundary
+
+This should not happen: `build_kg_assertion_schema_v0(include_predicate_aliases=True)` only offers aliases whose canonical target exists in the registry passed to it. Verify both calls use the *same* registry object. Building the schema with a custom registry while normalizing against the default one (by omitting `registry=`) will produce this mismatch.
+
+### Normalization is slow in a per-assertion loop
+
+`normalize_kg_predicate(predicate)` with no `registry` argument reloads the YAML from disk on every call. Load once and pass it in:
+
+```python
+reg = load_semantics_registry()
+for a in assertions:
+    canonical = normalize_kg_predicate(a["predicate"], registry=reg)
+```
+
+## Still stuck
+
+- [Registry format](registry.md) — the YAML shape and every validation rule
+- [API reference](api.md) — the public surface
+- [FAQ](faq.md) — conceptual questions and design boundaries
+- [Contributing](../CONTRIBUTING.md) — how to report an issue
 
 ---
 
@@ -945,12 +1367,18 @@ python scripts/generate_llms_full.py
 
 ## Release checklist (docs-first)
 
-- Update `pyproject.toml` version (and `CHANGELOG.md`)
+- Update `pyproject.toml` version and add the matching `CHANGELOG.md` section
 - Update `src/abstractsemantics/semantics.yaml` (registry changes)
 - Ensure docs reflect behavior (`docs/`)
 - Run `pytest`
 - Build with `python -m build`
 - Regenerate `llms-full.txt` (`python scripts/generate_llms_full.py`)
+- Tag `v<version>` to trigger `.github/workflows/release.yml`
+
+The release workflow refuses to publish unless the tag, the `pyproject.toml`
+version, and a dated `## [<version>] - <date>` changelog heading all agree, and
+it takes the release notes from that changelog section. Fold pending entries
+into the version's own section before tagging, or they ship undocumented.
 
 ## Related docs
 
@@ -959,14 +1387,16 @@ python scripts/generate_llms_full.py
 - [Architecture](architecture.md)
 - [Registry format](registry.md)
 - [KG assertion JSON Schema](schema.md)
+- [API reference](api.md)
 - [FAQ](faq.md)
+- [Troubleshooting](troubleshooting.md)
 
 ---
 
 ## src/abstractsemantics/semantics.yaml
 
 ```yaml
-version: 0
+version: 2
 
 prefixes:
   dcterms: "http://purl.org/dc/terms/"
@@ -974,6 +1404,7 @@ prefixes:
   skos: "http://www.w3.org/2004/02/skos/core#"
   cito: "http://purl.org/spar/cito/"
   rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  prov: "http://www.w3.org/ns/prov#"
   ex: "http://example.org/"
 
 # v0 policy: predicate allowlist for ingestion validation + UI dropdowns.
@@ -1089,6 +1520,124 @@ predicates:
   - id: "cito:confirms"
     label: "confirms"
 
+# Memory-record edge vocabulary (AbstractMemory typed records).
+#
+# Declared per decision:0016-vocabulary-direction (2026-07-10, agora commons
+# store; semantics c173 -> memory c184 -> resolved c190): the engine's
+# append-only journals engrave predicate strings permanently and equality-key
+# them with no alias resolution at read, so the PLAIN WORDS below are the
+# canonical at-rest spelling — one spelling per predicate, forever. CURIE
+# forms ride `equivalent:` as interop/export metadata ONLY, never a second
+# at-rest spelling.
+#
+# This section is deliberately SEPARATE from `predicates:` — that list feeds
+# the KG-extraction structured-output enum (build_kg_assertion_schema_v0),
+# and memory-record edges must never appear there (two spellings of one
+# predicate in front of an extractor is the confusion the ruling forbids).
+# The digest predicate for memory records is `dcterms:abstract` (declared in
+# `predicates:` above); AbstractMemory's validation set = these ids plus it.
+#
+# Direction convention (revised 2026-07-12 with the disposal writer path):
+# each entry's DESCRIPTION defines the authoritative semantic direction.
+# For FORMATION-time writers the rule subject = the authored/newer record is
+# structural (edges ride the newly formed record). Disposal-confirmed edges
+# (confirm_relation) carry CALLER-asserted endpoints — the caller must match
+# the description's direction; enforcement is memory's lane (flagged
+# 2026-07-12).
+#
+# `equivalent` lists are MANY-TO-ONE and LOSSY interop hints: several plain
+# words may share one broader CURIE (summarizes/from_session/derived_from
+# all specialize prov:wasDerivedFrom) — the mapping is never reversible and
+# must never drive an import back to plain words. Policy: one MOST-SPECIFIC
+# term per entry (refines lists prov:wasRevisionOf alone, never also its
+# superproperty prov:wasDerivedFrom — a PROV-aware importer infers it).
+#
+# KNOWN OVERLAP (declared, not drift): some `equivalent` CURIEs also appear
+# as ids in `predicates:` above (schema:mentions, schema:previousItem,
+# cito:supports, dcterms:isPartOf). Safe by construction — memory validation
+# accepts only the plain-word ids (a CURIE-spelled memory edge is refused),
+# and `equivalent` is export-only. A test pins this exact overlap set so a
+# new instance is a decision, not drift.
+#
+# Widening rule (both ways, e-s 143/145): no new relation engraves before a
+# declaration lands here, coordinated with the memory seat; nothing is added
+# here without coordinating with memory. Declaration IS permission: a
+# declared id immediately joins memory_record_predicate_ids(), so watched
+# not-yet-written words (e.g. `resolves`, reader-only today) stay OUT of
+# this section until their writer ships — the watch lives in backlog 0001.
+memory_relations:
+  - id: "summarizes"
+    label: "summarizes"
+    description: "A summary/reflection record names a source record it condenses (a summary must name its sources)."
+    equivalent: ["prov:wasDerivedFrom"]
+    subject_role: "summary"
+    object_role: "source"
+  - id: "mentions"
+    label: "mentions"
+    description: "Weak associative link from a record to one it references without deriving from it (e.g. dream records naming their source islands)."
+    equivalent: ["schema:mentions"]
+    subject_role: "referencing record"
+    object_role: "referenced record"
+  - id: "written_amid"
+    label: "written amid"
+    description: "Act-frame co-presence: a diary projection points at the graph records attended at write time. No exact standard-ontology equivalent (broadest near term: prov:wasInfluencedBy); deliberately unmapped."
+    subject_role: "diary projection"
+    object_role: "attended record"
+  - id: "from_session"
+    label: "from session"
+    description: "An elected identity record (e.g. an interest) points at the session record it grew out of."
+    equivalent: ["prov:wasDerivedFrom"]
+    subject_role: "elected record"
+    object_role: "session"
+  - id: "reflected_in"
+    label: "reflected in"
+    description: "An exchange/episode points at a diary entry elected during it (the exchange is the subject the entry reflects on). Only non-private projections carry this edge — private diary projections carry no edges by the containment rule."
+    equivalent: ["schema:subjectOf"]
+    subject_role: "exchange"
+    object_role: "diary entry"
+  - id: "continues"
+    label: "continues"
+    description: "An episode points at the immediately preceding episode in its session chain."
+    equivalent: ["schema:previousItem"]
+    subject_role: "episode"
+    object_role: "preceding episode"
+  - id: "derived_from"
+    label: "derived from"
+    description: "General derivation: a record points at the source material it was derived from."
+    equivalent: ["prov:wasDerivedFrom"]
+    subject_role: "derived record"
+    object_role: "source"
+  - id: "refines"
+    label: "refines"
+    description: "A newer revision points at the record it revises and supersedes (revision chains, e.g. world-model orientation cards)."
+    equivalent: ["prov:wasRevisionOf"]
+    subject_role: "new revision"
+    object_role: "prior revision"
+  - id: "answers"
+    label: "answers"
+    description: "A record answers a question record (subject = the answering record, object = the question). Distinct from the attributes.answers REFERENCE on diary entries (a book entry / record id, not an edge)."
+    equivalent: ["cito:repliesTo"]
+    subject_role: "answer"
+    object_role: "question"
+  - id: "supports"
+    label: "supports"
+    description: "A record provides evidential support for another (subject = the supporting evidence, object = the claim/lesson/record supported — cito:supports direction; the inverse reading is a distinct word, never this one)."
+    equivalent: ["cito:supports"]
+    subject_role: "evidence"
+    object_role: "claim"
+  - id: "part_of"
+    label: "part of"
+    description: "A record is a component of a larger record or story (subject = the part, object = the whole)."
+    equivalent: ["dcterms:isPartOf"]
+    subject_role: "part"
+    object_role: "whole"
+
+# NAMING NOTE (disambiguation): "entity_types" here = NER-sense classes for
+# KG extraction (what kind of thing a knowledge-graph node is: person, place,
+# concept...). This is UNRELATED to the framework's SUMMONED ENTITIES
+# (named persistent identities with homes/phases) — that vocabulary lives in
+# the gateway/runtime lanes; the maintainer's preferred term there is
+# "summoned entity" precisely because "named entity" collides with NER here.
 entity_types:
   # Generic "real-world thing" catch-all (includes physical objects).
   - id: "schema:Thing"
@@ -1137,22 +1686,32 @@ entity_types:
 
 ```python
 from .registry import (
+    MEMORY_DIGEST_PREDICATE,
+    MemoryRelationDef,
     SemanticsRegistry,
     load_semantics_registry,
     resolve_semantics_registry_path,
 )
 from .schema import (
     KG_ASSERTION_SCHEMA_REF_V0,
+    KG_PREDICATE_ALIAS_MAP_V0,
+    KG_PREDICATE_ALIASES_V0,
     build_kg_assertion_schema_v0,
+    normalize_kg_predicate,
     resolve_schema_ref,
 )
 
 __all__ = [
+    "MEMORY_DIGEST_PREDICATE",
+    "MemoryRelationDef",
     "SemanticsRegistry",
     "load_semantics_registry",
     "resolve_semantics_registry_path",
     "KG_ASSERTION_SCHEMA_REF_V0",
+    "KG_PREDICATE_ALIAS_MAP_V0",
+    "KG_PREDICATE_ALIASES_V0",
     "build_kg_assertion_schema_v0",
+    "normalize_kg_predicate",
     "resolve_schema_ref",
 ]
 ```
@@ -1164,11 +1723,18 @@ __all__ = [
 from __future__ import annotations
 
 import os
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 
 import yaml
+
+# The digest predicate for memory records: every formed record asserts its
+# digest text under this predicate (the one CURIE at rest in memory journals;
+# decision:0016-vocabulary-direction). Part of the memory-record validation
+# set alongside the declared plain-word relations.
+MEMORY_DIGEST_PREDICATE = "dcterms:abstract"
 
 
 @dataclass(frozen=True)
@@ -1188,11 +1754,39 @@ class EntityTypeDef:
 
 
 @dataclass(frozen=True)
+class MemoryRelationDef:
+    """A memory-record edge relation (AbstractMemory typed records).
+
+    Deliberately a separate vocabulary from `PredicateDef`: memory-record
+    relations are engraved as PLAIN WORDS in append-only journals (the
+    canonical at-rest spelling, never renamed), while `predicates` feed the
+    KG-extraction structured-output enum. `equivalent` carries equal-or-
+    broader standard CURIEs as export/interop metadata only — never a second
+    at-rest spelling (decision:0016-vocabulary-direction, 2026-07-10).
+
+    `subject_role`/`object_role` (added 2026-07-12) carry the authoritative
+    edge DIRECTION in machine-readable form — short role nouns for each
+    endpoint (e.g. supports: subject_role="evidence", object_role="claim").
+    Writers with caller-asserted endpoints (memory's disposal
+    confirm_relation) consume these for direction validation and error
+    messages instead of hardcoding a second copy of the semantics.
+    """
+
+    id: str
+    label: Optional[str] = None
+    description: Optional[str] = None
+    equivalent: tuple[str, ...] = ()
+    subject_role: Optional[str] = None
+    object_role: Optional[str] = None
+
+
+@dataclass(frozen=True)
 class SemanticsRegistry:
     version: int
     prefixes: Dict[str, str]
     predicates: List[PredicateDef]
     entity_types: List[EntityTypeDef]
+    memory_relations: List[MemoryRelationDef]
 
     def predicate_ids(self) -> set[str]:
         return {p.id for p in self.predicates if isinstance(p.id, str) and p.id.strip()}
@@ -1200,18 +1794,34 @@ class SemanticsRegistry:
     def entity_type_ids(self) -> set[str]:
         return {t.id for t in self.entity_types if isinstance(t.id, str) and t.id.strip()}
 
+    def memory_relation_ids(self) -> set[str]:
+        return {r.id for r in self.memory_relations if isinstance(r.id, str) and r.id.strip()}
+
+    def memory_record_predicate_ids(self) -> set[str]:
+        """The full validation set for memory-record writes.
+
+        Declared plain-word relation ids plus the digest predicate — the set
+        AbstractMemory's vocabulary validation (its item 0016) checks NEW
+        writes against. Engraved history predates validation and is never
+        re-checked (append-only journals).
+        """
+        return self.memory_relation_ids() | {MEMORY_DIGEST_PREDICATE}
+
 
 def resolve_semantics_registry_path() -> Path:
     """Resolve the registry YAML path.
 
     Env override:
-    - ABSTRACTSEMANTICS_REGISTRY_PATH
+    - ABSTRACTSEMANTICS_REGISTRY_PATH (relative paths resolve against the
+      current working directory; errors always name the resolved path)
     """
     raw = os.getenv("ABSTRACTSEMANTICS_REGISTRY_PATH")
     if isinstance(raw, str) and raw.strip():
         p = Path(raw).expanduser().resolve()
         if not p.exists():
             raise FileNotFoundError(f"ABSTRACTSEMANTICS_REGISTRY_PATH does not exist: {p}")
+        if not p.is_file():
+            raise FileNotFoundError(f"ABSTRACTSEMANTICS_REGISTRY_PATH is not a file: {p}")
         return p
     return Path(__file__).with_name("semantics.yaml")
 
@@ -1220,10 +1830,72 @@ def _as_list(value: Any) -> list:
     return list(value) if isinstance(value, list) else []
 
 
+class _StrictKeyLoader(yaml.SafeLoader):
+    """SafeLoader that REFUSES duplicate mapping keys (backlog 0003 item 1).
+
+    PyYAML deliberately does not enforce YAML's unique-key rule: a stray
+    pasted second `predicates:` block silently last-wins and can replace the
+    whole vocabulary without a sound. For a registry an operator hand-edits,
+    that silence is the defect — fail loudly at load instead.
+    """
+
+
+def _strict_mapping(loader: _StrictKeyLoader, node: yaml.nodes.MappingNode, deep: bool = False):
+    seen: set = set()
+    for key_node, _value_node in node.value:
+        # Merge keys (`<<:`) are handled by flatten_mapping inside
+        # construct_mapping below; constructing the merge-tag key node here
+        # would raise (SafeConstructor has no merge constructor) and refuse
+        # valid YAML the old loader accepted. Skip them in the dup scan.
+        if key_node.tag == "tag:yaml.org,2002:merge":
+            continue
+        key = loader.construct_object(key_node, deep=deep)
+        # Unhashable keys (lists/dicts) are a YAML error PyYAML raises on its
+        # own; only guard hashable duplicates here.
+        try:
+            duplicate = key in seen
+        except TypeError:
+            continue
+        if duplicate:
+            raise ValueError(
+                f"duplicate mapping key {key!r} (line {key_node.start_mark.line + 1})"
+            )
+        seen.add(key)
+    return yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
+
+
+_StrictKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _strict_mapping
+)
+
+
 def _load_yaml(path: Path) -> Dict[str, Any]:
     raw = path.read_text(encoding="utf-8")
-    data = yaml.safe_load(raw)
+    try:
+        data = yaml.load(raw, Loader=_StrictKeyLoader)
+    except yaml.YAMLError as e:
+        # PyYAML parses the string and reports '<unicode string>' — the
+        # operator hand-editing a registry needs the FILE named.
+        raise ValueError(f"Invalid YAML in semantics registry {path}: {e}") from e
+    except ValueError as e:
+        # Duplicate-key refusal from the strict loader: name the file too.
+        raise ValueError(f"Invalid YAML in semantics registry {path}: {e}") from e
     return data if isinstance(data, dict) else {}
+
+
+def _warn_skips(path: Path, section: str, skipped: int) -> None:
+    """ONE warning per section naming path + count (backlog 0003 item 2).
+
+    Item-skip LENIENCY is deliberate for predicates/entity_types (they feed
+    enums and fail soft) — but a wrong-indent typo that silently vanishes a
+    predicate used to surface only as a distant extractor-enum gap. The load
+    succeeds; the operator gets a sound."""
+    if skipped:
+        warnings.warn(
+            f"semantics registry {path}: skipped {skipped} malformed item(s) in "
+            f"'{section}' (each must be a mapping with a non-empty string 'id')",
+            stacklevel=3,
+        )
 
 
 def load_semantics_registry(path: Path | None = None) -> SemanticsRegistry:
@@ -1231,9 +1903,19 @@ def load_semantics_registry(path: Path | None = None) -> SemanticsRegistry:
     data = _load_yaml(p)
 
     version_raw = data.get("version", 0)
+    if version_raw is None:
+        # A bare `version:` (explicit null) is absent-shaped, not corrupt —
+        # a common hand-edit intermediate; stays quiet like a missing key.
+        version_raw = 0
     try:
         version = int(version_raw)
     except Exception:
+        # Backlog 0003 item 3: unparseable is DISTINCT from absent — absent
+        # defaults quietly, corruption gets a sound (both read as 0).
+        warnings.warn(
+            f"semantics registry {p}: unparseable version {version_raw!r} — reading as 0",
+            stacklevel=2,
+        )
         version = 0
 
     prefixes_raw = data.get("prefixes")
@@ -1244,11 +1926,14 @@ def load_semantics_registry(path: Path | None = None) -> SemanticsRegistry:
                 prefixes[k.strip()] = v.strip()
 
     predicates: list[PredicateDef] = []
+    skipped = 0
     for item in _as_list(data.get("predicates")):
         if not isinstance(item, dict):
+            skipped += 1
             continue
         pid = item.get("id")
         if not isinstance(pid, str) or not pid.strip():
+            skipped += 1
             continue
         predicates.append(
             PredicateDef(
@@ -1258,13 +1943,17 @@ def load_semantics_registry(path: Path | None = None) -> SemanticsRegistry:
                 description=item.get("description") if isinstance(item.get("description"), str) else None,
             )
         )
+    _warn_skips(p, "predicates", skipped)
 
     entity_types: list[EntityTypeDef] = []
+    skipped = 0
     for item in _as_list(data.get("entity_types")):
         if not isinstance(item, dict):
+            skipped += 1
             continue
         tid = item.get("id")
         if not isinstance(tid, str) or not tid.strip():
+            skipped += 1
             continue
         entity_types.append(
             EntityTypeDef(
@@ -1274,15 +1963,107 @@ def load_semantics_registry(path: Path | None = None) -> SemanticsRegistry:
                 description=item.get("description") if isinstance(item.get("description"), str) else None,
             )
         )
+    _warn_skips(p, "entity_types", skipped)
+
+    memory_relations: list[MemoryRelationDef] = []
+    skipped = 0
+    for item in _as_list(data.get("memory_relations")):
+        if not isinstance(item, dict):
+            skipped += 1
+            continue
+        rid = item.get("id")
+        if not isinstance(rid, str) or not rid.strip():
+            skipped += 1
+            continue
+        equivalent_raw = item.get("equivalent")
+        equivalent = tuple(
+            e.strip()
+            for e in (equivalent_raw if isinstance(equivalent_raw, list) else [])
+            if isinstance(e, str) and e.strip()
+        )
+        memory_relations.append(
+            MemoryRelationDef(
+                id=rid.strip(),
+                label=item.get("label") if isinstance(item.get("label"), str) else None,
+                description=item.get("description") if isinstance(item.get("description"), str) else None,
+                equivalent=equivalent,
+                subject_role=item.get("subject_role") if isinstance(item.get("subject_role"), str) else None,
+                object_role=item.get("object_role") if isinstance(item.get("object_role"), str) else None,
+            )
+        )
+    _warn_skips(p, "memory_relations", skipped)
+
+    # Backlog 0003 item 4: duplicate ids within a section keep FIRST + warn.
+    # Set-based consumers were always safe; iterating consumers (enum
+    # builders, UI dropdowns) saw both rows and label-wins became
+    # consumer-dependent — keep-first makes the winner deterministic.
+    def _dedupe(defs, section: str):
+        seen: set = set()
+        out = []
+        dups = []
+        for d in defs:
+            if d.id in seen:
+                dups.append(d.id)
+                continue
+            seen.add(d.id)
+            out.append(d)
+        if dups:
+            warnings.warn(
+                f"semantics registry {p}: duplicate id(s) in '{section}' — "
+                f"keeping the first occurrence of: {sorted(set(dups))}",
+                stacklevel=3,
+            )
+        return out
+
+    predicates = _dedupe(predicates, "predicates")
+    entity_types = _dedupe(entity_types, "entity_types")
+
+    # memory_relations duplicates are FATAL, not keep-first: this section is
+    # load-fatal by doctrine (declaration IS permission), and keep-first would
+    # silently decide which of two conflicting role declarations is
+    # authoritative — an order-dependent leniency worse than either choice
+    # (adversarial finding 2, 2026-07-20).
+    rel_ids = [r.id for r in memory_relations]
+    rel_dups = sorted({rid for rid in rel_ids if rel_ids.count(rid) > 1})
+    if rel_dups:
+        raise ValueError(
+            f"Semantics registry {p}: duplicate memory relation id(s) {rel_dups} — "
+            f"this section is load-fatal; remove the duplicate declaration(s)"
+        )
 
     if not predicates:
         raise ValueError(f"Semantics registry has no predicates: {p}")
+
+    # Structural invariants for memory_relations are enforced at LOAD time —
+    # unlike predicates/entity_types (which feed enums and fail soft), a
+    # declared memory relation immediately joins memory_record_predicate_ids()
+    # whose consumer engraves edges into append-only journals: a config typo
+    # would become a permanent at-rest spelling. Load is the only cheap place
+    # to fail (declaration IS permission).
+    predicate_id_set = {d.id for d in predicates}
+    for rel in memory_relations:
+        if ":" in rel.id:
+            raise ValueError(
+                f"Semantics registry {p}: memory relation id {rel.id!r} must be a "
+                f"plain word (no CURIE prefix) — plain words are canonical at rest"
+            )
+        if rel.id in predicate_id_set:
+            raise ValueError(
+                f"Semantics registry {p}: memory relation id {rel.id!r} collides "
+                f"with a KG predicate id — the two vocabularies must stay disjoint"
+            )
+        if not (rel.subject_role and rel.subject_role.strip()) or not (rel.object_role and rel.object_role.strip()):
+            raise ValueError(
+                f"Semantics registry {p}: memory relation {rel.id!r} must declare "
+                f"both subject_role and object_role (writers validate direction against them)"
+            )
 
     return SemanticsRegistry(
         version=version,
         prefixes=prefixes,
         predicates=predicates,
         entity_types=entity_types,
+        memory_relations=memory_relations,
     )
 ```
 ---
@@ -1304,25 +2085,84 @@ from .registry import SemanticsRegistry, load_semantics_registry
 KG_ASSERTION_SCHEMA_REF_V0 = "abstractsemantics:kg_assertion_schema_v0"
 
 
-# Small, deterministic alias set for predicates that LLMs tend to emit by default.
+# Alias -> canonical normalization map for predicates that LLMs tend to emit
+# by default (backlog 0002, built 2026-07-13).
 #
-# These are *not* part of the canonical semantics registry. Prefer keeping
-# structured-output enums canonical (so the model is forced to pick from the
-# agreed semantics). Alias handling belongs at the ingestion boundary.
+# These aliases are *not* part of the canonical semantics registry. Prefer
+# keeping structured-output enums canonical (so the model is forced to pick
+# from the agreed semantics). When aliases ARE offered
+# (`include_predicate_aliases=True`), the ingestion boundary normalizes them
+# via `normalize_kg_predicate()` before anything persists — one spelling per
+# predicate at rest (the same rule the memory-relations vocabulary enforces).
 #
-# Keep this list intentionally small to protect model context + reduce confusion.
-KG_PREDICATE_ALIASES_V0: Sequence[str] = (
-    "schema:description",
-    "schema:creator",
-    "schema:hasParent",
-    "schema:hasMember",
-    "schema:recognizedAs",
-    "schema:hasMemorySource",
-    "schema:hasPart",
-    "schema:isPartOf",
-    "dcterms:has_part",
-    "dcterms:is_part_of",
-)
+# Design rules (the accept-vs-offer split, decision:workitem-type-enum):
+# - The OFFER set (`KG_PREDICATE_ALIASES_V0`, derived from this map's keys)
+#   contains ONLY aliases with a DETERMINATE canonical mapping. Earlier alias
+#   spellings without one (schema:hasParent — broader vs isPartOf is
+#   context-dependent; schema:hasMember — no member predicate in the
+#   registry; schema:recognizedAs — lossy vs sameAs; schema:hasMemorySource —
+#   invented term with unclear intent) were REMOVED from the offer: offering
+#   a spelling the boundary cannot normalize invites un-normalizable data.
+# - The ACCEPT side (`normalize_kg_predicate`) passes canonical ids through,
+#   maps known aliases, and returns None for everything else — the caller
+#   labels or refuses; nothing is ever silently coerced to a guessed meaning.
+# - The map's RANGE is canonical registry predicate ids only, and its keys
+#   are never themselves registry ids (both test-pinned).
+#
+# Keep this map intentionally small to protect model context + reduce confusion.
+KG_PREDICATE_ALIAS_MAP_V0: Dict[str, str] = {
+    # schema.org twins of declared dcterms ids (same meaning, one spelling at rest)
+    "schema:description": "dcterms:description",
+    "schema:creator": "dcterms:creator",
+    "schema:hasPart": "dcterms:hasPart",
+    "schema:isPartOf": "dcterms:isPartOf",
+    # snake_case spelling variants that do not exist in dcterms
+    "dcterms:has_part": "dcterms:hasPart",
+    "dcterms:is_part_of": "dcterms:isPartOf",
+}
+
+# The alias OFFER set, derived from the map's keys (never maintained by hand —
+# a second copy would drift; the map is the single source).
+KG_PREDICATE_ALIASES_V0: Sequence[str] = tuple(KG_PREDICATE_ALIAS_MAP_V0)
+
+
+def normalize_kg_predicate(
+    predicate: object,
+    registry: Optional[SemanticsRegistry] = None,
+) -> Optional[str]:
+    """Normalize a predicate string to its canonical registry id.
+
+    The ingestion-boundary half of the alias design: call this on every
+    extractor-emitted predicate before persisting. The parameter is typed
+    `object` deliberately — sanitizing raw LLM output IS the contract, so
+    non-string input returns None instead of raising.
+
+    Matching contract: input is whitespace-stripped, then matched EXACTLY
+    (case-sensitive — CURIEs are case-sensitive and case-folding would be
+    guessing). The returned id is the stripped form.
+
+    Perf note: `registry=None` loads the registry YAML from disk on EVERY
+    call — in a per-assertion loop, load once and pass it in.
+
+    Returns:
+    - the (stripped) id when it already is a canonical registry predicate id;
+    - the canonical id when the input is a known alias
+      (`KG_PREDICATE_ALIAS_MAP_V0`);
+    - None otherwise — the caller decides (refuse loudly or label unknown);
+      unknown strings are never coerced to a guessed canonical id.
+    """
+    if not isinstance(predicate, str):
+        return None
+    p = predicate.strip()
+    if not p:
+        return None
+    reg = registry or load_semantics_registry()
+    if p in reg.predicate_ids():
+        return p
+    canonical = KG_PREDICATE_ALIAS_MAP_V0.get(p)
+    if canonical is not None and canonical in reg.predicate_ids():
+        return canonical
+    return None
 
 
 def _dedup_preserve_order(values: Sequence[str]) -> list[str]:
@@ -1351,15 +2191,33 @@ def build_kg_assertion_schema_v0(
     """Build the structured-output JSON Schema used by the KG extractor workflows.
 
     This schema is deliberately small and meant to be stable:
-    - `predicate` is restricted to the semantics registry (+ optional aliases).
+    - `predicate` is restricted to the semantics registry (+ optional aliases;
+      only aliases whose canonical target exists in the registry are offered).
     - `subject_type` / `object_type` are restricted to the registry entity types.
     - Evidence fields are bounded (short verbatim snippets).
+
+    Bounds: `max_assertions=0` means unbounded (no `maxItems`); negative
+    bounds are rejected — a negative cap silently becoming "no cap" is the
+    dangerous coercion direction.
     """
     reg = registry or load_semantics_registry()
 
+    if int(max_assertions) < 0 or int(min_assertions_when_nonempty) < 0:
+        raise ValueError("max_assertions and min_assertions_when_nonempty must be >= 0")
+    if int(max_evidence_quote_len) < 0 or int(max_original_context_len) < 0:
+        raise ValueError("evidence length bounds must be >= 0")
+
     predicate_ids: List[str] = [p.id for p in reg.predicates if isinstance(p.id, str) and p.id.strip()]
     if include_predicate_aliases:
-        predicate_ids = list(predicate_ids) + list(KG_PREDICATE_ALIASES_V0)
+        # Offer ONLY aliases whose canonical target exists in THIS registry —
+        # offering a spelling the boundary cannot normalize invites
+        # un-normalizable data (custom/env-override registries may lack some
+        # canonical targets; the accept-side guard in normalize_kg_predicate
+        # has the same check).
+        have = set(predicate_ids)
+        predicate_ids = list(predicate_ids) + [
+            alias for alias, canonical in KG_PREDICATE_ALIAS_MAP_V0.items() if canonical in have
+        ]
     predicate_ids = _dedup_preserve_order(predicate_ids)
 
     entity_type_ids: List[str] = [t.id for t in reg.entity_types if isinstance(t.id, str) and t.id.strip()]
@@ -1438,7 +2296,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractsemantics"
-version = "0.0.2"
+version = "0.0.5"
 description = "Semantics registry (predicates/types) for AbstractFramework."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -1450,7 +2308,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+apple = []
+all-apple = []
+gpu = []
+all-gpu = []
 dev = ["pytest>=7.0.0"]
+test = ["pytest>=7.0.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -1458,7 +2321,7 @@ include = ["abstractsemantics*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-abstractsemantics = ["*.yaml", "*.yml"]
+abstractsemantics = ["*.yaml", "*.yml", "py.typed"]
 ```
 ---
 
@@ -1467,7 +2330,30 @@ abstractsemantics = ["*.yaml", "*.yml"]
 ```python
 from __future__ import annotations
 
-from abstractsemantics import load_semantics_registry
+from abstractsemantics import (
+    MEMORY_DIGEST_PREDICATE,
+    load_semantics_registry,
+)
+
+# The plain-word memory-record relations declared per
+# decision:0016-vocabulary-direction (2026-07-10, seven relations) plus the
+# 2026-07-12 widening batch (refines live via world-model revision chains;
+# answers/supports/part_of disposal-writable via confirm_relation). Engraved
+# append-only — this set may WIDEN (coordinated with the memory seat) but an
+# id must never be renamed or removed.
+DECLARED_MEMORY_RELATIONS = {
+    "summarizes",
+    "mentions",
+    "written_amid",
+    "from_session",
+    "reflected_in",
+    "continues",
+    "derived_from",
+    "refines",
+    "answers",
+    "supports",
+    "part_of",
+}
 
 
 def test_load_semantics_registry_has_predicates():
@@ -1475,6 +2361,288 @@ def test_load_semantics_registry_has_predicates():
     ids = reg.predicate_ids()
     assert "rdf:type" in ids
     assert "dcterms:isPartOf" in ids
+
+
+def test_memory_relations_declared_plain_words():
+    reg = load_semantics_registry()
+    ids = reg.memory_relation_ids()
+    assert DECLARED_MEMORY_RELATIONS <= ids
+    # Plain words are the canonical at-rest spelling: no prefixed/CURIE ids
+    # may ever appear in this vocabulary (one spelling per predicate).
+    assert all(":" not in rid for rid in ids)
+
+
+def test_memory_record_predicate_ids_is_relations_plus_digest():
+    reg = load_semantics_registry()
+    validation_set = reg.memory_record_predicate_ids()
+    assert validation_set == reg.memory_relation_ids() | {MEMORY_DIGEST_PREDICATE}
+    assert MEMORY_DIGEST_PREDICATE == "dcterms:abstract"
+
+
+def test_memory_relation_equivalents_are_prefixed_registry_style():
+    """Equivalence metadata carries standard CURIEs only (interop hints), and
+    every CURIE prefix must be declared in the registry prefixes map — the
+    no-invented-vocabulary rule made checkable."""
+    reg = load_semantics_registry()
+    for rel in reg.memory_relations:
+        for eq in rel.equivalent:
+            assert ":" in eq, f"{rel.id}: equivalent {eq!r} is not a CURIE"
+            prefix = eq.split(":", 1)[0]
+            assert prefix in reg.prefixes, (
+                f"{rel.id}: equivalent {eq!r} uses undeclared prefix {prefix!r}"
+            )
+
+
+def test_memory_relations_never_leak_into_kg_predicates():
+    """The KG-extraction predicate list and the memory-relation vocabulary are
+    disjoint by design: memory plain words must never surface in the
+    structured-output enum fed to extractors."""
+    reg = load_semantics_registry()
+    assert not (reg.predicate_ids() & reg.memory_relation_ids())
+
+
+def test_memory_relations_carry_direction_roles():
+    """Every memory relation declares subject_role/object_role — the
+    machine-readable direction carrier (2026-07-12) that writers with
+    caller-asserted endpoints (memory's disposal confirm_relation) validate
+    against, instead of hardcoding a second copy of the semantics."""
+    reg = load_semantics_registry()
+    for rel in reg.memory_relations:
+        assert rel.subject_role and rel.subject_role.strip(), f"{rel.id}: missing subject_role"
+        assert rel.object_role and rel.object_role.strip(), f"{rel.id}: missing object_role"
+
+
+def test_equivalent_overlap_with_kg_predicates_is_the_declared_set():
+    """Some memory-relation `equivalent` CURIEs legitimately coincide with ids
+    in the KG predicate list (export-only metadata; memory validation refuses
+    CURIE-spelled edges, so no at-rest collision can arise). The overlap is
+    DECLARED — a new instance must be a decision, never drift."""
+    reg = load_semantics_registry()
+    equivalents = {eq for rel in reg.memory_relations for eq in rel.equivalent}
+    assert equivalents & reg.predicate_ids() == {
+        "schema:mentions",
+        "schema:previousItem",
+        "cito:supports",
+        "dcterms:isPartOf",
+    }
+
+
+# --- loader robustness (production-readiness wave, 2026-07-13) ---------------
+
+
+def test_loader_names_the_file_on_yaml_syntax_error(tmp_path):
+    """A hand-editing operator's first typo must produce an error naming the
+    FILE — bare PyYAML reports '<unicode string>', which names nothing."""
+    import pytest
+
+    bad = tmp_path / "broken.yaml"
+    bad.write_text("predicates:\n\t- id: x\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="broken.yaml"):
+        load_semantics_registry(bad)
+
+
+def test_loader_enforces_memory_relation_invariants(tmp_path):
+    """memory_relations feed append-only journal writers (declaration IS
+    permission) — structural typos in a custom/override registry must fail
+    LOUD at load, never engrave. Predicates/entity_types keep item-skip
+    leniency (they feed enums and fail soft); this section does not."""
+    import pytest
+
+    base = (
+        "version: 1\n"
+        "predicates:\n"
+        '  - id: "dcterms:title"\n'
+        "entity_types:\n"
+        '  - id: "schema:Thing"\n'
+    )
+
+    curie = tmp_path / "curie.yaml"
+    curie.write_text(
+        base + 'memory_relations:\n  - id: "prov:used"\n    subject_role: a\n    object_role: b\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="plain word"):
+        load_semantics_registry(curie)
+
+    collide = tmp_path / "collide.yaml"
+    collide.write_text(
+        base + 'memory_relations:\n  - id: "title"\n    subject_role: a\n    object_role: b\n'.replace(
+            '"title"', '"dcterms:title"'
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError):
+        load_semantics_registry(collide)
+
+    no_roles = tmp_path / "noroles.yaml"
+    no_roles.write_text(base + 'memory_relations:\n  - id: "summarizes"\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="subject_role and object_role"):
+        load_semantics_registry(no_roles)
+
+
+# --- loader diagnostics batch (backlog 0003, 2026-07-20) ----------------------
+# Four "silent degradation an operator would want a sound for" classes. Valid
+# files keep byte-identical behavior (no new warnings on the shipped registry —
+# pinned by test_shipped_registry_loads_clean below).
+
+_BASE = (
+    "version: 1\n"
+    "predicates:\n"
+    '  - id: "dcterms:title"\n'
+    "entity_types:\n"
+    '  - id: "schema:Thing"\n'
+)
+
+
+def test_duplicate_top_level_key_refuses_loudly(tmp_path):
+    """Item 1: PyYAML last-wins on duplicate keys — a stray pasted second
+    `predicates:` block could replace the whole vocabulary silently. The
+    strict loader refuses, naming the file and the line."""
+    import pytest
+
+    dup = tmp_path / "dup.yaml"
+    dup.write_text(
+        _BASE + 'predicates:\n  - id: "schema:name"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="duplicate mapping key"):
+        load_semantics_registry(dup)
+    with pytest.raises(ValueError, match="dup.yaml"):
+        load_semantics_registry(dup)
+
+
+def test_malformed_items_warn_once_per_section_and_load_succeeds(tmp_path):
+    """Item 2: a wrong-indent typo that turns an item into a non-dict used to
+    vanish silently (first symptom: a distant extractor enum). One warning
+    per section naming path + count; the load still succeeds (leniency is
+    deliberate — these sections feed enums and fail soft)."""
+    import pytest
+
+    f = tmp_path / "skips.yaml"
+    f.write_text(
+        "version: 1\n"
+        "predicates:\n"
+        '  - id: "dcterms:title"\n'
+        "  - just-a-string\n"
+        '  - {label: "no id"}\n'
+        "entity_types:\n"
+        '  - id: "schema:Thing"\n',
+        encoding="utf-8",
+    )
+    with pytest.warns(UserWarning, match=r"skipped 2 malformed item\(s\) in 'predicates'"):
+        reg = load_semantics_registry(f)
+    assert reg.predicate_ids() == {"dcterms:title"}
+
+
+def test_unparseable_version_warns_and_reads_zero(tmp_path):
+    """Item 3: `version: "abc"` used to coerce to 0 silently, conflating
+    absent with corrupt. Corruption now gets a sound; absent stays quiet."""
+    import pytest
+    import warnings as _w
+
+    bad = tmp_path / "vbad.yaml"
+    bad.write_text(_BASE.replace("version: 1", 'version: "abc"'), encoding="utf-8")
+    with pytest.warns(UserWarning, match="unparseable version"):
+        reg = load_semantics_registry(bad)
+    assert reg.version == 0
+
+    absent = tmp_path / "vnone.yaml"
+    absent.write_text(_BASE.replace("version: 1\n", ""), encoding="utf-8")
+    with _w.catch_warnings():
+        _w.simplefilter("error")  # absent version must NOT warn
+        reg2 = load_semantics_registry(absent)
+    assert reg2.version == 0
+
+
+def test_duplicate_ids_within_section_keep_first_and_warn(tmp_path):
+    """Item 4: duplicate ids in one section were both kept — set consumers
+    safe, iterating consumers (enums, dropdowns) saw both and label-wins was
+    consumer-dependent. Keep-first + one warning makes it deterministic."""
+    import pytest
+
+    f = tmp_path / "dupid.yaml"
+    f.write_text(
+        "version: 1\n"
+        "predicates:\n"
+        '  - id: "dcterms:title"\n'
+        '    label: "first wins"\n'
+        '  - id: "dcterms:title"\n'
+        '    label: "second loses"\n'
+        "entity_types:\n"
+        '  - id: "schema:Thing"\n',
+        encoding="utf-8",
+    )
+    with pytest.warns(UserWarning, match=r"duplicate id\(s\) in 'predicates'"):
+        reg = load_semantics_registry(f)
+    kept = [pdef for pdef in reg.predicates if pdef.id == "dcterms:title"]
+    assert len(kept) == 1
+    assert kept[0].label == "first wins"
+
+
+def test_duplicate_memory_relation_ids_are_fatal(tmp_path):
+    """Item 4, memory_relations divergence: this section is load-fatal by
+    doctrine — keep-first would silently pick which of two conflicting role
+    declarations is authoritative, and a broken SECOND copy would demote a
+    hard failure to a warning (adversarial finding 2). Duplicates refuse."""
+    import pytest
+
+    f = tmp_path / "duprel.yaml"
+    f.write_text(
+        _BASE
+        + "memory_relations:\n"
+        '  - id: "summarizes"\n'
+        "    subject_role: summary\n"
+        "    object_role: source\n"
+        '  - id: "summarizes"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="duplicate memory relation id"):
+        load_semantics_registry(f)
+
+
+def test_merge_keys_still_load(tmp_path):
+    """Regression pin (adversarial finding 1): YAML merge keys (`<<:`) are
+    valid SafeLoader YAML the strict dup scan must not refuse — the merge-tag
+    key node has no SafeConstructor and is flattened later by
+    construct_mapping, so the scan skips it."""
+    f = tmp_path / "merge.yaml"
+    f.write_text(
+        "version: 1\n"
+        "_shared: &common\n"
+        '  label: "shared label"\n'
+        "predicates:\n"
+        '  - id: "dcterms:title"\n'
+        "    <<: *common\n"
+        "entity_types:\n"
+        '  - id: "schema:Thing"\n',
+        encoding="utf-8",
+    )
+    reg = load_semantics_registry(f)
+    assert [(pd.id, pd.label) for pd in reg.predicates] == [("dcterms:title", "shared label")]
+
+
+def test_explicit_null_version_is_absent_shaped(tmp_path):
+    """A bare `version:` (explicit null) is a common hand-edit intermediate —
+    absent-shaped, quiet, reads 0 (adversarial finding 5)."""
+    import warnings as _w
+
+    f = tmp_path / "vnull.yaml"
+    f.write_text(_BASE.replace("version: 1", "version:"), encoding="utf-8")
+    with _w.catch_warnings():
+        _w.simplefilter("error")
+        reg = load_semantics_registry(f)
+    assert reg.version == 0
+
+
+def test_shipped_registry_loads_clean():
+    """No-behavior-change-for-valid-files, made checkable: the shipped
+    registry must load with ZERO warnings under the new diagnostics."""
+    import warnings as _w
+
+    with _w.catch_warnings():
+        _w.simplefilter("error")
+        reg = load_semantics_registry()
+    assert reg.version >= 2
 ```
 ---
 
@@ -1485,8 +2653,11 @@ from __future__ import annotations
 
 from abstractsemantics import (
     KG_ASSERTION_SCHEMA_REF_V0,
+    KG_PREDICATE_ALIAS_MAP_V0,
+    KG_PREDICATE_ALIASES_V0,
     build_kg_assertion_schema_v0,
     load_semantics_registry,
+    normalize_kg_predicate,
     resolve_schema_ref,
 )
 
@@ -1519,6 +2690,112 @@ def test_resolve_schema_ref_returns_concrete_schema() -> None:
     assert isinstance(resolved, dict)
     assert resolved.get("type") == "object"
     assert "assertions" in resolved.get("properties", {})
+
+
+# --- alias -> canonical normalization (backlog 0002) -------------------------
+
+
+def test_alias_map_range_is_canonical_registry_ids_only() -> None:
+    """The map's RANGE must be canonical registry predicate ids — normalizing
+    to a non-registry string would just mint a third spelling."""
+    reg = load_semantics_registry()
+    ids = reg.predicate_ids()
+    for alias, canonical in KG_PREDICATE_ALIAS_MAP_V0.items():
+        assert canonical in ids, f"alias {alias!r} maps outside the registry: {canonical!r}"
+
+
+def test_alias_map_keys_are_never_registry_ids() -> None:
+    """An alias that IS a registry id would make normalization ambiguous
+    (pass-through vs mapping) — keys and registry ids stay disjoint."""
+    reg = load_semantics_registry()
+    ids = reg.predicate_ids()
+    for alias in KG_PREDICATE_ALIAS_MAP_V0:
+        assert alias not in ids, f"alias {alias!r} is itself a registry id"
+
+
+def test_alias_offer_set_is_derived_from_the_map() -> None:
+    """One source: the offered alias tuple derives from the map's keys — a
+    hand-maintained second copy is the drift class (derive-never-copy)."""
+    assert tuple(KG_PREDICATE_ALIAS_MAP_V0) == tuple(KG_PREDICATE_ALIASES_V0)
+
+
+def test_normalize_passes_canonical_ids_through() -> None:
+    reg = load_semantics_registry()
+    for pid in sorted(reg.predicate_ids()):
+        assert normalize_kg_predicate(pid, reg) == pid
+
+
+def test_normalize_maps_every_offered_alias() -> None:
+    """Round-trip promise: everything the alias-enabled enum can offer, the
+    boundary can normalize — no offered spelling is un-normalizable."""
+    reg = load_semantics_registry()
+    schema = build_kg_assertion_schema_v0(registry=reg, include_predicate_aliases=True)
+    pred_enum = schema["properties"]["assertions"]["items"]["properties"]["predicate"]["enum"]
+    for offered in pred_enum:
+        normalized = normalize_kg_predicate(offered, reg)
+        assert normalized is not None, f"offered spelling {offered!r} cannot be normalized"
+        assert normalized in reg.predicate_ids()
+
+
+def test_normalize_returns_none_for_unknown_never_guesses() -> None:
+    reg = load_semantics_registry()
+    for unknown in ("schema:hasParent", "schema:hasMemorySource", "made:up", "", "   ", None, 42):
+        assert normalize_kg_predicate(unknown, reg) is None
+
+
+def test_offer_side_filters_aliases_whose_canonical_is_absent(tmp_path) -> None:
+    """Custom registries may lack an alias's canonical target — offering a
+    spelling the boundary cannot normalize invites un-normalizable data, so
+    the enum offers only aliases whose canonical exists in THIS registry
+    (the offer-side twin of normalize's accept-side guard)."""
+    custom = tmp_path / "custom.yaml"
+    custom.write_text(
+        "version: 1\n"
+        "predicates:\n"
+        '  - id: "dcterms:creator"\n'
+        "entity_types:\n"
+        '  - id: "schema:Thing"\n',
+        encoding="utf-8",
+    )
+    reg = load_semantics_registry(custom)
+    schema = build_kg_assertion_schema_v0(registry=reg, include_predicate_aliases=True)
+    enum = schema["properties"]["assertions"]["items"]["properties"]["predicate"]["enum"]
+    assert "schema:creator" in enum  # canonical dcterms:creator present
+    assert "schema:hasPart" not in enum  # canonical dcterms:hasPart absent
+    for offered in enum:
+        assert normalize_kg_predicate(offered, reg) is not None
+
+
+def test_negative_bounds_are_rejected() -> None:
+    """A negative cap silently becoming 'no cap' is the dangerous coercion
+    direction; negative maxLength is invalid JSON Schema."""
+    import pytest
+
+    with pytest.raises(ValueError):
+        build_kg_assertion_schema_v0(max_assertions=-1)
+    with pytest.raises(ValueError):
+        build_kg_assertion_schema_v0(max_evidence_quote_len=-7)
+
+
+def test_alias_map_stays_disjoint_from_memory_relations() -> None:
+    """Memory-relation plain words must never enter the KG alias vocabulary
+    (semantics.yaml: memory words never surface in the KG enum) — a future
+    map entry like "summarizes": "dcterms:abstract" would pass the range
+    check while leaking the vocabulary; this pin makes it a decision, not
+    drift. Belt: every memory word returns None from the normalizer."""
+    reg = load_semantics_registry()
+    assert set(KG_PREDICATE_ALIAS_MAP_V0) & reg.memory_relation_ids() == set()
+    for word in sorted(reg.memory_relation_ids()):
+        assert normalize_kg_predicate(word, reg) is None
+
+
+def test_indeterminate_aliases_are_not_offered() -> None:
+    """Aliases without a determinate canonical mapping were deliberately
+    removed from the offer set (offering what the boundary cannot normalize
+    invites un-normalizable data at rest)."""
+    for dropped in ("schema:hasParent", "schema:hasMember", "schema:recognizedAs", "schema:hasMemorySource"):
+        assert dropped not in KG_PREDICATE_ALIASES_V0
+        assert dropped not in KG_PREDICATE_ALIAS_MAP_V0
 ```
 ---
 
@@ -1527,6 +2804,119 @@ def test_resolve_schema_ref_returns_concrete_schema() -> None:
 # Changelog
 
 All notable changes to this package are documented in this file.
+
+## [0.0.5] - 2026-08-06
+
+### Added
+
+- **`memory_relations` registry section.** A third vocabulary alongside
+  `predicates` and `entity_types`, describing the edge relations used by
+  AbstractMemory's typed memory records: `summarizes`, `mentions`,
+  `written_amid`, `from_session`, `reflected_in`, `continues`,
+  `derived_from`, `refines`, `answers`, `supports`, and `part_of`. Ids are
+  plain words, which are the canonical spelling at rest. Each entry carries
+  an optional `equivalent` list of standard-ontology CURIEs for export and
+  interop, and `subject_role`/`object_role` naming each endpoint so writers
+  can validate edge direction from the registry instead of duplicating the
+  semantics.
+- **New public API**: `MemoryRelationDef`, the `SemanticsRegistry.memory_relations`
+  field, `SemanticsRegistry.memory_relation_ids()`,
+  `SemanticsRegistry.memory_record_predicate_ids()` (declared relations plus
+  the digest predicate — the validation set for memory-record writes), and
+  the `MEMORY_DIGEST_PREDICATE` constant (`"dcterms:abstract"`).
+- **`normalize_kg_predicate()` and `KG_PREDICATE_ALIAS_MAP_V0`.** Call
+  `normalize_kg_predicate()` at your ingestion boundary to map an
+  extractor-emitted predicate to its canonical registry id. Canonical ids
+  pass through, known aliases map to canonical, and anything else returns
+  `None` so you can refuse or label it — nothing is coerced to a guessed
+  meaning. Both are exported at package top level.
+- **`prov` prefix** (PROV-O), used by `equivalent` metadata.
+- **`py.typed` marker.** The package is fully annotated and its types are now
+  visible to type checkers in consumer projects.
+
+### Changed
+
+- Registry `version` is now `2`.
+- `KG_PREDICATE_ALIASES_V0` is derived from `KG_PREDICATE_ALIAS_MAP_V0` and
+  now offers only aliases with a single determinate canonical target.
+  `schema:hasParent`, `schema:hasMember`, `schema:recognizedAs`, and
+  `schema:hasMemorySource` are no longer offered. This affects you only if
+  you build schemas with `include_predicate_aliases=True` and rely on those
+  four spellings being accepted; use a canonical predicate id instead.
+- `build_kg_assertion_schema_v0(include_predicate_aliases=True)` offers an
+  alias only when its canonical target exists in the registry you passed, so
+  custom registries are never offered a spelling the boundary would reject.
+- Loader errors name the registry file, including YAML syntax errors.
+- `build_kg_assertion_schema_v0()` raises `ValueError` for negative bounds
+  rather than treating them as unbounded.
+- `ABSTRACTSEMANTICS_REGISTRY_PATH` pointing at a directory raises a message
+  that says so.
+
+### Registry validation
+
+`predicates` and `entity_types` remain lenient — malformed items are skipped
+and the load succeeds — because they feed structured-output enums. Problems
+that used to pass silently now report:
+
+- Duplicate YAML mapping keys fail the load. A stray second `predicates:`
+  block previously replaced the whole vocabulary without a warning.
+- Malformed items emit one warning per section, naming the file and the
+  number skipped.
+- An unparseable `version` warns and reads as `0`. An absent or explicitly
+  null `version` stays quiet.
+- Duplicate ids in `predicates`/`entity_types` warn and keep the first
+  occurrence, so every consumer resolves the same winner.
+
+`memory_relations` is validated strictly, because a declared relation
+immediately joins `memory_record_predicate_ids()` and its consumer writes to
+append-only journals. The load fails when a relation id contains a CURIE
+prefix, collides with a KG predicate id, omits `subject_role` or
+`object_role`, or is declared twice.
+
+A valid registry loads with no warnings.
+
+### Compatibility
+
+- `memory_relations` is disjoint from `predicates`. The `predicates` list
+  feeds the KG-extraction structured-output enum; memory-record plain words
+  never appear there.
+- Relation ids are additive: they are never renamed or removed, because
+  append-only journals record them permanently.
+- Some `equivalent` CURIEs (`schema:mentions`, `schema:previousItem`,
+  `cito:supports`, `dcterms:isPartOf`) also exist as `predicates` ids. This
+  is intentional and safe: memory-record validation accepts only plain-word
+  ids, and `equivalent` is export metadata.
+- `equivalent` mappings are many-to-one and lossy — several plain words can
+  share one broader CURIE — so they must not be used to import back to plain
+  words.
+- Registry version `1` was never published. Version `0.0.4` served registry
+  version `0`, so upgrading from `0.0.4` moves the registry from `0` to `2`.
+
+## [0.0.4] - 2026-05-08
+
+### Added
+
+- Added GitHub Actions CI for Python 3.10 through 3.12 with pytest and package
+  build checks.
+- Added a trusted-publishing release workflow for tagged or manually dispatched
+  releases, including version/changelog validation, distribution artifacts,
+  PyPI publication, and GitHub Release creation.
+- Added an AbstractSemantics GitHub bug report template.
+- Added a `test` optional dependency extra for CI and release validation.
+
+## 0.0.3 - 2026-05-08
+
+### Added
+
+- Added install-profile compatibility extras:
+  `abstractsemantics[apple]`, `abstractsemantics[gpu]`,
+  `abstractsemantics[all-apple]`, and `abstractsemantics[all-gpu]`.
+
+### Notes
+
+- These extras are intentionally no-op aliases. Semantics has no hardware
+  runtime dependencies, but exposing the shared profile names keeps
+  higher-level aggregate installs composable.
 
 ## 0.0.2 - 2026-02-04
 
@@ -1614,6 +3004,50 @@ python scripts/generate_llms_full.py
 
 ---
 
+## CODE_OF_CONDUCT.md
+
+# Code of Conduct
+
+## Our pledge
+
+We want participation in `abstractsemantics` to be a welcoming, harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
+
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
+
+## Our standards
+
+Examples of behavior that contributes to a positive environment:
+
+- Showing empathy and kindness toward other people
+- Being respectful of differing opinions, viewpoints, and experiences
+- Giving and gracefully accepting constructive feedback
+- Accepting responsibility, apologizing to those affected by our mistakes, and learning from the experience
+- Focusing on what is best for the community and for the people who depend on this package
+
+Examples of unacceptable behavior:
+
+- Sexualized language or imagery, and sexual attention or advances of any kind
+- Trolling, insulting or derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information, such as a physical or email address, without their explicit permission
+- Other conduct which could reasonably be considered inappropriate in a professional setting
+
+## Scope
+
+This Code of Conduct applies within all project spaces — the repository, issues, pull requests, and discussions — and also applies when an individual is officially representing the project in public spaces.
+
+## Enforcement
+
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainer through the repository's issue tracker, or privately using the channels described in [SECURITY.md](SECURITY.md) when the report contains sensitive details.
+
+All complaints will be reviewed and investigated promptly and fairly. The maintainer is obligated to respect the privacy and security of the reporter of any incident, and will take appropriate corrective action in response to behavior deemed in violation of this Code of Conduct — from a private warning through to a temporary or permanent ban from project spaces.
+
+## Attribution
+
+This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org/), version 2.1, available at https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
+
+---
+
 ## SECURITY.md
 
 # Security Policy
@@ -1654,7 +3088,7 @@ Security fixes are provided for the latest released version in the `0.x` series.
 
 ---
 
-## ACKNOWLEDMENTS.md
+## ACKNOWLEDGMENTS.md
 
 # Acknowledgments
 

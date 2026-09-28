@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Automations — recurring agent tasks | AbstractFramework</title>
+  <meta name="description" content="AbstractFramework automations run a workflow or the gateway's default agent on a fixed interval or on request, keep every run as a readable conversation, and notify you only when something needs you.">
+  <link rel="canonical" href="https://abstractframework.ai/automations.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Automations — recurring agent tasks">
+  <meta property="og:description" content="Run an agent every 5 minutes or every 7 days, read each run as a chat turn, and hear about it only when it needs you.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html" aria-current="page">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
+
+<div class="pkg-nav" aria-label="Packages and apps">
+  <div class="pkg-nav-inner">
+    <a href="core.html" class="pkg-nav-link">Core</a>
+    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
+    <a href="agent.html" class="pkg-nav-link">Agent</a>
+    <a href="flow.html" class="pkg-nav-link">Flow</a>
+    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link active" aria-current="page">Automations</a>
+    <a href="code.html" class="pkg-nav-link">Code</a>
+    <a href="observer.html" class="pkg-nav-link">Observer</a>
+    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
+    <a href="voice.html" class="pkg-nav-link">Voice</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
+    <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="memory.html" class="pkg-nav-link">Memory</a>
+    <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+  </div>
+</div>
+<main id="main">
+
+<section class="hero" style="min-height:auto;padding:8rem 0 3.5rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Feature &middot; since AbstractGateway 0.6.0 (framework 0.5.0)</div>
+    <h1><span class="gradient">Automations</span></h1>
+    <p class="hero-sub">An automation runs a workflow again and again on a trigger: "search every 5 minutes for the trade value of a share", "check this computer's memory every 2 minutes", "run this report when I ask". The gateway runs it, keeps every run as a readable conversation, and tells you only when something needs you.</p>
+    <div class="hero-actions">
+      <a href="#create" class="btn btn-primary">Create one</a>
+      <a href="start-automation.html" class="btn btn-secondary">First-hour journey</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/automations.md" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Automations guide</a>
+    </div>
+  </div>
+</section>
+
+<section id="see" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="showcase-grid reveal">
+      <div class="showcase-img">
+        <img src="assets/img/shots/observer-automations.webp" alt="The Observer's Automations page: a list of automations with their interval, state and last result, and one automation opened with its definition, controls, attention items and runs shown as chat turns" loading="lazy" width="1600" height="1000">
+      </div>
+      <div class="showcase-content">
+        <h3>Where you use them</h3>
+        <p>Create and manage automations from the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a>, the <a href="observer.html" style="color:var(--accent-light)">Observer</a> or <a href="code.html" style="color:var(--accent-light)">AbstractCode</a> (terminal and browser). Every gateway client can read their results.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong><a href="assistant.html" style="color:var(--accent-light)">Assistant</a></strong>: <em>Schedule this conversation…</em>, the Automations tab of the session switcher, tray notifications</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Observer</strong>: <em>Launch &rarr; Automate</em> and the Automations page, with each run's ledger one click away</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>AbstractCode</strong>: <code>/schedule</code> and <code>/automations</code> in the terminal, the Automations section in the browser</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>Flow</strong>: automation defaults on a workflow, carried to the gateway when you publish it</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MODEL ═══════════════════ -->
+<section id="model">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">How they work</div>
+      <h2 class="section-title">A durable run that asks only when it must</h2>
+      <p class="section-desc">Terms such as run, ledger and occurrence are defined in the <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">glossary</a>.</p>
+    </div>
+    <div class="components-grid">
+      <div class="comp-card reveal"><div class="comp-card-header"><span class="comp-tag foundation">Durable</span></div><h3>An automation is a durable run</h3><p>A controller run waits for the trigger, starts one run of your workflow, records the outcome and waits again. It survives restarts like any other run, and the next tick fires on the same grid.</p></div>
+      <div class="comp-card reveal"><div class="comp-card-header"><span class="comp-tag foundation">Readable</span></div><h3>Each tick is a chat turn</h3><p>Every firing starts an <em>occurrence</em>: your prompt, prefixed with one line naming the trigger, and the workflow's answer. Clients show each one as a question and answer pair.</p></div>
+      <div class="comp-card reveal"><div class="comp-card-header"><span class="comp-tag composition">Context</span></div><h3>Independent or growing</h3><p><strong>Independent</strong> (default): every tick starts fresh. <strong>Growing</strong>: every tick is the next turn of one conversation and sees the previous turns, the newest whole turns up to 50,000 tokens. No message is ever cut.</p></div>
+      <div class="comp-card reveal"><div class="comp-card-header"><span class="comp-tag app">Quiet</span></div><h3>Quiet by default</h3><p>An ordinary result updates the history and notifies no one. You hear about a run when its output carries <code>notify</code>, when it failed after its last retry, or while it waits for you.</p></div>
+      <div class="comp-card reveal"><div class="comp-card-header"><span class="comp-tag memory">Consent</span></div><h3>Creating it approves its tools</h3><p>An automation runs unattended, so by default the framework's tools run without asking: creating it is the consent. Choose <strong>Ask each time</strong> to approve every tool batch. Questions the workflow asks always wait for you.</p></div>
+      <div class="comp-card reveal"><div class="comp-card-header"><span class="comp-tag modality">Discuss</span></div><h3>Discuss a result</h3><p><strong>Discuss</strong> on a finished run forks a new conversation with the automation's whole history up to that run. It works in its own workspace, with the automation's folder mounted read-only.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CREATE ═══════════════════ -->
+<section id="create" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Create</div>
+      <h2 class="section-title">Four choices, from any client</h2>
+      <p class="section-desc">What to run, when (UTC), which context, and how tools are approved. Every client ends in the same request, <code>POST /api/gateway/automations</code>.</p>
+    </div>
+    <div class="install-wrap reveal">
+      <div class="code-tabs">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="a-observer">Observer</button>
+          <button class="tab-btn" data-tab="a-assistant">Assistant</button>
+          <button class="tab-btn" data-tab="a-code">AbstractCode</button>
+          <button class="tab-btn" data-tab="a-api">HTTP API</button>
+        </div>
+        <div class="tab-panel active" id="tab-a-observer">
+          <div class="install-notes"><ul>
+            <li>Open <strong>Launch</strong> and switch <strong>Run once | Automate</strong> to <strong>Automate</strong>.</li>
+            <li><strong>What</strong>: a published workflow and its inputs, or <strong>Gateway default</strong>, the gateway's default agent.</li>
+            <li><strong>When (UTC)</strong>: repeat every N minutes, hours or days, or once at a date and time. <strong>Context</strong>: Independent or Growing. <strong>Tools</strong>: run without asking, or ask each time.</li>
+            <li><strong>Advanced</strong> holds the title, the first run time, "stop after this many runs", "stop at", skills and the workspace. <strong>Create automation</strong> opens it on the Automations page.</li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-a-assistant">
+          <div class="install-notes"><ul>
+            <li>The clock button in the palette header opens <strong>Schedule this conversation…</strong>, prefilled with the conversation's workflow and its last question.</li>
+            <li>When: every 5 minutes, 30 minutes, hour, 8 hours, 24 hours or 7 days, every N minutes/hours/days, or once at a date and time.</li>
+            <li><strong>Schedule</strong> creates it and opens it in the switcher's Automations tab. Notifications arrive in the menu bar.</li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-a-code">
+          <div class="code-block"><pre><code><span class="line-cmt"># in the AbstractCode terminal client</span>
+/schedule Summarise new issues in this repository since the previous run
+/automations</code></pre></div>
+          <div class="install-notes"><ul>
+            <li><code>/schedule [task]</code> walks through four steps: the task, when (UTC), context and tools. <code>/automations</code> lists them and opens one: runs as chat pairs, waits that need you, the folder and the controls.</li>
+            <li>In the browser client, select <strong>+</strong> in the sidebar's <strong>Automations</strong> section.</li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-a-api">
+          <div class="code-block"><pre><code>POST /api/gateway/automations
+{
+  "request_id": "5f0c2e9a41b84d6f9a1e07c3d2b8a6f1",
+  "title": "AAPL price every 5 minutes",
+  "target": {
+    "flow_id": "@default",
+    "interface": "abstractcode.agent.v1",
+    "input_data": {"prompt": "Search the web for the current trade value of the Apple (AAPL) share and report the price, the change since the previous check if you know it, and the source URL."}
+  },
+  "trigger": {"source_id": "schedule", "source_version": 1, "config": {"every": "5m"}},
+  "context": {"mode": "growing"},
+  "policy": {"tool_approval": "auto"}
+}</code></pre></div>
+          <div class="install-notes"><ul>
+            <li><code>every</code> is a whole number followed by <code>s</code>, <code>m</code>, <code>h</code> or <code>d</code>, at most <code>366d</code>. The same <code>request_id</code> again returns the same automation, so retries are safe.</li>
+            <li>API reference: <a href="https://github.com/lpalbou/AbstractGateway/blob/main/docs/automations.md" target="_blank" rel="noopener noreferrer">AbstractGateway: Automations API</a>.</li>
+          </ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MANAGE ═══════════════════ -->
+<section id="manage">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Manage</div>
+      <h2 class="section-title">Every control, recorded once</h2>
+      <p class="section-desc">Each control is a durable command: sending the same command again is answered as a duplicate, never applied twice. Every client (<a href="observer.html" style="color:var(--accent-light)">Observer</a>, <a href="assistant.html" style="color:var(--accent-light)">Assistant</a>, <a href="code.html" style="color:var(--accent-light)">AbstractCode</a> terminal and web) draws Run now with the same play-in-a-circle icon and explains each control with the same hint.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Control</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Pause</strong> / <strong>Resume</strong></td><td>No scheduled run until you resume. Resume continues from the next tick; it never catches up the time spent paused.</td></tr>
+          <tr><td><strong>Run now</strong></td><td>One run at once, instead of waiting. <strong>The schedule does not move</strong>: the next scheduled run keeps its time (or starts right after this run if its time comes first). It does not count toward a run limit, and it works while paused, which stays paused. Not available while a run is in progress; there is no queue.</td></tr>
+          <tr><td><strong>Edit</strong></td><td>Title, interval and context in the apps (the workflow, inputs and policy through the API). Creates the next revision, used from the next run.</td></tr>
+          <tr><td><strong>Stop current</strong></td><td>Cancels the run in progress, quietly.</td></tr>
+          <tr><td><strong>Archive</strong></td><td>No further runs; the history is kept and stays readable, and Discuss still works.</td></tr>
+          <tr><td><strong>Discuss</strong></td><td>A new conversation forked at a run, with its own writable workspace and the automation's folder mounted read-only.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="showcase-grid reverse reveal" style="margin-top:3rem">
+      <div class="showcase-content">
+        <h3>In the menu bar: AbstractAssistant</h3>
+        <p>The <a href="assistant.html" style="color:var(--accent-light)">Assistant</a>&rsquo;s session switcher has two tabs, <strong>Sessions</strong> and <strong>Automations</strong>. Each automation shows its cadence, its state in words, the next run, the last result and what needs you ("waiting for you", "NEW"). Opening one shows its runs as chat pairs, and runs waiting for you can be answered in place.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Tray notifications for <code>notify</code> results, final failures and waiting runs, shown once</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>The workspace folder of each automation opens from its row</span></li>
+        </ul>
+        <div class="comp-links" style="margin-top:1rem"><a class="comp-link" href="assistant.html">AbstractAssistant &rarr;</a></div>
+      </div>
+      <div class="showcase-img" style="max-width:520px;justify-self:center">
+        <img src="assets/img/shots/assistant-switcher.webp" alt="The Assistant's session switcher on the Automations tab: four automations with their interval, next run, state (Active or Paused) and one marked waiting for you" loading="lazy" width="520" height="412">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ LIMITS ═══════════════════ -->
+<section id="limits" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Good to know</div>
+      <h2 class="section-title">Limits, stated plainly</h2>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left"><h3>Fixed UTC intervals</h3><p>"Every 24 hours" means 24 hours after the previous tick, not "daily at 08:00". There is no cron expression, time of day or time zone. Triggers are <code>schedule@1</code> and <code>manual@1</code> (Run now only).</p></div>
+      <div class="mode-card" style="text-align:left"><h3>One run at a time</h3><p>When a tick takes longer than the interval, the ticks that came due are coalesced into one run. Pick an interval longer than a typical tick, or a provider that serves requests in parallel.</p></div>
+      <div class="mode-card" style="text-align:left"><h3>Retries repeat the work</h3><p>Each tick runs exactly once inside the gateway, but a retried run executes your workflow again: a workflow that sends an email may send it again on a retry. Third-party MCP tools still ask on every call.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="container">
+    <div class="section-header reveal"><div class="section-label">Where to next</div><h2 class="section-title">Keep going</h2></div>
+    <div class="next-links reveal">
+      <a class="next-link" href="start-automation.html"><strong>Automation owner journey</strong><span>Your first automation in an hour, with three to try.</span></a>
+      <a class="next-link" href="observer.html"><strong>AbstractObserver</strong><span>The Automations page and each run's ledger.</span></a>
+      <a class="next-link" href="assistant.html"><strong>AbstractAssistant</strong><span>Schedule a conversation from the menu bar.</span></a>
+      <a class="next-link" href="code.html"><strong>AbstractCode</strong><span><code>/schedule</code> and <code>/automations</code> in the terminal.</span></a>
+      <a class="next-link" href="runtime.html"><strong>AbstractRuntime</strong><span>The durable controller behind every automation.</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
+    </div>
+    <div class="footer-col">
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
+  </div>
+</footer>
+<script src="assets/js/main.js?v=4"></script>
+</body>
+</html>

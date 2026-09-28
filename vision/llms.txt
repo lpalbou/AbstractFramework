@@ -1,12 +1,12 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractvision/main/llms.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractVision/main/llms.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractvision/main/llms.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractVision/main/llms.txt
 
 # AbstractVision
 
-> Model-agnostic generative vision API (images, optional video) with a capability registry, artifact-ref outputs, and backends for OpenAI-compatible HTTP, Diffusers, stable-diffusion.cpp, and MLX-Gen.
+> Model-agnostic generative vision API (images, optional video) with packaged model/adapter capability registries, artifact-ref outputs, and backends for OpenAI-compatible HTTP, Diffusers, stable-diffusion.cpp, and MLX-Gen.
 
 This repository’s current source of truth is the code under `src/abstractvision/` (docs in `docs/`).
 
@@ -17,24 +17,27 @@ Maintenance tips:
 - Regenerate `llms-full.txt` after doc/packaging changes: `python scripts/generate_llms_full.py`.
 
 Agent quickstart (choose the path that matches your goal):
-- **Use the library (Python / CLI)**: start with `README.md` → `docs/getting-started.md` → `docs/api.md` → `docs/reference/backends.md`; shell commands are `abstractvision t2i` / `abstractvision i2i` / `abstractvision t2v` / `abstractvision i2v`, and the interactive path is `abstractvision cli` (legacy alias `abstractvision repl`) with `/t2i` / `/i2i` / `/t2v` / `/i2v`.
+- **Use the library (Python / CLI)**: start with `README.md` → `docs/getting-started.md` → `docs/api.md` → `docs/reference/backends.md`; shell commands are `abstractvision t2i` / `abstractvision i2i` / `abstractvision upscale` / `abstractvision t2v` / `abstractvision i2v`, and the interactive path is `abstractvision cli` (legacy alias `abstractvision repl`) with `/t2i` / `/i2i` / `/t2v` / `/i2v`.
 - **Integrate with AbstractCore/Runtime**: read `docs/reference/abstractcore-integration.md` and `docs/reference/artifacts.md` (includes local model residency control for in-process backends).
 - **Inspect provider model catalogs**: use `abstractvision provider-models`, `VisionManager.list_provider_models(...)`, or `llm.vision.list_provider_models(...)`; catalog listing is explicit and does not select the active model.
 - **Inspect local model/task metadata**: use `abstractvision catalog`, `abstractvision show-model`, or `GET /v1/vision/models`; runtime-backed local surfaces only expose tasks that the selected backend currently enables.
-- **Need the model curation policy**: read `docs/reference/capabilities-registry.md`, `docs/adr/0005_curated_capability_registry_and_download_catalog.md`, and `docs/adr/0006_operator_control_configuration_precedence_and_explicit_network_use.md`.
+- **Need the model/adapter curation policy**: read `docs/reference/capabilities-registry.md`, `docs/adr/0005_curated_capability_registry_and_download_catalog.md`, and `docs/adr/0006_operator_control_configuration_precedence_and_explicit_network_use.md`.
 - **Need a single file**: open `llms-full.txt` (generated bundle of the core docs).
 - **Need local Diffusers**: install `abstractvision[diffusers]`, set `ABSTRACTVISION_BACKEND=diffusers`, pre-download `runwayml/stable-diffusion-v1-5`, or set `ABSTRACTVISION_DIFFUSERS_ALLOW_DOWNLOAD=1`.
-- **Need local MLX-Gen**: install `abstractvision[mlx-gen]`, choose exact published model ids such as `AbstractFramework/qwen-image-2512-4bit` for `t2i`, `AbstractFramework/qwen-image-edit-2511-4bit` or `briaai/Fibo-Edit` for `i2i`, and `Wan-AI/Wan2.2-TI2V-5B-Diffusers` for `t2v`/`i2v`; pre-download with `abstractvision download ... --provider mlx-gen`.
+- **Need local MLX-Gen**: install `abstractvision[mlx-gen]`. This release is validated on Apple Silicon first; the extra also installs on Linux when upstream `mlx-gen` / `mlx` markers are available. Choose exact published model ids such as `AbstractFramework/qwen-image-2512-4bit` for `t2i`, `AbstractFramework/qwen-image-edit-2511-4bit` or `briaai/Fibo-Edit` for `i2i`, `AbstractFramework/seedvr2-3b-8bit` / `AbstractFramework/seedvr2-7b-8bit` for SeedVR2 `upscale`, and `AbstractFramework/wan2.2-t2v-a14b-diffusers-8bit` / `AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit` for Wan A14B `t2v`/`i2v`; use typed `guidance_2` / CLI `--guidance-2` for the A14B second-stage guidance control, typed `control_image` / CLI `--control-image` for validated Qwen structured-control routes, and `mask` for validated Qwen/FIBO masked-edit routes; pre-download with `abstractvision download ... --provider mlx-gen`.
+- **Need LoRA adapters**: prefer the shared typed contract `lora_adapters=[LoRAAdapterSpec(...)]` in Python and repeated `--lora` / `--lora-scale` / `--lora-target-role` flags in the CLI. Use provider/model discovery to inspect `supports_lora`, `lora_status`, `lora_target_roles`, and `lora_validation_profile` before long runs.
 
 Reality checks (current shipped behavior, anchored in code):
-- Built-in backends implement `text_to_image`, `image_to_image`, and backend-dependent `text_to_video` / `image_to_video`.
-- Local MLX-Gen supports curated q4/q8 Apple Silicon image presets, official FIBO image snapshots, and Wan 2.2 TI2V `text_to_video` / first-frame `image_to_video`.
-- MLX-Gen Wan video progress is surfaced in shell/REPL output by default and through Python/Core `on_progress(event)` callbacks.
+- Built-in backends implement `text_to_image`, `image_to_image`, `image_upscale`, and backend-dependent `text_to_video` / `image_to_video`.
+- Local MLX-Gen supports curated q4/q8 image presets, official FIBO image snapshots, FLUX.2/Qwen multi-reference image edits, validated Qwen structured control and Qwen/FIBO masked edits, canonical SeedVR2 q8/q4 image upscaling packages, shared LoRA adapters, and Wan 2.2 TI2V plus task-specific Wan 2.2 A14B `text_to_video` / first-frame `image_to_video`.
+- Task-specific Wan A14B video declares typed `guidance_2` defaults in `vision_model_capabilities.json` (`3.0` for T2V, `3.5` for I2V); it is not transported through backend `extra`.
+- MLX-Gen progress is surfaced through Python/Core `on_progress(event)` callbacks, opt-in one-shot image generation/edit CLI `--progress`, and denoise-step video/upscale progress by default.
 - Local Diffusers `text_to_video` remains experimental and is temporarily disabled from the normal local surfaces.
 - OpenAI-compatible HTTP can also provide `text_to_video` / `image_to_video` when video endpoints are configured.
 - `multi_view_image` exists in the API but no built-in backend implements it yet.
 - Provider `/models` catalogs can be listed explicitly, including through the AbstractCore plugin boundary; they are not used for automatic model selection.
 - Backend normalization is shared across `VisionManager`, the playground API, and the AbstractCore plugin, so model-specific parameter constraints are enforced once in the backend layer instead of separately in each UI.
+- Image dimensions are provider/model-specific. `width`/`height` are optional request overrides; omit them to let the backend use its default or `auto` behavior, and do not assume `512x512` is universally accepted.
 
 ## Documentation
 
@@ -42,6 +45,7 @@ Reality checks (current shipped behavior, anchored in code):
 - [README.md](README.md): overview, install, quickstart
 - [docs/README.md](docs/README.md): docs index (map)
 - [docs/getting-started.md](docs/getting-started.md): first image (OpenAI-compatible HTTP / Diffusers / sdcpp) + Playground
+- [docs/mlx-gen-local-examples.md](docs/mlx-gen-local-examples.md): current MLX-Gen LoRA route proofs, exact commands, progress logs, and generated outputs
 - [docs/troubleshooting.md](docs/troubleshooting.md): symptom-oriented setup/runtime fixes for local backends, playground, and integration issues
 - [docs/api.md](docs/api.md): public Python API surface
 - [docs/architecture.md](docs/architecture.md): how components fit together (with diagrams)
@@ -68,14 +72,16 @@ Reality checks (current shipped behavior, anchored in code):
 ## Code entry points
 
 - [src/abstractvision/vision_manager.py](src/abstractvision/vision_manager.py): `VisionManager` orchestrator API
-- [src/abstractvision/types.py](src/abstractvision/types.py): request/response dataclasses (`ImageGenerationRequest`, `GeneratedAsset`, …)
+- [src/abstractvision/types.py](src/abstractvision/types.py): request/response dataclasses (`ImageGenerationRequest`, `ImageUpscaleRequest`, `GeneratedAsset`, …)
 - [src/abstractvision/errors.py](src/abstractvision/errors.py): error types (`CapabilityNotSupportedError`, …)
 - [src/abstractvision/backends/base_backend.py](src/abstractvision/backends/base_backend.py): `VisionBackend` contract
 - [src/abstractvision/backends/__init__.py](src/abstractvision/backends/__init__.py): lazy imports (keeps `import abstractvision` import-light)
 - [src/abstractvision/backends/openai_compatible.py](src/abstractvision/backends/openai_compatible.py): OpenAI-compatible HTTP backend (+ optional video)
 - [src/abstractvision/backends/huggingface_diffusers.py](src/abstractvision/backends/huggingface_diffusers.py): local Diffusers backend (local images; experimental local video groundwork)
 - [src/abstractvision/backends/stable_diffusion_cpp.py](src/abstractvision/backends/stable_diffusion_cpp.py): stable-diffusion.cpp backend (GGUF via `sd-cli` or python bindings)
+- [src/abstractvision/adapter_capabilities.py](src/abstractvision/adapter_capabilities.py): adapter capability registry loader + validator
 - [src/abstractvision/model_capabilities.py](src/abstractvision/model_capabilities.py): capability registry loader + validator
+- [src/abstractvision/lora_adapters.py](src/abstractvision/lora_adapters.py): shared LoRA parsing, matching, and backend handle helpers
 - [src/abstractvision/artifacts.py](src/abstractvision/artifacts.py): artifact refs + stores (`LocalAssetStore`, `RuntimeArtifactStoreAdapter`)
 - [src/abstractvision/cli.py](src/abstractvision/cli.py): CLI/REPL (`abstractvision`)
 - [src/abstractvision/playground_server.py](src/abstractvision/playground_server.py): self-contained playground server and `/v1/vision/*` jobs

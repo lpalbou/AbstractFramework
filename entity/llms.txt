@@ -1,0 +1,43 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractEntity/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractEntity/main/llms.txt
+
+# AbstractEntity
+
+> The Entity app for AbstractFramework, published on npm as `@abstractframework/entity`: create entities (AI companions with a lasting memory that live on your AbstractGateway), talk with them, watch their memory as a live graph, and read their diaries. A thin React client served by the `abstractentity` command with no server state of its own; every view is read from the gateway and the memory engine's replay stream.
+
+Key facts:
+- Run: `npx @abstractframework/entity` (or `npm install -g @abstractframework/entity`, then `abstractentity`). Serves `http://127.0.0.1:3007`, and at `/apps/entity/` through a gateway that manages it; Node.js 18 or newer; launch flags `--gateway-url` (aliases `--gateway`, `--url`; default: the gateway installed on this computer from `~/.abstractframework/gateway.json`, else `http://127.0.0.1:8080`), `--port`, `--host` (default `127.0.0.1`); `ABSTRACTENTITY_GATEWAY_URL`, `PORT`, `HOST` are legacy aliases below the flags.
+- First entity: with no entity the app shows "No entities yet" and a **Create your first entity** button; `/#new` (or `/#/new`) opens the creation form directly. Type a **Name** and press **Create entity**; **Advanced: starting document** takes your own YAML. The gateway console's **Create your first entity** button needs AbstractGateway 0.4.1 or newer; the app works with any gateway.
+- URLs: `/?entity=NAME` (live), `&live=0` (replay from the start), `/?page=blueprint`, `/?src=URL` (exported stream); with no reachable gateway the app opens a bundled demo life.
+- Sign-in: the shared app-origin proxy (`POST /api/connection/gateway`, HttpOnly cookies, `/api/gateway/*` proxied); tokens never stored in the browser. With `@abstractframework/app-server` 0.1.10 or newer the proxy sends the browser's connection address as `X-Forwarded-For` and `X-AbstractFramework-App-Proxy: abstractentity` to the gateway.
+- State at any scrub position is a pure fold of the replay stream; replay, live tail and scrub are one code path. Diary redaction is never reconstructed; tool use renders from data, never prose; the cognition wave reads the expressive character of the entity's words, not inner state.
+
+## Core docs
+
+- [README.md](README.md): what an entity is, your first entity, install and run, the app's surfaces.
+- [docs/README.md](docs/README.md): documentation index.
+- [docs/getting-started.md](docs/getting-started.md): install, sign in, create your first entity, talk with it.
+- [docs/architecture.md](docs/architecture.md): components and gateway routes (Mermaid diagrams), the replay-stream fold, `src/` module map, invariants, serving.
+- [docs/api.md](docs/api.md): command, environment variables, app URLs, server routes, gateway routes the app uses.
+- [docs/faq.md](docs/faq.md): entities, names, starting documents, diary privacy, gateway versions, the About dialog (`GET /api/gateway/about`).
+- [docs/troubleshooting.md](docs/troubleshooting.md): demo instead of entities, sign-in, missing console button, creation refusals, gaps, About showing the gateway unavailable, ports, build.
+
+## Topic deep dives
+
+- [docs/Overview.md](docs/Overview.md): goals, the challenge, core components, honesty invariants.
+- [docs/DataFlow.md](docs/DataFlow.md): transport and sign-in, the fold, per-surface data sources, the cognition-wave pipeline.
+- [docs/entity-phases.md](docs/entity-phases.md): the lifecycle phases (visit, work, personal, sleep) and liveness axis; companion to `spec/entity_phases.json`.
+
+## Contributing
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): setup with the sibling AbstractUIC checkout, tests and build.
+- [SECURITY.md](SECURITY.md): session model, deployment defaults, vulnerability reporting.
+
+## Optional
+
+- [CHANGELOG.md](CHANGELOG.md): release history.
+- [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md): lineage and credits.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): conduct expectations.

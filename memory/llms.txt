@@ -1,65 +1,47 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractmemory/main/llms.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractMemory/main/llms.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractmemory/main/llms.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractMemory/main/llms.txt
 
 # AbstractMemory
 
-> Append-only, temporal, provenance-aware triple assertions with deterministic structured queries, SQLite/LanceDB persistence, and optional vector/semantic retrieval. Part of the AbstractFramework ecosystem.
+> Durable, append-only agent memory for Python: temporal, provenance-aware triple assertions with deterministic queries and optional vector retrieval (layer 1), plus a MemorySystem facade that composes them with an append-only journal into a usage-weighted memory graph — reconstruction, attention, identity, valence, diary, consolidation, and a replay stream (layer 2). Part of the AbstractFramework ecosystem.
 
-Important notes for agents:
-- Public API exports are defined in [src/abstractmemory/__init__.py](src/abstractmemory/__init__.py) (keep [docs/api.md](docs/api.md) aligned).
-- `subject` / `predicate` / `object` are canonicalized (trim + lowercase) on write and query ([src/abstractmemory/models.py](src/abstractmemory/models.py), [tests/test_term_canonicalization.py](tests/test_term_canonicalization.py)).
-- Vector search is opt-in: `query_text` requires a configured embedder (no keyword fallback) ([tests/test_in_memory_query_text_fallback.py](tests/test_in_memory_query_text_fallback.py)).
-- `SQLiteTripleStore` is persistent and structured-query only; it rejects `query_text` and `query_vector` ([tests/test_sqlite_triple_store.py](tests/test_sqlite_triple_store.py)).
-- Timestamps are compared/filtered as strings; use RFC-3339/UTC strings (see [docs/api.md](docs/api.md)).
-- Release-channel note: this checkout is the source of truth for these docs; PyPI/tag state may drift from this source tree (see [README.md](README.md)).
+Key facts for agents:
 
-Common commands:
-```bash
-python -m pytest -q
-```
+- The authoritative export list is [src/abstractmemory/__init__.py](src/abstractmemory/__init__.py); [docs/api.md](docs/api.md) documents every export with verified signatures.
+- Reads are pure: `reconstruct`, inspection, replay, and `entity_card` deposit nothing; `commit_selection` is the only strengthening path.
+- Append-only, no deletion: updates are new assertions; belief revision is closure records; forgetting is decay + closures + silencing.
+- The journal's monotonic `seq` is the time axis: anchor reads with `as_of`/`at_seq`/`since_seq` for deterministic replay.
+- All three stores are vector-capable when constructed with an embedder; `query_text` without one raises (no keyword fallback).
+- Terms are canonicalized (trim + lowercase); timestamps compare as RFC-3339/UTC strings.
 
-## Docs
+## Core Docs
 
-- [README.md](README.md): overview + ecosystem
-- [docs/getting-started.md](docs/getting-started.md): copy/paste usage (in-memory, SQLite, LanceDB, gateway embedder)
-- [docs/api.md](docs/api.md): public API contracts
-- [docs/stores.md](docs/stores.md): backend behavior + persistence details
-- [docs/architecture.md](docs/architecture.md): boundaries + diagrams
-- [docs/faq.md](docs/faq.md): common questions
-- [docs/development.md](docs/development.md): local dev/test workflow
-- [docs/README.md](docs/README.md): documentation index
+- [README.md](README.md): project overview, install, quick examples for both layers
+- [docs/getting-started.md](docs/getting-started.md): setup, first triples, first MemorySystem session
+- [docs/architecture.md](docs/architecture.md): the two-layer model, journal-as-time-axis, the reconstruction union, presence ≠ use, append-only posture
+- [docs/api.md](docs/api.md): full API reference, grouped by surface
+- [docs/faq.md](docs/faq.md): common questions and current limits
+- [docs/troubleshooting.md](docs/troubleshooting.md): symptom-oriented fixes — setup, retrieval, embedding spaces, durability, maintenance
 
-## Code
+## Topic Deep Dives
 
-- [src/abstractmemory/__init__.py](src/abstractmemory/__init__.py): public exports (source of truth)
-- [src/abstractmemory/models.py](src/abstractmemory/models.py): `TripleAssertion` (+ `to_dict` / `from_dict`)
-- [src/abstractmemory/store.py](src/abstractmemory/store.py): `TripleQuery`, `TripleStore` protocol
-- [src/abstractmemory/in_memory_store.py](src/abstractmemory/in_memory_store.py): `InMemoryTripleStore`
-- [src/abstractmemory/sqlite_store.py](src/abstractmemory/sqlite_store.py): `SQLiteTripleStore`
-- [src/abstractmemory/lancedb_store.py](src/abstractmemory/lancedb_store.py): `LanceDBTripleStore`
-- [src/abstractmemory/embeddings.py](src/abstractmemory/embeddings.py): `TextEmbedder`, `AbstractGatewayTextEmbedder`
+- [docs/memory-system.md](docs/memory-system.md): the cognitive model — emergent working memory, two access counts, valence/gradation, identity cores, diary, sleep/consolidation, observability
+- [docs/stores.md](docs/stores.md): backend behavior and persistence details (in-memory, SQLite, LanceDB)
+- [docs/operator.md](docs/operator.md): read-only inspection and verification of an entity's memory home
 
-## Tests
+## Contributing
 
-- [tests/test_term_canonicalization.py](tests/test_term_canonicalization.py): term + scope canonicalization contract
-- [tests/test_triple_store_limits.py](tests/test_triple_store_limits.py): limit/order determinism contracts
-- [tests/test_in_memory_query_text_fallback.py](tests/test_in_memory_query_text_fallback.py): `query_text` requires embedder (no fallback)
-- [tests/test_sqlite_triple_store.py](tests/test_sqlite_triple_store.py): SQLite persistence + structured queries + semantic rejection
-- [tests/test_lancedb_triple_store.py](tests/test_lancedb_triple_store.py): persistence + vector search + missing dependency hint
-- [tests/conftest.py](tests/conftest.py): monorepo `sys.path` bootstrap
-
-## Project
-
-- [pyproject.toml](pyproject.toml): dependencies + optional extras
-- [CHANGELOG.md](CHANGELOG.md): notable changes
-- [CONTRIBUTING.md](CONTRIBUTING.md): dev workflow and expectations
-- [SECURITY.md](SECURITY.md): responsible vulnerability reporting
-- [LICENSE](LICENSE): license
-- [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md): credits
+- [docs/development.md](docs/development.md): local setup and test workflow
+- [CONTRIBUTING.md](CONTRIBUTING.md): contributor workflow, and how to cite the three design-record series
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): participation standards and reporting
+- [SECURITY.md](SECURITY.md): vulnerability reporting
 
 ## Optional
 
-- [llms-full.txt](llms-full.txt): single-file agent context (includes core docs + key contracts)
+- [CHANGELOG.md](CHANGELOG.md): release history
+- [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md): credits and lineage
+- [docs/README.md](docs/README.md): documentation index
+- [llms-full.txt](llms-full.txt): the full documentation corpus in one file

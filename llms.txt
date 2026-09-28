@@ -1,0 +1,57 @@
+# AbstractFramework
+
+> AbstractFramework is an open-source (MIT) AI platform you run yourself: agents, automations, voice, images, video and music behind one gateway (AbstractGateway), with local models or any cloud provider, and every step recorded in an append-only ledger. It installs with one line on macOS, Linux and Windows, and is also a set of Python libraries (AbstractCore, AbstractRuntime, AbstractAgent, …) you can use on their own.
+
+Current framework release: `abstractframework` 0.6.1 (2026-09-28). It pins abstractgateway 0.7.1, abstractassistant 0.9.1, abstractcore 2.18.0, AbstractRuntime 0.7.1, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.13.0, abstractvision 0.3.30 and abstractmusic 0.1.15. Browser apps (npm): @abstractframework/flow 0.4.0, code 0.6.1, observer 0.2.1, continuum 0.4.0, entity 0.3.0. Rust tools (crates.io): abstractgateway-console 0.11.0, abstractcode 0.7.1, abstractcore-console 0.4.0.
+
+Install:
+- macOS / Linux: `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
+- Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`
+- macOS package: https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg
+- Python: `pip install abstractframework` (light), `"abstractframework[apple]"`, `"abstractframework[gpu]"`
+- Container: `ghcr.io/lpalbou/abstractgateway:0.7.1`
+- Upgrade: re-run the same install line (on a Mac without Terminal, install the latest .pkg again), or use Update on the Gateway card of the console or in the menu-bar icon
+- The installer puts every terminal command in `~/.local/bin`: `abstractgateway`, `abstractgateway-config`, `abstractgateway-console`, `abstractcode` (sign in once with `abstractcode login --token <admin token>`, or `abstractgateway apps tui-command code` on the gateway machine), and the AbstractCore, AbstractVoice, AbstractVision and AbstractMusic commands (opt-outs `--no-console`, `--no-code-cli`, `--no-core-cli`)
+
+After install the web console is at http://127.0.0.1:8080/console, the terminal console is `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>`, and the browser apps are served at http://127.0.0.1:8080/apps/<app>/ (flow, observer, code, continuum, entity). Local clients find the gateway through `~/.abstractframework/gateway.json`; every app and terminal client takes `--gateway-url`.
+
+## Start here
+
+- [Install](https://abstractframework.ai/install.html): one-line installers, the macOS package, requirements, profiles, headless servers, network and start at login, options, troubleshooting, Python and Docker
+- [User journey](https://abstractframework.ai/start-user.html): chat, voice, automations and the Assistant
+- [Artist / creator journey](https://abstractframework.ai/start-creator.html): images, video, music and voice cloning, with hardware notes
+- [Developer journey](https://abstractframework.ai/start-developer.html): AbstractCore, AbstractAgent, the gateway HTTP API, Flow and AbstractCode
+- [Architect journey](https://abstractframework.ai/start-architect.html): topologies, containers, security posture and data location
+- [Researcher journey](https://abstractframework.ai/start-researcher.html): deep-research, co-scientist, the ledger and memory
+- [Automation owner journey](https://abstractframework.ai/start-automation.html): recurring agent tasks and notifications
+
+## Apps and features
+
+- [Consoles](https://abstractframework.ai/console.html): the web console (/console) and the terminal console (abstractgateway-console): first-run guide, models with fit verdicts, engines, providers, network, apps
+- [Automations](https://abstractframework.ai/automations.html): fixed-interval or on-demand agent tasks, independent or growing context, notifications, controls, limits
+- [AbstractFlow](https://abstractframework.ai/flow.html): visual workflow editor ([llms.txt](https://abstractframework.ai/flow/llms.txt))
+- [AbstractObserver](https://abstractframework.ai/observer.html): runs, ledger replay, automations ([llms.txt](https://abstractframework.ai/observer/llms.txt))
+- [AbstractCode](https://abstractframework.ai/code.html): coding agent, terminal and browser clients ([llms.txt](https://abstractframework.ai/code/llms.txt))
+- [AbstractAssistant](https://abstractframework.ai/assistant.html): macOS menu-bar assistant ([llms.txt](https://abstractframework.ai/assistant/llms.txt))
+- [AbstractContinuum](https://abstractframework.ai/continuum.html): continuous development console ([llms.txt](https://abstractframework.ai/continuum/llms.txt))
+- [AbstractEntity](https://abstractframework.ai/entity.html): summoned-entity manager ([llms.txt](https://abstractframework.ai/entity/llms.txt))
+
+## Packages
+
+- [AbstractGateway](https://abstractframework.ai/gateway.html): control plane: durable runs over HTTP/SSE, automations, users, apps ([llms.txt](https://abstractframework.ai/gateway/llms.txt), [llms-full.txt](https://abstractframework.ai/gateway/llms-full.txt))
+- [AbstractCore](https://abstractframework.ai/core.html): unified LLM API, OpenAI-compatible server, capability plugins ([llms.txt](https://abstractframework.ai/core/llms.txt), [llms-full.txt](https://abstractframework.ai/core/llms-full.txt))
+- [AbstractRuntime](https://abstractframework.ai/runtime.html): durable execution, ledger, automation controller, history window ([llms.txt](https://abstractframework.ai/runtime/llms.txt), [llms-full.txt](https://abstractframework.ai/runtime/llms-full.txt))
+- [AbstractAgent](https://abstractframework.ai/agent.html): ReAct / CodeAct / MemAct ([llms.txt](https://abstractframework.ai/agent/llms.txt), [llms-full.txt](https://abstractframework.ai/agent/llms-full.txt))
+- [AbstractVoice](https://abstractframework.ai/voice.html): TTS, STT, voice cloning ([llms.txt](https://abstractframework.ai/voice/llms.txt), [llms-full.txt](https://abstractframework.ai/voice/llms-full.txt))
+- [AbstractVision](https://abstractframework.ai/vision.html): image and video generation ([llms.txt](https://abstractframework.ai/vision/llms.txt), [llms-full.txt](https://abstractframework.ai/vision/llms-full.txt))
+- [AbstractMusic](https://abstractframework.ai/music.html): text-to-music ([llms.txt](https://abstractframework.ai/music/llms.txt), [llms-full.txt](https://abstractframework.ai/music/llms-full.txt))
+- [AbstractMemory](https://abstractframework.ai/memory.html): durable agent memory ([llms.txt](https://abstractframework.ai/memory/llms.txt), [llms-full.txt](https://abstractframework.ai/memory/llms-full.txt))
+- [AbstractSemantics](https://abstractframework.ai/semantics.html): semantics registry ([llms.txt](https://abstractframework.ai/semantics/llms.txt), [llms-full.txt](https://abstractframework.ai/semantics/llms-full.txt))
+
+The per-package llms files on this site are copies; the canonical versions live in each repository (https://raw.githubusercontent.com/lpalbou/<Repo>/main/llms.txt).
+
+## Optional
+
+- [Framework llms.txt](https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/llms.txt) and [llms-full.txt](https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/llms-full.txt): the root repository's own index and handbook
+- [Documentation](https://github.com/lpalbou/AbstractFramework/tree/main/docs): getting started, install, architecture, automations, configuration, FAQ, glossary, troubleshooting
+- [Changelog](https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md)

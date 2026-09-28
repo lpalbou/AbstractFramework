@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Install AbstractFramework — one line on macOS, Linux and Windows</title>
+  <meta name="description" content="Install AbstractFramework with one line on macOS, Linux or Windows, or with the macOS package. No admin password; it opens the web console in your browser, already signed in. Headless Linux, Python profiles and Docker too.">
+  <link rel="canonical" href="https://abstractframework.ai/install.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Install AbstractFramework">
+  <meta property="og:description" content="One line on macOS, Linux and Windows, or the macOS package. No admin password; it opens in your browser, already signed in.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html" aria-current="page">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
+<main id="main">
+
+<section class="hero" style="min-height:auto;padding:8rem 0 3.5rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Framework release 0.6.1 &middot; gateway 0.7.1</div>
+    <h1>Install <span class="gradient">AbstractFramework</span></h1>
+    <p class="hero-sub">One download or one line. No admin password, no system Python to prepare. At the end, AbstractFramework opens in your web browser, already signed in, and a first-run guide helps you pick an engine and a model that fits your machine.</p>
+    <div class="hero-actions">
+      <a href="#choose" class="btn btn-primary">Choose how to install</a>
+      <a href="#headless" class="btn btn-secondary">Headless or remote server</a>
+      <a href="#python" class="btn btn-secondary">Python profiles</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CHOOSE ═══════════════════ -->
+<section id="choose" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Choose</div>
+      <h2 class="section-title">Pick the line for your computer</h2>
+      <p class="section-desc">Every way below runs the same installer script, so the result is the same. Running it again repairs or upgrades the install in place.</p>
+    </div>
+
+    <div class="install-wrap reveal">
+      <div class="code-tabs" data-autoplatform data-win="i-win" data-linux="i-linux" data-mac="i-mac">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="i-mac">macOS</button>
+          <button class="tab-btn" data-tab="i-linux">Linux</button>
+          <button class="tab-btn" data-tab="i-win">Windows</button>
+          <button class="tab-btn" data-tab="i-hand">By hand (uv)</button>
+        </div>
+        <div class="tab-panel active" id="tab-i-mac">
+          <div class="install-notes" style="border-top:none"><p style="margin-bottom:.6rem"><strong>Without Terminal: the Mac package.</strong></p><ul>
+            <li><a href="https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg">Download AbstractFramework-Installer.pkg</a> (attached to every <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub release</a>) and double-click it.</li>
+            <li>The package is not signed with an Apple Developer ID, so macOS blocks it the first time. Close the warning, open <strong>System Settings &gt; Privacy &amp; Security</strong>, click <strong>Open Anyway</strong> next to the installer's name and confirm. You do this once per download.</li>
+            <li>Click <strong>Continue</strong>, then <strong>Install</strong>; it installs for you only, so it does not ask for your password. A Terminal window then shows each step and asks one question: <em>Start AbstractFramework automatically when you log in?</em> Press Return for yes.</li>
+            <li>It also leaves <strong>Install AbstractFramework.command</strong> (repair) and <strong>Uninstall AbstractFramework.command</strong> in <code>~/Library/Application Support/AbstractFramework/Installer</code>.</li>
+          </ul><p style="margin:.9rem 0 .2rem"><strong>With Terminal: one line.</strong> Paste it and press Return; it runs the same installer.</p></div>
+          <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+          <div class="install-notes"><ul>
+            <li>macOS 13 or later (the Apple Silicon engines need macOS 14), about 5 GB of free disk before models, and an internet connection.</li>
+            <li>With no answer to the start-at-login question within 25 seconds, it leaves start at login off. Pass options after <code>sh -s --</code>, for example <code>… | sh -s -- --with-ollama</code>. See <a href="#options">Options</a>.</li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-i-linux">
+          <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+          <div class="install-notes"><ul>
+            <li>Paste it in a terminal and press Return. It asks whether to start at login (a <code>systemd --user</code> service); Enter = yes, no answer within 25 seconds leaves it off. Your data lives in <code>~/.local/share/abstractgateway</code>.</li>
+            <li>glibc distributions on x86_64 or aarch64; about 5 GB of free disk before models. The <code>gpu</code> profile is picked when <code>nvidia-smi</code> or <code>rocminfo</code> works.</li>
+            <li><strong>Headless or over SSH:</strong> the same line works. It does not open a browser on the server; it offers the terminal console at the end instead, and one SSH tunnel reaches the web console and every app. See <a href="#headless">Headless or remote server</a>.</li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-i-win">
+          <div class="code-block"><pre><code>powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"</code></pre></div>
+          <div class="install-notes"><ul>
+            <li>Windows 10 22H2 or later, or Windows 11. Open PowerShell, paste the line and press Enter.</li>
+            <li>It installs under your user account (no administrator rights), asks whether to start AbstractFramework at sign-in (Enter = yes) and opens it in your browser.</li>
+            <li><code>-NoService</code> leaves start at sign-in off and asks nothing. The terminal console and <code>abstractcode</code> are built into <code>%USERPROFILE%\.local\bin</code> when Rust is already installed.</li>
+          </ul></div>
+        </div>
+        <div class="tab-panel" id="tab-i-hand">
+          <div class="code-block"><pre><code><span class="line-cmt"># the same install, step by step</span>
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv python install 3.12
+uv tool install --python 3.12 "abstractgateway[tray]==0.7.1"   <span class="line-cmt"># [apple,tray] or [gpu,tray] for local engines</span>
+uv tool update-shell                                         <span class="line-cmt"># puts ~/.local/bin on PATH; open a new terminal</span>
+abstractgateway service install --port 8080                  <span class="line-cmt"># or: abstractgateway serve</span>
+abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></div>
+          <div class="install-notes"><ul>
+            <li>The last command prints a one-time sign-in link for the console (valid 10 minutes, this machine only).</li>
+            <li>To avoid compiling anything, add the <code>--with</code> and <code>--overrides</code> arguments that <code>install.sh --print</code> shows.</li>
+          </ul></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="install-steps reveal" aria-label="What the installer does">
+      <div class="install-step"><h4>Checks this machine</h4><p>OS, CPU, disk, a free port, internet access, NVIDIA or ROCm. It picks a profile: <code>apple</code> on Apple Silicon (macOS 14+), <code>gpu</code> with a working NVIDIA or ROCm GPU, <code>light</code> otherwise.</p></div>
+      <div class="install-step"><h4>Installs in your account</h4><p>uv and a private Python 3.12, then the gateway as an isolated tool, with local voice (Supertonic text-to-speech and Whisper speech-to-text, on CPU). Prebuilt wheels only: no compiler needed.</p></div>
+      <div class="install-step"><h4>Puts the commands on PATH</h4><p>Builds the terminal console and AbstractCode&rsquo;s terminal client with cargo (Rust from rustup when missing), and exposes the library commands, all in <code>~/.local/bin</code> next to <code>abstractgateway</code>. A failed build never fails the install. <a href="#commands">Commands you get</a></p></div>
+      <div class="install-step"><h4>Opens the console</h4><p>Starts the gateway on <code>127.0.0.1:8080</code>, writes <code>~/.abstractframework/gateway.json</code> so every client finds it, and opens the web console through a one-time sign-in link.</p></div>
+    </div>
+
+    <div class="callout reveal" style="max-width:900px;margin:2rem auto 0">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>Afterwards, AbstractFramework is at <code>http://127.0.0.1:8080/console</code> (bookmark it). On a Mac its menu-bar icon opens it and shows its status. The browser apps open from the console's <strong>Apps</strong> page at <code>http://127.0.0.1:8080/apps/&lt;app&gt;/</code>. Next: <a href="console.html">what the console does</a>, or <a href="index.html#start">pick a starting point</a>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ COMMANDS ═══════════════════ -->
+<section id="commands">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Commands you get</div>
+      <h2 class="section-title">Every command in one folder</h2>
+      <p class="section-desc">Everything lands in <code>~/.local/bin</code> (Windows: <code>%USERPROFILE%\.local\bin</code>), which the installer adds to your shell profile: open a new terminal for it to be on PATH. The summary lists them under <code>Commands</code>.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table optout">
+        <thead><tr><th>Command</th><th>What it does</th><th>Opt out</th></tr></thead>
+        <tbody>
+          <tr><td><code>abstractgateway</code></td><td>The gateway: <code>serve</code>, <code>service</code> (start at login), <code>network</code>, <code>models</code>, <code>engines</code>, <code>apps</code></td><td>&mdash;</td></tr>
+          <tr><td><code>abstractgateway-config</code></td><td>The gateway&rsquo;s admin command: <code>status</code>, <code>claim-url</code> (a new sign-in link), defaults and settings</td><td>&mdash;</td></tr>
+          <tr><td><code>abstractgateway-console</code></td><td>The terminal console</td><td><code>--no-console</code></td></tr>
+          <tr><td><code>abstractcode</code></td><td>AbstractCode&rsquo;s terminal client (sign it in once, below)</td><td><code>--no-code-cli</code></td></tr>
+          <tr><td><code>abstractcore</code>, <code>abstractcore-chat</code>, <code>abstractcore-endpoint</code></td><td>AbstractCore&rsquo;s configuration and operations (<code>--config</code>, <code>models</code>, <code>engines</code>, <code>serve</code>), a terminal chat, a single-model <code>/v1</code> server</td><td rowspan="3"><code>--no-core-cli</code></td></tr>
+          <tr><td><code>summarizer</code>, <code>extractor</code>, <code>judge</code>, <code>intent</code>, <code>deepsearch</code></td><td>AbstractCore&rsquo;s apps (also as <code>abstractcore-&lt;app&gt;</code>): summarise a document, extract a knowledge graph, LLM-as-a-judge, intent analysis, a sourced web research report</td></tr>
+          <tr><td><code>abstractvoice</code>, <code>abstractvoice-prefetch</code>, <code>abstractvision</code>, <code>abstractmusic</code></td><td>Voice, images and video, and music in the terminal, from the gateway&rsquo;s own environment so they match the versions it runs</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:1rem">A package&rsquo;s commands come all together or not at all: when another program already has one of its names, the installer leaves that package out with a warning naming the file, and installs the rest.</p>
+    <div class="showcase-grid reveal" style="margin-top:2rem;align-items:start">
+      <div>
+        <h3 style="margin-bottom:.75rem">Sign the terminal app in</h3>
+        <div class="code-block"><pre><code>abstractcode login --token &lt;admin token&gt;   <span class="line-cmt"># once; the summary prints it with your token</span>
+abstractcode
+
+<span class="line-cmt"># or, on the gateway's computer, without handling a token:</span>
+abstractgateway apps tui-command code</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">The installer never saves the token for you. <code>tui-command</code> prints a one-time line, valid 2 minutes, that opens <code>abstractcode</code> signed in. Started without a sign-in, <code>abstractcode</code> says so and prints both lines.</p>
+      </div>
+      <div>
+        <h3 style="margin-bottom:.75rem">One folder for the terminal apps</h3>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">The console&rsquo;s <strong>Apps</strong> page installs and updates <code>abstractcode</code> in the same folder as the installer, so it runs by name whichever of the two installed it. A re-run of the installer keeps an <code>abstractcode</code> newer than its pin, and the uninstaller removes it with the console.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ WHAT YOU NEED ═══════════════════ -->
+<section id="requirements">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Requirements</div>
+      <h2 class="section-title">What your computer needs</h2>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>System</th><th>Supported</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>macOS</td><td>macOS 13 or later</td><td>Apple Silicon gets the fast local engines (MLX), which need macOS 14. The gateway takes about 2.4 GB on Apple Silicon, and uv's download cache about 2.4 GB more.</td></tr>
+          <tr><td>Linux</td><td>glibc distributions, x86_64 and aarch64</td><td>Start at login is a <code>systemd --user</code> service. Local voice is skipped on musl Linux (Alpine), where no wheels exist.</td></tr>
+          <tr><td>Windows</td><td>Windows 10 22H2+, Windows 11</td><td>User-scoped install, no administrator rights. Windows on ARM64 gets Supertonic voice but not Whisper.</td></tr>
+          <tr><td>Everything</td><td>About 5 GB free disk before models</td><td>Models you download later come on top. The installer stops with a plain message and the next step when something is missing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="reveal" style="margin:2.5rem 0 1rem">Install profiles</h3>
+    <p class="reveal" style="color:var(--text-secondary);max-width:760px;margin-bottom:1.25rem">The installer picks the profile for you; <code>--profile</code> overrides it. The framework's features are the same in every profile; the profile decides which local inference engines are installed.</p>
+    <div class="modes-grid reveal">
+      <div class="mode-card"><h3>Light</h3><p>Remote and endpoint engines only: OpenAI, Anthropic, OpenRouter, Portkey, and servers such as LM Studio, Ollama, vLLM or any OpenAI-compatible endpoint. Works everywhere.</p><div class="mode-tags"><span class="mode-tag">macOS</span><span class="mode-tag">Linux</span><span class="mode-tag">Windows</span></div></div>
+      <div class="mode-card"><h3>Apple</h3><p>Adds the local Apple Silicon engines (MLX and Metal) for text, images, video and voice, next to the endpoint providers.</p><div class="mode-tags"><span class="mode-tag">macOS 14+</span><span class="mode-tag">Apple Silicon</span></div></div>
+      <div class="mode-card"><h3>GPU</h3><p>Adds the local GPU engines for NVIDIA CUDA or AMD ROCm, next to the endpoint providers.</p><div class="mode-tags"><span class="mode-tag">Linux</span><span class="mode-tag">CUDA</span><span class="mode-tag">ROCm</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ HEADLESS ═══════════════════ -->
+<section id="headless" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Remote &amp; headless</div>
+      <h2 class="section-title">A Linux server over SSH works like a Mac</h2>
+      <p class="section-desc">Install with the same one-liner over SSH. You configure the gateway from the terminal console on the server, and one SSH tunnel carries the web console, the API and every browser app to your own computer.</p>
+    </div>
+    <div class="journey">
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Install over SSH</h3>
+        <div class="code-block"><pre><code>ssh -t &lt;server&gt;
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+        <p>It asks the start-at-login question in your SSH terminal, installs local voice like every install, and at the end offers to open the terminal console, signed in ("Press Enter within 25 s"). No answer skips it, so a scripted install never hangs. Over SSH it does not open a browser on the server.</p>
+      </div></div>
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Configure from the terminal console</h3>
+        <div class="code-block"><pre><code>abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;</code></pre></div>
+        <p>The installer's summary prints this command with your port and token filled in; the admin token is also in <code>~/.local/share/abstractgateway/auth/bootstrap-admin-token</code>. The console runs the same setup guide as the web console. Press <code>N</code> for <strong>Network</strong>, <code>A</code> for <strong>Apps</strong>, <code>F3</code> for the gateway host (restart, update, start at login).</p>
+      </div></div>
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Reach the web console and apps through one tunnel</h3>
+        <div class="code-block"><pre><code>ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
+<span class="line-cmt"># on the server, print a one-time sign-in link for your browser:</span>
+abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></div>
+        <p>Open the link in your browser, then open the apps from the console's <strong>Apps</strong> page: each one is served at <code>http://127.0.0.1:8080/apps/&lt;app&gt;/</code> (<code>observer</code>, <code>code</code>, <code>flow</code>, <code>continuum</code>, <code>entity</code>).</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ NETWORK & LOGIN ═══════════════════ -->
+<section id="network">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Network &amp; start at login</div>
+      <h2 class="section-title">This computer only, until you choose otherwise</h2>
+      <p class="section-desc">The gateway listens on <code>127.0.0.1:8080</code> by default. Change who can reach it in the web console's <strong>Network</strong> tab, the terminal console's Network screen (<code>N</code>), the menu-bar icon, or the command line.</p>
+    </div>
+    <div class="showcase-grid reveal" style="align-items:start">
+      <div>
+        <h3 style="margin-bottom:.75rem">Network</h3>
+        <div class="code-block"><pre><code>abstractgateway network status
+abstractgateway network set lan          <span class="line-cmt"># devices on your local network</span>
+abstractgateway network set localhost --port 8080
+abstractgateway network set internet --acknowledge-internet
+abstractgateway network restart --token &lt;admin token&gt;
+abstractgateway network addresses</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">A new mode applies at the next start. Internet mode leaves TLS and port forwarding to you: read <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/guide/gateway-security.md" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">Gateway security</a> first.</p>
+      </div>
+      <div>
+        <h3 style="margin-bottom:.75rem">Start at login</h3>
+        <div class="code-block"><pre><code>abstractgateway service enable     <span class="line-cmt"># start at the next login</span>
+abstractgateway service disable
+abstractgateway service install --port 8080
+abstractgateway service status
+abstractgateway service uninstall  <span class="line-cmt"># data is kept</span></code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">Or flip the <strong>Start at login</strong> switch in either console. It is a LaunchAgent on macOS, a <code>systemd --user</code> unit on Linux and a per-user Run entry on Windows.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OPTIONS ═══════════════════ -->
+<section id="options" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Options</div>
+      <h2 class="section-title">Installer options</h2>
+      <p class="section-desc">The most useful ones. <code>--print</code> shows the plan and every command without changing anything. The full list is in <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md#options" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">docs/install.md</a>.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>macOS / Linux</th><th>Windows</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>--profile auto|light|apple|gpu</code></td><td><code>-Profile</code></td><td>Override the profile choice</td></tr>
+          <tr><td><code>--port N</code></td><td><code>-Port N</code></td><td>Gateway port (default 8080; the next free port when 8080 is busy)</td></tr>
+          <tr><td><code>--with-ollama</code></td><td><code>-WithOllama</code></td><td>Run Ollama's official installer</td></tr>
+          <tr><td><code>--with-lmstudio</code></td><td><code>-WithLmStudio</code></td><td>Install LM Studio (headless daemon on macOS/Linux)</td></tr>
+          <tr><td><code>--with-apps</code></td><td><code>-WithApps</code></td><td>Make sure Node.js 18+ exists for running the browser apps on their own with <code>npx</code></td></tr>
+          <tr><td><code>--no-code-cli</code></td><td><code>-NoCodeCli</code></td><td>Do not build AbstractCode&rsquo;s terminal client (built by default)</td></tr>
+          <tr><td><code>--no-core-cli</code></td><td><code>-NoCoreCli</code></td><td>Do not put the AbstractCore, voice, vision and music commands on PATH</td></tr>
+          <tr><td><code>--no-console</code></td><td><code>-NoConsole</code></td><td>Skip the terminal console</td></tr>
+          <tr><td><code>--no-service</code></td><td><code>-NoService</code></td><td>Do not start at login; ask nothing</td></tr>
+          <tr><td><code>--no-open</code></td><td><code>-NoOpen</code></td><td>Do not open the browser (remote: do not offer the terminal console)</td></tr>
+          <tr><td><code>--data-dir DIR</code></td><td><code>-DataDir</code></td><td>Gateway data directory</td></tr>
+          <tr><td><code>--print</code></td><td><code>-Print</code></td><td>Show the plan and every command; change nothing</td></tr>
+          <tr><td><code>--uninstall [--purge]</code></td><td><code>-Uninstall [-Purge]</code></td><td>Remove the gateway and login item (<code>--purge</code> also deletes your data)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ TROUBLE ═══════════════════ -->
+<section id="trouble">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">If something goes wrong</div>
+      <h2 class="section-title">Run it again</h2>
+      <p class="section-desc">The installer stops at the first problem, says what happened in plain words and what to do. After you fix the cause, run it again: it continues where it stopped.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>What you see</th><th>What to do</th></tr></thead>
+        <tbody>
+          <tr><td><code>no internet connection: the installer could not reach pypi.org</code></td><td>Connect to the internet and run it again. Nothing was changed.</td></tr>
+          <tr><td><code>this Terminal runs in Intel (Rosetta) mode on an Apple Silicon Mac</code></td><td>Untick <strong>Open using Rosetta</strong> in Terminal's Get Info window, then run it again.</td></tr>
+          <tr><td><code>the Apple Silicon engines (MLX) need macOS 14 or later</code></td><td>You get the light version. Update macOS and run the installer again to add the local engines.</td></tr>
+          <tr><td>The browser page asks for a token</td><td>The one-time link lasts 10 minutes. Run the installer again for a fresh link, or run <code>abstractgateway claim --open</code>.</td></tr>
+          <tr><td>Anything else</td><td>Run it again. If it stops at the same step, report it with the log file named at the end of the message.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="showcase-grid reveal" style="margin-top:2.5rem;align-items:start">
+      <div>
+        <h3 style="margin-bottom:.75rem">Check an install</h3>
+        <div class="code-block"><pre><code>uvx abstractframework doctor</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">Checks Python, uv, Node, disk, the gateway and whether Ollama and LM Studio answer. It only reads.</p>
+      </div>
+      <div>
+        <h3 id="upgrade" style="margin-bottom:.75rem">Upgrade</h3>
+        <div class="code-block"><pre><code><span class="line-cmt"># re-run the same line you installed with</span>
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">The line always runs the installer of the latest release: it installs the gateway version that release pins, rebuilds the terminal apps when newer ones are pinned, and keeps your profile, port, start-at-login choice, network setting, data, models and apps. On Windows, run the PowerShell line again; on a Mac without Terminal, install the latest <code>.pkg</code> again. The gateway can also update itself from the <strong>Gateway</strong> card in the console (terminal console: <code>F3</code>) and from the menu-bar icon.</p>
+        <h3 style="margin:1.25rem 0 .75rem">Remove</h3>
+        <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">It asks before deleting anything, keeps your data unless you say yes, and keeps model weights and shared caches. Windows: <code>install.ps1 -Uninstall [-Purge]</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ PYTHON & DOCKER ═══════════════════ -->
+<section id="python" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Developers &amp; servers</div>
+      <h2 class="section-title">Python profiles and containers</h2>
+      <p class="section-desc">Want every framework library in your own Python environment, or a container on a server? Use the meta-package or the gateway image. Python 3.10 to 3.13.</p>
+    </div>
+    <div class="install-wrap reveal">
+      <div class="code-tabs">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="p-light">Light</button>
+          <button class="tab-btn" data-tab="p-apple">Apple</button>
+          <button class="tab-btn" data-tab="p-gpu">GPU</button>
+          <button class="tab-btn" data-tab="p-docker">Docker</button>
+        </div>
+        <div class="tab-panel active" id="tab-p-light">
+          <div class="code-block"><pre><code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+python -m pip install abstractframework
+abstractframework doctor
+abstractgateway serve     <span class="line-cmt"># prints a one-time console link</span></code></pre></div>
+          <div class="install-notes"><ul><li>Remote-first: cloud APIs and endpoint servers (LM Studio, Ollama, vLLM, llama.cpp, OpenAI-compatible). Multimodal input and output, tools, durable runs and workflows all work.</li></ul></div>
+        </div>
+        <div class="tab-panel" id="tab-p-apple">
+          <div class="code-block"><pre><code>pip install "abstractframework[apple]"</code></pre></div>
+          <div class="install-notes"><ul><li>macOS 14 or later on Apple Silicon. Local MLX and Metal engines next to the endpoint providers. A plain <code>pip install</code> of this profile builds a few compiled extras from source and needs a C/C++ compiler; the one-line installer does not.</li></ul></div>
+        </div>
+        <div class="tab-panel" id="tab-p-gpu">
+          <div class="code-block"><pre><code>pip install "abstractframework[gpu]"</code></pre></div>
+          <div class="install-notes"><ul><li>Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers. Voice cloning with F5-TTS needs Python 3.11+.</li></ul></div>
+        </div>
+        <div class="tab-panel" id="tab-p-docker">
+          <div class="code-block"><pre><code>docker run \
+  -p 8080:8080 \
+  -v "$PWD/runtime:/data" \
+  -e ABSTRACTGATEWAY_DATA_DIR=/data \
+  -e ABSTRACTGATEWAY_USER_AUTH=1 \
+  ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre></div>
+          <div class="install-notes"><ul>
+            <li>The light container: every framework capability through remote or endpoint inference. On first start it creates <code>default/admin</code> and writes the login token to <code>runtime/auth/bootstrap-admin-token</code>.</li>
+            <li><code>ghcr.io/lpalbou/abstractgateway:gpu-latest</code> is an experimental local GPU image for NVIDIA hosts. The AbstractCore OpenAI-compatible server is <code>ghcr.io/lpalbou/abstractcore-server:2.18.0</code>.</li>
+          </ul></div>
+        </div>
+      </div>
+    </div>
+    <p class="reveal" style="text-align:center;color:var(--text-secondary);margin-top:1.5rem;font-size:var(--text-sm)"><code>abstractframework</code> 0.6.1 pins every Python package with <code>==</code>: gateway 0.7.1, assistant 0.9.1, core 2.18.0, runtime 0.7.1, agent 0.3.17, skill 0.3.0, memory 0.3.0, semantics 0.0.5, voice 0.13.0, vision 0.3.30, music 0.1.15. <a href="start-developer.html" style="color:var(--accent-light)">Developer journey &rarr;</a></p>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
+    </div>
+    <div class="footer-col">
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
+  </div>
+</footer>
+<script src="assets/js/main.js?v=4"></script>
+</body>
+</html>

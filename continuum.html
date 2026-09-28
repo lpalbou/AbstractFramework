@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractContinuum — board-first development console | AbstractFramework</title>
+  <meta name="description" content="AbstractContinuum is a continuous iterative development and deployment console for AbstractFramework: a kanban board, executions, backlog, agents, team chat and service control, served by the gateway at /apps/continuum/.">
+  <link rel="canonical" href="https://abstractframework.ai/continuum.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractContinuum">
+  <meta property="og:description" content="A board-first development and deployment console served by your AbstractGateway.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=4">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Start as a</span><a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a><a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a><a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a><a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a><a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a><a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a></div></div>
+    </li>
+    <li><a href="install.html">Install</a></li>
+    <li class="nav-dropdown"><a href="index.html#apps">Apps <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow"><div class="nav-dropdown-group"><span class="nav-dropdown-label">After install</span><a href="console.html">Web &amp; terminal console<small>setup, models, network, apps</small></a><a href="automations.html">Automations<small>recurring or on-demand agent tasks</small></a><a href="flow.html">AbstractFlow<small>visual workflow editor</small></a><a href="observer.html">AbstractObserver<small>runs, ledger, automations</small></a><a href="code.html">AbstractCode<small>coding agent, terminal and web</small></a><a href="assistant.html">AbstractAssistant<small>macOS menu-bar assistant</small></a><a href="continuum.html" aria-current="page">AbstractContinuum<small>continuous development console</small></a><a href="entity.html">AbstractEntity<small>summoned-entity manager</small></a></div></div>
+    </li>
+    <li><a href="index.html#capabilities">Capabilities</a></li>
+    <li class="nav-dropdown"><a href="index.html#packages">Packages <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu"><div class="nav-dropdown-group"><span class="nav-dropdown-label">Foundation</span><a href="core.html">AbstractCore</a><a href="runtime.html">AbstractRuntime</a><a href="agent.html">AbstractAgent</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Control plane</span><a href="gateway.html">AbstractGateway</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Modalities</span><a href="voice.html">AbstractVoice</a><a href="vision.html">AbstractVision</a><a href="music.html">AbstractMusic</a></div><div class="nav-dropdown-group"><span class="nav-dropdown-label">Knowledge</span><a href="memory.html">AbstractMemory</a><a href="semantics.html">AbstractSemantics</a></div></div>
+    </li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a></li>
+    <li><a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
+
+<div class="pkg-nav" aria-label="Packages and apps">
+  <div class="pkg-nav-inner">
+    <a href="core.html" class="pkg-nav-link">Core</a>
+    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
+    <a href="agent.html" class="pkg-nav-link">Agent</a>
+    <a href="flow.html" class="pkg-nav-link">Flow</a>
+    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
+    <a href="code.html" class="pkg-nav-link">Code</a>
+    <a href="observer.html" class="pkg-nav-link">Observer</a>
+    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link active" aria-current="page">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
+    <a href="voice.html" class="pkg-nav-link">Voice</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
+    <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="memory.html" class="pkg-nav-link">Memory</a>
+    <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+  </div>
+</div>
+<main id="main">
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:8rem 0 4rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Application &middot; Development console <span class="ver">v0.4.0</span></div>
+    <h1>Abstract<span class="gradient">Continuum</span></h1>
+    <p class="hero-sub">A continuous iterative development and deployment console for AbstractFramework. Connect it to your <a href="gateway.html" style="color:var(--accent-light)">AbstractGateway</a> and it becomes a board-first development cockpit: a kanban of work items, agents that execute them, QA review, team chat and service control. The gateway serves it at <code>/apps/continuum/</code>; open it from the <a href="console.html" style="color:var(--accent-light)">console</a>'s <strong>Apps</strong> page (see <a href="install.html" style="color:var(--accent-light)">Install</a>).</p>
+    <div class="hero-actions">
+      <a href="#getting-started" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Get started
+      </a>
+      <a href="https://github.com/lpalbou/AbstractContinuum" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+      <a href="https://www.npmjs.com/package/@abstractframework/continuum" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">npm</a>
+      <a href="https://github.com/lpalbou/AbstractContinuum/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
+      <a href="https://github.com/lpalbou/AbstractContinuum/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
+    </div>
+    <div class="hero-code">
+<pre><code><span class="line-cmt"># Console &gt; Apps &gt; Continuum &gt; Open</span>
+
+<span class="line-cmt"># Or on its own (Node.js 18+), port 3002</span>
+<span class="line-kw">npx</span> @abstractframework/continuum \
+  --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section id="overview" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Overview</div>
+      <h2 class="section-title">Develop and deploy from one board</h2>
+      <p class="section-desc"><a href="observer.html">AbstractObserver</a> watches and discusses the running system; Continuum develops and deploys it. Work items flow across a kanban board, an execution agent of your choice implements them, and you review the result against its acceptance criteria before promoting it.</p>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Board-first</h3>
+        <p>The landing page is a kanban: <strong>Triage &rarr; Ready &rarr; In Progress &rarr; In Review &rarr; Done</strong>, with a <strong>Failed</strong> history lane. Cards carry type, priority (P0&ndash;P3), labels, package chips and a Definition-of-Ready dot.</p>
+        <div class="mode-tags"><span class="mode-tag">Kanban</span><span class="mode-tag">Sprints as labels</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Executor-agnostic</h3>
+        <p>The gateway's <code>executor</code> setting picks the agent that runs items: Codex CLI (<code>codex</code>, the default), Claude Code (<code>claude</code>), Cursor Agent (<code>cursor-agent</code>) or <a href="code.html">AbstractCode</a> (<code>abstractcode</code>).</p>
+        <div class="mode-tags"><span class="mode-tag">codex</span><span class="mode-tag">claude</span><span class="mode-tag">cursor-agent</span><span class="mode-tag">abstractcode</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Ready and Done gates</h3>
+        <p>Executing a Ready item is gated by an advisory <strong>Definition of Ready</strong> checklist (type, real summary, acceptance criteria, test commands), with a labeled override. Promoting from review shows the acceptance criteria as a <strong>Definition of Done</strong> checklist.</p>
+        <div class="mode-tags"><span class="mode-tag">DoR</span><span class="mode-tag">DoD</span></div>
+      </div>
+    </div>
+    <figure class="figure reveal" style="margin-top:2rem">
+      <img src="assets/img/shots/continuum-board.webp" alt="The AbstractContinuum 0.4.0 Board at /apps/continuum/: Triage, Ready, In Progress, In Review and Done columns, with two proposed demo tasks in Triage and two planned tasks with Execute buttons in Ready" loading="lazy" width="1600" height="800">
+      <figcaption>The Board with demo backlog items.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Pages</div>
+      <h2 class="section-title">What each page does</h2>
+    </div>
+    <div class="components-grid">
+
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></svg>
+        </div>
+        <h3>Board</h3>
+        <p>The work flow as a kanban. The card drawer holds the spec (view and edit, with metadata), the item's runs, and the QA review: an acceptance-criteria checklist, then promote to production, iterate with feedback, or <strong>Restart UAT</strong>, which deploys the candidate to the shared UAT (user-acceptance testing) stack for you to try first.</p>
+      </div>
+
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>Executions</h3>
+        <p>The live operations view: queued, running and awaiting-QA requests with live log tails, one-click QA actions and a strip of recently finished runs.</p>
+      </div>
+
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+        </div>
+        <h3>Backlog</h3>
+        <p>The full catalog: every kind of item including recurrent, deprecated and trash, search, batch execute, merge, and AI assist with an advisor.</p>
+      </div>
+
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <h3>Agents &amp; Entities</h3>
+        <p>The workforce: the configured execution agent, the advisor agent, a track record from execution history, and the gateway's entities with their skills.</p>
+      </div>
+
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <h3>Team</h3>
+        <p>A client for an <a href="https://github.com/lpalbou/AbstractContinuum/blob/main/docs/configuration.md#team-page-agora-hub" target="_blank" rel="noopener noreferrer">agora hub</a>, where people and agents work together: channels and DMs with threads, an inbox of open asks, hub-wide search, channel files, work claims and live updates. It posts as one configured seat through a server-side proxy; the seat key never reaches the browser.</p>
+      </div>
+
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+        </div>
+        <h3>Inbox</h3>
+        <p>Triage bug reports, feature requests and email; run triage and apply its decisions.</p>
+      </div>
+
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        </div>
+        <h3>Services</h3>
+        <p>Start, stop, restart and redeploy managed production and UAT processes, and set their environment variables (write-only). A high-trust surface: read the security notes below before exposing it.</p>
+      </div>
+
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M1 12h4M19 12h4M4.2 19.8L7 17M17 7l2.8-2.8"/></svg>
+        </div>
+        <h3>Settings</h3>
+        <p>Gateway sign-in, execution defaults (UAT in a candidate workspace, or in place in the production workspace), AI and voice preferences, and <strong>Gateway administration</strong>: backlog folder, exec runner, executor and process manager, each with where its value comes from. Only a gateway admin can change them.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section id="getting-started" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Get started</div>
+      <h2 class="section-title">Open Continuum</h2>
+      <p class="section-desc">Served through the gateway at <code>/apps/continuum/</code> with AbstractGateway 0.7.0 or newer; on its own port with AbstractGateway 0.4.1 or newer. A fresh gateway needs no backlog setup: the Board opens on <strong>Your backlog is empty</strong> with <strong>Create your first item</strong>.</p>
+    </div>
+
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="gw">Through the gateway</button>
+        <button class="tab-btn" data-tab="npx">On its own</button>
+        <button class="tab-btn" data-tab="cfg">Configure</button>
+      </div>
+      <div class="tab-panel active" id="tab-gw">
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Gateway console &gt; Apps &gt; Continuum &gt; Open</span>
+http://127.0.0.1:8080/apps/continuum/</code></pre>
+        </div>
+        <div class="install-notes"><ul><li>The gateway serves Continuum on its own address, so a remote or headless machine needs one port and one tunnel for the console and every app (see <a href="install.html#headless">headless installs</a>).</li></ul></div>
+      </div>
+      <div class="tab-panel" id="tab-npx">
+        <div class="code-block">
+<pre><code><span class="line-kw">npx</span> @abstractframework/continuum
+<span class="line-cmt"># or install the CLI globally</span>
+<span class="line-kw">npm install</span> -g @abstractframework/continuum
+abstractcontinuum --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
+        </div>
+        <div class="install-notes"><ul><li>Open <code>http://localhost:3002</code> and sign in with a gateway user and token from the connection badge at the bottom of the sidebar. The token is exchanged server-side for an HttpOnly session cookie and never stored in the browser. Without <code>--gateway-url</code>, Continuum uses the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>), else <code>http://127.0.0.1:8080</code>.</li></ul></div>
+      </div>
+      <div class="tab-panel" id="tab-cfg">
+        <div class="code-block">
+<pre><code>abstractcontinuum --port <span class="line-var">3002</span> --gateway-url <span class="line-str">http://127.0.0.1:8080</span> --hub-seat <span class="line-str">alice</span>
+abstractcontinuum config set hub_seat <span class="line-str">alice</span>    <span class="line-cmt"># saved in ~/.abstractcontinuum/settings.json</span>
+abstractcontinuum config get                   <span class="line-cmt"># every setting and where it comes from</span></code></pre>
+        </div>
+        <div class="install-notes"><ul><li><code>--port</code> (default 3002), <code>--host</code> (default <code>127.0.0.1</code>), <code>--gateway-url</code> (aliases <code>--gateway</code>, <code>--url</code>), and <code>--hub-url</code> / <code>--hub-seat</code> / <code>--hub-token-file</code> for the Team page. <code>abstractcontinuum --help</code> lists them all.</li></ul></div>
+      </div>
+    </div>
+
+    <div class="callout warn reveal" style="margin-top:2rem">
+      <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div><strong>A high-trust surface.</strong> Through the gateway, Continuum can redeploy services, run code-executing agents against your repositories, promote candidate output to production, send email from configured accounts and post as the configured hub seat. Whoever reaches it with a valid session can redeploy services. Keep it on loopback or a private network, put your own authenticating reverse proxy in front of anything broader, and give gateway tokens only to people with deploy rights. See the <a href="https://github.com/lpalbou/AbstractContinuum/blob/main/docs/security.md" target="_blank" rel="noopener noreferrer">security model</a>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ WHERE TO NEXT ═══════════════════ -->
+<section id="next">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Where to next</div>
+      <h2 class="section-title">Keep going</h2>
+    </div>
+    <div class="next-links reveal">
+      <a class="next-link" href="start-developer.html"><strong>Developer journey</strong><span>From a first run to agents that work through your backlog.</span></a>
+      <a class="next-link" href="install.html"><strong>Install AbstractFramework</strong><span>One line sets up the gateway that serves Continuum.</span></a>
+      <a class="next-link" href="code.html"><strong>AbstractCode</strong><span>The coding assistant, also available as a Continuum executor.</span></a>
+      <a class="next-link" href="observer.html"><strong>AbstractObserver</strong><span>Watch and discuss the running system.</span></a>
+      <a class="next-link" href="console.html"><strong>The consoles</strong><span>Install, open and configure apps from the gateway console.</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>An open-source AI platform you run yourself: agents, automations, voice and generative media behind one gateway, with every step recorded.</p>
+      <p style="margin-top:.5rem">MIT licensed &middot; framework release 0.6.1 (2026-09-28)</p>
+      <p style="margin-top:.75rem"><a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub: lpalbou</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Start here</h4>
+      <a href="install.html">Install</a>
+      <a href="start-user.html">User</a>
+      <a href="start-creator.html">Artist / creator</a>
+      <a href="start-developer.html">Developer</a>
+      <a href="start-architect.html">Architect</a>
+      <a href="start-researcher.html">Researcher</a>
+      <a href="start-automation.html">Automation owner</a>
+    </div>
+    <div class="footer-col">
+      <h4>Apps</h4>
+      <a href="console.html">Web &amp; terminal console</a>
+      <a href="automations.html">Automations</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Packages</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub releases</a>
+      <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Container images</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">Hugging Face models</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
+  </div>
+</footer>
+<script src="assets/js/main.js?v=4"></script>
+</body>
+</html>

@@ -1,16 +1,18 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractobserver/main/llms.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractObserver/main/llms.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractobserver/main/llms.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractObserver/main/llms.txt
 
 # AbstractObserver
 
 > Gateway-only observability UI (Web/PWA) for AbstractFramework runs: a browser SPA + tiny Node.js CLI that connects to an AbstractGateway HTTP API (HTTP fetch + SSE ledger streaming) and submits durable commands.
 
 This repository is UI-only:
-- The packaged CLI (`bin/cli.js`) serves static assets from `dist/` (SPA fallback) and does **not** proxy `/api`.
-- The browser talks to the gateway via `src/lib/gateway_client.ts` (treat this file as the source of truth for HTTP endpoints and request shapes).
+- The packaged CLI (`bin/cli.js` + `bin/server.js`) serves `dist/` (SPA fallback) at `/` or through the gateway at `/apps/observer/` (app-server mount contract: identity header, `<base href>`, cookie path, forwarded client address) and proxies `api/` to the Gateway after browser-session sign-in, using `@abstractframework/app-server`.
+- The browser talks to same-origin `/api` in hosted mode; direct Gateway URLs remain available for local development via `src/lib/gateway_client.ts` (treat this file as the source of truth for HTTP endpoints and request shapes).
+- Hosted sign-in uses Gateway URL + user + token only to create an app-scoped browser session. Settings persistence strips Gateway bearer tokens. With `@abstractframework/app-server` 0.1.10 or newer the proxy sends the browser's connection address as `X-Forwarded-For` and `X-AbstractFramework-App-Proxy: abstractobserver` to the Gateway.
+- On non-local hosted UI hostnames, the server-configured Gateway URL is authoritative; browser-supplied Gateway URL changes are rejected unless `ABSTRACTOBSERVER_ALLOW_REMOTE_BROWSER_GATEWAY_CONFIG=1` is enabled behind access control. Forwarded host headers are trusted only when `ABSTRACTOBSERVER_TRUST_PROXY_HEADERS=1` or `ABSTRACTGATEWAY_TRUST_PROXY_HEADERS=1`.
 
 ## Quickstart
 - Run packaged UI server (no build step): `npx --yes --package @abstractframework/observer -- abstractobserver`
@@ -26,21 +28,26 @@ Notes:
 
 ## Documentation (start here)
 - [README](README.md): Install and quickstart
-- [Getting started](docs/getting-started.md): Run the UI and connect to a gateway
-- [FAQ](docs/faq.md): Common questions (grounded in code)
+- [Getting started](docs/getting-started.md): Run the UI and connect to a gateway; Ask about a run (whole conversation, History note when the 50k-token window drops older messages, error cards never sent back) vs the top-bar Assistant (one gateway session per conversation, New conversation, no tools)
+- [FAQ](docs/faq.md): Common questions (grounded in code), including the CLI `/api` session proxy, the About dialog, chat history windows and the tool-less Assistant
 - [Docs index](docs/README.md): What to read next
 - [Architecture](docs/architecture.md): Components, data flow, diagrams
-- [Configuration](docs/configuration.md): CLI env vars, UI settings, deployment patterns
-- [API](docs/api.md): Gateway endpoints used by the UI (grounded in code)
+- [Configuration](docs/configuration.md): launch flags, serving under the gateway at /apps/observer/, UI settings, deployment patterns
+- [API](docs/api.md): Gateway endpoints used by the UI, including Runtime Activity run pages and canonical artifact envelope search/stats for Runtime Artifact Explorer
+- [Automations](docs/automations.md): Launch → Automate (what, when in UTC intervals, independent/growing context, tool approval), the Automations page (icon controls, Edit: the row's Edit opens the form — title, task, interval, context, tools —, 409 conflicts), runs as a conversation, answering waits by kind, the automation's files (browse, open, download through the gateway), Discuss as an in-page chat with a fork, automation tags on Board/Observe/System, legacy schedules and Recreate, the stub gateway
 - [Development](docs/development.md): Local dev, workspace deps, tests, build
 - [Security](docs/security.md): Trust boundaries and operational guidance
-- [Troubleshooting](docs/troubleshooting.md): Common issues and fixes
+- [Troubleshooting](docs/troubleshooting.md): Common issues and fixes (CORS, mixed content, 401 under `/api`, About shows the gateway unavailable, stale service worker, automations)
 
 ## Key entrypoints (code)
-- [CLI server](bin/cli.js): static server (`PORT`, `HOST`), SPA fallback, optional GPU widget config injection
+- [CLI](bin/cli.js) and [app server](bin/server.js): launch flags (`--gateway-url`, `--port`, `--host`, `--monitor-gpu`, `--entity-app-url`, `--gateway-dir`), mount-capable handler, session proxy, folder reveal (browsers on this machine only)
 - [App shell + pages](src/ui/app.tsx): settings, page routing, observe/launch flows, durable commands
 - [Gateway client](src/lib/gateway_client.ts): HTTP client + SSE ledger streaming (API source of truth)
-- [Vite config](vite.config.ts): workspace aliases + dev `/api` proxy
+- [Automations rules + controller](src/ui/automations.ts): workflow choice (`@default`), create body, run tags, capability gate, legacy prefill, typed wait answers, page controller
+- [Automations page](src/ui/automations_page.tsx) and [Automate fields](src/ui/automate_form.tsx): the page, rows and the ui-kit `AutomationPanel` wiring; the When/Context/Tools fields
+- [Discussion chat](src/ui/automation_discussion.tsx): panel-chat `WorkflowChat` + `presentInteraction` over the gateway client; folders through panel-chat `WorkspaceBrowser` (`/runs/{id}/workspace*`)
+- [Automations stub gateway](scripts/automations_stub_server.mjs): dev/test stub serving the ui-kit fixtures
+- [Vite config](vite.config.ts): workspace aliases + dev session proxy and `/api` fallback proxy
 - [Package metadata](package.json): npm name/version, scripts, Node engine
 - [llms-full generator](scripts/generate-llms-full.mjs): defines which files are embedded into `llms-full.txt`
 
@@ -51,7 +58,7 @@ Notes:
 
 ## Common tasks
 - Add/change a gateway capability: update `src/lib/gateway_client.ts` (source of truth) → update `docs/api.md` → run `npm test` + `npm run build`.
-- Change CLI behavior/config: update `bin/cli.js` → update `docs/configuration.md` → run `npm run build`.
+- Change CLI behavior/config: update `bin/cli.js` / `bin/server.js` → update `docs/configuration.md` → run `npm run build`.
 - Update docs for agents: edit docs → regenerate `llms-full.txt` with `npm run llms:full`.
 
 ## Optional (project meta)
@@ -59,4 +66,5 @@ Notes:
 - [Contributing](CONTRIBUTING.md): How to develop and submit changes
 - [Security policy](SECURITY.md): Responsible vulnerability reporting
 - [Acknowledgments](ACKNOWLEDGMENTS.md): Credits
+- [Code of conduct](CODE_OF_CONDUCT.md): Conduct expectations and reporting
 - [License](LICENSE): MIT license

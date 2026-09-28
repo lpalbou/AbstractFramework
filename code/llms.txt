@@ -1,75 +1,71 @@
 # This file is maintained in the source repository.
-# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstractcode/main/llms.txt
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractCode/main/llms.txt
 # 
 # Fetch the latest version directly:
-#   curl -sL https://raw.githubusercontent.com/lpalbou/abstractcode/main/llms.txt
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractCode/main/llms.txt
 
 # AbstractCode
 
-> Durable terminal TUI/CLI host for agentic coding on AbstractFramework (AbstractAgent + AbstractRuntime + AbstractCore). This repo contains the published Python package (`abstractcode/`) and an optional gateway-first web host UI (`web/`).
+> An agentic coding assistant with two clients — a Rust terminal application
+> (`tui/`, crates.io `abstractcode`) and a TypeScript browser application
+> (`web/`, npm `@abstractframework/code`). Neither runs the coding agent: it
+> runs durably on AbstractGateway, and both clients observe and steer it over
+> HTTP and SSE. A session is portable between them.
 
-This file follows the `llms.txt` manifest format (curated links). Use:
-- `llms.txt` when you can browse/fetch linked files.
-- `llms-full.txt` when you need an offline single-file snapshot (docs/policies only; no source code).
-To regenerate `llms-full.txt`, run: `python scripts/generate_llms_full.py`
-Format reference: https://llmstxt.org/
+This file follows the `llms.txt` manifest format (curated links). Use `llms.txt`
+when you can fetch the linked files, and `llms-full.txt` when you need one
+offline snapshot of the documentation. Format reference: https://llmstxt.org/
 
-Important notes (evidence-first):
-- Status: **pre-alpha**, version **0.3.6** (see `pyproject.toml` and `abstractcode/__init__.py`). Docs last verified: **2026-02-09**.
-- Source of truth is the code in `abstractcode/` and executable invariants in `tests/`. If docs and code disagree, follow the code/tests.
-- Authoritative in-app command list: `/help` (implemented in `abstractcode/react_shell.py::_show_help`).
-- Tools are approval-gated by default (wired via `PassthroughToolExecutor(mode="approval_required")` in `abstractcode/react_shell.py`).
-- The pip package is the Python CLI/TUI. The `web/` app is a separate Node/Vite build (see [docs/web.md](docs/web.md)).
-- Rebuilding `web/` requires a sibling `abstractuic/` repo via Vite path aliases (`web/vite.config.ts`); `web/dist/` is included for convenience.
-- Web voice UX exists (push-to-talk transcription + TTS playback) when the connected gateway exposes the endpoints used by `web/src/lib/gateway_client.ts` (`/audio/transcribe`, `/voice/tts`).
-- Local VisualFlow runs via `abstractcode flow ...` require `abstractcode[flow]` (see [docs/workflows.md](docs/workflows.md)).
+Ground rules for reading this repository:
 
-Dev loop:
-- `pytest -q`
-- `ruff check .`
-- `black .`
+- Status: **pre-alpha**. Interfaces and behavior may change between releases.
+- The source of truth is the code, and the executable invariants are the tests
+  (`cargo test --workspace` for the terminal client, `npm test` in `web/` for
+  the browser client). If the documentation and the code disagree, follow the
+  code.
+- The two clients release independently: tag `v<version>` publishes the crate,
+  tag `web-v<version>` publishes the npm package.
+- A reachable AbstractGateway is required. There is no standalone mode.
+- Tools are approval-gated by default; approvals are durable gateway commands,
+  so a wait raised in one client is answerable from the other.
+- The authoritative command list is `/help` inside the terminal client, and
+  `abstractcode --help` for the command line.
 
-## Start here
+## Project documentation
 
-- [README.md](README.md): Install + quickstart (+ architecture diagram)
-- [docs/getting-started.md](docs/getting-started.md): First run + key concepts
-- [docs/README.md](docs/README.md): Docs index (what to read when)
-- [docs/architecture.md](docs/architecture.md): Architecture (diagrams + code pointers)
-- [docs/cli.md](docs/cli.md): CLI/TUI reference (commands, env, persistence, MCP)
+- [README](README.md): what AbstractCode is, the two clients, and a quick start
+- [Getting started](docs/getting-started.md): running a gateway, installing a client, credentials, first run
+- [Architecture](docs/architecture.md): the clients, the browser app server, the gateway, the run stream with live reply deltas, the thin-client contract, and repository layout
+- [API and integration points](docs/api.md): the command-line surface, the library surface, and the gateway contract (runs, streams, discovery, workspace files, about)
+- [Workflows](docs/workflows.md): the gateway default agent workflow, selecting a workflow, and the `abstractcode.agent.v1` interface
+- [Automations](docs/automations.md): creating, managing, answering and discussing gateway automations from the terminal (`/automations`, `/schedule`) and the browser (the Automations sidebar section)
+- [Interface events](docs/ui_events.md): the workflow-driven event contract
+- [FAQ](docs/faq.md): recurring questions and current limitations
+- [Troubleshooting](docs/troubleshooting.md): symptom-oriented diagnosis and fixes
+- [Documentation index](docs/README.md): the full documentation map
 
-## Integration surfaces
+## Terminal client
 
-- [docs/api.md](docs/api.md): CLI surface, minimal Python API, workflow contracts
-- [docs/workflows.md](docs/workflows.md): Local flows, workflow agent mode, gateway + bundles
-- [docs/ui_events.md](docs/ui_events.md): Workflow-driven UI events contract
-- [docs/faq.md](docs/faq.md): Common issues and troubleshooting
+- [Terminal client README](tui/README.md): features, interface tour, keys, themes
+- [Terminal getting started](tui/docs/getting-started.md): terminal-specific setup
+- [Terminal API](tui/docs/api.md): command-line options, slash commands (`/workflow`, `/files`, `/stream`, `/about`, `/model`, `/mtp`, …), keys, streamed replies, exit codes
+- [Terminal architecture](tui/docs/architecture.md): how the client is built on AbstractTUI — threads, the ledger fold, live replies
+- [Terminal troubleshooting](tui/docs/troubleshooting.md): terminal, rendering, and connection problems
+- [Terminal FAQ](tui/docs/faq.md): durability, workspaces, tokens, steering semantics
+- [Orchestration cards](tui/docs/orchestration-cards.md): the coding workflows accepted by `--workflow` and when to choose each
 
-## Code map (Python)
+## Browser client
 
-- [abstractcode/__init__.py](abstractcode/__init__.py): Package metadata + `main(argv=None)` entrypoint
-- [abstractcode/__main__.py](abstractcode/__main__.py): `python -m abstractcode` entrypoint
-- [abstractcode/cli.py](abstractcode/cli.py): CLI arg parsing + subcommand dispatch (`flow`, `gateway`, `workflow`)
-- [abstractcode/react_shell.py](abstractcode/react_shell.py): TUI host (approvals, persistence, MCP, commands)
-- [abstractcode/file_mentions.py](abstractcode/file_mentions.py): `@file` mention parsing + workspace mounts
-- [abstractcode/workflow_agent.py](abstractcode/workflow_agent.py): VisualFlow “workflow as agent” (`abstractcode.agent.v1`)
-- [abstractcode/flow_cli.py](abstractcode/flow_cli.py): Local VisualFlow runner (`abstractcode flow ...`)
-- [abstractcode/gateway_cli.py](abstractcode/gateway_cli.py): Gateway HTTP client (runs, bundles, KG)
-- [abstractcode/workflow_cli.py](abstractcode/workflow_cli.py): Manage `.flow` bundles on a gateway
-- [tests/](tests/): Executable invariants / behavior examples
+- [Browser client README](web/README.md): running it, configuration, credential handling
+- [Web overview](docs/web.md): workflow selection with the gateway default, the conversation Files tab, Stream replies, MTP and other settings, the About dialog, approvals, workspace policy, and optional voice
+- [Web deployment](docs/deployment-web.md): hosting it behind HTTPS, reverse proxies, forwarded client addresses
+- [iPhone notes](docs/deployment-iphone.md): Safari and progressive web app behavior
 
 ## Policies
 
-- [CONTRIBUTING.md](CONTRIBUTING.md): Development setup + PR guidelines
-- [SECURITY.md](SECURITY.md): Responsible disclosure process
-- [ACKNOWLEDMENTS.md](ACKNOWLEDMENTS.md): Dependency credits (canonical spelling in this repo)
-- [ACKNOWLEDGMENTS.md](ACKNOWLEDGMENTS.md): Spelling alias (redirect)
-- [CHANGELOG.md](CHANGELOG.md): Release notes
-- [CHANGELOD.md](CHANGELOD.md): Typo alias (redirect)
-- [llms-full.txt](llms-full.txt): Offline snapshot of core docs/policies (no code)
-
-## Optional
-
-- [docs/web.md](docs/web.md): Web host overview + dev/build notes
-- [docs/deployment-web.md](docs/deployment-web.md): Run gateway + deploy web UI
-- [docs/deployment-iphone.md](docs/deployment-iphone.md): iPhone / PWA notes
-- [web/README.md](web/README.md): Web app README (gateway-first)
+- [Changelog](CHANGELOG.md): user-visible changes and migration notes
+- [Contributing](CONTRIBUTING.md): toolchains, tests, and the release tag scheme
+- [Security](SECURITY.md): how to report a vulnerability
+- [Code of conduct](CODE_OF_CONDUCT.md): contributor behavior expectations
+- [Acknowledgements](ACKNOWLEDGEMENTS.md): dependencies and upstream lineage
+- [License](LICENSE): MIT

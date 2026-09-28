@@ -1,0 +1,69 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractContinuum/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractContinuum/main/llms.txt
+
+# AbstractContinuum
+
+> Continuous iterative development and deployment console for
+> AbstractFramework (npm: `@abstractframework/continuum`, CLI:
+> `abstractcontinuum`, version 0.4.0): a thin React client over a Run
+> Gateway's development-lane APIs — kanban board, live execution pipeline
+> (executor chosen by a gateway setting: codex, claude, cursor-agent,
+> abstractcode), backlog catalog, agora hub Team
+> page, report/email triage, and managed prod/UAT service control.
+> High-trust surface: a signed-in user can redeploy services (see
+> SECURITY.md).
+
+Run it with `npx @abstractframework/continuum` against AbstractGateway
+0.4.1 or newer (`--gateway-url`, default: the gateway installed on this
+computer, else `http://127.0.0.1:8080`); it serves on
+`http://127.0.0.1:3002`, and a gateway that manages it serves it at
+`/apps/continuum/`. The server is configured with launch
+flags or `abstractcontinuum config set` (settings file
+`~/.abstractcontinuum/settings.json`; the hub seat is also on the Settings
+page); the backlog folder, exec runner,
+executor and process manager are gateway settings (Settings → Gateway
+administration, or `abstractgateway config set`).
+
+## Core Docs
+
+- [README.md](README.md): overview, pages, install and run, develop from source
+- [docs/getting-started.md](docs/getting-started.md): first run and first execution
+- [docs/README.md](docs/README.md): documentation index
+- [docs/architecture.md](docs/architecture.md): system shape diagram, serving under the gateway (`/apps/continuum/`), gateway settings and backlog folder flow, exec pipeline state machine, module layout, executor seam
+- [docs/api.md](docs/api.md): consumed gateway API families (incl. backlog status and the runtime-config settings door), session endpoints, hub proxy endpoints
+- [docs/configuration.md](docs/configuration.md): server launch flags and settings file (legacy env fallback, the local gateway pointer), serving through the gateway, Team page hub seat, sign-in proxy settings, gateway settings (backlog folder, exec runner, process manager), browser settings
+- [docs/security.md](docs/security.md): trust model, session/CSRF mechanics (and, with app-server 0.1.10 or newer, the `X-Forwarded-For` / `X-AbstractFramework-App-Proxy` headers the proxy sends), hub seat model, execution safety (UAT vs inplace)
+- [docs/faq.md](docs/faq.md): which version you are running (About), required gateway version, observer vs continuum, executor choice, where the backlog lives, write-only env vars
+- [docs/troubleshooting.md](docs/troubleshooting.md): sign-in, About showing the gateway unavailable, executions, backlog folder not available, inbox, services, Team page, dev setup
+
+## Topic Deep Dives
+
+- [docs/conventions.md](docs/conventions.md): the board's work-item grammar (lifecycle, metadata lines, type enum, DoR/DoD)
+- [docs/design/redesign_2026_07.md](docs/design/redesign_2026_07.md): the board-first design
+
+## Contributing
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): development workflow (sibling AbstractUIC checkout), checks, layout
+- [SECURITY.md](SECURITY.md): trust statement and vulnerability reporting
+
+## Source Map
+
+- bin/cli.js: CLI server — static serving, gateway session proxy, hub proxy mount, `config` command
+- bin/settings.js: server settings registry, flag > settings file > environment (legacy) > default, Settings route
+- bin/hub_proxy.js: allowlisted agora hub proxy (HTTP + WebSocket)
+- src/lib/gateway_client.ts: typed gateway client (dev-lane families only)
+- src/lib/hub_client.ts: agora hub client; vendor/hub/ holds the pinned hub contract
+- src/ui/board/: kanban board; src/ui/backlog/: backlog + exec pipeline (model.ts is pure + unit-pinned)
+- src/ui/backlog_folder.tsx: backlog folder states (empty Board, folder not available + admin actions)
+- src/ui/settings_page.tsx: Settings, including the hub seat and Gateway administration
+- src/ui/team_page.tsx: Team page; src/ui/executions_page.tsx, agents_page.tsx, report_inbox.tsx, email_inbox.tsx, processes_page.tsx (Services): other pages
+
+## Optional
+
+- [CHANGELOG.md](CHANGELOG.md): release history
+- [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md): credits
+- [history.md](history.md): provenance — born 2026-07-12 from the abstractobserver split
+- [docs/backlog/overview.md](docs/backlog/overview.md): package work backlog
