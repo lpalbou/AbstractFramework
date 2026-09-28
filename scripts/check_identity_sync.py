@@ -50,8 +50,8 @@ POINTER_FIXTURE_COPY_DIRS = [
     SIBLINGS / "abstractcode" / "tui" / "tests" / "fixtures" / "gateway_pointer",
     SIBLINGS / "abstractgateway" / "console-tui" / "tests" / "fixtures" / "gateway_pointer",
 ]
-# Automation control names, hints and the run-now glyph (the shared "Run now" tooltip and icon, operator
-# 2026-09-28): canonical in abstractuic (the web panel's CONTROL_HINTS and the Observer read it); the Qt
+# Automation control names, hints and the run-now glyph (the shared "Run now" tooltip and icon):
+# canonical in abstractuic (the web panel's CONTROL_HINTS and the Observer read it); the Qt
 # Assistant and AbstractCode's terminal client vendor byte-identical copies.
 CONTROLS_CANONICAL = SIBLINGS / "abstractuic" / "ui-kit" / "src" / "automations" / "automation_controls.json"
 CONTROLS_COPIES = [

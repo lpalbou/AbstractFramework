@@ -1927,8 +1927,8 @@ printf '  %-11s %s\n' "Console:" "$BASE_URL/console" "Gateway:" "$GW_SPEC ($PROF
     "Code:" "$([ "$CODE_OK" = 1 ] && echo "$_code_exe   (sign in once: $CODE_LOGIN; or on this machine: $TUI_COMMAND)" || echo "not installed ($CODE_WHY)")" \
     "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
 echo ""
-# What each command on PATH is (the operator's first question is "abstractgateway-config, what
-# is that?"). The crates are listed by full path when they are not in the tool bin dir.
+# What each command on PATH is, so a new user knows what abstractgateway-config and the others do.
+# The crates are listed by full path when they are not in the tool bin dir.
 cmd_line() { printf '      %-24s %s\n' "$1" "$2"; }
 echo "  Commands (in $TOOL_BIN):"
 cmd_line abstractgateway "the gateway: serve, service, network, models, engines, apps"
