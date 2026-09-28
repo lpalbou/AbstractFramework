@@ -171,14 +171,21 @@ The Mac package, the `.command` files and the one line all run the same script,
    `--with "abstractvoice[supertonic,stt]"`: Supertonic text-to-speech and Whisper speech-to-text,
    both on CPU (skipped on musl Linux and macOS before 13, where no wheels exist; Windows ARM64 gets
    Supertonic only). If those packages do not install on a system (for example glibc older than
-   2.28), the gateway is installed without them and the summary says so.
+   2.28), the gateway is installed without them and the summary says so. The same install puts
+   AbstractCore's commands and those of its voice, vision and music packages on PATH next to the
+   gateway's (`--with-executables-from`; `--no-core-cli` leaves them out): see
+   [Commands you get](#commands-you-get).
 5. Builds the terminal console, `abstractgateway-console`, with `cargo install --locked` into the
    same folder as the `abstractgateway` command (crates.io has no prebuilt binary). When cargo is
    missing, macOS and Linux get Rust from [rustup](https://rustup.rs) (minimal profile, in
    `~/.rustup` and `~/.cargo`, about 600 MB, shell profile untouched); Windows builds it only when
    Rust is already installed. It needs a C compiler; without one, or if the build fails, the
-   installer says why and continues. `--no-console` skips it. Then, when asked for, Node.js for
-   the browser apps, AbstractCode's terminal client, Ollama or LM Studio (flags below).
+   installer says why and continues. `--no-console` skips it. AbstractCode's terminal client,
+   `abstractcode`, is built the same way, with the same cargo, into the same folder (`--no-code-cli`
+   skips it; under `--no-console` it is built only with a cargo already there). A failed build never
+   fails the install: the installer warns once and prints the command to run by hand. Then, when
+   asked for, Node.js for the browser apps, Ollama or LM Studio (flags below). See
+   [Commands you get](#commands-you-get).
 6. With start at login on, registers the gateway with `abstractgateway service install --port N`
    (a LaunchAgent on macOS, a `systemd --user` unit on Linux, a per-user login entry on Windows) and
    starts it. The login item runs plain `abstractgateway serve`, so the gateway's
@@ -262,8 +269,8 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--with-ollama` | `-WithOllama` | Run Ollama's official installer (Linux uses sudo; the script tells you first) |
 | `--with-lmstudio` | `-WithLmStudio` | Install LM Studio (headless daemon on macOS/Linux, winget on Windows) |
 | `--no-console` | `-NoConsole` | Skip the terminal console (`abstractgateway-console`), which is otherwise built with cargo |
-| `--with-code-cli` | `-WithCodeCli` | Install the `abstractcode` crate with cargo (terminal client; needs Rust) |
-| `--with-core-cli` | `-WithCoreCli` | Also put the `abstractcore` command on PATH |
+| `--no-code-cli` | `-NoCodeCli` | Skip AbstractCode's terminal client (`abstractcode`), which is otherwise built with the console's cargo into the same folder (`--with-code-cli`, the old opt-in, is still accepted) |
+| `--no-core-cli` | `-NoCoreCli` | Do not put AbstractCore's commands (`abstractcore` and its apps) and `abstractvoice`, `abstractvision`, `abstractmusic` on PATH (`--with-core-cli`, the old opt-in, is still accepted) |
 | `--full` | `-Full` | Also build the [compiled extras](#compiled-extras) and llama.cpp from source (needs a C compiler) |
 | `--no-tray` | `-NoTray` | Leave out the menu-bar icon (`tray` extra) |
 | `--no-service` | `-NoService` | Do not start at login (asks nothing; starts the gateway in the background) |
@@ -280,6 +287,31 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--print-versions` | `-PrintVersions` | Print the pinned gateway, npm app and crate versions, then exit |
 | `-v`, `--verbose` | — | Show the full output of every command |
 | `--uninstall [--purge] [--remove-uv]` | `-Uninstall [-Purge]` | Stop the gateway process tree, remove the service and uv tools (purge also deletes your data: see [Remove AbstractFramework](#remove-abstractframework); `--remove-uv` also removes uv, its Python and cache when the installer added uv) |
+
+### Commands you get
+
+Everything lands in one folder, `~/.local/bin` (Windows: `%USERPROFILE%\.local\bin`; the Rust
+tools go to `%USERPROFILE%\.cargo\bin` there), which the installer adds to your shell profile: open
+a new terminal for it to be on PATH. The summary lists them under `Commands`.
+
+| Command | What it is |
+|---|---|
+| `abstractgateway` | The gateway itself: `serve`, `service` (start at login), `network` (who can reach it), `models`, `engines`, `apps` |
+| `abstractgateway-config` | The gateway's admin and configuration command: `status` (readiness without starting it), `claim-url` (a new one-time console sign-in link), `defaults` / `set-default` / `clear-default` (which provider and model each capability uses), `get` / `set` / `unset` (runtime settings), `bootstrap-admin`, `init` |
+| `abstractgateway-console` | The terminal console (`--gateway-url <url> --token <admin token>`); skipped with `--no-console` |
+| `abstractcode` | AbstractCode's terminal client (`--gateway-url <url> --token <admin token>`); skipped with `--no-code-cli` |
+| `abstractcore` | AbstractCore: `--config`, `--status`, `models`, `engines`, `serve`; also `abstractcore-chat` (a chat REPL), `abstractcore-endpoint`, and its apps `summarizer`, `extractor`, `judge`, `intent`, `deepsearch` (each also as `abstractcore-<app>`) |
+| `abstractvoice`, `abstractvoice-prefetch` | Voice in the terminal (a spoken chat, `web`, `tts`); `abstractvoice-prefetch` downloads voice models |
+| `abstractvision` | Images in the terminal: `cli`, `download`, `provider-models` |
+| `abstractmusic` | Music in the terminal: `t2m` (text to music) |
+
+The last four come from the gateway's own environment (`uv tool install --with-executables-from`),
+so they always match the versions the gateway runs; `--no-core-cli` leaves them out. uv exposes all
+of a package's commands or none, and refuses the whole install when one of them already exists, so
+when another program already has one of those names in the folder (for example an earlier
+`uv tool install abstractcore`), the installer leaves that package out, says which file is in the
+way, and installs the rest. An `abstractcode` that an earlier installer built with `--with-code-cli`
+is in `~/.cargo/bin`; the installer does not touch it (delete it with `cargo uninstall abstractcode`).
 
 Pass options through the one-liner like this:
 
@@ -400,7 +432,10 @@ A new mode or port applies at the next start: `network restart`, the console, th
 - Uninstall: [Remove AbstractFramework](#remove-abstractframework) above,
   `curl -LsSf .../install.sh | sh -s -- --uninstall` (Windows: the script block with
   `-Uninstall`), or by hand: `abstractgateway service uninstall` (when registered), then
-  `uv tool uninstall abstractgateway`. Your data stays in the data directory until you delete it
+  `uv tool uninstall abstractgateway` (it also removes the AbstractCore, voice, vision and music
+  commands it exposed) and `cargo uninstall --root ~/.local abstractgateway-console abstractcode`
+  (Windows: `cargo uninstall abstractgateway-console abstractcode`). The uninstaller does all of
+  it. Your data stays in the data directory until you delete it
   (`--purge`). See [Operations and support](installers/operations-and-support.md) for locations.
 
 ### Check the install

@@ -44,7 +44,22 @@ browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. T
 builds the terminal console, `abstractgateway-console`, which offers the same guide on a server
 without a browser (its **Network** screen, `N`, decides who can reach the gateway); over SSH the
 installer offers to open it at the end, and its summary prints the command (see
-[Headless or remote machine](install.md#headless-or-remote-machine)). Then
+[Headless or remote machine](install.md#headless-or-remote-machine)).
+
+The commands it puts on PATH (in `~/.local/bin`; open a new terminal), each listed in its summary:
+
+- `abstractgateway`: the gateway itself (`serve`, `service`, `network`, `models`, `engines`).
+- `abstractgateway-config`: the gateway's admin and configuration command: `status`, `claim-url`
+  (a new one-time console sign-in link), `set-default` (which model each capability uses),
+  `get` / `set` (runtime settings), `bootstrap-admin`.
+- `abstractgateway-console`: the terminal console, and `abstractcode`: AbstractCode's terminal
+  client; the summary prints both ready to paste, with `--gateway-url` and `--token`.
+- `abstractcore` (with `abstractcore-chat` and its apps `summarizer`, `extractor`, `judge`,
+  `intent`, `deepsearch`), `abstractvoice`, `abstractvision`, `abstractmusic`: the libraries'
+  own commands, from the gateway's environment.
+
+`--no-console`, `--no-code-cli` and `--no-core-cli` leave them out; see
+[Commands you get](install.md#commands-you-get). Then
 continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 [AbstractFlow](#author-orchestration-with-abstractflow). Step by step, what to do when something
 fails, and how to remove it: [Install](install.md); fixes for common problems:
@@ -298,8 +313,9 @@ the gateway default then runs at its next turn. See [Agent sessions](agent-sessi
 
 ### AbstractCode (terminal and browser)
 
-A coding client for durable agentic sessions on the gateway you started above. Install the Rust
-terminal client from crates.io (or download a prebuilt binary from the
+A coding client for durable agentic sessions on the gateway you started above. The installer
+already built the Rust terminal client, `abstractcode` (the summary prints the command, signed in).
+Otherwise install it from crates.io (or download a prebuilt binary from the
 [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases)), or run the
 browser client (the gateway console's **Apps** page opens it at `/apps/code/`, or run it with
 `npx`):

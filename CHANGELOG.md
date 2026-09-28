@@ -4,6 +4,20 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **The installer puts every command line on PATH by default.** AbstractCode's terminal client,
+  `abstractcode`, is built whenever the terminal console is, with the same cargo and into the same
+  folder (`~/.local/bin`; before, `--with-code-cli` put it in `~/.cargo/bin`, often not on PATH);
+  `--no-code-cli` (`-NoCodeCli`) skips it and a failed build never fails the install. AbstractCore's
+  commands (`abstractcore`, `abstractcore-chat`, its apps) and `abstractvoice`, `abstractvision`,
+  `abstractmusic` are exposed from the gateway's own environment; `--no-core-cli` (`-NoCoreCli`)
+  leaves them out, and a package whose command name another program already has is left out
+  instead of failing the install. `--with-code-cli` and `--with-core-cli` stay accepted. The
+  summary prints `AbstractCode (terminal): abstractcode --gateway-url <url> --token <token>` and a
+  `Commands` list saying what each one is (`abstractgateway-config`: the gateway's admin
+  command); the uninstaller removes `abstractcode` too. Docs: [Commands you get](docs/install.md#commands-you-get).
+
 ## [0.6.0] - 2026-09-28
 
 Remote and headless machines work like a Mac: one address and one SSH tunnel reach the console, the

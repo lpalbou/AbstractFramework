@@ -22,12 +22,14 @@ then runs the steps below. The one-line path:
    once.
 4. **Python**: `uv python install 3.12`.
 5. **Gateway**: `uv tool install --python 3.12 "abstractgateway[apple,tray]==<pin>"`. The
-   commands `abstractgateway` and `abstractgateway-config` land in `~/.local/bin`.
+   commands `abstractgateway` and `abstractgateway-config` land in `~/.local/bin`, with
+   AbstractCore's (`abstractcore` and its apps), `abstractvoice`, `abstractvision` and
+   `abstractmusic` (`--no-core-cli` leaves those out).
 6. **Optional** (flags): Node for the apps (`--with-apps` installs the `nodejs-wheel` uv tool when
    no Node 18+ exists), Ollama (`--with-ollama`: the official installer, which may ask for your
    password to link `/usr/local/bin/ollama`), LM Studio (`--with-lmstudio`: the headless `llmster`
-   daemon), AbstractCode's terminal client (`--with-code-cli`, through cargo). The gateway
-   terminal console is built by default (`--no-console` skips it).
+   daemon). The gateway terminal console and AbstractCode's terminal client are built by default
+   with cargo, into `~/.local/bin` too (`--no-console`, `--no-code-cli` skip them).
 7. **Service**: `abstractgateway service install --port 8080` registers a per-user LaunchAgent
    and starts it, so the gateway also starts at login. The LaunchAgent runs plain
    `abstractgateway serve`, so the gateway's Network setting (default `localhost`) decides where it

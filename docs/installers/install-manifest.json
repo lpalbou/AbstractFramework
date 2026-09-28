@@ -46,15 +46,15 @@
       },
       {
         "env": "",
-        "ps": "-WithCodeCli",
-        "sh": "--with-code-cli",
-        "summary": "cargo install abstractcode (terminal client) when cargo exists."
+        "ps": "-NoCodeCli",
+        "sh": "--no-code-cli",
+        "summary": "Skip AbstractCode's terminal client. By default abstractcode is built with the terminal console's cargo, into the same folder (--with-code-cli, the old opt-in, is accepted)."
       },
       {
         "env": "",
-        "ps": "-WithCoreCli",
-        "sh": "--with-core-cli",
-        "summary": "Also expose the abstractcore command (--with-executables-from abstractcore)."
+        "ps": "-NoCoreCli",
+        "sh": "--no-core-cli",
+        "summary": "Do not expose AbstractCore's commands (abstractcore, its apps) and abstractvoice, abstractvision, abstractmusic next to the gateway's (--with-core-cli, the old opt-in, is accepted)."
       },
       {
         "env": "",
