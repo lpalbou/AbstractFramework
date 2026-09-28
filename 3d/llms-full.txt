@@ -1,0 +1,358 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstract3d/main/llms-full.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstract3d/main/llms-full.txt
+
+# Abstract3D
+
+> Local-first 3D generation for AbstractFramework, with a validated textured TripoSR-based `scene3d` plugin for AbstractCore, an experimental local Step1X geometry backend, an experimental license-gated Hunyuan3D shape backend (`abstract3d:hunyuan3d21-local`, serving `tencent/Hunyuan3D-2.1` and the multi-view `tencent/Hunyuan3D-2mv`; requires ABSTRACT3D_HUNYUAN_ACCEPT_LICENSE=1; the Tencent license excludes EU/UK/South Korea), and a shared projection texture bake (`abstract3d.texturing`; canonical orthographic or perspective projection with strict first-surface visibility, see ADR 0007).
+
+## Document Index
+- [README.md](README.md): overview, install, quick start, validated scope, and experimental Step1X status
+- [docs/getting-started.md](docs/getting-started.md): setup and first successful runs
+- [docs/architecture.md](docs/architecture.md): system shape and backend boundaries
+- [docs/api.md](docs/api.md): Python and CLI reference
+- [docs/methodology.md](docs/methodology.md): generation workflows, Apple-local operating profile, and evaluation criteria
+- [docs/models.md](docs/models.md): validated backend, experimental Step1X path, blocked TRELLIS.2 path, and research catalog
+- [docs/benchmarks.md](docs/benchmarks.md): checked proof assets, measured results, TripoSR texture proof, and TripoSR-vs-Step1X comparison
+- [docs/integration-abstractcore.md](docs/integration-abstractcore.md): host integration
+- [docs/faq.md](docs/faq.md): conceptual support answers
+- [docs/troubleshooting.md](docs/troubleshooting.md): symptom-oriented fixes
+- [docs/adr/README.md](docs/adr/README.md): durable engineering policy
+
+---
+
+## README.md
+
+Abstract3D is a local-first 3D generation package for the AbstractFramework ecosystem.
+
+It exposes a first-class `scene3d` capability for:
+
+- `image_to_scene3d` (`i23d`)
+- `text_to_scene3d` (`t23d`)
+
+The validated default runtime path is:
+
+- `stabilityai/TripoSR` for single-image 3D reconstruction
+- lightweight `abstractvision` in the base install for provider-neutral composed `t23d`
+- `glb` as the primary artifact contract, with `obj` and zipped bundles as secondary forms
+- TripoSR defaults of `mc_resolution=256`, `cleanup=presentation`, baked `2048` base-color textures, and optional `mirror_symmetry` completion for single front-view symmetric subjects
+
+The repository also ships an experimental Step1X geometry backend:
+
+- backend id: `abstract3d:step1x-local`
+- provider alias: `step1x`
+- scope: official geometry checkpoint only
+- `t23d`: composed `text -> image -> geometry`
+- current status: works locally on Apple Silicon, but the checked proof cases were slower and lower-fidelity than TripoSR
+
+Install profiles:
+
+```bash
+pip install abstract3d
+pip install "abstract3d[triposr]"
+pip install "abstract3d[step1x]"
+pip install "abstract3d[hunyuan3d]"
+pip install "abstract3d[apple]"
+pip install "abstract3d[gpu]"
+pip install "abstractcore[scene3d]"
+```
+
+`pip install abstract3d` includes the lightweight `abstractvision` package contract. Use
+`abstract3d[apple]` or `abstract3d[gpu]` when the same environment should run local image
+composition as well as local 3D backends.
+
+Typical validated proof command:
+
+```bash
+python scripts/validate_local.py --backend triposr --device mps --mc-resolution 256
+```
+
+Typical validated image command:
+
+```bash
+abstract3d i23d ./object.png --output-dir ./out/object --device mps --format glb
+```
+
+That command now resolves to the cleaned textured TripoSR path by default. Use `--texture-mode vertex_color` for the lighter export, and `--texture-completion mirror_symmetry` when a single front-view symmetric subject needs better hidden-side texture.
+
+The validated path is object-centric. It is not yet a general multi-object scene generator.
+
+---
+
+## docs/getting-started.md
+
+Choose:
+
+- `abstract3d[triposr]` for the validated `i23d` path
+- `abstract3d[step1x]` for the experimental Step1X geometry path
+- `abstract3d[apple]` for Apple-local `t23d` plus both local backend families
+- `abstract3d[gpu]` for Linux/Windows GPU-local `t23d` plus both local backend families
+
+Example commands:
+
+- `abstract3d i23d ./object.png --output-dir ./out/object --device mps --format glb`
+- `abstract3d i23d ./object.png --output-dir ./out/object-fast --device mps --format glb --texture-mode vertex_color`
+- `abstract3d i23d ./object.png --output-dir ./out/object-step1x --backend step1x --model stepfun-ai/Step1X-3D --device mps --mc-resolution 128 --format glb`
+- `abstract3d t23d "..." --output-dir ./out/teapot --device mps`
+- checked Apple-local proof lane only: `abstract3d t23d "..." --output-dir ./out/teapot-proof --device mps --image-provider mlx-gen --image-model AbstractFramework/flux.2-klein-4b-8bit`
+
+Measured local footprint from the checked Apple-local machine:
+
+- TripoSR cache: `1.6G`
+- pinned TripoSR source snapshot: `63M`
+- Step1X geometry subset: `6.8G`
+- pinned Step1X source snapshot: `147M`
+- optional Apple-local proof image model cache (`AbstractFramework/flux.2-klein-4b-8bit` via `mlx-gen`): `8.0G`
+
+Step1X uses `float32` on `mps`, and the texture stage is intentionally out of scope.
+
+---
+
+## docs/architecture.md
+
+All supported paths enter through `Scene3DManager` or the AbstractCore `scene3d` facade, then route into the selected backend and the shared bundle writer.
+
+Main backend roles:
+
+- `TripoSRBackend`: validated default path, composed `t23d`, pinned TripoSR source snapshot, `glb`/`obj`/bundle export
+- `Step1XGeometryBackend`: experimental geometry-only path, official Step1X geometry weights, composed `t23d`, Apple `mps` `float32`, local compatibility patch layer
+- `Hunyuan3DShapeBackend`: experimental license-gated Hunyuan3D-2.1 shape path (official `tencent/Hunyuan3D-2.1` DiT + shape VAE, adaptive volume decoder, shared projection texture bake); requires `ABSTRACT3D_HUNYUAN_ACCEPT_LICENSE=1` because the Tencent license excludes the EU, UK, and South Korea
+- `Trellis2LocalBackend`: experimental official-only path that remains outside the permissive validated default because of the required DINOv3 companion stack
+
+Durable boundaries are governed by ADR 0001 through ADR 0005.
+
+---
+
+## docs/api.md
+
+Public Python entry point: `Scene3DManager`.
+
+Useful methods:
+
+- `available_providers`
+- `list_models`
+- `list_operations`
+- residency helpers
+- `t23d`
+- `i23d`
+- `generate`
+- `validate_suite`
+
+Built-in backend ids:
+
+- `abstract3d:triposr` / `triposr`
+- `abstract3d:step1x-local` / `step1x`
+- `abstract3d:hunyuan3d21-local` / `hunyuan3d21` / `hunyuan3d` / `hunyuan` (license-gated)
+- `abstract3d:trellis2-local` / `trellis2`
+
+The CLI provides:
+
+- `catalog`
+- `i23d`
+- `t23d`
+- `validate`
+
+`--num-inference-steps` is exposed for Step1X generation and validation.
+
+Mesh operations (`abstract3d.mesh_ops`, requires the `abstract3d[mesh]`
+extra, no model runtime): `analyze_mesh`, `transform_mesh`, `compose_scene`,
+`convert_mesh`, `repair_mesh`, `render_preview`.
+
+AI tools (`abstract3d.tools`): eight LLM-callable tools returning JSON with an
+explicit `success` field — `generate_3d_object`, `analyze_3d_object`,
+`transform_3d_object`, `compose_3d_scene`, `convert_3d_object`,
+`repair_3d_object`, `render_3d_preview`, `list_3d_backends`. Accessors:
+`abstract3d_tools()`, `abstract3d_tool_definitions()` (requires AbstractCore),
+`abstract3d_tool_specs()`, `register_tools(registry)`, and
+`SCENE3D_TOOL_CLASSIFICATION` for approval layers.
+
+Runtime expectations: the full Hunyuan3D loop recipe at `512` octree / 50
+steps on Apple `mps` takes on the order of 2¼ hours of compute (measured
+stage table in `docs/benchmarks.md`). The volume decode logs level
+schedules and ~5% chunk progress at INFO; `timings_s` values are
+awake-process time (macOS sleep excluded) — wrap long unattended runs in
+`caffeinate -dims <command>`.
+
+---
+
+## docs/methodology.md
+
+This page explains how the repository generates, measures, and reviews local 3D outputs.
+
+Main workflows:
+
+- validated `i23d` through TripoSR
+- composed `t23d` through `abstractvision` image generation followed by the selected `i23d` backend
+- experimental Step1X geometry-only `i23d`
+
+Validated TripoSR texture policy:
+
+- `mc_resolution=256`
+- deterministic CPU cleanup before export
+- baked base-color texture at `2048` by default
+- `4096` only as an explicit hero-mode override
+
+Apple-local operating profile:
+
+- one heavy inference job at a time
+- Step1X on `mps` `float32`
+- conservative Step1X MPS cap
+- Step1X runtime release before export and preview rendering
+- CPU-side Step1X surface extraction and cleanup after denoising
+- deterministic cleanup, vertex welding, and stable-pose export canonicalization
+
+Primary review method:
+
+- inspect `contact_sheet.png` first
+- then inspect `metadata.json` for timings, mesh density, topology, RSS, and MPS allocation
+
+Canonical public command patterns are documented for:
+
+- `abstract3d i23d`
+- `abstract3d t23d`
+- `python scripts/validate_local.py`
+
+---
+
+## docs/models.md
+
+Validated default backend:
+
+- `stabilityai/TripoSR`
+- tasks: `image_to_scene3d`, composed `text_to_scene3d`
+- license: MIT
+- Apple-local status: validated
+
+Experimental Step1X backend:
+
+- `stepfun-ai/Step1X-3D/Step1X-3D-Geometry-1300m`
+- tasks: `image_to_scene3d`, composed `text_to_scene3d`
+- license: Apache-2.0
+- status: implemented and benchmarked on Apple Silicon
+- boundary: geometry-only, official weights only, composed `t23d`, textured output out of scope
+
+Experimental license-gated Hunyuan3D-2.1 backend:
+
+- `tencent/Hunyuan3D-2.1/hunyuan3d-dit-v2-1`
+- tasks: `image_to_scene3d`, composed `text_to_scene3d`
+- license: tencent-hunyuan-community (territory-restricted: excludes the EU, UK, and South Korea)
+- status: implemented and benchmarked on Apple Silicon; strongest geometry in the local catalog on the checked proof objects
+- boundary: shape stage only, official weights only, explicit license acknowledgment required (`ABSTRACT3D_HUNYUAN_ACCEPT_LICENSE=1`), textures via the shared projection bake
+
+Multi-view geometry through the same backend:
+
+- `tencent/Hunyuan3D-2mv/hunyuan3d-dit-v2-mv` (`-fast` and `-turbo` subfolders accepted)
+- select with `model="tencent/Hunyuan3D-2mv"`; same license gate as 2.1
+- reference views whose angles snap to the trained front/left/back/right slots (25° tolerance) condition the shape; all references feed the texture bake
+- metadata records `multiview_conditioning` and `geometry_views`
+
+TRELLIS.2 remains implemented but not part of the permissive validated path because the official companion dependency stack still requires the gated non-permissive DINOv3 model.
+
+---
+
+## docs/benchmarks.md
+
+Checked Apple-local benchmark profile:
+
+- date: `2026-06-22`
+- hardware: `Apple M5 Max`, `128 GB`
+- Python: `3.12.13`
+- device: `mps`
+- checked Apple-local proof image provider: `mlx-gen`
+- checked Apple-local proof image model: `AbstractFramework/flux.2-klein-4b-8bit`
+- historical full-suite marching-cubes resolution: `128`
+- current validated texture profile: `mc_resolution=256`, `cleanup=presentation`, `texture_mode=baked_basecolor`, `texture_resolution=2048`
+
+Step1X-specific benchmark settings:
+
+- backend id: `abstract3d:step1x-local`
+- official model revision: `bf7084495b3a72222f36549b7942948aa4d9daa7`
+- pinned source snapshot: `cb5ac944709c6c913109070c7b90c3447f57f3d4`
+- Apple `mps` dtype: `float32`
+- current published dynamic reference lane: `docs/assets/validation/local-step1x-dynamic/`
+
+Loop recipe stage timing at 512³ (2026-07-22, Apple `mps`, measured):
+
+- pass-1 shape `2,054 s`, view synthesis `1,679 s`, pass-2 shape `2,433 s`,
+  mesh postprocess `195 s`, texture `1,770 s` — total ~2 h 16 m compute
+- chunked decode assembly measures `0.010 s` at full 513³ scale; decode
+  time is dominated by the accelerator queries
+
+Aggregate comparison:
+
+- TripoSR average total time: `6.3624 s`
+- Step1X average total time: `101.8601 s`
+- TripoSR average inference time: `0.4029 s`
+- Step1X average inference time: `55.1116 s`
+- TripoSR average MPS allocated: `1.5649 GiB`
+- Step1X average MPS allocated: `0.0008 GiB`
+- TripoSR average vertices/faces: `10,742` / `21,400`
+- Step1X average vertices/faces: `57,146` / `104,932.5`
+
+Interpretation:
+
+- TripoSR remains the validated default because it was much faster on the checked Apple-local profile and produced more recognizable object shapes on the same cases.
+- Step1X works locally, produces reproducible bundles, and integrates cleanly with AbstractCore, but it remains experimental.
+- The focused rocket `i23d` comparison also favored TripoSR over the stable Apple-local Step1X label profile on the checked machine.
+- A focused TripoSR texture proof now compares regular vertex-color output against baked `2048` textured output on two direct `i23d` objects and one `t23d`-derived object source.
+- A focused TripoSR portrait proof also compares baseline baked texture, `mirror_symmetry`, and `mirror_symmetry` plus one auxiliary side reference for a single front-view portrait.
+
+---
+
+## docs/integration-abstractcore.md
+
+Install `abstract3d` into the same environment as `abstractcore`.
+
+Exposed backend ids:
+
+- `abstract3d:triposr`
+- `abstract3d:step1x-local`
+- `abstract3d:trellis2-local`
+
+Accepted provider aliases:
+
+- `triposr`
+- `step1x`
+- `trellis2`
+
+Example Step1X host call:
+
+```python
+mesh_step1x = llm.scene3d.i23d(
+    "./object.png",
+    provider="step1x",
+    model="stepfun-ai/Step1X-3D",
+    format="glb",
+)
+```
+
+The current boundary is: TripoSR validated, Step1X geometry experimental, Hunyuan3D-2.1 license-gated and intentionally not registered with the AbstractCore plugin (direct `Scene3DManager`/CLI only), TRELLIS.2 implemented but outside the permissive validated path.
+
+---
+
+## docs/faq.md
+
+Key answers:
+
+- `t23d` is still composed, not native text-only 3D
+- Step1X does not provide native text-to-3D in this repo
+- Step1X textured output is not supported here
+- TripoSR remains the validated default because the checked Apple-local proof favored it over Step1X
+- neither the validated TripoSR path nor the experimental Step1X path requires CUDA in this repo
+- the validated TripoSR path now emits baked textures by default, but atlas resolution cannot recover detail absent from the reconstructed TripoSR color field
+
+---
+
+## docs/troubleshooting.md
+
+Main symptom-oriented fixes:
+
+- install `abstract3d`, then configure an `abstractvision` provider, or use `abstract3d[apple]` / `abstract3d[gpu]` for local image composition if `t23d` fails
+- compare against TripoSR if Step1X produces a dense blob or inflated mesh
+- unset `ABSTRACT3D_STEP1X_SOURCE_DIR` and let the repo bootstrap the pinned official Step1X snapshot if source bootstrap is misconfigured
+- review the Tencent license and set `ABSTRACT3D_HUNYUAN_ACCEPT_LICENSE=1` if the Hunyuan3D-2.1 backend refuses to run with a license acknowledgment error
+- request official access or point `ABSTRACT3D_TRELLIS2_DINO_MODEL` at a valid local authorized snapshot if TRELLIS.2 fails on DINOv3
+- retry on CPU, reduce `mc_resolution`, and keep one centered object if MPS behaves poorly
+- if a long run looks hung, check the run log for advancing `volume decode [...]: chunk N/M` lines and `pmset -g log` for mid-run sleep; keep long unattended runs awake with `caffeinate -dims`

@@ -1,8 +1,8 @@
 # AbstractFramework
 
-> AbstractFramework is an open-source (MIT) AI platform you run yourself: agents, automations, voice, images, video and music behind one gateway (AbstractGateway), with local models or any cloud provider, and every step recorded in an append-only ledger. It installs with one line on macOS, Linux and Windows, and is also a set of Python libraries (AbstractCore, AbstractRuntime, AbstractAgent, …) you can use on their own.
+> AbstractFramework is a modular, open-source (MIT) framework for durable, observable, multimodal AI: write once, generate everything, run anywhere. AbstractCore gives one Python API over ten provider types, local and cloud, with capability plugins for voice, images, video, music, 3D and cameras; AbstractRuntime runs agents and workflows as durable runs with an append-only ledger; AbstractGateway is the control plane (runs, automations, users, network) with thin clients in the terminal, the browser, the macOS menu bar and over SSH. It installs with one line on macOS, Linux and Windows, and every package also works on its own.
 
-Current framework release: `abstractframework` 0.6.1 (2026-09-28). It pins abstractgateway 0.7.1, abstractassistant 0.9.1, abstractcore 2.18.0, AbstractRuntime 0.7.1, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.13.0, abstractvision 0.3.30 and abstractmusic 0.1.15. Browser apps (npm): @abstractframework/flow 0.4.0, code 0.6.1, observer 0.2.1, continuum 0.4.0, entity 0.3.0. Rust tools (crates.io): abstractgateway-console 0.11.0, abstractcode 0.7.1, abstractcore-console 0.4.0.
+Current framework release: `abstractframework` 0.6.1 (2026-09-28). It pins abstractgateway 0.7.1, abstractassistant 0.9.1, abstractcore 2.18.0, AbstractRuntime 0.7.1, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.13.0, abstractvision 0.3.30 and abstractmusic 0.1.15. Separately released plugins: abstract3d 0.3.1, abstractcamera 0.2.0. Browser apps (npm): @abstractframework/flow 0.4.0, code 0.6.1, observer 0.2.1, continuum 0.4.0, entity 0.3.0. Rust tools (crates.io): abstractgateway-console 0.11.0, abstractcode 0.7.1, abstractcore-console 0.4.0.
 
 Install:
 - macOS / Linux: `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
@@ -10,7 +10,7 @@ Install:
 - macOS package: https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg
 - Python: `pip install abstractframework` (light), `"abstractframework[apple]"`, `"abstractframework[gpu]"`
 - Container: `ghcr.io/lpalbou/abstractgateway:0.7.1`
-- Upgrade: re-run the same install line (on a Mac without Terminal, install the latest .pkg again), or use Update on the Gateway card of the console or in the menu-bar icon
+- Upgrade: re-run the same install line (on a Mac without Terminal, install the latest .pkg again)
 - The installer puts every terminal command in `~/.local/bin`: `abstractgateway`, `abstractgateway-config`, `abstractgateway-console`, `abstractcode` (sign in once with `abstractcode login --token <admin token>`, or `abstractgateway apps tui-command code` on the gateway machine), and the AbstractCore, AbstractVoice, AbstractVision and AbstractMusic commands (opt-outs `--no-console`, `--no-code-cli`, `--no-core-cli`)
 
 After install the web console is at http://127.0.0.1:8080/console, the terminal console is `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>`, and the browser apps are served at http://127.0.0.1:8080/apps/<app>/ (flow, observer, code, continuum, entity). Local clients find the gateway through `~/.abstractframework/gateway.json`; every app and terminal client takes `--gateway-url`.
@@ -46,6 +46,8 @@ After install the web console is at http://127.0.0.1:8080/console, the terminal 
 - [AbstractVision](https://abstractframework.ai/vision.html): image and video generation ([llms.txt](https://abstractframework.ai/vision/llms.txt), [llms-full.txt](https://abstractframework.ai/vision/llms-full.txt))
 - [AbstractMusic](https://abstractframework.ai/music.html): text-to-music ([llms.txt](https://abstractframework.ai/music/llms.txt), [llms-full.txt](https://abstractframework.ai/music/llms-full.txt))
 - [AbstractMemory](https://abstractframework.ai/memory.html): durable agent memory ([llms.txt](https://abstractframework.ai/memory/llms.txt), [llms-full.txt](https://abstractframework.ai/memory/llms-full.txt))
+- [abstract3d](https://abstractframework.ai/3d.html): image-to-3D and text-to-3D capability plugin ([llms.txt](https://abstractframework.ai/3d/llms.txt), [llms-full.txt](https://abstractframework.ai/3d/llms-full.txt))
+- [AbstractCamera](https://abstractframework.ai/camera.html): camera control capability plugin ([llms.txt](https://abstractframework.ai/camera/llms.txt), [llms-full.txt](https://abstractframework.ai/camera/llms-full.txt))
 - [AbstractSemantics](https://abstractframework.ai/semantics.html): semantics registry ([llms.txt](https://abstractframework.ai/semantics/llms.txt), [llms-full.txt](https://abstractframework.ai/semantics/llms-full.txt))
 
 The per-package llms files on this site are copies; the canonical versions live in each repository (https://raw.githubusercontent.com/lpalbou/<Repo>/main/llms.txt).

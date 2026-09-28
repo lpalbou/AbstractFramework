@@ -1,0 +1,30 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/abstract3d/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/abstract3d/main/llms.txt
+
+# Abstract3D
+
+> Local-first 3D generation for AbstractFramework, with a validated textured TripoSR-based `scene3d` plugin for AbstractCore, an experimental local Step1X geometry backend, an experimental license-gated Hunyuan3D shape backend (2.1 flagship plus the multi-view 2mv checkpoint), and a shared projection texture bake.
+
+## Core Docs
+- [README.md](README.md): project overview, installation, validated scope, experimental Step1X status, and the license-gated Hunyuan3D-2.1 backend
+- [docs/getting-started.md](docs/getting-started.md): setup profiles, first successful runs, texture defaults, portrait symmetry option, and proof commands
+- [docs/architecture.md](docs/architecture.md): runtime shape, backend boundaries, and artifact contract
+- [docs/api.md](docs/api.md): Python manager, CLI surface, mesh operations (`abstract3d.mesh_ops`), AI tools (`abstract3d.tools`), and validation entry points
+- [docs/faq.md](docs/faq.md): scope, backend status, and hardware questions
+- [docs/troubleshooting.md](docs/troubleshooting.md): symptom-oriented fixes for TripoSR, Step1X, and TRELLIS.2
+
+## Topic Deep Dives
+- [docs/methodology.md](docs/methodology.md): generation workflows, Apple-local operating profile, multiview and symmetry texture methodology, evaluation criteria, and command patterns
+- [docs/models.md](docs/models.md): validated backend, experimental Step1X geometry path, license-gated Hunyuan3D-2.1 shape path, blocked TRELLIS.2 path, and research catalog
+- [docs/benchmarks.md](docs/benchmarks.md): checked-in contact sheets, measured timings, TripoSR texture proof, storage figures, and TripoSR-vs-Step1X comparison
+- [docs/integration-abstractcore.md](docs/integration-abstractcore.md): capability-plugin discovery, `generate(...)` output routing, and residency usage
+- [docs/adr/README.md](docs/adr/README.md): durable engineering policy decisions for backend scope and provenance
+
+## Project Docs
+- [CHANGELOG.md](CHANGELOG.md): user-visible release history
+- [CONTRIBUTING.md](CONTRIBUTING.md): contributor setup, tests, and validation workflow
+- [SECURITY.md](SECURITY.md): vulnerability reporting path
+- [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md): upstream lineage and credits

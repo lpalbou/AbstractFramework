@@ -1,0 +1,40 @@
+# This file is maintained in the source repository.
+# Canonical URL: https://raw.githubusercontent.com/lpalbou/AbstractCamera/main/llms.txt
+# 
+# Fetch the latest version directly:
+#   curl -sL https://raw.githubusercontent.com/lpalbou/AbstractCamera/main/llms.txt
+
+# AbstractCamera
+
+> Camera control abstractions: one thread-safe orchestrator (CameraManager) drives tethered PTP bodies (Nikon Z, Sony Alpha — hardware-validated), the machine's own cameras (macOS AVFoundation), DWARF smart telescopes over Wi-Fi (camera + pilotable alt-az mount), and a scriptable simulator, behind a session protocol with per-family adapters. A CameraHub pilots several cameras at once (one worker each; validated with four simultaneously) with per-device capture folders (`~/Pictures/<device>/[<sequence>/]`) and an on-device/local save policy. Live view, honest config dials with a write-verification ledger, single/burst/movie capture, mount GOTO/joystick/calibration as one-shot actions, an absolute-deadline intervalometer, live-view detection with auto-fire, rolling pre-capture clips, capture downloads.
+
+This repository's source of truth is the code under `src/abstractcamera/` (docs in `docs/`).
+
+Agent quickstart:
+- **Use the library**: `README.md` → `docs/getting-started.md` → `docs/api.md`. `pip install abstractcamera` (webcam+sim), extras: `[gphoto2]` (PTP), `[clips]` (MP4), `[raw]` (thumbnails), `[dwarf]` (smart telescopes over Wi-Fi). CLI: `abstractcamera list` / `abstractcamera preview`.
+- **Drive cameras from AbstractCore / an AI agent (ADR 0012)**: installing abstractcamera beside abstractcore auto-registers the `camera` capability (entry point `abstractcore.capabilities_plugins`, backend `abstractcamera:hub`); LLM tool set: `from abstractcamera.integrations.abstractcore_tools import camera_tools` → `generate(..., tools=camera_tools())` — eleven `camera_*` tools (open/close, preview-without-shutter, photo, bounded video, stop-recording, motion/lightning/meteor detection with auto-capture, event polling with session/eviction cursor contract) with a `CAMERA_TOOL_CLASSIFICATION` privacy/approval map (`captures_environment`). Synchronous operation layer: `abstractcamera.service.CameraService`.
+- **Wake workflows on movement (event API, not a daemon)**: detection runs in-process; its events are readable via `camera_get_events` / `detection_events` / `/v1/camera/events` with a cursor contract (session epoch, `evicted` signal, `trigger_id`, detection `metrics`). The wake-on-motion PRODUCER belongs at a framework entry (a gateway-hosted run or a flow that holds a camera open through the capability and emits via the gateway's own `emit_event`; a flow `wait_event`/`on_event` node resumes). abstractcamera is a dependency of abstractcore and ships NO gateway-facing daemon (the `abstractcamera watch` sentinel was removed — ADR 0013 § Amendment, operator ruling dm#14).
+- **Understand the design**: `docs/architecture.md` (manager / adapter / session layers, threading, hardware-scarred invariants), `docs/adr/` (13 decision records incl. the session-protocol boundary, multi-camera hub, device media sync, AbstractCore capability plugin, and event wire contract).
+- **Add a camera family**: `docs/api.md` § Extending; adapters in `src/abstractcamera/adapters/`, sessions/drivers in `src/abstractcamera/drivers/`; conformance suite in `tests/test_session_protocol.py`; hardware validation required before support claims (ADR 0007/0008 discipline).
+- **Camera-less dev/CI**: `ABSTRACTCAMERA_FAKE=1` (all transports become the simulator); scenario scripting via `abstractcamera.sim.gphoto2.configure(profile="z6ii"|"a7r4", ...)`; test seam `CameraManager(driver=FakeDriver(module))`.
+- **Debug a device issue**: `docs/troubleshooting.md` (TCC permission, ptpcamerad claims, Sony busy/silent-AF behaviors, stale ids).
+- **Need one file**: `llms-full.txt`.
+
+Reality checks (shipped behavior, anchored in code):
+- Hardware-validated: Nikon Z6 II (2026-07-07/08 + 2026-07-12 through the package, 18 checks), Sony A7R IV (2026-07-12, 22+11 checks), MacBook Pro camera (2026-07-12, 21 checks), four cameras SIMULTANEOUSLY via CameraHub (2026-07-12, 16 checks). Other PTP bodies: generic adapter, honest ledger, no family claims.
+- The Sony A7R IV intermittently drops accepted triggers (even in Manual focus); the expectation watch arms on EVERY single fire and reports drops honestly. A Nikon with an unformatted card fails every capture with a bare [-1]: the adapter warns at connect and names the cause on failures.
+- The webcam family exposes resolution + zoom (videoZoomFactor — the ONE manual control macOS grants) because the OS accepts nothing else: manual exposure/ISO/WB/focus AVFoundation APIs are iOS-only (measured unsupported on the built-in camera AND a Continuity iPhone; iPhone framing/depth effects are macOS Control Center Video Effects toggles, not app APIs). Capabilities never pretend (ADR 0004).
+- All PTP string widget reads are NULL-guarded via ctypes (`ptp_safe`): python-gphoto2 segfaults on NULL string values (observed on a Sony A7R IV mid-wake, 2026-07-12) — a NULL reads as an absent value, never a crash. Webcam ids are AVFoundation uniqueIDs and capture opens THAT device natively (ADR 0009, after a real positional-mapping inversion): names cannot point at the wrong camera; residual failures fail closed.
+- Sony movie start/stop is accepted but UNCONFIRMABLE over USB (no events, no status); webcam movies are confirmable (the package writes the MP4).
+- DWARF smart telescopes (family `dwarf`): protobuf-over-WebSocket control plane implemented from DwarfLab's published API v2 spec (vendored minimal proto3 codec; `websocket-client` behind the `dwarf` extra), RTSP live view, captures land in the device album (microSD) and download over HTTP, ONE master controller at a time (connect refuses honestly when the DWARFLAB app holds the lock). The mount rides the action channel: `gotoradec`/`gotosolar`/`stopgoto`/`calibrate`/`joystick`/`joystickstop` — one-shot, never cached, never replayed. Discovery is configured (`ABSTRACTCAMERA_DWARF_HOSTS`), never scanned; `scripts/validate_dwarf.py` sweeps deliberately (mount motion opt-in).
+- `is_tethering_available()` keeps its historic PTP-only meaning; general availability is `status()["available"]`.
+
+## Docs
+
+- [README.md](README.md): overview, install, quickstart, diagram
+- [docs/getting-started.md](docs/getting-started.md): enumeration, connect, dials, capture, detection, sequences, fake mode
+- [docs/architecture.md](docs/architecture.md): the three layers, threading contract, invariants
+- [docs/api.md](docs/api.md): CameraManager surface, capabilities descriptor, extension guide
+- [docs/faq.md](docs/faq.md) · [docs/troubleshooting.md](docs/troubleshooting.md)
+- [docs/adr/README.md](docs/adr/README.md): decision records
+- [CHANGELOG.md](CHANGELOG.md)
