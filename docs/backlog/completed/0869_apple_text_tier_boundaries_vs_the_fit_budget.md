@@ -5,6 +5,7 @@
 > Created: 2026-09-25
 > Priority: high
 > Labels: decision-gate, models, catalog, apple-silicon
+> Status: completed 2026-09-28. Answered by AbstractCore 2.18.1's fit rule (abstractcore `9026a04`, released in 2.18.1 `bd945f8`); root 0.6.2 pins abstractcore 2.18.1
 
 ## Summary
 
@@ -37,12 +38,31 @@ explicitly left out of abstractcore 2.15.1 pending this decision (STATUS patch w
    operator-only by the workspace rules).
 2. Low end: move the 9B boundary from 24 to 32 GiB (27B from 32 GiB) — the proposal on record.
 
+## Resolution (2026-09-28)
+
+The gate is answered by the rule AbstractCore 2.18.1 adopts, "recommendations must fit": each
+Apple silicon tier starts at the first memory size Apple ships where its model fits macOS's default
+GPU memory limit (core CHANGELOG `[2.18.1]`, `APPLE_TEXT_TIERS` in `config/model_catalog.py`):
+
+| Unified memory | Recommended text model |
+|---|---|
+| below 16 GiB | Qwen3 1.7B 8-bit (new; the largest catalog text model that fits 8 GB) |
+| 16 to below 32 GiB | Qwen3.5 9B (option 2 on record: the 9B boundary moves from 24 to 32 GiB) |
+| 32 to below 128 GiB | Qwen3.8 27B |
+| 128 GiB and above | Qwen3.8 Flash-Next, verdict `needs_gpu_limit` with the exact `sudo sysctl iogpu.wired_limit_mb=…` shown (option 1, keep the tier, with the command instead of a bare warning; the console never runs it) |
+
+Existing routes are unchanged (`apply-recommended` reports the new pick as `kept` unless `--force`).
+No verbatim operator quote was recorded in this item; the ruling was carried by the lead's
+2026-09-28 cascade GO (core 2.18.1 -> gateway 0.7.2 -> root 0.6.2).
+
 ## Acceptance criteria
 
-- [ ] Operator ruling recorded here (quote it verbatim).
-- [ ] `APPLE_TEXT_TIERS` changed per the ruling; every tier's pick `fits` on a stock machine of the
-      tier's lower bound, or the ruling explicitly accepts a warning.
-- [ ] Released in an abstractcore patch; root pin follows in a floor-pinned root patch.
+- [x] Ruling recorded (the fit rule above, via the 2026-09-28 cascade GO).
+- [x] `APPLE_TEXT_TIERS` changed per the ruling; every tier's pick fits at its lower bound, and the
+      128 GiB tier carries the GPU-limit command (`needs_gpu_limit`).
+- [x] Released in an abstractcore patch (2.18.1); the root pin follows in root 0.6.2 (0982).
+      The gateway's tier test reads core's table (`tests/test_gateway_recommended_text_tiers.py`),
+      green on 2.18.0 and 2.18.1.
 
 ## Testing
 

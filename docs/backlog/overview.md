@@ -12,9 +12,9 @@ so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findin
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 151 | 108 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0962, 0964–0975, 0977–0979, 0981 included; 0952, 0963 completed 2026-09-28; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Planned | 151 | 108 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0962, 0964–0975, 0977–0979, 0981, 0983 included; 0869, 0952, 0963 completed 2026-09-28; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931, 0976 included; 0901 promoted to planned) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 257 | 247 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0890, 0930, 0941, 0943, 0946–0950, 0952, 0963, 0980 (2026-09-28; 0941 released 2026-09-27 with root 0.5.0, 0980 is the patch wave's root record, root 0.6.1). |
+| Completed | 259 | 249 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0869, 0890, 0930, 0941, 0943, 0946–0950, 0952, 0963, 0980, 0982 (2026-09-28; 0941 released 2026-09-27 with root 0.5.0, 0980 is the patch wave's root record, root 0.6.1; 0982 is root 0.6.2's record, and 0869 is answered by abstractcore 2.18.1). |
 | Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -75,8 +75,8 @@ Release follow-ups after the 2026-09-26 wave:
 Earlier release follow-ups (after the 2026-09-24 waves; still open unless noted):
 
 1. Owner actions and decision gates: sign and notarize the Mac installer
-   ([0868](planned/0868_sign_and_notarize_the_mac_installer.md)); rule on the Apple
-   text tiers ([0869](planned/0869_apple_text_tier_boundaries_vs_the_fit_budget.md)) and on the
+   ([0868](planned/0868_sign_and_notarize_the_mac_installer.md)); the Apple text tiers
+   ([0869](completed/0869_apple_text_tier_boundaries_vs_the_fit_budget.md), answered by abstractcore 2.18.1's fit rule); rule on the
    gateway roles ([0870](planned/0870_operator_rulings_for_gateway_roles_0862.md)); crates.io
    trusted publishing ([0857](completed/0857_crates_io_trusted_publishing_for_console_crates.md), done 2026-09-26).
 2. Public-surface leaks first: the gateway docs site publishes `docs/backlog/**`
@@ -84,7 +84,7 @@ Earlier release follow-ups (after the 2026-09-24 waves; still open unless noted)
    maintainer HTML comments ([0885](planned/docs-hygiene/0885_gateway_console_ships_no_internal_html_comments.md)).
 3. Next abstractcore patch: default MLX id ([0874](planned/0874_core_default_mlx_model_id_names_a_missing_repo.md)) and
    llms sources ([0882](planned/docs-hygiene/0882_core_llms_sources_cover_every_user_page.md)) — both
-   already committed on local `main`, unreleased — plus the tier ruling (0869).
+   already committed on local `main`, unreleased — plus the tier ruling (0869, done in 2.18.1).
 4. One-click completeness: console TUI release binaries
    ([0876](planned/app-surfaces/0876_gateway_console_tui_release_binaries.md)); the Assistant
    sign-in handover is done ([0875](completed/0875_assistant_one_time_sign_in_handover.md), 2026-09-26,
@@ -178,7 +178,6 @@ Longer-running architecture work (unchanged since before the waves):
 | 0212-0222 | [Agency parity track (Codex-0.89 gaps)](planned/agency-parity/README.md) | In progress | Implemented + tested: 0212 (prefix-cache stability), 0213 (context fidelity/thought retention), 0214 (parallel read-only tools), 0216 (edit_file safety + CRLF/dash-line follow-ups), 0217 (verifier + update_plan + inject_guidance + default RetryPolicy), 039 (arg coercion + PEP-563 schema-type fix), 0215 engine + generalized output offload, 0220 (persistent-shell tools — opt-in, approval-gated, live-verified on OVH gpt-oss-120b). LIVE evidence recorded 2026-07-08 (track README "Live evidence"): prefix stability 12/12 + OpenAI cached_tokens 60.9%, thought retention, 2.09× parallel tools, verifier live catch, edit_file traps 3/3. Remaining: 0218 (design-first context-budget survival), 0219 (retrieval/project memory — owned elsewhere), unified prompt-caching strategy (0221). ADR-0026 binding: no lossy truncation in the loop. |
 | 0232 | [Sandbox `execute_command` and fix workspace path containment](planned/0232_execute_command_sandboxing_and_workspace_path_containment.md) | Planned | P0 security. `execute_command` is raw `sh -c` with the full inherited environment and no filesystem containment, so a `write_file` refused by `workspace_only` succeeds via shell heredoc (observed live 2026-07-30); `~/.abstractcode/gateway.json` and `~/.codex/auth.json` are readable, subsuming the `fetch_url` approval gate. Path containment is string-based, so case-variant and Unicode-NFD denylist bypasses work on APFS and `workspace_allowed_paths` pointing at the workspaces base exposes 1,746 sibling workspaces. Proposes fail-loud workspace clamping, identity-based (`st_dev`,`st_ino`) containment with `openat`+`O_NOFOLLOW`, per-invocation OS sandbox (sandbox-exec/bubblewrap) with container fallback, environment scrubbing, and approval tiering that forbids auto-approving `execute_command` while unsandboxed. |
 | 0868 | [Sign and notarize the Mac installer](planned/0868_sign_and_notarize_the_mac_installer.md) | Planned (owner action: Developer ID) | The `.pkg` on releases v0.3.0/v0.3.1 is unsigned; sign, notarize, staple, replace the asset, then update the nine doc places that teach **Open Anyway**. |
-| 0869 | [Apple text tier boundaries vs the fit budget](planned/0869_apple_text_tier_boundaries_vs_the_fit_budget.md) | Planned (operator decision gate) | Flash-Next on stock 128 GiB Macs and 27B on 24 GiB Macs fail the fit check they ship with; rule on the boundaries (9B below 32 GiB proposed). |
 | 0870 | [Operator rulings for gateway roles (0862)](planned/0870_operator_rulings_for_gateway_roles_0862.md) | Planned (operator decision gate) | Viewer role? Members configure their own entities? Require or prompt for a member account off localhost? |
 | 0871 | [Release planner must skip scratch trees](planned/0871_release_planner_must_skip_scratch_trees.md) | Planned | `abstract_release_plan.py` walks `untracked/`, worktrees and runtime workspaces; scratch package copies can pollute a plan. |
 | 0872 | [Runtime `MODELS_ENGINES_MIN_ABSTRACTCORE` floor](planned/0872_runtime_models_engines_floor_matches_the_cancel_signature.md) | Planned | Constant says 2.14.0; the 0.4.34 cancel signature needs 2.15.1 (pyproject floor already 2.15.1). |
@@ -371,6 +370,12 @@ Root 0.3.1 pins abstractcore 2.15.1, abstractgateway 0.4.2, AbstractRuntime 0.4.
 2026-09-25 (docs-only `main` commits): runtime `696f386`, core `194c312`, gateway `3312bfe`, root
 `cfb4926`, continuum `7bc4616`, entity `f3b5a11`, uic `9a307b3`.
 
+### Patch 0.6.2 (2026-09-28): STAGED
+
+Cascade GO 2026-09-28: abstractcore 2.18.1 (staged on core `main`) -> abstractgateway 0.7.2 (staged on gateway
+`main`, console crate 0.11.1) -> root 0.6.2 (`wave4/root`). Staging note `untracked/wave4-STAGE.md`; record
+[0982](completed/0982_patch_0_6_2_one_upgrade_path.md). Root resolution passes once core 2.18.1 and gateway 0.7.2 are on PyPI.
+
 ### Wave 2 (2026-09-28, root 0.6.0): IN PROGRESS
 
 Ledger `untracked/wave2/PLAN.md`; root staging note `untracked/wave2/stage-root.md`. Released: abstractvoice
@@ -447,6 +452,9 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0982 | [Patch 0.6.2: one upgrade path](completed/0982_patch_0_6_2_one_upgrade_path.md) | 2026-09-28 | Root record of 0.6.2 (staged on `wave4/root`): the line, the `.command`, and Update in the consoles and tray run one installer; remembered options, release matrix, restart everywhere; `--no-start` keeps the recorded port; pins core 2.18.1, gateway 0.7.2, console 0.11.1. |
+| 0983 | [Follow-ups after root 0.6.2](planned/0983_follow_ups_after_0_6_2.md) | Planned | GitHub API rate limit of the update check, core's stored image route on 8 GB Macs, hand-started gateway on the recorded port without `--no-start`, pwsh coverage, update log length. |
+| 0869 | [Apple text tier boundaries vs the fit budget](completed/0869_apple_text_tier_boundaries_vs_the_fit_budget.md) | 2026-09-28 | Moved from `planned/`. Answered by abstractcore 2.18.1's fit rule (1.7B below 16 GiB, 9B 16–32, 27B 32–128, Flash-Next 128+ with the GPU-limit command); root 0.6.2 pins it. |
 | 0980 | [Patch 0.6.1: commands on PATH, terminal sign-in, shared Run now hint](completed/0980_patch_0_6_1_commands_on_path_tui_sign_in_run_now_hints.md) | 2026-09-28 | Root record of the patch wave (staged on `wave3/root`): fix/installer-clis + fix/run-now-hint merged, pins gateway 0.7.1, assistant 0.9.1, code 0.7.1 / web 0.6.1, observer 0.2.1. |
 | 0981 | [Follow-ups after root 0.6.1](planned/0981_follow_ups_after_0_6_1.md) | Planned | Gate findings (gateway, AbstractCode, kit accessibility), docs contradicting code, small product bugs from the site screenshots, release-process gaps. |
 | 0963 | [Kit pointer reader: FIFO-safe open](completed/0963_kit_gateway_pointer_reader_fifo_safe_open.md) | 2026-09-28 | Moved from `planned/`. app-server 0.1.12 (AbstractUIC v0.1.15, on npm); the TUI, console and Assistant readers are FIFO-safe too. |
