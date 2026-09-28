@@ -20,11 +20,14 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 ## Quick start
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
-asks whether to start it at login, starts it on `127.0.0.1:8080`, and opens its web console in
-your browser already signed in. A first-run guide then sets up a local engine (Ollama, LM Studio,
-MLX, llama.cpp), downloads a model that fits your machine, and lists the apps. The installer also
-builds the terminal console, `abstractgateway-console`, which runs the same guide on a server without
-a browser ([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
+with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
+at login (Enter = yes; an unattended install leaves it off and says how to turn it on), starts it
+on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
+then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
+machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
+installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
+a server without a browser and offers itself at the end of an install over SSH
+([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
 
 - **Mac, no Terminal:** download and double-click
   [AbstractFramework-Installer.pkg](https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg).
@@ -34,7 +37,7 @@ a browser ([Headless or remote machine](docs/install.md#headless-or-remote-machi
 - **macOS / Linux, one line:**
 
   ```bash
-  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --interactive
+  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
   ```
 
 - **Windows 10 22H2+ / 11** (PowerShell):
@@ -116,7 +119,8 @@ With no auth configured, `abstractgateway serve` binds `127.0.0.1:8080`, enables
 creates `default/admin` in the per-user data folder, and prints a one-time sign-in link
 (`http://127.0.0.1:8080/console#claim=…`, valid 10 minutes, this machine only). Open it to reach the
 web console and its first-run guide. `abstractgateway claim` mints a new link;
-`abstractgateway service install` starts the gateway at login.
+`abstractgateway service enable` (or the console's **Start at login** switch) starts the gateway at
+login.
 
 Browser apps on `http://localhost:*` and `http://127.0.0.1:*` may always call it. To choose
 another data folder or allow another browser origin:
@@ -138,13 +142,15 @@ AbstractFlow, AbstractCode Web or AbstractObserver, or to the console without a 
 `ABSTRACTGATEWAY_AUTH_TOKEN` remains a legacy server/operator bearer token; it is not a browser
 sign-in token.
 
-Monitor runs from a browser, or from a terminal with the gateway console:
+Monitor runs from a browser, or from a terminal with the gateway console. The console's **Apps**
+page installs and opens the browser apps, served by the gateway at `/apps/<app>/`
+(`http://127.0.0.1:8080/apps/observer/`), so one address (and one SSH tunnel) reaches them all:
 
 ```bash
-npx @abstractframework/observer   # open http://localhost:3001
+npx @abstractframework/observer --gateway-url http://127.0.0.1:8080   # or run one on its own
 
 cargo install abstractgateway-console   # Rust 1.87+; the installer builds it for you
-abstractgateway-console --url http://127.0.0.1:8080 --token <admin token>   # <data dir>/auth/bootstrap-admin-token
+abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>   # <data dir>/auth/bootstrap-admin-token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
@@ -186,7 +192,7 @@ See [Agent sessions](docs/agent-sessions.md).
 
 AbstractFlow lets you author complex agentic orchestration as portable `.flow` bundles:
 
-1. Open the Flow Editor (`npx @abstractframework/flow`)
+1. Open the Flow Editor (the console's **Apps** page, or `npx @abstractframework/flow --gateway-url <url>`)
 2. Build a workflow: LLM steps, tool steps, branching, loops, subflows
 3. Export a `.flow` bundle into your own bundle directory and point `ABSTRACTGATEWAY_FLOWS_DIR` at it (or publish it through the Gateway API)
 4. Run it from any gateway-backed client (Observer, AbstractAssistant, Code Web UI, your app)
@@ -246,13 +252,13 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 |---|---|---|
 | [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, the gateway's default workflow, workspace files, live replies | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
 | [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, follows the gateway's default workflow or your pick, live replies, voice support | `pip install abstractassistant`, or **Open** in the gateway console (starts it signed in) |
-| [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | `npx @abstractframework/observer` |
-| [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | `npx @abstractframework/entity` |
-| [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | `npx @abstractframework/continuum` |
-| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` (the same setup guide and twelve screens, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
+| [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | the gateway console's **Apps** page (served at `/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` |
+| [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | the gateway console's **Apps** page (served at `/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` |
+| [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | the gateway console's **Apps** page (served at `/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` |
+| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` (the same setup guide and screens, Network and Apps included, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
-| **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | `npx @abstractframework/code` |
-| **Flow Editor** | Visual workflow authoring in the browser | `npx @abstractframework/flow` |
+| **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | the gateway console's **Apps** page (served at `/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` |
+| **Flow Editor** | Visual workflow authoring in the browser | the gateway console's **Apps** page (served at `/apps/flow/`), or `npx @abstractframework/flow --gateway-url <url>` |
 
 ### Shared libraries
 

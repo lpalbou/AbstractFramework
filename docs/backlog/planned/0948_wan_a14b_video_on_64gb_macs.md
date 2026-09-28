@@ -53,3 +53,10 @@ created and published on huggingface." / "i am pretty sure it does [fit 64 GB]."
 ## Receipts
 
 - Core tag-gate review 2026-09-27 (gate-core); release ledger.
+
+## Implementation (wave 2, 2026-09-28) — pending release
+
+abstractcore branch `wave2/core` (worktree `untracked/wave2/core`), local commits, no version bump;
+stays planned until the release lands: `8d86550` Wan2.2 T2V-A14B 8-bit measured resident (71.59 GiB
+MLX peak at 1280x720x81); `2ed029c` Wan2.2 I2V-A14B 8-bit measured resident (71.71 GiB at
+1280x720x81) and the A14B per-band fit tests.

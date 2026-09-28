@@ -4,7 +4,35 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Local gateway pointer.** After the health check the installer writes
+  `~/.abstractframework/gateway.json` (Windows: `%USERPROFILE%\.abstractframework\gateway.json`),
+  mode 0600: the gateway's loopback URL, port and data directory, never a token. The Assistant,
+  AbstractCode's terminal client and the browser apps' servers read it to find a gateway on a port
+  other than 8080. It follows the gateway's ownership rule: written only when absent and the install
+  uses the default data directory, or when it names this install's data directory. The uninstaller
+  deletes it when it names the uninstalled data directory.
+- `--ask-wait SECONDS` (Windows: `-AskWait`) sets how long a timed question waits (default 25, at
+  most 25). `--console-wait` remains as an alias.
+
 ### Changed
+
+- **Start at login is asked whenever a person is at a terminal**, not only with `--interactive`:
+  `curl … | sh` asks it on your terminal (`/dev/tty`), Enter = yes. Nobody answering within
+  `--ask-wait`, an install without a terminal (a script, CI, a provisioning tool) and `--yes` keep
+  the previous choice on a re-run and leave start at login **off** on a first install (it was on);
+  the summary then says how to turn it on: the **Start at login** switch in either console, or
+  `abstractgateway service enable`. A re-run reads the login item's own state, so a change made
+  with a console's switch is kept. `install.ps1` asks the same question on an interactive console
+  (it registered the login entry without asking). `--interactive` waits for answers without a time
+  limit; `--no-service` still asks nothing.
+- **Browser apps open through the gateway.** The summary's `Apps:` line and the docs point to
+  `<gateway>/apps/<app>/` (the console's **Apps** page installs and opens them); running an app on
+  its own with `npx … --gateway-url <url>` is the advanced alternative (`Standalone:` line).
+- The terminal console and AbstractCode commands in the summary and the docs use `--gateway-url`,
+  the flag every app and terminal client shares.
+- Growing automations replay the most recent 50 000 tokens of whole turns (docs).
 
 - The installer adds local voice to every install profile: Supertonic text-to-speech and Whisper
   speech-to-text (`abstractvoice[supertonic,stt]`), both CPU, from prebuilt wheels. The light

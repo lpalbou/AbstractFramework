@@ -5,8 +5,9 @@ How automations work in practice and how to manage them.
 An **automation** runs a workflow again and again on a trigger: "search every 5 minutes for the trade
 value of a market share", "monitor the memory usage of this computer every 2 minutes", "run this
 report when I ask". The gateway runs it, keeps every run as a readable conversation, and tells you
-only when something needs you. You create and manage automations from the Assistant or the
-Observer, and you can read their results in every gateway client.
+only when something needs you. You create and manage automations from the Assistant, the
+Observer or AbstractCode (terminal and browser), and you can read their results in every gateway
+client.
 
 This page is the cross-package guide. The package pages hold the full references:
 
@@ -16,6 +17,7 @@ This page is the cross-package guide. The package pages hold the full references
 | The HTTP API (`/api/gateway/automations…`, `/trigger-sources`), errors, run-list fields | [AbstractGateway: Automations API](https://github.com/lpalbou/AbstractGateway/blob/main/docs/automations.md) |
 | The Automations section, "Schedule this conversation…", tray notifications | [AbstractAssistant: Sessions and automations](https://github.com/lpalbou/AbstractAssistant/blob/main/docs/automations.md) |
 | Launch → Automate, the Automations page, legacy schedules | [AbstractObserver: Automations](https://github.com/lpalbou/AbstractObserver/blob/main/docs/automations.md) |
+| `/automations` and `/schedule` in the terminal, the Automations section in the browser | [AbstractCode: Automations](https://github.com/lpalbou/AbstractCode/blob/main/docs/automations.md) |
 | Automation defaults on a workflow | [AbstractFlow: Web editor → Automation Defaults](https://github.com/lpalbou/AbstractFlow/blob/main/docs/web-editor.md#automation-defaults) |
 | `AutomationPanel`, `AfScheduleDialog`, the shared client | [AbstractUIC: Automations](https://github.com/lpalbou/AbstractUIC/blob/main/docs/automations.md) |
 
@@ -53,9 +55,10 @@ page say so and stay disabled.
     one-turn conversation. Use it for checks that stand on their own (memory use, disk space, a
     health probe).
   - *Growing*: every occurrence is the next turn of one conversation (session
-    `automation:<id>`) and receives the previous turns as history, up to the most recent 40
-    messages and 24 000 characters. Use it when the answer depends on previous ticks ("the change
-    since the previous check").
+    `automation:<id>`) and receives the previous turns as history: the most recent 50 000 tokens
+    of whole turns (no message is ever cut; the model keeps the rest of its context window). Use it
+    when the answer depends on previous ticks ("the change since the previous check"). Each
+    occurrence run records what was replayed and dropped in `_runtime.session_history`.
 - **Quiet by default.** An ordinary result updates the automation's history and notifies no one.
   An occurrence asks for your attention only when its output carries `notify`, when it failed after
   its last retry, or while it waits for you (see [What notifies you](#what-notifies-you-and-when)).
@@ -100,7 +103,7 @@ flowchart TB
   Gateway --> API
   AS["Assistant<br/>Automations section,<br/>tray notifications"]
   OB["Observer<br/>Automations page,<br/>transcript, ledger"]
-  AC["AbstractCode<br/>automation sessions<br/>as conversations"]
+  AC["AbstractCode<br/>/automations, /schedule,<br/>Automations section (web)"]
   API --> AS
   API --> OB
   API --> AC
@@ -243,8 +246,8 @@ What to expect:
 - The agent calls `web_search` and `fetch_url` in its sub-run; 2 to 3 LLM calls per tick.
 - From the second tick on, the answer refers to the previous one ("unchanged from occurrence 4"),
   because the previous turns are in its context.
-- Input grows with the history: from about 7 300 tokens on the first tick to about 24 000 on the
-  eleventh. The history bound (40 messages, 24 000 characters) caps it.
+- Input grows with the history (about 7 300 tokens on the first tick) until the replayed history
+  reaches 50 000 tokens; from then on the oldest ticks drop out, whole.
 - Nothing notifies you: the default agent's output carries no `notify`. The results are in the
   automation's history, one chat pair per tick. To be told about a large move, use a workflow that
   returns `notify` (as in the next example).
@@ -340,8 +343,14 @@ sessions are not listed among your chats; discussions are, with an **about autom
 
 ### In AbstractCode
 
-AbstractCode lists the gateway's sessions without filtering by kind, so automations appear among
-your conversations:
+In the terminal client, `/automations` lists every automation (its state as a word and an icon,
+"Active ▶" or "Paused ⏸", what runs now, the next run, what needs you) and opens one: its runs as
+chat pairs, the waits that need you (tool approvals, questions), its folder, and the controls
+(pause/resume, run now, stop the current run, revise, archive, Discuss). `/schedule` creates one
+from the current workflow. The browser client has the same in its **Automations** sidebar section.
+
+AbstractCode also lists the gateway's sessions without filtering by kind, so automations appear
+among your conversations:
 
 - a **growing** automation is one conversation (`automation:<id>`) with one turn per occurrence;
 - an **independent** automation appears as one one-turn conversation per occurrence;
@@ -443,8 +452,9 @@ recorded. A wait the gateway does not type is shown without answer controls.
   external triggers (webhooks, e-mail, file changes) yet; packages can register new sources through
   the `abstractruntime.trigger_sources` entry-point group, and `GET /api/gateway/trigger-sources`
   lists what your gateway serves.
-- **Bounded growing history.** A growing automation replays at most the last 40 messages and
-  24 000 characters; older ticks drop out of its context (they stay in the history). Automatic
+- **Bounded growing history.** A growing automation replays the most recent 50 000 tokens of whole
+  turns; older ticks drop out of its context (they stay in the history), and the oldest replayed
+  message says how many were dropped. Automatic
   summaries (`context.growing.summary`) are refused with `unsupported_feature`. When a long-running
   automation must remember something, use a rolling summary in the prompt: ask it to end every
   answer with a short running summary of what matters (for example "high and low so far"), so the

@@ -6,15 +6,15 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files on 2026-09-27 (recursive, topic tracks included; README, overview, template and
+On-disk item files on 2026-09-28 (recursive, topic tracks included; README, overview, template and
 `evidence/` files excluded). The legacy part of the backlog still breaks the one-ID-one-item rule,
 so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findings) and 0889.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 132 | 89 flat (0929, 0930, 0933, 0935, 0937–0950 included) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Planned | 131 | 88 flat (0929, 0930, 0933, 0935, 0937–0950 included; 0890 moved to completed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931 included) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 245 | 235 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26) and 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27). |
+| Completed | 246 | 236 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27) and 0890 (2026-09-28, unreleased). |
 | Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
 | Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
 
@@ -27,8 +27,8 @@ Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis
 `untracked/release-2026-09-26/STATUS.md`, see [Release Trace](#release-trace)). Its release steps
 closed: [0899](completed/0899_npm_relock_and_kit_floors_after_the_kit_publishes.md) (relocks tagged)
 and [0857](completed/0857_crates_io_trusted_publishing_for_console_crates.md) (console crate 0.9.0
-published by CI through trusted publishing). [0890](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md)
-is half done (gateway deep-research 0.1.8 shipped; the flow side is open). Local stacks: rerun
+published by CI through trusted publishing). [0890](completed/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md)
+is done (gateway deep-research 0.1.8 shipped; the flow side is on abstractflow `wave2/mount`, unreleased). Local stacks: rerun
 `./scripts/start-local.sh --build` to run the released code.
 
 **Automations v1 BUILT, TESTED, AWAITING THE OPERATOR'S VALIDATION (2026-09-27)** (record [0928](completed/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md)).
@@ -56,9 +56,9 @@ Release follow-ups after the 2026-09-26 wave:
    ([0868](planned/0868_sign_and_notarize_the_mac_installer.md); the v0.4.0 `.pkg` is unsigned);
    refresh the stale "AUDIT ONLY" seat texts ([0904](proposed/0904_refresh_the_audit_only_seat_missions.md));
    decide whether observer gets GitHub releases (its `release.yml` has no release job).
-2. Flow side of [0890](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md):
-   wire entity-chat / entity-goodbye / multiagent-coding pins, empty `KNOWN_GAPS`, move the
-   deep-research generator scripts to 0.1.8.
+2. Wave 2 (2026-09-28, untracked/wave2/PLAN.md): 0890, 0943, 0946–0950 are implemented on the
+   wave-2 branches and wait for the one wave-2 release; 0890 is recorded completed (unreleased), the
+   others stay planned until the release lands (each carries an "Implementation (wave 2)" section).
 3. Wave follow-ups: [0918](completed/0918_agent_must_not_publish_reasoning_with_tool_markup_as_the_answer.md)
    (tool calls in a thinking block; core half in 2.16.0),
    [0919](proposed/0919_core_analyze_code_crashes_python39_on_unclosed_triple_quote.md) (`analyze_code`
@@ -91,7 +91,7 @@ Earlier release follow-ups (after the 2026-09-24 waves; still open unless noted)
    ADR-0034 order ([0860](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md)), test
    isolation for the remaining packages ([0849](planned/0849_test_suites_must_not_reach_the_operators_live_stack.md)),
    backlog normalization ([0889](planned/0889_normalize_the_legacy_root_backlog.md)).
-6. Wave 2026-09-25/26 (missions; completed records 0906–0915, release 0921): release step 0890 (flow side, above);
+6. Wave 2026-09-25/26 (missions; completed records 0906–0915, release 0921): release step 0890 (done on wave 2, above);
    security follow-up [0892](proposed/0892_gateway_tool_deny_list_gaps_and_launch_folder_trust_for_non_admins.md)
    (two of its three gaps closed 2026-09-26; still open: shell confinement 0232, `.netrc`/`.docker`,
    operator ruling on launch-folder trust for remote non-admins); operator gate
@@ -119,14 +119,14 @@ Longer-running architecture work (unchanged since before the waves):
 | 0939 | [JSON run store recency follows `updated_at`, not mtime](planned/0939_json_run_store_recency_order_follows_updated_at_not_mtime.md) | Planned | Review 43 F5: a restored backup reorders `list_run_index` windows (turn roots, growing history). |
 | 0940 | [Observer Automate form refuses server-owned input keys](planned/0940_observer_automate_form_refuses_server_owned_input_keys.md) | Planned | Review 54 O-2: the gateway allowlist (R52-1) removes the harm; the form must still say which typed keys will not be sent. |
 | 0942 | [One gateway-stored archive/hide semantic for sessions and automations](planned/0942_unified_hide_and_archive_semantics_for_sessions_and_automations_across_clients.md) | Planned (operator ruling 2026-09-27) | Archive hides and stops, never deletes; unarchive; `/runs`/`/automations` `archived=` filters; the same action/words in every client; no per-client hidden lists. |
-| 0943 | [Local gateway pointer file for non-Python clients](planned/0943_local_gateway_pointer_file_for_non_python_clients.md) | Planned (operator ask 2026-09-27; after the uncommitted `local_gateway()` work lands) | `~/.abstractframework/gateway.json`: installer + `serve` (ownership rule) write the bound URL; Rust TUIs, Node app-server and the frozen `.app` read it (loopback-only, no token); an admin port change is followed at restart; `abstractgateway-console` must also honour `ABSTRACTGATEWAY_URL`. |
+| 0943 | [Local gateway pointer file for non-Python clients](planned/0943_local_gateway_pointer_file_for_non_python_clients.md) | Implemented on wave-2 branches, pending release (open: `abstractgateway-console` reader + `ABSTRACTGATEWAY_URL`, ADR, installer-vs-docstring ownership wording) | `~/.abstractframework/gateway.json`: installer + `serve` (ownership rule) write the bound URL; Rust TUIs, Node app-server and the frozen `.app` read it (loopback-only, no token); an admin port change is followed at restart; `abstractgateway-console` must also honour `ABSTRACTGATEWAY_URL`. |
 | 0944 | [MiniMax-H3 local video on MLX-Gen](planned/0944_minimax_h3_local_video_on_mlx_gen.md) | Planned (next wave, BEFORE core ships) | AbstractVision `minimax-h3` family + AbstractCore per-artifact `allow_patterns` (134 GiB of a 498 GB repo); 128 GiB Macs. |
 | 0945 | [Cloud MiniMax video backend](planned/0945_minimax_cloud_video_backend.md) | Planned (next wave) | Async task/poll/fetch provider for `output.video`: the video option for non-Apple hosts. |
-| 0946 | [Qwen3-ASR broken on Transformers 5.x](planned/0946_qwen3_asr_broken_on_transformers_5.md) | Planned, HIGH (next wave, before core) | Three vendored-code breaks (mask call, config order, rope init); real-checkpoint proof + CI job like Qwen3-TTS. |
-| 0947 | [128 GiB tier fit vs the GPU wired limit](planned/0947_large_mac_tier_fit_and_gpu_wired_limit.md) | Planned (next wave) | The recommended 128 GiB text model is `too_large` by Core's own estimate unless `iogpu.wired_limit_mb` is raised; read it and explain it. |
-| 0948 | [Wan2.2 A14B 8-bit on 64–95 GiB Macs](planned/0948_wan_a14b_video_on_64gb_macs.md) | Planned (next wave) | Operator: A14B 8-bit runs at 64 GB; measure at the real canvas and make it the band's video recommendation. |
-| 0949 | [Core local-model tests out of date and invisible to CI](planned/0949_core_local_model_tests_out_of_date_and_uncovered_by_ci.md) | Planned (next wave) | Five torch/llama tests fail (`reasoning_effort`); CI skips them — add a CPU-torch job. |
-| 0950 | [Qwen3-TTS sampler choice as launch flags](planned/0950_qwen3_tts_sampler_choice_as_launch_flags.md) | Planned (low) | The 0.12.0 settings fields reach the CLI, REPL, web example and plugin. |
+| 0946 | [Qwen3-ASR broken on Transformers 5.x](planned/0946_qwen3_asr_broken_on_transformers_5.md) | Implemented on wave-2 branches (voice `ccf64f0`), pending release | Three vendored-code breaks (mask call, config order, rope init); real-checkpoint proof + CI job like Qwen3-TTS. |
+| 0947 | [128 GiB tier fit vs the GPU wired limit](planned/0947_large_mac_tier_fit_and_gpu_wired_limit.md) | Implemented on wave-2 branches (core `95085fa`, `2ed029c`), pending release | The recommended 128 GiB text model is `too_large` by Core's own estimate unless `iogpu.wired_limit_mb` is raised; read it and explain it. |
+| 0948 | [Wan2.2 A14B 8-bit on 64–95 GiB Macs](planned/0948_wan_a14b_video_on_64gb_macs.md) | Implemented on wave-2 branches (core `8d86550`, `2ed029c`), pending release | Operator: A14B 8-bit runs at 64 GB; measure at the real canvas and make it the band's video recommendation. |
+| 0949 | [Core local-model tests out of date and invisible to CI](planned/0949_core_local_model_tests_out_of_date_and_uncovered_by_ci.md) | Implemented on wave-2 branches (core `95085fa`, `2ed029c`), pending release | Five torch/llama tests fail (`reasoning_effort`); CI skips them — add a CPU-torch job. |
+| 0950 | [Qwen3-TTS sampler choice as launch flags](planned/0950_qwen3_tts_sampler_choice_as_launch_flags.md) | Implemented on wave-2 branches (voice `05f6748`), pending release | The 0.12.0 settings fields reach the CLI, REPL, web example and plugin. |
 | 0929 | [Automations v2: external triggers, durable inbox](planned/0929_automations_v2_external_triggers_durable_inbox.md) | Planned (after 0928's release, 0941) | Generic `event` source + `run.finished/failed` chaining with reliable admission. |
 | 0930 | [Automations: Code and console surfaces](planned/0930_automations_code_and_console_surfaces.md) | Planned (after 0928's release, 0941) | AbstractCode WUI section + TUI commands; console inventory. Until then Code lists one session per independent occurrence (review 46 G3). |
 | 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
@@ -160,7 +160,6 @@ Longer-running architecture work (unchanged since before the waves):
 | 0873 | [Root launchers stop exporting legacy backlog env](planned/0873_root_launchers_stop_exporting_legacy_backlog_env.md) | Planned | `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT` / `BACKLOG_EXEC_RUNNER` are stored settings since gateway 0.4.1; Continuum labels the exports "environment (legacy)". |
 | 0874 | [Core default MLX model id names a missing repo](planned/0874_core_default_mlx_model_id_names_a_missing_repo.md) | Planned (fix committed on local core `main`, unreleased) | `mlx-community/Qwen3-4B` does not exist; `…-4bit` does. |
 | 0889 | [Normalize the legacy root backlog](planned/0889_normalize_the_legacy_root_backlog.md) | Planned | 24 stale planned copies of completed items, 231 non-`NNNN_` filenames, reused IDs; blocks reliable counts. |
-| 0890 | [Wire bundled-flow interface pins, then rebuild the gateway bundles](planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md) | Planned, low (verified 2026-09-28: cosmetic) | No host reads the null pins (entity app/TUI read `answer`; entity-goodbye calls no LLM; multiagent-coding uses provider/model via Get Var). Remaining: abstractflow-only clean-up (wire `success`/`meta`/`passed`, empty `KNOWN_GAPS`, bump 0.1.7 script constants). |
 | 0876-0881 | [App surfaces track](planned/app-surfaces/README.md) | Planned | Seams between the gateway's apps manager and each app (console TUI binaries, Continuum flags/seat/dev port, Entity dead variable, Linux `evdev`). 0875 completed 2026-09-26. |
 | 0882-0888 | [Docs hygiene track](planned/docs-hygiene/README.md) | Planned | Code-vs-docs conflicts and publishing gaps from the 2026-09-25 coredoc pass. |
 
@@ -413,6 +412,7 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 0890 | [Wire bundled-flow interface pins, then rebuild the gateway bundles](completed/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md) | 2026-09-28 | Moved from `planned/`. **UNRELEASED** (abstractflow `wave2/mount` `3ad9dbc` + docs `561f4bd`): entity-chat/goodbye `success`/`meta`, multiagent-coding `passed`, `KNOWN_GAPS` removed, deep-research scripts on 0.1.8. No gateway rebuild needed. |
 | 0928 | [Automations v1: runtime-native scheduled/triggered tasks](completed/0928_automations_v1_runtime_native_scheduled_and_triggered_tasks.md) | 2026-09-27 | Moved from `planned/`. **UNRELEASED** (the operator tests first; release 0941). Runtime `79d9bf6`…`d02578a` (2957/26), gateway `57f26b9`…`4ece2f5` (2514, acceptance 16/16; review 55 pending), uic `9da01a0`…`1eb6d82`, flow `c5961d1`…`0d4bf76`, observer `56af9b4`…`9685fe0`, assistant `e3a0445`…`52d75df`; reviews 41–54 GO after fixes; E2E 9/9 with the real model; decisions D1 (tool approval, typed waits), session ids, turn roots, notify convention. Follow-ups 0937–0941. |
 | 0936 | [Release trace: 2026-09-27 wave (agent 0.3.16, assistant 0.7.0, root 0.4.2)](completed/0936_release_wave_2026_09_27.md) | 2026-09-27 | Heuristic removed from the agent; gateway-first Assistant sessions; first installer with the fixed uninstaller. |
 | 0934 | [Uninstall purge races the gateway and misses user data](completed/0934_uninstall_purge_races_the_gateway_and_misses_user_data.md) | 2026-09-27 | Moved from `planned/`. Process tree stopped first; verified purge of every user-data location; data-dir guards; live on main (dee84f9, 737a9cb, 33df8f7). |

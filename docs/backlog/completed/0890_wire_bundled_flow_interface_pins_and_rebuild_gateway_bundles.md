@@ -5,6 +5,8 @@
 > Created: 2026-09-26
 > Priority: low
 > Labels: flow, gateway, interfaces, release-step
+> Status: completed 2026-09-28 — UNRELEASED (abstractflow branch `wave2/mount`; ships in the wave-2 release)
+> Moved: `planned/0890_…` → `completed/0890_…` on 2026-09-28
 
 ## Summary
 
@@ -136,3 +138,35 @@ entity-goodbye `success`/`meta` from values the flows already compute; feed mult
 from `all_passed` (default false on `end_pre`); a documented test exemption for flows that never call
 an LLM instead of fake-wiring their `provider`/`model`; empty `KNOWN_GAPS` in `bundledFlows.test.ts`;
 bump the stale 0.1.7 script constants to 0.1.8.
+
+## Implementation (wave 2, 2026-09-28)
+
+abstractflow branch `wave2/mount` (worktree `untracked/wave2/flow`), local commits, no version bump:
+
+- `3ad9dbc` — flows: agent.v1 `success`/`meta` on entity-chat and entity-goodbye, coding.v1 `passed`
+  on multiagent-coding.
+  - entity-chat: a `chat_report` code node (`success` = the moment was not degraded; `meta` = the
+    host's provider/model, tools-ran count, tool rounds, degraded).
+  - entity-goodbye: `close_report` (`success` = the session-close child delivered its output;
+    `meta` = turns folded + reason). Named code outputs (`completed`, `meta`), so a code node's own
+    success (the executor's) is never taken as the verdict.
+  - multiagent-coding: `end.passed` reads the `all_passed` chip; `end_pre` sets `passed=False`.
+  - Bundle versions: entity-life 0.0.19, multiagent-coding 0.0.19.
+  - `bundledFlows.test.ts`: `KNOWN_GAPS` removed; a documented no-LLM exemption for the prompt check
+    (entity-goodbye), guarded so it fails if the flow or a subflow gains an `llm_call`/agent node;
+    run preflight reports no "hosts will read null" on the four flows.
+  - Smokes (real runtime, scripted LLM): goodbye/chat `success` + `meta`; multiagent `passed` on
+    refusal, full and stall.
+  - deep-research scripts: one `BUNDLE_VERSION` 0.1.8 in the generator (the pack script reads it);
+    no 0.1.7 left.
+- `561f4bd` — docs (entity-chat/goodbye `success` + `meta`, CHANGELOG [Unreleased], llms regenerated).
+
+Acceptance against the remaining scope of the 2026-09-28 verification: `KNOWN_GAPS` empty and the
+bundled-flow test green; preflight clean on the four flows; the stale 0.1.7 constants gone. The
+gateway ships none of these three flows, so no gateway bundle rebuild is needed; deep-research
+0.1.8 already shipped in abstractgateway 0.5.0.
+
+Release: abstractflow's next version in the wave-2 release (the operator's go). Recorded by the root
+worker from the lead's progress note (untracked/wave2/PLAN.md: "DONE flow mount: 638acdf, 3ad9dbc
+(0890), 561f4bd/1470cf1 docs").
+

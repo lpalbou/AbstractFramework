@@ -41,3 +41,9 @@ by the voice release worker (~1.5–2 h).
 ## Receipts
 
 - Voice worker report 2026-09-27.
+
+## Implementation (wave 2, 2026-09-28) — pending release
+
+abstractvoice branch `wave2/voice` (worktree `untracked/wave2/voice`), local commits, no version bump;
+stays planned until the release lands: `05f6748` the Qwen3-TTS predictor/sampler choice on every
+surface (CLI, REPL, web example, plugin settings); `339c09f` docs and CHANGELOG [Unreleased].

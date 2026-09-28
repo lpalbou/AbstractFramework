@@ -47,3 +47,9 @@ these five failures are unrelated to torch versions — this item makes that ver
 ## Receipts
 
 - Core staging report 2026-09-27; voice worker compile logs `untracked/release-2026-09-27/voice/compile/`.
+
+## Implementation (wave 2, 2026-09-28) — pending release
+
+abstractcore branch `wave2/core` (worktree `untracked/wave2/core`), local commits, no version bump;
+stays planned until the release lands: `95085fa` the stale local-model tests fixed; `2ed029c` the CI
+local-models job (CPU torch), required by the release workflow.

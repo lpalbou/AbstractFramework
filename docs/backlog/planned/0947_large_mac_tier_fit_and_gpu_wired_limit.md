@@ -51,3 +51,11 @@ Operator, 2026-09-27: "i am using it right now but you may need to increase the 
 ## Receipts
 
 - Adversarial review 1 (untracked/parity/REVIEW-1.md, minor list); core route worker report (6c64508).
+
+## Implementation (wave 2, 2026-09-28) — pending release
+
+abstractcore branch `wave2/core` (worktree `untracked/wave2/core`), local commits, no version bump;
+stays planned until the release lands: `95085fa` the GPU wired limit in the fit (with engine_missing
+on in-process routes, the stale local-model tests and the console's no-browser-without-display fix);
+`2ed029c` the web console's `needs_gpu_limit` badge, docs and CHANGELOG. The gateway consoles render
+`needs_gpu_limit` (abstractgateway `wave2/console` `7b13635`).

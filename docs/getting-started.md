@@ -29,17 +29,21 @@ package is not signed with an Apple Developer ID; see [Install](install.md#insta
 On macOS or Linux you can instead paste one line in Terminal:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --interactive
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
 ```
 
 On Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`.
 
-It installs uv, Python 3.12 and the pinned gateway in your user account (no admin password), asks
-whether to start it at login, starts it on `127.0.0.1:8080`, and opens its console in your browser
-already signed in. The console's first-run guide sets up a local engine or a cloud key and a
-default model (the **Models** tab lists the models that fit your machine and downloads them). The
-installer also builds the terminal console, `abstractgateway-console`, which offers the same guide
-on a server without a browser; the installer's summary prints its command (see
+It installs uv, Python 3.12 and the pinned gateway with local voice (Supertonic and Whisper) in
+your user account (no admin password), asks whether to start it at login (Enter = yes; an
+unattended install leaves it off and its summary says how to turn it on), starts it on
+`127.0.0.1:8080`, and opens its console in your browser already signed in. The console's first-run
+guide sets up a local engine or a cloud key and a default model (the **Models** tab lists the
+models that fit your machine and downloads them), and its **Apps** page installs and opens the
+browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The installer also
+builds the terminal console, `abstractgateway-console`, which offers the same guide on a server
+without a browser (its **Network** screen, `N`, decides who can reach the gateway); over SSH the
+installer offers to open it at the end, and its summary prints the command (see
 [Headless or remote machine](install.md#headless-or-remote-machine)). Then
 continue with [Monitor runs](#4-monitor-runs-with-abstractobserver) or
 [AbstractFlow](#author-orchestration-with-abstractflow). Step by step, what to do when something
@@ -185,7 +189,8 @@ link. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCo
 AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operator bearer-token
 path; it does not sign in browsers.
 
-To start the gateway at login, use `abstractgateway service install --port 8080`. The login item
+To start the gateway at login, turn on **Start at login** in the console (web: the Gateway
+section; terminal: `F3`), or run `abstractgateway service install --port 8080`. The login item
 listens where the gateway's Network setting says (this computer only until you change it; see
 [Network setting](install.md#network-setting-who-can-reach-the-gateway)).
 
@@ -197,15 +202,16 @@ curl -sS "http://127.0.0.1:8080/api/health"
 
 ### 4. Monitor runs with AbstractObserver
 
-In another terminal:
+Open the gateway console's **Apps** page and click **Install**, then **Open** next to Observer: it
+opens at `http://127.0.0.1:8080/apps/observer/`, already signed in. To run it on its own instead,
+in another terminal:
 
 ```bash
-npx @abstractframework/observer
+npx @abstractframework/observer --gateway-url http://127.0.0.1:8080
 ```
 
-Open http://localhost:3001 and connect. In hosted user-auth mode, enter Gateway
-URL, Gateway user, and that user's token; Observer exchanges the token for a
-browser session and does not persist the token in browser settings.
+Open the address it prints and sign in with a gateway user and that user's token; Observer
+exchanges the token for a browser session and does not persist the token in browser settings.
 
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
@@ -245,14 +251,14 @@ Author your own when you need something they do not cover.
 
 ### 1. Open the Flow Editor
 
-With the gateway running:
+With the gateway running, open the console's **Apps** page and **Open** the Flow Editor (it opens
+at `http://127.0.0.1:8080/apps/flow/`, signed in), or run it on its own:
 
 ```bash
-npx @abstractframework/flow
+npx @abstractframework/flow --gateway-url http://127.0.0.1:8080
 ```
 
-Open http://localhost:3003 and connect to your gateway. In hosted user-auth
-mode, use Gateway URL, Gateway user, and that user's token; Flow keeps an
+Open the address it prints and sign in with a gateway user and that user's token; Flow keeps an
 opaque browser session instead of storing the token.
 
 ### 2. Build a workflow
@@ -295,20 +301,23 @@ the gateway default then runs at its next turn. See [Agent sessions](agent-sessi
 A coding client for durable agentic sessions on the gateway you started above. Install the Rust
 terminal client from crates.io (or download a prebuilt binary from the
 [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases)), or run the
-browser client with `npx`:
+browser client (the gateway console's **Apps** page opens it at `/apps/code/`, or run it with
+`npx`):
 
 ```bash
 cargo install abstractcode
 abstractcode doctor              # check the gateway connection
-abstractcode
+abstractcode                     # finds the local gateway; --gateway-url <url> for another one
 
-npx @abstractframework/code      # browser client on http://127.0.0.1:3002
+npx @abstractframework/code --gateway-url http://127.0.0.1:8080   # the browser client on its own
 ```
 
 Sessions are durable: close and reopen, your full context is preserved. Each turn runs the
 gateway's default agent workflow unless you pick another (`/workflow`, `--workflow`). `/files`
 (the **Files** tab in the browser) shows the run's workspace on the gateway host, `/stream`
-chooses live replies, and `/about` shows the versions in use. Type `/help` for commands.
+chooses live replies, and `/about` shows the versions in use. `/automations` lists and manages the
+gateway's automations and `/schedule` creates one (the browser client has an **Automations**
+section); see [Automations](automations.md). Type `/help` for commands.
 
 ### AbstractAssistant (macOS tray)
 

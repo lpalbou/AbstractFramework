@@ -97,9 +97,12 @@ run the installer again: it continues where it stopped.
 
 ### No gateway after a restart
 
-- **Cause**: the gateway starts at login only when a login item was registered (answering "no" to
-  the start-at-login question, or `--no-service`, skips it).
-- **Fix**: `abstractgateway service install --port 8080`, or re-run the installer and answer yes.
+- **Cause**: the gateway starts at login only when start at login is on. Answering "no" to the
+  installer's question, an install run without a terminal (a script, CI), or `--no-service` leaves
+  it off.
+- **Fix**: turn on **Start at login** in either console (web: the Gateway section; terminal: `F3`),
+  run `abstractgateway service install --port 8080`, or re-run the installer in a terminal and
+  answer yes.
 
 ## Connecting clients
 

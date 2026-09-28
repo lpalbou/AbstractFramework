@@ -351,7 +351,13 @@ defaults for direct Core usage (written by `abstractcore --config` or
 
 ## Client configuration (Observer / Flow Editor / Code Web UI)
 
-All gateway-backed browser UIs need two things:
+Opened from the gateway console's **Apps** page, every browser app is served by the gateway at
+`/apps/<app>/` and signed in already: there is nothing to configure. Run on its own, a browser
+app takes the gateway's address as a launch flag, `--gateway-url <url>` (the same flag in every
+app and terminal client); without it, it uses the local gateway pointer
+(`~/.abstractframework/gateway.json`, written by the installer) when there is one.
+
+A browser UI run on its own needs two things:
 
 - **Gateway base URL** (example: `http://127.0.0.1:8080`)
 - **Gateway user + user token** in hosted user-auth mode
@@ -370,32 +376,25 @@ access control.
 ### AbstractObserver
 
 ```bash
-npx @abstractframework/observer
+npx @abstractframework/observer --gateway-url http://127.0.0.1:8080
 ```
 
-Set Gateway URL, Gateway user, and that user's token in the UI
-(http://localhost:3001). Observer exchanges the token for an app-scoped browser
+Sign in with a Gateway user and that user's token in the UI. Observer exchanges the token for an app-scoped browser
 session and does not persist the token in browser settings.
 
 ### Flow Editor
 
 ```bash
-npx @abstractframework/flow
-```
-
-Optional convenience variable:
-
-```bash
-export ABSTRACTFLOW_GATEWAY_URL="http://127.0.0.1:8080"
+npx @abstractframework/flow --gateway-url http://127.0.0.1:8080
 ```
 
 ### Code Web UI
 
 ```bash
-npx @abstractframework/code
+npx @abstractframework/code --gateway-url http://127.0.0.1:8080
 ```
 
-Open http://localhost:3002 and set the gateway URL in the UI settings.
+Open the address it prints and sign in.
 
 ---
 

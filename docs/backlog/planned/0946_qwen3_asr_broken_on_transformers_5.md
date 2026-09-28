@@ -54,3 +54,10 @@ yet another backlog planned item." Must be fixed before the next AbstractCore re
 ## Receipts
 
 - Voice worker report 2026-09-27 (`untracked/release-2026-09-27/voice/`).
+
+## Implementation (wave 2, 2026-09-28) — pending release
+
+abstractvoice branch `wave2/voice` (worktree `untracked/wave2/voice`), local commits, no version bump;
+stays planned until the release lands: `ccf64f0` Qwen3-ASR runs on Transformers 5.x, CI tests it on
+the floor and the latest Transformers; `339c09f` docs and CHANGELOG [Unreleased]. Evidence and the
+real-checkpoint proof: the voice worker's report (untracked/wave2/voice).

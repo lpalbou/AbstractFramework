@@ -54,7 +54,7 @@ silently lost 336 connections in 24 shipped flows (coding-agent, deep-research, 
   ACCEPT.
 - Not done, tracked: wiring the remaining unconnected pins of entity-chat/entity-goodbye/
   multiagent-coding and rebuilding the gateway's own `deep-research@0.1.7` bundle and its contract
-  test → [0890](../planned/0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md)
+  test → [0890](0890_wire_bundled_flow_interface_pins_and_rebuild_gateway_bundles.md)
   (release step; `KNOWN_GAPS` in `bundledFlows.test.ts` still non-empty on 2026-09-26). Drawing
   runtime-resolved handles → [0891](../proposed/0891_flow_runtime_resolved_handles_as_pins.md)
   (abstractflow proposed 0157). Flow vite dev proxy lacks forwarding headers; moving Flow onto

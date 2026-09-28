@@ -39,8 +39,10 @@ The composition root when you need a control plane (local or remote).
 
 ## Component view
 
-Every client talks to the gateway over HTTP/SSE. The browser apps are served by a small local
-server that also relays their gateway calls (see [App proxies](#app-proxies-and-the-forwarded-address)).
+Every client talks to the gateway over HTTP/SSE. Each browser app has a small server on
+`127.0.0.1` that serves its pages and relays its gateway calls; browsers reach it through the
+gateway, which serves every app on its own address at `/apps/<app>/` (see
+[App proxies](#app-proxies-and-the-forwarded-address)).
 The gateway composes the Python packages below it in one process: agent patterns, the durable
 runtime, memory, skills and AbstractCore, which reaches the model providers and local engines.
 Arrows point from a component to what it calls or depends on.
@@ -54,14 +56,17 @@ flowchart TB
         APP["Your app"]
     end
 
-    subgraph BROWSER["Browser apps, each behind its local app proxy"]
+    BR(("browser"))
+
+    subgraph BROWSER["Browser apps: each app server on 127.0.0.1"]
         CODEW["Code Web UI"]
         FLOWED["Flow Editor<br/>author .flow bundles"]
         UIAPPS["Observer · Entity · Continuum<br/>(ui-kit app-server)"]
     end
 
     subgraph GATEWAY["AbstractGateway (control plane)"]
-        API["HTTP/SSE API<br/>runs · schedules · workflow catalog<br/>ledger + artifacts · users · network · /about"]
+        API["HTTP/SSE API<br/>runs · schedules · automations · workflow catalog<br/>ledger + artifacts · users · network · /about"]
+        APXY["app proxy /apps/&lt;app&gt;/<br/>one address, one port for every app"]
         SESS["agent sessions<br/>default workflow · workspace guard<br/>skills shelf · live-reply hub"]
         WEB["web /console<br/>first-run guide · Models · Engines · Resources"]
         TRAY["menu-bar icon<br/>status · Network · open apps"]
@@ -79,7 +84,9 @@ flowchart TB
     PROV[("LLM providers and local engines<br/>Ollama · LM Studio · MLX · llama.cpp · vLLM · cloud APIs")]
 
     CLIENTS -->|HTTP/SSE| API
-    BROWSER -->|"HTTP/SSE through the app proxy"| API
+    BR -->|"/console, /apps/&lt;app&gt;/"| APXY
+    APXY -->|"relays (HTTP, SSE, WebSocket)"| BROWSER
+    BROWSER -->|"HTTP/SSE: the app server relays the gateway calls"| API
     WEB --> API
     TRAY --> API
     TRAY -.->|"Open: starts it signed in"| ASSIST
@@ -147,10 +154,15 @@ flowchart LR
         IMG["abstractgateway · abstractcore-server"]
     end
     BOOT["install.sh / install.ps1<br/>(uv tool install abstractgateway,<br/>cargo install abstractgateway-console)"]
+    PTR[("~/.abstractframework/gateway.json<br/>local gateway pointer: address only")]
     BOOT -->|installs, starts, opens /console| GW
+    BOOT -->|writes after the health check| PTR
+    GW -->|"serve keeps it current"| PTR
+    AS -.->|reads| PTR
+    CLI -.->|reads| PTR
     BOOT -->|builds by default| CON
     AS -->|HTTP/SSE| GW
-    APPS -->|HTTP/SSE| GW
+    APPS -->|"HTTP/SSE; served by the gateway at /apps/&lt;app&gt;/"| GW
     CLI -->|HTTP/SSE| GW
     CON -->|HTTP/SSE| GW
     CON -->|embeds screens| CCON
@@ -158,6 +170,17 @@ flowchart LR
     GW --> STACK
     IMG -.->|same server, containerized| GW
 ```
+
+The **local gateway pointer**, `~/.abstractframework/gateway.json`, tells clients on the gateway's
+computer where it listens when they start without an address: `{"schema": 1, "url", "port",
+"data_dir", "updated_at", "written_by"}`, a loopback URL, never a token. The installer writes it
+after the health check and `abstractgateway serve` keeps it current once bound, both only when the
+file is absent and the gateway uses the default data directory, or when the file already names
+their data directory, so a test or second gateway with its own data directory never takes it over.
+The Assistant, AbstractCode's terminal client and the app servers (the ui-kit app-server) read it;
+readers believe it only for schema 1, a loopback URL and a file owned by the reader. The
+uninstaller deletes it when it names the uninstalled data directory. An explicit
+`--gateway-url` always wins.
 
 The Models and Engines features are implemented once, in AbstractCore, and inherited by the
 gateway:
@@ -266,7 +289,27 @@ sequenceDiagram
 
 Each browser app runs behind a small local server that serves the page and relays its gateway
 calls: the AbstractCode web server, the Flow Editor's server, and the ui-kit app-server used by
-Observer, Entity and Continuum. The gateway gives a few defaults only to the person at its own
+Observer, Entity and Continuum. These servers listen on `127.0.0.1`; the gateway serves each of
+them on its own address at `/apps/<app>/` (HTTP, SSE and WebSocket), so a remote or headless
+gateway needs one address and one tunnel for the console, the API and every app:
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant G as Gateway /apps/observer/
+  participant A as App server (127.0.0.1)
+  B->>G: GET /apps/observer/… (the app's session cookie)
+  G->>G: check the app session and the Origin
+  G->>A: GET /… + X-Forwarded-Prefix, X-Forwarded-For (browser address), Proto, Host
+  A->>G: its gateway calls (X-Forwarded-For: the browser address)
+  G-->>A: API answer
+  A-->>B: page, events (relayed as they arrive)
+```
+
+The gateway serves an app there only when the app announces it can be
+(`X-AbstractFramework-App: <app>; mount=1`); each app receives only its own cookies and never the
+console's session or an `Authorization` header. Reference:
+[AbstractGateway: Apps are served through the gateway](https://github.com/lpalbou/AbstractGateway/blob/main/docs/apps.md#apps-are-served-through-the-gateway). The gateway gives a few defaults only to the person at its own
 keyboard (opening a folder, installing apps and engines, the Assistant hand-over), so it must
 know where a relayed request really comes from. The rule has two halves:
 

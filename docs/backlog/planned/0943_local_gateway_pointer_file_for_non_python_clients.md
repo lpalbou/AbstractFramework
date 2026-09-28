@@ -208,3 +208,42 @@ values, so both agree; `local_gateway()` gains no pointer tier.
   re-implementing the rule, a pointer written by every serve, the serve record only, and doing nothing.
 - Adversarial review of the Python side, 2026-09-27: the service-record tier is limited to pinned services, the
   installer hints were fixed, and the saved-sign-in re-point was added.
+
+## Implementation (wave 2, 2026-09-28) — pending release
+
+Implemented on the wave-2 branches, local commits, no version bump; stays planned until the release
+lands:
+
+- abstractgateway `wave2/apps-proxy` (worktree `untracked/wave2/gw-apps`): `e089ae2` serve writes the
+  pointer once bound, under the ownership rule (`gateway_pointer.py`); `2436f50` tests (written only
+  after bind, mutation-checked); `6bf4714` `network status` shows the pointer (url, owner, matches
+  the running port); `e3d0b7f` docs (deployment.md).
+- abstractframework root `wave2/root`: `143e83d` install.sh writes it after the health check
+  (`written_by: "installer"`, 0600, atomic, no token) under the same ownership rule, and
+  `--uninstall` deletes it only when it names this install's data dir (sandbox cases in
+  `scripts/tests/test_install_user_path.sh` [10] and [14], each RED-checked); `eacf855` install.ps1
+  equivalent (`%USERPROFILE%\.abstractframework\gateway.json`; not executed: no PowerShell on the
+  build machine); `da183ae` `scripts/check_identity_sync.py` gains the `gateway_pointer` fixture
+  group; docs (install.md, architecture.md, configuration.md).
+- abstractuic `wave2/integrate`: `bc5bd1b` app-server pointer reader + the canonical fixtures
+  `ui-kit/scripts/fixtures/gateway_pointer/`; `ae08b16` docs.
+- abstractassistant `wave2/assistant`: `a4866df` the frozen `.app` reads the pointer after the saved
+  sign-in, before 8080; `64af55d` tests on the shared fixture set.
+- abstractcode `wave2/automations`: `9e49d1b` TUI reader (precedence flag > env > saved login, the
+  old 8080 gives way > pointer > 8080; the shared case table vendored); `7cefa3f` web server
+  follows the pointer; `5a55bca` docs.
+- Apps on the kit, each following the pointer without `--gateway-url`: observer `1e411c2`, flow
+  `638acdf`/`561f4bd`, continuum `de76caa`/`6da8044`, entity `e85a52b`/`ca3af49`.
+
+Open against the acceptance criteria:
+
+- `abstractgateway-console` reads neither `ABSTRACTGATEWAY_URL` nor the pointer yet (branch
+  `wave2/console` head `3f51fab`: `--gateway-url`, default `http://127.0.0.1:8080`).
+- The installer writes the pointer only under the ownership rule (lead's instruction), while the
+  gateway module's docstring says the installer writes it always: with a custom `--data-dir` and no
+  pointer yet, neither the installer nor serve writes one. One of the two texts must change.
+- No ADR for the file contract yet; the busy-8080 and admin-port-change end-to-end proofs belong to
+  the release E2E.
+- `scripts/check_identity_sync.py` reads the sibling repos' main checkouts, so it passes only once
+  the abstractuic, abstractassistant and abstractcode branches merge (it passes today against the
+  branch worktrees: 36 ok).

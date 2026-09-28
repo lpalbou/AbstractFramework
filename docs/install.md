@@ -24,10 +24,11 @@ macOS 14), an internet connection, and about 5 GB of free disk space before mode
 4. **A Terminal window opens** and shows each step as it happens. It asks one question:
 
    ```
-   ? Start AbstractFramework automatically when you log in? (a per-user login item, no admin; the uninstaller removes it) [Y/n]
+   ? Start AbstractFramework automatically when you log in? (a per-user login item, no admin; the uninstaller removes it) [Y/n] (Enter = yes)
    ```
 
    Press **Return** for yes (recommended: it is then always there when you need it), or type `n`.
+   You can change it later with the **Start at login** switch in the console.
 5. **Wait** 2 to 15 minutes, depending on your connection. The last lines say
    `AbstractFramework is ready.` and your browser opens AbstractFramework.
 6. **In the browser**, the first-run guide helps you pick an engine (it detects what this Mac can
@@ -53,12 +54,17 @@ The package also leaves two double-clickable files in
 On macOS and Linux, open Terminal, paste this line and press Return:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --interactive
+curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
 ```
 
-`--interactive` makes it ask the start-at-login question; without it the answer is yes. Everything
-else is the same as the Mac package above. On Linux the login item is a `systemd --user` service and
-the data lives in `~/.local/share/abstractgateway`.
+It asks the same start-at-login question in your terminal: press Return for yes or type `n`. With
+no answer within 25 seconds it leaves start at login off, so an unattended run never waits.
+Everything else is the same as the Mac package above. On Linux the login item is a `systemd --user`
+service and the data lives in `~/.local/share/abstractgateway`.
+
+Run from a script, a provisioning tool or CI (no terminal to ask on), the installer asks nothing:
+start at login stays off on a first install (a re-run keeps what you chose before), and the summary
+says how to turn it on. `--no-service` always leaves it off and asks nothing.
 
 ### Windows
 
@@ -68,9 +74,10 @@ Windows 10 22H2+ / 11: open PowerShell, paste this line and press Enter:
 powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
 ```
 
-It installs under your user account (no administrator rights), starts AbstractFramework at sign-in
-and opens it in your browser. The Windows script registers the start-at-login entry without asking;
-add `-NoService` to skip it.
+It installs under your user account (no administrator rights) and opens AbstractFramework in your
+browser. It asks whether to start AbstractFramework at sign-in, like the Mac and Linux installer:
+Enter = yes, no answer within 25 seconds (or no console to ask on) leaves it off on a first install.
+`-NoService` leaves it off and asks nothing.
 
 ## If something goes wrong
 
@@ -121,7 +128,8 @@ It asks before removing anything, then asks two more questions, both defaulting 
   installer is what added uv; answer no if you use uv for anything else.
 
 It always removes the login item, stops AbstractFramework and removes the gateway (and the
-Assistant, which lives in the gateway's environment). Stopping means the whole gateway process
+Assistant, which lives in the gateway's environment). It also deletes the local gateway pointer,
+`~/.abstractframework/gateway.json`, when it names this install's data directory. Stopping means the whole gateway process
 tree: after the login item is removed it waits up to 20 seconds for every gateway process to exit
 (the server, the tray, an entity's own-time loop, model downloads, the apps it started), then
 stops the rest, and says which processes it stopped. It keeps Ollama and LM Studio (they have
@@ -148,8 +156,13 @@ The Mac package, the `.command` files and the one line all run the same script,
 1. Checks the machine (OS, CPU, macOS 14+ for Apple Silicon, Rosetta, NVIDIA/ROCm, the folders it
    writes, internet access to PyPI, free disk, a free port) and picks a profile: `apple` on Apple
    Silicon (macOS 14+), `gpu` when `nvidia-smi` or `rocminfo` works, `light` otherwise.
-2. Asks whether to start at login (only with `--interactive`; the default is yes, and a previous
-   "no" is remembered).
+2. Asks whether to start at login, whenever a person is at a terminal (`/dev/tty`, so it also works
+   through `curl | sh`). Enter = yes on a first install and the previous choice on a re-run; no
+   answer within `--ask-wait` seconds (default 25) keeps the previous choice, or leaves it off on a
+   first install. The double-click installers pass `--interactive`, which waits for the answer
+   without a time limit. With no terminal (automation) or `--yes` nothing is asked: a re-run keeps
+   the previous choice (the login item's own state, so a change made with a console's **Start at
+   login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
    `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.6.0"`, from prebuilt wheels
@@ -166,19 +179,30 @@ The Mac package, the `.command` files and the one line all run the same script,
    Rust is already installed. It needs a C compiler; without one, or if the build fails, the
    installer says why and continues. `--no-console` skips it. Then, when asked for, Node.js for
    the browser apps, AbstractCode's terminal client, Ollama or LM Studio (flags below).
-6. Registers the gateway to start at login with `abstractgateway service install --port N` (a
-   LaunchAgent on macOS, a `systemd --user` unit on Linux, a Startup shortcut on Windows) and starts
-   it. The login item runs plain `abstractgateway serve`, so the gateway's
+6. With start at login on, registers the gateway with `abstractgateway service install --port N`
+   (a LaunchAgent on macOS, a `systemd --user` unit on Linux, a per-user login entry on Windows) and
+   starts it. The login item runs plain `abstractgateway serve`, so the gateway's
    [Network setting](#network-setting-who-can-reach-the-gateway) decides where it listens. With
-   `--no-service` (or "no" to the question), or on a Linux host without a user systemd session, it
+   start at login off (or `--no-service`, or on a Linux host without a user systemd session), it
    starts the gateway in the background instead and removes a login item an earlier run
-   registered.
-7. Waits up to 180 seconds for `/api/health`, then opens `http://127.0.0.1:8080/console` through a
-   one-time sign-in link (`abstractgateway-config claim-url`, valid 10 minutes, this machine only).
-   If no link can be created, it shows where the admin token is. The summary shows both ways to
-   configure the gateway: the web console link and the terminal console command. On a remote or
-   headless session (SSH, or Linux without a display) it offers the terminal console instead
-   ("Press Enter within 25 s", signed in); no answer skips it, and `--no-open` skips the offer.
+   registered; the summary then says how to turn start at login on: the **Start at login** switch
+   in either console (web: the Gateway section; terminal: F3), or `abstractgateway service enable`.
+7. Waits up to 180 seconds for `/api/health`, then writes the local gateway pointer,
+   `~/.abstractframework/gateway.json` (Windows: `%USERPROFILE%\.abstractframework\gateway.json`):
+   the gateway's address on this computer, its port and data directory, never a token. Clients on
+   this computer that start without a gateway address (the Assistant, AbstractCode's terminal
+   client, the browser apps' servers) read it to find a gateway on a port other than 8080. It is
+   written only when it is absent and the install uses the default data directory, or when it
+   already names this install's data directory, so a second install with its own `--data-dir`
+   never takes it over; `abstractgateway serve` keeps it current under the same rule.
+8. Opens `http://127.0.0.1:8080/console` through a one-time sign-in link
+   (`abstractgateway-config claim-url`, valid 10 minutes, this machine only). If no link can be
+   created, it shows where the admin token is. The summary shows both ways to configure the
+   gateway (the web console link and the terminal console command) and where the browser apps
+   open: `http://127.0.0.1:8080/apps/<app>/` (the console's **Apps** page installs and opens them).
+   On a remote or headless session (SSH, or Linux without a display) it offers the terminal console
+   instead ("Press Enter within 25 s", signed in); no answer skips it, and `--no-open` or `--yes`
+   skips the offer.
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
 upgrades or repairs the install in place. The macOS package is payload-free: it copies the two
@@ -233,7 +257,7 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 |---|---|---|
 | `--profile auto\|light\|apple\|gpu` | `-Profile` | Override the profile choice |
 | `--port N` | `-Port N` | Gateway port (default 8080; the next free port when 8080 is busy) |
-| `--with-apps` | `-WithApps` | Make sure Node.js 18+ exists for the browser apps (`uv tool install nodejs-wheel`, no admin) |
+| `--with-apps` | `-WithApps` | Make sure Node.js 18+ exists for running the browser apps on their own with `npx` (the console's **Apps** page installs Node.js for the apps it runs) |
 | `--with-ollama` | `-WithOllama` | Run Ollama's official installer (Linux uses sudo; the script tells you first) |
 | `--with-lmstudio` | `-WithLmStudio` | Install LM Studio (headless daemon on macOS/Linux, winget on Windows) |
 | `--no-console` | `-NoConsole` | Skip the terminal console (`abstractgateway-console`), which is otherwise built with cargo |
@@ -241,15 +265,16 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--with-core-cli` | `-WithCoreCli` | Also put the `abstractcore` command on PATH |
 | `--full` | `-Full` | Also build the [compiled extras](#compiled-extras) and llama.cpp from source (needs a C compiler) |
 | `--no-tray` | `-NoTray` | Leave out the menu-bar icon (`tray` extra) |
-| `--no-service` | `-NoService` | Do not register a login service |
+| `--no-service` | `-NoService` | Do not start at login (asks nothing; starts the gateway in the background) |
 | `--no-start` | `-NoStart` | Install only; do not start the gateway |
 | `--no-open` | `-NoOpen` | Do not open the browser (remote or headless session: do not offer the terminal console) |
-| `--console-wait SECONDS` | | How long the end-of-install terminal console offer waits for Enter on a remote or headless session (default 25) |
+| `--ask-wait SECONDS` | `-AskWait SECONDS` | How long a timed question waits for an answer: start at login, and the terminal console offer at the end of a remote or headless install (default 25, at most 25; `--console-wait` is an alias) |
 | `--no-modify-path` | `-NoModifyPath` | Do not add `~/.local/bin` to your shell profile (`uv tool update-shell`) |
 | `--pin X` / `--from PATH` | `-Pin` / `-From` | Install another gateway version or a local checkout |
 | `--manifest PATH` | `-Manifest` | Read the gateway pin from this `install-manifest.json` |
 | `--data-dir DIR` | `-DataDir` | Gateway data directory |
-| `--interactive` | — | Ask whether to start at login (and, with `--uninstall`, whether to delete data and uv); the double-click installers pass it |
+| `--interactive` | — | Wait for every answer without a time limit, and also ask whether to build the terminal console (and, with `--uninstall`, whether to delete data and uv); the double-click installers pass it |
+| `-y`, `--yes` | — | Ask nothing, not even start at login (a first install leaves it off; a re-run keeps the previous choice) |
 | `--print` | `-Print` (or `-WhatIf`) | Show the plan and every command; change nothing |
 | `--print-versions` | `-PrintVersions` | Print the pinned gateway, npm app and crate versions, then exit |
 | `-v`, `--verbose` | — | Show the full output of every command |
@@ -267,18 +292,36 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 
 ### Headless or remote machine
 
-On a server without a browser, configure the gateway from the terminal console, on the machine
-itself. When you install over SSH, the installer offers to open it at the end. Later, start it with
-the command the installer's summary prints (your port and token filled in):
+Install over SSH with the same one-liner. It asks the start-at-login question in your SSH terminal
+(Enter = yes; a scripted install with no terminal leaves it off), installs local voice (Supertonic
+and Whisper, on CPU) like every other install, and at the end offers to open the terminal console,
+signed in ("Press Enter within 25 s"; no answer skips it, so a scripted `ssh -t` never hangs).
+
+Later, start the terminal console on the server with the command the installer's summary prints
+(your port and token filled in):
 
 ```bash
-abstractgateway-console --url http://127.0.0.1:8080 --token <admin token>
+abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>
 ```
 
-The admin token is in `~/.local/share/abstractgateway/auth/bootstrap-admin-token` (the installer's
-summary prints the command with it filled in). Or use the web console from your own computer through an SSH tunnel:
-`ssh -L 8080:127.0.0.1:8080 <server>`, then open the link from
-`abstractgateway-config claim-url --base-url http://127.0.0.1:8080` in your browser.
+The admin token is in `~/.local/share/abstractgateway/auth/bootstrap-admin-token` (the summary
+prints the command with it filled in). The terminal console configures everything the web console
+does: press `N` for the **Network** screen (who can reach the gateway: this machine, the local
+network or the internet; the saved and the running setting side by side, with the addresses to
+copy), `A` for **Apps**, `F3` for the gateway host (restart, update, start at login).
+
+From your own computer, one SSH tunnel carries the web console, the API and every browser app,
+because the gateway serves the apps on its own port:
+
+```bash
+ssh -L 8080:127.0.0.1:8080 <server>
+```
+
+Then open the link from `abstractgateway-config claim-url --base-url http://127.0.0.1:8080` in your
+browser, and open the apps from the console's **Apps** page: each opens at
+`http://127.0.0.1:8080/apps/<app>/` (`observer`, `code`, `flow`, `continuum`, `entity`). On the
+server itself, the terminal console's **Apps** screen shows the same link and the tunnel command
+instead of starting a browser.
 
 ### The same install by hand
 
@@ -294,13 +337,17 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080  # prints a on
 
 ### Run at login
 
-`abstractgateway service install` registers the login service (LaunchAgent on macOS,
-`systemd --user` on Linux, a Startup shortcut on Windows, experimental) and starts the gateway:
+The easiest way to turn start at login on or off is the **Start at login** switch in either
+console: the web console's Gateway section, or `F3` in the terminal console. In a terminal,
+`abstractgateway service` does the same (LaunchAgent on macOS, `systemd --user` on Linux, a
+per-user Run entry on Windows, experimental):
 
 ```bash
-abstractgateway service install --port 8080
+abstractgateway service enable      # start this gateway at the next login (the consoles' switch)
+abstractgateway service disable     # stop starting it at login (the running gateway keeps running)
+abstractgateway service install --port 8080   # register the login item and start the gateway now
 abstractgateway service status
-abstractgateway service uninstall
+abstractgateway service uninstall   # stop it and remove the login item (data is kept)
 ```
 
 The login item runs plain `abstractgateway serve`, so the host and port come from the Network
@@ -329,8 +376,8 @@ use a LaunchAgent in `~/Library/LaunchAgents/` with the same absolute command an
 ### Network setting: who can reach the gateway
 
 The gateway listens on this computer only (`localhost`, `127.0.0.1:8080`) until you choose
-otherwise. Change it in the console's network panel, from the menu-bar icon's **Network** menu, or
-in a terminal:
+otherwise. Change it in the web console's network panel, on the terminal console's **Network**
+screen (`N`), from the menu-bar icon's **Network** menu, or in a terminal:
 
 ```bash
 abstractgateway network status                      # configured vs running mode, addresses, warnings
@@ -482,25 +529,34 @@ Run or install them next to the Python stack:
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.6.0 |
 | Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.17.0 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.3.0 |
-| Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --url http://127.0.0.1:8080 --token <admin token>` | 0.10.0 |
-| Flow Editor | `npx @abstractframework/flow` (`--gateway-url <url>` for another gateway) | 0.3.22 |
-| Code Web UI | `npx @abstractframework/code` | 0.5.0 |
-| Observer | `npx @abstractframework/observer` | 0.1.14 |
-| Continuum console | `npx @abstractframework/continuum` (`--gateway-url <url>` for another gateway) | 0.3.2 |
-| Entity manager | `npx @abstractframework/entity` | 0.2.2 |
+| Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.10.0 |
+| Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.3.22 |
+| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.5.0 |
+| Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.1.14 |
+| Continuum console | the console's **Apps** page (`/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` | 0.3.2 |
+| Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.2.2 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.6.0 |
 
-The browser apps need Node.js 18 or later and a running gateway. Optional Python add-ons outside the
-profiles install on their own: `pip install abstract3d`, `pip install abstractcamera`.
+The browser apps need a running gateway. The gateway installs, starts and serves them itself, on
+its own address at `/apps/<app>/` (it installs Node.js for them when it is missing); running one on
+its own with `npx` needs Node.js 18 or later. Optional Python add-ons outside the profiles install
+on their own: `pip install abstract3d`, `pip install abstractcamera`.
 `abstractskill` comes with the gateway, which carries its curated skill shelf.
 
 ## Start the gateway and apps
 
-Start the gateway, open its console, then any browser app against it:
+Start the gateway and open its console:
 
 ```bash
 abstractgateway serve            # binds 127.0.0.1:8080 and prints a one-time console link
-npx @abstractframework/flow
+```
+
+The console's **Apps** page installs and opens the browser apps, each at
+`http://127.0.0.1:8080/apps/<app>/`, already signed in. To run an app on its own instead (for
+development, or against another gateway), pass the gateway's address:
+
+```bash
+npx @abstractframework/flow --gateway-url http://127.0.0.1:8080
 ```
 
 Configure providers, API keys, engines and default models in the console. For library-only use

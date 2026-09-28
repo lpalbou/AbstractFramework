@@ -32,7 +32,7 @@ No.
 | Smallest useful (LLM SDK only) | `pip install abstractcore` |
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
-| A browser app against an existing gateway | `npx @abstractframework/<flow\|code\|observer\|continuum\|entity>` |
+| A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity> --gateway-url <url>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
 | A container deployment | `ghcr.io/lpalbou/abstractgateway:0.6.0` |
 
@@ -113,7 +113,7 @@ Deploy a bundle to a gateway and any gateway-backed client can discover and run 
 ## How do I author complex agentic orchestration?
 
 1. Run a gateway (for durability + discovery).
-2. Open the Flow Editor (`npx @abstractframework/flow`) and connect to the gateway.
+2. Open the Flow Editor from the gateway console's **Apps** page (or `npx @abstractframework/flow --gateway-url <url>`).
 3. Build a workflow: LLM steps, tool steps, agent nodes, branching, loops, subflows.
 4. Export to `.flow`.
 5. Copy into `ABSTRACTGATEWAY_FLOWS_DIR` to deploy.
@@ -141,7 +141,8 @@ An automation is one durable run on the runtime (the controller). Each time its 
 starts one **occurrence**, a run of your workflow that clients show as a question/answer turn:
 
 - **Independent** context starts every occurrence fresh; **growing** context makes the occurrences
-  successive turns of one conversation, with a bounded history (40 messages, 24 000 characters).
+  successive turns of one conversation, with a bounded history (the most recent 50 000 tokens of
+  whole turns).
 - Automations are **quiet by default**: you are notified when the workflow's output carries
   `notify`, when a run fails after its last retry, or when a run waits for you.
 - Creating an automation is the consent for the framework tools its workflow uses; choose **Ask
@@ -282,10 +283,12 @@ in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path
 
 ### How do I stop or restart the gateway?
 
-When the script registered the login service, `abstractgateway service status` shows it,
+When start at login is on, `abstractgateway service status` shows it,
 `abstractgateway service uninstall` stops the gateway and removes the login entry (your data is
-kept), and `abstractgateway service install --port 8080` registers and starts it again. With `--no-service`, the install summary prints the stop and start commands; re-running the
-installer starts it again.
+kept), and `abstractgateway service install --port 8080` registers and starts it again. When it is
+off (you answered no, the install ran without a terminal, or `--no-service`), the install summary
+prints the stop and start commands and re-running the installer starts it again; turn start at
+login on with the **Start at login** switch in either console or `abstractgateway service enable`.
 
 ### How do I download a model or install Ollama later?
 
