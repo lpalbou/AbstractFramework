@@ -1,11 +1,13 @@
 #!/bin/sh
 # AbstractFramework installer for macOS: double-click this file in Finder.
 #
-# It opens Terminal and runs install.sh (from next to this file, or the
-# latest one from GitHub) with --interactive, which asks one question (start
-# at login?) and then installs everything under your home folder: no admin
-# password. When it finishes, your browser opens AbstractFramework.
-# Every command it runs is printed and logged.
+# It opens Terminal and runs the latest install.sh from GitHub, the same script
+# as the one-line install, with --interactive: it asks one question (start at
+# login?) and installs everything under your home folder, no admin password.
+# Double-clicking it again upgrades an existing install the same way. The copy
+# of install.sh next to this file is used only when GitHub cannot be reached.
+# When it finishes, your browser opens AbstractFramework. Every command it runs
+# is printed and logged.
 
 if [ -n "${ZSH_VERSION:-}" ]; then emulate sh; fi
 AF_INSTALL_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
@@ -28,21 +30,21 @@ BANNER
 
 _here="$(cd "$(dirname "$0")" 2>/dev/null && pwd || echo "")"
 _rc=0
-if [ -n "$_here" ] && [ -f "$_here/install.sh" ]; then
-    sh "$_here/install.sh" --interactive "$@" || _rc=$?
-elif command -v curl >/dev/null 2>&1; then
-    echo "  \$ curl -LsSf $AF_INSTALL_URL | sh -s -- --interactive"
+_tmp=""
+if command -v curl >/dev/null 2>&1; then
     _tmp="$(mktemp "${TMPDIR:-/tmp}/af-install.XXXXXX")"
-    if curl -LsSf "$AF_INSTALL_URL" -o "$_tmp"; then
-        sh "$_tmp" --interactive "$@" || _rc=$?
-    else
-        printf '\nERROR: no internet connection: the installer could not be downloaded.\n'
-        printf 'What to do: connect to the internet, then double-click this file again.\n'
-        _rc=1
-    fi
+    echo "  \$ curl -LsSf $AF_INSTALL_URL | sh -s -- --interactive"
+    curl -LsSf "$AF_INSTALL_URL" -o "$_tmp" 2>/dev/null || { rm -f "$_tmp"; _tmp=""; }
+fi
+if [ -n "$_tmp" ]; then
+    sh "$_tmp" --interactive "$@" || _rc=$?
     rm -f "$_tmp"
+elif [ -n "$_here" ] && [ -f "$_here/install.sh" ]; then
+    echo "  GitHub could not be reached: running the copy of the installer next to this file."
+    sh "$_here/install.sh" --interactive "$@" || _rc=$?
 else
-    printf '\nERROR: curl is missing, so nothing can be downloaded.\n'
+    printf '\nERROR: no internet connection: the installer could not be downloaded.\n'
+    printf 'What to do: connect to the internet, then double-click this file again.\n'
     _rc=1
 fi
 
