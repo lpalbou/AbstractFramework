@@ -607,7 +607,22 @@ console_bin() {
 # crate_installed BIN NAME PIN: BIN answers --version with that crate at that pin.
 crate_installed() { [ "$("$1" --version 2>/dev/null)" = "$2 $3" ]; }
 console_installed() { crate_installed "$CONSOLE_BIN" "$CONSOLE_NAME" "$CONSOLE_PIN"; }
-code_installed() { crate_installed "$CODE_BIN" "$CODE_NAME" "$CODE_PIN"; }
+# version_at_least A B: dotted numeric version A >= B (X.Y.Z; a missing part counts as 0).
+version_at_least() {
+    awk -v a="$1" -v b="$2" 'BEGIN {
+        if (a !~ /^[0-9]+(\.[0-9]+)*$/) exit 1
+        na = split(a, x, "."); nb = split(b, y, "."); n = na > nb ? na : nb
+        for (i = 1; i <= n; i++) { if (x[i] + 0 > y[i] + 0) exit 0; if (x[i] + 0 < y[i] + 0) exit 1 }
+        exit 0 }'
+}
+# code_installed: abstractcode at the pin OR LATER. The gateway's Apps page updates it in place in
+# the same folder, so a re-run must never downgrade it to the pin. Sets CODE_HAVE_V.
+CODE_HAVE_V=""
+code_installed() {
+    _cv="$("$CODE_BIN" --version 2>/dev/null)" || return 1
+    case "$_cv" in "$CODE_NAME "*) CODE_HAVE_V="${_cv#"$CODE_NAME "}" ;; *) return 1 ;; esac
+    version_at_least "$CODE_HAVE_V" "$CODE_PIN"
+}
 TOOL_BIN=""
 tool_bin() {
     if [ -n "$UV" ] && [ -x "$UV" ]; then TOOL_BIN="$("$UV" tool dir --bin 2>/dev/null || true)"; fi
@@ -1629,7 +1644,7 @@ if [ "$WITH_CODE_CLI" = 0 ]; then
 else
     step "AbstractCode terminal client ($CODE_NAME $CODE_PIN)"
     if [ "$CODE_HAVE" = 1 ]; then
-        ok "$CODE_NAME $CODE_PIN already installed: $CODE_BIN"; CODE_OK=1
+        ok "$CODE_NAME $CODE_HAVE_V already installed ($CODE_PIN or later): $CODE_BIN"; CODE_OK=1
     elif ! rust_cargo; then
         CODE_WHY="$RUST_WHY"
         # Under --no-console nothing above said it (the console step warns for both).
@@ -1847,7 +1862,12 @@ _code_exe="$CODE_NAME"; [ "$CODE_BIN" = "$TOOL_BIN/$CODE_NAME" ] || _code_exe="$
 if [ -n "$_tui_tok" ]; then _tok_arg="--token $_tui_tok"
 else _tok_arg="--token <admin token: cat $(q "$TOKEN_FILE")>"; fi
 TUI_CMD="$_tui_exe --gateway-url $BASE_URL $_tok_arg"
-CODE_CMD="$_code_exe --gateway-url $BASE_URL $_tok_arg"
+# AbstractCode's terminal client signs in once with the admin token given directly (the installer
+# never saves it for you) and then follows the gateway pointer, so no --gateway-url. On this
+# machine `abstractgateway apps tui-command code` opens it signed in without handling a token (it
+# finds the gateway through its data dir: a custom one is passed on).
+CODE_LOGIN="$_code_exe login $_tok_arg"
+TUI_COMMAND="abstractgateway apps tui-command code"; [ "$DATA_DIR_CUSTOM" = 1 ] && TUI_COMMAND="$TUI_COMMAND --data-dir $(q "$DATA_DIR")"
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     # The plain-language part first: what a non-technical user needs to know.
     printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
@@ -1869,10 +1889,10 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
         echo "    Terminal:  not installed: $CONSOLE_WHY"
     fi
     if [ "$CODE_OK" = 1 ]; then
-        echo "  AbstractCode (terminal): $CODE_CMD"
-        # PLACEHOLDER (TUI sign-in): how a fresh user signs AbstractCode's terminal client in; the
-        # lead fills it in from untracked/tui-signin-note.md. Replace before any release.
-        echo "  Sign in (terminal): <PLACEHOLDER: TUI sign-in command>"
+        echo "  AbstractCode, the coding client, in the terminal:"
+        echo "  Sign in (terminal, once): $CODE_LOGIN"
+        echo "    then run: $_code_exe"
+        echo "    or, on this machine, without a token: $TUI_COMMAND"
     else
         echo "  AbstractCode (terminal): not installed: $CODE_WHY"
     fi
@@ -1894,7 +1914,7 @@ fi
 printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): nothing was changed.' || echo 'Details')" "$C_0"
 printf '  %-11s %s\n' "Console:" "$BASE_URL/console" "Gateway:" "$GW_SPEC ($PROFILE profile)" \
     "Terminal:" "$([ "$CONSOLE_OK" = 1 ] && echo "$TUI_CMD" || echo "not installed ($CONSOLE_WHY)")" \
-    "Code:" "$([ "$CODE_OK" = 1 ] && echo "$CODE_CMD" || echo "not installed ($CODE_WHY)")" \
+    "Code:" "$([ "$CODE_OK" = 1 ] && echo "$_code_exe   (sign in once: $CODE_LOGIN; or on this machine: $TUI_COMMAND)" || echo "not installed ($CODE_WHY)")" \
     "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
 echo ""
 # What each command on PATH is (the operator's first question is "abstractgateway-config, what

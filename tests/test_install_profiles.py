@@ -678,7 +678,10 @@ def test_install_sh_with_code_cli_is_kept_as_an_alias_of_the_default(tmp_path: P
     default = _install_sh_print(tmp_path / "a", "--no-tray", profile="light")
     alias = _install_sh_print(tmp_path / "b", "--no-tray", "--with-code-cli", profile="light")
     assert alias.returncode == 0, alias.stderr
-    assert default.stdout.replace(str(tmp_path / "a"), "H") == alias.stdout.replace(str(tmp_path / "b"), "H")
+    # The same plan; only the free-disk reading may move between the two runs.
+    def plan(out: str, home: Path) -> list[str]:
+        return [line for line in out.replace(str(home), "H").splitlines() if "MB free" not in line]
+    assert plan(default.stdout, tmp_path / "a") == plan(alias.stdout, tmp_path / "b")
 
 
 def test_install_sh_no_code_cli_skips_only_it(tmp_path: Path) -> None:
