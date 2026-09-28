@@ -28,33 +28,41 @@
 #      supported) and prints how to reach both consoles, the web one (`/console`)
 #      and the terminal one, and the apps (`/apps/<app>/` on the gateway)
 #
-# Options (environment twins in brackets):
+# Upgrade: run the same line again. It finds the existing install (its bootstrap.env,
+# the uv tool), says "AbstractFramework <old> found: upgrading to <new>" (or "already up
+# to date"), keeps the profile, port, start at login, data dir and the choices marked
+# [kept] below, moves every library to the release's exact versions, restarts the gateway
+# when anything changed, and lists what changed (old -> new). The gateway's Update action
+# (web console, terminal console, tray) runs this same script with --no-start.
+#
+# Options (environment twins in brackets; [kept] = a re-run keeps the previous choice):
 #   --profile auto|light|apple|gpu  install profile (default auto)          [AF_PROFILE]
 #   --port N                 gateway port (default 8080, next free if busy)  [AF_PORT]
 #   --pin VERSION|latest     abstractgateway version (default: install manifest) [AF_PIN]
 #   --from PATH|REQUIREMENT  install the gateway from a checkout, wheel or
 #                            requirement instead of the pinned release      [AF_FROM]
 #   --manifest PATH          read the pin from this install-manifest.json
-#   --data-dir DIR           gateway data dir (default: per-OS user data dir) [AF_DATA_DIR]
+#   --data-dir DIR           gateway data dir (default: per-OS user data dir) [AF_DATA_DIR] [kept]
 #   --with-apps              make sure Node.js >= 18 exists for the npx apps
 #                            (uv tool install nodejs-wheel; no admin)
-#   --no-console             skip the terminal console (by default it is built with
+#   --no-console             skip the terminal console (by default it is built with [kept]
 #                            cargo: about 600 MB of Rust from rustup when cargo is
 #                            missing, and a C compiler); AbstractCode's terminal
 #                            client is then built only with a cargo already there
-#   --no-code-cli            skip AbstractCode's terminal client (abstractcode; by
-#                            default built with the console's cargo, into the same
-#                            folder; --with-code-cli, the old opt-in, is accepted)
-#   --no-core-cli            do not put AbstractCore's commands (abstractcore, its
-#                            apps) and abstractvoice, abstractvision, abstractmusic
-#                            on PATH (--with-core-cli, the old opt-in, is accepted)
+#   --no-code-cli            skip AbstractCode's terminal client (abstractcode; by [kept]
+#                            default built with the console's cargo, into the same folder)
+#   --no-core-cli            do not put AbstractCore's commands (abstractcore, its [kept]
+#                            apps) and abstractvoice, abstractvision, abstractmusic on PATH
+#   --with-console, --with-code-cli, --with-core-cli, --with-tray, --no-full
+#                            turn back on (off, for --no-full) what a previous run's
+#                            option left out (or in)
 #   --with-ollama            run Ollama's official installer (may ask for sudo)
 #   --with-lmstudio          run LM Studio's headless installer (llmster)
-#   --full                   also build the compiled extras (stable-diffusion.cpp,
+#   --full                   also build the compiled extras (stable-diffusion.cpp, [kept]
 #                            echo cancellation) and llama.cpp from source; needs a C compiler
-#   --no-tray                skip the tray extra
+#   --no-tray                skip the tray extra [kept]
 #   --no-service             do not start at login (asks nothing); start in background
-#   --no-start               install only; do not start the gateway
+#   --no-start               install only; do not start (or restart) the gateway
 #   --no-open                do not open the browser (on a remote or headless session:
 #                            do not offer the terminal console at the end)
 #   --ask-wait SECONDS       how long a timed question waits for an answer: start at login,
@@ -114,6 +122,13 @@ fi
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
 AF_GATEWAY_PIN_DEFAULT="0.7.1"
+# The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
+# the release's other Python packages in the gateway's environment (its `python_packages`,
+# minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
+# constraints, so an install or an upgrade lands on exactly the tested matrix, never on
+# whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
+AF_FRAMEWORK_VERSION="0.6.1"
+AF_PY_MATRIX="abstractcore==2.18.0 AbstractRuntime==0.7.1 abstractagent==0.3.17 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.13.0 abstractvision==0.3.30 abstractmusic==0.1.15"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.6.1 @abstractframework/observer@0.2.1 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"
 AF_CRATE_CONSOLE="abstractgateway-console@0.11.0"
@@ -193,6 +208,13 @@ af_uv_overrides() {  # $1 = 1 when llama-cpp-python comes from the prebuilt whee
         [ "$1" = 1 ] || echo "llama-cpp-python; sys_platform == 'never'"
     fi
 }
+# af_uv_constraints GGUF: the release matrix (when this run installs the release) and the
+# llama.cpp wheel pin (GGUF=1), one requirement per line; empty when neither applies.
+af_uv_constraints() {
+    if [ "$IS_RELEASE" = 1 ]; then for _c in $AF_PY_MATRIX; do echo "$_c"; done; fi
+    [ "$1" = 1 ] && echo "llama-cpp-python==$GGUF_PIN"
+    return 0
+}
 af_no_build_packages() {
     echo "webrtcvad vllm"
     [ "$FULL" = 1 ] || echo "$AF_COMPILED_EXTRAS llama-cpp-python"
@@ -207,15 +229,17 @@ PIN="${AF_PIN:-}"
 FROM="${AF_FROM:-}"
 MANIFEST=""
 DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
-WITH_APPS=0; WITH_CONSOLE=1; WITH_CODE_CLI=1; WITH_CORE_CLI=1
+# The choices that change what is installed are remembered (bootstrap.env) and kept by a plain
+# re-run: empty = not given on this command line (the previous install's choice, else the default).
+WITH_APPS=0; OPT_CONSOLE=""; OPT_CODE_CLI=""; OPT_CORE_CLI=""; OPT_TRAY=""; OPT_FULL=""
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
-FULL=0; NO_TRAY=0; NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
+NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
 PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0; ASK_WAIT=25; ASK_NOTHING=0
 INTERACTIVE="${AF_INTERACTIVE:-0}"
 
 usage() {
     if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
-        sed -n '2,85p' "$0" | sed 's/^# \{0,1\}//'
+        sed -n '2,93p' "$0" | sed 's/^# \{0,1\}//'
     else
         echo "Usage: install.sh [--profile auto|light|apple|gpu] [--port N] [--pin X] [--with-apps]"
         echo "                  [--with-ollama] [--with-lmstudio] [--no-service] [--no-open] [--print] [--uninstall]"
@@ -241,16 +265,18 @@ while [ $# -gt 0 ]; do
         --data-dir) need_arg "$@"; DATA_DIR="$2"; shift ;;
         --data-dir=*) DATA_DIR="${1#*=}" ;;
         --with-apps) WITH_APPS=1 ;;
-        --with-console) WITH_CONSOLE=1 ;;   # the default; kept for older command lines
-        --no-console) WITH_CONSOLE=0 ;;
-        --with-code-cli) WITH_CODE_CLI=1 ;;   # the default; kept for older command lines
-        --no-code-cli) WITH_CODE_CLI=0 ;;
-        --with-core-cli) WITH_CORE_CLI=1 ;;   # the default; kept for older command lines
-        --no-core-cli) WITH_CORE_CLI=0 ;;
+        --with-console) OPT_CONSOLE=1 ;;   # the default; turns back on what a previous --no-console left out
+        --no-console) OPT_CONSOLE=0 ;;
+        --with-code-cli) OPT_CODE_CLI=1 ;;
+        --no-code-cli) OPT_CODE_CLI=0 ;;
+        --with-core-cli) OPT_CORE_CLI=1 ;;
+        --no-core-cli) OPT_CORE_CLI=0 ;;
         --with-ollama) WITH_OLLAMA=1 ;;
         --with-lmstudio) WITH_LMSTUDIO=1 ;;
-        --full) FULL=1 ;;
-        --no-tray) NO_TRAY=1 ;;
+        --full) OPT_FULL=1 ;;
+        --no-full) OPT_FULL=0 ;;
+        --no-tray) OPT_TRAY=0 ;;
+        --with-tray) OPT_TRAY=1 ;;
         --no-service) NO_SERVICE=1 ;;
         --no-start) NO_START=1 ;;
         --no-open) NO_OPEN=1 ;;
@@ -259,7 +285,9 @@ while [ $# -gt 0 ]; do
         --no-modify-path) NO_MODIFY_PATH=1 ;;
         --print|--dry-run|-n) PRINT=1 ;;
         --print-versions)
+            echo "framework abstractframework $AF_FRAMEWORK_VERSION"
             echo "pypi abstractgateway $AF_GATEWAY_PIN_DEFAULT"
+            for spec in $AF_PY_MATRIX; do echo "pypi ${spec%%==*} ${spec##*==}"; done
             for spec in $AF_NPM_APPS; do echo "npm ${spec%@*} ${spec##*@}"; done
             for spec in $AF_CRATE_CONSOLE $AF_CRATE_CODE_CLI; do echo "crates ${spec%@*} ${spec##*@}"; done
             exit 0 ;;
@@ -455,10 +483,28 @@ if [ "$OS_ID" = macos ]; then
     MACOS_MAJOR="${MACOS_VERSION%%.*}"
 fi
 
+# The local gateway pointer (described with write_pointer below) names the data dir of the
+# install that last wrote it. A re-run without --data-dir keeps a custom data dir that way: the
+# pointer's folder is used when it holds this installer's state (bootstrap.env).
+POINTER_FILE="$HOME/.abstractframework/gateway.json"
+# pointer_data_dir: the data_dir the pointer names (any JSON layout); empty when the file is
+# absent or names none this shell can read.
+pointer_data_dir() {
+    [ -f "$POINTER_FILE" ] && [ -r "$POINTER_FILE" ] || return 0
+    tr '\n\r' '  ' <"$POINTER_FILE" 2>/dev/null \
+        | sed -nE 's/.*"data_dir"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' | head -n 1 \
+        | sed 's/\\"/"/g; s/\\\\/\\/g'
+}
 DATA_DIR_CUSTOM=0; [ -n "$DATA_DIR" ] && DATA_DIR_CUSTOM=1
+DATA_DIR_KEPT=0
 if [ -z "$DATA_DIR" ]; then
     if [ "$OS_ID" = macos ]; then DATA_DIR="$HOME/Library/Application Support/AbstractGateway"
     else DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/abstractgateway"; fi
+    _pd="$(pointer_data_dir)"
+    _def_real="$(CDPATH='' cd -- "$DATA_DIR" 2>/dev/null && pwd -P || echo "$DATA_DIR")"
+    if [ -n "$_pd" ] && [ "$_pd" != "$DATA_DIR" ] && [ "$_pd" != "$_def_real" ] && [ -f "$_pd/bootstrap.env" ]; then
+        DATA_DIR="$_pd"; DATA_DIR_CUSTOM=1; DATA_DIR_KEPT=1
+    fi
 fi
 # abs_path PATH: absolute, its parent folder resolved (pwd -P: /tmp -> /private/tmp, a
 # linked HOME); the last component is kept as given, so a data dir that is itself a link
@@ -514,16 +560,7 @@ GATEWAY_LOG="$LOG_DIR/gateway.log"
 # gateway never takes it over. --uninstall deletes it only when it names this install's
 # data dir (paths compared resolved).
 # ---------------------------------------------------------------------------
-POINTER_FILE="$HOME/.abstractframework/gateway.json"
 real_dir() { (CDPATH='' cd -- "$1" 2>/dev/null && pwd -P) || abs_path "$1"; }
-# pointer_data_dir: the data_dir the pointer names (any JSON layout); empty when the file is
-# absent or names none this shell can read.
-pointer_data_dir() {
-    [ -f "$POINTER_FILE" ] && [ -r "$POINTER_FILE" ] || return 0
-    tr '\n\r' '  ' <"$POINTER_FILE" 2>/dev/null \
-        | sed -nE 's/.*"data_dir"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' | head -n 1 \
-        | sed 's/\\"/"/g; s/\\\\/\\/g'
-}
 json_str() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
 # write_pointer: after the health check (the port is the one that answered), always.
 write_pointer() {
@@ -557,9 +594,14 @@ remove_pointer() {
     fi
 }
 
-# Previous run state (port, service mode, whether we installed Node).
+# Previous run state (port, service mode, whether we installed Node, the release, the choices).
 ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""; ST_UV_BY_US=""; ST_RUST_BY_US=""; ST_VOICE=""
+ST_FRAMEWORK=""; ST_CONSOLE=""; ST_CODE_CLI=""; ST_CORE_CLI=""; ST_TRAY=""; ST_FULL=""
+st_get() { sed -n "s/^$1=//p" "$STATE_FILE" | tail -n 1; }
 if [ -f "$STATE_FILE" ]; then
+    ST_FRAMEWORK="$(st_get FRAMEWORK_VERSION)"
+    ST_CONSOLE="$(st_get CONSOLE)"; ST_CODE_CLI="$(st_get CODE_CLI)"; ST_CORE_CLI="$(st_get CORE_CLI)"
+    ST_TRAY="$(st_get TRAY)"; ST_FULL="$(st_get FULL)"
     ST_RUST_BY_US="$(sed -n 's/^RUST_BY_INSTALLER=//p' "$STATE_FILE" | tail -n 1)"
     ST_VOICE="$(sed -n 's/^VOICE_SPEC=//p' "$STATE_FILE" | tail -n 1)"
     ST_UV_BY_US="$(sed -n 's/^UV_BY_INSTALLER=//p' "$STATE_FILE" | tail -n 1)"
@@ -568,6 +610,22 @@ if [ -f "$STATE_FILE" ]; then
     ST_NODE_WHEEL="$(sed -n 's/^NODE_WHEEL=//p' "$STATE_FILE" | tail -n 1)"
     ST_PROFILE="$(sed -n 's/^PROFILE=//p' "$STATE_FILE" | tail -n 1)"
 fi
+# The choices a re-run keeps: this command line's, else the previous install's, else the default.
+# KEPT lists the ones taken from the previous install that differ from the default.
+KEPT=""
+[ "$DATA_DIR_KEPT" = 1 ] && KEPT="--data-dir $DATA_DIR"
+opt_choice() {  # opt_choice GIVEN RECORDED DEFAULT FLAG-WHEN-OFF FLAG-WHEN-ON: sets CHOICE (0|1)
+    case "$1" in 0|1) CHOICE="$1"; return 0 ;; esac
+    case "$2" in 0|1) CHOICE="$2" ;; *) CHOICE="$3"; return 0 ;; esac
+    [ "$2" = "$3" ] && return 0
+    if [ "$2" = 0 ]; then KEPT="${KEPT:+$KEPT, }$4"; else KEPT="${KEPT:+$KEPT, }$5"; fi
+}
+opt_choice "$OPT_CONSOLE" "$ST_CONSOLE" 1 --no-console --with-console; WITH_CONSOLE="$CHOICE"
+opt_choice "$OPT_CODE_CLI" "$ST_CODE_CLI" 1 --no-code-cli --with-code-cli; WITH_CODE_CLI="$CHOICE"
+opt_choice "$OPT_CORE_CLI" "$ST_CORE_CLI" 1 --no-core-cli --with-core-cli; WITH_CORE_CLI="$CHOICE"
+opt_choice "$OPT_TRAY" "$ST_TRAY" 1 --no-tray --with-tray; WITH_TRAY="$CHOICE"
+opt_choice "$OPT_FULL" "$ST_FULL" 0 --no-full --full; FULL="$CHOICE"
+NO_TRAY=$((1 - WITH_TRAY))
 
 # ---------------------------------------------------------------------------
 # uv discovery
@@ -1147,6 +1205,52 @@ fi
 printf '%sAbstractFramework bootstrap%s  %s%s%s\n' "$C_B" "$C_0" "$C_D" \
     "$([ "$PRINT" = 1 ] && echo '(--print: preflight only, nothing is installed)' || echo "$AF_SCRIPT_URL")" "$C_0"
 
+# ---------------------------------------------------------------------------
+# An existing install: say what is there and what this run brings. The same line
+# installs, upgrades (keeping the profile, port, start at login, data dir and the
+# choices above) and repairs; the summary lists what changed.
+# ---------------------------------------------------------------------------
+# IS_RELEASE: this run installs the release these pins are (not --pin, --from or --manifest
+# with another gateway), so the release matrix applies and bootstrap.env records its version.
+IS_RELEASE=0; { [ -z "$FROM" ] && [ "$PIN" = "$AF_GATEWAY_PIN_DEFAULT" ]; } && IS_RELEASE=1
+find_uv >/dev/null 2>&1 || true; tool_bin; tool_venv; console_bin
+PREV_GW=""
+[ -n "$UV" ] && PREV_GW="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"
+if [ "$IS_RELEASE" = 1 ]; then TARGET="AbstractFramework $AF_FRAMEWORK_VERSION"
+elif [ -n "$FROM" ]; then TARGET="abstractgateway from $FROM (--from)"
+elif [ "$PIN" = latest ]; then TARGET="the newest abstractgateway (--pin latest)"
+else TARGET="abstractgateway $PIN ($PIN_SOURCE)"; fi
+if [ ! -f "$STATE_FILE" ] && [ -z "$PREV_GW" ]; then
+    ACTION=install; FOUND_LINE="No AbstractFramework install found: installing $TARGET"
+elif [ "$IS_RELEASE" = 1 ] && [ "$ST_FRAMEWORK" = "$AF_FRAMEWORK_VERSION" ]; then
+    ACTION=check; FOUND_LINE="AbstractFramework $ST_FRAMEWORK found: already up to date (every part is checked, and repaired if needed)"
+elif [ -n "$ST_FRAMEWORK" ]; then
+    ACTION=upgrade; FOUND_LINE="AbstractFramework $ST_FRAMEWORK found: upgrading to $TARGET"
+elif [ -f "$STATE_FILE" ]; then
+    ACTION=upgrade; FOUND_LINE="AbstractFramework found (abstractgateway ${PREV_GW:-not installed}; its release was not recorded): upgrading to $TARGET"
+else
+    ACTION=upgrade; FOUND_LINE="abstractgateway $PREV_GW found (a uv tool this installer has no record of): upgrading to $TARGET"
+fi
+# env_snapshot: "name==version" lines (names lower-cased, _ as -) of the gateway's uv tool
+# environment, plus the two crates this installer builds; the summary diffs two of them.
+env_snapshot() {
+    [ -n "$UV" ] && [ -x "$UV" ] && "$UV" pip freeze --python "$TOOL_VENV" 2>/dev/null \
+        | tr 'A-Z_' 'a-z-' | sed -n 's/^\([a-z0-9.-]*\)==\([^ ;]*\).*$/\1==\2/p' | sort
+    return 0
+}
+crate_snapshot() {
+    for _cs in "$CONSOLE_BIN" "$CODE_BIN"; do
+        _cv="$("$_cs" --version 2>/dev/null | head -n 1)" || continue
+        case "$_cv" in "$CONSOLE_NAME "*|"$CODE_NAME "*) echo "${_cv%% *}==${_cv#* }" ;; esac
+    done
+    return 0
+}
+ENV_BEFORE=""; CRATES_BEFORE=""
+if [ "$PRINT" = 0 ] && [ "$ACTION" != install ]; then ENV_BEFORE="$(env_snapshot)"; CRATES_BEFORE="$(crate_snapshot)"; fi
+
+printf '%s%s%s\n' "$C_B" "$FOUND_LINE" "$C_0"
+[ -n "$KEPT" ] && info "kept from the previous install: $KEPT (give the opposite option to change it)"
+
 step "Preflight"
 ok "system: $OS_ID $ARCH$([ -n "$MACOS_VERSION" ] && echo " (macOS $MACOS_VERSION)")"
 if [ "$OS_ID" = macos ] && [ "$MACOS_MAJOR" -lt 13 ] 2>/dev/null; then
@@ -1407,22 +1511,29 @@ install_gateway() {
     if [ "$PRINT" = 1 ]; then
         info "$DATA_DIR/uv-overrides.txt (written at install time; see the top of install.sh):"
         af_uv_overrides "$_gguf" | sed 's/^/      /'
-        [ "$_gguf" = 1 ] && info "$DATA_DIR/uv-constraints.txt:" && echo "      llama-cpp-python==$GGUF_PIN"
+        if [ -n "$(af_uv_constraints "$_gguf")" ]; then
+            info "$DATA_DIR/uv-constraints.txt:$([ "$IS_RELEASE" = 1 ] && echo " the AbstractFramework $AF_FRAMEWORK_VERSION release matrix (exact versions)")"
+            af_uv_constraints "$_gguf" | sed 's/^/      /'
+        fi
     else
         af_uv_overrides "$_gguf" >"$DATA_DIR/uv-overrides.txt"
-        [ "$_gguf" = 1 ] && echo "llama-cpp-python==$GGUF_PIN" >"$DATA_DIR/uv-constraints.txt"
+        af_uv_constraints "$_gguf" >"$DATA_DIR/uv-constraints.txt"
     fi
     set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS"
     [ -n "$VOICE_SPEC" ] && set -- "$@" --with "$VOICE_SPEC"
-    if [ "$_gguf" = 1 ]; then
-        set -- "$@" --with "llama-cpp-python==$GGUF_PIN" --constraints uv-constraints.txt --find-links "$GGUF_LINKS"
-    elif [ "$FULL" = 1 ]; then
-        set -- "$@" --with llama-cpp-python
-    fi
+    if [ "$_gguf" = 1 ]; then set -- "$@" --with "llama-cpp-python==$GGUF_PIN"
+    elif [ "$FULL" = 1 ]; then set -- "$@" --with llama-cpp-python; fi
+    [ -n "$(af_uv_constraints "$_gguf")" ] && set -- "$@" --constraints uv-constraints.txt
+    [ "$_gguf" = 1 ] && set -- "$@" --find-links "$GGUF_LINKS"
     set -- "$@" --overrides uv-overrides.txt
     for _p in $(af_no_build_packages); do set -- "$@" --no-build-package "$_p"; done
     for _p in $CLI_FROM; do set -- "$@" --with-executables-from "$_p"; done
     { [ -n "$FROM" ] || [ "$REINSTALL" = 1 ]; } && set -- "$@" --reinstall
+    # --pin latest: re-resolve to the newest releases. Without --upgrade, uv keeps every
+    # package already installed that still satisfies the requirement, so a re-run over a
+    # pinned install would change nothing. (`uv tool upgrade` cannot do it either: it keeps
+    # the `==<pin>` the first install recorded and answers "Nothing to upgrade".)
+    [ "$PIN" = latest ] && [ -z "$FROM" ] && set -- "$@" --upgrade
     _cwd="$(pwd)"
     RUN_SHOW="cd $(q "$DATA_DIR") && $(show_cmd "$@" "$GW_SPEC")"
     [ "$PRINT" = 1 ] || cd "$DATA_DIR"
@@ -1469,11 +1580,7 @@ if [ "$WITH_CORE_CLI" = 1 ]; then
 fi
 GGUF_RESULT=""
 REINSTALL=0
-if [ -n "$BEFORE" ] && [ "$PIN" = latest ] && [ -z "$FROM" ] && [ "$ST_PROFILE" = "$PROFILE" ]; then
-    run "upgrade abstractgateway" "$UV" tool upgrade abstractgateway
-    GGUF_RESULT="as in the previous install (uv tool upgrade keeps it)"
-    VOICE_SPEC="$ST_VOICE"; VOICE_RESULT="as in the previous install (uv tool upgrade keeps it)"
-elif [ "$FULL" = 1 ]; then
+if [ "$FULL" = 1 ]; then
     install_gateway_voice 0 0
     GGUF_RESULT="llama-cpp-python built from source (--full)"
 elif [ -n "$GGUF_PIN" ]; then
@@ -1513,9 +1620,13 @@ What to do: run the installer again; if it stops here again, report it with that
 fi
 ST_SPEC=""
 [ -f "$STATE_FILE" ] && ST_SPEC="$(sed -n 's/^GATEWAY_SPEC=//p' "$STATE_FILE" | tail -n 1)"
+# CHANGED: the running gateway must be restarted. Any package of its environment that moved
+# counts (a library-only release keeps the gateway's version).
+ENV_AFTER=""
+[ "$PRINT" = 0 ] && ENV_AFTER="$(env_snapshot)"
 CHANGED=0
 if [ "$BEFORE" != "$AFTER" ] || [ -n "$FROM" ] || [ "$REINSTALL" = 1 ] || { [ -n "$ST_SPEC" ] && [ "$ST_SPEC" != "$GW_SPEC" ]; } \
-    || { [ -n "$BEFORE" ] && [ "$ST_VOICE" != "$VOICE_SPEC" ]; }; then CHANGED=1; fi
+    || { [ -n "$BEFORE" ] && [ "$ST_VOICE" != "$VOICE_SPEC" ]; } || [ "$ENV_BEFORE" != "$ENV_AFTER" ]; then CHANGED=1; fi
 GW="$TOOL_BIN/abstractgateway"
 GWCFG="$TOOL_BIN/abstractgateway-config"
 
@@ -1703,6 +1814,10 @@ write_state() {
         echo "PORT=$PORT"; echo "MODE=$MODE"; echo "PROFILE=$PROFILE"
         echo "NODE_WHEEL=$NODE_WHEEL"; echo "GATEWAY_SPEC=$GW_SPEC"; echo "GATEWAY_VERSION=$AFTER"
         echo "UV_BY_INSTALLER=$UV_BY_US"; echo "RUST_BY_INSTALLER=$RUST_BY_US"; echo "VOICE_SPEC=$VOICE_SPEC"
+        # The release this install is (empty after --pin/--from), and the choices a re-run keeps.
+        echo "FRAMEWORK_VERSION=$([ "$IS_RELEASE" = 1 ] && echo "$AF_FRAMEWORK_VERSION")"
+        echo "CONSOLE=$WITH_CONSOLE"; echo "CODE_CLI=$WITH_CODE_CLI"; echo "CORE_CLI=$WITH_CORE_CLI"
+        echo "TRAY=$WITH_TRAY"; echo "FULL=$FULL"
     } >"$STATE_FILE"
 }
 
@@ -1713,6 +1828,30 @@ export ABSTRACTGATEWAY_USER_AUTH=1
 
 MODE=none
 NET_SETTING=0   # 1 = the background gateway starts plain `serve` (the Network setting binds it)
+SERVICE_FALLBACK=0   # 1 = the login item failed to register, so the gateway runs in the background
+AF_SYSTEMD_UNIT="abstractgateway.service"
+# start_background: (re)start the gateway as a background process of this user, pid in gateway.pid.
+start_background() {
+    stop_background_gateway
+    # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
+    # flags on the command line would override it forever (a restart replays them).
+    # Older gateways keep the pinned command line they need.
+    if [ "$PRINT" = 1 ]; then
+        info "$(show_cmd abstractgateway network set localhost --port "$PORT")   (gateways with 'abstractgateway network', when no mode is stored yet; then plain 'serve')"
+    elif gateway_supports network && seed_network_setting; then
+        NET_SETTING=1
+    fi
+    if [ "$NET_SETTING" = 1 ]; then set -- serve; else set -- serve --host 127.0.0.1 --port "$PORT"; fi
+    _cmd="ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") ABSTRACTGATEWAY_USER_AUTH=1 nohup $(q "$GW") $(show_cmd "$@") >>$(q "$GATEWAY_LOG") 2>&1 &"
+    printf '  %s$ %s%s\n' "$C_D" "$_cmd" "$C_0"
+    twin "$_cmd"
+    if [ "$PRINT" = 0 ]; then
+        ( umask 077; : >>"$GATEWAY_LOG" )
+        nohup "$GW" "$@" >>"$GATEWAY_LOG" 2>&1 </dev/null &
+        echo $! >"$PID_FILE"
+        ok "started (pid $(cat "$PID_FILE")), log: $GATEWAY_LOG"
+    fi
+}
 SERVICE_OK=0
 if gateway_supports service; then SERVICE_OK=1; fi
 USE_SERVICE=0
@@ -1731,9 +1870,15 @@ elif [ "$USE_SERVICE" = 1 ]; then
         info "(only when the installed gateway has 'abstractgateway service'; otherwise it starts in the background)"
     fi
     stop_background_gateway
+    SERVICE_FAILED=0
     if [ "$LOGIN_WAS" = y ] && [ "$REUSE_RUNNING" = 1 ] && [ "$CHANGED" = 0 ]; then
         ok "login item already registered and the gateway is running, unchanged"
     else
+        # A running systemd user unit: `systemctl --user enable --now` (what `service install`
+        # runs) leaves it on the code it started with, so it is restarted below when anything
+        # changed. launchd's bootout + bootstrap restarts the LaunchAgent by itself.
+        _was_active=0
+        if [ "$OS_ID" = linux ] && [ "$PRINT" = 0 ] && systemctl --user is-active --quiet "$AF_SYSTEMD_UNIT" 2>/dev/null; then _was_active=1; fi
         # The installer waits for health and mints the sign-in link itself (below), so the
         # service verb does neither when it supports skipping them (gateway 0.3.0+).
         # No --host: the login item runs plain `serve` and the gateway's Network setting
@@ -1743,9 +1888,24 @@ elif [ "$USE_SERVICE" = 1 ]; then
         if [ "$PRINT" = 0 ] && "$GW" service install --help 2>/dev/null | grep -q -- '--no-claim'; then
             set -- "$@" --no-wait --no-claim
         fi
-        run "register the gateway service" "$GW" service install "$@"
+        RUN_SOFT=1 run "register the gateway service" "$GW" service install "$@"
+        if [ "$RUN_RC" != 0 ]; then
+            SERVICE_FAILED=1
+        elif [ "$_was_active" = 1 ] && [ "$CHANGED" = 1 ]; then
+            run "restart the gateway service (it was running the previous version)" systemctl --user restart "$AF_SYSTEMD_UNIT"
+        fi
+        [ "$PRINT" = 1 ] && [ "$OS_ID" = linux ] && info "$(show_cmd systemctl --user restart "$AF_SYSTEMD_UNIT")   (when the unit was running and anything changed)"
     fi
-    MODE=service
+    if [ "$SERVICE_FAILED" = 1 ]; then
+        # Never leave the gateway stopped: it runs now, in the background, and the summary
+        # says how to turn start at login on once the cause is fixed.
+        warn "the login item could not be registered (details above and in $LOG_FILE): starting the gateway in the background instead, so it runs now"
+        step "Start in the background"
+        start_background
+        MODE=background; SERVICE_FALLBACK=1
+    else
+        MODE=service
+    fi
 else
     step "Start in the background"
     if [ "$LOGIN_WAS" = y ] && [ "$SERVICE_OK" = 1 ]; then
@@ -1760,25 +1920,7 @@ else
     if [ "$REUSE_RUNNING" = 1 ] && [ "$CHANGED" = 0 ] && pid_alive; then
         ok "already running (pid $(cat "$PID_FILE")), unchanged"
     else
-        stop_background_gateway
-        # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
-        # flags on the command line would override it forever (a restart replays them).
-        # Older gateways keep the pinned command line they need.
-        if [ "$PRINT" = 1 ]; then
-            info "$(show_cmd abstractgateway network set localhost --port "$PORT")   (gateways with 'abstractgateway network', when no mode is stored yet; then plain 'serve')"
-        elif gateway_supports network && seed_network_setting; then
-            NET_SETTING=1
-        fi
-        if [ "$NET_SETTING" = 1 ]; then set -- serve; else set -- serve --host 127.0.0.1 --port "$PORT"; fi
-        _cmd="ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") ABSTRACTGATEWAY_USER_AUTH=1 nohup $(q "$GW") $(show_cmd "$@") >>$(q "$GATEWAY_LOG") 2>&1 &"
-        printf '  %s$ %s%s\n' "$C_D" "$_cmd" "$C_0"
-        twin "$_cmd"
-        if [ "$PRINT" = 0 ]; then
-            ( umask 077; : >>"$GATEWAY_LOG" )
-            nohup "$GW" "$@" >>"$GATEWAY_LOG" 2>&1 </dev/null &
-            echo $! >"$PID_FILE"
-            ok "started (pid $(cat "$PID_FILE")), log: $GATEWAY_LOG"
-        fi
+        start_background
     fi
     MODE=background
 fi
@@ -1864,6 +2006,39 @@ fi
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
+# What this run changed: the release, the gateway, the release's libraries and the two crates
+# (old -> new), then how many other packages of the environment moved.
+CHANGE_LINES=""; CHANGE_OTHERS=0; UPGRADE_LINE=""
+if [ "$PRINT" = 0 ] && [ "$ACTION" != install ]; then
+    _names="abstractgateway"
+    for _c in $AF_PY_MATRIX; do _names="$_names $(printf '%s' "${_c%%==*}" | tr 'A-Z_' 'a-z-')"; done
+    _names="$_names $CONSOLE_NAME $CODE_NAME"
+    CHANGE_LINES="$(printf '%s\n%s\n' "$ENV_BEFORE" "$CRATES_BEFORE" | sed '/^$/d' | sed 's/^/B /'; \
+        printf '%s\n%s\n' "$ENV_AFTER" "$(crate_snapshot)" | sed '/^$/d' | sed 's/^/A /')"
+    CHANGE_LINES="$(printf '%s\n' "$CHANGE_LINES" | awk -v names="$_names" '
+        { split($2, kv, "=="); if ($1 == "B") b[kv[1]] = kv[2]; else a[kv[1]] = kv[2]; seen[kv[1]] = 1 }
+        END {
+            n = split(names, order, " "); for (i = 1; i <= n; i++) named[order[i]] = 1
+            for (i = 1; i <= n; i++) { k = order[i]
+                if (!(k in seen) || b[k] == a[k]) continue
+                printf "%s %s -> %s\n", k, (k in b ? b[k] : "(none)"), (k in a ? a[k] : "(removed)") }
+            o = 0; for (k in seen) if (!(k in named) && b[k] != a[k]) o++
+            printf "#others %d\n", o
+        }')"
+    CHANGE_OTHERS="$(printf '%s\n' "$CHANGE_LINES" | sed -n 's/^#others //p')"
+    CHANGE_LINES="$(printf '%s\n' "$CHANGE_LINES" | sed '/^#others /d')"
+    if [ "$IS_RELEASE" = 1 ] && [ "$ST_FRAMEWORK" != "$AF_FRAMEWORK_VERSION" ]; then
+        CHANGE_LINES="AbstractFramework ${ST_FRAMEWORK:-(not recorded)} -> $AF_FRAMEWORK_VERSION${CHANGE_LINES:+
+$CHANGE_LINES}"
+    fi
+    if [ -z "$CHANGE_LINES" ] && [ "${CHANGE_OTHERS:-0}" = 0 ]; then
+        UPGRADE_LINE="Already up to date: $([ "$IS_RELEASE" = 1 ] && echo "AbstractFramework $AF_FRAMEWORK_VERSION" || echo "abstractgateway $AFTER"); nothing changed."
+    elif [ "$IS_RELEASE" = 1 ]; then
+        UPGRADE_LINE="Upgraded: AbstractFramework ${ST_FRAMEWORK:-(not recorded)} -> $AF_FRAMEWORK_VERSION (what changed is listed under Details)."
+    else
+        UPGRADE_LINE="Upgraded: $TARGET (what changed is listed under Details)."
+    fi
+fi
 # The terminal console signs in with the admin token (`--token`), printed ready to paste; the
 # gateway keeps it in its data dir. Before the gateway has written it, the command names that file.
 _tui_exe="$CONSOLE_NAME"; [ "$CONSOLE_BIN" = "$TOOL_BIN/$CONSOLE_NAME" ] || _tui_exe="$(q "$CONSOLE_BIN")"
@@ -1881,6 +2056,8 @@ TUI_COMMAND="abstractgateway apps tui-command code"; [ "$DATA_DIR_CUSTOM" = 1 ] 
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     # The plain-language part first: what a non-technical user needs to know.
     printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
+    [ -n "$UPGRADE_LINE" ] && echo "  $UPGRADE_LINE"
+    [ "$SERVICE_FALLBACK" = 1 ] && echo "  Start at login could not be turned on (see the warning above); the gateway runs in the background until you restart the computer."
     [ "$OPENED" = 1 ] && echo "  Your browser now shows its web console. Its address is $BASE_URL/console (bookmark it)."
     echo "  Configure it from either console (the same settings, both need this machine):"
     # An opened claim link is spent (the browser redeemed it): show the plain address then.
@@ -1921,8 +2098,25 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     echo "  First steps in the console: pick an engine and a model; it shows what fits this computer."
     echo "  To remove it: run the uninstaller (Uninstall AbstractFramework.command), or: sh install.sh --uninstall"
 fi
+if [ "$PRINT" = 0 ] && [ "$NO_START" = 1 ]; then
+    printf '\n%sAbstractFramework is installed (--no-start).%s\n' "$C_B" "$C_0"
+    [ -n "$UPGRADE_LINE" ] && echo "  $UPGRADE_LINE"
+    if [ "$CHANGED" = 1 ] && [ "$ACTION" != install ]; then
+        echo "  A gateway that is running still runs the previous version until it restarts: the console's"
+        echo "  Restart (web: the Gateway section), the tray's Restart, or re-run this installer without --no-start."
+    fi
+fi
 printf '\n%s%s%s\n' "$C_B" "$([ "$PRINT" = 1 ] && echo 'Plan printed (--print): nothing was changed.' || echo 'Details')" "$C_0"
-printf '  %-11s %s\n' "Console:" "$BASE_URL/console" "Gateway:" "$GW_SPEC ($PROFILE profile)" \
+if [ -n "$CHANGE_LINES" ] || [ "${CHANGE_OTHERS:-0}" != 0 ]; then
+    echo "  Changes:"
+    printf '%s\n' "$CHANGE_LINES" | sed '/^$/d' | awk '{ printf "      %-24s %s %s %s\n", $1, $2, $3, $4 }'
+    [ "${CHANGE_OTHERS:-0}" != 0 ] && echo "      (and $CHANGE_OTHERS other packages of the gateway's environment)"
+elif [ -n "$UPGRADE_LINE" ]; then
+    echo "  Changes:    none"
+fi
+printf '  %-11s %s\n' "Console:" "$BASE_URL/console" \
+    "Release:" "$([ "$IS_RELEASE" = 1 ] && echo "AbstractFramework $AF_FRAMEWORK_VERSION" || echo "$TARGET (not a recorded AbstractFramework release)")" \
+    "Gateway:" "$GW_SPEC ($PROFILE profile)" \
     "Terminal:" "$([ "$CONSOLE_OK" = 1 ] && echo "$TUI_CMD" || echo "not installed ($CONSOLE_WHY)")" \
     "Code:" "$([ "$CODE_OK" = 1 ] && echo "$_code_exe   (sign in once: $CODE_LOGIN; or on this machine: $TUI_COMMAND)" || echo "not installed ($CODE_WHY)")" \
     "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
@@ -1941,7 +2135,8 @@ echo ""
 echo "  Status:     $([ "$MODE" = service ] && echo "abstractgateway service status" || echo "curl $BASE_URL/api/health")"
 echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service uninstall   (stops it and removes the login entry; data is kept)" || echo "kill \$(cat $(q "$PID_FILE"))")"
 echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --port $PORT" || echo "re-run this installer, or: ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve$([ "$NET_SETTING" = 1 ] || echo " --host 127.0.0.1 --port $PORT")")"
-echo "  Upgrade:    re-run this installer (or: uv tool upgrade abstractgateway)"
+echo "  Upgrade:    curl -LsSf $AF_SCRIPT_URL | sh   (the latest AbstractFramework release; keeps your settings and data)"
+echo "              curl -LsSf $AF_SCRIPT_URL | sh -s -- --pin latest   (the newest abstractgateway on PyPI; see $AF_DOCS#upgrade)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"
 echo "  GGUF:       $GGUF_RESULT"

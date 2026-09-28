@@ -95,10 +95,12 @@ local gateway through `~/.abstractframework/gateway.json`, or uses `http://127.0
 
 ## Upgrade and repair
 
-Re-run the same one-liner. The script keeps the previous port and profile, installs the pin from
-the current manifest (a no-op when it is already installed), restarts the gateway only when the
-package changed, and re-checks health. `uv tool upgrade abstractgateway` and the tray's "Check for
-updates" are equivalent for uv-tool installs.
+Re-run the same one-liner. The script keeps the previous port, profile and start-at-login choice,
+installs the pin from the current manifest (a no-op when it is already installed), restarts the
+gateway only when the package changed, and re-checks health. `--pin latest` installs the newest
+gateway on PyPI instead. `uv tool upgrade abstractgateway` and the console's or tray's update do not
+upgrade an installer install: uv keeps the exact version the installer pinned. See
+[Upgrade](../install.md#upgrade).
 
 ## Uninstall
 
