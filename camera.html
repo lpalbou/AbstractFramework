@@ -82,8 +82,8 @@
       <a href="https://pypi.org/project/abstractcamera/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
       <a href="https://github.com/lpalbou/AbstractCamera/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
     </div>
-    <div class="hero-code">
-<!-- PENDING-W2: E8 -->
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code>pip install abstractcamera       <span class="line-cmt"># webcam + simulator</span>
 abstractcamera list              <span class="line-cmt"># lists cameras without opening any device</span></code></pre>
     </div>
@@ -174,8 +174,8 @@ abstractcamera list              <span class="line-cmt"># lists cameras without 
         <button class="tab-btn" data-tab="cam-tools">Agent tools</button>
       </div>
       <div class="tab-panel active" id="tab-cam-install">
-        <div class="code-block">
-<!-- PENDING-W2: E8 -->
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code>pip install abstractcamera                 <span class="line-cmt"># webcam + simulator (numpy + OpenCV)</span>
 pip install <span class="line-str">"abstractcamera[gphoto2]"</span>      <span class="line-cmt"># + tethered PTP bodies (libgphoto2)</span>
 pip install <span class="line-str">"abstractcamera[clips]"</span>        <span class="line-cmt"># + MP4 clip and movie encoding</span>
@@ -184,8 +184,8 @@ pip install <span class="line-str">"abstractcamera[all]"</span>          <span c
         </div>
       </div>
       <div class="tab-panel" id="tab-cam-python">
-        <div class="code-block">
-<!-- PENDING-W2: E8 -->
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractcamera <span class="line-kw">import</span> CameraManager, list_cameras
 
 <span class="line-kw">for</span> camera <span class="line-kw">in</span> <span class="line-fn">list_cameras</span>():
@@ -200,8 +200,8 @@ manager.<span class="line-fn">disconnect</span>()</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-cam-tools">
-        <div class="code-block">
-<!-- PENDING-W2: E8 -->
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractcamera.integrations.abstractcore_tools <span class="line-kw">import</span> camera_tools
 
 llm.<span class="line-fn">generate</span>(<span class="line-str">"Take a photo if something moves"</span>, tools=<span class="line-fn">camera_tools</span>())</code></pre>

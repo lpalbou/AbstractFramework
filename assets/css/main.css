@@ -3860,3 +3860,7 @@ button:focus-visible,
   .arch-flow .af-down, .arch-flow .af-up, .arch-flow .af-ledger rect { animation: none; opacity: 1; }
   .devices .m1, .devices .m2, .devices .m3, .devices .m4 { animation: none; opacity: 1; }
 }
+#top .hero-code { max-width: 660px; }
+.hero-code pre { overflow-x: auto; }
+/* the cube field extends left of the grid box (negative columns); centre cubes + layer labels */
+.iso-grid { left: 225px; }

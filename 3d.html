@@ -82,8 +82,8 @@
       <a href="https://pypi.org/project/abstract3d/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
       <a href="https://lpalbou.github.io/abstract3d/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Docs</a>
     </div>
-    <div class="hero-code">
-<!-- PENDING-W2: E8 -->
+    <!-- PENDING-W2: E8 -->
+<div class="hero-code">
 <pre><code>pip install <span class="line-str">"abstract3d[triposr]"</span>      <span class="line-cmt"># validated local image-to-3D</span>
 abstract3d i23d ./object.png --output-dir ./out/object --device mps --format glb</code></pre>
     </div>
@@ -175,8 +175,8 @@ abstract3d i23d ./object.png --output-dir ./out/object --device mps --format glb
         <button class="tab-btn" data-tab="d3-core">With AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-d3-install">
-        <div class="code-block">
-<!-- PENDING-W2: E8 -->
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code>pip install abstract3d                   <span class="line-cmt"># base: remote image composition only</span>
 pip install <span class="line-str">"abstract3d[triposr]"</span>        <span class="line-cmt"># validated local TripoSR</span>
 pip install <span class="line-str">"abstract3d[apple]"</span>          <span class="line-cmt"># Apple Silicon: TripoSR + local text-to-3D</span>
@@ -185,8 +185,8 @@ pip install <span class="line-str">"abstractcore[scene3d]"</span>      <span cla
         </div>
       </div>
       <div class="tab-panel" id="tab-d3-cli">
-        <div class="code-block">
-<!-- PENDING-W2: E8 -->
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code>abstract3d catalog --validated-only --json
 
 <span class="line-cmt"># image to 3D</span>
@@ -199,8 +199,8 @@ abstract3d t23d <span class="line-str">"a ceramic teapot with a curved spout and
         </div>
       </div>
       <div class="tab-panel" id="tab-d3-python">
-        <div class="code-block">
-<!-- PENDING-W2: E8 -->
+        <!-- PENDING-W2: E8 -->
+<div class="code-block">
 <pre><code><span class="line-kw">from</span> abstract3d <span class="line-kw">import</span> Scene3DManager
 
 scene3d = <span class="line-fn">Scene3DManager</span>(backend_id=<span class="line-str">"triposr"</span>)
@@ -210,8 +210,8 @@ text_result = scene3d.<span class="line-fn">t23d</span>(<span class="line-str">"
         </div>
       </div>
       <div class="tab-panel" id="tab-d3-core">
-        <div class="code-block">
-<!-- PENDING-W2: E3 -->
+        <!-- PENDING-W2: E3 -->
+<div class="code-block">
 <pre><code>resp = llm.<span class="line-fn">generate</span>(
     text=<span class="line-str">"A glossy red cube."</span>,
     output={<span class="line-str">"modality"</span>: <span class="line-str">"scene3d"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"triposr"</span>, <span class="line-str">"format"</span>: <span class="line-str">"glb"</span>},
