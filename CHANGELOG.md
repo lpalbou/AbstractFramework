@@ -44,7 +44,7 @@ Run now explains itself the same way in every client.
 ### Added
 
 - **Run now reads the same everywhere** (ui-kit 0.1.16, Observer 0.2.1, Assistant 0.9.1,
-  AbstractCode 0.7.1). Every client draws Run now with the same play-in-a-circle icon and explains
+  AbstractCode terminal 0.7.1 and web 0.6.1). Every client draws Run now with the same play-in-a-circle icon and explains
   it with the same text: it runs the automation once now instead of waiting; the next scheduled run
   keeps its time (or starts right after this run if its time comes first); it does not count toward
   a run limit; it works while paused, which stays paused; and it is not available while a run is in
@@ -55,8 +55,8 @@ Run now explains itself the same way in every client.
 
 - **abstractgateway 0.7.1** (was 0.7.0): terminal apps in the uv tool bin folder.
 - **abstractassistant 0.9.1** (was 0.9.0): the shared Run now icon and hints.
-- npm: **@abstractframework/observer 0.2.1** (shared Run now hints) and
-  **@abstractframework/code 0.6.1**.
+- npm: **@abstractframework/observer 0.2.1** and **@abstractframework/code 0.6.1** (both with the
+  shared Run now hints, ui-kit 0.1.16).
 - crates.io: **abstractcode 0.7.1** (sign-in report, "not signed in" state, Run now line).
 - Unchanged: abstractcore 2.18.0, AbstractRuntime 0.7.1, abstractagent 0.3.17, abstractvoice 0.13.0,
   abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvision 0.3.30,
