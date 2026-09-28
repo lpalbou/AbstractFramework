@@ -10,7 +10,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -18,14 +18,14 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.18.0",
     "abstractruntime": "0.7.1",
     "abstractagent": "0.3.17",
-    "abstractgateway": "0.7.0",
+    "abstractgateway": "0.7.1",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.13.0",
     "abstractvision": "0.3.30",
     "abstractmusic": "0.1.15",
-    "abstractassistant": "0.9.0",
+    "abstractassistant": "0.9.1",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -44,8 +44,8 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.4.0",
-    "@abstractframework/code": "0.6.0",
-    "@abstractframework/observer": "0.2.0",
+    "@abstractframework/code": "0.6.1",
+    "@abstractframework/observer": "0.2.1",
     "@abstractframework/continuum": "0.4.0",
     "@abstractframework/entity": "0.3.0",
 }
@@ -55,7 +55,7 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstractgateway-console": "0.11.0",
     "abstractcore-console": "0.4.0",
-    "abstractcode": "0.7.0",
+    "abstractcode": "0.7.1",
     "abstracttui": "0.6.0",
 }
 

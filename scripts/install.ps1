@@ -80,11 +80,11 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.7.0'
+$AfGatewayPinDefault = '0.7.1'
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.4.0', '@abstractframework/code@0.6.0', '@abstractframework/observer@0.2.0', '@abstractframework/continuum@0.4.0', '@abstractframework/entity@0.3.0')
+$AfNpmApps = @('@abstractframework/flow@0.4.0', '@abstractframework/code@0.6.1', '@abstractframework/observer@0.2.1', '@abstractframework/continuum@0.4.0', '@abstractframework/entity@0.3.0')
 $AfCrateConsole = 'abstractgateway-console@0.11.0'
-$AfCrateCodeCli = 'abstractcode@0.7.0'
+$AfCrateCodeCli = 'abstractcode@0.7.1'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
 # the parent of the uv tool bin folder, so they land next to abstractgateway.exe (the folder the
 # gateway's Apps page also updates abstractcode in); cargo's own root when that folder is not

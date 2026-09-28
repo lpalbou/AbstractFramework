@@ -113,11 +113,11 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.7.0"
+AF_GATEWAY_PIN_DEFAULT="0.7.1"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.6.0 @abstractframework/observer@0.2.0 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"
+AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.6.1 @abstractframework/observer@0.2.1 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"
 AF_CRATE_CONSOLE="abstractgateway-console@0.11.0"
-AF_CRATE_CODE_CLI="abstractcode@0.7.0"
+AF_CRATE_CODE_CLI="abstractcode@0.7.1"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
 # `abstractgateway-config` (uv tool install --with-executables-from; --no-core-cli leaves them
 # out): AbstractCore and its voice, vision and music packages. Not abstractruntime (its one
