@@ -21,9 +21,9 @@
 #     leaves it off and the summary says how to turn it on; a re-run keeps the previous
 #     choice; --yes and --no-service ask nothing; dash without a controlling terminal
 #   - the local gateway pointer (~/.abstractframework/gateway.json): written after the
-#     health check with written_by "installer", 0600, no token, only under the ownership
-#     rule (default data dir or a pointer naming this data dir); --uninstall deletes it only
-#     when it names this install's data dir
+#     health check with written_by "installer", 0600, no token, for the install just made
+#     (a custom --data-dir included; a pointer naming another data dir or unreadable is
+#     replaced); --uninstall deletes it only when it names this install's data dir
 #   - uninstall.sh removes a login item left without its tool (launchctl bootout
 #     through the double, plist deleted), keeps data unless --purge
 #   - uninstall with a live gateway tree (a writer every 50 ms and a detached,
@@ -547,18 +547,18 @@ assert d["schema"] == 1 and d["url"] == "http://127.0.0.1:" + sys.argv[2] and d[
 assert d["data_dir"] == sys.argv[3] and d["written_by"] == "installer" and d["updated_at"].endswith("Z"), d' "$PTR" "$BG_PORT" "$PTR_DD" 2>&1; echo $?)" "$OUT"
     check "pointer: mode 0600, no token, no temp file left" "$([[ "$(stat -f %Lp "$PTR" 2>/dev/null || stat -c %a "$PTR")" == 600 ]] && ! grep -qi token "$PTR" && [[ "$(ls -A "$(dirname "$PTR")")" == gateway.json ]]; echo $?)" "$OUT"
     check "pointer: the installer says where it wrote it" "$(has "$OUT" "gateway pointer: $PTR -> http://127.0.0.1:$BG_PORT"; echo $?)" "$OUT"
-    # Ownership: a pointer naming another gateway's data dir is left alone.
+    # The installer owns the install it just made: a pointer naming another data dir is replaced, and said so.
     BG_POINTER='{"data_dir": "/elsewhere/other-gateway", "port": 9999, "schema": 1, "updated_at": "2026-01-01T00:00:00Z", "url": "http://127.0.0.1:9999", "written_by": "serve"}' bg_case bg_ptr_other 1
-    check "pointer: another gateway's pointer is left unchanged, and said so" "$([[ $RC == 0 ]] && grep -q '"port": 9999' "$PTR" && has "$OUT" "left unchanged: it belongs to the gateway with data directory /elsewhere/other-gateway"; echo $?)" "$OUT"
+    check "pointer: one naming another gateway's data dir is replaced by this install, and said so" "$([[ $RC == 0 ]] && grep -q "\"port\": $BG_PORT" "$PTR" && grep -q "\"data_dir\": \"$(cd "$DATA_T" && pwd -P)\"" "$PTR" && grep -q '"written_by": "installer"' "$PTR" && has "$OUT" "the gateway pointer named the gateway with data directory /elsewhere/other-gateway; it now names this install"; echo $?)" "$OUT"
     BG_POINTER='not json' bg_case bg_ptr_bad 1
-    check "pointer: one naming no readable data dir is left unchanged (serve repairs it)" "$([[ $RC == 0 ]] && [[ "$(cat "$PTR")" == "not json" ]] && has "$OUT" "names no data directory the installer can read"; echo $?)" "$OUT"
+    check "pointer: an unreadable one is replaced" "$([[ $RC == 0 ]] && grep -q '"written_by": "installer"' "$PTR"; echo $?)" "$OUT"
     # ... and one naming this data dir (through a linked path) is taken over.
     mkdir -p "$WORK/bg_ptr_mine/home/$DATA_REL"; ln -s "$WORK/bg_ptr_mine/home" "$WORK/bg_ptr_mine/homelink"
     BG_POINTER="{\"data_dir\": \"$WORK/bg_ptr_mine/homelink/$DATA_REL\", \"port\": 9999, \"schema\": 1, \"updated_at\": \"x\", \"url\": \"http://127.0.0.1:9999\", \"written_by\": \"serve\"}" bg_case bg_ptr_mine 1
     check "pointer: one naming this data dir (via a link) is rewritten with the install's port" "$([[ $RC == 0 ]] && grep -q "\"port\": $BG_PORT" "$PTR" && grep -q '"written_by": "installer"' "$PTR"; echo $?)" "$OUT"
-    # A custom --data-dir with no pointer yet: not the default data dir, so nothing is written.
+    # A custom --data-dir, first install: the installer is the one writer that knows it.
     BG_ARGS="--no-console --data-dir $WORK/bg_ptr_custom/data" bg_case bg_ptr_custom 1
-    check "pointer: a custom --data-dir without a pointer writes none, and says so" "$([[ $RC == 0 && ! -e "$PTR" ]] && has "$OUT" "gateway pointer not written: none yet and this install's data directory is not the default"; echo $?)" "$OUT"
+    check "pointer: a custom --data-dir first install writes the pointer naming that data dir" "$([[ $RC == 0 ]] && grep -q "\"data_dir\": \"$WORK/bg_ptr_custom/data\"" "$PTR" && grep -q "\"port\": $BG_PORT" "$PTR"; echo $?)" "$OUT"
 
     bg_case bg_lan 1 "lan $BG_PORT"
     check "stored lan: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"

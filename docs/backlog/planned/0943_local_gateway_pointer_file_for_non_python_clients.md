@@ -219,7 +219,8 @@ lands:
   after bind, mutation-checked); `6bf4714` `network status` shows the pointer (url, owner, matches
   the running port); `e3d0b7f` docs (deployment.md).
 - abstractframework root `wave2/root`: `143e83d` install.sh writes it after the health check
-  (`written_by: "installer"`, 0600, atomic, no token) under the same ownership rule, and
+  (`written_by: "installer"`, 0600, atomic, no token); since the lead's ruling below it writes it
+  unconditionally for the install it just made, and
   `--uninstall` deletes it only when it names this install's data dir (sandbox cases in
   `scripts/tests/test_install_user_path.sh` [10] and [14], each RED-checked); `eacf855` install.ps1
   equivalent (`%USERPROFILE%\.abstractframework\gateway.json`; not executed: no PowerShell on the
@@ -239,9 +240,15 @@ Open against the acceptance criteria:
 
 - `abstractgateway-console` reads neither `ABSTRACTGATEWAY_URL` nor the pointer yet (branch
   `wave2/console` head `3f51fab`: `--gateway-url`, default `http://127.0.0.1:8080`).
-- The installer writes the pointer only under the ownership rule (lead's instruction), while the
-  gateway module's docstring says the installer writes it always: with a custom `--data-dir` and no
-  pointer yet, neither the installer nor serve writes one. One of the two texts must change.
+- ~~Installer vs docstring ownership wording~~ — resolved by the lead 2026-09-28: the installer is
+  the install's owner and the one writer that always knows a custom `--data-dir`, so install.sh /
+  install.ps1 write the pointer for the install they just made unconditionally (replacing one that
+  names another data dir); `serve` keeps its ownership rule. Uninstall still deletes only a pointer
+  naming this install's data dir.
+- The shared fixture set needs a canonical `CHECKSUMS.sha256` in abstractuic
+  `ui-kit/scripts/fixtures/gateway_pointer/` (the Assistant already vendors one; AbstractCode's copy
+  must add it). `scripts/check_identity_sync.py` byte-compares it and checks that it lists every
+  fixture with its sha256; it fails until both land.
 - No ADR for the file contract yet; the busy-8080 and admin-port-change end-to-end proofs belong to
   the release E2E.
 - `scripts/check_identity_sync.py` reads the sibling repos' main checkouts, so it passes only once

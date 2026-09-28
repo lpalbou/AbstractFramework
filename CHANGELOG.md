@@ -10,9 +10,10 @@ All notable changes to AbstractFramework will be documented in this file.
   `~/.abstractframework/gateway.json` (Windows: `%USERPROFILE%\.abstractframework\gateway.json`),
   mode 0600: the gateway's loopback URL, port and data directory, never a token. The Assistant,
   AbstractCode's terminal client and the browser apps' servers read it to find a gateway on a port
-  other than 8080. It follows the gateway's ownership rule: written only when absent and the install
-  uses the default data directory, or when it names this install's data directory. The uninstaller
-  deletes it when it names the uninstalled data directory.
+  other than 8080. The installer writes it for the install it just made, a custom `--data-dir`
+  included (replacing a pointer that names another data directory); `abstractgateway serve` then
+  keeps it current under its ownership rule. The uninstaller deletes it when it names the
+  uninstalled data directory.
 - `--ask-wait SECONDS` (Windows: `-AskWait`) sets how long a timed question waits (default 25, at
   most 25). `--console-wait` remains as an alias.
 

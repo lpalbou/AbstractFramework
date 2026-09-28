@@ -173,10 +173,12 @@ flowchart LR
 
 The **local gateway pointer**, `~/.abstractframework/gateway.json`, tells clients on the gateway's
 computer where it listens when they start without an address: `{"schema": 1, "url", "port",
-"data_dir", "updated_at", "written_by"}`, a loopback URL, never a token. The installer writes it
-after the health check and `abstractgateway serve` keeps it current once bound, both only when the
-file is absent and the gateway uses the default data directory, or when the file already names
-their data directory, so a test or second gateway with its own data directory never takes it over.
+"data_dir", "updated_at", "written_by"}`, a loopback URL, never a token. The installer owns the
+install it just made and is the one writer that always knows a custom `--data-dir`, so it writes
+the pointer for that install after the health check, unconditionally. `abstractgateway serve`
+keeps it current once bound, but only when the file is absent and the gateway uses the default
+data directory, or when the file already names its data directory, so a test or second gateway
+with its own data directory never takes it over.
 The Assistant, AbstractCode's terminal client and the app servers (the ui-kit app-server) read it;
 readers believe it only for schema 1, a loopback URL and a file owned by the reader. The
 uninstaller deletes it when it names the uninstalled data directory. An explicit

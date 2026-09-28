@@ -191,10 +191,11 @@ The Mac package, the `.command` files and the one line all run the same script,
    `~/.abstractframework/gateway.json` (Windows: `%USERPROFILE%\.abstractframework\gateway.json`):
    the gateway's address on this computer, its port and data directory, never a token. Clients on
    this computer that start without a gateway address (the Assistant, AbstractCode's terminal
-   client, the browser apps' servers) read it to find a gateway on a port other than 8080. It is
-   written only when it is absent and the install uses the default data directory, or when it
-   already names this install's data directory, so a second install with its own `--data-dir`
-   never takes it over; `abstractgateway serve` keeps it current under the same rule.
+   client, the browser apps' servers) read it to find a gateway on a port other than 8080. The
+   installer always writes it for the install it just made, a custom `--data-dir` included (it
+   replaces a pointer that names another data directory). `abstractgateway serve` keeps it current
+   once bound, but only when the file is absent and it uses the default data directory, or when
+   the file already names its data directory, so a test gateway never takes it over.
 8. Opens `http://127.0.0.1:8080/console` through a one-time sign-in link
    (`abstractgateway-config claim-url`, valid 10 minutes, this machine only). If no link can be
    created, it shows where the admin token is. The summary shows both ways to configure the

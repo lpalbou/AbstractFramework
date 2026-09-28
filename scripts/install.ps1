@@ -253,10 +253,11 @@ function Read-TimedAnswer([string]$Question, [string]$Default, [string]$NoAnswer
 
 # The local gateway pointer (root backlog 0943): where this computer's gateway listens, for the
 # clients that cannot ask Python (the terminal consoles, the browser apps, the Assistant). The
-# address only, never a token. Same ownership rule as the gateway's own writer
-# (abstractgateway/gateway_pointer.py) and install.sh: written when the file is absent and this
-# install uses the default data dir, or when it names this data dir (paths compared resolved,
-# case-insensitively); a file whose data_dir cannot be read is left alone.
+# address only, never a token. As in install.sh, the installer owns the install it just made (and
+# is the one writer that always knows a custom -DataDir), so it writes the pointer for this install
+# unconditionally after the health check; `abstractgateway serve` rewrites it only under its
+# ownership rule (abstractgateway/gateway_pointer.py). -Uninstall deletes it only when it names this
+# install's data dir (paths compared resolved, case-insensitively).
 function Resolve-DirPath([string]$Path) {
     try { $full = (Get-Item -LiteralPath $Path -Force -ErrorAction Stop).FullName } catch { $full = [IO.Path]::GetFullPath($Path) }
     return $full.TrimEnd('\', '/')
@@ -312,7 +313,6 @@ function Main {
     $state = Read-State $stateFile
     $script:AskSeconds = [Math]::Max(0, [Math]::Min(25, $AskWait))
     $pointerFile = Join-Path $homeDir '.abstractframework\gateway.json'
-    $defaultDataDir = Join-Path $localAppData 'AbstractGateway'
 
     # uv discovery (the official installer puts uv in %USERPROFILE%\.local\bin).
     $uv = $null
@@ -912,24 +912,19 @@ function Main {
             Write-Ok "gateway healthy at $baseUrl (${i}s)"
             $ptrDir = Get-PointerDataDir $pointerFile
             $mine = Resolve-DirPath $DataDir
-            if (-not $ptrDir -and (Test-Path -LiteralPath $pointerFile)) {
-                Write-Info "gateway pointer $pointerFile left unchanged: it names no data directory the installer can read"
-            } elseif ($ptrDir -and ((Resolve-DirPath $ptrDir) -ne $mine)) {
-                Write-Info "gateway pointer $pointerFile left unchanged: it belongs to the gateway with data directory $ptrDir"
-            } elseif (-not $ptrDir -and ($mine -ne (Resolve-DirPath $defaultDataDir))) {
-                Write-Info "gateway pointer not written: none yet and this install's data directory is not the default ($defaultDataDir); clients take --gateway-url $baseUrl"
-            } else {
-                try {
-                    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $pointerFile) | Out-Null
-                    $body = [ordered]@{ data_dir = $mine; port = $Port; schema = 1; updated_at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); url = $baseUrl; written_by = 'installer' }
-                    $tmp = "$pointerFile.$PID.tmp"
-                    [System.IO.File]::WriteAllText($tmp, ($body | ConvertTo-Json) + "`n", (New-Object System.Text.UTF8Encoding($false)))
-                    if (Test-Path -LiteralPath $pointerFile) { [System.IO.File]::Replace($tmp, $pointerFile, $null) } else { [System.IO.File]::Move($tmp, $pointerFile) }
-                    Write-Ok "gateway pointer: $pointerFile -> $baseUrl (the consoles and apps on this computer find the gateway there)"
-                } catch {
-                    Remove-Item -LiteralPath "$pointerFile.$PID.tmp" -Force -ErrorAction SilentlyContinue
-                    Write-Warn2 "could not write the gateway pointer $pointerFile; clients take --gateway-url $baseUrl"
-                }
+            if ($ptrDir -and ((Resolve-DirPath $ptrDir) -ne $mine)) {
+                Write-Info "the gateway pointer named the gateway with data directory $ptrDir; it now names this install"
+            }
+            try {
+                New-Item -ItemType Directory -Force -Path (Split-Path -Parent $pointerFile) | Out-Null
+                $body = [ordered]@{ data_dir = $mine; port = $Port; schema = 1; updated_at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); url = $baseUrl; written_by = 'installer' }
+                $tmp = "$pointerFile.$PID.tmp"
+                [System.IO.File]::WriteAllText($tmp, ($body | ConvertTo-Json) + "`n", (New-Object System.Text.UTF8Encoding($false)))
+                if (Test-Path -LiteralPath $pointerFile) { [System.IO.File]::Replace($tmp, $pointerFile, $null) } else { [System.IO.File]::Move($tmp, $pointerFile) }
+                Write-Ok "gateway pointer: $pointerFile -> $baseUrl (the consoles and apps on this computer find the gateway there)"
+            } catch {
+                Remove-Item -LiteralPath "$pointerFile.$PID.tmp" -Force -ErrorAction SilentlyContinue
+                Write-Warn2 "could not write the gateway pointer $pointerFile; clients take --gateway-url $baseUrl"
             }
         }
 

@@ -12,6 +12,7 @@ Usage: check_identity_sync.py [--lenient] [extra/copy.json ...]
 """
 from __future__ import annotations
 
+import hashlib
 import sys
 from pathlib import Path
 
@@ -39,7 +40,7 @@ AUTOMATION_FIXTURE_COPY_DIRS = [
 ]
 # Local gateway pointer fixtures (~/.abstractframework/gateway.json, root backlog 0943): canonical in
 # abstractuic (the kit's reader), vendored by the Assistant's reader and AbstractCode's terminal reader.
-POINTER_FIXTURE_NAMES = ("cases.json", "malformed.json", "non_loopback.json", "valid.json", "wrong_schema.json")
+POINTER_FIXTURE_NAMES = ("cases.json", "malformed.json", "non_loopback.json", "valid.json", "wrong_schema.json", "CHECKSUMS.sha256")
 POINTER_FIXTURE_CANONICAL_DIR = SIBLINGS / "abstractuic" / "ui-kit" / "scripts" / "fixtures" / "gateway_pointer"
 POINTER_FIXTURE_COPY_DIRS = [
     SIBLINGS / "abstractassistant" / "tests" / "basic" / "fixtures" / "gateway_pointer",
@@ -61,6 +62,10 @@ def main(argv: list[str]) -> int:
     groups += [(CONSOLE_FIXTURE_CANONICAL_DIR / name, [CONSOLE_FIXTURE_COPY_DIR / name]) for name in CONSOLE_FIXTURE_NAMES]
     groups += [(AUTOMATION_FIXTURE_CANONICAL_DIR / name, [d / name for d in AUTOMATION_FIXTURE_COPY_DIRS]) for name in AUTOMATION_FIXTURE_NAMES]
     groups += [(POINTER_FIXTURE_CANONICAL_DIR / name, [d / name for d in POINTER_FIXTURE_COPY_DIRS]) for name in POINTER_FIXTURE_NAMES]
+    # A fixture set's CHECKSUMS.sha256 must name every fixture of the set with its sha256
+    # (readers' tests verify their copies against it; a stale list would pass them silently).
+    for fixture_dir, names in ((AUTOMATION_FIXTURE_CANONICAL_DIR, AUTOMATION_FIXTURE_NAMES), (POINTER_FIXTURE_CANONICAL_DIR, POINTER_FIXTURE_NAMES)):
+        failures += _check_checksum_list(fixture_dir, names)
     for canonical_path, copies in groups:
         if not canonical_path.exists():
             print(f"missing  {canonical_path} (canonical)")
@@ -68,6 +73,23 @@ def main(argv: list[str]) -> int:
             continue
         failures += _check_copies(canonical_path.read_bytes(), canonical_path, copies, strict)
     return 1 if failures else 0
+
+
+def _check_checksum_list(fixture_dir: Path, names: tuple[str, ...]) -> int:
+    listing = fixture_dir / "CHECKSUMS.sha256"
+    if not listing.exists():
+        return 0  # reported as missing (canonical) by the byte comparison
+    expected = {n: hashlib.sha256((fixture_dir / n).read_bytes()).hexdigest() for n in names if n != "CHECKSUMS.sha256" and (fixture_dir / n).exists()}
+    listed = {}
+    for line in listing.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            digest, _, name = line.strip().partition("  ")
+            listed[name.strip()] = digest
+    if listed == expected:
+        print(f"ok       {listing} (lists every fixture with its sha256)")
+        return 0
+    print(f"STALE    {listing}: listed {sorted(listed)} vs fixtures {sorted(expected)}, or a digest differs")
+    return 1
 
 
 def _check_copies(canonical: bytes, canonical_path: Path, copies: list[Path], strict: bool) -> int:

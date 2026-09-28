@@ -408,7 +408,7 @@ AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a bro
 
 Quick commands:
 - Mac installer: download `https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg` and double-click it; the package is not signed with an Apple Developer ID, so the first time allow it with Open Anyway in System Settings > Privacy & Security; it runs `install.sh --interactive` in Terminal. Remove with `Uninstall AbstractFramework.command` or `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`
-- One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); installs uv + Python 3.12 + the pinned gateway (with local voice) as a uv tool, asks whether to start at login whenever a terminal exists (Enter = yes; no terminal or no answer within `--ask-wait` = off on a first install, kept on a re-run; the summary says how to turn it on), starts it on 127.0.0.1:8080, writes the local gateway pointer `~/.abstractframework/gateway.json` (address only, gateway ownership rule) and opens `/console` through a one-time claim link; browser apps open through the gateway at `/apps/<app>/`; `--print` dry run, `--uninstall` to remove
+- One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); installs uv + Python 3.12 + the pinned gateway (with local voice) as a uv tool, asks whether to start at login whenever a terminal exists (Enter = yes; no terminal or no answer within `--ask-wait` = off on a first install, kept on a re-run; the summary says how to turn it on), starts it on 127.0.0.1:8080, writes the local gateway pointer `~/.abstractframework/gateway.json` for this install (address only; `serve` keeps it current under its ownership rule) and opens `/console` through a one-time claim link; browser apps open through the gateway at `/apps/<app>/`; `--print` dry run, `--uninstall` to remove
 - Network exposure: the gateway listens on this computer only (`localhost`) until you run `abstractgateway network set lan|internet` (or use the console / menu-bar icon); `service install` takes `--port`, and the login item runs plain `serve` so the Network setting applies
 - Start either entry point and open the printed one-time link: `abstractcore serve` (http://127.0.0.1:8000/console#claim=…) or `abstractgateway serve` (http://127.0.0.1:8080/console#claim=…); both consoles have Models (catalog + fit verdict, download, delete) and Engines (detect, install) tabs, mirrored by `abstractcore models|engines` and `abstractgateway models|engines`
 - Install pinned stack: `pip install abstractframework`
@@ -2865,10 +2865,12 @@ flowchart LR
 
 The **local gateway pointer**, `~/.abstractframework/gateway.json`, tells clients on the gateway's
 computer where it listens when they start without an address: `{"schema": 1, "url", "port",
-"data_dir", "updated_at", "written_by"}`, a loopback URL, never a token. The installer writes it
-after the health check and `abstractgateway serve` keeps it current once bound, both only when the
-file is absent and the gateway uses the default data directory, or when the file already names
-their data directory, so a test or second gateway with its own data directory never takes it over.
+"data_dir", "updated_at", "written_by"}`, a loopback URL, never a token. The installer owns the
+install it just made and is the one writer that always knows a custom `--data-dir`, so it writes
+the pointer for that install after the health check, unconditionally. `abstractgateway serve`
+keeps it current once bound, but only when the file is absent and the gateway uses the default
+data directory, or when the file already names its data directory, so a test or second gateway
+with its own data directory never takes it over.
 The Assistant, AbstractCode's terminal client and the app servers (the ui-kit app-server) read it;
 readers believe it only for schema 1, a loopback URL and a file owned by the reader. The
 uninstaller deletes it when it names the uninstalled data directory. An explicit
@@ -3403,10 +3405,11 @@ The Mac package, the `.command` files and the one line all run the same script,
    `~/.abstractframework/gateway.json` (Windows: `%USERPROFILE%\.abstractframework\gateway.json`):
    the gateway's address on this computer, its port and data directory, never a token. Clients on
    this computer that start without a gateway address (the Assistant, AbstractCode's terminal
-   client, the browser apps' servers) read it to find a gateway on a port other than 8080. It is
-   written only when it is absent and the install uses the default data directory, or when it
-   already names this install's data directory, so a second install with its own `--data-dir`
-   never takes it over; `abstractgateway serve` keeps it current under the same rule.
+   client, the browser apps' servers) read it to find a gateway on a port other than 8080. The
+   installer always writes it for the install it just made, a custom `--data-dir` included (it
+   replaces a pointer that names another data directory). `abstractgateway serve` keeps it current
+   once bound, but only when the file is absent and it uses the default data directory, or when
+   the file already names its data directory, so a test gateway never takes it over.
 8. Opens `http://127.0.0.1:8080/console` through a one-time sign-in link
    (`abstractgateway-config claim-url`, valid 10 minutes, this machine only). If no link can be
    created, it shows where the admin token is. The summary shows both ways to configure the

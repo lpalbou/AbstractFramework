@@ -475,21 +475,16 @@ GATEWAY_LOG="$LOG_DIR/gateway.log"
 # The local gateway pointer, ~/.abstractframework/gateway.json (root backlog 0943):
 # where this computer's gateway listens, for the clients that cannot ask Python (the
 # terminal consoles, the browser apps, the Assistant .app). The address only: never a
-# token, a pid or liveness. Written after the health check, atomically, mode 0600, under
-# the gateway's own ownership rule (abstractgateway/gateway_pointer.py), so a test or a
-# second install with its own --data-dir never takes it over:
-#   - the file is absent and this install uses the default data dir; or
-#   - the file's data_dir is this install's data dir.
-# Paths are compared resolved. A file whose data_dir this shell cannot read is left alone
-# (the gateway's serve, which parses JSON, replaces an unreadable one). `abstractgateway serve` overwrites it once bound (the
-# same rule); --uninstall deletes it only when it names this install's data dir.
+# token, a pid or liveness. The installer owns the install it just made and is the one
+# writer that always knows a custom --data-dir, so it writes the pointer for this install
+# unconditionally after the health check (replacing one that names another data dir: the
+# user just installed or re-ran this one), atomically, mode 0600. `abstractgateway serve`
+# rewrites it once bound, but only under its ownership rule (abstractgateway/
+# gateway_pointer.py: absent + default data dir, or naming its own data dir), so a test
+# gateway never takes it over. --uninstall deletes it only when it names this install's
+# data dir (paths compared resolved).
 # ---------------------------------------------------------------------------
 POINTER_FILE="$HOME/.abstractframework/gateway.json"
-if [ "$OS_ID" = macos ]; then DEFAULT_DATA_DIR="$HOME/Library/Application Support/AbstractGateway"
-else
-    # The XDG spec (and the gateway's host_paths.user_data_dir): a relative XDG_DATA_HOME is ignored.
-    case "${XDG_DATA_HOME:-}" in /*) DEFAULT_DATA_DIR="$XDG_DATA_HOME/abstractgateway" ;; *) DEFAULT_DATA_DIR="$HOME/.local/share/abstractgateway" ;; esac
-fi
 real_dir() { (CDPATH='' cd -- "$1" 2>/dev/null && pwd -P) || abs_path "$1"; }
 # pointer_data_dir: the data_dir the pointer names (any JSON layout); empty when the file is
 # absent or names none this shell can read.
@@ -500,20 +495,11 @@ pointer_data_dir() {
         | sed 's/\\"/"/g; s/\\\\/\\/g'
 }
 json_str() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
-# write_pointer: after the health check (the port is the one that answered).
+# write_pointer: after the health check (the port is the one that answered), always.
 write_pointer() {
     _pd="$(pointer_data_dir)"
-    if [ -z "$_pd" ] && { [ -e "$POINTER_FILE" ] || [ -L "$POINTER_FILE" ]; }; then
-        info "gateway pointer $POINTER_FILE left unchanged: it names no data directory the installer can read"
-        return 0
-    fi
     if [ -n "$_pd" ] && [ "$(real_dir "$_pd")" != "$(real_dir "$DATA_DIR")" ]; then
-        info "gateway pointer $POINTER_FILE left unchanged: it belongs to the gateway with data directory $_pd"
-        return 0
-    fi
-    if [ -z "$_pd" ] && [ "$(real_dir "$DATA_DIR")" != "$(real_dir "$DEFAULT_DATA_DIR")" ]; then
-        info "gateway pointer not written: none yet and this install's data directory is not the default ($DEFAULT_DATA_DIR); clients take --gateway-url $BASE_URL"
-        return 0
+        info "the gateway pointer named the gateway with data directory $_pd; it now names this install"
     fi
     _ptmp="$POINTER_FILE.$$.tmp"
     if mkdir -p "$(dirname "$POINTER_FILE")" 2>/dev/null \
@@ -1723,7 +1709,7 @@ What to do: restart the computer (the login item starts it again) or run the ins
         ok "gateway healthy at $BASE_URL (${_i}s)"
         write_pointer
     fi
-    [ "$PRINT" = 1 ] && info "then write the gateway pointer $POINTER_FILE -> $BASE_URL (address only, no token; only when it is absent and this is the default data dir, or when it names this data dir)"
+    [ "$PRINT" = 1 ] && info "then write the gateway pointer $POINTER_FILE -> $BASE_URL (this install's address and data dir; no token)"
 
     step "Console sign-in"
     if [ "$PRINT" = 0 ] && gateway_supports claim-url; then
