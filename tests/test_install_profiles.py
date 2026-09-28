@@ -145,6 +145,10 @@ def test_framework_profile_pins_match_sibling_repo_versions_when_available() -> 
     assert NPM_RELEASE_VERSIONS["@abstractframework/flow"] == flow_version
 
 
+def _vtuple(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
 def test_framework_profiles_inherit_runtime_pdf_stack() -> None:
     runtime_pyproject = ROOT / "abstractruntime" / "pyproject.toml"
     gateway_pyproject = ROOT / "abstractgateway" / "pyproject.toml"
@@ -170,10 +174,14 @@ def test_framework_profiles_inherit_runtime_pdf_stack() -> None:
     assert f"AbstractRuntime=={runtime_version}" in root_deps
     assert f"abstractgateway[apple]=={gateway_version}" in root_apple
     assert f"abstractgateway[gpu]=={gateway_version}" in root_gpu
-    # The pinned Gateway must accept the pinned Runtime in every profile.
-    assert f"AbstractRuntime>={runtime_version}" in gateway_deps
-    assert f"AbstractRuntime[apple]>={runtime_version}" in gateway_apple
-    assert f"AbstractRuntime[gpu]>={runtime_version}" in gateway_gpu
+    # The pinned Gateway must accept the pinned Runtime in every profile: its floor is at or below
+    # the pin (a patch Runtime release does not force a Gateway release).
+    for deps, extra in ((gateway_deps, ""), (gateway_apple, "[apple]"), (gateway_gpu, "[gpu]")):
+        floor = re.search(rf"^AbstractRuntime{re.escape(extra)}>=([0-9.]+)", deps, flags=re.M | re.I)
+        assert floor, f"gateway declares no AbstractRuntime{extra}>= floor"
+        assert _vtuple(floor.group(1)) <= _vtuple(runtime_version), (
+            f"gateway AbstractRuntime{extra}>={floor.group(1)} refuses the pinned {runtime_version}"
+        )
     assert "pypdf<7.0.0,>=6.0.0" in runtime_deps
     assert "reportlab<5.0.0,>=4.0.0" in runtime_deps
 
