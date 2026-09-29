@@ -589,12 +589,19 @@
 .mg .mg-edge { stroke: rgba(152, 152, 176, .38); stroke-width: 1.6; opacity: 0; transition: stroke-dashoffset 600ms var(--ease-out), opacity 300ms var(--ease); }
 .mg .mg-edge.is-on { opacity: 1; }
 .mg .mg-edge.rel-summarizes, .mg .mg-edge.rel-answers { stroke: rgba(251, 191, 36, .6); }
+.mg .mg-edge.rel-co_selected { stroke: rgba(34, 211, 238, .16); stroke-width: 1; }
+.mg .mg-edge.rel-feels_about { stroke: rgba(251, 113, 133, .5); }
+.mg .mg-edge.rel-holds, .mg .mg-edge.rel-sparked_by { stroke: rgba(129, 140, 248, .55); }
+.mg .mg-edge.rel-written_amid, .mg .mg-edge.rel-reflected_in { stroke: rgba(244, 114, 182, .4); }
+.mg .mg-edge.rel-continues { stroke: rgba(52, 211, 153, .6); stroke-width: 2; }
+.mg .mg-edge.is-cross { stroke-opacity: .45; }
+.mg-legend i.l-line { width: 18px; height: 0; border-radius: 0; border-top: 2px solid rgba(152, 152, 176, .7); background: none; }
+.mg-legend i.l-faint { border-top: 1px solid rgba(34, 211, 238, .5); }
 .mg .mg-edge.rel-from_session { stroke: rgba(52, 211, 153, .35); }
 .mg .mg-edge.rel-derived_from, .mg .mg-edge.rel-supports { stroke: rgba(34, 211, 238, .45); }
 .mg .mg-core-label text { font-family: var(--mono); font-size: 15px; fill: #c7d2fe; letter-spacing: .06em; paint-order: stroke; stroke: #111119; stroke-width: 4px; }
 .mg-visit { position: absolute; left: 1.1rem; top: .9rem; font-family: var(--mono); font-size: .75rem; color: var(--text-muted); }
 .mg-visit b { color: var(--accent-light); font-weight: 500; }
-.mg-badge { position: absolute; right: 1rem; top: .8rem; z-index: 2; padding: .15rem .55rem; border-radius: var(--radius-full); font-size: .68rem; font-weight: 700; color: #1c1300; background: #fbbf24; }
 .mg-controls { display: flex; align-items: center; gap: .8rem; margin-top: .6rem; }
 .mg-play { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; cursor: pointer; border: 1px solid rgba(129, 140, 248, .45); background: rgba(99, 102, 241, .16); color: var(--text); }
 .mg-play:focus-visible, .mg-range:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }

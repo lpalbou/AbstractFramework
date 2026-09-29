@@ -14,9 +14,12 @@
    timestamp | ts | seq. Edge fields read: source | from | src | subject,
    target | to | dst | object, relation | predicate | kind. Snapshots are merged
    in order; a node belongs to the first visit that contains it and appears in
-   creation order. The identity core (value, purpose, trait) is pinned at the
-   centre. Without data-mg-src the component draws a PLACEHOLDER graph of the
-   same shape and says so on screen.
+   creation order. The identity core (identity, value, purpose, trait) is
+   pinned at the centre. Recalled-together pairs (co_selected) are drawn only
+   from CO_SELECTED_MIN co-recalls up. The data is W2's export of the demo
+   entity "Lumen" (assets/data/entity-graph/visit-1..4.json, schema
+   abstractframework.site.entity_graph.v1). No data or a failed load shows an
+   error, never made-up data.
    Reduced motion: the final graph, no autoplay; the scrubber still works.
    ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
@@ -28,13 +31,18 @@
 
   // AbstractMemory record kinds (records.py MEMORY_RECORD_KINDS); identity kinds first.
   var KIND_COLORS = {
-    value: '#818cf8', purpose: '#a78bfa', trait: '#c4b5fd',
+    identity: '#e0e7ff', value: '#818cf8', purpose: '#a78bfa', trait: '#c4b5fd',
     interest: '#e879f9', episode: '#34d399', memory: '#2dd4bf', lesson: '#fbbf24',
     diary: '#f472b6', question: '#38bdf8', answer: '#7dd3fc', summary: '#f59e0b',
     dream: '#fb7185', world_model: '#22d3ee', realization: '#f0abfc', claim: '#fcd34d',
-    decision: '#a3e635', plan: '#bef264', instruction: '#94a3b8'
+    decision: '#a3e635', plan: '#bef264', instruction: '#94a3b8',
+    feeling: '#fb7185', person: '#e5e7eb'
   };
-  var CORE = { value: 1, purpose: 1, trait: 1 };
+  var CORE = { identity: 1, value: 1, purpose: 1, trait: 1 };
+  // Recall co-use (`co_selected`, one edge per pair recalled together, with a count) is by far the
+  // most numerous relation (185 of 273 edges after Lumen's fourth visit). Only pairs recalled together
+  // at least this often are drawn, thin and faint, so the structure stays readable.
+  var CO_SELECTED_MIN = 4;
 
   function S(tag, attrs, parent) {
     var e = document.createElementNS(SVGNS, tag);
@@ -69,9 +77,10 @@
         var a = String(pick(e, ['source', 'from', 'src', 'subject'])), b = String(pick(e, ['target', 'to', 'dst', 'object']));
         var rel = String(pick(e, ['relation', 'predicate', 'kind']) || '');
         var key = a + '|' + b + '|' + rel;
-        if (seenE[key]) return;
-        seenE[key] = true;
-        edges.push({ a: a, b: b, rel: rel, visit: vi + 1 });
+        var cnt = typeof e.count === 'number' ? e.count : null;
+        if (seenE[key]) { if (cnt !== null) seenE[key].count = cnt; return; }
+        seenE[key] = { a: a, b: b, rel: rel, visit: vi + 1, count: cnt };
+        edges.push(seenE[key]);
       });
     });
     nodes.sort(function (x, y) {
@@ -80,32 +89,13 @@
       if (x.t !== null && y.t !== null && x.t !== y.t) return x.t < y.t ? -1 : 1;
       return x.ord - y.ord;
     });
-    edges = edges.filter(function (e) { return byId[e.a] && byId[e.b]; });
-    return { nodes: nodes, byId: byId, edges: edges, visits: snapshots.length };
-  }
-
-  // Placeholder of the same shape as W2's per-visit snapshots (clearly labelled on screen).
-  function placeholder() {
-    var snaps = [], nodes = [], edges = [], n = 0;
-    function add(kind, label) { var id = 'p' + (n++); nodes.push({ id: id, kind: kind, label: label, seq: n }); return id; }
-    function link(a, b, rel) { edges.push({ source: a, target: b, relation: rel }); }
-    var core = [add('value', 'intellectual_honesty'), add('value', 'shared_vulnerability'), add('value', 'care_in_action'),
-                add('purpose', 'help the humans you work with'), add('trait', 'ask before assuming')];
-    var eps = [], interest = null, question = null;
-    for (var v = 1; v <= 4; v++) {
-      var ep = add('episode', 'visit ' + v);
-      if (eps.length) link(ep, eps[eps.length - 1], 'continues');
-      eps.push(ep);
-      var mems = [];
-      for (var m = 0; m < 4 + (v % 2) * 2; m++) { var r = add('memory', 'visit ' + v + ' turn ' + (m + 1)); link(r, ep, 'from_session'); if (mems.length) link(r, mems[mems.length - 1], 'mentions'); mems.push(r); }
-      if (v === 1) { interest = add('interest', 'restore tooling'); link(interest, mems[1], 'derived_from'); }
-      if (v >= 2) { var ls = add('lesson', 'lesson ' + (v - 1)); link(ls, ep, 'derived_from'); link(ls, mems[0], 'supports'); }
-      if (v === 2) { question = add('question', 'why did it fail?'); link(question, ep, 'written_amid'); var d = add('diary', 'diary entry'); link(d, ep, 'written_amid'); }
-      if (v === 3) { var an = add('answer', 'answer'); link(an, question, 'answers'); var su = add('summary', 'summary'); link(su, eps[0], 'summarizes'); link(su, eps[1], 'summarizes'); var in2 = add('interest', 'backup schedules'); link(in2, mems[2], 'derived_from'); }
-      if (v === 4) { var wm = add('world_model', 'the home lab'); link(wm, mems[0], 'derived_from'); link(wm, eps[2], 'derived_from'); var d2 = add('diary', 'diary entry'); link(d2, ep, 'written_amid'); link(mems[3], interest, 'mentions'); }
-      snaps.push({ nodes: nodes.slice(), edges: edges.slice() });
-    }
-    return snaps;
+    var total = edges.length;
+    edges = edges.filter(function (e) {
+      if (!byId[e.a] || !byId[e.b]) return false;
+      return e.rel !== 'co_selected' || (e.count || 0) >= CO_SELECTED_MIN;
+    });
+    var ent = snapshots.length && snapshots[snapshots.length - 1] ? snapshots[snapshots.length - 1].entity : null;
+    return { nodes: nodes, byId: byId, edges: edges, visits: snapshots.length, totalEdges: total, entity: ent };
   }
 
   // ── layout: deterministic, identity core pinned at the centre; each visit
@@ -113,15 +103,18 @@
   // small force pass in unit-disc coordinates, then stretched to the canvas.
   function layout(g, W, Hh) {
     var V = Math.max(1, g.visits), sector = Math.PI * 2 / V;
-    var core = g.nodes.filter(function (n) { return CORE[n.kind]; });
+    // the identity node(s) at the centre, the spark's values, purposes and traits on a ring around it
+    var ids = g.nodes.filter(function (n) { return n.kind === 'identity'; });
+    ids.forEach(function (n, i) { n.u = i === 0 ? 0 : 0.05 * Math.cos(i * 2.4); n.v = i === 0 ? 0 : 0.05 * Math.sin(i * 2.4) + 0.04; n.pin = true; });
+    var core = g.nodes.filter(function (n) { return CORE[n.kind] && n.kind !== 'identity'; });
     core.forEach(function (n, i) {
       var a = -Math.PI / 2 + (i / Math.max(core.length, 1)) * Math.PI * 2;
-      n.u = Math.cos(a) * 0.12; n.v = Math.sin(a) * 0.12; n.pin = true;
+      n.u = Math.cos(a) * 0.17; n.v = Math.sin(a) * 0.17; n.pin = true;
     });
     var rest = g.nodes.filter(function (n) { return !CORE[n.kind]; });
     rest.forEach(function (n) {
       n.home = -Math.PI / 2 + (n.visit - 0.5) * sector;
-      var a = n.home + (hash(n.id) - 0.5) * sector * 0.8, r = 0.38 + hash(n.id + 'r') * 0.52;
+      var a = n.home + (hash(n.id) - 0.5) * sector * 0.8, r = 0.42 + hash(n.id + 'r') * 0.5;
       n.u = Math.cos(a) * r; n.v = Math.sin(a) * r;
     });
     var all = g.nodes, k = 0.11;
@@ -149,7 +142,7 @@
         var da = Math.atan2(Math.sin(p.home - a), Math.cos(p.home - a));
         var lim = sector * 0.42;
         if (Math.abs(da) > lim) { var push = (Math.abs(da) - lim) * Math.sign(da) * 0.5; p.fu += -Math.sin(a) * push * r; p.fv += Math.cos(a) * push * r; }
-        if (r < 0.32) { p.fu += p.u / r * (0.32 - r); p.fv += p.v / r * (0.32 - r); }
+        if (r < 0.36) { p.fu += p.u / r * (0.36 - r); p.fv += p.v / r * (0.36 - r); }
         if (r > 0.94) { p.fu -= p.u / r * (r - 0.94); p.fv -= p.v / r * (r - 0.94); }
       });
       rest.forEach(function (p) {
@@ -170,28 +163,26 @@
     this.playing = false;
     this.userPaused = reduceMQ.matches;
     var src = (root.getAttribute('data-mg-src') || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    this.isPlaceholder = !src.length;
     var ready = function (snaps) {
       self.g = merge(snaps);
       self.build();
       self.observe();
     };
-    if (src.length) {
-      Promise.all(src.map(function (u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error(u + ': HTTP ' + r.status); return r.json(); }); }))
-        .then(ready)
-        .catch(function (err) {
-          // Fail loudly: show the error instead of silently drawing something else.
-          self.canvas.innerHTML = '<p class="mg-error">Memory graph data failed to load: ' + String(err.message || err).replace(/</g, '&lt;') + '</p>';
-        });
-    } else {
-      ready(placeholder());
+    if (!src.length) {
+      this.canvas.innerHTML = '<p class="mg-error">Memory graph: no data-mg-src on this element.</p>';
+      return;
     }
+    Promise.all(src.map(function (u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error(u + ': HTTP ' + r.status); return r.json(); }); }))
+      .then(ready)
+      .catch(function (err) {
+        // Fail loudly: show the error instead of silently drawing something else.
+        self.canvas.innerHTML = '<p class="mg-error">Memory graph data failed to load: ' + String(err.message || err).replace(/</g, '&lt;') + '</p>';
+      });
   }
 
   MemoryGrowth.prototype.build = function () {
     var self = this, g = this.g;
     this.canvas.innerHTML = '';
-    if (this.isPlaceholder) H('span', 'mg-badge', this.canvas, 'Placeholder data');
     this.svgWrap = H('div', 'mg-svg', this.canvas);
     this.visitTag = H('div', 'mg-visit', this.canvas);
     var ctr = H('div', 'mg-controls', this.root.querySelector('.mg-canvas'));
@@ -211,8 +202,10 @@
     g.nodes.forEach(function (n) { if (kinds.indexOf(n.kind) < 0) kinds.push(n.kind); });
     var leg = H('div', 'mg-legend', this.canvas);
     kinds.forEach(function (k) {
-      H('span', null, leg, '<i style="background:' + (KIND_COLORS[k] || '#9898b0') + '"></i>' + k + (CORE[k] ? ' <small>(identity)</small>' : ''));
+      H('span', null, leg, '<i style="background:' + (KIND_COLORS[k] || '#9898b0') + '"></i>' + k + (CORE[k] && k !== 'identity' ? ' <small>(spark)</small>' : ''));
     });
+    H('span', 'mg-leg-edge', leg, '<i class="l-line"></i>relations (continues, written_amid, reflected_in, summarizes, holds, feels_about)');
+    H('span', 'mg-leg-edge', leg, '<i class="l-line l-faint"></i>recalled together (co_selected, ' + CO_SELECTED_MIN + '+ times; ' + g.edges.filter(function (e) { return e.rel === 'co_selected'; }).length + ' of ' + g.totalEdges + ' edges drawn in all)');
 
     this.layoutFor();
     if ('ResizeObserver' in window) {
@@ -247,7 +240,7 @@
       var a = g.byId[e.a], b = g.byId[e.b];
       e.at = Math.max(a.at, b.at) + 0.01;
       var len = Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
-      var line = S('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: 'mg-edge rel-' + e.rel.replace(/[^a-z_]/gi, ''), 'stroke-dasharray': len }, gE);
+      var line = S('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: 'mg-edge rel-' + e.rel.replace(/[^a-z_]/gi, '') + (a.visit !== b.visit && !CORE[a.kind] && !CORE[b.kind] ? ' is-cross' : ''), 'stroke-dasharray': len }, gE);
       line.style.strokeDashoffset = String(len);
       var t = S('title', null, line); t.textContent = e.rel;
       e.el = line; e.len = len;
@@ -255,8 +248,8 @@
     // identity core labels
     var coreNodes = g.nodes.filter(function (x) { return CORE[x.kind]; });
     var gc = S('g', { class: 'mg-core-label' }, svg);
-    var ct = S('text', { x: W / 2, y: Hh / 2 + 0.12 * (Hh / 2 - 36) + (this.narrow ? 62 : 40), 'text-anchor': 'middle', style: this.narrow ? 'font-size:30px' : '' }, gc);
-    ct.textContent = 'identity core';
+    var ct = S('text', { x: W / 2, y: Hh / 2 + 0.17 * (Hh / 2 - 36) + (this.narrow ? 58 : 36), 'text-anchor': 'middle', style: this.narrow ? 'font-size:30px' : '' }, gc);
+    ct.textContent = (g.entity ? g.entity + ' \u00b7 ' : '') + 'identity core';
     this.svgWrap.innerHTML = '';
     this.svgWrap.appendChild(svg);
     this.paint(true);
