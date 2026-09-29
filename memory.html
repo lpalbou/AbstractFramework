@@ -126,19 +126,18 @@ python -m pip install <span class="line-str">"abstractmemory[lancedb]"</span>   
 </section>
 
 <!-- ═══════════════════ RECONSTRUCTION ═══════════════════ -->
-<!-- Q14 claims: deliver/FACTS.md "Q14"; sources in deliver/fragments/memory-reconstruction.html -->
+<!-- Q14 / R4-M1 claims: deliver/FACTS.md "Q14"; sources in deliver/fragments/memory-reconstruction.html. The home page carries the passive/active/durable explanation; this page keeps the diagram and the API. -->
 <section id="reconstruction" class="section" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Memory</div>
-      <h2 class="section-title">Memory Is Reconstructed, Not Retrieved</h2>
-      <p class="section-desc">Before every answer, an entity's working memory is rebuilt from the moment: who is there, what is asked, and when. Then it can reach further on its own. Every recall is kept, in the run's ledger and in the temporal memory graph.</p>
+      <span class="section-label">Reconstruction</span>
+      <h2 class="section-title">Memory is reconstructed, not retrieved</h2>
+      <p class="section-desc">For an entity, each turn is a cue that rebuilds a working memory; its memory tools then read more. The calls behind it are on this page.</p>
     </div>
-
     <div class="table-wrap reveal" style="margin-bottom:2rem">
       <svg viewBox="0 0 960 330" width="100%" role="img" aria-labelledby="mrp-title mrp-desc" style="min-width:680px;display:block;font-family:Inter,system-ui,sans-serif">
         <title id="mrp-title">Dynamic memory reconstruction</title>
-        <desc id="mrp-desc">A cue made of the request, the people present and the date and time of day enters reconstruct. It returns a working memory made of three parts: the core identity, what was just in use, and what the cue calls up. The entity can then explore further with its memory tools. The recall is recorded as a step in the run's ledger and as a trace in the temporal memory graph.</desc>
+        <desc id="mrp-desc">A cue made of the request, the people present and the date and time of day enters reconstruct. It returns a working memory made of three parts: the core identity, what was just in use, and what the cue calls up. The entity can then read more with its memory tools, which feed the working memory directly. The reconstruction is recorded as a step in the run's ledger and as a trace in the temporal memory graph.</desc>
         <defs>
           <marker id="mrp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--text-muted, #8b8ba7)"/></marker>
         </defs>
@@ -174,30 +173,26 @@ python -m pip install <span class="line-str">"abstractmemory[lancedb]"</span>   
         <text x="871" y="116" text-anchor="middle" fill="var(--text, #e6e6f0)" font-size="14" font-weight="700">Working memory</text>
         <text x="871" y="136" text-anchor="middle" fill="var(--text-muted, #8b8ba7)" font-size="11">for this answer</text>
         <!-- active loop -->
-        <path d="M871 172 C 871 250, 367 250, 367 167" fill="none" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#mrp-arrow)"/>
-        <text x="619" y="244" text-anchor="middle" fill="var(--text-secondary, #b4b4c8)" font-size="12">active: the entity asks for more (search_memory, read_memory, recent_memories, feelings_about)</text>
+        <rect x="792" y="212" width="158" height="40" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.18)" stroke-dasharray="5 4"/>
+        <text x="871" y="237" text-anchor="middle" fill="var(--text, #e6e6f0)" font-size="12" font-weight="600">Memory tools</text>
+        <line x1="871" y1="211" x2="871" y2="174" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#mrp-arrow)"/>
+        <text x="780" y="236" text-anchor="end" fill="var(--text-secondary, #b4b4c8)" font-size="12">active: the entity reads more (search_memory, read_memory, recent_memories, feelings_about)</text>
         <!-- durable -->
         <rect x="10" y="272" width="940" height="46" rx="10" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.12)"/>
         <text x="480" y="300" text-anchor="middle" fill="var(--text-secondary, #b4b4c8)" font-size="13">Durable twice: a MEMORY_RECALL step in the run's ledger, and a journaled trace in the temporal memory graph (replayable as of that moment)</text>
       </svg>
     </div>
-
-    <div class="modes-grid reveal">
-      <div class="mode-card" style="text-align:left">
-        <h3>Passive</h3>
-        <p>Each turn is a cue: the words of the request and who is present; at the start of a visit, the date, the time of day and the machine too. It rebuilds a working memory from the core identity, what was just in use, and what the cue calls up through exact, keyword, vector and co-presence channels, with activation spreading along links between memories.</p>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Active</h3>
-        <p>During the turn the entity can ask for more: search and read its memories, list the recent ones, ask how it feels about someone or something, read its diary. Underneath, AbstractMemory offers a deliberate reach (<code>probe</code>) and a rebuild of one past moment (<code>situate</code>).</p>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Durable and explainable</h3>
-        <p>Recall is a step in the run's ledger and a trace in the memory graph. <code>recall_history</code> shows a memory's part in past recalls and <code>explain_recall</code> answers why it did or did not surface. Only memories actually used are strengthened.</p>
-      </div>
-    </div>
-    <div class="comp-links reveal" style="margin-top:1.25rem">
-      <a class="comp-link" href="entity.html">AbstractEntity &rarr;</a>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Call</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>reconstruct(Stimulus(...), scopes=...)</code></td><td>Pure read that returns the working set: <code>self</code> (identity), <code>stm</code> (just in use) and <code>stimulus</code> / <code>both</code> (what the cue matched), with an <code>as_of_seq</code> replay anchor</td></tr>
+          <tr><td><code>commit_selection(trace_id, used_ids)</code></td><td>The only strengthening path: marks what actually entered the context</td></tr>
+          <tr><td><code>probe(...)</code>, <code>probe_expand(...)</code>, <code>familiarity(...)</code></td><td>A deliberate reach with a stated reason; tells "I hold nothing here" from "I hold a lot"</td></tr>
+          <tr><td><code>situate(...)</code></td><td>Rebuilds the context of one past moment; pure read, results labeled historical</td></tr>
+          <tr><td><code>recall_history(...)</code>, <code>explain_recall(...)</code></td><td>A record's part in recent reconstructions, and why it did or did not surface in one of them</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>
