@@ -193,7 +193,7 @@ abstractcore-console</code></pre></div>
           <tr><td><code>fits</code></td><td>Runs with headroom.</td></tr>
           <tr><td><code>tight</code></td><td>Runs, with little headroom.</td></tr>
           <tr><td><code>partial_offload</code></td><td>CUDA only: too big for VRAM, fits VRAM plus part of RAM (slower).</td></tr>
-          <tr><td><code>needs_gpu_limit</code></td><td>Apple silicon: does not fit the current GPU memory limit, but fits once macOS lets the GPU use more. The verdict carries the exact command, for example <code>sudo sysctl iogpu.wired_limit_mb=117760</code>; the setting lasts until the Mac restarts, and both consoles print it.</td></tr>
+          <tr><td><code>needs_gpu_limit</code></td><td>Apple silicon: does not fit the current GPU memory limit, but fits once macOS lets the GPU use more. The verdict carries the exact command, for example <code>sudo sysctl iogpu.wired_limit_mb=117760</code> for Qwen3.8 Flash-Next 4-bit on a 128 GB Mac with AbstractCore 2.18.0 (2.18.1, coming, computes 114688 for the same model; see <a href="console.html#recommended">the recommendations table</a>); the setting lasts until the Mac restarts, and both consoles print it.</td></tr>
           <tr><td><code>too_large</code></td><td>Does not fit.</td></tr>
           <tr><td><code>unknown</code></td><td>No size or parameter count, or no measurable ceiling.</td></tr>
         </tbody>
