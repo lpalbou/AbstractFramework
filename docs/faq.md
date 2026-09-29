@@ -34,7 +34,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity> --gateway-url <url>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.7.2` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.7.3` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -266,6 +266,20 @@ developer tools" prompt, cancel it and re-run the one-liner. llama.cpp GGUF mode
 Silicon, Linux and Windows x64 ([llama.cpp GGUF models](install.md#llamacpp-gguf-models)). You
 need a compiler only for `--full`, which adds stable-diffusion.cpp and (macOS, Linux) echo cancellation, and
 llama.cpp on machines without a prebuilt wheel ([Compiled extras](install.md#compiled-extras)).
+On Linux with the gpu profile, vLLM also needs a C compiler (`build-essential`) the first time it
+starts a model ([GPU on Linux (NVIDIA)](install.md#gpu-on-linux-nvidia)).
+
+### Does the installer use my NVIDIA GPU?
+
+Yes, on Linux and Windows x64: when `nvidia-smi` works, the installer picks the `gpu` profile
+(`--profile gpu` / `-Profile gpu` forces it). On Linux it installs llama.cpp's CUDA build matching
+PyTorch's CUDA and checks that PyTorch, llama.cpp and Whisper use the GPU; this path is validated on
+an NVIDIA GPU with driver 595 and CUDA 13. On Windows it installs PyTorch's CUDA build and
+llama.cpp's prebuilt CUDA build, chosen from your driver version; this path is implemented but not
+yet validated on real NVIDIA hardware. Each installer prints what runs where (`PyTorch:`, `GGUF:`
+and Whisper lines) and falls back to the CPU for any part that does not work. See
+[GPU on Linux (NVIDIA)](install.md#gpu-on-linux-nvidia) and
+[GPU on Windows (NVIDIA)](install.md#gpu-on-windows-nvidia).
 
 ### Windows says scripts are disabled on this system
 

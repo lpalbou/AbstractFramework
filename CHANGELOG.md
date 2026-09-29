@@ -4,6 +4,68 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-09-29
+
+The `gpu` setting on NVIDIA machines. Pins: AbstractGateway 0.7.3, AbstractCore 2.19.1,
+AbstractRuntime 0.7.2, AbstractVoice 0.13.1, AbstractVision 0.3.32 and Abstract3D 0.3.2; every other
+version, and the terminal consoles, are unchanged from 0.6.2.
+
+### Added
+
+- **The `gpu` setting on Linux + NVIDIA is validated on real hardware.** On Ubuntu 26.04 with a
+  Quadro RTX 5000 (16 GB, driver 595, CUDA 13), from a clean home, the one-line install with the gpu
+  profile completed in under three minutes on a fast connection (about 13 GB downloaded). It ran
+  PyTorch on CUDA 13, llama.cpp's CUDA build with every layer on the GPU, Whisper speech-to-text on
+  CUDA, text through LM Studio, and image generation with FLUX.2 [klein] 4B through Diffusers
+  (768x768 in about 17 s), all through the gateway. vLLM installs with the gpu setting but was not
+  validated: it needs a C compiler (`build-essential`) the first time it starts a model, and on
+  GPUs older than compute capability 8.0 the `--attention-backend TRITON_ATTN` option. See
+  [GPU on Linux (NVIDIA)](docs/install.md#gpu-on-linux-nvidia).
+- **`install.sh` on Linux + NVIDIA** installs llama.cpp's CUDA build that matches PyTorch's CUDA
+  (CUDA 13 with driver 580 or newer, CUDA 12 with driver 525 or newer) and keeps it only when it
+  loads and offloads to the GPU; otherwise the CPU build goes back and the summary says why. At the
+  end it checks that PyTorch sees the GPU and which device Whisper uses (`PyTorch:`, `GGUF:` and
+  `Voice:` summary lines), and warns when no C compiler is found for vLLM.
+- **`install.ps1` on Windows + NVIDIA** picks the GPU stack from `nvidia-smi` (CUDA 13 with driver
+  580 or newer and compute capability 7.5 or newer, CUDA 12 with driver 525 or newer, otherwise the
+  CPU), installs PyTorch's CUDA build and llama.cpp's matching prebuilt build (CUDA, then Vulkan,
+  then CPU), and ends with GPU checks that replace any part that does not work with one that does.
+  The Windows gpu setting is implemented and tested with simulated drivers and wheel-only
+  resolves, but it has **not yet been validated on real NVIDIA hardware**. See
+  [GPU on Windows (NVIDIA)](docs/install.md#gpu-on-windows-nvidia).
+- **Live installer progress.** Both installers show uv's output as it comes, with a
+  `still working (… elapsed; last: …)` line after 15 seconds of silence, so a multi-GB download no
+  longer looks frozen. `install.ps1` announces the big downloads before they start.
+
+### Changed
+
+- **Only the three install settings in hints.** Every install hint across the framework names
+  light (`pip install -U abstractcore`), `abstractcore[apple]` or `abstractcore[gpu]`, or says that
+  a capability is not available on this machine, never a bare package or a plugin's own extra
+  (AbstractCore 2.19.1, AbstractGateway 0.7.3, AbstractVoice 0.13.1, AbstractRuntime 0.7.2,
+  Abstract3D 0.3.2).
+- **Smaller gpu setting.** The gpu setting no longer installs MLX-Gen (AbstractVision 0.3.32):
+  about 2.1 GB less on Linux, and it installs on Linux distributions with an older glibc.
+- **`abstractcore[gpu]` installs on Windows with wheels only** (vLLM is Linux only;
+  stable-diffusion.cpp and llama.cpp are left to the installer's prebuilt builds on Windows).
+- **Recommendations on NVIDIA machines.** **Use recommended defaults** picks FLUX.2 [klein] 4B
+  through Diffusers for image generation on an NVIDIA GPU (it fits a 16 GB card), and the LM Studio
+  text download is `qwen/qwen3.5-9b@q4_k_m`, which LM Studio offers on Linux and Windows.
+- **AbstractRuntime depends on AbstractCore's three settings** (`abstractcore`, `[apple]`, `[gpu]`),
+  and `openai` 2.x is allowed across the stack, so the gpu setting resolves a current vLLM.
+
+### Fixed
+
+- **Speech-to-text without an OpenAI key.** Transcription runs on the configured `input.voice`
+  route (for example local Whisper) and no longer needs TTS credentials (AbstractCore 2.19.1,
+  AbstractVoice 0.13.1).
+- **Whisper on NVIDIA GPUs.** faster-whisper uses CUDA only when CUDA 12 cuBLAS loads (installed
+  with the gpu setting on Linux and Windows), and otherwise runs on the CPU with a warning.
+- **llama.cpp on CUDA** loads without importing PyTorch first on Linux, and a GGUF model too large
+  for the GPU at its full context tries smaller contexts on the GPU before falling back to the CPU.
+- **Image generation on smaller GPUs.** A Diffusers pipeline that does not fit the GPU's free
+  memory loads with model CPU offload instead of failing with CUDA out of memory.
+
 ## [0.6.2] - 2026-09-29
 
 One line installs, upgrades and repairs AbstractFramework, and **Update** in the consoles and the

@@ -312,7 +312,9 @@ $code = Invoke-LiveProcess -Exe '{prog}' -Arguments @('plain', 'with space', 'qu
     # While torch downloads nothing is printed: the heartbeat says how long and what it is doing.
     beats = [l for l in out.splitlines() if "still working" in l]
     assert beats, out
-    assert re.search(r"\.\.\. still working \(\d+s elapsed; last: Downloading torch \(1\.9GiB\)\)", beats[0]), beats
+    # A beat may fire before the first line arrives on a loaded machine (no `last:` yet); the
+    # beats during the download name it.
+    assert any(re.search(r"\.\.\. still working \(\d+s elapsed; last: Downloading torch \(1\.9GiB\)\)", b) for b in beats), beats
     # Package lines go to the log only, counted on the console.
     assert "torch==2.14.0+cu130" not in out and "    | (2 package lines: see the log)" in out
     logged = log.read_text()
