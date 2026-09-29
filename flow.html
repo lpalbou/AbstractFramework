@@ -105,8 +105,11 @@ npx @abstractframework/flow --gateway-url http://127.0.0.1:8080</code></pre>
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
-      <h2 class="section-title">Draw it, publish it, use it everywhere</h2>
+      <h2 class="section-title">Draw it, publish it, share it, use it</h2>
       <p class="section-desc">AbstractFlow is a web app (<code>@abstractframework/flow</code>): a browser editor plus a small Node server that forwards <code>/api/*</code> to the gateway. It ships no Python package and no execution host: the gateway stores your workflows and <a href="runtime.html">AbstractRuntime</a> compiles and runs them durably, with a <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#ledger" target="_blank" rel="noopener noreferrer">ledger</a> of every step.</p>
+    </div>
+    <div class="callout reveal" style="margin-bottom:2rem">
+      <div><strong>The next step after skills.</strong> A skill (<code>SKILL.md</code>, see AbstractSkill) tells an agent in prose what to do. A workflow says it formally and visually: it orchestrates model calls, agents and deterministic code in one graph that you can read, test, version and share, and that runs durably on the gateway.</div>
     </div>
     <div class="modes-grid flow-steps reveal">
       <div class="mode-card" style="text-align:left">
@@ -280,13 +283,13 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 <section id="publish">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Publish &amp; automate</div>
-      <h2 class="section-title">From draft to a workflow everyone can run</h2>
+      <div class="section-label">Publish, share &amp; automate</div>
+      <h2 class="section-title">From draft to a workflow others can run</h2>
     </div>
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
         <h3>Save and publish</h3>
-        <p>The editor stores drafts on the gateway (<code>/api/gateway/visualflows/*</code>). <strong>Publish</strong> installs a bundle version in the gateway's registry, which is shared by every user of that gateway, so publishing there needs an admin. Admins can also promote a version to the gateway's shared workflow catalog, which the Assistant lists.</p>
+        <p>The editor stores drafts on the gateway (<code>/api/gateway/visualflows/*</code>). <strong>Publish</strong> installs a bundle version in the gateway's registry, which is shared by every user of that gateway, so publishing there needs an admin.</p>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Automation Defaults</h3>
@@ -298,8 +301,34 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       </div>
     </div>
 
+
+    <h3 class="reveal" style="margin:2.5rem 0 1rem">Share a workflow</h3>
+    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">A published workflow is one portable <code>.flow</code> file: the manifest, the root flow and its subflows in a single zip.</p>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Download it</h3>
+        <p><code>GET /api/gateway/bundles/{bundle_id}/download</code> exports a version as its original <code>.flow</code> bytes, byte for byte, so it installs elsewhere exactly as it ran here.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Install it on another gateway</h3>
+        <p><code>POST /api/gateway/bundles/upload</code> installs a <code>.flow</code> file on any gateway (an admin action, since the registry is shared).</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Share it inside your gateway</h3>
+        <p>An admin promotes a version to the gateway's shared workflow catalog, with an optional default pointer and access rules; catalog versions are immutable. The Assistant lists its workflows from this catalog.</p>
+      </div>
+    </div>
+    <!-- VERIFIED-DOCS abstractgateway/docs/api.md:82-87 -->
+<div class="code-block reveal" style="margin-top:1.5rem">
+<pre><code>curl -sS -H <span class="line-str">"$AUTH"</span> \
+  -F <span class="line-str">"file=@./my-bundle@0.1.0.flow"</span> \
+  -F <span class="line-str">"overwrite=false"</span> \
+  -F <span class="line-str">"reload=true"</span> \
+  <span class="line-str">"$BASE_URL/api/gateway/bundles/upload"</span></code></pre>
+    </div>
+
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Packing a bundle from Python</h3>
-    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">Outside the editor, AbstractRuntime packs a bundle from VisualFlow JSON files. Upload the result with <code>POST /api/gateway/bundles/upload</code>, or place it in the directory named by <code>ABSTRACTGATEWAY_FLOWS_DIR</code>.</p>
+    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">Outside the editor, AbstractRuntime packs a bundle from VisualFlow JSON files. Upload the result as above, or place it in the directory named by <code>ABSTRACTGATEWAY_FLOWS_DIR</code>.</p>
     <!-- VERIFIED-DOCS: RESULTS.md E8 flow.html:220 (signature check, untracked/site-rethink/examples/E8-snippets/flow-220-check/run.log) -->
 <div class="code-block reveal">
 <pre><code><span class="line-kw">from</span> abstractruntime.workflow_bundle <span class="line-kw">import</span> <span class="line-fn">pack_workflow_bundle</span>
