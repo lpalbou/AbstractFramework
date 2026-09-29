@@ -78,7 +78,7 @@
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span> CAPABILITY PLUGIN &middot; 3D &middot; v0.3.1</div>
     <h1>Abstract<span class="gradient">3D</span></h1>
-    <p class="hero-sub">Abstract3D (<code>abstract3d</code>) adds a <code>scene3d</code> capability to <a href="core.html">AbstractCore</a>: image-to-3D and text-to-3D generation, with a validated local TripoSR backend and GLB as the primary output. Installed next to AbstractCore, it registers itself as <code>llm.scene3d</code> and as the <code>scene3d</code> output of <code>generate()</code>. Status: alpha, one centered object per image. It installs separately and is not part of the <code>abstractframework</code> install profiles.</p>
+    <p class="hero-sub">Abstract3D (<code>abstract3d</code>) adds a <code>scene3d</code> capability to <a href="core.html">AbstractCore</a>: image-to-3D and text-to-3D generation, with a validated local TripoSR backend and GLB as the primary output. Installed next to AbstractCore, it registers itself as <code>llm.scene3d</code> and as the <code>scene3d</code> output of <code>generate()</code>. Status: alpha, one centered object per image. It is part of the framework install (<code>abstractframework</code> 0.6.2 pins Abstract3D 0.3.1) and of AbstractCore&rsquo;s light install; the local TripoSR backend installs with <code>pip install "abstract3d[triposr]"</code>.</p>
     <div class="hero-actions">
       <a href="#getting-started" class="btn btn-primary">Get Started</a>
       <a href="https://github.com/lpalbou/abstract3d" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
@@ -178,13 +178,12 @@ abstract3d i23d ./object.png --output-dir ./out/object --device mps --format glb
         <button class="tab-btn" data-tab="d3-core">With AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-d3-install">
-        <!-- VERIFIED-DOCS: abstract3d@v0.3.1 pyproject.toml:33, :42, :143, :175 (base, triposr, apple, gpu); abstractcore[scene3d] in pypi-extras (RESULTS.md) -->
+        <!-- VERIFIED-DOCS: abstract3d@v0.3.1 pyproject.toml:33, :42, :143, :175 (base, triposr, apple, gpu); AbstractCore 2.19.0 light install includes abstract3d (PyPI requires_dist) -->
 <div class="code-block">
 <pre><code>pip install abstract3d                   <span class="line-cmt"># base: remote image composition only</span>
 pip install <span class="line-str">"abstract3d[triposr]"</span>        <span class="line-cmt"># validated local TripoSR</span>
 pip install <span class="line-str">"abstract3d[apple]"</span>          <span class="line-cmt"># Apple Silicon: TripoSR, Step1X and local image composition</span>
-pip install <span class="line-str">"abstract3d[gpu]"</span>            <span class="line-cmt"># NVIDIA / AMD hosts</span>
-pip install <span class="line-str">"abstractcore[scene3d]"</span>      <span class="line-cmt"># plugin discovery from AbstractCore</span></code></pre>
+pip install <span class="line-str">"abstract3d[gpu]"</span>            <span class="line-cmt"># NVIDIA / AMD hosts</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-d3-cli">
@@ -214,14 +213,14 @@ text_result = scene3d.<span class="line-fn">t23d</span>(<span class="line-str">"
         <p class="vd-note" style="color:var(--text-muted);font-size:var(--text-sm);margin-top:.5rem">Checked against Abstract3D 0.3.1 (<code>src/abstract3d/scene3d_manager.py</code>, lines 13-70); needs the TripoSR weights and an Apple Silicon Mac for <code>device="mps"</code>; not executed for this page.</p>
       </div>
       <div class="tab-panel" id="tab-d3-core">
-        <!-- VERIFIED-DOCS: abstractcore@v2.18.0 abstractcore/core/output_specs.py:36-38, :126-133 (scene3d output); abstract3d@v0.3.1 pyproject.toml:285-286 (AbstractCore plugin entry point), triposr_runtime.py:3126 (provider "triposr"); a fragment; not run (GPU lock) -->
+        <!-- VERIFIED-DOCS: abstractcore@v2.18.0 (unchanged in 2.19.0) abstractcore/core/output_specs.py:36-38, :126-133 (scene3d output); abstract3d@v0.3.1 pyproject.toml:285-286 (AbstractCore plugin entry point), triposr_runtime.py:3126 (provider "triposr"); a fragment; not run (GPU lock) -->
 <div class="code-block">
 <pre><code>resp = llm.<span class="line-fn">generate</span>(
     text=<span class="line-str">"A glossy red cube."</span>,
     output={<span class="line-str">"modality"</span>: <span class="line-str">"scene3d"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"triposr"</span>, <span class="line-str">"format"</span>: <span class="line-str">"glb"</span>},
 )</code></pre>
         </div>
-        <p class="vd-note" style="color:var(--text-muted);font-size:var(--text-sm);margin-top:.5rem">Checked against AbstractCore 2.18.0 (<code>abstractcore/core/output_specs.py</code>, the <code>scene3d</code> output) and Abstract3D 0.3.1; needs <code>abstract3d[triposr]</code>, its weights and an <code>llm</code> from <code>create_llm</code>; not executed for this page.</p>
+        <p class="vd-note" style="color:var(--text-muted);font-size:var(--text-sm);margin-top:.5rem">Checked against AbstractCore 2.19.0 (<code>abstractcore/core/output_specs.py</code>, the <code>scene3d</code> output) and Abstract3D 0.3.1; needs <code>abstract3d[triposr]</code>, its weights and an <code>llm</code> from <code>create_llm</code>; not executed for this page.</p>
       </div>
     </div>
     <div class="callout reveal">
@@ -241,7 +240,7 @@ text_result = scene3d.<span class="line-fn">t23d</span>(<span class="line-str">"
         AbstractFramework
       </a>
       <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.2</p>
       <p style="margin-top:.75rem">
         <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>

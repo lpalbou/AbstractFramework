@@ -5,7 +5,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>AbstractVision — image and video generation for Python | AbstractFramework</title>
-  <meta name="description" content="AbstractVision 0.3.30: one Python API for text-to-image, image editing, upscaling, text-to-video and image-to-video. OpenAI-compatible HTTP by default; Diffusers, stable-diffusion.cpp (GGUF) and MLX-Gen run locally.">
+  <meta name="description" content="AbstractVision 0.3.31: one Python API for text-to-image, image editing, upscaling, text-to-video and image-to-video. OpenAI-compatible HTTP by default; Diffusers, stable-diffusion.cpp (GGUF) and MLX-Gen run locally.">
   <link rel="canonical" href="https://abstractframework.ai/vision.html">
   <meta property="og:type" content="website">
   <meta property="og:title" content="AbstractVision — generative images and video">
@@ -78,7 +78,7 @@
 <section class="hero" id="top">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> Multimodal capability &middot; AbstractCore plugin &middot; v0.3.30</div>
+    <div class="hero-badge"><span class="dot"></span> Multimodal capability &middot; AbstractCore plugin &middot; v0.3.31</div>
     <h1>Abstract<span class="gradient">Vision</span></h1>
     <p class="hero-sub">Generative images and video behind one Python API: text-to-image, image editing, upscaling, text-to-video and image-to-video. The base install calls OpenAI or any OpenAI-compatible image server; Diffusers, stable-diffusion.cpp and MLX-Gen run models on your own machine through explicit extras. Installed next to <a href="core.html">AbstractCore</a>, it becomes <code>llm.vision</code>. AbstractVision is the output side; images and video as input (what a model reads) go through <a href="core.html#features">AbstractCore&rsquo;s media input</a>.</p>
     <div class="hero-actions">
@@ -129,7 +129,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
     </div>
     <div class="callout ok reveal" style="max-width:900px;margin:2rem auto 0">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-      <div><strong>Included in the one-line installer.</strong> The <a href="install.html">AbstractFramework installer</a> installs AbstractVision with the gateway: the OpenAI-compatible backend on every profile, plus Diffusers and stable-diffusion.cpp with the <code>apple</code> and <code>gpu</code> profiles, and MLX-Gen with the <code>apple</code> profile. The <code>abstractvision</code> command is on your PATH (<code>~/.local/bin</code>). To upgrade, re-run the same install line (on a Mac without Terminal, double-click <strong>Install AbstractFramework.command</strong> again), see <a href="install.html#upgrade">Upgrade</a> (an <strong>Update</strong> button that runs the installer is coming with AbstractGateway 0.7.2).</div>
+      <div><strong>Included in the one-line installer.</strong> The <a href="install.html">AbstractFramework installer</a> installs AbstractVision with the gateway: the OpenAI-compatible backend on every profile, plus Diffusers and stable-diffusion.cpp with the <code>apple</code> and <code>gpu</code> profiles, and MLX-Gen with the <code>apple</code> profile. The <code>abstractvision</code> command is on your PATH (<code>~/.local/bin</code>). To upgrade, re-run the same install line (on a Mac without Terminal, double-click <strong>Install AbstractFramework.command</strong> again), see <a href="install.html#upgrade">Upgrade</a>; on an installer install, the console&rsquo;s update runs the installer.</div>
     </div>
   </div>
 </section>
@@ -171,7 +171,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
 
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Text to video</h3>
-      <p style="color:var(--text-secondary);max-width:820px;margin-bottom:1rem">Local video generation runs through MLX-Gen, validated on Apple Silicon, until AbstractVision&rsquo;s Diffusers video path, experimental and disabled in 0.3.30, reaches parity (<a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/README.md#L534" target="_blank" rel="noopener noreferrer">AbstractVision README</a>); on other systems, use an OpenAI-compatible video endpoint through the remote backend.</p>
+      <p style="color:var(--text-secondary);max-width:820px;margin-bottom:1rem">Local video generation runs through MLX-Gen, validated on Apple Silicon, until AbstractVision&rsquo;s Diffusers video path, experimental and disabled in 0.3.31, reaches parity (<a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/README.md#L554" target="_blank" rel="noopener noreferrer">AbstractVision README</a>); on other systems, use an OpenAI-compatible video endpoint through the remote backend.</p>
       <div class="c3" data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
         <div class="c3-stage">
           <!-- deliver/media/README-video.md:14-24 (text-to-video clip 1) -->
@@ -180,7 +180,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
               <source src="assets/video/wan-ti2v-t2v-alpine-lake.mp4" type="video/mp4">
               Your browser cannot play this H.264 MP4 video.
             </video>
-            <figcaption>Wan 2.2 TI2V-5B, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 25.7 min on an M5 Max &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
+            <figcaption>Wan 2.2 TI2V-5B, generated with AbstractVision through MLX-Gen: 832&times;480 (TI2V-5B&rsquo;s default canvas), 121 frames at 24 fps, 50 steps, 25.7 min on an M5 Max &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
           </figure>
           <figure class="c3-slide">
             <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
@@ -210,7 +210,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
                 <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
                 Your browser cannot play this H.264 MP4 video.
               </video>
-              <figcaption><strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse"</figcaption>
+              <figcaption><strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (TI2V-5B&rsquo;s default canvas), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse"</figcaption>
             </figure>
           </div>
     </div>
@@ -248,7 +248,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
     <div class="section-header reveal">
       <div class="section-label">MLX-Gen</div>
       <h2 class="section-title">Local images and video on Apple Silicon</h2>
-      <p class="section-desc"><a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a> is a local image and video generation runtime for Apple Silicon and MLX, started as a fork of mflux. AbstractVision 0.3.30 uses <code>mlx-gen</code> 0.38.x. Prepared q4 and q8 models are published in the <a href="https://huggingface.co/collections/AbstractFramework/mlx-gen/" target="_blank" rel="noopener noreferrer">AbstractFramework/mlx-gen collection</a> on Hugging Face.</p>
+      <p class="section-desc"><a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a> is a local image and video generation runtime for Apple Silicon and MLX, started as a fork of mflux. AbstractVision 0.3.31 uses <code>mlx-gen</code> 0.38.x. Prepared q4 and q8 models are published in the <a href="https://huggingface.co/collections/AbstractFramework/mlx-gen/" target="_blank" rel="noopener noreferrer">AbstractFramework/mlx-gen collection</a> on Hugging Face.</p>
     </div>
     <div class="components-grid reveal">
       <div class="comp-card">
@@ -278,7 +278,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
     </div>
     <div class="callout warn reveal" style="max-width:900px;margin:2rem auto 0">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-      <div><strong>Plan memory for video.</strong> Wan q8 packages save disk and download, not memory: they load at BF16. The TI2V-5B q8 package is 16.9 GiB on disk (BF16: 21.2 GiB). Memory needed to generate, including overhead: for TI2V-5B, the AbstractCore 2.18.0 catalog records a 58.47 GiB MLX peak at its default 1280&times;704 (17 frames) and 25 GB at 832&times;480 (AbstractCore 2.18.1, coming, gives about 63.5 GiB and 34.3 GiB for 121 frames); T2V-A14B about 72 GiB at its default 1280&times;720 (81 frames). These come from runs on an M5 Max with 128 GB. The console&rsquo;s <a href="console.html#recommended" style="color:var(--accent-light)">recommendations table</a> says which size fits your Mac.</div>
+      <div><strong>Plan memory for video.</strong> Wan q8 packages save disk and download, not memory: they load at BF16. The TI2V-5B q8 package is 16.9 GiB on disk (BF16: 21.2 GiB). Video decodes in overlapping tiles by default, so the decode no longer sets the memory peak: TI2V-5B peaks at 16.3 GiB at its default 832&times;480 (121 frames) and at 25.4 GiB at 1280&times;704; T2V-A14B at 38.3 GiB at its default 832&times;480 (81 frames). These are MLX allocator peaks measured on Apple Silicon with mlx-gen 0.38. The console&rsquo;s <a href="console.html#recommended" style="color:var(--accent-light)">recommendations table</a> says which size fits your Mac.</div>
     </div>
   </div>
 </section>
@@ -353,10 +353,10 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
         <button class="tab-btn" data-tab="vision-core">AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-vision-remote">
-        <p style="color:var(--text-secondary);line-height:1.7">Against any OpenAI-compatible image server, <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/vision_manager.py#L26" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>VisionManager</code></a> takes an <code>OpenAICompatibleVisionBackend</code> built from <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/backends/openai_compatible.py#L301" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>OpenAICompatibleBackendConfig</code></a>, and can keep results in a <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/artifacts.py#L84" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>LocalAssetStore</code></a>.</p>
+        <p style="color:var(--text-secondary);line-height:1.7">Against any OpenAI-compatible image server, <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/src/abstractvision/vision_manager.py#L26" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>VisionManager</code></a> takes an <code>OpenAICompatibleVisionBackend</code> built from <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/src/abstractvision/backends/openai_compatible.py#L301" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>OpenAICompatibleBackendConfig</code></a>, and can keep results in a <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/src/abstractvision/artifacts.py#L84" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>LocalAssetStore</code></a>.</p>
       </div>
       <div class="tab-panel" id="tab-vision-local">
-        <p style="color:var(--text-secondary);line-height:1.7">For local models on Apple Silicon, <code>VisionManager</code> takes an <code>MLXGenVisionBackend</code> with an <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/backends/__init__.py#L47" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>MLXGenBackendConfig</code></a>(model=...); it offers <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/vision_manager.py#L140" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>generate_image</code></a>, <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/vision_manager.py#L176" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>edit_image</code></a> and <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/vision_manager.py#L270" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>image_to_video</code></a>. The next tab shows the verified MLX-Gen call through AbstractCore.</p>
+        <p style="color:var(--text-secondary);line-height:1.7">For local models on Apple Silicon, <code>VisionManager</code> takes an <code>MLXGenVisionBackend</code> with an <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/src/abstractvision/backends/__init__.py#L47" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>MLXGenBackendConfig</code></a>(model=...); it offers <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/src/abstractvision/vision_manager.py#L140" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>generate_image</code></a>, <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/src/abstractvision/vision_manager.py#L176" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>edit_image</code></a> and <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/src/abstractvision/vision_manager.py#L270" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>image_to_video</code></a>. The next tab shows the verified MLX-Gen call through AbstractCore.</p>
       </div>
       <div class="tab-panel" id="tab-vision-core">
         <!-- W2 PASS: SNIPPETS.md E3-image -->
@@ -403,7 +403,7 @@ image = llm.<span class="line-fn">generate</span>(
         AbstractFramework
       </a>
       <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.2</p>
       <p style="margin-top:.75rem">
         <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>

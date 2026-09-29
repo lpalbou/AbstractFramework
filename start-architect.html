@@ -99,7 +99,7 @@
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Choose a topology <span class="j-time">15 min</span></h3>
-        <div class="table-wrap"><table class="data-table"><thead><tr><th>Where</th><th>How</th></tr></thead><tbody><tr><td>One computer</td><td>The installer&rsquo;s default: <code>127.0.0.1:8080</code>, a per-user login item.</td></tr><tr><td>Local network</td><td><code style="white-space:normal;overflow-wrap:anywhere">abstractgateway network set lan</code>, then restart. User auth required.</td></tr><tr><td>Internet</td><td><code style="white-space:normal;overflow-wrap:anywhere">abstractgateway network set internet --acknowledge-internet</code>, behind TLS you provide (reverse proxy or tunnel).</td></tr><tr><td>Headless Linux</td><td>The one-liner over SSH, the terminal console on the server, one <code style="white-space:normal;overflow-wrap:anywhere">ssh -L 8080:127.0.0.1:8080</code> tunnel for the console, API and every app.</td></tr><tr><td>Container</td><td><code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractgateway:0.7.1</code> (light); an experimental <code>gpu-latest</code> image for NVIDIA hosts.</td></tr></tbody></table></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Where</th><th>How</th></tr></thead><tbody><tr><td>One computer</td><td>The installer&rsquo;s default: <code>127.0.0.1:8080</code>, a per-user login item.</td></tr><tr><td>Local network</td><td><code style="white-space:normal;overflow-wrap:anywhere">abstractgateway network set lan</code>, then restart. User auth required.</td></tr><tr><td>Internet</td><td><code style="white-space:normal;overflow-wrap:anywhere">abstractgateway network set internet --acknowledge-internet</code>, behind TLS you provide (reverse proxy or tunnel).</td></tr><tr><td>Headless Linux</td><td>The one-liner over SSH, the terminal console on the server, one <code style="white-space:normal;overflow-wrap:anywhere">ssh -L 8080:127.0.0.1:8080</code> tunnel for the console, API and every app.</td></tr><tr><td>Container</td><td><code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractgateway:0.7.2</code> (light); an experimental <code>gpu-latest</code> image for NVIDIA hosts.</td></tr></tbody></table></div>
         <figure class="figure" style="margin-top:1rem">
           <img src="assets/img/shots/console-tui-network.webp" alt="The terminal console's Network screen: Localhost only selected, Local network and Internet options, the address list and reverse-proxy settings" loading="lazy" width="1600" height="657">
           <figcaption>The same setting over SSH: the terminal console&rsquo;s Network screen (<code>N</code>) shows the saved mode, what is running and every address.</figcaption>
@@ -113,7 +113,7 @@
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre></div><p>On first start it creates <code>default/admin</code> and writes the login token to <code style="white-space:normal;overflow-wrap:anywhere">runtime/auth/bootstrap-admin-token</code>. Create named users in the console&rsquo;s <strong>Users &amp; Entities</strong> tab and rotate the bootstrap token.</p>
+  ghcr.io/lpalbou/abstractgateway:0.7.2</code></pre></div><p>On first start it creates <code>default/admin</code> and writes the login token to <code style="white-space:normal;overflow-wrap:anywhere">runtime/auth/bootstrap-admin-token</code>. Create named users in the console&rsquo;s <strong>Users &amp; Entities</strong> tab and rotate the bootstrap token.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Place the data <span class="j-time">10 min</span></h3>
@@ -205,7 +205,7 @@ abstractgateway network addresses</code></pre></div><p><code>doctor</code> only 
         AbstractFramework
       </a>
       <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.2</p>
       <p style="margin-top:.75rem">
         <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>

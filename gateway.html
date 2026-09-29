@@ -77,7 +77,7 @@
 <section class="hero" style="min-height:auto;padding:8rem 0 4rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> Application &middot; Control plane &middot; v0.7.1</div>
+    <div class="hero-badge"><span class="dot"></span> Application &middot; Control plane &middot; v0.7.2</div>
     <img src="assets/img/logos/gateway.png" alt="" width="77" height="77" style="border-radius:14px;margin-bottom:1rem;box-shadow:0 0 30px rgba(16,185,129,0.2)">
     <h1>Abstract<span class="gradient">Gateway</span></h1>
     <p class="hero-sub">AbstractGateway runs your durable AI workflows and is the control plane of an AbstractFramework installation. It starts runs, keeps their append-only <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#ledger" target="_blank" rel="noopener noreferrer">ledger</a> (the record of every step) so any client can replay or stream them, and serves the web console, the browser apps and the <a href="automations.html">Automations</a> API from one address. You manage users, providers, local engines, models, apps and network access from the <a href="console.html">web or terminal console</a>, the command line or the tray icon (the menu bar on macOS). The installer sets it up for you (<a href="install.html">Install</a>).</p>
@@ -161,7 +161,7 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
 
     <div class="callout reveal" style="margin-top:1rem">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div><strong>Upgrade.</strong> Re-run the same install line: it upgrades or repairs the install in place. The console&rsquo;s Gateway card (terminal console: F3) and the tray icon also offer <strong>Update</strong>; an Update that runs the installer itself is coming with AbstractGateway 0.7.2. See <a href="install.html#upgrade">Upgrade</a>. A <code style="white-space:normal;overflow-wrap:anywhere">pip install abstractgateway</code> upgrades with <code>pip install -U</code>.</div>
+      <div><strong>Upgrade.</strong> Re-run the same install line: it upgrades or repairs the install in place. The console&rsquo;s Gateway card (<strong>Check now</strong>), the terminal console (F3, then <code>u</code>) and the tray icon (<strong>Check for Updates</strong>) also offer the update; on an installer install it runs the installer. See <a href="install.html#upgrade">Upgrade</a>. A <code style="white-space:normal;overflow-wrap:anywhere">pip install abstractgateway</code> upgrades with <code>pip install -U</code>.</div>
     </div>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Users and sign-in</h3>
@@ -438,9 +438,9 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</
     </div>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Docker</h3>
-    <!-- VERIFIED-DOCS abstractgateway/README.md@v0.7.1 "Docker server"; docs/install.md:665 -->
+    <!-- VERIFIED-DOCS abstractgateway/README.md "Docker server"; docs/install.md:665; GHCR tags 0.7.2 and gpu-latest (tags/list, 2026-09-29) -->
 <div class="code-block reveal">
-<pre><code><span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway:0.7.1
+<pre><code><span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway:0.7.2
 <span class="line-cmt"># experimental full GPU image for NVIDIA hosts (best effort)</span>
 <span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway:gpu-latest
 
@@ -450,7 +450,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</
   -e <span class="line-var">ABSTRACTGATEWAY_USER_AUTH</span>=1 \
   -e <span class="line-var">LMSTUDIO_BASE_URL</span>=<span class="line-str">"http://host.docker.internal:1234/v1"</span> \
   -v <span class="line-str">"$PWD/runtime:/data"</span> \
-  ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre>
+  ghcr.io/lpalbou/abstractgateway:0.7.2</code></pre>
     </div>
     <p class="reveal" style="color:var(--text-secondary);margin-top:1rem;max-width:860px">On first start the container creates <code>default/admin</code> and writes its token to <code style="white-space:normal;overflow-wrap:anywhere">runtime/auth/bootstrap-admin-token</code>; use it to sign in to <code>/console</code>, then rotate it or create named users. On Apple Silicon, keep MLX inference native on macOS and point the container at it.</p>
 
@@ -498,7 +498,7 @@ abstractgateway migrate --from=file --to=sqlite \
         AbstractFramework
       </a>
       <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.2</p>
       <p style="margin-top:.75rem">
         <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>

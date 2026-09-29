@@ -75,7 +75,7 @@
 <section class="hero" style="min-height:auto;padding:8rem 0 3.5rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> Framework release 0.6.1 &middot; gateway 0.7.1</div>
+    <div class="hero-badge"><span class="dot"></span> Framework release 0.6.2 &middot; gateway 0.7.2</div>
     <h1>Install <span class="gradient">AbstractFramework</span></h1>
     <p class="hero-sub">One download or one line. No admin password, no system Python to prepare. At the end, AbstractFramework opens in your web browser, already signed in, and a first-run guide helps you pick an engine and a model that fits your machine.</p>
     <div class="hero-actions">
@@ -140,7 +140,7 @@
 <div class="code-block"><pre><code><span class="line-cmt"># the same install, step by step</span>
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.7.1"   <span class="line-cmt"># [apple,tray] or [gpu,tray] for local engines</span>
+uv tool install --python 3.12 "abstractgateway[tray]==0.7.2"   <span class="line-cmt"># [apple,tray] or [gpu,tray] for local engines</span>
 uv tool update-shell                                         <span class="line-cmt"># puts ~/.local/bin on PATH; open a new terminal</span>
 abstractgateway service install --port 8080                  <span class="line-cmt"># or: abstractgateway serve</span>
 abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></div>
@@ -228,12 +228,12 @@ abstractgateway apps tui-command code</code></pre></div>
     </div>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Install profiles</h3>
-    <p class="reveal" style="color:var(--text-secondary);max-width:760px;margin-bottom:1.25rem">The installer picks the profile for you; <code>--profile</code> overrides it. The framework's features are the same in every profile; the profile decides which local inference engines are installed. AbstractFramework runs on macOS, Linux and Windows and has been tested most on Apple Silicon; local video generation runs through MLX-Gen, validated on Apple Silicon, until AbstractVision&rsquo;s Diffusers video path reaches parity (<a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/README.md#L534" target="_blank" rel="noopener noreferrer">AbstractVision README</a>).</p>
-    <!-- sources: abstractgateway@v0.7.1 pyproject.toml:14-29, :94-107; abstractruntime@v0.7.1 pyproject.toml (dependencies: abstractcore[remote,tools,vision,voice,audio,music]; apple: abstractcore[all-apple]; gpu: abstractcore[all-gpu]); abstractcore@v2.18.0 pyproject.toml:320-406 -->
+    <p class="reveal" style="color:var(--text-secondary);max-width:760px;margin-bottom:1.25rem">The installer picks the profile for you; <code>--profile</code> overrides it. The framework's features are the same in every profile; the profile decides which local inference engines are installed. AbstractFramework runs on macOS, Linux and Windows and has been tested most on Apple Silicon; local video generation runs through MLX-Gen, validated on Apple Silicon, until AbstractVision&rsquo;s Diffusers video path reaches parity (<a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.31/README.md#L554" target="_blank" rel="noopener noreferrer">AbstractVision README</a>).</p>
+    <!-- sources: abstractframework 0.6.2 on PyPI (pins); abstractgateway@v0.7.2 profiles -> AbstractRuntime[apple|gpu] -> abstractcore[all-apple|all-gpu], which 2.19.0 maps to abstractcore[apple|gpu] (abstractcore@v2.19.0 pyproject.toml:144-206, the all-apple / all-gpu aliases); PyPI abstractcore 2.19.0 requires_dist -->
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem">
       <div class="mode-card" style="display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 4;gap:.75rem;text-align:left"><h3 style="margin:0">Light</h3><p style="margin:0">Remote and endpoint engines: OpenAI, Anthropic, OpenRouter, Portkey, LM Studio, Ollama, vLLM and any OpenAI-compatible endpoint, plus local voice on the processor. Works on macOS, Linux and Windows.</p><div></div><div class="mode-tags" style="justify-content:flex-start;align-content:flex-start"><span class="mode-tag">OpenAI</span><span class="mode-tag">Anthropic</span><span class="mode-tag">OpenRouter</span><span class="mode-tag">Portkey</span><span class="mode-tag">LM Studio</span><span class="mode-tag">Ollama</span><span class="mode-tag">vLLM</span><span class="mode-tag">OpenAI-compatible</span></div></div>
-      <div class="mode-card" style="display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 4;gap:.75rem;text-align:left"><h3 style="margin:0">Apple <small style="font-weight:500;color:var(--text-secondary)">Light +</small></h3><p style="margin:0">Everything in Light, plus the local Apple Silicon engines (MLX and Metal) for text, voice, music, images and video. macOS 14+ on Apple Silicon.</p><div></div><div class="mode-tags" style="justify-content:flex-start;align-content:flex-start"><span class="mode-tag">Light +</span><span class="mode-tag">MLX</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">MLX-Gen (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span></div></div>
-      <div class="mode-card" style="display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 4;gap:.75rem;text-align:left"><h3 style="margin:0">GPU <small style="font-weight:500;color:var(--text-secondary)">Light +</small></h3><p style="margin:0">Everything in Light, plus the local GPU engines for NVIDIA CUDA or AMD ROCm on Linux.</p><div></div><div class="mode-tags" style="justify-content:flex-start;align-content:flex-start"><span class="mode-tag">Light +</span><span class="mode-tag">vLLM engine</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">Diffusers (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span></div></div>
+      <div class="mode-card" style="display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 4;gap:.75rem;text-align:left"><h3 style="margin:0">Apple <small style="font-weight:500;color:var(--text-secondary)">Light +</small></h3><p style="margin:0">Everything in Light, plus the local Apple Silicon engines (MLX and Metal) for text, voice, music, images and video. macOS 14+ on Apple Silicon.</p><div></div><div class="mode-tags" style="justify-content:flex-start;align-content:flex-start"><span class="mode-tag">Light +</span><span class="mode-tag">MLX</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">MLX-Gen (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span><span class="mode-tag">Headless browser</span></div></div>
+      <div class="mode-card" style="display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;grid-row:span 4;gap:.75rem;text-align:left"><h3 style="margin:0">GPU <small style="font-weight:500;color:var(--text-secondary)">Light +</small></h3><p style="margin:0">Everything in Light, plus the local GPU engines for NVIDIA CUDA or AMD ROCm on Linux.</p><div></div><div class="mode-tags" style="justify-content:flex-start;align-content:flex-start"><span class="mode-tag">Light +</span><span class="mode-tag">vLLM engine</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">Diffusers (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span><span class="mode-tag">Headless browser</span></div></div>
     </div>
   </div>
 </section>
@@ -369,7 +369,7 @@ abstractgateway service uninstall  <span class="line-cmt"># data is kept</span><
         <!-- VERIFIED-DOCS docs/install.md:57 -->
 <div class="code-block"><pre><code><span class="line-cmt"># re-run the same line you installed with</span>
 curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
-        <p style="color:var(--text-secondary);font-size:var(--text-sm)">Re-running the script upgrades or repairs the install in place and keeps your profile, port and start-at-login choice. On Windows, run the PowerShell line again; on a Mac without Terminal, double-click <strong>Install AbstractFramework.command</strong> again. The console&rsquo;s <strong>Gateway</strong> card (terminal console: <code>F3</code>) and the gateway&rsquo;s tray icon also offer <strong>Update</strong>; an Update that runs the installer itself is coming with AbstractGateway 0.7.2.</p>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">Re-running the script upgrades or repairs the install in place and keeps your profile, port and start-at-login choice. On Windows, run the PowerShell line again; on a Mac without Terminal, double-click <strong>Install AbstractFramework.command</strong> again. The console&rsquo;s <strong>Gateway</strong> card (<strong>Check now</strong>), the terminal console (<code>F3</code>, then <code>u</code>) and the gateway&rsquo;s tray icon (<strong>Check for Updates</strong>) also offer the update: on an installer install it compares your AbstractFramework release with the newest one and runs the installer.</p>
         <h3 style="margin:1.25rem 0 .75rem">Remove</h3>
         <!-- VERIFIED-DOCS docs/install.md:109 -->
 <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh</code></pre></div>
@@ -404,7 +404,7 @@ abstractgateway serve     <span class="line-cmt"># prints a one-time console lin
           <div class="install-notes"><ul><li>Remote-first: cloud APIs and endpoint servers (LM Studio, Ollama, vLLM, llama.cpp, OpenAI-compatible). Multimodal input and output, tools, durable runs and workflows all work.</li></ul></div>
         </div>
         <div class="tab-panel" id="tab-p-apple">
-          <!-- VERIFIED-DOCS: E1-E3 ran in abstractframework[apple]==0.6.1 (RESULTS.md); README.md:288 -->
+          <!-- VERIFIED-DOCS: PyPI abstractframework 0.6.2 extras apple/gpu; E1-E3 ran in abstractframework[apple]==0.6.1 (RESULTS.md); README.md:288 -->
 <div class="code-block"><pre><code>pip install "abstractframework[apple]"</code></pre></div>
           <div class="install-notes"><ul><li>macOS 14 or later on Apple Silicon. Local MLX and Metal engines next to the endpoint providers. A plain <code>pip install</code> of this profile builds a few compiled extras from source and needs a C/C++ compiler; the one-line installer does not.</li></ul></div>
         </div>
@@ -420,15 +420,15 @@ abstractgateway serve     <span class="line-cmt"># prints a one-time console lin
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre></div>
+  ghcr.io/lpalbou/abstractgateway:0.7.2</code></pre></div>
           <div class="install-notes"><ul>
             <li>The light container: every framework capability through remote or endpoint inference. On first start it creates <code>default/admin</code> and writes the login token to <code style="white-space:normal;overflow-wrap:anywhere">runtime/auth/bootstrap-admin-token</code>.</li>
-            <li><code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractgateway:gpu-latest</code> is an experimental local GPU image for NVIDIA hosts. The AbstractCore OpenAI-compatible server is <code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractcore-server:2.18.0</code>.</li>
+            <li><code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractgateway:gpu-latest</code> is an experimental local GPU image for NVIDIA hosts. The AbstractCore OpenAI-compatible server is <code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractcore-server:2.19.0</code>.</li>
           </ul></div>
         </div>
       </div>
     </div>
-    <p class="reveal" style="text-align:center;color:var(--text-secondary);margin-top:1.5rem;font-size:var(--text-sm)"><code>abstractframework</code> 0.6.1 pins every Python package with <code>==</code>: gateway 0.7.1, assistant 0.9.1, core 2.18.0, runtime 0.7.1, agent 0.3.17, skill 0.3.0, memory 0.3.0, semantics 0.0.5, voice 0.13.0, music 0.1.15, vision 0.3.30. <a href="start-developer.html" style="color:var(--accent-light)">Developer journey &rarr;</a></p>
+    <p class="reveal" style="text-align:center;color:var(--text-secondary);margin-top:1.5rem;font-size:var(--text-sm)"><code>abstractframework</code> 0.6.2 pins every Python package with <code>==</code>: gateway 0.7.2, assistant 0.9.1, core 2.19.0, runtime 0.7.1, agent 0.3.17, skill 0.3.0, memory 0.3.0, semantics 0.0.5, voice 0.13.0, music 0.1.15, vision 0.3.31, 3D 0.3.1. <a href="start-developer.html" style="color:var(--accent-light)">Developer journey &rarr;</a></p>
   </div>
 </section>
 
@@ -443,7 +443,7 @@ abstractgateway serve     <span class="line-cmt"># prints a one-time console lin
         AbstractFramework
       </a>
       <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.2</p>
       <p style="margin-top:.75rem">
         <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
