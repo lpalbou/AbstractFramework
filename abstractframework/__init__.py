@@ -46,7 +46,7 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.4.0",
-    "@abstractframework/code": "0.6.1",
+    "@abstractframework/code": "0.6.2",
     "@abstractframework/observer": "0.2.1",
     "@abstractframework/continuum": "0.4.0",
     "@abstractframework/entity": "0.3.0",

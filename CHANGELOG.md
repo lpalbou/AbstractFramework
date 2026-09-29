@@ -9,8 +9,8 @@ All notable changes to AbstractFramework will be documented in this file.
 The `gpu` setting on NVIDIA machines, speech-to-text in the fresh setup, and loaded image models
 that are reused. Pins: AbstractGateway 0.7.4, AbstractCore 2.19.2, AbstractRuntime 0.7.3,
 AbstractVoice 0.13.2, AbstractVision 0.3.33 and Abstract3D 0.3.2; the gateway's terminal console is
-`abstractgateway-console` 0.11.2. Every other version, and the other terminal clients, are unchanged
-from 0.6.2.
+`abstractgateway-console` 0.11.2, and the browser client AbstractCode web is 0.6.2. Every other
+version, and the other terminal clients, are unchanged from 0.6.2.
 
 ### Added
 
@@ -76,6 +76,10 @@ from 0.6.2.
 
 ### Fixed
 
+- **The approval gate shows in every client.** When the agent's tool call waits for approval, a
+  browser or phone that opens the same conversation later now shows the same Allow / Deny card and
+  "Approval needed" as the client that started the turn, instead of "Running a tool" and a Steer box
+  (AbstractCode web 0.6.2 with `@abstractframework/panel-chat` 0.1.20; two-browser end-to-end test).
 - **Speech-to-text without an OpenAI key.** Transcription runs on the configured `input.voice`
   route (for example local Whisper) and no longer needs TTS credentials (AbstractCore 2.19.1,
   AbstractVoice 0.13.1).
