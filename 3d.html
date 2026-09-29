@@ -75,7 +75,7 @@
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span> CAPABILITY PLUGIN &middot; 3D &middot; v0.3.1</div>
     <h1>Abstract<span class="gradient">3D</span></h1>
-    <p class="hero-sub"><code>abstract3d</code> adds a <code>scene3d</code> capability to <a href="core.html">AbstractCore</a>: image-to-3D and text-to-3D generation, with a validated local TripoSR backend and GLB as the primary output. Installed next to AbstractCore, it registers itself as <code>llm.scene3d</code> and as the <code>scene3d</code> output of <code>generate()</code>. Status: alpha, one centered object per image.</p>
+    <p class="hero-sub"><code>abstract3d</code> adds a <code>scene3d</code> capability to <a href="core.html">AbstractCore</a>: image-to-3D and text-to-3D generation, with a validated local TripoSR backend and GLB as the primary output. Installed next to AbstractCore, it registers itself as <code>llm.scene3d</code> and as the <code>scene3d</code> output of <code>generate()</code>. Status: alpha, one centered object per image. It installs separately and is not part of the <code>abstractframework</code> install profiles.</p>
     <div class="hero-actions">
       <a href="#getting-started" class="btn btn-primary">Get Started</a>
       <a href="https://github.com/lpalbou/abstract3d" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
@@ -210,7 +210,7 @@ text_result = scene3d.<span class="line-fn">t23d</span>(<span class="line-str">"
         </div>
       </div>
       <div class="tab-panel" id="tab-d3-core">
-        <!-- PENDING-W2: E3 -->
+        <!-- PENDING-W2: E8 -->
 <div class="code-block">
 <pre><code>resp = llm.<span class="line-fn">generate</span>(
     text=<span class="line-str">"A glossy red cube."</span>,
