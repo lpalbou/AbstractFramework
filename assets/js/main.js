@@ -157,6 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (note && tab.dataset.note) note.innerHTML = tab.dataset.note;
       term.setAttribute('aria-labelledby', tab.id);
       qs.style.setProperty('--qs-i', tabs.indexOf(tab));
+      /* dependent content: every [data-follows="qs"] block shows only its [data-when] variant for this OS */
+      qs.querySelectorAll('[data-follows="qs"] [data-when]').forEach(el => {
+        el.hidden = !el.dataset.when.split(/\s+/).includes(tab.dataset.os);
+      });
       if (focus) tab.focus();
     }
     tabs.forEach((tab, i) => {

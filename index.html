@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css?v=20260929e">
+  <link rel="stylesheet" href="assets/css/main.css?v=20260929f">
   <link rel="stylesheet" href="assets/css/components.css?v=20260929e">
 </head>
 <body>
@@ -143,11 +143,12 @@
       </div>
       <p class="qs-note" id="getting-started"><span class="qs-note-text">macOS 13 or later (the Apple Silicon engines need macOS 14), about 5 GB free. Installs in your user account, local voice included, and opens the web console signed in; running it again repairs or upgrades.</span> <a href="install.html">All install options &rarr;</a></p>
       <!-- steps: docs/install.md:57, 74 (installers); docs/install.md:608 (console link, signed in); abstractgateway/docs/first-run.md:46 (Use recommended defaults); docs/getting-started.md:43 (/apps/<app>/) -->
-      <div class="install-steps compact qs-steps">
-        <div class="install-step"><h4>Run the installer</h4><p>The line above, or the macOS <code>.pkg</code>.</p></div>
-        <div class="install-step"><h4>The console opens</h4><p>In your browser, already signed in.</p></div>
-        <div class="install-step"><h4>Pick your models</h4><p><strong>Use recommended defaults</strong> for what this computer can run.</p></div>
-        <div class="install-step"><h4>Use it anywhere</h4><p>Apps at <code class="long">/apps/&lt;app&gt;/</code>, the terminal, or the menu bar on macOS or the system tray.</p></div>
+      <!-- steps follow the selected OS tab (data-follows="qs"): docs/install.md:57, 74 (installers), :608 (serve prints the sign-in link), headless terminal console and systemd --user (claims under "Get started"); abstractgateway docs/tray.md:3-4 (menu bar / system tray); abstractgateway/docs/first-run.md:46 (Use recommended defaults); docs/getting-started.md:43 (/apps/<app>/) -->
+      <div class="install-steps compact qs-steps" data-follows="qs">
+        <div class="install-step"><h4>Run the installer</h4><p><span data-when="mac">The line above, or the macOS <code>.pkg</code> installer.</span><span data-when="linux" hidden>The line above, in a terminal or over SSH.</span><span data-when="win" hidden>The PowerShell line above; no administrator rights needed.</span><span data-when="py" hidden><code class="long">pip install abstractframework</code>, with <code>[apple]</code> or <code>[gpu]</code> for local engines.</span></p></div>
+        <div class="install-step"><h4>The console opens</h4><p><span data-when="mac">In your browser, already signed in.</span><span data-when="linux" hidden>In your browser, signed in; on a headless server the installer offers the terminal console.</span><span data-when="win" hidden>In your browser, already signed in.</span><span data-when="py" hidden>Run <code class="long">abstractgateway serve</code>: it prints a one-time sign-in link to the console.</span></p></div>
+        <div class="install-step"><h4>Pick your models</h4><p><span data-when="mac"><strong>Use recommended defaults</strong> for what this Mac can run.</span><span data-when="linux" hidden><strong>Use recommended defaults</strong> for what this computer can run.</span><span data-when="win" hidden><strong>Use recommended defaults</strong> for what this computer can run.</span><span data-when="py" hidden>Open the link, then <strong>Use recommended defaults</strong> for what this computer can run.</span></p></div>
+        <div class="install-step"><h4>Use it anywhere</h4><p><span data-when="mac">Apps at <code class="long">/apps/&lt;app&gt;/</code>, the terminal, or the menu-bar icon.</span><span data-when="linux" hidden>Apps at <code class="long">/apps/&lt;app&gt;/</code> or the terminal; start at login runs as a <code>systemd --user</code> service.</span><span data-when="win" hidden>Apps at <code class="long">/apps/&lt;app&gt;/</code>, the terminal, or the icon in the system tray.</span><span data-when="py" hidden>Apps at <code class="long">/apps/&lt;app&gt;/</code>, or AbstractCore straight from your own Python code.</span></p></div>
       </div>
     </div>
     <!-- R5b-hero (W2 PASS): examples/R5b/hero.py verbatim (46.7 s, abstractframework 0.6.2; RESULTS.md R5b-hero) -->
@@ -2005,7 +2006,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
   </div>
 </footer>
 
-<script src="assets/js/main.js?v=20260929e"></script>
+<script src="assets/js/main.js?v=20260929f"></script>
 <script src="assets/js/carousel3.js?v=20260929e"></script>
 <script src="assets/js/compare.js?v=20260929e"></script>
 <script src="assets/js/synced-chat.js?v=20260929e"></script>
