@@ -238,7 +238,7 @@ abstractcore-console</code></pre></div>
       <div class="comp-card">
         <div class="comp-card-header"><span class="comp-tag modality">Plugins</span></div>
         <h3>Capability plugins</h3>
-        <p><code>llm.voice</code> and <code>llm.audio</code> (<a href="voice.html">AbstractVoice</a>), <code>llm.vision</code> (<a href="vision.html">AbstractVision</a>), <code>llm.music</code> (<a href="music.html">AbstractMusic</a>), <code>llm.scene3d</code> (<a href="https://github.com/lpalbou/abstract3d" target="_blank" rel="noopener noreferrer">abstract3d</a>, text and image to 3D) and <code>llm.camera</code> (<a href="https://github.com/lpalbou/AbstractCamera" target="_blank" rel="noopener noreferrer">abstractcamera</a>, real-camera piloting).</p>
+        <p><code>llm.voice</code> and <code>llm.audio</code> (<a href="voice.html">AbstractVoice</a>), <code>llm.vision</code> (<a href="vision.html">AbstractVision</a>), <code>llm.music</code> (<a href="music.html">AbstractMusic</a>), <code>llm.scene3d</code> (<a href="https://github.com/lpalbou/abstract3d" target="_blank" rel="noopener noreferrer">Abstract3D</a>, text and image to 3D) and <code>llm.camera</code> (<a href="https://github.com/lpalbou/AbstractCamera" target="_blank" rel="noopener noreferrer">AbstractCamera</a>, real-camera piloting).</p>
       </div>
       <div class="comp-card">
         <div class="comp-card-header"><span class="comp-tag foundation">Apple silicon</span></div>
@@ -410,7 +410,7 @@ print(resp.choices[<span class="line-var">0</span>].message.content)</code></pre
           <tr><td><code>gpu</code> / <code>vllm</code></td><td>GPU local LLM stack (heavy)</td></tr>
           <tr><td><code>tools</code></td><td>Built-in web tools (<code>web_search</code>, <code>skim_websearch</code>, <code>skim_url</code>, <code>fetch_url</code>)</td></tr>
           <tr><td><code>media</code></td><td>Images, PDFs, Office documents</td></tr>
-          <tr><td><code>voice</code>, <code>vision</code>, <code>music</code>, <code>scene3d</code></td><td>Capability plugins: AbstractVoice, AbstractVision, AbstractMusic, abstract3d (camera: <code>pip install abstractcamera</code>)</td></tr>
+          <tr><td><code>voice</code>, <code>music</code>, <code>vision</code>, <code>scene3d</code></td><td>Capability plugins: AbstractVoice, AbstractMusic, AbstractVision, Abstract3D (AbstractCamera: <code>pip install abstractcamera</code>)</td></tr>
           <tr><td><code>compression</code></td><td>Glyph visual-text compression</td></tr>
           <tr><td><code>embeddings</code></td><td><code>EmbeddingManager</code> and local embedding models</td></tr>
           <tr><td><code>tokens</code></td><td>Precise token counting (tiktoken)</td></tr>
@@ -466,11 +466,13 @@ print(resp.choices[<span class="line-var">0</span>].message.content)</code></pre
       <a href="agent.html">AbstractAgent</a>
       <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
       <a href="flow.html">AbstractFlow</a>
+      <a href="tui.html">AbstractTUI</a>
+      <a href="uic.html">AbstractUIC</a>
     </div>
     <div class="footer-col">
       <h4>Applications</h4>
       <a href="gateway.html">AbstractGateway</a>
-      <a href="console.html">Consoles</a>
+      <a href="console.html">Gateway &amp; Core consoles</a>
       <a href="automations.html">Automations</a>
       <a href="code.html">AbstractCode</a>
       <a href="observer.html">AbstractObserver</a>
@@ -481,9 +483,9 @@ print(resp.choices[<span class="line-var">0</span>].message.content)</code></pre
     <div class="footer-col">
       <h4>Modalities &amp; Knowledge</h4>
       <a href="voice.html">AbstractVoice</a>
-      <a href="vision.html">AbstractVision</a>
       <a href="music.html">AbstractMusic</a>
-      <a href="3d.html">abstract3d</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="3d.html">Abstract3D</a>
       <a href="camera.html">AbstractCamera</a>
       <a href="memory.html">AbstractMemory</a>
       <a href="semantics.html">AbstractSemantics</a>
