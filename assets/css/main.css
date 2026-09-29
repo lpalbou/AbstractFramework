@@ -4200,3 +4200,12 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 .profile-note { color: var(--text-muted); font-size: .75rem; line-height: 1.5; margin-top: .75rem; }
 @media (max-width: 768px) { .profile-cards { grid-template-rows: none; } .profile-cards .mode-card { grid-row: auto; } .profile-note:empty { display: none; } }
 .profile-cards .mode-card p.profile-note { color: var(--text-muted); font-size: .75rem; line-height: 1.5; margin-top: .75rem; }
+/* Round 5: hero keywords and the per-modality direction strip */
+.hero-sub .kw-prod { font-weight: 700; color: #fff; }
+.hero .hero-sub .io .kw-mm { background: var(--gradient-text); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
+.mm-dir { list-style: none; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .5rem; margin: 1.25rem 0 0; }
+.mm-dir li { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: .55rem .6rem; text-align: center; }
+.mm-dir b { display: block; font-size: .82rem; color: var(--text); }
+.mm-dir span { display: block; font: 500 .7rem var(--mono); color: var(--accent-light); margin-top: .15rem; }
+@media (max-width: 1000px) { .mm-dir { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .mm-dir { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -116,8 +116,8 @@
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span> Open Source &middot; MIT Licensed &middot; 21 Components</div>
     <h1>Write once.<br><span class="gradient">Generate everything.</span><br>Run anywhere.</h1>
-    <p class="hero-sub">A modular, open-source framework for durable, observable, multimodal AI. One Python API for any model, local or cloud. One runtime where agents pause, resume and replay. One gateway on macOS, Linux, Windows or in a container, on your laptop, your network or the internet, with thin clients on every device.
-      <span class="io"><b>In:</b> text, images, audio, video, documents. <b>Out:</b> text, voice, music, images, video, 3D.</span></p>
+    <p class="hero-sub">One <b class="kw-prod">Core</b> API for any model, local or cloud. One <b class="kw-prod">Runtime</b> where agents pause, resume and replay. One <b class="kw-prod">Gateway</b> on macOS, Linux, Windows or in a container, on your laptop, your network or the internet, with thin clients on every device.
+      <span class="io"><b class="kw-mm">Multimodal</b> input &amp; output: text, documents, images, video, voice, music, 3D, camera.</span></p>
     <div class="hero-actions">
       <a href="install.html" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -372,6 +372,17 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg></span><div><h4>3D <small>Abstract3D</small></h4><p>Image-to-3D and text-to-3D, with GLB output.</p></div></div>
       </div>
     </div>
+    <!-- directions: abstractcore README.md:43, 340-355 (inputs); plugin entry points (outputs); abstractcamera/README.md:67-73 (capture); music input planned: docs/backlog/planned/0986_input_output_modality_parity_voice_music.md -->
+    <ul class="mm-dir reveal" aria-label="Direction of each modality">
+      <li><b>Text</b><span>in &amp; out</span></li>
+      <li><b>Documents</b><span>in</span></li>
+      <li><b>Images</b><span>in &amp; out</span></li>
+      <li><b>Video</b><span>in &amp; out</span></li>
+      <li><b>Voice</b><span>in &amp; out</span></li>
+      <li><b>Music</b><span>out (input planned)</span></li>
+      <li><b>3D</b><span>out</span></li>
+      <li><b>Camera</b><span>in (capture)</span></li>
+    </ul>
     <p class="mm-foot reveal">Media input follows explicit policies, never silent changes. AbstractCamera is a capability too, for capture rather than generation: it opens real cameras, takes photos and clips, and gives an agent camera tools. The one-line <code>output="image"</code> form needs a default route for that capability; without one, name the provider and model in the call: both forms are in <a href="#generate">Two ways to generate</a>. Below, the same capabilities over HTTP.</p>
 
     <div class="mm-proof reveal">
