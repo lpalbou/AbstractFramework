@@ -174,6 +174,14 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
       <p style="color:var(--text-secondary);max-width:820px;margin-bottom:1rem">Local video generation runs through MLX-Gen, validated on Apple Silicon, until AbstractVision&rsquo;s Diffusers video path, experimental and disabled in 0.3.30, reaches parity (<a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/README.md#L534" target="_blank" rel="noopener noreferrer">AbstractVision README</a>); on other systems, use an OpenAI-compatible video endpoint through the remote backend.</p>
       <div class="c3" data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
         <div class="c3-stage">
+          <!-- deliver/media/README-video.md:14-24 (text-to-video clip 1) -->
+          <figure class="c3-slide">
+            <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-wan-ti2v-t2v-alpine-lake.jpg" aria-label="Generated video: a rowboat drifting on a calm alpine lake at sunrise">
+              <source src="assets/video/wan-ti2v-t2v-alpine-lake.mp4" type="video/mp4">
+              Your browser cannot play this H.264 MP4 video.
+            </video>
+            <figcaption>Wan 2.2 TI2V-5B, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 25.7 min on an M5 Max &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
+          </figure>
           <figure class="c3-slide">
             <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
               <source src="assets/video/t2v-river.mp4" type="video/mp4">
@@ -188,15 +196,23 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
             </video>
             <figcaption>Wan 2.2 text-to-video &mdash; "A dynamic combat in space between two starships"</figcaption>
           </figure>
-          <figure class="c3-slide">
-            <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
-              <source src="assets/video/t2v-example.mp4" type="video/mp4">
-              Your browser cannot play this H.264 MP4 video.
-            </video>
-            <figcaption>Wan 2.2 text-to-video &mdash; a starship in slow orbit around Earth, city lights below</figcaption>
-          </figure>
         </div>
       </div>
+      <h3 style="margin:2rem 0 1rem">Image to video</h3>
+      <!-- deliver/media/README-video.md:26-43 (still and image-to-video clip 2) -->
+      <div class="i2v-pair">
+            <figure>
+              <img src="assets/img/flux2-klein-still-lighthouse.jpg" alt="The source still: a white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks" width="832" height="480" loading="lazy">
+              <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps, 16 s &mdash; "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors"</figcaption>
+            </figure>
+            <figure>
+              <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" aria-label="Generated video: waves breaking against the rocks below the lighthouse as the camera pushes in" width="832" height="480">
+                <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
+                Your browser cannot play this H.264 MP4 video.
+              </video>
+              <figcaption><strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse"</figcaption>
+            </figure>
+          </div>
     </div>
   </div>
 </section>
