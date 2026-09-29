@@ -539,9 +539,14 @@ plan decides the final numbers.
   device-code flow for headless ones). Requires the operator to register OAuth clients (Google
   Cloud OAuth client with the Gmail scope — needs Google's verification for public use; Microsoft
   Entra app with IMAP/SMTP scopes); client ids/secrets are gateway settings, never env vars.
-- **Polling cadence, clarified:** an email-triggered automation whose steps need no model (e.g.
-  "forward invoices", "notify me when X writes") checks every 60 s; an automation that runs a
-  model on each new message (e.g. "summarise / classify / draft a reply for each new email")
-  checks every 10 min and processes the batch of new messages since its last run; the opt-in AI
-  triage (read new mail, open a session to ask what matters) runs at most once an hour. Every
-  automation reads a message at most once (durable per-automation cursor).
+- **Polling cadence (operator, final):** an email-triggered automation whose steps need no model
+  (e.g. "forward invoices", "notify me when X writes") checks every 60 s. Any automation that runs
+  a model on new mail (summarise, classify, draft replies, AI triage opening a session) runs **once
+  an hour by default**, on the batch of messages received since its last run; the interval is
+  customizable per automation (web and terminal consoles). Every automation reads a message at
+  most once (durable per-automation cursor).
+- **OAuth clients:** support both (a) a built-in AbstractFramework OAuth client registered once by
+  the provider (Microsoft: multi-tenant Entra app with publisher verification; Google: OAuth client
+  for the restricted Gmail scope, usable by up to 100 test users until Google's verification and
+  security assessment pass) and (b) "bring your own OAuth client" as a gateway admin setting for
+  self-hosted deployments. App passwords stay as the fallback.
