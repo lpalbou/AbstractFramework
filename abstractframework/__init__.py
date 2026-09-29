@@ -10,7 +10,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.6.3"
+__version__ = "0.6.4"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 

@@ -648,7 +648,7 @@ else
     check "new gateway: seeds localhost on the install port (nothing stored)" "$(grep -qx "abstractgateway network set localhost --port $BG_PORT" "$GWLOG" && [[ "$(cat "$NETF")" == "localhost $BG_PORT" ]]; echo $?)" "$GWLOG"
     check "new gateway: starts plain serve with the data dir as a launch flag (no --host/--port)" "$(grep -qxF "abstractgateway serve --data-dir $DATA_T" "$GWLOG" && ! grep -q "serve --host" "$GWLOG"; echo $?)" "$GWLOG"
     # Launch flags, not environment variables (operator ruling): the Start hint names --data-dir.
-    check "new gateway: the Start hint is plain serve with --data-dir, no environment variables" "$(grep -qF "Start:      re-run this installer, or: abstractgateway serve --data-dir '$DATA_T'" "$OUT" && ! grep "Start:" "$OUT" | grep -q "ABSTRACTGATEWAY_" && ! grep -q "ABSTRACTGATEWAY_DATA_DIR=.* nohup" "$OUT"; echo $?)" "$OUT"
+    check "new gateway: the Start hint is plain serve with --data-dir, no environment variables" "$({ grep -qF "Start:      re-run this installer, or: abstractgateway serve --data-dir '$DATA_T'" "$OUT" || grep -qx "  Start:      re-run this installer, or: abstractgateway serve --data-dir $DATA_T" "$OUT"; } && ! grep "Start:" "$OUT" | grep -q "ABSTRACTGATEWAY_" && ! grep -q "ABSTRACTGATEWAY_DATA_DIR=.* nohup" "$OUT"; echo $?)" "$OUT"
     # 0943: the pointer, written by the installer once the gateway answered (default data dir).
     PTR_DD="$(cd "$DATA_T" && pwd -P)"
     check "pointer: written after the health check, the contract's keys, written_by installer" "$(/usr/bin/python3 -c 'import json, sys
@@ -1004,7 +1004,9 @@ else
     GW_PIN="$(sed -n 's/^AF_GATEWAY_PIN_DEFAULT="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
     FW="$(sed -n 's/^AF_FRAMEWORK_VERSION="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
     MATRIX="$(sed -n 's/^AF_PY_MATRIX="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
-    HAND_STATE="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=$FW\nCONSOLE=0\nGATEWAY_SPEC=abstractgateway[tray]==$GW_PIN\n"
+    # the spec this machine installs (the tray extra only with a display: macOS here, none on a Linux sandbox)
+    HAND_SPEC="abstractgateway==$GW_PIN"; [[ "$IS_MAC" == 1 ]] && HAND_SPEC="abstractgateway[tray]==$GW_PIN"
+    HAND_STATE="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=$FW\nCONSOLE=0\nGATEWAY_SPEC=$HAND_SPEC\n"
     # replaced: the port and its record kept, the hand-started process stopped, one gateway (the installer's) on the port
     hand_replaced() {  # hand_replaced LABEL
         check "$1: recognised as this install's gateway started by hand, on the recorded port" "$([[ $RC == 0 ]] && has "$OUT" "port $BG_PORT: this install's gateway runs there, started by hand (pid $HAND_PID" && ! has "$OUT" "using $((BG_PORT + 1))" && ! has "$OUT" "in use by another process"; echo $?)" "$OUT"

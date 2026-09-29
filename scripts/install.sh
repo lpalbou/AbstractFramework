@@ -127,7 +127,7 @@ AF_GATEWAY_PIN_DEFAULT="0.7.4"
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.6.3"
+AF_FRAMEWORK_VERSION="0.6.4"
 AF_PY_MATRIX="abstractcore==2.19.2 AbstractRuntime==0.7.3 abstractagent==0.3.17 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.13.2 abstractvision==0.3.33 abstractmusic==0.1.15 abstract3d==0.3.2"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.6.2 @abstractframework/observer@0.2.1 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"

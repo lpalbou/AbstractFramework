@@ -84,12 +84,39 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
     moving to another port only for a foreign process, without persisting the move when the
     process was ours. Receipt: `untracked/rehearsal-063/32-no-nvidia-smi-print.log` line 15.
     Owner: root `scripts/install.sh` (and `install.ps1` for the same check).
+    **Fixed in root 0.6.4** (branch `fix/installer-064`): the listener's pid (lsof/ss;
+    Get-NetTCPConnection) running abstractgateway and serving this data dir (its serve record
+    `run/gateway-serve.json`, its `--data-dir`, Linux `/proc/<pid>/environ`) is this install's
+    gateway: the port is kept and the installer's start replaces it; one on another port is stopped
+    too; `--no-start` leaves it running. Tests: `test_install_user_path.sh` [21] (sh + dash),
+    `tests/test_install_ps1_own_gateway.py`; mutation-checked; validated on the OVH GPU VM.
 21. Gateway image requests reload the model in a subprocess on every request: 54-59 s per image
     through the gateway (`29-gateway-image-unloaded-{1,2}.json`: 54.3 s, 59.0 s) against 16 s per
     image in one process (`30-direct-flux-klein.log`: load 40.6 s once, then 16.4 s and 15.4 s),
     FLUX.2 [klein] 4B on Diffusers with model CPU offload. Keep the image model resident in a
     long-lived worker (with the model-residency eject rules that already cover text) or reuse it
     across requests. Owner: abstractgateway / abstractruntime local image generation path.
+
+**Release 0.6.3 publish (2026-09-30)**
+22. uv's cached index right after a release: `uv tool install ... 'abstractgateway[gpu]==0.7.4'`
+    failed "no version of abstractgateway[gpu]==0.7.4" minutes after the publish until
+    `uv cache clean abstractgateway` (PyPI's simple pages allow a 10-minute cache). **Fixed in root
+    0.6.4**: both installers pass `--refresh-package` for abstractgateway and every release-matrix
+    package on every install (a conditional request each). Owner: root installers.
+23. Launch flags, not environment variables (operator ruling): the summary's Start line and the
+    background start printed `ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=... abstractgateway
+    serve`. **Fixed in root 0.6.4**: `abstractgateway serve --data-dir <dir>` (gateways 0.3+ turn
+    user auth on by themselves; `--pin` 0.1/0.2 keep the environment). Still open: the installer
+    passes the data dir to its other gateway commands (`network`, `service install`, `claim-url`)
+    through the exported `ABSTRACTGATEWAY_DATA_DIR`, and the service-mode Start line
+    (`abstractgateway service install --port N`) names no `--data-dir` for a custom data dir.
+24. `scripts/tests/test_install_user_path.sh` on Linux (Ubuntu 26.04, dash): 6 checks fail on main
+    (v0.6.3) and on the 0.6.4 branch alike, all outside the installer changes: "pointer: mode 0600"
+    (`stat -f` prints a filesystem block on GNU), the two `<data>/apps/bin/abstractcode` uninstall
+    checks, the two `--pin latest` / release-pin install-line checks and "nothing changed: the
+    running gateway is left alone" (the tests' recorded `GATEWAY_SPEC` carries the tray extra, which
+    a Linux sandbox without a display does not install). Receipt: `untracked/root-064-vm/suite-linux*.txt`.
+    Owner: root tests.
 
 ## Acceptance criteria
 

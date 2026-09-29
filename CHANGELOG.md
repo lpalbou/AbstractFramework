@@ -4,6 +4,33 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-09-30
+
+Installer fixes. Every package version is unchanged from 0.6.3.
+
+### Fixed
+
+- **One gateway per data directory when you re-run the installer.** A gateway of this install that
+  you started yourself (for example with the summary's Start line) is recognized: it listens on the
+  install's port and serves the same data directory, as its serve record
+  (`<data dir>/run/gateway-serve.json`) or its `--data-dir` says. `install.sh` and `install.ps1` now
+  keep that port and replace the gateway with their own start, instead of moving to the next port
+  and starting a second gateway on the same data. A gateway of this install started by hand on
+  another port is stopped too. With `--no-start` (`-NoStart`, the console's Update) it keeps
+  running and the summary says a restart is due. A program that is not this install's gateway
+  keeps the port, as before.
+- **A release published minutes earlier installs at once.** The installers pass
+  `--refresh-package` for `abstractgateway` and every package of the release matrix to
+  `uv tool install`, so uv asks PyPI again instead of using its cached index page (which could say
+  "no version of abstractgateway[gpu]==<pin>" until `uv cache clean abstractgateway`).
+
+### Changed
+
+- **Launch flags, not environment variables.** The summary's Start line and the background start
+  use `abstractgateway serve --data-dir <data dir>` (plus `--host`/`--port` when the gateway has
+  no Network setting) instead of `ABSTRACTGATEWAY_DATA_DIR=... ABSTRACTGATEWAY_USER_AUTH=1`; the
+  gateway starts with user auth on by itself. Gateways before 0.3 (`--pin`) keep the environment.
+
 ## [0.6.3] - 2026-09-29
 
 The `gpu` setting on NVIDIA machines, speech-to-text in the fresh setup, and loaded image models
