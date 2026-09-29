@@ -128,15 +128,13 @@
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- PENDING-W2: E5 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
+        <!-- E5 (W2 PASS): examples/E5-agent/plain.py verbatim -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> create_react_agent
 
-<span class="line-cmt"># provider/model resolve from your AbstractCore config defaults</span>
-<span class="line-cmt"># (`abstractcore --config`) when omitted; pass them explicitly to pin.</span>
-agent = <span class="line-fn">create_react_agent</span>(provider=<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
+agent = <span class="line-fn">create_react_agent</span>(provider=<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 agent.<span class="line-fn">start</span>(<span class="line-str">"List the files in the current directory"</span>)
 state = agent.<span class="line-fn">run_to_completion</span>()
-print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
+<span class="line-fn">print</span>(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
     </div>
 
@@ -268,19 +266,19 @@ state = agent.<span class="line-fn">run_to_completion</span>()
 print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-hooks">
-        <!-- PENDING-W2: E8 -->
+        <!-- E8 (W2 PASS): examples/E8-snippets/agent-267-mlx/snippet.py verbatim -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> LoopHooks, HookEvent, ReactAgent
 <span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> create_local_runtime
 
 <span class="line-kw">def</span> <span class="line-fn">my_handler</span>(event: HookEvent):
     <span class="line-cmt"># LISTEN / CAPTURE: a copied payload, safe to inspect</span>
-    print(event.run_id, event.name, event.step, event.data)
+    <span class="line-fn">print</span>(event.run_id, event.name, event.step, event.data)
     <span class="line-cmt"># STEER: the injection reaches the model at the next reason boundary</span>
-    <span class="line-kw">if</span> event.name == <span class="line-str">"tool_executed"</span> <span class="line-kw">and</span> event.data.get(<span class="line-str">"tool"</span>) == <span class="line-str">"web_search"</span>:
+    if event.name == <span class="line-str">"tool_executed"</span> and event.data.<span class="line-fn">get</span>(<span class="line-str">"tool"</span>) == <span class="line-str">"web_search"</span>:
         <span class="line-kw">return</span> {<span class="line-str">"inject"</span>: <span class="line-str">"Prefer primary sources over blogs."</span>}
 
-runtime = <span class="line-fn">create_local_runtime</span>(provider=<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
-agent = <span class="line-fn">ReactAgent</span>(runtime=runtime, hooks=<span class="line-fn">LoopHooks</span>().add(my_handler))</code></pre></div>
+runtime = <span class="line-fn">create_local_runtime</span>(provider=<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+agent = <span class="line-fn">ReactAgent</span>(runtime=runtime, hooks=<span class="line-fn">LoopHooks</span>().<span class="line-fn">add</span>(my_handler))</code></pre></div>
       </div>
     </div>
     <p class="reveal" style="color:var(--text-secondary);margin-top:var(--space-lg)">On Ollama, raise the context window to the model's maximum (for example <code style="white-space:normal;overflow-wrap:anywhere">llm_kwargs={"num_ctx": ...}</code>): the server default is small and silently drops the oldest content. These loops send the transcript and about 19 tool schemas on every cycle, so prefer a tool-capable model.</p>

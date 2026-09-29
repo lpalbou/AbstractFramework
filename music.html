@@ -283,21 +283,18 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-music-core">
-        <!-- PENDING-W2: E8 -->
-<div class="code-block">
-<pre><code><span class="line-cmt"># pip install abstractcore abstractmusic  (the plugin is discovered automatically)</span>
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+        <!-- E3 (W2 PASS): examples/E3-explicit/music.py verbatim -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
-<span class="line-var">llm</span> = <span class="line-fn">create_llm</span>(
-    <span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b-instruct"</span>,   <span class="line-cmt"># any provider; the LLM does not make the audio</span>
-    music_backend=<span class="line-str">"acemusic"</span>,
-    music_acemusic_api_key=<span class="line-str">"..."</span>,
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+
+music = llm.<span class="line-fn">generate</span>(
+    text=<span class="line-str">"Calm ambient piano with soft strings, warm and hopeful, instrumental"</span>,
+    output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>,
+            <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>, <span class="line-str">"duration_s"</span>: 15},
 )
-<span class="line-var">wav_bytes</span> = <span class="line-var">llm</span>.music.<span class="line-fn">t2m</span>(<span class="line-str">"ambient lo-fi study music"</span>, format=<span class="line-str">"wav"</span>, duration_s=<span class="line-str">10.0</span>)
-
-<span class="line-cmt"># Which providers can run here, and why the others cannot</span>
-<span class="line-var">details</span> = <span class="line-var">llm</span>.music.<span class="line-fn">provider_details</span>(task=<span class="line-str">"text_to_music"</span>)</code></pre>
-        </div>
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:.75rem">With <code>abstractcore</code> and <code>abstractmusic</code> installed, the plugin is discovered automatically. The text model does not make the audio: any provider works in its place, for example <code>create_llm("ollama", model="qwen3:4b")</code>; the MLX line runs on Apple Silicon.</p>
       </div>
     </div>
   </div>

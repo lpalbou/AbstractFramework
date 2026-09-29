@@ -303,11 +303,12 @@ run_id, state = sr.<span class="line-fn">run</span>(my_workflow)
 sr.<span class="line-fn">stop</span>()</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-core">
-        <!-- PENDING-W2: E8 -->
+        <!-- E8 (W2 PASS): examples/E8-snippets/runtime-302-mlx/snippet.py verbatim -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> create_local_runtime
 
 <span class="line-cmt"># LLM_CALL and TOOL_CALLS effects run through AbstractCore</span>
-rt = <span class="line-fn">create_local_runtime</span>(provider=<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)</code></pre></div>
+rt = <span class="line-fn">create_local_runtime</span>(provider=<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+<span class="line-fn">print</span>(<span class="line-fn">type</span>(rt).__name__, <span class="line-fn">type</span>(rt.run_store).__name__)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-approval">
         <!-- PENDING-W2: E8 -->

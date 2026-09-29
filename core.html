@@ -281,39 +281,39 @@ abstractcore-console</code></pre></div>
         <button class="tab-btn" data-tab="embed">Embeddings</button>
       </div>
       <div class="tab-panel active" id="tab-stream">
-        <!-- PENDING-W2: E8 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+        <!-- E8 (W2 PASS): examples/E8-snippets/core-282-mlx/snippet.py verbatim -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
-<span class="line-kw">for</span> chunk <span class="line-kw">in</span> llm.<span class="line-fn">generate</span>(<span class="line-str">"Write a short poem about distributed systems."</span>, stream=<span class="line-var">True</span>):
-    print(chunk.content <span class="line-kw">or</span> <span class="line-str">""</span>, end=<span class="line-str">""</span>, flush=<span class="line-var">True</span>)</code></pre></div>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+<span class="line-kw">for</span> chunk <span class="line-kw">in</span> llm.<span class="line-fn">generate</span>(<span class="line-str">"Write a short poem about distributed systems."</span>, stream=True):
+    <span class="line-fn">print</span>(chunk.content or <span class="line-str">""</span>, end=<span class="line-str">""</span>, flush=True)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-tools">
-        <!-- PENDING-W2: E8 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>, <span class="line-fn">tool</span>
+        <!-- E8 (W2 PASS): examples/E8-snippets/core-289-mlx/snippet.py verbatim -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm, tool
 
-<span class="line-kw">@</span><span class="line-fn">tool</span>
-<span class="line-kw">def</span> <span class="line-fn">get_weather</span>(city: <span class="line-var">str</span>) -> <span class="line-var">str</span>:
-    <span class="line-kw">return</span> <span class="line-str">f"{city}: 22°C and sunny"</span>
+@tool
+<span class="line-kw">def</span> <span class="line-fn">get_weather</span>(city: str) -&gt; str:
+    <span class="line-kw">return</span> f<span class="line-str">"{city}: 22°C and sunny"</span>
 
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"What's the weather in Paris? Use the tool."</span>, tools=[get_weather])
 
-print(resp.content)
-print(resp.tool_calls)   <span class="line-cmt"># structured calls; your host decides how to run them</span></code></pre></div>
+<span class="line-fn">print</span>(resp.content)
+<span class="line-fn">print</span>(resp.tool_calls)   <span class="line-cmt"># structured calls; your host decides how to run them</span></code></pre></div>
       </div>
       <div class="tab-panel" id="tab-structured">
-        <!-- PENDING-W2: E8 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> pydantic <span class="line-kw">import</span> <span class="line-fn">BaseModel</span>
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+        <!-- E8 (W2 PASS): examples/E8-snippets/core-302-mlx/snippet.py verbatim -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> pydantic <span class="line-kw">import</span> BaseModel
+<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
-<span class="line-kw">class</span> <span class="line-fn">Answer</span>(<span class="line-fn">BaseModel</span>):
-    title: <span class="line-var">str</span>
-    bullets: <span class="line-var">list</span>[<span class="line-var">str</span>]
+<span class="line-kw">class</span> <span class="line-fn">Answer</span>(BaseModel):
+    title: str
+    bullets: list[str]
 
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"Summarize HTTP/3 in 3 bullets."</span>, response_model=Answer)
-print(answer.bullets)</code></pre></div>
+<span class="line-fn">print</span>(answer.bullets)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-media">
         <!-- E2 (W2 PASS): examples/E2-defaults/defaults.sh and snippet.py verbatim -->
@@ -374,7 +374,7 @@ export ABSTRACTCORE_AUTH_TOKEN=<span class="line-str">"$(abstractcore serve --pr
 curl -X POST http://localhost:8000/v1/chat/completions \
   -H <span class="line-str">"Content-Type: application/json"</span> \
   -H <span class="line-str">"Authorization: Bearer $ABSTRACTCORE_AUTH_TOKEN"</span> \
-  -d <span class="line-str">'{"model": "ollama/qwen3:4b",
+  -d <span class="line-str">'{"model": "mlx/mlx-community/Qwen3.5-4B-4bit",
        "messages": [{"role": "user", "content": "Hello!"}]}'</span></code></pre></div>
         <!-- PENDING-W2: E8 -->
 <div class="code-block"><pre><code><span class="line-kw">import</span> os
@@ -383,7 +383,7 @@ curl -X POST http://localhost:8000/v1/chat/completions \
 client = <span class="line-fn">OpenAI</span>(base_url=<span class="line-str">"http://localhost:8000/v1"</span>,
                 api_key=os.environ[<span class="line-str">"ABSTRACTCORE_AUTH_TOKEN"</span>])
 resp = client.chat.completions.<span class="line-fn">create</span>(
-    model=<span class="line-str">"ollama/qwen3:4b"</span>,
+    model=<span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>,
     messages=[{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"Hello!"</span>}],
 )
 print(resp.choices[<span class="line-var">0</span>].message.content)</code></pre></div>
