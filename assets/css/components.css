@@ -456,6 +456,7 @@
 .eg svg .eg-edge.summarizes { stroke: rgba(251, 191, 36, .7); stroke-dasharray: 4 3; }
 .eg svg .eg-edge.supersedes { stroke: rgba(152, 152, 176, .6); stroke-dasharray: 2 3; }
 .eg svg .eg-edge.mentions { stroke: rgba(236, 72, 153, .45); stroke-dasharray: 1 3; }
+.eg svg .eg-edge.answers, .eg svg .eg-edge.explores { stroke: rgba(232, 121, 249, .75); stroke-width: 1.5; }
 .eg svg .eg-edge.is-new { animation: eg-draw 900ms var(--ease-out) both; stroke-dasharray: 400; }
 @keyframes eg-draw { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
 .eg svg .eg-phase-pill rect { fill: rgba(255, 255, 255, .03); stroke: rgba(255, 255, 255, .08); transition: fill 300ms var(--ease), stroke 300ms var(--ease); }

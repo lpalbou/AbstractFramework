@@ -12,6 +12,19 @@
    most one dream with `mentions` links; sources unchanged); the four phases
    are visit / work / personal / sleep (AbstractRuntime identity/spec/entity_phases.vendored.json:49-84, identity/life.py:232-235; entities have no role field).
 
+   Personal days follow AbstractRuntime's life loop (identity/life.py): the
+   day gate picks a personal day when standing drives exist
+   (drive_pressure total_open > 0) and the personal grant is armed
+   (:140-142, :309-312); an armed, unused grant also gives personal time
+   (:315-319); the day-open cue offers standing drives back as handles:
+   open questions, open problems, commitments, interests never yet explored
+   (:470-507, :526-533); each tick may end with a `next:` line that becomes
+   the next tick's cue (:13, :658, :2145); the entity rereads its book and
+   memory, searches the web, uses its workspace, or elects rest (:640-668).
+   A diary entry with attributes.answers closes a question
+   (abstractmemory diary.py:14, :201-206); a record with explores= discharges
+   an interest (drive_pressure.py:45-57).
+
    Markup (see deliver/fragments/entity-graph.html):
      <div class="eg" data-eg aria-label="..."></div>
    The script renders the panels, the scrubber and the log. Everything is
@@ -30,18 +43,19 @@
     { key: 'role', label: 'phase', sub: ['visit ·', 'work ·', 'personal ·', 'sleep'] },
     { key: 'purpose', label: 'purpose', sub: ['spark:', 'purposes'] },
     { key: 'history', label: 'history', sub: ['formed', 'per session'] },
+    { key: 'drives', label: 'drives', sub: ['open', 'questions,', 'interests'] },
     { key: 'experience', label: 'experience', sub: ['lessons,', 'facts,', 'diary,', 'sleep', 'proposals'] }
   ];
   var PHASES = ['visit', 'work', 'personal', 'sleep'];
   var COLORS = {
-    identity: '#818cf8', purpose: '#a78bfa', ok: '#34d399', failed: '#f472b6', experience: '#fbbf24'
+    drives: '#e879f9', identity: '#818cf8', purpose: '#a78bfa', ok: '#34d399', failed: '#f472b6', experience: '#fbbf24'
   };
   var SEQ_MAX = 32;
 
   var DATA = [
     {
       key: 'castor', name: 'Castor', note: 'long-lived', born: 0,
-      phases: [[0, 'personal'], [2, 'visit'], [5, 'work'], [12, 'sleep'], [15, 'work'], [18, 'personal'], [20, 'work'], [22, 'visit'], [25, 'sleep'], [28, 'personal']],
+      phases: [[0, 'personal'], [2, 'visit'], [5, 'work'], [12, 'sleep'], [15, 'work'], [18, 'personal'], [20, 'work'], [22, 'visit'], [25, 'sleep'], [28, 'personal'], [30, 'sleep']],
       nodes: [
         { id: 'v1', lane: 'identity', kind: 'value', label: 'honesty', title: 'value (spark): intellectual_honesty', born: 0 },
         { id: 'v2', lane: 'identity', kind: 'value', label: 'care', title: 'value (spark): care_in_action', born: 0 },
@@ -52,43 +66,51 @@
         { id: 'r9', lane: 'history', kind: 'episode', status: 'ok', label: 'work 9', title: 'episode formed from work session 9: restore test, passed', born: 9 },
         { id: 'r16', lane: 'history', kind: 'episode', status: 'ok', label: 'work 16', title: 'episode formed from work session 16: hourly backups, done', born: 16 },
         { id: 'r23', lane: 'history', kind: 'episode', status: 'ok', label: 'visit 23', title: 'episode formed from visit 23: review, went well', born: 23 },
+        { id: 'i1', lane: 'drives', kind: 'interest', drive: true, label: 'restore tools', title: 'interest: restore tooling (an interest never yet explored is a standing drive)', born: 10, until: 29, resolved: 'explored' },
+        { id: 'q1', lane: 'drives', kind: 'question', drive: true, label: 'why 7 failed?', title: 'diary question: why did work session 7 fail? (an open question is a standing drive)', born: 17, until: 19, resolved: 'answered' },
         { id: 'l1', lane: 'experience', kind: 'lesson', label: 'verify restore', title: 'lesson: verify a restore before sign-off', born: 10 },
         { id: 'c1', lane: 'experience', kind: 'fact', label: 'nightly', title: 'fact (triple): home-lab, backup_schedule, nightly', born: 11, until: 20, window: true },
         { id: 's1', lane: 'experience', kind: 'summary', label: 'summary', title: 'summary proposed by consolidation: restore test (inactive until reviewed)', born: 13, proposal: true },
-        { id: 'y1', lane: 'experience', kind: 'diary', label: 'diary', title: 'diary entry (the book keeps the words; the graph keeps the act of writing)', born: 18 },
+        { id: 'y1', lane: 'experience', kind: 'diary', label: 'answer', title: 'diary entry that answers the open question (attributes.answers)', born: 19 },
         { id: 'c2', lane: 'experience', kind: 'fact', label: 'hourly', title: 'fact (triple): home-lab, backup_schedule, hourly', born: 20, window: true },
-        { id: 'd1', lane: 'experience', kind: 'dream', label: 'dream', title: 'dream proposed during sleep (review-gated, never a fact)', born: 26, proposal: true }
+        { id: 'y2', lane: 'experience', kind: 'diary', label: 'notes', title: 'diary note that explores the interest (attributes.explores)', born: 29 }
       ],
       edges: [
         { type: 'summarizes', from: 's1', to: 'r7', at: 13 }, { type: 'summarizes', from: 's1', to: 'r9', at: 13 },
+        { type: 'answers', from: 'y1', to: 'q1', at: 19 },
         { type: 'supersedes', from: 'c2', to: 'c1', at: 20 },
-        { type: 'mentions', from: 'd1', to: 'r16', at: 26 }, { type: 'mentions', from: 'd1', to: 'r23', at: 26 }
+        { type: 'explores', from: 'y2', to: 'i1', at: 29 }
       ],
       recalls: [
         { at: 9, from: 'r9', to: ['r7'] },
         { at: 16, from: 'r16', to: ['l1', 'c1'] },
-        { at: 23, from: 'r23', to: ['l1', 'c2'] }
+        { at: 19, from: 'y1', to: ['r7', 'l1'] },
+        { at: 23, from: 'r23', to: ['l1', 'c2'] },
+        { at: 29, from: 'y2', to: ['r7', 'l1'] }
       ],
       log: {
-        0: 'Castor is created from its spark: values, traits and purposes, fixed for life and present in every conversation.',
+        0: 'Castor is created from its spark: values, traits and purposes, fixed for life. First own time: the personal grant is armed and still unused, no standing drives yet.',
         2: 'Visit: a person talks with Castor.',
         3: 'Formation: the visit is formed into memory as an episode.',
         5: 'Work: Castor is summoned into a work session.',
         7: 'The restore test fails. The failure is formed into memory like any success.',
         9: 'Recall: the new session recalls the failed attempt from memory. The restore test passes.',
-        10: 'At the end of the session Castor writes down a lesson it chooses to keep.',
+        10: 'At the end of the session Castor keeps a lesson and an interest (restore tooling). An interest never yet explored is a standing drive.',
         11: 'A fact forms: (home-lab, backup_schedule, nightly), valid from seq 11.',
         12: 'Sleep.',
         13: 'Consolidation during sleep proposes a summary of the two restore sessions (inactive until reviewed); the sources stay unchanged.',
         15: 'Work.',
         16: 'Recall: the lesson and the nightly fact light up; recall strengthens what the session used.',
-        18: 'Personal time: Castor writes a diary entry. The diary is hash-chained and never deleted.',
-        20: 'The nightly fact closes (valid until seq 20); the hourly fact supersedes it. Nothing is deleted.',
+        17: 'At the end of the session Castor writes a question in its diary: why did work 7 fail? An open question is a standing drive.',
+        18: 'Day gate: 2 standing drives (<code>total_open</code> 2) and an armed personal grant make a personal day. The day-open cue offers the drives back as handles.',
+        19: 'Personal time: Castor rereads its book and memory, searches the web, and answers its question in the diary (<code>answers</code>). The question closes. Its last line: <code>next: compare restore tools</code>.',
+        20: 'Work. The nightly fact closes (valid until seq 20); the hourly fact supersedes it. Nothing is deleted.',
         22: 'Visit.',
         23: 'Recall: the lesson and the hourly fact, in a later conversation.',
-        25: 'Sleep.',
-        26: 'Sleep proposes one dream, weakly linked to recent sessions; a proposal, never a fact.',
-        28: 'Personal time. History: 5 sessions formed into memory, 4 went well, 1 failed.'
+        25: 'Sleep: nothing new to propose tonight; a quiet night is a valid night.',
+        28: 'Day gate: 1 standing drive (an interest never yet explored) makes a personal day. The first tick receives its own note: <code>next: compare restore tools</code>.',
+        29: 'Castor explores the interest: reads sources, tries an idea in its workspace, and writes a diary note that explores it (<code>explores</code>). <code>total_open</code> 0.',
+        30: 'Castor elects rest with a <code>rest</code> block and the loop stops; while it rests, sleep links the day. History: 5 sessions, 4 went well, 1 failed.'
       }
     },
     {
@@ -103,39 +125,43 @@
         { id: 'r17', lane: 'history', kind: 'episode', status: 'failed', label: 'work 17', title: 'episode formed from work session 17: mail API call refused, failed', born: 17 },
         { id: 'r21', lane: 'history', kind: 'episode', status: 'ok', label: 'work 21', title: 'episode formed from work session 21: inbox triage, done', born: 21 },
         { id: 'r29', lane: 'history', kind: 'episode', status: 'ok', label: 'work 29', title: 'episode formed from work session 29: draft replies, done', born: 29 },
+        { id: 'i1', lane: 'drives', kind: 'interest', drive: true, label: 'mail filters', title: 'interest: mail filters (never yet explored: still a standing drive)', born: 8 },
+        { id: 'q1', lane: 'drives', kind: 'question', drive: true, label: 'why read-only?', title: 'diary question: why is the token scope read-only?', born: 18, until: 20, resolved: 'answered' },
         { id: 'c1', lane: 'experience', kind: 'fact', label: 'read-only', title: 'fact (triple): mail_api, token_scope, read-only', born: 15, until: 24, window: true },
         { id: 'l1', lane: 'experience', kind: 'lesson', label: 'check scope', title: 'lesson: check the token scope before calling', born: 18 },
-        { id: 'y1', lane: 'experience', kind: 'diary', label: 'diary', title: 'diary entry (a question: why is the scope read-only?)', born: 20 },
+        { id: 'y1', lane: 'experience', kind: 'diary', label: 'answer', title: 'diary entry that answers the open question (attributes.answers)', born: 20 },
         { id: 'c2', lane: 'experience', kind: 'fact', label: 'read-write', title: 'fact (triple): mail_api, token_scope, read-write', born: 24, window: true },
         { id: 's1', lane: 'experience', kind: 'summary', label: 'summary', title: 'summary proposed by consolidation: mail API call refused (inactive until reviewed)', born: 26, proposal: true }
       ],
       edges: [
+        { type: 'answers', from: 'y1', to: 'q1', at: 20 },
         { type: 'supersedes', from: 'c2', to: 'c1', at: 24 },
         { type: 'summarizes', from: 's1', to: 'r14', at: 26 }, { type: 'summarizes', from: 's1', to: 'r17', at: 26 }
       ],
       recalls: [
         { at: 17, from: 'r17', to: ['r14', 'c1'] },
+        { at: 20, from: 'y1', to: ['r14', 'c1'] },
         { at: 21, from: 'r21', to: ['l1', 'y1'] },
         { at: 29, from: 'r29', to: ['l1', 'c2'] }
       ],
       log: {
         0: 'Not created yet.',
-        6: 'Ephemeral is created from its own spark: values, traits and purposes, fixed for life.',
+        6: 'Ephemeral is created from its own spark: values, traits and purposes, fixed for life. First own time: the personal grant is armed and still unused.',
         7: 'Work.',
-        8: 'Formation: the work session is formed into memory as an episode.',
+        8: 'Formation: the work session is formed into memory. Ephemeral keeps an interest (mail filters), a standing drive.',
         12: 'Sleep. Nothing to consolidate: a quiet night is a valid night.',
         14: 'The mail API refuses the call. The failure is formed into memory, with a feeling about tool:mail_api.',
         15: 'A fact forms: (mail_api, token_scope, read-only), valid from seq 15.',
         17: 'Same error. Recall: the earlier failure and the read-only fact light up.',
-        18: 'At the end of the session Ephemeral writes down a lesson it chooses to keep.',
-        19: 'Personal time.',
-        20: 'Ephemeral writes a question in its diary: why is the scope read-only?',
-        21: 'Recall: the lesson and the diary question; it asks for a wider scope and the session succeeds.',
+        18: 'At the end of the session Ephemeral keeps a lesson and writes a question in its diary: why is the scope read-only?',
+        19: 'Day gate: 2 standing drives (an open question, an interest) and an armed personal grant make a personal day. The day-open cue offers them back as handles.',
+        20: 'Personal time: it rereads its memory of the refused calls, reads the API documentation on the web, and answers its question in the diary (<code>answers</code>). Its last line: <code>next: ask for read-write at work</code>.',
+        21: 'Work. Recall: the lesson and the diary answer; it asks for a wider scope and the session succeeds.',
         24: 'The read-only fact closes (valid until seq 24); read-write supersedes it.',
         25: 'Sleep.',
         26: 'Consolidation during sleep proposes a summary of the two refused sessions (inactive until reviewed).',
         28: 'Work.',
-        29: 'Recall: the lesson and the new fact. History: 5 sessions formed into memory, 3 went well, 2 failed.'
+        29: 'Recall: the lesson and the new fact. One drive still stands (the mail-filters interest), offered again on its next personal day. History: 5 sessions, 3 went well, 2 failed.'
       }
     }
   ];
@@ -253,13 +279,15 @@
     H('div', 'eg-legend', root,
       '<span><i style="background:' + COLORS.identity + '"></i>identity</span>' +
       '<span><i style="background:' + COLORS.purpose + '"></i>purpose</span>' +
+      '<span><i style="background:' + COLORS.drives + '"></i>standing drive (open question, interest)</span>' +
       '<span><i style="background:' + COLORS.ok + '"></i>session went well</span>' +
       '<span><i style="background:' + COLORS.failed + '"></i>session failed</span>' +
       '<span><i style="background:' + COLORS.experience + '"></i>lesson, fact, diary</span>' +
-      '<span><i style="background:transparent;border:1.5px dotted ' + COLORS.experience + '"></i>sleep proposal (summary, dream)</span>' +
+      '<span><i style="background:transparent;border:1.5px dotted ' + COLORS.experience + '"></i>sleep proposal (summary)</span>' +
       '<span><i class="l-line" style="border-color:#22d3ee"></i>recall</span>' +
       '<span><i class="l-dash" style="border-color:rgba(251,191,36,.8)"></i>summarizes</span>' +
       '<span><i class="l-dash" style="border-color:rgba(152,152,176,.8)"></i>supersedes</span>' +
+      '<span><i class="l-line" style="border-color:rgba(232,121,249,.8)"></i>answers, explores</span>' +
       '<span><i style="background:transparent;border:1.5px dashed #9898b0"></i>closed (valid until)</span>');
     this.syncBtn();
   };
@@ -309,7 +337,8 @@
     this.range.setAttribute('aria-valuetext', 'journal sequence ' + this.seq + ' of ' + SEQ_MAX);
     this.panels.forEach(function (p) {
       var ph = p.ent.born <= self.seq ? phaseAt(p.ent, self.seq) : null;
-      p.phase.innerHTML = ph ? 'phase <b>' + ph + '</b>' : 'not created';
+      var open = p.ent.nodes.filter(function (n) { return n.drive && n.born <= self.seq && !(n.until !== undefined && self.seq >= n.until); }).length;
+      p.phase.innerHTML = ph ? 'phase <b>' + ph + '</b> · drives <b>' + open + '</b>' : 'not created';
       p.now.setAttribute('aria-live', announce ? 'polite' : 'off');
       p.now.innerHTML = logAt(p.ent, self.seq);
       self.draw(p);
@@ -325,7 +354,7 @@
     this.data.forEach(function (e) { var c = {}; e.nodes.forEach(function (n) { c[n.lane] = (c[n.lane] || 0) + 1; slots = Math.max(slots, c[n.lane]); }); });
     var avail = W - gutter - 4;
     var slotW = avail / slots;
-    var laneH = { identity: 74, role: 70, purpose: 70, history: 74, experience: 78 };
+    var laneH = { identity: 74, role: 70, purpose: 70, history: 74, drives: 74, experience: 78 };
     var laneY = {}, y = 6;
     LANES.forEach(function (l) { laneY[l.key] = y; y += laneH[l.key]; });
     var H_ = y + 4;
@@ -379,7 +408,7 @@
     var counts = {};
     ent.recalls.forEach(function (r) { if (r.at <= seq) r.to.forEach(function (id) { counts[id] = (counts[id] || 0) + 1; }); });
     var activeRecall = ent.recalls.filter(function (r) { return r.at <= seq && seq < r.at + 2; })[0] || null;
-    var runNow = ent.nodes.some(function (n) { return n.lane === 'history' && n.born <= seq && seq < n.born + 2; });
+    var runNow = phaseAt(ent, seq) === 'personal' || ent.nodes.some(function (n) { return n.lane === 'history' && n.born <= seq && seq < n.born + 2; });
 
     // edges
     var gE = S('g', null, svg);
@@ -431,8 +460,8 @@
         t.textContent = ln;
       });
       var win = null;
-      if (n.window || n.until !== undefined) {
-        win = closed ? n.born + '→' + n.until : 'since ' + n.born;
+      if (n.window || n.drive || n.until !== undefined) {
+        win = n.resolved ? (closed ? n.resolved + ' ' + n.until : 'open') : closed ? n.born + '→' + n.until : 'since ' + n.born;
         var wt = S('text', { class: 'eg-node-win', x: c.x, y: c.y + r + 12 + lines.length * 11, 'text-anchor': 'middle' }, g);
         wt.textContent = win;
       }
