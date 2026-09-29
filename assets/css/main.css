@@ -4189,3 +4189,9 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 .entry-features li { display: block; position: relative; padding-left: calc(6px + 0.65rem); }
 .entry-features li::before { position: absolute; left: 0; top: 0; }
 .install-note-small { color: var(--text-muted); font-size: .8rem; margin-top: .5rem; line-height: 1.5; }
+/* Profile cards: icon, title, text and badges share rows across the three cards (subgrid),
+   so every badge block starts on the same line whatever its number of rows */
+.profile-cards { grid-template-rows: repeat(4, auto); row-gap: 0; }
+.profile-cards .mode-card { display: grid; grid-row: span 4; grid-template-rows: subgrid; align-content: start; row-gap: 0; }
+.profile-cards .mode-card .mode-tags { margin-top: 0; padding-top: 1rem; align-self: start; }
+@media (max-width: 768px) { .profile-cards { grid-template-rows: none; row-gap: var(--space-lg); } .profile-cards .mode-card { grid-row: auto; grid-template-rows: none; } }
