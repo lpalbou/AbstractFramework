@@ -184,7 +184,7 @@ abstractgateway apps launch assistant</code></pre>
       <div class="tab-panel" id="tab-pip">
         <!-- PENDING-W2: E8 -->
 <div class="code-block">
-<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractassistant[voice]"</span>   <span class="line-cmt"># [voice]: local microphone capture</span>
+<pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractassistant[voice]"</span>   <span class="line-cmt"># [voice]: adds local speech-to-text</span>
 
 assistant                                          <span class="line-cmt"># launch the menu-bar app</span>
 assistant run --prompt <span class="line-str">"What changed in the repo today?"</span>
@@ -192,7 +192,7 @@ assistant run --prompt <span class="line-str">"Explain this error"</span> --stre
 assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> --gateway-token <span class="line-var">&lt;token&gt;</span></code></pre>
         </div>
         <div class="install-notes"><ul>
-          <li>The base install covers text chat, spoken replies and gateway-backed media; the <code>voice</code> extra adds microphone capture for dictation and voice conversation. Speech-to-text and text-to-speech run on the gateway either way.</li>
+          <li>The base install covers text chat, spoken replies, gateway-backed media and microphone capture for dictation and voice conversation; the <code>voice</code> extra adds local speech-to-text. Speech-to-text and text-to-speech run on the gateway either way.</li>
           <li><code>assistant run</code> prints the final answer once on stdout; <code>--stream on|off</code> overrides the saved <strong>Stream replies</strong> choice for that turn. The command is also installed as <code>abstractassistant</code>.</li>
           <li><code>--gateway-url</code> alone is enough once you have signed in to that gateway: the app reuses the sign-in saved in <code>~/.abstractassistant/gateway_connection.json</code>.</li>
         </ul></div>
