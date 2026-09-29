@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css?v=20260929h">
+  <link rel="stylesheet" href="assets/css/main.css?v=20260929j">
   <link rel="stylesheet" href="assets/css/components.css?v=20260929e">
 </head>
 <body>
@@ -1157,6 +1157,30 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
       <div class="mode-card" style="text-align:left">
         <h3>4. Make it the default agent</h3>
         <p>An admin sets it as the gateway's default for an interface (<strong>Workflows &rarr; Make agent default</strong>). Every chat that follows <strong>Gateway default</strong> runs it from its next turn.</p>
+      </div>
+      <!-- W4 fragment deliver/fragments/flow-share.html (A), round 7; FACTS R7-share (gateway v0.7.2) -->
+      <div class="mode-card" style="text-align:left">
+        <h3>5. Share it</h3>
+        <p>Export one version as a single <code>.flow</code> file (<strong>Export</strong> in the console's Workflows tab, or <kbd>e</kbd> in the terminal console). An admin installs it on another gateway with <strong>Import…</strong> (<kbd>i</kbd>), then promotes it to that gateway's shared catalog, from the API today, so its users can pick it.</p>
+        <p style="font:400 .72rem/1.5 var(--mono);color:var(--text-muted);margin-top:.5rem;overflow-wrap:anywhere">GET /api/gateway/bundles/{id}/download · POST /api/gateway/bundles/upload · POST /api/gateway/admin/workflow-catalog/promote</p>
+      </div>
+    </div>
+    <!-- W4 fragment deliver/fragments/flow-share.html (B) -->
+    <div class="reveal" style="margin-top:2rem;border:1px solid rgba(6,182,212,.35);border-radius:14px;padding:1.25rem 1.5rem;background:linear-gradient(135deg,rgba(99,102,241,.10),rgba(6,182,212,.08))">
+      <p style="font-weight:700;color:var(--text);margin-bottom:1rem">Made to be shared <span style="font-weight:400;color:var(--text-secondary)">&middot; Workflows are made to be shared between gateways and the people who use them.</span></p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:.75rem;align-items:start">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+          <div><strong>1. Export</strong><p style="color:var(--text-secondary);font-size:.88rem">Download one version as a single <code>.flow</code> file, exactly as it runs.</p></div>
+        </div>
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:.75rem;align-items:start">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/><path d="M12 7v6"/><path d="M9 10l3-3 3 3"/></svg>
+          <div><strong>2. Install it elsewhere</strong><p style="color:var(--text-secondary);font-size:.88rem">An admin imports the file on another gateway, and it runs there the same way.</p></div>
+        </div>
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:.75rem;align-items:start">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="7" r="3"/><circle cx="5" cy="17" r="2.5"/><circle cx="19" cy="17" r="2.5"/><path d="M10 9.5l-3.5 5M14 9.5l3.5 5"/></svg>
+          <div><strong>3. Promote to the shared catalog</strong><p style="color:var(--text-secondary);font-size:.88rem">Users of that gateway can then pick it: the Assistant and AbstractCode web list the shared catalog.</p></div>
+        </div>
       </div>
     </div>
 
