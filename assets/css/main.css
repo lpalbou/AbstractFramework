@@ -4188,3 +4188,4 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 /* Entry-card bullets flow as one inline sentence (a flex li split text and code chips into columns) */
 .entry-features li { display: block; position: relative; padding-left: calc(6px + 0.65rem); }
 .entry-features li::before { position: absolute; left: 0; top: 0; }
+.install-note-small { color: var(--text-muted); font-size: .8rem; margin-top: .5rem; line-height: 1.5; }

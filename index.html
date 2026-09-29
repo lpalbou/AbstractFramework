@@ -216,6 +216,8 @@ music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambien
 <span class="line-kw">pip install</span> <span class="line-str">"abstractcore[apple]"</span>   <span class="line-cmt"># light + local MLX engines on Apple silicon</span>
 <span class="line-kw">pip install</span> <span class="line-str">"abstractcore[gpu]"</span>     <span class="line-cmt"># light + local vLLM on NVIDIA / AMD GPUs</span></code></pre>
         </div>
+        <!-- abstractcore@v2.18.0 abstractcore/providers/openai_provider.py:25-31, anthropic_provider.py:27-42 (SDK imports); same note as core.html -->
+        <p class="install-note-small">AbstractCore 2.19.0 (coming) ships the OpenAI and Anthropic SDKs with the base install; with 2.18.0 add them: <code class="long">pip install openai anthropic</code>.</p>
         <div class="entry-scenario">
           <h4>When to use AbstractCore</h4>
           <p>You are writing a script, a notebook or a tool. You want to talk to models with minimal setup and switch between local runtimes and cloud APIs without rewriting your code. You do not need persistent runs or a server.</p>
@@ -715,7 +717,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <h3>Light</h3>
         <p>Remote inference: OpenAI, Anthropic, OpenRouter, Portkey, LM Studio, Ollama, vLLM and any OpenAI-compatible endpoint. Runs anywhere Python runs.</p>
-        <div class="mode-tags"><span class="mode-tag">OpenAI</span><span class="mode-tag">Anthropic</span><span class="mode-tag">Portkey</span><span class="mode-tag">OpenAI-compatible</span></div>
+        <div class="mode-tags"><span class="mode-tag">OpenAI</span><span class="mode-tag">Portkey</span><span class="mode-tag">OpenAI-compatible</span></div>
       </div>
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--green)" stroke="none" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></div>
@@ -727,7 +729,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg></div>
         <h3>GPU</h3>
         <p>Everything in Light, plus the local engines for NVIDIA CUDA or AMD ROCm on Linux, and Windows where the wheels exist.</p>
-        <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">vLLM</span><span class="mode-tag">HuggingFace</span><span class="mode-tag">Diffusers</span><span class="mode-tag">CUDA</span></div>
+        <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">vLLM</span><span class="mode-tag">Diffusers</span><span class="mode-tag">CUDA</span></div>
       </div>
     </div>
     <!-- VERIFIED-DOCS docs/install.md:393 (not runnable hermetically: needs a remote server) -->
@@ -1022,7 +1024,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
           <span class="comp-tag app">Application</span>
         </div>
         <h3>AbstractEntity <span class="ver">0.3.0</span></h3>
-        <p>Persistent, self-evolving agents with an identity, a purpose, a history and experiences: entities. We are defining the field here.</p>
+        <p>Talk with persistent entities, read their diaries and see how their memory grows, served by the gateway.</p>
         <div class="comp-links">
           <a class="comp-link" href="entity.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/AbstractEntity" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -1345,13 +1347,6 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
                 </video>
                 <figcaption>Wan 2.2 text-to-video &mdash; "A dynamic combat in space between two starships"</figcaption>
               </figure>
-              <figure class="c3-slide">
-                <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
-                  <source src="assets/video/t2v-example.mp4" type="video/mp4">
-                  Your browser cannot play this H.264 MP4 video.
-                </video>
-                <figcaption>Wan 2.2 text-to-video &mdash; a starship in slow orbit around Earth, city lights below</figcaption>
-              </figure>
             </div>
           </div>
         </div>
@@ -1648,13 +1643,13 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
     <div class="section-header reveal">
       <div class="section-label">Memory</div>
       <h2 class="section-title">Memory Is Reconstructed, Not Retrieved</h2>
-      <p class="section-desc">Before every answer, an entity's working memory is rebuilt from the moment: who is there, what is asked, and when. Then it can reach further on its own. Every recall is kept, in the run's ledger and in the temporal memory graph.</p>
+      <p class="section-desc">Before every answer, an entity's working memory is rebuilt from the moment: who is there, what is asked, and when. Then it can read more on its own. Every reconstruction is kept, in the run's ledger and in the temporal memory graph.</p>
     </div>
 
     <div class="table-wrap reveal" style="margin-bottom:2rem">
       <svg viewBox="0 0 960 330" width="100%" role="img" aria-labelledby="mr-title mr-desc" style="min-width:680px;display:block;font-family:Inter,system-ui,sans-serif">
         <title id="mr-title">Dynamic memory reconstruction</title>
-        <desc id="mr-desc">A cue made of the request, the people present and the date and time of day enters reconstruct. It returns a working memory made of three parts: the core identity, what was just in use, and what the cue calls up. The entity can then explore further with its memory tools. The recall is recorded as a step in the run's ledger and as a trace in the temporal memory graph.</desc>
+        <desc id="mr-desc">A cue made of the request, the people present and the date and time of day enters reconstruct. It returns a working memory made of three parts: the core identity, what was just in use, and what the cue calls up. The entity can then read more with its memory tools, which feed the working memory directly. The reconstruction is recorded as a step in the run's ledger and as a trace in the temporal memory graph.</desc>
         <defs>
           <marker id="mr-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--text-muted, #8b8ba7)"/></marker>
         </defs>
@@ -1690,8 +1685,10 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
         <text x="871" y="116" text-anchor="middle" fill="var(--text, #e6e6f0)" font-size="14" font-weight="700">Working memory</text>
         <text x="871" y="136" text-anchor="middle" fill="var(--text-muted, #8b8ba7)" font-size="11">for this answer</text>
         <!-- active loop -->
-        <path d="M871 172 C 871 250, 367 250, 367 167" fill="none" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#mr-arrow)"/>
-        <text x="619" y="244" text-anchor="middle" fill="var(--text-secondary, #b4b4c8)" font-size="12">active: the entity asks for more (search_memory, read_memory, recent_memories, feelings_about)</text>
+        <rect x="792" y="212" width="158" height="40" rx="10" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.18)" stroke-dasharray="5 4"/>
+        <text x="871" y="237" text-anchor="middle" fill="var(--text, #e6e6f0)" font-size="12" font-weight="600">Memory tools</text>
+        <line x1="871" y1="211" x2="871" y2="174" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#mr-arrow)"/>
+        <text x="780" y="236" text-anchor="end" fill="var(--text-secondary, #b4b4c8)" font-size="12">active: the entity reads more (search_memory, read_memory, recent_memories, feelings_about)</text>
         <!-- durable -->
         <rect x="10" y="272" width="940" height="46" rx="10" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.12)"/>
         <text x="480" y="300" text-anchor="middle" fill="var(--text-secondary, #b4b4c8)" font-size="13">Durable twice: a MEMORY_RECALL step in the run's ledger, and a journaled trace in the temporal memory graph (replayable as of that moment)</text>
@@ -1705,11 +1702,11 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Active</h3>
-        <p>During the turn the entity can ask for more: search and read its memories, list the recent ones, ask how it feels about someone or something, read its diary. Underneath, AbstractMemory offers a deliberate reach (<code>probe</code>) and a rebuild of one past moment (<code>situate</code>).</p>
+        <p>During the turn the entity can ask for more: search and read its memories, list the recent ones, ask how it feels about someone or something, read its diary. These are pure reads over its own memory. AbstractMemory also offers a deliberate reach (<code>probe</code>) and a rebuild of one past moment (<code>situate</code>).</p>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Durable and explainable</h3>
-        <p>Recall is a step in the run's ledger and a trace in the memory graph. <code>recall_history</code> shows a memory's part in past recalls and <code>explain_recall</code> answers why it did or did not surface. Only memories actually used are strengthened.</p>
+        <p>Each reconstruction is a step in the run's ledger and a trace in the memory graph. <code>recall_history</code> shows a memory's part in past recalls and <code>explain_recall</code> answers why it did or did not surface. Only memories actually used are strengthened.</p>
       </div>
     </div>
     <div class="comp-links reveal" style="margin-top:1.25rem">
