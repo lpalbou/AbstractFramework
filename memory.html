@@ -46,26 +46,27 @@
 <div class="pkg-nav" aria-label="Packages and apps">
   <div class="pkg-nav-inner">
     <a href="core.html" class="pkg-nav-link">Core</a>
-    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
-    <a href="agent.html" class="pkg-nav-link">Agent</a>
-    <a href="flow.html" class="pkg-nav-link">Flow</a>
-    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
-    <a href="console.html" class="pkg-nav-link">Consoles</a>
-    <a href="automations.html" class="pkg-nav-link">Automations</a>
-    <a href="code.html" class="pkg-nav-link">Code</a>
-    <a href="observer.html" class="pkg-nav-link">Observer</a>
-    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
-    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
-    <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
     <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="3d.html" class="pkg-nav-link">3D</a>
     <a href="camera.html" class="pkg-nav-link">Camera</a>
+    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
+    <a href="agent.html" class="pkg-nav-link">Agent</a>
     <a href="memory.html" class="pkg-nav-link active" aria-current="page">Memory</a>
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="flow.html" class="pkg-nav-link">Flow</a>
+    <a href="code.html" class="pkg-nav-link">Code</a>
+    <a href="observer.html" class="pkg-nav-link">Observer</a>
+    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="tui.html" class="pkg-nav-link">TUI</a>
     <a href="uic.html" class="pkg-nav-link">UIC</a>
+    <span class="pkg-nav-divider" aria-hidden="true"></span>
+    <a class="pkg-nav-link topic" href="console.html">Consoles</a>
+    <a class="pkg-nav-link topic" href="automations.html">Automations</a>
   </div>
 </div>
 
@@ -84,10 +85,10 @@
       <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- VERIFIED-DOCS abstractmemory/README.md:56-57 -->
+    <!-- VERIFIED-DOCS abstractmemory/README.md:56-57 (lowercase distribution name; pip is case-insensitive, README.md:60) -->
 <div class="hero-code">
-<pre><code>python -m pip install AbstractMemory
-python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   <span class="line-cmt"># LanceDB backend</span></code></pre>
+<pre><code>python -m pip install abstractmemory
+python -m pip install <span class="line-str">"abstractmemory[lancedb]"</span>   <span class="line-cmt"># LanceDB backend</span></code></pre>
     </div>
   </div>
 </section>
@@ -211,7 +212,7 @@ python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   
       </div>
     </div>
 
-    <!-- VERIFIED-DOCS abstractmemory/README.md:86-105 -->
+    <!-- E8 B075 (W2 PASS): examples/E8-snippets/B075-print/snippet.py (SNIPPETS.md "memory-system"; identical minus the print line) -->
 <div class="code-block reveal" style="margin-top:var(--space-2xl)"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> (
     MemorySystem, MemoryRecordInput, SQLiteTripleStore, SQLiteJournal, Stimulus,
 )
@@ -254,7 +255,7 @@ system.<span class="line-fn">commit_selection</span>(result.trace_id, [h.record_
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- VERIFIED-DOCS abstractmemory/README.md:64-80 -->
+        <!-- E8 B076 (W2 PASS): examples/E8-snippets/B076-print/snippet.py (SNIPPETS.md "memory-triples"; identical minus the print line) -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> InMemoryTripleStore, TripleAssertion, TripleQuery
 
 store = <span class="line-fn">InMemoryTripleStore</span>()
