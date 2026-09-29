@@ -51,6 +51,10 @@ terminal console `abstractgateway-console` 0.11.1; every other version is unchan
 - **`--no-start` (`-NoStart`)** upgrades without starting or restarting the gateway and says when a
   restart is due. It keeps this install's port even when a program the installer did not start
   holds it.
+- **One installer at a time.** A second installer for the same data directory (the line re-run
+  while a console's Update runs, or the other way round) stops with `another AbstractFramework
+  installer is already running` and changes nothing. The lock of an interrupted run is taken over
+  by the next one.
 - **Install AbstractFramework.command runs the latest installer** from GitHub, so double-clicking
   it again upgrades. It uses the copy it came with only when GitHub cannot be reached, and says so.
 - **`--pin latest` (`-Pin latest`) upgrades an existing install** with the same profile, voice and

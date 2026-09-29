@@ -178,6 +178,41 @@ function Write-Ok([string]$Text) { Write-Host '  + ' -ForegroundColor Green -NoN
 function Write-Info([string]$Text) { Write-Host '  . ' -ForegroundColor Cyan -NoNewline; Write-Host $Text }
 function Write-Warn2([string]$Text) { Write-Host '  ! ' -ForegroundColor Yellow -NoNewline; Write-Host $Text }
 function Stop-Install([string]$Text) { throw "AFBOOT: $Text" }
+# One installer at a time per data dir (same rule as install.sh): a re-run and the gateway's Update
+# must never install over each other. The lock is <data dir>\update\install.lock, a directory
+# (created atomically) holding the owner's pid; a lock whose pid is gone is taken over.
+$script:LockDir = ''
+$script:LockHeld = $false
+function Lock-Install([string]$DataDirPath) {
+    $script:LockDir = Join-Path (Join-Path $DataDirPath 'update') 'install.lock'
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $script:LockDir) | Out-Null
+    $refuse = { param($owner) Stop-Install "another AbstractFramework installer is already running for $DataDirPath (pid $owner; lock $($script:LockDir)). What to do: wait until it finishes (an Update started from a console or the menu-bar icon shows its progress there), then run this again. Nothing was changed." }
+    $owner = { try { ([string](Get-Content -Raw -LiteralPath (Join-Path $script:LockDir 'pid') -ErrorAction Stop)).Trim() } catch { '' } }
+    $created = $false
+    try { [System.IO.Directory]::CreateDirectory($script:LockDir) | Out-Null; $created = -not (Test-Path -LiteralPath (Join-Path $script:LockDir 'pid')) } catch { }
+    # CreateDirectory succeeds on an existing folder: a lock already holding a pid is someone's.
+    if (-not $created) {
+        $pidText = & $owner
+        if (-not $pidText) { Start-Sleep -Seconds 1; $pidText = & $owner }
+        if ($pidText -and (Get-Process -Id ([int]$pidText) -ErrorAction SilentlyContinue)) { & $refuse $pidText }
+        Remove-Item -LiteralPath $script:LockDir -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Path $script:LockDir -ErrorAction SilentlyContinue | Out-Null
+        Write-Info "took over a stale installer lock (pid $(if ($pidText) { $pidText } else { 'unknown' }) is no longer running)"
+    }
+    # The pid file is created with CreateNew: of two runs racing here, exactly one wins.
+    try {
+        $fs = [System.IO.File]::Open((Join-Path $script:LockDir 'pid'), [System.IO.FileMode]::CreateNew)
+        $bytes = [System.Text.Encoding]::ASCII.GetBytes("$PID")
+        $fs.Write($bytes, 0, $bytes.Length); $fs.Close()
+    } catch { & $refuse (& $owner) }
+    $script:LockHeld = $true
+}
+function Unlock-Install {
+    if (-not $script:LockHeld) { return }
+    $pidFile = Join-Path $script:LockDir 'pid'
+    try { if (([string](Get-Content -Raw -LiteralPath $pidFile -ErrorAction Stop)).Trim() -eq "$PID") { Remove-Item -LiteralPath $script:LockDir -Recurse -Force -ErrorAction SilentlyContinue } } catch { }
+    $script:LockHeld = $false
+}
 
 function Format-Arg([string]$Value) {
     if ($Value -match '^[A-Za-z0-9_./:=@,+%\\-]+$') { return $Value }
@@ -482,6 +517,7 @@ function Main {
 
     if (-not $script:DryRun) {
         New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+        Lock-Install $DataDir
         $script:LogFile = Join-Path $logDir ("install-{0}.log" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
         New-Item -ItemType File -Force -Path $script:LogFile | Out-Null
     }
@@ -1377,5 +1413,8 @@ try {
     Write-Host "ERROR: $msg" -ForegroundColor Red
     if ("$_" -notlike 'AFBOOT:*') { Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray }
     # `exit` would close the window of someone who pasted `irm | iex`; only exit when run as a file.
+    Unlock-Install
     if ($script:RanAsFile) { exit 1 }
+} finally {
+    Unlock-Install
 }

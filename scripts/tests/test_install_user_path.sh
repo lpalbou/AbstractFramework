@@ -933,6 +933,28 @@ else
     check "pre-0.6.2, everything on disk: the install keeps --full (no llama.cpp wheel pin) and the library commands" "$({ grep "tool install " "$UVLOG" | grep -q -- "--with llama-cpp-python --constraints" || has "$OUT" "needs a C compiler"; } && grep "tool install " "$UVLOG" | grep -q -- "--with-executables-from abstractcore" && grep -q "abstractgateway-console" "$CARGOLOG"; echo $?)" "$UVLOG"
 fi
 
+echo "[20] one installer at a time per data dir: a running one is refused cleanly, a stale lock is taken over"
+if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    check "port $BG_PORT is free for the installer-lock cases" 1
+else
+    LOCK_STATE="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=0.6.0\nCONSOLE=0\nCODE_CLI=0\nCORE_CLI=0\nTRAY=1\nFULL=0\n"
+    # Another installer holds the lock (a live pid): the gateway's Update run is refused, and changes nothing.
+    sleep 300 & LIVE_PID=$!
+    mkdir -p "$WORK/lock_live/home/$DATA_REL/update/install.lock"; echo "$LIVE_PID" >"$WORK/lock_live/home/$DATA_REL/update/install.lock/pid"
+    BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$LOCK_STATE" BG_ARGS="--no-console --no-start --yes" bg_case lock_live 1
+    check "a running installer holds the lock: refused (exit 1) with the pid, the lock and what to do" "$([[ $RC == 1 ]] && has "$OUT" "another AbstractFramework installer is already running for .*(pid $LIVE_PID; lock .*install.lock)" && has "$OUT" "wait until it finishes" && has "$OUT" "Nothing was changed"; echo $?)" "$OUT"
+    check "refused: nothing installed, no state written, the other run's lock left as it was" "$(! grep -q "tool install" "$UVLOG" && grep -qx "FRAMEWORK_VERSION=0.6.0" "$DATA_T/bootstrap.env" && [[ "$(cat "$DATA_T/update/install.lock/pid")" == "$LIVE_PID" ]]; echo $?)" "$OUT"
+    kill "$LIVE_PID" 2>/dev/null; wait "$LIVE_PID" 2>/dev/null
+    # The lock of a run that is gone (its pid is dead): taken over, said so, and released at the end.
+    sleep 0 & DEAD_PID=$!; wait "$DEAD_PID" 2>/dev/null
+    mkdir -p "$WORK/lock_stale/home/$DATA_REL/update/install.lock"; echo "$DEAD_PID" >"$WORK/lock_stale/home/$DATA_REL/update/install.lock/pid"
+    BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$LOCK_STATE" BG_ARGS="--no-console --no-start --yes" bg_case lock_stale 1
+    check "a stale lock (dead pid) is taken over, the install runs, and the lock is gone afterwards" "$([[ $RC == 0 ]] && has "$OUT" "took over a stale installer lock (pid $DEAD_PID is no longer running)" && grep -q "tool install" "$UVLOG" && [[ ! -e "$DATA_T/update/install.lock" ]]; echo $?)" "$OUT"
+    # A first install takes (and releases) the lock too; --print takes none.
+    BG_UV_LIST='other-tool v1.0' bg_case lock_first 1
+    check "a first install leaves no lock behind" "$([[ $RC == 0 ]] && [[ -d "$DATA_T/update" && ! -e "$DATA_T/update/install.lock" ]]; echo $?)" "$OUT"
+fi
+
 echo ""
 echo "passed: $PASS  failed: $FAIL"
 [[ "$FAIL" == 0 ]]

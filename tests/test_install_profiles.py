@@ -1269,6 +1269,10 @@ def test_install_ps1_upgrades_like_install_sh() -> None:
     # A 0.6.1-era install's unrecorded choices are read from disk in both installers ([19]).
     assert "recorded no options (before AbstractFramework 0.6.2): read from disk" in ps1
     assert "if ((Test-Path -LiteralPath $stateFile) -and $prevGw) {" in ps1 and 'from = "abstractcore"' in ps1
+    # One installer at a time per data dir ([20]): both take the lock before the first change.
+    assert "Lock-Install $DataDir" in ps1 and "Unlock-Install" in ps1
+    sh_text = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    assert 'LOCK_DIR="$DATA_DIR/update/install.lock"' in sh_text and "Join-Path (Join-Path $DataDirPath 'update') 'install.lock'" in ps1
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     for key in ("FRAMEWORK_VERSION=", "CONSOLE=", "CODE_CLI=", "CORE_CLI=", "TRAY=", "FULL="):
         assert f'echo "{key}' in sh, key
@@ -1287,3 +1291,35 @@ def test_install_ps1_no_start_keeps_the_recorded_port_like_install_sh() -> None:
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     held_sh = sh.index('elif [ "$NO_START" = 1 ] && [ -n "$ST_PORT" ] && [ "$PORT" = "$ST_PORT" ]; then')
     assert held_sh < sh.index('using $_p (kept for future runs)')
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_one_installer_at_a_time(tmp_path: Path) -> None:
+    """Same rule as install.sh [20]: Lock-Install refuses while the lock's pid runs (Stop-Install with
+    the pid, the lock and what to do), takes over a lock whose pid is gone, and Unlock-Install removes
+    only its own lock. The functions are loaded from the script's AST (running it would install)."""
+    live = subprocess.Popen(["sleep", "300"])
+    try:
+        data = tmp_path / "data"
+        lock = data / "update" / "install.lock"
+        lock.mkdir(parents=True)
+        (lock / "pid").write_text(str(live.pid))
+        script = str(ROOT / "scripts" / "install.ps1").replace("'", "''")
+        probe = f"""
+$ast = [System.Management.Automation.Language.Parser]::ParseFile('{script}', [ref]$null, [ref]$null)
+$names = @('Stop-Install', 'Write-Info', 'Lock-Install', 'Unlock-Install')
+foreach ($f in $ast.FindAll({{ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $names -contains $n.Name }}, $true)) {{ Invoke-Expression $f.Extent.Text }}
+$script:LockHeld = $false
+try {{ Lock-Install '{data}'; 'HELD' }} catch {{ "REFUSED: $_" }}
+Set-Content -LiteralPath '{lock / "pid"}' -Value '999999'
+try {{ Lock-Install '{data}'; "HELD $((Get-Content -Raw '{lock / "pid"}').Trim() -eq "$PID")" }} catch {{ "REFUSED: $_" }}
+Unlock-Install
+"GONE $(-not (Test-Path '{lock}'))"
+"""
+        out = subprocess.run(["pwsh", "-NoProfile", "-Command", probe], check=True, capture_output=True, text=True).stdout
+    finally:
+        live.kill()
+    assert f"REFUSED: AFBOOT: another AbstractFramework installer is already running for {data} (pid {live.pid}; lock {lock})" in out, out
+    assert "wait until it finishes" in out and "Nothing was changed." in out
+    assert "took over a stale installer lock (pid 999999 is no longer running)" in out and "HELD True" in out, out
+    assert "GONE True" in out, out

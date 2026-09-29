@@ -99,6 +99,7 @@ where it stopped.
 | `the installed gateway does not start … reinstalling it` | Nothing to do: an earlier install was interrupted and the installer repairs it. |
 | `the gateway did not answer … within 180 s` | Restart the computer (the login item starts it) or run the installer again, then open `http://127.0.0.1:8080/console`. |
 | The browser page asks for a token | The one-time sign-in link lasts 10 minutes. Run the installer again: it opens a fresh link. |
+| `another AbstractFramework installer is already running` | An installer, or an **Update** from a console or the menu-bar icon, is running for this data directory. Wait until it finishes, then run the line again. |
 | Anything else | Run the installer again. If it stops at the same step, report it with the log file named at the end of the message (`~/Library/Application Support/AbstractGateway/logs/install-….log`). |
 
 ## Upgrade
@@ -168,6 +169,11 @@ installer.
 With `--no-start` (Windows: `-NoStart`) the installer upgrades without starting or restarting the
 gateway, and says when a restart is due. It keeps this install's port even when another program
 holds it.
+
+One installer runs at a time for a data directory. A second one, for example the line re-run while
+a console's **Update** is running, stops with `another AbstractFramework installer is already
+running` and changes nothing; run it again when the first has finished. A run that was interrupted
+(a closed terminal, a crash) leaves a lock that the next run takes over by itself.
 
 ### Upgrade only the gateway
 

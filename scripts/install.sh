@@ -548,6 +548,45 @@ LOG_DIR="$DATA_DIR/logs"
 GATEWAY_LOG="$LOG_DIR/gateway.log"
 
 # ---------------------------------------------------------------------------
+# One installer at a time per data dir: a terminal re-run and the gateway's Update (which runs
+# this script with --yes --no-start --no-open --no-modify-path --data-dir DIR) must never install
+# over each other. The lock is a directory, <data dir>/update/install.lock (mkdir is atomic),
+# holding the owner's pid. A lock whose pid is gone (a crash, a closed terminal) is taken over.
+# Taken before the first change: at once on a re-run, when the data dir is created on a first
+# install. --print and --print-versions change nothing and take no lock.
+# ---------------------------------------------------------------------------
+LOCK_DIR="$DATA_DIR/update/install.lock"
+LOCK_HELD=0
+lock_release() {
+    [ "$LOCK_HELD" = 1 ] || return 0
+    [ "$(cat "$LOCK_DIR/pid" 2>/dev/null)" = "$$" ] && rm -rf "$LOCK_DIR" 2>/dev/null
+    LOCK_HELD=0
+}
+lock_owner() { cat "$LOCK_DIR/pid" 2>/dev/null; }
+lock_refuse() {
+    printf '\n%sERROR:%s another AbstractFramework installer is already running for %s (pid %s; lock %s).\nWhat to do: wait until it finishes (an Update started from a console or the menu-bar icon shows its progress there), then run this again. Nothing was changed.\n' \
+        "$C_R" "$C_0" "$DATA_DIR" "$1" "$LOCK_DIR" >&2
+    exit 1
+}
+lock_take() {
+    [ "$PRINT" = 0 ] && [ "$LOCK_HELD" = 0 ] || return 0
+    mkdir -p "$DATA_DIR/update" 2>/dev/null || return 0   # an unwritable data dir fails below, with its own message
+    if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+        _lk_pid="$(lock_owner)"
+        # A lock just created may not hold its pid yet: look again before calling it stale.
+        [ -n "$_lk_pid" ] || { sleep 1; _lk_pid="$(lock_owner)"; }
+        if [ -n "$_lk_pid" ] && kill -0 "$_lk_pid" 2>/dev/null; then lock_refuse "$_lk_pid"; fi
+        rm -rf "$LOCK_DIR" 2>/dev/null
+        # Two runs taking over the same stale lock: mkdir lets exactly one of them win.
+        mkdir "$LOCK_DIR" 2>/dev/null || lock_refuse "$(lock_owner)"
+        info "took over a stale installer lock (pid ${_lk_pid:-unknown} is no longer running)"
+    fi
+    echo "$$" >"$LOCK_DIR/pid"
+    LOCK_HELD=1
+    trap 'lock_release' EXIT
+}
+
+# ---------------------------------------------------------------------------
 # The local gateway pointer, ~/.abstractframework/gateway.json (root backlog 0943):
 # where this computer's gateway listens, for the clients that cannot ask Python (the
 # terminal consoles, the browser apps, the Assistant .app). The address only: never a
@@ -1016,6 +1055,7 @@ UNINSTALL_AGAIN="run the uninstaller again (sh uninstall.sh --yes, or double-cli
 # ---------------------------------------------------------------------------
 if [ "$UNINSTALL" = 1 ]; then
     printf '%sAbstractFramework uninstall%s%s\n' "$C_B" "$C_0" "$([ "$PRINT" = 1 ] && echo ' (--print: nothing is changed)')"
+    [ -d "$DATA_DIR" ] && lock_take
     find_uv || true; tool_bin; tool_venv
     # Asked first, so the user answers once and every step below runs unattended.
     if [ "$PURGE" = 0 ]; then
@@ -1304,6 +1344,7 @@ if [ -f "$STATE_FILE" ] && [ -n "$PREV_GW" ]; then
 fi
 resolve_choices
 
+[ -d "$DATA_DIR" ] && lock_take
 printf '%s%s%s\n' "$C_B" "$FOUND_LINE" "$C_0"
 [ -n "$INFERRED" ] && info "the previous install recorded no options (before AbstractFramework 0.6.2): read from disk: $INFERRED"
 [ -n "$KEPT" ] && info "kept from the previous install: $KEPT (give the opposite option to change it)"
@@ -1542,6 +1583,7 @@ fi
 # ---------------------------------------------------------------------------
 if [ "$PRINT" = 0 ]; then
     mkdir -p "$LOG_DIR"
+    lock_take
     LOG_FILE="$LOG_DIR/install-$(date +%Y%m%d-%H%M%S).log"
     ( umask 077; : >"$LOG_FILE" )
 fi
@@ -2244,6 +2286,8 @@ offer_console() {
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ] && [ "$NO_OPEN" = 0 ] && [ "$REMOTE_SESSION" = 1 ] \
     && [ "$ASK_NOTHING" = 0 ] && [ "$CONSOLE_OK" = 1 ] && [ -n "$_tui_tok" ] && tty_ok; then
     # Everything is installed: Ctrl+C here must not turn a finished install into exit 130.
+    # The console can stay open for long: another installer may run meanwhile.
+    lock_release
     trap : INT
     if offer_console; then
         "$CONSOLE_BIN" --gateway-url "$BASE_URL" --token "$_tui_tok" </dev/tty >/dev/tty 2>&1 || \
