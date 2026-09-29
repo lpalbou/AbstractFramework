@@ -155,8 +155,8 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
     <div class="install-steps reveal" aria-label="What the installer does">
       <div class="install-step"><h4>Checks this machine</h4><p>OS, CPU, disk, a free port, internet access, NVIDIA or ROCm. It picks a profile: <code>apple</code> on Apple Silicon (macOS 14+), <code>gpu</code> with a working NVIDIA or ROCm GPU, <code>light</code> otherwise.</p></div>
       <div class="install-step"><h4>Installs in your account</h4><p>uv and a private Python 3.12, then the gateway as an isolated tool, with local voice (Supertonic text-to-speech and Whisper speech-to-text, on CPU). Prebuilt wheels only: no compiler needed.</p></div>
-      <div class="install-step"><h4>Puts the commands on PATH</h4><p>Builds the terminal console and AbstractCode&rsquo;s terminal client with cargo (Rust from rustup when missing), and exposes the library commands, all in <code>~/.local/bin</code> next to <code>abstractgateway</code>. A failed build never fails the install. <a href="#commands">Commands you get</a></p></div>
-      <div class="install-step"><h4>Opens the console</h4><p>Starts the gateway on <code>127.0.0.1:8080</code>, writes <code style="white-space:normal;overflow-wrap:anywhere">~/.abstractframework/gateway.json</code> so every client finds it, and opens the web console through a one-time sign-in link.</p></div>
+      <div class="install-step"><h4>Puts the commands on PATH</h4><p>Builds the terminal console and AbstractCode&rsquo;s terminal client with cargo (on macOS and Linux, Rust from rustup when missing; on Windows, only when Rust is already installed), and exposes the library commands, all next to <code>abstractgateway</code> in <code>~/.local/bin</code> (Windows: <code style="white-space:normal;overflow-wrap:anywhere">%USERPROFILE%\.local\bin</code>). A failed build never fails the install. <a href="#commands">Commands you get</a></p></div>
+      <div class="install-step"><h4>Opens the console</h4><p>Starts the gateway on <code>127.0.0.1:8080</code>, writes <code style="white-space:normal;overflow-wrap:anywhere">~/.abstractframework/gateway.json</code> (Windows: <code style="white-space:normal;overflow-wrap:anywhere">%USERPROFILE%\.abstractframework\gateway.json</code>) so every client finds it, and opens the web console through a one-time sign-in link.</p></div>
     </div>
 
     <div class="callout reveal" style="max-width:900px;margin:2rem auto 0">
@@ -290,7 +290,7 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
       <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
         <h3>Local network</h3>
         <p>Every device on your network (or your VPN) reaches the sign-in page and the API. User accounts are required. It is plain HTTP, so use it on networks you trust, or behind a TLS proxy or VPN.</p>
-        <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">lan</span><span class="mode-tag">user accounts</span></div>
+        <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">LAN</span><span class="mode-tag">user accounts</span></div>
       </div>
       <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
         <h3>Internet</h3>
