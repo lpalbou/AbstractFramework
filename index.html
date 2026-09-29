@@ -1594,7 +1594,7 @@ RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;
     <div class="section-header reveal">
       <div class="section-label">Entities</div>
       <h2 class="section-title">Entities: Persistent, Self-Evolving Agents</h2>
-      <p class="section-desc">We call an entity a persistent, self-evolving agent with an identity, a purpose, a history and experiences. We are defining the field here.</p>
+      <p class="section-desc">We call an entity a persistent, self-evolving agent with an identity, a purpose, a history and experiences. AbstractEntity is our work toward self-evolving agents.</p>
     </div>
 
     <div class="modes-grid reveal">
@@ -1615,16 +1615,16 @@ RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;
       </div>
     </div>
 
-
     <div class="showcase-grid reveal" style="margin-top:2.5rem">
       <div class="showcase-img">
+        <!-- PENDING-W2: ephemeral (deliver/entity-ui/ephemeral-graph.mp4 + poster replaces this screenshot; figcaption from W4: "Ephemeral, one of our entities: its memory graph in the AbstractEntity app.") -->
         <!-- Entity 0.3.0 capture, reused per W2 MANIFEST.md ("Reused, not retaken") -->
         <img src="assets/img/shots/entity-list.webp" alt="The AbstractEntity Summoned entities page with one newly created demo entity shown asleep, and its visit, work, personal and sleep modes" loading="lazy">
       </div>
       <div class="showcase-content">
         <h3>Two tracks</h3>
         <p><strong>For your work:</strong> an agent with a persistent identity and expertise, which you visit, summon into a work session as itself, or give a task, and which remembers how things went.</p>
-        <p><strong>For research:</strong> in its own time an entity explores its interests and tries to resolve its open questions. Whether a self-evolving history like this can lead to something like awareness is an open research question, and we treat it as one.</p>
+        <p><strong>For research:</strong> in its own time an entity explores its interests and tries to resolve its open questions. Whether a self-evolving history like this can lead to something like awareness is an open research question.</p>
         <ul class="showcase-features">
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Every visit is a durable run, kept in the entity's home folder</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Sleep consolidates memory without calling a model; it only proposes</li>
@@ -1637,7 +1637,7 @@ RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;
         </div>
       </div>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);margin-top:2rem;max-width:860px">Entities are the promise; the way they remember is what makes them credible. Next: how an entity's memory is reconstructed for every answer.</p>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:2rem;max-width:860px">How an entity remembers is described next.</p>
   </div>
 </section>
 
@@ -1678,7 +1678,7 @@ RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;
     </div>
     <!-- W4 fragment deliver/fragments/related-work.html (round 5; claims in its header) -->
     <div class="callout reveal" style="margin-top:2rem">
-      <div><strong>Related work.</strong> <a href="https://github.com/letta-ai/letta" target="_blank" rel="noopener noreferrer">Letta</a> (formerly MemGPT) works in the same direction: stateful agents whose state is persisted in a database, <a href="https://docs.letta.com/v1-sdk/concepts/stateful-agents" target="_blank" rel="noopener noreferrer">memory blocks</a> pinned in the context that the agent edits with memory tools, a searchable <a href="https://docs.letta.com/v1-sdk/memory/archival-memory" target="_blank" rel="noopener noreferrer">archival memory</a>, and <a href="https://docs.letta.com/configuration/memory" target="_blank" rel="noopener noreferrer">dreaming</a>, where background subagents review recent conversations and update memory. Our choices differ in five places: an entity's identity is planted once from its starting document and never rewritten; its night consolidation is deterministic, calls no model and only proposes; facts live in a temporal graph with validity windows and provenance; beyond the always-present identity core, working memory is reconstructed for each moment from the cue; and every reconstruction is a step in the run's ledger and a trace in the memory graph.</div>
+      <div><strong>Related work.</strong> <a href="https://github.com/letta-ai/letta" target="_blank" rel="noopener noreferrer">Letta</a> (formerly MemGPT) also builds <a href="https://docs.letta.com/concepts/stateful-agents" target="_blank" rel="noopener noreferrer">stateful agents</a>: an agent keeps its own memory and message history across sessions, and background subagents review recent conversations to <a href="https://docs.letta.com/configuration/memory" target="_blank" rel="noopener noreferrer">consolidate lessons</a> into memory. AbstractEntity and AbstractMemory take these choices: an entity's identity is planted once from its starting document and never rewritten; night consolidation is deterministic, calls no model and only proposes; facts live in a temporal graph with validity windows and provenance; beyond the identity core, working memory is reconstructed for each moment from the cue; and every reconstruction is recorded as a step in the run's ledger.</div>
     </div>
   </div>
 </section>
@@ -1887,7 +1887,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
     <div class="section-header reveal">
       <div class="section-label">History</div>
       <h2 class="section-title">Where it comes from</h2>
-      <p class="section-desc">AbstractFramework grew out of <a href="https://github.com/lpalbou/AbstractLLM" target="_blank" rel="noopener noreferrer">AbstractLLM</a>, a unified interface to language models first published on GitHub and PyPI in April 2025. Its provider layer became AbstractCore (renamed in AbstractCore 2.4.0), and the durable runtime, agents, gateway, clients and modality plugins were then built as dedicated packages. Each package keeps its own changelog.</p>
+      <p class="section-desc">Work on what became AbstractFramework began in early 2024. Its first public form, <a href="https://github.com/lpalbou/AbstractLLM" target="_blank" rel="noopener noreferrer">AbstractLLM</a>, was published on GitHub and PyPI on 8 April 2025. AbstractLLM later became AbstractCore, and the rest of the framework was built as the dedicated packages below, each with its own changelog.</p>
     </div>
     <div class="comp-links reveal" style="justify-content:center;flex-wrap:wrap;gap:.5rem 1rem">
       <a class="comp-link" href="https://github.com/lpalbou/abstractframework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractFramework</a>
