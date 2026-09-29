@@ -78,27 +78,102 @@ document.addEventListener('DOMContentLoaded', () => {
     counterObserver.observe(el);
   });
 
-  /* ── Copy code buttons ── */
-  document.querySelectorAll('.code-block, .hero-code').forEach(block => {
-    if (block.querySelector('.copy-btn')) return;
+  /* ── Terminal look for shell blocks ──
+     A block is shown as a terminal unless it reads as source code (an import, a definition,
+     an assignment or a method call at the start of a line). data-lang="shell|code" overrides. */
+  const CODE_LINE = /^\s*(from\s+[\w.]+\s+import\b|import\s+[\w.]|def\s|class\s|@\w|const\s|let\s|[A-Za-z_][\w.]*\s*=[^=]|[A-Za-z_]\w*(\.\w+)+\(|[{[])/m;
+  document.querySelectorAll('.code-block').forEach(block => {
+    const lang = block.dataset.lang;
+    const text = (block.querySelector('code') || block).textContent || '';
+    const shell = lang ? lang === 'shell' : !CODE_LINE.test(text);
+    block.classList.toggle('term', shell);
+  });
+
+  /* ── Copy buttons: an icon, a brief "Copied" state, announced to screen readers ── */
+  const ICON_COPY = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+  const ICON_DONE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  const liveRegion = document.createElement('div');
+  liveRegion.className = 'sr-only';
+  liveRegion.setAttribute('aria-live', 'polite');
+  document.body.appendChild(liveRegion);
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise((resolve, reject) => {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy') ? resolve() : reject(new Error('copy refused')); }
+      catch (err) { reject(err); } finally { ta.remove(); }
+    });
+  }
+  function addCopyButton(block, getText) {
+    if (block.querySelector(':scope > .copy-btn')) return;
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'copy-btn';
-    btn.textContent = 'Copy';
-    btn.setAttribute('aria-label', 'Copy code');
+    btn.innerHTML = ICON_COPY + '<span class="copy-tip" aria-hidden="true">Copied</span>';
+    btn.setAttribute('aria-label', 'Copy');
+    let timer = null;
     btn.addEventListener('click', () => {
-      const code = block.querySelector('code') || block.querySelector('pre') || block;
-      const text = block.dataset.copy || code.textContent.trim();
-      navigator.clipboard.writeText(text).then(() => {
-        btn.textContent = 'Copied!';
+      copyText(getText()).then(() => {
         btn.classList.add('copied');
-        setTimeout(() => {
-          btn.textContent = 'Copy';
+        btn.innerHTML = ICON_DONE + '<span class="copy-tip" aria-hidden="true">Copied</span>';
+        btn.setAttribute('aria-label', 'Copied');
+        liveRegion.textContent = 'Copied to the clipboard';
+        clearTimeout(timer);
+        timer = setTimeout(() => {
           btn.classList.remove('copied');
-        }, 2000);
+          btn.innerHTML = ICON_COPY + '<span class="copy-tip" aria-hidden="true">Copied</span>';
+          btn.setAttribute('aria-label', 'Copy');
+          liveRegion.textContent = '';
+        }, 1600);
+      }).catch(() => { liveRegion.textContent = 'Copy failed: select the text and copy it'; });
+    });
+    if (getComputedStyle(block).position === 'static') block.style.position = 'relative';
+    block.appendChild(btn);
+  }
+  document.querySelectorAll('.code-block, .hero-code').forEach(block => {
+    addCopyButton(block, () => {
+      const code = block.querySelector('code') || block.querySelector('pre') || block;
+      return (block.dataset.copy || code.textContent).trim();
+    });
+  });
+
+  /* ── Quick start: OS segmented control over one terminal line ── */
+  document.querySelectorAll('.qs').forEach(qs => {
+    const tabs = Array.from(qs.querySelectorAll('.qs-tab'));
+    const cmd = qs.querySelector('.qs-cmd');
+    const prompt = qs.querySelector('.qs-prompt');
+    const note = qs.querySelector('.qs-note-text');
+    const term = qs.querySelector('.qs-term');
+    function select(tab, focus) {
+      tabs.forEach(t => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+      });
+      cmd.textContent = tab.dataset.cmd;
+      if (prompt) prompt.textContent = tab.dataset.prompt || '$';
+      if (note && tab.dataset.note) note.innerHTML = tab.dataset.note;
+      term.setAttribute('aria-labelledby', tab.id);
+      qs.style.setProperty('--qs-i', tabs.indexOf(tab));
+      if (focus) tab.focus();
+    }
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => select(tab, false));
+      tab.addEventListener('keydown', e => {
+        let j = null;
+        if (e.key === 'ArrowRight') j = (i + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft') j = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') j = 0;
+        else if (e.key === 'End') j = tabs.length - 1;
+        if (j !== null) { e.preventDefault(); select(tabs[j], true); }
       });
     });
-    block.style.position = 'relative';
-    block.appendChild(btn);
+    const ua = navigator.userAgent || '';
+    const os = /Windows/i.test(ua) ? 'win' : (/Android/i.test(ua) ? 'mac' : (/Linux|X11|CrOS/i.test(ua) ? 'linux' : 'mac'));
+    select(tabs.find(t => t.dataset.os === os) || tabs[0], false);
+    addCopyButton(term, () => cmd.textContent.trim());
   });
 
   /* ── Mobile menu toggle ── */
@@ -179,6 +254,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  /* ── Pause every video that leaves the screen or is not the visible slide ── */
+  if ('IntersectionObserver' in window) {
+    const vio = new IntersectionObserver(entries => {
+      entries.forEach(en => { if (!en.isIntersecting && !en.target.paused) en.target.pause(); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('video').forEach(v => vio.observe(v));
+  }
+
   /* ── Carousel ── */
   document.querySelectorAll('.carousel').forEach(carousel => {
     const track = carousel.querySelector('.carousel-track');
@@ -233,45 +316,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const cubeGrid = document.getElementById('cubeGrid');
   if (cubeGrid) {
     const CUBE_SIZE = 48, COL_STEP = 90, ROW_STEP = 110;
+    /* Rows mirror the three-layer positioning (library, durable runtime, control plane) with the
+       applications on top and the reusable toolkits underneath; the colour of a cube is its type. */
     const cubesData = [
-      { id:'code',      layer:'app',        col:-3, row:0, label:'Code',      name:'AbstractCode',      layerName:'Application',       href:'code.html',      desc:'A coding agent that runs durably on the gateway, with a terminal client and a browser client: tool approvals, workspace files, streamed replies and automations.' },
-      { id:'flow',      layer:'app',        col:-2, row:0, label:'Flow',      name:'AbstractFlow',      layerName:'Application',       href:'flow.html',      desc:'The visual workflow editor. Draw workflows in the browser and publish them to the gateway as portable .flow bundles.' },
-      { id:'observer',  layer:'app',        col:-1, row:0, label:'Observer',  name:'AbstractObserver',  layerName:'Application',       href:'observer.html',  desc:'Watch runs live, replay the ledger step by step, and create and manage automations.' },
-      { id:'assistant', layer:'app',        col:0,  row:0, label:'Assistant', name:'AbstractAssistant', layerName:'Application',       href:'assistant.html', desc:'A macOS menu-bar assistant with a palette, a voice mode, and your gateway sessions and automations one key away.' },
-      { id:'continuum', layer:'app',        col:1,  row:0, label:'Continuum', name:'AbstractContinuum', layerName:'Application',       href:'continuum.html', desc:'A board-first console for continuous development and deployment work.' },
-      { id:'entity',    layer:'app',        col:2,  row:0, label:'Entity',    name:'AbstractEntity',    layerName:'Application',       href:'entity.html',    desc:'Create entities with a lasting memory of their own, talk with them, and read their diaries.' },
-      { id:'consoles',  layer:'app',        col:3,  row:0, label:'Consoles',  name:'Web and terminal consoles', layerName:'Application', href:'console.html', desc:'The gateway web console and abstractgateway-console in a terminal: setup, models, engines, network, users and apps. abstractcore-console does the same for AbstractCore alone.' },
-      { id:'gateway',   layer:'control',    col:0,  row:1, label:'Gateway',   name:'AbstractGateway',   layerName:'Control Plane',     href:'gateway.html',   desc:'The controller: starts, resumes and cancels durable runs over HTTP and SSE, runs automations, manages users and network access, and serves the consoles and apps.' },
-      { id:'agent',     layer:'compose',    col:-1.5, row:2, label:'Agent',     name:'AbstractAgent',     layerName:'Composition',       href:'agent.html',     desc:'Agent patterns (ReAct, CodeAct, MemAct) built on AbstractRuntime and AbstractCore.' },
-      { id:'skill',     layer:'compose',    col:-0.5, row:2, label:'Skill',     name:'AbstractSkill',     layerName:'Composition',       href:'https://github.com/lpalbou/AbstractSkill', desc:'Agent Skills (SKILL.md): parsing, validation, the curated skill shelf and the trust gate the gateway applies before a skill reaches a run.' },
-      { id:'uikit',     layer:'compose',    col:0.5, row:2, label:'UI kit',    name:'AbstractUIC',       layerName:'Composition',       href:'https://github.com/lpalbou/AbstractUIC', desc:'Reusable UI packages for the clients: React components, web components and a gateway session proxy (npm @abstractframework/ui-kit).' },
-      { id:'tui',       layer:'compose',    col:1.5, row:2, label:'TUI',       name:'AbstractTUI',       layerName:'Composition',       href:'https://github.com/lpalbou/AbstractTUI', desc:'The Rust terminal-UI engine, built on fine-grained reactive signals, that the terminal clients and consoles run on (crates.io abstracttui).' },
-      { id:'core',      layer:'foundation', col:-0.5, row:3, label:'Core',    name:'AbstractCore',      layerName:'Foundation',        href:'core.html',      desc:'One Python LLM API over ten provider types, local and cloud: tools, structured output, media, embeddings, capability plugins and an OpenAI-compatible server.' },
-      { id:'runtime',   layer:'foundation', col:0.5,  row:3, label:'Runtime', name:'AbstractRuntime',   layerName:'Foundation',        href:'runtime.html',   desc:'Where agentic operations run: durable runs, effects and waits, checkpoint and resume, with an append-only ledger.' },
-      { id:'voice',     layer:'plugin',     col:-2, row:4, label:'Voice',     name:'AbstractVoice',     layerName:'Capability Plugin', href:'voice.html',     desc:'Text-to-speech, speech-to-text and voice cloning, local or remote.' },
-      { id:'vision',    layer:'plugin',     col:-1, row:4, label:'Vision',    name:'AbstractVision',    layerName:'Capability Plugin', href:'vision.html',    desc:'Image generation, editing and upscaling, text-to-video and image-to-video, through MLX-Gen, Diffusers, stable-diffusion.cpp or OpenAI-compatible services.' },
-      { id:'music',     layer:'plugin',     col:0,  row:4, label:'Music',     name:'AbstractMusic',     layerName:'Capability Plugin', href:'music.html',     desc:'Text-to-music and text-to-audio: ACE Music and ElevenLabs remotely, ACE-Step and Stable Audio locally.' },
-      { id:'scene3d',   layer:'plugin',     col:1,  row:4, label:'3D',        name:'abstract3d',        layerName:'Capability Plugin', href:'3d.html',        desc:'Image-to-3D and text-to-3D with a validated local TripoSR backend and GLB output.' },
-      { id:'camera',    layer:'plugin',     col:2,  row:4, label:'Camera',    name:'AbstractCamera',    layerName:'Capability Plugin', href:'camera.html',    desc:'Camera control: tethered bodies, webcams and smart telescopes behind one manager, with camera tools for agents.' },
-      { id:'memory',    layer:'knowledge',  col:-0.5, row:5, label:'Memory',  name:'AbstractMemory',    layerName:'Knowledge',         href:'memory.html',    desc:'Durable, append-only agent memory: temporal triples, and a memory system that forms, recalls and consolidates records from use.' },
-      { id:'semantics', layer:'knowledge',  col:0.5,  row:5, label:'Semantics', name:'AbstractSemantics', layerName:'Knowledge',       href:'semantics.html', desc:'The shared vocabulary: predicates, entity types and memory relations, with JSON Schema helpers.' },
+      { id:'flow',      type:'app',        col:-2.5, row:0, label:'Flow',      name:'AbstractFlow',      typeName:'Application',       href:'flow.html',      desc:'The visual workflow editor: mix agent steps with deterministic nodes, publish the workflow to the gateway, and run it from every client.' },
+      { id:'code',      type:'app',        col:-1.5, row:0, label:'Code',      name:'AbstractCode',      typeName:'Application',       href:'code.html',      desc:'A coding agent that runs durably on the gateway, with a terminal client and a browser client: tool approvals, workspace files, streamed replies and automations.' },
+      { id:'observer',  type:'app',        col:-0.5, row:0, label:'Observer',  name:'AbstractObserver',  typeName:'Application',       href:'observer.html',  desc:'Watch runs live, replay the ledger step by step, and create and manage automations.' },
+      { id:'assistant', type:'app',        col:0.5,  row:0, label:'Assistant', name:'AbstractAssistant', typeName:'Application',       href:'assistant.html', desc:'A desktop assistant in the menu bar: a palette, a voice mode, and your gateway sessions and automations.' },
+      { id:'continuum', type:'app',        col:1.5,  row:0, label:'Continuum', name:'AbstractContinuum', typeName:'Application',       href:'continuum.html', desc:'A board-first console for continuous development and deployment work.' },
+      { id:'entity',    type:'app',        col:2.5,  row:0, label:'Entity',    name:'AbstractEntity',    typeName:'Application',       href:'entity.html',    desc:'Persistent entities with an identity and a lasting memory of their own: talk with them and read their diaries.' },
+      { id:'gateway',   type:'control',    col:0,    row:1, label:'Gateway',   name:'AbstractGateway',   typeName:'Control Plane',     href:'gateway.html',   desc:'The controller: starts, resumes and cancels durable runs over HTTP and SSE, runs automations, manages users and network access, and serves the apps, the web console and the abstractgateway-console terminal console.' },
+      { id:'runtime',   type:'foundation', col:-2,   row:2, label:'Runtime',   name:'AbstractRuntime',   typeName:'Foundation',        href:'runtime.html',   desc:'Where agentic operations run: durable runs, effects and waits, checkpoint and resume, with an append-only ledger.' },
+      { id:'agent',     type:'compose',    col:-1,   row:2, label:'Agent',     name:'AbstractAgent',     typeName:'Composition',       href:'agent.html',     desc:'Agent patterns (ReAct, CodeAct, MemAct) run durably by AbstractRuntime, with tool approval.' },
+      { id:'memory',    type:'knowledge',  col:0,    row:2, label:'Memory',    name:'AbstractMemory',    typeName:'Knowledge',         href:'memory.html',    desc:'Durable, append-only agent memory: temporal triples, and a memory system that forms, recalls and consolidates records from use.' },
+      { id:'semantics', type:'knowledge',  col:1,    row:2, label:'Semantics', name:'AbstractSemantics', typeName:'Knowledge',         href:'semantics.html', desc:'The shared vocabulary: predicates, entity types and memory relations, with JSON Schema helpers.' },
+      { id:'skill',     type:'compose',    col:2,    row:2, label:'Skill',     name:'AbstractSkill',     typeName:'Composition',       href:'https://github.com/lpalbou/AbstractSkill', desc:'Agent Skills (SKILL.md): parsing, validation, the curated skill shelf and the trust gate the gateway applies before a skill reaches a run.' },
+      { id:'core',      type:'foundation', col:-2.5, row:3, label:'Core',      name:'AbstractCore',      typeName:'Foundation',        href:'core.html',      desc:'One Python API over ten provider types, local and cloud: tools, structured output, media input, capability plugins, an OpenAI-compatible server with a web console, and abstractcore-console in a terminal.' },
+      { id:'voice',     type:'plugin',     col:-1.5, row:3, label:'Voice',     name:'AbstractVoice',     typeName:'Capability Plugin', href:'voice.html',     desc:'Text-to-speech, speech-to-text and voice cloning, local or remote.' },
+      { id:'music',     type:'plugin',     col:-0.5, row:3, label:'Music',     name:'AbstractMusic',     typeName:'Capability Plugin', href:'music.html',     desc:'Text-to-music and text-to-audio: ACE-Step and Stable Audio locally, ACE Music and ElevenLabs remotely.' },
+      { id:'vision',    type:'plugin',     col:0.5,  row:3, label:'Vision',    name:'AbstractVision',    typeName:'Capability Plugin', href:'vision.html',    desc:'Image generation, editing and upscaling, text-to-video and image-to-video, through MLX-Gen, Diffusers, stable-diffusion.cpp or OpenAI-compatible services.' },
+      { id:'scene3d',   type:'plugin',     col:1.5,  row:3, label:'3D',        name:'Abstract3D',        typeName:'Capability Plugin', href:'3d.html',        desc:'Image-to-3D and text-to-3D with a validated local TripoSR backend and GLB output.' },
+      { id:'camera',    type:'plugin',     col:2.5,  row:3, label:'Camera',    name:'AbstractCamera',    typeName:'Capability Plugin', href:'camera.html',    desc:'Camera control: tethered bodies, webcams and smart telescopes behind one manager, with camera tools for agents.' },
+      { id:'tui',       type:'toolkit',    col:-1,   row:4, label:'TUI',       name:'AbstractTUI',       typeName:'Toolkit',           href:'https://github.com/lpalbou/AbstractTUI', desc:'The reactive Rust terminal-UI engine behind the AbstractCode terminal client and both terminal consoles. Build your own terminal apps on it (crates.io abstracttui).' },
+      { id:'uic',       type:'toolkit',    col:0,    row:4, label:'UIC',       name:'AbstractUIC',       typeName:'Toolkit',           href:'https://github.com/lpalbou/AbstractUIC', desc:'React components, web components and a gateway session proxy used by the browser apps. Build your own web apps on it (npm @abstractframework/ui-kit).' },
+      { id:'mlxgen',    type:'toolkit',    col:1,    row:4, label:'MLX-Gen',   name:'MLX-Gen',           typeName:'Toolkit',           href:'https://github.com/lpalbou/mlx-gen', desc:'Generative image and video model runtimes for MLX: the Apple silicon engine behind AbstractVision.' },
     ];
-    const layerColors = { app:'#34d399', control:'#22d3ee', compose:'#818cf8', foundation:'#6366f1', plugin:'#f472b6', knowledge:'#fbbf24' };
+    const typeColors = { app:'#34d399', control:'#22d3ee', compose:'#a78bfa', foundation:'#818cf8', plugin:'#f472b6', knowledge:'#fbbf24', toolkit:'#a1a1b5' };
 
     cubesData.forEach(c => {
       const cx = c.col * COL_STEP, cy = c.row * ROW_STEP;
       const wrap = document.createElement('div');
       wrap.className = 'cube-wrap';
       wrap.dataset.id = c.id;
-      wrap.dataset.layer = c.layer;
+      wrap.dataset.layer = c.type;
+      wrap.dataset.row = c.row;
       wrap.style.cssText = '--size:'+CUBE_SIZE+'px;--tx:'+cx+'px;--ty:'+cy+'px;transform:translate('+cx+'px,'+cy+'px)';
       wrap.innerHTML = '<div class="cube"><div class="face top"></div><div class="face left"></div><div class="face right"></div></div>'
-        + '<div class="cube-tooltip"><div class="tip-layer" style="color:'+layerColors[c.layer]+'">'+c.layerName+'</div>'
+        + '<div class="cube-tooltip"><div class="tip-layer" style="color:'+typeColors[c.type]+'">'+c.typeName+'</div>'
         + '<div class="tip-name">'+c.name+'</div><div class="tip-desc">'+c.desc+'</div></div>'
         + '<div class="cube-label">'+c.label+'</div>';
       wrap.setAttribute('role', 'listitem');
       wrap.tabIndex = 0;
-      wrap.setAttribute('aria-label', c.name + ' (' + c.layerName + '): ' + c.desc);
+      wrap.setAttribute('aria-label', c.name + ' (' + c.typeName + '): ' + c.desc);
       wrap.addEventListener('click', function(){ window.location.href = c.href; });
       wrap.addEventListener('keydown', function(e){ if (e.key === 'Enter') window.location.href = c.href; });
       cubeGrid.appendChild(wrap);
@@ -280,16 +366,15 @@ document.addEventListener('DOMContentLoaded', () => {
     var layerLabels = [
       { row:0, text:'APPLICATIONS', color:'#34d399' },
       { row:1, text:'CONTROL PLANE', color:'#22d3ee' },
-      { row:2, text:'COMPOSITION', color:'#818cf8' },
-      { row:3, text:'FOUNDATION', color:'#6366f1' },
-      { row:4, text:'PLUGINS', color:'#f472b6' },
-      { row:5, text:'KNOWLEDGE', color:'#fbbf24' },
+      { row:2, text:'DURABLE RUNTIME', color:'#818cf8' },
+      { row:3, text:'LIBRARY', color:'#f472b6' },
+      { row:4, text:'TOOLKITS', color:'#a1a1b5' },
     ];
     layerLabels.forEach(function(l) {
       var el = document.createElement('div');
       el.className = 'layer-label';
-      el.dataset.layer = ['app','control','compose','foundation','plugin','knowledge'][l.row];
-      el.style.cssText = 'left:'+(3.9*COL_STEP)+'px;top:'+(l.row*ROW_STEP+14)+'px;color:'+l.color;
+      el.dataset.row = l.row;
+      el.style.cssText = 'left:'+(3.4*COL_STEP)+'px;top:'+(l.row*ROW_STEP+14)+'px;color:'+l.color;
       el.textContent = l.text;
       cubeGrid.appendChild(el);
     });
@@ -297,13 +382,13 @@ document.addEventListener('DOMContentLoaded', () => {
     var cubeWraps = cubeGrid.querySelectorAll('.cube-wrap[data-id]');
     var cubeLabels = cubeGrid.querySelectorAll('.layer-label');
     function highlightCube(id) {
-      var activeLayer = null;
-      cubeWraps.forEach(function(w){ if(w.dataset.id===id) activeLayer=w.dataset.layer; });
+      var activeRow = null;
+      cubeWraps.forEach(function(w){ if(w.dataset.id===id) activeRow=w.dataset.row; });
       cubeWraps.forEach(function(w){
         w.classList.toggle('active', w.dataset.id===id);
         w.classList.toggle('dimmed', id && w.dataset.id!==id);
       });
-      cubeLabels.forEach(function(l){ l.classList.toggle('highlight', l.dataset.layer===activeLayer); });
+      cubeLabels.forEach(function(l){ l.classList.toggle('highlight', l.dataset.row===activeRow); });
     }
     function clearCubeHighlight() {
       cubeWraps.forEach(function(w){ w.classList.remove('active','dimmed'); });
