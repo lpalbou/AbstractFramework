@@ -127,13 +127,15 @@ again does the same.
 
 The line always runs the installer of the latest AbstractFramework release. It:
 
-- finds the existing install and says what it does:
-  `AbstractFramework 0.6.1 found: upgrading to AbstractFramework 0.6.2`, or
-  `AbstractFramework 0.6.2 found: already up to date` (every part is still checked, and repaired
-  when needed);
+- finds the existing install and says what it does. An install made by 0.6.2 or later recorded its
+  release, so the line names it: `AbstractFramework <yours> found: upgrading to AbstractFramework
+  <latest>`, or `AbstractFramework <yours> found: already up to date` (every part is still checked,
+  and repaired when needed). An install made by 0.6.1 or earlier recorded no release, so its first
+  upgrade says `AbstractFramework found (abstractgateway 0.7.1; its release was not recorded):
+  upgrading to AbstractFramework 0.6.2` (with the gateway version you have);
 - installs the gateway version that release pins, and every library the gateway uses
   (AbstractCore, AbstractRuntime, AbstractAgent, AbstractSkill, AbstractMemory, AbstractSemantics
-  and the voice, vision and music packages) at the exact version released and tested with it ([Check your versions](#check-your-versions) shows
+  and the voice, vision, music and 3D packages) at the exact version released and tested with it ([Check your versions](#check-your-versions) shows
   how to print the list);
 - rebuilds the terminal console (`abstractgateway-console`) and AbstractCode's terminal client
   (`abstractcode`) when the release pins newer versions, with the Rust toolchain from the first
@@ -152,13 +154,15 @@ The line always runs the installer of the latest AbstractFramework release. It:
 - never leaves the gateway stopped: when the login item cannot be registered, the gateway starts in
   the background and the summary says how to turn start at login on;
 - ends with what changed, old -> new, under **Changes** (`Changes: none` when nothing moved), and
-  `Upgraded: AbstractFramework 0.6.1 -> 0.6.2` or `Already up to date: AbstractFramework 0.6.2;
-  nothing changed.`
+  `Upgraded: AbstractFramework <yours> -> <latest>` (`Upgraded: AbstractFramework (not recorded) ->
+  0.6.2` for the first upgrade of a 0.6.1 or earlier install) or `Already up to date:
+  AbstractFramework <yours>; nothing changed.`
 
 #### Upgrading from 0.6.1 or earlier
 
-Installs made by AbstractFramework 0.6.1 or earlier did not record your install options. The first
-re-run reads them from what is installed: whether the terminal console and `abstractcode` are
+Installs made by AbstractFramework 0.6.1 or earlier recorded neither their release nor your install
+options. The first re-run says `AbstractFramework found (abstractgateway <version>; its release was
+not recorded): upgrading to AbstractFramework 0.6.2`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
 there, whether the gateway has the tray extra and the AbstractCore commands, whether the compiled
 extras were built (`--full`), and a custom data directory through the gateway pointer. It prints
 what it found (`read from disk: …`) and records it for later runs. You can also repeat your
@@ -713,7 +717,7 @@ does not.
 `abstractframework` 0.6.2 pins `abstractgateway==0.7.2`, `abstractassistant==0.9.1`,
 `abstractcore==2.19.0`, `AbstractRuntime==0.7.1`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.0`,
-`abstractvision==0.3.31` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
+`abstractvision==0.3.31`, `abstractmusic==0.1.15` and `abstract3d==0.3.1`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
 installed package whose version differs from these pins.
@@ -758,6 +762,10 @@ Choose Light when:
 - you use local model servers through HTTP, such as LM Studio, Ollama, vLLM, llama.cpp, or LocalAI;
 - you want the smallest and least surprising install;
 - you do not want pip to install MLX, CUDA, Diffusers, or local model-runtime stacks.
+
+The Light environment takes about 0.9 GB in a fresh Python 3.12 environment. Most of it is
+AbstractCore's light setting, which includes the Office-document parsers, the built-in tools and
+the voice, vision, music and 3D plugins with their remote backends; it installs no local engine.
 
 After install, run `abstractframework doctor`, start the gateway and configure providers in its
 console (see [Start the gateway](#start-the-gateway-and-apps)).
@@ -810,8 +818,8 @@ Run or install them next to the Python stack:
 
 The browser apps need a running gateway. The gateway installs, starts and serves them itself, on
 its own address at `/apps/<app>/` (it installs Node.js for them when it is missing); running one on
-its own with `npx` needs Node.js 18 or later. `abstract3d` comes with AbstractCore in every
-profile; the optional add-on outside the profiles installs on its own: `pip install abstractcamera`.
+its own with `npx` needs Node.js 18 or later. `abstract3d` (pinned above) comes with
+AbstractCore in every profile; the optional add-on outside the profiles installs on its own: `pip install abstractcamera`.
 `abstractskill` comes with the gateway, which carries its curated skill shelf.
 
 ## Start the gateway and apps

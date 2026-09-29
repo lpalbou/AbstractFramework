@@ -25,6 +25,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvoice": "0.13.0",
     "abstractvision": "0.3.31",
     "abstractmusic": "0.1.15",
+    "abstract3d": "0.3.1",
     "abstractassistant": "0.9.1",
 }
 
@@ -39,6 +40,7 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
     "abstractvoice": "abstractvoice",
     "abstractvision": "abstractvision",
     "abstractmusic": "abstractmusic",
+    "abstract3d": "abstract3d",
     "abstractassistant": "abstractassistant",
 }
 
@@ -59,15 +61,10 @@ CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstracttui": "0.6.0",
 }
 
-CORE_DEFAULT_EXTRAS = [
-    "remote",
-    "tools",
-    "media",
-    "vision",
-    "voice",
-    "audio",
-    "music",
-]
+# The light profile installs plain `abstractcore` (no extra): AbstractCore's light setting already
+# carries every remote provider, the tools, media and the capability plugins. The apple and gpu
+# profiles get AbstractCore's local engines through the gateway's profile.
+CORE_DEFAULT_EXTRAS: list[str] = []
 
 # Convenience re-exports (AbstractCore is a base dependency of this meta-package).
 # Keep this import lightweight: do not import optional tool/media deps here.

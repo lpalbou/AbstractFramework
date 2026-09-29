@@ -8,14 +8,18 @@ All notable changes to AbstractFramework will be documented in this file.
 
 One line installs, upgrades and repairs AbstractFramework, and **Update** in the consoles and the
 menu-bar icon runs that same line. Pins: AbstractGateway 0.7.2, AbstractCore 2.19.0,
-AbstractVision 0.3.31 and the terminal consoles `abstractgateway-console` 0.11.1 and
+AbstractVision 0.3.31, Abstract3D 0.3.1 (new in the matrix: AbstractCore now installs it) and the
+terminal consoles `abstractgateway-console` 0.11.1 and
 `abstractcore-console` 0.4.1; every other version is unchanged from 0.6.1.
 
 ### Changed
 
 - **One line installs, upgrades and repairs.** Re-running the install line (or double-clicking
-  **Install AbstractFramework.command** again) finds the existing install and says
-  `AbstractFramework 0.6.1 found: upgrading to AbstractFramework 0.6.2` or `already up to date`.
+  **Install AbstractFramework.command** again) finds the existing install and says what it does:
+  `AbstractFramework <yours> found: upgrading to AbstractFramework <latest>` or `already up to
+  date` for installs from 0.6.2 on, which record their release. An install made by 0.6.1 or
+  earlier recorded none, so its first upgrade says `AbstractFramework found (abstractgateway 0.7.1;
+  its release was not recorded): upgrading to AbstractFramework 0.6.2`.
   The summary lists what changed, old -> new, under **Changes**, and ends with `Upgraded: …` or
   `Already up to date: …; nothing changed.` `install.ps1` does the same on Windows. See
   [Upgrade](docs/install.md#upgrade).
@@ -33,7 +37,7 @@ AbstractVision 0.3.31 and the terminal consoles `abstractgateway-console` 0.11.1
   `-WithTray`, `-NoFull`) turn one back.
 - **The libraries land on the release's tested versions.** The installer installs AbstractCore,
   AbstractRuntime, AbstractAgent, AbstractSkill, AbstractMemory, AbstractSemantics and the voice,
-  vision and music packages at exactly the versions of the AbstractFramework release, not only at
+  vision, music and 3D packages at exactly the versions of the AbstractFramework release, not only at
   the gateway's minimums. `--print-versions` (`-PrintVersions`) lists the release and that matrix.
   `--pin latest` still installs the newest gateway and libraries, and records no release.
 - **The gateway restarts whenever anything changed**, a library alone included: the macOS login
@@ -68,7 +72,7 @@ AbstractVision 0.3.31 and the terminal consoles `abstractgateway-console` 0.11.1
   "abstractcore[gpu]"` (adds every local engine an NVIDIA or AMD machine runs). The earlier extra
   names still install as deprecated aliases; see AbstractCore's
   [Installation](https://github.com/lpalbou/abstractcore/blob/main/docs/installation.md#deprecated-aliases).
-  `abstract3d` now comes with AbstractCore in every profile.
+  `abstract3d` now comes with AbstractCore in every profile, pinned at 0.3.1.
 - **Recommendations for every capability** (AbstractCore 2.19.0).
   `abstractcore models recommendations` shows the recommended model for text, image input, speech
   output, speech input, image, video and music on every kind of machine (`--host`: this one), with

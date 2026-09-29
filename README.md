@@ -330,6 +330,7 @@ and tested together.
 | PyPI | `abstractvoice` | 0.13.0 |
 | PyPI | `abstractvision` | 0.3.31 |
 | PyPI | `abstractmusic` | 0.1.15 |
+| PyPI | `abstract3d` | 0.3.1 |
 | npm | `@abstractframework/flow` | 0.4.0 |
 | npm | `@abstractframework/code` | 0.6.1 |
 | npm | `@abstractframework/observer` | 0.2.1 |
@@ -342,8 +343,8 @@ and tested together.
 | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.7.2 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.19.0 |
 
-`abstract3d` (0.3.1) comes with AbstractCore in every profile. The optional add-on that is not
-part of any profile installs separately: `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)
+`abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
+not part of any profile installs separately: `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)
 comes with the gateway, which carries its curated skill shelf; install it on its own with
 `pip install abstractskill`.
 

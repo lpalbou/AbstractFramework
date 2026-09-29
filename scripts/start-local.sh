@@ -15,7 +15,7 @@
 #   ./scripts/start-local.sh --build=apple   # force a profile (light|apple|gpu|auto)
 #
 # --build defaults to the `auto` profile, which is `apple` on macOS: that is
-# what installs the heavy local-engine extras ([all-apple] — mlx, mlx-lm,
+# what installs the local engines (abstractcore[apple] — mlx, mlx-lm,
 # mlx-vlm at their pinned floors). build.sh's own default is `light`, which
 # installs NO extras, so `bash build.sh` with no argument leaves the MLX
 # provider unbuildable however many times you run it.
@@ -50,7 +50,7 @@ Usage: ./scripts/start-local.sh [--build[=PROFILE]] [--no-build]
   --build             rebuild every local package first, then start
   --build=PROFILE     same, with an explicit profile: light | apple | gpu | auto
                       (default: auto — resolves to apple on macOS, i.e. the
-                       [all-apple] extras that carry mlx / mlx-lm / mlx-vlm)
+                       abstractcore[apple], which carries mlx / mlx-lm / mlx-vlm)
   --no-build          explicit form of the default
   -h, --help          this message
 EOF

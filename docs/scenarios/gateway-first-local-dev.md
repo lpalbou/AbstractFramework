@@ -83,11 +83,9 @@ Smoke check:
 curl -sS http://127.0.0.1:8080/api/health
 ```
 
-Read the local admin user token for browser UIs:
-
-```bash
-cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token"
-```
+The browser UIs sign in as user `admin` with the gateway's admin token: `abstractgateway serve`
+prints it when it starts (`Gateway admin token: …`). Paste that value where a client asks for the
+token (`--token <admin token>` on the command line).
 
 ## Step 4: Start the thin clients
 

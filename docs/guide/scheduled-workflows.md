@@ -26,11 +26,15 @@ If you stop the gateway process, nothing ticks. When it restarts, due waits resu
 
 Endpoint: `POST /api/gateway/runs/schedule`
 
+`<admin token>` is the gateway's admin token: `abstractgateway serve` prints it when it starts
+(`Gateway admin token: …`), and the installer's summary shows it in its `--token` lines. Paste the
+value in place of `<admin token>`.
+
 Example: start now, repeat every 20 minutes forever:
 
 ```bash
 curl -sS -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
+  -H "Authorization: Bearer <admin token>" \
   -H "Content-Type: application/json" \
   -d '{
     "bundle_id": "my-bundle",
@@ -46,7 +50,7 @@ Example: start at a specific time (UTC ISO), run 10 times:
 
 ```bash
 curl -sS -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
+  -H "Authorization: Bearer <admin token>" \
   -H "Content-Type: application/json" \
   -d '{
     "bundle_id": "my-bundle",

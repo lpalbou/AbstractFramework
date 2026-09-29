@@ -1323,3 +1323,13 @@ Unlock-Install
     assert "wait until it finishes" in out and "Nothing was changed." in out
     assert "took over a stale installer lock (pid 999999 is no longer running)" in out and "HELD True" in out, out
     assert "GONE True" in out, out
+
+
+def test_release_profile_names_no_core_extra() -> None:
+    """AbstractCore has three install settings (light, apple, gpu); the light profile is plain
+    `abstractcore`, so the release profile names no core extra (the old extra names are deprecated
+    aliases and must not be advertised)."""
+    import abstractframework
+
+    assert abstractframework.CORE_DEFAULT_EXTRAS == []
+    assert abstractframework.get_release_profile()["core_extras"] == []

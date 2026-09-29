@@ -334,6 +334,7 @@ and tested together.
 | PyPI | `abstractvoice` | 0.13.0 |
 | PyPI | `abstractvision` | 0.3.31 |
 | PyPI | `abstractmusic` | 0.1.15 |
+| PyPI | `abstract3d` | 0.3.1 |
 | npm | `@abstractframework/flow` | 0.4.0 |
 | npm | `@abstractframework/code` | 0.6.1 |
 | npm | `@abstractframework/observer` | 0.2.1 |
@@ -346,8 +347,8 @@ and tested together.
 | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.7.2 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.19.0 |
 
-`abstract3d` (0.3.1) comes with AbstractCore in every profile. The optional add-on that is not
-part of any profile installs separately: `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)
+`abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
+not part of any profile installs separately: `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)
 comes with the gateway, which carries its curated skill shelf; install it on its own with
 `pip install abstractskill`.
 
@@ -565,10 +566,10 @@ Notes for LLMs working in this repo:
 ## Release Profile (Pinned Versions)
 
 - [pyproject.toml](pyproject.toml): Single source of truth for pinned ecosystem versions and extras.
-- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
+- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.6.2 pins (PyPI, `==`): abstractgateway 0.7.2, abstractassistant 0.9.1, abstractcore 2.19.0, AbstractRuntime 0.7.1, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.13.0, abstractvision 0.3.31, abstractmusic 0.1.15.
+- abstractframework 0.6.2 pins (PyPI, `==`): abstractgateway 0.7.2, abstractassistant 0.9.1, abstractcore 2.19.0, AbstractRuntime 0.7.1, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.13.0, abstractvision 0.3.31, abstractmusic 0.1.15, abstract3d 0.3.1.
 - Released with it: npm `@abstractframework/flow` 0.4.0, `code` 0.6.1, `observer` 0.2.1, `continuum` 0.4.0, `entity` 0.3.0 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.11.1 (built by the installer by default), `abstractcore-console` 0.4.1, `abstractcode` 0.7.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.7.2`, `ghcr.io/lpalbou/abstractcore-server:2.19.0`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
@@ -659,6 +660,7 @@ dependencies = [
     "abstractvoice==0.13.0",
     "abstractvision==0.3.31",
     "abstractmusic==0.1.15",
+    "abstract3d==0.3.1",
 ]
 
 [project.optional-dependencies]
@@ -745,6 +747,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvoice": "0.13.0",
     "abstractvision": "0.3.31",
     "abstractmusic": "0.1.15",
+    "abstract3d": "0.3.1",
     "abstractassistant": "0.9.1",
 }
 
@@ -759,6 +762,7 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
     "abstractvoice": "abstractvoice",
     "abstractvision": "abstractvision",
     "abstractmusic": "abstractmusic",
+    "abstract3d": "abstract3d",
     "abstractassistant": "abstractassistant",
 }
 
@@ -779,15 +783,10 @@ CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstracttui": "0.6.0",
 }
 
-CORE_DEFAULT_EXTRAS = [
-    "remote",
-    "tools",
-    "media",
-    "vision",
-    "voice",
-    "audio",
-    "music",
-]
+# The light profile installs plain `abstractcore` (no extra): AbstractCore's light setting already
+# carries every remote provider, the tools, media and the capability plugins. The apple and gpu
+# profiles get AbstractCore's local engines through the gateway's profile.
+CORE_DEFAULT_EXTRAS: list[str] = []
 
 # Convenience re-exports (AbstractCore is a base dependency of this meta-package).
 # Keep this import lightweight: do not import optional tool/media deps here.
@@ -2123,12 +2122,14 @@ AbstractObserver is replay-first: it renders runs by replaying the ledger, then 
 
 An automation runs a workflow on a fixed interval and keeps every run as a conversation. Create
 one from the Observer (**Launch → Automate**), from an Assistant conversation (**Schedule this
-conversation…**), or through the gateway API on a gateway that advertises the Automations API:
+conversation…**), or through the gateway API on a gateway that advertises the Automations API.
+`<admin token>` is the gateway's admin token: `abstractgateway serve` prints it when it starts
+(`Gateway admin token: …`), and the installer's summary shows it in its `--token` lines. Paste the
+value in place of `<admin token>`.
 
 ```bash
-TOKEN=$(cat "<data dir>/auth/bootstrap-admin-token")   # abstractgateway-config status prints <data dir>
 curl -X POST "http://127.0.0.1:8080/api/gateway/automations" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: Bearer <admin token>" \
   -H "Content-Type: application/json" \
   -d '{"request_id":"memory-watch-1","title":"Memory every 2 minutes",
        "target":{"flow_id":"@default","interface":"abstractcode.agent.v1",
@@ -3413,13 +3414,15 @@ again does the same.
 
 The line always runs the installer of the latest AbstractFramework release. It:
 
-- finds the existing install and says what it does:
-  `AbstractFramework 0.6.1 found: upgrading to AbstractFramework 0.6.2`, or
-  `AbstractFramework 0.6.2 found: already up to date` (every part is still checked, and repaired
-  when needed);
+- finds the existing install and says what it does. An install made by 0.6.2 or later recorded its
+  release, so the line names it: `AbstractFramework <yours> found: upgrading to AbstractFramework
+  <latest>`, or `AbstractFramework <yours> found: already up to date` (every part is still checked,
+  and repaired when needed). An install made by 0.6.1 or earlier recorded no release, so its first
+  upgrade says `AbstractFramework found (abstractgateway 0.7.1; its release was not recorded):
+  upgrading to AbstractFramework 0.6.2` (with the gateway version you have);
 - installs the gateway version that release pins, and every library the gateway uses
   (AbstractCore, AbstractRuntime, AbstractAgent, AbstractSkill, AbstractMemory, AbstractSemantics
-  and the voice, vision and music packages) at the exact version released and tested with it ([Check your versions](#check-your-versions) shows
+  and the voice, vision, music and 3D packages) at the exact version released and tested with it ([Check your versions](#check-your-versions) shows
   how to print the list);
 - rebuilds the terminal console (`abstractgateway-console`) and AbstractCode's terminal client
   (`abstractcode`) when the release pins newer versions, with the Rust toolchain from the first
@@ -3438,13 +3441,15 @@ The line always runs the installer of the latest AbstractFramework release. It:
 - never leaves the gateway stopped: when the login item cannot be registered, the gateway starts in
   the background and the summary says how to turn start at login on;
 - ends with what changed, old -> new, under **Changes** (`Changes: none` when nothing moved), and
-  `Upgraded: AbstractFramework 0.6.1 -> 0.6.2` or `Already up to date: AbstractFramework 0.6.2;
-  nothing changed.`
+  `Upgraded: AbstractFramework <yours> -> <latest>` (`Upgraded: AbstractFramework (not recorded) ->
+  0.6.2` for the first upgrade of a 0.6.1 or earlier install) or `Already up to date:
+  AbstractFramework <yours>; nothing changed.`
 
 #### Upgrading from 0.6.1 or earlier
 
-Installs made by AbstractFramework 0.6.1 or earlier did not record your install options. The first
-re-run reads them from what is installed: whether the terminal console and `abstractcode` are
+Installs made by AbstractFramework 0.6.1 or earlier recorded neither their release nor your install
+options. The first re-run says `AbstractFramework found (abstractgateway <version>; its release was
+not recorded): upgrading to AbstractFramework 0.6.2`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
 there, whether the gateway has the tray extra and the AbstractCore commands, whether the compiled
 extras were built (`--full`), and a custom data directory through the gateway pointer. It prints
 what it found (`read from disk: …`) and records it for later runs. You can also repeat your
@@ -3999,7 +4004,7 @@ does not.
 `abstractframework` 0.6.2 pins `abstractgateway==0.7.2`, `abstractassistant==0.9.1`,
 `abstractcore==2.19.0`, `AbstractRuntime==0.7.1`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.0`,
-`abstractvision==0.3.31` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
+`abstractvision==0.3.31`, `abstractmusic==0.1.15` and `abstract3d==0.3.1`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
 installed package whose version differs from these pins.
@@ -4044,6 +4049,10 @@ Choose Light when:
 - you use local model servers through HTTP, such as LM Studio, Ollama, vLLM, llama.cpp, or LocalAI;
 - you want the smallest and least surprising install;
 - you do not want pip to install MLX, CUDA, Diffusers, or local model-runtime stacks.
+
+The Light environment takes about 0.9 GB in a fresh Python 3.12 environment. Most of it is
+AbstractCore's light setting, which includes the Office-document parsers, the built-in tools and
+the voice, vision, music and 3D plugins with their remote backends; it installs no local engine.
 
 After install, run `abstractframework doctor`, start the gateway and configure providers in its
 console (see [Start the gateway](#start-the-gateway-and-apps)).
@@ -4096,8 +4105,8 @@ Run or install them next to the Python stack:
 
 The browser apps need a running gateway. The gateway installs, starts and serves them itself, on
 its own address at `/apps/<app>/` (it installs Node.js for them when it is missing); running one on
-its own with `npx` needs Node.js 18 or later. `abstract3d` comes with AbstractCore in every
-profile; the optional add-on outside the profiles installs on its own: `pip install abstractcamera`.
+its own with `npx` needs Node.js 18 or later. `abstract3d` (pinned above) comes with
+AbstractCore in every profile; the optional add-on outside the profiles installs on its own: `pip install abstractcamera`.
 `abstractskill` comes with the gateway, which carries its curated skill shelf.
 
 ## Start the gateway and apps
@@ -5866,7 +5875,7 @@ The meta-package version (`0.6.2` for this release).
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.6.2:
 `abstractcore` 2.19.0, `abstractruntime` 0.7.1, `abstractagent` 0.3.17, `abstractgateway` 0.7.2,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.0, `abstractvision` 0.3.31,
-`abstractmusic` 0.1.15, `abstractassistant` 0.9.1.
+`abstractmusic` 0.1.15, `abstract3d` 0.3.1, `abstractassistant` 0.9.1.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -5889,7 +5898,11 @@ The Rust terminal tools released with this version, installed with `cargo instal
 
 ### `CORE_DEFAULT_EXTRAS`
 
-List of AbstractCore extras implied by the default framework install profile (remote-first): `remote`, `tools`, `media`, `vision`, `voice`, `audio`, `music`.
+The AbstractCore extras the light profile installs: none (an empty list). AbstractCore has three
+install settings, `abstractcore` (light: every remote provider, the tools, media inputs and the
+capability plugins), `abstractcore[apple]` and `abstractcore[gpu]`; the light profile uses the
+first, and the `apple` and `gpu` profiles get AbstractCore's local engines through the gateway's
+profile. `get_release_profile()["core_extras"]` returns the same list.
 
 ### `get_release_profile()`
 
@@ -7207,11 +7220,15 @@ If you stop the gateway process, nothing ticks. When it restarts, due waits resu
 
 Endpoint: `POST /api/gateway/runs/schedule`
 
+`<admin token>` is the gateway's admin token: `abstractgateway serve` prints it when it starts
+(`Gateway admin token: …`), and the installer's summary shows it in its `--token` lines. Paste the
+value in place of `<admin token>`.
+
 Example: start now, repeat every 20 minutes forever:
 
 ```bash
 curl -sS -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
+  -H "Authorization: Bearer <admin token>" \
   -H "Content-Type: application/json" \
   -d '{
     "bundle_id": "my-bundle",
@@ -7227,7 +7244,7 @@ Example: start at a specific time (UTC ISO), run 10 times:
 
 ```bash
 curl -sS -X POST "http://127.0.0.1:8080/api/gateway/runs/schedule" \
-  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
+  -H "Authorization: Bearer <admin token>" \
   -H "Content-Type: application/json" \
   -d '{
     "bundle_id": "my-bundle",
@@ -7954,11 +7971,9 @@ Smoke check:
 curl -sS http://127.0.0.1:8080/api/health
 ```
 
-Read the local admin user token for browser UIs:
-
-```bash
-cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token"
-```
+The browser UIs sign in as user `admin` with the gateway's admin token: `abstractgateway serve`
+prints it when it starts (`Gateway admin token: …`). Paste that value where a client asks for the
+token (`--token <admin token>` on the command line).
 
 ## Step 4: Start the thin clients
 

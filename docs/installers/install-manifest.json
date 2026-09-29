@@ -410,6 +410,12 @@
       "version": "0.1.15"
     },
     {
+      "distribution": "abstract3d",
+      "id": "abstract3d",
+      "registry": "pypi",
+      "version": "0.3.1"
+    },
+    {
       "distribution": "abstractassistant",
       "id": "abstractassistant",
       "registry": "pypi",

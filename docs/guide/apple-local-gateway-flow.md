@@ -50,14 +50,9 @@ abstractgateway serve --host 127.0.0.1 --port 8080
 
 The Gateway API is now at `http://127.0.0.1:8080`.
 
-Gateway creates `default/admin` if needed and writes the browser-login token to
-`$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token`:
-
-```bash
-cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token"
-```
-
-Use that token with Gateway user `admin`.
+Gateway creates `default/admin` if needed and prints its token when it starts
+(`Gateway admin token: …`). Use that token with Gateway user `admin`; below it is written
+`<admin token>`, to paste in its place.
 
 ## Start Flow
 
@@ -91,11 +86,11 @@ Run these while Gateway is still running.
 
 ```bash
 curl -s \
-  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
+  -H "Authorization: Bearer <admin token>" \
   http://127.0.0.1:8080/api/gateway/discovery/capabilities | python -m json.tool
 
 curl -s \
-  -H "Authorization: Bearer $(cat "$ABSTRACTGATEWAY_DATA_DIR/auth/bootstrap-admin-token")" \
+  -H "Authorization: Bearer <admin token>" \
   http://127.0.0.1:8080/api/gateway/discovery/providers | python -m json.tool
 ```
 

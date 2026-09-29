@@ -259,12 +259,14 @@ AbstractObserver is replay-first: it renders runs by replaying the ledger, then 
 
 An automation runs a workflow on a fixed interval and keeps every run as a conversation. Create
 one from the Observer (**Launch → Automate**), from an Assistant conversation (**Schedule this
-conversation…**), or through the gateway API on a gateway that advertises the Automations API:
+conversation…**), or through the gateway API on a gateway that advertises the Automations API.
+`<admin token>` is the gateway's admin token: `abstractgateway serve` prints it when it starts
+(`Gateway admin token: …`), and the installer's summary shows it in its `--token` lines. Paste the
+value in place of `<admin token>`.
 
 ```bash
-TOKEN=$(cat "<data dir>/auth/bootstrap-admin-token")   # abstractgateway-config status prints <data dir>
 curl -X POST "http://127.0.0.1:8080/api/gateway/automations" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: Bearer <admin token>" \
   -H "Content-Type: application/json" \
   -d '{"request_id":"memory-watch-1","title":"Memory every 2 minutes",
        "target":{"flow_id":"@default","interface":"abstractcode.agent.v1",
