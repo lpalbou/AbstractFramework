@@ -134,7 +134,7 @@
         <button type="button" class="qs-tab" role="tab" id="qs-mac" aria-controls="qs-term" aria-selected="true" data-os="mac" data-prompt="$" data-cmd="curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh" data-note="macOS 13 or later (the Apple Silicon engines need macOS 14), about 5 GB free. Installs in your user account, local voice included, and opens the web console signed in; running it again repairs or upgrades. Prefer a double-click? &lt;a href=&quot;install.html#choose&quot;&gt;The .pkg installer&lt;/a&gt;.">macOS</button>
         <button type="button" class="qs-tab" role="tab" id="qs-linux" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="linux" data-prompt="$" data-cmd="curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh" data-note="x86_64 or aarch64; start at login is a &lt;code&gt;systemd --user&lt;/code&gt; service. Works the same over SSH on a headless server. &lt;a href=&quot;install.html#headless&quot;&gt;Headless install&lt;/a&gt; or &lt;a href=&quot;install.html&quot;&gt;the container&lt;/a&gt;.">Linux</button>
         <button type="button" class="qs-tab" role="tab" id="qs-win" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="win" data-prompt="PS&gt;" data-cmd='powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"' data-note="Windows 10 22H2 or later, or Windows 11. Installs under your user account, no administrator rights.">Windows</button>
-        <button type="button" class="qs-tab" role="tab" id="qs-py" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="py" data-prompt="$" data-cmd="pip install abstractframework" data-note="Python 3.10 to 3.13: the framework's Python packages, pinned together (Abstract3D and AbstractCamera install separately). Add &lt;code&gt;[apple]&lt;/code&gt; or &lt;code&gt;[gpu]&lt;/code&gt; for local engines, check with &lt;code&gt;abstractframework doctor&lt;/code&gt;, then run &lt;code&gt;abstractgateway serve&lt;/code&gt;.">Python</button>
+        <button type="button" class="qs-tab" role="tab" id="qs-py" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="py" data-prompt="$" data-cmd="pip install abstractframework" data-note="Python 3.10 to 3.13: the framework's Python packages, pinned together (AbstractCamera installs separately). Add &lt;code&gt;[apple]&lt;/code&gt; or &lt;code&gt;[gpu]&lt;/code&gt; for local engines, check with &lt;code&gt;abstractframework doctor&lt;/code&gt;, then run &lt;code&gt;abstractgateway serve&lt;/code&gt;.">Python</button>
       </div>
       <!-- VERIFIED-DOCS docs/install.md:57 (this default line; the tabs switch to docs/install.md:57, 74 and README.md:294) -->
       <div class="qs-term" id="qs-term" role="tabpanel" aria-labelledby="qs-mac">
@@ -210,14 +210,12 @@ music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambien
           <li>An OpenAI-compatible <code>/v1</code> server, a web console and <code>abstractcore-console</code></li>
           <li>Model recommendations for this machine before you download</li>
         </ul>
-        <!-- VERIFIED-DOCS abstractcore@v2.18.0 pyproject.toml:99-210 (profiles: apple :169, gpu :194); PLAN Q1 (three install settings, operator decision) -->
+        <!-- VERIFIED-DOCS abstractcore 2.19.0 on PyPI (requires_dist: base includes openai and anthropic; extras apple, gpu); abstractcore@v2.19.0 pyproject.toml:66-72, :144, :174; PLAN Q1 -->
 <div class="code-block" style="margin-top:1rem">
 <pre><code><span class="line-kw">pip install</span> abstractcore            <span class="line-cmt"># light: OpenAI, Anthropic, OpenRouter, Portkey, LM Studio, Ollama, vLLM, any OpenAI-compatible endpoint</span>
 <span class="line-kw">pip install</span> <span class="line-str">"abstractcore[apple]"</span>   <span class="line-cmt"># light + local MLX engines on Apple silicon</span>
 <span class="line-kw">pip install</span> <span class="line-str">"abstractcore[gpu]"</span>     <span class="line-cmt"># light + local vLLM on NVIDIA / AMD GPUs</span></code></pre>
         </div>
-        <!-- abstractcore@v2.18.0 abstractcore/providers/openai_provider.py:25-31, anthropic_provider.py:27-42 (SDK imports); same note as core.html -->
-        <p class="install-note-small">AbstractCore 2.19.0 (coming) ships the OpenAI and Anthropic SDKs with the base install; with 2.18.0 add them: <code class="long">pip install openai anthropic</code>.</p>
         <div class="entry-scenario">
           <h4>When to use AbstractCore</h4>
           <p>You are writing a script, a notebook or a tool. You want to talk to models with minimal setup and switch between local runtimes and cloud APIs without rewriting your code. You do not need persistent runs or a server.</p>
@@ -245,11 +243,11 @@ music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambien
           <li>Thin clients in a terminal, a browser and the tray (the menu bar on macOS); Telegram and email bridges</li>
           <li>Start on one device, continue on another</li>
         </ul>
-        <!-- VERIFIED-DOCS README.md:60; abstractgateway/README.md@v0.7.1 "Docker server" -->
+        <!-- VERIFIED-DOCS README.md:60; abstractgateway/README.md@v0.7.2 "Docker server" -->
 <div class="code-block" style="margin-top:1rem">
 <pre><code><span class="line-kw">pip install</span> abstractgateway
 <span class="line-cmt"># or</span>
-<span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre>
+<span class="line-kw">docker pull</span> ghcr.io/lpalbou/abstractgateway:0.7.2</code></pre>
         </div>
         <div class="entry-scenario">
           <h4>When to use AbstractGateway</h4>
@@ -685,28 +683,25 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
         <div class="mode-tags"><span class="mode-tag">SSH</span><span class="mode-tag">systemd --user</span><span class="mode-tag">GHCR</span></div>
       </div>
     </div>
-    <!-- profile badges and notes: names as core.html (21180fb); abstractcore@v2.18.0 pyproject.toml:169-176 (apple = MLX only), :194-198 (gpu = vLLM only); abstractcore main ee9a115 (2.19.0, coming) pyproject.toml:66-72 (light incl. OpenAI and Anthropic SDKs), apple :144-172, gpu :174-200; abstractvision pyproject all-apple / all-gpu (MLX-Gen on Apple only, Diffusers, stable-diffusion.cpp); providers v2.18.0 registry.py:162-290 -->
+    <!-- profile badges: abstractcore 2.19.0 on PyPI requires_dist (base: openai, anthropic; extra "apple": mlx, mlx-lm, mlx-vlm, transformers, llama-cpp-python, sentence-transformers, abstractvoice[all-apple], abstractvision[all-apple] (MLX-Gen, Diffusers), abstractmusic[all-apple], playwright; extra "gpu": vllm, transformers, llama-cpp-python, sentence-transformers, abstractvoice[all-gpu], abstractvision[all-gpu] (Diffusers), abstractmusic[all-gpu], playwright); names as core.html; providers registry.py:162-290 -->
     <div class="modes-grid profile-cards reveal" style="margin-top:1.5rem">
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <h3>Light</h3>
         <p>Remote inference: OpenAI, Anthropic, OpenRouter, Portkey, LM Studio, Ollama, vLLM and any OpenAI-compatible endpoint. Runs anywhere Python runs.</p>
         <div class="mode-tags"><span class="mode-tag">OpenAI</span><span class="mode-tag">Anthropic</span><span class="mode-tag">OpenRouter</span><span class="mode-tag">Portkey</span><span class="mode-tag">LM Studio</span><span class="mode-tag">Ollama</span><span class="mode-tag">vLLM</span><span class="mode-tag">OpenAI-compatible</span></div>
-        <p class="profile-note" aria-hidden="true"></p>
       </div>
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--green)" stroke="none" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></div>
         <h3>Apple</h3>
         <p>Everything in Light, plus the local MLX and Metal engines on Apple Silicon (macOS 14 or later) for text, voice, images and video.</p>
         <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">MLX</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">MLX-Gen (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span><span class="mode-tag">Headless browser</span></div>
-        <p class="profile-note">With 2.18.0 this installs the MLX engine; the rest comes with AbstractCore 2.19.0 (coming).</p>
       </div>
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg></div>
         <h3>GPU</h3>
         <p>Everything in Light, plus the local engines for NVIDIA CUDA or AMD ROCm on Linux, and Windows where the wheels exist.</p>
         <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">vLLM engine</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">Diffusers (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span><span class="mode-tag">Headless browser</span></div>
-        <p class="profile-note">With 2.18.0 this installs the vLLM engine; the rest comes with AbstractCore 2.19.0 (coming).</p>
       </div>
     </div>
     <!-- VERIFIED-DOCS docs/install.md:393 (not runnable hermetically: needs a remote server) -->
@@ -725,7 +720,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
     <div class="section-header reveal">
       <div class="section-label">Ecosystem</div>
       <h2 class="section-title">Every Component, Layer by Layer</h2>
-      <p class="section-desc">From the library to the applications: 21 components, published as 24 main packages on PyPI, npm and crates.io, grouped by the layer they belong to. AbstractCore and its plugins work on their own; each higher layer builds on the ones below. Versions are the released ones; Abstract3D and AbstractCamera install separately.</p>
+      <p class="section-desc">From the library to the applications: 21 components, published as 24 main packages on PyPI, npm and crates.io, grouped by the layer they belong to. AbstractCore and its plugins work on their own; each higher layer builds on the ones below. Versions are the released ones; AbstractCamera installs separately.</p>
     </div>
     <div class="components-grid">
       <div class="comp-group reveal"><h3>Library</h3><p>AbstractCore and its capability plugins, in your own Python code</p></div>
@@ -736,9 +731,9 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
           <img src="assets/img/logos/core.png" alt="" width="24" height="24" style="border-radius:6px;background:transparent">
           <span class="comp-tag foundation">Foundation</span>
         </div>
-        <h3>AbstractCore <span class="ver">2.18.0</span></h3>
+        <h3>AbstractCore <span class="ver">2.19.0</span></h3>
         <p>One Python API over ten provider types: OpenAI, Anthropic, OpenRouter, Portkey, Ollama, LM Studio, MLX, Hugging Face, vLLM and any OpenAI-compatible endpoint. Tools, structured output, streaming, media input, embeddings, capability plugins and an OpenAI-compatible server.</p>
-        <ul class="sub-list"><li>Web console: <code>abstractcore serve</code>, then the printed <code>/console</code> link</li><li>Terminal console: <code>abstractcore-console</code> (crates.io, 0.4.0)</li></ul>
+        <ul class="sub-list"><li>Web console: <code>abstractcore serve</code>, then the printed <code>/console</code> link</li><li>Terminal console: <code>abstractcore-console</code> (crates.io, 0.4.1)</li></ul>
         <div class="comp-links">
           <a class="comp-link" href="core.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractcore" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -782,7 +777,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
           <span class="comp-tag modality">Capability Plugin</span>
         </div>
-        <h3>AbstractVision <span class="ver">0.3.30</span></h3>
+        <h3>AbstractVision <span class="ver">0.3.31</span></h3>
         <p>Image generation, editing and upscaling, text-to-video and image-to-video through MLX-Gen on Apple Silicon, Diffusers, stable-diffusion.cpp or OpenAI-compatible services.</p>
         <div class="comp-links">
           <a class="comp-link" href="vision.html">Docs &rarr;</a>
@@ -798,7 +793,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
           <span class="comp-tag modality">Capability Plugin</span>
         </div>
         <h3>Abstract3D <span class="ver">0.3.1</span></h3>
-        <p>Image-to-3D and text-to-3D with a validated local TripoSR backend and GLB output, mesh operations and AI tools; other local backends are experimental. Installs separately: <code>pip install abstract3d</code>.</p>
+        <p>Image-to-3D and text-to-3D with a validated local TripoSR backend and GLB output, mesh operations and AI tools; other local backends are experimental. Part of the framework install since 0.6.2 (AbstractCore installs it).</p>
         <div class="comp-links">
           <a class="comp-link" href="3d.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstract3d" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -905,9 +900,9 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
           <img src="assets/img/logos/gateway.png" alt="" width="29" height="29" style="border-radius:6px;background:transparent">
           <span class="comp-tag control">Control Plane</span>
         </div>
-        <h3>AbstractGateway <span class="ver">0.7.1</span></h3>
+        <h3>AbstractGateway <span class="ver">0.7.2</span></h3>
         <p>The control plane: durable runs over HTTP and SSE, automations, users and auth, the Network setting, and the browser apps on one address. SQLite or Postgres.</p>
-        <ul class="sub-list"><li>Web console at <code>/console</code>: setup, models that fit this machine, engines, network, users</li><li>Terminal console: <code>abstractgateway-console</code> (crates.io, 0.11.0), the same setup over SSH</li></ul>
+        <ul class="sub-list"><li>Web console at <code>/console</code>: setup, models that fit this machine, engines, network, users</li><li>Terminal console: <code>abstractgateway-console</code> (crates.io, 0.11.1), the same setup over SSH</li></ul>
         <div class="comp-links">
           <a class="comp-link" href="gateway.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstractgateway" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -1293,7 +1288,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
     </div>
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Video (Wan 2.2)</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1.25rem">Generated on-device with AbstractVision through MLX-Gen. Local video generation runs through MLX-Gen, validated on Apple Silicon first; the local Diffusers text-to-video path is experimental and temporarily disabled. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. At 1280&times;704, Wan 2.2 TI2V-5B needs about 58 GiB of memory: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
+      <p style="color:var(--text-secondary);margin-bottom:1.25rem">Generated on-device with AbstractVision through MLX-Gen. Local video generation runs through MLX-Gen, validated on Apple Silicon first; the local Diffusers text-to-video path is experimental and temporarily disabled. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. Decoded in tiles by default, Wan 2.2 TI2V-5B peaks at 16.3 GiB of memory at 832&times;480 and 25.4 GiB at 1280&times;704 on Apple silicon: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
       <div class="code-tabs video-tabs">
         <div class="tab-nav">
           <button class="tab-btn active" data-tab="vid-t2v">Text-to-video</button>
@@ -1308,7 +1303,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
                   <source src="assets/video/wan-ti2v-t2v-alpine-lake.mp4" type="video/mp4">
                   Your browser cannot play this H.264 MP4 video.
                 </video>
-                <figcaption>Wan 2.2 TI2V-5B, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 25.7 min on an M5 Max &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
+                <figcaption>Wan 2.2 TI2V-5B, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas), 121 frames at 24 fps, 50 steps, 25.7 min on an M5 Max &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
               </figure>
               <figure class="c3-slide">
                 <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
@@ -1339,7 +1334,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
                 <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
                 Your browser cannot play this H.264 MP4 video.
               </video>
-              <figcaption><strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse"</figcaption>
+              <figcaption><strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse"</figcaption>
             </figure>
           </div>
         </div>
@@ -1860,7 +1855,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
       <p class="section-desc">The framework moves in coordinated releases: one version of <code>abstractframework</code> always installs the same, tested set of packages.</p>
     </div>
     <div class="roadmap-timeline reveal">
-      <div class="roadmap-item upcoming"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status planned">Coming</span><h4>Recommendations for every capability, updates from the console</h4><p>AbstractCore 2.18.1 adds <code class="long">abstractcore models recommendations</code>: the recommended model for every capability on every kind of machine. AbstractGateway 0.7.2 runs the installer when you update from the console, the menu bar on macOS or the system tray, or the terminal console.</p></div></div>
+      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.2 &middot; 2026-09-29</span><h4>One line installs, upgrades and repairs</h4><p>Re-running the install line finds the existing install, upgrades it to the release's tested versions and lists what changed; <strong>Update</strong> in the web console, the terminal console and the menu-bar or tray icon runs that same line (AbstractGateway 0.7.2). AbstractCore 2.19.0 adds <code class="long">abstractcore models recommendations</code>, the recommended model for every capability, and installs Abstract3D.</p></div></div>
       <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.1 &middot; 2026-09-28</span><h4>Every command on your PATH</h4><p>The installer builds <code>abstractcode</code> and exposes the AbstractCore, voice, music and vision commands next to the gateway; the terminal app says how to sign in; Run now explains itself the same way in every client.</p></div></div>
       <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.0 &middot; 2026-09-28</span><h4>Remote machines work like a Mac</h4><p>Apps served through the gateway at <code>/apps/&lt;app&gt;/</code>, the local gateway pointer, automations in AbstractCode, history that keeps whole messages up to 50,000 tokens, voice that says what it can do, DNS-rebinding protection.</p></div></div>
       <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.5.0 &middot; 2026-09-27</span><h4>Automations and a headless setup</h4><p>Automations in the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a>, the <a href="observer.html" style="color:var(--accent-light)">Observer</a> and <a href="flow.html" style="color:var(--accent-light)">Flow</a>; the terminal console installed by default; configuring a remote Linux server without a browser.</p></div></div>
@@ -1939,7 +1934,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
         AbstractFramework
       </a>
       <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
-      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.2</p>
       <p style="margin-top:.75rem">
         <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
