@@ -150,8 +150,7 @@
         <div class="install-step"><h4>Use it anywhere</h4><p>Apps at <code class="long">/apps/&lt;app&gt;/</code>, the terminal, or the menu bar on macOS or the system tray.</p></div>
       </div>
     </div>
-    <!-- PENDING-W2: R5b-hero (the hero block becomes examples/R5b hero verbatim) -->
-    <!-- E1 (W2 PASS): examples/E1-text/snippet.py verbatim (whole file), then E2-snippet (W2 PASS): examples/E2-defaults/snippet.py lines 7-16 verbatim -->
+    <!-- R5b-hero (W2 PASS): examples/R5b/hero.py verbatim (46.7 s, abstractframework 0.6.2; RESULTS.md R5b-hero) -->
 <div class="hero-code">
 <pre><code><span class="kw">from</span> abstractcore <span class="kw">import</span> create_llm
 
@@ -162,18 +161,17 @@ llm = <span class="fn">create_llm</span>(<span class="str">"mlx"</span>, model=<
 response = llm.<span class="fn">generate</span>(<span class="str">"In two sentences, what is a durable workflow runtime?"</span>)
 <span class="kw">print</span>(response.content)
 
-image = llm.<span class="fn">generate</span>(<span class="str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
-                     <span class="str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="str">"image"</span>)
+<span class="cmt"># Image, voice and music below use the defaults set once (defaults.sh, or the console's "Use recommended defaults")</span>
+image = llm.<span class="fn">generate</span>(<span class="str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>, output=<span class="str">"image"</span>)
+speech = llm.<span class="fn">generate</span>(<span class="str">"AbstractFramework: write once, generate everything, run anywhere."</span>, output=<span class="str">"voice"</span>)
+music = llm.<span class="fn">generate</span>(<span class="str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="str">"music"</span>)
+
 <span class="fn">open</span>(<span class="str">"lighthouse.png"</span>, <span class="str">"wb"</span>).<span class="fn">write</span>(image.outputs[<span class="str">"image"</span>][0].data)
-
-speech = llm.<span class="fn">generate</span>(text=<span class="str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
-                      output=<span class="str">"voice"</span>)
 <span class="fn">open</span>(<span class="str">"tagline.wav"</span>, <span class="str">"wb"</span>).<span class="fn">write</span>(speech.outputs[<span class="str">"voice"</span>][0].data)
-
-music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="str">"music"</span>)
 <span class="fn">open</span>(<span class="str">"ambient.wav"</span>, <span class="str">"wb"</span>).<span class="fn">write</span>(music.outputs[<span class="str">"music"</span>][0].data)</code></pre>
     </div>
-    <p class="qs-note" style="max-width:840px;margin:.5rem auto 0;text-align:left">The image, voice and music calls need their routes set once: the gateway console's <strong>Use recommended defaults</strong> sets voice and image where this computer runs them; set music with <code class="long">abstractcore config set-default output.music</code> or the console's Multimodal tab. <a href="#generate">Both forms &rarr;</a></p>
+    <p class="qs-note" style="max-width:840px;margin:.5rem auto 0;text-align:left">The image, voice and music calls need their routes set once: the gateway console's <strong>Use recommended defaults</strong> sets voice and image where this computer runs them; set music with <code class="long">abstractcore config set-default output.music</code> or the console's Multimodal tab. Qwen3.5-4B thinks before it answers: the first text call can take a while; pass <code>thinking="none"</code> for a quick reply. <a href="#generate">Both forms &rarr;</a></p>
+    <!-- thinking note: examples/RESULTS.md R5b-hero (first attempt 14 min of thinking; generate(..., thinking="none") answered in 0.6 s in a probe) -->
   </div>
 </section>
 
@@ -318,22 +316,22 @@ music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm a
       </div>
       <div class="tab-panel" id="tab-gen-http">
         <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code>. Paste the token that <code class="long">abstractcore serve --print-token</code> prints in place of <code>&lt;token&gt;</code>; the server asks for it even on loopback.</li></ul></div>
-        <!-- PENDING-W2: R5b-http (speech, music, image: the same trio as Python) -->
-        <!-- R5-http (W2 PASS): examples/R5/http.sh verbatim (http.run.log; RESULTS.md R5-http) -->
+        <!-- R5b-http (W2 PASS): examples/R5b/http.sh verbatim (speech 1.1 s, music 3.7 s, image 7.4 s; RESULTS.md R5b-http) -->
 <div class="code-block" data-lang="shell">
 <pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
 <span class="line-cmt"># Start the server first (another terminal): abstractcore serve --port 19740</span>
-
-curl -sS http://127.0.0.1:19740/v1/chat/completions -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d '{<span class="line-str">"model"</span>: <span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>, <span class="line-str">"reasoning_effort"</span>: <span class="line-str">"none"</span>,
-       <span class="line-str">"messages"</span>: [{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"In one sentence, what is an append-only ledger?"</span>}]}'
 
 curl -sS http://127.0.0.1:19740/v1/audio/speech -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
   -H <span class="line-str">"Content-Type: application/json"</span> \
   -d '{<span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>,
        <span class="line-str">"input"</span>: <span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>, <span class="line-str">"response_format"</span>: <span class="line-str">"wav"</span>}' \
   --output tagline.wav
+
+curl -sS http://127.0.0.1:19740/v1/audio/music -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>,
+       <span class="line-str">"prompt"</span>: <span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, <span class="line-str">"response_format"</span>: <span class="line-str">"wav"</span>}' \
+  --output ambient.wav
 
 curl -sS http://127.0.0.1:19740/v1/images/generations -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
   -H <span class="line-str">"Content-Type: application/json"</span> \
@@ -643,16 +641,21 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Des
       </div>
     </div>
     <div class="ledger-routes reveal">
-      <!-- PENDING-W2: R5b-gateway-api (pasted-token form, literal http://127.0.0.1:8080, RUN_ID captured) -->
-      <!-- E6 (W2 PASS; the stream line VERIFIED-DOCS abstractgateway routes/gateway.py:10416): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:6-11 (gateway 0.7.1, run.log) -->
-      <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:.5rem"><code>GW</code> is your gateway address, <code>TOKEN</code> your gateway token and <code>RUN_ID</code> the <code>run_id</code> that <code class="long">POST /api/gateway/runs/start</code> returns (see <a href="#flow">Flow</a>).</p>
+      <!-- R5b-gateway-api (W2 PASS): examples/R5b/gateway_api.sh verbatim (gateway 0.7.2; RESULTS.md R5b-gateway-api) -->
       <div class="code-block">
-<pre><code><span class="line-cmt"># Replay the ledger, then follow new records live (SSE)</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
-curl -sS -N -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger/stream"</span>
+<pre><code><span class="line-cmt"># &lt;token&gt;: &lt;data dir&gt;/auth/bootstrap-admin-token, or the console's one-time link (abstractgateway docs/configuration.md:120, v0.7.2)</span>
+
+<span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
+RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"bundle_id"</span>:<span class="line-str">"basic-agent"</span>,<span class="line-str">"input_data"</span>:{<span class="line-str">"prompt"</span>:<span class="line-str">"How long should I steep green tea?"</span>}}' \
+  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/start"</span> | python3 -c 'import json,sys; print(json.load(sys.stdin)[<span class="line-str">"run_id"</span>])')
+
+<span class="line-cmt"># Replay the ledger, then follow new records live (SSE; --max-time ends the sample)</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
+curl -sS -N --max-time 5 -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID/ledger/stream"</span>
 
 <span class="line-cmt"># The run and its ledger survive a gateway restart</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID"</span></code></pre>
+curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID"</span></code></pre>
       </div>
       <div class="comp-links" style="margin-top:1rem">
         <a class="comp-link" href="runtime.html">AbstractRuntime: runs, effects and the ledger &rarr;</a>
@@ -1142,26 +1145,26 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
       </div>
     </div>
 
-    <p class="reveal" style="color:var(--text-muted);margin-top:2.5rem;font-size:.85rem">In both calls, <code>GW</code> is your gateway address (for example <code>http://127.0.0.1:8080</code>) and <code>TOKEN</code> your gateway token.</p>
-    <div class="showcase-grid reveal" style="margin-top:1rem;align-items:start">
+    <div class="showcase-grid reveal" style="margin-top:2.5rem;align-items:start">
       <div style="min-width:0">
         <h3 style="margin-bottom:.75rem">Start a published workflow</h3>
-        <!-- PENDING-W2: R5b-gateway-api -->
-        <!-- E6 (W2 PASS): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:1-4 (gateway 0.7.1) -->
+        <!-- R5b-gateway-api (W2 PASS): examples/R5b/gateway_api.sh lines 1-6, a contiguous excerpt -->
         <div class="code-block">
-<pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
-  <span class="line-str">"$GW/api/gateway/runs/start"</span></code></pre>
+<pre><code><span class="line-cmt"># &lt;token&gt;: &lt;data dir&gt;/auth/bootstrap-admin-token, or the console's one-time link (abstractgateway docs/configuration.md:120, v0.7.2)</span>
+
+<span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
+RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"bundle_id"</span>:<span class="line-str">"basic-agent"</span>,<span class="line-str">"input_data"</span>:{<span class="line-str">"prompt"</span>:<span class="line-str">"How long should I steep green tea?"</span>}}' \
+  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/start"</span> | python3 -c 'import json,sys; print(json.load(sys.stdin)[<span class="line-str">"run_id"</span>])')</code></pre>
         </div>
       </div>
       <div style="min-width:0">
         <h3 style="margin-bottom:.75rem">Or whatever the gateway's default agent is</h3>
-        <!-- VERIFIED-DOCS AF/abstractgateway/docs/api.md:121-124 (variables renamed to the $TOKEN / $GW of the E6 block beside it) -->
+        <!-- VERIFIED-DOCS AF/abstractgateway/docs/api.md:121-124 (token and address written as the literal values of the R5b block beside it) -->
         <div class="code-block">
-<pre><code>curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+<pre><code>curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
   -d <span class="line-str">'{"flow_id":"@default","interface":"abstractcode.agent.v1","input_data":{"prompt":"Hello"}}'</span> \
-  <span class="line-str">"$GW/api/gateway/runs/start"</span></code></pre>
+  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/start"</span></code></pre>
         </div>
       </div>
     </div>
