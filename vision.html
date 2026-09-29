@@ -142,15 +142,19 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
       <h2 class="section-title">Generated with AbstractVision</h2>
       <p class="section-desc">Images and video clips made through the AbstractVision API.</p>
     </div>
+    <!-- W5 fragment deliver/fragments/compare.html (a): text-to-image original vs its image-to-image edit -->
+    <div class="reveal" style="max-width:560px;margin:0 auto 2rem">
+  <figure class="cmp" data-compare style="--cmp-ratio: 1 / 1" data-compare-label="Compare the text-to-image original with its image-to-image edit">
+    <div class="cmp-stage">
+      <div class="cmp-layer cmp-before"><img src="assets/img/starship-snow.png" alt="Before: a starship standing in a snowy landscape, generated with FLUX.2 Klein" width="512" height="512" loading="lazy"></div>
+      <div class="cmp-layer cmp-after"><img src="assets/img/starship-snow-pencil-sketch.png" alt="After: the same starship image turned into a pencil sketch by an image-to-image edit" width="512" height="512" loading="lazy"></div>
+      <span class="cmp-tag cmp-tag-before">Text-to-image</span>
+      <span class="cmp-tag cmp-tag-after">Image-to-image edit</span>
+    </div>
+    <figcaption>Image-to-image edit with Qwen Image Edit: the color image (FLUX.2 Klein 4B), then its pencil-sketch edit. Drag the divider to compare.</figcaption>
+  </figure>
+    </div>
     <div class="gallery-grid reveal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem">
-      <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
-        <img src="assets/img/starship-snow.png" alt="A large spaceship resting on a snowfield under a blue sky" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
-        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text to image</p>
-      </div>
-      <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
-        <img src="assets/img/starship-snow-pencil-sketch.png" alt="The same spaceship scene redrawn as a pencil sketch" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
-        <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Image edit: the previous image as a pencil sketch</p>
-      </div>
       <div class="gallery-item" style="overflow:hidden;border-radius:var(--radius);border:1px solid var(--border)">
         <img src="assets/img/gallery-cyberpunk.png" alt="A rainy neon-lit city street at night between tall towers" loading="lazy" style="width:100%;height:220px;object-fit:cover;display:block">
         <p style="color:var(--text-secondary);font-size:.82rem;padding:.75rem;text-align:center;background:var(--bg-card)">Text to image: neon city</p>
@@ -200,20 +204,22 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
       </div>
       <h3 style="margin:2rem 0 1rem">Image to video</h3>
       <!-- deliver/media/README-video.md:26-43 (still and image-to-video clip 2) -->
-      <div class="i2v-pair">
-            <figure>
-              <img src="assets/img/flux2-klein-still-lighthouse.jpg" alt="The source still: a white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks" width="832" height="480" loading="lazy">
-              <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps, 16 s &mdash; "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors"</figcaption>
-            </figure>
-            <figure>
-              <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" aria-label="Generated video: waves breaking against the rocks below the lighthouse as the camera pushes in" width="832" height="480">
-                <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
-                Your browser cannot play this H.264 MP4 video.
-              </video>
-              <figcaption><strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (TI2V-5B&rsquo;s default canvas), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse"</figcaption>
-            </figure>
-          </div>
+<div style="max-width:860px">
+  <figure class="cmp" data-compare style="--cmp-ratio: 832 / 480" data-compare-label="Compare the text-to-image still with the image-to-video clip made from it">
+    <div class="cmp-stage">
+      <div class="cmp-layer cmp-before"><img src="assets/img/flux2-klein-still-lighthouse.jpg" alt="Before: the source still, a white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks" width="832" height="480" loading="lazy"></div>
+      <div class="cmp-layer cmp-after">
+        <video autoplay muted loop playsinline preload="metadata" data-c3-controls="0" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" width="832" height="480" aria-label="After: waves breaking against the rocks below the lighthouse as the camera pushes in">
+          <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
+          Your browser cannot play this H.264 MP4 video.
+        </video>
+      </div>
+      <span class="cmp-tag cmp-tag-before">Text-to-image still</span>
+      <span class="cmp-tag cmp-tag-after">Image-to-video</span>
     </div>
+    <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps, 16 s &mdash; "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors" <strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (TI2V-5B&rsquo;s default canvas), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse" Drag the divider to compare.</figcaption>
+  </figure>
+      </div>
   </div>
 </section>
 
@@ -467,6 +473,7 @@ image = llm.<span class="line-fn">generate</span>(
 </footer>
 
 <script src="assets/js/main.js?v=20260929e"></script>
+<script src="assets/js/compare.js?v=20260929e"></script>
 <script src="assets/js/carousel3.js?v=20260929e"></script>
 </body>
 </html>
