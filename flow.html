@@ -77,7 +77,7 @@
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span> Application &middot; Visual workflow editor &middot; v0.4.0</div>
     <h1>Abstract<span class="gradient">Flow</span></h1>
-    <p class="hero-sub">Draw multi-agent systems: agents and model calls wired together with plain Python code, branches, loops, subflows and human approvals. Publish a workflow to your <a href="gateway.html">AbstractGateway</a> and it becomes an executable that every client runs, like an endpoint: from <a href="code.html">AbstractCode</a>, <a href="assistant.html">AbstractAssistant</a>, <a href="observer.html">AbstractObserver</a>, an <a href="automations.html">automation</a> or one API call, inside chats and agent sessions.</p>
+    <p class="hero-sub">Draw multi-agent systems: agents and model calls wired together with plain Python code, branches, loops, subflows and human approvals. Publish a workflow to your <a href="gateway.html">AbstractGateway</a> and it becomes a versioned executable you run like an endpoint: as the agent of a chat in <a href="code.html">AbstractCode</a> or <a href="assistant.html">AbstractAssistant</a>, once from <a href="observer.html">AbstractObserver</a>, on a schedule as an <a href="automations.html">automation</a>, or from any program with one API call.</p>
     <div class="hero-actions">
       <a href="#run" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -117,8 +117,8 @@ npx @abstractframework/flow --gateway-url http://127.0.0.1:8080</code></pre>
         <p><strong>Publish</strong> packs a new <code>.flow</code> <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#workflow-bundle-flow" target="_blank" rel="noopener noreferrer">workflow bundle</a> version (the workflow, its subflows and metadata in one file) and installs it on the gateway. Earlier versions are kept; leave the version empty and it is bumped for you.</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>3. Use it from every client</h3>
-        <p>Pick it with <code>/workflow</code> in the AbstractCode terminal, in the <strong>Workflow</strong> list of AbstractCode web, in the Observer's <strong>Launch</strong> page, as the target of an automation, or start it with one API call. Leave model pickers on <em>Auto (Gateway default)</em> and the gateway's defaults choose the model at run time.</p>
+        <h3>3. Run it</h3>
+        <p>As the agent of a chat (<code>/workflow</code> in the AbstractCode terminal, the <strong>Workflow</strong> list in AbstractCode web), once from the Observer's <strong>Launch</strong> page, as the target of an automation, or with one API call. Leave model pickers on <em>Auto (Gateway default)</em> and the gateway's defaults choose the model at run time.</p>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>4. Make it the default agent</h3>
@@ -173,10 +173,10 @@ npx @abstractframework/flow --gateway-url http://127.0.0.1:8080</code></pre>
       <table class="data-table">
         <thead><tr><th>Client</th><th>Where you choose the workflow</th><th>What it lists</th></tr></thead>
         <tbody>
-          <tr><td><a href="code.html">AbstractCode</a> terminal</td><td><code>/workflow</code> (alias <code>/agent</code>) in a session, or <code>--workflow default | coding-agent:coder | &lt;bundle_id&gt;[@version][:&lt;flow_id&gt;]</code></td><td>The gateway's published workflows, <strong>Gateway default</strong> first; the choice is kept in <code>~/.abstractcode/prefs.json</code></td></tr>
+          <tr><td><a href="code.html">AbstractCode</a> terminal</td><td><code>/workflow</code> (alias <code>/agent</code>) in a session, or <code>--workflow default | coding-agent:coder | &lt;bundle_id&gt;[@version][:&lt;flow_id&gt;]</code></td><td>Published workflows that declare <code>abstractcode.agent.v1</code>, <strong>Gateway default</strong> first; the choice is kept in <code>~/.abstractcode/prefs.json</code></td></tr>
           <tr><td>AbstractCode web</td><td>The <strong>Workflow</strong> list in the toolbar</td><td>The coding agents published on your gateway, <strong>Gateway default</strong> first; <strong>Show all workflows</strong> adds schema-driven workflows</td></tr>
-          <tr><td><a href="assistant.html">AbstractAssistant</a></td><td><strong>Settings &rarr; Models &rarr; Workflow</strong></td><td><strong>Gateway default</strong> and the workflows of the gateway's shared catalog</td></tr>
-          <tr><td><a href="observer.html">AbstractObserver</a></td><td><strong>Launch &rarr; Run once</strong>: pick a workflow, fill its inputs, <strong>Launch now</strong></td><td>The gateway's bundles and its default agent</td></tr>
+          <tr><td><a href="assistant.html">AbstractAssistant</a></td><td><strong>Settings &rarr; Models &rarr; Workflow</strong></td><td><strong>Gateway default</strong> and the shared catalog's workflows that declare <code>abstractassistant.agent.v1</code> (an admin promotes a published bundle to the catalog)</td></tr>
+          <tr><td><a href="observer.html">AbstractObserver</a></td><td><strong>Launch &rarr; Run once</strong>: pick a workflow, fill its inputs, <strong>Launch now</strong></td><td>Any bundle on the gateway (its latest version) and the default agent; one run per launch</td></tr>
           <tr><td><a href="automations.html">Automations</a></td><td>The automation's target: a published workflow, or the default agent of an interface</td><td>Workflows of the gateway's own registry</td></tr>
           <tr><td>Your app</td><td><code>POST /api/gateway/runs/start</code></td><td><code>GET /api/gateway/bundles</code>, <code>GET /api/gateway/workflow-catalog</code></td></tr>
         </tbody>
@@ -204,7 +204,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
         </div>
       </div>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);margin-top:1rem;max-width:860px">Every start answers with the run id and the exact workflow version that runs it (<code>resolved_workflow</code>). The run's ledger then records every step, and any client can replay it and follow it live.</p>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1rem;max-width:860px">Every start answers with the run id and the exact workflow version that runs it (<code>resolved_workflow</code>). Inside a chat, the workflow is the chat's driver: every turn is a run of the selected workflow on the same <code>session_id</code>, and the client can switch workflow between turns. The run's ledger records every step, and any client can load it and follow it live.</p>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Make it the default agent of a client</h3>
     <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">A client that runs an agent names an interface rather than a fixed workflow, and the gateway setting <code>agents.default_workflow.&lt;interface&gt;</code> decides which workflow answers. With nothing saved, AbstractCode (<code>abstractcode.agent.v1</code>) runs the shipped <code>basic-agent</code> and the Assistant (<code>abstractassistant.agent.v1</code>) runs its built-in orchestrator. An admin changes it in the web console (<strong>Workflows &rarr; Make agent default</strong>), in the terminal console (<strong>Runtimes &rarr; Runtime knobs &rarr; Edit default agent workflows</strong>) or from the command line; the change is audit-logged. A saved workflow must declare the interface, and a default that no longer resolves is refused rather than replaced.</p>
