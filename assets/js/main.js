@@ -14,14 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
       const href = a.getAttribute('href');
-      if (href === '#') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      if (href === '#') { e.preventDefault(); window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }); return; }
       const el = document.querySelector(href);
       if (el) {
         e.preventDefault();
         history.replaceState(null, '', href);
         const offset = 80;
         const y = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
+        window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
       }
     });
   });
@@ -186,28 +186,36 @@ document.addEventListener('DOMContentLoaded', () => {
       toggle.setAttribute('aria-expanded', links.classList.contains('open'));
     });
     links.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => links.classList.remove('open'));
+      a.addEventListener('click', () => { links.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); });
     });
   }
 
-  /* ── Image lightbox ── */
-  document.querySelectorAll('.showcase-img img, .gallery-item img, .get-card .shot img, .figure img, .j-body img').forEach(img => {
+  /* ── Image lightbox (mouse and keyboard; focus moves in and back) ── */
+  document.querySelectorAll('.showcase-img img, .gallery-item img, .get-card .shot img, .figure img, .j-body img, .mm-art img').forEach(img => {
     img.style.cursor = 'zoom-in';
-    img.addEventListener('click', () => {
+    img.tabIndex = 0;
+    img.setAttribute('role', 'button');
+    img.setAttribute('aria-label', 'Enlarge: ' + (img.alt || 'image'));
+    function open() {
       const overlay = document.createElement('div');
       overlay.className = 'lightbox-overlay';
+      overlay.tabIndex = -1;
       const big = document.createElement('img');
       big.src = img.currentSrc || img.src;
       big.alt = img.alt || '';
       overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
       overlay.setAttribute('aria-label', img.alt || 'Image');
       overlay.appendChild(big);
-      overlay.addEventListener('click', () => overlay.remove());
-      document.addEventListener('keydown', function esc(e) {
-        if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', esc); }
-      });
+      function close() { overlay.remove(); document.removeEventListener('keydown', esc); img.focus(); }
+      function esc(e) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); close(); } }
+      overlay.addEventListener('click', close);
+      document.addEventListener('keydown', esc);
       document.body.appendChild(overlay);
-    });
+      overlay.focus();
+    }
+    img.addEventListener('click', open);
+    img.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
   });
 
   /* ── Tab system (ARIA tabs, arrow keys) ── */
@@ -319,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* Rows mirror the three-layer positioning (library, durable runtime, control plane) with the
        applications on top and the reusable toolkits underneath; the colour of a cube is its type. */
     const cubesData = [
-      { id:'flow',      type:'app',        col:-2.5, row:0, label:'Flow',      name:'AbstractFlow',      typeName:'Application',       href:'flow.html',      desc:'The visual workflow editor: mix agent steps with deterministic nodes, publish the workflow to the gateway, and run it from every client.' },
+      { id:'flow',      type:'app',        col:-2.5, row:0, label:'Flow',      name:'AbstractFlow',      typeName:'Application',       href:'flow.html',      desc:'The visual workflow editor: draw a graph that mixes agent steps with deterministic nodes; the gateway installs it as a versioned .flow bundle that runs on AbstractRuntime.' },
       { id:'code',      type:'app',        col:-1.5, row:0, label:'Code',      name:'AbstractCode',      typeName:'Application',       href:'code.html',      desc:'A coding agent that runs durably on the gateway, with a terminal client and a browser client: tool approvals, workspace files, streamed replies and automations.' },
       { id:'observer',  type:'app',        col:-0.5, row:0, label:'Observer',  name:'AbstractObserver',  typeName:'Application',       href:'observer.html',  desc:'Watch runs live, replay the ledger step by step, and create and manage automations.' },
       { id:'assistant', type:'app',        col:0.5,  row:0, label:'Assistant', name:'AbstractAssistant', typeName:'Application',       href:'assistant.html', desc:'A desktop assistant one shortcut away: a palette, a voice mode, and your gateway sessions and automations. Built for macOS; the same app runs from pip on Linux and Windows desktops with a system tray.' },
@@ -328,9 +336,9 @@ document.addEventListener('DOMContentLoaded', () => {
       { id:'gateway',   type:'control',    col:0,    row:1, label:'Gateway',   name:'AbstractGateway',   typeName:'Control Plane',     href:'gateway.html',   desc:'The controller: starts, resumes and cancels durable runs over HTTP and SSE, runs automations, manages users and network access, and serves the apps, the web console and the abstractgateway-console terminal console.' },
       { id:'runtime',   type:'foundation', col:-2,   row:2, label:'Runtime',   name:'AbstractRuntime',   typeName:'Foundation',        href:'runtime.html',   desc:'Where agentic operations run: durable runs, effects and waits, checkpoint and resume, with an append-only ledger.' },
       { id:'agent',     type:'compose',    col:-1,   row:2, label:'Agent',     name:'AbstractAgent',     typeName:'Composition',       href:'agent.html',     desc:'Agent patterns (ReAct, CodeAct, MemAct) run durably by AbstractRuntime, with tool approval.' },
-      { id:'memory',    type:'knowledge',  col:0,    row:2, label:'Memory',    name:'AbstractMemory',    typeName:'Knowledge',         href:'memory.html',    desc:'Durable, append-only agent memory: temporal triples, and a memory system that forms, recalls and consolidates records from use.' },
-      { id:'semantics', type:'knowledge',  col:1,    row:2, label:'Semantics', name:'AbstractSemantics', typeName:'Knowledge',         href:'semantics.html', desc:'The shared vocabulary: predicates, entity types and memory relations, with JSON Schema helpers.' },
-      { id:'skill',     type:'compose',    col:2,    row:2, label:'Skill',     name:'AbstractSkill',     typeName:'Composition',       href:'https://github.com/lpalbou/AbstractSkill', desc:'Agent Skills (SKILL.md): parsing, validation, the curated skill shelf and the trust gate the gateway applies before a skill reaches a run.' },
+      { id:'memory',    type:'knowledge',  col:1,    row:2, label:'Memory',    name:'AbstractMemory',    typeName:'Knowledge',         href:'memory.html',    desc:'Durable, append-only agent memory: temporal triples, and a memory system that forms, recalls and consolidates records from use.' },
+      { id:'semantics', type:'knowledge',  col:2,    row:2, label:'Semantics', name:'AbstractSemantics', typeName:'Knowledge',         href:'semantics.html', desc:'The shared vocabulary: predicates, entity types and memory relations, with JSON Schema helpers.' },
+      { id:'skill',     type:'compose',    col:0,    row:2, label:'Skill',     name:'AbstractSkill',     typeName:'Composition',       href:'https://github.com/lpalbou/AbstractSkill', desc:'Agent Skills (SKILL.md): parsing, validation, the curated skill shelf and the trust gate the gateway applies before a skill reaches a run.' },
       { id:'core',      type:'foundation', col:-2.5, row:3, label:'Core',      name:'AbstractCore',      typeName:'Foundation',        href:'core.html',      desc:'One Python API over ten provider types, local and cloud: tools, structured output, media input, capability plugins, an OpenAI-compatible server with a web console, and abstractcore-console in a terminal.' },
       { id:'voice',     type:'plugin',     col:-1.5, row:3, label:'Voice',     name:'AbstractVoice',     typeName:'Capability Plugin', href:'voice.html',     desc:'Text-to-speech, speech-to-text and voice cloning, local or remote.' },
       { id:'music',     type:'plugin',     col:-0.5, row:3, label:'Music',     name:'AbstractMusic',     typeName:'Capability Plugin', href:'music.html',     desc:'Text-to-music and text-to-audio: ACE-Step and Stable Audio locally, ACE Music and ElevenLabs remotely.' },
@@ -359,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
       wrap.tabIndex = 0;
       wrap.setAttribute('aria-label', c.name + ' (' + c.typeName + '): ' + c.desc);
       wrap.addEventListener('click', function(){ window.location.href = c.href; });
-      wrap.addEventListener('keydown', function(e){ if (e.key === 'Enter') window.location.href = c.href; });
+      wrap.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.location.href = c.href; } });
       cubeGrid.appendChild(wrap);
     });
 

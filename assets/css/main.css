@@ -4127,3 +4127,5 @@ section { padding: 4.5rem var(--space-xl); }
 .mm-proof .tab-btn { white-space: nowrap; }
 #top .hero-code { padding-right: 2.75rem; }
 @media (max-width: 560px) { .qs-term { align-items: flex-start; } }
+.qs, #top .hero-code { max-width: 840px; }
+.qs-term { font-size: .78rem; }
