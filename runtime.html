@@ -362,6 +362,7 @@ run_id = runtime.<span class="line-fn">start</span>(workflow=wf, vars={<span cla
 runtime.<span class="line-fn">tick</span>(workflow=wf, run_id=run_id)
 <span class="line-cmt"># events: {"kind": "llm.delta", "text": "Hello", "channel": "content", ...}</span>
 <span class="line-cmt">#         {"kind": "llm.delta_end", "reason": "completed", ...}</span></code></pre></div>
+        <p class="vd-note" style="color:var(--text-muted);font-size:var(--text-sm);margin-top:.5rem">Checked against AbstractRuntime 0.7.1 (<code>Runtime.set_live_delta_sink</code>); a fragment that needs a <code>runtime</code> and a workflow <code>wf</code>; not executed for this page.</p>
       </div>
     </div>
   </div>

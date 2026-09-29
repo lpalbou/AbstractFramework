@@ -201,6 +201,7 @@ manager.<span class="line-fn">request_trigger</span>()                <span clas
 jpeg, seq = manager.<span class="line-fn">get_latest_frame</span>()   <span class="line-cmt"># live view</span>
 manager.<span class="line-fn">disconnect</span>()</code></pre>
         </div>
+        <p class="vd-note" style="color:var(--text-muted);font-size:var(--text-sm);margin-top:.5rem">Checked against AbstractCamera 0.2.0 (<code>src/abstractcamera/camera_manager.py</code>); needs a connected camera (a PTP body or a webcam); not executed for this page.</p>
       </div>
       <div class="tab-panel" id="tab-cam-tools">
         <!-- VERIFIED-DOCS: abstractcamera@v0.2.0 src/abstractcamera/integrations/abstractcore_tools.py:422 (camera_tools); a fragment -->
@@ -209,6 +210,7 @@ manager.<span class="line-fn">disconnect</span>()</code></pre>
 
 llm.<span class="line-fn">generate</span>(<span class="line-str">"Take a photo if something moves"</span>, tools=<span class="line-fn">camera_tools</span>())</code></pre>
         </div>
+        <p class="vd-note" style="color:var(--text-muted);font-size:var(--text-sm);margin-top:.5rem">Checked against AbstractCamera 0.2.0 (<code>integrations/abstractcore_tools.py</code>, line 422); needs a connected camera and an <code>llm</code> from <code>create_llm</code>; not executed for this page.</p>
       </div>
     </div>
     <div class="callout reveal">
