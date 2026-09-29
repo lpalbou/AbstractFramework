@@ -110,7 +110,7 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In 
         <!-- VERIFIED-DOCS abstractcore@v2.19.0 README.md:481-488 (the server is part of the light install) -->
 <div class="code-block"><pre><code>pip install abstractcore   <span class="line-cmt"># the server and its web console</span>
 abstractcore serve                   <span class="line-cmt"># 127.0.0.1:8000; prints a one-time console link</span>
-<span class="line-kw">export</span> ABSTRACTCORE_AUTH_TOKEN=<span class="line-str">"$(abstractcore serve --print-token)"</span></code></pre></div><p>Point any OpenAI SDK at <code>http://localhost:8000/v1</code> and route with <code>model="provider/model"</code>. The same server exposes audio, image and video routes when the plugins are installed.</p>
+abstractcore serve --print-token      <span class="line-cmt"># prints the token; paste it as Bearer &lt;token&gt; or api_key</span></code></pre></div><p>Point any OpenAI SDK at <code>http://localhost:8000/v1</code> and route with <code>model="provider/model"</code>. The same server exposes audio, image and video routes when the plugins are installed.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Make it agentic, then durable <span class="j-time">15 min</span></h3>
@@ -154,7 +154,8 @@ state = agent.<span class="line-fn">run_to_completion</span>()
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Drive the gateway over HTTP <span class="j-time">15 min</span></h3>
-        <p>Install the framework (one line, or <code style="white-space:normal;overflow-wrap:anywhere">pip install abstractgateway</code> then <code>abstractgateway serve</code>). Set <code>GW</code> to the gateway address (<code>http://127.0.0.1:8080</code>) and <code>TOKEN</code> to the admin token from <code style="white-space:normal;overflow-wrap:anywhere">&lt;data dir&gt;/auth/bootstrap-admin-token</code>. Start a run of a shipped workflow, stream its ledger, and read it back after a restart:</p><!-- VERIFIED-DOCS: SNIPPETS.md E6 (W2 PASS) with RUN_ID captured from the run_id field of the start response (examples/E6-gateway-api/run.log:4); the SSE line: abstractgateway@v0.7.1 src/abstractgateway/routes/gateway.py:10416 -->
+        <p>Install the framework (one line, or <code style="white-space:normal;overflow-wrap:anywhere">pip install abstractgateway</code> then <code>abstractgateway serve</code>). Set <code>GW</code> to the gateway address (<code>http://127.0.0.1:8080</code>) and <code>TOKEN</code> to the admin token from <code style="white-space:normal;overflow-wrap:anywhere">&lt;data dir&gt;/auth/bootstrap-admin-token</code>. Start a run of a shipped workflow, stream its ledger, and read it back after a restart:</p><!-- PENDING-W2: R5b-gateway-api -->
+<!-- VERIFIED-DOCS: SNIPPETS.md E6 (W2 PASS) with RUN_ID captured from the run_id field of the start response (examples/E6-gateway-api/run.log:4); the SSE line: abstractgateway@v0.7.1 src/abstractgateway/routes/gateway.py:10416 -->
 <div class="code-block"><pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
 RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
   -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \

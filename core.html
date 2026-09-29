@@ -306,6 +306,7 @@ music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm a
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-r5-http">
+        <!-- PENDING-W2: R5b-http -->
         <!-- W2 PASS: SNIPPETS.md R5-http -->
 <div class="code-block"><pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
 <span class="line-cmt"># Start the server first (another terminal): abstractcore serve --port 19740</span>
@@ -391,6 +392,7 @@ resp = client.chat.completions.<span class="line-fn">create</span>(
     reasoning_effort=<span class="line-str">"none"</span>,                      <span class="line-cmt"># no thinking phase for a one-line answer</span>
 )
 <span class="line-fn">print</span>(resp.choices[0].message.content)</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:.5rem">Or paste the token that <code>abstractcore serve --print-token</code> prints as <code>api_key</code>.</p>
       </div>
     </div>
   </div>
