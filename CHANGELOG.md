@@ -67,7 +67,8 @@ terminal consoles `abstractgateway-console` 0.11.1 and
   that work.
 - **AbstractCore has three install settings** (AbstractCore 2.19.0): `pip install abstractcore`
   (light: every remote provider, the built-in tools, media inputs, the server and console, and the
-  voice, vision, music and 3D plugins with their remote backends), `pip install
+  voice, vision, music and 3D plugins with their remote backends; about 600 MB for AbstractCore
+  alone in a fresh Python 3.12 environment), `pip install
   "abstractcore[apple]"` (adds every local engine an Apple silicon Mac runs) and `pip install
   "abstractcore[gpu]"` (adds every local engine an NVIDIA or AMD machine runs). The earlier extra
   names still install as deprecated aliases; see AbstractCore's
@@ -78,7 +79,7 @@ terminal consoles `abstractgateway-console` 0.11.1 and
   output, speech input, image, video and music on every kind of machine (`--host`: this one), with
   the engine, the download size, the memory need and whether it fits. On Apple silicon the fit
   estimate follows the measured GPU memory limit (about 75% of unified memory by default). The text
-  tiers are unchanged: Qwen3.5 9B below 24 GB (an 8 GB Mac is told it may not fit), Qwen3.8 27B
+  tiers are unchanged: Qwen3.5 9B below 24 GB (on an 8 GB Mac it reads as tight, with a small context), Qwen3.8 27B
   from 24 GB, Qwen3.8 Flash-Next from 128 GB. A model that runs only with a small context, such as
   Qwen3.8 27B on a 24 GB Mac, says so and prints the `sudo sysctl iogpu.wired_limit_mb=…` command
   that gives it more (20480 on 24 GB, 114688 for Flash-Next on 128 GB); nothing runs it for you.
@@ -89,9 +90,11 @@ terminal consoles `abstractgateway-console` 0.11.1 and
 - **Faster video by default** (AbstractVision 0.3.31). Each Wan2.2 model has its own
   speed-oriented default size: 832x480 (TI2V-5B: 121 frames at 24 fps; T2V-A14B and I2V-A14B: 81
   frames at 16 fps), and the video is decoded in overlapping tiles, so the decode no longer sets the
-  memory peak. Measured on Apple silicon, TI2V-5B at 832x480 peaks at about 16.3 GiB (was about
-  60 GiB at the previous 1280x704 default), so the recommended video route is written on Macs with
-  32 GB of unified memory or more. Pass `width`, `height`, `num_frames`, `fps` and `steps` for
+  memory peak. Measured on Apple silicon (MLX peaks at 832x480 with tiled decode), TI2V-5B needs
+  about 16.3 GiB for text-to-video and 16.6 GiB for image-to-video (about 60 GiB at the previous
+  1280x704 default), so the recommended video route is written on Macs with 32 GB of unified memory
+  or more, and a 24 GB Mac is told the GPU memory limit that makes it fit. T2V-A14B and I2V-A14B
+  (about 38.3 and 38.4 GiB, measured) fit a 48 GB Mac once its GPU memory limit is raised. Pass `width`, `height`, `num_frames`, `fps` and `steps` for
   another size. The memory figures are AbstractVision/mlx-gen's measurements (the engine keeps the
   text encoder and VAE in memory), not the model's own requirement.
 - **Left and Right switch screens in both terminal consoles** (`abstractgateway-console` 0.11.1,

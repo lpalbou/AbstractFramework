@@ -763,7 +763,7 @@ Choose Light when:
 - you want the smallest and least surprising install;
 - you do not want pip to install MLX, CUDA, Diffusers, or local model-runtime stacks.
 
-The Light environment takes about 0.9 GB in a fresh Python 3.12 environment. Most of it is
+The Light environment takes about 0.9 GB in a fresh Python 3.12 environment. About 600 MB of it is
 AbstractCore's light setting, which includes the Office-document parsers, the built-in tools and
 the voice, vision, music and 3D plugins with their remote backends; it installs no local engine.
 
