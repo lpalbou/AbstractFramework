@@ -390,6 +390,13 @@
 .sc-app-ssh .sc-btn { font-size: .56rem; padding: .08rem .3rem; border-radius: 0; background: #1f2433; border-color: #1f2433; }
 .sc-app-ssh .sc-btn.primary { background: #3b4a7a; border-color: #3b4a7a; }
 .sc-app-ssh .sc-gate-note { font-size: .52rem; }
+.sc-waiting { display: inline-flex; align-items: center; gap: .35rem; margin-top: .4rem; font-size: .64rem; font-weight: 600; color: #fbbf24; }
+.sc-waiting::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fbbf24; animation: sc-wait 1.2s ease-in-out infinite; }
+@keyframes sc-wait { 0%, 100% { opacity: .35; } 50% { opacity: 1; box-shadow: 0 0 6px #fbbf24; } }
+.sc-app-ssh .sc-waiting { font-size: .54rem; }
+.sc-gate.is-resolved .sc-waiting { display: none; }
+.sc-auth small { display: block; font-size: .58rem; opacity: .7; margin-top: .1rem; }
+.sc-app-ssh .sc-auth small { display: inline; margin-left: .4rem; font-size: .5rem; }
 .sc-resolved { display: none; margin-top: .4rem; font-size: .66rem; font-weight: 600; color: #34d399; }
 .sc-app-ssh .sc-resolved { font-size: .56rem; }
 .sc-gate.is-resolved .sc-btns { opacity: .35; }
@@ -414,6 +421,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .sc-typing i { animation: none; opacity: .7; }
+  .sc-waiting::before { animation: none; opacity: 1; }
   .sc-anim .sc-feed > [data-sc].is-in, .sc-gate.is-resolved .sc-resolved { animation: none; }
 }
 

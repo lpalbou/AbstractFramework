@@ -11,7 +11,9 @@
              <div class="sc-a" data-sc="2">...</div>   assistant reply (typing dots first)
              <div class="sc-gate" data-sc="5">... <button class="sc-btn" data-sc-approve>...</button>
                   <span class="sc-resolved">...</span></div>   approval gate
-             <div class="sc-tool" data-sc="6">...</div>  tool result
+             <div class="sc-u sc-auth" data-sc="6">Approved ...<small>from the <span class="sc-auth-from"></span></small></div>
+                                                  the user's approval: the gate WAITS until this step
+             <div class="sc-tool" data-sc="7">...</div>  tool result
          </div></figure> ...
        </div>
        <div class="sc-bar"><span class="sc-now"></span></div>
@@ -74,6 +76,8 @@
     this.root.classList.remove('sc-anim', 'sc-fading');
     this.root.querySelectorAll('.sc-gate').forEach(function (g) { g.classList.add('is-resolved'); });
     this.root.querySelectorAll('.sc-typing').forEach(function (t) { t.remove(); });
+    var who = this.approvers.length ? this.frameName(this.approvers[0]) : '';
+    this.root.querySelectorAll('.sc-auth-from').forEach(function (n) { if (who) n.textContent = who; });
     if (this.toggle) this.toggle.hidden = true;
     this.say(this.staticText);
   };
@@ -123,47 +127,63 @@
     this.root.querySelectorAll('.sc-gate').forEach(function (g) { g.classList.remove('is-resolved'); });
     this.root.querySelectorAll('.sc-typing').forEach(function (t) { t.remove(); });
     this.root.querySelectorAll('.is-pressed').forEach(function (b) { b.classList.remove('is-pressed'); });
+    // On a loop the conversation starts again from its first line, already shown.
+    if (this.loop > 0 && this.steps.length) this.reveal(this.items(this.steps[0]));
     this.actions = this.build();
     this.pos = 0;
   };
 
-  // The shared timeline for one loop: a list of {run, wait} actions.
+  // The shared timeline for one loop: a list of {run, wait} actions. The gate
+  // WAITS: nothing after it appears until one frame approves; the approval is
+  // the user's own act, shown as a user line in every frame, then the run
+  // continues.
   SyncedChat.prototype.build = function () {
     var self = this;
     var A = [];
     var userIdx = 0;
     var approver = this.approvers.length ? this.approvers[this.loop % this.approvers.length] : null;
-    A.push({ run: function () { self.say('One conversation on the gateway, three clients following it live.'); }, wait: 900 });
-    this.steps.forEach(function (step) {
+    var gateItems = null;
+    A.push({ run: function () { self.say('One conversation on the gateway, three clients following the same ledger live.'); }, wait: this.loop > 0 ? 400 : 900 });
+    this.steps.forEach(function (step, k) {
       var items = self.items(step);
       if (!items.length) return;
       var first = items[0];
-      if (first.classList.contains('sc-u')) {
+      if (first.classList.contains('sc-u') && !first.classList.contains('sc-auth')) {
         var src = self.from[userIdx % Math.max(self.from.length, 1)] || null;
         userIdx++;
+        var already = k === 0 && self.loop > 0;
         A.push({ run: function () {
           self.highlight(src);
           if (src) self.say('Sent from the <b>' + self.frameName(src) + '</b>');
           self.reveal(items);
-        }, wait: 1300 });
+        }, wait: already ? 1100 : 1400 });
+      } else if (first.classList.contains('sc-auth')) {
+        // The user authorizes the pending tool call from one frame.
+        A.push({ run: function () {
+          var f = self.frameEl(approver);
+          var btn = f && f.querySelector('[data-sc-approve]');
+          if (btn) btn.classList.add('is-pressed');
+          self.highlight(approver);
+          if (approver) self.say('You approve from the <b>' + self.frameName(approver) + '</b>');
+        }, wait: 600 });
+        A.push({ run: function () {
+          self.root.querySelectorAll('.is-pressed').forEach(function (b) { b.classList.remove('is-pressed'); });
+          items.forEach(function (n) {
+            var from = n.querySelector('.sc-auth-from');
+            if (from && approver) from.textContent = self.frameName(approver);
+          });
+          self.reveal(items);
+          if (gateItems) gateItems.forEach(function (g) { g.classList.add('is-resolved'); });
+          self.say('Approved from the <b>' + self.frameName(approver) + '</b>: the wait resolves in all three, and the run continues');
+        }, wait: 1800 });
       } else if (first.classList.contains('sc-a') || first.classList.contains('sc-gate')) {
         var gate = first.classList.contains('sc-gate');
+        if (gate) gateItems = items;
         A.push({ run: function () { self.highlight(null); self.typing(true); }, wait: gate ? 900 : 1100 });
-        A.push({ run: function () { self.typing(false); self.reveal(items); if (gate) self.say('The run waits for approval, shown in every client'); },
-                 wait: gate ? 2300 : Math.min(2600, 1000 + first.textContent.length * 14) });
-        if (gate) {
-          A.push({ run: function () {
-            var f = self.frameEl(approver);
-            var btn = f && f.querySelector('[data-sc-approve]');
-            if (btn) btn.classList.add('is-pressed');
-            self.highlight(approver);
-          }, wait: 450 });
-          A.push({ run: function () {
-            self.root.querySelectorAll('.is-pressed').forEach(function (b) { b.classList.remove('is-pressed'); });
-            items.forEach(function (g) { g.classList.add('is-resolved'); });
-            if (approver) self.say('Approved from the <b>' + self.frameName(approver) + '</b>: resolved in all three');
-          }, wait: 1700 });
-        }
+        A.push({ run: function () {
+          self.typing(false); self.reveal(items);
+          if (gate) self.say('The run <b>waits for your approval</b>, in every client. Nothing else happens until you answer.');
+        }, wait: gate ? 3600 : Math.min(2600, 1000 + first.textContent.length * 14) });
       } else {
         A.push({ run: function () { self.highlight(null); self.reveal(items); }, wait: 1100 });
       }
