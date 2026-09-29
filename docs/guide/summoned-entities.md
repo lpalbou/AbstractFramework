@@ -83,7 +83,7 @@ or over HTTP:
 
 ```bash
 curl -X POST http://localhost:8080/api/gateway/entities \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin token>" -H "Content-Type: application/json" \
   -d '{"name": "Castor", "spark_text": "'"$(cat castor.yaml | sed 's/"/\\"/g')"'"}'
 ```
 
@@ -126,7 +126,7 @@ verb. HTTP: `POST/GET /api/gateway/entities/{name}/state`.
 
 ```bash
 curl -X POST http://localhost:8080/api/gateway/entities/Castor/summon \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin token>" -H "Content-Type: application/json" \
   -d '{"prompt": "Introduce yourself.",
        "input_data": {"provider": "lmstudio", "model": "ornith-1.0-35b",
                        "use_context": false, "tools": [], "max_iterations": 2},
@@ -385,11 +385,11 @@ and realtime are the same format:
 
 ```bash
 # The whole life so far (bounded read, one JSON envelope per line):
-curl -H "Authorization: Bearer $TOKEN" \
+curl -H "Authorization: Bearer <admin token>" \
   "http://localhost:8080/api/gateway/entities/Castor/replay" | head -20
 
 # Live tail (SSE; reconnects resume exactly via Last-Event-ID):
-curl -N -H "Authorization: Bearer $TOKEN" \
+curl -N -H "Authorization: Bearer <admin token>" \
   "http://localhost:8080/api/gateway/entities/Castor/replay/stream"
 ```
 
