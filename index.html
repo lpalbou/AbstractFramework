@@ -689,40 +689,40 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> 
     </div>
     <!-- W4 fragment deliver/fragments/deploy.html (round 5; claims in its header) -->
     <h3 class="reveal" style="margin:0 0 1rem">Who can reach it</h3>
-    <div class="modes-grid reveal">
+    <div class="modes-grid chip-cards reveal">
       <div class="mode-card" style="text-align:left">
         <h3>This computer</h3>
         <p>The default: the gateway listens on <code>127.0.0.1</code> only, with user accounts on. Nobody else can connect.</p>
-        <div class="mode-tags"><span class="mode-tag">localhost</span><span class="mode-tag">default</span></div>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg><code>localhost</code></span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-8 9 8v10H3z"/></svg>Default</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>Local network</h3>
+        <h3>Local network (LAN)</h3>
         <p>Every device on your network (or your VPN) reaches the sign-in page and the API. User accounts are required. It is plain HTTP, so use it on networks you trust, or behind a TLS proxy or VPN.</p>
-        <div class="mode-tags"><span class="mode-tag">lan</span><span class="mode-tag">user accounts</span></div>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg><code>lan</code></span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Accounts required</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Internet</h3>
         <p>The same, with an explicit acknowledgement. The gateway does not terminate TLS: put your own TLS reverse proxy (Caddy, nginx, Traefik) or a tunnel in front of it.</p>
-        <div class="mode-tags"><span class="mode-tag">internet</span><span class="mode-tag">your TLS</span><span class="mode-tag">user accounts</span></div>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg><code>internet</code></span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>Your TLS</span></div>
       </div>
     </div>
 
     <h3 class="reveal" style="margin:2rem 0 1rem">How it runs</h3>
-    <div class="modes-grid reveal">
+    <div class="modes-grid chip-cards reveal">
       <div class="mode-card" style="text-align:left">
         <h3>Desktop</h3>
         <p>An icon in the macOS menu bar, the Windows system tray or a Linux panel opens the console already signed in. <strong>Start AbstractGateway at login</strong> registers a per-user login item.</p>
-        <div class="mode-tags"><span class="mode-tag">tray</span><span class="mode-tag">start at login</span></div>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/></svg>Tray icon</span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Start at login</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Headless server</h3>
         <p>Install over SSH with the same one-line installer, manage it from the terminal console (<code>abstractgateway-console</code>), keep it running with a <code>systemd --user</code> service, and reach the console, the API and every app through one SSH tunnel.</p>
-        <div class="mode-tags"><span class="mode-tag">SSH</span><span class="mode-tag">terminal console</span><span class="mode-tag">systemd --user</span></div>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l3 3-3 3M12 15h5"/></svg>SSH</span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><code>systemd --user</code></span></div>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Container</h3>
         <p>Release images on GHCR (<code>ghcr.io/lpalbou/abstractgateway</code>, and a <code>-gpu</code> variant), run with a mounted data directory and <code>ABSTRACTGATEWAY_USER_AUTH=1</code>.</p>
-        <div class="mode-tags"><span class="mode-tag">GHCR</span><span class="mode-tag">Docker</span></div>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>GHCR image</span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>Mounted data</span></div>
       </div>
     </div>
 
@@ -734,19 +734,19 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> 
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <h3>Light</h3>
         <p>Remote inference: OpenAI, Anthropic, OpenRouter, Portkey, LM Studio, Ollama, vLLM and any OpenAI-compatible endpoint. Runs anywhere Python runs.</p>
-        <div class="mode-tags"><span class="mode-tag">OpenAI</span><span class="mode-tag">Anthropic</span><span class="mode-tag">OpenRouter</span><span class="mode-tag">Portkey</span><span class="mode-tag">LM Studio</span><span class="mode-tag">Ollama</span><span class="mode-tag">vLLM</span><span class="mode-tag">OpenAI-compatible</span></div>
+        <div class="chip-row"><span class="chip">OpenAI</span><span class="chip">Anthropic</span><span class="chip">OpenRouter</span><span class="chip">Portkey</span><span class="chip">LM Studio</span><span class="chip">Ollama</span><span class="chip">vLLM</span><span class="chip">OpenAI-compatible</span></div>
       </div>
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--green)" stroke="none" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></div>
         <h3>Apple</h3>
         <p>Everything in Light, plus the local MLX and Metal engines on Apple Silicon (macOS 14 or later) for text, voice, images and video.</p>
-        <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">MLX</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">MLX-Gen (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span><span class="mode-tag">Headless browser</span></div>
+        <div class="chip-row"><span class="chip chip-accent">Light +</span><span class="chip">MLX</span><span class="chip">Hugging Face</span><span class="chip">GGUF (llama.cpp)</span><span class="chip">Local embeddings</span><span class="chip">AbstractVoice local</span><span class="chip">MLX-Gen (AbstractVision)</span><span class="chip">AbstractMusic local</span><span class="chip">Headless browser</span></div>
       </div>
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg></div>
         <h3>GPU</h3>
         <p>Everything in Light, plus the local engines for NVIDIA CUDA or AMD ROCm on Linux, and Windows where the wheels exist.</p>
-        <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">vLLM engine</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">Diffusers (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span><span class="mode-tag">Headless browser</span></div>
+        <div class="chip-row"><span class="chip chip-accent">Light +</span><span class="chip">vLLM engine</span><span class="chip">Hugging Face</span><span class="chip">GGUF (llama.cpp)</span><span class="chip">Local embeddings</span><span class="chip">AbstractVoice local</span><span class="chip">Diffusers (AbstractVision)</span><span class="chip">AbstractMusic local</span><span class="chip">Headless browser</span></div>
       </div>
     </div>
     <!-- VERIFIED-DOCS docs/install.md:393 (not runnable hermetically: needs a remote server) -->

@@ -4211,3 +4211,17 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 @media (max-width: 480px) { .mm-dir { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .gen-schema { max-width: 640px; margin: 0 auto 1rem; }
 .mm-dir-note { text-align: center; color: var(--text-muted); font-size: .8rem; margin-top: .6rem; }
+/* Chips (round 6): one visual system for card facts — small icon + short label, equal height,
+   one row at the bottom of each card. Classes for other pages: .chip-cards (card grid),
+   .chip-row (the row), .chip (one fact), .chip-ic (its icon), .chip-accent (the highlighted one). */
+.chip-row { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chip { display: inline-flex; align-items: center; gap: .35rem; height: 26px; padding: 0 .6rem; border-radius: 7px;
+  background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.1); color: var(--text-secondary);
+  font: 500 .72rem var(--font); line-height: 1; white-space: nowrap; }
+.chip code { font-size: .7rem; background: none; border: 0; padding: 0; color: var(--accent-light); }
+.chip .chip-ic { flex: 0 0 auto; color: var(--text-muted); }
+.chip.chip-accent { color: var(--accent-light); border-color: rgba(6,182,212,.35); background: rgba(6,182,212,.08); }
+.chip-cards .mode-card { display: flex; flex-direction: column; }
+.chip-cards .mode-card .chip-row { margin-top: auto; padding-top: 1rem; }
+.profile-cards .mode-card .chip-row { justify-content: center; padding-top: 1rem; align-self: start; }
+#deploy h3.reveal + .modes-grid, #deploy h3.reveal + .chip-cards { margin-top: 0; }
