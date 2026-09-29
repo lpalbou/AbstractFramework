@@ -8,7 +8,8 @@ All notable changes to AbstractFramework will be documented in this file.
 
 One line installs, upgrades and repairs AbstractFramework, and **Update** in the consoles and the
 menu-bar icon runs that same line. Pins: AbstractGateway 0.7.2, AbstractCore 2.18.1 and the
-terminal console `abstractgateway-console` 0.11.1; every other version is unchanged from 0.6.1.
+terminal consoles `abstractgateway-console` 0.11.1 and `abstractcore-console` 0.4.1; every other
+version is unchanged from 0.6.1.
 
 ### Changed
 
@@ -74,6 +75,12 @@ terminal console `abstractgateway-console` 0.11.1; every other version is unchan
   flagged. The Wan2.2 video memory figures are AbstractVision/mlx-gen's measurements. See
   AbstractCore's
   [Recommended models](https://github.com/lpalbou/abstractcore/blob/main/docs/recommended-models.md).
+
+- **Left and Right switch screens in both terminal consoles** (`abstractgateway-console` 0.11.1,
+  `abstractcore-console` 0.4.1): the previous or next screen in browse mode, wrapping at both ends,
+  like `Ctrl+P` / `Ctrl+N`. A focused element that uses the arrows keeps them: a text field moves
+  its caret, a list or tabs bar changes its selection, a dialog keeps every key, and a focused
+  scrolling pane scrolls.
 
 ### Documentation
 

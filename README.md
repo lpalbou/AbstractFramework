@@ -335,7 +335,7 @@ and tested together.
 | npm | `@abstractframework/entity` | 0.3.0 |
 | crates.io | `abstractcode` | 0.7.1 |
 | crates.io | `abstractgateway-console` | 0.11.1 |
-| crates.io | `abstractcore-console` | 0.4.0 |
+| crates.io | `abstractcore-console` | 0.4.1 |
 | crates.io | `abstracttui` | 0.6.0 |
 | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.7.2 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.18.1 |

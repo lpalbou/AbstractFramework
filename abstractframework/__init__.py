@@ -54,7 +54,7 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 # or by the bootstrap scripts: the gateway console and abstractcode by default).
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstractgateway-console": "0.11.1",
-    "abstractcore-console": "0.4.0",
+    "abstractcore-console": "0.4.1",
     "abstractcode": "0.7.1",
     "abstracttui": "0.6.0",
 }

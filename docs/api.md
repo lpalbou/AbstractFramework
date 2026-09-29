@@ -79,7 +79,7 @@ The npm apps released with this version, each runnable with `npx <package>`:
 ### `CRATE_RELEASE_VERSIONS`
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.11.1, `abstractcore-console` 0.4.0, `abstractcode` 0.7.1 and the
+`abstractgateway-console` 0.11.1, `abstractcore-console` 0.4.1, `abstractcode` 0.7.1 and the
 `abstracttui` engine 0.6.0. The bootstrap scripts build `abstractgateway-console` at this version by default
 (`--no-console` skips it) and `abstractcode` next to it (`--no-code-cli` skips it).
 
