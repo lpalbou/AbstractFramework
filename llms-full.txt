@@ -3720,7 +3720,8 @@ package page, pinned in `uv-constraints.txt` next to the overrides file):
 | Machine | Wheel |
 |---|---|
 | Apple Silicon Mac | `llama-cpp-python==0.3.28`, Metal (GPU offload) |
-| Linux x86_64 / aarch64 (glibc) | `llama-cpp-python==0.3.35`, CPU |
+| Linux x86_64 / aarch64 (glibc), light profile | `llama-cpp-python==0.3.35`, CPU |
+| Linux x86_64, gpu profile with an NVIDIA GPU | `llama-cpp-python==0.3.35`: the CUDA build matching PyTorch's CUDA (below), else CPU |
 | Windows x64, light profile | `llama-cpp-python==0.3.35`, CPU |
 | Windows x64, gpu profile | `llama-cpp-python==0.3.35`: the CUDA build for the GPU stack (below), else Vulkan, else CPU |
 | Intel Mac, musl Linux, Windows on ARM | no prebuilt wheel: skipped |
@@ -3730,6 +3731,36 @@ says `GGUF (llama.cpp) skipped: no prebuilt wheel for this machine`; `--full` th
 source. The summary's `GGUF:` line says which wheel was installed. On Apple Silicon the Metal wheel
 is pinned to 0.3.28, the newest Metal wheel on that index that passes uv's archive integrity
 check.
+
+### GPU on Linux (NVIDIA)
+
+PyPI's PyTorch for Linux is already a CUDA build, so the gpu profile installs it as it is. After the
+install, `install.sh` asks `nvidia-smi` for the driver version and compute capability and checks, in
+the gateway's own environment:
+
+- that PyTorch sees the GPU (`torch.cuda.is_available()`, the device name and PyTorch's CUDA
+  version); a driver older than PyTorch's CUDA needs is reported with the version it has;
+- llama.cpp: the install itself takes the CPU wheel (it never fails on a GPU detail); then the CUDA
+  build matching PyTorch's CUDA is swapped in, `cu130` for CUDA 13 (driver 580 or newer) or `cu125`
+  for CUDA 12 (driver 525 or newer). It uses the CUDA runtime and cuBLAS that PyTorch's NVIDIA
+  wheels already installed (AbstractCore preloads them before importing llama.cpp), and it is kept
+  only when it loads the way AbstractCore loads it and reports GPU offload; otherwise the CPU wheel
+  goes back and the summary says why;
+- faster-whisper: which device AbstractVoice picks, and that CUDA 12 cuBLAS really loads for it.
+
+The summary's `PyTorch:`, `GGUF:` and `Voice:` lines say what runs where. uv's output is shown as it
+comes, with a `still working (… elapsed; last: …)` line after 15 seconds of silence.
+
+vLLM is part of the Linux gpu profile, and it is the one engine that needs a C compiler: Triton
+builds its GPU kernels the first time vLLM starts a model (`sudo apt-get install -y build-essential`
+on Debian/Ubuntu; the installer warns when none is found). On a GPU older than compute capability 8.0
+(Turing: RTX 20xx, Quadro RTX, T4) start it with `--attention-backend TRITON_ATTN`: its default
+there, FlashInfer, compiles with the CUDA toolkit's `nvcc`, which a driver-only machine does not have.
+
+Measured on Ubuntu 26.04 with a Quadro RTX 5000 (16 GB, driver 595.91.07, CUDA 13.2), from a clean
+home: the whole install took under three minutes on a fast connection (about 13 GB downloaded,
+14 GB on disk), PyTorch 2.11 on CUDA 13.0, llama.cpp's `cu130` build offloading every layer,
+Whisper on CUDA, FLUX.2 [klein] 4B through Diffusers at 768x768 in about 17 s (root backlog 0989).
 
 ### GPU on Windows (NVIDIA)
 
