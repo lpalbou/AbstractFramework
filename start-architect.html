@@ -74,6 +74,7 @@
 <section class="hero" style="min-height:auto;padding:8rem 0 3rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
+    <div class="j-hero-icon" style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--bg-card);border:1px solid var(--border);margin-bottom:1rem"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
     <div class="hero-badge"><span class="dot"></span> Start here &middot; Architect / solution engineer</div>
     <h1>Start as an <span class="gradient">architect</span></h1>
     <p class="hero-sub">Decide where AI runs, who can reach it and where the data lives. AbstractGateway is one process per data folder: a durable control plane with user accounts, a replayable ledger and thin clients over HTTP and SSE.</p>
@@ -91,12 +92,16 @@
     <div class="journey">
       <div class="j-step reveal"><div class="j-body">
         <h3>Read the shape of the system <span class="j-time">10 min</span></h3>
-        <p>Clients (the <a href="console.html">consoles</a>, browser apps, the <a href="assistant.html">Assistant</a>, <a href="code.html">AbstractCode</a>, your own app) talk to <strong>AbstractGateway</strong> over HTTP and SSE. The gateway runs workflows on <strong>AbstractRuntime</strong>, which records every step in an append-only ledger, and reaches models through <strong>AbstractCore</strong>: local engines on the gateway host or cloud providers.</p><!-- PENDING-W2: E8 -->
+        <p>Clients (the <a href="console.html">gateway consoles</a>, browser apps, the <a href="assistant.html">Assistant</a>, <a href="code.html">AbstractCode</a>, your own app) talk to <strong>AbstractGateway</strong> over HTTP and SSE. The gateway runs workflows on <strong>AbstractRuntime</strong>, which records every step in an append-only ledger, and reaches models through <strong>AbstractCore</strong>: local engines on the gateway host or cloud providers.</p><!-- PENDING-W2: E8 -->
 <div class="code-block"><pre><code>Tray / Palette / CLI / browser apps -&gt; AbstractGateway -&gt; AbstractRuntime -&gt; AbstractCore -&gt; Providers</code></pre></div>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Choose a topology <span class="j-time">15 min</span></h3>
         <div class="table-wrap"><table class="data-table"><thead><tr><th>Where</th><th>How</th></tr></thead><tbody><tr><td>One computer</td><td>The installer&rsquo;s default: <code>127.0.0.1:8080</code>, a per-user login item.</td></tr><tr><td>Local network</td><td><code>abstractgateway network set lan</code>, then restart. User auth required.</td></tr><tr><td>Internet</td><td><code>abstractgateway network set internet --acknowledge-internet</code>, behind TLS you provide (reverse proxy or tunnel).</td></tr><tr><td>Headless Linux</td><td>The one-liner over SSH, the terminal console on the server, one <code>ssh -L 8080:127.0.0.1:8080</code> tunnel for the console, API and every app.</td></tr><tr><td>Container</td><td><code>ghcr.io/lpalbou/abstractgateway:0.7.1</code> (light); an experimental <code>gpu-latest</code> image for NVIDIA hosts.</td></tr></tbody></table></div>
+        <figure class="figure" style="margin-top:1rem">
+          <img src="assets/img/shots/console-tui-network.webp" alt="The terminal console's Network screen: Localhost only selected, Local network and Internet options, the address list and reverse-proxy settings" loading="lazy" width="1600" height="657">
+          <figcaption>The same setting over SSH: the terminal console&rsquo;s Network screen (<code>N</code>) shows the saved mode, what is running and every address.</figcaption>
+        </figure>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Stand up a server <span class="j-time">15 min</span></h3>

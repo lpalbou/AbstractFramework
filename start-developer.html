@@ -74,6 +74,7 @@
 <section class="hero" style="min-height:auto;padding:8rem 0 3rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
+    <div class="j-hero-icon" style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--bg-card);border:1px solid var(--border);margin-bottom:1rem"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
     <div class="hero-badge"><span class="dot"></span> Start here &middot; Developer</div>
     <h1>Start as a <span class="gradient">developer</span></h1>
     <p class="hero-sub">Two entry points lead to the same ecosystem: AbstractCore, a Python library with one API over local and cloud providers, and AbstractGateway, a control plane with durable runs over HTTP. Start with either.</p>
@@ -101,7 +102,7 @@
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
 response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In two sentences, what is a durable workflow runtime?"</span>)
-<span class="line-fn">print</span>(response.content)</code></pre></div><p>Tools, structured output with Pydantic, streaming, media input, embeddings and MCP tool sources use the same object. Models are never downloaded silently: <code>abstractcore models download</code> fetches them, and <code>abstractcore models catalog --fits</code> lists what fits your machine. After the one-line install, <code>abstractcore</code>, its apps (<code>summarizer</code>, <code>extractor</code>, <code>judge</code>, <code>intent</code>, <code>deepsearch</code>), <code>abstractvoice</code>, <code>abstractmusic</code> and <code>abstractvision</code> are already on your PATH, matching the gateway&rsquo;s versions.</p>
+<span class="line-fn">print</span>(response.content)</code></pre></div><p>Tools, structured output with Pydantic, streaming, media input, embeddings and MCP tool sources use the same object, and the same <code>generate()</code> returns voice, music, images, video and 3D once a capability route is configured (<a href="core.html#features">input and output</a>). Models are never downloaded silently: <code>abstractcore models download</code> fetches them, and <code>abstractcore models catalog --fits</code> lists what fits your machine. After the one-line install, <code>abstractcore</code>, its apps (<code>summarizer</code>, <code>extractor</code>, <code>judge</code>, <code>intent</code>, <code>deepsearch</code>), <code>abstractvoice</code>, <code>abstractmusic</code> and <code>abstractvision</code> are already on your PATH, matching the gateway&rsquo;s versions.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Serve it to any OpenAI client <span class="j-time">5 min</span></h3>
@@ -153,7 +154,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Author and code <span class="j-time">15 min</span></h3>
-        <p>Open <a href="flow.html">Flow</a> at <code>/apps/flow/</code>, draw a workflow and publish it: every gateway client can run it. For coding, the one-line installer already put the <a href="code.html">AbstractCode</a> terminal client on your PATH (otherwise <code>cargo install abstractcode</code>). Sign it in once:</p><!-- PENDING-W2: E8 -->
+        <p>Open <a href="flow.html">Flow</a> at <code>/apps/flow/</code>, draw a workflow and publish it: every gateway client can run it, and AbstractCode&rsquo;s <code>/workflow</code> command picks it as the agent of a session. For coding, the one-line installer already put the <a href="code.html">AbstractCode</a> terminal client on your PATH (otherwise <code>cargo install abstractcode</code>). Sign it in once:</p><!-- PENDING-W2: E8 -->
 <div class="code-block"><pre><code>abstractcode login --token &lt;admin token&gt;   <span class="line-cmt"># the installer's summary prints this line</span>
 abstractcode
 <span class="line-cmt"># or, on the gateway's computer:</span>

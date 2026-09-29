@@ -74,6 +74,7 @@
 <section class="hero" style="min-height:auto;padding:8rem 0 3rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
+    <div class="j-hero-icon" style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--bg-card);border:1px solid var(--border);margin-bottom:1rem"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--green-light)" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
     <div class="hero-badge"><span class="dot"></span> Start here &middot; User</div>
     <h1>Start as a <span class="gradient">user</span></h1>
     <p class="hero-sub">You want a capable assistant on your own computer: chat with a model that fits your machine, talk to it, and let it check things for you on a schedule. No programming needed.</p>
@@ -109,6 +110,10 @@
       <div class="j-step reveal"><div class="j-body">
         <h3>Let it work for you <span class="j-time">10 min</span></h3>
         <p>In an <a href="assistant.html">Assistant</a> conversation, click the clock button and choose <strong>Schedule this conversation&hellip;</strong>: every 8 hours, say, with <strong>Independent</strong> context. The switcher&rsquo;s <strong>Automations</strong> tab shows each run as a chat turn, and the tray icon notifies you only when a run needs you. <a href="automations.html">How automations work</a></p>
+        <figure class="figure" style="margin-top:1rem;max-width:420px">
+          <img src="assets/img/shots/assistant-schedule.webp" alt="The Schedule this conversation window: What, with Workflow: AbstractAssistant Orchestrator, an optional title and the task prefilled with the conversation's last question; When (UTC) set to every 8 hours with an optional first-run time; Context: Independent or Growing; Tools: Tools run without asking or Ask each time; the preview line every 8 hours (UTC), first run now; Cancel and Schedule" loading="lazy" width="1070" height="1072">
+          <figcaption><strong>Schedule this conversation&hellip;</strong> in the Assistant: the task, the interval, the context mode and the tool approval.</figcaption>
+        </figure>
       </div></div>
     </div>
   </div>
@@ -125,7 +130,7 @@
         <span class="t-num">TRY 1</span>
         <h3>A daily digest</h3>
         <p>Ask: "Search the web for news about &lt;a topic you follow&gt; and summarise the three most important items with links." Then schedule it every 24 hours with growing context, so each run can say what changed.</p>
-        
+        <p><a href="automations.html#model">Independent or growing context</a></p>
       </div>
       <div class="try-card reveal">
         <span class="t-num">TRY 2</span>

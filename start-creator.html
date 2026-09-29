@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Start as an artist or creator: images, video, music and voices | AbstractFramework</title>
-  <meta name="description" content="A first hour with AbstractFramework for creators: generate images and short videos, compose music, and clone a voice, with the hardware each one needs.">
+  <title>Start as an artist or creator: voices, music, images and video | AbstractFramework</title>
+  <meta name="description" content="A first hour with AbstractFramework for creators: hear and clone a voice, compose music, generate images and short videos, with the hardware each one needs.">
   <link rel="canonical" href="https://abstractframework.ai/start-creator.html">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="Start as an artist or creator: images, video, music and voices">
-  <meta property="og:description" content="A first hour with AbstractFramework for creators: generate images and short videos, compose music, and clone a voice, with the hardware each one needs.">
+  <meta property="og:title" content="Start as an artist or creator: voices, music, images and video">
+  <meta property="og:description" content="A first hour with AbstractFramework for creators: hear and clone a voice, compose music, generate images and short videos, with the hardware each one needs.">
   <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -74,10 +74,11 @@
 <section class="hero" style="min-height:auto;padding:8rem 0 3rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
+    <div class="j-hero-icon" style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--bg-card);border:1px solid var(--border);margin-bottom:1rem"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="2" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.75 1.5-1.5 0-.4-.15-.74-.4-1-.25-.26-.4-.6-.4-1 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-4.97-4.5-9-10-9z"/></svg></div>
     <div class="hero-badge"><span class="dot"></span> Start here &middot; Artist / creator</div>
     <h1>Start as a <span class="gradient">creator</span></h1>
-    <p class="hero-sub">Generate images and short videos, compose music from a prompt, and give your work a voice, running the models yourself where your hardware allows and using a service where it does not.</p>
-    <div class="hero-actions"><a href="install.html" class="btn btn-primary">Install first</a><a href="vision.html" class="btn btn-secondary">Images &amp; video</a><a href="music.html" class="btn btn-secondary">Music</a><a href="voice.html" class="btn btn-secondary">Voice</a></div>
+    <p class="hero-sub">You make voices, music, images or video, and you want to run the models yourself. In an hour you hear a voice, compose a track, paint an image and chain all three in one workflow, on your own hardware where it is big enough and through a service where it is not.</p>
+    <div class="hero-actions"><a href="install.html" class="btn btn-primary">Install first</a><a href="voice.html" class="btn btn-secondary">Voice</a><a href="music.html" class="btn btn-secondary">Music</a><a href="vision.html" class="btn btn-secondary">Images &amp; video</a><a href="3d.html" class="btn btn-secondary">3D</a></div>
     <nav class="persona-switch" aria-label="Other starting points"><a href="start-user.html">User</a><a href="start-creator.html" aria-current="page">Artist / creator</a><a href="start-developer.html">Developer</a><a href="start-architect.html">Architect</a><a href="start-researcher.html">Researcher</a><a href="start-automation.html">Automation owner</a></nav>
   </div>
 </section>
@@ -91,16 +92,28 @@
     <div class="journey">
       <div class="j-step reveal"><div class="j-body">
         <h3>Install with the right profile <span class="j-time">15 min</span></h3>
-        <p>The installer picks the profile for your machine: <code>apple</code> on an Apple Silicon Mac with macOS 14+, which brings the local MLX engines for images and video; <code>gpu</code> on Linux with an NVIDIA or AMD GPU; <code>light</code> elsewhere, where generation goes through a service.</p><!-- VERIFIED-DOCS docs/install.md:57 -->
+        <p>The installer picks the profile for your machine: <code>apple</code> on an Apple Silicon Mac with macOS 14+, which brings the local MLX engines for images and video; <code>gpu</code> on Linux with an NVIDIA or AMD GPU; <code>light</code> elsewhere, where generation goes through a service. Every profile includes local voice (Supertonic text-to-speech and Whisper speech-to-text, on the processor).</p><!-- VERIFIED-DOCS docs/install.md:57 -->
 <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Let the console choose models that fit <span class="j-time">10 min</span></h3>
-        <p>In the first-run guide&rsquo;s <strong>Default model</strong> step, <strong>Use recommended defaults</strong> sets text, voice, images and video wherever this computer can run them; a route it cannot run shows the reason. The <strong>Models</strong> tab has <strong>Image</strong>, <strong>Video</strong> and <strong>Voice</strong> capability filters, the download size of each build, and a fit badge. Downloads start only when you click <strong>Download</strong>.</p>
+        <p>In the first-run guide&rsquo;s <strong>Default model</strong> step, click <strong>Use recommended defaults</strong>: it sets text, voice, images and video wherever this computer can run them, and a route it cannot run shows the reason. The <strong>Models</strong> tab has <strong>Voice</strong>, <strong>Image</strong> and <strong>Video</strong> capability filters, the download size of each build, and a fit badge. Downloads start only when you click <strong>Download</strong>.</p>
+        <figure class="figure" style="margin-top:1rem">
+          <img src="assets/img/shots/console-models.webp" alt="The web console's Models tab searched for llama: Llama 3.3 70B builds marked Tight and Needs GPU limit, with the sudo sysctl command that raises the Mac GPU memory limit, and Llama 4 Scout builds marked Too large" loading="lazy" width="1600" height="1100">
+          <figcaption>Fit badges in the gateway console&rsquo;s Models tab, here for text models on a 128 GB Mac.</figcaption>
+        </figure>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
-        <h3>Make your first image <span class="j-time">10 min</span></h3>
-        <p>Open the console&rsquo;s <strong>Sandbox</strong> tab and generate an image against your defaults. From Python, the same thing is one call:</p><!-- E2 (W2 PASS): examples/E2-defaults/snippet.py verbatim (comment adapted) -->
+        <h3>Hear a voice <span class="j-time">5 min</span></h3>
+        <p>Open the console&rsquo;s <strong>Sandbox</strong> tab. It shows one output button per configured capability: choose <strong>Voice</strong>, type a line and send it; the answer comes back as audio. <a href="voice.html">AbstractVoice</a> also clones a voice from a reference recording, with OmniVoice, F5-TTS or Chroma locally or with an OpenAI-compatible service.</p>
+      </div></div>
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Compose a track <span class="j-time">5 min</span></h3>
+        <p>Music is recommended but not set for you. In the console&rsquo;s <strong>Multimodal</strong> tab, set the music route to ACE Music (a service; set <code>ACEMUSIC_API_KEY</code>) or to ACE-Step 1.5 XL turbo, which runs locally on an Apple Silicon Mac from 18 GB or on an NVIDIA GPU (<a href="console.html#recommended">which machine runs what</a>). Then choose <strong>Music</strong> in the Sandbox and describe the track. <a href="music.html">AbstractMusic</a> lists every backend and its licence.</p>
+      </div></div>
+      <div class="j-step reveal"><div class="j-body">
+        <h3>Paint an image <span class="j-time">10 min</span></h3>
+        <p>Choose <strong>Image</strong> in the Sandbox and describe the picture. From Python, with the same defaults, it is one call:</p><!-- E2 (W2 PASS): examples/E2-defaults/snippet.py verbatim (comment adapted) -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
 <span class="line-cmt"># The capability routes come from AbstractCore's config (set by the step above,</span>
@@ -109,15 +122,11 @@ llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span
 
 image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
                      <span class="line-str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="line-str">"image"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)</code></pre></div><p>Edits take a source image (and optional style references) with the same <code>output="image"</code>. See <a href="vision.html">AbstractVision</a>.</p>
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)</code></pre></div><p>Edits take a source image (and optional style references) with the same <code>output="image"</code>, and video routes take a prompt or a still. See <a href="vision.html">AbstractVision</a>.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
-        <h3>Draw it as a workflow <span class="j-time">15 min</span></h3>
-        <p>Open <a href="flow.html">Flow</a> from the console&rsquo;s Apps page (<code>/apps/flow/</code>) and chain an LLM step that writes a scene, an image step that paints it and a voice step that narrates it. One turn can return text, audio and an image, all stored with the run.</p>
-      </div></div>
-      <div class="j-step reveal"><div class="j-body">
-        <h3>Add music and a voice <span class="j-time">10 min</span></h3>
-        <p><a href="music.html">AbstractMusic</a> writes music from a prompt: through ACE Music (set <code>ACEMUSIC_API_KEY</code>) or locally with ACE-Step. <a href="voice.html">AbstractVoice</a> clones a voice from a reference recording with OmniVoice, F5-TTS or Chroma locally, or an OpenAI-compatible service.</p>
+        <h3>Chain them in a workflow <span class="j-time">15 min</span></h3>
+        <p>Open <a href="flow.html">Flow</a> from the console&rsquo;s Apps page (<code>/apps/flow/</code>) and chain an LLM step that writes a scene, a voice step that narrates it and an image step that paints it. One turn can return text, audio and an image, all stored with the run. Publish it, and every gateway client can run it.</p>
       </div></div>
     </div>
   </div>
@@ -132,9 +141,9 @@ image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A wate
     <div class="try-grid">
       <div class="try-card reveal">
         <span class="t-num">TRY 1</span>
-        <h3>A short video</h3>
-        <p>On an Apple Silicon Mac with 96 GB or more, the recommended video route is Wan 2.2 TI2V-5B through MLX-Gen (on 64 GB, set it yourself and generate at 832&times;480). Ask for "a crystal clear river in the mountains", or animate a still with image-to-video.</p>
-        <p><a href="vision.html">Video routes and sizes</a></p>
+        <h3>Your narrator</h3>
+        <p>Clone a voice from a clean recording of your own voice, then have it read your script. A transcript of the reference helps the engines that use one; AbstractVoice fills it in with speech-to-text when it is missing.</p>
+        <p><a href="voice.html">Cloning engines</a></p>
       </div>
       <div class="try-card reveal">
         <span class="t-num">TRY 2</span>
@@ -150,9 +159,9 @@ image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A wate
       </div>
       <div class="try-card reveal">
         <span class="t-num">TRY 3</span>
-        <h3>Your narrator</h3>
-        <p>Clone a voice from a clean recording of your own voice, then have it read your script. A transcript of the reference helps the engines that use one; AbstractVoice fills it in with speech-to-text when it is missing.</p>
-        <p><a href="voice.html">Cloning engines</a></p>
+        <h3>A short video, then 3D</h3>
+        <p>On an Apple Silicon Mac with 96 GB or more, the recommended video route is Wan 2.2 TI2V-5B through MLX-Gen (on 64 GB, set it yourself and generate at 832&times;480). Ask for "a crystal clear river in the mountains", or animate a still with image-to-video. To turn one object in an image into a GLB model, install <a href="3d.html">Abstract3D</a> (separately) and run TripoSR locally.</p>
+        <p><a href="vision.html">Video routes and sizes</a> &middot; <a href="3d.html">Abstract3D</a></p>
       </div>
     </div>
   </div>

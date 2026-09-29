@@ -74,6 +74,7 @@
 <section class="hero" style="min-height:auto;padding:8rem 0 3rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
+    <div class="j-hero-icon" style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:var(--bg-card);border:1px solid var(--border);margin-bottom:1rem"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
     <div class="hero-badge"><span class="dot"></span> Start here &middot; Automation owner</div>
     <h1>Start as an <span class="gradient">automation owner</span></h1>
     <p class="hero-sub">Hand recurring checks, digests and reports to an agent. Each automation runs on the gateway at a fixed interval or on request, keeps every run as a readable chat turn, and speaks up only when a run needs you.</p>
@@ -97,7 +98,11 @@
       <div class="j-step reveal"><div class="j-body">
         <h3>Create your first automation <span class="j-time">10 min</span></h3>
         <p>Open the <a href="observer.html">Observer</a> from the console&rsquo;s Apps page. Choose <strong>Launch</strong>, switch to <strong>Automate</strong>, pick <strong>Gateway default</strong>, and write the task:</p><!-- PENDING-W2: E8 -->
-<div class="code-block"><pre><code>Check the free disk space on this computer and report it in one line.</code></pre></div><p>Set <strong>Repeat every 30 minutes</strong>, <strong>Independent</strong> context, tools run without asking, then <strong>Create automation</strong>.</p>
+<div class="code-block"><pre><code>Check the free disk space on this computer and report it in one line.</code></pre></div><p>Set <strong>Repeat every 30 minutes</strong>, <strong>Independent</strong> context, tools run without asking, then <strong>Create automation</strong>. Already chatting in the <a href="assistant.html">Assistant</a>? Its clock button, <strong>Schedule this conversation&hellip;</strong>, creates the same kind of automation from the conversation.</p>
+        <figure class="figure" style="margin-top:1rem">
+          <img src="assets/img/shots/observer-edit.webp" alt="The Observer's Edit automation form, prefilled with the title, task, a 30-minute interval, growing context and tool approval" loading="lazy" width="1440" height="900">
+          <figcaption>The Observer&rsquo;s automation form: task, interval, context mode and tool approval.</figcaption>
+        </figure>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Read it like a chat <span class="j-time">5 min</span></h3>
@@ -128,7 +133,7 @@
         <span class="t-num">TRY 1</span>
         <h3>Market watch (growing)</h3>
         <p>"Search the web for the current price of &lt;a share&gt; and report it with the change since the previous check." Every 5 minutes, growing context: each tick sees the previous ones.</p>
-        
+        <p><a href="automations.html#model">Growing context</a></p>
       </div>
       <div class="try-card reveal">
         <span class="t-num">TRY 2</span>
@@ -140,7 +145,7 @@
         <span class="t-num">TRY 3</span>
         <h3>Weekly report you can question</h3>
         <p>Every 7 days, summarise the week&rsquo;s changes in a folder. When a report surprises you, <strong>Discuss</strong> it: the new chat sees the automation&rsquo;s history and can read its files, without changing them.</p>
-        
+        <p><a href="automations.html#manage">Discuss a result</a></p>
       </div>
     </div>
   </div>
