@@ -522,3 +522,26 @@ plan decides the final numbers.
 - **D10:** no environment variables.
 - **D11:** an inbox reader inside the consoles: not in v1 (to confirm with the operator if wanted).
 - **D12:** read-only mailbox access (no mark-read, move or delete).
+
+### Operator additions (2026-09-29, night)
+
+- **Account recovery and sign-in by email** (gateway accounts, only for users who configured
+  email): "Forgot your password?" (reset link / code sent to the user's registered address) and
+  "Email me a sign-in code" (one-time code). The message is sent through that user's own
+  configured SMTP account (the gateway holds the encrypted credentials, so no sign-in is needed
+  to send it). Codes: single use, short expiry (10 min), stored hashed, rate-limited per account
+  and per client address, constant response whether or not the account exists (no account
+  enumeration), every issue/use recorded in the audit log without the code. Users without email
+  configured see neither option (the admin reset path stays).
+- **OAuth2 sign-in for Google and Microsoft in this feature** (not deferred), if feasible:
+  XOAUTH2 for IMAP and SMTP in the core mail layer, token refresh, tokens encrypted like
+  passwords; the gateway runs the authorization flow (loopback redirect for local gateways,
+  device-code flow for headless ones). Requires the operator to register OAuth clients (Google
+  Cloud OAuth client with the Gmail scope — needs Google's verification for public use; Microsoft
+  Entra app with IMAP/SMTP scopes); client ids/secrets are gateway settings, never env vars.
+- **Polling cadence, clarified:** an email-triggered automation whose steps need no model (e.g.
+  "forward invoices", "notify me when X writes") checks every 60 s; an automation that runs a
+  model on each new message (e.g. "summarise / classify / draft a reply for each new email")
+  checks every 10 min and processes the batch of new messages since its last run; the opt-in AI
+  triage (read new mail, open a session to ask what matters) runs at most once an hour. Every
+  automation reads a message at most once (durable per-automation cursor).
