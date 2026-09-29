@@ -663,7 +663,6 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
 
 
 <!-- ═══════════════════ DEPLOYMENT ═══════════════════ -->
-<!-- PENDING-W4: deploy (deliver/fragments/deploy.html: two rows + paragraph replace the four mixed cards; the profiles row stays) -->
 <section id="deploy" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
@@ -671,32 +670,47 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
       <h2 class="section-title">Design on your laptop. Deploy anywhere. Same framework.</h2>
       <p class="section-desc">The same gateway runs on this computer, a server on your network, a container or the internet. You choose who can reach it; the install profile decides which local engines it carries. Local and cloud models mix freely.</p>
     </div>
-    <div class="modes-grid reveal" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
-      <div class="mode-card">
-        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+    <!-- W4 fragment deliver/fragments/deploy.html (round 5; claims in its header) -->
+    <h3 class="reveal" style="margin:0 0 1rem">Who can reach it</h3>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
         <h3>This computer</h3>
-        <p>The default: <code>127.0.0.1:8080</code>, start at login if you want it, and a tray icon (the menu bar on macOS).</p>
-        <div class="mode-tags"><span class="mode-tag">localhost</span><span class="mode-tag">macOS</span><span class="mode-tag">Linux</span><span class="mode-tag">Windows</span></div>
+        <p>The default: the gateway listens on <code>127.0.0.1</code> only, with user accounts on. Nobody else can connect.</p>
+        <div class="mode-tags"><span class="mode-tag">localhost</span><span class="mode-tag">default</span></div>
       </div>
-      <div class="mode-card">
-        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg></div>
+      <div class="mode-card" style="text-align:left">
         <h3>Local network</h3>
-        <p>Set the Network setting to <code>lan</code> and every device at home or in the office reaches the same gateway, with user accounts.</p>
+        <p>Every device on your network (or your VPN) reaches the sign-in page and the API. User accounts are required. It is plain HTTP, so use it on networks you trust, or behind a TLS proxy or VPN.</p>
         <div class="mode-tags"><span class="mode-tag">lan</span><span class="mode-tag">user accounts</span></div>
       </div>
-      <div class="mode-card">
-        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
+      <div class="mode-card" style="text-align:left">
         <h3>Internet</h3>
-        <p>Set it to <code>internet</code> behind your own TLS and port forwarding or reverse proxy; user accounts are required.</p>
-        <div class="mode-tags"><span class="mode-tag">internet</span><span class="mode-tag">reverse proxy</span></div>
-      </div>
-      <div class="mode-card">
-        <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/></svg></div>
-        <h3>Headless server or container</h3>
-        <p>Install over SSH and configure with the terminal console; one SSH tunnel reaches the console, the API and every app. Or run the GHCR container.</p>
-        <div class="mode-tags"><span class="mode-tag">SSH</span><span class="mode-tag">systemd --user</span><span class="mode-tag">GHCR</span></div>
+        <p>The same, with an explicit acknowledgement. The gateway does not terminate TLS: put your own TLS reverse proxy (Caddy, nginx, Traefik) or a tunnel in front of it.</p>
+        <div class="mode-tags"><span class="mode-tag">internet</span><span class="mode-tag">your TLS</span><span class="mode-tag">user accounts</span></div>
       </div>
     </div>
+
+    <h3 class="reveal" style="margin:2rem 0 1rem">How it runs</h3>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Desktop</h3>
+        <p>An icon in the macOS menu bar, the Windows system tray or a Linux panel opens the console already signed in. <strong>Start AbstractGateway at login</strong> registers a per-user login item.</p>
+        <div class="mode-tags"><span class="mode-tag">tray</span><span class="mode-tag">start at login</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Headless server</h3>
+        <p>Install over SSH with the same one-line installer, manage it from the terminal console (<code>abstractgateway-console</code>), keep it running with a <code>systemd --user</code> service, and reach the console, the API and every app through one SSH tunnel.</p>
+        <div class="mode-tags"><span class="mode-tag">SSH</span><span class="mode-tag">terminal console</span><span class="mode-tag">systemd --user</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Container</h3>
+        <p>Release images on GHCR (<code>ghcr.io/lpalbou/abstractgateway</code>, and a <code>-gpu</code> variant), run with a mounted data directory and <code>ABSTRACTGATEWAY_USER_AUTH=1</code>.</p>
+        <div class="mode-tags"><span class="mode-tag">GHCR</span><span class="mode-tag">Docker</span></div>
+      </div>
+    </div>
+
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><strong>In practice.</strong> A new gateway answers on this computer only. The <strong>Network</strong> setting, in the web console, the terminal console or the tray, or <code>abstractgateway network set lan</code> (or <code>internet</code>) opens it up at the next start, and both keep user accounts on. A gateway started on another address without user accounts or a token refuses to start.</p>
+    <h3 class="reveal" style="margin:2rem 0 1rem">What it carries</h3>
     <!-- profile badges: abstractcore 2.19.0 on PyPI requires_dist (base: openai, anthropic; extra "apple": mlx, mlx-lm, mlx-vlm, transformers, llama-cpp-python, sentence-transformers, abstractvoice[all-apple], abstractvision[all-apple] (MLX-Gen, Diffusers), abstractmusic[all-apple], playwright; extra "gpu": vllm, transformers, llama-cpp-python, sentence-transformers, abstractvoice[all-gpu], abstractvision[all-gpu] (Diffusers), abstractmusic[all-gpu], playwright); names as core.html; providers registry.py:162-290 -->
     <div class="modes-grid profile-cards reveal" style="margin-top:1.5rem">
       <div class="mode-card">
@@ -1703,10 +1717,13 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       <a class="comp-link" href="memory.html#reconstruction">How reconstruction works &rarr;</a>
       <a class="comp-link" href="entity.html">AbstractEntity &rarr;</a>
     </div>
+    <!-- W4 fragment deliver/fragments/related-work.html (round 5; claims in its header) -->
+    <div class="callout reveal" style="margin-top:2rem">
+      <div><strong>Related work.</strong> <a href="https://github.com/letta-ai/letta" target="_blank" rel="noopener noreferrer">Letta</a> (formerly MemGPT) works in the same direction: stateful agents whose state is persisted in a database, <a href="https://docs.letta.com/v1-sdk/concepts/stateful-agents" target="_blank" rel="noopener noreferrer">memory blocks</a> pinned in the context that the agent edits with memory tools, a searchable <a href="https://docs.letta.com/v1-sdk/memory/archival-memory" target="_blank" rel="noopener noreferrer">archival memory</a>, and <a href="https://docs.letta.com/configuration/memory" target="_blank" rel="noopener noreferrer">dreaming</a>, where background subagents review recent conversations and update memory. Our choices differ in five places: an entity's identity is planted once from its starting document and never rewritten; its night consolidation is deterministic, calls no model and only proposes; facts live in a temporal graph with validity windows and provenance; beyond the always-present identity core, working memory is reconstructed for each moment from the cue; and every reconstruction is a step in the run's ledger and a trace in the memory graph.</div>
+    </div>
   </div>
 </section>
 
-<!-- PENDING-W4: related-work (paragraph after the memory section) -->
 <section id="knowledge" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
@@ -1905,7 +1922,39 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
   </div>
 </section>
 
-<!-- PENDING-W4: history (deliver/fragments/history.html: origin in AbstractLLM, refactored into dedicated packages, links to each CHANGELOG) -->
+<!-- W4 fragment deliver/fragments/history.html (round 5; claims in its header) -->
+<section id="history">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">History</div>
+      <h2 class="section-title">Where it comes from</h2>
+      <p class="section-desc">AbstractFramework grew out of <a href="https://github.com/lpalbou/AbstractLLM" target="_blank" rel="noopener noreferrer">AbstractLLM</a>, a unified interface to language models first published on GitHub and PyPI in April 2025. Its provider layer became AbstractCore (renamed in AbstractCore 2.4.0), and the durable runtime, agents, gateway, clients and modality plugins were then built as dedicated packages. Each package keeps its own changelog.</p>
+    </div>
+    <div class="comp-links reveal" style="justify-content:center;flex-wrap:wrap;gap:.5rem 1rem">
+      <a class="comp-link" href="https://github.com/lpalbou/abstractframework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractFramework</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractCore/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractCore</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractVoice/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractVoice</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractMusic/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractMusic</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractVision/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractVision</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstract3d/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Abstract3D</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractCamera/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractCamera</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractruntime/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractRuntime</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractagent/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractAgent</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractmemory/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractMemory</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractsemantics/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractSemantics</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractSkill/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractgateway/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractGateway</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractFlow/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractFlow</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractcode/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractCode</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractobserver/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractObserver</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractassistant/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractAssistant</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractContinuum/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractContinuum</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractEntity/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractEntity</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstracttui/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractTUI</a>
+      <a class="comp-link" href="https://github.com/lpalbou/abstractuic/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">AbstractUIC</a>
+    </div>
+  </div>
+</section>
 
 <!-- ═══════════════════ CTA ═══════════════════ -->
 <section class="cta-section">
