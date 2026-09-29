@@ -23,6 +23,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/main.css?v=6">
+  <link rel="stylesheet" href="assets/css/components.css">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -39,7 +40,7 @@
         <div class="nav-dropdown-group">
           <span class="nav-dropdown-label">Your first hour as a</span>
           <a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a>
-          <a href="start-creator.html">Artist / creator<small>images, video, music, voices</small></a>
+          <a href="start-creator.html">Artist / creator<small>voices, music, images, video, 3D</small></a>
           <a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a>
           <a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a>
           <a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a>
@@ -93,7 +94,7 @@
     <li><a href="#multimodal">Multimodal</a></li>
     <li><a href="#architecture">Architecture</a></li>
     <li><a href="#ledger">Ledger</a></li>
-    <li><a href="#showcase">Showcase</a></li>
+    <li><a href="#flow">Flow</a></li>
     <li><a href="#getting-started">Get Started</a></li>
     <li><a href="install.html">Install</a></li>
     <li><a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer" class="nav-cta">
@@ -565,54 +566,71 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
   </div>
 </section>
 
-<!-- ═══════════════════ THE LEDGER IS THE RUN ═══════════════════ -->
-<!-- PENDING-W4: ledger (replace with deliver/fragments/ledger.html and FACTS.md when they land) -->
+<!-- ═══════════════════ THE LEDGER ═══════════════════ -->
+<!-- W4 fragment deliver/fragments/ledger.html (claims and sources in its header and FACTS.md P9) -->
 <section id="ledger">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Observability</div>
-      <h2 class="section-title">The Ledger Is the Run</h2>
-      <p class="section-desc">Most stacks write logs about a run. Here the run is its append-only ledger: every step an agent or a workflow takes is recorded as it happens. Logs are an extract of it; every app is a view of it.</p>
+      <h2 class="section-title">The Ledger Is the Record of the Run</h2>
+      <p class="section-desc">Most stacks log what an agent did. Here every step is appended to the run's ledger as it happens, and everything you see about a run is read back from it.</p>
     </div>
     <div class="ledger-grid reveal">
       <div>
-        <p class="ledger-lead">Nothing about a run lives only in memory or in a client. <em>What the ledger holds is what happened</em>, so any client, on any device, can rebuild the run and act on it.</p>
+        <p class="ledger-lead">Each step writes one record: the node, the effect it asked for with its <em>full payload</em>, the result or the error, the status and the timing. Records are only ever appended, next to a durable checkpoint of the run's state.</p>
         <div class="ledger-points">
-          <div class="ledger-point"><span class="lp-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span><div><h4>Every step, recorded</h4><p>Each step is a record with its effect (a model call, tool calls, a question to you), its result, status, timing and attempt. The run's state is checkpointed, so it resumes where it stopped.</p></div></div>
-          <div class="ledger-point"><span class="lp-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></span><div><h4>Replayed by every client</h4><p>An app reads the ledger from a cursor, then follows new records live over SSE. The terminal, the browser and the menu bar show the same run because they read the same records.</p></div></div>
-          <div class="ledger-point"><span class="lp-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><div><h4>Survives restarts, tamper-evident on request</h4><p>Runs and ledgers live in the gateway's store and are identical after a restart. Snapshots keep a named copy of a run's state; an optional hash chain makes edits and reordering detectable.</p></div></div>
-          <div class="ledger-point"><span class="lp-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><div><h4>Inspected step by step</h4><p>AbstractObserver replays any run with the raw JSON of each step, its tool approvals and wait states. <a href="observer.html" style="color:var(--accent-light)">AbstractObserver &rarr;</a></p></div></div>
+          <div class="ledger-point">
+            <span class="lp-ic" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+            <div><h4>Nothing summarised away</h4><p>Prompts, model replies, tool calls and their results, waits and approvals are all records. The chat transcript, the tool activity and the Observer's trace are views of the same ledger.</p></div>
+          </div>
+          <div class="ledger-point">
+            <span class="lp-ic" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 3v6h-6"/></svg></span>
+            <div><h4>Survives a crash or a restart</h4><p>A record is written before the checkpoint that commits it. After a restart the run resumes from its last checkpoint, and effects that already completed are not run twice.</p></div>
+          </div>
+          <div class="ledger-point">
+            <span class="lp-ic" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="2" y="4" width="13" height="10" rx="1.5"/><rect x="17" y="7" width="5" height="11" rx="1"/><path d="M6 18h6"/></svg></span>
+            <div><h4>Thin apps replay it, from any device</h4><p>AbstractCode, the Assistant, the Observer and your own app page through the ledger from any cursor, then follow new records live over SSE. A client that reconnects catches up from where it stopped, so every device shows the same run.</p></div>
+          </div>
         </div>
       </div>
-      <div>
-        <div class="ledger-viz" role="img" aria-label="Illustration of a run ledger: numbered records for a model call, tool calls, a memory recall, a question waiting for your approval and an answer, followed live by three clients">
-          <div class="lv-bar"><span><b>ledger</b> &middot; illustration</span><span class="lv-live">live</span></div>
-          <ol class="ledger-rows">
-            <li><span class="n">01</span><span class="k llm">llm_call</span><span class="d">plan the reply</span><span class="s">completed</span></li>
-            <li><span class="n">02</span><span class="k">memory_recall</span><span class="d">what the user asked last week</span><span class="s">completed</span></li>
-            <li><span class="n">03</span><span class="k tool">tool_calls</span><span class="d">list_files(path=".")</span><span class="s">completed</span></li>
-            <li><span class="n">04</span><span class="k llm">llm_call</span><span class="d">draft the change</span><span class="s">completed</span></li>
-            <li class="cursor"><span class="n">05</span><span class="k wait">ask_user</span><span class="d">approve write_file(README.md)?</span><span class="s w">waiting</span></li>
-            <li><span class="n">06</span><span class="k tool">tool_calls</span><span class="d">write_file(README.md)</span><span class="s">completed</span></li>
-            <li><span class="n">07</span><span class="k llm">llm_call</span><span class="d">summarize what changed</span><span class="s">completed</span></li>
-            <li><span class="n">08</span><span class="k">answer_user</span><span class="d">"README updated: two sections..."</span><span class="s">completed</span></li>
-          </ol>
-          <div class="lv-clients"><div><b>Terminal</b>replays 01&ndash;08</div><div><b>Browser</b>replays 01&ndash;08</div><div><b>Menu bar</b>replays 01&ndash;08</div></div>
+      <div class="ledger-viz" role="img" aria-label="Illustration: the ledger of an agent run. The reason step calls the model, the act step asks to run a tool and waits for approval, the tool runs, and the reason step calls the model again. Three clients, a terminal, a browser and the Assistant, read the same records.">
+        <div class="lv-bar"><span><b>ledger</b> one agent turn &middot; append-only</span><span class="lv-live">live</span></div>
+        <ol class="ledger-rows">
+          <li><span class="n">01</span><span class="k llm">llm_call</span><span class="d">reason &middot; model request</span><span class="s">started</span></li>
+          <li><span class="n">02</span><span class="k llm">llm_call</span><span class="d">reason &middot; reply with one tool call</span><span class="s">completed</span></li>
+          <li><span class="n">03</span><span class="k tool">tool_calls</span><span class="d">act &middot; payload: tool and arguments</span><span class="s">started</span></li>
+          <li><span class="n">04</span><span class="k wait">tool_calls</span><span class="d">act &middot; waiting for your approval</span><span class="s w">waiting</span></li>
+          <li><span class="n">05</span><span class="k tool">tool_calls</span><span class="d">act &middot; approved, tool result</span><span class="s">completed</span></li>
+          <li><span class="n">06</span><span class="k llm">llm_call</span><span class="d">reason &middot; model request with the result</span><span class="s">started</span></li>
+          <li class="cursor"><span class="n">07</span><span class="k llm">llm_call</span><span class="d">reason &middot; final answer</span><span class="s">completed</span></li>
+        </ol>
+        <div class="lv-clients">
+          <div><b>Terminal</b>replays from 0, then streams</div>
+          <div><b>Browser</b>same records, same cursor</div>
+          <div><b>Assistant</b>resumes the wait</div>
         </div>
-        <!-- E6 (W2 PASS): examples/E6-gateway-api/snippet.sh verbatim (ledger lines); run.log: ledger identical after a gateway restart -->
-<div class="code-block ledger-routes" data-lang="shell">
+      </div>
+    </div>
+    <div class="ledger-routes reveal">
+      <!-- E6 (W2 PASS): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:6-11 (gateway 0.7.1, run.log) -->
+      <div class="code-block">
 <pre><code><span class="line-cmt"># Replay the ledger, then follow new records live (SSE)</span>
 curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
 curl -sS -N -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger/stream"</span>
 
 <span class="line-cmt"># The run and its ledger survive a gateway restart</span>
 curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID"</span></code></pre>
-        </div>
-        <!-- PENDING-W2: SHOT observer-ledger (a real Observer ledger view goes here) -->
       </div>
+      <div class="comp-links" style="margin-top:1rem">
+        <a class="comp-link" href="runtime.html">AbstractRuntime: runs, effects and the ledger &rarr;</a>
+        <a class="comp-link" href="observer.html">AbstractObserver: browse any ledger &rarr;</a>
+        <a class="comp-link" href="https://github.com/lpalbou/abstractgateway/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">Gateway ledger API &rarr;</a>
+      </div>
+      <!-- PENDING-W2: SHOT observer-ledger (a real Observer ledger view) -->
     </div>
   </div>
 </section>
+
 
 <!-- ═══════════════════ DEPLOYMENT ═══════════════════ -->
 <section id="deploy" style="background:var(--bg-surface)">
@@ -658,7 +676,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--green)" stroke="none" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></div>
         <h3>Apple</h3>
-        <p>Adds the local MLX and Metal engines on Apple Silicon (macOS 14 or later) for text, images, video and voice, next to everything in Light.</p>
+        <p>Adds the local MLX and Metal engines on Apple Silicon (macOS 14 or later) for text, voice, images and video, next to everything in Light.</p>
         <div class="mode-tags"><span class="mode-tag">MLX</span><span class="mode-tag">MLX-Gen</span><span class="mode-tag">Metal</span></div>
       </div>
       <div class="mode-card">
@@ -923,18 +941,17 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
         </div>
       </div>
 
-      <!-- AbstractAssistant -->
+      <!-- AbstractAssistant: W4 fragment assistant-card.html (A), FACTS.md P2/P10 -->
       <div class="comp-card t-app reveal">
         <div class="comp-card-header">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
           <span class="comp-tag app">Application</span>
         </div>
         <h3>AbstractAssistant <span class="ver">0.9.1</span></h3>
-        <!-- PENDING-W4: assistant (supported OSes and wording from FACTS.md) -->
-        <p>A desktop assistant in the menu bar: a palette with a voice mode, your gateway sessions from every device, automations and live run activity.</p>
+        <p>A desktop assistant in your menu bar or system tray: a chat palette one shortcut away, hands-free voice conversations and a small CLI, on your gateway's sessions and workflows. Built for macOS, with an app bundle you can build; the same app runs from pip on Linux and Windows.</p>
         <div class="comp-links">
           <a class="comp-link" href="assistant.html">Docs &rarr;</a>
-          <a class="comp-link" href="https://github.com/lpalbou/abstractassistant" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://github.com/lpalbou/AbstractAssistant" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
           <a class="comp-link" href="https://pypi.org/project/abstractassistant/" target="_blank" rel="noopener noreferrer">PyPI &rarr;</a>
         </div>
       </div>
@@ -969,32 +986,34 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
         </div>
       </div>
 
-      <div class="comp-group reveal"><h3>Toolkits</h3><p>Build your own apps on the same parts</p></div>
+      <div class="comp-group reveal"><h3>Toolkits</h3><p>The toolkits the framework's own apps are built from, published for yours</p></div>
 
-      <!-- AbstractTUI -->
+      <!-- AbstractTUI: W4 fragment tui-uic.html, FACTS.md P18 -->
       <div class="comp-card t-toolkit reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M6 9l3 3-3 3M11 15h6"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c4c4d4" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l3 3-3 3M11 15h6"/></svg>
           <span class="comp-tag toolkit">Toolkit</span>
         </div>
         <h3>AbstractTUI <span class="ver">0.6.0</span></h3>
-        <p>The reactive Rust terminal-UI engine behind the AbstractCode terminal client, <code>abstractgateway-console</code> and <code>abstractcore-console</code>. Build your own terminal apps on it.</p>
+        <p>The Rust terminal UI engine behind AbstractCode's terminal client and the AbstractGateway and AbstractCore terminal consoles: reactive signals, a compositor, a streaming chat feed, Markdown, 26 themes, images and 3D in the terminal. Reuse it for your own terminal apps.</p>
         <div class="comp-links">
-          <a class="comp-link" href="https://github.com/lpalbou/AbstractTUI" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <!-- PENDING-W4: tui.html Docs link -->
+          <a class="comp-link" href="https://github.com/lpalbou/abstracttui" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
           <a class="comp-link" href="https://crates.io/crates/abstracttui" target="_blank" rel="noopener noreferrer">crates.io &rarr;</a>
         </div>
       </div>
 
-      <!-- AbstractUIC -->
+      <!-- AbstractUIC: W4 fragment tui-uic.html, FACTS.md P18 -->
       <div class="comp-card t-toolkit reveal">
         <div class="comp-card-header">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c4c4d4" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
           <span class="comp-tag toolkit">Toolkit</span>
         </div>
-        <h3>AbstractUIC <span class="ver">0.1.16</span></h3>
-        <p>React components, web components and a gateway session proxy, used by the browser apps. Build your own web apps on it: <code>@abstractframework/ui-kit</code>, <code>panel-chat</code> and more.</p>
+        <h3>AbstractUIC <span class="ver">ui-kit 0.1.16</span></h3>
+        <p>The web UI kit of the framework's browser apps: React components (chat panel, provider and model pickers, gateway sign-in, About dialog), Web Components, 21 themes and a Node.js gateway session proxy. Reuse it for your own web apps on a gateway.</p>
         <div class="comp-links">
-          <a class="comp-link" href="https://github.com/lpalbou/AbstractUIC" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <!-- PENDING-W4: uic.html Docs link -->
+          <a class="comp-link" href="https://github.com/lpalbou/abstractuic" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
           <a class="comp-link" href="https://www.npmjs.com/package/@abstractframework/ui-kit" target="_blank" rel="noopener noreferrer">npm &rarr;</a>
         </div>
       </div>
@@ -1016,51 +1035,83 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
   </div>
 </section>
 
-<!-- ═══════════════════ SHOWCASE: FLOW AUTHORING ═══════════════════ -->
-<!-- PENDING-W4: flow (insert deliver/fragments/flow.html: draw it, publish it, then use it from every chat and agent session) -->
-<section id="showcase" style="background:var(--bg-surface)">
+<!-- ═══════════════════ FLOW ═══════════════════ -->
+<!-- W4 fragment deliver/fragments/flow.html (claims and sources in its header and FACTS.md P1) -->
+<section id="flow" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Visual Authoring</div>
-      <h2 class="section-title">Blueprint Your AI Workflows</h2>
-      <p class="section-desc">Wire LLM, agent, tool, branch, loop and subflow nodes in the browser, then publish the workflow to your gateway, where every client can run it and an automation can repeat it.</p>
+      <div class="section-label">AbstractFlow</div>
+      <h2 class="section-title">Draw a Multi-Agent System. Run It Everywhere.</h2>
+      <p class="section-desc">In AbstractFlow you wire agents and model calls together with plain Python code, branches, loops, subflows and a human approval step. Publish the graph and it becomes an executable on your gateway: every client can start it like an endpoint, inside a chat or an agent session.</p>
     </div>
 
     <div class="showcase-grid reveal">
       <div class="showcase-img">
         <!-- PENDING-W2: SHOT flow -->
-        <img src="assets/img/shots/flow-map-reduce.webp" alt="The AbstractFlow editor with a map-reduce workflow on its canvas" loading="lazy">
+        <img src="assets/img/shots/flow-map-reduce.webp" alt="The AbstractFlow editor with a map-reduce workflow: inputs, a for-each loop, a per-item LLM call, append and persist steps, a reduce LLM call and the result node" loading="lazy">
       </div>
       <div class="showcase-content">
-        <h3>Design Pipelines Visually</h3>
-        <p>Combine LLM calls, agents, voice and image generation, conditionals, loops and subflows. Every node has its own provider, model and parameters.</p>
+        <h3>Loop engineering, graph engineering</h3>
+        <p>The loop, the reviewer and the deterministic checks are nodes you can see. Change one, publish again, and the next run uses it.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> LLM, Agent, Tool, Conditional, Loop and Subflow nodes</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Structured outputs with a response-schema builder</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Portable <code>.flow</code> bundles, published to the gateway catalog</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Automation defaults stored on the workflow</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Agent, LLM Call, Tool Calls and Subflow nodes next to sandboxed Python Code</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> If/Else, Switch, ForEach, For, While, Parallel and Sequence</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Ask User pauses the run until a person answers</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Voice, music, image, video and camera nodes on the gateway's capabilities</li>
         </ul>
-        <div class="comp-links" style="margin-top:1rem"><a class="comp-link" href="flow.html">AbstractFlow &rarr;</a></div>
       </div>
     </div>
 
-    <div class="showcase-grid reverse reveal">
-      <div class="showcase-content">
-        <h3>Multimodal Output at Every Turn</h3>
-        <p>A single workflow turn can produce text, narrated audio and a generated image. Every artifact is stored with the run and replayable from the ledger.</p>
-        <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Text, voice and image in one turn</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Artifacts stored with the run</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Every step inspectable with its raw JSON</li>
-        </ul>
+    <div class="modes-grid reveal" style="margin-top:2.5rem">
+      <div class="mode-card" style="text-align:left">
+        <h3>1. Draw</h3>
+        <p>Build the graph in the browser. Declare the interface it implements, such as <code>abstractcode.agent.v1</code>, so agent clients know how to call it.</p>
       </div>
-      <div class="showcase-img">
-        <!-- PENDING-W2: SHOT flow-observability-1-turn -->
-        <img src="assets/img/flow-observability-1-turn.png" alt="One workflow turn that produced a text answer, a voice recording and a generated image, shown with their controls" loading="lazy">
+      <div class="mode-card" style="text-align:left">
+        <h3>2. Publish</h3>
+        <p><strong>Publish</strong> packs a new <code>.flow</code> bundle version and installs it on the gateway. Earlier versions stay available.</p>
       </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>3. Use it from every client</h3>
+        <p><code>/workflow</code> in the AbstractCode terminal, the <strong>Workflow</strong> list in AbstractCode web, <strong>Launch</strong> in the Observer, an automation, or one API call. The Assistant runs workflows from the shared catalog.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>4. Make it the default agent</h3>
+        <p>An admin sets it as the gateway's default for an interface (<strong>Workflows &rarr; Make agent default</strong>). Every chat that follows <strong>Gateway default</strong> runs it from the next turn.</p>
+      </div>
+    </div>
+
+    <div class="showcase-grid reveal" style="margin-top:2.5rem;align-items:start">
+      <div style="min-width:0">
+        <h3 style="margin-bottom:.75rem">Start a published workflow</h3>
+        <!-- E6 (W2 PASS): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:1-4 (gateway 0.7.1) -->
+        <div class="code-block">
+<pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
+  <span class="line-str">"$GW/api/gateway/runs/start"</span></code></pre>
+        </div>
+      </div>
+      <div style="min-width:0">
+        <h3 style="margin-bottom:.75rem">Or whatever the gateway's default agent is</h3>
+        <!-- VERIFIED-DOCS AF/abstractgateway/docs/api.md:121-124 -->
+        <div class="code-block">
+<pre><code>curl -sS -H <span class="line-str">"$AUTH"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"flow_id":"@default","interface":"abstractcode.agent.v1","input_data":{"prompt":"Hello"}}'</span> \
+  <span class="line-str">"$BASE_URL/api/gateway/runs/start"</span></code></pre>
+        </div>
+      </div>
+    </div>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1rem">The answer names the run and the exact workflow version that runs it; the run's <a href="#ledger">ledger</a> then streams every step.</p>
+
+    <div class="comp-links reveal" style="margin-top:1.25rem">
+      <a class="comp-link" href="flow.html">AbstractFlow &rarr;</a>
+      <a class="comp-link" href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/agent-sessions.md" target="_blank" rel="noopener noreferrer">Default agent workflows &rarr;</a>
+      <a class="comp-link" href="automations.html">Run it on a schedule &rarr;</a>
     </div>
   </div>
 </section>
+
 
 <!-- ═══════════════════ SHOWCASE: ABSTRACTCODE ═══════════════════ -->
 <section id="code">
@@ -1118,11 +1169,14 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
 </section>
 
 <!-- ═══════════════════ SHOWCASE: ASSISTANT ═══════════════════ -->
-<!-- PENDING-W4: assistant (title phrase, supported OSes, hotkey and tray from FACTS.md) -->
 <section id="assistant-home">
   <div class="container">
+    <!-- W4 fragment assistant-card.html (B), FACTS.md P2/P10 -->
     <div class="section-header reveal">
       <div class="section-label">Desktop</div>
+      <h2 class="section-title">AbstractAssistant &mdash; One Shortcut Away</h2>
+      <p class="section-desc">Press <kbd>&#8984;&#8679;Space</kbd> from any app, or click its icon in the menu bar, and the palette opens on your gateway: your sessions from every device, your automations and live run activity, with voice conversations on <kbd>&#8984;&#8679;V</kbd>. Built for macOS, where you can also build it as a menu-bar app bundle; the same Python app runs on Linux and Windows desktops that have a system tray, without that bundle and not validated to the same standard.</p>
+    </div>
       <h2 class="section-title">AbstractAssistant &mdash; One Key Away</h2>
       <p class="section-desc">A menu-bar palette with a voice mode, fed by the gateway: your sessions from every device, automations, and live run activity.</p>
     </div>
@@ -1147,77 +1201,10 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Generative Media</div>
-      <h2 class="section-title">Images, Video and Music, Locally</h2>
+      <h2 class="section-title">Music, Images and Video, Locally</h2>
       <p class="section-desc">Generate on your hardware. On Apple Silicon, MLX-Gen runs FLUX.2, Qwen Image, Z-Image, ERNIE and Wan 2.2; on NVIDIA, Diffusers and stable-diffusion.cpp. Hardware needs are in the <a href="start-creator.html" style="color:var(--accent-light)">creator journey</a>.</p>
     </div>
-    <!-- PENDING-W5: carousel (3-panel carousel from deliver/fragments/carousel.html) -->
-    <div class="carousel reveal" id="gallery-carousel">
-      <div class="carousel-track">
-        <!-- W2 PASS: examples/E2-defaults (lighthouse), E4-openai-server/snippet.sh (paper boat), E3-explicit/image.py (lighthouse, explicit route) -->
-        <div class="carousel-slide">
-          <img src="assets/media/lighthouse.webp" alt="A watercolor lighthouse on a rocky coast at dawn with seagulls, generated with FLUX.2 Klein" loading="lazy">
-          <div class="carousel-caption">FLUX.2 Klein 4B through MLX-Gen, from <code>generate(..., output="image")</code> &mdash; "A watercolor illustration of a lighthouse on a rocky coast at dawn"</div>
-        </div>
-        <div class="carousel-slide">
-          <img src="assets/media/paper-boat.webp" alt="A watercolor paper boat on a calm lake at sunrise, generated with FLUX.2 Klein" loading="lazy">
-          <div class="carousel-caption">FLUX.2 Klein 4B over the OpenAI-compatible <code>/v1/images/generations</code> &mdash; "A paper boat on a calm lake at sunrise, watercolor"</div>
-        </div>
-        <div class="carousel-slide">
-          <img src="assets/media/lighthouse-cliff.webp" alt="A watercolor lighthouse on a cliff above a calm sea, generated with FLUX.2 Klein" loading="lazy">
-          <div class="carousel-caption">FLUX.2 Klein 4B with the provider and model named in the call &mdash; "A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</div>
-        </div>
-        <div class="carousel-slide">
-          <img src="assets/img/starship-snow.png" alt="A starship standing in a snowy landscape, generated with FLUX.2 Klein" loading="lazy">
-          <div class="carousel-caption">FLUX.2 Klein 4B &mdash; "A starship in snow"</div>
-        </div>
-        <div class="carousel-slide">
-          <img src="assets/img/starship-snow-pencil-sketch.png" alt="The same starship image turned into a pencil sketch by an image edit" loading="lazy">
-          <div class="carousel-caption">Qwen Image Edit &mdash; pencil-sketch edit of the image above</div>
-        </div>
-        <div class="carousel-slide">
-          <img src="assets/img/gallery-cyberpunk.png" alt="A neon cyberpunk city street at night" loading="lazy">
-          <div class="carousel-caption">Z-Image Turbo &mdash; "Cyberpunk city at night"</div>
-        </div>
-        <div class="carousel-slide">
-          <img src="assets/img/gallery-samurai.png" alt="A samurai standing on a cliff at dawn" loading="lazy">
-          <div class="carousel-caption">Z-Image Turbo &mdash; "Samurai on cliff at dawn"</div>
-        </div>
-      </div>
-      <button class="carousel-prev" aria-label="Previous image">&#8249;</button>
-      <button class="carousel-next" aria-label="Next image">&#8250;</button>
-      <div class="carousel-dots"></div>
-    </div>
-    <div class="reveal" style="margin-top:2rem">
-      <h3 style="margin-bottom:1rem">Text-to-Video (Wan 2.2)</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generated on-device with Wan 2.2 TI2V-5B through MLX-Gen. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. TI2V-5B needs about 63.5 GiB of memory while it generates at its default 1280&times;704 size: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
-      <div class="carousel">
-        <div class="carousel-track">
-          <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
-              <source src="assets/video/t2v-example.mp4" type="video/mp4">
-            </video>
-            <div class="carousel-caption">"A Star Trek vessel in slow orbit around earth with shimmering lights of metropoles"</div>
-          </div>
-          <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
-              <source src="assets/video/t2v-river.mp4" type="video/mp4">
-            </video>
-            <div class="carousel-caption">"A crystal clear river in the mountains"</div>
-          </div>
-          <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg" aria-label="Generated video: two starships in combat">
-              <source src="assets/video/t2v-space.mp4" type="video/mp4">
-            </video>
-            <div class="carousel-caption">"A dynamic combat in space between two starships"</div>
-          </div>
-        </div>
-        <button class="carousel-prev" aria-label="Previous video">&#8592;</button>
-        <button class="carousel-next" aria-label="Next video">&#8594;</button>
-        <div class="carousel-dots"></div>
-      </div>
-    </div>
-    <!-- PENDING-VIDEO: i2v (an "Image-to-video (Wan 2.2)" block with the video worker's clips from deliver/media/) -->
-    <div class="reveal" style="margin-top:2rem">
+    <div class="reveal" style="margin-bottom:2rem">
       <h3 style="margin-bottom:1rem">Text-to-Music (ACE-Step / ACE Music)</h3>
       <p style="color:var(--text-secondary);margin-bottom:1.5rem">Locally with ACE-Step 1.5, or remotely through the ACE Music API. Instrumental and vocal tracks with genre and style control.</p>
       <div class="audio-showcase">
@@ -1235,6 +1222,68 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
         </div>
       </div>
     </div>
+    <h3 class="reveal" style="margin-bottom:1rem">Text-to-Image and Image Editing</h3>
+    <!-- W5 fragment deliver/fragments/carousel.html (P11) -->
+    <div class="c3 reveal" data-c3 style="--c3-ratio: 4 / 3" aria-label="Generated images">
+      <div class="c3-stage">
+        <!-- W2 PASS: examples/E2-defaults (lighthouse), E4-openai-server/snippet.sh (paper boat), E3-explicit/image.py (lighthouse, explicit route) -->
+        <figure class="c3-slide">
+          <img src="assets/media/lighthouse.webp" alt="A watercolor lighthouse on a rocky coast at dawn with seagulls, generated with FLUX.2 Klein" loading="lazy">
+          <figcaption>FLUX.2 Klein 4B through MLX-Gen, <code>output="image"</code> &mdash; "A watercolor illustration of a lighthouse on a rocky coast at dawn"</figcaption>
+        </figure>
+        <figure class="c3-slide">
+          <img src="assets/media/paper-boat.webp" alt="A watercolor paper boat on a calm lake at sunrise, generated with FLUX.2 Klein" loading="lazy">
+          <figcaption>FLUX.2 Klein 4B over <code>/v1/images/generations</code> &mdash; "A paper boat on a calm lake at sunrise, watercolor"</figcaption>
+        </figure>
+        <figure class="c3-slide">
+          <img src="assets/media/lighthouse-cliff.webp" alt="A watercolor lighthouse on a cliff above a calm sea, generated with FLUX.2 Klein" loading="lazy">
+          <figcaption>FLUX.2 Klein 4B, provider and model named in the call &mdash; "A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</figcaption>
+        </figure>
+        <figure class="c3-slide">
+          <img src="assets/img/starship-snow.png" alt="A starship standing in a snowy landscape, generated with FLUX.2 Klein" loading="lazy">
+          <figcaption>FLUX.2 Klein 4B &mdash; "A starship in snow"</figcaption>
+        </figure>
+        <figure class="c3-slide">
+          <img src="assets/img/starship-snow-pencil-sketch.png" alt="The same starship image turned into a pencil sketch by an image edit" loading="lazy">
+          <figcaption>Qwen Image Edit &mdash; pencil-sketch edit of the starship image</figcaption>
+        </figure>
+        <figure class="c3-slide">
+          <img src="assets/img/gallery-cyberpunk.png" alt="A neon cyberpunk city street at night" loading="lazy">
+          <figcaption>Z-Image Turbo &mdash; "Cyberpunk city at night"</figcaption>
+        </figure>
+        <figure class="c3-slide">
+          <img src="assets/img/gallery-samurai.png" alt="A samurai standing on a cliff at dawn" loading="lazy">
+          <figcaption>Z-Image Turbo &mdash; "Samurai on cliff at dawn"</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="reveal" style="margin-top:2rem">
+      <h3 style="margin-bottom:1rem">Text-to-Video (Wan 2.2)</h3>
+      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generated on-device with Wan 2.2 TI2V-5B through MLX-Gen. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. TI2V-5B needs about 63.5 GiB of memory while it generates at its default 1280&times;704 size: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
+      <div class="c3 reveal" data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
+        <div class="c3-stage">
+          <figure class="c3-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
+              <source src="assets/video/t2v-example.mp4" type="video/mp4">
+            </video>
+            <figcaption>Wan 2.2 TI2V-5B &mdash; "A Star Trek vessel in slow orbit around earth with shimmering lights of metropoles"</figcaption>
+          </figure>
+          <figure class="c3-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
+              <source src="assets/video/t2v-river.mp4" type="video/mp4">
+            </video>
+            <figcaption>Wan 2.2 TI2V-5B &mdash; "A crystal clear river in the mountains"</figcaption>
+          </figure>
+          <figure class="c3-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg" aria-label="Generated video: two starships in combat">
+              <source src="assets/video/t2v-space.mp4" type="video/mp4">
+            </video>
+            <figcaption>Wan 2.2 TI2V-5B &mdash; "A dynamic combat in space between two starships"</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+    <!-- PENDING-VIDEO: i2v (an "Image-to-video (Wan 2.2)" block with the video worker's clips from deliver/media/) -->
   </div>
 </section>
 
@@ -1246,50 +1295,256 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
       <h2 class="section-title">Start Anywhere. Continue Everywhere.</h2>
       <p class="section-desc">Runs live on the gateway, not in the client. The AbstractCode terminal and browser clients share the same sessions, and the Assistant&rsquo;s Sessions tab lists every chat session on the gateway, whichever client started it. Start a conversation in AbstractAssistant on your MacBook Pro, continue it with the AbstractCode terminal client in an SSH app on your phone, and finish it in the AbstractCode web app in any browser.</p>
     </div>
-    <!-- PENDING-W5: devices (real device frames with W2 screenshots, deliver/fragments/devices.html) -->
-    <!-- PENDING-W2: continuity shots (the same session in the Assistant, the terminal client and the web app) -->
-    <!-- PENDING-W5: synced-chat (timed three-device chat with the approval gate, deliver/fragments/synced-chat.html) -->
-    <div class="devices reveal" aria-label="The same conversation shown in three clients">
-      <div class="device">
-        <div class="d-bar"><i></i><i></i><i></i><span>AbstractAssistant</span></div>
-        <div class="d-body">
-          <div class="msg u m1">Summarize the open issues in my project.</div>
-          <div class="msg a m2">Three open issues: two about install on Linux, one about voice...</div>
-          <div class="msg u m3">Draft a reply to the voice issue.</div>
-          <div class="msg a m4">Here is a draft reply...</div>
+    <!-- W5 fragment deliver/fragments/devices.html (P13); PENDING-W2: code-tui and code-tui-phone screenshots for its placeholder slots -->
+    <div class="dv-hub reveal" role="group" aria-label="One gateway and one ledger, four live views on four devices">
+      <svg class="dv-wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="dv-wire-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#818cf8"/><stop offset=".5" stop-color="#22d3ee"/><stop offset="1" stop-color="#34d399"/>
+          </linearGradient>
+        </defs>
+        <path d="M50 50 L22 26"/><path d="M50 50 L78 26"/><path d="M50 50 L22 76"/><path d="M50 50 L78 76"/>
+      </svg>
+
+      <figure class="dv dv-slot dv-slot-laptop">
+        <div class="dv-laptop">
+          <div class="dv-lid">
+            <div class="dv-display dv-desktop">
+              <img src="assets/img/shots/assistant-palette.webp" alt="The AbstractAssistant palette: a question about steeping tea and the assistant's answer, with its token and tool counters" loading="lazy">
+            </div>
+          </div>
+          <div class="dv-base"></div>
         </div>
-        <div class="d-caption"><strong>MacBook Pro</strong> &middot; menu bar</div>
+        <figcaption class="dv-cap"><strong>MacBook Pro</strong> &middot; AbstractAssistant</figcaption>
+      </figure>
+
+      <div class="dv-core">
+        <span class="dv-core-kicker">One gateway</span>
+        <strong>AbstractGateway</strong>
+        <span class="dv-core-sub">runs, waits and the ledger</span>
+        <ol class="dv-ledger" aria-label="Ledger entries, appended in order">
+          <li><b>llm_call</b>&nbsp;completed</li>
+          <li><b>tool_calls</b>&nbsp;waiting</li>
+          <li><b>tool_calls</b>&nbsp;completed</li>
+          <li><b>llm_call</b>&nbsp;completed</li>
+        </ol>
       </div>
-      <div class="device phone term">
-        <div class="d-bar"><span>ssh &middot; abstractcode</span></div>
-        <div class="d-body">
-          <div class="msg u m1">Summarize the open issues in my project.</div>
-          <div class="msg a m2">Three open issues: two about install on Linux, one about voice...</div>
-          <div class="msg u m3">Draft a reply to the voice issue.</div>
-          <div class="msg a m4">Here is a draft reply...</div>
+
+      <figure class="dv dv-slot dv-slot-browser">
+        <div class="dv-browser">
+          <div class="dv-chrome">
+            <span class="dv-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="dv-url"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>127.0.0.1:8080/apps/code/</span>
+          </div>
+          <div class="dv-display">
+            <img src="assets/img/shots/code-web.webp" alt="The AbstractCode web app in a browser, signed in to the gateway" loading="lazy">
+          </div>
         </div>
-        <div class="d-caption"><strong>Phone</strong> &middot; AbstractCode terminal in an SSH app</div>
-      </div>
-      <div class="device">
-        <div class="d-bar"><i></i><i></i><i></i><span>127.0.0.1:8080/apps/code/</span></div>
-        <div class="d-body">
-          <div class="msg u m1">Summarize the open issues in my project.</div>
-          <div class="msg a m2">Three open issues: two about install on Linux, one about voice...</div>
-          <div class="msg u m3">Draft a reply to the voice issue.</div>
-          <div class="msg a m4">Here is a draft reply...</div>
+        <figcaption class="dv-cap"><strong>Browser</strong> &middot; AbstractCode web</figcaption>
+      </figure>
+
+      <figure class="dv dv-slot dv-slot-terminal">
+        <div class="dv-terminal">
+          <div class="dv-chrome">
+            <span class="dv-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="dv-title">abstractcode</span>
+          </div>
+          <div class="dv-display">
+            <div class="dv-placeholder">AbstractCode terminal client<br>(screenshot pending)</div>
+          </div>
         </div>
-        <div class="d-caption"><strong>Browser</strong> &middot; AbstractCode web</div>
+        <figcaption class="dv-cap"><strong>Terminal</strong> &middot; AbstractCode terminal client</figcaption>
+      </figure>
+
+      <figure class="dv dv-slot dv-slot-phone">
+        <div class="dv-phone">
+          <div class="dv-body">
+            <span class="dv-island" aria-hidden="true"></span>
+            <div class="dv-display">
+              <div class="dv-placeholder">AbstractCode terminal client over SSH</div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="dv-cap"><strong>iPhone</strong> &middot; AbstractCode terminal in an SSH app</figcaption>
+      </figure>
+    </div>
+    <!-- W5 fragment deliver/fragments/synced-chat.html (P14) -->
+    <div class="sc reveal" data-sc-root data-sc-from="laptop,phone,browser" data-sc-approvers="phone,browser,laptop">
+      <ol class="sc-sr" aria-label="The conversation shown in the three clients">
+        <li>You, on the MacBook Pro in AbstractAssistant: Summarize the open issues in my project.</li>
+        <li>Assistant: Three open issues: two about install on Linux, one about voice.</li>
+        <li>You, on the phone in the AbstractCode terminal client over SSH: Draft a reply to the voice issue.</li>
+        <li>Assistant: Here is a draft reply for the voice issue.</li>
+        <li>You, in the browser in AbstractCode web: What is in my Downloads folder?</li>
+        <li>The agent asks to run the tool execute_command with the command ls ~/Downloads. The run waits for approval, and the approval request appears in all three clients. Approving it in one client resolves it in all three.</li>
+        <li>Tool result: 42 items.</li>
+        <li>Assistant: 42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</li>
+      </ol>
+
+      <div class="sc-grid" aria-hidden="true">
+
+        <!-- MacBook Pro: AbstractAssistant -->
+        <figure class="dv sc-frame" data-sc-frame="laptop" data-sc-name="MacBook Pro">
+          <div class="dv-laptop">
+            <div class="dv-lid">
+              <div class="dv-display">
+                <div class="sc-screen sc-app-assistant">
+                  <div class="sc-app-bar"><span class="dv-lights"><i></i><i></i><i></i></span><b>AbstractAssistant</b><span class="sc-pill">Open issues</span><span class="sc-ok"></span></div>
+                  <div class="sc-feed">
+                    <div class="sc-u" data-sc="1">Summarize the open issues in my project.</div>
+                    <div class="sc-a" data-sc="2">Three open issues: two about install on Linux, one about voice.</div>
+                    <div class="sc-u" data-sc="3">Draft a reply to the voice issue.</div>
+                    <div class="sc-a" data-sc="4">Here is a draft reply for the voice issue.</div>
+                    <div class="sc-u" data-sc="5">What is in my Downloads folder?</div>
+                    <div class="sc-gate" data-sc="6">
+                      <span class="sc-gate-title">execute_command needs your approval</span>
+                      <code>ls ~/Downloads</code>
+                      <div class="sc-btns"><span class="sc-btn ghost">Decide later</span><span class="sc-btn">Deny</span><span class="sc-btn primary" data-sc-approve>Allow once &#9662;</span></div>
+                      <span class="sc-resolved">&#10003; Approved by you</span>
+                    </div>
+                    <div class="sc-tool" data-sc="7">execute_command &middot; 42 items</div>
+                    <div class="sc-a" data-sc="8">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
+                  </div>
+                  <div class="sc-app-input">Ask anything, drop files, or press &#8984;&#8679;V to talk</div>
+                </div>
+              </div>
+            </div>
+            <div class="dv-base"></div>
+          </div>
+          <figcaption class="dv-cap"><strong>MacBook Pro</strong> &middot; AbstractAssistant</figcaption>
+        </figure>
+
+        <!-- Phone: AbstractCode terminal client in an SSH app -->
+        <figure class="dv sc-frame" data-sc-frame="phone" data-sc-name="phone">
+          <div class="dv-phone">
+            <div class="dv-body">
+              <span class="dv-island"></span>
+              <div class="dv-display">
+                <div class="sc-screen sc-app-ssh">
+                  <div class="sc-ssh-bar"><span>ssh &middot; <b>abstractcode</b></span><span>9:41</span></div>
+                  <div class="sc-feed">
+                    <div class="sc-u" data-sc="1">Summarize the open issues in my project.</div>
+                    <div class="sc-a" data-sc="2">Three open issues: two about install on Linux, one about voice.</div>
+                    <div class="sc-u" data-sc="3">Draft a reply to the voice issue.</div>
+                    <div class="sc-a" data-sc="4">Here is a draft reply for the voice issue.</div>
+                    <div class="sc-u" data-sc="5">What is in my Downloads folder?</div>
+                    <div class="sc-gate" data-sc="6">
+                      <span class="sc-gate-title">tool approval &mdash; 1 call(s)</span>
+                      <code>execute_command {"command": "ls ~/Downloads"}</code>
+                      <div class="sc-btns"><span class="sc-btn primary" data-sc-approve>approve (a)</span><span class="sc-btn">approve all (A)</span><span class="sc-btn">deny (d)</span></div>
+                      <span class="sc-resolved">&#10003; approved</span>
+                    </div>
+                    <div class="sc-tool" data-sc="7">execute_command &rarr; 42 items</div>
+                    <div class="sc-a" data-sc="8">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
+                  </div>
+                  <div class="sc-status">Agent: react &middot; gateway session</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <figcaption class="dv-cap"><strong>Phone</strong> &middot; AbstractCode terminal over SSH</figcaption>
+        </figure>
+
+        <!-- Browser: AbstractCode web -->
+        <figure class="dv sc-frame" data-sc-frame="browser" data-sc-name="browser">
+          <div class="dv-browser">
+            <div class="dv-chrome">
+              <span class="dv-lights"><i></i><i></i><i></i></span>
+              <span class="dv-url">127.0.0.1:8080/apps/code/</span>
+            </div>
+            <div class="dv-display">
+              <div class="sc-screen sc-app-web">
+                <div class="sc-web-head"><b>AbstractCode</b> Open issues<span class="sc-pill">react</span></div>
+                <div class="sc-feed">
+                  <div class="sc-u" data-sc="1">Summarize the open issues in my project.</div>
+                  <div class="sc-a" data-sc="2">Three open issues: two about install on Linux, one about voice.</div>
+                  <div class="sc-u" data-sc="3">Draft a reply to the voice issue.</div>
+                  <div class="sc-a" data-sc="4">Here is a draft reply for the voice issue.</div>
+                  <div class="sc-u" data-sc="5">What is in my Downloads folder?</div>
+                  <div class="sc-gate" data-sc="6">
+                    <span class="sc-gate-title">Approve to run these tools.</span>
+                    <code>execute_command &middot; command: ls ~/Downloads</code>
+                    <div class="sc-btns"><span class="sc-btn">Approve All</span><span class="sc-btn primary" data-sc-approve>Approve Once</span><span class="sc-btn">Deny</span></div>
+                    <span class="sc-resolved">&#10003; Approved</span>
+                  </div>
+                  <div class="sc-tool" data-sc="7">execute_command &middot; 42 items</div>
+                  <div class="sc-a" data-sc="8">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <figcaption class="dv-cap"><strong>Browser</strong> &middot; AbstractCode web</figcaption>
+        </figure>
+
       </div>
+
+      <div class="sc-bar"><span class="sc-now" aria-hidden="true">One conversation, three clients. An approval given in one client resolves the wait in all three.</span></div>
     </div>
     <p class="reveal" style="color:var(--text-muted);margin-top:1.5rem;font-size:.9rem;text-align:center;max-width:820px;margin-inline:auto">Illustration. The append-only ledger captures every operation; any client that connects replays a run from its history and follows it live. The terminal client signs in to a remote gateway with <code>abstractcode login --gateway-url &lt;url&gt; --token &lt;token&gt;</code>; on the gateway&rsquo;s own computer, SSH included, <code>abstractgateway apps tui-command code</code> prints a one-use line that opens <code>abstractcode</code> signed in.</p>
   </div>
 </section>
 
 <!-- ═══════════════════ ENTITIES ═══════════════════ -->
-<!-- PENDING-W4: entities (insert deliver/fragments/entities.html as its own section here) -->
+<!-- W4 fragment deliver/fragments/entities.html (claims and sources in its header and FACTS.md P3) -->
+<section id="entities" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Entities</div>
+      <h2 class="section-title">Agents With a Life of Their Own</h2>
+      <p class="section-desc">An entity is a persistent agent with one identity for its whole life. It remembers every conversation, keeps a diary no one can delete, sleeps to sort its memories, and changes through its own reflection, never by someone rewriting who it is.</p>
+    </div>
+
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Identity</h3>
+        <p>Values in order of precedence, purposes and traits, planted from a starting document when you create it. Every conversation opens with that identity core, whole: a core that does not fit is refused rather than cut.</p>
+        <div class="mode-tags"><span class="mode-tag">value</span><span class="mode-tag">purpose</span><span class="mode-tag">trait</span><span class="mode-tag">interest</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Memory in time</h3>
+        <p>What happens to it becomes facts in a temporal graph (<a href="memory.html">AbstractMemory</a>): each keeps when it was observed, when it was valid and where it came from. Nothing is deleted; only how easily a memory comes back changes.</p>
+        <div class="mode-tags"><span class="mode-tag">observed_at</span><span class="mode-tag">valid_from</span><span class="mode-tag">valid_until</span><span class="mode-tag">provenance</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>A life, not a session</h3>
+        <p>A <strong>visit</strong> is a conversation run as one durable run: each turn recalls, answers and forms new memories, and the close is a reflection. <strong>Sleep</strong> consolidates and dreams without calling a model. The <strong>diary</strong> is written by the entity alone.</p>
+        <div class="mode-tags"><span class="mode-tag">visit</span><span class="mode-tag">work</span><span class="mode-tag">own time</span><span class="mode-tag">sleep</span></div>
+      </div>
+    </div>
+
+    <!-- W5 fragment deliver/fragments/entity-graph.html (P15) -->
+    <div style="margin-top:2.5rem">
+<div class="eg reveal" data-eg aria-label="Illustration: the memory graphs of two entities, Castor and Ephemeral, over time"></div>
+<p class="eg-note reveal">Illustration of the model, not a live graph. Each entity's identity core (values, traits, purpose) is planted once from its spark and stays present in every run; each run adds an episode, successes and failures alike; recall strengthens only what a run used; claims carry validity windows and close instead of being deleted; sleep forms review-gated summaries and at most one dream, leaving the sources unchanged. The AbstractEntity app shows the real graph of your entities, live.</p>
+    </div>
+
+    <div class="showcase-grid reveal" style="margin-top:2.5rem">
+      <div class="showcase-img">
+        <!-- PENDING-W2: SHOT entity-list -->
+        <img src="assets/img/shots/entity-list.webp" alt="The AbstractEntity Summoned entities page with one newly created demo entity shown asleep, and its visit, work, personal and sleep modes" loading="lazy">
+      </div>
+      <div class="showcase-content">
+        <h3>It looks back at its own past</h3>
+        <p>An entity recalls before it answers, and it can search its own memories, its feelings about people and things, and its diary. What it learned comes back as lessons, and how things went as feelings about the people, tools and ideas involved.</p>
+        <ul class="showcase-features">
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <strong>Summon</strong> it into a work session, as itself, with a task as the brief</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Every visit is a durable run with its own ledger, kept in the entity's home folder</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> The <strong>blueprint</strong> shows its daily cycle and how its memory is built</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Copy the home folder and you move the whole life</li>
+        </ul>
+        <p style="color:var(--text-muted);font-size:.85rem;margin-top:.75rem">AbstractEntity 0.3.0 and AbstractMemory 0.3.0 are released and pre-1.0: the APIs are versioned and tested, and details may still evolve.</p>
+        <div class="comp-links" style="margin-top:1rem">
+          <a class="comp-link" href="entity.html">AbstractEntity &rarr;</a>
+          <a class="comp-link" href="memory.html">AbstractMemory &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
 <!-- ═══════════════════ KNOWLEDGE GRAPH ═══════════════════ -->
-<section id="knowledge" style="background:var(--bg-surface)">
+<section id="knowledge">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Knowledge</div>
@@ -1298,7 +1553,6 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
     </div>
     <div class="showcase-grid reveal">
       <div>
-        <!-- PENDING-W5: entity-graph (entity memory animation, deliver/fragments/entity-graph.html) -->
         <img src="assets/img/knowledge-graph-visual.png" alt="Knowledge graph visualization" loading="lazy" style="border-radius:var(--radius-lg);border:1px solid var(--border);box-shadow:var(--shadow-lg)">
       </div>
       <div class="showcase-content">
@@ -1407,7 +1661,7 @@ reg = <span class="line-fn">load_semantics_registry</span>()
 </section>
 
 <!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section id="getting-started">
+<section id="getting-started" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Quick Start</div>
@@ -1486,7 +1740,7 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
 </section>
 
 <!-- ═══════════════════ START HERE ═══════════════════ -->
-<section id="start" style="background:var(--bg-surface)">
+<section id="start">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Start Here</div>
@@ -1504,8 +1758,8 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
       <a class="persona-card creator reveal" href="start-creator.html">
         <div class="p-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="2" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.75 1.5-1.5 0-.4-.15-.74-.4-1-.25-.26-.4-.6-.4-1 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-4.97-4.5-9-10-9z"/></svg></div>
         <h3>Artist / creator</h3>
-        <p class="p-who">You make images, video, music or voices, and want to run the models yourself.</p>
-        <ul><li>Generate images and short videos</li><li>Compose music from a prompt</li><li>Clone a voice you have the rights to</li></ul>
+        <p class="p-who">You make voices, music, images or video, and want to run the models yourself.</p>
+        <ul><li>Clone a voice you have the rights to</li><li>Compose music from a prompt</li><li>Generate images and short videos</li></ul>
         <span class="p-go">Start as a creator &rarr;</span>
       </a>
       <a class="persona-card dev reveal" href="start-developer.html">
@@ -1541,7 +1795,7 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
 </section>
 
 <!-- ═══════════════════ RELEASES ═══════════════════ -->
-<section id="releases">
+<section id="releases" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Releases</div>
@@ -1562,7 +1816,7 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
 </section>
 
 <!-- ═══════════════════ PHILOSOPHY ═══════════════════ -->
-<section id="principles" style="background:var(--bg-surface)">
+<section id="principles">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Philosophy</div>
@@ -1587,7 +1841,7 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
       <div class="mode-card" style="text-align:left">
         <div style="margin-bottom:1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
         <h3>Observable, Replay-First</h3>
-        <p>Every LLM call, tool call and decision is in the ledger. Any client rebuilds a run by replaying it, then follows it live.</p>
+        <p>Every LLM call, tool call and wait is a ledger record. Any client rebuilds its view of a run by replaying it, then follows it live.</p>
       </div>
       <div class="mode-card" style="text-align:left">
         <div style="margin-bottom:1rem"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
@@ -1637,35 +1891,35 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
       </p>
     </div>
     <div class="footer-col">
-      <h4>Library</h4>
+      <h4>Foundation</h4>
       <a href="core.html">AbstractCore</a>
-      <a href="voice.html">AbstractVoice</a>
-      <a href="music.html">AbstractMusic</a>
-      <a href="vision.html">AbstractVision</a>
-      <a href="3d.html">Abstract3D</a>
-      <a href="camera.html">AbstractCamera</a>
-    </div>
-    <div class="footer-col">
-      <h4>Runtime &amp; Toolkits</h4>
       <a href="runtime.html">AbstractRuntime</a>
       <a href="agent.html">AbstractAgent</a>
-      <a href="memory.html">AbstractMemory</a>
-      <a href="semantics.html">AbstractSemantics</a>
       <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
-      <a href="https://github.com/lpalbou/AbstractTUI" target="_blank" rel="noopener noreferrer">AbstractTUI</a>
-      <a href="https://github.com/lpalbou/AbstractUIC" target="_blank" rel="noopener noreferrer">AbstractUIC</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="tui.html">AbstractTUI</a>
+      <a href="uic.html">AbstractUIC</a>
     </div>
     <div class="footer-col">
-      <h4>Gateway &amp; Apps</h4>
+      <h4>Applications</h4>
       <a href="gateway.html">AbstractGateway</a>
-      <a href="console.html">Consoles</a>
+      <a href="console.html">Gateway &amp; Core consoles</a>
       <a href="automations.html">Automations</a>
-      <a href="flow.html">AbstractFlow</a>
       <a href="code.html">AbstractCode</a>
       <a href="observer.html">AbstractObserver</a>
       <a href="assistant.html">AbstractAssistant</a>
       <a href="continuum.html">AbstractContinuum</a>
       <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Modalities &amp; Knowledge</h4>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="3d.html">Abstract3D</a>
+      <a href="camera.html">AbstractCamera</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
     </div>
     <div class="footer-col">
       <h4>Resources</h4>
@@ -1692,5 +1946,8 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
 </footer>
 
 <script src="assets/js/main.js?v=6"></script>
+<script src="assets/js/carousel3.js"></script>
+<script src="assets/js/synced-chat.js"></script>
+<script src="assets/js/entity-graph.js"></script>
 </body>
 </html>
