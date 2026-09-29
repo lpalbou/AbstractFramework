@@ -276,10 +276,50 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
 <section id="network">
   <div class="container">
     <div class="section-header reveal">
-      <div class="section-label">Network &amp; start at login</div>
+      <div class="section-label">Where it runs</div>
       <h2 class="section-title">This computer only, until you choose otherwise</h2>
-      <p class="section-desc">The gateway listens on <code>127.0.0.1:8080</code> by default. Change who can reach it in the web console's <strong>Network</strong> tab, the terminal console's Network screen (<code>N</code>), the gateway&rsquo;s tray icon, or the command line.</p>
     </div>
+    <!-- W4 fragment deliver/fragments/deploy.html (FACTS R5-5): abstractgateway@v0.7.2 docs/security.md:14-21, :287-340; docs/configuration.md:204, :415-419; docs/tray.md:3-12, :225-236; docs/deployment.md:10-26, :62-68, :138; root docs/install.md:563-593, :608-615 -->
+    <h3 class="reveal" style="margin:0 0 1rem">Who can reach it</h3>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
+        <h3>This computer</h3>
+        <p>The default: the gateway listens on <code>127.0.0.1</code> only, with user accounts on. Nobody else can connect.</p>
+        <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">localhost</span><span class="mode-tag">default</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
+        <h3>Local network</h3>
+        <p>Every device on your network (or your VPN) reaches the sign-in page and the API. User accounts are required. It is plain HTTP, so use it on networks you trust, or behind a TLS proxy or VPN.</p>
+        <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">lan</span><span class="mode-tag">user accounts</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
+        <h3>Internet</h3>
+        <p>The same, with an explicit acknowledgement. The gateway does not terminate TLS: put your own TLS reverse proxy (Caddy, nginx, Traefik) or a tunnel in front of it.</p>
+        <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">internet</span><span class="mode-tag">your TLS</span><span class="mode-tag">user accounts</span></div>
+      </div>
+    </div>
+    
+    <h3 class="reveal" style="margin:2rem 0 1rem">How it runs</h3>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
+        <h3>Desktop</h3>
+        <p>An icon in the macOS menu bar, the Windows system tray or a Linux panel opens the console already signed in. <strong>Start AbstractGateway at login</strong> registers a per-user login item.</p>
+        <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">tray</span><span class="mode-tag">start at login</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
+        <h3>Headless server</h3>
+        <p>Install over SSH with the same one-line installer, manage it from the terminal console (<code>abstractgateway-console</code>), keep it running with a <code>systemd --user</code> service, and reach the console, the API and every app through one SSH tunnel.</p>
+        <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">SSH</span><span class="mode-tag">terminal console</span><span class="mode-tag">systemd --user</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
+        <h3>Container</h3>
+        <p>Release images on GHCR (<code>ghcr.io/lpalbou/abstractgateway</code>, and a <code>-gpu</code> variant), run with a mounted data directory and <code>ABSTRACTGATEWAY_USER_AUTH=1</code>.</p>
+        <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">GHCR</span><span class="mode-tag">Docker</span></div>
+      </div>
+    </div>
+    
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><strong>In practice.</strong> A new gateway answers on this computer only. The <strong>Network</strong> setting, in the web console, the terminal console or the tray, or <code>abstractgateway network set lan</code> (or <code>internet</code>) opens it up at the next start, and both keep user accounts on. A gateway started on another address without user accounts or a token refuses to start.</p>
+    <h3 class="reveal" style="margin:2.5rem 0 1rem">The commands</h3>
     <div class="showcase-grid reveal" style="align-items:start">
       <div>
         <h3 style="margin-bottom:.75rem">Network</h3>
