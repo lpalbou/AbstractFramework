@@ -1,0 +1,453 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   entity-graph.js — an illustrated timeline of two entities' memory graphs.
+
+   Vocabulary follows AbstractMemory and AbstractGateway (see
+   deliver/fragments/COMPONENTS.md for the source lines): identity records
+   (value, trait, purpose) planted by `engram` from the spark and present in
+   reserved self seats; episodes per run (success and failure); lessons and
+   claims (triples with valid_from / valid_until); `reconstruct` +
+   `commit_selection` (recall strengthens only what was used); closure by
+   `supersede` (nothing is deleted); `consolidation_pass` (a review-gated
+   summary with `summarizes` edges, sources unchanged); `dream_pass` (at most
+   one dream per night, `mentions` links); the four phases visit / work /
+   personal / sleep.
+
+   Markup (see deliver/fragments/entity-graph.html):
+     <div class="eg" data-eg aria-label="..."></div>
+   The script renders the panels, the scrubber and the log. Everything is
+   drawn with inline SVG sized to the container, so labels stay legible from
+   390 px to 1440 px. Under prefers-reduced-motion the graph opens on its
+   final state and never plays by itself; the scrubber still works.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var reduceMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+
+  var LANES = [
+    { key: 'identity', label: 'identity', sub: ['value', 'trait'] },
+    { key: 'role', label: 'role', sub: ['phase'] },
+    { key: 'purpose', label: 'purpose', sub: ['purpose'] },
+    { key: 'history', label: 'history', sub: ['episode', 'per run'] },
+    { key: 'experience', label: 'experience', sub: ['lesson', 'claim', 'summary', 'dream'] }
+  ];
+  var PHASES = ['visit', 'work', 'personal', 'sleep'];
+  var COLORS = {
+    identity: '#818cf8', purpose: '#a78bfa', ok: '#34d399', failed: '#f472b6', experience: '#fbbf24', dream: '#fb7185'
+  };
+  var SEQ_MAX = 32;
+
+  var DATA = [
+    {
+      key: 'castor', name: 'Castor', note: 'long-lived', born: 0,
+      phases: [[0, 'personal'], [2, 'visit'], [5, 'work'], [12, 'sleep'], [15, 'work'], [18, 'personal'], [20, 'work'], [22, 'visit'], [25, 'sleep'], [28, 'personal']],
+      nodes: [
+        { id: 'v1', lane: 'identity', kind: 'value', label: 'honesty', title: 'value: intellectual_honesty (core)', born: 0 },
+        { id: 'v2', lane: 'identity', kind: 'value', label: 'care', title: 'value: care_in_action (revisable)', born: 0, until: 18 },
+        { id: 't1', lane: 'identity', kind: 'trait', label: 'ask first', title: 'trait: ask before assuming', born: 0 },
+        { id: 'v3', lane: 'identity', kind: 'value', label: 'care v2', title: 'value: care_in_action, revised by the entity (supersedes the first version)', born: 18 },
+        { id: 'p1', lane: 'purpose', kind: 'purpose', label: 'help people', title: 'purpose: help the humans you work with', born: 0 },
+        { id: 'r3', lane: 'history', kind: 'episode', status: 'ok', label: 'run 3', title: 'episode: run 3 (visit), backup strategy, succeeded', born: 3 },
+        { id: 'r7', lane: 'history', kind: 'episode', status: 'failed', label: 'run 7', title: 'episode: run 7 (work), restore test, failed', born: 7 },
+        { id: 'r9', lane: 'history', kind: 'episode', status: 'ok', label: 'run 9', title: 'episode: run 9 (work), restore test, succeeded', born: 9 },
+        { id: 'r16', lane: 'history', kind: 'episode', status: 'ok', label: 'run 16', title: 'episode: run 16 (work), hourly backups, succeeded', born: 16 },
+        { id: 'r23', lane: 'history', kind: 'episode', status: 'ok', label: 'run 23', title: 'episode: run 23 (visit), review, succeeded', born: 23 },
+        { id: 'l1', lane: 'experience', kind: 'lesson', label: 'verify restore', title: 'lesson: verify a restore before sign-off', born: 10 },
+        { id: 'c1', lane: 'experience', kind: 'claim', label: 'nightly', title: 'claim: (home-lab, backup_schedule, nightly)', born: 11, until: 20, window: true },
+        { id: 's1', lane: 'experience', kind: 'summary', label: 'summary', title: 'summary: restore test (review-gated candidate from consolidation_pass)', born: 13 },
+        { id: 'c2', lane: 'experience', kind: 'claim', label: 'hourly', title: 'claim: (home-lab, backup_schedule, hourly)', born: 20, window: true },
+        { id: 'd1', lane: 'experience', kind: 'dream', label: 'dream', title: 'dream: one per night at most, review-gated, never a fact', born: 26 }
+      ],
+      edges: [
+        { type: 'summarizes', from: 's1', to: 'r7', at: 13 }, { type: 'summarizes', from: 's1', to: 'r9', at: 13 },
+        { type: 'supersedes', from: 'v3', to: 'v2', at: 18 },
+        { type: 'supersedes', from: 'c2', to: 'c1', at: 20 },
+        { type: 'mentions', from: 'd1', to: 'r16', at: 26 }, { type: 'mentions', from: 'd1', to: 'r23', at: 26 }
+      ],
+      recalls: [
+        { at: 9, from: 'r9', to: ['r7'] },
+        { at: 16, from: 'r16', to: ['l1', 'c1'] },
+        { at: 23, from: 'r23', to: ['l1', 'c2'] }
+      ],
+      log: {
+        0: '<code>engram</code>: the spark plants the identity core (values, trait, purpose) in reserved self seats.',
+        2: 'Visit: a person talks with Castor.',
+        3: 'Run 3 succeeds and forms an episode. Identity is present in the working set; presence is not counted as use.',
+        5: 'Work: Castor is summoned into a work session.',
+        7: 'Run 7 fails. The failure is an episode too, like any success.',
+        9: 'Run 9: <code>reconstruct</code> recalls the failed run 7; <code>commit_selection</code> strengthens it. The restore test passes.',
+        10: 'A lesson forms: verify a restore before sign-off.',
+        11: 'A claim forms: (home-lab, backup_schedule, nightly), valid from seq 11.',
+        12: 'Sleep.',
+        13: '<code>consolidation_pass</code>: runs 7 and 9 share a title; a review-gated summary links them (<code>summarizes</code>). The sources stay unchanged.',
+        15: 'Work.',
+        16: 'Run 16 recalls the lesson and the nightly claim; both gain strength.',
+        18: 'Personal time: Castor revises a revisable value by its own act (<code>supersede</code>). The old record is closed, never deleted.',
+        20: 'The nightly claim closes (valid until seq 20); the hourly claim supersedes it.',
+        22: 'Visit.',
+        23: 'Run 23 recalls the lesson and the hourly claim.',
+        25: 'Sleep.',
+        26: '<code>dream_pass</code>: at most one dream per night, review-gated, weakly linked (<code>mentions</code>).',
+        28: 'Personal time. History: 5 runs, 4 succeeded, 1 failed.'
+      }
+    },
+    {
+      key: 'ephemeral', name: 'Ephemeral', note: 'created later', born: 6,
+      phases: [[6, 'personal'], [7, 'work'], [12, 'sleep'], [14, 'work'], [19, 'personal'], [21, 'work'], [25, 'sleep'], [28, 'work']],
+      nodes: [
+        { id: 'v1', lane: 'identity', kind: 'value', label: 'honesty', title: 'value: intellectual_honesty (core)', born: 6 },
+        { id: 't1', lane: 'identity', kind: 'trait', label: 'verify first', title: 'trait: verify before asserting', born: 6 },
+        { id: 'p1', lane: 'purpose', kind: 'purpose', label: 'triage', title: 'purpose: triage the inbox', born: 6, until: 20 },
+        { id: 'p2', lane: 'purpose', kind: 'purpose', label: 'triage + reply', title: 'purpose: triage the inbox and draft replies (supersedes the first purpose)', born: 20 },
+        { id: 'r8', lane: 'history', kind: 'episode', status: 'ok', label: 'run 8', title: 'episode: run 8 (work), inbox triage, succeeded', born: 8 },
+        { id: 'r14', lane: 'history', kind: 'episode', status: 'failed', label: 'run 14', title: 'episode: run 14 (work), mail API call refused, failed', born: 14 },
+        { id: 'r17', lane: 'history', kind: 'episode', status: 'failed', label: 'run 17', title: 'episode: run 17 (work), mail API call refused, failed', born: 17 },
+        { id: 'r21', lane: 'history', kind: 'episode', status: 'ok', label: 'run 21', title: 'episode: run 21 (work), inbox triage, succeeded', born: 21 },
+        { id: 'r29', lane: 'history', kind: 'episode', status: 'ok', label: 'run 29', title: 'episode: run 29 (work), draft replies, succeeded', born: 29 },
+        { id: 'c1', lane: 'experience', kind: 'claim', label: 'read-only', title: 'claim: (mail_api, token_scope, read-only)', born: 15, until: 24, window: true },
+        { id: 'l1', lane: 'experience', kind: 'lesson', label: 'check scope', title: 'lesson: check the token scope before calling', born: 18 },
+        { id: 'c2', lane: 'experience', kind: 'claim', label: 'read-write', title: 'claim: (mail_api, token_scope, read-write)', born: 24, window: true },
+        { id: 's1', lane: 'experience', kind: 'summary', label: 'summary', title: 'summary: mail API call refused (review-gated candidate from consolidation_pass)', born: 26 }
+      ],
+      edges: [
+        { type: 'supersedes', from: 'p2', to: 'p1', at: 20 },
+        { type: 'supersedes', from: 'c2', to: 'c1', at: 24 },
+        { type: 'summarizes', from: 's1', to: 'r14', at: 26 }, { type: 'summarizes', from: 's1', to: 'r17', at: 26 }
+      ],
+      recalls: [
+        { at: 17, from: 'r17', to: ['r14', 'c1'] },
+        { at: 21, from: 'r21', to: ['l1', 'c1'] },
+        { at: 29, from: 'r29', to: ['l1', 'c2'] }
+      ],
+      log: {
+        0: 'Not created yet.',
+        6: '<code>engram</code>: Ephemeral is created; its own spark plants its identity core.',
+        7: 'Work.',
+        8: 'Run 8 succeeds: inbox triage.',
+        12: 'Sleep. Nothing to consolidate: a quiet night is a valid night.',
+        14: 'Run 14 fails: the mail API refuses the call. <code>appraise</code> records a feeling about tool:mail_api; feelings never change recall.',
+        15: 'A claim forms: (mail_api, token_scope, read-only), valid from seq 15.',
+        17: 'Run 17 fails the same way; <code>reconstruct</code> recalls run 14 and the claim.',
+        18: 'A lesson forms: check the token scope before calling.',
+        19: 'Personal time.',
+        20: 'Its purpose evolves by its own act; the first purpose is superseded, not deleted.',
+        21: 'Run 21 recalls the lesson and the claim, asks for a wider scope and succeeds.',
+        24: 'The read-only claim closes (valid until seq 24); read-write supersedes it.',
+        25: 'Sleep.',
+        26: '<code>consolidation_pass</code>: runs 14 and 17 share a title; a review-gated summary links them.',
+        28: 'Work.',
+        29: 'Run 29 recalls the lesson and the new claim, and succeeds. History: 5 runs, 3 succeeded, 2 failed.'
+      }
+    }
+  ];
+
+  function S(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function H(tag, cls, parent, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function stripTags(s) { return String(s).replace(/<[^>]+>/g, ''); }
+
+  function phaseAt(ent, seq) {
+    var p = null;
+    ent.phases.forEach(function (x) { if (x[0] <= seq) p = x[1]; });
+    return p;
+  }
+  function logAt(ent, seq) {
+    var best = null, at = -1;
+    Object.keys(ent.log).forEach(function (k) { var n = +k; if (n <= seq && n > at) { at = n; best = ent.log[k]; } });
+    return best === null ? '' : '<span class="eg-sr">seq ' + at + ': </span>' + best;
+  }
+  function wrapLabel(text, maxChars) {
+    var words = text.split(' '), lines = [], cur = '';
+    words.forEach(function (w) {
+      if (!cur) cur = w;
+      else if ((cur + ' ' + w).length <= maxChars) cur += ' ' + w;
+      else { lines.push(cur); cur = w; }
+    });
+    if (cur) lines.push(cur);
+    if (lines.length > 2) lines = [lines[0], lines.slice(1).join(' ')];
+    return lines;
+  }
+
+  function EntityGraph(root) {
+    var self = this;
+    this.root = root;
+    this.data = DATA;
+    this.seq = reduceMQ.matches ? SEQ_MAX : 0;
+    this.playing = false;
+    this.userPaused = reduceMQ.matches;
+    this.visible = false;
+    this.timer = null;
+    this.prevSeq = null;
+    this.build();
+    this.render();
+    if ('ResizeObserver' in window) {
+      var lastW = 0;
+      new ResizeObserver(function () {
+        var w = self.panels[0].canvas.clientWidth;
+        if (Math.abs(w - lastW) > 2) { lastW = w; self.prevSeq = self.seq; self.render(); }
+      }).observe(root);
+    } else {
+      window.addEventListener('resize', function () { self.prevSeq = self.seq; self.render(); });
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        self.visible = entries[0].isIntersecting;
+        if (self.visible) self.play(); else self.pause(false);
+      }, { threshold: 0.3 }).observe(root);
+    }
+    if (reduceMQ.addEventListener) {
+      reduceMQ.addEventListener('change', function () {
+        if (reduceMQ.matches) { self.pause(true); self.setSeq(SEQ_MAX, false); }
+      });
+    }
+  }
+
+  EntityGraph.prototype.build = function () {
+    var self = this;
+    var root = this.root;
+    root.setAttribute('role', 'group');
+    if (!root.hasAttribute('aria-label')) root.setAttribute('aria-label', 'Illustration: two entities and their memory graphs over time');
+    root.innerHTML = '';
+    var wrap = H('div', 'eg-panels', root);
+    this.panels = this.data.map(function (ent) {
+      var fig = H('figure', 'eg-panel', wrap);
+      var head = H('div', 'eg-head', fig);
+      H('div', 'eg-name', head, ent.name + '<small>' + ent.note + '</small>');
+      var phase = H('div', 'eg-phase', head);
+      var canvas = H('div', 'eg-canvas', fig);
+      var now = H('p', 'eg-now', fig);
+      now.setAttribute('aria-live', 'off');
+      return { ent: ent, fig: fig, phase: phase, canvas: canvas, now: now };
+    });
+
+    var ctr = H('div', 'eg-controls', root);
+    this.playBtn = H('button', 'eg-play', ctr);
+    this.playBtn.type = 'button';
+    this.playBtn.addEventListener('click', function () {
+      if (self.playing) self.pause(true);
+      else { self.userPaused = false; if (self.seq >= SEQ_MAX) self.setSeq(0, false); self.play(true); }
+    });
+    var id = 'eg-range-' + Math.random().toString(36).slice(2, 8);
+    var lab = H('label', 'eg-sr', ctr, 'Journal sequence');
+    lab.setAttribute('for', id);
+    this.range = H('input', 'eg-range', ctr);
+    this.range.type = 'range'; this.range.min = '0'; this.range.max = String(SEQ_MAX); this.range.step = '1'; this.range.id = id;
+    this.range.addEventListener('input', function () { self.pause(true); self.setSeq(+self.range.value, true); });
+    this.seqOut = H('output', 'eg-seq', ctr);
+    this.seqOut.setAttribute('for', id);
+
+    H('div', 'eg-legend', root,
+      '<span><i style="background:' + COLORS.identity + '"></i>identity</span>' +
+      '<span><i style="background:' + COLORS.purpose + '"></i>purpose</span>' +
+      '<span><i style="background:' + COLORS.ok + '"></i>run succeeded</span>' +
+      '<span><i style="background:' + COLORS.failed + '"></i>run failed</span>' +
+      '<span><i style="background:' + COLORS.experience + '"></i>lesson, claim, summary</span>' +
+      '<span><i class="l-line" style="border-color:#22d3ee"></i>recall</span>' +
+      '<span><i class="l-dash" style="border-color:rgba(251,191,36,.8)"></i>summarizes</span>' +
+      '<span><i class="l-dash" style="border-color:rgba(152,152,176,.8)"></i>supersedes</span>' +
+      '<span><i style="background:transparent;border:1.5px dashed #9898b0"></i>closed (valid until)</span>');
+    this.syncBtn();
+  };
+
+  EntityGraph.prototype.syncBtn = function () {
+    this.playBtn.innerHTML = this.playing
+      ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+    this.playBtn.setAttribute('aria-label', this.playing ? 'Pause the timeline' : 'Play the timeline');
+  };
+
+  EntityGraph.prototype.setSeq = function (seq, announce) {
+    this.prevSeq = this.seq;
+    this.seq = Math.max(0, Math.min(SEQ_MAX, seq));
+    this.render(announce);
+  };
+
+  EntityGraph.prototype.play = function (fromUser) {
+    var self = this;
+    if (this.playing || this.userPaused || reduceMQ.matches && !fromUser) return;
+    if (!this.visible && !fromUser) return;
+    this.playing = true;
+    this.syncBtn();
+    var step = function () {
+      if (!self.playing) return;
+      if (self.seq >= SEQ_MAX) {
+        self.timer = setTimeout(function () { if (!self.playing) return; self.setSeq(0, false); self.timer = setTimeout(step, 900); }, 3800);
+        return;
+      }
+      self.setSeq(self.seq + 1, false);
+      self.timer = setTimeout(step, 780);
+    };
+    this.timer = setTimeout(step, 500);
+  };
+
+  EntityGraph.prototype.pause = function (byUser) {
+    if (byUser) this.userPaused = true;
+    this.playing = false;
+    if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+    this.syncBtn();
+  };
+
+  EntityGraph.prototype.render = function (announce) {
+    var self = this;
+    this.range.value = String(this.seq);
+    this.seqOut.textContent = 'seq ' + this.seq + ' / ' + SEQ_MAX;
+    this.range.setAttribute('aria-valuetext', 'journal sequence ' + this.seq + ' of ' + SEQ_MAX);
+    this.panels.forEach(function (p) {
+      var ph = p.ent.born <= self.seq ? phaseAt(p.ent, self.seq) : null;
+      p.phase.innerHTML = ph ? 'phase <b>' + ph + '</b>' : 'not created';
+      p.now.setAttribute('aria-live', announce ? 'polite' : 'off');
+      p.now.innerHTML = logAt(p.ent, self.seq);
+      self.draw(p);
+    });
+  };
+
+  EntityGraph.prototype.draw = function (p) {
+    var ent = p.ent, seq = this.seq, prev = this.prevSeq;
+    var W = Math.max(280, p.canvas.clientWidth || 520);
+    var narrow = W < 440;
+    var gutter = narrow ? 66 : 96;
+    var slots = 5;
+    var avail = W - gutter - 4;
+    var slotW = avail / slots;
+    var laneH = { identity: 74, role: 44, purpose: 70, history: 74, experience: 78 };
+    var laneY = {}, y = 6;
+    LANES.forEach(function (l) { laneY[l.key] = y; y += laneH[l.key]; });
+    var H_ = y + 4;
+
+    var svg = S('svg', { viewBox: '0 0 ' + W + ' ' + H_, width: W, height: H_, role: 'img', 'aria-label': ent.name + ': memory graph at journal sequence ' + seq });
+    var desc = S('desc', null, svg);
+    desc.textContent = stripTags(logAt(ent, seq));
+
+    // lanes
+    var gL = S('g', null, svg);
+    LANES.forEach(function (l, i) {
+      var ly = laneY[l.key];
+      if (i > 0) S('line', { class: 'eg-lane-line', x1: 0, x2: W, y1: ly, y2: ly }, gL);
+      var t = S('text', { class: 'eg-lane-label', x: 0, y: ly + 16 }, gL);
+      t.textContent = l.label;
+      l.sub.forEach(function (s, j) {
+        var st = S('text', { class: 'eg-lane-sub', x: 0, y: ly + 29 + j * 11 }, gL);
+        st.textContent = s;
+      });
+    });
+
+    if (seq < ent.born) {
+      var u = S('text', { class: 'eg-unborn', x: gutter + avail / 2, y: H_ / 2, 'text-anchor': 'middle' }, svg);
+      u.textContent = 'created at seq ' + ent.born + ' (engram)';
+      p.canvas.innerHTML = '';
+      p.canvas.appendChild(svg);
+      return;
+    }
+
+    // role lane: the four phases, the current one lit
+    var ph = phaseAt(ent, seq);
+    var pillW = Math.min(84, (avail - 12) / 4), pillH = 22;
+    var ry = laneY.role + (laneH.role - pillH) / 2;
+    PHASES.forEach(function (name, i) {
+      var g = S('g', { class: 'eg-phase-pill' + (name === ph ? ' is-on' : '') }, svg);
+      var px = gutter + i * (pillW + 4);
+      S('rect', { x: px, y: ry, width: pillW, height: pillH, rx: 11 }, g);
+      var t = S('text', { x: px + pillW / 2, y: ry + 15, 'text-anchor': 'middle' }, g);
+      t.textContent = name;
+    });
+
+    // node positions (slot by order of formation inside each lane)
+    var pos = {}, laneCount = {};
+    ent.nodes.forEach(function (n) {
+      var k = laneCount[n.lane] || 0;
+      laneCount[n.lane] = k + 1;
+      pos[n.id] = { x: gutter + (k + 0.5) * slotW, y: laneY[n.lane] + 18 };
+    });
+
+    // recall counts up to seq (commit_selection strengthens what was used)
+    var counts = {};
+    ent.recalls.forEach(function (r) { if (r.at <= seq) r.to.forEach(function (id) { counts[id] = (counts[id] || 0) + 1; }); });
+    var activeRecall = ent.recalls.filter(function (r) { return r.at <= seq && seq < r.at + 2; })[0] || null;
+    var runNow = ent.nodes.some(function (n) { return n.lane === 'history' && n.born <= seq && seq < n.born + 2; });
+
+    // edges
+    var gE = S('g', null, svg);
+    function curve(a, b) {
+      if (Math.abs(a.y - b.y) < 2) {
+        var lift = Math.min(30, Math.abs(a.x - b.x) / 2 + 8);
+        return 'M' + a.x + ' ' + (a.y - 8) + ' Q' + ((a.x + b.x) / 2) + ' ' + (a.y - 8 - lift) + ' ' + b.x + ' ' + (b.y - 8);
+      }
+      var my = (a.y + b.y) / 2;
+      return 'M' + a.x + ' ' + a.y + ' C' + a.x + ' ' + my + ' ' + b.x + ' ' + my + ' ' + b.x + ' ' + b.y;
+    }
+    ent.edges.forEach(function (e) {
+      if (e.at > seq) return;
+      var fresh = prev !== null && prev < e.at && e.at <= seq;
+      S('path', { class: 'eg-edge ' + e.type + (fresh ? ' is-new' : ''), d: curve(pos[e.from], pos[e.to]) }, gE);
+    });
+    if (activeRecall) {
+      activeRecall.to.forEach(function (id) {
+        S('path', { class: 'eg-edge recall', d: curve(pos[activeRecall.from], pos[id]) }, gE);
+      });
+    }
+
+    // nodes
+    var maxChars = Math.max(6, Math.floor((slotW - 4) / 5.6));
+    var gN = S('g', null, svg);
+    ent.nodes.forEach(function (n) {
+      if (n.born > seq) return;
+      var c = pos[n.id];
+      var closed = n.until !== undefined && seq >= n.until;
+      var fresh = prev !== null && prev < n.born && n.born <= seq;
+      var color = n.lane === 'history' ? COLORS[n.status] : n.kind === 'dream' ? COLORS.dream : COLORS[n.lane] || COLORS.experience;
+      var cls = 'eg-node' + (closed ? ' is-closed' : '') + (fresh ? ' is-new' : '');
+      if (!closed && runNow && (n.lane === 'identity' || n.lane === 'purpose')) cls += ' is-self';
+      if (activeRecall && activeRecall.to.indexOf(n.id) >= 0) cls += ' is-recalled';
+      var g = S('g', { class: cls }, gN);
+      var r = (narrow ? 7 : 8.5) + Math.min(counts[n.id] || 0, 3) * 1.7;
+      if (n.kind === 'summary' || n.kind === 'dream') {
+        S('circle', { cx: c.x, cy: c.y, r: r, fill: color, 'fill-opacity': .12, stroke: color, 'stroke-dasharray': '2 2' }, g);
+      } else {
+        S('circle', { cx: c.x, cy: c.y, r: r, fill: color, 'fill-opacity': .28, stroke: color }, g);
+      }
+      if (n.lane === 'history') {
+        var mark = S('text', { x: c.x, y: c.y + 3.5, 'text-anchor': 'middle', style: 'font-size:9px;font-weight:700;fill:' + color }, g);
+        mark.textContent = n.status === 'ok' ? '✓' : '✕';
+      }
+      var lines = wrapLabel(n.label, maxChars);
+      lines.forEach(function (ln, i) {
+        var t = S('text', { class: 'eg-node-label', x: c.x, y: c.y + r + 12 + i * 11, 'text-anchor': 'middle' }, g);
+        t.textContent = ln;
+      });
+      var win = null;
+      if (n.window || n.until !== undefined) {
+        win = closed ? n.born + '→' + n.until : 'since ' + n.born;
+        var wt = S('text', { class: 'eg-node-win', x: c.x, y: c.y + r + 12 + lines.length * 11, 'text-anchor': 'middle' }, g);
+        wt.textContent = win;
+      }
+      var title = S('title', null, g);
+      title.textContent = n.title + ' · formed at seq ' + n.born +
+        (n.until !== undefined ? (closed ? ' · closed at seq ' + n.until : ' · valid until seq ' + n.until) : '') +
+        (counts[n.id] ? ' · recalled ' + counts[n.id] + 'x' : '');
+    });
+
+    p.canvas.innerHTML = '';
+    p.canvas.appendChild(svg);
+  };
+
+  function init(scope) {
+    Array.prototype.forEach.call((scope || document).querySelectorAll('[data-eg]'), function (root) {
+      if (root._eg) return;
+      root._eg = new EntityGraph(root);
+    });
+  }
+  window.EntityGraph = { init: init };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { init(); });
+  else init();
+})();
