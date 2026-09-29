@@ -1280,7 +1280,6 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       </div>
     </div>
     <h3 class="reveal" style="margin-bottom:1rem">Text-to-Image and Image Editing</h3>
-    <!-- PENDING-W5: compare (slider: starship text-to-image vs image-to-image pencil edit; lighthouse still vs image-to-video clip) -->
     <!-- W5 fragment deliver/fragments/carousel.html (P11) -->
     <div class="c3 reveal" data-c3 style="--c3-ratio: 4 / 3" aria-label="Generated images">
       <div class="c3-stage">
@@ -1297,14 +1296,6 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
           <img src="assets/media/lighthouse-cliff.webp" alt="A watercolor lighthouse on a cliff above a calm sea, generated with FLUX.2 Klein" loading="lazy">
           <figcaption>FLUX.2 Klein 4B, provider and model named in the call &mdash; "A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</figcaption>
         </figure>
-        <!-- CLAIMS "Media captions": original site captions (FLUX.2 Klein 4B for the colour image, Qwen Image Edit for the sketch); PLAN Q9 -->
-        <figure class="c3-slide">
-          <div class="c3-pair">
-            <img src="assets/img/starship-snow.png" alt="Before: a starship standing in a snowy landscape, generated with FLUX.2 Klein" loading="lazy">
-            <img src="assets/img/starship-snow-pencil-sketch.png" alt="After: the same starship image turned into a pencil sketch by an image-to-image edit" loading="lazy">
-          </div>
-          <figcaption>Image-to-image edit with Qwen Image Edit: the colour image (FLUX.2 Klein 4B), then its pencil-sketch edit</figcaption>
-        </figure>
         <figure class="c3-slide">
           <img src="assets/img/gallery-cyberpunk.png" alt="A neon cyberpunk city street at night" loading="lazy">
           <figcaption>Z-Image Turbo &mdash; "Cyberpunk city at night"</figcaption>
@@ -1316,15 +1307,41 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       </div>
     </div>
     <div class="reveal" style="margin-top:2rem">
+      <h3 style="margin-bottom:1rem">Before and After: Image-to-Image and Image-to-Video</h3>
+      <!-- W5 fragment deliver/fragments/compare.html (round 5, point 6); CLAIMS "Media captions" (a) and README-video.md section 2 (b) -->
+      <div class="cmp-pair reveal">
+
+        <figure class="cmp" data-compare style="--cmp-ratio: 1 / 1" data-compare-label="Compare the text-to-image original with its image-to-image edit">
+          <div class="cmp-stage">
+            <div class="cmp-layer cmp-before"><img src="assets/img/starship-snow.png" alt="Before: a starship standing in a snowy landscape, generated with FLUX.2 Klein" width="512" height="512" loading="lazy"></div>
+            <div class="cmp-layer cmp-after"><img src="assets/img/starship-snow-pencil-sketch.png" alt="After: the same starship image turned into a pencil sketch by an image-to-image edit" width="512" height="512" loading="lazy"></div>
+            <span class="cmp-tag cmp-tag-before">Text-to-image</span>
+            <span class="cmp-tag cmp-tag-after">Image-to-image edit</span>
+          </div>
+          <figcaption>Image-to-image edit with Qwen Image Edit: the colour image (FLUX.2 Klein 4B), then its pencil-sketch edit. Drag the divider to compare.</figcaption>
+        </figure>
+
+        <figure class="cmp" data-compare style="--cmp-ratio: 832 / 480" data-compare-label="Compare the text-to-image still with the image-to-video clip made from it">
+          <div class="cmp-stage">
+            <div class="cmp-layer cmp-before"><img src="assets/img/flux2-klein-still-lighthouse.jpg" alt="Before: the source still, a white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks" width="832" height="480" loading="lazy"></div>
+            <div class="cmp-layer cmp-after">
+              <video autoplay muted loop playsinline preload="metadata" data-c3-controls="0" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" width="832" height="480" aria-label="After: waves breaking against the rocks below the lighthouse as the camera pushes in">
+                <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
+              </video>
+            </div>
+            <span class="cmp-tag cmp-tag-before">Text-to-image still</span>
+            <span class="cmp-tag cmp-tag-after">Image-to-video</span>
+          </div>
+          <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps. <strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen, 832&times;480, 121 frames at 24 fps, 50 steps. Prompts: "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors", then "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse". Drag the divider to compare.</figcaption>
+        </figure>
+
+      </div>
+    </div>
+    <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Video (Wan 2.2)</h3>
       <p style="color:var(--text-secondary);margin-bottom:1.25rem">Generated on-device with AbstractVision through MLX-Gen. Local video generation runs through MLX-Gen, validated on Apple Silicon first; the local Diffusers text-to-video path is experimental and temporarily disabled. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. Decoded in tiles by default, Wan 2.2 TI2V-5B peaks at 16.3 GiB of memory at 832&times;480 and 25.4 GiB at 1280&times;704 on Apple silicon: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
-      <div class="code-tabs video-tabs">
-        <div class="tab-nav">
-          <button class="tab-btn active" data-tab="vid-t2v">Text-to-video</button>
-          <button class="tab-btn" data-tab="vid-i2v">Image-to-video</button>
-        </div>
-        <div class="tab-panel active" id="tab-vid-t2v">
-          <div class="c3 " data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
+      <h4 class="reveal" style="margin:0 0 .75rem;color:var(--text-secondary);font-weight:600">Text-to-video</h4>
+      <div class="c3 " data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
             <div class="c3-stage">
               <!-- video worker: deliver/media/README-video.md section 1 (model, canvas, frames, fps, steps, seed, prompt, 1539 s); untracked/wan-mem/queue3.txt:2 -->
               <figure class="c3-slide">
@@ -1350,30 +1367,11 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
               </figure>
             </div>
           </div>
-        </div>
-        <div class="tab-panel" id="tab-vid-i2v">
-          <!-- video worker: deliver/media/README-video.md section 2 (still: FLUX.2 klein 4B 8-bit, 832x480, 4 steps, seed 11, 16 s; clip: Wan 2.2 TI2V-5B image-to-video, 832x480, 121 frames, 24 fps, 50 steps, seed 5, 1436 s) -->
-          <div class="i2v-pair">
-            <figure>
-              <img src="assets/img/flux2-klein-still-lighthouse.jpg" alt="The source still: a white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks" width="832" height="480" loading="lazy">
-              <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps, 16 s &mdash; "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors"</figcaption>
-            </figure>
-            <figure>
-              <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" aria-label="Generated video: waves breaking against the rocks below the lighthouse as the camera pushes in" width="832" height="480">
-                <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
-                Your browser cannot play this H.264 MP4 video.
-              </video>
-              <figcaption><strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse"</figcaption>
-            </figure>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
 <!-- ═══════════════════ CROSS-DEVICE ═══════════════════ -->
-<!-- PENDING-W5: continuity highlight -->
 <section id="continuity">
   <div class="container">
     <div class="section-header reveal">
@@ -2049,6 +2047,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
 
 <script src="assets/js/main.js?v=20260929e"></script>
 <script src="assets/js/carousel3.js?v=20260929e"></script>
+<script src="assets/js/compare.js?v=20260929e"></script>
 <script src="assets/js/synced-chat.js?v=20260929e"></script>
 <script src="assets/js/entity-graph.js?v=20260929e"></script>
 </body>
