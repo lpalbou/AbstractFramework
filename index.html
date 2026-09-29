@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css?v=20260929k">
+  <link rel="stylesheet" href="assets/css/main.css?v=20260929l">
   <link rel="stylesheet" href="assets/css/components.css?v=20260929e">
 </head>
 <body>
@@ -1356,7 +1356,7 @@ RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;
     </div>
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Before and After: Image-to-Image and Image-to-Video</h3>
-      <!-- W5 fragment deliver/fragments/compare.html (round 5, point 6); CLAIMS "Media captions" (a) and README-video.md section 2 (b) -->
+      <!-- W5 fragment deliver/fragments/compare.html (round 5, point 6); CLAIMS "Media captions" (a) and README-video.md section 3 (b: Wan 2.2 I2V-A14B, replaces the TI2V-5B clip) -->
       <div class="cmp-pair reveal">
 
         <figure class="cmp" data-compare style="--cmp-ratio: 1 / 1" data-compare-label="Compare the text-to-image original with its image-to-image edit">
@@ -1373,14 +1373,14 @@ RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;
           <div class="cmp-stage">
             <div class="cmp-layer cmp-before"><img src="assets/img/flux2-klein-still-lighthouse.jpg" alt="Before: the source still, a white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks" width="832" height="480" loading="lazy"></div>
             <div class="cmp-layer cmp-after">
-              <video autoplay muted loop playsinline preload="metadata" data-c3-controls="0" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" width="832" height="480" aria-label="After: waves breaking against the rocks below the lighthouse as the camera pushes in">
-                <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
+              <video autoplay muted loop playsinline preload="metadata" data-c3-controls="0" poster="assets/img/wan-i2v-a14b-lighthouse.jpg" width="832" height="480" aria-label="After: waves breaking against the rocks below the lighthouse while the camera, the rocks and the buildings stay still">
+                <source src="assets/video/wan-i2v-a14b-lighthouse.mp4" type="video/mp4">
               </video>
             </div>
             <span class="cmp-tag cmp-tag-before">Text-to-image still</span>
             <span class="cmp-tag cmp-tag-after">Image-to-video</span>
           </div>
-          <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps. <strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen, 832&times;480, 121 frames at 24 fps, 50 steps. Prompts: "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors", then "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse". Drag the divider to compare.</figcaption>
+          <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps. <strong>The clip</strong>: Wan 2.2 I2V-A14B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480, 81 frames at 16 fps, 40 steps, 3 h 01 min on an M5 Max. Drag the divider to compare.<span class="cmp-detail">Prompt: "Static camera. Waves roll in and break against the rocks with white spray, soft clouds drift slowly across the sky, the lighthouse beam sweeps slowly. The rocks, the lighthouse and the keeper's house stay perfectly still and solid." Negative prompt: "warping, morphing, melting, moving rocks, deforming rocks, deforming buildings, bending lighthouse, wobbling structures, distortion, camera motion, zoom, pan, shaking, flicker, blurry, low quality, watermark, text". Seed 5, guidance 3.5 / 3.5, flow shift 3.0 (the model's defaults). This I2V-A14B clip is the one shown here.</span></figcaption>
         </figure>
 
       </div>

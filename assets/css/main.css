@@ -4258,3 +4258,4 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 @media (max-width: 900px) { .iso-grid { transform: scale(.7); margin-bottom: -150px; } }
 /* Package-page heroes: the logo image is centred above the title (img is display:block globally) */
 .hero-inner > img { margin-left: auto; margin-right: auto; }
+.cmp-detail { display: block; margin-top: .35rem; font-size: .74rem; color: var(--text-muted); line-height: 1.5; }
