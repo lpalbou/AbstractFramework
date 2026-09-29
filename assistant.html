@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractAssistant — the macOS menu-bar app for your gateway | AbstractFramework</title>
-  <meta name="description" content="AbstractAssistant is the gateway-native macOS menu-bar app: a compact chat palette, hands-free voice conversation, your sessions and automations from the gateway, tool approvals and a small CLI.">
+  <title>AbstractAssistant 0.9.1 — desktop assistant, one shortcut away | AbstractFramework</title>
+  <meta name="description" content="AbstractAssistant is a desktop assistant for AbstractGateway: a chat palette on a global shortcut or the menu-bar icon, hands-free voice conversations, automations and a small CLI. Built for macOS; the same Python app runs on Linux and Windows desktops with a system tray.">
   <link rel="canonical" href="https://abstractframework.ai/assistant.html">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="AbstractAssistant — the macOS menu-bar app for your gateway">
-  <meta property="og:description" content="Chat, talk hands-free, and schedule conversations as automations from the menu bar. The gateway runs the workflows, models and tools.">
+  <meta property="og:title" content="AbstractAssistant — one shortcut away">
+  <meta property="og:description" content="A desktop palette and voice mode on your gateway&#x27;s sessions, workflows and automations. Built for macOS; runs on Linux and Windows with a system tray.">
   <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="assets/css/main.css?v=5">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">Skip to content</a>
 
 <!-- ═══════════════════ NAV ═══════════════════ -->
 <nav class="nav" aria-label="Main">
@@ -33,9 +33,8 @@
   <ul class="nav-links" id="nav-links">
     <li><a href="./">Home</a></li>
     <li><a href="#overview">Overview</a></li>
-    <li><a href="#install">Install</a></li>
-    <li><a href="#voice">Voice</a></li>
-    <li><a href="#automations">Automations</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#getting-started">Get Started</a></li>
     <li><a href="https://github.com/lpalbou/AbstractAssistant" target="_blank" rel="noopener noreferrer" class="nav-cta">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
@@ -59,23 +58,26 @@
     <a href="continuum.html" class="pkg-nav-link">Continuum</a>
     <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
-    <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="3d.html" class="pkg-nav-link">3D</a>
     <a href="camera.html" class="pkg-nav-link">Camera</a>
     <a href="memory.html" class="pkg-nav-link">Memory</a>
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+    <a href="tui.html" class="pkg-nav-link">TUI</a>
+    <a href="uic.html" class="pkg-nav-link">UIC</a>
   </div>
 </div>
+
 <main id="main">
 
 <!-- ═══════════════════ HERO ═══════════════════ -->
 <section class="hero" style="min-height:auto;padding:8rem 0 4rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> Application &middot; macOS menu-bar app &middot; v0.9.1</div>
+    <div class="hero-badge"><span class="dot"></span> Application &middot; Desktop assistant &middot; v0.9.1</div>
     <h1>Abstract<span class="gradient">Assistant</span></h1>
-    <p class="hero-sub">The menu-bar app of AbstractFramework: a compact chat palette, a hands-free voice conversation mode and a small CLI. It is a thin client of <a href="gateway.html" style="color:var(--accent-light)">AbstractGateway</a>: the gateway runs the workflows, holds the provider connections and executes the tools, and the app keeps only your local preferences and caches. After you <a href="install.html" style="color:var(--accent-light)">install AbstractFramework</a>, the console's <strong>Apps</strong> page installs the Assistant and opens it already signed in.</p>
+    <p class="hero-sub">The desktop assistant of AbstractFramework: a compact chat palette one shortcut away (<kbd>&#8984;&#8679;Space</kbd>, or a click on its menu-bar or system-tray icon), a hands-free voice conversation mode and a small CLI. It is a thin client of <a href="gateway.html" style="color:var(--accent-light)">AbstractGateway</a>: the gateway runs the workflows, holds the provider connections and executes the tools, and the app keeps only your local preferences and caches. Built for macOS; the same Python app runs on Linux and Windows desktops that have a system tray (see <a href="#platforms" style="color:var(--accent-light)">Platforms</a>).</p>
     <div class="hero-actions">
       <a href="#install" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -87,11 +89,11 @@
       <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractAssistant/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS abstractassistant/README.md:45,69,75,81 (commands and flags; the prompt text is an example) -->
 <div class="hero-code">
 <pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractassistant[voice]"</span>
 
-<span class="line-cmt"># the menu-bar app</span>
+<span class="line-cmt"># the desktop app (menu bar or system tray)</span>
 assistant
 <span class="line-cmt"># one turn in the terminal</span>
 assistant run --prompt <span class="line-str">"Summarize my notes"</span>
@@ -110,7 +112,7 @@ assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> \
       <h2 class="section-title">A thin desktop client of your gateway</h2>
       <p class="section-desc">AbstractGateway owns workflow discovery, durable runs, provider connections, tool execution and policy, workspace policy and multimodal defaults. The Assistant keeps your preferences, window placement, downloads, a rebuildable cache of your sessions, and the overrides you choose for this app.</p>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS abstractassistant/README.md:12 -->
 <div class="code-block reveal">
 <pre><code>Tray / Palette / CLI  ──▸  AbstractGateway  ──▸  AbstractRuntime  ──▸  AbstractCore  ──▸  Providers</code></pre>
     </div>
@@ -125,7 +127,7 @@ assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> \
       </div>
       <div class="showcase-content">
         <h3>The palette</h3>
-        <p>Click the menu-bar icon, or press the summon shortcut (<kbd>&#8984;&#8679;Space</kbd> by default), and the palette opens. Its title says what the app is doing: Running, Reconnecting, Listening, Speaking or Not sent. The header names the current chat, which opens the switcher, and holds the buttons for a new chat, tool permissions, <strong>Schedule this conversation&hellip;</strong>, spoken replies and Settings. The dot on the right shows whether the gateway is reachable.</p>
+        <p>Click the menu-bar (or system-tray) icon, or press the summon shortcut (<kbd>&#8984;&#8679;Space</kbd> by default), and the palette opens. Its title says what the app is doing: Running, Reconnecting, Listening, Speaking or Not sent. The header names the current chat, which opens the switcher, and holds the buttons for a new chat, tool permissions, <strong>Schedule this conversation&hellip;</strong>, spoken replies and Settings. The dot on the right shows whether the gateway is reachable.</p>
         <ul class="showcase-features">
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Each reply ends with its statistics: tokens, tools, files, duration and model, with detail views</span></li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>While a run works, an activity card shows the current step, the elapsed time and recent tool calls, with pause, resume and stop</span></li>
@@ -146,9 +148,34 @@ assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> \
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Your sessions, from every device</h3>
-        <p>The switcher lists every chat on the gateway, whichever client started it: the Assistant on any Mac, <a href="code.html" style="color:var(--accent-light)">AbstractCode</a> or the <a href="observer.html" style="color:var(--accent-light)">Observer</a>. Sessions live on the gateway, so every device shows the same list.</p>
+        <p>The switcher lists every chat on the gateway, whichever client started it: the Assistant on any computer, <a href="code.html" style="color:var(--accent-light)">AbstractCode</a> or the <a href="observer.html" style="color:var(--accent-light)">Observer</a>. Sessions live on the gateway, so every device shows the same list.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ PLATFORMS ═══════════════════ -->
+<section id="platforms">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Platforms</div>
+      <h2 class="section-title">Built for macOS, runs on Linux and Windows</h2>
+      <p class="section-desc">AbstractAssistant is one Python app (Qt, with a Qt system-tray icon and a global shortcut). macOS is its primary target and the only platform with an app bundle. On Linux and Windows the same app installs with pip or from the console and runs with the same palette, voice mode and CLI; those platforms are not packaged or validated to the macOS standard.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th></th><th>macOS</th><th>Linux</th><th>Windows</th></tr></thead>
+        <tbody>
+          <tr><td>Tray icon</td><td>Menu-bar icon; click opens the palette</td><td>System-tray icon where the desktop has a tray host (GNOME needs the AppIndicator extension); otherwise the app opens as a window and says why</td><td>System-tray icon; click opens the palette, right-click shows its menu</td></tr>
+          <tr><td>Global shortcut</td><td><kbd>&#8984;&#8679;Space</kbd>, once macOS grants Accessibility (and Input Monitoring)</td><td>The same default, with Super for <kbd>&#8984;</kbd></td><td>The same default, with the Windows key for <kbd>&#8984;</kbd></td></tr>
+          <tr><td>Voice</td><td colspan="3">Microphone capture and streaming playback in the base install on every platform; speech-to-text and text-to-speech run on the gateway. Playback uses <code>afplay</code> on macOS, <code>winsound</code> on Windows, and <code>paplay</code>, <code>aplay</code>, <code>ffplay</code> or <code>mpg123</code> on Linux.</td></tr>
+          <tr><td>Notifications</td><td colspan="3">Tray notifications (the icon's message balloon) on every platform with a tray</td></tr>
+          <tr><td>Install</td><td colspan="3">From the gateway console's <strong>Apps</strong> page, or <code>pip install abstractassistant</code>; the <code>abstractframework</code> Python package includes it</td></tr>
+          <tr><td>App bundle</td><td><code>build-macos-app</code> builds <code>AbstractAssistant.app</code> (unsigned, menu-bar only)</td><td colspan="2">None: run the <code>assistant</code> command</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1rem;max-width:860px">When the shortcut cannot be registered, the icon's tooltip says so and the icon still opens the palette. The CLI (<code>assistant run --prompt</code>) needs no tray at all.</p>
   </div>
 </section>
 
@@ -158,7 +185,7 @@ assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> \
     <div class="section-header reveal">
       <div class="section-label">Install</div>
       <h2 class="section-title">Open it from the console, or install it with pip</h2>
-      <p class="section-desc">You need Python 3.10 or later and an AbstractGateway you can reach. macOS is the primary target; Linux and Windows may work through the Qt shell but are not packaged to the same standard.</p>
+      <p class="section-desc">You need Python 3.10 or later and an AbstractGateway you can reach. The console and pip installs work on every platform the app runs on; the app bundle is macOS only.</p>
     </div>
 
     <div class="code-tabs reveal">
@@ -168,7 +195,7 @@ assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> \
         <button class="tab-btn" data-tab="app">macOS app bundle</button>
       </div>
       <div class="tab-panel active" id="tab-console">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS abstractgateway/docs/apps.md:382-383 -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># Gateway console &gt; Apps &gt; Assistant card: Install (when it is missing), then Open</span>
 <span class="line-cmt"># The same from a terminal on the gateway's computer:</span>
@@ -178,15 +205,15 @@ abstractgateway apps launch assistant</code></pre>
         <div class="install-notes"><ul>
           <li><strong>Install</strong> adds <code>abstractassistant</code> to the gateway's own Python environment, with every <code>abstract*</code> package the gateway runs pinned to its current version, so installing the Assistant never changes the gateway. The <code>abstractframework</code> Python package already includes it.</li>
           <li><strong>Open</strong> starts the Assistant on the gateway's computer, already signed in as you, and the app remembers that sign-in. The console can sign in only an Assistant it launches, so quit a running Assistant before you click <strong>Open</strong>. From another computer, the card says the Assistant runs on the gateway's computer.</li>
-          <li>The gateway's own menu-bar icon has a <strong>Launch Assistant</strong> entry that finds the app the same way.</li>
+          <li>The gateway's own tray icon has a <strong>Launch Assistant</strong> entry that finds the app the same way.</li>
         </ul></div>
       </div>
       <div class="tab-panel" id="tab-pip">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS abstractassistant/docs/getting-started.md:19,43,49,55; abstractassistant/docs/INSTALLATION.md:104 (--stream on|off; prompt texts are examples) -->
 <div class="code-block">
 <pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractassistant[voice]"</span>   <span class="line-cmt"># [voice]: adds local speech-to-text</span>
 
-assistant                                          <span class="line-cmt"># launch the menu-bar app</span>
+assistant                                          <span class="line-cmt"># launch the desktop app</span>
 assistant run --prompt <span class="line-str">"What changed in the repo today?"</span>
 assistant run --prompt <span class="line-str">"Explain this error"</span> --stream on
 assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> --gateway-token <span class="line-var">&lt;token&gt;</span></code></pre>
@@ -198,14 +225,14 @@ assistant --gateway-url <span class="line-str">http://127.0.0.1:8080</span> --ga
         </ul></div>
       </div>
       <div class="tab-panel" id="tab-app">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS abstractassistant/docs/INSTALLATION.md:65-66,79 -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># From a checkout of the repository</span>
 <span class="line-kw">pip install</span> -e <span class="line-str">".[macos-app]"</span>
 build-macos-app                  <span class="line-cmt"># builds AbstractAssistant.app and installs it into /Applications</span>
 build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/macos/AbstractAssistant.app</span></code></pre>
         </div>
-        <div class="install-notes"><ul><li>The bundle is unsigned and not notarized: an app you build yourself opens normally, but a copy sent to someone else is blocked by Gatekeeper. It is menu-bar only, so look for its icon in the menu bar, not the Dock.</li></ul></div>
+        <div class="install-notes"><ul><li>The bundle is unsigned and not notarized: an app you build yourself opens normally, but a copy sent to someone else is blocked by Gatekeeper. It is menu-bar only, so look for its icon in the menu bar, not the Dock. <code>build-macos-app</code> runs on macOS only; there is no Linux or Windows package.</li></ul></div>
       </div>
     </div>
 
@@ -222,7 +249,7 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
     <div class="section-header reveal">
       <div class="section-label">Voice</div>
       <h2 class="section-title">Talk to it, hands-free</h2>
-      <p class="section-desc">Microphone capture and playback happen on your Mac; speech-to-text and text-to-speech run on the gateway (the installer gives it local voice through <a href="voice.html" style="color:var(--accent-light)">AbstractVoice</a>). Every reply has a speaker button, the composer's microphone dictates into the message, and <kbd>&#8984;&#8679;V</kbd> starts a voice conversation.</p>
+      <p class="section-desc">Microphone capture and playback happen on your computer; speech-to-text and text-to-speech run on the gateway (the installer gives it local voice through <a href="voice.html" style="color:var(--accent-light)">AbstractVoice</a>). Every reply has a speaker button, the composer's microphone dictates into the message, and <kbd>&#8984;&#8679;V</kbd> starts a voice conversation.</p>
     </div>
     <div class="showcase-grid reverse reveal" style="margin-top:0">
       <div class="showcase-img">
@@ -239,12 +266,13 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>The microphone pauses while the assistant works, so side conversation never steers a run</span></li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Short, spoken-style replies by default; typing still works during a conversation</span></li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Barge-in: keep the mic open with headphones and say "stop" to interrupt a reply</span></li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Replies play on the Mac's current output device, or the one you pick in <strong>Settings &rarr; Voice</strong></span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>Replies play on the computer's current output device, or the one you pick in <strong>Settings &rarr; Voice</strong></span></li>
         </ul>
       </div>
     </div>
 
     <h3 class="reveal" style="margin:1rem 0 1rem">Keyboard shortcuts</h3>
+    <p class="reveal" style="color:var(--text-secondary);margin-bottom:1rem">Shown with macOS keys. On Linux and Windows, <kbd>&#8984;</kbd> in the global shortcut is the Super / Windows key, and the palette's own shortcuts use <kbd>Ctrl</kbd> where macOS uses <kbd>&#8984;</kbd>.</p>
     <div class="table-wrap reveal">
       <table class="data-table">
         <thead><tr><th>Keys</th><th>Action</th></tr></thead>
@@ -267,7 +295,7 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
     <div class="section-header reveal">
       <div class="section-label">Sessions and automations</div>
       <h2 class="section-title">Your chats and your automations, side by side</h2>
-      <p class="section-desc">Click the chat name in the header. The switcher has two tabs, <strong>Sessions | Automations</strong>, both fed by the gateway. An <a href="automations.html" style="color:var(--accent-light)">automation</a> runs a task on the gateway on a fixed UTC schedule; it keeps running while the Assistant is closed or the Mac sleeps.</p>
+      <p class="section-desc">Click the chat name in the header. The switcher has two tabs, <strong>Sessions | Automations</strong>, both fed by the gateway. An <a href="automations.html" style="color:var(--accent-light)">automation</a> runs a task on the gateway on a fixed UTC schedule; it keeps running while the Assistant is closed or the computer sleeps.</p>
     </div>
 
     <div class="showcase-grid reveal" style="margin-top:0">
@@ -280,11 +308,11 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
       </div>
       <div class="showcase-content">
         <h3>One card per automation</h3>
-        <p>Each card shows when the automation last ran, its last result, the schedule, the next run, the run count and the workspace folder, which opens in Finder when it is on this Mac. A chip says "waiting for you" or "failed" only when it applies. The button on the right says the automation's state in words: <strong>Active &#9654;</strong> in green, <strong>Paused &#9208;</strong> in amber; click it to pause or resume.</p>
+        <p>Each card shows when the automation last ran, its last result, the schedule, the next run, the run count and the workspace folder, which opens in your file manager (Finder on macOS) when it is on this computer. A chip says "waiting for you" or "failed" only when it applies. The button on the right says the automation's state in words: <strong>Active &#9654;</strong> in green, <strong>Paused &#9208;</strong> in amber; click it to pause or resume.</p>
         <ul class="showcase-features">
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>The same automations as AbstractCode and the Observer, whichever app created them</span></li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span><strong>+ New automation</strong> for a new task; <strong>Show archived</strong> for the history</span></li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>The tab label and <strong>Automations&hellip;</strong> in the menu-bar icon's menu count what needs you</span></li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <span>The tab label and <strong>Automations&hellip;</strong> in the tray icon's menu count what needs you</span></li>
         </ul>
       </div>
     </div>
@@ -365,7 +393,7 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>The workspace folder</h3>
-        <p>Every session and automation card has a folder icon for the workspace the gateway reports. It opens in Finder when the folder is on this Mac; until the gateway reports the folder, the icon is disabled and says so.</p>
+        <p>Every session and automation card has a folder icon for the workspace the gateway reports. It opens in your file manager when the folder is on this computer; until the gateway reports the folder, the icon is disabled and says so.</p>
       </div>
     </div>
   </div>
@@ -409,7 +437,7 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
       <div class="showcase-content">
         <h3>Seven Settings sections</h3>
         <p><strong>Connection</strong>, <strong>Models &amp; reasoning</strong> (workflow, reasoning effort, reply streaming), <strong>Voice</strong>, <strong>Workspace</strong> (root and allowed folders), <strong>Tools &amp; permissions</strong>, <strong>Appearance &amp; window</strong> and <strong>About</strong>. Every value says whether it is the gateway default or this app's override.</p>
-        <p>Each route the Assistant drives (chat model, voice output and input, image generation, edit and upscale, video, image to video, music, sound effects) has its own Provider and Model lists. The first item is always <strong>Gateway default</strong>; any other choice is kept on this Mac and sent with each request, and the gateway's shared defaults never change.</p>
+        <p>Each route the Assistant drives (chat model, voice output and input, image generation, edit and upscale, video, image to video, music, sound effects) has its own Provider and Model lists. The first item is always <strong>Gateway default</strong>; any other choice is kept on this computer and sent with each request, and the gateway's shared defaults never change.</p>
       </div>
     </div>
   </div>
@@ -445,7 +473,7 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
         <h3>Approve a run from the notification</h3>
         <ol style="list-style:decimal;padding-left:1.2rem;color:var(--text-secondary);display:grid;gap:.35rem">
           <li>A notification says "Downloads clean-up needs your approval".</li>
-          <li>Choose <strong>Automations&hellip;</strong> in the menu-bar icon's menu (or <kbd>&#8984;2</kbd> in the switcher).</li>
+          <li>Choose <strong>Automations&hellip;</strong> in the tray icon's menu (or <kbd>&#8984;2</kbd> in the switcher).</li>
           <li>Click the card marked "waiting for you".</li>
           <li>Read the tool call and its arguments, then click <strong>Approve</strong> or <strong>Deny</strong>.</li>
         </ol>
@@ -475,7 +503,7 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Local files</div>
-      <h2 class="section-title">What stays on this Mac</h2>
+      <h2 class="section-title">What stays on your computer</h2>
       <p class="section-desc">The gateway is the source of truth for workflows, provider and model defaults, tools and their approval defaults, workspace policy, run history, sessions, automations and artifacts. The Assistant stores the rest under <code>~/.abstractassistant/</code>.</p>
     </div>
     <div class="table-wrap reveal">
@@ -502,7 +530,7 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
       <h2 class="section-title">Keep going</h2>
     </div>
     <div class="next-links reveal">
-      <a class="next-link" href="start-user.html"><strong>User journey</strong><span>Install, pick a model, and say hello from the menu bar.</span></a>
+      <a class="next-link" href="start-user.html"><strong>User journey</strong><span>Install, pick a model, and say hello from the palette.</span></a>
       <a class="next-link" href="install.html"><strong>Install AbstractFramework</strong><span>One download or one line sets up the gateway and its console.</span></a>
       <a class="next-link" href="console.html"><strong>Web &amp; terminal console</strong><span>The Apps page that installs and opens the Assistant.</span></a>
       <a class="next-link" href="automations.html"><strong>Automations</strong><span>How scheduled conversations run, from the Assistant, Code or the Observer.</span></a>
@@ -537,11 +565,13 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
       <a href="agent.html">AbstractAgent</a>
       <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
       <a href="flow.html">AbstractFlow</a>
+      <a href="tui.html">AbstractTUI</a>
+      <a href="uic.html">AbstractUIC</a>
     </div>
     <div class="footer-col">
       <h4>Applications</h4>
       <a href="gateway.html">AbstractGateway</a>
-      <a href="console.html">Consoles</a>
+      <a href="console.html">Gateway &amp; Core consoles</a>
       <a href="automations.html">Automations</a>
       <a href="code.html">AbstractCode</a>
       <a href="observer.html">AbstractObserver</a>
@@ -552,9 +582,9 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
     <div class="footer-col">
       <h4>Modalities &amp; Knowledge</h4>
       <a href="voice.html">AbstractVoice</a>
-      <a href="vision.html">AbstractVision</a>
       <a href="music.html">AbstractMusic</a>
-      <a href="3d.html">abstract3d</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="3d.html">Abstract3D</a>
       <a href="camera.html">AbstractCamera</a>
       <a href="memory.html">AbstractMemory</a>
       <a href="semantics.html">AbstractSemantics</a>
@@ -582,7 +612,6 @@ build-macos-app --skip-install   <span class="line-cmt"># leaves it in dist/maco
     contact@abstractframework.ai
   </div>
 </footer>
-
 <script src="assets/js/main.js?v=5"></script>
 </body>
 </html>
