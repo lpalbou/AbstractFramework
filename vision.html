@@ -20,6 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/main.css?v=5">
+  <link rel="stylesheet" href="assets/css/components.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -170,30 +171,30 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
 
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Text to video</h3>
-      <div class="carousel">
-        <div class="carousel-track">
-          <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg">
-              <source src="assets/video/t2v-example.mp4" type="video/mp4">
-            </video>
-            <div class="carousel-caption">"A Star Trek vessel in slow orbit around earth with shimmering lights of metropoles"</div>
-          </div>
-          <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg">
+      <div class="c3" data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
+        <div class="c3-stage">
+          <figure class="c3-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
               <source src="assets/video/t2v-river.mp4" type="video/mp4">
+              Your browser cannot play this H.264 MP4 video.
             </video>
-            <div class="carousel-caption">"A crystal clear river in the mountains"</div>
-          </div>
-          <div class="carousel-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg">
+            <figcaption>Wan 2.2 text-to-video &mdash; "A crystal clear river in the mountains"</figcaption>
+          </figure>
+          <figure class="c3-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg" aria-label="Generated video: two starships in combat">
               <source src="assets/video/t2v-space.mp4" type="video/mp4">
+              Your browser cannot play this H.264 MP4 video.
             </video>
-            <div class="carousel-caption">"A dynamic combat in space between two starships"</div>
-          </div>
+            <figcaption>Wan 2.2 text-to-video &mdash; "A dynamic combat in space between two starships"</figcaption>
+          </figure>
+          <figure class="c3-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
+              <source src="assets/video/t2v-example.mp4" type="video/mp4">
+              Your browser cannot play this H.264 MP4 video.
+            </video>
+            <figcaption>Wan 2.2 text-to-video &mdash; a starship in slow orbit around Earth, city lights below</figcaption>
+          </figure>
         </div>
-        <button class="carousel-prev" aria-label="Previous">&#8592;</button>
-        <button class="carousel-next" aria-label="Next">&#8594;</button>
-        <div class="carousel-dots"></div>
       </div>
     </div>
   </div>
@@ -485,5 +486,6 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
 </footer>
 
 <script src="assets/js/main.js?v=5"></script>
+<script src="assets/js/carousel3.js"></script>
 </body>
 </html>
