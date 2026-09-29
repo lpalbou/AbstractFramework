@@ -3864,3 +3864,5 @@ button:focus-visible,
 .hero-code pre { overflow-x: auto; }
 /* the cube field extends left of the grid box (negative columns); centre cubes + layer labels */
 .iso-grid { left: 225px; }
+/* home hero: keep the three-line tagline on three lines at phone width (Generate everything. is the widest line) */
+@media (max-width: 480px) { #top h1 { font-size: clamp(1.6rem, 7.4vw, 2.5rem); overflow-wrap: normal; } }
