@@ -150,6 +150,7 @@
         <div class="install-step"><h4>Use it anywhere</h4><p>Apps at <code class="long">/apps/&lt;app&gt;/</code>, the terminal, or the menu bar on macOS or the system tray.</p></div>
       </div>
     </div>
+    <!-- PENDING-W2: R5b-hero (the hero block becomes examples/R5b hero verbatim) -->
     <!-- E1 (W2 PASS): examples/E1-text/snippet.py verbatim (whole file), then E2-snippet (W2 PASS): examples/E2-defaults/snippet.py lines 7-16 verbatim -->
 <div class="hero-code">
 <pre><code><span class="kw">from</span> abstractcore <span class="kw">import</span> create_llm
@@ -317,6 +318,7 @@ music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm a
       </div>
       <div class="tab-panel" id="tab-gen-http">
         <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code>. Paste the token that <code class="long">abstractcore serve --print-token</code> prints in place of <code>&lt;token&gt;</code>; the server asks for it even on loopback.</li></ul></div>
+        <!-- PENDING-W2: R5b-http (speech, music, image: the same trio as Python) -->
         <!-- R5-http (W2 PASS): examples/R5/http.sh verbatim (http.run.log; RESULTS.md R5-http) -->
 <div class="code-block" data-lang="shell">
 <pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
@@ -641,6 +643,7 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Des
       </div>
     </div>
     <div class="ledger-routes reveal">
+      <!-- PENDING-W2: R5b-gateway-api (pasted-token form, literal http://127.0.0.1:8080, RUN_ID captured) -->
       <!-- E6 (W2 PASS; the stream line VERIFIED-DOCS abstractgateway routes/gateway.py:10416): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:6-11 (gateway 0.7.1, run.log) -->
       <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:.5rem"><code>GW</code> is your gateway address, <code>TOKEN</code> your gateway token and <code>RUN_ID</code> the <code>run_id</code> that <code class="long">POST /api/gateway/runs/start</code> returns (see <a href="#flow">Flow</a>).</p>
       <div class="code-block">
@@ -1143,6 +1146,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
     <div class="showcase-grid reveal" style="margin-top:1rem;align-items:start">
       <div style="min-width:0">
         <h3 style="margin-bottom:.75rem">Start a published workflow</h3>
+        <!-- PENDING-W2: R5b-gateway-api -->
         <!-- E6 (W2 PASS): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:1-4 (gateway 0.7.1) -->
         <div class="code-block">
 <pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
