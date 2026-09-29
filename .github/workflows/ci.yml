@@ -194,7 +194,7 @@ jobs:
           $uv = (Get-Command uv -ErrorAction SilentlyContinue).Source
           if (-not $uv) { $uv = "$env:USERPROFILE\.local\bin\uv.exe" }
           $ps1 = Get-Content -Raw scripts/install.ps1
-          $matrix = [regex]::Matches([regex]::Match($ps1, '(?m)^\$AfPyMatrix = @\((.*)\)$').Groups[1].Value, "'([^']+)'") | ForEach-Object { $_.Groups[1].Value }
+          $matrix = [regex]::Matches([regex]::Match($ps1, '(?m)^\$AfPyMatrix = @\((.*)\)\r?$').Groups[1].Value, "'([^']+)'") | ForEach-Object { $_.Groups[1].Value }
           $llama = [regex]::Match($ps1, "(?m)^\`$AfLlamaCpuPin = '([^']+)'").Groups[1].Value
           $pin = (Get-Content docs/installers/install-manifest.json -Raw | ConvertFrom-Json).bootstrap.gateway_version
           $core = ($matrix | Where-Object { $_ -like 'abstractcore==*' })
