@@ -277,60 +277,15 @@ abstractcode login --gateway-url https://gateway.example.com --token &lt;TOKEN&g
       </div>
 
     </div>
-    <div class="callout reveal defaults-note" style="margin-top:2rem">
-      <div><strong>About the one-line form.</strong> <code class="long">llm.generate("...", output="image")</code> is one line only once a default route is configured for that capability: from the gateway console (the first-run guide's <strong>Use recommended defaults</strong>, or the Multimodal tab), or with <code class="long">abstractcore config set-default</code>. Without a default, name the provider and model in the call; both forms are shown in <a href="#multimodal">Multimodal</a>.</div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════ UNIFIED MULTIMODAL ═══════════════════ -->
-<section id="multimodal" style="background:var(--bg-surface)">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">Multimodal</div>
-      <h2 class="section-title">One Interface for Every Modality</h2>
-      <p class="section-desc">Text, images, audio, video and documents in; text, voice, music, images, video and 3D out, through the same <code>generate()</code> on the same LLM instance. Each modality is a capability plugin: install it and AbstractCore picks it up.</p>
-    </div>
-
-    <div class="mm-hub reveal" aria-label="Inputs on the left, one generate() call in the centre, outputs on the right">
-      <div class="mm-col in">
-        <div class="mm-col-title">Input &middot; <code>media=</code></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></span><div><h4>Text</h4><p>Any of ten provider types, local or cloud, with tools and structured output.</p></div></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span><div><h4>Images</h4><p>A vision model, or a vision fallback that describes the image for a text-only model.</p></div></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span><div><h4>Audio</h4><p>An audio-capable model, or speech-to-text through AbstractVoice.</p></div></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg></span><div><h4>Video</h4><p>Native video where the model supports it, otherwise sampled frames.</p></div></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h6"/></svg></span><div><h4>Documents</h4><p>PDFs and Office files, with optional visual-text compression for long ones.</p></div></div>
-      </div>
-
-      <div class="mm-core">
-        <span class="mm-wire l" aria-hidden="true"></span>
-        <div class="mm-core-box">
-          <div class="mm-core-lib">AbstractCore</div>
-          <code>llm.generate()</code>
-          <span>one call, one policy for media,<br>local and cloud models</span>
+    <div id="generate" class="gen-tabs reveal">
+      <h3 class="gen-title">Two ways to generate voice, music and images</h3>
+      <p class="gen-sub">With defaults configured once (from the gateway console or <code class="long">abstractcore config set-default</code>), each modality is one <code>generate()</code> line. Without defaults, name the provider and the model in the call. The text model is always explicit: <code>create_llm</code> takes a provider.</p>
+      <div class="code-tabs">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="gen-defaults">With gateway defaults configured</button>
+          <button class="tab-btn" data-tab="gen-explicit">Without defaults (AbstractCore only)</button>
         </div>
-        <span class="mm-wire r" aria-hidden="true"></span>
-      </div>
-
-      <div class="mm-col out">
-        <div class="mm-col-title">Output &middot; <code>output=</code></div>
-        <div class="mm-item text-out"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><div><h4>Text <small>AbstractCore</small></h4><p>Streaming, tool calls and structured output, the same across providers.</p></div></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M19 5a10 10 0 010 14"/></svg></span><div><h4>Voice <small>AbstractVoice</small></h4><p>Text-to-speech, speech-to-text and voice cloning, local or remote.</p></div></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><div><h4>Music <small>AbstractMusic</small></h4><p>Text-to-music: ACE-Step and Stable Audio locally, ACE Music and ElevenLabs remotely.</p></div></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span><div><h4>Vision: images and video <small>AbstractVision</small></h4><p>Generate, edit and upscale images; text-to-video and image-to-video.</p></div></div>
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg></span><div><h4>3D <small>Abstract3D</small></h4><p>Image-to-3D and text-to-3D, with GLB output.</p></div></div>
-      </div>
-    </div>
-    <p class="mm-foot reveal">Media input follows explicit policies, never silent changes. AbstractCamera is a capability too, for capture rather than generation: it opens real cameras, takes photos and clips, and gives an agent camera tools. The one-line <code>output="image"</code> form needs a default route for that capability; without one, name the provider and model in the call. Both forms ran as shown below.</p>
-
-    <div class="mm-proof reveal">
-    <div class="code-tabs">
-      <div class="tab-nav">
-        <button class="tab-btn active" data-tab="mm-defaults">With configured defaults</button>
-        <button class="tab-btn" data-tab="mm-explicit">Explicit per capability</button>
-        <button class="tab-btn" data-tab="mm-api">OpenAI-compatible server</button>
-      </div>
-      <div class="tab-panel active" id="tab-mm-defaults">
+      <div class="tab-panel active" id="tab-gen-defaults">
         <div class="install-notes" style="border-top:none"><ul><li>Configure AbstractCore's capability routes once; the gateway console's <strong>Use recommended defaults</strong> and its Multimodal tab write the same store. Once a capability has a default, its call is one line.</li></ul></div>
         <!-- E2-defaults.sh (W2 PASS): examples/E2-defaults/defaults.sh lines 3-6 verbatim; its comment is in the note above. E2-gateway-recommended proves the console writes the same store -->
 <div class="code-block">
@@ -359,7 +314,7 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
-      <div class="tab-panel" id="tab-mm-explicit">
+      <div class="tab-panel" id="tab-gen-explicit">
         <div class="install-notes" style="border-top:none"><ul><li>No defaults and no server: name the provider and the model for each capability in the call. These ran with <code>pip install "abstractframework[apple]"</code> (AbstractCore, the plugins and the Apple silicon engines), with every route cleared first.</li></ul></div>
         <!-- E3-image (W2 PASS): examples/E3-explicit/image.py verbatim -->
         <div class="code-sub">Image</div>
@@ -403,7 +358,57 @@ music = llm.<span class="line-fn">generate</span>(
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
-      <div class="tab-panel" id="tab-mm-api">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ UNIFIED MULTIMODAL ═══════════════════ -->
+<section id="multimodal" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Multimodal</div>
+      <h2 class="section-title">One Interface for Every Modality</h2>
+      <p class="section-desc">Text, images, audio, video and documents in; text, voice, music, images, video and 3D out, through the same <code>generate()</code> on the same LLM instance. Each modality is a capability plugin: install it and AbstractCore picks it up.</p>
+    </div>
+
+    <div class="mm-hub reveal" aria-label="Inputs on the left, one generate() call in the centre, outputs on the right">
+      <div class="mm-col in">
+        <div class="mm-col-title">Input &middot; <code>media=</code></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></span><div><h4>Text</h4><p>Any of ten provider types, local or cloud, with tools and structured output.</p></div></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span><div><h4>Images</h4><p>A vision model, or a vision fallback that describes the image for a text-only model.</p></div></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span><div><h4>Audio</h4><p>An audio-capable model, or speech-to-text through AbstractVoice.</p></div></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg></span><div><h4>Video</h4><p>Native video where the model supports it, otherwise sampled frames.</p></div></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h6"/></svg></span><div><h4>Documents</h4><p>PDFs and Office files, with optional visual-text compression for long ones.</p></div></div>
+      </div>
+
+      <div class="mm-core">
+        <span class="mm-wire l" aria-hidden="true"></span>
+        <div class="mm-core-box">
+          <div class="mm-core-lib">AbstractCore</div>
+          <code>llm.generate()</code>
+          <span>one call, one policy for media,<br>local and cloud models</span>
+        </div>
+        <span class="mm-wire r" aria-hidden="true"></span>
+      </div>
+
+      <div class="mm-col out">
+        <div class="mm-col-title">Output &middot; <code>output=</code></div>
+        <div class="mm-item text-out"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span><div><h4>Text <small>AbstractCore</small></h4><p>Streaming, tool calls and structured output, the same across providers.</p></div></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M19 5a10 10 0 010 14"/></svg></span><div><h4>Voice <small>AbstractVoice</small></h4><p>Text-to-speech, speech-to-text and voice cloning, local or remote.</p></div></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><div><h4>Music <small>AbstractMusic</small></h4><p>Text-to-music: ACE-Step and Stable Audio locally, ACE Music and ElevenLabs remotely.</p></div></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span><div><h4>Vision: images and video <small>AbstractVision</small></h4><p>Generate, edit and upscale images; text-to-video and image-to-video.</p></div></div>
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg></span><div><h4>3D <small>Abstract3D</small></h4><p>Image-to-3D and text-to-3D, with GLB output.</p></div></div>
+      </div>
+    </div>
+    <p class="mm-foot reveal">Media input follows explicit policies, never silent changes. AbstractCamera is a capability too, for capture rather than generation: it opens real cameras, takes photos and clips, and gives an agent camera tools. The one-line <code>output="image"</code> form needs a default route for that capability; without one, name the provider and model in the call: both forms are in <a href="#generate">Two ways to generate</a>. Below, the same capabilities over HTTP.</p>
+
+    <div class="mm-proof reveal">
+    <div class="code-tabs">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="mm-api">OpenAI-compatible server</button>
+      </div>
+      <div class="tab-panel active" id="tab-mm-api">
         <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code> (this ran from the <code>abstractframework[apple]</code> install). The server asks for a bearer token, even on loopback.</li></ul></div>
         <!-- E4 (W2 PASS): examples/E4-openai-server/snippet.sh verbatim (run-models.log, run-chat-speech.log, run-images.log) -->
 <div class="code-block">
@@ -434,7 +439,7 @@ curl -sS <span class="line-str">"$BASE/v1/images/generations"</span> -H <span cl
 
     <!-- Artifacts: the outputs of examples/E2-defaults/snippet.py (W2 PASS; deliver/media/lighthouse.webp, tagline.mp3, ambient.mp3); routes: examples/E2-defaults/defaults.sh -->
     <div class="mm-proof-side">
-      <h3>What that code produced</h3>
+      <h3>What the <a href="#generate">defaults example</a> produced</h3>
       <div class="mm-art">
         <div class="a-body"><span class="a-kind">Voice <em>supertonic &middot; supertonic-3</em></span><p><q>AbstractFramework: write once, generate everything, run anywhere.</q></p><audio controls preload="none" aria-label="Generated voice: the tagline read aloud"><source src="assets/media/tagline.mp3" type="audio/mpeg"></audio></div>
       </div>
