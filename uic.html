@@ -26,49 +26,85 @@
 
 <!-- ═══════════════════ NAV ═══════════════════ -->
 <nav class="nav" aria-label="Main">
-  <a href="./" class="nav-brand">
+  <a href="index.html" class="nav-brand">
     <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
     AbstractFramework
   </a>
   <ul class="nav-links" id="nav-links">
-    <li><a href="./">Home</a></li>
-    <li><a href="#overview">Overview</a></li>
-    <li><a href="#features">Features</a></li>
-    <li><a href="#getting-started">Get Started</a></li>
-    <li><a href="https://github.com/lpalbou/abstractuic" target="_blank" rel="noopener noreferrer" class="nav-cta">
+    <li class="nav-dropdown"><a href="index.html#start">Start here <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu narrow">
+        <div class="nav-dropdown-group">
+          <span class="nav-dropdown-label">Your first hour as a</span>
+          <a href="start-user.html">User<small>chat, voice, automations, the Assistant</small></a>
+          <a href="start-creator.html">Artist / creator<small>voices, music, images, video, 3D</small></a>
+          <a href="start-developer.html">Developer<small>Python libraries, gateway API, Flow</small></a>
+          <a href="start-architect.html">Architect / solution engineer<small>deployment, security, data</small></a>
+          <a href="start-researcher.html">Researcher<small>deep research, co-scientist, memory</small></a>
+          <a href="start-automation.html">Automation owner<small>recurring agent tasks</small></a>
+        </div>
+      </div>
+    </li>
+    <li class="nav-dropdown"><a href="index.html#components">Components <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4l3 3 3-3"/></svg></a>
+      <div class="nav-dropdown-menu">
+        <div class="nav-dropdown-group">
+          <span class="nav-dropdown-label">Library</span>
+          <a href="core.html">AbstractCore</a>
+          <a href="voice.html">AbstractVoice</a>
+          <a href="music.html">AbstractMusic</a>
+          <a href="vision.html">AbstractVision</a>
+          <a href="3d.html">Abstract3D</a>
+          <a href="camera.html">AbstractCamera</a>
+        </div>
+        <div class="nav-dropdown-group">
+          <span class="nav-dropdown-label">Durable runtime</span>
+          <a href="runtime.html">AbstractRuntime</a>
+          <a href="agent.html">AbstractAgent</a>
+          <a href="memory.html">AbstractMemory</a>
+          <a href="semantics.html">AbstractSemantics</a>
+          <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
+        </div>
+        <div class="nav-dropdown-group">
+          <span class="nav-dropdown-label">Control plane</span>
+          <a href="gateway.html">AbstractGateway</a>
+          <a class="topic" href="console.html">Gateway &amp; Core consoles</a>
+          <a class="topic" href="automations.html">Automations</a>
+        </div>
+        <div class="nav-dropdown-group">
+          <span class="nav-dropdown-label">Applications</span>
+          <a href="flow.html">AbstractFlow</a>
+          <a href="code.html">AbstractCode</a>
+          <a href="observer.html">AbstractObserver</a>
+          <a href="assistant.html">AbstractAssistant</a>
+          <a href="continuum.html">AbstractContinuum</a>
+          <a href="entity.html">AbstractEntity</a>
+        </div>
+        <div class="nav-dropdown-group">
+          <span class="nav-dropdown-label">Toolkits</span>
+          <a href="tui.html">AbstractTUI</a>
+          <a href="uic.html">AbstractUIC</a>
+          <a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a>
+        </div>
+      </div>
+    </li>
+    <li><a href="index.html#multimodal">Multimodal</a></li>
+    <li><a href="index.html#architecture">Architecture</a></li>
+    <li><a href="index.html#ledger">Ledger</a></li>
+    <li><a href="index.html#flow">Flow</a></li>
+    <li><a href="index.html#entities">Entities</a></li>
+    <li><a href="index.html#getting-started">Get Started</a></li>
+    <li><a href="install.html">Install</a></li>
+    <li><a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer" class="nav-cta">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
+    </a></li>
+    <li><a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer" class="nav-cta" style="margin-left:4px">
+      Models
     </a></li>
   </ul>
   <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
 </nav>
 
-<div class="pkg-nav" aria-label="Packages and apps">
-  <div class="pkg-nav-inner">
-    <a href="core.html" class="pkg-nav-link">Core</a>
-    <a href="voice.html" class="pkg-nav-link">Voice</a>
-    <a href="music.html" class="pkg-nav-link">Music</a>
-    <a href="vision.html" class="pkg-nav-link">Vision</a>
-    <a href="3d.html" class="pkg-nav-link">3D</a>
-    <a href="camera.html" class="pkg-nav-link">Camera</a>
-    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
-    <a href="agent.html" class="pkg-nav-link">Agent</a>
-    <a href="memory.html" class="pkg-nav-link">Memory</a>
-    <a href="semantics.html" class="pkg-nav-link">Semantics</a>
-    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
-    <a href="flow.html" class="pkg-nav-link">Flow</a>
-    <a href="code.html" class="pkg-nav-link">Code</a>
-    <a href="observer.html" class="pkg-nav-link">Observer</a>
-    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
-    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
-    <a href="entity.html" class="pkg-nav-link">Entity</a>
-    <a href="tui.html" class="pkg-nav-link">TUI</a>
-    <a href="uic.html" class="pkg-nav-link active" aria-current="page">UIC</a>
-    <span class="pkg-nav-divider" aria-hidden="true"></span>
-    <a class="pkg-nav-link topic" href="console.html">Consoles</a>
-    <a class="pkg-nav-link topic" href="automations.html">Automations</a>
-  </div>
-</div>
+<div class="pkg-nav" data-section-nav aria-label="On this page"></div>
 
 <main id="main">
 
@@ -98,7 +134,7 @@
 </section>
 
 <!-- ═══════════════════ OVERVIEW ═══════════════════ -->
-<section id="overview" class="section">
+<section id="overview" data-nav-label="Overview" class="section">
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Overview</span>
@@ -123,7 +159,7 @@
 </section>
 
 <!-- ═══════════════════ FEATURES ═══════════════════ -->
-<section id="features" class="section" style="background:var(--bg-surface)">
+<section id="features" data-nav-label="Packages" class="section" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Packages</span>
@@ -147,7 +183,7 @@
 </section>
 
 <!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section id="getting-started" class="section">
+<section id="getting-started" data-nav-label="Get started" class="section">
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Get Started</span>
@@ -215,7 +251,7 @@ server.<span class="line-fn">listen</span>(<span class="line-var">3000</span>);<
 </section>
 
 <!-- ═══════════════════ NEXT ═══════════════════ -->
-<section id="next" class="section" style="background:var(--bg-surface)">
+<section id="next" data-nav-label="Next" class="section" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Where to next</span>
@@ -303,6 +339,6 @@ server.<span class="line-fn">listen</span>(<span class="line-var">3000</span>);<
     contact@abstractframework.ai
   </div>
 </footer>
-<script src="assets/js/main.js?v=20260929e"></script>
+<script src="assets/js/main.js?v=20260929f"></script>
 </body>
 </html>
