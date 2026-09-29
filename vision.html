@@ -128,7 +128,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
     </div>
     <div class="callout ok reveal" style="max-width:900px;margin:2rem auto 0">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-      <div><strong>Included in the one-line installer.</strong> The <a href="install.html">AbstractFramework installer</a> installs AbstractVision with the gateway: the OpenAI-compatible backend on every profile, plus Diffusers and stable-diffusion.cpp with the <code>apple</code> and <code>gpu</code> profiles, and MLX-Gen with the <code>apple</code> profile. The <code>abstractvision</code> command is on your PATH (<code>~/.local/bin</code>). To upgrade, re-run the same install line (on a Mac without Terminal, install the latest .pkg again), see <a href="install.html#upgrade">Upgrade</a> (an <strong>Update</strong> button that runs the installer is coming with AbstractGateway 0.7.2).</div>
+      <div><strong>Included in the one-line installer.</strong> The <a href="install.html">AbstractFramework installer</a> installs AbstractVision with the gateway: the OpenAI-compatible backend on every profile, plus Diffusers and stable-diffusion.cpp with the <code>apple</code> and <code>gpu</code> profiles, and MLX-Gen with the <code>apple</code> profile. The <code>abstractvision</code> command is on your PATH (<code>~/.local/bin</code>). To upgrade, re-run the same install line (on a Mac without Terminal, double-click <strong>Install AbstractFramework.command</strong> again), see <a href="install.html#upgrade">Upgrade</a> (an <strong>Update</strong> button that runs the installer is coming with AbstractGateway 0.7.2).</div>
     </div>
   </div>
 </section>
@@ -278,7 +278,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
         <thead><tr><th>GPU memory</th><th>Model</th><th>Why</th></tr></thead>
         <tbody>
           <tr><td>&le; 16 GB</td><td><code>runwayml/stable-diffusion-v1-5</code></td><td>Small, stable, widely compatible</td></tr>
-          <tr><td>24&ndash;32 GB</td><td><code>black-forest-labs/FLUX.2-klein-4B</code></td><td>Newer, not gated (needs Diffusers from source)</td></tr>
+          <tr><td>24&ndash;32 GB</td><td><code>black-forest-labs/FLUX.2-klein-4B</code></td><td>Not gated (needs Diffusers from source)</td></tr>
           <tr><td>32 GB</td><td><code>stabilityai/stable-diffusion-3.5-large-turbo</code></td><td>High quality at low step counts (gated)</td></tr>
           <tr><td>64 GB</td><td><code>Qwen/Qwen-Image-2512</code></td><td>Strong prompt following and text rendering</td></tr>
           <tr><td>128 GB</td><td><code>black-forest-labs/FLUX.2-dev</code></td><td>Very high quality; non-commercial license, gated</td></tr>

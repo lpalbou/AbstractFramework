@@ -128,7 +128,7 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
     </div>
     <div class="callout ok reveal" style="max-width:900px;margin:2rem auto 0">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-      <div><strong>Included in the one-line installer.</strong> The <a href="install.html">AbstractFramework installer</a> installs AbstractMusic with the gateway: the remote backends on every profile, plus the local model runtimes with the <code>apple</code> and <code>gpu</code> profiles. The <code>abstractmusic</code> command is on your PATH (<code>~/.local/bin</code>). To upgrade, re-run the same install line (on a Mac without Terminal, install the latest .pkg again), see <a href="install.html#upgrade">Upgrade</a> (an <strong>Update</strong> button that runs the installer is coming with AbstractGateway 0.7.2).</div>
+      <div><strong>Included in the one-line installer.</strong> The <a href="install.html">AbstractFramework installer</a> installs AbstractMusic with the gateway: the remote backends on every profile, plus the local model runtimes with the <code>apple</code> and <code>gpu</code> profiles. The <code>abstractmusic</code> command is on your PATH (<code>~/.local/bin</code>). To upgrade, re-run the same install line (on a Mac without Terminal, double-click <strong>Install AbstractFramework.command</strong> again), see <a href="install.html#upgrade">Upgrade</a> (an <strong>Update</strong> button that runs the installer is coming with AbstractGateway 0.7.2).</div>
     </div>
   </div>
 </section>
@@ -145,32 +145,32 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
       <div class="comp-card" style="padding:1.5rem">
         <h4 style="margin-bottom:.25rem;color:var(--text)">Ambient</h4>
         <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">ACE-Step</p>
-        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/demo-ambient.wav" type="audio/wav"></audio>
+        <audio aria-label="Ambient, music sample generated with ACE-Step" controls preload="metadata" style="width:100%"><source src="assets/audio/demo-ambient.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
         <h4 style="margin-bottom:.25rem;color:var(--text)">Epic cinematic</h4>
         <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">ACE-Step</p>
-        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/demo-epic.wav" type="audio/wav"></audio>
+        <audio aria-label="Epic cinematic, music sample generated with ACE-Step" controls preload="metadata" style="width:100%"><source src="assets/audio/demo-epic.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
         <h4 style="margin-bottom:.25rem;color:var(--text)">Jazz</h4>
         <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">ACE-Step</p>
-        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/demo-jazz.wav" type="audio/wav"></audio>
+        <audio aria-label="Jazz, music sample generated with ACE-Step" controls preload="metadata" style="width:100%"><source src="assets/audio/demo-jazz.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
         <h4 style="margin-bottom:.25rem;color:var(--text)">Pop</h4>
         <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">ACE-Step</p>
-        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/demo-pop.wav" type="audio/wav"></audio>
+        <audio aria-label="Pop, music sample generated with ACE-Step" controls preload="metadata" style="width:100%"><source src="assets/audio/demo-pop.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
         <h4 style="margin-bottom:.25rem;color:var(--text)">Lo-fi hip hop</h4>
         <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Stable Audio 3</p>
-        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/demo-lofi.wav" type="audio/wav"></audio>
+        <audio aria-label="Lo-fi hip hop, music sample generated with Stable Audio 3" controls preload="metadata" style="width:100%"><source src="assets/audio/demo-lofi.wav" type="audio/wav"></audio>
       </div>
       <div class="comp-card" style="padding:1.5rem">
         <h4 style="margin-bottom:.25rem;color:var(--text)">Electronic</h4>
         <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem">Stable Audio 3</p>
-        <audio controls preload="metadata" style="width:100%"><source src="assets/audio/demo-electronic.wav" type="audio/wav"></audio>
+        <audio aria-label="Electronic, music sample generated with Stable Audio 3" controls preload="metadata" style="width:100%"><source src="assets/audio/demo-electronic.wav" type="audio/wav"></audio>
       </div>
     </div>
   </div>
@@ -193,7 +193,7 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
           <tr><td><code style="white-space:nowrap">acemusic</code> <em>(default)</em></td><td>Remote</td><td>base</td><td>ACE Music hosted API; needs <code>ACEMUSIC_API_KEY</code>. Text-to-music with optional lyrics; WAV, MP3 or FLAC. Output rights follow the provider's terms.</td></tr>
           <tr><td><code style="white-space:nowrap">elevenlabs</code></td><td>Remote</td><td>base</td><td>ElevenLabs Music only (voice belongs in <a href="voice.html">AbstractVoice</a>); needs <code>ELEVENLABS_API_KEY</code> and may need a paid Music-enabled plan. Accepts composition plans.</td></tr>
           <tr><td><code style="white-space:nowrap">acestep</code></td><td>Local</td><td><code style="white-space:nowrap">[acestep]</code></td><td><code>ACE-Step/acestep-v15-xl-turbo-diffusers</code>, MIT, 8 steps: the validated default. The XL SFT and XL base checkpoints run at about 50 steps.</td></tr>
-          <tr><td><code style="white-space:nowrap">stable-audio-3</code></td><td>Local</td><td><code style="white-space:nowrap">[stable-audio-3]</code></td><td><code>stabilityai/stable-audio-3-small-music</code>, up to 120 s, 44.1 kHz stereo. Gated; Stability AI Community License. Passed 30 s and 120 s validation runs, not yet recommended pending broader and GPU validation. Also Small SFX and the GPU-oriented Medium (up to 380 s).</td></tr>
+          <tr><td><code style="white-space:nowrap">stable-audio-3</code></td><td>Local</td><td><code style="white-space:nowrap">[stable-audio-3]</code></td><td><code>stabilityai/stable-audio-3-small-music</code>, up to 120 s, 44.1 kHz stereo. Gated; Stability AI Community License. Passed 30 s and 120 s validation runs; not recommended until broader and GPU validation. Also Small SFX and the GPU-oriented Medium (up to 380 s).</td></tr>
           <tr><td><code style="white-space:nowrap">stable-audio</code></td><td>Local</td><td><code style="white-space:nowrap">[stable-audio]</code></td><td><code>stabilityai/stable-audio-open-small</code>, clips up to 11 s, suited to short sounds. Gated; Stability AI Community License.</td></tr>
           <tr><td><code style="white-space:nowrap">musicgen</code></td><td>Local</td><td><code style="white-space:nowrap">[musicgen]</code></td><td><code>facebook/musicgen-small</code>. Weights are CC BY-NC 4.0: non-commercial validation only.</td></tr>
         </tbody>

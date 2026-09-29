@@ -99,12 +99,16 @@
       <div class="j-step reveal"><div class="j-body">
         <h3>Run deep-research <span class="j-time">20 min</span></h3>
         <p><code>deep-research</code> investigates a request, runs rounds of adversarial review, keeps a verified source ledger and exports Markdown, PDF and DOCX. Its inputs are the request, a viewpoint, and an effort of <code>quick</code>, <code>standard</code> or <code>thorough</code>. It serves the plain chat interface, so AbstractCode can run it directly:</p><!-- PENDING-W2: E8 -->
-<div class="code-block"><pre><code>abstractcode --workflow deep-research</code></pre></div><p>Or open the <a href="observer.html">Observer</a>, choose <strong>Launch</strong> and run it once. Its research agents use a read-only evidence allowlist (web search, fetch, skim, read file); only the export step writes files.</p>
+<div class="code-block"><pre><code>abstractcode login --token &lt;admin token&gt;   <span class="line-cmt"># once; the installer&rsquo;s summary prints this line</span>
+abstractcode --workflow deep-research</code></pre></div><p>Or open the <a href="observer.html">Observer</a>, choose <strong>Launch</strong> and run it once. Its research agents use a read-only evidence allowlist (web search, fetch, skim, read file); only the export step writes files.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Follow every step <span class="j-time">10 min</span></h3>
-        <p>In the Observer, open the run and replay its ledger: each investigation round, every search and fetch, the reviewer&rsquo;s guidance and the export manifest with file paths and hashes. Nothing is summarised away.</p>
-        <!-- PENDING-W2: SHOT observer-ledger -->
+        <p>In the Observer, open the run and replay its ledger: each investigation round, every search and fetch, the reviewer&rsquo;s guidance and the export manifest with file paths and hashes. Nothing is summarized away.</p>
+        <figure class="figure" style="margin-top:1rem">
+          <img src="assets/img/shots/observer-run-ledger.webp" alt="Observer Ledger tab of a completed run: ledger records node-2::done, node-2::reason (llm_call, completed and started) and ANSWERING (on_flow_end) with their JSON payloads and Unfold / Copy buttons, plus Steps / Cycles / Condensed / Copy JSONL controls" loading="lazy">
+          <figcaption>The Observer&rsquo;s Ledger tab: every record of a run, with its payload.</figcaption>
+        </figure>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Generate hypotheses with co-scientist <span class="j-time">15 min</span></h3>
@@ -124,7 +128,7 @@
       <div class="try-card reveal">
         <span class="t-num">TRY 1</span>
         <h3>A weekly literature watch</h3>
-        <p>Schedule a growing automation every 7 days: "Find new papers on &lt;your topic&gt; since the previous run and summarise them with links." Each run sees the previous ones and reports what is new.</p>
+        <p>Schedule a growing automation every 7 days: "Find new papers on &lt;your topic&gt; since the previous run and summarize them with links." Each run sees the previous ones and reports what is new.</p>
         <p><a href="automations.html">Automations</a></p>
       </div>
       <div class="try-card reveal">
