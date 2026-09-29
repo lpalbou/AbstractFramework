@@ -154,19 +154,20 @@ state = agent.<span class="line-fn">run_to_completion</span>()
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Drive the gateway over HTTP <span class="j-time">15 min</span></h3>
-        <p>Install the framework (one line, or <code style="white-space:normal;overflow-wrap:anywhere">pip install abstractgateway</code> then <code>abstractgateway serve</code>). Set <code>GW</code> to the gateway address (<code>http://127.0.0.1:8080</code>) and <code>TOKEN</code> to the admin token from <code style="white-space:normal;overflow-wrap:anywhere">&lt;data dir&gt;/auth/bootstrap-admin-token</code>. Start a run of a shipped workflow, stream its ledger, and read it back after a restart:</p><!-- PENDING-W2: R5b-gateway-api -->
-<!-- VERIFIED-DOCS: SNIPPETS.md E6 (W2 PASS) with RUN_ID captured from the run_id field of the start response (examples/E6-gateway-api/run.log:4); the SSE line: abstractgateway@v0.7.1 src/abstractgateway/routes/gateway.py:10416 -->
-<div class="code-block"><pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
-RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
-  <span class="line-str">"$GW/api/gateway/runs/start"</span> | python3 -c <span class="line-str">'import json,sys; print(json.load(sys.stdin)["run_id"])'</span>)
+        <p>Install the framework (one line, or <code style="white-space:normal;overflow-wrap:anywhere">pip install abstractgateway</code> then <code>abstractgateway serve</code>). Paste the admin token from <code style="white-space:normal;overflow-wrap:anywhere">&lt;data dir&gt;/auth/bootstrap-admin-token</code> where the requests say <code>&lt;token&gt;</code>. Start a run of a shipped workflow, stream its ledger, and read it back after a restart:</p><!-- W2 PASS: SNIPPETS.md R5b-gateway-api -->
+<div class="code-block"><pre><code><span class="line-cmt"># &lt;token&gt;: &lt;data dir&gt;/auth/bootstrap-admin-token, or the console's one-time link (abstractgateway docs/configuration.md:120, v0.7.2)</span>
 
-<span class="line-cmt"># Replay the ledger, then follow new records live (SSE)</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
-curl -sS -N -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger/stream"</span>
+<span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
+RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
+  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/start"</span> | python3 -c <span class="line-str">'import json,sys; print(json.load(sys.stdin)["run_id"])'</span>)
+
+<span class="line-cmt"># Replay the ledger, then follow new records live (SSE; --max-time ends the sample)</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
+curl -sS -N --max-time 5 -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID/ledger/stream"</span>
 
 <span class="line-cmt"># The run and its ledger survive a gateway restart</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID"</span></code></pre></div><p>The OpenAPI spec is at <code>/openapi.json</code> and Swagger UI at <code>/docs</code> on your gateway.</p>
+curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID"</span></code></pre></div><p>The OpenAPI spec is at <code>/openapi.json</code> and Swagger UI at <code>/docs</code> on your gateway.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Author and code <span class="j-time">15 min</span></h3>

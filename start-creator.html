@@ -153,18 +153,14 @@ image = llm.<span class="line-fn">generate</span>(
       <div class="try-card reveal">
         <span class="t-num">TRY 2</span>
         <h3>A soundtrack</h3>
-        <p>Generate 15 seconds of music locally with ACE-Step, naming the provider and model in the call (Apple Silicon, in the environment from the image step):</p><!-- PENDING-W2: R5b-music -->
-<!-- E3 (W2 PASS): examples/E3-explicit/music.py verbatim -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+        <p>Generate music locally with ACE-Step, naming the provider and model in the call (Apple Silicon, in the environment from the image step):</p><!-- W2 PASS: SNIPPETS.md R5b-music -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-music = llm.<span class="line-fn">generate</span>(
-    text=<span class="line-str">"Calm ambient piano with soft strings, warm and hopeful, instrumental"</span>,
-    output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>,
-            <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>, <span class="line-str">"duration_s"</span>: <span class="line-var">15</span>},
-)
-<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).write(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre></div>
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
         <p><a href="music.html">Backends and licenses</a></p>
       </div>
       <div class="try-card reveal">

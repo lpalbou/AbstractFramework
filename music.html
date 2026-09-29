@@ -259,17 +259,13 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
         <p style="color:var(--text-secondary);line-height:1.7">Local generation installs <code>abstractmusic[acestep]</code> and gives <code>MusicManager</code> an <code>AceStepBackend</code> with its <a href="https://github.com/lpalbou/AbstractMusic/blob/v0.1.15/src/abstractmusic/backends/acestep.py#L264" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>AceStepBackendConfig</code></a>; the same backend, called through AbstractCore, is the verified example in the next tab.</p>
       </div>
       <div class="tab-panel" id="tab-music-core">
-        <!-- PENDING-W2: R5b-music -->
-        <!-- E3 (W2 PASS): examples/E3-explicit/music.py verbatim -->
+        <!-- W2 PASS: SNIPPETS.md R5b-music -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-music = llm.<span class="line-fn">generate</span>(
-    text=<span class="line-str">"Calm ambient piano with soft strings, warm and hopeful, instrumental"</span>,
-    output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>,
-            <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>, <span class="line-str">"duration_s"</span>: 15},
-)
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:.75rem">With <code>abstractcore</code> and <code>abstractmusic</code> installed, the plugin is discovered automatically. The text model does not make the audio: any provider works in its place, for example <code style="white-space:normal;overflow-wrap:anywhere">create_llm("ollama", model="qwen3:4b")</code>; the MLX line runs on Apple Silicon.</p>
       </div>

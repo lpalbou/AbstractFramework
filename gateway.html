@@ -361,21 +361,21 @@ abstractgateway models loaded                    <span class="line-cmt"># what i
       <h2 class="section-title">The client contract</h2>
       <p class="section-desc">Clients start runs, act with durable commands and render by replaying or streaming the ledger. The live OpenAPI spec is at <code>/openapi.json</code> and Swagger UI at <code>/docs</code>.</p>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:.75rem"><code>GW</code> is the gateway address, <code>TOKEN</code> the admin token (<code style="white-space:normal;overflow-wrap:anywhere">&lt;data dir&gt;/auth/bootstrap-admin-token</code>) and <code>RUN_ID</code> the <code>run_id</code> field of the start response.</p>
-    <!-- PENDING-W2: R5b-gateway-api -->
-    <!-- W2 PASS: SNIPPETS.md E6 (the SSE line: VERIFIED-DOCS abstractgateway@v0.7.1 src/abstractgateway/routes/gateway.py:10416) -->
+    <!-- W2 PASS: SNIPPETS.md R5b-gateway-api -->
 <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
-  <span class="line-str">"$GW/api/gateway/runs/start"</span>
+<pre><code><span class="line-cmt"># &lt;token&gt;: &lt;data dir&gt;/auth/bootstrap-admin-token, or the console's one-time link (abstractgateway docs/configuration.md:120, v0.7.2)</span>
 
-<span class="line-cmt"># Replay the ledger, then follow new records live (SSE)</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
-curl -sS -N -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger/stream"</span>
+<span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
+RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
+  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/start"</span> | python3 -c <span class="line-str">'import json,sys; print(json.load(sys.stdin)["run_id"])'</span>)
+
+<span class="line-cmt"># Replay the ledger, then follow new records live (SSE; --max-time ends the sample)</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
+curl -sS -N --max-time 5 -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID/ledger/stream"</span>
 
 <span class="line-cmt"># The run and its ledger survive a gateway restart</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID"</span></code></pre>
+curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/$RUN_ID"</span></code></pre>
 </div>
     <!-- VERIFIED-DOCS: RESULTS.md E8 gateway.html:356 (start and ledger replay PASS in E6; stream and commands routes in abstractgateway 0.7.1 routes/gateway.py) -->
 <div class="code-block reveal" style="margin-top:1rem">

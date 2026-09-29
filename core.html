@@ -306,21 +306,21 @@ music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm a
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-r5-http">
-        <!-- PENDING-W2: R5b-http -->
-        <!-- W2 PASS: SNIPPETS.md R5-http -->
+        <!-- W2 PASS: SNIPPETS.md R5b-http -->
 <div class="code-block"><pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
 <span class="line-cmt"># Start the server first (another terminal): abstractcore serve --port 19740</span>
-
-curl -sS http://127.0.0.1:19740/v1/chat/completions -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d '{<span class="line-str">"model"</span>: <span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>, <span class="line-str">"reasoning_effort"</span>: <span class="line-str">"none"</span>,
-       <span class="line-str">"messages"</span>: [{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"In one sentence, what is an append-only ledger?"</span>}]}'
 
 curl -sS http://127.0.0.1:19740/v1/audio/speech -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
   -H <span class="line-str">"Content-Type: application/json"</span> \
   -d '{<span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>,
        <span class="line-str">"input"</span>: <span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>, <span class="line-str">"response_format"</span>: <span class="line-str">"wav"</span>}' \
   --output tagline.wav
+
+curl -sS http://127.0.0.1:19740/v1/audio/music -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>,
+       <span class="line-str">"prompt"</span>: <span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, <span class="line-str">"response_format"</span>: <span class="line-str">"wav"</span>}' \
+  --output ambient.wav
 
 curl -sS http://127.0.0.1:19740/v1/images/generations -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
   -H <span class="line-str">"Content-Type: application/json"</span> \
@@ -379,20 +379,18 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Des
         </ul>
       </div>
       <div style="min-width:0">
-        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">The curl requests for chat, speech and images are in the <a href="#getting-started">HTTP tab above</a>. Any OpenAI SDK works the same way; this one ran on port 19740, a scratch port, and <code>abstractcore serve</code> listens on <code>127.0.0.1:8000</code> by default.</p>
-        <!-- W2 PASS: SNIPPETS.md E4-openai-sdk -->
-<div class="code-block"><pre><code><span class="line-kw">import</span> os
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">The curl requests for chat, speech and images are in the <a href="#getting-started">HTTP tab above</a>. Any OpenAI SDK works the same way, against <code>abstractcore serve</code> on its default <code>127.0.0.1:8000</code>.</p>
+        <!-- W2 PASS: SNIPPETS.md R5b-openai-sdk -->
+<div class="code-block"><pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
 <span class="line-kw">from</span> openai <span class="line-kw">import</span> OpenAI
 
-<span class="line-cmt"># export ABSTRACTCORE_AUTH_TOKEN="$(abstractcore serve --print-token --port 19740)"</span>
-client = <span class="line-fn">OpenAI</span>(base_url=<span class="line-str">"http://127.0.0.1:19740/v1"</span>, api_key=os.environ[<span class="line-str">"ABSTRACTCORE_AUTH_TOKEN"</span>])
+client = <span class="line-fn">OpenAI</span>(base_url=<span class="line-str">"http://127.0.0.1:8000/v1"</span>, api_key=<span class="line-str">"&lt;token&gt;"</span>)
 resp = client.chat.completions.<span class="line-fn">create</span>(
     model=<span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>,   <span class="line-cmt"># route to any provider/model, e.g. "ollama/qwen3:4b"</span>
-    messages=[{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"Hello from the OpenAI SDK! Answer in one short sentence."</span>}],
+    messages=[{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"In one sentence, what is an append-only ledger?"</span>}],
     reasoning_effort=<span class="line-str">"none"</span>,                      <span class="line-cmt"># no thinking phase for a one-line answer</span>
 )
 <span class="line-fn">print</span>(resp.choices[0].message.content)</code></pre></div>
-        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:.5rem">Or paste the token that <code>abstractcore serve --print-token</code> prints as <code>api_key</code>.</p>
       </div>
     </div>
   </div>

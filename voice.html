@@ -298,17 +298,14 @@ status = <span class="line-fn">engine_runtime_status</span>(<span class="line-st
         </div>
       </div>
       <div class="tab-panel" id="tab-voice-core">
-        <!-- PENDING-W2: R5b-voice -->
-        <!-- W2 PASS: SNIPPETS.md E3-voice -->
+        <!-- W2 PASS: SNIPPETS.md R5b-voice -->
 <div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-speech = llm.<span class="line-fn">generate</span>(
-    text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
-    output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>},
-)
+speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+                      output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>})
 <span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][0].data)</code></pre>
         </div>
       </div>
