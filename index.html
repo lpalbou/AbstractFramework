@@ -282,33 +282,33 @@ abstractcode login --gateway-url https://gateway.example.com --token &lt;TOKEN&g
 llm.<span class="line-fn">generate</span>(prompt, media=[...], output=...)</code></pre>
       </div>
       <p class="gen-sub">Inputs go in <code>media=</code>, the output modality in <code>output=</code>; a provider is required. With defaults configured once, <code>output="image"</code> is enough; without them, name the engine in <code>output={...}</code>.</p>
-      <!-- PENDING-W2: R5 (R5-with-defaults, R5-without-defaults, R5-http, R5-media-input in examples/SNIPPETS.md replace the blocks below verbatim) -->
       <div class="mm-proof">
       <div class="code-tabs">
         <div class="tab-nav">
           <button class="tab-btn active" data-tab="gen-defaults">Python</button>
           <button class="tab-btn" data-tab="gen-http">HTTP (OpenAI-compatible)</button>
           <button class="tab-btn" data-tab="gen-explicit">No defaults</button>
+          <button class="tab-btn" data-tab="gen-media">Media input</button>
         </div>
       <div class="tab-panel active" id="tab-gen-defaults">
         <div class="install-notes" style="border-top:none"><ul><li>Set the routes once per machine; the gateway console's <strong>Use recommended defaults</strong> and its Multimodal tab write the same AbstractCore store (recommended defaults set voice and image; set music as shown). Then each modality is one line.</li></ul></div>
-        <!-- VERIFIED-DOCS + W2 run: examples/Q2-tabs/defaults.sh verbatim (with_defaults.defaults.log; RESULTS.md Q2-with-defaults) -->
+        <!-- VERIFIED-DOCS + W2 run: examples/R5/defaults.sh verbatim (with_defaults.defaults.log; RESULTS.md R5-with-defaults) -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># Once per machine (the gateway console's "Use recommended defaults" writes the same store)</span>
 abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.<span class="line-var">2</span>-klein-4b-8bit
 abstractcore config set-default output.voice --provider supertonic --model supertonic-<span class="line-var">3</span>
 abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers</code></pre>
         </div>
-        <!-- Q2-with-defaults (W2 PASS): examples/Q2-tabs/with_defaults.py verbatim (74.9 s, RESULTS.md Q2-with-defaults) -->
+        <!-- R5-with-defaults (W2 PASS): examples/R5/with_defaults.py verbatim (32.5 s, abstractframework 0.6.2) -->
         <div class="code-block" style="margin-top:1rem">
 <pre><code><span class="line-cmt"># Defaults set once: see defaults.sh (or the gateway console's "Use recommended defaults")</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor lighthouse on a rocky coast at dawn"</span>, output=<span class="line-str">"image"</span>)
-speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Write once. Generate everything. Run anywhere."</span>, output=<span class="line-str">"voice"</span>)
-music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="line-str">"music"</span>)
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>, output=<span class="line-str">"image"</span>)
+speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>, output=<span class="line-str">"voice"</span>)
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="line-str">"music"</span>)
 
 <span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
 <span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
@@ -316,46 +316,44 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
         </div>
       </div>
       <div class="tab-panel" id="tab-gen-http">
-        <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code> (this ran from the <code>abstractframework[apple]</code> install). The server asks for a bearer token, even on loopback.</li></ul></div>
-        <!-- E4 (W2 PASS): examples/E4-openai-server/snippet.sh verbatim (run-models.log, run-chat-speech.log, run-images.log) -->
-<div class="code-block">
-<pre><code><span class="line-cmt"># Start the OpenAI-compatible server (another terminal): abstractcore serve --port 19740</span>
-BASE=http://127.0.0.1:19740
-TOKEN=$(abstractcore serve --print-token --port 19740)   <span class="line-cmt"># loopback bearer token, created on first use</span>
+        <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code>. Paste the token that <code class="long">abstractcore serve --print-token</code> prints in place of <code>&lt;token&gt;</code>; the server asks for it even on loopback.</li></ul></div>
+        <!-- R5-http (W2 PASS): examples/R5/http.sh verbatim (http.run.log; RESULTS.md R5-http) -->
+<div class="code-block" data-lang="shell">
+<pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
+<span class="line-cmt"># Start the server first (another terminal): abstractcore serve --port 19740</span>
 
-curl -sS <span class="line-str">"$BASE/v1/models"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span>
-
-curl -sS <span class="line-str">"$BASE/v1/chat/completions"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+curl -sS http://127.0.0.1:19740/v1/chat/completions -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
   -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"model": "mlx/mlx-community/Qwen3.5-4B-4bit",
-       "messages": [{"role": "user", "content": "In one sentence, what is an append-only ledger?"}]}'</span>
+  -d '{<span class="line-str">"model"</span>: <span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>, <span class="line-str">"reasoning_effort"</span>: <span class="line-str">"none"</span>,
+       <span class="line-str">"messages"</span>: [{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"In one sentence, what is an append-only ledger?"</span>}]}'
 
-curl -sS <span class="line-str">"$BASE/v1/audio/speech"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+curl -sS http://127.0.0.1:19740/v1/audio/speech -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
   -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"provider": "supertonic", "model": "supertonic-3", "input": "Write once. Generate everything. Run anywhere.",
-       "response_format": "wav"}'</span> --output speech.wav
+  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>,
+       <span class="line-str">"input"</span>: <span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>, <span class="line-str">"response_format"</span>: <span class="line-str">"wav"</span>}' \
+  --output tagline.wav
 
-curl -sS <span class="line-str">"$BASE/v1/images/generations"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+curl -sS http://127.0.0.1:19740/v1/images/generations -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
   -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"provider": "mlx-gen", "model": "AbstractFramework/flux.2-klein-4b-8bit",
-       "prompt": "A paper boat on a calm lake at sunrise, watercolor",
-       "width": 1024, "height": 1024, "response_format": "b64_json"}'</span> &gt; image.json</code></pre>
+  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>,
+       <span class="line-str">"prompt"</span>: <span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
+       <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024, <span class="line-str">"response_format"</span>: <span class="line-str">"b64_json"</span>}' &gt; image.json</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-gen-explicit">
-        <div class="install-notes" style="border-top:none"><ul><li>No configured defaults and no server: name the provider and the model for each capability in the call. This ran with <code class="long">pip install "abstractframework[apple]"</code>, with every route cleared first.</li></ul></div>
-        <!-- Q2-without-defaults (W2 PASS): examples/Q2-tabs/without_defaults.py verbatim (22.4 s, RESULTS.md Q2-without-defaults) -->
+        <div class="install-notes" style="border-top:none"><ul><li>No configured defaults and no server: each output names its engine. This ran with <code class="long">pip install "abstractframework[apple]"</code> 0.6.2, with every route cleared first.</li></ul></div>
+        <!-- R5-without-defaults (W2 PASS): examples/R5/without_defaults.py verbatim (19.0 s) -->
 <div class="code-block">
-<pre><code><span class="line-cmt"># No configured defaults: name the provider and model per capability</span>
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
+<span class="line-cmt"># generate() is a method on an LLM instance: the text model is the entry point; each output below names its own engine</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor lighthouse on a rocky coast at dawn"</span>,
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
                      output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
-speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Write once. Generate everything. Run anywhere."</span>,
+speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
                       output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>})
-music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
                      output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
 
 <span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
@@ -363,19 +361,30 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
+      <div class="tab-panel" id="tab-gen-media">
+        <div class="install-notes" style="border-top:none"><ul><li>Inputs go in <code>media=[...]</code>. Here the 4B model reads the lighthouse image itself and printed: &ldquo;This watercolor painting depicts a white lighthouse and adjacent buildings perched atop a rugged, rocky cliff overlooking a blue ocean under a soft, pastel sky.&rdquo;</li></ul></div>
+        <!-- R5-media-input (W2 PASS): examples/R5/media_input.py verbatim (9.4 s; media_input.run.log) -->
+<div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describe this image in one sentence."</span>, media=[<span class="line-str">"lighthouse.png"</span>])
+<span class="line-kw">print</span>(response.content)</code></pre>
+        </div>
       </div>
-    <!-- Artifacts: the outputs of examples/E2-defaults/snippet.py (W2 PASS; deliver/media/lighthouse.webp, tagline.mp3, ambient.mp3); routes: examples/E2-defaults/defaults.sh -->
+      </div>
+    <!-- Artifacts: the outputs of examples/R5/with_defaults.py (W2 PASS; R5/with-out converted: webp q85, mp3 q2) -->
     <div class="mm-proof-side">
-      <h3>Results from the same models (E2 run, prompts below)</h3>
+      <h3>What the Python tab produced</h3>
       <div class="mm-art">
-        <div class="a-body"><span class="a-kind">Voice <em>supertonic &middot; supertonic-3</em></span><p><q>AbstractFramework: write once, generate everything, run anywhere.</q></p><audio controls preload="none" aria-label="Generated voice: the tagline read aloud"><source src="assets/media/tagline.mp3" type="audio/mpeg"></audio></div>
+        <div class="a-body"><span class="a-kind">Voice <em>supertonic &middot; supertonic-3</em></span><p><q>AbstractFramework: write once, generate everything, run anywhere.</q></p><audio controls preload="none" aria-label="Generated voice: the tagline read aloud"><source src="assets/media/r5-tagline.mp3" type="audio/mpeg"></audio></div>
       </div>
       <div class="mm-art">
-        <div class="a-body"><span class="a-kind">Music <em>acestep &middot; ACE-Step/acestep-v15-xl-turbo-diffusers</em></span><p><q>Calm ambient piano with soft strings, instrumental</q></p><audio controls preload="none" aria-label="Generated music: calm ambient piano with soft strings"><source src="assets/media/ambient.mp3" type="audio/mpeg"></audio></div>
+        <div class="a-body"><span class="a-kind">Music <em>acestep &middot; ACE-Step/acestep-v15-xl-turbo-diffusers</em></span><p><q>Calm ambient piano with soft strings, instrumental</q></p><audio controls preload="none" aria-label="Generated music: calm ambient piano with soft strings"><source src="assets/media/r5-ambient.mp3" type="audio/mpeg"></audio></div>
       </div>
       <div class="mm-art">
-        <img src="assets/media/lighthouse.webp" alt="A watercolor lighthouse on a rocky coast at dawn with a calm sea, generated by the code on the left" width="1024" height="1024" loading="lazy">
-        <div class="a-body"><span class="a-kind">Image <em>mlx-gen &middot; AbstractFramework/flux.2-klein-4b-8bit</em></span><p><q>A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea, seagulls in the distance</q></p></div>
+        <img src="assets/media/r5-lighthouse.webp" alt="A watercolor white lighthouse with small buildings on a rocky, green-topped headland above a calm sea at dawn, generated by the Python tab" width="1024" height="1024" loading="lazy">
+        <div class="a-body"><span class="a-kind">Image <em>mlx-gen &middot; AbstractFramework/flux.2-klein-4b-8bit</em></span><p><q>A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea</q></p></div>
       </div>
     </div>
     </div>
