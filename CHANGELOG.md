@@ -4,12 +4,12 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-## [0.6.2] - 2026-09-28
+## [0.6.2] - 2026-09-29
 
 One line installs, upgrades and repairs AbstractFramework, and **Update** in the consoles and the
-menu-bar icon runs that same line. Pins: AbstractGateway 0.7.2, AbstractCore 2.18.1 and the
-terminal consoles `abstractgateway-console` 0.11.1 and `abstractcore-console` 0.4.1; every other
-version is unchanged from 0.6.1.
+menu-bar icon runs that same line. Pins: AbstractGateway 0.7.2, AbstractCore 2.19.0,
+AbstractVision 0.3.31 and the terminal consoles `abstractgateway-console` 0.11.1 and
+`abstractcore-console` 0.4.1; every other version is unchanged from 0.6.1.
 
 ### Changed
 
@@ -61,7 +61,15 @@ version is unchanged from 0.6.1.
 - **`--pin latest` (`-Pin latest`) upgrades an existing install** with the same profile, voice and
   llama.cpp setup (`uv tool install --upgrade`), and the summary's upgrade lines give the commands
   that work.
-- **Recommendations for every capability** (AbstractCore 2.18.1).
+- **AbstractCore has three install settings** (AbstractCore 2.19.0): `pip install abstractcore`
+  (light: every remote provider, the built-in tools, media inputs, the server and console, and the
+  voice, vision, music and 3D plugins with their remote backends), `pip install
+  "abstractcore[apple]"` (adds every local engine an Apple silicon Mac runs) and `pip install
+  "abstractcore[gpu]"` (adds every local engine an NVIDIA or AMD machine runs). The earlier extra
+  names still install as deprecated aliases; see AbstractCore's
+  [Installation](https://github.com/lpalbou/abstractcore/blob/main/docs/installation.md#deprecated-aliases).
+  `abstract3d` now comes with AbstractCore in every profile.
+- **Recommendations for every capability** (AbstractCore 2.19.0).
   `abstractcore models recommendations` shows the recommended model for text, image input, speech
   output, speech input, image, video and music on every kind of machine (`--host`: this one), with
   the engine, the download size, the memory need and whether it fits. On Apple silicon the fit
@@ -72,10 +80,16 @@ version is unchanged from 0.6.1.
   that gives it more (20480 on 24 GB, 114688 for Flash-Next on 128 GB); nothing runs it for you.
   The recommended image model is memory-gated: on an 8 GB Mac the gateway's first-run guide shows
   it as not available here, with the reason, and a saved image or video route that does not fit is
-  flagged. The Wan2.2 video memory figures are AbstractVision/mlx-gen's measurements. See
-  AbstractCore's
+  flagged. See AbstractCore's
   [Recommended models](https://github.com/lpalbou/abstractcore/blob/main/docs/recommended-models.md).
-
+- **Faster video by default** (AbstractVision 0.3.31). Each Wan2.2 model has its own
+  speed-oriented default size: 832x480 (TI2V-5B: 121 frames at 24 fps; T2V-A14B and I2V-A14B: 81
+  frames at 16 fps), and the video is decoded in overlapping tiles, so the decode no longer sets the
+  memory peak. Measured on Apple silicon, TI2V-5B at 832x480 peaks at about 16.3 GiB (was about
+  60 GiB at the previous 1280x704 default), so the recommended video route is written on Macs with
+  32 GB of unified memory or more. Pass `width`, `height`, `num_frames`, `fps` and `steps` for
+  another size. The memory figures are AbstractVision/mlx-gen's measurements (the engine keeps the
+  text encoder and VAE in memory), not the model's own requirement.
 - **Left and Right switch screens in both terminal consoles** (`abstractgateway-console` 0.11.1,
   `abstractcore-console` 0.4.1): the previous or next screen in browse mode, wrapping at both ends,
   like `Ctrl+P` / `Ctrl+N`. A focused element that uses the arrows keeps them: a text field moves

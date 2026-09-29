@@ -89,7 +89,9 @@ Start here if you need a lightweight LLM library for scripts, notebooks, or exis
 - Multimodal via capability plugins (Voice, Vision, Music)
 
 ```bash
-pip install abstractcore
+pip install abstractcore              # light: every remote provider (OpenAI, Anthropic, OpenRouter, Ollama, LM Studio, ...)
+pip install "abstractcore[apple]"     # + the local engines of an Apple silicon Mac (MLX, voice, image, video, music)
+pip install "abstractcore[gpu]"       # + the local engines of an NVIDIA or AMD machine (vLLM, voice, image, video, music)
 ```
 
 ```python
@@ -162,7 +164,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.7.2` and `ghcr.io/lpalbou/abstractcore-server:2.18.1`.
+`ghcr.io/lpalbou/abstractgateway:0.7.2` and `ghcr.io/lpalbou/abstractcore-server:2.19.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -319,14 +321,14 @@ and tested together.
 |---|---|---|
 | PyPI | `abstractgateway` | 0.7.2 |
 | PyPI | `abstractassistant` | 0.9.1 |
-| PyPI | `abstractcore` | 2.18.1 |
+| PyPI | `abstractcore` | 2.19.0 |
 | PyPI | `AbstractRuntime` | 0.7.1 |
 | PyPI | `abstractagent` | 0.3.17 |
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
 | PyPI | `abstractvoice` | 0.13.0 |
-| PyPI | `abstractvision` | 0.3.30 |
+| PyPI | `abstractvision` | 0.3.31 |
 | PyPI | `abstractmusic` | 0.1.15 |
 | npm | `@abstractframework/flow` | 0.4.0 |
 | npm | `@abstractframework/code` | 0.6.1 |
@@ -338,10 +340,10 @@ and tested together.
 | crates.io | `abstractcore-console` | 0.4.1 |
 | crates.io | `abstracttui` | 0.6.0 |
 | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.7.2 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.18.1 |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.19.0 |
 
-Optional add-ons that are not part of any profile install separately:
-`pip install abstract3d` (0.3.1) and `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)
+`abstract3d` (0.3.1) comes with AbstractCore in every profile. The optional add-on that is not
+part of any profile installs separately: `pip install abstractcamera` (0.2.0). `abstractskill` (pinned above)
 comes with the gateway, which carries its curated skill shelf; install it on its own with
 `pip install abstractskill`.
 

@@ -711,9 +711,9 @@ A plain `pip install` of the `apple` or `gpu` profile builds the
 does not.
 
 `abstractframework` 0.6.2 pins `abstractgateway==0.7.2`, `abstractassistant==0.9.1`,
-`abstractcore==2.18.1`, `AbstractRuntime==0.7.1`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
+`abstractcore==2.19.0`, `AbstractRuntime==0.7.1`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.0`,
-`abstractvision==0.3.30` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
+`abstractvision==0.3.31` and `abstractmusic==0.1.15`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
 installed package whose version differs from these pins.
@@ -798,7 +798,7 @@ Run or install them next to the Python stack:
 | Tool | Command | Version released with 0.6.2 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.7.2 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.18.1 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.19.0 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.4.1 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.11.1 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.4.0 |
@@ -810,8 +810,8 @@ Run or install them next to the Python stack:
 
 The browser apps need a running gateway. The gateway installs, starts and serves them itself, on
 its own address at `/apps/<app>/` (it installs Node.js for them when it is missing); running one on
-its own with `npx` needs Node.js 18 or later. Optional Python add-ons outside the profiles install
-on their own: `pip install abstract3d`, `pip install abstractcamera`.
+its own with `npx` needs Node.js 18 or later. `abstract3d` comes with AbstractCore in every
+profile; the optional add-on outside the profiles installs on its own: `pip install abstractcamera`.
 `abstractskill` comes with the gateway, which carries its curated skill shelf.
 
 ## Start the gateway and apps
@@ -857,7 +857,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.18.1`.
+`ghcr.io/lpalbou/abstractcore-server:2.19.0`.
 
 ## How installs are designed
 

@@ -44,7 +44,7 @@ abstractvoice           | abstractvoice     | lpalbou/AbstractVoice       | pyth
 abstractmusic           | abstractmusic     | lpalbou/AbstractMusic       | python | .                     | pypi     | abstractmusic                          | 0    | -
 abstractcamera          | abstractcamera    | lpalbou/AbstractCamera      | python | .                     | pypi     | abstractcamera                         | 0    | -
 abstract3d              | abstract3d        | lpalbou/abstract3d          | python | .                     | pypi     | abstract3d                             | 1    | abstractvision:dep
-abstractcore            | abstractcore      | lpalbou/AbstractCore        | python | .                     | pypi     | abstractcore                           | 2    | abstractvision:extra,abstractvoice:extra,abstractmusic:extra,abstract3d:extra
+abstractcore            | abstractcore      | lpalbou/AbstractCore        | python | .                     | pypi     | abstractcore                           | 2    | abstractvision:dep,abstractvoice:dep,abstractmusic:dep,abstract3d:dep
 core-console            | abstractcore      | lpalbou/AbstractCore        | rust   | console-tui           | crates   | abstractcore-console                   | 1    | abstracttui:dep
 abstractruntime         | abstractruntime   | lpalbou/AbstractRuntime     | python | .                     | pypi     | AbstractRuntime                        | 3    | abstractcore:dep,abstractmemory:dep,abstractsemantics:dep
 abstractagent           | abstractagent     | lpalbou/AbstractAgent       | python | .                     | pypi     | abstractagent                          | 4    | abstractcore:dep,abstractruntime:dep

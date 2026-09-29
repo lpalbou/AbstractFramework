@@ -1,11 +1,11 @@
 # 0982 — Patch 0.6.2: one upgrade path (the line, the .command, the consoles and the tray run one installer)
 
-> Package: abstractframework (installers, docs); abstractgateway 0.7.2 (console crate 0.11.1); abstractcore 2.18.1
+> Package: abstractframework (installers, docs); abstractgateway 0.7.2 (console crate 0.11.1); abstractcore 2.19.0
 > Type: task
 > Created: 2026-09-28
 > Priority: high
 > Labels: installer, upgrade, self-update, patch-wave
-> Status: completed 2026-09-28. Staged on root `wave4/root` for root 0.6.2; it ships after abstractcore 2.18.1 and abstractgateway 0.7.2 are on PyPI (cascade GO 2026-09-28)
+> Status: completed 2026-09-28. Staged on root `wave4/root` for root 0.6.2; it ships after abstractcore 2.19.0 and abstractgateway 0.7.2 are on PyPI (cascade GO 2026-09-28)
 
 ## Summary
 
@@ -30,7 +30,7 @@ console and the tray all run the same `install.sh`.
   - install.ps1 parity (stops a running gateway before files change on Windows);
   - `Install AbstractFramework.command` runs the latest install.sh, its bundled copy only offline.
 - **Release commit (this item)**:
-  - pins abstractcore 2.18.1, abstractgateway 0.7.2, crate abstractgateway-console 0.11.1 (others
+  - pins abstractcore 2.19.0, abstractgateway 0.7.2, crate abstractgateway-console 0.11.1 (others
     unchanged from 0.6.1); manifest regenerated with the generator; installers' pins and matrix;
     docs version tables;
   - install.sh / install.ps1: under `--no-start` (`-NoStart`, the gateway's Update run), a recorded

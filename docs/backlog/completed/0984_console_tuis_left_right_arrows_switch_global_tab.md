@@ -5,7 +5,7 @@
 > Created: 2026-09-29
 > Priority: normal
 > Labels: tui, console, keyboard, ux
-> Status: completed 2026-09-29. Ships in abstractgateway-console 0.11.1 (gateway 0.7.2, `219a1d2`) and abstractcore-console 0.4.1 (core 2.18.1, `d820229`); root 0.6.2 pins both
+> Status: completed 2026-09-29. Ships in abstractgateway-console 0.11.1 (gateway 0.7.2, `219a1d2`) and abstractcore-console 0.4.1 (core 2.19.0, `d820229`); root 0.6.2 pins both
 
 ## Summary
 
@@ -47,7 +47,7 @@ Operator request (2026-09-29): "the left and right arrows should be used to chan
 ## Resolution (2026-09-29)
 
 - abstractgateway-console 0.11.1 (`219a1d2`, released with AbstractGateway 0.7.2) and
-  abstractcore-console 0.4.1 (`d820229`, released with AbstractCore 2.18.1). Root 0.6.2 pins both
+  abstractcore-console 0.4.1 (`d820229`, released with AbstractCore 2.19.0). Root 0.6.2 pins both
   (`CRATE_RELEASE_VERSIONS`; the installer builds the gateway console at 0.11.1).
 - Known limitation: a focused vertical scrolling pane keeps Left/Right (AbstractTUI routes the
   arrows to it), so the global switch does not fire there until focus moves. Follow-up:

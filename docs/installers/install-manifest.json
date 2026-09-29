@@ -353,7 +353,7 @@
       "distribution": "abstractcore",
       "id": "abstractcore",
       "registry": "pypi",
-      "version": "2.18.1"
+      "version": "2.19.0"
     },
     {
       "distribution": "AbstractRuntime",
@@ -401,7 +401,7 @@
       "distribution": "abstractvision",
       "id": "abstractvision",
       "registry": "pypi",
-      "version": "0.3.30"
+      "version": "0.3.31"
     },
     {
       "distribution": "abstractmusic",

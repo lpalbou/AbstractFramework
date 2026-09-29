@@ -29,7 +29,7 @@ Edge kinds explain *why* one package comes before another:
 | Edge | Meaning |
 |---|---|
 | `dep` | Runtime dependency (pyproject `dependencies`, npm `dependencies`, Cargo `[dependencies]`) |
-| `extra` | Only through an optional extra (for example `abstractcore[vision]` → `abstractvision`) |
+| `extra` | Only through an optional extra (for example `abstractgateway[apple]` → `abstractruntime[apple]`) |
 | `peer` | npm peer dependency |
 | `dev` | npm dev dependency bundled at build time from the registry |
 | `alias` | Vite source alias to `../abstractuic/<package>/src`: the build needs the AbstractUIC checkout |

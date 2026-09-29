@@ -29,7 +29,7 @@ No.
 | Goal | Install |
 |---|---|
 | A running gateway + web console, no Python setup | the installer (a Mac package, or one line) in [Install](install.md) |
-| Smallest useful (LLM SDK only) | `pip install abstractcore` |
+| Smallest useful (LLM SDK only) | `pip install abstractcore` (every remote provider); `abstractcore[apple]` or `abstractcore[gpu]` add the local engines |
 | Gateway-first deployment | `pip install abstractgateway` |
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity> --gateway-url <url>` |

@@ -258,7 +258,7 @@ build_profile_extras() {
     # so the line below asks them for an extra they do not define: pip warns
     # ("does not provide the extra 'all-apple'") and installs them bare. That
     # looks like a bug and is deliberately left alone. Their `apple` extra is
-    # only `abstractcore[all-apple]`, which this script installs directly one
+    # only `abstractcore[apple]`, which this script installs directly one
     # line below -- so nothing is missed -- while ASKING for it re-resolves the
     # environment, and the root meta-package (installed editable, with exact
     # `==` pins) then drags every local editable install back to the pinned
@@ -277,7 +277,15 @@ build_profile_extras() {
                 *) printf '%s' "" ;;
             esac
             ;;
-        abstractsemantics|abstractmemory|abstractvision|abstractvoice|abstractmusic|abstract3d|abstractcore|abstractruntime|abstractagent)
+        abstractcore)
+            # AbstractCore has three install settings: light (no extra), apple, gpu.
+            case "$profile" in
+                apple) printf '%s' "[apple]" ;;
+                gpu) printf '%s' "[gpu]" ;;
+                *) printf '%s' "" ;;
+            esac
+            ;;
+        abstractsemantics|abstractmemory|abstractvision|abstractvoice|abstractmusic|abstract3d|abstractruntime|abstractagent)
             case "$profile" in
                 apple) printf '%s' "[all-apple]" ;;
                 gpu) printf '%s' "[all-gpu]" ;;
@@ -348,7 +356,7 @@ explain_resolution_failure() {
 
 # Editable-install a Python package from a local directory.
 # Usage: install_editable <relative_dir> [pip_extras] [label] [needs]
-# Example: install_editable abstractcore "[tools,media]" "pip t2" "abstractvision"
+# Example: install_editable abstractcore "[apple]" "pip t2" "abstractvision"
 install_editable() {
     local rel_dir="$1"
     local extras="${2:-}"

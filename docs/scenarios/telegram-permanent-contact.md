@@ -26,9 +26,10 @@ Secure the gateway host and its storage.
 
 ```bash
 pip install abstractgateway
-# Optional (only if your workflows call Telegram tools like `send_telegram_message`):
-# pip install "abstractcore[tools]"
 ```
+
+The Telegram tools (`send_telegram_message` and the others) are built into AbstractCore, which
+`abstractgateway` installs; nothing else is needed.
 
 ## Step 2: Configure the gateway (minimum)
 

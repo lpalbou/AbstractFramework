@@ -113,6 +113,11 @@ For the full Light / Apple / GPU profile chooser, see [Install AbstractFramework
 pip install abstractcore
 ```
 
+This light install runs every remote provider (OpenAI, Anthropic, OpenRouter, Ollama, LM Studio and
+any OpenAI-compatible endpoint). For local engines, install `"abstractcore[apple]"` on an Apple
+silicon Mac or `"abstractcore[gpu]"` on an NVIDIA or AMD machine instead. These are AbstractCore's
+three install settings.
+
 ### 2. Configure a provider
 
 **Local (Ollama)** — free, no API key:
