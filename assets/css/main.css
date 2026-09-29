@@ -4210,3 +4210,4 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 @media (max-width: 1000px) { .mm-dir { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 480px) { .mm-dir { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .gen-schema { max-width: 640px; margin: 0 auto 1rem; }
+.mm-dir-note { text-align: center; color: var(--text-muted); font-size: .8rem; margin-top: .6rem; }
