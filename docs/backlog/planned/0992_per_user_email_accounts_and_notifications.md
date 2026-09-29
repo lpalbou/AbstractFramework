@@ -496,3 +496,29 @@ plan decides the final numbers.
     gate (or an automation's pre-authorised recipients) decides whether a given send runs
     unattended;
   - default for a new account: `allowlist` containing only the user's registered address.
+
+### Operator answers to D1–D12 (2026-09-29, evening)
+
+- **D1 sign-in:** v1 = explicit IMAP/SMTP settings (host, port, TLS mode, login, password). OAuth2
+  for Google and Microsoft as soon as feasible (v2).
+- **D2:** credentials encrypted at rest.
+- **D3:** admins never read users' mail. Admins CAN enable or disable email capabilities per user /
+  runtime (a per-user switch in the admin views; disabled = no mailbox watcher, no sending, no email
+  notifications, settings kept).
+- **D4:** mail is sent by a runtime, i.e. one user: the sender is that runtime's registered email
+  account.
+- **D5:** email configuration is optional; without it there is no email sending and no email
+  notification (no gateway-wide fallback sender).
+- **D6 polling:** every 60 s when checking needs no model inference (fetch + typed filters);
+  every 10 min when the automation needs model inference on new mail.
+- **D7 AI triage (opt-in automation):** the AI reads new mail, identifies what is urgent or
+  important, and opens a session with its user to ask what should be done. At most once every
+  60 min, only on newly received messages; a message read once by an automation is never read
+  again by that automation (durable per-automation cursor).
+- **D8:** approving actions by replying to an email: not in v1; recipient control is the recipient
+  policy (allowlist / denylist) plus the approval gate.
+- **D9:** default limits 20 per hour and 100 per day per user, explicitly editable by the user in
+  the web and terminal consoles.
+- **D10:** no environment variables.
+- **D11:** an inbox reader inside the consoles: not in v1 (to confirm with the operator if wanted).
+- **D12:** read-only mailbox access (no mark-read, move or delete).
