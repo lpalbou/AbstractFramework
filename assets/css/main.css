@@ -4181,3 +4181,7 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 .i2v-pair img, .i2v-pair video { display: block; width: 100%; height: auto; aspect-ratio: 832 / 480; object-fit: cover; background: #000; }
 .i2v-pair figcaption { padding: .7rem 1rem .9rem; font-size: .8rem; color: var(--text-secondary); line-height: 1.55; }
 @media (max-width: 800px) { .i2v-pair { grid-template-columns: 1fr; } }
+.qs-steps { margin-top: .9rem; grid-template-columns: repeat(4, minmax(0,1fr)); }
+.qs-steps .install-step { background: rgba(10,10,18,.6); }
+@media (max-width: 900px) { .qs-steps { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .qs-steps { grid-template-columns: 1fr; } }

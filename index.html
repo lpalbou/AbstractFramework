@@ -119,9 +119,9 @@
     <p class="hero-sub">A modular, open-source framework for durable, observable, multimodal AI. One Python API for any model, local or cloud. One runtime where agents pause, resume and replay. One gateway on macOS, Linux, Windows or in a container, on your laptop, your network or the internet, with thin clients on every device.
       <span class="io"><b>In:</b> text, images, audio, video, documents. <b>Out:</b> text, voice, music, images, video, 3D.</span></p>
     <div class="hero-actions">
-      <a href="#getting-started" class="btn btn-primary">
+      <a href="install.html" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get Started
+        Install Guide
       </a>
       <a href="https://github.com/lpalbou/abstractframework" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -131,16 +131,23 @@
     <!-- VERIFIED-DOCS Quick start (P16). Lines: docs/install.md:57 (macOS/Linux), docs/install.md:74 (Windows), README.md:294 + E7 PASS (pip) -->
     <div class="qs" aria-label="Quick start">
       <div class="qs-tabs" role="tablist" aria-label="Install on">
-        <button type="button" class="qs-tab" role="tab" id="qs-mac" aria-controls="qs-term" aria-selected="true" data-os="mac" data-prompt="$" data-cmd="curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh" data-note="macOS 13 or later. Installs in your user account and opens the web console, signed in. Prefer a double-click? &lt;a href=&quot;install.html#choose&quot;&gt;The .pkg installer&lt;/a&gt;.">macOS</button>
-        <button type="button" class="qs-tab" role="tab" id="qs-linux" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="linux" data-prompt="$" data-cmd="curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh" data-note="x86_64 or aarch64. Works the same over SSH on a headless server. &lt;a href=&quot;install.html#headless&quot;&gt;Headless install&lt;/a&gt;.">Linux</button>
-        <button type="button" class="qs-tab" role="tab" id="qs-win" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="win" data-prompt="PS&gt;" data-cmd='powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"' data-note="Windows 10 22H2 or later, or Windows 11. No administrator rights needed.">Windows</button>
-        <button type="button" class="qs-tab" role="tab" id="qs-py" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="py" data-prompt="$" data-cmd="pip install abstractframework" data-note="Python 3.10 to 3.13. Add &lt;code&gt;[apple]&lt;/code&gt; or &lt;code&gt;[gpu]&lt;/code&gt; for local engines, then run &lt;code&gt;abstractgateway serve&lt;/code&gt;.">Python</button>
+        <button type="button" class="qs-tab" role="tab" id="qs-mac" aria-controls="qs-term" aria-selected="true" data-os="mac" data-prompt="$" data-cmd="curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh" data-note="macOS 13 or later (the Apple Silicon engines need macOS 14), about 5 GB free. Installs in your user account, local voice included, and opens the web console signed in; running it again repairs or upgrades. Prefer a double-click? &lt;a href=&quot;install.html#choose&quot;&gt;The .pkg installer&lt;/a&gt;.">macOS</button>
+        <button type="button" class="qs-tab" role="tab" id="qs-linux" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="linux" data-prompt="$" data-cmd="curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh" data-note="x86_64 or aarch64; start at login is a &lt;code&gt;systemd --user&lt;/code&gt; service. Works the same over SSH on a headless server. &lt;a href=&quot;install.html#headless&quot;&gt;Headless install&lt;/a&gt; or &lt;a href=&quot;install.html&quot;&gt;the container&lt;/a&gt;.">Linux</button>
+        <button type="button" class="qs-tab" role="tab" id="qs-win" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="win" data-prompt="PS&gt;" data-cmd='powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"' data-note="Windows 10 22H2 or later, or Windows 11. Installs under your user account, no administrator rights.">Windows</button>
+        <button type="button" class="qs-tab" role="tab" id="qs-py" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="py" data-prompt="$" data-cmd="pip install abstractframework" data-note="Python 3.10 to 3.13: the framework's Python packages, pinned together (Abstract3D and AbstractCamera install separately). Add &lt;code&gt;[apple]&lt;/code&gt; or &lt;code&gt;[gpu]&lt;/code&gt; for local engines, check with &lt;code&gt;abstractframework doctor&lt;/code&gt;, then run &lt;code&gt;abstractgateway serve&lt;/code&gt;.">Python</button>
       </div>
       <div class="qs-term" id="qs-term" role="tabpanel" aria-labelledby="qs-mac">
         <span class="qs-prompt" aria-hidden="true">$</span>
         <code class="qs-cmd">curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code>
       </div>
-      <p class="qs-note"><span class="qs-note-text">macOS 13 or later. Installs in your user account and opens the web console, signed in.</span> <a href="install.html">All install options &rarr;</a></p>
+      <p class="qs-note" id="getting-started"><span class="qs-note-text">macOS 13 or later (the Apple Silicon engines need macOS 14), about 5 GB free. Installs in your user account, local voice included, and opens the web console signed in; running it again repairs or upgrades.</span> <a href="install.html">All install options &rarr;</a></p>
+      <!-- steps: docs/install.md:57, 74 (installers); docs/install.md:608 (console link, signed in); abstractgateway/docs/first-run.md:46 (Use recommended defaults); docs/getting-started.md:43 (/apps/<app>/) -->
+      <div class="install-steps compact qs-steps">
+        <div class="install-step"><h4>Run the installer</h4><p>The line above, or the macOS <code>.pkg</code>.</p></div>
+        <div class="install-step"><h4>The console opens</h4><p>In your browser, already signed in.</p></div>
+        <div class="install-step"><h4>Pick your models</h4><p><strong>Use recommended defaults</strong> for what this computer can run.</p></div>
+        <div class="install-step"><h4>Use it anywhere</h4><p>Apps at <code class="long">/apps/&lt;app&gt;/</code>, the terminal, or the menu bar on macOS or the system tray.</p></div>
+      </div>
     </div>
     <!-- E1 (W2 PASS): examples/E1-text/snippet.py verbatim (whole file), then E2-snippet (W2 PASS): examples/E2-defaults/snippet.py lines 7-16 verbatim -->
 <div class="hero-code">
@@ -211,17 +218,6 @@ music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambien
         <div class="entry-scenario">
           <h4>When to use AbstractCore</h4>
           <p>You are writing a script, a notebook or a tool. You want to talk to models with minimal setup and switch between local runtimes and cloud APIs without rewriting your code. You do not need persistent runs or a server.</p>
-          <!-- E1 (W2 PASS): examples/E1-text/snippet.py verbatim -->
-<div class="code-block" style="margin-top:1rem">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
-
-<span class="line-cmt"># Local model on Apple silicon (MLX). Any provider works the same way, e.g.</span>
-<span class="line-cmt"># create_llm("openai", model="gpt-5-mini") or create_llm("ollama", model="qwen3:4b").</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-
-response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In two sentences, what is a durable workflow runtime?"</span>)
-<span class="line-fn">print</span>(response.content)</code></pre>
-          </div>
         </div>
         <div class="comp-links" style="margin-top:.75rem">
           <a class="comp-link" href="core.html">Docs &rarr;</a>
@@ -1087,7 +1083,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
 <!-- ═══════════════════ FLOW ═══════════════════ -->
 <!-- W4 fragment deliver/fragments/flow.html (claims and sources in its header and FACTS.md P1) -->
 <!-- PENDING-W4: Q7 (updated deliver/fragments/flow.html: sharing workflows, workflows as an evolution of skills) -->
-<section id="flow">
+<section id="flow" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">AbstractFlow</div>
@@ -1582,7 +1578,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 <!-- ═══════════════════ ENTITIES ═══════════════════ -->
 <!-- W4 fragment deliver/fragments/entities.html (claims and sources in its header and FACTS.md P3) -->
 <!-- PENDING-W4: Q12 (updated deliver/fragments/entities.html) -->
-<section id="entities">
+<section id="entities" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Entities</div>
@@ -1743,87 +1739,8 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
   </div>
 </section>
 
-<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
-<section id="getting-started" style="background:var(--bg-surface)">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">Quick Start</div>
-      <h2 class="section-title">Up and Running in Minutes</h2>
-      <p class="section-desc">One installer per system. It sets everything up in your user account, local voice included, and opens the web console already signed in. Running it again repairs or upgrades in place.</p>
-    </div>
-    <div class="install-wrap reveal">
-      <div class="code-tabs" data-autoplatform data-win="h-win" data-linux="h-linux" data-mac="h-mac">
-        <div class="tab-nav">
-          <button class="tab-btn active" data-tab="h-mac">macOS</button>
-          <button class="tab-btn" data-tab="h-linux">Linux</button>
-          <button class="tab-btn" data-tab="h-win">Windows</button>
-          <button class="tab-btn" data-tab="h-py">Python</button>
-          <button class="tab-btn" data-tab="h-docker">Docker</button>
-        </div>
-        <div class="tab-panel active" id="tab-h-mac">
-          <div class="install-notes" style="border-top:none"><ul>
-            <li><strong>Without Terminal:</strong> <a href="https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg">download AbstractFramework-Installer.pkg</a> and double-click it. It is not signed with an Apple Developer ID: the first time, open <strong>System Settings &gt; Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>. <a href="install.html#choose">Step by step</a></li>
-            <li><strong>With Terminal:</strong> paste this line; it runs the same installer.</li>
-          </ul></div>
-          <!-- VERIFIED-DOCS docs/install.md:57 -->
-<div class="code-block">
-<pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
-          <div class="install-notes"><ul><li>macOS 13 or later (the Apple Silicon engines need macOS 14); about 5 GB of free disk before models.</li></ul></div>
-        </div>
-        <div class="tab-panel" id="tab-h-linux">
-          <!-- VERIFIED-DOCS docs/install.md:57 -->
-<div class="code-block">
-<pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
-          <div class="install-notes"><ul>
-            <li>x86_64 or aarch64. Start at login is a <code>systemd --user</code> service.</li>
-            <li>Over SSH on a headless server it works the same and offers the terminal console at the end. <a href="install.html#headless">Headless install</a></li>
-          </ul></div>
-        </div>
-        <div class="tab-panel" id="tab-h-win">
-          <!-- VERIFIED-DOCS docs/install.md:74 -->
-<div class="code-block">
-<pre><code>powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"</code></pre></div>
-          <div class="install-notes"><ul>
-            <li>Windows 10 22H2 or later, or Windows 11. Installs under your user account, no administrator rights.</li>
-          </ul></div>
-        </div>
-        <div class="tab-panel" id="tab-h-py">
-          <!-- VERIFIED-DOCS; E7 PASS (light install + abstractframework doctor); apple: E1-E3 venv; gpu: README.md:294; serve: docs/install.md:608 -->
-<div class="code-block">
-<pre><code>pip install abstractframework            <span class="line-cmt"># light: cloud and endpoint engines</span>
-pip install "abstractframework[apple]"   <span class="line-cmt"># + local Apple Silicon engines</span>
-pip install "abstractframework[gpu]"     <span class="line-cmt"># + local CUDA / ROCm engines</span>
-abstractframework doctor                 <span class="line-cmt"># checks the pinned versions and this machine</span>
-abstractgateway serve                    <span class="line-cmt"># prints a one-time console link</span></code></pre></div>
-          <div class="install-notes"><ul>
-            <li>The framework's Python packages in your own environment, pinned together (Abstract3D and AbstractCamera install separately). Python 3.10 to 3.13. <a href="start-developer.html">Developer journey</a></li>
-          </ul></div>
-        </div>
-        <div class="tab-panel" id="tab-h-docker">
-          <!-- VERIFIED-DOCS docs/install.md:654-661 -->
-<div class="code-block">
-<pre><code>docker run -p 8080:8080 -v "$PWD/runtime:/data" \
-  -e ABSTRACTGATEWAY_DATA_DIR=/data -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre></div>
-          <div class="install-notes"><ul>
-            <li>The light gateway container for servers; the admin login token is written to <code class="long">runtime/auth/bootstrap-admin-token</code>. <a href="start-architect.html">Architect journey</a></li>
-          </ul></div>
-        </div>
-      </div>
-    </div>
-    <!-- steps: docs/install.md:57, 74 (installers); docs/install.md:608 (console link, signed in); abstractgateway/docs/first-run.md:46 (Use recommended defaults); docs/getting-started.md:43 (/apps/<app>/) -->
-    <div class="install-steps compact reveal" style="max-width:900px;margin-inline:auto">
-      <div class="install-step"><h4>Run the installer</h4><p>One line above, or the macOS <code>.pkg</code>.</p></div>
-      <div class="install-step"><h4>The console opens</h4><p>In your browser, already signed in.</p></div>
-      <div class="install-step"><h4>Pick your models</h4><p><strong>Use recommended defaults</strong> for what this computer can run.</p></div>
-      <div class="install-step"><h4>Use it anywhere</h4><p>Apps at <code class="long">/apps/&lt;app&gt;/</code>, the terminal, or the menu bar on macOS or the system tray.</p></div>
-    </div>
-    <p class="reveal" style="text-align:center;margin-top:1rem"><a class="comp-link" href="install.html">Everything about installing &rarr;</a></p>
-  </div>
-</section>
-
 <!-- ═══════════════════ START HERE ═══════════════════ -->
-<section id="start">
+<section id="start" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Start Here</div>
@@ -1878,7 +1795,7 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
 </section>
 
 <!-- ═══════════════════ RELEASES ═══════════════════ -->
-<section id="releases" style="background:var(--bg-surface)">
+<section id="releases">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Releases</div>
@@ -1899,7 +1816,7 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
 </section>
 
 <!-- ═══════════════════ PHILOSOPHY ═══════════════════ -->
-<section id="principles">
+<section id="principles" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Philosophy</div>
