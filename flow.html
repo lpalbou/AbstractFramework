@@ -184,6 +184,7 @@ npx @abstractframework/flow --gateway-url http://127.0.0.1:8080</code></pre>
     <div class="showcase-grid reveal" style="margin-top:2rem;align-items:start">
       <div style="min-width:0">
         <h3 style="margin-bottom:.75rem">Start a workflow by name</h3>
+        <!-- PENDING-W2: R5b-gateway-api -->
         <!-- E6 (W2 PASS): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:1-4 (gateway 0.7.1, run.log) -->
         <div class="code-block">
 <pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
@@ -194,11 +195,11 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       </div>
       <div style="min-width:0">
         <h3 style="margin-bottom:.75rem">Or the gateway's default agent</h3>
-        <!-- VERIFIED-DOCS abstractgateway/docs/api.md:121-124 -->
+        <!-- VERIFIED-DOCS abstractgateway/docs/api.md:121-124 (adapted: bearer token and gateway address pasted, operator rule) -->
         <div class="code-block">
-<pre><code>curl -sS -H <span class="line-str">"$AUTH"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+<pre><code>curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
   -d <span class="line-str">'{"flow_id":"@default","interface":"abstractcode.agent.v1","input_data":{"prompt":"Hello"}}'</span> \
-  <span class="line-str">"$BASE_URL/api/gateway/runs/start"</span></code></pre>
+  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/start"</span></code></pre>
         </div>
       </div>
     </div>
@@ -318,13 +319,13 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
         <p>An admin promotes a version to the gateway's shared workflow catalog, with an optional default pointer and access rules; catalog versions are immutable. The Assistant lists its workflows from this catalog.</p>
       </div>
     </div>
-    <!-- VERIFIED-DOCS abstractgateway/docs/api.md:82-87 -->
+    <!-- VERIFIED-DOCS abstractgateway/docs/api.md:82-87 (adapted: bearer token and gateway address pasted, operator rule) -->
 <div class="code-block reveal" style="margin-top:1.5rem">
-<pre><code>curl -sS -H <span class="line-str">"$AUTH"</span> \
+<pre><code>curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
   -F <span class="line-str">"file=@./my-bundle@0.1.0.flow"</span> \
   -F <span class="line-str">"overwrite=false"</span> \
   -F <span class="line-str">"reload=true"</span> \
-  <span class="line-str">"$BASE_URL/api/gateway/bundles/upload"</span></code></pre>
+  <span class="line-str">"http://127.0.0.1:8080/api/gateway/bundles/upload"</span></code></pre>
     </div>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Packing a bundle from Python</h3>
