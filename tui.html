@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractTUI 0.6.0 — the terminal UI engine behind AbstractFramework's terminal apps | AbstractFramework</title>
+  <meta name="description" content="AbstractTUI is a reactive, compositor-grade terminal UI engine for Rust: signals, layered rendering, a streaming chat feed, Markdown, 26 themes, images and 3D in the terminal. It powers AbstractCode&#x27;s terminal client and the AbstractGateway and AbstractCore terminal consoles.">
+  <link rel="canonical" href="https://abstractframework.ai/tui.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractTUI — the terminal, composed">
+  <meta property="og:description" content="The Rust terminal UI engine behind AbstractCode&#x27;s terminal client and the AbstractGateway and AbstractCore consoles. Reuse it for your own terminal apps.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=5">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="./">Home</a></li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#getting-started">Get Started</a></li>
+    <li><a href="https://github.com/lpalbou/abstracttui" target="_blank" rel="noopener noreferrer" class="nav-cta">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
+
+<div class="pkg-nav" aria-label="Packages and apps">
+  <div class="pkg-nav-inner">
+    <a href="core.html" class="pkg-nav-link">Core</a>
+    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
+    <a href="agent.html" class="pkg-nav-link">Agent</a>
+    <a href="flow.html" class="pkg-nav-link">Flow</a>
+    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
+    <a href="code.html" class="pkg-nav-link">Code</a>
+    <a href="observer.html" class="pkg-nav-link">Observer</a>
+    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
+    <a href="voice.html" class="pkg-nav-link">Voice</a>
+    <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
+    <a href="3d.html" class="pkg-nav-link">3D</a>
+    <a href="camera.html" class="pkg-nav-link">Camera</a>
+    <a href="memory.html" class="pkg-nav-link">Memory</a>
+    <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+    <a href="tui.html" class="pkg-nav-link active" aria-current="page">TUI</a>
+    <a href="uic.html" class="pkg-nav-link">UIC</a>
+  </div>
+</div>
+
+<main id="main">
+
+<!--
+  tui.html claims (W4): abstracttui/Cargo.toml:4,11,12,14,27-35; README.md:3,12-13,40-133,167,181-182,225; docs/README.md:24; examples/README.md:20-57;
+  dependents: abstractcode/tui/Cargo.toml:2-3,105 (abstracttui 0.6.0); abstractgateway/console-tui/Cargo.toml:53,58-63 (0.3.6); abstractcore/console-tui/Cargo.toml:56 (0.3.6);
+  crates.io max_version 0.6.0 (checked 2026-09-29). Details: untracked/site-rethink/deliver/FACTS.md "P18".
+-->
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:8rem 0 4rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Toolkit &middot; Terminal UI engine &middot; v0.6.0</div>
+    <h1>Abstract<span class="gradient">TUI</span></h1>
+    <p class="hero-sub">AbstractTUI is a reactive, compositor-grade terminal UI engine for Rust: fine-grained signals, layered rendering with damage tracking, a streaming chat feed and Markdown, 26 themes, images and software-rendered 3D, all in the terminal. It is the engine behind the <a href="code.html">AbstractCode</a> terminal client and the terminal consoles of <a href="gateway.html">AbstractGateway</a> and <a href="core.html">AbstractCore</a>, and you can build your own terminal apps on it.</p>
+    <div class="hero-actions">
+      <a href="#getting-started" class="btn btn-primary">Get Started</a>
+      <a href="https://github.com/lpalbou/abstracttui" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+      <a href="https://crates.io/crates/abstracttui" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">crates.io</a>
+      <a href="https://docs.rs/abstracttui" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">docs.rs</a>
+    </div>
+    <!-- VERIFIED-DOCS abstracttui/README.md:167 -->
+<div class="hero-code">
+<pre><code>cargo add abstracttui</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section id="overview" class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Overview</span>
+      <h2 class="section-title">The terminal, composed</h2>
+      <p class="section-desc">Reading a signal inside a view tracks it; writing one re-runs exactly the computations that depended on it, and those repaint exactly the screen regions they own. Damaged regions go through a compositor (z-ordered layers, alpha, per-layer offset and opacity) and a frame diff, so an idle app emits zero bytes and a blinking cursor repaints one cell.</p>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card">
+        <h3>Who builds on it</h3>
+        <p>The <a href="code.html">AbstractCode</a> terminal client (<code>abstractcode</code> 0.7.1, on AbstractTUI 0.6.0), the AbstractGateway terminal console (<code>abstractgateway-console</code>) and the AbstractCore terminal console (<code>abstractcore-console</code>), both on AbstractTUI 0.3.6. See <a href="console.html">the consoles</a>.</p>
+        <div class="mode-tags"><span class="mode-tag">abstractcode</span><span class="mode-tag">abstractgateway-console</span><span class="mode-tag">abstractcore-console</span></div>
+      </div>
+      <div class="mode-card">
+        <h3>Austere dependencies</h3>
+        <p><code>unicode-width</code>, <code>unicode-segmentation</code>, <code>miniz_oxide</code>, plus <code>libc</code> on Unix or <code>windows-sys</code> on Windows. ANSI output, input parsing, layout, signals, PNG/JPEG decoding, glTF parsing and the 3D rasterizer are implemented in the crate.</p>
+        <div class="mode-tags"><span class="mode-tag">MIT</span><span class="mode-tag">Rust 1.87+</span></div>
+      </div>
+      <div class="mode-card">
+        <h3>Where it runs</h3>
+        <p>macOS and Linux are verified, with live pseudo-terminal tests. Windows is best effort: it compiles cleanly for MSVC and the library suite runs in CI on Windows, without a live Windows console run.</p>
+        <div class="mode-tags"><span class="mode-tag">macOS</span><span class="mode-tag">Linux</span><span class="mode-tag">Windows (best effort)</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features" class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Features</span>
+      <h2 class="section-title">Everything a terminal app needs</h2>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag toolkit">Widgets</span></div>
+        <h3>Widgets and layout</h3>
+        <p>Buttons, inputs, a multiline <code>TextArea</code> composer with history and completion, selects and comboboxes, sortable tables, tabs, modals, toasts, a file picker, and the app shell: <code>PageHost</code>, <code>Drawer</code> and <code>DrawerDock</code>, arranged by a flexbox-style solver and a track grid.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag toolkit">Chat</span></div>
+        <h3>Transcripts and documents</h3>
+        <p><code>Feed</code> renders append-only conversations and logs; streaming Markdown re-typesets only the open block per token, tables included. <code>MarkdownView</code> adds a heading outline and find-in-document. A tail follows new output until you scroll.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag toolkit">Themes</span></div>
+        <h3>26 themes</h3>
+        <p>Catppuccin, Tokyo Night, Nord, Dracula, Gruvbox, Solarized and the Abstract originals, over 36 semantic tokens audited against WCAG contrast floors, swapped at runtime through one signal; <code>ThemeSwitcher</code> is the drop-in chip.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag toolkit">Input</span></div>
+        <h3>Input everywhere</h3>
+        <p>Keyboard and mouse, the kitty keyboard protocol, bracketed paste hardened against huge or hostile input, and a file-drop classifier, so a file dropped on the terminal becomes an attachment. Push-to-talk and live audio meters for voice apps.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag toolkit">Graphics</span></div>
+        <h3>Images and 3D</h3>
+        <p>PNG, JPEG and GIF through kitty graphics, iTerm2, sixel or Unicode mosaics, chosen automatically with every fallback labeled; animated GIF and APNG; GLB models rendered by a software rasterizer, with no GPU.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag toolkit">Testing</span></div>
+        <h3>Headless tests and screenshots</h3>
+        <p>Drive the real rendering pipeline against a captured terminal and assert on the screen, with no pty; export any screen as plain text, replayable ANSI or SVG. Graphs and Mermaid diagrams come as extension crates.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section id="getting-started" class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Get Started</span>
+      <h2 class="section-title">Your first terminal app</h2>
+      <p class="section-desc">Fifteen lines and one import. Tab focus, Enter activation and Ctrl+C quit are defaults, and only the count line repaints when the signal changes.</p>
+    </div>
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="tui-install">Install</button>
+        <button class="tab-btn" data-tab="tui-first">First app</button>
+        <button class="tab-btn" data-tab="tui-examples">Examples</button>
+      </div>
+      <div class="tab-panel active" id="tab-tui-install">
+        <!-- VERIFIED-DOCS abstracttui/README.md:167,181-182 -->
+<div class="code-block">
+<pre><code>cargo add abstracttui
+cargo add abstracttui-graph      <span class="line-cmt"># 0.2 — graph auto-layout + GraphView</span>
+cargo add abstracttui-mermaid    <span class="line-cmt"># 0.2 — mermaid subset renderer</span></code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-tui-first">
+        <!-- VERIFIED-DOCS abstracttui/README.md:140-154 -->
+<div class="code-block">
+<pre><code><span class="line-kw">use</span> abstracttui::prelude::*;
+
+<span class="line-kw">fn</span> <span class="line-fn">main</span>() -&gt; abstracttui::base::Result&lt;()&gt; {
+    App::<span class="line-fn">simple</span>(|cx| {
+        <span class="line-kw">let</span> count = cx.<span class="line-fn">signal</span>(<span class="line-var">0</span>);
+        Element::<span class="line-fn">new</span>()
+            .<span class="line-fn">style</span>(LayoutStyle::<span class="line-fn">column</span>())
+            .<span class="line-fn">child</span>(<span class="line-fn">dyn_view</span>(LayoutStyle::<span class="line-fn">line</span>(<span class="line-var">1</span>), <span class="line-kw">move</span> || {
+                <span class="line-fn">text</span>(<span class="line-fn">format!</span>(<span class="line-str">"count: {}"</span>, count.<span class="line-fn">get</span>()))
+            }))
+            .<span class="line-fn">child</span>(Button::<span class="line-fn">new</span>(<span class="line-str">"+1"</span>).<span class="line-fn">on_click</span>(<span class="line-kw">move</span> || count.<span class="line-fn">update</span>(|c| *c += <span class="line-var">1</span>)).<span class="line-fn">view</span>(cx))
+            .<span class="line-fn">child</span>(<span class="line-fn">text</span>(<span class="line-str">"Tab focuses · Enter clicks · Ctrl+C quits"</span>))
+            .<span class="line-fn">build</span>()
+    })
+}</code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-tui-examples">
+        <!-- VERIFIED-DOCS abstracttui/README.md:188-190 (clone and run an example); examples/README.md:20-57 -->
+<div class="code-block">
+<pre><code>git clone https://github.com/lpalbou/abstracttui
+cd abstracttui
+cargo run --example dashboard
+<span class="line-cmt"># 35 runnable programs, from hello.rs to transcript.rs (streaming markdown chat) and viewer3d.rs</span></code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="callout reveal">
+      <div>Reference: <a href="https://github.com/lpalbou/abstracttui/blob/main/docs/getting-started.md" target="_blank" rel="noopener noreferrer">getting started</a>, <a href="https://github.com/lpalbou/abstracttui/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">API</a>, <a href="https://github.com/lpalbou/abstracttui/blob/main/docs/theming.md" target="_blank" rel="noopener noreferrer">theming</a>, <a href="https://github.com/lpalbou/abstracttui/blob/main/docs/graphics-and-3d.md" target="_blank" rel="noopener noreferrer">graphics and 3D</a>, <a href="https://github.com/lpalbou/abstracttui/blob/main/docs/live-data.md" target="_blank" rel="noopener noreferrer">live data</a>. For web apps, the counterpart is <a href="uic.html">AbstractUIC</a>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ NEXT ═══════════════════ -->
+<section id="next" class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Where to next</span>
+      <h2 class="section-title">Keep going</h2>
+    </div>
+    <div class="next-links reveal">
+      <a class="next-link" href="code.html"><strong>AbstractCode</strong><span>The terminal coding client built on AbstractTUI.</span></a>
+      <a class="next-link" href="console.html"><strong>Gateway and Core consoles</strong><span>The two terminal consoles built on AbstractTUI.</span></a>
+      <a class="next-link" href="uic.html"><strong>AbstractUIC</strong><span>The web counterpart: components for browser apps.</span></a>
+      <a class="next-link" href="gateway.html"><strong>AbstractGateway</strong><span>The API your terminal app can talk to.</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.75rem">
+        <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub Organization
+        </a>
+      </p>
+    </div>
+    <div class="footer-col">
+      <h4>Foundation</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="tui.html">AbstractTUI</a>
+      <a href="uic.html">AbstractUIC</a>
+    </div>
+    <div class="footer-col">
+      <h4>Applications</h4>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="console.html">Gateway &amp; Core consoles</a>
+      <a href="automations.html">Automations</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Modalities &amp; Knowledge</h4>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="3d.html">Abstract3D</a>
+      <a href="camera.html">AbstractCamera</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="install.html">Install</a>
+      <a href="index.html#start">Start here</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace Models</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm Packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker Images</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker</a> &middot;
+    <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace</a> &middot;
+    <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
+  </div>
+</footer>
+<script src="assets/js/main.js?v=5"></script>
+</body>
+</html>

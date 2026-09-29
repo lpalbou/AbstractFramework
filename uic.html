@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AbstractUIC — React components, Web Components and a gateway session proxy | AbstractFramework</title>
+  <meta name="description" content="AbstractUIC is the web UI kit of AbstractFramework&#x27;s browser apps: themes, a chat panel, provider and model pickers, gateway sign-in, an About dialog, Web Components monitors and a Node.js gateway session proxy, published on npm under @abstractframework.">
+  <link rel="canonical" href="https://abstractframework.ai/uic.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AbstractUIC — the web UI kit of AbstractFramework">
+  <meta property="og:description" content="The React components, Web Components, themes and gateway session proxy the framework&#x27;s browser apps are built from.">
+  <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css?v=5">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<nav class="nav" aria-label="Main">
+  <a href="./" class="nav-brand">
+    <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="32" height="32" style="border-radius:6px">
+    AbstractFramework
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="./">Home</a></li>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#getting-started">Get Started</a></li>
+    <li><a href="https://github.com/lpalbou/abstractuic" target="_blank" rel="noopener noreferrer" class="nav-cta">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a></li>
+  </ul>
+  <button class="mobile-toggle" aria-label="Menu" aria-controls="nav-links">&#9776;</button>
+</nav>
+
+<div class="pkg-nav" aria-label="Packages and apps">
+  <div class="pkg-nav-inner">
+    <a href="core.html" class="pkg-nav-link">Core</a>
+    <a href="runtime.html" class="pkg-nav-link">Runtime</a>
+    <a href="agent.html" class="pkg-nav-link">Agent</a>
+    <a href="flow.html" class="pkg-nav-link">Flow</a>
+    <a href="gateway.html" class="pkg-nav-link">Gateway</a>
+    <a href="console.html" class="pkg-nav-link">Consoles</a>
+    <a href="automations.html" class="pkg-nav-link">Automations</a>
+    <a href="code.html" class="pkg-nav-link">Code</a>
+    <a href="observer.html" class="pkg-nav-link">Observer</a>
+    <a href="assistant.html" class="pkg-nav-link">Assistant</a>
+    <a href="continuum.html" class="pkg-nav-link">Continuum</a>
+    <a href="entity.html" class="pkg-nav-link">Entity</a>
+    <a href="voice.html" class="pkg-nav-link">Voice</a>
+    <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
+    <a href="3d.html" class="pkg-nav-link">3D</a>
+    <a href="camera.html" class="pkg-nav-link">Camera</a>
+    <a href="memory.html" class="pkg-nav-link">Memory</a>
+    <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+    <a href="tui.html" class="pkg-nav-link">TUI</a>
+    <a href="uic.html" class="pkg-nav-link active" aria-current="page">UIC</a>
+  </div>
+</div>
+
+<main id="main">
+
+<!--
+  uic.html claims (W4): abstractuic/README.md:3,39-47,57-75,79-88; ui-kit/package.json:2-3 (0.1.16; npm latest 0.1.16 checked 2026-09-29); panel-chat/package.json:2-3 (0.1.19; npm latest 0.1.19);
+  app-server/package.json:2-4; app-server/README.md:211-237; monitor-gpu/README.md:12-34; ui-kit/src/index.ts:1-200; panel-chat/src/index.ts:2-77; panel-chat/src/workflow_runtime.ts:24-41;
+  users: abstractcode/web/package.json:42-48; abstractobserver/package.json:46 + vite.config.ts:73-77; abstractflow/package.json:45; abstractcontinuum/package.json:46; abstractentity/package.json:45;
+  abstractgateway/src/abstractgateway/console_islands.py:5-6; abstractcore/abstractcore/console/theme_sync.py:3-6. Details: deliver/FACTS.md "P18".
+-->
+<!-- ═══════════════════ DOC HERO ═══════════════════ -->
+<section class="hero" style="min-height:auto;padding:8rem 0 4rem">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Toolkit &middot; Web UI kit &middot; ui-kit v0.1.16</div>
+    <h1>Abstract<span class="gradient">UIC</span></h1>
+    <p class="hero-sub">AbstractUIC is the web UI kit of AbstractFramework's browser apps: React components (a chat panel, provider and model pickers, gateway sign-in, an About dialog, an automations panel), small Web Components, 21 themes, and a Node.js gateway session proxy. <a href="code.html">AbstractCode</a> web, <a href="observer.html">AbstractObserver</a>, <a href="flow.html">AbstractFlow</a>, <a href="continuum.html">AbstractContinuum</a> and <a href="entity.html">AbstractEntity</a> are built from it, and you can build your own web app on a gateway the same way. Packages are published on npm under <code>@abstractframework</code>.</p>
+    <div class="hero-actions">
+      <a href="#getting-started" class="btn btn-primary">Get Started</a>
+      <a href="https://github.com/lpalbou/abstractuic" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
+      <a href="https://www.npmjs.com/package/@abstractframework/ui-kit" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">npm</a>
+    </div>
+    <!-- VERIFIED-DOCS abstractuic/README.md:59 -->
+<div class="hero-code">
+<pre><code>npm i @abstractframework/panel-chat @abstractframework/ui-kit</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<section id="overview" class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Overview</span>
+      <h2 class="section-title">Host-driven building blocks</h2>
+      <p class="section-desc">The components import nothing from a host app: data and callbacks flow in from the page that uses them. The chat controller replays a run the way every framework client does: it pages through the run's ledger from a cursor, then follows the live stream from the gateway.</p>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card">
+        <h3>Who builds on it</h3>
+        <p>AbstractCode web depends on <code>ui-kit</code>, <code>panel-chat</code>, <code>app-server</code> and two monitors. The Observer, Flow, Continuum and Entity use <code>app-server</code> and compile <code>ui-kit</code> and <code>panel-chat</code> in from source. The AbstractGateway web console mounts ui-kit islands (top-bar actions, appearance dialog), and the AbstractCore web console takes its themes from ui-kit.</p>
+      </div>
+      <div class="mode-card">
+        <h3>React and Web Components</h3>
+        <p>React packages for chat, pickers, dialogs and monitors; <code>&lt;monitor-gpu&gt;</code> and <code>&lt;monitor-memory&gt;</code> as Web Components for any page; console islands for pages that are not React apps.</p>
+      </div>
+      <div class="mode-card">
+        <h3>A server side too</h3>
+        <p><code>@abstractframework/app-server</code> serves your app under the gateway's <code>/apps/&lt;id&gt;/</code>, parses the shared launch flags, and exchanges the gateway token for an HttpOnly cookie session, so the browser never stores the token.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features" class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Packages</span>
+      <h2 class="section-title">Install only what you need</h2>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Package</th><th>What it provides</th></tr></thead>
+        <tbody>
+          <tr><td><code>@abstractframework/ui-kit</code> 0.1.16</td><td>Theme tokens (21 themes), <code>AfSelect</code> and provider/model pickers, the gateway connect modal and connection hook, top bar, drawer and appearance dialog, the About dialog and identity helpers, tool policy editor, critical action dialog, steer composer, voice hook (streaming TTS, push-to-talk), automations panel, schedule dialog and typed gateway client</td></tr>
+          <tr><td><code>@abstractframework/panel-chat</code> 0.1.19</td><td>Chat thread, message cards, composer, Markdown and JSON rendering, an app assistant panel, workflow chat with streamed replies, "Schedule this…" and the "from automation" badge</td></tr>
+          <tr><td><code>@abstractframework/app-server</code></td><td>The Node server side: mounting under <code>/apps/&lt;id&gt;/</code>, shared launch flags, the local gateway pointer, the gateway session proxy (token to HttpOnly cookie, CSRF, URL pinning)</td></tr>
+          <tr><td><code>@abstractframework/monitor-flow</code></td><td>Agent-cycle trace viewer with a ledger adapter</td></tr>
+          <tr><td><code>@abstractframework/monitor-active-memory</code></td><td>Knowledge graph and active memory explorer (ReactFlow)</td></tr>
+          <tr><td><code>@abstractframework/monitor-gpu</code></td><td>GPU utilization widget, <code>&lt;monitor-gpu&gt;</code></td></tr>
+          <tr><td><code>@abstractframework/monitor-memory</code></td><td>Host RAM and device memory widget, <code>&lt;monitor-memory&gt;</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ GETTING STARTED ═══════════════════ -->
+<section id="getting-started" class="section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Get Started</span>
+      <h2 class="section-title">A web app on your gateway</h2>
+      <p class="section-desc">Import the theme tokens once, then the CSS and components of the packages you use. On the server side, one proxy gives your page a gateway session.</p>
+    </div>
+    <div class="code-tabs reveal">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="uic-react">React chat</button>
+        <button class="tab-btn" data-tab="uic-server">Gateway session proxy</button>
+        <button class="tab-btn" data-tab="uic-wc">Web Component</button>
+      </div>
+      <div class="tab-panel active" id="tab-uic-react">
+        <!-- VERIFIED-DOCS abstractuic/README.md:83-88 -->
+<div class="code-block">
+<pre><code><span class="line-kw">import</span> <span class="line-str">"@abstractframework/ui-kit/theme.css"</span>;
+<span class="line-kw">import</span> <span class="line-str">"@abstractframework/panel-chat/panel_chat.css"</span>;
+
+<span class="line-kw">import</span> { ChatComposer, ChatThread } <span class="line-kw">from</span> <span class="line-str">"@abstractframework/panel-chat"</span>;</code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-uic-server">
+        <!-- VERIFIED-DOCS abstractuic/app-server/README.md:212-236 -->
+<div class="code-block">
+<pre><code><span class="line-kw">import</span> http <span class="line-kw">from</span> <span class="line-str">"node:http"</span>;
+
+<span class="line-kw">import</span> { createGatewaySessionProxy } <span class="line-kw">from</span> <span class="line-str">"@abstractframework/app-server"</span>;
+
+<span class="line-kw">const</span> gatewayProxy = <span class="line-fn">createGatewaySessionProxy</span>({
+  appId: <span class="line-str">"my-app"</span>,
+  defaultGatewayUrl: process.env.ABSTRACTGATEWAY_URL || <span class="line-str">"http://127.0.0.1:8080"</span>,
+});
+
+<span class="line-kw">const</span> server = http.<span class="line-fn">createServer</span>(<span class="line-kw">async</span> (req, res) =&gt; {
+  <span class="line-kw">const</span> pathname = <span class="line-kw">new</span> <span class="line-fn">URL</span>(req.url || <span class="line-str">"/"</span>, <span class="line-str">"http://127.0.0.1"</span>).pathname;
+  <span class="line-kw">if</span> (gatewayProxy.<span class="line-fn">handle</span>(req, res, pathname)) <span class="line-kw">return</span>;
+
+  <span class="line-kw">if</span> (pathname === <span class="line-str">"/healthz"</span>) {
+    res.<span class="line-fn">writeHead</span>(<span class="line-var">200</span>, { <span class="line-str">"Content-Type"</span>: <span class="line-str">"text/plain; charset=utf-8"</span> });
+    res.<span class="line-fn">end</span>(<span class="line-str">"ok"</span>);
+    <span class="line-kw">return</span>;
+  }
+
+  res.<span class="line-fn">writeHead</span>(<span class="line-var">404</span>, { <span class="line-str">"Content-Type"</span>: <span class="line-str">"text/plain; charset=utf-8"</span> });
+  res.<span class="line-fn">end</span>(<span class="line-str">"not found"</span>);
+});
+
+server.<span class="line-fn">listen</span>(<span class="line-var">3000</span>);</code></pre>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-uic-wc">
+        <!-- VERIFIED-DOCS abstractuic/monitor-gpu/README.md:12,33 -->
+<div class="code-block">
+<pre><code>npm i @abstractframework/monitor-gpu
+
+<span class="line-cmt">&lt;!-- after registerMonitorGpuWidget() --&gt;</span>
+&lt;monitor-gpu base-url=<span class="line-str">"http://localhost:8080"</span> tick-ms=<span class="line-str">"1500"</span> history-size=<span class="line-str">"20"</span> mode=<span class="line-str">"icon"</span>&gt;&lt;/monitor-gpu&gt;</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="callout reveal">
+      <div>Reference: <a href="https://github.com/lpalbou/abstractuic/blob/main/docs/getting-started.md" target="_blank" rel="noopener noreferrer">getting started</a>, <a href="https://github.com/lpalbou/abstractuic/blob/main/docs/adoption-guide.md" target="_blank" rel="noopener noreferrer">adoption guide</a>, <a href="https://github.com/lpalbou/abstractuic/blob/main/docs/theming.md" target="_blank" rel="noopener noreferrer">theming</a>, <a href="https://github.com/lpalbou/abstractuic/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">API</a>. For terminal apps, the counterpart is <a href="tui.html">AbstractTUI</a>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ NEXT ═══════════════════ -->
+<section id="next" class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Where to next</span>
+      <h2 class="section-title">Keep going</h2>
+    </div>
+    <div class="next-links reveal">
+      <a class="next-link" href="code.html"><strong>AbstractCode</strong><span>The browser coding client built from AbstractUIC.</span></a>
+      <a class="next-link" href="observer.html"><strong>AbstractObserver</strong><span>Runs, ledgers and automations in the browser.</span></a>
+      <a class="next-link" href="tui.html"><strong>AbstractTUI</strong><span>The terminal counterpart.</span></a>
+      <a class="next-link" href="gateway.html"><strong>AbstractGateway</strong><span>The API and <code>/apps/&lt;id&gt;/</code> mounting your web app uses.</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="./" class="nav-brand" style="margin-bottom:.5rem">
+        <img src="assets/img/logo-framework.png" alt="AbstractFramework" width="28" height="28" style="border-radius:4px">
+        AbstractFramework
+      </a>
+      <p>Open-source AI infrastructure. Build durable, observable, multimodal AI systems that run everywhere.</p>
+      <p style="margin-top:.5rem">MIT Licensed &middot; framework release 0.6.1</p>
+      <p style="margin-top:.75rem">
+        <a href="https://github.com/lpalbou" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.4rem;color:var(--text-secondary)">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub Organization
+        </a>
+      </p>
+    </div>
+    <div class="footer-col">
+      <h4>Foundation</h4>
+      <a href="core.html">AbstractCore</a>
+      <a href="runtime.html">AbstractRuntime</a>
+      <a href="agent.html">AbstractAgent</a>
+      <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
+      <a href="flow.html">AbstractFlow</a>
+      <a href="tui.html">AbstractTUI</a>
+      <a href="uic.html">AbstractUIC</a>
+    </div>
+    <div class="footer-col">
+      <h4>Applications</h4>
+      <a href="gateway.html">AbstractGateway</a>
+      <a href="console.html">Gateway &amp; Core consoles</a>
+      <a href="automations.html">Automations</a>
+      <a href="code.html">AbstractCode</a>
+      <a href="observer.html">AbstractObserver</a>
+      <a href="assistant.html">AbstractAssistant</a>
+      <a href="continuum.html">AbstractContinuum</a>
+      <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Modalities &amp; Knowledge</h4>
+      <a href="voice.html">AbstractVoice</a>
+      <a href="music.html">AbstractMusic</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="3d.html">Abstract3D</a>
+      <a href="camera.html">AbstractCamera</a>
+      <a href="memory.html">AbstractMemory</a>
+      <a href="semantics.html">AbstractSemantics</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="install.html">Install</a>
+      <a href="index.html#start">Start here</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation</a>
+      <a href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Changelog</a>
+      <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace Models</a>
+      <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm Packages</a>
+      <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker Images</a>
+      <a href="llms.txt">llms.txt</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 AbstractFramework &middot; Licensed under <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework" target="_blank" rel="noopener noreferrer">GitHub</a> &middot;
+    <a href="https://pypi.org/project/abstractframework/" target="_blank" rel="noopener noreferrer">PyPI</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractGateway/pkgs/container/abstractgateway" target="_blank" rel="noopener noreferrer">Docker</a> &middot;
+    <a href="https://huggingface.co/AbstractFramework" target="_blank" rel="noopener noreferrer">HuggingFace</a> &middot;
+    <a href="https://www.npmjs.com/search?q=%40abstractframework" target="_blank" rel="noopener noreferrer">npm</a> &middot;
+    <a href="https://github.com/lpalbou/AbstractFramework/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security</a> &middot;
+    contact@abstractframework.ai
+  </div>
+</footer>
+<script src="assets/js/main.js?v=5"></script>
+</body>
+</html>
