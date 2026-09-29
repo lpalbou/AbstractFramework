@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/main.css?v=20260929f">
+  <link rel="stylesheet" href="assets/css/main.css?v=20260929h">
   <link rel="stylesheet" href="assets/css/components.css?v=20260929e">
 </head>
 <body>
@@ -285,21 +285,20 @@ llm.<span class="line-fn">generate</span>(prompt, media=[...], output=...)</code
       <div class="mm-proof">
       <div class="code-tabs">
         <div class="tab-nav">
-          <button class="tab-btn active" data-tab="gen-defaults">Python</button>
-          <button class="tab-btn" data-tab="gen-http">HTTP (OpenAI-compatible)</button>
-          <button class="tab-btn" data-tab="gen-explicit">No defaults</button>
-          <button class="tab-btn" data-tab="gen-media">Media input</button>
+          <button class="tab-btn active" data-tab="gen-defaults">Python (with defaults)</button>
+          <button class="tab-btn" data-tab="gen-explicit">Python (no defaults)</button>
+          <button class="tab-btn" data-tab="gen-http">OpenAI-compatible endpoint</button>
         </div>
       <div class="tab-panel active" id="tab-gen-defaults">
-        <div class="install-notes" style="border-top:none"><ul><li>Set the routes once per machine; the gateway console's <strong>Use recommended defaults</strong> and its Multimodal tab write the same AbstractCore store (recommended defaults set voice and image; set music as shown). Then each modality is one line.</li></ul></div>
-        <!-- VERIFIED-DOCS + W2 run: examples/R5/defaults.sh verbatim (with_defaults.defaults.log; RESULTS.md R5-with-defaults) -->
+        <div class="install-notes" style="border-top:none"><ul><li>Set the routes once per machine; the gateway console's <strong>Use recommended defaults</strong> and its Multimodal tab write the same AbstractCore store (recommended defaults set voice and image; set music as shown). Then each modality is one line, and the picture goes back in through <code>media=</code>.</li></ul></div>
+        <!-- VERIFIED-DOCS + W2 run: examples/R6/defaults.sh verbatim (with_defaults.defaults.log; RESULTS.md R6-with-defaults) -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># Once per machine (the gateway console's "Use recommended defaults" writes the same store)</span>
 abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.<span class="line-var">2</span>-klein-4b-8bit
 abstractcore config set-default output.voice --provider supertonic --model supertonic-<span class="line-var">3</span>
 abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers</code></pre>
         </div>
-        <!-- R5-with-defaults (W2 PASS): examples/R5/with_defaults.py verbatim (32.5 s, abstractframework 0.6.2) -->
+        <!-- R6-with-defaults (W2 PASS): examples/R6/with_defaults.py verbatim (184.8 s, abstractframework 0.6.2; RESULTS.md R6-with-defaults) -->
         <div class="code-block" style="margin-top:1rem">
 <pre><code><span class="line-cmt"># Defaults set once: see defaults.sh (or the gateway console's "Use recommended defaults")</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
@@ -312,12 +311,45 @@ music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm a
 
 <span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
 <span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
-<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)
+
+<span class="line-cmt"># Ask the text model about the picture it just made (the image goes in through media=)</span>
+answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"What is in this picture?"</span>, media=[<span class="line-str">"lighthouse.png"</span>])
+<span class="line-kw">print</span>(answer.content)</code></pre>
         </div>
+        <!-- answer: examples/R6/answers.md "with_defaults.py", first sentence of the printed answer -->
+        <p class="gen-answer"><span>The model answered:</span> &ldquo;This picture depicts a serene, watercolor-style illustration of a lighthouse situated on a rocky outcrop. &hellip;&rdquo;</p>
+      </div>
+      <div class="tab-panel" id="tab-gen-explicit">
+        <div class="install-notes" style="border-top:none"><ul><li>No configured defaults and no server: each output names its engine. This ran with <code class="long">pip install "abstractframework[apple]"</code> 0.6.2, with every route cleared first.</li></ul></div>
+        <!-- R6-no-defaults (W2 PASS): examples/R6/no_defaults.py verbatim (27.9 s; RESULTS.md R6-no-defaults) -->
+<div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+
+<span class="line-cmt"># generate() is a method on an LLM instance: the text model is the entry point; each output below names its own engine</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
+speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+                      output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>})
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
+
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)
+
+<span class="line-cmt"># Ask the text model about the picture it just made (the image goes in through media=)</span>
+answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"What is in this picture?"</span>, media=[<span class="line-str">"lighthouse.png"</span>])
+<span class="line-kw">print</span>(answer.content)</code></pre>
+        </div>
+        <!-- answer: examples/R6/answers.md "no_defaults.py", first sentence of the printed answer -->
+        <p class="gen-answer"><span>The model answered:</span> &ldquo;This picture depicts a serene watercolor painting of a lighthouse. &hellip;&rdquo;</p>
       </div>
       <div class="tab-panel" id="tab-gen-http">
-        <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code>. Paste the token that <code class="long">abstractcore serve --print-token</code> prints in place of <code>&lt;token&gt;</code>; the server asks for it even on loopback.</li></ul></div>
-        <!-- R5b-http (W2 PASS): examples/R5b/http.sh verbatim (speech 1.1 s, music 3.7 s, image 7.4 s; RESULTS.md R5b-http) -->
+        <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code>. Paste the token that <code class="long">abstractcore serve --print-token</code> prints in place of <code>&lt;token&gt;</code>; the server asks for it even on loopback. The picture goes back to the chat endpoint as a base64 data URL.</li></ul></div>
+        <!-- R6-http (W2 PASS): examples/R6/http.sh verbatim (15 s warm; http.run.log; RESULTS.md R6-http) -->
 <div class="code-block" data-lang="shell">
 <pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
 <span class="line-cmt"># Start the server first (another terminal): abstractcore serve --port 19740</span>
@@ -338,53 +370,35 @@ curl -sS http://127.0.0.1:19740/v1/images/generations -H <span class="line-str">
   -H <span class="line-str">"Content-Type: application/json"</span> \
   -d '{<span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>,
        <span class="line-str">"prompt"</span>: <span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
-       <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024, <span class="line-str">"response_format"</span>: <span class="line-str">"b64_json"</span>}' &gt; image.json</code></pre>
+       <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024, <span class="line-str">"response_format"</span>: <span class="line-str">"b64_json"</span>}' &gt; image.json
+
+<span class="line-cmt"># Save the generated picture, then ask the chat model about it: the PNG travels as a base64 data URL</span>
+python3 -c 'import base64,json; open(<span class="line-str">"lighthouse.png"</span>,<span class="line-str">"wb"</span>).write(base64.b64decode(json.load(open(<span class="line-str">"image.json"</span>))[<span class="line-str">"data"</span>][0][<span class="line-str">"b64_json"</span>]))'
+IMG=$(base64 &lt; lighthouse.png | tr -d '\n')
+cat &gt; question.json &lt;&lt;JSON
+{<span class="line-str">"model"</span>: <span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>, <span class="line-str">"reasoning_effort"</span>: <span class="line-str">"none"</span>,
+ <span class="line-str">"messages"</span>: [{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: [
+   {<span class="line-str">"type"</span>: <span class="line-str">"text"</span>, <span class="line-str">"text"</span>: <span class="line-str">"What is in this picture?"</span>},
+   {<span class="line-str">"type"</span>: <span class="line-str">"image_url"</span>, <span class="line-str">"image_url"</span>: {<span class="line-str">"url"</span>: <span class="line-str">"data:image/png;base64,$IMG"</span>}}]}]}
+JSON
+curl -sS http://127.0.0.1:19740/v1/chat/completions -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> -d @question.json</code></pre>
         </div>
-      </div>
-      <div class="tab-panel" id="tab-gen-explicit">
-        <div class="install-notes" style="border-top:none"><ul><li>No configured defaults and no server: each output names its engine. This ran with <code class="long">pip install "abstractframework[apple]"</code> 0.6.2, with every route cleared first.</li></ul></div>
-        <!-- R5-without-defaults (W2 PASS): examples/R5/without_defaults.py verbatim (19.0 s) -->
-<div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
-
-<span class="line-cmt"># generate() is a method on an LLM instance: the text model is the entry point; each output below names its own engine</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
-                     output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
-speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
-                      output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>})
-music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
-                     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
-
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
-<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
-<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
-        </div>
-      </div>
-      <div class="tab-panel" id="tab-gen-media">
-        <div class="install-notes" style="border-top:none"><ul><li>Inputs go in <code>media=[...]</code>. Here the 4B model reads the lighthouse image itself and printed: &ldquo;This watercolor painting depicts a white lighthouse and adjacent buildings perched atop a rugged, rocky cliff overlooking a blue ocean under a soft, pastel sky.&rdquo;</li></ul></div>
-        <!-- R5-media-input (W2 PASS): examples/R5/media_input.py verbatim (9.4 s; media_input.run.log) -->
-<div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
-
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describe this image in one sentence."</span>, media=[<span class="line-str">"lighthouse.png"</span>])
-<span class="line-kw">print</span>(response.content)</code></pre>
-        </div>
+        <!-- answer: examples/R6/answers.md "http.sh", first sentence of the printed answer (markdown bold rendered) -->
+        <p class="gen-answer"><span>The model answered:</span> &ldquo;This is a <strong>watercolor painting</strong> of a <strong>lighthouse situated on a rocky coastal cliff</strong>, overlooking the sea. &hellip;&rdquo;</p>
       </div>
       </div>
-    <!-- Artifacts: the outputs of examples/R5/with_defaults.py (W2 PASS; R5/with-out converted: webp q85, mp3 q2) -->
+    <!-- Artifacts: the outputs of examples/R6/with_defaults.py (W2 PASS; R6/with-out converted: webp q85, mp3 q2) -->
     <div class="mm-proof-side">
-      <h3>What the Python tab produced</h3>
+      <h3>What &ldquo;Python (with defaults)&rdquo; produced</h3>
       <div class="mm-art">
-        <div class="a-body"><span class="a-kind">Voice <em>supertonic &middot; supertonic-3</em></span><p><q>AbstractFramework: write once, generate everything, run anywhere.</q></p><audio controls preload="none" aria-label="Generated voice: the tagline read aloud"><source src="assets/media/r5-tagline.mp3" type="audio/mpeg"></audio></div>
+        <div class="a-body"><span class="a-kind">Voice <em>supertonic &middot; supertonic-3</em></span><p><q>AbstractFramework: write once, generate everything, run anywhere.</q></p><audio controls preload="none" aria-label="Generated voice: the tagline read aloud"><source src="assets/media/r6-tagline.mp3" type="audio/mpeg"></audio></div>
       </div>
       <div class="mm-art">
-        <div class="a-body"><span class="a-kind">Music <em>acestep &middot; ACE-Step/acestep-v15-xl-turbo-diffusers</em></span><p><q>Calm ambient piano with soft strings, instrumental</q></p><audio controls preload="none" aria-label="Generated music: calm ambient piano with soft strings"><source src="assets/media/r5-ambient.mp3" type="audio/mpeg"></audio></div>
+        <div class="a-body"><span class="a-kind">Music <em>acestep &middot; ACE-Step/acestep-v15-xl-turbo-diffusers</em></span><p><q>Calm ambient piano with soft strings, instrumental</q></p><audio controls preload="none" aria-label="Generated music: calm ambient piano with soft strings"><source src="assets/media/r6-ambient.mp3" type="audio/mpeg"></audio></div>
       </div>
       <div class="mm-art">
-        <img src="assets/media/r5-lighthouse.webp" alt="A watercolor white lighthouse with small buildings on a rocky, green-topped headland above a calm sea at dawn, generated by the Python tab" width="1024" height="1024" loading="lazy">
+        <img src="assets/media/r6-lighthouse.webp" alt="A watercolor white lighthouse with a red lantern room on green-topped rocks above a calm sea at dawn, generated by the Python (with defaults) example" width="1024" height="1024" loading="lazy">
         <div class="a-body"><span class="a-kind">Image <em>mlx-gen &middot; AbstractFramework/flux.2-klein-4b-8bit</em></span><p><q>A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea</q></p></div>
       </div>
     </div>
@@ -1617,9 +1631,14 @@ RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;
 
     <div class="showcase-grid reveal" style="margin-top:2.5rem">
       <div class="showcase-img">
-        <!-- PENDING-W2: ephemeral (deliver/entity-ui/ephemeral-graph.mp4 + poster replaces this screenshot; figcaption from W4: "Ephemeral, one of our entities: its memory graph in the AbstractEntity app.") -->
-        <!-- Entity 0.3.0 capture, reused per W2 MANIFEST.md ("Reused, not retaken") -->
-        <img src="assets/img/shots/entity-list.webp" alt="The AbstractEntity Summoned entities page with one newly created demo entity shown asleep, and its visit, work, personal and sleep modes" loading="lazy">
+        <!-- W2 deliver/entity-ui/README.md: ephemeral-graph.mp4 (1440x900, 8 s, AbstractEntity 0.3.0 mind view on a read-only copy, every word hidden) + poster; W5 .vfig pattern (never autoplays) -->
+        <figure class="vfig">
+          <div class="vfig-media">
+            <video controls playsinline preload="none" poster="assets/img/poster-ephemeral-graph.jpg" width="1440" height="900" aria-label="Recording of Ephemeral's memory graph growing in the AbstractEntity app, with every label hidden"><source src="assets/video/ephemeral-graph.mp4" type="video/mp4">Your browser cannot play this H.264 MP4 video.</video>
+            <button type="button" class="vfig-play" aria-label="Play the recording"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+          <figcaption>Ephemeral, one of our entities: its memory graph in the AbstractEntity app. Labels are hidden; the structure is real.</figcaption>
+        </figure>
       </div>
       <div class="showcase-content">
         <h3>Two tracks</h3>
@@ -1651,12 +1670,9 @@ RUN_ID=$(curl -sS -H <span class="line-str">"Authorization: Bearer &lt;token&gt;
       <h2 class="section-title">How an Entity Remembers: Reconstructed, Not Retrieved</h2>
       <p class="section-desc">Before every answer, an entity's working memory is rebuilt from the moment: who is there, what is asked, and when. Then it can read more on its own. Every reconstruction is kept, in the run's ledger and in the temporal memory graph.</p>
     </div>
+    <!-- W4 deliver/fragments/memory-growth-caption.html, kept as the section's explanation (the Lumen animation is removed, round 6 point 9) -->
+    <p class="reveal mr-explain">Each moment rebuilds working memory from the cue (the words of the request and who is present): the identity core, what was just in use, and what the request calls up. The entity can then read more with its memory tools. Every reconstruction is kept twice, as a step in the run's ledger and as a trace in the temporal memory graph, and only the memories it actually used grow stronger.</p>
 
-    <!-- W5 fragment deliver/fragments/memory-growth.html (round 5, point 8; data: assets/data/entity-graph/visit-1..4.json from W2, deliver/entity-graph/README.md) + W4 caption deliver/fragments/memory-growth-caption.html -->
-    <figure class="mg reveal" data-mg data-mg-src="assets/data/entity-graph/visit-1.json,assets/data/entity-graph/visit-2.json,assets/data/entity-graph/visit-3.json,assets/data/entity-graph/visit-4.json">
-      <div class="mg-canvas"></div>
-      <figcaption class="mg-caption">Each moment rebuilds working memory from the cue (the words of the request and who is present): the identity core, what was just in use, and what the request calls up. The entity can then read more with its memory tools. Every reconstruction is kept twice, as a step in the run's ledger and as a trace in the temporal memory graph, and only the memories it actually used grow stronger. Lumen is a demo entity created for this site: four visits about an imaginary workshop, with recall on keywords (no embedding model configured).</figcaption>
-    </figure>
 
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
@@ -2010,6 +2026,5 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
 <script src="assets/js/carousel3.js?v=20260929e"></script>
 <script src="assets/js/compare.js?v=20260929e"></script>
 <script src="assets/js/synced-chat.js?v=20260929e"></script>
-<script src="assets/js/memory-growth.js?v=20260929e"></script>
 </body>
 </html>
