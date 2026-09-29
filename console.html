@@ -245,8 +245,7 @@ abstractgateway-console --about --gateway-url http://127.0.0.1:8080</code></pre>
       <p class="section-desc">The one-line installer puts every terminal command in <code>~/.local/bin</code>, next to <code>abstractgateway</code>: the terminal console, AbstractCode's terminal client, and the AbstractCore, AbstractVoice, AbstractMusic and AbstractVision commands. The console's Apps page installs and updates <code>abstractcode</code> in that same folder.</p>
     </div>
     <!-- VERIFIED-DOCS: RESULTS.md E8 console.html:240 (helpcheck, helpcheck-crates; claim-url PASS) -->
-<div class="code-block reveal" style="max-width:860px;margin:0 auto"><pre><code>abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;
-abstractcode login --token &lt;admin token&gt;     <span class="line-cmt"># once, then: abstractcode</span>
+<div class="code-block reveal" style="max-width:860px;margin:0 auto"><pre><code>abstractcode login --token &lt;admin token&gt;     <span class="line-cmt"># once, then: abstractcode</span>
 abstractgateway apps tui-command code        <span class="line-cmt"># on the gateway's computer: a one-time signed-in line</span>
 abstractgateway-config claim-url             <span class="line-cmt"># a new one-time console sign-in link</span>
 abstractcore models catalog --fits           <span class="line-cmt"># the Models tab from the command line</span></code></pre></div>

@@ -93,8 +93,8 @@
     <div class="journey">
       <div class="j-step reveal"><div class="j-body">
         <h3>Call any model from Python <span class="j-time">10 min</span></h3>
-        <!-- VERIFIED-DOCS: abstractcore/README.md:132; pypi-extras (RESULTS.md) -->
-<div class="code-block"><pre><code>pip install <span class="line-str">"abstractcore[mlx]"</span>   <span class="line-cmt"># or plain abstractcore for Ollama, LM Studio and /v1 endpoints</span></code></pre></div>
+        <!-- VERIFIED-DOCS: abstractcore@v2.18.0 pyproject.toml:169 (apple), :194 (gpu); pypi-extras (RESULTS.md) -->
+<div class="code-block"><pre><code>pip install <span class="line-str">"abstractcore[apple]"</span>   <span class="line-cmt"># Apple Silicon; plain abstractcore for Ollama, LM Studio and OpenAI-compatible endpoints; [gpu] for vLLM</span></code></pre></div>
 <!-- W2 PASS: SNIPPETS.md E1 -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 

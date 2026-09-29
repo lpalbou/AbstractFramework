@@ -364,7 +364,7 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
         <ul class="showcase-features">
           <li><span class="icon">&#10003;</span> <span><code style="white-space:normal;overflow-wrap:anywhere">abstractcore serve --print-token</code> prints the token for API clients</span></li>
           <li><span class="icon">&#10003;</span> <span><code style="white-space:normal;overflow-wrap:anywhere">abstractcore-endpoint</code> serves one provider and model per worker</span></li>
-          <li><span class="icon">&#10003;</span> <span>Docker: <code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractcore-server:2.18.0</code>, built from PyPI with <code style="white-space:normal;overflow-wrap:anywhere">abstractcore[server,remote,media,tokens,compression]</code> (remote providers; no local engines)</span></li>
+          <li><span class="icon">&#10003;</span> <span>Docker: <code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractcore-server:2.18.0</code>, built from PyPI with the server and the remote providers (no local engines)</span></li>
         </ul>
       </div>
       <div style="min-width:0">
@@ -413,28 +413,15 @@ resp = client.chat.completions.<span class="line-fn">create</span>(
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Install</span>
-      <h2 class="section-title">Choose the smallest install</h2>
-      <p class="section-desc">The base install covers Ollama, LM Studio, OpenRouter, Portkey and OpenAI-compatible endpoints with no SDK. Extras compose: <code style="white-space:normal;overflow-wrap:anywhere">pip install "abstractcore[remote,media,tools]"</code>.</p>
+      <h2 class="section-title">Three installs</h2>
+      <p class="section-desc">Pick the one that matches where your models run. Apple and GPU contain everything in Light and add local engines.</p>
     </div>
-    <div class="table-wrap reveal">
-      <table class="data-table">
-        <thead><tr><th>Extra</th><th>What it adds</th></tr></thead>
-        <tbody>
-          <tr><td><code>remote</code></td><td>OpenAI and Anthropic SDKs (or <code>openai</code> / <code>anthropic</code> alone)</td></tr>
-          <tr><td><code>huggingface</code></td><td>Transformers and torch (heavy)</td></tr>
-          <tr><td><code>apple</code> / <code>mlx</code></td><td>Apple silicon local LLM stack (heavy)</td></tr>
-          <tr><td><code>gpu</code> / <code>vllm</code></td><td>GPU local LLM stack (heavy)</td></tr>
-          <tr><td><code>tools</code></td><td>Built-in web tools (<code>web_search</code>, <code>skim_websearch</code>, <code>skim_url</code>, <code>fetch_url</code>)</td></tr>
-          <tr><td><code>media</code></td><td>Images, PDFs, Office documents</td></tr>
-          <tr><td><code>voice</code>, <code>music</code>, <code>vision</code>, <code>scene3d</code></td><td>Capability plugins: AbstractVoice, AbstractMusic, AbstractVision, Abstract3D (AbstractCamera: <code style="white-space:normal;overflow-wrap:anywhere">pip install abstractcamera</code>)</td></tr>
-          <tr><td><code>compression</code></td><td>Glyph visual-text compression</td></tr>
-          <tr><td><code>embeddings</code></td><td><code>EmbeddingManager</code> and local embedding models</td></tr>
-          <tr><td><code>tokens</code></td><td>Precise token counting (tiktoken)</td></tr>
-          <tr><td><code>server</code></td><td>OpenAI-compatible HTTP server and web console</td></tr>
-          <tr><td><code>all-apple</code> / <code>all-gpu</code></td><td>Full local environment: remote SDKs, HF/GGUF, MLX or vLLM, features, server (Python 3.11+)</td></tr>
-        </tbody>
-      </table>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="display:flex;flex-direction:column;text-align:left"><h3>Light</h3><p>Remote and endpoint inference: Ollama, LM Studio and vLLM servers, OpenRouter, Portkey, and any OpenAI-compatible endpoint.</p><!-- VERIFIED-DOCS: abstractcore@v2.18.0 pyproject.toml:52-56 (base), :169 (apple), :194 (gpu); pypi-extras (RESULTS.md) --><div class="code-block" style="margin:.75rem 0"><pre><code>pip install abstractcore</code></pre></div><div class="mode-tags" style="margin-top:auto"><span class="mode-tag">macOS</span><span class="mode-tag">Linux</span><span class="mode-tag">Windows</span></div></div>
+      <div class="mode-card" style="display:flex;flex-direction:column;text-align:left"><h3>Apple <small style="font-weight:500;color:var(--text-secondary)">Light +</small></h3><p>Everything in Light, plus the local MLX engine for Apple Silicon (text and image input, MTP).</p><!-- VERIFIED-DOCS: abstractcore@v2.18.0 pyproject.toml:52-56 (base), :169 (apple), :194 (gpu); pypi-extras (RESULTS.md) --><div class="code-block" style="margin:.75rem 0"><pre><code>pip install <span class="line-str">"abstractcore[apple]"</span></code></pre></div><div class="mode-tags" style="margin-top:auto"><span class="mode-tag">macOS</span><span class="mode-tag">Apple Silicon</span></div></div>
+      <div class="mode-card" style="display:flex;flex-direction:column;text-align:left"><h3>GPU <small style="font-weight:500;color:var(--text-secondary)">Light +</small></h3><p>Everything in Light, plus the local vLLM engine for NVIDIA CUDA or AMD ROCm.</p><!-- VERIFIED-DOCS: abstractcore@v2.18.0 pyproject.toml:52-56 (base), :169 (apple), :194 (gpu); pypi-extras (RESULTS.md) --><div class="code-block" style="margin:.75rem 0"><pre><code>pip install <span class="line-str">"abstractcore[gpu]"</span></code></pre></div><div class="mode-tags" style="margin-top:auto"><span class="mode-tag">Linux</span><span class="mode-tag">CUDA</span><span class="mode-tag">ROCm</span></div></div>
     </div>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:var(--space-lg)">Capability plugins install as their own packages next to any of the three: <code>pip install abstractvoice</code>, <code>abstractmusic</code>, <code>abstractvision</code>, <code>abstract3d</code> or <code>abstractcamera</code> (<a href="#features">what each adds</a>). The OpenAI-compatible server and its web console install with <code style="white-space:normal;overflow-wrap:anywhere">pip install "abstractcore[server]"</code> (<a href="#server">Server</a>).</p>
     <p class="reveal" style="color:var(--text-secondary);margin-top:var(--space-lg)">Music defaults to the lightweight remote ACE Music backend: set <code style="white-space:normal;overflow-wrap:anywhere">ACEMUSIC_API_KEY</code> before use. Local music engines are optional plugin extras. To upgrade a library install, run <code>pip install -U</code> with the same extras, for example <code style="white-space:normal;overflow-wrap:anywhere">pip install -U "abstractcore[server]"</code>; an installer install upgrades with the framework (<a href="install.html#upgrade">Upgrade</a>).</p>
   </div>
 </section>
