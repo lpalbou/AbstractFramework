@@ -6,13 +6,13 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files on 2026-09-28 (recursive, topic tracks included; README, overview, template and
+On-disk item files on 2026-09-29 (recursive, topic tracks included; README, overview, template and
 `evidence/` files excluded). The legacy part of the backlog still breaks the one-ID-one-item rule,
 so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findings) and 0889.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 158 | 115 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0962, 0964–0975, 0977–0979, 0981, 0983, 0985–0991 included; 0869, 0952, 0963 completed 2026-09-28, 0984 completed 2026-09-29; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
+| Planned | 159 | 116 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0962, 0964–0975, 0977–0979, 0981, 0983, 0985–0992 included; 0869, 0952, 0963 completed 2026-09-28, 0984 completed 2026-09-29; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
 | Proposed | 44 | 36 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931, 0976 included; 0901 promoted to planned) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
 | Completed | 260 | 250 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0869, 0890, 0930, 0941, 0943, 0946–0950, 0952, 0963, 0980, 0982 (2026-09-28), 0984 (2026-09-29; 0941 released 2026-09-27 with root 0.5.0, 0980 is the patch wave's root record, root 0.6.1; 0982 is root 0.6.2's record, and 0869 is closed by the operator's tier ruling, carried by abstractcore 2.19.0). |
 | Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
@@ -116,6 +116,7 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 0992 | [Per-user email accounts and notifications](planned/0992_per_user_email_accounts_and_notifications.md) | Planned (high) | Design + plan, no code: typed mail library and encrypted account store in Core; one mailbox per principal in its gateway plane (`/me/email`, web console + TUI); `email.received@1` trigger on the 0929 inbox; notification dispatcher with durable outbox and rate limits. Found: TLS unverified on every IMAP/SMTP connection, the default automation grant lets an agent email any address, the email bridge never starts under multi-user auth. 12 operator decisions open. |
 | 0991 | [Model residency and GPU memory management](planned/0991_model_residency_and_gpu_memory_management.md) | Planned (high) | One registry of loaded models across engines (in-process text/media, LM Studio/Ollama/vLLM, one-shot subprocesses), resident/protected/ejectable reusing the text lock, NVML/Metal memory budget naming holders, LRU eviction of ejectable models before a load, typed progress, honest errors. Fixed 2026-09-29 (unreleased): resident image models now serve generation (VM 17–19 s vs 54–59 s), a Diffusers unload frees its 18.8 GB. |
 | 0990 | [Seamless vLLM Engines card](planned/0990_seamless_vllm_engine_card.md) | Planned | No-sudo toolchain (ziglang wheel as Triton `CC`, `-l:` rewrite, hermetic glibc target), gateway-supervised `vllm serve` on a free loopback port, per-cc flags (TRITON_ATTN < 8.0, FlashInfer sampler off), NVML memory budget; measured on Turing: 75 s first start, 35 s warm, 85 tok/s (Qwen3-1.7B). |
 | 0989 | [NVIDIA test machines for the Linux and Windows installs](planned/0989_nvidia_test_machines_for_linux_and_windows_installs.md) | Planned (high) | No NVIDIA hardware: one-off AWS g4dn.xlarge session (~$5–10) vs OVHcloud GPU vs GitHub GPU runners (needs an org on Team). |
