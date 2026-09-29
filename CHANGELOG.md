@@ -12,17 +12,21 @@ version, and the terminal consoles, are unchanged from 0.6.2.
 
 ### Added
 
-- **The `gpu` setting on Linux + NVIDIA is validated on real hardware.** On Ubuntu 26.04 with a
-  Quadro RTX 5000 (16 GB, driver 595, CUDA 13), from a clean home, the one-line install with the gpu
-  profile completed in under three minutes on a fast connection (about 13 GB downloaded). It ran
-  PyTorch on CUDA 13, llama.cpp's CUDA build with every layer on the GPU, Whisper speech-to-text on
-  CUDA, text through LM Studio, and image generation with FLUX.2 [klein] 4B through Diffusers
-  (768x768 in about 17 s), all through the gateway. vLLM installs with the gpu setting but was not
+- **The `gpu` setting on Linux + NVIDIA, run on real hardware.** On Ubuntu 26.04 with a Quadro
+  RTX 5000 (16 GB, driver 595, CUDA 13), a pre-release build of this installer installed the gpu
+  profile from a clean home in about three minutes (with the previous release's package versions;
+  this release's package fixes were then installed on top). The installer's checks reported
+  PyTorch 2.11 on CUDA 13.0, llama.cpp's `cu130` build with GPU offload, and Whisper on the GPU.
+  Through the gateway: text with LM Studio (`qwen/qwen3.5-9b@q4_k_m`), speech-to-text with
+  faster-whisper on CUDA, text-to-speech with Supertonic, and image generation with FLUX.2 [klein]
+  4B through Diffusers (about 57 s for one image request; a direct Diffusers run generated 768x768
+  in about 17 s once the model was loaded). vLLM installs with the gpu setting but was not
   validated: it needs a C compiler (`build-essential`) the first time it starts a model, and on
   GPUs older than compute capability 8.0 the `--attention-backend TRITON_ATTN` option. See
   [GPU on Linux (NVIDIA)](docs/install.md#gpu-on-linux-nvidia).
 - **`install.sh` on Linux + NVIDIA** installs llama.cpp's CUDA build that matches PyTorch's CUDA
-  (CUDA 13 with driver 580 or newer, CUDA 12 with driver 525 or newer) and keeps it only when it
+  (PyPI's PyTorch for Linux is a CUDA 13 build, which needs NVIDIA driver 580 or newer; with an
+  older driver PyTorch and llama.cpp run on the processor) and keeps it only when it
   loads and offloads to the GPU; otherwise the CPU build goes back and the summary says why. At the
   end it checks that PyTorch sees the GPU and which device Whisper uses (`PyTorch:`, `GGUF:` and
   `Voice:` summary lines), and warns when no C compiler is found for vLLM.

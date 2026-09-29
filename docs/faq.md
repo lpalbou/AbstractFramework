@@ -273,8 +273,9 @@ starts a model ([GPU on Linux (NVIDIA)](install.md#gpu-on-linux-nvidia)).
 
 Yes, on Linux and Windows x64: when `nvidia-smi` works, the installer picks the `gpu` profile
 (`--profile gpu` / `-Profile gpu` forces it). On Linux it installs llama.cpp's CUDA build matching
-PyTorch's CUDA and checks that PyTorch, llama.cpp and Whisper use the GPU; this path is validated on
-an NVIDIA GPU with driver 595 and CUDA 13. On Windows it installs PyTorch's CUDA build and
+PyTorch's CUDA and checks that PyTorch, llama.cpp and Whisper use the GPU. PyPI's PyTorch for Linux is
+a CUDA 13 build and needs NVIDIA driver 580 or newer; with an older driver the engines run on the
+processor. This path has been run on a Quadro RTX 5000 (driver 595, CUDA 13). On Windows it installs PyTorch's CUDA build and
 llama.cpp's prebuilt CUDA build, chosen from your driver version; this path is implemented but not
 yet validated on real NVIDIA hardware. Each installer prints what runs where (`PyTorch:`, `GGUF:`
 and Whisper lines) and falls back to the CPU for any part that does not work. See

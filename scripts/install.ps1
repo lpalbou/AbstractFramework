@@ -260,6 +260,15 @@ function Select-GpuStack($Info) {
         Why = "${gpu}driver $($Info.Driver) is older than 525 (CUDA 12 needs 525 or newer): PyTorch's CPU build; update the NVIDIA driver and run the installer again for the GPU" }
 }
 
+# Whether PyTorch's packages must be reinstalled: an existing install (not a first install) whose
+# recorded stack (TORCH= in bootstrap.env, '' = PyPI's build) differs from this run's, for example
+# CPU -> CUDA 13 after a driver update. uv keeps an installed torch that satisfies the pins, so
+# without --reinstall-package the old build would stay.
+function Test-TorchReinstall([string]$Action, $State, [string]$TorchTag) {
+    if ($Action -eq 'install') { return $false }
+    return ("$($State['TORCH'])" -ne $TorchTag)
+}
+
 # uv arguments and constraints that select PyTorch's build for a stack ($Torch '' = PyPI's build).
 function Get-TorchSelection([string]$Torch, [bool]$UvHasTorchBackend) {
     if (-not $Torch) { return @{ Args = @(); Constraints = @() } }
@@ -1187,7 +1196,7 @@ function Main {
     }
     # A stack change on an existing install (for example CPU -> CUDA 13) replaces PyTorch's packages.
     $torchTag = if ($stack -and $stack.Torch) { $stack.Torch } else { '' }
-    if ($action -ne 'install' -and "$($state['TORCH'])" -ne $torchTag -and ($state.ContainsKey('TORCH') -or $torchTag)) { $script:TorchReinstall = $true }
+    if (Test-TorchReinstall $action $state $torchTag) { $script:TorchReinstall = $true }
     # Local voice (see $AfWithVoice at the top).
     # A hashtable, so the nested functions below can update it. Voice never fails an install: where
     # its wheels are missing the same install is retried without it (Install-GatewayVoice).
@@ -1373,6 +1382,10 @@ function Main {
             elseif ($stack.Torch -and $t.cuda_build) {
                 Write-Warn2 "PyTorch $($t.version) (CUDA $($t.cuda_build) build) installed, but CUDA is not available: the GPU or its driver cannot run this build; torch engines run on the CPU"
                 $torchResult = "PyTorch $($t.version): CUDA not available on this machine (see the warning above); the engines run on the CPU"
+            } elseif ($stack.Torch -and $script:TorchSel.Args.Count) {
+                # The CUDA build was asked for, but a CPU-only PyTorch is what got installed.
+                Write-Warn2 "PyTorch $($t.version) is a CPU-only build although the $($stack.Label) build ($($stack.Torch)) was requested: torch engines run on the CPU. Run the installer again; if it stays CPU-only, report it with the log: $script:LogFile"
+                $torchResult = "PyTorch $($t.version) on the CPU (the $($stack.Label) build was requested but not installed)"
             } else { Write-Ok "PyTorch $($t.version) on the CPU"; if (-not $torchResult -or $torchResult -like 'PyTorch CUDA*') { $torchResult = "PyTorch $($t.version) on the CPU" } }
         } elseif ($stack.Torch -and $script:TorchSel.Args.Count) {
             $why = if ($t) { $t.error } else { 'no answer from the check' }

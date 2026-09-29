@@ -233,16 +233,35 @@ nvidia_info() {
     fi
     NV_OK=1
 }
-# llama_cuda_build TORCH_CUDA_MAJOR: the llama.cpp CUDA build folder for this driver and torch, or
-# empty (with the reason in LLAMA_CUDA_WHY).
+# llama_cuda_build TORCH_CUDA_MAJOR TORCH_SEES_GPU: sets LLAMA_CUDA_BUILD to the llama.cpp CUDA build
+# folder for this driver and torch, or to empty with the reason in LLAMA_CUDA_WHY. It sets both in
+# the caller's shell: call it directly, never inside $(...) (a subshell would drop LLAMA_CUDA_WHY,
+# and `set -u` then aborts the install where the reason is printed). When nvidia-smi does not
+# answer but PyTorch sees the GPU (a container without NVML, WSL), the build follows PyTorch's CUDA
+# alone; the loader check after the swap still decides whether it stays.
 llama_cuda_build() {
-    LLAMA_CUDA_WHY=""
-    if [ "$NV_OK" != 1 ]; then LLAMA_CUDA_WHY="no working NVIDIA GPU ($NV_ERR)"; return 0; fi
+    LLAMA_CUDA_BUILD=""; LLAMA_CUDA_WHY=""
     case "$1" in
-        13) if [ "$NV_MAJOR" -ge 580 ]; then echo "$AF_LLAMA_CUDA13"; else LLAMA_CUDA_WHY="PyTorch uses CUDA 13, which needs NVIDIA driver 580 or newer (this one is $NV_DRIVER)"; fi ;;
-        12) if [ "$NV_MAJOR" -ge 525 ]; then echo "$AF_LLAMA_CUDA12"; else LLAMA_CUDA_WHY="CUDA 12 needs NVIDIA driver 525 or newer (this one is $NV_DRIVER)"; fi ;;
-        *) LLAMA_CUDA_WHY="PyTorch has no CUDA build here (${1:-not installed})" ;;
+        13) _lcb="$AF_LLAMA_CUDA13"; _lcd=580 ;;
+        12) _lcb="$AF_LLAMA_CUDA12"; _lcd=525 ;;
+        *) LLAMA_CUDA_WHY="PyTorch has no CUDA build here (${1:-not installed})"; return 0 ;;
     esac
+    if [ "${2:-0}" != 1 ]; then
+        LLAMA_CUDA_WHY="PyTorch does not see the GPU, so its CUDA libraries cannot serve llama.cpp either"; return 0
+    fi
+    if [ "$NV_OK" = 1 ] && [ "$NV_MAJOR" -lt "$_lcd" ]; then
+        LLAMA_CUDA_WHY="PyTorch uses CUDA $1, which needs NVIDIA driver $_lcd or newer (this one is $NV_DRIVER)"; return 0
+    fi
+    LLAMA_CUDA_BUILD="$_lcb"
+    return 0
+}
+# torch_driver_hint TORCH_CUDA_VERSION: " (CUDA X needs NVIDIA driver N or newer; this one is M)"
+# only when nvidia-smi reports a driver older than that CUDA needs; empty otherwise.
+torch_driver_hint() {
+    case "$(printf '%s' "$1" | cut -d. -f1)" in 13) _tdn=580 ;; 12) _tdn=525 ;; *) return 0 ;; esac
+    if [ "$NV_OK" = 1 ] && [ "$NV_MAJOR" -lt "$_tdn" ]; then
+        printf ' (CUDA %s needs NVIDIA driver %s or newer; this one is %s)' "$1" "$_tdn" "$NV_DRIVER"
+    fi
     return 0
 }
 af_uv_overrides() {  # $1 = 1 when llama-cpp-python comes from the prebuilt wheel
@@ -496,6 +515,10 @@ live_exec() {
     _lseen="$(wc -l <"$LOG_FILE" | tr -d ' ')"
     "$@" >>"$LOG_FILE" 2>&1 &
     _lpid=$!
+    # A background job ignores Ctrl-C in a non-interactive shell: stop it ourselves, so an
+    # interrupted install never leaves uv running (and holding its cache lock) behind.
+    trap 'kill "$_lpid" 2>/dev/null; wait "$_lpid" 2>/dev/null || :; exit 130' INT
+    trap 'kill "$_lpid" 2>/dev/null; wait "$_lpid" 2>/dev/null || :; exit 143' TERM
     _lalive=1
     while [ "$_lalive" = 1 ]; do
         kill -0 "$_lpid" 2>/dev/null || _lalive=0
@@ -520,6 +543,7 @@ live_exec() {
     done
     _lrc=0
     wait "$_lpid" || _lrc=$?
+    trap - INT TERM
     return "$_lrc"
 }
 # run_sh DESCRIPTION 'shell pipeline' : for the vendor `curl ... | sh` one-liners.
@@ -1857,7 +1881,7 @@ except BaseException as e:
             TORCH_RESULT="torch $_tv, CUDA $_tb on $(smoke_val "$_t" device)"; ok "PyTorch: $TORCH_RESULT"
         elif [ -n "$_tv" ]; then
             TORCH_RESULT="torch $_tv (CUDA ${_tb:-none}) does not see the GPU: Diffusers, Transformers and vLLM run on the processor"
-            warn "PyTorch: $TORCH_RESULT$([ "$NV_OK" = 1 ] && [ -n "$_tb" ] && echo " (CUDA $_tb needs a newer NVIDIA driver than $NV_DRIVER?)")"
+            warn "PyTorch: $TORCH_RESULT$(torch_driver_hint "$_tb")"
         else
             TORCH_RESULT="not importable ($(smoke_val "$_t" error))"; warn "PyTorch: $TORCH_RESULT"
         fi
@@ -1865,8 +1889,14 @@ except BaseException as e:
         case "$GGUF_RESULT" in
             "llama-cpp-python $GGUF_PIN ("*)
                 _tmaj="$(printf '%s' "$_tb" | cut -d. -f1)"
-                _lb="$(llama_cuda_build "$_tmaj")"
-                [ "$_tc" = 1 ] || { _lb=""; LLAMA_CUDA_WHY="PyTorch does not see the GPU, so its CUDA libraries cannot serve llama.cpp either"; }
+                llama_cuda_build "$_tmaj" "$_tc"
+                _lb="$LLAMA_CUDA_BUILD"
+                # llama.cpp's Linux CUDA wheels are built for glibc 2.35 or newer (manylinux_2_35).
+                _glibc="$(ldd --version 2>&1 | head -n 1 | grep -oE '[0-9]+\.[0-9]+$' || true)"
+                if [ -n "$_lb" ] && [ -n "$_glibc" ] && \
+                    [ "$(printf '%s\n' "$_glibc" 2.35 | sort -t. -k1,1n -k2,2n | head -n 1)" != 2.35 ]; then
+                    LLAMA_CUDA_WHY="llama.cpp's CUDA builds need glibc 2.35 or newer (this system has glibc $_glibc)"; _lb=""
+                fi
                 _llama_check='r = {}
 try:
     try:
@@ -1901,7 +1931,12 @@ print("AFSMOKE cuda_build=" + ("1" if lib and any(lib.glob("libggml-cuda.so*")) 
                         GGUF_RESULT="llama-cpp-python $GGUF_PIN ($_lb CUDA build from $AF_LLAMA_INDEX/$_lb/llama-cpp-python/), GPU offload"
                     else
                         _why="$(smoke_val "$_r" error | cut -c1-240)"; [ -n "$_why" ] || _why="loads, but reports no GPU offload"
-                        warn "llama.cpp's $_lb build does not work here ($_why; an AbstractCore older than the Linux CUDA preload cannot load it): putting the CPU build back"
+                        case "$_why" in
+                            *GLIBC*|*glibc*) _whyhint="; this system's glibc is older than the build needs (2.35)" ;;
+                            *libcudart*|*libcublas*) _whyhint="; an AbstractCore older than 2.19.1 does not preload PyTorch's CUDA libraries for it" ;;
+                            *) _whyhint="" ;;
+                        esac
+                        warn "llama.cpp's $_lb build does not work here ($_why$_whyhint): putting the CPU build back"
                         RUN_SOFT=1 run "reinstall llama.cpp's cpu build" "$UV" pip install --python "$GPY" --no-index \
                             --find-links "$GGUF_LINKS" --no-deps --reinstall-package llama-cpp-python \
                             --refresh-package llama-cpp-python "llama-cpp-python==$GGUF_PIN"

@@ -38,7 +38,7 @@ pytestmark = pytest.mark.skipif(shutil.which("pwsh") is None, reason="needs Powe
 
 FUNCTIONS = [
     "Write-Info", "Write-Ok", "Write-Warn2", "Get-NvidiaInfo", "Select-GpuStack", "Get-TorchSelection",
-    "ConvertTo-WinArg", "Invoke-LiveProcess", "Invoke-Smoke", "Resolve-LlamaBuild",
+    "ConvertTo-WinArg", "Invoke-LiveProcess", "Invoke-Smoke", "Resolve-LlamaBuild", "Test-TorchReinstall",
 ]
 VARIABLES = ["AfTorchIndex", "AfTorchPins", "AfLlamaSizes", "AfLlamaSmoke"]
 
@@ -128,6 +128,31 @@ def test_new_driver_on_an_old_gpu_picks_cuda_12(tmp_path: Path) -> None:
     s = _stack(tmp_path, _fake_smi(tmp_path, with_cc="581.29, 6.1, NVIDIA GeForce GTX 1080\n"))
     assert s["name"] == "cu126"
     assert "not CUDA 13: compute capability 6.1 is below 7.5" in s["why"]
+
+
+def test_compute_capability_just_below_the_floor_picks_cuda_12(tmp_path: Path) -> None:
+    # Volta (7.0) with a new driver: CUDA 13 builds need compute capability 7.5 or newer.
+    s = _stack(tmp_path, _fake_smi(tmp_path, with_cc="581.29, 7.0, Tesla V100-SXM2-16GB\n"))
+    assert s["name"] == "cu126"
+    assert "not CUDA 13: compute capability 7.0 is below 7.5" in s["why"]
+
+
+@pytest.mark.parametrize(
+    "action, state, tag, expected",
+    [
+        ("install", "@{}", "cu130", False),                    # a first install has nothing to replace
+        ("upgrade", "@{}", "cu130", True),                     # before 0.6.3 no TORCH= was recorded: PyPI's CPU build
+        ("upgrade", "@{}", "", False),                         # CPU before, CPU now
+        ("upgrade", "@{ TORCH = '' }", "cu130", True),         # CPU -> CUDA 13 (driver updated)
+        ("upgrade", "@{ TORCH = 'cu126' }", "cu130", True),    # CUDA 12 -> CUDA 13
+        ("upgrade", "@{ TORCH = 'cu130' }", "", True),         # CUDA 13 -> CPU (GPU removed)
+        ("upgrade", "@{ TORCH = 'cu130' }", "cu130", False),   # same stack: keep torch
+        ("repair", "@{ TORCH = 'cu130' }", "cu126", True),
+    ],
+)
+def test_torch_is_reinstalled_only_when_the_stack_changes(tmp_path: Path, action, state, tag, expected) -> None:
+    out = _pwsh(f"$st = {state}; if (Test-TorchReinstall '{action}' $st '{tag}') {{ 'YES' }} else {{ 'NO' }}", tmp_path)
+    assert out.strip().splitlines()[-1] == ("YES" if expected else "NO")
 
 
 def test_several_gpus_are_judged_by_the_oldest(tmp_path: Path) -> None:
@@ -397,6 +422,9 @@ def test_install_steps_use_live_output_and_the_fallbacks_are_wired() -> None:
     # A CUDA torch that does not import is replaced by the CPU build; one that imports without CUDA is kept.
     assert "does not import ($why): replacing it with PyTorch's CPU build" in ps1
     assert "installed, but CUDA is not available" in ps1
+    # A CPU-only torch after a CUDA build was requested is said out loud.
+    assert "is a CPU-only build although the $($stack.Label) build ($($stack.Torch)) was requested" in ps1
+    assert "if (Test-TorchReinstall $action $state $torchTag) { $script:TorchReinstall = $true }" in ps1
     # A stack change replaces torch's packages; the stack is recorded for the next run.
     assert "if ($script:TorchReinstall) { foreach ($p in $AfTorchPins.Keys) { $argv += @('--reinstall-package', $p) } }" in ps1
     assert '"TORCH=$(if ($script:TorchSel.Args.Count) { $stack.Torch })", "LLAMA=$llamaFinal"' in ps1

@@ -45,9 +45,9 @@ button of gateway 0.7.1 cannot upgrade. Gateway only, apps, and version checks:
 [Upgrade](docs/install.md#upgrade).
 
 On Linux or Windows with an NVIDIA GPU (`nvidia-smi` works), the installer picks the `gpu` profile:
-PyTorch and llama.cpp on CUDA, Whisper on the GPU, Diffusers image generation. It is validated on
-Linux with an NVIDIA GPU; the Windows gpu install is implemented but not yet validated on real
-NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) and
+PyTorch and llama.cpp on CUDA, Whisper on the GPU, Diffusers image generation. On Linux it needs
+NVIDIA driver 580 or newer and has been run on a Quadro RTX 5000; the Windows gpu install is
+implemented but not yet validated on real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) and
 [GPU on Windows](docs/install.md#gpu-on-windows-nvidia).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
@@ -314,7 +314,7 @@ pip install "abstractframework[gpu]"
 |---|---|---|---|
 | Light | `pip install abstractframework` | macOS, Linux, Windows | 3.10–3.13 |
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
-| GPU | `pip install "abstractframework[gpu]"` | Linux / Windows with a CUDA or ROCm GPU | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
+| GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
 ### Release matrix (abstractframework 0.6.3)
 

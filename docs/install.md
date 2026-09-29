@@ -470,10 +470,16 @@ on Debian/Ubuntu; the installer warns when none is found). On a GPU older than c
 (Turing: RTX 20xx, Quadro RTX, T4) start it with `--attention-backend TRITON_ATTN`: its default
 there, FlashInfer, compiles with the CUDA toolkit's `nvcc`, which a driver-only machine does not have.
 
-Measured on Ubuntu 26.04 with a Quadro RTX 5000 (16 GB, driver 595.91.07, CUDA 13.2), from a clean
-home: the whole install took under three minutes on a fast connection (about 13 GB downloaded,
-14 GB on disk), PyTorch 2.11 on CUDA 13.0, llama.cpp's `cu130` build offloading every layer,
-Whisper on CUDA, FLUX.2 [klein] 4B through Diffusers at 768x768 in about 17 s (root backlog 0989).
+**Driver.** PyPI's PyTorch for Linux (2.11 at this release) is a CUDA 13 build, which needs NVIDIA
+driver 580 or newer. With a driver from 525 to 579, PyTorch reports no GPU, so Diffusers,
+Transformers, vLLM and llama.cpp run on the processor; the installer says so. Update the driver
+(`sudo ubuntu-drivers install` on Ubuntu) and run the installer again. Whisper uses its own CUDA 12
+libraries, which need driver 525 or newer.
+
+On Ubuntu 26.04 with a Quadro RTX 5000 (16 GB, driver 595.91.07, CUDA 13.2), from a clean home, the
+install took about three minutes. Its checks reported PyTorch 2.11 on CUDA 13.0, llama.cpp's `cu130`
+build with GPU offload and Whisper on the GPU; through the gateway, one FLUX.2 [klein] 4B image
+request through Diffusers took about 57 s (root backlog 0989).
 
 ### GPU on Windows (NVIDIA)
 
@@ -768,10 +774,14 @@ whether local inference engines are installed.
 | Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 | GPU | Linux with NVIDIA CUDA or AMD ROCm drivers; Windows x64 with NVIDIA (see [GPU on Windows](#gpu-on-windows-nvidia)) | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 
-A plain `pip install` of the `apple` or `gpu` profile builds the
+A plain `pip install` of the `apple` profile, or of the `gpu` profile on Linux, builds the
 [compiled extras](#compiled-extras) (`llama-cpp-python`, `stable-diffusion-cpp-python`,
 `aec-audio-processing`) from source, so it needs a C/C++ compiler. The one-line install above
-does not.
+does not. On Windows, a plain `pip install "abstractframework[gpu]"` needs no compiler (llama.cpp
+and stable-diffusion.cpp are left out there, and `aec-audio-processing` has Windows wheels for
+Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use the one-line
+installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
+([GPU on Windows](#gpu-on-windows-nvidia)).
 
 `abstractframework` 0.6.3 pins `abstractgateway==0.7.3`, `abstractassistant==0.9.1`,
 `abstractcore==2.19.1`, `AbstractRuntime==0.7.2`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
