@@ -275,12 +275,20 @@ abstractcode login --gateway-url https://gateway.example.com --token &lt;TOKEN&g
 
     </div>
     <div id="generate" class="gen-tabs reveal">
-      <h3 class="gen-title">Two ways to generate voice, music and images</h3>
-      <p class="gen-sub">With defaults configured once (from the gateway console or <code class="long">abstractcore config set-default</code>), each modality is one <code>generate()</code> line. Without defaults, name the provider and the model in the call. The text model is always explicit: <code>create_llm</code> takes a provider.</p>
+      <h3 class="gen-title">One call for every modality</h3>
+      <!-- schematic, not a run example: signatures VERIFIED-DOCS abstractcore@v2.19.0 abstractcore/core/factory.py:10 (create_llm(provider, model=None, **kwargs)), abstractcore/providers/base.py:9177-9178 (generate(prompt, ...)) -->
+<div class="code-block gen-schema" data-lang="code">
+<pre><code>llm = <span class="line-fn">create_llm</span>(provider, model=...)
+llm.<span class="line-fn">generate</span>(prompt, media=[...], output=...)</code></pre>
+      </div>
+      <p class="gen-sub">Inputs go in <code>media=</code>, the output modality in <code>output=</code>; a provider is required. With defaults configured once, <code>output="image"</code> is enough; without them, name the engine in <code>output={...}</code>.</p>
+      <!-- PENDING-W2: R5 (R5-with-defaults, R5-without-defaults, R5-http, R5-media-input in examples/SNIPPETS.md replace the blocks below verbatim) -->
+      <div class="mm-proof">
       <div class="code-tabs">
         <div class="tab-nav">
-          <button class="tab-btn active" data-tab="gen-defaults">With gateway defaults configured</button>
-          <button class="tab-btn" data-tab="gen-explicit">Without defaults (AbstractCore only)</button>
+          <button class="tab-btn active" data-tab="gen-defaults">Python</button>
+          <button class="tab-btn" data-tab="gen-http">HTTP (OpenAI-compatible)</button>
+          <button class="tab-btn" data-tab="gen-explicit">No defaults</button>
         </div>
       <div class="tab-panel active" id="tab-gen-defaults">
         <div class="install-notes" style="border-top:none"><ul><li>Set the routes once per machine; the gateway console's <strong>Use recommended defaults</strong> and its Multimodal tab write the same AbstractCore store (recommended defaults set voice and image; set music as shown). Then each modality is one line.</li></ul></div>
@@ -307,6 +315,33 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
+      <div class="tab-panel" id="tab-gen-http">
+        <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code> (this ran from the <code>abstractframework[apple]</code> install). The server asks for a bearer token, even on loopback.</li></ul></div>
+        <!-- E4 (W2 PASS): examples/E4-openai-server/snippet.sh verbatim (run-models.log, run-chat-speech.log, run-images.log) -->
+<div class="code-block">
+<pre><code><span class="line-cmt"># Start the OpenAI-compatible server (another terminal): abstractcore serve --port 19740</span>
+BASE=http://127.0.0.1:19740
+TOKEN=$(abstractcore serve --print-token --port 19740)   <span class="line-cmt"># loopback bearer token, created on first use</span>
+
+curl -sS <span class="line-str">"$BASE/v1/models"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span>
+
+curl -sS <span class="line-str">"$BASE/v1/chat/completions"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"model": "mlx/mlx-community/Qwen3.5-4B-4bit",
+       "messages": [{"role": "user", "content": "In one sentence, what is an append-only ledger?"}]}'</span>
+
+curl -sS <span class="line-str">"$BASE/v1/audio/speech"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"provider": "supertonic", "model": "supertonic-3", "input": "Write once. Generate everything. Run anywhere.",
+       "response_format": "wav"}'</span> --output speech.wav
+
+curl -sS <span class="line-str">"$BASE/v1/images/generations"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"provider": "mlx-gen", "model": "AbstractFramework/flux.2-klein-4b-8bit",
+       "prompt": "A paper boat on a calm lake at sunrise, watercolor",
+       "width": 1024, "height": 1024, "response_format": "b64_json"}'</span> &gt; image.json</code></pre>
+        </div>
+      </div>
       <div class="tab-panel" id="tab-gen-explicit">
         <div class="install-notes" style="border-top:none"><ul><li>No configured defaults and no server: name the provider and the model for each capability in the call. This ran with <code class="long">pip install "abstractframework[apple]"</code>, with every route cleared first.</li></ul></div>
         <!-- Q2-without-defaults (W2 PASS): examples/Q2-tabs/without_defaults.py verbatim (22.4 s, RESULTS.md Q2-without-defaults) -->
@@ -329,6 +364,21 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
         </div>
       </div>
       </div>
+    <!-- Artifacts: the outputs of examples/E2-defaults/snippet.py (W2 PASS; deliver/media/lighthouse.webp, tagline.mp3, ambient.mp3); routes: examples/E2-defaults/defaults.sh -->
+    <div class="mm-proof-side">
+      <h3>Results from the same models (E2 run, prompts below)</h3>
+      <div class="mm-art">
+        <div class="a-body"><span class="a-kind">Voice <em>supertonic &middot; supertonic-3</em></span><p><q>AbstractFramework: write once, generate everything, run anywhere.</q></p><audio controls preload="none" aria-label="Generated voice: the tagline read aloud"><source src="assets/media/tagline.mp3" type="audio/mpeg"></audio></div>
+      </div>
+      <div class="mm-art">
+        <div class="a-body"><span class="a-kind">Music <em>acestep &middot; ACE-Step/acestep-v15-xl-turbo-diffusers</em></span><p><q>Calm ambient piano with soft strings, instrumental</q></p><audio controls preload="none" aria-label="Generated music: calm ambient piano with soft strings"><source src="assets/media/ambient.mp3" type="audio/mpeg"></audio></div>
+      </div>
+      <div class="mm-art">
+        <img src="assets/media/lighthouse.webp" alt="A watercolor lighthouse on a rocky coast at dawn with a calm sea, generated by the code on the left" width="1024" height="1024" loading="lazy">
+        <div class="a-body"><span class="a-kind">Image <em>mlx-gen &middot; AbstractFramework/flux.2-klein-4b-8bit</em></span><p><q>A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea, seagulls in the distance</q></p></div>
+      </div>
+    </div>
+    </div>
     </div>
   </div>
 </section>
@@ -385,55 +435,7 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
     </ul>
     <p class="mm-foot reveal">Media input follows explicit policies, never silent changes. AbstractCamera is a capability too, for capture rather than generation: it opens real cameras, takes photos and clips, and gives an agent camera tools. The one-line <code>output="image"</code> form needs a default route for that capability; without one, name the provider and model in the call: both forms are in <a href="#generate">Two ways to generate</a>. Below, the same capabilities over HTTP.</p>
 
-    <div class="mm-proof reveal">
-    <div class="code-tabs">
-      <div class="tab-nav">
-        <button class="tab-btn active" data-tab="mm-api">OpenAI-compatible server</button>
-      </div>
-      <div class="tab-panel active" id="tab-mm-api">
-        <div class="install-notes" style="border-top:none"><ul><li>Any OpenAI client, in any language, against <code>abstractcore serve</code> (this ran from the <code>abstractframework[apple]</code> install). The server asks for a bearer token, even on loopback.</li></ul></div>
-        <!-- E4 (W2 PASS): examples/E4-openai-server/snippet.sh verbatim (run-models.log, run-chat-speech.log, run-images.log) -->
-<div class="code-block">
-<pre><code><span class="line-cmt"># Start the OpenAI-compatible server (another terminal): abstractcore serve --port 19740</span>
-BASE=http://127.0.0.1:19740
-TOKEN=$(abstractcore serve --print-token --port 19740)   <span class="line-cmt"># loopback bearer token, created on first use</span>
-
-curl -sS <span class="line-str">"$BASE/v1/models"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span>
-
-curl -sS <span class="line-str">"$BASE/v1/chat/completions"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"model": "mlx/mlx-community/Qwen3.5-4B-4bit",
-       "messages": [{"role": "user", "content": "In one sentence, what is an append-only ledger?"}]}'</span>
-
-curl -sS <span class="line-str">"$BASE/v1/audio/speech"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"provider": "supertonic", "model": "supertonic-3", "input": "Write once. Generate everything. Run anywhere.",
-       "response_format": "wav"}'</span> --output speech.wav
-
-curl -sS <span class="line-str">"$BASE/v1/images/generations"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"provider": "mlx-gen", "model": "AbstractFramework/flux.2-klein-4b-8bit",
-       "prompt": "A paper boat on a calm lake at sunrise, watercolor",
-       "width": 1024, "height": 1024, "response_format": "b64_json"}'</span> &gt; image.json</code></pre>
-        </div>
-      </div>
-    </div>
-
-    <!-- Artifacts: the outputs of examples/E2-defaults/snippet.py (W2 PASS; deliver/media/lighthouse.webp, tagline.mp3, ambient.mp3); routes: examples/E2-defaults/defaults.sh -->
-    <div class="mm-proof-side">
-      <h3>What the <a href="#generate">defaults example</a> produced</h3>
-      <div class="mm-art">
-        <div class="a-body"><span class="a-kind">Voice <em>supertonic &middot; supertonic-3</em></span><p><q>AbstractFramework: write once, generate everything, run anywhere.</q></p><audio controls preload="none" aria-label="Generated voice: the tagline read aloud"><source src="assets/media/tagline.mp3" type="audio/mpeg"></audio></div>
-      </div>
-      <div class="mm-art">
-        <div class="a-body"><span class="a-kind">Music <em>acestep &middot; ACE-Step/acestep-v15-xl-turbo-diffusers</em></span><p><q>Calm ambient piano with soft strings, instrumental</q></p><audio controls preload="none" aria-label="Generated music: calm ambient piano with soft strings"><source src="assets/media/ambient.mp3" type="audio/mpeg"></audio></div>
-      </div>
-      <div class="mm-art">
-        <img src="assets/media/lighthouse.webp" alt="A watercolor lighthouse on a rocky coast at dawn with a calm sea, generated by the code on the left" width="1024" height="1024" loading="lazy">
-        <div class="a-body"><span class="a-kind">Image <em>mlx-gen &middot; AbstractFramework/flux.2-klein-4b-8bit</em></span><p><q>A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea, seagulls in the distance</q></p></div>
-      </div>
-    </div>
-    </div>
+    <p class="reveal" style="text-align:center;margin-top:1.5rem"><a class="comp-link" href="#generate">The code for each modality, in Python and over HTTP, and what it produced &rarr;</a></p>
   </div>
 </section>
 
@@ -1748,7 +1750,6 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
 <span class="line-fn">print</span>(hits)</code></pre>
         </div>
       </div>
-      </div>
     </div>
 
     <div class="showcase-grid reverse reveal" style="margin-top:3rem">
@@ -1857,29 +1858,8 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
   </div>
 </section>
 
-<!-- ═══════════════════ RELEASES ═══════════════════ -->
-<section id="releases" style="background:var(--bg-surface)">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-label">Releases</div>
-      <h2 class="section-title">What Shipped</h2>
-      <p class="section-desc">The framework moves in coordinated releases: one version of <code>abstractframework</code> always installs the same, tested set of packages.</p>
-    </div>
-    <div class="roadmap-timeline reveal">
-      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.2 &middot; 2026-09-29</span><h4>One line installs, upgrades and repairs</h4><p>Re-running the install line finds the existing install, upgrades it to the release's tested versions and lists what changed; <strong>Update</strong> in the web console, the terminal console and the menu-bar or tray icon runs that same line (AbstractGateway 0.7.2). AbstractCore 2.19.0 adds <code class="long">abstractcore models recommendations</code>, the recommended model for every capability, and installs Abstract3D.</p></div></div>
-      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.1 &middot; 2026-09-28</span><h4>Every command on your PATH</h4><p>The installer builds <code>abstractcode</code> and exposes the AbstractCore, voice, music and vision commands next to the gateway; the terminal app says how to sign in; Run now explains itself the same way in every client.</p></div></div>
-      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.0 &middot; 2026-09-28</span><h4>Remote machines work like a Mac</h4><p>Apps served through the gateway at <code>/apps/&lt;app&gt;/</code>, the local gateway pointer, automations in AbstractCode, history that keeps whole messages up to 50,000 tokens, voice that says what it can do, DNS-rebinding protection.</p></div></div>
-      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.5.0 &middot; 2026-09-27</span><h4>Automations and a headless setup</h4><p>Automations in the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a>, the <a href="observer.html" style="color:var(--accent-light)">Observer</a> and <a href="flow.html" style="color:var(--accent-light)">Flow</a>; the terminal console installed by default; configuring a remote Linux server without a browser.</p></div></div>
-      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.4.0 &middot; 2026-09-26</span><h4>One agent workflow across the clients</h4><p>The gateway picks the agent workflow, AbstractCode browses the workspace, a curated skill shelf, live replies in AbstractCode, the Assistant and the Observer, and the console opens the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a> already signed in.</p></div></div>
-      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.3.0 &middot; 2026-09-24</span><h4>A Mac install without Terminal knowledge</h4><p>The <code>.pkg</code> and double-click installers and uninstaller, and install failures explained in plain words.</p></div></div>
-      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.2.0 &middot; 2026-09-23</span><h4>One-line install and the console</h4><p>Install with one line, sign in with a one-time link, and manage local models and engines from the console, the terminal or the command line.</p></div></div>
-    </div>
-    <p class="reveal" style="text-align:center;margin-top:1.5rem"><a class="comp-link" href="https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md" target="_blank" rel="noopener noreferrer">Full changelog &rarr;</a></p>
-  </div>
-</section>
-
 <!-- ═══════════════════ PHILOSOPHY ═══════════════════ -->
-<section id="principles">
+<section id="principles" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Philosophy</div>
@@ -1919,6 +1899,8 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
     </div>
   </div>
 </section>
+
+<!-- PENDING-W4: history (deliver/fragments/history.html: origin in AbstractLLM, refactored into dedicated packages, links to each CHANGELOG) -->
 
 <!-- ═══════════════════ CTA ═══════════════════ -->
 <section class="cta-section">

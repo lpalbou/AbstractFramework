@@ -4209,3 +4209,4 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 .mm-dir span { display: block; font: 500 .7rem var(--mono); color: var(--accent-light); margin-top: .15rem; }
 @media (max-width: 1000px) { .mm-dir { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 480px) { .mm-dir { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.gen-schema { max-width: 640px; margin: 0 auto 1rem; }
