@@ -10,7 +10,7 @@
    deleted; recall in a later session strengthens only what was used; sleep
    is deterministic and only proposes (a summary with `summarizes` edges, at
    most one dream with `mentions` links; sources unchanged); the four phases
-   are visit / work / personal / sleep.
+   are visit / work / personal / sleep (AbstractRuntime identity/spec/entity_phases.vendored.json:49-84, identity/life.py:232-235; entities have no role field).
 
    Markup (see deliver/fragments/entity-graph.html):
      <div class="eg" data-eg aria-label="..."></div>
@@ -27,7 +27,7 @@
 
   var LANES = [
     { key: 'identity', label: 'identity', sub: ['spark:', 'values,', 'traits'] },
-    { key: 'role', label: 'role', sub: ['phase'] },
+    { key: 'role', label: 'phase', sub: ['visit ·', 'work ·', 'personal ·', 'sleep'] },
     { key: 'purpose', label: 'purpose', sub: ['spark:', 'purposes'] },
     { key: 'history', label: 'history', sub: ['formed', 'per session'] },
     { key: 'experience', label: 'experience', sub: ['lessons,', 'facts,', 'diary,', 'sleep', 'proposals'] }
@@ -325,7 +325,7 @@
     this.data.forEach(function (e) { var c = {}; e.nodes.forEach(function (n) { c[n.lane] = (c[n.lane] || 0) + 1; slots = Math.max(slots, c[n.lane]); }); });
     var avail = W - gutter - 4;
     var slotW = avail / slots;
-    var laneH = { identity: 74, role: 44, purpose: 70, history: 74, experience: 78 };
+    var laneH = { identity: 74, role: 70, purpose: 70, history: 74, experience: 78 };
     var laneY = {}, y = 6;
     LANES.forEach(function (l) { laneY[l.key] = y; y += laneH[l.key]; });
     var H_ = y + 4;
