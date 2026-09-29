@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractMemory 0.3 — durable, append-only memory for agents | AbstractFramework</title>
-  <meta name="description" content="AbstractMemory is a Python library for durable, append-only agent memory: temporal triples over in-memory, SQLite or LanceDB stores, and a MemorySystem that forms, reconstructs and consolidates memories from use.">
+  <title>AbstractMemory 0.3.0 — temporal, provenance-aware memory for agents and entities | AbstractFramework</title>
+  <meta name="description" content="AbstractMemory stores facts as temporal triples with validity windows and provenance, and builds a usage-weighted memory system on top: formation, recall, attention, identity, diary, sleep and consolidation. Nothing is deleted.">
   <link rel="canonical" href="https://abstractframework.ai/memory.html">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="AbstractMemory — durable agent memory">
-  <meta property="og:description" content="Two layers: temporal, provenance-aware triples, and a MemorySystem with a journal for formation, recall, attention, identity, diary and consolidation.">
+  <meta property="og:title" content="AbstractMemory — memory in time">
+  <meta property="og:description" content="Temporal triples with validity windows and provenance, and a memory system that forms, recalls, consolidates and never deletes.">
   <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="assets/css/main.css?v=5">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">Skip to content</a>
 
 <!-- ═══════════════════ NAV ═══════════════════ -->
 <nav class="nav" aria-label="Main">
@@ -33,8 +33,8 @@
   <ul class="nav-links" id="nav-links">
     <li><a href="./">Home</a></li>
     <li><a href="#overview">Overview</a></li>
-    <li><a href="#memory-system">Memory system</a></li>
-    <li><a href="#triples">Triples</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#getting-started">Get Started</a></li>
     <li><a href="https://github.com/lpalbou/AbstractMemory" target="_blank" rel="noopener noreferrer" class="nav-cta">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
@@ -58,30 +58,33 @@
     <a href="continuum.html" class="pkg-nav-link">Continuum</a>
     <a href="entity.html" class="pkg-nav-link">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
-    <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="3d.html" class="pkg-nav-link">3D</a>
     <a href="camera.html" class="pkg-nav-link">Camera</a>
     <a href="memory.html" class="pkg-nav-link active" aria-current="page">Memory</a>
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+    <a href="tui.html" class="pkg-nav-link">TUI</a>
+    <a href="uic.html" class="pkg-nav-link">UIC</a>
   </div>
 </div>
+
 <main id="main">
 
 <!-- ═══════════════════ DOC HERO ═══════════════════ -->
 <section class="hero" style="min-height:auto;padding:8rem 0 4rem">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> KNOWLEDGE &middot; memory &middot; v0.3.0</div>
+    <div class="hero-badge"><span class="dot"></span> Knowledge &middot; Memory &middot; v0.3.0</div>
     <h1>Abstract<span class="gradient">Memory</span></h1>
-    <p class="hero-sub">AbstractMemory is a Python library for durable, append-only agent memory. Layer 1 stores facts as temporal triples (subject, predicate, object), each with its time and provenance: where it came from. Layer 2, the <code>MemorySystem</code>, combines those triples with an append-only journal into a usage-weighted memory graph: it forms records, reconstructs working memory from a cue, and strengthens only what you actually use. Storage never decays and nothing is deleted.</p>
+    <p class="hero-sub">AbstractMemory is a Python library for durable, append-only agent memory. Layer 1 stores facts as temporal triples (subject, predicate, object), each with its time and provenance: where it came from. Layer 2, the <code>MemorySystem</code>, combines those triples with an append-only journal into a usage-weighted memory graph: it forms records, reconstructs working memory from a cue, and strengthens only what you actually use. Storage never decays and nothing is deleted. It is the memory engine of the framework's <a href="entity.html">entities</a>.</p>
     <div class="hero-actions">
       <a href="https://github.com/lpalbou/AbstractMemory" target="_blank" rel="noopener noreferrer" class="btn btn-primary"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub</a>
       <a href="https://pypi.org/project/AbstractMemory/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
       <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS abstractmemory/README.md:56-57 -->
 <div class="hero-code">
 <pre><code>python -m pip install AbstractMemory
 python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   <span class="line-cmt"># LanceDB backend</span></code></pre>
@@ -121,13 +124,44 @@ python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   
   </div>
 </section>
 
+<!-- ═══════════════════ MEMORY IN TIME ═══════════════════ -->
+<section id="time" class="section" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Memory in time</span>
+      <h2 class="section-title">Every fact knows when, and where from</h2>
+      <p class="section-desc">A fact is a <code>TripleAssertion</code>: subject, predicate and object, with the time it was observed, the window in which it holds, a confidence and its provenance. Beliefs change by adding records, never by editing or deleting old ones.</p>
+    </div>
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Validity windows</h3>
+        <p><code>observed_at</code> says when the fact was seen; <code>valid_from</code> and <code>valid_until</code> bound when it holds. A query with <code>active_at</code> returns what was true at that moment, and <code>since</code> / <code>until</code> filter by observation time.</p>
+        <div class="mode-tags"><span class="mode-tag">observed_at</span><span class="mode-tag">valid_from</span><span class="mode-tag">valid_until</span><span class="mode-tag">active_at</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Provenance</h3>
+        <p>Each assertion carries a free-form <code>provenance</code> record (for example the span or turn it came from) and an optional <code>confidence</code>; journal events record who acted: the runtime, an operator or the system.</p>
+        <div class="mode-tags"><span class="mode-tag">provenance</span><span class="mode-tag">confidence</span><span class="mode-tag">actor</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Revision without deletion</h3>
+        <p>A belief is revised by an append-only closure, <code>retract</code> or <code>supersede</code>. The journal gives every record a monotonic <code>seq</code>, so a recall can be re-run <em>as of</em> an earlier moment and returns the same result while the stored facts are unchanged.</p>
+        <div class="mode-tags"><span class="mode-tag">retract</span><span class="mode-tag">supersede</span><span class="mode-tag">seq</span><span class="mode-tag">as_of</span></div>
+      </div>
+    </div>
+    <div class="callout reveal" style="margin-top:var(--space-2xl)">
+      <div><strong>How an entity lives on it.</strong> Every turn of a visit is formed into an episode, and every answer starts with a recall over the entity's own scopes. At the end of a visit the entity keeps the lessons, feelings and interests it chooses; at night, sleep consolidates and proposes without calling a model. Its founding identity (values, purposes, traits) stays fixed. See <a href="entity.html">AbstractEntity</a>.</div>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════════ LAYER 2 ═══════════════════ -->
-<section id="memory-system" class="section" style="background:var(--bg-surface)">
+<section id="memory-system" class="section">
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Layer 2</span>
       <h2 class="section-title">The memory system</h2>
-      <p class="section-desc">Working memory is not stored; it emerges from use. Every journal record gets a monotonic <code>seq</code>, so any past state can be reproduced by reading <code>as_of</code> that point. The <a href="https://github.com/lpalbou/AbstractMemory/blob/main/docs/memory-system.md" target="_blank" rel="noopener noreferrer">memory system guide</a> explains the model in depth.</p>
+      <p class="section-desc">Working memory is not stored; it emerges from use. Every journal record gets a monotonic <code>seq</code>, so a recall can be reproduced <code>as_of</code> an earlier point (exactly, while the stored facts are unchanged). The <a href="https://github.com/lpalbou/AbstractMemory/blob/main/docs/memory-system.md" target="_blank" rel="noopener noreferrer">memory system guide</a> explains the model in depth.</p>
     </div>
     <div class="components-grid reveal">
       <div class="comp-card">
@@ -158,7 +192,7 @@ python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   
       <div class="comp-card">
         <div class="comp-card-header"><span class="comp-tag modality">Sleep</span></div>
         <h3>Sleep and consolidation</h3>
-        <p>One night in a fixed order: resolution, maintenance, world models, dream. It is deterministic and makes no LLM calls; a dream only proposes, and waking evidence decides.</p>
+        <p>One night in a fixed order: resolution, maintenance, world models, mining, identity and dream. It is deterministic and makes no LLM calls; it only proposes, and waking evidence decides.</p>
       </div>
       <div class="comp-card">
         <div class="comp-card-header"><span class="comp-tag composition">Reach</span></div>
@@ -177,7 +211,7 @@ python -m pip install <span class="line-str">"AbstractMemory[lancedb]"</span>   
       </div>
     </div>
 
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS abstractmemory/README.md:86-105 -->
 <div class="code-block reveal" style="margin-top:var(--space-2xl)"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> (
     MemorySystem, MemoryRecordInput, SQLiteTripleStore, SQLiteJournal, Stimulus,
 )
@@ -201,7 +235,7 @@ system.<span class="line-fn">commit_selection</span>(result.trace_id, [h.record_
 </section>
 
 <!-- ═══════════════════ LAYER 1 ═══════════════════ -->
-<section id="triples" class="section">
+<section id="triples" class="section" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Layer 1</span>
@@ -220,7 +254,7 @@ system.<span class="line-fn">commit_selection</span>(result.trace_id, [h.record_
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS abstractmemory/README.md:64-80 -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> InMemoryTripleStore, TripleAssertion, TripleQuery
 
 store = <span class="line-fn">InMemoryTripleStore</span>()
@@ -242,7 +276,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
     </div>
 
     <h3 class="reveal" style="margin:var(--space-2xl) 0 var(--space-md)">Semantic search with an embedder</h3>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS abstractmemory/docs/getting-started.md:72-90 (endpoint and model names are examples); abstractmemory/docs/api.md:61,76 -->
 <div class="code-block reveal"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> OpenAICompatTextEmbedder, SQLiteTripleStore, TripleAssertion, TripleQuery
 
 <span class="line-cmt"># any OpenAI-compatible /embeddings endpoint; base_url includes the version prefix</span>
@@ -256,14 +290,14 @@ print(hits[<span class="line-var">0</span>].attributes[<span class="line-str">"_
 </section>
 
 <!-- ═══════════════════ NEXT ═══════════════════ -->
-<section id="next" class="section" style="background:var(--bg-surface)">
+<section id="next" class="section">
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Where to next</span>
       <h2 class="section-title">Keep going</h2>
     </div>
     <div class="next-links reveal">
-      <a class="next-link" href="entity.html"><strong>Entities</strong><span>Long-lived entities whose mind runs on AbstractMemory.</span></a>
+      <a class="next-link" href="entity.html"><strong>AbstractEntity</strong><span>Persistent agents whose memory runs on AbstractMemory.</span></a>
       <a class="next-link" href="semantics.html"><strong>AbstractSemantics</strong><span>The shared predicates, entity types and memory relations.</span></a>
       <a class="next-link" href="start-researcher.html"><strong>Researcher journey</strong><span>Memory, recall and replay as objects of study.</span></a>
       <a class="next-link" href="runtime.html"><strong>AbstractRuntime</strong><span>The durable runtime whose memory effects write here.</span></a>
@@ -298,11 +332,13 @@ print(hits[<span class="line-var">0</span>].attributes[<span class="line-str">"_
       <a href="agent.html">AbstractAgent</a>
       <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
       <a href="flow.html">AbstractFlow</a>
+      <a href="tui.html">AbstractTUI</a>
+      <a href="uic.html">AbstractUIC</a>
     </div>
     <div class="footer-col">
       <h4>Applications</h4>
       <a href="gateway.html">AbstractGateway</a>
-      <a href="console.html">Consoles</a>
+      <a href="console.html">Gateway &amp; Core consoles</a>
       <a href="automations.html">Automations</a>
       <a href="code.html">AbstractCode</a>
       <a href="observer.html">AbstractObserver</a>
@@ -313,9 +349,9 @@ print(hits[<span class="line-var">0</span>].attributes[<span class="line-str">"_
     <div class="footer-col">
       <h4>Modalities &amp; Knowledge</h4>
       <a href="voice.html">AbstractVoice</a>
-      <a href="vision.html">AbstractVision</a>
       <a href="music.html">AbstractMusic</a>
-      <a href="3d.html">abstract3d</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="3d.html">Abstract3D</a>
       <a href="camera.html">AbstractCamera</a>
       <a href="memory.html">AbstractMemory</a>
       <a href="semantics.html">AbstractSemantics</a>
@@ -343,7 +379,6 @@ print(hits[<span class="line-var">0</span>].attributes[<span class="line-str">"_
     contact@abstractframework.ai
   </div>
 </footer>
-
 <script src="assets/js/main.js?v=5"></script>
 </body>
 </html>
