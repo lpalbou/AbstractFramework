@@ -285,75 +285,48 @@ abstractcode login --gateway-url https://gateway.example.com --token &lt;TOKEN&g
           <button class="tab-btn" data-tab="gen-explicit">Without defaults (AbstractCore only)</button>
         </div>
       <div class="tab-panel active" id="tab-gen-defaults">
-        <div class="install-notes" style="border-top:none"><ul><li>Configure AbstractCore's capability routes once; the gateway console's <strong>Use recommended defaults</strong> and its Multimodal tab write the same store. Once a capability has a default, its call is one line.</li></ul></div>
-        <!-- E2-defaults.sh (W2 PASS): examples/E2-defaults/defaults.sh lines 3-6 verbatim; its comment is in the note above. E2-gateway-recommended proves the console writes the same store -->
+        <div class="install-notes" style="border-top:none"><ul><li>Set the routes once per machine; the gateway console's <strong>Use recommended defaults</strong> and its Multimodal tab write the same AbstractCore store (recommended defaults set voice and image; set music as shown). Then each modality is one line.</li></ul></div>
+        <!-- VERIFIED-DOCS + W2 run: examples/Q2-tabs/defaults.sh verbatim (with_defaults.defaults.log; RESULTS.md Q2-with-defaults) -->
 <div class="code-block">
-<pre><code>abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit
-abstractcore config set-default output.voice --provider supertonic --model supertonic-3
-abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers
-abstractcore config defaults</code></pre>
+<pre><code><span class="line-cmt"># Once per machine (the gateway console's "Use recommended defaults" writes the same store)</span>
+abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.<span class="line-var">2</span>-klein-4b-8bit
+abstractcore config set-default output.voice --provider supertonic --model supertonic-<span class="line-var">3</span>
+abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers</code></pre>
         </div>
-        <!-- E2-snippet (W2 PASS): examples/E2-defaults/snippet.py verbatim -->
+        <!-- Q2-with-defaults (W2 PASS): examples/Q2-tabs/with_defaults.py verbatim (74.9 s, RESULTS.md Q2-with-defaults) -->
         <div class="code-block" style="margin-top:1rem">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+<pre><code><span class="line-cmt"># Defaults set once: see defaults.sh (or the gateway console's "Use recommended defaults")</span>
+<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
-<span class="line-cmt"># The capability routes come from AbstractCore's config (defaults.sh above,</span>
-<span class="line-cmt"># or the gateway console's recommended defaults); the text model is explicit.</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
-                     <span class="line-str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="line-str">"image"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
-
-speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
-                      output=<span class="line-str">"voice"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
-
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor lighthouse on a rocky coast at dawn"</span>, output=<span class="line-str">"image"</span>)
+speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Write once. Generate everything. Run anywhere."</span>, output=<span class="line-str">"voice"</span>)
 music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="line-str">"music"</span>)
+
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-gen-explicit">
-        <div class="install-notes" style="border-top:none"><ul><li>No defaults and no server: name the provider and the model for each capability in the call. These ran with <code class="long">pip install "abstractframework[apple]"</code> (AbstractCore, the plugins and the Apple silicon engines), with every route cleared first.</li></ul></div>
-        <!-- E3-image (W2 PASS): examples/E3-explicit/image.py verbatim -->
-        <div class="code-sub">Image</div>
+        <div class="install-notes" style="border-top:none"><ul><li>No configured defaults and no server: name the provider and the model for each capability in the call. This ran with <code class="long">pip install "abstractframework[apple]"</code>, with every route cleared first.</li></ul></div>
+        <!-- Q2-without-defaults (W2 PASS): examples/Q2-tabs/without_defaults.py verbatim (22.4 s, RESULTS.md Q2-without-defaults) -->
 <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+<pre><code><span class="line-cmt"># No configured defaults: name the provider and model per capability</span>
+<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-image = llm.<span class="line-fn">generate</span>(
-    <span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
-    output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>,
-            <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>, <span class="line-str">"width"</span>: <span class="line-var">1024</span>, <span class="line-str">"height"</span>: <span class="line-var">1024</span>},
-)
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)</code></pre>
-        </div>
-        <!-- E3-voice (W2 PASS): examples/E3-explicit/voice.py verbatim -->
-        <div class="code-sub">Voice</div>
-<div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor lighthouse on a rocky coast at dawn"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
+speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Write once. Generate everything. Run anywhere."</span>,
+                      output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>})
+music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
 
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-
-speech = llm.<span class="line-fn">generate</span>(
-    text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
-    output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>},
-)
-<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)</code></pre>
-        </div>
-        <!-- E3-music (W2 PASS): examples/E3-explicit/music.py verbatim -->
-        <div class="code-sub">Music</div>
-<div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
-
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-
-music = llm.<span class="line-fn">generate</span>(
-    text=<span class="line-str">"Calm ambient piano with soft strings, warm and hopeful, instrumental"</span>,
-    output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>,
-            <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>, <span class="line-str">"duration_s"</span>: <span class="line-var">15</span>},
-)
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
