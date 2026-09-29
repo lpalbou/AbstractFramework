@@ -377,6 +377,7 @@ music = llm.<span class="line-fn">generate</span>(
         <div class="mm-col-title">Input &middot; <code>media=</code></div>
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></span><div><h4>Text</h4><p>Any of ten provider types, local or cloud, with tools and structured output.</p></div></div>
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span><div><h4>Images</h4><p>A vision model, or a vision fallback that describes the image for a text-only model.</p></div></div>
+        <!-- PENDING-W4: Q3 (what the code has for audio input: input.voice via AbstractVoice speech-to-text; input.sound / input.music routes) -->
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span><div><h4>Audio</h4><p>An audio-capable model, or speech-to-text through AbstractVoice.</p></div></div>
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg></span><div><h4>Video</h4><p>Native video where the model supports it, otherwise sampled frames.</p></div></div>
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h6"/></svg></span><div><h4>Documents</h4><p>PDFs and Office files, with optional visual-text compression for long ones.</p></div></div>
@@ -994,7 +995,8 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
           <span class="comp-tag app">Application</span>
         </div>
         <h3>AbstractAssistant <span class="ver">0.9.1</span></h3>
-        <p>A desktop assistant in your menu bar or system tray: a chat palette one shortcut away, hands-free voice conversations and a small CLI, on your gateway's sessions and workflows. Built for macOS, with an app bundle you can build; the same app runs from pip on Linux and Windows.</p>
+        <!-- PENDING-W4: Q4 (OS wording from FACTS Q4) -->
+        <p>A desktop assistant in your menu bar or system tray: a chat palette, hands-free voice conversations and a small CLI, on your gateway's sessions and workflows. It runs on macOS, Linux and Windows desktops with a system tray; it is tested most on macOS, where it is also packaged as an app bundle.</p>
         <div class="comp-links">
           <a class="comp-link" href="assistant.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/AbstractAssistant" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -1024,7 +1026,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
           <span class="comp-tag app">Application</span>
         </div>
         <h3>AbstractEntity <span class="ver">0.3.0</span></h3>
-        <p>Create entities with a lasting memory of their own, talk with them and read their diaries, served by the gateway.</p>
+        <p>Persistent, self-evolving agents with an identity, a purpose, a history and experiences: entities. We are defining the field here.</p>
         <div class="comp-links">
           <a class="comp-link" href="entity.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/AbstractEntity" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -1084,6 +1086,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
 
 <!-- ═══════════════════ FLOW ═══════════════════ -->
 <!-- W4 fragment deliver/fragments/flow.html (claims and sources in its header and FACTS.md P1) -->
+<!-- PENDING-W4: Q7 (updated deliver/fragments/flow.html: sharing workflows, workflows as an evolution of skills) -->
 <section id="flow">
   <div class="container">
     <div class="section-header reveal">
@@ -1232,8 +1235,9 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
     <!-- W4 fragment assistant-card.html (B), FACTS.md P2/P10 -->
     <div class="section-header reveal">
       <div class="section-label">Desktop</div>
-      <h2 class="section-title">AbstractAssistant &mdash; One Shortcut Away</h2>
-      <p class="section-desc">Press <kbd>&#8984;&#8679;Space</kbd> from any app (Super+Shift+Space on Linux and Windows; configurable), or click its menu-bar or tray icon, and the palette opens on your gateway: your sessions from every device, your automations and live run activity. In the palette, <kbd>&#8984;&#8679;V</kbd> starts a hands-free voice conversation. Built for macOS, where you can also build it as a menu-bar app bundle; the same Python app runs on Linux and Windows desktops that have a system tray, without that bundle and not validated to the same standard.</p>
+      <h2 class="section-title">AbstractAssistant &mdash; One Click Away</h2>
+      <p class="section-desc">Press <kbd>&#8984;&#8679;Space</kbd> from any app (Super+Shift+Space on Linux and Windows; configurable), or click its menu-bar or tray icon, and the palette opens on your gateway: your sessions from every device, your automations and live run activity. In the palette, <kbd>&#8984;&#8679;V</kbd> starts a hands-free voice conversation. The app is not tied to one system: it runs on macOS, Linux and Windows desktops that have a system tray, and it is tested most on macOS, where it is also packaged as a menu-bar app bundle.</p>
+    <!-- PENDING-W4: Q4 (OS wording from FACTS Q4) -->
     </div>
     <div class="gallery reveal">
       <div class="gallery-item">
@@ -1553,11 +1557,12 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 
 <!-- ═══════════════════ ENTITIES ═══════════════════ -->
 <!-- W4 fragment deliver/fragments/entities.html (claims and sources in its header and FACTS.md P3) -->
+<!-- PENDING-W4: Q12 (updated deliver/fragments/entities.html) -->
 <section id="entities">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Entities</div>
-      <h2 class="section-title">Agents With a Life of Their Own</h2>
+      <h2 class="section-title">Entities: Persistent Agents With an Identity</h2>
       <p class="section-desc">An entity is a persistent agent with a fixed founding identity (values, purposes, traits), its own memory graph and a hash-chained diary. Every conversation is formed into its memory. It writes down the lessons, feelings and interests it chooses to keep, recalls them in later conversations, and consolidates its memory while it sleeps.</p>
     </div>
 
@@ -1611,6 +1616,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 
 
 <!-- ═══════════════════ KNOWLEDGE GRAPH ═══════════════════ -->
+<!-- PENDING-W4: Q14 (deliver/fragments/memory-reconstruction.html for this section) -->
 <section id="knowledge">
   <div class="container">
     <div class="section-header reveal">
