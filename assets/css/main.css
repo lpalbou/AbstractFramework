@@ -4146,3 +4146,13 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
   .pkg-nav-inner { flex-wrap: nowrap; justify-content: flex-start; white-space: nowrap; }
   .pkg-nav { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 28px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 28px), transparent 100%); }
 }
+/* Principles: a class, so the phone rule applies */
+.principles-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+/* Lightbox close button */
+.lightbox-close { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 1rem); right: 1rem; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(10,10,16,.85); color: #fff; cursor: pointer; }
+.lightbox-close:hover { background: rgba(40,40,56,.95); }
+/* Package bar and nav: topic pages (Consoles, Automations) read as topics, not packages */
+.pkg-nav-divider { align-self: center; width: 1px; height: 18px; margin: 0 6px; background: var(--border-hover); flex: 0 0 auto; }
+.pkg-nav-link.topic, .nav-dropdown-menu a.topic { font-style: italic; color: var(--text-muted); opacity: .85; }
+.pkg-nav-link.topic::before, .nav-dropdown-menu a.topic::before { content: '\2192\00a0'; font-style: normal; opacity: .6; }
+.pkg-nav-link.topic.active { opacity: 1; color: var(--primary-light); }

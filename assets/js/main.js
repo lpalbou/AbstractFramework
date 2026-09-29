@@ -206,16 +206,25 @@ document.addEventListener('DOMContentLoaded', () => {
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-modal', 'true');
       overlay.setAttribute('aria-label', img.alt || 'Image');
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'lightbox-close';
+      closeBtn.setAttribute('aria-label', 'Close');
+      closeBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>';
       overlay.appendChild(big);
+      overlay.appendChild(closeBtn);
       function close() { overlay.remove(); document.removeEventListener('keydown', esc); img.focus(); }
-      function esc(e) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); close(); } }
+      function esc(e) {
+        if (e.key === 'Escape') { e.preventDefault(); close(); }
+        else if (e.key === 'Tab') { e.preventDefault(); closeBtn.focus(); }  /* focus stays inside the dialog */
+      }
       overlay.addEventListener('click', close);
       document.addEventListener('keydown', esc);
       document.body.appendChild(overlay);
-      overlay.focus();
+      closeBtn.focus();
     }
     img.addEventListener('click', open);
-    img.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    img.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); open(); } });
   });
 
   /* ── Tab system (ARIA tabs, arrow keys) ── */
