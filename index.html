@@ -1325,28 +1325,28 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
             <div class="c3-stage">
               <!-- video worker: deliver/media/README-video.md section 1 (model, canvas, frames, fps, steps, seed, prompt, 1539 s); untracked/wan-mem/queue3.txt:2 -->
               <figure class="c3-slide">
-                <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-wan-ti2v-t2v-alpine-lake.jpg" aria-label="Generated video: a rowboat drifting on a calm alpine lake at sunrise">
+                <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-wan-ti2v-t2v-alpine-lake.jpg" aria-label="Generated video: a rowboat drifting on a calm alpine lake at sunrise">
                   <source src="assets/video/wan-ti2v-t2v-alpine-lake.mp4" type="video/mp4">
                   Your browser cannot play this H.264 MP4 video.
                 </video>
                 <figcaption>Wan 2.2 TI2V-5B, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 25.7 min on an M5 Max &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
               </figure>
               <figure class="c3-slide">
-                <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
+                <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
                   <source src="assets/video/t2v-river.mp4" type="video/mp4">
                   Your browser cannot play this H.264 MP4 video.
                 </video>
                 <figcaption>Wan 2.2 text-to-video &mdash; "A crystal clear river in the mountains"</figcaption>
               </figure>
               <figure class="c3-slide">
-                <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg" aria-label="Generated video: two starships in combat">
+                <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-t2v-space.jpg" aria-label="Generated video: two starships in combat">
                   <source src="assets/video/t2v-space.mp4" type="video/mp4">
                   Your browser cannot play this H.264 MP4 video.
                 </video>
                 <figcaption>Wan 2.2 text-to-video &mdash; "A dynamic combat in space between two starships"</figcaption>
               </figure>
               <figure class="c3-slide">
-                <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
+                <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
                   <source src="assets/video/t2v-example.mp4" type="video/mp4">
                   Your browser cannot play this H.264 MP4 video.
                 </video>
@@ -1363,7 +1363,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
               <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps, 16 s &mdash; "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors"</figcaption>
             </figure>
             <figure>
-              <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" width="832" height="480" aria-label="Generated video: waves breaking against the rocks below the lighthouse as the camera pushes in">
+              <video autoplay muted loop playsinline controls preload="metadata" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" aria-label="Generated video: waves breaking against the rocks below the lighthouse as the camera pushes in" width="832" height="480">
                 <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
                 Your browser cannot play this H.264 MP4 video.
               </video>
@@ -1466,7 +1466,8 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
         <li>You, on the phone in the AbstractCode terminal client over SSH: Draft a reply to the voice issue.</li>
         <li>Assistant: Here is a draft reply for the voice issue.</li>
         <li>You, in the browser in AbstractCode web: What is in my Downloads folder?</li>
-        <li>The agent asks to run the tool execute_command with the command ls ~/Downloads. The run waits for approval, and the approval request appears in all three clients. Approving it in one client resumes the run, and every client sees it continue.</li>
+        <li>The agent asks to run the tool execute_command with the command ls ~/Downloads. The run waits for your approval, and the request appears in all three clients; nothing else happens until you answer.</li>
+        <li>You approve it from the phone. The approval resolves the run's wait, and all three clients see the run continue.</li>
         <li>Tool result: 42 items.</li>
         <li>Assistant: 42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</li>
       </ol>
@@ -1490,10 +1491,12 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
                       <span class="sc-gate-title">execute_command needs your approval</span>
                       <code>ls ~/Downloads</code>
                       <div class="sc-btns"><span class="sc-btn ghost">Decide later</span><span class="sc-btn">Deny</span><span class="sc-btn primary" data-sc-approve>Allow once &#9662;</span></div>
+                      <span class="sc-waiting">Needs your approval</span>
                       <span class="sc-resolved">&#10003; Approved by you</span>
                     </div>
-                    <div class="sc-tool" data-sc="7">execute_command &middot; 42 items</div>
-                    <div class="sc-a" data-sc="8">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
+                    <div class="sc-u sc-auth" data-sc="7">Approved: run execute_command<small>from the <span class="sc-auth-from">phone</span></small></div>
+                    <div class="sc-tool" data-sc="8">execute_command &middot; 42 items</div>
+                    <div class="sc-a" data-sc="9">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
                   </div>
                   <div class="sc-app-input">Ask anything, drop files, or press &#8984;&#8679;V to talk</div>
                 </div>
@@ -1520,12 +1523,14 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
                     <div class="sc-u" data-sc="5">What is in my Downloads folder?</div>
                     <div class="sc-gate" data-sc="6">
                       <span class="sc-gate-title">tool approval &mdash; 1 call(s)</span>
-                      <code class="long">execute_command {"command": "ls ~/Downloads"}</code>
+                      <code>execute_command {"command": "ls ~/Downloads"}</code>
                       <div class="sc-btns"><span class="sc-btn primary" data-sc-approve>approve (a)</span><span class="sc-btn">approve all (A)</span><span class="sc-btn">deny (d)</span></div>
+                      <span class="sc-waiting">waiting for approval</span>
                       <span class="sc-resolved">&#10003; approved</span>
                     </div>
-                    <div class="sc-tool" data-sc="7">execute_command &rarr; 42 items</div>
-                    <div class="sc-a" data-sc="8">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
+                    <div class="sc-u sc-auth" data-sc="7">Approved: run execute_command<small>from the <span class="sc-auth-from">phone</span></small></div>
+                    <div class="sc-tool" data-sc="8">execute_command &rarr; 42 items</div>
+                    <div class="sc-a" data-sc="9">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
                   </div>
                   <div class="sc-status">Agent: react &middot; gateway session</div>
                 </div>
@@ -1553,12 +1558,14 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
                   <div class="sc-u" data-sc="5">What is in my Downloads folder?</div>
                   <div class="sc-gate" data-sc="6">
                     <span class="sc-gate-title">Approve to run these tools.</span>
-                    <code class="long">execute_command &middot; command: ls ~/Downloads</code>
+                    <code>execute_command &middot; command: ls ~/Downloads</code>
                     <div class="sc-btns"><span class="sc-btn">Approve All</span><span class="sc-btn primary" data-sc-approve>Approve Once</span><span class="sc-btn">Deny</span></div>
-                    <span class="sc-resolved">&#10003; Approved</span>
+                    <span class="sc-waiting">Waiting for approval</span>
+                      <span class="sc-resolved">&#10003; Approved</span>
                   </div>
-                  <div class="sc-tool" data-sc="7">execute_command &middot; 42 items</div>
-                  <div class="sc-a" data-sc="8">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
+                  <div class="sc-u sc-auth" data-sc="7">Approved: run execute_command<small>from the <span class="sc-auth-from">phone</span></small></div>
+                  <div class="sc-tool" data-sc="8">execute_command &middot; 42 items</div>
+                  <div class="sc-a" data-sc="9">42 items: 18 installers, 11 archives and 13 documents. Want me to move the installers to the Trash?</div>
                 </div>
               </div>
             </div>

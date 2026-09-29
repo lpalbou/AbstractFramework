@@ -272,27 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ── Pause every video that leaves the screen or is not the visible slide ── */
-  /* Autoplay videos (muted, looped) play only while in view, and never under reduced motion;
-     videos inside a three-panel carousel are left to carousel3.js. */
-  document.querySelectorAll('video[autoplay]').forEach(v => {
-    if (reduceMotion) { v.removeAttribute('autoplay'); v.pause(); }
-  });
-  if ('IntersectionObserver' in window) {
-    const vio = new IntersectionObserver(entries => {
-      entries.forEach(en => {
-        const v = en.target;
-        if (!en.isIntersecting) { if (!v.paused) v.pause(); return; }
-        if (!reduceMotion && v.hasAttribute('autoplay') && !v.closest('.c3') && v.paused && v.offsetParent !== null) {
-          v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {});
-        }
-      });
-    }, { threshold: 0.35 });
-    document.querySelectorAll('video').forEach(v => vio.observe(v));
-    /* a video in a tab that becomes visible is observed again */
-    document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
-      document.querySelectorAll('video').forEach(v => { vio.unobserve(v); vio.observe(v); });
-    }));
-  }
+  /* Video playback (autoplay in view, pause out of view, reduced motion) is handled by carousel3.js. */
 
   /* ── Carousel ── */
   document.querySelectorAll('.carousel').forEach(carousel => {
