@@ -31,6 +31,11 @@
   // script takes over from the native attribute so that it can pause off
   // screen and honour prefers-reduced-motion (no autoplay; controls shown).
   // A viewer's own pause is respected until the video leaves and comes back.
+  // Only a pause that follows the viewer's own gesture on that video counts as
+  // the viewer's pause: pauses issued by this script, by other scripts or by
+  // the browser never block autoplay later (a stale "user paused" flag left a
+  // side slide stuck at 0:00 when it came to the centre).
+  var GESTURE_MS = 1500;
   function manage(v) {
     if (v._afManaged) return;
     v._afManaged = true;
@@ -39,9 +44,15 @@
     v.muted = true;
     v.setAttribute('playsinline', '');
     if (!v.hasAttribute('controls') && v.dataset.c3Controls === undefined) v.setAttribute('controls', '');
+    var mark = function () { v._afGestureAt = Date.now(); };
+    v.addEventListener('pointerdown', mark);
+    v.addEventListener('keydown', mark);
+    v.addEventListener('click', mark);
     v.addEventListener('pause', function () {
-      if (v._afAuto) { v._afAuto = false; return; }
-      if (!v.ended) v._afUserPaused = true;
+      var scripted = v._afAuto;
+      v._afAuto = false;
+      if (scripted || v.ended) return;
+      if (v._afGestureAt && Date.now() - v._afGestureAt < GESTURE_MS) v._afUserPaused = true;
     });
     v.addEventListener('play', function () { v._afUserPaused = false; });
     if (!v.paused) autoPause(v);
@@ -49,10 +60,31 @@
   function autoPlay(v) {
     if (reduceMQ.matches || v._afUserPaused || !v.paused) return;
     v.muted = true;
+    v.preload = 'auto';
+    // Nothing loaded yet, a failed load, or a preload suspended after the metadata
+    // (a server without byte ranges cannot resume it): start the load again.
+    if (v.readyState === 0 || v.error || v.networkState === 3 || (v.readyState < 2 && v.networkState === 1)) { try { v.load(); } catch (e) {} }
+    // Watchdog: if playback has not advanced after 2.5 s while still wanted, reload once.
+    clearTimeout(v._afDog);
+    var t0 = v.currentTime;
+    v._afDog = setTimeout(function () {
+      if (!v._afWant || v._afRetried || v.currentTime > t0 + 0.05) return;
+      v._afRetried = true;
+      try { v.load(); } catch (e) {}
+      var p2 = v.play(); if (p2 && p2.catch) p2.catch(function () {});
+    }, 2500);
     var pr = v.play();
-    if (pr && pr.catch) pr.catch(function () {});
+    if (pr && pr.catch) pr.catch(function () {
+      // play() can be rejected while the load restarts: retry once when data arrives.
+      var retry = function () { v.removeEventListener('canplay', retry); if (v._afWant) autoPlay(v); };
+      v.addEventListener('canplay', retry);
+    });
+    v._afWant = true;
   }
   function autoPause(v, forget) {
+    v._afWant = false;
+    v._afRetried = false;
+    clearTimeout(v._afDog);
     if (forget) v._afUserPaused = false;
     if (v.paused) return;
     v._afAuto = true;
@@ -314,7 +346,7 @@
     // A video that starts playing in the centre stops the slide show from moving on.
     this.slides.forEach(function (s) {
       var v = s.querySelector('video');
-      if (v) v.addEventListener('play', function () { if (!s.classList.contains('is-center')) v.pause(); });
+      if (v) v.addEventListener('play', function () { if (!s.classList.contains('is-center')) { if (v._afManaged) autoPause(v, true); else v.pause(); } });
     });
   };
 
