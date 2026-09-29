@@ -165,6 +165,24 @@ npx @abstractframework/flow --gateway-url http://127.0.0.1:8080</code></pre>
         <p>An admin makes it the gateway's default workflow for an interface. Every chat that follows <strong>Gateway default</strong> in AbstractCode, the Assistant or your own client runs it from its next turn; a turn never changes workflow while it runs.</p>
       </div>
     </div>
+    <!-- Round 7: "Made to be shared" strip; sources in deliver/fragments/flow-share.html -->
+    <div class="reveal" style="margin-top:2rem;border:1px solid rgba(6,182,212,.35);border-radius:14px;padding:1.25rem 1.5rem;background:linear-gradient(135deg,rgba(99,102,241,.10),rgba(6,182,212,.08))">
+      <p style="font-weight:700;color:var(--text);margin-bottom:1rem">Made to be shared <span style="font-weight:400;color:var(--text-secondary)">&middot; Workflows are made to be shared between gateways and the people who use them.</span></p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:.75rem;align-items:start">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+          <div><strong>1. Export</strong><p style="color:var(--text-secondary);font-size:.88rem">Download one version as a single <code>.flow</code> file, exactly as it runs.</p></div>
+        </div>
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:.75rem;align-items:start">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/><path d="M12 7v6"/><path d="M9 10l3-3 3 3"/></svg>
+          <div><strong>2. Install it elsewhere</strong><p style="color:var(--text-secondary);font-size:.88rem">An admin imports the file on another gateway, and it runs there the same way.</p></div>
+        </div>
+        <div style="display:grid;grid-template-columns:32px 1fr;gap:.75rem;align-items:start">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="7" r="3"/><circle cx="5" cy="17" r="2.5"/><circle cx="19" cy="17" r="2.5"/><path d="M10 9.5l-3.5 5M14 9.5l3.5 5"/></svg>
+          <div><strong>3. Promote to the shared catalog</strong><p style="color:var(--text-secondary);font-size:.88rem">Users of that gateway can then pick it: the Assistant and AbstractCode web list the shared catalog.</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -341,19 +359,23 @@ RUN_ID=$(curl -sS -H "Authorization: Bearer &lt;token&gt;" -H "Content-Type: app
 
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Share a workflow</h3>
-    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">A published workflow is one portable <code>.flow</code> file: the manifest, the root flow and its subflows in a single zip.</p>
+    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">A published workflow is one portable <code>.flow</code> file: the manifest, the root flow and its subflows in a single zip. Workflows are made to be shared between gateways and the people who use them.</p>
+    <!-- Round 7 R7-share: GW v0.7.2 console.py:1853,1860-1861,3629-3634,3774,10440; docs/console.md:38,382; routes/gateway.py:1161,1444,1477-1500,7451-7463,7532-7553 -->
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
-        <h3>Download it</h3>
-        <p><code>GET /api/gateway/bundles/{bundle_id}/download</code> exports a version as its original <code>.flow</code> bytes, byte for byte, so it installs elsewhere exactly as it ran here.</p>
+        <h3>1. Export</h3>
+        <p>In the web console's <strong>Workflows</strong> tab, <strong>Export</strong> downloads the latest version as a <code>.flow</code> file (a version's own Export gives that version); in the terminal console, press <kbd>e</kbd>. The file is byte-identical to what runs on the gateway.</p>
+        <p style="font:400 .72rem/1.5 var(--mono);color:var(--text-muted);margin-top:.5rem">GET /api/gateway/bundles/{bundle_id}/download?bundle_version=…</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>Install it on another gateway</h3>
-        <p><code>POST /api/gateway/bundles/upload</code> installs a <code>.flow</code> file on any gateway (an admin action, since the registry is shared).</p>
+        <h3>2. Install it elsewhere</h3>
+        <p>On the other gateway, an admin clicks <strong>Import…</strong> in the Workflows tab and picks one or more <code>.flow</code> files, or presses <kbd>i</kbd> in the terminal console. Files up to 75 MB by default.</p>
+        <p style="font:400 .72rem/1.5 var(--mono);color:var(--text-muted);margin-top:.5rem">POST /api/gateway/bundles/upload</p>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>Share it inside your gateway</h3>
-        <p>An admin promotes a version to the gateway's shared workflow catalog, with an optional default pointer and access rules; catalog versions are immutable. The Assistant lists its workflows from this catalog.</p>
+        <h3>3. Promote to the shared catalog</h3>
+        <p>An admin promotes an installed version to the gateway's shared catalog, optionally as its default and with access rules; catalog versions are immutable. The Assistant and AbstractCode web list the catalog. Promotion is available from the API today, not from a console button.</p>
+        <p style="font:400 .72rem/1.5 var(--mono);color:var(--text-muted);margin-top:.5rem">POST /api/gateway/admin/workflow-catalog/promote</p>
       </div>
     </div>
     <!-- VERIFIED-DOCS abstractgateway/docs/api.md:82-87 (adapted: bearer token and gateway address pasted, operator rule) -->
