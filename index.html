@@ -128,7 +128,7 @@
         View on GitHub
       </a>
     </div>
-    <!-- Quick start (P16). Lines: docs/install.md:57 (macOS/Linux), docs/install.md:74 (Windows), README.md:294 + E7 PASS (pip) -->
+    <!-- VERIFIED-DOCS Quick start (P16). Lines: docs/install.md:57 (macOS/Linux), docs/install.md:74 (Windows), README.md:294 + E7 PASS (pip) -->
     <div class="qs" aria-label="Quick start">
       <div class="qs-tabs" role="tablist" aria-label="Install on">
         <button type="button" class="qs-tab" role="tab" id="qs-mac" aria-controls="qs-term" aria-selected="true" data-os="mac" data-prompt="$" data-cmd="curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh" data-note="macOS 13 or later. Installs in your user account and opens the web console, signed in. Prefer a double-click? &lt;a href=&quot;install.html#choose&quot;&gt;The .pkg installer&lt;/a&gt;.">macOS</button>
@@ -142,23 +142,29 @@
       </div>
       <p class="qs-note"><span class="qs-note-text">macOS 13 or later. Installs in your user account and opens the web console, signed in.</span> <a href="install.html">All install options &rarr;</a></p>
     </div>
-    <!-- E1 + E2 (W2 PASS): code lines and the E1 comment verbatim from examples/E1-text/snippet.py and examples/E2-defaults/snippet.py; the "Image, voice, music" comment is a site note -->
+    <!-- E1 (W2 PASS): examples/E1-text/snippet.py verbatim (whole file), then E2-snippet (W2 PASS): examples/E2-defaults/snippet.py lines 7-16 verbatim -->
 <div class="hero-code">
-<pre><code><span class="kw">from</span> abstractcore <span class="kw">import</span> <span class="fn">create_llm</span>
+<pre><code><span class="kw">from</span> abstractcore <span class="kw">import</span> create_llm
+
 <span class="cmt"># Local model on Apple silicon (MLX). Any provider works the same way, e.g.</span>
 <span class="cmt"># create_llm("openai", model="gpt-5-mini") or create_llm("ollama", model="qwen3:4b").</span>
 llm = <span class="fn">create_llm</span>(<span class="str">"mlx"</span>, model=<span class="str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-response = llm.<span class="fn">generate</span>(<span class="str">"In two sentences, what is a durable workflow runtime?"</span>)
 
-<span class="cmt"># Voice, music, image: configure each route once. The gateway console's "Use recommended</span>
-<span class="cmt"># defaults" sets voice and image where this computer runs them; music with</span>
-<span class="cmt"># `abstractcore config set-default output.music ...` or the console's Multimodal tab</span>
+response = llm.<span class="fn">generate</span>(<span class="str">"In two sentences, what is a durable workflow runtime?"</span>)
+<span class="kw">print</span>(response.content)
+
 image = llm.<span class="fn">generate</span>(<span class="str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
                      <span class="str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="str">"image"</span>)
+<span class="fn">open</span>(<span class="str">"lighthouse.png"</span>, <span class="str">"wb"</span>).<span class="fn">write</span>(image.outputs[<span class="str">"image"</span>][0].data)
+
 speech = llm.<span class="fn">generate</span>(text=<span class="str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
                       output=<span class="str">"voice"</span>)
-music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="str">"music"</span>)</code></pre>
+<span class="fn">open</span>(<span class="str">"tagline.wav"</span>, <span class="str">"wb"</span>).<span class="fn">write</span>(speech.outputs[<span class="str">"voice"</span>][0].data)
+
+music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="str">"music"</span>)
+<span class="fn">open</span>(<span class="str">"ambient.wav"</span>, <span class="str">"wb"</span>).<span class="fn">write</span>(music.outputs[<span class="str">"music"</span>][0].data)</code></pre>
     </div>
+    <p class="qs-note" style="max-width:840px;margin:.5rem auto 0;text-align:left">The image, voice and music calls need their routes set once: the gateway console's <strong>Use recommended defaults</strong> sets voice and image where this computer runs them; set music with <code>abstractcore config set-default output.music</code> or the console's Multimodal tab. <a href="#multimodal">Both forms &rarr;</a></p>
   </div>
 </section>
 
@@ -196,7 +202,7 @@ music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambien
           <li>An OpenAI-compatible <code>/v1</code> server, a web console and <code>abstractcore-console</code></li>
           <li>Model recommendations for this machine before you download</li>
         </ul>
-        <!-- install lines: abstractcore/README.md:118-133 -->
+        <!-- VERIFIED-DOCS abstractcore/README.md:118-133 (install lines) -->
 <div class="code-block" style="margin-top:1rem">
 <pre><code><span class="line-kw">pip install</span> abstractcore             <span class="line-cmt"># Ollama, LM Studio, OpenRouter, Portkey, any /v1 endpoint</span>
 <span class="line-kw">pip install</span> <span class="line-str">"abstractcore[remote]"</span>   <span class="line-cmt"># + OpenAI and Anthropic SDKs</span>
@@ -325,18 +331,17 @@ abstractcode login --gateway-url https://gateway.example.com --token &lt;TOKEN&g
         <button class="tab-btn" data-tab="mm-api">OpenAI-compatible server</button>
       </div>
       <div class="tab-panel active" id="tab-mm-defaults">
-        <div class="install-notes" style="border-top:none"><ul><li>Defaults come from the gateway console (<strong>Use recommended defaults</strong> or the Multimodal tab) or from <code class="long">abstractcore config set-default</code>. Once a capability has a default, its call is one line.</li></ul></div>
-        <!-- E2 (W2 PASS): examples/E2-defaults/defaults.sh and snippet.py verbatim; E2-gateway-recommended proves the console writes the same store -->
+        <div class="install-notes" style="border-top:none"><ul><li>Configure AbstractCore's capability routes once; the gateway console's <strong>Use recommended defaults</strong> and its Multimodal tab write the same store. Once a capability has a default, its call is one line.</li></ul></div>
+        <!-- E2-defaults.sh (W2 PASS): examples/E2-defaults/defaults.sh lines 3-6 verbatim; its comment is in the note above. E2-gateway-recommended proves the console writes the same store -->
 <div class="code-block">
-<pre><code><span class="line-cmt"># Configure AbstractCore's capability routes once (the gateway console's</span>
-<span class="line-cmt"># "Use recommended defaults" writes the same store)</span>
-abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit
+<pre><code>abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit
 abstractcore config set-default output.voice --provider supertonic --model supertonic-3
 abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers
 abstractcore config defaults</code></pre>
         </div>
+        <!-- E2-snippet (W2 PASS): examples/E2-defaults/snippet.py verbatim -->
         <div class="code-block" style="margin-top:1rem">
-<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
 <span class="line-cmt"># The capability routes come from AbstractCore's config (defaults.sh above,</span>
 <span class="line-cmt"># or the gateway console's recommended defaults); the text model is explicit.</span>
@@ -344,22 +349,22 @@ llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span
 
 image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
                      <span class="line-str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="line-str">"image"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
 
 speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
                       output=<span class="line-str">"voice"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).write(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
 
 music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="line-str">"music"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).write(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-mm-explicit">
-        <div class="install-notes" style="border-top:none"><ul><li>No defaults and no server: name the provider and the model for each capability in the call.</li></ul></div>
-        <!-- E3 (W2 PASS): examples/E3-explicit/image.py verbatim, then the generate calls of voice.py and music.py verbatim; every route cleared first -->
+        <div class="install-notes" style="border-top:none"><ul><li>No defaults and no server: name the provider and the model for each capability in the call. These ran with <code>pip install "abstractframework[apple]"</code> (AbstractCore, the plugins and the Apple silicon engines), with every route cleared first.</li></ul></div>
+        <!-- E3-image (W2 PASS): examples/E3-explicit/image.py verbatim -->
+        <div class="code-sub">Image</div>
 <div class="code-block">
-<pre><code><span class="line-cmt"># ran with: pip install "abstractframework[apple]" (AbstractCore, the plugins and the Apple silicon engines)</span>
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
@@ -368,18 +373,34 @@ image = llm.<span class="line-fn">generate</span>(
     output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>,
             <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>, <span class="line-str">"width"</span>: <span class="line-var">1024</span>, <span class="line-str">"height"</span>: <span class="line-var">1024</span>},
 )
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)</code></pre>
+        </div>
+        <!-- E3-voice (W2 PASS): examples/E3-explicit/voice.py verbatim -->
+        <div class="code-sub">Voice</div>
+<div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
 speech = llm.<span class="line-fn">generate</span>(
     text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
     output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>},
 )
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)</code></pre>
+        </div>
+        <!-- E3-music (W2 PASS): examples/E3-explicit/music.py verbatim -->
+        <div class="code-sub">Music</div>
+<div class="code-block">
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
 music = llm.<span class="line-fn">generate</span>(
     text=<span class="line-str">"Calm ambient piano with soft strings, warm and hopeful, instrumental"</span>,
     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>,
             <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>, <span class="line-str">"duration_s"</span>: <span class="line-var">15</span>},
-)</code></pre>
+)
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-mm-api">
@@ -706,7 +727,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
         <div class="mode-tags"><span class="mode-tag">vLLM</span><span class="mode-tag">HuggingFace</span><span class="mode-tag">Diffusers</span><span class="mode-tag">CUDA</span></div>
       </div>
     </div>
-    <!-- VERIFIED-DOCS docs/install.md:389-392 (not runnable hermetically: needs a remote server) -->
+    <!-- VERIFIED-DOCS docs/install.md:393 (not runnable hermetically: needs a remote server) -->
 <div class="code-block reveal" style="max-width:720px;margin:1.5rem auto 0">
 <pre><code><span class="line-cmt"># From your computer: one tunnel for the console, the API and every app</span>
 ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
@@ -1288,9 +1309,17 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
     </div>
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Text-to-Video (Wan 2.2)</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generated on-device with Wan 2.2 text-to-video through MLX-Gen. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. Wan 2.2 TI2V-5B needs about 58 GiB of memory at its default 1280&times;704 size: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
+      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generated on-device with Wan 2.2 text-to-video through MLX-Gen. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. The first clip is Wan 2.2 TI2V-5B at 832&times;480; at 1280&times;704 the model needs about 58 GiB of memory: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
       <div class="c3 reveal" data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
         <div class="c3-stage">
+          <!-- video worker: untracked/wan-mem/queue3.txt:2 via locked_demo.sh -> demo_clip.py (model demo_clip.py:14, t2v mode); ffprobe h264 832x480, 121 frames, 5.04 s -->
+          <figure class="c3-slide">
+            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-wan-ti2v-t2v-alpine-lake.jpg" aria-label="Generated video: a rowboat drifting on a calm alpine lake at sunrise">
+              <source src="assets/video/wan-ti2v-t2v-alpine-lake.mp4" type="video/mp4">
+              Your browser cannot play this H.264 MP4 video.
+            </video>
+            <figcaption>Wan 2.2 TI2V-5B, 832x480, 5 s &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
+          </figure>
           <figure class="c3-slide">
             <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
               <source src="assets/video/t2v-river.mp4" type="video/mp4">
@@ -1605,7 +1634,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
         <button class="tab-btn active" data-tab="kg-python">Python</button>
       </div>
       <div class="tab-panel active" id="tab-kg-python">
-        <!-- W3 PASS 2026-09-29: this block verbatim, abstractmemory 0.3.0 in the released venv (scratchpad rethink/w3/kg/run.log) -->
+        <!-- VERIFIED-DOCS + W3 run 2026-09-29: this block verbatim with abstractmemory 0.3.0 (released venv); output recorded in CLAIMS.md section 1; call shapes abstractmemory/src/abstractmemory/models.py:31-51 -->
 <div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> <span class="line-fn">InMemoryTripleStore</span>, <span class="line-fn">TripleAssertion</span>, <span class="line-fn">TripleQuery</span>
 
@@ -1621,7 +1650,8 @@ store.<span class="line-fn">add</span>([
     )
 ])
 
-hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(subject=<span class="line-str">"user"</span>, limit=<span class="line-var">10</span>))</code></pre>
+hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(subject=<span class="line-str">"user"</span>, limit=<span class="line-var">10</span>))
+<span class="line-fn">print</span>(hits)</code></pre>
         </div>
       </div>
       </div>
@@ -1723,7 +1753,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
           </ul></div>
         </div>
         <div class="tab-panel" id="tab-h-py">
-          <!-- E7 PASS (light install + abstractframework doctor); apple: E1-E3 venv; gpu: README.md:294; serve: docs/install.md:608 -->
+          <!-- VERIFIED-DOCS; E7 PASS (light install + abstractframework doctor); apple: E1-E3 venv; gpu: README.md:294; serve: docs/install.md:608 -->
 <div class="code-block">
 <pre><code>pip install abstractframework            <span class="line-cmt"># light: cloud and endpoint engines</span>
 pip install "abstractframework[apple]"   <span class="line-cmt"># + local Apple Silicon engines</span>
@@ -1751,7 +1781,7 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
       <div class="install-step"><h4>Run the installer</h4><p>One line above, or the macOS <code>.pkg</code>.</p></div>
       <div class="install-step"><h4>The console opens</h4><p>In your browser, already signed in.</p></div>
       <div class="install-step"><h4>Pick your models</h4><p><strong>Use recommended defaults</strong> for what this computer can run.</p></div>
-      <div class="install-step"><h4>Use it anywhere</h4><p>Apps at <code>/apps/&lt;app&gt;/</code>, the terminal or the menu bar.</p></div>
+      <div class="install-step"><h4>Use it anywhere</h4><p>Apps at <code class="long">/apps/&lt;app&gt;/</code>, the terminal, or the menu bar on macOS or the system tray.</p></div>
     </div>
     <p class="reveal" style="text-align:center;margin-top:1rem"><a class="comp-link" href="install.html">Everything about installing &rarr;</a></p>
   </div>
@@ -1821,11 +1851,11 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
       <p class="section-desc">The framework moves in coordinated releases: one version of <code>abstractframework</code> always installs the same, tested set of packages.</p>
     </div>
     <div class="roadmap-timeline reveal">
-      <div class="roadmap-item upcoming"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status planned">Coming</span><h4>Recommendations for every capability, updates from the console</h4><p>AbstractCore 2.18.1 adds <code class="long">abstractcore models recommendations</code>: the recommended model for every capability on every kind of machine. AbstractGateway 0.7.2 runs the installer when you update from the console, the menu bar or the terminal console.</p></div></div>
+      <div class="roadmap-item upcoming"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status planned">Coming</span><h4>Recommendations for every capability, updates from the console</h4><p>AbstractCore 2.18.1 adds <code class="long">abstractcore models recommendations</code>: the recommended model for every capability on every kind of machine. AbstractGateway 0.7.2 runs the installer when you update from the console, the menu bar on macOS or the system tray, or the terminal console.</p></div></div>
       <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.1 &middot; 2026-09-28</span><h4>Every command on your PATH</h4><p>The installer builds <code>abstractcode</code> and exposes the AbstractCore, voice, music and vision commands next to the gateway; the terminal app says how to sign in; Run now explains itself the same way in every client.</p></div></div>
       <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.6.0 &middot; 2026-09-28</span><h4>Remote machines work like a Mac</h4><p>Apps served through the gateway at <code>/apps/&lt;app&gt;/</code>, the local gateway pointer, automations in AbstractCode, history that keeps whole messages up to 50,000 tokens, voice that says what it can do, DNS-rebinding protection.</p></div></div>
       <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.5.0 &middot; 2026-09-27</span><h4>Automations and a headless setup</h4><p>Automations in the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a>, the <a href="observer.html" style="color:var(--accent-light)">Observer</a> and <a href="flow.html" style="color:var(--accent-light)">Flow</a>; the terminal console installed by default; configuring a remote Linux server without a browser.</p></div></div>
-      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.4.0 &middot; 2026-09-26</span><h4>One agent workflow for every client</h4><p>The gateway picks the agent workflow, AbstractCode browses the workspace, a curated skill shelf, live replies in every client, and the console opens the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a> already signed in.</p></div></div>
+      <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.4.0 &middot; 2026-09-26</span><h4>One agent workflow across the clients</h4><p>The gateway picks the agent workflow, AbstractCode browses the workspace, a curated skill shelf, live replies in AbstractCode, the Assistant and the Observer, and the console opens the <a href="assistant.html" style="color:var(--accent-light)">Assistant</a> already signed in.</p></div></div>
       <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.3.0 &middot; 2026-09-24</span><h4>A Mac install without Terminal knowledge</h4><p>The <code>.pkg</code> and double-click installers and uninstaller, and install failures explained in plain words.</p></div></div>
       <div class="roadmap-item done"><div class="roadmap-marker"></div><div class="roadmap-content"><span class="roadmap-status">0.2.0 &middot; 2026-09-23</span><h4>One-line install and the console</h4><p>Install with one line, sign in with a one-time link, and manage local models and engines from the console, the terminal or the command line.</p></div></div>
     </div>
@@ -1928,19 +1958,19 @@ abstractgateway serve                    <span class="line-cmt"># prints a one-t
       <a href="gateway.html">AbstractGateway</a>
       <a href="console.html">Gateway &amp; Core consoles</a>
       <a href="automations.html">Automations</a>
-      <h4 style="margin-top:1rem">Toolkits</h4>
-      <a href="tui.html">AbstractTUI</a>
-      <a href="uic.html">AbstractUIC</a>
-      <a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a>
-    </div>
-    <div class="footer-col">
-      <h4>Applications</h4>
+      <h4 style="margin-top:1rem">Applications</h4>
       <a href="flow.html">AbstractFlow</a>
       <a href="code.html">AbstractCode</a>
       <a href="observer.html">AbstractObserver</a>
       <a href="assistant.html">AbstractAssistant</a>
       <a href="continuum.html">AbstractContinuum</a>
       <a href="entity.html">AbstractEntity</a>
+    </div>
+    <div class="footer-col">
+      <h4>Toolkits</h4>
+      <a href="tui.html">AbstractTUI</a>
+      <a href="uic.html">AbstractUIC</a>
+      <a href="https://github.com/lpalbou/mlx-gen" target="_blank" rel="noopener noreferrer">MLX-Gen</a>
     </div>
     <div class="footer-col">
       <h4>Resources</h4>

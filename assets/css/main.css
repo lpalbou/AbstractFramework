@@ -4156,3 +4156,4 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 .pkg-nav-link.topic, .nav-dropdown-menu a.topic { font-style: italic; color: var(--text-muted); opacity: .85; }
 .pkg-nav-link.topic::before, .nav-dropdown-menu a.topic::before { content: '\2192\00a0'; font-style: normal; opacity: .6; }
 .pkg-nav-link.topic.active { opacity: 1; color: var(--primary-light); }
+.code-sub { font: 600 .68rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); padding: .8rem 1.1rem .1rem; background: #000; }
