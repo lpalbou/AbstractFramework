@@ -588,7 +588,7 @@ def test_install_sh_full_builds_the_compiled_extras(tmp_path: Path) -> None:
     out = proc.stdout
     assert _printed_overrides(out) == _ALWAYS
     install = _install_line(out)
-    assert f"--with llama-cpp-python --constraints uv-constraints.txt --overrides uv-overrides.txt --no-build-package webrtcvad --no-build-package vllm {_CLI_FROM} 'abstractgateway[" in install
+    assert f"--with llama-cpp-python --constraints uv-constraints.txt --overrides uv-overrides.txt --no-build-package webrtcvad --no-build-package vllm {_REFRESH} {_CLI_FROM} 'abstractgateway[" in install
     assert "--find-links" not in install
     for pkg in _COMPILED_EXTRAS:
         assert pkg not in install
@@ -652,6 +652,12 @@ def test_install_sh_console_needs_a_compiler(tmp_path: Path) -> None:
 # (react-agent is a deprecated stub that points at AbstractCode).
 _CLI_PACKAGES = ["abstractcore", "abstractvoice", "abstractvision", "abstractmusic"]
 _CLI_FROM = " ".join(f"--with-executables-from {p}" for p in _CLI_PACKAGES)
+# uv revalidates the index for the gateway and the release matrix on every install (backlog 0987).
+_REFRESH = " ".join(
+    f"--refresh-package {p}"
+    for p in ["abstractgateway", *[c.split("==")[0] for c in re.search(
+        r'^AF_PY_MATRIX="([^"]+)"$', (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8"), flags=re.M).group(1).split()]]
+)
 _BASE = "http://127.0.0.1:18999"
 
 

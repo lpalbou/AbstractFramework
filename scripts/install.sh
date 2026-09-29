@@ -279,6 +279,16 @@ af_uv_constraints() {
     [ "$1" = 1 ] && echo "llama-cpp-python==$GGUF_PIN"
     return 0
 }
+# af_refresh_packages: the packages whose index pages uv revalidates on every install (root backlog
+# 0987): uv caches PyPI's simple pages as PyPI's headers allow (10 minutes), so right after a release
+# `uv tool install 'abstractgateway==<new pin>'` failed with "no version of abstractgateway==<pin>"
+# until `uv cache clean abstractgateway`. --refresh-package makes uv ask the index again for these
+# names only (a conditional request each; downloaded wheels stay cached): the gateway and the
+# release matrix, the versions this installer pins.
+af_refresh_packages() {
+    echo abstractgateway
+    for _c in $AF_PY_MATRIX; do echo "${_c%%==*}"; done
+}
 af_no_build_packages() {
     echo "webrtcvad vllm"
     [ "$FULL" = 1 ] || echo "$AF_COMPILED_EXTRAS llama-cpp-python"
@@ -897,6 +907,129 @@ stop_background_gateway() {
             rm -f "$PID_FILE"
         fi
     fi
+}
+
+# ---------------------------------------------------------------------------
+# This install's gateway, whoever started it (root backlog 0987 item 20). A gateway started by
+# hand (for example with the summary's Start line) has no gateway.pid and is not the login item,
+# yet it serves this install's data dir: a re-run must replace it on the same port, never move to
+# the next port and start a second gateway on the same data. Only typed signals decide:
+#   - the pid listening on the port (lsof, else ss; both report this user's own processes);
+#   - that process belongs to this user and runs the abstractgateway command;
+#   - it serves THIS data dir: the serve record every gateway writes at start,
+#     <data dir>/run/gateway-serve.json, names its pid (and the data dir it resolved), or its
+#     command line passes --data-dir <this data dir>, or (Linux) its environment sets
+#     ABSTRACTGATEWAY_DATA_DIR to it.
+# When neither lsof nor ss can name the listener, the serve record decides alone: its pid is a live
+# abstractgateway process of this user, it names this port, and /api/health there is a gateway's.
+# Anything else on the port (another program, or a gateway of another data dir) is foreign.
+# ---------------------------------------------------------------------------
+SERVE_RECORD="$DATA_DIR/run/gateway-serve.json"
+serve_record_num() {  # serve_record_num KEY: a numeric value of the serve record, empty when none
+    [ -f "$SERVE_RECORD" ] && [ -r "$SERVE_RECORD" ] || return 0
+    tr '\n\r' '  ' <"$SERVE_RECORD" 2>/dev/null | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p" | head -n 1
+}
+serve_record_data_dir() {
+    [ -f "$SERVE_RECORD" ] && [ -r "$SERVE_RECORD" ] || return 0
+    tr '\n\r' '  ' <"$SERVE_RECORD" 2>/dev/null \
+        | sed -nE 's/.*"data_dir"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' | head -n 1 \
+        | sed 's/\\"/"/g; s/\\\\/\\/g'
+}
+# port_listener_pid PORT: the pid listening on PORT, when lsof or ss can say; empty otherwise.
+port_listener_pid() {
+    _plp=""
+    if have lsof; then _plp="$(lsof -nP -t -iTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -n 1)"; fi
+    if [ -z "$_plp" ] && have ss; then
+        _plp="$(ss -ltnpH "sport = :$1" 2>/dev/null | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' | head -n 1)"
+    fi
+    case "$_plp" in *[!0-9]*) _plp="" ;; esac
+    printf '%s' "$_plp"
+}
+# gw_process PID: a live process of this user whose command line runs abstractgateway.
+gw_process() {
+    case "$1" in ''|*[!0-9]*) return 1 ;; esac
+    kill -0 "$1" 2>/dev/null || return 1
+    have ps || return 1
+    [ "$(ps -o uid= -p "$1" 2>/dev/null | tr -d ' ')" = "$(id -u)" ] || return 1
+    ps -o args= -p "$1" 2>/dev/null | grep -q abstractgateway
+}
+# gw_data_dir_arg PID: the --data-dir its command line passes (Linux: /proc/PID/cmdline, exact),
+# else its ABSTRACTGATEWAY_DATA_DIR (Linux: /proc/PID/environ); empty when neither says.
+gw_data_dir_arg() {
+    [ -r "/proc/$1/cmdline" ] || return 0
+    _gda="$(tr '\0' '\n' <"/proc/$1/cmdline" 2>/dev/null | awk '
+        p { print; exit } $0 == "--data-dir" { p = 1; next } /^--data-dir=/ { sub(/^--data-dir=/, ""); print; exit }')"
+    if [ -z "$_gda" ] && [ -r "/proc/$1/environ" ]; then
+        _gda="$(tr '\0' '\n' <"/proc/$1/environ" 2>/dev/null | sed -n 's/^ABSTRACTGATEWAY_DATA_DIR=//p' | head -n 1)"
+    fi
+    printf '%s' "$_gda"
+}
+# gw_serves_this_data_dir PID: the gateway process PID serves this install's data dir.
+gw_serves_this_data_dir() {
+    _mine="$(real_dir "$DATA_DIR")"
+    if [ "$(serve_record_num pid)" = "$1" ]; then
+        _rd="$(serve_record_data_dir)"
+        { [ -z "$_rd" ] || [ "$(real_dir "$_rd")" = "$_mine" ]; } && return 0
+    fi
+    _ad="$(gw_data_dir_arg "$1")"
+    if [ -n "$_ad" ]; then [ "$(real_dir "$_ad")" = "$_mine" ]; return; fi
+    # No /proc (macOS): the exact argument on its command line.
+    _args=" $(ps -o args= -p "$1" 2>/dev/null) "
+    for _dd in "$DATA_DIR" "$DATA_DIR_ABS_GIVEN"; do
+        case "$_args" in *" --data-dir $_dd "*|*" --data-dir=$_dd "*) return 0 ;; esac
+    done
+    return 1
+}
+# own_gateway_on_port PORT: 0 when the gateway listening on PORT serves this install's data dir;
+# its pid in OWN_GW_PID.
+OWN_GW_PID=""
+own_gateway_on_port() {
+    OWN_GW_PID=""
+    _og="$(port_listener_pid "$1")"
+    if [ -z "$_og" ]; then
+        _og="$(serve_record_num pid)"
+        [ -n "$_og" ] && [ "$(serve_record_num port)" = "$1" ] && is_our_gateway "$1" || return 1
+    fi
+    gw_process "$_og" && gw_serves_this_data_dir "$_og" || return 1
+    OWN_GW_PID="$_og"
+}
+# service_main_pid: the login item's gateway pid as the service manager reports it; 0 when the
+# service is not running; empty when it cannot say.
+service_main_pid() {
+    if [ "$OS_ID" = linux ]; then
+        have systemctl || return 0
+        _smp="$(systemctl --user show -p MainPID --value abstractgateway.service 2>/dev/null | head -n 1)"
+    else
+        have launchctl || return 0
+        _sml="$(launchctl print "gui/$(id -u)/ai.abstractframework.gateway" 2>/dev/null)" || return 0
+        _smp="$(printf '%s\n' "$_sml" | sed -n 's/.*[{;[:space:]]pid = \([0-9][0-9]*\).*/\1/p' | head -n 1)"
+        [ -n "$_smp" ] || _smp=0
+    fi
+    case "$_smp" in ''|*[!0-9]*) return 0 ;; esac
+    printf '%s' "$_smp"
+}
+# stop_hand_gateway: stop this install's gateway found running outside the installer's control
+# (HAND_GW_PID), so the installer's own start takes its place; waits until its port is free.
+HAND_GW_PID=""; HAND_GW_PORT=""
+stop_hand_gateway() {
+    [ -n "$HAND_GW_PID" ] || return 0
+    if ! kill -0 "$HAND_GW_PID" 2>/dev/null; then HAND_GW_PID=""; return 0; fi
+    run "stop this install's gateway started by hand (pid $HAND_GW_PID, port $HAND_GW_PORT)" kill "$HAND_GW_PID"
+    [ "$PRINT" = 1 ] && return 0
+    _i=0; _max=$((AF_STOP_TIMEOUT * 2))
+    while kill -0 "$HAND_GW_PID" 2>/dev/null && [ "$_i" -lt "$_max" ]; do sleep 0.5; _i=$((_i + 1)); done
+    if kill -0 "$HAND_GW_PID" 2>/dev/null; then
+        warn "pid $HAND_GW_PID did not exit within $AF_STOP_TIMEOUT s: stopping it with SIGKILL"
+        kill -9 "$HAND_GW_PID" 2>/dev/null || true
+        _i=0; while kill -0 "$HAND_GW_PID" 2>/dev/null && [ "$_i" -lt 10 ]; do sleep 0.5; _i=$((_i + 1)); done
+    fi
+    if kill -0 "$HAND_GW_PID" 2>/dev/null; then
+        die "this install's gateway started by hand (pid $HAND_GW_PID) could not be stopped.
+What to do: stop it (kill $HAND_GW_PID), then run the installer again."
+    fi
+    _i=0; while port_busy "$HAND_GW_PORT" && [ "$_i" -lt 20 ]; do sleep 0.5; _i=$((_i + 1)); done
+    ok "stopped this install's gateway started by hand (pid $HAND_GW_PID); the installer's own start replaces it on port $PORT"
+    HAND_GW_PID=""
 }
 
 # ---------------------------------------------------------------------------
@@ -1627,10 +1760,26 @@ if [ -z "$PORT" ]; then PORT="${ST_PORT:-8080}"; PORT_EXPLICIT=0; else PORT_EXPL
 case "$PORT" in ''|*[!0-9]*) die "--port must be a number (got '$PORT')" ;; esac
 case "$ASK_WAIT" in ''|*[!0-9]*) die "--ask-wait must be a number of seconds (got '$ASK_WAIT')" ;; esac
 [ "$ASK_WAIT" -le 25 ] || ASK_WAIT=25
+# The gateways this installer manages: its background start (gateway.pid) and the login item (its
+# pid when the service manager reports it). A listener with another pid is not one of them, even
+# on the recorded port.
+_bg_pid=""; pid_alive && _bg_pid="$(cat "$PID_FILE" 2>/dev/null)"
+_svc_pid=""; [ "$LOGIN_WAS" = y ] && _svc_pid="$(service_main_pid)"
 if port_busy "$PORT"; then
-    if [ "$PORT" = "$ST_PORT" ] && { pid_alive || { [ "$LOGIN_WAS" = y ] && is_our_gateway "$PORT"; }; }; then
+    _lp="$(port_listener_pid "$PORT")"
+    if [ "$PORT" = "$ST_PORT" ] && { { [ -n "$_bg_pid" ] && { [ -z "$_lp" ] || [ "$_lp" = "$_bg_pid" ]; }; } \
+        || { [ "$LOGIN_WAS" = y ] && is_our_gateway "$PORT" && { [ -z "$_lp" ] || [ -z "$_svc_pid" ] || [ "$_lp" = "$_svc_pid" ]; }; }; }; then
         REUSE_RUNNING=1
         ok "port $PORT: this install's gateway is already running (it will be restarted if the package changes)"
+    elif own_gateway_on_port "$PORT"; then
+        # This install's own gateway, started by hand: the port stays; nothing is moved or recorded
+        # elsewhere. The installer's start replaces it (below); --no-start leaves it running.
+        HAND_GW_PID="$OWN_GW_PID"; HAND_GW_PORT="$PORT"
+        if [ "$NO_START" = 1 ]; then
+            info "port $PORT: this install's gateway runs there, started by hand (pid $HAND_GW_PID, data dir $DATA_DIR); kept (--no-start restarts nothing)"
+        else
+            ok "port $PORT: this install's gateway runs there, started by hand (pid $HAND_GW_PID, data dir $DATA_DIR); the installer's own start replaces it on this port"
+        fi
     elif [ "$NO_START" = 1 ] && [ -n "$ST_PORT" ] && [ "$PORT" = "$ST_PORT" ]; then
         PORT_HELD=1
         info "port $PORT (this install's) is in use by a process this installer did not start; kept (--no-start starts nothing)"
@@ -1645,6 +1794,23 @@ if port_busy "$PORT"; then
     fi
 else
     ok "port $PORT is free"
+fi
+# This install's gateway started by hand on ANOTHER port (the serve record names it): it would be a
+# second gateway writing the same data, so the installer's start replaces it too. Not the gateways
+# the installer manages (gateway.pid, or the login item when the service manager cannot say which
+# pid is its own).
+if [ -z "$HAND_GW_PID" ]; then
+    _rp="$(serve_record_num pid)"; _rport="$(serve_record_num port)"
+    if [ -n "$_rp" ] && [ -n "$_rport" ] && [ "$_rport" != "$PORT" ] && [ "$_rp" != "$_bg_pid" ] \
+        && { [ "$LOGIN_WAS" != y ] || { [ -n "$_svc_pid" ] && [ "$_rp" != "$_svc_pid" ]; }; } \
+        && gw_process "$_rp" && gw_serves_this_data_dir "$_rp"; then
+        HAND_GW_PID="$_rp"; HAND_GW_PORT="$_rport"
+        if [ "$NO_START" = 1 ]; then
+            info "this install's gateway also runs on port $_rport, started by hand (pid $_rp); kept (--no-start restarts nothing)"
+        else
+            info "this install's gateway also runs on port $_rport, started by hand (pid $_rp): it is stopped before the gateway starts on port $PORT (one gateway per data dir)"
+        fi
+    fi
 fi
 BASE_URL="http://127.0.0.1:$PORT"
 
@@ -1747,6 +1913,7 @@ install_gateway() {
     [ "$_gguf" = 1 ] && set -- "$@" --find-links "$GGUF_LINKS"
     set -- "$@" --overrides uv-overrides.txt
     for _p in $(af_no_build_packages); do set -- "$@" --no-build-package "$_p"; done
+    for _p in $(af_refresh_packages); do set -- "$@" --refresh-package "$_p"; done
     for _p in $CLI_FROM; do set -- "$@" --with-executables-from "$_p"; done
     { [ -n "$FROM" ] || [ "$REINSTALL" = 1 ]; } && set -- "$@" --reinstall
     # --pin latest: re-resolve to the newest releases. Without --upgrade, uv keeps every
@@ -2206,7 +2373,11 @@ start_background() {
         NET_SETTING=1
     fi
     if [ "$NET_SETTING" = 1 ]; then set -- serve; else set -- serve --host 127.0.0.1 --port "$PORT"; fi
-    _cmd="ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") ABSTRACTGATEWAY_USER_AUTH=1 nohup $(q "$GW") $(show_cmd "$@") >>$(q "$GATEWAY_LOG") 2>&1 &"
+    # Launch flags, not environment variables: `serve --data-dir` (gateways 0.3 and later also start
+    # with user auth on by themselves). Gateways before 0.3 (--pin) keep the environment they need.
+    if [ "$_old_pin" = 1 ]; then _cmd="ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") ABSTRACTGATEWAY_USER_AUTH=1 "
+    else set -- "$@" --data-dir "$DATA_DIR"; _cmd=""; fi
+    _cmd="${_cmd}nohup $(q "$GW") $(show_cmd "$@") >>$(q "$GATEWAY_LOG") 2>&1 &"
     printf '  %s$ %s%s\n' "$C_D" "$_cmd" "$C_0"
     twin "$_cmd"
     if [ "$PRINT" = 0 ]; then
@@ -2224,6 +2395,10 @@ if [ "$NO_SERVICE" = 0 ] && { [ "$OS_ID" = macos ] || [ "$SYSTEMD_USER" = 1 ]; }
     if [ "$SERVICE_OK" = 1 ] || [ "$PRINT" = 1 ]; then USE_SERVICE=1; fi
 fi
 
+if [ "$NO_START" = 0 ] && [ -n "$HAND_GW_PID" ]; then
+    step "Stop this install's gateway started by hand (the installer's start replaces it)"
+    stop_hand_gateway
+fi
 if [ "$NO_START" = 1 ]; then
     step "Start"
     info "--no-start: the gateway is installed but not started"
@@ -2469,6 +2644,10 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 1 ]; then
         echo "  A gateway that is running still runs the previous version until it restarts: the console's"
         echo "  Restart (web: the Gateway section), the tray's Restart, or re-run this installer without --no-start."
     fi
+    if [ -n "$HAND_GW_PID" ]; then
+        echo "  This install's gateway, started by hand (pid $HAND_GW_PID, port $HAND_GW_PORT), still runs the version it"
+        echo "  started with: re-run this installer without --no-start to replace it with the installer's own start."
+    fi
     if [ "$PORT_HELD" = 1 ]; then
         echo "  Port $PORT, this install's port, is in use by a program this installer did not start (for example a"
         echo "  gateway started by hand). The install keeps port $PORT: restart that gateway to run this version, or stop"
@@ -2503,7 +2682,11 @@ for _p in $CLI_FROM; do cmd_line "$_p" "$(af_cli_about "$_p")"; done
 echo ""
 echo "  Status:     $([ "$MODE" = service ] && echo "abstractgateway service status" || echo "curl $BASE_URL/api/health")"
 echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service uninstall   (stops it and removes the login entry; data is kept)" || echo "kill \$(cat $(q "$PID_FILE"))")"
-echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --port $PORT" || echo "re-run this installer, or: ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve$([ "$NET_SETTING" = 1 ] || echo " --host 127.0.0.1 --port $PORT")")"
+# Launch flags, not environment variables (gateways before 0.3, reachable with --pin, need the environment).
+_start_bind="$([ "$NET_SETTING" = 1 ] || echo " --host 127.0.0.1 --port $PORT")"
+if [ "$_old_pin" = 1 ]; then _start_hint="ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve$_start_bind"
+else _start_hint="abstractgateway serve --data-dir $(q "$DATA_DIR")$_start_bind"; fi
+echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --port $PORT" || echo "re-run this installer, or: $_start_hint")"
 echo "  Upgrade:    curl -LsSf $AF_SCRIPT_URL | sh   (the latest AbstractFramework release; keeps your settings and data)"
 echo "              curl -LsSf $AF_SCRIPT_URL | sh -s -- --pin latest   (the newest abstractgateway on PyPI; see $AF_DOCS#upgrade)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
