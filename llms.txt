@@ -4,6 +4,8 @@
 
 Current framework release: `abstractframework` 0.6.2 (2026-09-29). It pins AbstractGateway 0.7.2, AbstractAssistant 0.9.1, AbstractCore 2.19.0, AbstractRuntime 0.7.1, AbstractAgent 0.3.17, AbstractSkill 0.3.0, AbstractMemory 0.3.0, AbstractSemantics 0.0.5, AbstractVoice 0.13.0, AbstractMusic 0.1.15, AbstractVision 0.3.31 and Abstract3D 0.3.1. Separately released plugin: AbstractCamera 0.2.0. Browser apps (npm): AbstractFlow 0.4.0, AbstractCode web 0.6.1, AbstractObserver 0.2.1, AbstractContinuum 0.4.0, AbstractEntity 0.3.0, and the shared UI kit of AbstractUIC, @abstractframework/ui-kit 0.1.16. Rust tools (crates.io): abstractgateway-console 0.11.1 (AbstractGateway's terminal console), abstractcode 0.7.1 (AbstractCode's terminal client), abstractcore-console 0.4.1 (AbstractCore's terminal console), and AbstractTUI (0.6.0 on crates.io), the terminal-UI engine behind AbstractCode's terminal client and both terminal consoles.
 
+Release history and each release's pins: https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md
+
 Install:
 - macOS / Linux: `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
 - Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`
