@@ -3807,8 +3807,11 @@ timed separately where the path allows it):
   (AbstractVoice 0.13.2).
 - **The image model and the text model on the GPU together.** While LM Studio kept
   `qwen/qwen3.5-9b` loaded (6.5 GB), an image request failed with CUDA out of memory. In 0.6.3
-  Diffusers falls back to sequential CPU offload in this case (AbstractVision 0.3.33), which is much
-  slower; unload the text model first (`lms unload --all`) to keep model CPU offload.
+  Diffusers falls back to sequential CPU offload in this case (AbstractVision 0.3.33): much less GPU
+  memory (near 1.4 GB for FLUX.2 [klein] 4B at 768x768) and slower per step (about 2.3 s against
+  1.5 s), so a 4-step image took 10.9 to 15.6 s against 13.4 to 18.5 s with model CPU offload, and
+  models that run many steps are slower. Unloading the text model first (`lms unload --all`) gives
+  model CPU offload back, which is faster for those.
 - **The image route was not always saved.** The candidate's **Use recommended defaults** could
   report the image route as already set without saving it, when the console read the routes a few
   seconds earlier. In 0.6.3 it saves every route it reports (AbstractCore 2.19.2).

@@ -94,8 +94,10 @@ from 0.6.2.
 - **Image generation on smaller GPUs.** A Diffusers pipeline that does not fit the GPU's free
   memory loads with model CPU offload instead of failing with CUDA out of memory. When even the
   largest component does not fit (for example next to a loaded text model), it falls back to
-  sequential CPU offload, which runs in far less GPU memory but is much slower (AbstractVision
-  0.3.33).
+  sequential CPU offload, which uses much less GPU memory and is slower per step (AbstractVision
+  0.3.33). On the Quadro RTX 5000, FLUX.2 [klein] 4B at 768x768 and 4 steps peaked near 1.4 GB and
+  took 10.9 to 15.6 s, against 13.4 to 18.5 s with model CPU offload; at about 2.3 s per step
+  against 1.5 s, models that run many steps are slower with it.
 - **A loaded image model is reused.** After **Load** in the console (or `POST /models/load`), image
   and video requests for that model run on the loaded pipeline instead of loading the model again
   for each request (AbstractRuntime 0.7.3, AbstractGateway 0.7.4). On the rehearsal machine,
@@ -123,7 +125,7 @@ Fixed entries above address each one.
   with model CPU offload, so the image request failed with CUDA out of memory after three attempts
   (about 2.5 minutes). With the text model unloaded (`lms unload --all`, or the console's model
   list), the same request worked. In this case AbstractVision 0.3.33 falls back to sequential CPU
-  offload, which is much slower; unloading the text model first keeps the faster model CPU offload.
+  offload (see Fixed above).
 - **Use recommended defaults could skip the image route on a fresh install.** On an NVIDIA machine,
   if the button was used within a few seconds of the console reading the routes, it could report the
   image route as already set without saving it. Using it again saved it.
