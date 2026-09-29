@@ -183,7 +183,7 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
           <tr><td><code>abstractcode</code></td><td>AbstractCode&rsquo;s terminal client (sign it in once, below)</td><td><code>--no-code-cli</code></td></tr>
           <tr><td><code>abstractcore</code>, <code>abstractcore-chat</code>, <code>abstractcore-endpoint</code></td><td>AbstractCore&rsquo;s configuration and operations (<code>--config</code>, <code>models</code>, <code>engines</code>, <code>serve</code>), a terminal chat, a single-model <code>/v1</code> server</td><td rowspan="3"><code>--no-core-cli</code></td></tr>
           <tr><td><code>summarizer</code>, <code>extractor</code>, <code>judge</code>, <code>intent</code>, <code>deepsearch</code></td><td>AbstractCore&rsquo;s apps (also as <code>abstractcore-&lt;app&gt;</code>): summarise a document, extract a knowledge graph, LLM-as-a-judge, intent analysis, a sourced web research report</td></tr>
-          <tr><td><code>abstractvoice</code>, <code>abstractvoice-prefetch</code>, <code>abstractvision</code>, <code>abstractmusic</code></td><td>Voice, images and video, and music in the terminal, from the gateway&rsquo;s own environment so they match the versions it runs</td></tr>
+          <tr><td><code>abstractvoice</code>, <code>abstractvoice-prefetch</code>, <code>abstractmusic</code>, <code>abstractvision</code></td><td>Voice, music, and images and video in the terminal, from the gateway&rsquo;s own environment so they match the versions it runs</td></tr>
         </tbody>
       </table>
     </div>
@@ -230,7 +230,7 @@ abstractgateway apps tui-command code</code></pre></div>
     <p class="reveal" style="color:var(--text-secondary);max-width:760px;margin-bottom:1.25rem">The installer picks the profile for you; <code>--profile</code> overrides it. The framework's features are the same in every profile; the profile decides which local inference engines are installed.</p>
     <div class="modes-grid reveal">
       <div class="mode-card"><h3>Light</h3><p>Remote and endpoint engines only: OpenAI, Anthropic, OpenRouter, Portkey, and servers such as LM Studio, Ollama, vLLM or any OpenAI-compatible endpoint. Works everywhere.</p><div class="mode-tags"><span class="mode-tag">macOS</span><span class="mode-tag">Linux</span><span class="mode-tag">Windows</span></div></div>
-      <div class="mode-card"><h3>Apple</h3><p>Adds the local Apple Silicon engines (MLX and Metal) for text, images, video and voice, next to the endpoint providers.</p><div class="mode-tags"><span class="mode-tag">macOS 14+</span><span class="mode-tag">Apple Silicon</span></div></div>
+      <div class="mode-card"><h3>Apple</h3><p>Adds the local Apple Silicon engines (MLX and Metal) for text, voice, images and video, next to the endpoint providers.</p><div class="mode-tags"><span class="mode-tag">macOS 14+</span><span class="mode-tag">Apple Silicon</span></div></div>
       <div class="mode-card"><h3>GPU</h3><p>Adds the local GPU engines for NVIDIA CUDA or AMD ROCm, next to the endpoint providers.</p><div class="mode-tags"><span class="mode-tag">Linux</span><span class="mode-tag">CUDA</span><span class="mode-tag">ROCm</span></div></div>
     </div>
   </div>
@@ -322,7 +322,7 @@ abstractgateway service uninstall  <span class="line-cmt"># data is kept</span><
           <tr><td><code>--with-lmstudio</code></td><td><code>-WithLmStudio</code></td><td>Install LM Studio (headless daemon on macOS/Linux)</td></tr>
           <tr><td><code>--with-apps</code></td><td><code>-WithApps</code></td><td>Make sure Node.js 18+ exists for running the browser apps on their own with <code>npx</code></td></tr>
           <tr><td><code>--no-code-cli</code></td><td><code>-NoCodeCli</code></td><td>Do not build AbstractCode&rsquo;s terminal client (built by default)</td></tr>
-          <tr><td><code>--no-core-cli</code></td><td><code>-NoCoreCli</code></td><td>Do not put the AbstractCore, voice, vision and music commands on PATH</td></tr>
+          <tr><td><code>--no-core-cli</code></td><td><code>-NoCoreCli</code></td><td>Do not put the AbstractCore, AbstractVoice, AbstractMusic and AbstractVision commands on PATH</td></tr>
           <tr><td><code>--no-console</code></td><td><code>-NoConsole</code></td><td>Skip the terminal console</td></tr>
           <tr><td><code>--no-service</code></td><td><code>-NoService</code></td><td>Do not start at login; ask nothing</td></tr>
           <tr><td><code>--no-open</code></td><td><code>-NoOpen</code></td><td>Do not open the browser (remote: do not offer the terminal console)</td></tr>
@@ -426,7 +426,7 @@ abstractgateway serve     <span class="line-cmt"># prints a one-time console lin
         </div>
       </div>
     </div>
-    <p class="reveal" style="text-align:center;color:var(--text-secondary);margin-top:1.5rem;font-size:var(--text-sm)"><code>abstractframework</code> 0.6.1 pins every Python package with <code>==</code>: gateway 0.7.1, assistant 0.9.1, core 2.18.0, runtime 0.7.1, agent 0.3.17, skill 0.3.0, memory 0.3.0, semantics 0.0.5, voice 0.13.0, vision 0.3.30, music 0.1.15. <a href="start-developer.html" style="color:var(--accent-light)">Developer journey &rarr;</a></p>
+    <p class="reveal" style="text-align:center;color:var(--text-secondary);margin-top:1.5rem;font-size:var(--text-sm)"><code>abstractframework</code> 0.6.1 pins every Python package with <code>==</code>: gateway 0.7.1, assistant 0.9.1, core 2.18.0, runtime 0.7.1, agent 0.3.17, skill 0.3.0, memory 0.3.0, semantics 0.0.5, voice 0.13.0, music 0.1.15, vision 0.3.30. <a href="start-developer.html" style="color:var(--accent-light)">Developer journey &rarr;</a></p>
   </div>
 </section>
 

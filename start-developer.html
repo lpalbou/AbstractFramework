@@ -101,13 +101,13 @@
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
 response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In two sentences, what is a durable workflow runtime?"</span>)
-<span class="line-fn">print</span>(response.content)</code></pre></div><p>Tools, structured output with Pydantic, streaming, media input, embeddings and MCP tool sources use the same object. Models are never downloaded silently: <code>abstractcore models download</code> fetches them, and <code>abstractcore models catalog --fits</code> lists what fits your machine. After the one-line install, <code>abstractcore</code>, its apps (<code>summarizer</code>, <code>extractor</code>, <code>judge</code>, <code>intent</code>, <code>deepsearch</code>), <code>abstractvoice</code>, <code>abstractvision</code> and <code>abstractmusic</code> are already on your PATH, matching the gateway&rsquo;s versions.</p>
+<span class="line-fn">print</span>(response.content)</code></pre></div><p>Tools, structured output with Pydantic, streaming, media input, embeddings and MCP tool sources use the same object. Models are never downloaded silently: <code>abstractcore models download</code> fetches them, and <code>abstractcore models catalog --fits</code> lists what fits your machine. After the one-line install, <code>abstractcore</code>, its apps (<code>summarizer</code>, <code>extractor</code>, <code>judge</code>, <code>intent</code>, <code>deepsearch</code>), <code>abstractvoice</code>, <code>abstractmusic</code> and <code>abstractvision</code> are already on your PATH, matching the gateway&rsquo;s versions.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Serve it to any OpenAI client <span class="j-time">5 min</span></h3>
         <!-- PENDING-W2: E4 -->
 <div class="code-block"><pre><code>abstractcore serve        <span class="line-cmt"># 127.0.0.1:8000; prints a one-time console link</span>
-<span class="line-kw">export</span> <span class="line-var">ABSTRACTCORE_AUTH_TOKEN</span>=<span class="line-str">"$(abstractcore serve --print-token)"</span></code></pre></div><p>Point any OpenAI SDK at <code>http://localhost:8000/v1</code> and route with <code>model="provider/model"</code>. The same server exposes image, video and audio routes when the plugins are installed.</p>
+<span class="line-kw">export</span> <span class="line-var">ABSTRACTCORE_AUTH_TOKEN</span>=<span class="line-str">"$(abstractcore serve --print-token)"</span></code></pre></div><p>Point any OpenAI SDK at <code>http://localhost:8000/v1</code> and route with <code>model="provider/model"</code>. The same server exposes audio, image and video routes when the plugins are installed.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Make it agentic, then durable <span class="j-time">15 min</span></h3>
