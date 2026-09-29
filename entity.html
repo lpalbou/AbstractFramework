@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="color-scheme" content="dark">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>AbstractEntity — create entities and watch what they remember | AbstractFramework</title>
-  <meta name="description" content="AbstractEntity is the entity app of AbstractFramework: create entities, talk with them, watch what they remember as a live memory graph, and read their diaries. Served by the gateway at /apps/entity/.">
+  <title>AbstractEntity 0.3.0 — persistent agents with identity, memory and a diary | AbstractFramework</title>
+  <meta name="description" content="Entities are persistent agents with one identity for their whole life: values, purposes and traits, a temporal memory graph, a diary no one can delete, visits, summons and sleep. AbstractEntity is the web app to create, talk with and watch them.">
   <link rel="canonical" href="https://abstractframework.ai/entity.html">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="AbstractEntity">
-  <meta property="og:description" content="Create entities, talk with them, watch their memory graph and read their diaries.">
+  <meta property="og:title" content="AbstractEntity — agents with a life of their own">
+  <meta property="og:description" content="Persistent agents with identity, temporal memory, a diary, visits, summons and sleep, on your AbstractGateway.">
   <meta property="og:image" content="https://abstractframework.ai/assets/img/og-card.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -58,14 +58,17 @@
     <a href="continuum.html" class="pkg-nav-link">Continuum</a>
     <a href="entity.html" class="pkg-nav-link active" aria-current="page">Entity</a>
     <a href="voice.html" class="pkg-nav-link">Voice</a>
-    <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="music.html" class="pkg-nav-link">Music</a>
+    <a href="vision.html" class="pkg-nav-link">Vision</a>
     <a href="3d.html" class="pkg-nav-link">3D</a>
     <a href="camera.html" class="pkg-nav-link">Camera</a>
     <a href="memory.html" class="pkg-nav-link">Memory</a>
     <a href="semantics.html" class="pkg-nav-link">Semantics</a>
+    <a href="tui.html" class="pkg-nav-link">TUI</a>
+    <a href="uic.html" class="pkg-nav-link">UIC</a>
   </div>
 </div>
+
 <main id="main">
 
 <!-- ═══════════════════ HERO ═══════════════════ -->
@@ -74,98 +77,147 @@
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span> Application &middot; Entities &middot; v0.3.0</div>
     <h1>Abstract<span class="gradient">Entity</span></h1>
-    <p class="hero-sub">The entity app of AbstractFramework: the place where you create entities, talk with them, watch what they remember as a live memory graph, and read their diaries. It runs as a small local web app in front of your <a href="gateway.html" style="color:var(--accent-light)">AbstractGateway</a>, which serves it at <code>/apps/entity/</code>; open it from the <a href="console.html" style="color:var(--accent-light)">console</a>'s <strong>Apps</strong> page (see <a href="install.html" style="color:var(--accent-light)">Install</a>).</p>
+    <p class="hero-sub">An entity is a persistent agent with one identity for its whole life: values, purposes and traits, a memory of everything it has lived, and a diary it alone writes. It lives on your <a href="gateway.html" style="color:var(--accent-light)">AbstractGateway</a>, which owns its life (create, visit, summon, sleep). AbstractEntity is the web app where you create entities, talk with them, watch their memory graph grow and read their diaries; the gateway serves it at <code>/apps/entity/</code> (see <a href="install.html" style="color:var(--accent-light)">Install</a>).</p>
     <div class="hero-actions">
-      <a href="#getting-started" class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Get started
-      </a>
+      <a href="#getting-started" class="btn btn-primary">Get started</a>
       <a href="https://github.com/lpalbou/AbstractEntity" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub</a>
       <a href="https://www.npmjs.com/package/@abstractframework/entity" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">npm</a>
       <a href="https://github.com/lpalbou/AbstractEntity/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractEntity/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS abstractentity/README.md:52,55 -->
 <div class="hero-code">
 <pre><code><span class="line-cmt"># Console &gt; Apps &gt; Entity &gt; Open</span>
-
 <span class="line-cmt"># Or on its own (Node.js 18+), port 3007</span>
-<span class="line-kw">npx</span> @abstractframework/entity \
-  --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
+<span class="line-kw">npx</span> @abstractframework/entity --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<!-- ═══════════════════ WHAT IT IS ═══════════════════ -->
 <section id="overview" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Overview</div>
-      <h2 class="section-title">What is an entity?</h2>
-      <p class="section-desc">An entity is an AI companion with a lasting memory of its own. You give it a name; from then on it remembers what you talk about, keeps a diary, sleeps to sort its memories and grows over time. It lives on your AbstractGateway (its memory is stored there, in its own folder), and it keeps one identity for its whole life.</p>
+      <h2 class="section-title">What an entity is</h2>
+      <p class="section-desc">Not a chatbot configuration: a home folder holding everything the entity is and has lived. Each time you talk with it or give it work, the same self comes back, across sessions, users and devices. Its founding identity is fixed for life; what grows is its memory, its diary, and the lessons, feelings and interests it chooses to keep.</p>
     </div>
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
-        <h3>Your first entity</h3>
-        <p>Open the app, type a name (for example <em>Pollux</em>) and press <strong>Create entity</strong>. The name is all it needs: the entity starts from the standard starting document. Then say hello in the <strong>Chat</strong> tab.</p>
+        <h3>Identity</h3>
+        <p>A starting document (the <em>spark</em>, stored verbatim and kept for life) plants its identity core: values in order of precedence, purposes, traits and honesty limits. Every conversation opens with that core, whole: when it does not fit the model's budget, the conversation is refused rather than cut, because "a truncated core is a different person".</p>
+        <div class="mode-tags"><span class="mode-tag">value</span><span class="mode-tag">purpose</span><span class="mode-tag">trait</span><span class="mode-tag">interest</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>One name, one life</h3>
-        <p>A name belongs to one entity for its whole life: creating an entity whose name already exists opens the existing one. The <strong>Advanced: starting document</strong> fold takes your own starting document (YAML).</p>
+        <h3>Two records</h3>
+        <p><strong>Memory</strong> is the involuntary record: everything that happens to it and its standing feelings about people, tools, ideas and places. <strong>The book</strong>, its diary, is the voluntary record: first-person, hash-chained, written only by the entity, and never deletable anywhere in the code, on disk or over HTTP.</p>
+        <div class="mode-tags"><span class="mode-tag">memory.sqlite3</span><span class="mode-tag">home.sqlite3</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>A thin client</h3>
-        <p>The gateway owns each entity's life: it creates the entity, summons it (brings the same self back into a session), runs visits (conversations) and reports its state. The app keeps no server state of its own: every view is read from the gateway, and the memory views are computed from the replay stream of <a href="memory.html">AbstractMemory</a>, the memory engine.</p>
+        <h3>One home, one life</h3>
+        <p>The home folder also holds the entity's own run store and ledger, its artifacts and a workspace. Copy the folder and you move the whole life. A name belongs to one entity: creating one whose name exists opens the existing entity. Its handle is <code>&lt;name&gt;@&lt;gateway ip&gt;</code>.</p>
+        <div class="mode-tags"><span class="mode-tag">spark.yaml</span><span class="mode-tag">runtime ledger</span><span class="mode-tag">workspace/</span></div>
       </div>
     </div>
-    <figure class="figure reveal" style="margin-top:2rem">
-      <!-- PENDING-W2: SHOT entity-list -->
-      <img src="assets/img/shots/entity-list.webp" alt="The AbstractEntity 0.3.0 Summoned entities page at /apps/entity/ with one newly created demo entity, Vega, shown asleep, and its visit, work, personal and sleep modes" loading="lazy" width="1600" height="556">
-      <figcaption>The entities list with a newly created demo entity.</figcaption>
-    </figure>
   </div>
 </section>
 
-<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<!-- ═══════════════════ LIFE ═══════════════════ -->
+<section id="life">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Its life</div>
+      <h2 class="section-title">Visit, summon, sleep</h2>
+      <p class="section-desc">An entity is in exactly one phase at a time: a <strong>visit</strong> (a visitor is in the room), <strong>work</strong>, <strong>personal</strong> time of its own, or <strong>sleep</strong>. Newborn entities begin asleep. Separately, its state is awake, asleep or paused.</p>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="data-table">
+        <thead><tr><th>Word</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Create</strong></td><td>Type a name and press <strong>Create entity</strong>; it starts from the standard starting document, or from your own YAML under <strong>Advanced: starting document</strong>. The gateway checks the document, stores it verbatim and plants the identity core. The same document twice is the same entity; a changed one is refused.</td></tr>
+          <tr><td><strong>Visit</strong></td><td>A conversation with you, the signed-in visitor, run as one durable run in the entity's own runtime, so a gateway restart does not end it. Each turn it recalls, answers, may write in its diary and forms new memories; at the close it reflects and keeps what it concluded: a summary, interests, lessons, diary entries and feelings.</td></tr>
+          <tr><td><strong>Summon</strong></td><td>A work session <em>as</em> the entity: its identity header leads the system prompt and your work brief is the prompt. Summons are workplace sessions: routine feelings only, no identity writes.</td></tr>
+          <tr><td><strong>Work</strong></td><td>A task left with the entity: an operator's work order in its home, or <code>/task &lt;name&gt; &lt;title&gt;</code> from the AbstractCode terminal, which leaves it on the entity's desk. The entity works on it in its own time and declares when it is done; the order is archived, never deleted.</td></tr>
+          <tr><td><strong>Sleep</strong></td><td>Consolidation of the memory graph, and optionally a dream. Sleep makes no model calls for the dream: it proposes, and waking evidence decides.</td></tr>
+          <tr><td><strong>Own time</strong></td><td>The life loop: the entity prompts itself through its interests and questions, a day at a time, and may choose to rest. Off by default; an operator arms it.</td></tr>
+          <tr><td><strong>Blueprint</strong></td><td>The page that shows how every entity works: the lifecycle state graph, the operator dials and the cognition map of how memory is built for each turn.</td></tr>
+          <tr><td><strong>Meet</strong></td><td>Two entities in one conversation, which you can steer and read afterwards.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1rem;max-width:860px">From the terminal, <a href="code.html" style="color:var(--accent-light)">AbstractCode</a> opens a visit with <code>@name</code>, lists entities with <code>/entities</code>, and leaves work on an entity's desk with <code>/task &lt;name&gt; &lt;title&gt;</code>.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ MEMORY ═══════════════════ -->
+<section id="memory" style="background:var(--bg-surface)">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Memory in time</div>
+      <h2 class="section-title">It looks back at its own past</h2>
+      <p class="section-desc">An entity's memory runs on <a href="memory.html" style="color:var(--accent-light)">AbstractMemory</a>: a temporal graph where every fact keeps when it was observed, when it was valid and where it came from. Nothing is deleted; only how easily a memory comes back changes.</p>
+    </div>
+    <div class="components-grid reveal">
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag memory">Recall</span></div>
+        <h3>Before every answer</h3>
+        <p>Each turn starts with a recall over the entity's own memories, and the identity core is always present. Recall is a pure read: only memories the turn actually used are strengthened.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag memory">Formation</span></div>
+        <h3>After every turn</h3>
+        <p>The turn becomes an episode, kept with its verbatim text. What the entity chooses to write goes into its diary: notes, ideas, commitments, reflections, questions, problems and lessons.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag composition">Tools</span></div>
+        <h3>Its own questions</h3>
+        <p>During a turn it can search and read its memories, list its recent ones, ask how it feels about someone or something, and read its diary. What it learned comes back as lessons, and how things went as feelings.</p>
+      </div>
+      <div class="comp-card">
+        <div class="comp-card-header"><span class="comp-tag modality">Sleep</span></div>
+        <h3>One night</h3>
+        <p>Resolution, maintenance, world models, mining, identity and dream, in that order, deterministic and without model calls. Sleep only proposes: summaries stay inactive until reviewed, and waking evidence decides about a dream.</p>
+      </div>
+    </div>
+    <div class="callout reveal" style="margin-top:2rem">
+      <div>Every visit is a durable run with its own ledger in the entity's home, which an operator can read (<code>GET /api/gateway/entities/&lt;name&gt;/visit/&lt;run_id&gt;/ledger</code>). The entity itself looks back through its memory and its diary, and the app's <strong>Ledger</strong> tab shows its life as events: memories formed, recalled, committed and appraised, diary entries and maintenance.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ IN THE APP ═══════════════════ -->
 <section id="features">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">In the app</div>
       <h2 class="section-title">The entities list and the entity page</h2>
+      <p class="section-desc">The app is a thin client: it keeps no server state of its own. Every view is read from the gateway, and the memory views are computed from the memory engine's replay stream, so replay, live tail and scrubbing back in time show the same picture. Without a reachable gateway it opens a bundled demo life.</p>
     </div>
-
-    <div class="modes-grid reveal" style="margin-bottom:2rem">
-      <div class="mode-card" style="text-align:left">
-        <h3>Entities list (Summoned entities)</h3>
-        <p>Create entities, open one, watch them all at once (<strong>watch all</strong>), convene two of them into one conversation (<strong>convene a meet</strong>), and open the <strong>blueprint</strong> page that shows how every entity's memory and daily cycle work.</p>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Entity page</h3>
-        <p>The memory graph, the chat, and a set of reading tabs over the same life. Replay, live tail and scrubbing back in time show the same picture.</p>
-      </div>
-      <div class="mode-card" style="text-align:left">
-        <h3>Demo life offline</h3>
-        <p>Without a reachable gateway the app opens a bundled demo life, so you can explore the memory graph offline.</p>
-      </div>
-    </div>
-
+    <figure class="figure reveal" style="margin:0 0 2rem">
+      <!-- PENDING-W2: SHOT entity-list -->
+      <img src="assets/img/shots/entity-list.webp" alt="The AbstractEntity 0.3.0 Summoned entities page at /apps/entity/ with one newly created demo entity, Vega, shown asleep, and its visit, work, personal and sleep modes" loading="lazy" width="1600" height="556">
+      <figcaption>The entities list with a newly created demo entity, asleep as every newborn is.</figcaption>
+    </figure>
     <div class="table-wrap reveal">
       <table class="data-table">
         <thead><tr><th>Surface</th><th>What it shows</th></tr></thead>
         <tbody>
           <tr><td>Memory graph</td><td>The entity's memories as a live force-directed graph, with search, lenses (identity, recent, warm, feelings, diary, dreams, questions), replay, time scrub and live tail</td></tr>
           <tr><td>Chat</td><td>Visits: talk with the entity, see its reasoning cycles and tool use, adjust its model, files, tools and system prompt in <strong>Settings</strong></td></tr>
-          <tr><td>Card</td><td>The entity's identity card: values, purposes, likes, open questions, interests, key moments and life so far</td></tr>
+          <tr><td>Card</td><td>The identity card: values, purposes, likes, open questions, interests, key moments and life so far</td></tr>
           <tr><td>Detail</td><td>One memory: its verbatim text, feelings and associations</td></tr>
           <tr><td>Book</td><td>The diary as a day-grouped journal; sealed entries stay sealed</td></tr>
           <tr><td>Lessons</td><td>What the entity has learned and kept</td></tr>
-          <tr><td>World</td><td>The entity's short orientation cards about people, systems and ideas it has met</td></tr>
+          <tr><td>World</td><td>Short orientation cards about people, systems and ideas it has met</td></tr>
           <tr><td>Health</td><td>Memory counts, recall coverage, sessions, model usage and on-disk footprint</td></tr>
           <tr><td>Wave</td><td>The cognition wave: the expressive character of the entity's own words over time (not its inner state)</td></tr>
-          <tr><td>Ledger</td><td>The continuous life ledger, a running record of events: memories formed, recalled, committed, appraised, diary and maintenance</td></tr>
+          <tr><td>Ledger</td><td>The continuous life ledger: memories formed, recalled, committed, appraised, diary and maintenance</td></tr>
           <tr><td>Meet console</td><td>Two entities in one conversation: steer it, watch both sides, read it afterwards</td></tr>
         </tbody>
       </table>
+    </div>
+    <div class="callout reveal" style="margin-top:2rem">
+      <div><strong>Released, pre-1.0.</strong> AbstractEntity 0.3.0 (npm) and AbstractMemory 0.3.0 (PyPI) are released, and the entity routes ship with AbstractGateway. The APIs are versioned and tested, and details may still evolve. The app has no entry into the <strong>work</strong> phase of its own (work comes from a work order or <code>/task</code>), and the cognition map is served read-only.</div>
     </div>
   </div>
 </section>
@@ -178,14 +230,13 @@
       <h2 class="section-title">Open the Entity app</h2>
       <p class="section-desc">From the <a href="console.html">gateway console</a>, the Entity card's button reads <strong>Create your first entity</strong> while the gateway has none; it opens the app signed in, straight on the creation form. Serving the app at <code>/apps/entity/</code> needs AbstractGateway 0.7.0 or newer.</p>
     </div>
-
     <div class="code-tabs reveal">
       <div class="tab-nav">
         <button class="tab-btn active" data-tab="gw">Through the gateway</button>
         <button class="tab-btn" data-tab="npx">On its own</button>
       </div>
       <div class="tab-panel active" id="tab-gw">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS abstractentity/README.md:19-22 (console Apps > Entity; served at /apps/entity/) -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># Gateway console &gt; Apps &gt; Entity &gt; Open</span>
 http://127.0.0.1:8080/apps/entity/</code></pre>
@@ -193,11 +244,10 @@ http://127.0.0.1:8080/apps/entity/</code></pre>
         <div class="install-notes"><ul><li>The gateway serves the app on its own address, so a remote or headless machine needs one port and one tunnel for the console and every app (see <a href="install.html#headless">headless installs</a>).</li></ul></div>
       </div>
       <div class="tab-panel" id="tab-npx">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS abstractentity/README.md:44,47; abstractentity/docs/api.md:14 -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># run without installing</span>
 <span class="line-kw">npx</span> @abstractframework/entity
-
 <span class="line-cmt"># or install the abstractentity command globally</span>
 <span class="line-kw">npm install</span> -g @abstractframework/entity
 abstractentity --gateway-url <span class="line-str">http://127.0.0.1:8080</span></code></pre>
@@ -216,10 +266,10 @@ abstractentity --gateway-url <span class="line-str">http://127.0.0.1:8080</span>
       <h2 class="section-title">Keep going</h2>
     </div>
     <div class="next-links reveal">
+      <a class="next-link" href="memory.html"><strong>AbstractMemory</strong><span>The temporal memory an entity lives on.</span></a>
       <a class="next-link" href="start-researcher.html"><strong>Researcher journey</strong><span>Memory, entities and what they keep over time.</span></a>
+      <a class="next-link" href="code.html"><strong>AbstractCode</strong><span>Visit an entity from the terminal with <code>@name</code>.</span></a>
       <a class="next-link" href="install.html"><strong>Install AbstractFramework</strong><span>One line sets up the gateway that hosts your entities.</span></a>
-      <a class="next-link" href="memory.html"><strong>AbstractMemory</strong><span>One of the services that make entities live.</span></a>
-      <a class="next-link" href="code.html"><strong>AbstractCode</strong><span>Talk with an entity from the terminal with <code>@name</code>.</span></a>
       <a class="next-link" href="gateway.html"><strong>AbstractGateway</strong><span>Where entities live and the app is served.</span></a>
     </div>
   </div>
@@ -251,11 +301,13 @@ abstractentity --gateway-url <span class="line-str">http://127.0.0.1:8080</span>
       <a href="agent.html">AbstractAgent</a>
       <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>
       <a href="flow.html">AbstractFlow</a>
+      <a href="tui.html">AbstractTUI</a>
+      <a href="uic.html">AbstractUIC</a>
     </div>
     <div class="footer-col">
       <h4>Applications</h4>
       <a href="gateway.html">AbstractGateway</a>
-      <a href="console.html">Consoles</a>
+      <a href="console.html">Gateway &amp; Core consoles</a>
       <a href="automations.html">Automations</a>
       <a href="code.html">AbstractCode</a>
       <a href="observer.html">AbstractObserver</a>
@@ -266,9 +318,9 @@ abstractentity --gateway-url <span class="line-str">http://127.0.0.1:8080</span>
     <div class="footer-col">
       <h4>Modalities &amp; Knowledge</h4>
       <a href="voice.html">AbstractVoice</a>
-      <a href="vision.html">AbstractVision</a>
       <a href="music.html">AbstractMusic</a>
-      <a href="3d.html">abstract3d</a>
+      <a href="vision.html">AbstractVision</a>
+      <a href="3d.html">Abstract3D</a>
       <a href="camera.html">AbstractCamera</a>
       <a href="memory.html">AbstractMemory</a>
       <a href="semantics.html">AbstractSemantics</a>
