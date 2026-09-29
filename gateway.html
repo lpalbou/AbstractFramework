@@ -333,7 +333,7 @@ abstractgateway models loaded                    <span class="line-cmt"># what i
         </ul>
         <p style="color:var(--text-secondary);margin-top:1rem">You create and manage automations in <a href="observer.html">AbstractObserver</a>, <a href="assistant.html">AbstractAssistant</a> and <a href="code.html">AbstractCode</a> (terminal and web). See <a href="automations.html">Automations</a>.</p>
       </div>
-      <!-- PENDING-W2: E6 -->
+      <!-- PENDING-W2: E8 -->
 <div class="code-block">
 <pre><code><span class="line-kw">GET</span>   /api/gateway/trigger-sources
 <span class="line-kw">POST</span>  /api/gateway/automations
@@ -358,18 +358,24 @@ abstractgateway models loaded                    <span class="line-cmt"># what i
       <h2 class="section-title">The client contract</h2>
       <p class="section-desc">Clients start runs, act with durable commands and render by replaying or streaming the ledger. The live OpenAPI spec is at <code>/openapi.json</code> and Swagger UI at <code>/docs</code>.</p>
     </div>
-    <!-- PENDING-W2: E6 -->
+    <!-- E6 (W2 PASS): examples/E6-gateway-api/snippet.sh verbatim -->
 <div class="code-block reveal">
-<pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"Hello"}}'</span> \
-  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/start"</span>
+<pre><code><span class="line-cmt"># GW = the gateway address, TOKEN = the admin token (&lt;data dir&gt;/auth/bootstrap-admin-token)</span>
+<span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
+  <span class="line-str">"$GW/api/gateway/runs/start"</span>
 
-<span class="line-cmt"># Replay the ledger, then stream new records (SSE)</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/&lt;run_id&gt;/ledger?after=0"</span>
-curl -sS -N -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</span> <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/&lt;run_id&gt;/ledger/stream"</span>
+<span class="line-cmt"># Replay the ledger, then follow new records live (SSE)</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
+curl -sS -N -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger/stream"</span>
 
-<span class="line-cmt"># Resume a paused run with a durable command</span>
+<span class="line-cmt"># The run and its ledger survive a gateway restart</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID"</span></code></pre>
+</div>
+    <!-- PENDING-W2: E8 -->
+<div class="code-block reveal" style="margin-top:1rem">
+<pre><code><span class="line-cmt"># Resume a paused run with a durable command</span>
 curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
   -d <span class="line-str">'{"command_id":"&lt;uuid&gt;","run_id":"&lt;run_id&gt;","type":"resume","payload":{}}'</span> \
   <span class="line-str">"http://127.0.0.1:8080/api/gateway/commands"</span></code></pre>

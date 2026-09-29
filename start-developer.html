@@ -89,12 +89,16 @@
     <div class="journey">
       <div class="j-step reveal"><div class="j-body">
         <h3>Call any model from Python <span class="j-time">10 min</span></h3>
-        <!-- PENDING-W2: E1 -->
-<div class="code-block"><pre><code><span class="line-kw">pip install</span> abstractcore
+        <!-- E1 (W2 PASS): examples/E1-text/snippet.py verbatim; install: abstractcore/README.md:132 -->
+<div class="code-block"><pre><code><span class="line-kw">pip install</span> <span class="line-str">"abstractcore[mlx]"</span>   <span class="line-cmt"># or plain abstractcore for Ollama, LM Studio and /v1 endpoints</span>
 
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)   <span class="line-cmt"># or "openai", "anthropic", "lmstudio", "mlx", …</span>
-response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Draft a privacy-preserving onboarding checklist."</span>)
+
+<span class="line-cmt"># Local model on Apple silicon (MLX). Any provider works the same way, e.g.</span>
+<span class="line-cmt"># create_llm("openai", model="gpt-5-mini") or create_llm("ollama", model="qwen3:4b").</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+
+response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In two sentences, what is a durable workflow runtime?"</span>)
 <span class="line-fn">print</span>(response.content)</code></pre></div><p>Tools, structured output with Pydantic, streaming, media input, embeddings and MCP tool sources use the same object. Models are never downloaded silently: <code>abstractcore models download</code> fetches them, and <code>abstractcore models catalog --fits</code> lists what fits your machine. After the one-line install, <code>abstractcore</code>, its apps (<code>summarizer</code>, <code>extractor</code>, <code>judge</code>, <code>intent</code>, <code>deepsearch</code>), <code>abstractvoice</code>, <code>abstractvision</code> and <code>abstractmusic</code> are already on your PATH, matching the gateway&rsquo;s versions.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
@@ -132,13 +136,18 @@ agent2.<span class="line-fn">load_state</span>(<span class="line-str">"agent_sta
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Drive the gateway over HTTP <span class="j-time">15 min</span></h3>
-        <p>Install the framework (one line, or <code>pip install abstractgateway</code> then <code>abstractgateway serve</code>). The admin token is in <code>&lt;data dir&gt;/auth/bootstrap-admin-token</code>. Start a run of a shipped workflow and stream its ledger:</p><!-- PENDING-W2: E6 -->
-<div class="code-block"><pre><code>curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"Hello"}}'</span> \
-  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/start"</span>
+        <p>Install the framework (one line, or <code>pip install abstractgateway</code> then <code>abstractgateway serve</code>). Set <code>GW</code> to the gateway address (<code>http://127.0.0.1:8080</code>) and <code>TOKEN</code> to the admin token from <code>&lt;data dir&gt;/auth/bootstrap-admin-token</code>. Start a run of a shipped workflow, stream its ledger, and read it back after a restart:</p><!-- E6 (W2 PASS): examples/E6-gateway-api/snippet.sh verbatim -->
+<div class="code-block"><pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
+  <span class="line-str">"$GW/api/gateway/runs/start"</span>
 
-curl -sS -N -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</span> \
-  <span class="line-str">"http://127.0.0.1:8080/api/gateway/runs/&lt;run_id&gt;/ledger/stream"</span></code></pre></div><p>The OpenAPI spec is at <code>/openapi.json</code> and Swagger UI at <code>/docs</code> on your gateway.</p>
+<span class="line-cmt"># Replay the ledger, then follow new records live (SSE)</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
+curl -sS -N -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger/stream"</span>
+
+<span class="line-cmt"># The run and its ledger survive a gateway restart</span>
+curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID"</span></code></pre></div><p>The OpenAPI spec is at <code>/openapi.json</code> and Swagger UI at <code>/docs</code> on your gateway.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Author and code <span class="j-time">15 min</span></h3>

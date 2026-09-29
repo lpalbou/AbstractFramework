@@ -118,16 +118,15 @@ abstractcore serve
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- PENDING-W2: E1 -->
+        <!-- E1 (W2 PASS): examples/E1-text/snippet.py verbatim -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
-<span class="line-cmt"># Local: Ollama running, `ollama pull qwen3:4b` done</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
-response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Draft a privacy-preserving onboarding checklist."</span>)
-print(response.content)
+<span class="line-cmt"># Local model on Apple silicon (MLX). Any provider works the same way, e.g.</span>
+<span class="line-cmt"># create_llm("openai", model="gpt-5-mini") or create_llm("ollama", model="qwen3:4b").</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-<span class="line-cmt"># Cloud: same code, pip install "abstractcore[openai]"</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)</code></pre></div>
+response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In two sentences, what is a durable workflow runtime?"</span>)
+<span class="line-fn">print</span>(response.content)</code></pre></div>
       </div>
     </div>
 
@@ -280,7 +279,7 @@ abstractcore-console</code></pre></div>
         <button class="tab-btn" data-tab="embed">Embeddings</button>
       </div>
       <div class="tab-panel active" id="tab-stream">
-        <!-- PENDING-W2: E1 -->
+        <!-- PENDING-W2: E8 -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</span>, model=<span class="line-str">"qwen3:4b"</span>)
@@ -288,7 +287,7 @@ llm = <span class="line-fn">create_llm</span>(<span class="line-str">"ollama"</s
     print(chunk.content <span class="line-kw">or</span> <span class="line-str">""</span>, end=<span class="line-str">""</span>, flush=<span class="line-var">True</span>)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-tools">
-        <!-- PENDING-W2: E1 -->
+        <!-- PENDING-W2: E8 -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>, <span class="line-fn">tool</span>
 
 <span class="line-kw">@</span><span class="line-fn">tool</span>
@@ -302,7 +301,7 @@ print(resp.content)
 print(resp.tool_calls)   <span class="line-cmt"># structured calls; your host decides how to run them</span></code></pre></div>
       </div>
       <div class="tab-panel" id="tab-structured">
-        <!-- PENDING-W2: E1 -->
+        <!-- PENDING-W2: E8 -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> pydantic <span class="line-kw">import</span> <span class="line-fn">BaseModel</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
@@ -315,19 +314,21 @@ answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"Summa
 print(answer.bullets)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-media">
-        <!-- PENDING-W2: E2 -->
-<div class="code-block"><pre><code><span class="line-cmt"># pip install "abstractcore[vision,voice]" and configure the plugin backends first</span>
+        <!-- E2 (W2 PASS): examples/E2-defaults/defaults.sh and snippet.py verbatim -->
+<div class="code-block"><pre><code><span class="line-cmt"># Once: abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit</span>
+<span class="line-cmt">#       abstractcore config set-default output.voice --provider supertonic --model supertonic-3</span>
+<span class="line-cmt"># (or the gateway console's "Use recommended defaults", which writes the same store)</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-<span class="line-cmt"># Image generation via abstractvision</span>
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A red ceramic mug on a white table."</span>, output=<span class="line-str">"image"</span>)
-png_bytes = image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
+                     <span class="line-str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="line-str">"image"</span>)
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
 
-<span class="line-cmt"># Text-to-speech via abstractvoice</span>
-speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Hello from AbstractCore."</span>, output=<span class="line-str">"voice"</span>)
-wav_bytes = speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data</code></pre></div>
+speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+                      output=<span class="line-str">"voice"</span>)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).write(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-embed">
         <!-- PENDING-W2: E8 -->
