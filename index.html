@@ -172,7 +172,7 @@ speech = llm.<span class="fn">generate</span>(text=<span class="str">"AbstractFr
 music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="str">"music"</span>)
 <span class="fn">open</span>(<span class="str">"ambient.wav"</span>, <span class="str">"wb"</span>).<span class="fn">write</span>(music.outputs[<span class="str">"music"</span>][0].data)</code></pre>
     </div>
-    <p class="qs-note" style="max-width:840px;margin:.5rem auto 0;text-align:left">The image, voice and music calls need their routes set once: the gateway console's <strong>Use recommended defaults</strong> sets voice and image where this computer runs them; set music with <code>abstractcore config set-default output.music</code> or the console's Multimodal tab. <a href="#multimodal">Both forms &rarr;</a></p>
+    <p class="qs-note" style="max-width:840px;margin:.5rem auto 0;text-align:left">The image, voice and music calls need their routes set once: the gateway console's <strong>Use recommended defaults</strong> sets voice and image where this computer runs them; set music with <code class="long">abstractcore config set-default output.music</code> or the console's Multimodal tab. <a href="#multimodal">Both forms &rarr;</a></p>
   </div>
 </section>
 
@@ -312,7 +312,7 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
         </div>
       </div>
       <div class="tab-panel" id="tab-gen-explicit">
-        <div class="install-notes" style="border-top:none"><ul><li>No defaults and no server: name the provider and the model for each capability in the call. These ran with <code>pip install "abstractframework[apple]"</code> (AbstractCore, the plugins and the Apple silicon engines), with every route cleared first.</li></ul></div>
+        <div class="install-notes" style="border-top:none"><ul><li>No defaults and no server: name the provider and the model for each capability in the call. These ran with <code class="long">pip install "abstractframework[apple]"</code> (AbstractCore, the plugins and the Apple silicon engines), with every route cleared first.</li></ul></div>
         <!-- E3-image (W2 PASS): examples/E3-explicit/image.py verbatim -->
         <div class="code-sub">Image</div>
 <div class="code-block">
@@ -646,7 +646,7 @@ curl -sS <span class="line-str">"$BASE/v1/images/generations"</span> -H <span cl
     </div>
     <div class="ledger-routes reveal">
       <!-- E6 (W2 PASS; the stream line VERIFIED-DOCS abstractgateway routes/gateway.py:10416): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:6-11 (gateway 0.7.1, run.log) -->
-      <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:.5rem"><code>GW</code> is your gateway address, <code>TOKEN</code> your gateway token and <code>RUN_ID</code> the <code>run_id</code> that <code>POST /api/gateway/runs/start</code> returns (see <a href="#flow">Flow</a>).</p>
+      <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:.5rem"><code>GW</code> is your gateway address, <code>TOKEN</code> your gateway token and <code>RUN_ID</code> the <code>run_id</code> that <code class="long">POST /api/gateway/runs/start</code> returns (see <a href="#flow">Flow</a>).</p>
       <div class="code-block">
 <pre><code><span class="line-cmt"># Replay the ledger, then follow new records live (SSE)</span>
 curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span class="line-str">"$GW/api/gateway/runs/$RUN_ID/ledger?after=0"</span>
@@ -1088,7 +1088,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
     <div class="section-header reveal">
       <div class="section-label">AbstractFlow</div>
       <h2 class="section-title">Draw a Multi-Agent System. Then Use It.</h2>
-      <p class="section-desc">Draw agents, deterministic Python code, branches, loops and parallel steps in one graph. Publish it and your gateway keeps it as a versioned bundle you run like an endpoint: pick it as the agent of a chat in AbstractCode or AbstractAssistant, launch it once from AbstractObserver, schedule it as an automation, or start it from any program with <code>POST /api/gateway/runs/start</code>.</p>
+      <p class="section-desc">Draw agents, deterministic Python code, branches, loops and parallel steps in one graph. Publish it and your gateway keeps it as a versioned bundle you run like an endpoint: pick it as the agent of a chat in AbstractCode or AbstractAssistant, launch it once from AbstractObserver, schedule it as an automation, or start it from any program with <code class="long">POST /api/gateway/runs/start</code>.</p>
     </div>
 
     <div class="showcase-grid reveal">
@@ -1149,7 +1149,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
         </div>
       </div>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><strong>The next step after skills.</strong> A skill (<code>SKILL.md</code>) tells an agent in prose what to do; a workflow says it formally and visually, orchestrating model calls, agents and code in one graph that runs durably. <strong>Share it</strong> as one <code>.flow</code> file: download a version from one gateway (<code>GET /api/gateway/bundles/{bundle_id}/download</code>), install it on another (<code>POST /api/gateway/bundles/upload</code>), or promote it to your gateway's shared catalog.</p>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><strong>The next step after skills.</strong> A skill (<code>SKILL.md</code>) tells an agent in prose what to do; a workflow says it formally and visually, orchestrating model calls, agents and code in one graph that runs durably. <strong>Share it</strong> as one <code>.flow</code> file: download a version from one gateway (<code class="long">GET /api/gateway/bundles/{bundle_id}/download</code>), install it on another (<code class="long">POST /api/gateway/bundles/upload</code>), or promote it to your gateway's shared catalog.</p>
     <p class="reveal" style="color:var(--text-secondary);margin-top:1rem">The answer names the run and the exact workflow version that runs it; the run's <a href="#ledger">ledger</a> then streams every step.</p>
 
     <div class="comp-links reveal" style="margin-top:1.25rem">
@@ -1523,7 +1523,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
                     <div class="sc-u" data-sc="5">What is in my Downloads folder?</div>
                     <div class="sc-gate" data-sc="6">
                       <span class="sc-gate-title">tool approval &mdash; 1 call(s)</span>
-                      <code>execute_command {"command": "ls ~/Downloads"}</code>
+                      <code class="long">execute_command {"command": "ls ~/Downloads"}</code>
                       <div class="sc-btns"><span class="sc-btn primary" data-sc-approve>approve (a)</span><span class="sc-btn">approve all (A)</span><span class="sc-btn">deny (d)</span></div>
                       <span class="sc-waiting">waiting for approval</span>
                       <span class="sc-resolved">&#10003; approved</span>
@@ -1558,7 +1558,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
                   <div class="sc-u" data-sc="5">What is in my Downloads folder?</div>
                   <div class="sc-gate" data-sc="6">
                     <span class="sc-gate-title">Approve to run these tools.</span>
-                    <code>execute_command &middot; command: ls ~/Downloads</code>
+                    <code class="long">execute_command &middot; command: ls ~/Downloads</code>
                     <div class="sc-btns"><span class="sc-btn">Approve All</span><span class="sc-btn primary" data-sc-approve>Approve Once</span><span class="sc-btn">Deny</span></div>
                     <span class="sc-waiting">Waiting for approval</span>
                       <span class="sc-resolved">&#10003; Approved</span>
