@@ -314,19 +314,18 @@ llm.<span class="line-fn">generate</span>(prompt, media=[...], output=...)</code
     <h3 class="reveal" style="margin-bottom:var(--space-md)">Code examples</h3>
     <div class="code-tabs reveal">
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="r5-python">Python</button>
-        <button class="tab-btn" data-tab="r5-http">HTTP (OpenAI-compatible)</button>
-        <button class="tab-btn" data-tab="r5-nodefaults">No defaults</button>
-        <button class="tab-btn" data-tab="r5-media">Media input</button>
+        <button class="tab-btn active" data-tab="r6-defaults">Python (with defaults)</button>
+        <button class="tab-btn" data-tab="r6-nodefaults">Python (no defaults)</button>
+        <button class="tab-btn" data-tab="r6-http">OpenAI-compatible endpoint</button>
       </div>
-      <div class="tab-panel active" id="tab-r5-python">
-        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">Set the capability routes once per machine, then each output is one call.</p>
+      <div class="tab-panel active" id="tab-r6-defaults">
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">Set the capability routes once per machine, then each output is one call, and the same model reads the picture back through <code>media=</code>.</p>
         <!-- W2 PASS: SNIPPETS.md R5-with-defaults (defaults.sh) -->
 <div class="code-block"><pre><code><span class="line-cmt"># Once per machine (the gateway console's "Use recommended defaults" writes the same store)</span>
 abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit
 abstractcore config set-default output.voice --provider supertonic --model supertonic-3
 abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers</code></pre></div>
-        <!-- W2 PASS: SNIPPETS.md R5-with-defaults -->
+        <!-- W2 PASS: SNIPPETS.md R6-with-defaults -->
 <div class="code-block"><pre><code><span class="line-cmt"># Defaults set once: see defaults.sh (or the gateway console's "Use recommended defaults")</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
@@ -338,10 +337,63 @@ music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm a
 
 <span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][0].data)
 <span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][0].data)
-<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)
+
+<span class="line-cmt"># Ask the text model about the picture it just made (the image goes in through media=)</span>
+answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"What is in this picture?"</span>, media=[<span class="line-str">"lighthouse.png"</span>])
+<span class="line-fn">print</span>(answer.content)</code></pre></div>
+        <details class="run-answer" style="margin-top:.75rem;color:var(--text-secondary);font-size:var(--text-sm)">
+          <summary><strong>What the run printed</strong> (examples/R6/with_defaults.run.log; RESULTS.md R6): &ldquo;This picture depicts a serene, watercolor-style illustration of a lighthouse situated on a rocky outcrop. Here are the key details:&rdquo;</summary>
+          <blockquote style="margin:.5rem 0 0;padding-left:1rem;border-left:2px solid var(--border)">
+<p>This picture depicts a serene, watercolor-style illustration of a lighthouse situated on a rocky outcrop. Here are the key details:</p>
+<ul>
+<li><strong>The Lighthouse:</strong> It is a white, cylindrical tower with a stone foundation. It features a few small rectangular windows and a reddish-brown arched door at the base. At the very top is a dark lantern room with a glass enclosure, from which a warm light appears to be glowing.</li>
+<li><strong>The Setting:</strong> The lighthouse is perched on a cluster of large, grey rocks that are covered in patches of green vegetation. The water around the rocks is depicted in shades of blue with white foam, suggesting gentle waves.</li>
+<li><strong>The Water:</strong> The foreground shows the water with soft, wavy patterns and distinct reflections of the lighthouse tower and the sky.</li>
+<li><strong>The Sky:</strong> The sky is painted with soft, blended washes of pastel colors—yellows, pinks, and light blues—creating a peaceful atmosphere that suggests either a sunrise or sunset.</li>
+<li><strong>Background:</strong> In the distance, there is a faint, hazy outline of land or hills on the horizon.</li>
+</ul>
+<p>Overall, the image has a soft, artistic quality typical of watercolor painting, with visible texture on the "paper."</p>
+          </blockquote>
+        </details>
       </div>
-      <div class="tab-panel" id="tab-r5-http">
-        <!-- W2 PASS: SNIPPETS.md R5b-http -->
+      <div class="tab-panel" id="tab-r6-nodefaults">
+        <!-- W2 PASS: SNIPPETS.md R6-no-defaults -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+
+<span class="line-cmt"># generate() is a method on an LLM instance: the text model is the entry point; each output below names its own engine</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
+speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+                      output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>})
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
+
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][0].data)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][0].data)
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)
+
+<span class="line-cmt"># Ask the text model about the picture it just made (the image goes in through media=)</span>
+answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"What is in this picture?"</span>, media=[<span class="line-str">"lighthouse.png"</span>])
+<span class="line-fn">print</span>(answer.content)</code></pre></div>
+        <details class="run-answer" style="margin-top:.75rem;color:var(--text-secondary);font-size:var(--text-sm)">
+          <summary><strong>What the run printed</strong> (examples/R6/no_defaults.run.log; RESULTS.md R6): &ldquo;This picture depicts a serene watercolor painting of a lighthouse. Here are the key elements:&rdquo;</summary>
+          <blockquote style="margin:.5rem 0 0;padding-left:1rem;border-left:2px solid var(--border)">
+<p>This picture depicts a serene watercolor painting of a lighthouse. Here are the key elements:</p>
+<ul>
+<li><strong>The Lighthouse:</strong> A tall, white lighthouse stands centrally in the composition. It features a red lantern room at the very top and a small flag flying on a pole. It is situated on a raised, rocky platform with railings around the base and the lantern room.</li>
+<li><strong>The Rocks:</strong> The lighthouse is perched atop a rugged, jagged cliff of brown and grey rocks. There is some green vegetation, likely moss or grass, growing on the rocks.</li>
+<li><strong>The Ocean:</strong> The water is painted in varying shades of blue and white, suggesting gentle waves lapping against the rocks. The water reflects the lighthouse and the rocks below.</li>
+<li><strong>The Sky:</strong> The background shows a soft, pastel sky with a gradient of colors ranging from pale yellow near the horizon to light blue and pink clouds above, suggesting a peaceful sunrise or sunset.</li>
+</ul>
+<p>Overall, the image has a soft, dreamy quality typical of watercolor art.</p>
+          </blockquote>
+        </details>
+      </div>
+      <div class="tab-panel" id="tab-r6-http">
+        <!-- W2 PASS: SNIPPETS.md R6-http -->
 <div class="code-block"><pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
 <span class="line-cmt"># Start the server first (another terminal): abstractcore serve --port 19740</span>
 
@@ -361,35 +413,57 @@ curl -sS http://127.0.0.1:19740/v1/images/generations -H <span class="line-str">
   -H <span class="line-str">"Content-Type: application/json"</span> \
   -d '{<span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>,
        <span class="line-str">"prompt"</span>: <span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
-       <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024, <span class="line-str">"response_format"</span>: <span class="line-str">"b64_json"</span>}' &gt; image.json</code></pre></div>
+       <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024, <span class="line-str">"response_format"</span>: <span class="line-str">"b64_json"</span>}' &gt; image.json
+
+<span class="line-cmt"># Save the generated picture, then ask the chat model about it: the PNG travels as a base64 data URL</span>
+python3 -c <span class="line-str">'import base64,json; open("lighthouse.png","wb").write(base64.b64decode(json.load(open("image.json"))["data"][0]["b64_json"]))'</span>
+IMG=$(base64 &lt; lighthouse.png | tr -d <span class="line-str">'\n'</span>)
+cat &gt; question.json &lt;&lt;JSON
+{<span class="line-str">"model"</span>: <span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>, <span class="line-str">"reasoning_effort"</span>: <span class="line-str">"none"</span>,
+ <span class="line-str">"messages"</span>: [{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: [
+   {<span class="line-str">"type"</span>: <span class="line-str">"text"</span>, <span class="line-str">"text"</span>: <span class="line-str">"What is in this picture?"</span>},
+   {<span class="line-str">"type"</span>: <span class="line-str">"image_url"</span>, <span class="line-str">"image_url"</span>: {<span class="line-str">"url"</span>: <span class="line-str">"data:image/png;base64,$IMG"</span>}}]}]}
+JSON
+curl -sS http://127.0.0.1:19740/v1/chat/completions -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> -d @question.json</code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:.5rem">The run used port 19740; <code>abstractcore serve</code> listens on <code>127.0.0.1:8000</code> by default.</p>
-      </div>
-      <div class="tab-panel" id="tab-r5-nodefaults">
-        <!-- W2 PASS: SNIPPETS.md R5-without-defaults -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
-
-<span class="line-cmt"># generate() is a method on an LLM instance: the text model is the entry point; each output below names its own engine</span>
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
-                     output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
-speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
-                      output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>})
-music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
-                     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
-
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][0].data)
-<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][0].data)
-<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
-      </div>
-      <div class="tab-panel" id="tab-r5-media">
-        <!-- W2 PASS: SNIPPETS.md R5-media-input -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
-
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describe this image in one sentence."</span>, media=[<span class="line-str">"lighthouse.png"</span>])
-<span class="line-fn">print</span>(response.content)</code></pre></div>
-        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:.5rem">On the lighthouse image generated above, the run printed: &ldquo;This watercolor painting depicts a white lighthouse and adjacent buildings perched atop a rugged, rocky cliff overlooking a blue ocean under a soft, pastel sky.&rdquo;</p>
+        <details class="run-answer" style="margin-top:.75rem;color:var(--text-secondary);font-size:var(--text-sm)">
+          <summary><strong>What the run printed</strong> (examples/R6/http.run.log; RESULTS.md R6; its bullet glyphs omitted): &ldquo;This is a <strong>watercolor painting</strong> of a <strong>lighthouse situated on a rocky coastal cliff</strong>, overlooking the sea.&rdquo;</summary>
+          <blockquote style="margin:.5rem 0 0;padding-left:1rem;border-left:2px solid var(--border)">
+<p>This is a <strong>watercolor painting</strong> of a <strong>lighthouse situated on a rocky coastal cliff</strong>, overlooking the sea.</p>
+<p>Here’s a detailed breakdown of what’s in the picture:</p>
+<p><strong>Lighthouse</strong>:</p>
+<ul>
+<li>A tall, white cylindrical tower with a red band around its base and a black lantern room on top.</li>
+<li>It has small windows along its shaft and a gallery (railing) around the lantern room.</li>
+<li>A smaller, connected building (possibly a keeper’s house or utility room) sits beside the base of the lighthouse.</li>
+</ul>
+<p><strong>Rocks &amp; Coastline</strong>:</p>
+<ul>
+<li>The lighthouse stands on a rugged, rocky outcrop that juts into the sea.</li>
+<li>Large, weathered boulders are scattered around the base and extend into the water, suggesting a tidal or shallow shoreline.</li>
+<li>Some greenery (grass or low shrubs) grows among the rocks.</li>
+</ul>
+<p><strong>Sea &amp; Water</strong>:</p>
+<ul>
+<li>The water is depicted with soft, flowing brushstrokes in blues and whites, suggesting gentle waves.</li>
+<li>There’s a reflection of the lighthouse and sky on the water’s surface near the rocks.</li>
+</ul>
+<p><strong>Sky &amp; Atmosphere</strong>:</p>
+<ul>
+<li>The sky is painted with warm pastel tones — pinks, yellows, and light blues — evoking a <strong>sunset or sunrise</strong>.</li>
+<li>Soft clouds are visible, adding to the serene, tranquil mood.</li>
+<li>In the distance, faint landforms (hills or mountains) appear on the horizon, blending into the sky.</li>
+</ul>
+<p><strong>Art Style</strong>:</p>
+<ul>
+<li>This is clearly a <strong>watercolor illustration</strong>, likely digital or AI-generated to mimic traditional watercolor effects.</li>
+<li>The edges are intentionally soft and slightly irregular, giving it an organic, hand-painted feel.</li>
+<li>The lighting is warm and atmospheric, enhancing the peaceful, romantic coastal scene.</li>
+</ul>
+<p>Overall, the image captures a classic, idyllic maritime scene — peaceful, nostalgic, and beautifully rendered with impressionistic watercolor techniques. It evokes feelings of solitude, safety, and the timeless beauty of coastal landscapes.</p>
+          </blockquote>
+        </details>
       </div>
     </div>
   </div>
@@ -414,7 +488,7 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Des
         </ul>
       </div>
       <div style="min-width:0">
-        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">The curl requests for chat, speech and images are in the <a href="#getting-started">HTTP tab above</a>. Any OpenAI SDK works the same way, against <code>abstractcore serve</code> on its default <code>127.0.0.1:8000</code>.</p>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">The curl requests for chat, speech and images are in the <a href="#getting-started">OpenAI-compatible endpoint tab above</a>. Any OpenAI SDK works the same way, against <code>abstractcore serve</code> on its default <code>127.0.0.1:8000</code>.</p>
         <!-- W2 PASS: SNIPPETS.md R5b-openai-sdk -->
 <div class="code-block"><pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
 <span class="line-kw">from</span> openai <span class="line-kw">import</span> OpenAI
