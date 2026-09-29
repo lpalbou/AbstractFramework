@@ -474,3 +474,25 @@ plan decides the final numbers.
 
 - Operator directive, 2026-09-29 (quoted in Summary).
 - Inventory read in source 2026-09-29 (file:line above); TLS default checked on the local CPython 3.12.13.
+
+## Operator decisions (2026-09-29, evening)
+
+- **No environment variables.** Email is configured as proper settings in AbstractCore's config
+  store and the gateway's per-user settings, never through `ABSTRACT_EMAIL_*` or other env vars.
+  The existing env-var path is removed (a one-time import into the new settings is allowed, then
+  the variables are ignored with a message naming the new setting).
+- **Configurable from all four consoles:** AbstractCore web console + terminal console, and the
+  gateway web console + terminal console (same fields, same validation, same words).
+- **Recipient policy, same logic as tool policies**, per user/runtime, enforced deterministically
+  before any send (tool call, automation action, notification):
+  - `mode: allowlist` — deny all except the listed recipients and domains (e.g. only my own
+    address, or only `@mycompany.com`);
+  - `mode: denylist` — allow all except the listed recipients and domains;
+  - entries are exact addresses or domains (a domain entry matches that domain; subdomains only
+    when written as such); no pattern language, no heuristics;
+  - the policy applies to To, Cc and Bcc; a message with any refused recipient is refused as a
+    whole, with the refused addresses and the rule that refused them in the error;
+  - approval still applies on top: the policy decides who CAN receive mail at all; the approval
+    gate (or an automation's pre-authorised recipients) decides whether a given send runs
+    unattended;
+  - default for a new account: `allowlist` containing only the user's registered address.
