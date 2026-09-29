@@ -414,6 +414,65 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ── Section navigator: <div class="pkg-nav" data-section-nav> is filled from this page's own
+     <section id> + .section-title pairs (label: data-nav-label, else the title, kept short), and the
+     current section is highlighted while scrolling. ── */
+  document.querySelectorAll('[data-section-nav]').forEach(bar => {
+    const items = [];
+    document.querySelectorAll('main section[id], body > section[id]').forEach(sec => {
+      if (sec.closest('[data-section-nav]')) return;
+      const title = sec.querySelector('.section-title, .doc-section h2, h2');
+      let label = sec.dataset.navLabel || (title ? title.textContent : '');
+      label = label.replace(/\s+/g, ' ').trim();
+      if (!sec.dataset.navLabel) {
+        label = label.split(/\s[—–]\s|:\s|\.\s/)[0].replace(/\.$/, '');
+        if (label.length > 34) {
+          const tag = sec.querySelector('.section-label');
+          label = tag ? tag.textContent.trim() : label.slice(0, 32).replace(/\s+\S*$/, '') + '…';
+        }
+      }
+      if (label && !items.some(it => it.sec === sec)) items.push({ sec, label });
+    });
+    if (items.length < 2) { bar.hidden = true; return; }
+    const inner = document.createElement('div');
+    inner.className = 'pkg-nav-inner';
+    const links = items.map(({ sec, label }) => {
+      const a = document.createElement('a');
+      a.className = 'pkg-nav-link';
+      a.href = '#' + sec.id;
+      a.textContent = label;
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        history.replaceState(null, '', '#' + sec.id);
+        const y = sec.getBoundingClientRect().top + window.scrollY - 110;
+        window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
+      });
+      inner.appendChild(a);
+      return a;
+    });
+    bar.textContent = '';
+    bar.appendChild(inner);
+    let current = -1;
+    function update() {
+      const probe = 130;
+      let idx = 0;
+      items.forEach((it, i) => { if (it.sec.getBoundingClientRect().top <= probe) idx = i; });
+      if (idx === current) return;
+      current = idx;
+      links.forEach((a, i) => {
+        a.classList.toggle('active', i === idx);
+        if (i === idx) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
+      });
+      const a = links[idx];
+      if (a && bar.scrollWidth > bar.clientWidth) {
+        const left = a.offsetLeft - bar.clientWidth / 2 + a.offsetWidth / 2;
+        bar.scrollTo({ left, behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  });
+
   /* ── Active nav link highlighting ── */
   const sections = document.querySelectorAll('section[id]');
   const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
