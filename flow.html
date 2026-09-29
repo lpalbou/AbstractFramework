@@ -184,13 +184,14 @@ npx @abstractframework/flow --gateway-url http://127.0.0.1:8080</code></pre>
     <div class="showcase-grid reveal" style="margin-top:2rem;align-items:start">
       <div style="min-width:0">
         <h3 style="margin-bottom:.75rem">Start a workflow by name</h3>
-        <!-- PENDING-W2: R5b-gateway-api -->
-        <!-- E6 (W2 PASS): untracked/site-rethink/examples/E6-gateway-api/snippet.sh:1-4 (gateway 0.7.1, run.log) -->
+        <!-- R5b-gateway-api (W2 PASS): examples/SNIPPETS.md "R5b-gateway-api", lines 1-7 verbatim (contiguous excerpt: token note and start); source examples/R5b/gateway_api.sh -->
         <div class="code-block">
-<pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
-curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d <span class="line-str">'{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}'</span> \
-  <span class="line-str">"$GW/api/gateway/runs/start"</span></code></pre>
+<pre><code># &lt;token&gt;: &lt;data dir&gt;/auth/bootstrap-admin-token, or the console's one-time link (abstractgateway docs/configuration.md:120, v0.7.2)
+
+# Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)
+RUN_ID=$(curl -sS -H "Authorization: Bearer &lt;token&gt;" -H "Content-Type: application/json" \
+  -d '{"bundle_id":"basic-agent","input_data":{"prompt":"How long should I steep green tea?"}}' \
+  "http://127.0.0.1:8080/api/gateway/runs/start" | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_id"])')</code></pre>
         </div>
       </div>
       <div style="min-width:0">
