@@ -108,7 +108,7 @@
   <div class="hero-bg-img" style="position:absolute;inset:0;background:url('assets/img/hero-bg.png') center/cover no-repeat;opacity:0.25;z-index:0" aria-hidden="true"></div>
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span> Open Source &middot; MIT Licensed &middot; 20 Packages</div>
+    <div class="hero-badge"><span class="dot"></span> Open Source &middot; MIT Licensed &middot; 21 Components</div>
     <h1>Write once.<br><span class="gradient">Generate everything.</span><br>Run anywhere.</h1>
     <p class="hero-sub">A modular, open-source framework for durable, observable, multimodal AI. One Python API for any model, local or cloud. One runtime where agents pause, resume and replay. One gateway on your laptop, your network or the internet, with thin clients on every device.</p>
     <div class="hero-actions">
@@ -144,7 +144,7 @@ music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambien
 
 <!-- ═══════════════════ STATS ═══════════════════ -->
 <div class="stats-bar reveal">
-  <div class="stat"><div class="stat-num" data-count="20">20</div><div class="stat-label">Packages</div></div>
+  <div class="stat"><div class="stat-num" data-count="21">21</div><div class="stat-label">Components</div></div>
   <div class="stat"><div class="stat-num" data-count="10">10</div><div class="stat-label">LLM Provider Types</div></div>
   <div class="stat"><div class="stat-num" data-count="6">6</div><div class="stat-label">Modalities</div></div>
   <div class="stat"><div class="stat-num" data-count="100%">100%</div><div class="stat-label">Open Source</div></div>
@@ -310,7 +310,7 @@ abstractcode login --gateway-url https://gateway.example.com --token &lt;TOKEN&g
         <tbody>
           <tr><td>Applications</td><td><a href="code.html">Code</a>, <a href="flow.html">Flow</a>, <a href="observer.html">Observer</a>, <a href="assistant.html">Assistant</a>, <a href="continuum.html">Continuum</a>, <a href="entity.html">Entity</a>, <a href="console.html">Consoles</a></td></tr>
           <tr><td>Control plane</td><td><a href="gateway.html">AbstractGateway</a></td></tr>
-          <tr><td>Composition</td><td><a href="agent.html">AbstractAgent</a>, <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>, <a href="https://github.com/lpalbou/AbstractUIC" target="_blank" rel="noopener noreferrer">AbstractUIC</a></td></tr>
+          <tr><td>Composition</td><td><a href="agent.html">AbstractAgent</a>, <a href="https://github.com/lpalbou/AbstractSkill" target="_blank" rel="noopener noreferrer">AbstractSkill</a>, <a href="https://github.com/lpalbou/AbstractUIC" target="_blank" rel="noopener noreferrer">AbstractUIC</a>, <a href="https://github.com/lpalbou/AbstractTUI" target="_blank" rel="noopener noreferrer">AbstractTUI</a></td></tr>
           <tr><td>Foundation</td><td><a href="core.html">AbstractCore</a>, <a href="runtime.html">AbstractRuntime</a></td></tr>
           <tr><td>Capability plugins</td><td><a href="voice.html">Voice</a>, <a href="vision.html">Vision</a>, <a href="music.html">Music</a>, <a href="3d.html">3D</a>, <a href="camera.html">Camera</a></td></tr>
           <tr><td>Knowledge</td><td><a href="memory.html">AbstractMemory</a>, <a href="semantics.html">AbstractSemantics</a></td></tr>
@@ -617,7 +617,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
     <div class="section-header reveal">
       <div class="section-label">Ecosystem</div>
       <h2 class="section-title">Every Piece, Purpose-Built</h2>
-      <p class="section-desc">20 packages. Each one independently useful. Together, a complete AI infrastructure. Versions are the released ones in framework 0.6.1.</p>
+      <p class="section-desc">21 components, published as 23 packages on PyPI, npm and crates.io. Each one independently useful; together, a complete AI infrastructure. Versions are the released ones in framework 0.6.1; abstract3d and AbstractCamera install separately.</p>
     </div>
     <div class="components-grid">
       <!-- AbstractCore -->
@@ -854,7 +854,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
           <span class="comp-tag modality">Modality Plugin</span>
         </div>
         <h3>abstract3d <span class="ver">0.3.1</span></h3>
-        <p>Image-to-3D and text-to-3D with a validated local TripoSR backend and GLB output, mesh operations and AI tools.</p>
+        <p>Image-to-3D and text-to-3D with a validated local TripoSR backend and GLB output, mesh operations and AI tools; other local backends are experimental. Installs separately: <code>pip install abstract3d</code>.</p>
         <div class="comp-links">
           <a class="comp-link" href="3d.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/abstract3d" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -869,7 +869,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
           <span class="comp-tag modality">Modality Plugin</span>
         </div>
         <h3>AbstractCamera <span class="ver">0.2.0</span></h3>
-        <p>Camera control for tethered bodies, webcams and smart telescopes behind one manager, with camera tools an agent can call.</p>
+        <p>Camera control for tethered bodies, webcams and DWARF smart telescopes behind one manager, with camera tools an agent can call. Installs separately: <code>pip install abstractcamera</code>.</p>
         <div class="comp-links">
           <a class="comp-link" href="camera.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/AbstractCamera" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -918,6 +918,20 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
         <div class="comp-links">
           <a class="comp-link" href="https://github.com/lpalbou/AbstractUIC" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
           <a class="comp-link" href="https://www.npmjs.com/package/@abstractframework/ui-kit" target="_blank" rel="noopener noreferrer">npm &rarr;</a>
+        </div>
+      </div>
+
+      <!-- AbstractTUI -->
+      <div class="comp-card reveal">
+        <div class="comp-card-header">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary-light)" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M6 9l3 3-3 3M11 15h6"/></svg>
+          <span class="comp-tag foundation">Tooling</span>
+        </div>
+        <h3>AbstractTUI <span class="ver">0.6.0</span></h3>
+        <p>The Rust terminal-UI engine, built on fine-grained reactive signals, that the AbstractCode terminal client and the terminal consoles run on.</p>
+        <div class="comp-links">
+          <a class="comp-link" href="https://github.com/lpalbou/AbstractTUI" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
+          <a class="comp-link" href="https://crates.io/crates/abstracttui" target="_blank" rel="noopener noreferrer">crates.io &rarr;</a>
         </div>
       </div>
     </div>
@@ -1259,7 +1273,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
         </div>
       </div>
       <div class="tab-panel" id="tab-kg-api">
-        <!-- PENDING-W2: E6 -->
+        <!-- PENDING-W2: E8 -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># Query the knowledge graph via gateway</span>
 curl http://localhost:<span class="line-var">8080</span>/api/gateway/kg/query \
@@ -1270,7 +1284,7 @@ curl http://localhost:<span class="line-var">8080</span>/api/gateway/kg/query \
 <span class="line-cmt"># AbstractSemantics validates predicates</span>
 <span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> <span class="line-fn">load_semantics_registry</span>
 reg = <span class="line-fn">load_semantics_registry</span>()
-<span class="line-cmt"># 50+ predicates, entity types, CURIE prefixes</span></code></pre>
+<span class="line-cmt"># 44 predicates and 18 entity types in the shipped registry</span></code></pre>
         </div>
       </div>
     </div>
