@@ -73,6 +73,24 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
     release-day flips (`untracked/site-rethink/REPORT.md` §15). The site stays unpublished until
     the operator says so.
 
+**Rehearsal 0.6.3 (Linux + NVIDIA, Quadro RTX 5000 16 GB, 2026-09-29)**
+20. Re-running the installer after a hand-started gateway starts a second gateway on the same
+    data. With a gateway started by hand on 8080 (the summary's own `Start:` line), the preflight
+    reports "port 8080 is in use by another process; using 8081 (kept for future runs)", persists
+    8081, and the run then starts another `abstractgateway serve` on 8081 with the same
+    `ABSTRACTGATEWAY_DATA_DIR`. Two gateways then write one store, and the pointer
+    (`~/.abstractframework/gateway.json`) moves to 8081. The installer should recognise its own
+    gateway on the port (pid file, pointer, `/api/health` and data dir) and reuse or restart it,
+    moving to another port only for a foreign process, without persisting the move when the
+    process was ours. Receipt: `untracked/rehearsal-063/32-no-nvidia-smi-print.log` line 15.
+    Owner: root `scripts/install.sh` (and `install.ps1` for the same check).
+21. Gateway image requests reload the model in a subprocess on every request: 54-59 s per image
+    through the gateway (`29-gateway-image-unloaded-{1,2}.json`: 54.3 s, 59.0 s) against 16 s per
+    image in one process (`30-direct-flux-klein.log`: load 40.6 s once, then 16.4 s and 15.4 s),
+    FLUX.2 [klein] 4B on Diffusers with model CPU offload. Keep the image model resident in a
+    long-lived worker (with the model-residency eject rules that already cover text) or reuse it
+    across requests. Owner: abstractgateway / abstractruntime local image generation path.
+
 ## Acceptance criteria
 
 - [ ] Each item fixed with a test that goes RED without it, or closed with a recorded decision.
@@ -81,3 +99,4 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
 
 `untracked/vision-gate/`, `untracked/core-2.19.0-gate/`, `untracked/root-0.6.2-gate/`,
 `untracked/wave4-STAGE.md`.
+Items 20-21: `untracked/rehearsal-063/`.
