@@ -4157,3 +4157,8 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 .pkg-nav-link.topic::before, .nav-dropdown-menu a.topic::before { content: '\2192\00a0'; font-style: normal; opacity: .6; }
 .pkg-nav-link.topic.active { opacity: 1; color: var(--primary-light); }
 .code-sub { font: 600 .68rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); padding: .8rem 1.1rem .1rem; background: #000; }
+/* Profile cards: badges on one baseline; "Light +" marks the inclusive profiles */
+.profile-cards .mode-card { display: flex; flex-direction: column; }
+.profile-cards .mode-card .mode-tags { margin-top: auto; padding-top: 1rem; }
+.profile-cards .mode-icon { height: 40px; display: grid; place-items: center; }
+.mode-tag.light-plus { color: var(--accent-light); border-color: rgba(6,182,212,.35); background: rgba(6,182,212,.08); }
