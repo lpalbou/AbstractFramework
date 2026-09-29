@@ -106,6 +106,19 @@ from 0.6.2.
 - **Unloading an image model frees its memory.** On CUDA, FLUX.2 [klein] 4B with model CPU offload
   left 16.3 GB held after an unload; it now leaves 0.86 GB (AbstractVision 0.3.33).
 
+### Security
+
+- **Email connections verify TLS.** AbstractCore's mail tools (`list_emails`, `read_email`,
+  `send_email`) and the gateway's email bridge check the server certificate and host name, and refuse
+  before login when the check fails; a server signed by a private CA is trusted with the new
+  `ca_file` field of an account (AbstractCore 2.19.2, AbstractGateway 0.7.4).
+- **Automations no longer email anyone the model chooses.** With the default automatic tool
+  approval, message-sending tools are no longer pre-approved: a `send_email` to your registered
+  email runs unattended, any other recipient waits for your approval (AbstractRuntime 0.7.3,
+  AbstractGateway 0.7.4).
+- A `password_env_var` / `imap_password_env_var` that is not an environment variable name is refused
+  instead of being read as the password (AbstractCore 2.19.2, AbstractGateway 0.7.4).
+
 ### Found in the rehearsal
 
 Found in the rehearsal on the Quadro RTX 5000 described above, which ran the candidate versions. The
