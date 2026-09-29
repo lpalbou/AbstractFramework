@@ -109,7 +109,7 @@ pip install <span class="line-str">"abstractruntime[apple]"</span>   <span class
         <ul class="showcase-features">
           <li><span class="icon">&#10003;</span> <span><strong>Durable waits:</strong> <code>ASK_USER</code>, <code>WAIT_UNTIL</code>, <code>WAIT_EVENT</code>, <code>EMIT_EVENT</code>, subworkflows</span></li>
           <li><span class="icon">&#10003;</span> <span><strong>Stores:</strong> in-memory, JSON/JSONL and SQLite, a durable command inbox, artifacts and offloading, snapshots</span></li>
-          <li><span class="icon">&#10003;</span> <span><strong>Provenance:</strong> a hash-chained, tamper-evident ledger (<code style="white-space:normal;overflow-wrap:anywhere">HashChainedLedgerStore</code>, <code style="white-space:normal;overflow-wrap:anywhere">verify_ledger_chain()</code>)</span></li>
+          <li><span class="icon">&#10003;</span> <span><strong>Provenance, opt-in:</strong> wrap a ledger store in <code style="white-space:normal;overflow-wrap:anywhere">HashChainedLedgerStore</code> for a tamper-evident chain (<code style="white-space:normal;overflow-wrap:anywhere">verify_ledger_chain()</code>). Entity diaries use it; the gateway&rsquo;s run ledgers do not</span></li>
           <li><span class="icon">&#10003;</span> <span><strong>Limits and ids:</strong> a default budget of 20 iterations; a run id you choose is created only when no run already uses it</span></li>
         </ul>
       </div>
