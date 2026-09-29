@@ -145,7 +145,7 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In 
     <div class="section-header reveal">
       <span class="section-label">Local models</span>
       <h2 class="section-title">Pick, download and run a model that fits</h2>
-      <p class="section-desc"><code style="white-space:normal;overflow-wrap:anywhere">abstractcore serve</code> starts the server on <code>127.0.0.1:8000</code>, creates its own bearer token on first run and prints a one-time console link. The console shows what this machine can run and installs engines with one confirmation. Every action shows the matching command.</p>
+      <p class="section-desc"><code style="white-space:normal;overflow-wrap:anywhere">abstractcore serve</code> starts the server on <code>127.0.0.1:8000</code>, creates its own bearer token on first run and prints a one-time link to AbstractCore&rsquo;s own web console. The console shows what this machine can run and installs engines with one confirmation. Every action shows the matching command. AbstractGateway has its own consoles; <a href="console.html">both pairs</a> share the Models and Engines screens.</p>
     </div>
 
     <div class="table-wrap reveal">
@@ -163,7 +163,7 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In 
     <div class="showcase-grid reveal" style="margin-top:var(--space-2xl)">
       <div class="showcase-content" style="min-width:0">
         <h3>The same from a terminal</h3>
-        <p>Everything the console does is a command. For a keyboard-first screen, the <code style="white-space:normal;overflow-wrap:anywhere">abstractcore-console</code> crate (v0.4.0, Rust 1.87+) has the same Models and Engines screens and also edits your default models, providers, API keys and capability routes.</p>
+        <p>Everything the console does is a command. For a keyboard-first screen, AbstractCore&rsquo;s terminal console, the <code style="white-space:normal;overflow-wrap:anywhere">abstractcore-console</code> crate (v0.4.0, Rust 1.87+, built on <a href="tui.html">AbstractTUI</a>), has the same Models and Engines screens and also edits your default models, providers, API keys and capability routes.</p>
         <ul class="showcase-features">
           <li><span class="icon">&#10003;</span> <span>Lost the link? <code style="white-space:normal;overflow-wrap:anywhere">abstractcore serve --claim-url --port 8000</code> prints a fresh one (valid 10 minutes, one use)</span></li>
           <li><span class="icon">&#10003;</span> <span>API keys and default models are set on the host with <code style="white-space:normal;overflow-wrap:anywhere">abstractcore --config</code></span></li>
@@ -227,18 +227,18 @@ abstractcore-console</code></pre></div>
       </div>
       <div class="comp-card">
         <div class="comp-card-header"><span class="comp-tag modality">Media in</span></div>
-        <h3>Media input with policies</h3>
-        <p>Images, audio, video and documents (<code style="white-space:normal;overflow-wrap:anywhere">abstractcore[media]</code>). Nothing is changed silently: a text-only model can get short observations from a configured vision model, and audio or video follow explicit policies.</p>
+        <h3>Input: text, images, audio, video, documents</h3>
+        <p>Attach files with <code>media=[...]</code> next to your prompt (<code style="white-space:normal;overflow-wrap:anywhere">abstractcore[media]</code>). Nothing is changed silently: images go to a vision-capable model, or a text-only model gets short observations from a configured vision fallback; audio follows <code>audio_policy</code> (speech to text through AbstractVoice); video follows <code>video_policy</code> (native video, or sampled frames sent through the vision path).</p>
       </div>
       <div class="comp-card">
         <div class="comp-card-header"><span class="comp-tag modality">Media out</span></div>
-        <h3>Generated media</h3>
-        <p><code style="white-space:normal;overflow-wrap:anywhere">generate(..., output=...)</code> returns images, image edits and upscales, text-to-video, image-to-video, speech, music and voice clones through capability plugins. Text-only <code>generate()</code> is unchanged.</p>
+        <h3>Output: text, voice, music, images, video, 3D</h3>
+        <p>The same <code style="white-space:normal;overflow-wrap:anywhere">generate(..., output=...)</code> returns speech and voice clones, music, images with edits and upscales, text-to-video and image-to-video, and 3D scenes through capability plugins. Text-only <code>generate()</code> is unchanged.</p>
       </div>
       <div class="comp-card">
         <div class="comp-card-header"><span class="comp-tag modality">Plugins</span></div>
         <h3>Capability plugins</h3>
-        <p><code>llm.voice</code> and <code>llm.audio</code> (<a href="voice.html">AbstractVoice</a>), <code>llm.vision</code> (<a href="vision.html">AbstractVision</a>), <code>llm.music</code> (<a href="music.html">AbstractMusic</a>), <code>llm.scene3d</code> (<a href="https://github.com/lpalbou/abstract3d" target="_blank" rel="noopener noreferrer">Abstract3D</a>, text and image to 3D) and <code>llm.camera</code> (<a href="https://github.com/lpalbou/AbstractCamera" target="_blank" rel="noopener noreferrer">AbstractCamera</a>, real-camera piloting).</p>
+        <p><code>llm.voice</code> and <code>llm.audio</code> (<a href="voice.html">AbstractVoice</a>), <code>llm.music</code> (<a href="music.html">AbstractMusic</a>), <code>llm.vision</code> (<a href="vision.html">AbstractVision</a>), <code>llm.scene3d</code> (<a href="3d.html">Abstract3D</a>, text and image to 3D) and <code>llm.camera</code> (<a href="camera.html">AbstractCamera</a>, real-camera piloting).</p>
       </div>
       <div class="comp-card">
         <div class="comp-card-header"><span class="comp-tag foundation">Apple silicon</span></div>
@@ -433,7 +433,7 @@ print(resp.choices[<span class="line-var">0</span>].message.content)</code></pre
     <div class="next-links reveal">
       <a class="next-link" href="start-developer.html"><strong>Developer journey</strong><span>Build on the Python packages, from a first call to durable agents.</span></a>
       <a class="next-link" href="runtime.html"><strong>AbstractRuntime</strong><span>Durable workflows that run LLM and tool calls through AbstractCore.</span></a>
-      <a class="next-link" href="console.html"><strong>Consoles</strong><span>The framework's web and terminal consoles.</span></a>
+      <a class="next-link" href="console.html#core-consoles"><strong>AbstractCore and AbstractGateway consoles</strong><span>The web and terminal consoles of both packages.</span></a>
       <a class="next-link" href="install.html"><strong>Install the framework</strong><span>One line on macOS, Linux and Windows.</span></a>
       <a class="next-link" href="voice.html"><strong>AbstractVoice</strong><span>The speech plugin behind <code>llm.voice</code> and <code>llm.audio</code>.</span></a>
     </div>

@@ -123,7 +123,7 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>A control plane you can see</h3>
-        <p>The web console at <code>/console</code> covers users, runtimes, workflows, providers, multimodal defaults, models, engines, apps and network access. The same screens exist in a terminal. See <a href="console.html">the consoles</a>.</p>
+        <p>AbstractGateway comes with two consoles. Its web console at <code>/console</code> covers users, runtimes, workflows, providers, multimodal defaults, models, engines, apps and network access; its terminal console, <code>abstractgateway-console</code> (built on <a href="tui.html">AbstractTUI</a>), has the same screens. See <a href="console.html">the gateway consoles</a>.</p>
       </div>
     </div>
   </div>
@@ -155,7 +155,7 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
 
     <div class="callout reveal" style="margin-top:2rem">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div>The setup guide installs a local engine, downloads a model that fits your machine and lists the apps. It is described on <a href="console.html">the consoles page</a>, together with the terminal console, <code>abstractgateway-console</code>, which runs the same guide on a server without a browser.</div>
+      <div>The setup guide installs a local engine, downloads a model that fits your machine and lists the apps. It is described on <a href="console.html">the gateway consoles page</a>, together with the gateway&rsquo;s terminal console, <code>abstractgateway-console</code>, which runs the same guide on a server without a browser.</div>
     </div>
 
     <div class="callout reveal" style="margin-top:1rem">
@@ -386,7 +386,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</
     <div class="modes-grid reveal" style="margin-top:2rem">
       <div class="mode-card" style="text-align:left">
         <h3>Media routes</h3>
-        <p>Run-scoped routes for text-to-speech, transcription, image generation, editing and upscaling, video (from text or an image) and music. Each creates a durable child run and returns artifacts, with the backend chosen in the console's <strong>Multimodal</strong> tab.</p>
+        <p>Run-scoped routes for text-to-speech, transcription, music, image generation, editing and upscaling, and video (from text or an image). Each creates a durable child run and returns artifacts, with the backend chosen in the console's <strong>Multimodal</strong> tab.</p>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Discovery</h3>
@@ -478,7 +478,7 @@ abstractgateway migrate --from=file --to=sqlite \
     </div>
     <div class="next-links reveal">
       <a class="next-link" href="install.html"><strong>Install</strong><span>One line on macOS, Linux and Windows, or the Mac package.</span></a>
-      <a class="next-link" href="console.html"><strong>The consoles</strong><span>The setup guide, models, engines, network and apps, in a browser or a terminal.</span></a>
+      <a class="next-link" href="console.html"><strong>The gateway consoles</strong><span>The setup guide, models, engines, network and apps, in a browser or a terminal.</span></a>
       <a class="next-link" href="automations.html"><strong>Automations</strong><span>Scheduled workflows you can pause, edit and discuss.</span></a>
       <a class="next-link" href="start-architect.html"><strong>Start as an architect</strong><span>Network modes, headless servers, security and data.</span></a>
       <a class="next-link" href="runtime.html"><strong>AbstractRuntime</strong><span>The durable run model behind every gateway run.</span></a>
