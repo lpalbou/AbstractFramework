@@ -136,6 +136,7 @@
         <button type="button" class="qs-tab" role="tab" id="qs-win" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="win" data-prompt="PS&gt;" data-cmd='powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"' data-note="Windows 10 22H2 or later, or Windows 11. Installs under your user account, no administrator rights.">Windows</button>
         <button type="button" class="qs-tab" role="tab" id="qs-py" aria-controls="qs-term" aria-selected="false" tabindex="-1" data-os="py" data-prompt="$" data-cmd="pip install abstractframework" data-note="Python 3.10 to 3.13: the framework's Python packages, pinned together (Abstract3D and AbstractCamera install separately). Add &lt;code&gt;[apple]&lt;/code&gt; or &lt;code&gt;[gpu]&lt;/code&gt; for local engines, check with &lt;code&gt;abstractframework doctor&lt;/code&gt;, then run &lt;code&gt;abstractgateway serve&lt;/code&gt;.">Python</button>
       </div>
+      <!-- VERIFIED-DOCS docs/install.md:57 (this default line; the tabs switch to docs/install.md:57, 74 and README.md:294) -->
       <div class="qs-term" id="qs-term" role="tabpanel" aria-labelledby="qs-mac">
         <span class="qs-prompt" aria-hidden="true">$</span>
         <code class="qs-cmd">curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code>
@@ -373,8 +374,8 @@ music = llm.<span class="line-fn">generate</span>(
         <div class="mm-col-title">Input &middot; <code>media=</code></div>
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></span><div><h4>Text</h4><p>Any of ten provider types, local or cloud, with tools and structured output.</p></div></div>
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span><div><h4>Images</h4><p>A vision model, or a vision fallback that describes the image for a text-only model.</p></div></div>
-        <!-- PENDING-W4: Q3 (what the code has for audio input: input.voice via AbstractVoice speech-to-text; input.sound / input.music routes) -->
-        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span><div><h4>Audio</h4><p>An audio-capable model, or speech-to-text through AbstractVoice.</p></div></div>
+        <!-- FACTS.md Q3: abstractcore/abstractcore/providers/base.py:4043-4047 (only audio fallback is speech-to-text); core/generate_contract.py:540-547 (input.voice / input.music / input.sound routes) -->
+        <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg></span><div><h4>Audio</h4><p>Speech through AbstractVoice or an audio-capable model; sound and music understanding through audio-capable models (no dedicated local engine).</p></div></div>
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg></span><div><h4>Video</h4><p>Native video where the model supports it, otherwise sampled frames.</p></div></div>
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h6"/></svg></span><div><h4>Documents</h4><p>PDFs and Office files, with optional visual-text compression for long ones.</p></div></div>
       </div>
@@ -984,15 +985,14 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
         </div>
       </div>
 
-      <!-- AbstractAssistant: W4 fragment assistant-card.html (A), FACTS.md P2/P10 -->
+      <!-- AbstractAssistant: W4 fragment assistant-card.html (A), FACTS.md Q4/Q8 -->
       <div class="comp-card t-app reveal">
         <div class="comp-card-header">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
           <span class="comp-tag app">Application</span>
         </div>
         <h3>AbstractAssistant <span class="ver">0.9.1</span></h3>
-        <!-- PENDING-W4: Q4 (OS wording from FACTS Q4) -->
-        <p>A desktop assistant in your menu bar or system tray: a chat palette, hands-free voice conversations and a small CLI, on your gateway's sessions and workflows. It runs on macOS, Linux and Windows desktops with a system tray; it is tested most on macOS, where it is also packaged as an app bundle.</p>
+        <p>A desktop assistant in your menu bar or system tray: a chat palette one click away, hands-free voice conversations and a small CLI, on your gateway's sessions and workflows. The same app runs on macOS, Linux and Windows; on macOS it is also packaged as a menu-bar app bundle.</p>
         <div class="comp-links">
           <a class="comp-link" href="assistant.html">Docs &rarr;</a>
           <a class="comp-link" href="https://github.com/lpalbou/AbstractAssistant" target="_blank" rel="noopener noreferrer">GitHub &rarr;</a>
@@ -1082,7 +1082,7 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
 
 <!-- ═══════════════════ FLOW ═══════════════════ -->
 <!-- W4 fragment deliver/fragments/flow.html (claims and sources in its header and FACTS.md P1) -->
-<!-- PENDING-W4: Q7 (updated deliver/fragments/flow.html: sharing workflows, workflows as an evolution of skills) -->
+<!-- W4 fragment deliver/fragments/flow.html (P1, Q7; claims in its header and FACTS.md) -->
 <section id="flow" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
@@ -1149,6 +1149,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
         </div>
       </div>
     </div>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><strong>The next step after skills.</strong> A skill (<code>SKILL.md</code>) tells an agent in prose what to do; a workflow says it formally and visually, orchestrating model calls, agents and code in one graph that runs durably. <strong>Share it</strong> as one <code>.flow</code> file: download a version from one gateway (<code>GET /api/gateway/bundles/{bundle_id}/download</code>), install it on another (<code>POST /api/gateway/bundles/upload</code>), or promote it to your gateway's shared catalog.</p>
     <p class="reveal" style="color:var(--text-secondary);margin-top:1rem">The answer names the run and the exact workflow version that runs it; the run's <a href="#ledger">ledger</a> then streams every step.</p>
 
     <div class="comp-links reveal" style="margin-top:1.25rem">
@@ -1228,12 +1229,11 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 <!-- ═══════════════════ SHOWCASE: ASSISTANT ═══════════════════ -->
 <section id="assistant-home">
   <div class="container">
-    <!-- W4 fragment assistant-card.html (B), FACTS.md P2/P10 -->
+    <!-- W4 fragment assistant-card.html (B), FACTS.md Q4/Q8 -->
     <div class="section-header reveal">
       <div class="section-label">Desktop</div>
       <h2 class="section-title">AbstractAssistant &mdash; One Click Away</h2>
-      <p class="section-desc">Press <kbd>&#8984;&#8679;Space</kbd> from any app (Super+Shift+Space on Linux and Windows; configurable), or click its menu-bar or tray icon, and the palette opens on your gateway: your sessions from every device, your automations and live run activity. In the palette, <kbd>&#8984;&#8679;V</kbd> starts a hands-free voice conversation. The app is not tied to one system: it runs on macOS, Linux and Windows desktops that have a system tray, and it is tested most on macOS, where it is also packaged as a menu-bar app bundle.</p>
-    <!-- PENDING-W4: Q4 (OS wording from FACTS Q4) -->
+      <p class="section-desc">Click its menu-bar or tray icon, or press <kbd>&#8984;&#8679;Space</kbd> from any app (Super+Shift+Space on Linux and Windows; configurable), and the palette opens on your gateway: your sessions from every device, your automations and live run activity. In the palette, <kbd>&#8984;&#8679;V</kbd> starts a hands-free voice conversation. It is OS-agnostic: the same Python app runs on macOS, Linux and Windows desktops with a system tray. It has been tested most on macOS, where it is also packaged as a menu-bar app bundle.</p>
     </div>
     <div class="gallery reveal">
       <div class="gallery-item">
@@ -1314,8 +1314,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
     </div>
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Video (Wan 2.2)</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1.25rem">Generated on-device with AbstractVision through MLX-Gen. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. At 1280&times;704, Wan 2.2 TI2V-5B needs about 58 GiB of memory: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
-      <!-- PENDING-W4: Q4 (video through MLX-Gen is Apple silicon only until AbstractVision reaches parity; wording from FACTS Q4) -->
+      <p style="color:var(--text-secondary);margin-bottom:1.25rem">Generated on-device with AbstractVision through MLX-Gen. Local video generation runs through MLX-Gen, validated on Apple Silicon first; the local Diffusers text-to-video path is experimental and temporarily disabled. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. At 1280&times;704, Wan 2.2 TI2V-5B needs about 58 GiB of memory: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
       <div class="code-tabs video-tabs">
         <div class="tab-nav">
           <button class="tab-btn active" data-tab="vid-t2v">Text-to-video</button>
@@ -1577,52 +1576,52 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 
 <!-- ═══════════════════ ENTITIES ═══════════════════ -->
 <!-- W4 fragment deliver/fragments/entities.html (claims and sources in its header and FACTS.md P3) -->
-<!-- PENDING-W4: Q12 (updated deliver/fragments/entities.html) -->
+<!-- W4 fragment deliver/fragments/entities.html (P3, Q5, Q12; claims in its header and FACTS.md) -->
 <section id="entities" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Entities</div>
-      <h2 class="section-title">Entities: Persistent Agents With an Identity</h2>
-      <p class="section-desc">An entity is a persistent agent with a fixed founding identity (values, purposes, traits), its own memory graph and a hash-chained diary. Every conversation is formed into its memory. It writes down the lessons, feelings and interests it chooses to keep, recalls them in later conversations, and consolidates its memory while it sleeps.</p>
+      <h2 class="section-title">Persistent, Self-Evolving Agents</h2>
+      <p class="section-desc">Persistent, self-evolving agents with an identity, a purpose, a history and experiences: entities. We are defining the field here.</p>
     </div>
 
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
-        <h3>Identity</h3>
-        <p>Values in order of precedence, purposes and traits, planted from a starting document when you create it and kept for life. Every conversation opens with that identity core, whole: a core that does not fit is refused rather than cut.</p>
-        <div class="mode-tags"><span class="mode-tag">value</span><span class="mode-tag">purpose</span><span class="mode-tag">trait</span><span class="mode-tag">interest</span></div>
+        <h3>An identity, planted once</h3>
+        <p>Values in order of precedence, purposes and traits, from a starting document you give it at creation and kept for life. Every conversation opens with that identity core, whole: a core that does not fit is refused rather than cut.</p>
+        <div class="mode-tags"><span class="mode-tag">value</span><span class="mode-tag">purpose</span><span class="mode-tag">trait</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>Memory in time</h3>
-        <p>What happens to it becomes facts in a temporal graph (<a href="memory.html">AbstractMemory</a>): each keeps when it was observed, when it was valid and where it came from. Nothing is deleted; only how easily a memory comes back changes.</p>
-        <div class="mode-tags"><span class="mode-tag">observed_at</span><span class="mode-tag">valid_from</span><span class="mode-tag">valid_until</span><span class="mode-tag">provenance</span></div>
+        <h3>Expertise it owns</h3>
+        <p>Give an entity a responsibility and it keeps it. Every conversation and task is formed into its memory, and at the end of each session it writes down the lessons and feelings it keeps: what worked, what did not and why. The next time, it recalls them before it answers.</p>
+        <div class="mode-tags"><span class="mode-tag">episode</span><span class="mode-tag">lesson</span><span class="mode-tag">feeling</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
-        <h3>A life, not a session</h3>
-        <p>A <strong>visit</strong> is a conversation run as one durable run: each turn recalls, answers and forms new memories, and the close is a reflection. <strong>Sleep</strong> consolidates and dreams without calling a model. The <strong>diary</strong> is written by the entity alone.</p>
-        <div class="mode-tags"><span class="mode-tag">visit</span><span class="mode-tag">work</span><span class="mode-tag">own time</span><span class="mode-tag">sleep</span></div>
+        <h3>A history shaped by what it lives</h3>
+        <p>Its history, its interests and its purposes in practice grow from its experiences and from the requests and tasks it receives, in a temporal memory graph where every fact keeps when it was observed, when it held and where it came from. Its diary is hash-chained, with no delete path in the code or over HTTP.</p>
+        <div class="mode-tags"><span class="mode-tag">observed_at</span><span class="mode-tag">valid_from</span><span class="mode-tag">provenance</span></div>
       </div>
     </div>
 
     <!-- W5 fragment deliver/fragments/entity-graph.html (P15) -->
     <div style="margin-top:2.5rem">
 <div class="eg reveal" data-eg aria-label="Illustration: the memory graphs of two entities, Castor and Ephemeral, over time"></div>
-<p class="eg-note reveal">Illustration of the model, not a live graph. Each entity keeps the identity its spark gave it (values, traits, purposes) for life; the phase lane shows what it is doing (visit, work, personal time or sleep). Every conversation and work session is formed into its memory, failures included; it writes down the lessons and diary entries it chooses to keep and recalls them in later sessions. Facts carry validity windows and are closed or superseded, never deleted. Sleep is a deterministic pass that only proposes consolidations. The AbstractEntity app shows the real memory graph of your entities, live.</p>
+<p class="eg-note reveal">Illustration of the model, not a live graph. Each entity keeps the identity its spark gave it (values, traits, purposes) for life; the phase lane shows what it is doing (visit, work, personal time or sleep). On a personal day, which comes when it has standing drives (open questions, interests never yet explored), it rereads its diary and memory, looks things up and answers its own questions; each moment can leave a <code>next:</code> note for the next one. Every conversation and work session is formed into its memory, failures included; it writes down the lessons and diary entries it chooses to keep and recalls them in later sessions. Facts carry validity windows and are closed or superseded, never deleted. Sleep is a deterministic pass that only proposes consolidations. The AbstractEntity app shows the real memory graph of your entities, live.</p>
     </div>
 
     <div class="showcase-grid reveal" style="margin-top:2.5rem">
       <div class="showcase-img">
-        <!-- Entity 0.3.0 capture, reused per W2 MANIFEST.md ("Reused, not retaken"; untracked/site-refresh/shots/MANIFEST.md) -->
+        <!-- Entity 0.3.0 capture, reused per W2 MANIFEST.md ("Reused, not retaken") -->
         <img src="assets/img/shots/entity-list.webp" alt="The AbstractEntity Summoned entities page with one newly created demo entity shown asleep, and its visit, work, personal and sleep modes" loading="lazy">
       </div>
       <div class="showcase-content">
-        <h3>It looks back at its own past</h3>
-        <p>An entity recalls before it answers, and it can search its own memories, its feelings about people and things, and its diary. What it learned comes back as lessons, and how things went as feelings about the people, tools and ideas involved.</p>
+        <h3>Two tracks</h3>
+        <p><strong>For your work:</strong> an agent with a persistent identity and expertise, which you visit, summon into a work session as itself, or give a task, and which remembers how things went.</p>
+        <p><strong>For research:</strong> in its own time an entity explores its interests and tries to resolve its open questions. Whether a self-evolving history like this can lead to something like awareness is an open research question, and we treat it as one.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> <strong>Summon</strong> it into a work session, as itself, with a task as the brief</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Every visit is a durable run with its own ledger, kept in the entity's home folder</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> The <strong>blueprint</strong> shows its daily cycle and how its memory is built</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Copy the home folder and you move the whole life</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Every visit is a durable run, kept in the entity's home folder</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Sleep consolidates memory without calling a model; it only proposes</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Copy the home folder and you move the whole entity</li>
         </ul>
         <p style="color:var(--text-muted);font-size:.85rem;margin-top:.75rem">AbstractEntity 0.3.0 and AbstractMemory 0.3.0 are released and pre-1.0: the APIs are versioned and tested, and details may still evolve.</p>
         <div class="comp-links" style="margin-top:1rem">
@@ -1636,8 +1635,84 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 
 
 <!-- ═══════════════════ KNOWLEDGE GRAPH ═══════════════════ -->
-<!-- PENDING-W4: Q14 (deliver/fragments/memory-reconstruction.html for this section) -->
-<section id="knowledge">
+<!-- W4 fragment deliver/fragments/memory-reconstruction.html (Q14; claims in its header and FACTS.md) -->
+<section id="memory-reconstruction">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Memory</div>
+      <h2 class="section-title">Memory Is Reconstructed, Not Retrieved</h2>
+      <p class="section-desc">Before every answer, an entity's working memory is rebuilt from the moment: who is there, what is asked, and when. Then it can reach further on its own. Every recall is kept, in the run's ledger and in the temporal memory graph.</p>
+    </div>
+
+    <div class="table-wrap reveal" style="margin-bottom:2rem">
+      <svg viewBox="0 0 960 330" width="100%" role="img" aria-labelledby="mr-title mr-desc" style="min-width:680px;display:block;font-family:Inter,system-ui,sans-serif">
+        <title id="mr-title">Dynamic memory reconstruction</title>
+        <desc id="mr-desc">A cue made of the request, the people present and the date and time of day enters reconstruct. It returns a working memory made of three parts: the core identity, what was just in use, and what the cue calls up. The entity can then explore further with its memory tools. The recall is recorded as a step in the run's ledger and as a trace in the temporal memory graph.</desc>
+        <defs>
+          <marker id="mr-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--text-muted, #8b8ba7)"/></marker>
+        </defs>
+        <!-- cue -->
+        <rect x="10" y="40" width="210" height="170" rx="12" fill="rgba(99,102,241,.10)" stroke="rgba(99,102,241,.45)"/>
+        <text x="30" y="70" fill="var(--text, #e6e6f0)" font-size="15" font-weight="700">The moment (cue)</text>
+        <text x="30" y="100" fill="var(--text-secondary, #b4b4c8)" font-size="13">the request, its words</text>
+        <text x="30" y="124" fill="var(--text-secondary, #b4b4c8)" font-size="13">who is present</text>
+        <text x="30" y="148" fill="var(--text-secondary, #b4b4c8)" font-size="13">date and time of day</text>
+        <text x="30" y="172" fill="var(--text-secondary, #b4b4c8)" font-size="13">the machine</text>
+        <text x="30" y="196" fill="var(--text-muted, #8b8ba7)" font-size="11">Stimulus(cue_text, participants, …)</text>
+        <line x1="222" y1="125" x2="290" y2="125" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.6" marker-end="url(#mr-arrow)"/>
+        <!-- reconstruct -->
+        <rect x="292" y="85" width="150" height="80" rx="12" fill="rgba(6,182,212,.12)" stroke="rgba(6,182,212,.5)"/>
+        <text x="367" y="120" text-anchor="middle" fill="var(--text, #e6e6f0)" font-size="15" font-weight="700">reconstruct</text>
+        <text x="367" y="142" text-anchor="middle" fill="var(--text-muted, #8b8ba7)" font-size="11">pure read · RECALL step</text>
+        <line x1="444" y1="125" x2="500" y2="60" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.6" marker-end="url(#mr-arrow)"/>
+        <line x1="444" y1="125" x2="500" y2="125" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.6" marker-end="url(#mr-arrow)"/>
+        <line x1="444" y1="125" x2="500" y2="190" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.6" marker-end="url(#mr-arrow)"/>
+        <!-- three parts -->
+        <rect x="502" y="36" width="230" height="46" rx="10" fill="rgba(245,158,11,.12)" stroke="rgba(245,158,11,.5)"/>
+        <text x="518" y="58" fill="var(--text, #e6e6f0)" font-size="13" font-weight="700">Core identity</text>
+        <text x="518" y="74" fill="var(--text-muted, #8b8ba7)" font-size="11">values, purposes, traits (self)</text>
+        <rect x="502" y="102" width="230" height="46" rx="10" fill="rgba(16,185,129,.12)" stroke="rgba(16,185,129,.5)"/>
+        <text x="518" y="124" fill="var(--text, #e6e6f0)" font-size="13" font-weight="700">Short-term memory</text>
+        <text x="518" y="140" fill="var(--text-muted, #8b8ba7)" font-size="11">what was just in use (stm)</text>
+        <rect x="502" y="168" width="230" height="46" rx="10" fill="rgba(236,72,153,.12)" stroke="rgba(236,72,153,.5)"/>
+        <text x="518" y="190" fill="var(--text, #e6e6f0)" font-size="13" font-weight="700">What the request needs</text>
+        <text x="518" y="206" fill="var(--text-muted, #8b8ba7)" font-size="11">what the cue calls up (stimulus)</text>
+        <line x1="734" y1="125" x2="790" y2="125" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.6" marker-end="url(#mr-arrow)"/>
+        <!-- working memory -->
+        <rect x="792" y="80" width="158" height="90" rx="12" fill="rgba(139,92,246,.12)" stroke="rgba(139,92,246,.5)"/>
+        <text x="871" y="116" text-anchor="middle" fill="var(--text, #e6e6f0)" font-size="14" font-weight="700">Working memory</text>
+        <text x="871" y="136" text-anchor="middle" fill="var(--text-muted, #8b8ba7)" font-size="11">for this answer</text>
+        <!-- active loop -->
+        <path d="M871 172 C 871 250, 367 250, 367 167" fill="none" stroke="var(--text-muted, #8b8ba7)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#mr-arrow)"/>
+        <text x="619" y="244" text-anchor="middle" fill="var(--text-secondary, #b4b4c8)" font-size="12">active: the entity asks for more (search_memory, read_memory, recent_memories, feelings_about)</text>
+        <!-- durable -->
+        <rect x="10" y="272" width="940" height="46" rx="10" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.12)"/>
+        <text x="480" y="300" text-anchor="middle" fill="var(--text-secondary, #b4b4c8)" font-size="13">Durable twice: a MEMORY_RECALL step in the run's ledger, and a journaled trace in the temporal memory graph (replayable as of that moment)</text>
+      </svg>
+    </div>
+
+    <div class="modes-grid reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Passive</h3>
+        <p>Each turn is a cue: the words of the request and who is present; at the start of a visit, the date, the time of day and the machine too. It rebuilds a working memory from the core identity, what was just in use, and what the cue calls up through exact, keyword, vector and co-presence channels, with activation spreading along links between memories.</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Active</h3>
+        <p>During the turn the entity can ask for more: search and read its memories, list the recent ones, ask how it feels about someone or something, read its diary. Underneath, AbstractMemory offers a deliberate reach (<code>probe</code>) and a rebuild of one past moment (<code>situate</code>).</p>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Durable and explainable</h3>
+        <p>Recall is a step in the run's ledger and a trace in the memory graph. <code>recall_history</code> shows a memory's part in past recalls and <code>explain_recall</code> answers why it did or did not surface. Only memories actually used are strengthened.</p>
+      </div>
+    </div>
+    <div class="comp-links reveal" style="margin-top:1.25rem">
+      <a class="comp-link" href="memory.html#reconstruction">How reconstruction works &rarr;</a>
+      <a class="comp-link" href="entity.html">AbstractEntity &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section id="knowledge" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Knowledge</div>
@@ -1740,7 +1815,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
 </section>
 
 <!-- ═══════════════════ START HERE ═══════════════════ -->
-<section id="start" style="background:var(--bg-surface)">
+<section id="start">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Start Here</div>
@@ -1795,7 +1870,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
 </section>
 
 <!-- ═══════════════════ RELEASES ═══════════════════ -->
-<section id="releases">
+<section id="releases" style="background:var(--bg-surface)">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Releases</div>
@@ -1816,7 +1891,7 @@ hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuer
 </section>
 
 <!-- ═══════════════════ PHILOSOPHY ═══════════════════ -->
-<section id="principles" style="background:var(--bg-surface)">
+<section id="principles">
   <div class="container">
     <div class="section-header reveal">
       <div class="section-label">Philosophy</div>
