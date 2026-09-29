@@ -553,7 +553,8 @@ GATEWAY_LOG="$LOG_DIR/gateway.log"
 # over each other. The lock is a directory, <data dir>/update/install.lock (mkdir is atomic),
 # holding the owner's pid. A lock whose pid is gone (a crash, a closed terminal) is taken over.
 # Taken before the first change: at once on a re-run, when the data dir is created on a first
-# install. --print and --print-versions change nothing and take no lock.
+# install; --uninstall takes it only in a data dir that holds this installer's bootstrap.env.
+# --print and --print-versions change nothing and take no lock.
 # ---------------------------------------------------------------------------
 LOCK_DIR="$DATA_DIR/update/install.lock"
 LOCK_HELD=0
@@ -1055,7 +1056,9 @@ UNINSTALL_AGAIN="run the uninstaller again (sh uninstall.sh --yes, or double-cli
 # ---------------------------------------------------------------------------
 if [ "$UNINSTALL" = 1 ]; then
     printf '%sAbstractFramework uninstall%s%s\n' "$C_B" "$C_0" "$([ "$PRINT" = 1 ] && echo ' (--print: nothing is changed)')"
-    [ -d "$DATA_DIR" ] && lock_take
+    # Only an installer install's data dir (bootstrap.env): the purge checks below must see any
+    # other folder exactly as it is.
+    [ -f "$STATE_FILE" ] && lock_take
     find_uv || true; tool_bin; tool_venv
     # Asked first, so the user answers once and every step below runs unattended.
     if [ "$PURGE" = 0 ]; then
