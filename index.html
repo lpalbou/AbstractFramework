@@ -1298,13 +1298,13 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
           <img src="assets/media/lighthouse-cliff.webp" alt="A watercolor lighthouse on a cliff above a calm sea, generated with FLUX.2 Klein" loading="lazy">
           <figcaption>FLUX.2 Klein 4B, provider and model named in the call &mdash; "A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</figcaption>
         </figure>
+        <!-- CLAIMS "Media captions": original site captions (FLUX.2 Klein 4B for the colour image, Qwen Image Edit for the sketch); PLAN Q9 -->
         <figure class="c3-slide">
-          <img src="assets/img/starship-snow.png" alt="A starship standing in a snowy landscape, generated with FLUX.2 Klein" loading="lazy">
-          <figcaption>FLUX.2 Klein 4B &mdash; "A starship in snow"</figcaption>
-        </figure>
-        <figure class="c3-slide">
-          <img src="assets/img/starship-snow-pencil-sketch.png" alt="The same starship image turned into a pencil sketch by an image edit" loading="lazy">
-          <figcaption>Qwen Image Edit &mdash; pencil-sketch edit of the starship image</figcaption>
+          <div class="c3-pair">
+            <img src="assets/img/starship-snow.png" alt="Before: a starship standing in a snowy landscape, generated with FLUX.2 Klein" loading="lazy">
+            <img src="assets/img/starship-snow-pencil-sketch.png" alt="After: the same starship image turned into a pencil sketch by an image-to-image edit" loading="lazy">
+          </div>
+          <figcaption>Image-to-image edit with Qwen Image Edit: the colour image (FLUX.2 Klein 4B), then its pencil-sketch edit</figcaption>
         </figure>
         <figure class="c3-slide">
           <img src="assets/img/gallery-cyberpunk.png" alt="A neon cyberpunk city street at night" loading="lazy">
@@ -1317,43 +1317,67 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       </div>
     </div>
     <div class="reveal" style="margin-top:2rem">
-      <h3 style="margin-bottom:1rem">Text-to-Video (Wan 2.2)</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generated on-device with Wan 2.2 text-to-video through MLX-Gen. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. The first clip is Wan 2.2 TI2V-5B at 832&times;480; at 1280&times;704 the model needs about 58 GiB of memory: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
-      <div class="c3 reveal" data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
-        <div class="c3-stage">
-          <!-- video worker: untracked/wan-mem/queue3.txt:2 via locked_demo.sh -> demo_clip.py (model demo_clip.py:14, t2v mode); ffprobe h264 832x480, 121 frames, 5.04 s -->
-          <figure class="c3-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-wan-ti2v-t2v-alpine-lake.jpg" aria-label="Generated video: a rowboat drifting on a calm alpine lake at sunrise">
-              <source src="assets/video/wan-ti2v-t2v-alpine-lake.mp4" type="video/mp4">
-              Your browser cannot play this H.264 MP4 video.
-            </video>
-            <figcaption>Wan 2.2 TI2V-5B, 832x480, 5 s &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
-          </figure>
-          <figure class="c3-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
-              <source src="assets/video/t2v-river.mp4" type="video/mp4">
-              Your browser cannot play this H.264 MP4 video.
-            </video>
-            <figcaption>Wan 2.2 text-to-video &mdash; "A crystal clear river in the mountains"</figcaption>
-          </figure>
-          <figure class="c3-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg" aria-label="Generated video: two starships in combat">
-              <source src="assets/video/t2v-space.mp4" type="video/mp4">
-              Your browser cannot play this H.264 MP4 video.
-            </video>
-            <figcaption>Wan 2.2 text-to-video &mdash; "A dynamic combat in space between two starships"</figcaption>
-          </figure>
-          <figure class="c3-slide">
-            <video controls loop muted playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
-              <source src="assets/video/t2v-example.mp4" type="video/mp4">
-              Your browser cannot play this H.264 MP4 video.
-            </video>
-            <figcaption>Wan 2.2 text-to-video &mdash; a starship in slow orbit around Earth, city lights below</figcaption>
-          </figure>
+      <h3 style="margin-bottom:1rem">Video (Wan 2.2)</h3>
+      <p style="color:var(--text-secondary);margin-bottom:1.25rem">Generated on-device with AbstractVision through MLX-Gen. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. At 1280&times;704, Wan 2.2 TI2V-5B needs about 58 GiB of memory: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
+      <!-- PENDING-W4: Q4 (video through MLX-Gen is Apple silicon only until AbstractVision reaches parity; wording from FACTS Q4) -->
+      <div class="code-tabs video-tabs">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="vid-t2v">Text-to-video</button>
+          <button class="tab-btn" data-tab="vid-i2v">Image-to-video</button>
+        </div>
+        <div class="tab-panel active" id="tab-vid-t2v">
+          <div class="c3 " data-c3 style="--c3-ratio: 16 / 9" aria-label="Generated videos">
+            <div class="c3-stage">
+              <!-- video worker: deliver/media/README-video.md section 1 (model, canvas, frames, fps, steps, seed, prompt, 1539 s); untracked/wan-mem/queue3.txt:2 -->
+              <figure class="c3-slide">
+                <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-wan-ti2v-t2v-alpine-lake.jpg" aria-label="Generated video: a rowboat drifting on a calm alpine lake at sunrise">
+                  <source src="assets/video/wan-ti2v-t2v-alpine-lake.mp4" type="video/mp4">
+                  Your browser cannot play this H.264 MP4 video.
+                </video>
+                <figcaption>Wan 2.2 TI2V-5B, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 25.7 min on an M5 Max &mdash; "A slow cinematic dolly shot across a calm alpine lake at sunrise, a small wooden rowboat drifting on glassy water, mist rising between pine trees, snowy peaks reflected in the lake, warm golden light, gentle ripples, shallow depth of field, film look"</figcaption>
+              </figure>
+              <figure class="c3-slide">
+                <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-t2v-river.jpg" aria-label="Generated video: a clear mountain river">
+                  <source src="assets/video/t2v-river.mp4" type="video/mp4">
+                  Your browser cannot play this H.264 MP4 video.
+                </video>
+                <figcaption>Wan 2.2 text-to-video &mdash; "A crystal clear river in the mountains"</figcaption>
+              </figure>
+              <figure class="c3-slide">
+                <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-t2v-space.jpg" aria-label="Generated video: two starships in combat">
+                  <source src="assets/video/t2v-space.mp4" type="video/mp4">
+                  Your browser cannot play this H.264 MP4 video.
+                </video>
+                <figcaption>Wan 2.2 text-to-video &mdash; "A dynamic combat in space between two starships"</figcaption>
+              </figure>
+              <figure class="c3-slide">
+                <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-t2v-example.jpg" aria-label="Generated video: a starship in slow orbit around Earth">
+                  <source src="assets/video/t2v-example.mp4" type="video/mp4">
+                  Your browser cannot play this H.264 MP4 video.
+                </video>
+                <figcaption>Wan 2.2 text-to-video &mdash; a starship in slow orbit around Earth, city lights below</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+        <div class="tab-panel" id="tab-vid-i2v">
+          <!-- video worker: deliver/media/README-video.md section 2 (still: FLUX.2 klein 4B 8-bit, 832x480, 4 steps, seed 11, 16 s; clip: Wan 2.2 TI2V-5B image-to-video, 832x480, 121 frames, 24 fps, 50 steps, seed 5, 1436 s) -->
+          <div class="i2v-pair">
+            <figure>
+              <img src="assets/img/flux2-klein-still-lighthouse.jpg" alt="The source still: a white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks" width="832" height="480" loading="lazy">
+              <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps, 16 s &mdash; "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors"</figcaption>
+            </figure>
+            <figure>
+              <video controls autoplay muted loop playsinline preload="metadata" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" width="832" height="480" aria-label="Generated video: waves breaking against the rocks below the lighthouse as the camera pushes in">
+                <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
+                Your browser cannot play this H.264 MP4 video.
+              </video>
+              <figcaption><strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (the default canvas from AbstractVision 0.3.31, coming), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse"</figcaption>
+            </figure>
+          </div>
         </div>
       </div>
     </div>
-    <!-- PENDING-VIDEO: i2v (an "Image-to-video (Wan 2.2)" block with the video worker's clips from deliver/media/) -->
   </div>
 </section>
 

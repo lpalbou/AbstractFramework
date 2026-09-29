@@ -4169,3 +4169,15 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 .gen-tabs .tab-nav { overflow-x: auto; scrollbar-width: none; }
 .gen-tabs .tab-btn { white-space: nowrap; }
 .mm-proof-side h3 a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+/* Before/after pair inside a carousel slide */
+.c3-slide > .c3-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #000; aspect-ratio: var(--c3-ratio); }
+.c3-slide > .c3-pair img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Video tabs: no terminal chrome needed around media */
+.video-tabs { background: transparent; border: 0; box-shadow: none; }
+.video-tabs .tab-nav { background: none; padding-left: 0; }
+.video-tabs .tab-panel { padding-top: 1rem; }
+.i2v-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.i2v-pair figure { margin: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.i2v-pair img, .i2v-pair video { display: block; width: 100%; height: auto; aspect-ratio: 832 / 480; object-fit: cover; background: #000; }
+.i2v-pair figcaption { padding: .7rem 1rem .9rem; font-size: .8rem; color: var(--text-secondary); line-height: 1.55; }
+@media (max-width: 800px) { .i2v-pair { grid-template-columns: 1fr; } }
