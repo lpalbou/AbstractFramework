@@ -276,80 +276,84 @@ abstractcore-console</code></pre></div>
     <!-- VERIFIED-DOCS: schematic of the signatures, not a runnable example — abstractcore@v2.19.0 abstractcore/core/factory.py:10 (create_llm(provider, model=None, **kwargs)), abstractcore/providers/base.py:9178-9185 (generate(prompt, ..., media=...)), :9289 (output= read from the call) -->
     <div class="code-block reveal" style="max-width:720px;margin:0 auto var(--space-xl)"><pre><code>llm = <span class="line-fn">create_llm</span>(provider, model=...)
 llm.<span class="line-fn">generate</span>(prompt, media=[...], output=...)</code></pre></div>
-    <!-- PENDING-W2: R5 (R5-with-defaults, R5-without-defaults, R5-http, R5-media-input) -->
     <h3 class="reveal" style="margin-bottom:var(--space-md)">Code examples</h3>
     <div class="code-tabs reveal">
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="stream">Streaming</button>
-        <button class="tab-btn" data-tab="tools">Tools</button>
-        <button class="tab-btn" data-tab="structured">Structured output</button>
-        <button class="tab-btn" data-tab="media">Media output</button>
-        <button class="tab-btn" data-tab="embed">Embeddings</button>
+        <button class="tab-btn active" data-tab="r5-python">Python</button>
+        <button class="tab-btn" data-tab="r5-http">HTTP (OpenAI-compatible)</button>
+        <button class="tab-btn" data-tab="r5-nodefaults">No defaults</button>
+        <button class="tab-btn" data-tab="r5-media">Media input</button>
       </div>
-      <div class="tab-panel active" id="tab-stream">
-        <!-- E8 (W2 PASS): examples/E8-snippets/core-282-mlx/snippet.py verbatim -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
-
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-<span class="line-kw">for</span> chunk <span class="line-kw">in</span> llm.<span class="line-fn">generate</span>(<span class="line-str">"Write a short poem about distributed systems."</span>, stream=True):
-    <span class="line-fn">print</span>(chunk.content or <span class="line-str">""</span>, end=<span class="line-str">""</span>, flush=True)</code></pre></div>
-      </div>
-      <div class="tab-panel" id="tab-tools">
-        <!-- E8 (W2 PASS): examples/E8-snippets/core-289-mlx/snippet.py verbatim -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm, tool
-
-@tool
-<span class="line-kw">def</span> <span class="line-fn">get_weather</span>(city: str) -&gt; str:
-    <span class="line-kw">return</span> f<span class="line-str">"{city}: 22°C and sunny"</span>
-
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"What's the weather in Paris? Use the tool."</span>, tools=[get_weather])
-
-<span class="line-fn">print</span>(resp.content)
-<span class="line-fn">print</span>(resp.tool_calls)   <span class="line-cmt"># structured calls; your host decides how to run them</span></code></pre></div>
-      </div>
-      <div class="tab-panel" id="tab-structured">
-        <!-- W2 PASS: SNIPPETS.md core-structured -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> pydantic <span class="line-kw">import</span> BaseModel
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
-
-<span class="line-kw">class</span> <span class="line-fn">Answer</span>(BaseModel):
-    title: str
-    bullets: list[str]
-
-llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"Give a title and three bullets that summarize HTTP/3."</span>, response_model=Answer)
-<span class="line-fn">print</span>(answer.title)
-<span class="line-fn">print</span>(answer.bullets)</code></pre></div>
-      </div>
-      <div class="tab-panel" id="tab-media">
-        <!-- W2 PASS: SNIPPETS.md E2-defaults.sh, then E2-snippet -->
-<div class="code-block"><pre><code><span class="line-cmt"># Configure AbstractCore's capability routes once (the gateway console's</span>
-<span class="line-cmt"># "Use recommended defaults" writes the same store; see RESULTS.md E2)</span>
+      <div class="tab-panel active" id="tab-r5-python">
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">Set the capability routes once per machine, then each output is one call.</p>
+        <!-- W2 PASS: SNIPPETS.md R5-with-defaults (defaults.sh) -->
+<div class="code-block"><pre><code><span class="line-cmt"># Once per machine (the gateway console's "Use recommended defaults" writes the same store)</span>
 abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit
 abstractcore config set-default output.voice --provider supertonic --model supertonic-3
-abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers
-abstractcore config defaults</code></pre></div>
-<!-- W2 PASS: SNIPPETS.md E2-snippet (examples/E2-defaults/snippet.py) -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers</code></pre></div>
+        <!-- W2 PASS: SNIPPETS.md R5-with-defaults -->
+<div class="code-block"><pre><code><span class="line-cmt"># Defaults set once: see defaults.sh (or the gateway console's "Use recommended defaults")</span>
+<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
-<span class="line-cmt"># The capability routes come from AbstractCore's config (defaults.sh above,</span>
-<span class="line-cmt"># or the gateway console's recommended defaults); the text model is explicit.</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
-                     <span class="line-str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="line-str">"image"</span>)
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>, output=<span class="line-str">"image"</span>)
+speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>, output=<span class="line-str">"voice"</span>)
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="line-str">"music"</span>)
+
 <span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][0].data)
-
-speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
-                      output=<span class="line-str">"voice"</span>)
 <span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][0].data)
-
-music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="line-str">"music"</span>)
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
       </div>
-      <div class="tab-panel" id="tab-embed">
-        <p style="color:var(--text-secondary);line-height:1.7"><a href="https://github.com/lpalbou/AbstractCore/blob/v2.19.0/abstractcore/embeddings/manager.py#L325" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>EmbeddingManager</code></a> embeds text with a local model (all-MiniLM-L6-v2 by default) or an embeddings endpoint; <code>embed(text)</code> returns a vector and <a href="https://github.com/lpalbou/AbstractCore/blob/v2.19.0/abstractcore/embeddings/manager.py#L1324" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>compute_similarity(a, b)</code></a> compares two texts. Remote embedding providers work with the light install; local embedding models come with <code>[apple]</code> and <code>[gpu]</code> (<a href="https://github.com/lpalbou/AbstractCore/blob/v2.19.0/docs/embeddings.md#L12" target="_blank" rel="noopener noreferrer">Embeddings guide</a>).</p>
+      <div class="tab-panel" id="tab-r5-http">
+        <!-- W2 PASS: SNIPPETS.md R5-http -->
+<div class="code-block"><pre><code><span class="line-cmt"># &lt;token&gt;: printed by abstractcore serve --print-token</span>
+<span class="line-cmt"># Start the server first (another terminal): abstractcore serve --port 19740</span>
+
+curl -sS http://127.0.0.1:19740/v1/chat/completions -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"model"</span>: <span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>, <span class="line-str">"reasoning_effort"</span>: <span class="line-str">"none"</span>,
+       <span class="line-str">"messages"</span>: [{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"In one sentence, what is an append-only ledger?"</span>}]}'
+
+curl -sS http://127.0.0.1:19740/v1/audio/speech -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>,
+       <span class="line-str">"input"</span>: <span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>, <span class="line-str">"response_format"</span>: <span class="line-str">"wav"</span>}' \
+  --output tagline.wav
+
+curl -sS http://127.0.0.1:19740/v1/images/generations -H <span class="line-str">"Authorization: Bearer &lt;token&gt;"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>,
+       <span class="line-str">"prompt"</span>: <span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
+       <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024, <span class="line-str">"response_format"</span>: <span class="line-str">"b64_json"</span>}' &gt; image.json</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:.5rem">The run used port 19740; <code>abstractcore serve</code> listens on <code>127.0.0.1:8000</code> by default.</p>
+      </div>
+      <div class="tab-panel" id="tab-r5-nodefaults">
+        <!-- W2 PASS: SNIPPETS.md R5-without-defaults -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+
+<span class="line-cmt"># generate() is a method on an LLM instance: the text model is the entry point; each output below names its own engine</span>
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
+speech = llm.<span class="line-fn">generate</span>(<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+                      output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>})
+music = llm.<span class="line-fn">generate</span>(<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>,
+                     output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>, <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>})
+
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][0].data)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][0].data)
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
+      </div>
+      <div class="tab-panel" id="tab-r5-media">
+        <!-- W2 PASS: SNIPPETS.md R5-media-input -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
+
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
+response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Describe this image in one sentence."</span>, media=[<span class="line-str">"lighthouse.png"</span>])
+<span class="line-fn">print</span>(response.content)</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-top:.5rem">On the lighthouse image generated above, the run printed: &ldquo;This watercolor painting depicts a white lighthouse and adjacent buildings perched atop a rugged, rocky cliff overlooking a blue ocean under a soft, pastel sky.&rdquo;</p>
       </div>
     </div>
   </div>
@@ -374,29 +378,7 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
         </ul>
       </div>
       <div style="min-width:0">
-        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">These ran on port 19740, a scratch port; <code>abstractcore serve</code> listens on <code>127.0.0.1:8000</code> by default (<a href="https://github.com/lpalbou/AbstractCore/blob/main/docs/server.md" target="_blank" rel="noopener noreferrer">server guide</a>), so drop <code>--port 19740</code> and use port 8000.</p>
-        <!-- W2 PASS: SNIPPETS.md E4-server -->
-<div class="code-block"><pre><code><span class="line-cmt"># Start the OpenAI-compatible server (another terminal): abstractcore serve --port 19740</span>
-BASE=http://127.0.0.1:19740
-TOKEN=$(abstractcore serve --print-token --port 19740)   <span class="line-cmt"># loopback bearer token, created on first use</span>
-
-curl -sS <span class="line-str">"$BASE/v1/models"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span>
-
-curl -sS <span class="line-str">"$BASE/v1/chat/completions"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d '{<span class="line-str">"model"</span>: <span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>,
-       <span class="line-str">"messages"</span>: [{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"In one sentence, what is an append-only ledger?"</span>}]}'
-
-curl -sS <span class="line-str">"$BASE/v1/audio/speech"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>, <span class="line-str">"input"</span>: <span class="line-str">"Write once. Generate everything. Run anywhere."</span>,
-       <span class="line-str">"response_format"</span>: <span class="line-str">"wav"</span>}' --output speech.wav
-
-curl -sS <span class="line-str">"$BASE/v1/images/generations"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
-  -H <span class="line-str">"Content-Type: application/json"</span> \
-  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>,
-       <span class="line-str">"prompt"</span>: <span class="line-str">"A paper boat on a calm lake at sunrise, watercolor"</span>,
-       <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024, <span class="line-str">"response_format"</span>: <span class="line-str">"b64_json"</span>}' &gt; image.json</code></pre></div>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm);margin-bottom:.5rem">The curl requests for chat, speech and images are in the <a href="#getting-started">HTTP tab above</a>. Any OpenAI SDK works the same way; this one ran on port 19740, a scratch port, and <code>abstractcore serve</code> listens on <code>127.0.0.1:8000</code> by default.</p>
         <!-- W2 PASS: SNIPPETS.md E4-openai-sdk -->
 <div class="code-block"><pre><code><span class="line-kw">import</span> os
 <span class="line-kw">from</span> openai <span class="line-kw">import</span> OpenAI
