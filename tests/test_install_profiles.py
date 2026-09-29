@@ -382,6 +382,11 @@ _DEFAULT_OVERRIDES = _ALWAYS + [f"{p}; sys_platform == 'never'" for p in _COMPIL
 _NO_GGUF_OVERRIDES = _DEFAULT_OVERRIDES + ["llama-cpp-python; sys_platform == 'never'"]
 _NO_BUILD = ["webrtcvad", "vllm", *_COMPILED_EXTRAS, "llama-cpp-python"]
 _SKIPPED = "Skipped compiled extras (stable-diffusion.cpp, echo cancellation): re-run with {flag} after installing a C compiler."
+# install.ps1: aec-audio-processing has Windows wheels for cp311-cp313 (root backlog 0988).
+_PS1_COMPILED_EXTRAS = ["stable-diffusion-cpp-python"]
+_PS1_DEFAULT_OVERRIDES = _ALWAYS + [f"{p}; sys_platform == 'never'" for p in _PS1_COMPILED_EXTRAS]
+_PS1_NO_BUILD = ["webrtcvad", "vllm", *_PS1_COMPILED_EXTRAS, "llama-cpp-python"]
+_PS1_SKIPPED = "Skipped compiled extras (stable-diffusion.cpp): re-run with {flag} after installing a C compiler."
 _GGUF_SKIPPED = "GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with {flag} after installing a C compiler"
 _LLAMA = "https://abetlen.github.io/llama-cpp-python/whl"
 
@@ -925,7 +930,10 @@ def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
     sh_extras = re.search(r'^AF_COMPILED_EXTRAS="([^"]+)"$', sh, flags=re.M)
     ps_extras = re.search(r"^\$AfCompiledExtras = @\((.*)\)$", ps1, flags=re.M)
     assert sh_extras and ps_extras
-    assert sh_extras.group(1).split() == re.findall(r"'([^']+)'", ps_extras.group(1)) == _COMPILED_EXTRAS
+    assert sh_extras.group(1).split() == _COMPILED_EXTRAS
+    # install.ps1 (Python 3.12 on Windows) takes echo cancellation from its cp311-cp313 Windows wheel
+    # (root backlog 0988); install.sh keeps it compiled-only (no macOS/Linux wheels).
+    assert re.findall(r"'([^']+)'", ps_extras.group(1)) == _PS1_COMPILED_EXTRAS
     assert "GATEWAY_FLAG_APPS" not in sh and "GatewayFlagApps" not in ps1
     assert "ABSTRACTGATEWAY_URL" not in sh and "ABSTRACTGATEWAY_URL" not in ps1
     assert 'AF_WITH_WHEELS="webrtcvad-wheels>=2.0.14"' in sh
@@ -934,7 +942,7 @@ def test_install_ps1_carries_the_same_lists_as_install_sh() -> None:
         assert f'echo "{line}"' in sh
         assert f'"{line}"' in ps1
     assert f"AF_SKIPPED_LINE=\"{_SKIPPED.format(flag='--full')}\"" in sh
-    assert f"$AfSkippedLine = '{_SKIPPED.format(flag='-Full')}'" in ps1
+    assert f"$AfSkippedLine = '{_PS1_SKIPPED.format(flag='-Full')}'" in ps1
     assert f"$AfGgufSkipped = '{_GGUF_SKIPPED.format(flag='-Full')}'" in ps1
     assert f'AF_LLAMA_INDEX="{_LLAMA}"' in sh and f"$AfLlamaIndex = '{_LLAMA}'" in ps1
     sh_cpu = re.search(r'^AF_LLAMA_CPU_PIN="([^"]+)"$', sh, flags=re.M)
@@ -960,18 +968,21 @@ def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_pa
     assert parse == "0"
     env = {**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad"),
            "PROCESSOR_ARCHITECTURE": "AMD64"}
+    # PATH without nvidia-smi: the gpu profile's CPU stack (PyPI torch; llama.cpp vulkan, then cpu).
+    # The CUDA stacks are covered with a fake nvidia-smi in tests/test_install_ps1_gpu_stack.py.
+    env["PATH"] = os.pathsep.join([os.path.dirname(__import__("shutil").which("pwsh")), "/usr/bin", "/bin"])
     argv = ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "gpu", "-Port", "18999"]
     out = subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
-    assert _printed_overrides(out) == _DEFAULT_OVERRIDES
+    assert _printed_overrides(out) == _PS1_DEFAULT_OVERRIDES
     assert _printed_block(out, "uv-constraints.txt:") == [*_release_matrix(), "llama-cpp-python==0.3.35"]
     install = _install_line(out)
     assert (
         "--with 'webrtcvad-wheels>=2.0.14' --with 'abstractvoice[supertonic,stt]' --with llama-cpp-python==0.3.35 --constraints uv-constraints.txt "
-        f"--find-links {_LLAMA}/cpu/llama-cpp-python/ --overrides uv-overrides.txt "
+        f"--find-links {_LLAMA}/vulkan/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
-    assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
-    assert _SKIPPED.format(flag="-Full") in out
-    assert f"GGUF:       llama-cpp-python 0.3.35 (cpu wheel from {_LLAMA}/cpu/llama-cpp-python/)" in out
+    assert " ".join(f"--no-build-package {p}" for p in _PS1_NO_BUILD) in install
+    assert _PS1_SKIPPED.format(flag="-Full") in out
+    assert f"GGUF:       llama-cpp-python 0.3.35 (vulkan wheel from {_LLAMA}/vulkan/llama-cpp-python/)" in out
     assert not (tmp_path / "lad").exists(), "-Print must not write anything"
     if __import__("shutil").which("cl.exe") is None:
         full = subprocess.run(argv + ["-Full"], capture_output=True, text=True, env=env)

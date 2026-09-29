@@ -433,8 +433,10 @@ package page, pinned in `uv-constraints.txt` next to the overrides file):
 | Machine | Wheel |
 |---|---|
 | Apple Silicon Mac | `llama-cpp-python==0.3.28`, Metal (GPU offload) |
-| Linux x86_64 / aarch64 (glibc) | `llama-cpp-python==0.3.35`, CPU |
-| Windows x64 | `llama-cpp-python==0.3.35`, CPU |
+| Linux x86_64 / aarch64 (glibc), light profile | `llama-cpp-python==0.3.35`, CPU |
+| Linux x86_64, gpu profile with an NVIDIA GPU | `llama-cpp-python==0.3.35`: the CUDA build matching PyTorch's CUDA (below), else CPU |
+| Windows x64, light profile | `llama-cpp-python==0.3.35`, CPU |
+| Windows x64, gpu profile | `llama-cpp-python==0.3.35`: the CUDA build for the GPU stack (below), else Vulkan, else CPU |
 | Intel Mac, musl Linux, Windows on ARM | no prebuilt wheel: skipped |
 
 Where no wheel exists, or when the wheel install fails, the script installs everything else and
@@ -443,11 +445,68 @@ source. The summary's `GGUF:` line says which wheel was installed. On Apple Sili
 is pinned to 0.3.28, the newest Metal wheel on that index that passes uv's archive integrity
 check.
 
+### GPU on Linux (NVIDIA)
+
+PyPI's PyTorch for Linux is already a CUDA build, so the gpu profile installs it as it is. After the
+install, `install.sh` asks `nvidia-smi` for the driver version and compute capability and checks, in
+the gateway's own environment:
+
+- that PyTorch sees the GPU (`torch.cuda.is_available()`, the device name and PyTorch's CUDA
+  version); a driver older than PyTorch's CUDA needs is reported with the version it has;
+- llama.cpp: the install itself takes the CPU wheel (it never fails on a GPU detail); then the CUDA
+  build matching PyTorch's CUDA is swapped in, `cu130` for CUDA 13 (driver 580 or newer) or `cu125`
+  for CUDA 12 (driver 525 or newer). It uses the CUDA runtime and cuBLAS that PyTorch's NVIDIA
+  wheels already installed (AbstractCore preloads them before importing llama.cpp), and it is kept
+  only when it loads the way AbstractCore loads it and reports GPU offload; otherwise the CPU wheel
+  goes back and the summary says why;
+- faster-whisper: which device AbstractVoice picks, and that CUDA 12 cuBLAS really loads for it.
+
+The summary's `PyTorch:`, `GGUF:` and `Voice:` lines say what runs where. uv's output is shown as it
+comes, with a `still working (… elapsed; last: …)` line after 15 seconds of silence.
+
+vLLM is part of the Linux gpu profile, and it is the one engine that needs a C compiler: Triton
+builds its GPU kernels the first time vLLM starts a model (`sudo apt-get install -y build-essential`
+on Debian/Ubuntu; the installer warns when none is found). On a GPU older than compute capability 8.0
+(Turing: RTX 20xx, Quadro RTX, T4) start it with `--attention-backend TRITON_ATTN`: its default
+there, FlashInfer, compiles with the CUDA toolkit's `nvcc`, which a driver-only machine does not have.
+
+Measured on Ubuntu 26.04 with a Quadro RTX 5000 (16 GB, driver 595.91.07, CUDA 13.2), from a clean
+home: the whole install took under three minutes on a fast connection (about 13 GB downloaded,
+14 GB on disk), PyTorch 2.11 on CUDA 13.0, llama.cpp's `cu130` build offloading every layer,
+Whisper on CUDA, FLUX.2 [klein] 4B through Diffusers at 768x768 in about 17 s (root backlog 0989).
+
+### GPU on Windows (NVIDIA)
+
+PyPI's PyTorch for Windows runs on the CPU only; the CUDA builds come from PyTorch's own index. With
+the gpu profile, `install.ps1` asks `nvidia-smi` for the driver version and the GPU's compute
+capability, prints the stack it picks and why, and installs:
+
+| NVIDIA driver | PyTorch | llama.cpp builds tried, in order |
+|---|---|---|
+| 580 or newer, compute capability 7.5 or newer | CUDA 13 (`cu130`, about 1.9 GB) | `cu130`, Vulkan, CPU |
+| 525 or newer | CUDA 12 (`cu126`, about 2.5 GB) | `cu125`, Vulkan, CPU |
+| older, or no working NVIDIA GPU | PyPI's CPU build | Vulkan, CPU |
+
+It announces the big downloads before they start and shows uv's output as it happens, with a
+`still working (… elapsed; last: Downloading torch …)` line whenever nothing new was printed for
+15 seconds. At the end it checks, in the gateway's own environment, that PyTorch sees the GPU
+(`torch.cuda.is_available()` and the device name), that the llama.cpp build loads the way
+AbstractCore loads it and reports GPU offload, and which device faster-whisper picks. A part that
+does not work is replaced by one that does: a CUDA install that fails is retried without llama.cpp,
+then with PyTorch's CPU build; a llama.cpp build that does not load (or reports no GPU offload) is
+replaced by the next one, and removed when none loads. The summary's `GPU stack:`, `PyTorch:`,
+`GGUF:` and `Whisper:` lines say what runs where, and why. vLLM (Linux only upstream) and
+stable-diffusion.cpp (a source build that needs an elevated MSVC install) are not part of the
+Windows gpu profile; Diffusers on PyTorch covers image and video generation.
+
+These paths are tested with simulated drivers, fake installers and wheel-only resolves; a run on
+real Windows + NVIDIA hardware is still pending (root backlog 0988).
+
 ### Compiled extras
 
-Two optional engines publish no wheel on PyPI and are skipped by default: stable-diffusion.cpp
-image generation (`stable-diffusion-cpp-python`) and voice echo cancellation
-(`aec-audio-processing`). `--full` (Windows: `-Full`) keeps them and builds them, and llama.cpp,
+Optional engines that publish no wheel on PyPI are skipped by default: stable-diffusion.cpp
+image generation (`stable-diffusion-cpp-python`) and, on macOS and Linux, voice echo cancellation
+(`aec-audio-processing`; Windows gets its prebuilt wheel). `--full` (Windows: `-Full`) keeps them and builds them, and llama.cpp,
 from source, which takes several minutes and needs a C/C++ compiler (macOS:
 `xcode-select --install`; Debian/Ubuntu: `sudo apt-get install -y build-essential`; Windows:
 Visual Studio Build Tools with "Desktop development with C++"). Without a compiler, `--full` stops
@@ -707,7 +766,7 @@ whether local inference engines are installed.
 |---|---|---|---|
 | Light | macOS, Linux, Windows | 3.10–3.13 | No local inference engines. |
 | Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
-| GPU | Linux (and Windows where the engines publish wheels) with NVIDIA CUDA or AMD ROCm drivers | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
+| GPU | Linux with NVIDIA CUDA or AMD ROCm drivers; Windows x64 with NVIDIA (see [GPU on Windows](#gpu-on-windows-nvidia)) | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 
 A plain `pip install` of the `apple` or `gpu` profile builds the
 [compiled extras](#compiled-extras) (`llama-cpp-python`, `stable-diffusion-cpp-python`,

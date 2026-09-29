@@ -264,7 +264,7 @@ to install `libatomic1`. The script tells you before running them.
 No. The default install uses prebuilt wheels only. If macOS shows an "install the command line
 developer tools" prompt, cancel it and re-run the one-liner. llama.cpp GGUF models come from upstream's prebuilt wheel on Apple
 Silicon, Linux and Windows x64 ([llama.cpp GGUF models](install.md#llamacpp-gguf-models)). You
-need a compiler only for `--full`, which adds stable-diffusion.cpp and echo cancellation, and
+need a compiler only for `--full`, which adds stable-diffusion.cpp and (macOS, Linux) echo cancellation, and
 llama.cpp on machines without a prebuilt wheel ([Compiled extras](install.md#compiled-extras)).
 
 ### Windows says scripts are disabled on this system

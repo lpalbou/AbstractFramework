@@ -30,8 +30,13 @@
          then opens the console (one-time claim URL when supported); the browser apps
          open through the gateway at /apps/<app>/
 
-    -Full also builds the compiled extras (stable-diffusion.cpp, echo cancellation) and
-    llama.cpp from source; it needs the MSVC Build Tools.
+    -Full also builds the compiled extra (stable-diffusion.cpp) and llama.cpp from source; it
+    needs the MSVC Build Tools. Echo cancellation comes from its prebuilt wheel.
+
+    The gpu profile picks PyTorch's CUDA build for the NVIDIA driver it finds (CUDA 13 for driver
+    580+ and compute capability 7.5+, CUDA 12 for driver 525+, else the CPU build), shows the
+    downloads as they happen, checks what really runs on the GPU at the end, and falls back to
+    a working CPU install for any part that does not (root backlog 0988).
 
     Upgrade: run the same line again. It finds the existing install (bootstrap.env, the uv
     tool), says "AbstractFramework <old> found: upgrading to <new>" (or "already up to date"),
@@ -133,23 +138,26 @@ $AfScriptUrl = 'https://raw.githubusercontent.com/lpalbou/AbstractFramework/main
 # `uv tool install` gets an overrides file (an override whose marker is never true
 # drops the package) and --no-build-package for the same packages, so a gap fails
 # fast instead of starting a compiler: webrtcvad is always dropped (webrtcvad-wheels
-# comes in through --with), vllm is Linux-only, and the compiled extras
-# (stable-diffusion-cpp-python, aec-audio-processing; optional, imported lazily)
-# are dropped unless -Full, which builds them from source and so needs a compiler.
+# comes in through --with), vllm is Linux-only, and the compiled extra
+# (stable-diffusion-cpp-python; optional, imported lazily) is dropped unless -Full, which
+# builds it from source and so needs a compiler. aec-audio-processing (echo cancellation)
+# is not compiled here: it has Windows wheels for cp311-cp313 and this installer uses
+# Python 3.12 (install.sh keeps it in its compiled list: no macOS/Linux wheels).
 # llama-cpp-python (llama.cpp GGUF, every profile) comes from upstream's prebuilt
-# CPU wheel on x64 Windows: --find-links on the package page of abetlen's wheel
+# wheel on x64 Windows (light: the CPU build; gpu: the stack's CUDA build, else Vulkan,
+# else CPU, see below): --find-links on the package page of abetlen's wheel
 # index, pinned through --constraints uv-constraints.txt, --no-build-package so the
 # sdist is never built. No wheel for Windows on ARM; there, and whenever the wheel
 # install fails, it is dropped and the summary says so. -Full builds it from source.
-# Same lists as install.sh (tests/test_install_profiles.py checks).
+# Same lists as install.sh, less aec-audio-processing (tests/test_install_profiles.py checks).
 # ---------------------------------------------------------------------------
 $AfWithWheels = 'webrtcvad-wheels>=2.0.14'
 # Local voice on every profile: Supertonic text-to-speech (ONNX Runtime) and Whisper speech-to-text
 # (faster-whisper: CTranslate2). Windows ARM64 gets Supertonic only: CTranslate2 has no ARM64 wheel.
 $AfWithVoice = 'abstractvoice[supertonic,stt]'
 $AfWithVoiceArm64 = 'abstractvoice[supertonic]'
-$AfCompiledExtras = @('stable-diffusion-cpp-python', 'aec-audio-processing')
-$AfSkippedLine = 'Skipped compiled extras (stable-diffusion.cpp, echo cancellation): re-run with -Full after installing a C compiler.'
+$AfCompiledExtras = @('stable-diffusion-cpp-python')
+$AfSkippedLine = 'Skipped compiled extras (stable-diffusion.cpp): re-run with -Full after installing a C compiler.'
 $AfLlamaIndex = 'https://abetlen.github.io/llama-cpp-python/whl'
 $AfLlamaCpuPin = '0.3.35'
 $AfGgufSkipped = 'GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with -Full after installing a C compiler'
@@ -165,6 +173,263 @@ function Get-NoBuildPackages([bool]$WithCompiledExtras) {
     $pkgs = @('webrtcvad', 'vllm')
     if (-not $WithCompiledExtras) { $pkgs += $AfCompiledExtras + @('llama-cpp-python') }
     return $pkgs
+}
+
+# ---------------------------------------------------------------------------
+# The gpu setting on Windows + NVIDIA (root backlog 0988). PyPI's Windows torch is a CPU build;
+# the CUDA builds live on download.pytorch.org. The stack follows the NVIDIA driver:
+#   driver >= 580 and compute capability >= 7.5 -> CUDA 13: torch cu130, llama.cpp cu130
+#   driver >= 525                               -> CUDA 12: torch cu126, llama.cpp cu125
+#   anything else (no NVIDIA, older driver)     -> PyTorch's CPU build, llama.cpp vulkan, else cpu
+# `uv tool install --torch-backend <cuXXX>` routes only the PyTorch packages to that index (uv
+# 0.11.14 honours it for tool installs; uv prints "experimental"). An older uv without the option
+# gets the index itself (--index + --index-strategy unsafe-best-match) and exact +cuXXX pins.
+# llama.cpp's Windows CUDA wheels load cuBLAS/cudart from torch\lib (AbstractCore adds that folder
+# before importing llama_cpp); every llama.cpp build is kept only when it loads in the gateway's
+# environment (GPU builds: when llama.cpp reports GPU offload), else the next one is tried:
+# CUDA -> vulkan -> cpu -> none. Nothing optional ever fails the install.
+# ---------------------------------------------------------------------------
+$AfTorchIndex = 'https://download.pytorch.org/whl'
+# PyTorch versions of the release (uv resolves them; the explicit-index fallback pins them +cuXXX).
+$AfTorchPins = [ordered]@{ 'torch' = '2.14.0'; 'torchvision' = '0.29.0'; 'torchaudio' = '2.11.0' }
+$AfLlamaSizes = @{ 'cu130' = 'about 220 MB'; 'cu125' = 'about 480 MB'; 'vulkan' = 'about 45 MB'; 'cpu' = 'about 7 MB' }
+$script:HeartbeatSeconds = 15
+
+# What nvidia-smi says: Ok, Driver, DriverMajor, Cc (the lowest compute capability, or $null when
+# the driver cannot report it), Name, Error. A missing nvidia-smi or any error: no NVIDIA GPU.
+function Get-NvidiaInfo([string]$Smi = 'nvidia-smi') {
+    $info = @{ Ok = $false; Driver = ''; DriverMajor = 0; Cc = $null; Name = ''; Error = '' }
+    if (-not (Get-Command $Smi -ErrorAction SilentlyContinue)) { $info.Error = 'nvidia-smi not found'; return $info }
+    $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try {
+        $lines = @(& $Smi '--query-gpu=driver_version,compute_cap,name' '--format=csv,noheader' 2>&1 | ForEach-Object { "$_" })
+        $code = $LASTEXITCODE
+        $withCc = $true
+        if ($code -ne 0) {
+            # Drivers too old to report compute_cap: ask for the driver alone.
+            $lines = @(& $Smi '--query-gpu=driver_version,name' '--format=csv,noheader' 2>&1 | ForEach-Object { "$_" })
+            $code = $LASTEXITCODE; $withCc = $false
+        }
+    } catch { $lines = @("$_"); $code = 1 } finally { $ErrorActionPreference = $old }
+    if ($code -ne 0) {
+        $first = ($lines | Where-Object { $_.Trim() } | Select-Object -First 1)
+        $info.Error = "nvidia-smi failed: $(if ($first) { $first.Trim() } else { "exit $code" })"
+        return $info
+    }
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    foreach ($l in $lines) {
+        if (-not $l.Trim()) { continue }
+        $parts = if ($withCc) { $l.Split(',', 3) } else { $l.Split(',', 2) }
+        $drv = $parts[0].Trim()
+        $major = 0
+        if (-not [int]::TryParse(($drv.Split('.')[0]), [ref]$major)) { continue }
+        if (-not $info.Driver) { $info.Driver = $drv; $info.DriverMajor = $major }
+        if ($withCc -and $parts.Count -ge 2) {
+            $cc = 0.0
+            if ([double]::TryParse($parts[1].Trim(), [Globalization.NumberStyles]::Float, $inv, [ref]$cc)) {
+                if ($null -eq $info.Cc -or $cc -lt $info.Cc) { $info.Cc = $cc }
+            }
+        }
+        $nameAt = if ($withCc) { 2 } else { 1 }
+        if (-not $info.Name -and $parts.Count -gt $nameAt) { $info.Name = $parts[$nameAt].Trim() }
+    }
+    if (-not $info.Driver) { $info.Error = "nvidia-smi gave no driver version: $(($lines -join ' ').Trim())"; return $info }
+    $info.Ok = $true
+    return $info
+}
+
+# The stack for the gpu setting: Name (cu130 | cu126 | cpu), Torch (the PyTorch index tag, '' for
+# PyPI's CPU build), Llama (llama.cpp wheel folders to try, in order), Label, TorchSize, Why.
+function Select-GpuStack($Info) {
+    $gpu = if ($Info.Name) { "$($Info.Name), " } else { 'NVIDIA GPU, ' }
+    $ccText = if ($null -ne $Info.Cc) { $Info.Cc.ToString('0.0', [Globalization.CultureInfo]::InvariantCulture) } else { 'not reported' }
+    if (-not $Info.Ok) {
+        return @{ Name = 'cpu'; Torch = ''; Llama = @('vulkan', 'cpu'); Label = 'CPU'; TorchSize = 'about 0.3 GB'
+            Why = "no working NVIDIA GPU ($($Info.Error)): PyTorch's CPU build; llama.cpp tries its Vulkan build, then its CPU build" }
+    }
+    if ($Info.DriverMajor -ge 580 -and $null -ne $Info.Cc -and $Info.Cc -ge 7.5) {
+        return @{ Name = 'cu130'; Torch = 'cu130'; Llama = @('cu130', 'vulkan', 'cpu'); Label = 'CUDA 13'; TorchSize = 'about 1.9 GB'
+            Why = "${gpu}driver $($Info.Driver) (580 or newer) and compute capability $ccText (7.5 or newer)" }
+    }
+    if ($Info.DriverMajor -ge 525) {
+        $short = if ($Info.DriverMajor -lt 580) { "driver $($Info.Driver) is older than 580" } else { "compute capability $ccText is below 7.5" }
+        return @{ Name = 'cu126'; Torch = 'cu126'; Llama = @('cu125', 'vulkan', 'cpu'); Label = 'CUDA 12'; TorchSize = 'about 2.5 GB'
+            Why = "${gpu}driver $($Info.Driver) (525 or newer); not CUDA 13: $short" }
+    }
+    return @{ Name = 'cpu'; Torch = ''; Llama = @('vulkan', 'cpu'); Label = 'CPU'; TorchSize = 'about 0.3 GB'
+        Why = "${gpu}driver $($Info.Driver) is older than 525 (CUDA 12 needs 525 or newer): PyTorch's CPU build; update the NVIDIA driver and run the installer again for the GPU" }
+}
+
+# uv arguments and constraints that select PyTorch's build for a stack ($Torch '' = PyPI's build).
+function Get-TorchSelection([string]$Torch, [bool]$UvHasTorchBackend) {
+    if (-not $Torch) { return @{ Args = @(); Constraints = @() } }
+    if ($UvHasTorchBackend) { return @{ Args = @('--torch-backend', $Torch); Constraints = @() } }
+    $pins = @(); foreach ($k in $AfTorchPins.Keys) { $pins += "$k==$($AfTorchPins[$k])+$Torch" }
+    return @{ Args = @('--index', "$AfTorchIndex/$Torch", '--index-strategy', 'unsafe-best-match'); Constraints = $pins }
+}
+
+# One argument, quoted the way Windows (and .NET's ProcessStartInfo.Arguments) splits a command line.
+function ConvertTo-WinArg([string]$Value) {
+    if ($Value -ne '' -and $Value -notmatch '[\s"]') { return $Value }
+    $out = New-Object System.Text.StringBuilder
+    [void]$out.Append('"')
+    $bs = 0
+    foreach ($ch in $Value.ToCharArray()) {
+        if ($ch -eq '\') { $bs++; continue }
+        if ($ch -eq '"') { [void]$out.Append(('\' * (2 * $bs + 1)) + '"'); $bs = 0; continue }
+        [void]$out.Append(('\' * $bs) + $ch); $bs = 0
+    }
+    [void]$out.Append(('\' * (2 * $bs)) + '"')
+    return $out.ToString()
+}
+
+# Run a program and show its output as it comes (uv's progress lines), write every line to the
+# log, and print a heartbeat -- elapsed time and the last Downloading/Building/Installed line --
+# whenever nothing was printed for $script:HeartbeatSeconds, so a multi-GB download never looks
+# frozen. Package lists (" + name==version") go to the log only and are counted. Returns the exit code.
+function Invoke-LiveProcess([string]$Exe, [string[]]$Arguments, [string]$Log) {
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $Exe
+    $psi.Arguments = (($Arguments | ForEach-Object { ConvertTo-WinArg $_ }) -join ' ')
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.CreateNoWindow = $true
+    $psi.WorkingDirectory = (Get-Location).ProviderPath
+    $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+    $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+    $writer = $null
+    if ($Log) { $writer = New-Object System.IO.StreamWriter($Log, $true, (New-Object System.Text.UTF8Encoding($false))) }
+    try {
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        $start = Get-Date; $lastShown = $start; $lastKey = ''; $listed = 0
+        $readers = @{ out = $proc.StandardOutput; err = $proc.StandardError }
+        $tasks = @{ out = $proc.StandardOutput.ReadLineAsync(); err = $proc.StandardError.ReadLineAsync() }
+        while ($tasks.Count) {
+            $got = $false
+            foreach ($k in @($tasks.Keys)) {
+                $t = $tasks[$k]
+                if (-not $t.IsCompleted) { continue }
+                $line = $t.Result
+                if ($null -eq $line) { $tasks.Remove($k); continue }
+                $tasks[$k] = $readers[$k].ReadLineAsync()
+                $got = $true
+                if ($writer) { $writer.WriteLine($line); $writer.Flush() }
+                if ($line -match '^\s*[-+~] \S') { $listed++; continue }
+                if (-not $line.Trim()) { continue }
+                if ($line -match '(Downloading|Downloaded|Building|Built|Prepared|Installed|Uninstalled|Resolved|Updated)') { $lastKey = $line.Trim() }
+                Write-Host "    | $($line.TrimEnd())" -ForegroundColor DarkGray
+                $lastShown = Get-Date
+            }
+            if (-not $got) {
+                $now = Get-Date
+                if (($now - $lastShown).TotalSeconds -ge $script:HeartbeatSeconds) {
+                    $el = $now - $start
+                    $elText = if ($el.TotalMinutes -ge 1) { '{0}m {1:00}s' -f [int][Math]::Floor($el.TotalMinutes), $el.Seconds } else { '{0}s' -f [int]$el.TotalSeconds }
+                    Write-Host "    ... still working ($elText elapsed$(if ($lastKey) { "; last: $lastKey" }))" -ForegroundColor DarkGray
+                    $lastShown = $now
+                }
+                Start-Sleep -Milliseconds 200
+            }
+        }
+        $proc.WaitForExit()
+        if ($listed) { Write-Host "    | ($listed package lines: see the log)" -ForegroundColor DarkGray }
+        return $proc.ExitCode
+    } finally {
+        if ($writer) { $writer.Close() }
+    }
+}
+
+# The llama.cpp check AbstractCore's own load path makes, in a fresh process of the gateway's
+# environment (no torch import, which would mask missing DLLs): its Windows DLL preparation when
+# this AbstractCore has it, import, backend init, GPU offload. One JSON line "AFSMOKE {...}".
+$AfLlamaSmoke = @'
+import json
+r = {"import": False, "offload": False, "error": "", "prep": None}
+try:
+    try:
+        from abstractcore.utils.windows_dll import prepare_llama_cpp_import
+        r["prep"] = prepare_llama_cpp_import()
+    except ImportError:
+        r["prep"] = None
+    import llama_cpp
+    r["import"] = True
+    r["version"] = getattr(llama_cpp, "__version__", "")
+    init = getattr(llama_cpp, "llama_backend_init", None)
+    if callable(init):
+        init()
+    r["offload"] = bool(llama_cpp.llama_supports_gpu_offload())
+except BaseException as e:
+    r["error"] = "%s: %s" % (type(e).__name__, e)
+print("AFSMOKE " + json.dumps(r))
+'@
+$AfTorchSmoke = @'
+import json
+r = {"import": False, "cuda": False, "error": ""}
+try:
+    import torch
+    r.update({"import": True, "version": torch.__version__, "cuda_build": torch.version.cuda})
+    r["cuda"] = bool(torch.cuda.is_available())
+    if r["cuda"]:
+        r["device"] = torch.cuda.get_device_name(0)
+except BaseException as e:
+    r["error"] = "%s: %s" % (type(e).__name__, e)
+print("AFSMOKE " + json.dumps(r))
+'@
+$AfWhisperSmoke = @'
+import json, importlib.util
+r = {"device": "", "error": "", "cublas_guard": False}
+try:
+    r["cublas_guard"] = importlib.util.find_spec("abstractvoice.compute.windows_cuda") is not None
+    from abstractvoice.compute import best_faster_whisper_device
+    r["device"] = best_faster_whisper_device()
+except BaseException as e:
+    r["error"] = "%s: %s" % (type(e).__name__, e)
+print("AFSMOKE " + json.dumps(r))
+'@
+# Run one smoke script with the gateway environment's Python: the parsed JSON, or $null.
+function Invoke-Smoke([string]$Python, [string]$Code, [string]$Log) {
+    if (-not $Python -or -not (Test-Path -LiteralPath $Python)) { return $null }
+    # From a file, not `-c`: Windows PowerShell 5.1 mangles double quotes inside native arguments.
+    $file = Join-Path ([System.IO.Path]::GetTempPath()) ("af-smoke-{0}-{1}.py" -f $PID, [guid]::NewGuid().ToString('N'))
+    [System.IO.File]::WriteAllText($file, $Code, (New-Object System.Text.UTF8Encoding($false)))
+    $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try { $out = @(& $Python $file 2>&1 | ForEach-Object { "$_" }) } catch { $out = @("$_") } finally {
+        $ErrorActionPreference = $old
+        Remove-Item -LiteralPath $file -Force -ErrorAction SilentlyContinue
+    }
+    if ($Log) { Add-Content -Path $Log -Value (@("`r`n`$ $Python <smoke check>") + $out) -Encoding UTF8 }
+    $line = $out | Where-Object { $_ -like 'AFSMOKE *' } | Select-Object -Last 1
+    if (-not $line) { return $null }
+    try { return ($line.Substring(8) | ConvertFrom-Json) } catch { return $null }
+}
+
+# llama.cpp: keep the first build in $Variants that loads (GPU builds: that also report GPU
+# offload; the cpu build: that loads). $Install swaps a build in ({ param($v) } -> $true when it
+# installed), $Check runs the smoke ({ param($v) } -> the AFSMOKE object), $Remove uninstalls
+# llama.cpp when no build loads (never a broken import left behind). $Installed: the build the
+# gateway install already included. Returns @{ Kept; Where; Why (the builds not kept, and why) }.
+function Resolve-LlamaBuild([string[]]$Variants, [string]$Installed, [scriptblock]$Install, [scriptblock]$Check, [scriptblock]$Remove) {
+    $current = $Installed
+    $why = @()
+    foreach ($v in $Variants) {
+        if ($current -ne $v) {
+            Write-Info "llama.cpp: installing its $v build ($($AfLlamaSizes[$v]))"
+            if (-not (& $Install $v)) { $why += "${v}: did not install"; $current = ''; continue }
+            $current = $v
+        }
+        $r = & $Check $v
+        if ($r -and $r.import -and ($v -eq 'cpu' -or $r.offload)) {
+            $where = if ($r.offload) { 'GPU offload' } else { 'CPU' }
+            Write-Ok "llama.cpp $($r.version) ($v build): loads, $where"
+            return @{ Kept = $v; Where = $where; Why = $why }
+        }
+        $reason = if (-not $r) { 'no answer from the check' } elseif (-not $r.import) { "does not load: $($r.error)" } else { 'loads, but reports no GPU offload' }
+        Write-Warn2 "llama.cpp $v build $reason$(if ($v -ne $Variants[-1]) { '; trying the next build' })"
+        $why += "${v}: $reason"
+    }
+    if ($current) { & $Remove }
+    return @{ Kept = ''; Where = ''; Why = $why }
 }
 
 $script:RanAsFile = [bool]$PSCommandPath
@@ -222,7 +487,7 @@ function Format-Cmd([string[]]$Argv) { return (($Argv | ForEach-Object { Format-
 
 # Run a native command: print it, log its output, fail loudly on a non-zero exit.
 function Invoke-Native {
-    param([string]$Description, [string[]]$Argv, [switch]$Soft, [string]$Shown = '')
+    param([string]$Description, [string[]]$Argv, [switch]$Soft, [string]$Shown = '', [switch]$Live)
     if (-not $Shown) { $Shown = Format-Cmd $Argv }
     Write-Host "  `$ $Shown" -ForegroundColor DarkGray
     $script:Twins.Add($Shown)
@@ -234,8 +499,13 @@ function Invoke-Native {
     $ErrorActionPreference = 'Continue'   # PS 5.1 turns native stderr into errors
     try {
         Add-Content -Path $script:LogFile -Value "`r`n`$ $Shown" -Encoding UTF8
-        & $exe @rest 2>&1 | ForEach-Object { "$_" } | Add-Content -Path $script:LogFile -Encoding UTF8
-        $code = $LASTEXITCODE
+        if ($Live) {
+            # Long downloads and builds: the output as it comes, and a heartbeat (Invoke-LiveProcess).
+            $code = Invoke-LiveProcess -Exe $exe -Arguments $rest -Log $script:LogFile
+        } else {
+            & $exe @rest 2>&1 | ForEach-Object { "$_" } | Add-Content -Path $script:LogFile -Encoding UTF8
+            $code = $LASTEXITCODE
+        }
     } catch {
         Add-Content -Path $script:LogFile -Value "$_" -Encoding UTF8
         $code = 1
@@ -735,8 +1005,9 @@ function Main {
         Write-Ok 'C compiler found: -Full builds the compiled extras from source (several minutes)'
     }
 
-    $hasNvidia = $false
-    if (Test-Command 'nvidia-smi') { try { & nvidia-smi -L *> $null; $hasNvidia = ($LASTEXITCODE -eq 0) } catch { } }
+    # nvidia-smi: driver version and compute capability pick the gpu profile's stack (0988).
+    $gpuInfo = Get-NvidiaInfo
+    $hasNvidia = [bool]$gpuInfo.Ok
     switch ($profileName) {
         'auto' {
             if ($state['PROFILE']) { $profileName = $state['PROFILE']; $why = 'kept from the previous install' }
@@ -747,10 +1018,20 @@ function Main {
         'light' { Write-Ok 'profile: light (remote/endpoint engines only)' }
         'gpu' {
             if (-not $hasNvidia) { Write-Warn2 'gpu profile requested but nvidia-smi does not work; local GPU engines will fall back to CPU' }
-            Write-Ok 'profile: gpu (local CUDA engines; best-effort on Windows)'
+            Write-Ok 'profile: gpu (local engines on the NVIDIA GPU when one works, else on the CPU)'
         }
         'apple' { Stop-Install 'the apple profile is for Apple Silicon Macs; use -Profile light or gpu' }
         default { Stop-Install "unknown profile '$profileName' (expected auto, light or gpu)" }
+    }
+
+    # The gpu profile's stack (0988): printed with the reason; Windows on ARM has no CUDA builds.
+    $stack = $null
+    $cpuArchEarly = if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE }
+    if ($profileName -eq 'gpu') {
+        if ($onWindows -and $cpuArchEarly -eq 'ARM64') {
+            $stack = @{ Name = 'cpu'; Torch = ''; Llama = @(); Label = 'CPU'; TorchSize = 'about 0.3 GB'; Why = 'Windows on ARM: PyTorch has CPU builds only there' }
+        } else { $stack = Select-GpuStack $gpuInfo }
+        Write-Ok "GPU stack: $($stack.Label) ($($stack.Why))"
     }
 
     $extras = @()
@@ -886,12 +1167,27 @@ function Main {
         return ''
     }
     $before = Get-GatewayToolVersion
-    # llama.cpp GGUF: the prebuilt CPU wheel on x64 Windows (see the top of this script).
+    # llama.cpp GGUF: the prebuilt wheel on x64 Windows (see the top of this script and 0988 above).
     $ggufPin = ''; $ggufLinks = ''
     $cpuArch = if ($env:PROCESSOR_ARCHITEW6432) { $env:PROCESSOR_ARCHITEW6432 } else { $env:PROCESSOR_ARCHITECTURE }
+    # The llama.cpp builds to try, in order (gpu profile: the stack's; light: the CPU build).
+    $llamaVariants = @(if ($stack -and $stack.Llama.Count) { $stack.Llama } else { 'cpu' })
+    $ggufVariant = $llamaVariants[0]
     if (-not $Full -and ($cpuArch -eq 'AMD64' -or -not $onWindows)) {
-        $ggufPin = $AfLlamaCpuPin; $ggufLinks = "$AfLlamaIndex/cpu/llama-cpp-python/"
+        $ggufPin = $AfLlamaCpuPin; $ggufLinks = "$AfLlamaIndex/$ggufVariant/llama-cpp-python/"
     }
+    # PyTorch's build (0988): --torch-backend when this uv has it for tool installs, else the index.
+    $script:TorchSel = @{ Args = @(); Constraints = @() }
+    $script:TorchReinstall = $false
+    $torchResult = ''
+    $uvTorchBackend = $true
+    if ($stack -and $stack.Torch -and -not $script:DryRun -and $uv -and (Test-Path -LiteralPath $uv)) {
+        $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        try { $uvTorchBackend = [bool]((& $uv tool install --help 2>$null) -join "`n" -match '--torch-backend') } catch { $uvTorchBackend = $false } finally { $ErrorActionPreference = $old }
+    }
+    # A stack change on an existing install (for example CPU -> CUDA 13) replaces PyTorch's packages.
+    $torchTag = if ($stack -and $stack.Torch) { $stack.Torch } else { '' }
+    if ($action -ne 'install' -and "$($state['TORCH'])" -ne $torchTag -and ($state.ContainsKey('TORCH') -or $torchTag)) { $script:TorchReinstall = $true }
     # Local voice (see $AfWithVoice at the top).
     # A hashtable, so the nested functions below can update it. Voice never fails an install: where
     # its wheels are missing the same install is retried without it (Install-GatewayVoice).
@@ -915,6 +1211,7 @@ function Main {
         $constraints = @()
         if ($isRelease) { $constraints += $AfPyMatrix }
         if ($Gguf) { $constraints += "llama-cpp-python==$ggufPin" }
+        $constraints += $script:TorchSel.Constraints
         if ($script:DryRun) {
             if ($constraints.Count) {
                 Write-Info "$(Join-Path $DataDir 'uv-constraints.txt'):$(if ($isRelease) { " the AbstractFramework $AfFrameworkVersion release matrix (exact versions)" })"
@@ -931,6 +1228,8 @@ function Main {
         elseif ($Full) { $argv += @('--with', 'llama-cpp-python') }
         if ($constraints.Count) { $argv += @('--constraints', 'uv-constraints.txt') }
         if ($Gguf) { $argv += @('--find-links', $ggufLinks) }
+        $argv += $script:TorchSel.Args
+        if ($script:TorchReinstall) { foreach ($p in $AfTorchPins.Keys) { $argv += @('--reinstall-package', $p) } }
         $argv += @('--overrides', 'uv-overrides.txt')
         foreach ($p in (Get-NoBuildPackages $Full)) { $argv += @('--no-build-package', $p) }
         foreach ($p in $cliFrom) { $argv += @('--with-executables-from', $p) }
@@ -941,10 +1240,10 @@ function Main {
         # the `==<pin>` the first install recorded and answers "Nothing to upgrade".)
         if ($Pin -eq 'latest' -and -not $From) { $argv += '--upgrade' }
         $shownInstall = "Set-Location $(Format-Arg $DataDir); $(Format-Cmd ($argv + @($gwSpec)))"
-        $desc = if ($Gguf) { 'install abstractgateway with the llama.cpp cpu wheel' } else { 'install abstractgateway' }
+        $desc = if ($Gguf) { "install abstractgateway with the llama.cpp $ggufVariant wheel" } else { 'install abstractgateway' }
         if (-not $script:DryRun) { Push-Location -LiteralPath $DataDir }
         try {
-            return (Invoke-Native -Description $desc -Argv ($argv + @($gwSpec)) -Shown $shownInstall -Soft:$Soft)
+            return (Invoke-Native -Description $desc -Argv ($argv + @($gwSpec)) -Shown $shownInstall -Soft:$Soft -Live)
         } finally {
             if (-not $script:DryRun) { Pop-Location }
         }
@@ -985,17 +1284,56 @@ function Main {
         }
     }
     $ggufResult = ''
-    if ($Full) {
+    $ggufInstalled = ''   # the llama.cpp build the gateway install itself included
+    # The big downloads, announced before they start (the output streams below, with a heartbeat).
+    if ($profileName -eq 'gpu') {
+        $sizes = @("PyTorch $($stack.Label) build ($($stack.TorchSize))")
+        if ($ggufPin) { $sizes += "llama.cpp $ggufVariant build ($($AfLlamaSizes[$ggufVariant]))" }
+        Write-Info "large downloads ahead: $($sizes -join ', '), plus the voice, image and music engines (several GB in all; cached by uv for re-runs). This can take a while; progress is shown as it happens."
+    }
+    $cudaDone = $false
+    if ($stack -and $stack.Torch) {
+        $script:TorchSel = Get-TorchSelection $stack.Torch $uvTorchBackend
+        if (-not $uvTorchBackend) { Write-Info "this uv has no 'uv tool install --torch-backend': using the PyTorch index $AfTorchIndex/$($stack.Torch) with exact +$($stack.Torch) versions" }
+        if ($script:DryRun) { Write-Info "PyTorch $($stack.Label): $(Format-Cmd $script:TorchSel.Args) (if this install fails: without llama.cpp, then PyTorch's CPU build)" }
+        if ($ggufPin) {
+            Write-Info "attempt: PyTorch $($stack.Label) build with the llama.cpp $ggufVariant build"
+            if (Install-Gateway $true -Soft) { $cudaDone = $true; $ggufInstalled = $ggufVariant }
+            else { Write-Warn2 "the install with the llama.cpp $ggufVariant build did not succeed: retrying without llama.cpp (it is tried again afterwards)" }
+        }
+        if (-not $cudaDone) {
+            Write-Info "attempt: PyTorch $($stack.Label) build without llama.cpp"
+            if (Install-Gateway $false -Soft) { $cudaDone = $true }
+        }
+        if ($cudaDone -or $script:DryRun) {
+            $torchResult = "PyTorch $($stack.Label) build (from $AfTorchIndex/$($stack.Torch))"
+        } else {
+            Write-Warn2 "the PyTorch $($stack.Label) build did not install (see $($script:LogFile)): falling back to PyTorch's CPU build"
+            $torchResult = "CPU build: the $($stack.Label) build did not install (see the log); the engines run on the CPU"
+            $script:TorchSel = @{ Args = @(); Constraints = @() }
+            $script:TorchReinstall = $true
+            # Without CUDA torch, llama.cpp's CUDA builds cannot load: Vulkan, then CPU.
+            $llamaVariants = @($llamaVariants | Where-Object { $_ -notlike 'cu*' })
+            if (-not $llamaVariants.Count) { $llamaVariants = @('cpu') }
+            $ggufVariant = $llamaVariants[0]
+            if ($ggufPin) { $ggufLinks = "$AfLlamaIndex/$ggufVariant/llama-cpp-python/" }
+        }
+    }
+    if ($cudaDone) {
+        if ($Full) { $ggufResult = 'llama-cpp-python built from source (-Full)' }
+        elseif ($ggufInstalled) { $ggufResult = "llama-cpp-python $ggufPin ($ggufInstalled wheel from $ggufLinks)" }
+    } elseif ($Full) {
         Install-GatewayVoice $false | Out-Null
         $ggufResult = 'llama-cpp-python built from source (-Full)'
     } elseif ($ggufPin) {
-        if ($script:DryRun) { Write-Info "llama.cpp GGUF: llama-cpp-python $ggufPin, cpu wheel from $ggufLinks (if this install fails, it is retried without it)" }
+        if ($script:DryRun) { Write-Info "llama.cpp GGUF: llama-cpp-python $ggufPin, $ggufVariant wheel from $ggufLinks (if this install fails, it is retried without it)" }
         if (Install-GatewayVoice $true -Soft) {
-            $ggufResult = "llama-cpp-python $ggufPin (cpu wheel from $ggufLinks)"
+            $ggufInstalled = $ggufVariant
+            $ggufResult = "llama-cpp-python $ggufPin ($ggufVariant wheel from $ggufLinks)"
         } else {
             Write-Warn2 $AfGgufSkipped
             Install-GatewayVoice $false | Out-Null
-            $ggufResult = "skipped (the prebuilt cpu wheel did not install; see $($script:LogFile))"
+            $ggufResult = "skipped (the prebuilt $ggufVariant wheel did not install; see $($script:LogFile))"
         }
     } else {
         Write-Warn2 $AfGgufSkipped
@@ -1009,6 +1347,79 @@ function Main {
         if (-not $before) { Write-Ok "installed abstractgateway $after" }
         elseif ($before -eq $after -and -not $From) { Write-Ok "abstractgateway $after already installed" }
         else { Write-Ok "abstractgateway $before -> $after" }
+    }
+
+    # --- 3b. what runs on the GPU (0988): PyTorch, llama.cpp, Whisper -----------------------------
+    # Each check runs in a fresh process of the gateway's environment. A part that does not work is
+    # replaced by one that does (PyTorch's CPU build; llama.cpp's next build, down to none), and the
+    # summary says what runs where and why. Nothing optional fails the install.
+    $toolPy = ''
+    $toolVenvNow = $toolVenv
+    if (-not $script:DryRun -and $uv -and (Test-Path -LiteralPath $uv)) { try { $toolVenvNow = Join-Path "$(& $uv tool dir 2>$null | Select-Object -First 1)" 'abstractgateway' } catch { } }
+    if ($toolVenvNow) { $toolPy = if ($onWindows) { Join-Path $toolVenvNow 'Scripts\python.exe' } else { Join-Path $toolVenvNow 'bin/python' } }
+    $whisperResult = ''
+    $llamaFinal = ''
+    if ($profileName -eq 'gpu') { Write-Step 'Check what runs on the GPU (PyTorch, llama.cpp, Whisper)' } elseif ($ggufPin -and -not $Full) { Write-Step 'Check llama.cpp' }
+    if ($script:DryRun) {
+        if ($profileName -eq 'gpu') { Write-Info "PyTorch: import torch; torch.cuda.is_available() and the device name (a CUDA build that cannot import is replaced by PyTorch's CPU build)" }
+        if ($ggufPin -and -not $Full) {
+            $order = ($llamaVariants | ForEach-Object { "$_ ($($AfLlamaSizes[$_]))" }) -join ', then '
+            Write-Info "llama.cpp builds tried in this order: $order; a build is kept when it loads as AbstractCore loads it (GPU builds: when llama.cpp reports GPU offload), else none"
+        }
+    } elseif ($profileName -eq 'gpu') {
+        $t = Invoke-Smoke $toolPy $AfTorchSmoke $script:LogFile
+        if ($t -and $t.import) {
+            if ($t.cuda) { Write-Ok "PyTorch $($t.version): CUDA $($t.cuda_build) on $($t.device)"; $torchResult = "PyTorch $($t.version) on the GPU ($($t.device))" }
+            elseif ($stack.Torch -and $t.cuda_build) {
+                Write-Warn2 "PyTorch $($t.version) (CUDA $($t.cuda_build) build) installed, but CUDA is not available: the GPU or its driver cannot run this build; torch engines run on the CPU"
+                $torchResult = "PyTorch $($t.version): CUDA not available on this machine (see the warning above); the engines run on the CPU"
+            } else { Write-Ok "PyTorch $($t.version) on the CPU"; if (-not $torchResult -or $torchResult -like 'PyTorch CUDA*') { $torchResult = "PyTorch $($t.version) on the CPU" } }
+        } elseif ($stack.Torch -and $script:TorchSel.Args.Count) {
+            $why = if ($t) { $t.error } else { 'no answer from the check' }
+            Write-Warn2 "PyTorch's $($stack.Label) build does not import ($why): replacing it with PyTorch's CPU build"
+            $script:TorchSel = @{ Args = @(); Constraints = @() }; $script:TorchReinstall = $true
+            $llamaVariants = @($llamaVariants | Where-Object { $_ -notlike 'cu*' }); if (-not $llamaVariants.Count) { $llamaVariants = @('cpu') }
+            $ggufVariant = $llamaVariants[0]
+            if ($ggufPin) { $ggufLinks = "$AfLlamaIndex/$ggufVariant/llama-cpp-python/" }
+            if (Install-Gateway ([bool]$ggufInstalled) -Soft) {
+                if ($ggufInstalled) { $ggufInstalled = $ggufVariant }
+                $t2 = Invoke-Smoke $toolPy $AfTorchSmoke $script:LogFile
+                $torchResult = if ($t2 -and $t2.import) { "PyTorch $($t2.version) on the CPU (fallback: the $($stack.Label) build did not import: $why)" } else { "PyTorch does not import (see $($script:LogFile)); torch engines are unavailable" }
+            } else { $torchResult = "PyTorch's CPU build did not install either (see $($script:LogFile)); torch engines are unavailable" }
+            Write-Info $torchResult
+        } else {
+            $why = if ($t) { $t.error } else { 'no answer from the check' }
+            Write-Warn2 "PyTorch does not import ($why)"
+            $torchResult = "PyTorch does not import ($why)"
+        }
+    }
+    # llama.cpp: keep the first build that loads; swap builds with uv pip inside the gateway's
+    # environment (--no-index: only that build's wheel page), uninstall when none loads.
+    if (-not $script:DryRun -and $ggufPin -and -not $Full -and $toolPy -and (Test-Path -LiteralPath $toolPy)) {
+        $pick = Resolve-LlamaBuild -Variants $llamaVariants -Installed $ggufInstalled -Install {
+            param($v)
+            $links = "$AfLlamaIndex/$v/llama-cpp-python/"
+            Invoke-Native -Description "install the llama.cpp $v build" -Argv @($uv, 'pip', 'install', '--python', $toolPy, '--no-index', '--find-links', $links, '--no-deps', '--reinstall-package', 'llama-cpp-python', '--refresh-package', 'llama-cpp-python', "llama-cpp-python==$ggufPin") -Soft -Live
+        } -Check { param($v) Invoke-Smoke $toolPy $AfLlamaSmoke $script:LogFile } -Remove {
+            Invoke-Native -Description 'remove llama.cpp (no build loads here)' -Argv @($uv, 'pip', 'uninstall', '--python', $toolPy, 'llama-cpp-python') -Soft | Out-Null
+        }
+        $llamaFinal = $pick.Kept
+        if ($llamaFinal) {
+            $ggufResult = "llama-cpp-python $ggufPin ($llamaFinal build, $($pick.Where))$(if ($pick.Why.Count) { "; not kept: $($pick.Why -join '; ')" })"
+        } else {
+            $ggufResult = "skipped: no llama.cpp build loads on this machine ($($pick.Why -join '; ')); GGUF models run in Ollama or LM Studio"
+            Write-Warn2 "GGUF (llama.cpp): $ggufResult"
+        }
+    }
+    if (-not $script:DryRun -and $profileName -eq 'gpu' -and $voice.Spec) {
+        $w = Invoke-Smoke $toolPy $AfWhisperSmoke $script:LogFile
+        if ($w -and $w.device) {
+            $whisperResult = "faster-whisper on $($w.device)"
+            if ($w.device -eq 'cuda' -and -not $w.cublas_guard -and $stack.Name -eq 'cu130') {
+                $whisperResult += ' (this AbstractVoice predates the CUDA 12 cuBLAS check: if speech-to-text fails, set ABSTRACTVOICE_WHISPER_DEVICE=cpu)'
+                Write-Warn2 "Whisper: $whisperResult"
+            } else { Write-Ok "Whisper: $whisperResult" }
+        } elseif ($w) { $whisperResult = "not checked ($($w.error))" }
     }
     # Any package of the gateway's environment that moved counts (a library-only release keeps
     # the gateway's version).
@@ -1229,7 +1640,9 @@ function Main {
             # The release this install is (empty after -Pin/-From), and the choices a re-run keeps.
             "FRAMEWORK_VERSION=$(if ($isRelease) { $AfFrameworkVersion })",
             "CONSOLE=$(if ($NoConsole) { 0 } else { 1 })", "CODE_CLI=$(if ($NoCodeCli) { 0 } else { 1 })",
-            "CORE_CLI=$(if ($NoCoreCli) { 0 } else { 1 })", "TRAY=$(if ($NoTray) { 0 } else { 1 })", "FULL=$(if ($Full) { 1 } else { 0 })"
+            "CORE_CLI=$(if ($NoCoreCli) { 0 } else { 1 })", "TRAY=$(if ($NoTray) { 0 } else { 1 })", "FULL=$(if ($Full) { 1 } else { 0 })",
+            # PyTorch's build (cu130, cu126; empty = PyPI's) and the llama.cpp build kept (0988).
+            "TORCH=$(if ($script:TorchSel.Args.Count) { $stack.Torch })", "LLAMA=$llamaFinal"
         ) | Set-Content -LiteralPath $stateFile -Encoding ASCII
     }
 
@@ -1391,8 +1804,11 @@ function Main {
     Write-Host "              & ([scriptblock]::Create((irm $AfScriptUrl))) -Pin latest   (the newest abstractgateway on PyPI; see $AfDocs#upgrade)"
     Write-Host "  Uninstall:  install.ps1 -Uninstall   (or: $(if ($mode -eq 'service') { 'abstractgateway service uninstall; ' })uv tool uninstall abstractgateway)"
     Write-Host '  Check:      uvx abstractframework doctor'
+    if ($stack) { Write-Host "  GPU stack:  $($stack.Label) ($($stack.Why))" }
+    if ($torchResult) { Write-Host "  PyTorch:    $torchResult" }
     Write-Host "  GGUF:       $ggufResult"
     Write-Host "  Voice:      $($voice.Result)"
+    if ($whisperResult) { Write-Host "  Whisper:    $whisperResult" }
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     Write-Host "  Apps:       $baseUrl/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
     Write-Host "  Standalone: npx -y @abstractframework/flow --gateway-url $baseUrl   (advanced; also code, observer, continuum, entity)"

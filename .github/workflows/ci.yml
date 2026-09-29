@@ -122,6 +122,34 @@ jobs:
         shell: pwsh
         run: ./scripts/install.ps1 -Print -Profile light -Port 18080 -WithApps
 
+      # The gpu profile's stack choice (root backlog 0988), with and without a (fake) NVIDIA GPU:
+      # the runner has none, so a fake nvidia-smi.cmd stands in for the driver answers.
+      - name: gpu stack dry runs (install.ps1 -Print, fake nvidia-smi)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $fake = Join-Path $env:RUNNER_TEMP 'fake-smi'
+          New-Item -ItemType Directory -Force -Path $fake | Out-Null
+          $plain = $env:PATH
+          $cases = @(
+            @{ Smi = $null; Expect = @('GPU stack: CPU (no working NVIDIA GPU', 'whl/vulkan/llama-cpp-python/'); Refuse = '--torch-backend' },
+            @{ Smi = '581.29, 8.9, Fake RTX 4090'; Expect = @('GPU stack: CUDA 13', '--torch-backend cu130', 'whl/cu130/llama-cpp-python/'); Refuse = $null },
+            @{ Smi = '560.94, 8.6, Fake RTX 3080'; Expect = @('GPU stack: CUDA 12', '--torch-backend cu126', 'whl/cu125/llama-cpp-python/'); Refuse = $null },
+            @{ Smi = '516.94, 7.5, Fake Quadro'; Expect = @('GPU stack: CPU', 'older than 525'); Refuse = '--torch-backend' }
+          )
+          foreach ($c in $cases) {
+            Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $fake 'nvidia-smi.cmd')
+            if ($c.Smi) {
+              Set-Content -LiteralPath (Join-Path $fake 'nvidia-smi.cmd') -Value "@echo off`r`necho $($c.Smi)" -Encoding ASCII
+              $env:PATH = "$fake;$plain"
+            } else { $env:PATH = $plain }
+            $out = ./scripts/install.ps1 -Print -Profile gpu -Port 18080 *>&1 | Out-String
+            foreach ($e in $c.Expect) { if (-not $out.Contains($e)) { Write-Output $out; throw "dry run for '$($c.Smi)' lacks: $e" } }
+            if ($c.Refuse -and $out.Contains($c.Refuse)) { Write-Output $out; throw "dry run for '$($c.Smi)' must not contain: $($c.Refuse)" }
+            Write-Output "ok: $(if ($c.Smi) { $c.Smi } else { 'no nvidia-smi' })"
+          }
+          $env:PATH = $plain
+
       - name: Install the published pin (install.ps1, Windows PowerShell 5.1)
         if: runner.os == 'Windows'
         shell: powershell
@@ -153,6 +181,39 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'import llama_cpp failed' }
           Write-Output "llama_cpp: $out (expected version $want)"
           if ($out.Split(' ')[0] -ne $want) { throw "llama_cpp $out, expected $want" }
+
+      # The gpu profile resolves on Windows with wheels only (root backlog 0988): what install.ps1
+      # installs (its overrides and the release matrix, PyTorch cu130, llama.cpp's cu130 wheel), and
+      # plain `pip install "abstractcore[gpu]"` at the release matrix's AbstractCore (needs the
+      # vllm / llama-cpp-python markers, AbstractCore after 2.19.0). The four sdist-only packages
+      # allowed are pure Python.
+      - name: Windows gpu resolves with wheels only (uv pip compile)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $uv = (Get-Command uv -ErrorAction SilentlyContinue).Source
+          if (-not $uv) { $uv = "$env:USERPROFILE\.local\bin\uv.exe" }
+          $ps1 = Get-Content -Raw scripts/install.ps1
+          $matrix = [regex]::Matches([regex]::Match($ps1, '(?m)^\$AfPyMatrix = @\((.*)\)$').Groups[1].Value, "'([^']+)'") | ForEach-Object { $_.Groups[1].Value }
+          $llama = [regex]::Match($ps1, "(?m)^\`$AfLlamaCpuPin = '([^']+)'").Groups[1].Value
+          $pin = (Get-Content docs/installers/install-manifest.json -Raw | ConvertFrom-Json).bootstrap.gateway_version
+          $core = ($matrix | Where-Object { $_ -like 'abstractcore==*' })
+          if (-not $matrix -or -not $llama -or -not $pin -or -not $core) { throw 'could not read the release matrix, the llama.cpp pin or the gateway pin' }
+          $dir = Join-Path $env:RUNNER_TEMP 'gpu-compile'; New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          Set-Content "$dir/overrides.txt" -Encoding ASCII -Value @("webrtcvad; sys_platform == 'never'", "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'", "stable-diffusion-cpp-python; sys_platform == 'never'")
+          Set-Content "$dir/constraints.txt" -Encoding ASCII -Value (@($matrix) + "llama-cpp-python==$llama")
+          Set-Content "$dir/installer.in" -Encoding ASCII -Value @("abstractgateway[gpu,tray]==$pin", 'webrtcvad-wheels>=2.0.14', 'abstractvoice[supertonic,stt]', "llama-cpp-python==$llama")
+          Set-Content "$dir/core.in" -Encoding ASCII -Value @(($core -replace '^abstractcore==', 'abstractcore[gpu]=='))
+          $wheels = @('--only-binary', ':all:', '--no-binary', 'antlr4-python3-runtime', '--no-binary', 'encodec', '--no-binary', 'langdetect', '--no-binary', 'transformers-stream-generator',
+                      '--python-platform', 'x86_64-pc-windows-msvc', '--python-version', '3.12', '--torch-backend', 'cu130', '--no-header', '--quiet')
+          & $uv pip compile @wheels --find-links https://abetlen.github.io/llama-cpp-python/whl/cu130/llama-cpp-python/ --overrides "$dir/overrides.txt" -c "$dir/constraints.txt" "$dir/installer.in" -o "$dir/installer.txt"
+          if ($LASTEXITCODE -ne 0) { throw 'the gpu install of install.ps1 does not resolve with wheels only on Windows' }
+          if (-not (Select-String -Path "$dir/installer.txt" -Pattern '^torch==.*\+cu130' -Quiet)) { throw 'install.ps1 gpu: torch is not the cu130 build' }
+          Write-Output "install.ps1 gpu resolves: $((Select-String -Path "$dir/installer.txt" -Pattern '^(torch|llama-cpp-python|aec-audio-processing)==').Line -join ', ')"
+          & $uv pip compile @wheels "$dir/core.in" -o "$dir/core.txt"
+          if ($LASTEXITCODE -ne 0) { throw "plain pip install `"$($core -replace '==', '[gpu]==')`" does not resolve with wheels only on Windows (it needs AbstractCore's Windows markers: backlog 0988)" }
+          if (Select-String -Path "$dir/core.txt" -Pattern '^(vllm|llama-cpp-python|stable-diffusion-cpp-python)==' -Quiet) { throw 'abstractcore[gpu] still pulls vllm / llama-cpp-python / stable-diffusion-cpp-python on Windows' }
+          Write-Output "abstractcore[gpu] resolves on Windows: $((Select-String -Path "$dir/core.txt" -Pattern '^torch==').Line)"
 
       - name: Gateway log on failure (Windows)
         if: failure() && runner.os == 'Windows'

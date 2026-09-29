@@ -200,6 +200,51 @@ AF_LLAMA_INDEX="https://abetlen.github.io/llama-cpp-python/whl"
 AF_LLAMA_METAL_PIN="0.3.28"
 AF_LLAMA_CPU_PIN="0.3.35"
 AF_GGUF_SKIPPED="GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with --full after installing a C compiler"
+# Linux + NVIDIA, gpu profile (root backlog 0989): abetlen also publishes manylinux CUDA builds
+# (cu124/cu125/cu130/cu132). They link libcudart/libcublas without bundling them; the NVIDIA wheels
+# PyTorch depends on carry them (AbstractCore preloads them before importing llama_cpp), so the
+# build must match the CUDA major of the torch the gateway got: torch CUDA 13 -> cu130 (driver 580
+# or newer), torch CUDA 12 -> cu125 (driver 525 or newer). The install itself always takes the cpu
+# wheel (it never fails on a GPU detail); the CUDA build is swapped in afterwards and kept only when
+# it loads the way AbstractCore loads it and reports GPU offload, else the cpu build goes back.
+AF_LLAMA_CUDA13="cu130"
+AF_LLAMA_CUDA12="cu125"
+# nvidia_info: NV_OK (1 when nvidia-smi answers), NV_DRIVER, NV_MAJOR, NV_CC10 (the lowest compute
+# capability of all GPUs x10, empty when the driver cannot report it), NV_NAME, NV_ERR.
+nvidia_info() {
+    NV_OK=0; NV_DRIVER=""; NV_MAJOR=0; NV_CC10=""; NV_NAME=""; NV_ERR=""
+    if ! have nvidia-smi; then NV_ERR="nvidia-smi not found"; return 0; fi
+    _nv="$(nvidia-smi --query-gpu=driver_version,compute_cap,name --format=csv,noheader 2>/dev/null)" || _nv=""
+    _nvcc=1
+    if [ -z "$_nv" ]; then
+        # Drivers too old to report compute_cap: the driver alone.
+        _nv="$(nvidia-smi --query-gpu=driver_version,name --format=csv,noheader 2>/dev/null)" || _nv=""
+        _nvcc=0
+    fi
+    if [ -z "$_nv" ]; then NV_ERR="nvidia-smi gave no answer"; return 0; fi
+    NV_DRIVER="$(printf '%s\n' "$_nv" | head -n 1 | cut -d, -f1 | tr -d ' ')"
+    NV_MAJOR="$(printf '%s' "$NV_DRIVER" | cut -d. -f1)"
+    case "$NV_MAJOR" in ''|*[!0-9]*) NV_ERR="nvidia-smi gave no driver version: $(printf '%s' "$_nv" | head -n 1)"; NV_MAJOR=0; return 0 ;; esac
+    if [ "$_nvcc" = 1 ]; then
+        NV_CC10="$(printf '%s\n' "$_nv" | cut -d, -f2 | tr -d ' ' | awk -F. '$1 ~ /^[0-9]+$/ { v = $1 * 10 + ($2 == "" ? 0 : substr($2, 1, 1)); if (m == "" || v < m) m = v } END { print m }')"
+        NV_NAME="$(printf '%s\n' "$_nv" | head -n 1 | cut -d, -f3- | sed 's/^ *//')"
+    else
+        NV_NAME="$(printf '%s\n' "$_nv" | head -n 1 | cut -d, -f2- | sed 's/^ *//')"
+    fi
+    NV_OK=1
+}
+# llama_cuda_build TORCH_CUDA_MAJOR: the llama.cpp CUDA build folder for this driver and torch, or
+# empty (with the reason in LLAMA_CUDA_WHY).
+llama_cuda_build() {
+    LLAMA_CUDA_WHY=""
+    if [ "$NV_OK" != 1 ]; then LLAMA_CUDA_WHY="no working NVIDIA GPU ($NV_ERR)"; return 0; fi
+    case "$1" in
+        13) if [ "$NV_MAJOR" -ge 580 ]; then echo "$AF_LLAMA_CUDA13"; else LLAMA_CUDA_WHY="PyTorch uses CUDA 13, which needs NVIDIA driver 580 or newer (this one is $NV_DRIVER)"; fi ;;
+        12) if [ "$NV_MAJOR" -ge 525 ]; then echo "$AF_LLAMA_CUDA12"; else LLAMA_CUDA_WHY="CUDA 12 needs NVIDIA driver 525 or newer (this one is $NV_DRIVER)"; fi ;;
+        *) LLAMA_CUDA_WHY="PyTorch has no CUDA build here (${1:-not installed})" ;;
+    esac
+    return 0
+}
 af_uv_overrides() {  # $1 = 1 when llama-cpp-python comes from the prebuilt wheel
     echo "webrtcvad; sys_platform == 'never'"
     echo "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'"
@@ -399,11 +444,15 @@ run() {
     printf '  %s$ %s%s\n' "$C_D" "$_shown" "$C_0"
     twin "$_shown"
     _soft="$RUN_SOFT"; RUN_SOFT=0
+    _live="$RUN_LIVE"; RUN_LIVE=0
     RUN_RC=0
     [ "$PRINT" = 1 ] && return 0
     _rc=0
     if [ "$VERBOSE" = 1 ] || [ -z "$LOG_FILE" ]; then
         "$@" || _rc=$?
+    elif [ "$_live" = 1 ]; then
+        printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
+        live_exec "$@" || _rc=$?
     else
         printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
         "$@" >>"$LOG_FILE" 2>&1 || _rc=$?
@@ -435,6 +484,44 @@ What to do: run the installer again (it repairs a half-finished install). If it 
 same step, report it with the log file: ${LOG_FILE:-the output above} ($AF_DOCS#if-something-goes-wrong)"
 }
 RUN_SOFT=0
+RUN_LIVE=0
+# live_exec CMD...: runs CMD with its output appended to the log, shows uv's progress lines as they
+# come ("    | Downloading torch (1.9GiB)"; package lists " + name==version" stay in the log), and
+# prints "... still working (Nm SSs elapsed; last: <line>)" after AF_HEARTBEAT seconds of silence,
+# so a multi-GB download never looks frozen (root backlog 0989: the gpu install's 14 GB resolve
+# printed nothing for its whole duration). Returns CMD's exit code. `run` uses it with RUN_LIVE=1.
+AF_HEARTBEAT="${AF_HEARTBEAT:-15}"
+live_exec() {
+    _ls="$(date +%s)"; _lq="$_ls"; _ll=""
+    _lseen="$(wc -l <"$LOG_FILE" | tr -d ' ')"
+    "$@" >>"$LOG_FILE" 2>&1 &
+    _lpid=$!
+    _lalive=1
+    while [ "$_lalive" = 1 ]; do
+        kill -0 "$_lpid" 2>/dev/null || _lalive=0
+        [ "$_lalive" = 0 ] || sleep 1
+        _ln="$(wc -l <"$LOG_FILE" | tr -d ' ')"
+        if [ "$_ln" -gt "$_lseen" ]; then
+            _lv="$(sed -n "$((_lseen + 1)),${_ln}p" "$LOG_FILE" | grep -v '^ *[-+~] [^ ]' | grep -v '^ *$' || true)"
+            _lseen="$_ln"
+            if [ -n "$_lv" ]; then
+                printf '%s\n' "$_lv" | sed "s/^ */    $C_D| /; s/\$/$C_0/"
+                _lq="$(date +%s)"
+                _lk="$(printf '%s\n' "$_lv" | grep -E 'Download|Prepared|Installed|Resolved|Building|Built|Uninstalled' | tail -n 1 || true)"
+                [ -z "$_lk" ] || _ll="$(printf '%s' "$_lk" | sed 's/^ *//')"
+            fi
+        fi
+        _lnow="$(date +%s)"
+        if [ "$_lalive" = 1 ] && [ $((_lnow - _lq)) -ge "$AF_HEARTBEAT" ]; then
+            _le=$((_lnow - _ls))
+            printf '    %s... still working (%dm %02ds elapsed%s)%s\n' "$C_D" $((_le / 60)) $((_le % 60)) "${_ll:+; last: $_ll}" "$C_0"
+            _lq="$_lnow"
+        fi
+    done
+    _lrc=0
+    wait "$_lpid" || _lrc=$?
+    return "$_lrc"
+}
 # run_sh DESCRIPTION 'shell pipeline' : for the vendor `curl ... | sh` one-liners.
 RUN_SHOW=""
 run_sh() { RUN_SHOW="$2"; run "$1" sh -c "$2"; }
@@ -1646,7 +1733,7 @@ install_gateway() {
     _cwd="$(pwd)"
     RUN_SHOW="cd $(q "$DATA_DIR") && $(show_cmd "$@" "$GW_SPEC")"
     [ "$PRINT" = 1 ] || cd "$DATA_DIR"
-    RUN_SOFT="$_gsoft" run "install abstractgateway$([ "$_gguf" = 1 ] && echo " with the llama.cpp $GGUF_KIND wheel")" "$@" "$GW_SPEC"
+    RUN_LIVE=1 RUN_SOFT="$_gsoft" run "install abstractgateway$([ "$_gguf" = 1 ] && echo " with the llama.cpp $GGUF_KIND wheel")" "$@" "$GW_SPEC"
     [ "$PRINT" = 1 ] || cd "$_cwd" 2>/dev/null || cd "$HOME"
     return "$RUN_RC"
 }
@@ -1727,6 +1814,139 @@ What to do: run the installer again; if it stops here again, report it with that
     elif [ "$BEFORE" = "$AFTER" ] && [ -z "$FROM" ]; then ok "abstractgateway $AFTER already installed"
     else ok "abstractgateway $BEFORE -> $AFTER"; fi
 fi
+# ---------------------------------------------------------------------------
+# NVIDIA (Linux, gpu profile): what the GPU engines really run on (root backlog 0989)
+# ---------------------------------------------------------------------------
+GPU_RESULT=""; TORCH_RESULT=""
+if [ "$PROFILE" = gpu ] && [ "$OS_ID" = linux ]; then
+    step "NVIDIA GPU check"
+    nvidia_info
+    if [ "$NV_OK" = 1 ]; then
+        ok "GPU: ${NV_NAME:-NVIDIA GPU}, driver $NV_DRIVER$([ -n "$NV_CC10" ] && echo ", compute capability $((NV_CC10 / 10)).$((NV_CC10 % 10))")"
+    else
+        warn "no working NVIDIA GPU ($NV_ERR): the GPU engines run on the processor"
+    fi
+    if [ "$PRINT" = 1 ]; then
+        info "then: PyTorch's CUDA check; llama.cpp's CUDA build matching PyTorch's CUDA ($AF_LLAMA_CUDA13 for CUDA 13 with driver 580+, $AF_LLAMA_CUDA12 for CUDA 12 with driver 525+), kept only when it loads and offloads to the GPU; Whisper's device"
+    else
+        tool_venv
+        GPY="$TOOL_VENV/bin/python"
+        [ -x "$GPY" ] || { [ -n "$TOOL_VENV2" ] && GPY="$TOOL_VENV2/bin/python"; }
+        SMOKE_PY="$(mktemp "${TMPDIR:-/tmp}/af-smoke.XXXXXX")"
+        # gpu_smoke 'python code': runs it with the gateway environment's Python; its
+        # "AFSMOKE key=value" lines are what the checks read.
+        gpu_smoke() {
+            printf '%s\n' "$1" >"$SMOKE_PY"
+            printf '\n$ %s <smoke check>\n' "$GPY" >>"$LOG_FILE"
+            "$GPY" "$SMOKE_PY" 2>>"$LOG_FILE" | tee -a "$LOG_FILE" | sed -n 's/^AFSMOKE //p' || true
+        }
+        smoke_val() { printf '%s\n' "$1" | sed -n "s/^$2=//p" | head -n 1; }
+        _t="$(gpu_smoke 'import sys
+try:
+    import torch
+    print("AFSMOKE version=" + torch.__version__)
+    print("AFSMOKE cuda_build=" + str(torch.version.cuda or ""))
+    ok = bool(torch.cuda.is_available())
+    print("AFSMOKE cuda=" + ("1" if ok else "0"))
+    if ok:
+        print("AFSMOKE device=" + torch.cuda.get_device_name(0))
+except BaseException as e:
+    print("AFSMOKE error=%s: %s" % (type(e).__name__, str(e).splitlines()[0] if str(e) else ""))')"
+        _tv="$(smoke_val "$_t" version)"; _tb="$(smoke_val "$_t" cuda_build)"; _tc="$(smoke_val "$_t" cuda)"
+        if [ "$_tc" = 1 ]; then
+            TORCH_RESULT="torch $_tv, CUDA $_tb on $(smoke_val "$_t" device)"; ok "PyTorch: $TORCH_RESULT"
+        elif [ -n "$_tv" ]; then
+            TORCH_RESULT="torch $_tv (CUDA ${_tb:-none}) does not see the GPU: Diffusers, Transformers and vLLM run on the processor"
+            warn "PyTorch: $TORCH_RESULT$([ "$NV_OK" = 1 ] && [ -n "$_tb" ] && echo " (CUDA $_tb needs a newer NVIDIA driver than $NV_DRIVER?)")"
+        else
+            TORCH_RESULT="not importable ($(smoke_val "$_t" error))"; warn "PyTorch: $TORCH_RESULT"
+        fi
+        # llama.cpp: swap in the CUDA build matching torch's CUDA, keep it only when it offloads.
+        case "$GGUF_RESULT" in
+            "llama-cpp-python $GGUF_PIN ("*)
+                _tmaj="$(printf '%s' "$_tb" | cut -d. -f1)"
+                _lb="$(llama_cuda_build "$_tmaj")"
+                [ "$_tc" = 1 ] || { _lb=""; LLAMA_CUDA_WHY="PyTorch does not see the GPU, so its CUDA libraries cannot serve llama.cpp either"; }
+                _llama_check='r = {}
+try:
+    try:
+        from abstractcore.utils.windows_dll import prepare_llama_cpp_import
+        prepare_llama_cpp_import()
+    except ImportError:
+        pass
+    import llama_cpp
+    print("AFSMOKE import=1")
+    print("AFSMOKE version=" + str(getattr(llama_cpp, "__version__", "")))
+    print("AFSMOKE offload=" + ("1" if llama_cpp.llama_supports_gpu_offload() else "0"))
+except BaseException as e:
+    print("AFSMOKE error=%s: %s" % (type(e).__name__, str(e).splitlines()[0] if str(e) else ""))'
+                _cur="$(smoke_val "$(gpu_smoke 'import importlib.util, pathlib
+s = importlib.util.find_spec("llama_cpp")
+lib = pathlib.Path(s.origin).parent / "lib" if s and s.origin else None
+print("AFSMOKE cuda_build=" + ("1" if lib and any(lib.glob("libggml-cuda.so*")) else "0"))')" cuda_build)"
+                if [ -z "$_lb" ]; then
+                    info "llama.cpp keeps its CPU build: $LLAMA_CUDA_WHY"
+                    GGUF_RESULT="$GGUF_RESULT; CPU ($LLAMA_CUDA_WHY)"
+                else
+                    _swapped=0
+                    if [ "$_cur" != 1 ]; then
+                        info "llama.cpp: installing its $_lb build (CUDA; a download of a few hundred MB; PyTorch has CUDA $_tb)"
+                        if RUN_LIVE=1 RUN_SOFT=1 run "install llama.cpp's $_lb build" "$UV" pip install --python "$GPY" --no-index \
+                            --find-links "$AF_LLAMA_INDEX/$_lb/llama-cpp-python/" --no-deps --reinstall-package llama-cpp-python \
+                            --refresh-package llama-cpp-python "llama-cpp-python==$GGUF_PIN" && [ "$RUN_RC" = 0 ]; then _swapped=1; fi
+                    fi
+                    _r="$(gpu_smoke "$_llama_check")"
+                    if [ "$(smoke_val "$_r" import)" = 1 ] && [ "$(smoke_val "$_r" offload)" = 1 ]; then
+                        ok "llama.cpp $(smoke_val "$_r" version) ($_lb build): loads, GPU offload"
+                        GGUF_RESULT="llama-cpp-python $GGUF_PIN ($_lb CUDA build from $AF_LLAMA_INDEX/$_lb/llama-cpp-python/), GPU offload"
+                    else
+                        _why="$(smoke_val "$_r" error | cut -c1-240)"; [ -n "$_why" ] || _why="loads, but reports no GPU offload"
+                        warn "llama.cpp's $_lb build does not work here ($_why; an AbstractCore older than the Linux CUDA preload cannot load it): putting the CPU build back"
+                        RUN_SOFT=1 run "reinstall llama.cpp's cpu build" "$UV" pip install --python "$GPY" --no-index \
+                            --find-links "$GGUF_LINKS" --no-deps --reinstall-package llama-cpp-python \
+                            --refresh-package llama-cpp-python "llama-cpp-python==$GGUF_PIN"
+                        GGUF_RESULT="$GGUF_RESULT; CPU (the $_lb build did not load: $_why)"
+                    fi
+                    : "$_swapped"
+                fi ;;
+        esac
+        # Whisper: CTranslate2's own device choice through AbstractVoice.
+        # CTranslate2 loads CUDA 12 cuBLAS by name at the first GPU transcription: check that it
+        # loads after AbstractVoice's own preparation (AbstractVoice releases before the Linux
+        # preload pick CUDA and then fail with "Library libcublas.so.12 is not found").
+        _w="$(gpu_smoke 'import ctypes
+try:
+    from abstractvoice.compute import best_faster_whisper_device
+    d = best_faster_whisper_device()
+    print("AFSMOKE device=" + d)
+    if d == "cuda":
+        try:
+            ctypes.CDLL("libcublas.so.12")
+            print("AFSMOKE cublas12=1")
+        except OSError:
+            print("AFSMOKE cublas12=0")
+except BaseException as e:
+    print("AFSMOKE error=%s: %s" % (type(e).__name__, e))')"
+        _wd="$(smoke_val "$_w" device)"
+        [ "$_wd" != cuda ] || [ "$(smoke_val "$_w" cublas12)" = 1 ] || _wd=cuda-broken
+        case "$_wd" in
+            cuda) VOICE_RESULT="$(printf '%s' "$VOICE_RESULT" | sed 's/, local on CPU$//'); Whisper on the NVIDIA GPU, Supertonic on the processor"; ok "Whisper: NVIDIA GPU (CUDA)" ;;
+            cuda-broken)
+                warn "Whisper: this AbstractVoice picks CUDA but CUDA 12 cuBLAS does not load, so its first GPU transcription fails; an AbstractVoice with the Linux CUDA 12 preload fixes it"
+                VOICE_RESULT="$VOICE_RESULT (Whisper on CUDA fails here: CUDA 12 cuBLAS does not load; update AbstractVoice)" ;;
+            cpu) info "Whisper: processor (CTranslate2 found no usable CUDA 12 cuBLAS)" ;;
+            *) [ -z "$VOICE_SPEC" ] || info "Whisper: device not determined ($(smoke_val "$_w" error))" ;;
+        esac
+        rm -f "$SMOKE_PY"
+    fi
+    # vLLM compiles GPU kernels at first use (Triton), which needs a C compiler; measured on a
+    # Turing card: "RuntimeError: Failed to find C compiler" without one.
+    if ! have cc && ! have gcc && ! have clang; then
+        warn "vLLM needs a C compiler when it first starts a model (Triton builds its GPU kernels): sudo apt-get install -y build-essential (Debian/Ubuntu). llama.cpp, Diffusers and Whisper do not."
+        GPU_RESULT="vLLM needs a C compiler (sudo apt-get install -y build-essential)"
+    fi
+fi
+
 ST_SPEC=""
 [ -f "$STATE_FILE" ] && ST_SPEC="$(sed -n 's/^GATEWAY_SPEC=//p' "$STATE_FILE" | tail -n 1)"
 # CHANGED: the running gateway must be restarted. Any package of its environment that moved
@@ -2253,8 +2473,10 @@ echo "  Upgrade:    curl -LsSf $AF_SCRIPT_URL | sh   (the latest AbstractFramewo
 echo "              curl -LsSf $AF_SCRIPT_URL | sh -s -- --pin latest   (the newest abstractgateway on PyPI; see $AF_DOCS#upgrade)"
 echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"
+[ -z "$TORCH_RESULT" ] || echo "  PyTorch:    $TORCH_RESULT"
 echo "  GGUF:       $GGUF_RESULT"
 echo "  Voice:      $VOICE_RESULT"
+[ -z "$GPU_RESULT" ] || echo "  vLLM:       $GPU_RESULT"
 if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
     echo "  $AF_SKIPPED_LINE"
 fi
