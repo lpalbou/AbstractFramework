@@ -135,45 +135,45 @@
       <div class="j-step reveal"><div class="j-body">
         <h3>Choose a topology <span class="j-time">15 min</span></h3>
         <!-- W4 fragment deliver/fragments/deploy.html (FACTS R5-5): abstractgateway@v0.7.2 docs/security.md:14-21, :287-340; docs/configuration.md:204, :415-419; docs/tray.md:3-12, :225-236; docs/deployment.md:10-26, :62-68, :138; root docs/install.md:563-593, :608-615 -->
-<h3 class="reveal" style="margin:0 0 1rem">Who can reach it</h3>
-<div class="modes-grid reveal">
-  <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
-    <h3>This computer</h3>
-    <p>The default: the gateway listens on <code>127.0.0.1</code> only, with user accounts on. Nobody else can connect.</p>
-    <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">localhost</span><span class="mode-tag">default</span></div>
-  </div>
-  <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
-    <h3>Local network</h3>
-    <p>Every device on your network (or your VPN) reaches the sign-in page and the API. User accounts are required. It is plain HTTP, so use it on networks you trust, or behind a TLS proxy or VPN.</p>
-    <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">LAN</span><span class="mode-tag">user accounts</span></div>
-  </div>
-  <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
-    <h3>Internet</h3>
-    <p>The same, with an explicit acknowledgement. The gateway does not terminate TLS: put your own TLS reverse proxy (Caddy, nginx, Traefik) or a tunnel in front of it.</p>
-    <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">internet</span><span class="mode-tag">your TLS</span><span class="mode-tag">user accounts</span></div>
-  </div>
-</div>
+    <h3 class="reveal" style="margin:0 0 1rem">Who can reach it</h3>
+    <div class="modes-grid chip-cards reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>This computer</h3>
+        <p>The default: the gateway listens on <code>127.0.0.1</code> only, with user accounts on. Nobody else can connect.</p>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg><code>localhost</code></span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-8 9 8v10H3z"/></svg>Default</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Local network (LAN)</h3>
+        <p>Every device on your network (or your VPN) reaches the sign-in page and the API. User accounts are required. It is plain HTTP, so use it on networks you trust, or behind a TLS proxy or VPN.</p>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg><code>lan</code></span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Accounts required</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Internet</h3>
+        <p>The same, with an explicit acknowledgement. The gateway does not terminate TLS: put your own TLS reverse proxy (Caddy, nginx, Traefik) or a tunnel in front of it.</p>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg><code>internet</code></span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>Your TLS</span></div>
+      </div>
+    </div>
 
-<h3 class="reveal" style="margin:2rem 0 1rem">How it runs</h3>
-<div class="modes-grid reveal">
-  <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
-    <h3>Desktop</h3>
-    <p>An icon in the macOS menu bar, the Windows system tray or a Linux panel opens the console already signed in. <strong>Start AbstractGateway at login</strong> registers a per-user login item.</p>
-    <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">tray</span><span class="mode-tag">start at login</span></div>
-  </div>
-  <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
-    <h3>Headless server</h3>
-    <p>Install over SSH with the same one-line installer, manage it from the terminal console (<code>abstractgateway-console</code>), keep it running with a <code>systemd --user</code> service, and reach the console, the API and every app through one SSH tunnel.</p>
-    <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">SSH</span><span class="mode-tag">terminal console</span><span class="mode-tag">systemd --user</span></div>
-  </div>
-  <div class="mode-card" style="text-align:left;display:flex;flex-direction:column">
-    <h3>Container</h3>
-    <p>Release images on GHCR (<code>ghcr.io/lpalbou/abstractgateway</code>, and a <code>-gpu</code> variant), run with a mounted data directory and <code>ABSTRACTGATEWAY_USER_AUTH=1</code>.</p>
-    <div class="mode-tags" style="margin-top:auto;padding-top:.75rem;justify-content:flex-start"><span class="mode-tag">GHCR</span><span class="mode-tag">Docker</span></div>
-  </div>
-</div>
+    <h3 class="reveal" style="margin:2rem 0 1rem">How it runs</h3>
+    <div class="modes-grid chip-cards reveal">
+      <div class="mode-card" style="text-align:left">
+        <h3>Desktop</h3>
+        <p>An icon in the macOS menu bar, the Windows system tray or a Linux panel opens the console already signed in. <strong>Start AbstractGateway at login</strong> registers a per-user login item.</p>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/></svg>Tray icon</span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Start at login</span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Headless server</h3>
+        <p>Install over SSH with the same one-line installer, manage it from the terminal console (<code>abstractgateway-console</code>), keep it running with a <code>systemd --user</code> service, and reach the console, the API and every app through one SSH tunnel.</p>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l3 3-3 3M12 15h5"/></svg>SSH</span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><code>systemd --user</code></span></div>
+      </div>
+      <div class="mode-card" style="text-align:left">
+        <h3>Container</h3>
+        <p>Release images on GHCR (<code>ghcr.io/lpalbou/abstractgateway</code>, and a <code>-gpu</code> variant), run with a mounted data directory and <code>ABSTRACTGATEWAY_USER_AUTH=1</code>.</p>
+        <div class="chip-row"><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>GHCR image</span><span class="chip"><svg class="chip-ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>Mounted data</span></div>
+      </div>
+    </div>
 
-<p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><strong>In practice.</strong> A new gateway answers on this computer only. The <strong>Network</strong> setting, in the web console, the terminal console or the tray, or <code>abstractgateway network set lan</code> (or <code>internet</code>) opens it up at the next start, and both keep user accounts on. A gateway started on another address without user accounts or a token refuses to start.</p>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><strong>In practice.</strong> A new gateway answers on this computer only. The <strong>Network</strong> setting, in the web console, the terminal console or the tray, or <code>abstractgateway network set lan</code> (or <code>internet</code>) opens it up at the next start, and both keep user accounts on. A gateway started on another address without user accounts or a token refuses to start.</p>
         <figure class="figure" style="margin-top:1rem">
           <img src="assets/img/shots/console-tui-network.webp" alt="The terminal console's Network screen: Localhost only selected, Local network and Internet options, the address list and reverse-proxy settings" loading="lazy" width="1600" height="657">
           <figcaption>The same setting over SSH: the terminal console&rsquo;s Network screen (<code>N</code>) shows the saved mode, what is running and every address.</figcaption>
