@@ -121,20 +121,23 @@
         View on GitHub
       </a>
     </div>
-    <!-- PENDING-W2: E1 (text) + E2 (defaults form) -->
+    <!-- E1 + E2 (W2 PASS): verbatim lines of examples/E1-text/snippet.py and examples/E2-defaults/snippet.py -->
 <div class="hero-code">
 <pre><code><span class="kw">from</span> abstractcore <span class="kw">import</span> <span class="fn">create_llm</span>
 
+<span class="cmt"># Local model on Apple silicon (MLX). For text, any provider works the same way,</span>
+<span class="cmt"># e.g. create_llm("ollama", model="qwen3:4b").</span>
 llm = <span class="fn">create_llm</span>(<span class="str">"mlx"</span>, model=<span class="str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-<span class="cmt"># or: create_llm("ollama", model="qwen3:4b")</span>
 
-<span class="cmt"># Text</span>
-response = llm.<span class="fn">generate</span>(<span class="str">"Write a haiku about space."</span>)
+response = llm.<span class="fn">generate</span>(<span class="str">"In two sentences, what is a durable workflow runtime?"</span>)
 
-<span class="cmt"># Image, voice, music: one line each once defaults are set</span>
-image = llm.<span class="fn">generate</span>(<span class="str">"A nebula over mountains"</span>, output=<span class="str">"image"</span>)
-voice = llm.<span class="fn">generate</span>(response.content, output=<span class="str">"voice"</span>)
-music = llm.<span class="fn">generate</span>(<span class="str">"A calm piano loop"</span>, output=<span class="str">"music"</span>)</code></pre>
+<span class="cmt"># Image, voice, music: needs the capability routes configured once, from the gateway</span>
+<span class="cmt"># console's "Use recommended defaults" or `abstractcore config set-default ...`</span>
+image = llm.<span class="fn">generate</span>(<span class="str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
+                     <span class="str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="str">"image"</span>)
+speech = llm.<span class="fn">generate</span>(text=<span class="str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+                      output=<span class="str">"voice"</span>)
+music = llm.<span class="fn">generate</span>(text=<span class="str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="str">"music"</span>)</code></pre>
     </div>
   </div>
 </section>
@@ -173,18 +176,25 @@ music = llm.<span class="fn">generate</span>(<span class="str">"A calm piano loo
           <li>An OpenAI-compatible <code>/v1</code> server with a web console</li>
           <li>Model recommendations for this machine before you download</li>
         </ul>
-        <!-- PENDING-W2: E1 -->
+        <!-- install lines: abstractcore/README.md:118-133 -->
 <div class="code-block" style="margin-top:1rem">
-<pre><code><span class="line-kw">pip install</span> abstractcore</code></pre>
+<pre><code><span class="line-kw">pip install</span> abstractcore             <span class="line-cmt"># Ollama, LM Studio, OpenRouter, Portkey, any /v1 endpoint</span>
+<span class="line-kw">pip install</span> <span class="line-str">"abstractcore[remote]"</span>   <span class="line-cmt"># + OpenAI and Anthropic SDKs</span>
+<span class="line-kw">pip install</span> <span class="line-str">"abstractcore[mlx]"</span>      <span class="line-cmt"># + local MLX on Apple silicon</span></code></pre>
         </div>
         <div class="entry-scenario">
           <h4>When to use AbstractCore</h4>
           <p>You are writing a script, a notebook or a tool. You want to talk to models with minimal setup and switch between local runtimes and cloud APIs without rewriting your code. You do not need persistent runs or a server.</p>
-          <!-- PENDING-W2: E1 -->
+          <!-- E1 (W2 PASS): examples/E1-text/snippet.py verbatim -->
 <div class="code-block" style="margin-top:1rem">
 <pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+
+<span class="line-cmt"># Local model on Apple silicon (MLX). Any provider works the same way, e.g.</span>
+<span class="line-cmt"># create_llm("openai", model="gpt-5-mini") or create_llm("ollama", model="qwen3:4b").</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-<span class="line-fn">print</span>(llm.<span class="line-fn">generate</span>(<span class="line-str">"Explain durable execution in 3 bullets."</span>).content)</code></pre>
+
+response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In two sentences, what is a durable workflow runtime?"</span>)
+<span class="line-fn">print</span>(response.content)</code></pre>
           </div>
         </div>
         <div class="comp-links" style="margin-top:.75rem">
@@ -210,7 +220,7 @@ llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span
           <li>Thin clients: terminal, browser, menu bar, Telegram, email</li>
           <li>Start on one device, continue on another</li>
         </ul>
-        <!-- PENDING-W2: E7 -->
+        <!-- VERIFIED-DOCS README.md:60; abstractgateway/README.md@v0.7.1 "Docker server" -->
 <div class="code-block" style="margin-top:1rem">
 <pre><code><span class="line-kw">pip install</span> abstractgateway
 <span class="line-cmt"># or</span>
@@ -1309,13 +1319,13 @@ reg = <span class="line-fn">load_semantics_registry</span>()
             <li><strong>Without Terminal:</strong> <a href="https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg">download AbstractFramework-Installer.pkg</a> and double-click it. It is not signed with an Apple Developer ID: the first time, open <strong>System Settings &gt; Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>. <a href="install.html#choose">Step by step</a></li>
             <li><strong>With Terminal:</strong> paste this line; it runs the same installer.</li>
           </ul></div>
-          <!-- PENDING-W2: E7 -->
+          <!-- VERIFIED-DOCS docs/install.md:57 -->
 <div class="code-block">
 <pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
           <div class="install-notes"><ul><li>macOS 13 or later (the Apple Silicon engines need macOS 14); about 5 GB of free disk before models.</li></ul></div>
         </div>
         <div class="tab-panel" id="tab-h-linux">
-          <!-- PENDING-W2: E7 -->
+          <!-- VERIFIED-DOCS docs/install.md:57 -->
 <div class="code-block">
 <pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
           <div class="install-notes"><ul>
@@ -1324,7 +1334,7 @@ reg = <span class="line-fn">load_semantics_registry</span>()
           </ul></div>
         </div>
         <div class="tab-panel" id="tab-h-win">
-          <!-- PENDING-W2: E7 -->
+          <!-- VERIFIED-DOCS docs/install.md:74 -->
 <div class="code-block">
 <pre><code>powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"</code></pre></div>
           <div class="install-notes"><ul>
@@ -1332,18 +1342,19 @@ reg = <span class="line-fn">load_semantics_registry</span>()
           </ul></div>
         </div>
         <div class="tab-panel" id="tab-h-py">
-          <!-- PENDING-W2: E7 -->
+          <!-- E7 PASS (light install + abstractframework doctor); apple: E1-E3 venv; gpu: README.md:294; serve: docs/install.md:608 -->
 <div class="code-block">
 <pre><code>pip install abstractframework            <span class="line-cmt"># light: cloud and endpoint engines</span>
 pip install "abstractframework[apple]"   <span class="line-cmt"># + local Apple Silicon engines</span>
 pip install "abstractframework[gpu]"     <span class="line-cmt"># + local CUDA / ROCm engines</span>
+abstractframework doctor                 <span class="line-cmt"># checks the pinned versions and this machine</span>
 abstractgateway serve                    <span class="line-cmt"># prints a one-time console link</span></code></pre></div>
           <div class="install-notes"><ul>
             <li>Every framework library in your own environment, pinned together. Python 3.10 to 3.13. <a href="start-developer.html">Developer journey</a></li>
           </ul></div>
         </div>
         <div class="tab-panel" id="tab-h-docker">
-          <!-- PENDING-W2: E7 -->
+          <!-- VERIFIED-DOCS docs/install.md:654-661 -->
 <div class="code-block">
 <pre><code>docker run -p 8080:8080 -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data -e ABSTRACTGATEWAY_USER_AUTH=1 \
