@@ -1,16 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    entity-graph.js — an illustrated timeline of two entities' memory graphs.
 
-   Vocabulary follows AbstractMemory and AbstractGateway (see
-   deliver/fragments/COMPONENTS.md for the source lines): identity records
-   (value, trait, purpose) planted by `engram` from the spark and present in
-   reserved self seats; episodes per run (success and failure); lessons and
-   claims (triples with valid_from / valid_until); `reconstruct` +
-   `commit_selection` (recall strengthens only what was used); closure by
-   `supersede` (nothing is deleted); `consolidation_pass` (a review-gated
-   summary with `summarizes` edges, sources unchanged); `dream_pass` (at most
-   one dream per night, `mentions` links); the four phases visit / work /
-   personal / sleep.
+   Vocabulary follows AbstractMemory, AbstractRuntime and AbstractGateway (see
+   deliver/fragments/COMPONENTS.md for the source lines): the spark (values,
+   traits, purposes) is fixed for life and present in every session; every
+   session is formed into memory (episodes, successes and failures alike);
+   lessons and the diary are what the entity chooses to keep; facts are
+   triples with valid_from / valid_until that close or are superseded, never
+   deleted; recall in a later session strengthens only what was used; sleep
+   is deterministic and only proposes (a summary with `summarizes` edges, at
+   most one dream with `mentions` links; sources unchanged); the four phases
+   are visit / work / personal / sleep.
 
    Markup (see deliver/fragments/entity-graph.html):
      <div class="eg" data-eg aria-label="..."></div>
@@ -26,15 +26,15 @@
   var reduceMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
 
   var LANES = [
-    { key: 'identity', label: 'identity', sub: ['value', 'trait'] },
+    { key: 'identity', label: 'identity', sub: ['spark:', 'values,', 'traits'] },
     { key: 'role', label: 'role', sub: ['phase'] },
-    { key: 'purpose', label: 'purpose', sub: ['purpose'] },
-    { key: 'history', label: 'history', sub: ['episode', 'per run'] },
-    { key: 'experience', label: 'experience', sub: ['lesson', 'claim', 'summary', 'dream'] }
+    { key: 'purpose', label: 'purpose', sub: ['spark:', 'purposes'] },
+    { key: 'history', label: 'history', sub: ['formed', 'per session'] },
+    { key: 'experience', label: 'experience', sub: ['lessons,', 'facts,', 'diary,', 'sleep', 'proposals'] }
   ];
   var PHASES = ['visit', 'work', 'personal', 'sleep'];
   var COLORS = {
-    identity: '#818cf8', purpose: '#a78bfa', ok: '#34d399', failed: '#f472b6', experience: '#fbbf24', dream: '#fb7185'
+    identity: '#818cf8', purpose: '#a78bfa', ok: '#34d399', failed: '#f472b6', experience: '#fbbf24'
   };
   var SEQ_MAX = 32;
 
@@ -43,25 +43,24 @@
       key: 'castor', name: 'Castor', note: 'long-lived', born: 0,
       phases: [[0, 'personal'], [2, 'visit'], [5, 'work'], [12, 'sleep'], [15, 'work'], [18, 'personal'], [20, 'work'], [22, 'visit'], [25, 'sleep'], [28, 'personal']],
       nodes: [
-        { id: 'v1', lane: 'identity', kind: 'value', label: 'honesty', title: 'value: intellectual_honesty (core)', born: 0 },
-        { id: 'v2', lane: 'identity', kind: 'value', label: 'care', title: 'value: care_in_action (revisable)', born: 0, until: 18 },
-        { id: 't1', lane: 'identity', kind: 'trait', label: 'ask first', title: 'trait: ask before assuming', born: 0 },
-        { id: 'v3', lane: 'identity', kind: 'value', label: 'care v2', title: 'value: care_in_action, revised by the entity (supersedes the first version)', born: 18 },
-        { id: 'p1', lane: 'purpose', kind: 'purpose', label: 'help people', title: 'purpose: help the humans you work with', born: 0 },
-        { id: 'r3', lane: 'history', kind: 'episode', status: 'ok', label: 'run 3', title: 'episode: run 3 (visit), backup strategy, succeeded', born: 3 },
-        { id: 'r7', lane: 'history', kind: 'episode', status: 'failed', label: 'run 7', title: 'episode: run 7 (work), restore test, failed', born: 7 },
-        { id: 'r9', lane: 'history', kind: 'episode', status: 'ok', label: 'run 9', title: 'episode: run 9 (work), restore test, succeeded', born: 9 },
-        { id: 'r16', lane: 'history', kind: 'episode', status: 'ok', label: 'run 16', title: 'episode: run 16 (work), hourly backups, succeeded', born: 16 },
-        { id: 'r23', lane: 'history', kind: 'episode', status: 'ok', label: 'run 23', title: 'episode: run 23 (visit), review, succeeded', born: 23 },
+        { id: 'v1', lane: 'identity', kind: 'value', label: 'honesty', title: 'value (spark): intellectual_honesty', born: 0 },
+        { id: 'v2', lane: 'identity', kind: 'value', label: 'care', title: 'value (spark): care_in_action', born: 0 },
+        { id: 't1', lane: 'identity', kind: 'trait', label: 'ask first', title: 'trait (spark): ask before assuming', born: 0 },
+        { id: 'p1', lane: 'purpose', kind: 'purpose', label: 'help people', title: 'purpose (spark): help the humans you work with', born: 0 },
+        { id: 'r3', lane: 'history', kind: 'episode', status: 'ok', label: 'visit 3', title: 'episode formed from visit 3: backup strategy, went well', born: 3 },
+        { id: 'r7', lane: 'history', kind: 'episode', status: 'failed', label: 'work 7', title: 'episode formed from work session 7: restore test, failed', born: 7 },
+        { id: 'r9', lane: 'history', kind: 'episode', status: 'ok', label: 'work 9', title: 'episode formed from work session 9: restore test, passed', born: 9 },
+        { id: 'r16', lane: 'history', kind: 'episode', status: 'ok', label: 'work 16', title: 'episode formed from work session 16: hourly backups, done', born: 16 },
+        { id: 'r23', lane: 'history', kind: 'episode', status: 'ok', label: 'visit 23', title: 'episode formed from visit 23: review, went well', born: 23 },
         { id: 'l1', lane: 'experience', kind: 'lesson', label: 'verify restore', title: 'lesson: verify a restore before sign-off', born: 10 },
-        { id: 'c1', lane: 'experience', kind: 'claim', label: 'nightly', title: 'claim: (home-lab, backup_schedule, nightly)', born: 11, until: 20, window: true },
-        { id: 's1', lane: 'experience', kind: 'summary', label: 'summary', title: 'summary: restore test (review-gated candidate from consolidation_pass)', born: 13 },
-        { id: 'c2', lane: 'experience', kind: 'claim', label: 'hourly', title: 'claim: (home-lab, backup_schedule, hourly)', born: 20, window: true },
-        { id: 'd1', lane: 'experience', kind: 'dream', label: 'dream', title: 'dream: one per night at most, review-gated, never a fact', born: 26 }
+        { id: 'c1', lane: 'experience', kind: 'fact', label: 'nightly', title: 'fact (triple): home-lab, backup_schedule, nightly', born: 11, until: 20, window: true },
+        { id: 's1', lane: 'experience', kind: 'summary', label: 'summary', title: 'summary proposed by consolidation: restore test (inactive until reviewed)', born: 13, proposal: true },
+        { id: 'y1', lane: 'experience', kind: 'diary', label: 'diary', title: 'diary entry (the book keeps the words; the graph keeps the act of writing)', born: 18 },
+        { id: 'c2', lane: 'experience', kind: 'fact', label: 'hourly', title: 'fact (triple): home-lab, backup_schedule, hourly', born: 20, window: true },
+        { id: 'd1', lane: 'experience', kind: 'dream', label: 'dream', title: 'dream proposed during sleep (review-gated, never a fact)', born: 26, proposal: true }
       ],
       edges: [
         { type: 'summarizes', from: 's1', to: 'r7', at: 13 }, { type: 'summarizes', from: 's1', to: 'r9', at: 13 },
-        { type: 'supersedes', from: 'v3', to: 'v2', at: 18 },
         { type: 'supersedes', from: 'c2', to: 'c1', at: 20 },
         { type: 'mentions', from: 'd1', to: 'r16', at: 26 }, { type: 'mentions', from: 'd1', to: 'r23', at: 26 }
       ],
@@ -71,73 +70,72 @@
         { at: 23, from: 'r23', to: ['l1', 'c2'] }
       ],
       log: {
-        0: '<code>engram</code>: the spark plants the identity core (values, trait, purpose) in reserved self seats.',
+        0: 'Castor is created from its spark: values, traits and purposes, fixed for life and present in every conversation.',
         2: 'Visit: a person talks with Castor.',
-        3: 'Run 3 succeeds and forms an episode. Identity is present in the working set; presence is not counted as use.',
+        3: 'Formation: the visit is formed into memory as an episode.',
         5: 'Work: Castor is summoned into a work session.',
-        7: 'Run 7 fails. The failure is an episode too, like any success.',
-        9: 'Run 9: <code>reconstruct</code> recalls the failed run 7; <code>commit_selection</code> strengthens it. The restore test passes.',
-        10: 'A lesson forms: verify a restore before sign-off.',
-        11: 'A claim forms: (home-lab, backup_schedule, nightly), valid from seq 11.',
+        7: 'The restore test fails. The failure is formed into memory like any success.',
+        9: 'Recall: the new session recalls the failed attempt from memory. The restore test passes.',
+        10: 'At the end of the session Castor writes down a lesson it chooses to keep.',
+        11: 'A fact forms: (home-lab, backup_schedule, nightly), valid from seq 11.',
         12: 'Sleep.',
-        13: '<code>consolidation_pass</code>: runs 7 and 9 share a title; a review-gated summary links them (<code>summarizes</code>). The sources stay unchanged.',
+        13: 'Consolidation during sleep proposes a summary of the two restore sessions (inactive until reviewed); the sources stay unchanged.',
         15: 'Work.',
-        16: 'Run 16 recalls the lesson and the nightly claim; both gain strength.',
-        18: 'Personal time: Castor revises a revisable value by its own act (<code>supersede</code>). The old record is closed, never deleted.',
-        20: 'The nightly claim closes (valid until seq 20); the hourly claim supersedes it.',
+        16: 'Recall: the lesson and the nightly fact light up; recall strengthens what the session used.',
+        18: 'Personal time: Castor writes a diary entry. The diary is hash-chained and never deleted.',
+        20: 'The nightly fact closes (valid until seq 20); the hourly fact supersedes it. Nothing is deleted.',
         22: 'Visit.',
-        23: 'Run 23 recalls the lesson and the hourly claim.',
+        23: 'Recall: the lesson and the hourly fact, in a later conversation.',
         25: 'Sleep.',
-        26: '<code>dream_pass</code>: at most one dream per night, review-gated, weakly linked (<code>mentions</code>).',
-        28: 'Personal time. History: 5 runs, 4 succeeded, 1 failed.'
+        26: 'Sleep proposes one dream, weakly linked to recent sessions; a proposal, never a fact.',
+        28: 'Personal time. History: 5 sessions formed into memory, 4 went well, 1 failed.'
       }
     },
     {
       key: 'ephemeral', name: 'Ephemeral', note: 'created later', born: 6,
       phases: [[6, 'personal'], [7, 'work'], [12, 'sleep'], [14, 'work'], [19, 'personal'], [21, 'work'], [25, 'sleep'], [28, 'work']],
       nodes: [
-        { id: 'v1', lane: 'identity', kind: 'value', label: 'honesty', title: 'value: intellectual_honesty (core)', born: 6 },
-        { id: 't1', lane: 'identity', kind: 'trait', label: 'verify first', title: 'trait: verify before asserting', born: 6 },
-        { id: 'p1', lane: 'purpose', kind: 'purpose', label: 'triage', title: 'purpose: triage the inbox', born: 6, until: 20 },
-        { id: 'p2', lane: 'purpose', kind: 'purpose', label: 'triage + reply', title: 'purpose: triage the inbox and draft replies (supersedes the first purpose)', born: 20 },
-        { id: 'r8', lane: 'history', kind: 'episode', status: 'ok', label: 'run 8', title: 'episode: run 8 (work), inbox triage, succeeded', born: 8 },
-        { id: 'r14', lane: 'history', kind: 'episode', status: 'failed', label: 'run 14', title: 'episode: run 14 (work), mail API call refused, failed', born: 14 },
-        { id: 'r17', lane: 'history', kind: 'episode', status: 'failed', label: 'run 17', title: 'episode: run 17 (work), mail API call refused, failed', born: 17 },
-        { id: 'r21', lane: 'history', kind: 'episode', status: 'ok', label: 'run 21', title: 'episode: run 21 (work), inbox triage, succeeded', born: 21 },
-        { id: 'r29', lane: 'history', kind: 'episode', status: 'ok', label: 'run 29', title: 'episode: run 29 (work), draft replies, succeeded', born: 29 },
-        { id: 'c1', lane: 'experience', kind: 'claim', label: 'read-only', title: 'claim: (mail_api, token_scope, read-only)', born: 15, until: 24, window: true },
+        { id: 'v1', lane: 'identity', kind: 'value', label: 'honesty', title: 'value (spark): intellectual_honesty', born: 6 },
+        { id: 't1', lane: 'identity', kind: 'trait', label: 'verify first', title: 'trait (spark): verify before asserting', born: 6 },
+        { id: 'p1', lane: 'purpose', kind: 'purpose', label: 'triage mail', title: 'purpose (spark): help triage the inbox', born: 6 },
+        { id: 'r8', lane: 'history', kind: 'episode', status: 'ok', label: 'work 8', title: 'episode formed from work session 8: inbox triage, done', born: 8 },
+        { id: 'r14', lane: 'history', kind: 'episode', status: 'failed', label: 'work 14', title: 'episode formed from work session 14: mail API call refused, failed', born: 14 },
+        { id: 'r17', lane: 'history', kind: 'episode', status: 'failed', label: 'work 17', title: 'episode formed from work session 17: mail API call refused, failed', born: 17 },
+        { id: 'r21', lane: 'history', kind: 'episode', status: 'ok', label: 'work 21', title: 'episode formed from work session 21: inbox triage, done', born: 21 },
+        { id: 'r29', lane: 'history', kind: 'episode', status: 'ok', label: 'work 29', title: 'episode formed from work session 29: draft replies, done', born: 29 },
+        { id: 'c1', lane: 'experience', kind: 'fact', label: 'read-only', title: 'fact (triple): mail_api, token_scope, read-only', born: 15, until: 24, window: true },
         { id: 'l1', lane: 'experience', kind: 'lesson', label: 'check scope', title: 'lesson: check the token scope before calling', born: 18 },
-        { id: 'c2', lane: 'experience', kind: 'claim', label: 'read-write', title: 'claim: (mail_api, token_scope, read-write)', born: 24, window: true },
-        { id: 's1', lane: 'experience', kind: 'summary', label: 'summary', title: 'summary: mail API call refused (review-gated candidate from consolidation_pass)', born: 26 }
+        { id: 'y1', lane: 'experience', kind: 'diary', label: 'diary', title: 'diary entry (a question: why is the scope read-only?)', born: 20 },
+        { id: 'c2', lane: 'experience', kind: 'fact', label: 'read-write', title: 'fact (triple): mail_api, token_scope, read-write', born: 24, window: true },
+        { id: 's1', lane: 'experience', kind: 'summary', label: 'summary', title: 'summary proposed by consolidation: mail API call refused (inactive until reviewed)', born: 26, proposal: true }
       ],
       edges: [
-        { type: 'supersedes', from: 'p2', to: 'p1', at: 20 },
         { type: 'supersedes', from: 'c2', to: 'c1', at: 24 },
         { type: 'summarizes', from: 's1', to: 'r14', at: 26 }, { type: 'summarizes', from: 's1', to: 'r17', at: 26 }
       ],
       recalls: [
         { at: 17, from: 'r17', to: ['r14', 'c1'] },
-        { at: 21, from: 'r21', to: ['l1', 'c1'] },
+        { at: 21, from: 'r21', to: ['l1', 'y1'] },
         { at: 29, from: 'r29', to: ['l1', 'c2'] }
       ],
       log: {
         0: 'Not created yet.',
-        6: '<code>engram</code>: Ephemeral is created; its own spark plants its identity core.',
+        6: 'Ephemeral is created from its own spark: values, traits and purposes, fixed for life.',
         7: 'Work.',
-        8: 'Run 8 succeeds: inbox triage.',
+        8: 'Formation: the work session is formed into memory as an episode.',
         12: 'Sleep. Nothing to consolidate: a quiet night is a valid night.',
-        14: 'Run 14 fails: the mail API refuses the call. <code>appraise</code> records a feeling about tool:mail_api; feelings never change recall.',
-        15: 'A claim forms: (mail_api, token_scope, read-only), valid from seq 15.',
-        17: 'Run 17 fails the same way; <code>reconstruct</code> recalls run 14 and the claim.',
-        18: 'A lesson forms: check the token scope before calling.',
+        14: 'The mail API refuses the call. The failure is formed into memory, with a feeling about tool:mail_api.',
+        15: 'A fact forms: (mail_api, token_scope, read-only), valid from seq 15.',
+        17: 'Same error. Recall: the earlier failure and the read-only fact light up.',
+        18: 'At the end of the session Ephemeral writes down a lesson it chooses to keep.',
         19: 'Personal time.',
-        20: 'Its purpose evolves by its own act; the first purpose is superseded, not deleted.',
-        21: 'Run 21 recalls the lesson and the claim, asks for a wider scope and succeeds.',
-        24: 'The read-only claim closes (valid until seq 24); read-write supersedes it.',
+        20: 'Ephemeral writes a question in its diary: why is the scope read-only?',
+        21: 'Recall: the lesson and the diary question; it asks for a wider scope and the session succeeds.',
+        24: 'The read-only fact closes (valid until seq 24); read-write supersedes it.',
         25: 'Sleep.',
-        26: '<code>consolidation_pass</code>: runs 14 and 17 share a title; a review-gated summary links them.',
+        26: 'Consolidation during sleep proposes a summary of the two refused sessions (inactive until reviewed).',
         28: 'Work.',
-        29: 'Run 29 recalls the lesson and the new claim, and succeeds. History: 5 runs, 3 succeeded, 2 failed.'
+        29: 'Recall: the lesson and the new fact. History: 5 sessions formed into memory, 3 went well, 2 failed.'
       }
     }
   ];
@@ -168,10 +166,15 @@
     return best === null ? '' : '<span class="eg-sr">seq ' + at + ': </span>' + best;
   }
   function wrapLabel(text, maxChars) {
-    var words = text.split(' '), lines = [], cur = '';
+    var words = [], lines = [], cur = '';
+    text.split(' ').forEach(function (w) {
+      if (w.length > maxChars && w.indexOf('-') > 0) { var i = w.indexOf('-'); words.push(w.slice(0, i + 1)); words.push(w.slice(i + 1)); }
+      else words.push(w);
+    });
     words.forEach(function (w) {
       if (!cur) cur = w;
-      else if ((cur + ' ' + w).length <= maxChars) cur += ' ' + w;
+      else if ((cur + ' ' + w).length <= maxChars && cur.slice(-1) !== '-') cur += ' ' + w;
+      else if (cur.slice(-1) === '-' && (cur + w).length <= maxChars) cur += w;
       else { lines.push(cur); cur = w; }
     });
     if (cur) lines.push(cur);
@@ -250,9 +253,10 @@
     H('div', 'eg-legend', root,
       '<span><i style="background:' + COLORS.identity + '"></i>identity</span>' +
       '<span><i style="background:' + COLORS.purpose + '"></i>purpose</span>' +
-      '<span><i style="background:' + COLORS.ok + '"></i>run succeeded</span>' +
-      '<span><i style="background:' + COLORS.failed + '"></i>run failed</span>' +
-      '<span><i style="background:' + COLORS.experience + '"></i>lesson, claim, summary</span>' +
+      '<span><i style="background:' + COLORS.ok + '"></i>session went well</span>' +
+      '<span><i style="background:' + COLORS.failed + '"></i>session failed</span>' +
+      '<span><i style="background:' + COLORS.experience + '"></i>lesson, fact, diary</span>' +
+      '<span><i style="background:transparent;border:1.5px dotted ' + COLORS.experience + '"></i>sleep proposal (summary, dream)</span>' +
       '<span><i class="l-line" style="border-color:#22d3ee"></i>recall</span>' +
       '<span><i class="l-dash" style="border-color:rgba(251,191,36,.8)"></i>summarizes</span>' +
       '<span><i class="l-dash" style="border-color:rgba(152,152,176,.8)"></i>supersedes</span>' +
@@ -316,8 +320,9 @@
     var ent = p.ent, seq = this.seq, prev = this.prevSeq;
     var W = Math.max(280, p.canvas.clientWidth || 520);
     var narrow = W < 440;
-    var gutter = narrow ? 66 : 96;
-    var slots = 5;
+    var gutter = narrow ? 60 : 96;
+    var slots = 1;
+    this.data.forEach(function (e) { var c = {}; e.nodes.forEach(function (n) { c[n.lane] = (c[n.lane] || 0) + 1; slots = Math.max(slots, c[n.lane]); }); });
     var avail = W - gutter - 4;
     var slotW = avail / slots;
     var laneH = { identity: 74, role: 44, purpose: 70, history: 74, experience: 78 };
@@ -337,7 +342,7 @@
       var t = S('text', { class: 'eg-lane-label', x: 0, y: ly + 16 }, gL);
       t.textContent = l.label;
       l.sub.forEach(function (s, j) {
-        var st = S('text', { class: 'eg-lane-sub', x: 0, y: ly + 29 + j * 11 }, gL);
+        var st = S('text', { class: 'eg-lane-sub', x: 0, y: ly + 28 + j * (narrow ? 10 : 11), style: narrow ? 'font-size:8.5px' : '' }, gL);
         st.textContent = s;
       });
     });
@@ -398,20 +403,20 @@
     }
 
     // nodes
-    var maxChars = Math.max(6, Math.floor((slotW - 4) / 5.6));
+    var maxChars = Math.max(5, Math.floor((slotW - 2) / (narrow ? 5.1 : 5.6)));
     var gN = S('g', null, svg);
     ent.nodes.forEach(function (n) {
       if (n.born > seq) return;
       var c = pos[n.id];
       var closed = n.until !== undefined && seq >= n.until;
       var fresh = prev !== null && prev < n.born && n.born <= seq;
-      var color = n.lane === 'history' ? COLORS[n.status] : n.kind === 'dream' ? COLORS.dream : COLORS[n.lane] || COLORS.experience;
+      var color = n.lane === 'history' ? COLORS[n.status] : COLORS[n.lane] || COLORS.experience;
       var cls = 'eg-node' + (closed ? ' is-closed' : '') + (fresh ? ' is-new' : '');
       if (!closed && runNow && (n.lane === 'identity' || n.lane === 'purpose')) cls += ' is-self';
       if (activeRecall && activeRecall.to.indexOf(n.id) >= 0) cls += ' is-recalled';
       var g = S('g', { class: cls }, gN);
       var r = (narrow ? 7 : 8.5) + Math.min(counts[n.id] || 0, 3) * 1.7;
-      if (n.kind === 'summary' || n.kind === 'dream') {
+      if (n.proposal) {
         S('circle', { cx: c.x, cy: c.y, r: r, fill: color, 'fill-opacity': .12, stroke: color, 'stroke-dasharray': '2 2' }, g);
       } else {
         S('circle', { cx: c.x, cy: c.y, r: r, fill: color, 'fill-opacity': .28, stroke: color }, g);
@@ -422,7 +427,7 @@
       }
       var lines = wrapLabel(n.label, maxChars);
       lines.forEach(function (ln, i) {
-        var t = S('text', { class: 'eg-node-label', x: c.x, y: c.y + r + 12 + i * 11, 'text-anchor': 'middle' }, g);
+        var t = S('text', { class: 'eg-node-label', x: c.x, y: c.y + r + 12 + i * 11, 'text-anchor': 'middle', style: narrow ? 'font-size:9.2px' : '' }, g);
         t.textContent = ln;
       });
       var win = null;

@@ -295,6 +295,8 @@
   .dv-core { max-width: 340px; margin-inline: auto; }
   .dv-wires { display: none; }
   .dv-slot-phone .dv-phone { max-width: 170px; }
+  .dv-title { padding-right: 0; }
+  .dv-display.dv-desktop > img { padding: 3% 5%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .dv-wires path, .dv-ledger li:last-child, .dv-core::after { animation: none !important; }
@@ -395,12 +397,12 @@
 .sc-tool { align-self: stretch; font-family: var(--mono); font-size: .62rem; color: #9ca3af; padding: .3rem .5rem; border-left: 2px solid rgba(16, 185, 129, .6); background: rgba(16, 185, 129, .06); }
 .sc-app-ssh .sc-tool { font-size: .54rem; }
 
-.sc-bar { display: flex; align-items: center; justify-content: center; gap: .8rem; margin-top: 1.4rem; min-height: 32px; }
+.sc-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .6rem .8rem; text-align: center; margin-top: 1.4rem; min-height: 32px; }
 .sc-now { font-size: var(--text-sm); color: var(--text-secondary); }
 .sc-now b { color: var(--accent-light); font-weight: 600; }
 .sc-toggle {
   display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .7rem; border-radius: var(--radius-full);
-  border: 1px solid var(--border-hover); background: var(--bg-card); color: var(--text-secondary); font: inherit; font-size: var(--text-xs); cursor: pointer;
+  border: 1px solid var(--border-hover); background: var(--bg-card); color: var(--text-secondary); font: inherit; font-size: var(--text-xs); cursor: pointer; white-space: nowrap;
 }
 .sc-toggle:hover { color: var(--text); border-color: rgba(129, 140, 248, .5); }
 .sc-toggle:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
@@ -442,7 +444,7 @@
 .eg svg .eg-node-win { font-size: 9px; fill: var(--text-muted); font-family: var(--mono); paint-order: stroke; stroke: #0d0d16; stroke-width: 3px; stroke-linejoin: round; }
 .eg svg .eg-node circle { stroke-width: 1.5; transition: r 400ms var(--ease), opacity 400ms var(--ease); }
 .eg svg .eg-node.is-closed circle { fill-opacity: .08 !important; stroke-dasharray: 3 3; opacity: .7; }
-.eg svg .eg-node.is-closed .eg-node-label { fill: var(--text-muted); text-decoration: line-through; }
+.eg svg .eg-node.is-closed .eg-node-label { fill: var(--text-muted); }
 .eg svg .eg-node.is-new circle { animation: eg-pop 600ms var(--ease-spring) both; }
 .eg svg .eg-node.is-self circle { filter: drop-shadow(0 0 5px rgba(129, 140, 248, .95)); }
 .eg svg .eg-node.is-recalled circle { filter: drop-shadow(0 0 7px rgba(34, 211, 238, 1)); stroke: #22d3ee; }
