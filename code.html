@@ -90,7 +90,7 @@
       <a href="https://github.com/lpalbou/AbstractCode/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractCode/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS: RESULTS.md E8 code.html:91 (helpcheck-crates login --token; helpcheck apps tui-command code; npm bin --gateway-url) -->
 <div class="hero-code">
 <pre><code><span class="line-cmt"># Terminal client: the installer puts it on your PATH</span>
 abstractcode login --token <span class="line-var">&lt;admin token&gt;</span>   <span class="line-cmt"># once</span>
@@ -132,7 +132,6 @@ abstractgateway apps tui-command code
       </div>
     </div>
     <figure class="figure reveal" style="margin-top:2rem">
-      <!-- PENDING-W2: SHOT code-web -->
       <img src="assets/img/shots/code-web.webp" alt="The AbstractCode web client at /apps/code/: the sidebar with New conversation, an Automations section listing three demo automations and the conversations; a start screen with four starter cards; the Workspace panel with Files, Activity and Artifacts tabs" loading="lazy" width="1600" height="1000">
       <figcaption>The browser client: automations in the sidebar, the conversation workspace on the right.</figcaption>
     </figure>
@@ -234,19 +233,16 @@ abstractgateway apps tui-command code
     </div>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem">
       <figure class="figure">
-        <!-- PENDING-W2: SHOT abstractcode-web -->
-        <img src="assets/img/abstractcode-web.png" alt="AbstractCode web client: a user asks about an attached image named bateau.png and the agent describes a stylized sailboat" loading="lazy">
-        <figcaption>The web client: a chat turn about an attached image.</figcaption>
+        <img src="assets/img/shots/code-chat.webp" alt="AbstractCode web conversation: &quot;Summarise the attached release notes in three bullets.&quot; and the agent's three bullets, with token, tool and time chips; the Files tab shows the conversation workspace" loading="lazy">
+        <figcaption>The web client 0.6.1: a conversation with an attached file, the Files tab open.</figcaption>
       </figure>
       <figure class="figure">
-        <!-- PENDING-W2: SHOT abstractcode-auditability -->
         <img src="assets/img/abstractcode-auditability.png" alt="AbstractCode web client Context panel showing one reasoning cycle with System, User, Tools, Response, Reasoning and Raw views" loading="lazy">
-        <figcaption>The web client's Context panel: one reasoning cycle and the exact model input.</figcaption>
+        <figcaption>The web client's Context panel: one reasoning cycle and the exact model input (captured from an earlier version).</figcaption>
       </figure>
       <figure class="figure">
-        <!-- PENDING-W2: SHOT abstractcode-tui -->
-        <img src="assets/img/abstractcode-tui.png" alt="AbstractCode in a terminal, listing the available tools with their parameters" loading="lazy">
-        <figcaption>The terminal client listing the agent's tools and their parameters (captured from an earlier version).</figcaption>
+        <img src="assets/img/shots/code-tui-chat.webp" alt="AbstractCode terminal conversation: the question &quot;How long should I steep green tea?&quot;, the cycle line, the reply, then &quot;done · 1 llm calls&quot; and the status bar" loading="lazy">
+        <figcaption>The terminal client 0.7.1: one conversation turn, then the status bar.</figcaption>
       </figure>
     </div>
   </div>
@@ -268,7 +264,7 @@ abstractgateway apps tui-command code
         <button class="tab-btn" data-tab="headless">Headless</button>
       </div>
       <div class="tab-panel active" id="tab-terminal">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 code.html:264 (cargo install abstractcode@0.7.1 ran; helpcheck-crates) -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># already on PATH after the one-line install; otherwise:</span>
 <span class="line-kw">cargo install</span> abstractcode                <span class="line-cmt"># or a prebuilt binary from GitHub releases</span>
@@ -287,7 +283,7 @@ abstractcode --workflow <span class="line-str">default</span>             <span 
         <div class="install-notes"><ul><li>Started without a valid sign-in, <code>abstractcode</code> says so and prints both ways to sign in instead of opening. The installer never saves the token for you; the admin token is in <code>&lt;data dir&gt;/auth/bootstrap-admin-token</code>.</li><li><code>login</code> checks the credentials against the gateway before saving them in <code>~/.abstractcode/gateway.json</code>. Without <code>--gateway-url</code> or a saved login, the client uses the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>), else <code>http://127.0.0.1:8080</code>. <code>--provider</code> and <code>--model</code> only override the gateway's route.</li></ul></div>
       </div>
       <div class="tab-panel" id="tab-web">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 code.html:282 (npm bin: --gateway-url, --port, 3002) -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># From the gateway console: Apps &gt; Code &gt; Open  (http://127.0.0.1:8080/apps/code/)</span>
 
@@ -298,7 +294,7 @@ abstractcode --workflow <span class="line-str">default</span>             <span 
         <div class="install-notes"><ul><li>Sign in with your gateway user and token: the web server exchanges the token for a gateway browser session and keeps only app-scoped session cookies. The server listens on <code>127.0.0.1</code> by default; to reach it from another machine, expose or tunnel the gateway's own address and use <code>/apps/code/</code>.</li></ul></div>
       </div>
       <div class="tab-panel" id="tab-headless">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 code.html:292 (helpcheck-crates: exec --permissions read, --stream on) -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># One-shot run that prints transcript events as they arrive</span>
 abstractcode exec <span class="line-str">"Summarize the workspace layout"</span> --permissions <span class="line-str">read</span>

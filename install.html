@@ -192,7 +192,7 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
     <div class="showcase-grid reveal" style="margin-top:2rem;align-items:start">
       <div>
         <h3 style="margin-bottom:.75rem">Sign the terminal app in</h3>
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 install.html:166 (helpcheck-crates, helpcheck) -->
 <div class="code-block"><pre><code>abstractcode login --token &lt;admin token&gt;   <span class="line-cmt"># once; the summary prints it with your token</span>
 abstractcode
 
@@ -255,13 +255,13 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Configure from the terminal console</h3>
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 install.html:221-232 (helpcheck-crates) -->
 <div class="code-block"><pre><code>abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;</code></pre></div>
         <p>The installer's summary prints this command with your port and token filled in; the admin token is also in <code>~/.local/share/abstractgateway/auth/bootstrap-admin-token</code>. The console runs the same setup guide as the web console. Press <code>N</code> for <strong>Network</strong>, <code>A</code> for <strong>Apps</strong>, <code>F3</code> for the gateway host (restart, update, start at login).</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Reach the web console and apps through one tunnel</h3>
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 install.html:221-232 (helpcheck: claim-url --base-url); ssh not run -->
 <div class="code-block"><pre><code>ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
 <span class="line-cmt"># on the server, print a one-time sign-in link for your browser:</span>
 abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></div>
@@ -282,7 +282,7 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
     <div class="showcase-grid reveal" style="align-items:start">
       <div>
         <h3 style="margin-bottom:.75rem">Network</h3>
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 install.html:252 (helpcheck network); not run -->
 <div class="code-block"><pre><code>abstractgateway network status
 abstractgateway network set lan          <span class="line-cmt"># devices on your local network</span>
 abstractgateway network set localhost --port 8080
@@ -293,7 +293,7 @@ abstractgateway network addresses</code></pre></div>
       </div>
       <div>
         <h3 style="margin-bottom:.75rem">Start at login</h3>
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 install.html:262 (helpcheck service); not run (machine persistence) -->
 <div class="code-block"><pre><code>abstractgateway service enable     <span class="line-cmt"># start at the next login</span>
 abstractgateway service disable
 abstractgateway service install --port 8080
@@ -359,7 +359,7 @@ abstractgateway service uninstall  <span class="line-cmt"># data is kept</span><
     <div class="showcase-grid reveal" style="margin-top:2.5rem;align-items:start">
       <div>
         <h3 style="margin-bottom:.75rem">Check an install</h3>
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 install.html:327 PASS (equivalent: E7 ran abstractframework doctor from the venv) -->
 <div class="code-block"><pre><code>uvx abstractframework doctor</code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm)">Checks Python, uv, Node, disk, the gateway and whether Ollama and LM Studio answer. It only reads.</p>
       </div>
@@ -403,7 +403,7 @@ abstractgateway serve     <span class="line-cmt"># prints a one-time console lin
           <div class="install-notes"><ul><li>Remote-first: cloud APIs and endpoint servers (LM Studio, Ollama, vLLM, llama.cpp, OpenAI-compatible). Multimodal input and output, tools, durable runs and workflows all work.</li></ul></div>
         </div>
         <div class="tab-panel" id="tab-p-apple">
-          <!-- E1-E3 PASS (ran in abstractframework[apple]==0.6.1); README.md:288 -->
+          <!-- VERIFIED-DOCS: E1-E3 ran in abstractframework[apple]==0.6.1 (RESULTS.md); README.md:288 -->
 <div class="code-block"><pre><code>pip install "abstractframework[apple]"</code></pre></div>
           <div class="install-notes"><ul><li>macOS 14 or later on Apple Silicon. Local MLX and Metal engines next to the endpoint providers. A plain <code>pip install</code> of this profile builds a few compiled extras from source and needs a C/C++ compiler; the one-line installer does not.</li></ul></div>
         </div>

@@ -88,7 +88,7 @@
       <a href="https://github.com/lpalbou/AbstractContinuum/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractContinuum/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS: RESULTS.md E8 continuum.html:90 (repo tag v0.4.0: bin abstractcontinuum, --gateway-url, port 3002) -->
 <div class="hero-code">
 <pre><code><span class="line-cmt"># Console &gt; Apps &gt; Continuum &gt; Open</span>
 
@@ -125,7 +125,6 @@
       </div>
     </div>
     <figure class="figure reveal" style="margin-top:2rem">
-      <!-- PENDING-W2: SHOT continuum-board -->
       <img src="assets/img/shots/continuum-board.webp" alt="The AbstractContinuum 0.4.0 Board at /apps/continuum/: Triage, Ready, In Progress, In Review and Done columns, with two proposed demo tasks in Triage and two planned tasks with Execute buttons in Ready" loading="lazy" width="1600" height="800">
       <figcaption>The Board with demo backlog items.</figcaption>
     </figure>
@@ -225,7 +224,7 @@
         <button class="tab-btn" data-tab="cfg">Configure</button>
       </div>
       <div class="tab-panel active" id="tab-gw">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 continuum.html:225 (/apps/<id>/ pattern verified with code, observer, flow) -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># Gateway console &gt; Apps &gt; Continuum &gt; Open</span>
 http://127.0.0.1:8080/apps/continuum/</code></pre>
@@ -233,7 +232,7 @@ http://127.0.0.1:8080/apps/continuum/</code></pre>
         <div class="install-notes"><ul><li>The gateway serves Continuum on its own address, so a remote or headless machine needs one port and one tunnel for the console and every app (see <a href="install.html#headless">headless installs</a>).</li></ul></div>
       </div>
       <div class="tab-panel" id="tab-npx">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 continuum.html:232 (bin name at v0.4.0) -->
 <div class="code-block">
 <pre><code><span class="line-kw">npx</span> @abstractframework/continuum
 <span class="line-cmt"># or install the CLI globally</span>
@@ -243,7 +242,7 @@ abstractcontinuum --gateway-url <span class="line-str">http://127.0.0.1:8080</sp
         <div class="install-notes"><ul><li>Open <code>http://localhost:3002</code> and sign in with a gateway user and token from the connection badge at the bottom of the sidebar. The token is exchanged server-side for an HttpOnly session cookie and never stored in the browser. Without <code>--gateway-url</code>, Continuum uses the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>), else <code>http://127.0.0.1:8080</code>.</li></ul></div>
       </div>
       <div class="tab-panel" id="tab-cfg">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 continuum.html:241 (--port, --hub-seat, config set/get at v0.4.0) -->
 <div class="code-block">
 <pre><code>abstractcontinuum --port <span class="line-var">3002</span> --gateway-url <span class="line-str">http://127.0.0.1:8080</span> --hub-seat <span class="line-str">alice</span>
 abstractcontinuum config set hub_seat <span class="line-str">alice</span>    <span class="line-cmt"># saved in ~/.abstractcontinuum/settings.json</span>

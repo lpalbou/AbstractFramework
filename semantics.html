@@ -84,7 +84,7 @@
       <a href="https://github.com/lpalbou/AbstractSemantics/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractSemantics/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS: RESULTS.md E8 semantics.html:86 (pypi-extras: only PyYAML) -->
 <div class="hero-code">
 <pre><code>pip install abstractsemantics     <span class="line-cmt"># only dependency: PyYAML</span></code></pre>
     </div>
@@ -181,39 +181,39 @@
         <button class="tab-btn" data-tab="yaml">Registry YAML</button>
       </div>
       <div class="tab-panel active" id="tab-schema">
-        <!-- PENDING-W2: E8 -->
+        <!-- W2 PASS: SNIPPETS.md semantics-registry -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry, build_kg_assertion_schema_v0
 
 reg = <span class="line-fn">load_semantics_registry</span>()
-print(len(reg.predicates), len(reg.entity_types))   <span class="line-cmt"># 44 18</span>
+<span class="line-fn">print</span>(<span class="line-fn">len</span>(reg.predicates), <span class="line-fn">len</span>(reg.entity_types))   <span class="line-cmt"># 44 18</span>
 
-schema = <span class="line-fn">build_kg_assertion_schema_v0</span>(registry=reg, include_predicate_aliases=<span class="line-var">True</span>)
+schema = <span class="line-fn">build_kg_assertion_schema_v0</span>(registry=reg, include_predicate_aliases=True)
 
 <span class="line-cmt"># or resolve the stable reference</span>
 <span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> KG_ASSERTION_SCHEMA_REF_V0, resolve_schema_ref
 schema = <span class="line-fn">resolve_schema_ref</span>({<span class="line-str">"$ref"</span>: KG_ASSERTION_SCHEMA_REF_V0})</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-relations">
-        <!-- PENDING-W2: E8 -->
+        <!-- W2 PASS: SNIPPETS.md semantics-relations -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry
 
 reg = <span class="line-fn">load_semantics_registry</span>()
-print(sorted(reg.<span class="line-fn">memory_relation_ids</span>()))
-print(sorted(reg.<span class="line-fn">memory_record_predicate_ids</span>()))
+<span class="line-fn">print</span>(<span class="line-fn">sorted</span>(reg.<span class="line-fn">memory_relation_ids</span>()))
+<span class="line-fn">print</span>(<span class="line-fn">sorted</span>(reg.<span class="line-fn">memory_record_predicate_ids</span>()))
 
-supports = next(r <span class="line-kw">for</span> r <span class="line-kw">in</span> reg.memory_relations <span class="line-kw">if</span> r.id == <span class="line-str">"supports"</span>)
-print(supports.subject_role, <span class="line-str">"-&gt;"</span>, supports.object_role)  <span class="line-cmt"># evidence -&gt; claim</span></code></pre></div>
+supports = <span class="line-fn">next</span>(r <span class="line-kw">for</span> r <span class="line-kw">in</span> reg.memory_relations if r.id == <span class="line-str">"supports"</span>)
+<span class="line-fn">print</span>(supports.subject_role, <span class="line-str">"-&gt;"</span>, supports.object_role)  <span class="line-cmt"># evidence -&gt; claim</span></code></pre></div>
       </div>
       <div class="tab-panel" id="tab-normalize">
-        <!-- PENDING-W2: E8 -->
+        <!-- W2 PASS: SNIPPETS.md semantics-normalize -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractsemantics <span class="line-kw">import</span> load_semantics_registry, normalize_kg_predicate
 
 reg = <span class="line-fn">load_semantics_registry</span>()
-<span class="line-fn">normalize_kg_predicate</span>(<span class="line-str">"schema:hasPart"</span>, registry=reg)      <span class="line-cmt"># 'dcterms:hasPart'</span>
-<span class="line-fn">normalize_kg_predicate</span>(<span class="line-str">"something:invented"</span>, registry=reg)  <span class="line-cmt"># None</span></code></pre></div>
+<span class="line-fn">print</span>(<span class="line-fn">normalize_kg_predicate</span>(<span class="line-str">"schema:hasPart"</span>, registry=reg))      <span class="line-cmt"># 'dcterms:hasPart'</span>
+<span class="line-fn">print</span>(<span class="line-fn">normalize_kg_predicate</span>(<span class="line-str">"something:invented"</span>, registry=reg))  <span class="line-cmt"># None</span></code></pre></div>
       </div>
       <div class="tab-panel" id="tab-yaml">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 semantics.html:210 PASS (semantics-210-check: the excerpt matches the shipped semantics.yaml) -->
 <div class="code-block"><pre><code><span class="line-cmt"># semantics.yaml (excerpt of the shipped registry)</span>
 version: 2
 prefixes:

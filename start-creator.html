@@ -114,18 +114,20 @@
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Paint an image <span class="j-time">10 min</span></h3>
-        <p>Choose <strong>Image</strong> in the Sandbox and describe the picture. From Python, with the same defaults, it is one call. Python code runs in an environment of your own: the one-line installer keeps AbstractCore inside the gateway&rsquo;s tool environment. On an Apple Silicon Mac, install the pinned framework with its local engines:</p>
+        <p>Choose <strong>Image</strong> in the Sandbox and describe the picture. From Python, naming the engine and model in the call, it takes one call and no configured defaults. Python code runs in an environment of your own: the one-line installer keeps AbstractCore inside the gateway&rsquo;s tool environment. On an Apple Silicon Mac, install the pinned framework with its local engines:</p>
+<!-- VERIFIED-DOCS: the W2 venv (examples/E1-text/env.txt:21); pypi-extras (RESULTS.md); docs/install.md:515-518 (compiler) -->
 <div class="code-block"><pre><code>pip install <span class="line-str">"abstractframework[apple]==0.6.1"</span>   <span class="line-cmt"># Python 3.12; builds compiled extras, so it needs a C/C++ compiler</span></code></pre></div>
-<p>The <code>mlx</code> and <code>mlx-gen</code> lines below run only on Apple Silicon. On Linux with an NVIDIA GPU, install <code>"abstractframework[gpu]"</code> and route images to Diffusers; on a light install, use a cloud provider for the text model and the image route (<a href="vision.html">AbstractVision backends</a>).</p><!-- E2 (W2 PASS): examples/E2-defaults/snippet.py verbatim (comment adapted); install as in examples/E1-text/env.txt:21 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+<p>The <code>mlx</code> and <code>mlx-gen</code> names below run only on Apple Silicon. On Linux with an NVIDIA GPU, install <code>"abstractframework[gpu]"</code> and route images to Diffusers; on a light install, use a cloud provider for the text model and the image route (<a href="vision.html">AbstractVision backends</a>).</p><!-- W2 PASS: SNIPPETS.md E3-image -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
-<span class="line-cmt"># The capability routes come from AbstractCore's config (set by the step above,</span>
-<span class="line-cmt"># or the gateway console's recommended defaults); the text model is explicit.</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
-                     <span class="line-str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="line-str">"image"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)</code></pre></div><p>Edits take a source image (and optional style references) with the same <code>output="image"</code>, and video routes take a prompt or a still. See <a href="vision.html">AbstractVision</a>.</p>
+image = llm.<span class="line-fn">generate</span>(
+    <span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
+    output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>,
+            <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>, <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024},
+)
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][0].data)</code></pre></div><p>Edits take a source image (and optional style references) with the same <code>output="image"</code>, and video routes take a prompt or a still. See <a href="vision.html">AbstractVision</a>.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Chain them in a workflow <span class="j-time">15 min</span></h3>

@@ -85,7 +85,7 @@
       <a href="https://pypi.org/project/abstract3d/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
       <a href="https://lpalbou.github.io/abstract3d/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Docs</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS: abstract3d@v0.3.1 pyproject.toml:42 (triposr extra), :282-283 (abstract3d command); src/abstract3d/cli.py:40-42 (--format, --output-dir, --device), :128-129 (i23d image); not run (GPU lock, RESULTS.md E3-scene3d) -->
 <div class="hero-code">
 <pre><code>pip install <span class="line-str">"abstract3d[triposr]"</span>      <span class="line-cmt"># validated local image-to-3D</span>
 abstract3d i23d ./object.png --output-dir ./out/object --device mps --format glb</code></pre>
@@ -178,7 +178,7 @@ abstract3d i23d ./object.png --output-dir ./out/object --device mps --format glb
         <button class="tab-btn" data-tab="d3-core">With AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-d3-install">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: abstract3d@v0.3.1 pyproject.toml:33, :42, :143, :175 (base, triposr, apple, gpu); abstractcore[scene3d] in pypi-extras (RESULTS.md) -->
 <div class="code-block">
 <pre><code>pip install abstract3d                   <span class="line-cmt"># base: remote image composition only</span>
 pip install <span class="line-str">"abstract3d[triposr]"</span>        <span class="line-cmt"># validated local TripoSR</span>
@@ -188,7 +188,7 @@ pip install <span class="line-str">"abstractcore[scene3d]"</span>      <span cla
         </div>
       </div>
       <div class="tab-panel" id="tab-d3-cli">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: abstract3d@v0.3.1 src/abstract3d/cli.py:35-37 (catalog --validated-only --json), :40-42, :126 (--backend), :128-136 (i23d; t23d with --image-provider, --image-model); backend id "triposr" accepted (triposr_runtime.py:3153); not run -->
 <div class="code-block">
 <pre><code>abstract3d catalog --validated-only --json
 
@@ -202,7 +202,7 @@ abstract3d t23d <span class="line-str">"a ceramic teapot with a curved spout and
         </div>
       </div>
       <div class="tab-panel" id="tab-d3-python">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: abstract3d@v0.3.1 src/abstract3d/scene3d_manager.py:13-15 (backend_id), :67-70 (t23d, i23d); backends/__init__.py:44 ("triposr"); not run -->
 <div class="code-block">
 <pre><code><span class="line-kw">from</span> abstract3d <span class="line-kw">import</span> Scene3DManager
 
@@ -213,7 +213,7 @@ text_result = scene3d.<span class="line-fn">t23d</span>(<span class="line-str">"
         </div>
       </div>
       <div class="tab-panel" id="tab-d3-core">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: abstractcore@v2.18.0 abstractcore/core/output_specs.py:36-38, :126-133 (scene3d output); abstract3d@v0.3.1 pyproject.toml:285-286 (AbstractCore plugin entry point), triposr_runtime.py:3126 (provider "triposr"); a fragment; not run (GPU lock) -->
 <div class="code-block">
 <pre><code>resp = llm.<span class="line-fn">generate</span>(
     text=<span class="line-str">"A glossy red cube."</span>,

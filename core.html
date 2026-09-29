@@ -90,7 +90,7 @@
       <a href="https://github.com/lpalbou/AbstractCore/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractCore/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E4 -->
+    <!-- VERIFIED-DOCS: RESULTS.md E8 core.html:93 PASS (E4 serve printed the claim link) -->
 <div class="hero-code">
 <pre><code>pip install <span class="line-str">"abstractcore[server]"</span>
 abstractcore serve
@@ -171,7 +171,7 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In 
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 core.html:172 (cli-help/helpcheck.log; crates.io abstractcore-console 0.4.0) -->
 <div class="code-block"><pre><code>abstractcore host profile                 <span class="line-cmt"># accelerator, memory ceiling, free disk</span>
 abstractcore models catalog --fits        <span class="line-cmt"># models that fit this machine</span>
 abstractcore models download ollama qwen3:8b
@@ -304,7 +304,7 @@ resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"What's 
 <span class="line-fn">print</span>(resp.tool_calls)   <span class="line-cmt"># structured calls; your host decides how to run them</span></code></pre></div>
       </div>
       <div class="tab-panel" id="tab-structured">
-        <!-- E8 (W2 PASS): examples/E8-snippets/core-302-mlx/snippet.py verbatim -->
+        <!-- W2 PASS: SNIPPETS.md core-structured -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> pydantic <span class="line-kw">import</span> BaseModel
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
@@ -313,28 +313,37 @@ resp = llm.<span class="line-fn">generate</span>(<span class="line-str">"What's 
     bullets: list[str]
 
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"Summarize HTTP/3 in 3 bullets."</span>, response_model=Answer)
+answer = llm.<span class="line-fn">generate</span>(<span class="line-str">"Give a title and three bullets that summarize HTTP/3."</span>, response_model=Answer)
+<span class="line-fn">print</span>(answer.title)
 <span class="line-fn">print</span>(answer.bullets)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-media">
-        <!-- E2 (W2 PASS): examples/E2-defaults/defaults.sh and snippet.py verbatim -->
-<div class="code-block"><pre><code><span class="line-cmt"># Once: abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit</span>
-<span class="line-cmt">#       abstractcore config set-default output.voice --provider supertonic --model supertonic-3</span>
-<span class="line-cmt"># (or the gateway console's "Use recommended defaults", which writes the same store)</span>
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+        <!-- W2 PASS: SNIPPETS.md E2-defaults.sh, then E2-snippet -->
+<div class="code-block"><pre><code><span class="line-cmt"># Configure AbstractCore's capability routes once (the gateway console's</span>
+<span class="line-cmt"># "Use recommended defaults" writes the same store; see RESULTS.md E2)</span>
+abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit
+abstractcore config set-default output.voice --provider supertonic --model supertonic-3
+abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers
+abstractcore config defaults</code></pre></div>
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
+<span class="line-cmt"># The capability routes come from AbstractCore's config (defaults.sh above,</span>
+<span class="line-cmt"># or the gateway console's recommended defaults); the text model is explicit.</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
 image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
                      <span class="line-str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="line-str">"image"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(image.outputs[<span class="line-str">"image"</span>][0].data)
 
 speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
                       output=<span class="line-str">"voice"</span>)
-<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).write(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)</code></pre></div>
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][0].data)
+
+music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="line-str">"music"</span>)
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-embed">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: abstractcore@v2.18.0 abstractcore/embeddings/manager.py:325 (EmbeddingManager), :558 (embed), :1324 (compute_similarity); models.py:326-328 (default all-minilm-l6-v2); not run (model not cached, RESULTS.md E8 core.html:328) -->
 <div class="code-block"><pre><code><span class="line-cmt"># pip install "abstractcore[embeddings]"</span>
 <span class="line-kw">from</span> abstractcore.embeddings <span class="line-kw">import</span> <span class="line-fn">EmbeddingManager</span>
 
@@ -367,27 +376,40 @@ print(embedder.<span class="line-fn">compute_similarity</span>(<span class="line
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- PENDING-W2: E4 -->
-<div class="code-block"><pre><code>pip install <span class="line-str">"abstractcore[server]"</span>
-abstractcore serve        <span class="line-cmt"># 127.0.0.1:8000</span>
-export ABSTRACTCORE_AUTH_TOKEN=<span class="line-str">"$(abstractcore serve --print-token)"</span>
+        <!-- W2 PASS: SNIPPETS.md E4-server -->
+<div class="code-block"><pre><code><span class="line-cmt"># Start the OpenAI-compatible server (another terminal): abstractcore serve --port 19740</span>
+BASE=http://127.0.0.1:19740
+TOKEN=$(abstractcore serve --print-token --port 19740)   <span class="line-cmt"># loopback bearer token, created on first use</span>
 
-curl -X POST http://localhost:8000/v1/chat/completions \
+curl -sS <span class="line-str">"$BASE/v1/models"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span>
+
+curl -sS <span class="line-str">"$BASE/v1/chat/completions"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
   -H <span class="line-str">"Content-Type: application/json"</span> \
-  -H <span class="line-str">"Authorization: Bearer $ABSTRACTCORE_AUTH_TOKEN"</span> \
-  -d <span class="line-str">'{"model": "mlx/mlx-community/Qwen3.5-4B-4bit",
-       "messages": [{"role": "user", "content": "Hello!"}]}'</span></code></pre></div>
-        <!-- PENDING-W2: E8 -->
-<div class="code-block"><pre><code><span class="line-kw">import</span> os
-<span class="line-kw">from</span> openai <span class="line-kw">import</span> <span class="line-fn">OpenAI</span>
+  -d '{<span class="line-str">"model"</span>: <span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>,
+       <span class="line-str">"messages"</span>: [{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"In one sentence, what is an append-only ledger?"</span>}]}'
 
-client = <span class="line-fn">OpenAI</span>(base_url=<span class="line-str">"http://localhost:8000/v1"</span>,
-                api_key=os.environ[<span class="line-str">"ABSTRACTCORE_AUTH_TOKEN"</span>])
+curl -sS <span class="line-str">"$BASE/v1/audio/speech"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>, <span class="line-str">"input"</span>: <span class="line-str">"Write once. Generate everything. Run anywhere."</span>,
+       <span class="line-str">"response_format"</span>: <span class="line-str">"wav"</span>}' --output speech.wav
+
+curl -sS <span class="line-str">"$BASE/v1/images/generations"</span> -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="line-str">"Content-Type: application/json"</span> \
+  -d '{<span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>,
+       <span class="line-str">"prompt"</span>: <span class="line-str">"A paper boat on a calm lake at sunrise, watercolor"</span>,
+       <span class="line-str">"width"</span>: 1024, <span class="line-str">"height"</span>: 1024, <span class="line-str">"response_format"</span>: <span class="line-str">"b64_json"</span>}' &gt; image.json</code></pre></div>
+        <!-- W2 PASS: SNIPPETS.md E4-openai-sdk -->
+<div class="code-block"><pre><code><span class="line-kw">import</span> os
+<span class="line-kw">from</span> openai <span class="line-kw">import</span> OpenAI
+
+<span class="line-cmt"># export ABSTRACTCORE_AUTH_TOKEN="$(abstractcore serve --print-token --port 19740)"</span>
+client = <span class="line-fn">OpenAI</span>(base_url=<span class="line-str">"http://127.0.0.1:19740/v1"</span>, api_key=os.environ[<span class="line-str">"ABSTRACTCORE_AUTH_TOKEN"</span>])
 resp = client.chat.completions.<span class="line-fn">create</span>(
-    model=<span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>,
-    messages=[{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"Hello!"</span>}],
+    model=<span class="line-str">"mlx/mlx-community/Qwen3.5-4B-4bit"</span>,   <span class="line-cmt"># route to any provider/model, e.g. "ollama/qwen3:4b"</span>
+    messages=[{<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"Hello from the OpenAI SDK! Answer in one short sentence."</span>}],
+    reasoning_effort=<span class="line-str">"none"</span>,                      <span class="line-cmt"># no thinking phase for a one-line answer</span>
 )
-print(resp.choices[<span class="line-var">0</span>].message.content)</code></pre></div>
+<span class="line-fn">print</span>(resp.choices[0].message.content)</code></pre></div>
       </div>
     </div>
   </div>

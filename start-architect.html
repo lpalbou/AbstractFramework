@@ -93,7 +93,7 @@
     <div class="journey">
       <div class="j-step reveal"><div class="j-body">
         <h3>Read the shape of the system <span class="j-time">10 min</span></h3>
-        <p>Clients (the <a href="console.html">gateway consoles</a>, browser apps, the <a href="assistant.html">Assistant</a>, <a href="code.html">AbstractCode</a>, your own app) talk to <strong>AbstractGateway</strong> over HTTP and SSE. The gateway runs workflows on <strong>AbstractRuntime</strong>, which records every step in an append-only ledger, and reaches models through <strong>AbstractCore</strong>: local engines on the gateway host or cloud providers.</p><!-- PENDING-W2: E8 -->
+        <p>Clients (the <a href="console.html">gateway consoles</a>, browser apps, the <a href="assistant.html">Assistant</a>, <a href="code.html">AbstractCode</a>, your own app) talk to <strong>AbstractGateway</strong> over HTTP and SSE. The gateway runs workflows on <strong>AbstractRuntime</strong>, which records every step in an append-only ledger, and reaches models through <strong>AbstractCore</strong>: local engines on the gateway host or cloud providers.</p><!-- diagram text, not code (RESULTS.md E8 start-architect.html:70 N/A) -->
 <div class="code-block"><pre><code>Consoles / browser apps / AbstractAssistant / AbstractCode / your app
   -&gt; AbstractGateway (HTTP + SSE) -&gt; AbstractRuntime -&gt; AbstractCore -&gt; Providers</code></pre></div>
       </div></div>
@@ -121,7 +121,7 @@
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Check it <span class="j-time">10 min</span></h3>
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 start-architect.html:91 PASS (doctor, equivalent) + VERIFIED-DOCS (network status/addresses; helpcheck) -->
 <div class="code-block"><pre><code>uvx abstractframework doctor
 abstractgateway network status
 abstractgateway network addresses</code></pre></div><p><code>doctor</code> only reads: Python, uv, Node, disk, the gateway, and whether Ollama and LM Studio answer.</p>

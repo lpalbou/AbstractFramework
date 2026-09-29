@@ -85,7 +85,7 @@
       <a href="https://pypi.org/project/abstractcamera/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">PyPI</a>
       <a href="https://github.com/lpalbou/AbstractCamera/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS: abstractcamera@v0.2.0 pyproject.toml:59-60 (abstractcamera command); src/abstractcamera/cli.py:19 (list, non-invasive); not run -->
 <div class="hero-code">
 <pre><code>pip install abstractcamera       <span class="line-cmt"># webcam + simulator</span>
 abstractcamera list              <span class="line-cmt"># lists cameras without opening any device</span></code></pre>
@@ -177,7 +177,7 @@ abstractcamera list              <span class="line-cmt"># lists cameras without 
         <button class="tab-btn" data-tab="cam-tools">Agent tools</button>
       </div>
       <div class="tab-panel active" id="tab-cam-install">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: abstractcamera@v0.2.0 pyproject.toml:72-82 (gphoto2, clips, dwarf, all extras) -->
 <div class="code-block">
 <pre><code>pip install abstractcamera                 <span class="line-cmt"># webcam + simulator (numpy + OpenCV)</span>
 pip install <span class="line-str">"abstractcamera[gphoto2]"</span>      <span class="line-cmt"># + tethered PTP bodies (libgphoto2)</span>
@@ -187,7 +187,7 @@ pip install <span class="line-str">"abstractcamera[all]"</span>          <span c
         </div>
       </div>
       <div class="tab-panel" id="tab-cam-python">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: abstractcamera@v0.2.0 src/abstractcamera/__init__.py:37-41 (CameraManager, list_cameras); camera_manager.py:263 (connect), :686 (set_config_value), :331 (request_trigger), :571 (get_latest_frame), :309 (disconnect); not run (no camera attached to the evidence machine) -->
 <div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractcamera <span class="line-kw">import</span> CameraManager, list_cameras
 
@@ -203,7 +203,7 @@ manager.<span class="line-fn">disconnect</span>()</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-cam-tools">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: abstractcamera@v0.2.0 src/abstractcamera/integrations/abstractcore_tools.py:422 (camera_tools); a fragment -->
 <div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractcamera.integrations.abstractcore_tools <span class="line-kw">import</span> camera_tools
 

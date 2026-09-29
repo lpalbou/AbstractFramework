@@ -84,7 +84,7 @@
       <a href="https://github.com/lpalbou/AbstractAgent/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractAgent/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS: RESULTS.md E8 agent.html:88 (pypi-extras: abstractagent 0.3.17 requires abstractcore[tools], abstractruntime>=0.7.0) -->
 <div class="hero-code">
 <pre><code>pip install abstractagent
 <span class="line-cmt"># pulls in abstractcore[tools] and AbstractRuntime 0.7+</span></code></pre>
@@ -219,26 +219,33 @@ state = agent.<span class="line-fn">run_to_completion</span>()
         <button class="tab-btn" data-tab="hooks">Loop hooks</button>
       </div>
       <div class="tab-panel active" id="tab-persist">
-        <!-- PENDING-W2: E5 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
+        <!-- W2 PASS: SNIPPETS.md E5-durable-start, then E5-durable-resume -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> create_react_agent
+<span class="line-kw">from</span> abstractruntime.storage.json_files <span class="line-kw">import</span> JsonFileRunStore, JsonlLedgerStore
+
+run_store = <span class="line-fn">JsonFileRunStore</span>(<span class="line-str">".runs"</span>)      <span class="line-cmt"># run state as JSON files</span>
+ledger_store = <span class="line-fn">JsonlLedgerStore</span>(<span class="line-str">".runs"</span>)   <span class="line-cmt"># append-only ledger, one JSONL file per run</span>
+
+agent = <span class="line-fn">create_react_agent</span>(provider=<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>,
+                           run_store=run_store, ledger_store=ledger_store)
+agent.<span class="line-fn">start</span>(<span class="line-str">"List the files in the current directory, then say which one is a CSV file"</span>)
+agent.<span class="line-fn">save_state</span>(<span class="line-str">"agent_state.json"</span>)       <span class="line-cmt"># the run id; the state itself is in .runs/</span>
+<span class="line-cmt"># ... the process stops here (crash, restart, deploy): nothing in memory survives</span></code></pre></div>
+<p style="color:var(--text-secondary);font-size:var(--text-sm);margin:.75rem 0 .25rem">After a restart, in a new process:</p>
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> create_react_agent
 <span class="line-kw">from</span> abstractruntime.storage.json_files <span class="line-kw">import</span> JsonFileRunStore, JsonlLedgerStore
 
 run_store = <span class="line-fn">JsonFileRunStore</span>(<span class="line-str">".runs"</span>)
 ledger_store = <span class="line-fn">JsonlLedgerStore</span>(<span class="line-str">".runs"</span>)
 
-agent = <span class="line-fn">create_react_agent</span>(run_store=run_store, ledger_store=ledger_store)
-agent.<span class="line-fn">start</span>(<span class="line-str">"Long running task"</span>)
-agent.<span class="line-fn">save_state</span>(<span class="line-str">"agent_state.json"</span>)
-
-<span class="line-cmt"># ... later / after restart ...</span>
-
-agent2 = <span class="line-fn">create_react_agent</span>(run_store=run_store, ledger_store=ledger_store)
-agent2.<span class="line-fn">load_state</span>(<span class="line-str">"agent_state.json"</span>)
-state = agent2.<span class="line-fn">run_to_completion</span>()
-print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
+agent = <span class="line-fn">create_react_agent</span>(provider=<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>,
+                           run_store=run_store, ledger_store=ledger_store)
+agent.<span class="line-fn">load_state</span>(<span class="line-str">"agent_state.json"</span>)       <span class="line-cmt"># re-attach to the same run</span>
+state = agent.<span class="line-fn">run_to_completion</span>()
+<span class="line-fn">print</span>(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-ask">
-        <!-- PENDING-W2: E5 -->
+        <!-- VERIFIED-DOCS: abstractagent@v0.3.17 src/abstractagent/agents/base.py:254 (is_waiting), :281 (get_pending_question), :299 (resume); RESULTS.md E8 agent.html:240 partial run (11 ask/resume iterations, no final answer in 300 s on the 4B model) -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
 
 agent = <span class="line-fn">create_react_agent</span>()
@@ -253,21 +260,21 @@ state = agent.<span class="line-fn">run_to_completion</span>()
 print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-custom">
-        <!-- PENDING-W2: E5 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> <span class="line-fn">create_react_agent</span>
-<span class="line-kw">from</span> abstractcore.tools <span class="line-kw">import</span> <span class="line-fn">tool</span>
+        <!-- W2 PASS: SNIPPETS.md agent-custom-tool -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> create_react_agent
+<span class="line-kw">from</span> abstractcore.tools <span class="line-kw">import</span> tool
 
-<span class="line-kw">@</span><span class="line-fn">tool</span>(name=<span class="line-str">"my_tool"</span>, description=<span class="line-str">"Example tool"</span>)
-<span class="line-kw">def</span> <span class="line-fn">my_tool</span>(query: <span class="line-var">str</span>) -> <span class="line-var">str</span>:
-    <span class="line-kw">return</span> <span class="line-str">f"Echo: {query}"</span>
+@<span class="line-fn">tool</span>(name=<span class="line-str">"my_tool"</span>, description=<span class="line-str">"Example tool"</span>)
+<span class="line-kw">def</span> <span class="line-fn">my_tool</span>(query: str) -&gt; str:
+    <span class="line-kw">return</span> f<span class="line-str">"Echo: {query}"</span>
 
-agent = <span class="line-fn">create_react_agent</span>(tools=[my_tool])
+agent = <span class="line-fn">create_react_agent</span>(provider=<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>, tools=[my_tool])
 agent.<span class="line-fn">start</span>(<span class="line-str">"Call my_tool with 'hello' and report the result"</span>, allowed_tools=[<span class="line-str">"my_tool"</span>])
 state = agent.<span class="line-fn">run_to_completion</span>()
-print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
+<span class="line-fn">print</span>(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-hooks">
-        <!-- E8 (W2 PASS): examples/E8-snippets/agent-267-mlx/snippet.py verbatim -->
+        <!-- W2 PASS: SNIPPETS.md agent-hooks -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> LoopHooks, HookEvent, ReactAgent
 <span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> create_local_runtime
 
@@ -279,7 +286,11 @@ print(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
         <span class="line-kw">return</span> {<span class="line-str">"inject"</span>: <span class="line-str">"Prefer primary sources over blogs."</span>}
 
 runtime = <span class="line-fn">create_local_runtime</span>(provider=<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
-agent = <span class="line-fn">ReactAgent</span>(runtime=runtime, hooks=<span class="line-fn">LoopHooks</span>().<span class="line-fn">add</span>(my_handler))</code></pre></div>
+agent = <span class="line-fn">ReactAgent</span>(runtime=runtime, hooks=<span class="line-fn">LoopHooks</span>().<span class="line-fn">add</span>(my_handler))
+
+agent.<span class="line-fn">start</span>(<span class="line-str">"In one sentence, what is a durable run?"</span>)   <span class="line-cmt"># W2: run it so the hook prints events (this ReactAgent has no tools)</span>
+state = agent.<span class="line-fn">run_to_completion</span>()
+<span class="line-fn">print</span>(state.output[<span class="line-str">"answer"</span>])</code></pre></div>
       </div>
     </div>
     <p class="reveal" style="color:var(--text-secondary);margin-top:var(--space-lg)">On Ollama, raise the context window to the model's maximum (for example <code style="white-space:normal;overflow-wrap:anywhere">llm_kwargs={"num_ctx": ...}</code>): the server default is small and silently drops the oldest content. These loops send the transcript and about 19 tool schemas on every cycle, so prefer a tool-capable model.</p>

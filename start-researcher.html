@@ -98,7 +98,7 @@
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Run deep-research <span class="j-time">20 min</span></h3>
-        <p><code>deep-research</code> investigates a request, runs rounds of adversarial review, keeps a verified source ledger and exports Markdown, PDF and DOCX. Its inputs are the request, a viewpoint, and an effort of <code>quick</code>, <code>standard</code> or <code>thorough</code>. It serves the plain chat interface, so AbstractCode can run it directly:</p><!-- PENDING-W2: E8 -->
+        <p><code>deep-research</code> investigates a request, runs rounds of adversarial review, keeps a verified source ledger and exports Markdown, PDF and DOCX. Its inputs are the request, a viewpoint, and an effort of <code>quick</code>, <code>standard</code> or <code>thorough</code>. It serves the plain chat interface, so AbstractCode can run it directly:</p><!-- VERIFIED-DOCS: RESULTS.md E8 start-researcher.html:74 (--workflow and login --token in helpcheck-crates; bundle deep-research 0.1.8 ships with gateway 0.7.1) -->
 <div class="code-block"><pre><code>abstractcode login --token &lt;admin token&gt;   <span class="line-cmt"># once; the installer&rsquo;s summary prints this line</span>
 abstractcode --workflow deep-research</code></pre></div><p>Or open the <a href="observer.html">Observer</a>, choose <strong>Launch</strong> and run it once. Its research agents use a read-only evidence allowlist (web search, fetch, skim, read file); only the export step writes files.</p>
       </div></div>

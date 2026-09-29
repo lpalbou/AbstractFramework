@@ -86,7 +86,7 @@
       <a href="https://github.com/lpalbou/AbstractRuntime/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractRuntime/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS: RESULTS.md E8 runtime.html:89 (pypi-extras) -->
 <div class="hero-code">
 <pre><code>pip install abstractruntime            <span class="line-cmt"># remote providers, no local engines</span>
 pip install <span class="line-str">"abstractruntime[apple]"</span>   <span class="line-cmt"># local engines on Apple silicon; [gpu] for NVIDIA</span></code></pre>
@@ -115,7 +115,7 @@ pip install <span class="line-str">"abstractruntime[apple]"</span>   <span class
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- PENDING-W2: E8 -->
+        <!-- W2 PASS: SNIPPETS.md runtime-pause-resume -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> Effect, EffectType, Runtime, StepPlan, WorkflowSpec
 <span class="line-kw">from</span> abstractruntime.storage <span class="line-kw">import</span> InMemoryLedgerStore, InMemoryRunStore
 
@@ -133,8 +133,8 @@ pip install <span class="line-str">"abstractruntime[apple]"</span>   <span class
 
 
 <span class="line-kw">def</span> <span class="line-fn">done</span>(run, ctx):
-    answer = run.vars.get(<span class="line-str">"user_answer"</span>) <span class="line-kw">or</span> {}
-    text = answer.get(<span class="line-str">"text"</span>) <span class="line-kw">if</span> isinstance(answer, dict) <span class="line-kw">else</span> <span class="line-var">None</span>
+    answer = run.vars.<span class="line-fn">get</span>(<span class="line-str">"user_answer"</span>) or {}
+    text = answer.<span class="line-fn">get</span>(<span class="line-str">"text"</span>) if <span class="line-fn">isinstance</span>(answer, dict) else None
     <span class="line-kw">return</span> <span class="line-fn">StepPlan</span>(node_id=<span class="line-str">"done"</span>, complete_output={<span class="line-str">"answer"</span>: text})
 
 
@@ -143,7 +143,7 @@ rt = <span class="line-fn">Runtime</span>(run_store=<span class="line-fn">InMemo
 
 run_id = rt.<span class="line-fn">start</span>(workflow=wf)
 state = rt.<span class="line-fn">tick</span>(workflow=wf, run_id=run_id)
-<span class="line-kw">assert</span> state.status.value == <span class="line-str">"waiting"</span>
+assert state.status.value == <span class="line-str">"waiting"</span>
 
 state = rt.<span class="line-fn">resume</span>(
     workflow=wf,
@@ -151,7 +151,8 @@ state = rt.<span class="line-fn">resume</span>(
     wait_key=state.waiting.wait_key,
     payload={<span class="line-str">"text"</span>: <span class="line-str">"yes"</span>},
 )
-<span class="line-kw">assert</span> state.status.value == <span class="line-str">"completed"</span></code></pre></div>
+assert state.status.value == <span class="line-str">"completed"</span>
+<span class="line-fn">print</span>(state.status.value, state.output)   <span class="line-cmt"># completed {'answer': 'yes'}</span></code></pre></div>
       </div>
     </div>
 
@@ -257,17 +258,17 @@ state = rt.<span class="line-fn">resume</span>(
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- PENDING-W2: E8 -->
+        <!-- W2 PASS: SNIPPETS.md runtime-history-window -->
 <div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> HISTORY_REPLAY_MAX_TOKENS, window_transcript
 
 messages = [
     {<span class="line-str">"role"</span>: <span class="line-str">"user"</span>, <span class="line-str">"content"</span>: <span class="line-str">"hi"</span>},
     {<span class="line-str">"role"</span>: <span class="line-str">"assistant"</span>, <span class="line-str">"content"</span>: <span class="line-str">"hello"</span>},
 ]
-history = window_transcript(messages)   <span class="line-cmt"># max_tokens=50_000 by default</span>
-print(HISTORY_REPLAY_MAX_TOKENS)         <span class="line-cmt"># 50000</span>
-print(history.report[<span class="line-str">"policy"</span>])        <span class="line-cmt"># most_recent_whole_turns</span>
-print(history.report[<span class="line-str">"dropped_messages"</span>])</code></pre></div>
+history = <span class="line-fn">window_transcript</span>(messages)   <span class="line-cmt"># max_tokens=50_000 by default</span>
+<span class="line-fn">print</span>(HISTORY_REPLAY_MAX_TOKENS)         <span class="line-cmt"># 50000</span>
+<span class="line-fn">print</span>(history.report[<span class="line-str">"policy"</span>])        <span class="line-cmt"># most_recent_whole_turns</span>
+<span class="line-fn">print</span>(history.report[<span class="line-str">"dropped_messages"</span>])</code></pre></div>
       </div>
     </div>
   </div>
@@ -289,8 +290,32 @@ print(history.report[<span class="line-str">"dropped_messages"</span>])</code></
         <button class="tab-btn" data-tab="live">Live streaming</button>
       </div>
       <div class="tab-panel active" id="tab-sched">
-        <!-- PENDING-W2: E8 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> create_scheduled_runtime, JsonFileRunStore, JsonlLedgerStore
+        <!-- W2 PASS: SNIPPETS.md runtime-scheduled -->
+<div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> Effect, EffectType, Runtime, StepPlan, WorkflowSpec
+<span class="line-kw">from</span> abstractruntime.storage <span class="line-kw">import</span> InMemoryLedgerStore, InMemoryRunStore
+
+
+<span class="line-kw">def</span> <span class="line-fn">ask</span>(run, ctx):
+    <span class="line-kw">return</span> <span class="line-fn">StepPlan</span>(
+        node_id=<span class="line-str">"ask"</span>,
+        effect=<span class="line-fn">Effect</span>(
+            type=EffectType.ASK_USER,
+            payload={<span class="line-str">"prompt"</span>: <span class="line-str">"Continue?"</span>},
+            result_key=<span class="line-str">"user_answer"</span>,
+        ),
+        next_node=<span class="line-str">"done"</span>,
+    )
+
+
+<span class="line-kw">def</span> <span class="line-fn">done</span>(run, ctx):
+    answer = run.vars.<span class="line-fn">get</span>(<span class="line-str">"user_answer"</span>) or {}
+    text = answer.<span class="line-fn">get</span>(<span class="line-str">"text"</span>) if <span class="line-fn">isinstance</span>(answer, dict) else None
+    <span class="line-kw">return</span> <span class="line-fn">StepPlan</span>(node_id=<span class="line-str">"done"</span>, complete_output={<span class="line-str">"answer"</span>: text})
+
+
+my_workflow = <span class="line-fn">WorkflowSpec</span>(workflow_id=<span class="line-str">"demo"</span>, entry_node=<span class="line-str">"ask"</span>, nodes={<span class="line-str">"ask"</span>: ask, <span class="line-str">"done"</span>: done})
+
+<span class="line-kw">from</span> abstractruntime <span class="line-kw">import</span> create_scheduled_runtime, JsonFileRunStore, JsonlLedgerStore
 
 sr = <span class="line-fn">create_scheduled_runtime</span>(
     run_store=<span class="line-fn">JsonFileRunStore</span>(<span class="line-str">"./data"</span>),
@@ -298,10 +323,11 @@ sr = <span class="line-fn">create_scheduled_runtime</span>(
 )
 run_id, state = sr.<span class="line-fn">run</span>(my_workflow)
 
-<span class="line-kw">if</span> state.status.value == <span class="line-str">"waiting"</span>:
+if state.status.value == <span class="line-str">"waiting"</span>:
     state = sr.<span class="line-fn">respond</span>(run_id, {<span class="line-str">"text"</span>: <span class="line-str">"yes"</span>})
 
-sr.<span class="line-fn">stop</span>()</code></pre></div>
+sr.<span class="line-fn">stop</span>()
+<span class="line-fn">print</span>(state.status.value, state.output)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-core">
         <!-- E8 (W2 PASS): examples/E8-snippets/runtime-302-mlx/snippet.py verbatim -->
@@ -312,8 +338,11 @@ rt = <span class="line-fn">create_local_runtime</span>(provider=<span class="lin
 <span class="line-fn">print</span>(<span class="line-fn">type</span>(rt).__name__, <span class="line-fn">type</span>(rt.run_store).__name__)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-approval">
-        <!-- PENDING-W2: E8 -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> (
+        <!-- W2 PASS: SNIPPETS.md runtime-approval -->
+<div class="code-block"><pre><code><span class="line-kw">def</span> <span class="line-fn">write_file</span>(path: str, content: str) -&gt; str:   <span class="line-cmt"># W2: stub for the name the page assumes</span>
+    <span class="line-kw">return</span> <span class="line-str">"ok"</span>
+
+<span class="line-kw">from</span> abstractruntime.integrations.abstractcore <span class="line-kw">import</span> (
     ApprovalToolExecutor,
     MappingToolExecutor,
     ToolApprovalPolicy,
@@ -322,10 +351,11 @@ rt = <span class="line-fn">create_local_runtime</span>(provider=<span class="lin
 tools = <span class="line-fn">ApprovalToolExecutor</span>(
     delegate=<span class="line-fn">MappingToolExecutor</span>({<span class="line-str">"write_file"</span>: write_file}),
     policy=<span class="line-fn">ToolApprovalPolicy</span>(),
-)</code></pre></div>
+)
+<span class="line-fn">print</span>(<span class="line-fn">type</span>(tools).__name__)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-live">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 runtime.html:320 (runtime-320-check: Runtime.set_live_delta_sink exists); a fragment -->
 <div class="code-block"><pre><code>events = []
 runtime.<span class="line-fn">set_live_delta_sink</span>(events.append)
 run_id = runtime.<span class="line-fn">start</span>(workflow=wf, vars={<span class="line-str">"_runtime"</span>: {<span class="line-str">"stream"</span>: <span class="line-var">True</span>}})

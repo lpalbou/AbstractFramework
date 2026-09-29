@@ -91,7 +91,7 @@
       <a href="https://github.com/lpalbou/AbstractVoice/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractVoice/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS: RESULTS.md E8 voice.html:91 (pypi-extras) -->
 <div class="hero-code">
 <pre><code><span class="cmt"># Remote OpenAI audio (reads OPENAI_API_KEY)</span>
 pip install abstractvoice
@@ -235,7 +235,7 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
 
     <div class="reveal" style="max-width:48rem;margin:0 auto">
       <h3 style="margin-bottom:.75rem">Command line</h3>
-      <!-- PENDING-W2: E8 -->
+      <!-- VERIFIED-DOCS: RESULTS.md E8 voice.html:234 (helpcheck: abstractvoice flags, abstractvoice-prefetch --supertonic --stt, web --port); needs an OpenAI key, not run -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># One-shot: write a WAV with hosted OpenAI audio and exit</span>
 <span class="line-kw">OPENAI_API_KEY</span>=... <span class="line-kw">abstractvoice</span> <span class="line-str">--provider openai --model tts-1 --voice alloy \
@@ -253,7 +253,7 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
       </div>
 
       <h3 style="margin-top:2rem;margin-bottom:.75rem">Python</h3>
-      <!-- PENDING-W2: E8 -->
+      <!-- VERIFIED-DOCS: abstractvoice@v0.13.0 abstractvoice/vm/manager.py:23 (VoiceManager); RESULTS.md E8 voice.html:251 api-names-check (parameters and methods); not run: plays audio and needs reference.wav -->
 <div class="code-block">
 <pre><code><span class="line-kw">from</span> abstractvoice <span class="line-kw">import</span> <span class="line-fn">VoiceManager</span>
 
@@ -291,7 +291,7 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
         <button class="tab-btn" data-tab="voice-core">AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-voice-stream">
-        <!-- PENDING-W2: E8 -->
+        <!-- VERIFIED-DOCS: RESULTS.md E8 voice.html:288; abstractvoice@v0.13.0 abstractvoice/vm/tts_mixin.py:1711 (open_tts_text_stream); a fragment -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># Speak an LLM reply while it is still being generated</span>
 <span class="line-var">stream</span> = <span class="line-var">vm</span>.<span class="line-fn">open_tts_text_stream</span>()
@@ -303,34 +303,29 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-voice-status">
-        <!-- PENDING-W2: E8 -->
+        <!-- W2 PASS: SNIPPETS.md voice-engine-status -->
 <div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractvoice.engine_runtime <span class="line-kw">import</span> <span class="line-fn">engine_runtime_status</span>
+<pre><code><span class="line-kw">from</span> abstractvoice.engine_runtime <span class="line-kw">import</span> engine_runtime_status
 
 <span class="line-cmt"># Checks installed packages only: nothing is imported or loaded</span>
-<span class="line-var">status</span> = <span class="line-fn">engine_runtime_status</span>(<span class="line-str">"qwen3-tts"</span>)
-<span class="line-fn">print</span>(<span class="line-var">status</span>.installed)        <span class="line-cmt"># False when torch/transformers are missing</span>
-<span class="line-fn">print</span>(<span class="line-var">status</span>.reason)           <span class="line-cmt"># plain-words explanation</span>
-<span class="line-fn">print</span>(<span class="line-var">status</span>.install_command)  <span class="line-cmt"># the pip command for the qwen3-tts extra</span></code></pre>
+status = <span class="line-fn">engine_runtime_status</span>(<span class="line-str">"qwen3-tts"</span>)
+<span class="line-fn">print</span>(status.installed)        <span class="line-cmt"># False when torch/transformers are missing</span>
+<span class="line-fn">print</span>(status.reason)           <span class="line-cmt"># plain-words explanation</span>
+<span class="line-fn">print</span>(status.install_command)  <span class="line-cmt"># the pip command for the qwen3-tts extra</span></code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-voice-core">
-        <!-- PENDING-W2: E8 -->
+        <!-- W2 PASS: SNIPPETS.md E3-voice -->
 <div class="code-block">
-<pre><code><span class="line-cmt"># pip install abstractcore abstractvoice  (the plugin is discovered automatically)</span>
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> create_llm
 
-<span class="line-var">llm</span> = <span class="line-fn">create_llm</span>(<span class="line-str">"openai"</span>, model=<span class="line-str">"gpt-4o-mini"</span>)
+llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-<span class="line-var">wav</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">tts</span>(<span class="line-str">"Hello"</span>, provider=<span class="line-str">"openai"</span>, model=<span class="line-str">"tts-1"</span>, voice=<span class="line-str">"alloy"</span>)
-<span class="line-var">text</span> = <span class="line-var">llm</span>.audio.<span class="line-fn">transcribe</span>(<span class="line-str">"speech.wav"</span>, provider=<span class="line-str">"faster-whisper"</span>, model=<span class="line-str">"small"</span>)
-
-<span class="line-cmt"># Discovery: what can run now, and why the others cannot</span>
-<span class="line-var">providers</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">available_providers</span>()
-<span class="line-fn">print</span>(<span class="line-var">providers</span>[<span class="line-str">"tts"</span>], <span class="line-var">providers</span>[<span class="line-str">"unavailable"</span>])
-
-<span class="line-cmt"># Clone through the plugin</span>
-<span class="line-var">clone</span> = <span class="line-var">llm</span>.voice.<span class="line-fn">clone</span>(<span class="line-str">"reference.wav"</span>, provider=<span class="line-str">"omnivoice"</span>, name=<span class="line-str">"my-voice"</span>)</code></pre>
+speech = llm.<span class="line-fn">generate</span>(
+    text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+    output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>},
+)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(speech.outputs[<span class="line-str">"voice"</span>][0].data)</code></pre>
         </div>
       </div>
     </div>
