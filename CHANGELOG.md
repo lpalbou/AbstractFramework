@@ -12,17 +12,29 @@ version, and the terminal consoles, are unchanged from 0.6.2.
 
 ### Added
 
-- **The `gpu` setting on Linux + NVIDIA, run on real hardware.** On Ubuntu 26.04 with a Quadro
-  RTX 5000 (16 GB, driver 595, CUDA 13), a pre-release build of this installer installed the gpu
-  profile from a clean home in about three minutes (with the previous release's package versions;
-  this release's package fixes were then installed on top). The installer's checks reported
-  PyTorch 2.11 on CUDA 13.0, llama.cpp's `cu130` build with GPU offload, and Whisper on the GPU.
-  Through the gateway: text with LM Studio (`qwen/qwen3.5-9b@q4_k_m`), speech-to-text with
-  faster-whisper on CUDA, text-to-speech with Supertonic, and image generation with FLUX.2 [klein]
-  4B through Diffusers (about 57 s for one image request; a direct Diffusers run generated 768x768
-  in about 17 s once the model was loaded). vLLM installs with the gpu setting but was not
-  validated: it needs a C compiler (`build-essential`) the first time it starts a model, and on
-  GPUs older than compute capability 8.0 the `--attention-backend TRITON_ATTN` option. See
+- **The `gpu` setting on Linux + NVIDIA, rehearsed on real hardware with this release.** On
+  Ubuntu 26.04 with a Quadro RTX 5000 (16 GB, driver 595.91.07, CUDA 13.2; 4 vCPU, 26 GB RAM),
+  `install.sh` installed exactly this release's versions from PyPI in 3 min 1 s. The previous
+  install had been removed with `uninstall.sh --yes --purge` and uv's download cache cleared; model
+  weights, LM Studio and a Rust toolchain were already on the machine. The Python packages took 39 s
+  (about 5.8 GB of wheels), llama.cpp's `cu130` build 18 s (726 MB), compiling the two terminal
+  clients with cargo 110 s, and the start and health check 5 s. The install added 14.2 GB on disk.
+  Its checks reported PyTorch 2.11.0 on CUDA 13.0, llama.cpp 0.3.35 (`cu130`) with GPU offload and
+  Whisper on the GPU. Run again, it reported "already up to date" in 10 s. With **Use recommended
+  defaults** and the model weights already downloaded:
+  - text with LM Studio (`qwen/qwen3.5-9b`, Q4_K_M, 6.5 GB on the GPU): the first gateway request
+    took 23 s including loading the model, the next 12 s for a 318-token answer (308 of them
+    reasoning); from AbstractCore in Python about 41 tokens/s;
+  - text-to-speech with Supertonic, on the processor: 1.1 to 1.4 s per sentence (3.2 s for the
+    first gateway request);
+  - image generation with FLUX.2 [klein] 4B through Diffusers, with model CPU offload (7.8 GB
+    peak): 41 s to load the model, then 15 to 16 s per 1024x1024 image. Each gateway image request
+    loads the model again, so one request takes 54 to 59 s;
+  - speech-to-text did not work as installed; see Known issues below.
+
+  vLLM 0.22.1 installs with the gpu setting but was not validated: it needs a C compiler
+  (`build-essential`) the first time it starts a model, and on GPUs older than compute capability
+  8.0 the `--attention-backend TRITON_ATTN` option. See
   [GPU on Linux (NVIDIA)](docs/install.md#gpu-on-linux-nvidia).
 - **`install.sh` on Linux + NVIDIA** installs llama.cpp's CUDA build that matches PyTorch's CUDA
   (PyPI's PyTorch for Linux is a CUDA 13 build, which needs NVIDIA driver 580 or newer; with an
@@ -62,13 +74,38 @@ version, and the terminal consoles, are unchanged from 0.6.2.
 
 - **Speech-to-text without an OpenAI key.** Transcription runs on the configured `input.voice`
   route (for example local Whisper) and no longer needs TTS credentials (AbstractCore 2.19.1,
-  AbstractVoice 0.13.1).
+  AbstractVoice 0.13.1). The route must be set by hand; see Known issues.
 - **Whisper on NVIDIA GPUs.** faster-whisper uses CUDA only when CUDA 12 cuBLAS loads (installed
   with the gpu setting on Linux and Windows), and otherwise runs on the CPU with a warning.
 - **llama.cpp on CUDA** loads without importing PyTorch first on Linux, and a GGUF model too large
   for the GPU at its full context tries smaller contexts on the GPU before falling back to the CPU.
 - **Image generation on smaller GPUs.** A Diffusers pipeline that does not fit the GPU's free
   memory loads with model CPU offload instead of failing with CUDA out of memory.
+
+### Known issues
+
+Found in the rehearsal on the Quadro RTX 5000 described above.
+
+- **Speech-to-text fails on a fresh gpu install**, for two reasons:
+  - **Use recommended defaults** does not set the speech input route (`input.voice`). With no route,
+    transcription uses OpenAI and fails with "OpenAI audio requires OPENAI_API_KEY". Set Voice
+    Input to `faster-whisper`, model `base`, in either console.
+  - PyAV 19.0.0, released on 2026-09-29, removed an option that faster-whisper 1.2.1 uses to read
+    audio files. Every transcription through the gateway then fails with `open() got an unexpected
+    keyword argument 'metadata_errors'`. To fix it, run
+    `uv pip install --python ~/.local/share/uv/tools/abstractgateway/bin/python "av<19"` and
+    restart the gateway.
+
+  With both fixes, faster-whisper transcribed on the GPU with no OpenAI key: 1.0 to 2.3 s per
+  gateway request, and 0.3 GB of GPU memory.
+- **An image next to a loaded text model runs out of GPU memory on a 16 GB card.** LM Studio's
+  `qwen/qwen3.5-9b` keeps 6.5 GB on the GPU while it is loaded. FLUX.2 [klein] needs 7.8 GB even
+  with model CPU offload, so the image request failed with CUDA out of memory after three attempts
+  (about 2.5 minutes). Unload the text model first (`lms unload --all`, or the console's model
+  list), and the same request works.
+- **Use recommended defaults can skip the image route on a fresh install.** On an NVIDIA machine,
+  if the button is used within a few seconds of the console reading the routes, it can report the
+  image route as already set without saving it. Using it again saves it.
 
 ## [0.6.2] - 2026-09-29
 

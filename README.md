@@ -46,7 +46,8 @@ button of gateway 0.7.1 cannot upgrade. Gateway only, apps, and version checks:
 
 On Linux or Windows with an NVIDIA GPU (`nvidia-smi` works), the installer picks the `gpu` profile:
 PyTorch and llama.cpp on CUDA, Whisper on the GPU, Diffusers image generation. On Linux it needs
-NVIDIA driver 580 or newer and has been run on a Quadro RTX 5000; the Windows gpu install is
+NVIDIA driver 580 or newer. It was rehearsed on a Quadro RTX 5000 on Ubuntu 26.04; speech-to-text
+needs two fixes there, described in GPU on Linux. The Windows gpu install is
 implemented but not yet validated on real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) and
 [GPU on Windows](docs/install.md#gpu-on-windows-nvidia).
 
