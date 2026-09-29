@@ -79,7 +79,7 @@
     <div class="hero-badge"><span class="dot"></span> Application &middot; Control plane &middot; v0.7.1</div>
     <img src="assets/img/logos/gateway.png" alt="" width="77" height="77" style="border-radius:14px;margin-bottom:1rem;box-shadow:0 0 30px rgba(16,185,129,0.2)">
     <h1>Abstract<span class="gradient">Gateway</span></h1>
-    <p class="hero-sub">AbstractGateway runs your durable AI workflows and is the control plane of an AbstractFramework installation. It starts runs, keeps their append-only <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#ledger" target="_blank" rel="noopener noreferrer">ledger</a> (the record of every step) so any client can replay or stream them, and serves the web console, the browser apps and the <a href="automations.html">Automations</a> API from one address. You manage users, providers, local engines, models, apps and network access from the <a href="console.html">web or terminal console</a>, the command line or the menu-bar icon. The installer sets it up for you (<a href="install.html">Install</a>).</p>
+    <p class="hero-sub">AbstractGateway runs your durable AI workflows and is the control plane of an AbstractFramework installation. It starts runs, keeps their append-only <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#ledger" target="_blank" rel="noopener noreferrer">ledger</a> (the record of every step) so any client can replay or stream them, and serves the web console, the browser apps and the <a href="automations.html">Automations</a> API from one address. You manage users, providers, local engines, models, apps and network access from the <a href="console.html">web or terminal console</a>, the command line or the tray icon (the menu bar on macOS). The installer sets it up for you (<a href="install.html">Install</a>).</p>
     <div class="hero-actions">
       <a href="#first-run" class="btn btn-primary">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -160,7 +160,7 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
 
     <div class="callout reveal" style="margin-top:1rem">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div><strong>Upgrade.</strong> Re-run the same install line: it upgrades or repairs the install in place. The console&rsquo;s Gateway card (terminal console: F3) and the menu-bar icon also offer <strong>Update</strong>; an Update that runs the installer itself is coming with AbstractGateway 0.7.2. See <a href="install.html#upgrade">Upgrade</a>. A <code>pip install abstractgateway</code> upgrades with <code>pip install -U</code>.</div>
+      <div><strong>Upgrade.</strong> Re-run the same install line: it upgrades or repairs the install in place. The console&rsquo;s Gateway card (terminal console: F3) and the tray icon also offer <strong>Update</strong>; an Update that runs the installer itself is coming with AbstractGateway 0.7.2. See <a href="install.html#upgrade">Upgrade</a>. A <code>pip install abstractgateway</code> upgrades with <code>pip install -U</code>.</div>
     </div>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Users and sign-in</h3>
@@ -188,7 +188,7 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
     <div class="section-header reveal">
       <div class="section-label">Network &amp; security</div>
       <h2 class="section-title">Loopback first, open on purpose</h2>
-      <p class="section-desc">One setting decides who can reach the gateway. The console's Network tab, the terminal console, the menu-bar icon and <code>abstractgateway network</code> all edit it, and it applies at the next start (or at once with <code>abstractgateway network restart</code>).</p>
+      <p class="section-desc">One setting decides who can reach the gateway. The console's Network tab, the terminal console, the tray icon and <code>abstractgateway network</code> all edit it, and it applies at the next start (or at once with <code>abstractgateway network restart</code>).</p>
     </div>
 
     <div class="table-wrap reveal">
