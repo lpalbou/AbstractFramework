@@ -238,21 +238,21 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
         </div>
       </div>
       <h3 style="margin:2rem 0 1rem">Image to video</h3>
-      <!-- deliver/media/README-video.md:26-43 (still and image-to-video clip 2) -->
+      <!-- deliver/media/README-video.md section 2 (the still) and section 3 (Wan 2.2 I2V-A14B clip, accepted after the frame check) -->
 <div style="max-width:860px">
   <figure class="cmp" data-compare style="--cmp-ratio: 832 / 480" data-compare-label="Compare the text-to-image still with the image-to-video clip made from it">
     <div class="cmp-stage">
       <div class="cmp-layer cmp-before"><img src="assets/img/flux2-klein-still-lighthouse.jpg" alt="Before: the source still, a white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks" width="832" height="480" loading="lazy"></div>
       <div class="cmp-layer cmp-after">
-        <video autoplay muted loop playsinline preload="metadata" data-c3-controls="0" poster="assets/img/poster-wan-ti2v-i2v-lighthouse.jpg" width="832" height="480" aria-label="After: waves breaking against the rocks below the lighthouse as the camera pushes in">
-          <source src="assets/video/wan-ti2v-i2v-lighthouse.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline preload="metadata" data-c3-controls="0" poster="assets/img/wan-i2v-a14b-lighthouse.jpg" width="832" height="480" aria-label="After: waves breaking against the rocks below the lighthouse, with the rocks and buildings holding still">
+          <source src="assets/video/wan-i2v-a14b-lighthouse.mp4" type="video/mp4">
           Your browser cannot play this H.264 MP4 video.
         </video>
       </div>
       <span class="cmp-tag cmp-tag-before">Text-to-image still</span>
       <span class="cmp-tag cmp-tag-after">Image-to-video</span>
     </div>
-    <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps, 16 s &mdash; "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors" <strong>The clip</strong>: Wan 2.2 TI2V-5B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480 (TI2V-5B&rsquo;s default canvas), 121 frames at 24 fps, 50 steps, 23.9 min on an M5 Max &mdash; "Waves roll in and break against the rocks with white spray, clouds drift slowly across the golden sky, the camera pushes in gently toward the lighthouse" Drag the divider to compare.</figcaption>
+    <figcaption><strong>The still</strong>: FLUX.2 klein 4B (8-bit) through MLX-Gen, 832&times;480, 4 steps, 16 s &mdash; "A white lighthouse on a rocky headland at golden hour, waves breaking on dark rocks, sea spray, warm low sun, soft clouds, cinematic landscape photograph, 35mm, natural colors" <strong>The clip</strong>: Wan 2.2 I2V-A14B image-to-video from that still, generated with AbstractVision through MLX-Gen: 832&times;480, 81 frames at 16 fps (5 s), 40 steps, 3 h 01 min on an M5 Max &mdash; "Static camera. Waves roll in and break against the rocks with white spray, soft clouds drift slowly across the sky, the lighthouse beam sweeps slowly. The rocks, the lighthouse and the keeper&rsquo;s house stay perfectly still and solid." Negative prompt: "warping, morphing, melting, moving rocks, deforming rocks, deforming buildings, bending lighthouse, wobbling structures, distortion, camera motion, zoom, pan, shaking, flicker, blurry, low quality, watermark, text". Drag the divider to compare.</figcaption>
   </figure>
       </div>
   </div>
