@@ -217,7 +217,7 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In 
           <li>Durable runs that survive restarts, with an append-only ledger</li>
           <li>Automations: recurring or on-demand runs kept as conversations</li>
           <li>Web and terminal consoles, user accounts, network access</li>
-          <li>Thin clients: terminal, browser, menu bar, Telegram, email</li>
+          <li>Thin clients in a terminal, a browser and the menu bar; Telegram and email bridges</li>
           <li>Start on one device, continue on another</li>
         </ul>
         <!-- VERIFIED-DOCS README.md:60; abstractgateway/README.md@v0.7.1 "Docker server" -->
@@ -229,7 +229,7 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"In 
         <div class="entry-scenario">
           <h4>When to use AbstractGateway</h4>
           <p>You are building a product or running AI for yourself or a team: a coding agent, recurring reports, a chat that follows you across devices. You want runs that survive crashes, user accounts, and clients that are views of the same run.</p>
-          <!-- PENDING-W2: E6 -->
+          <!-- VERIFIED-DOCS docs/install.md:608 (serve prints the link); docs/getting-started.md:43 (/apps/&lt;app&gt;/); abstractcode/docs/getting-started.md:84-91 (login) -->
 <div class="code-block" style="margin-top:1rem">
 <pre><code><span class="line-cmt"># Start once. Connect from anywhere.</span>
 abstractgateway serve
@@ -239,8 +239,8 @@ abstractgateway serve
 http://127.0.0.1:8080/apps/code/
 http://127.0.0.1:8080/apps/observer/
 
-<span class="line-cmt"># Terminal client</span>
-abstractcode</code></pre>
+<span class="line-cmt"># Terminal client, signed in to a remote gateway</span>
+abstractcode login --gateway-url https://gateway.example.com --token &lt;TOKEN&gt;</code></pre>
           </div>
         </div>
         <div class="comp-links" style="margin-top:.75rem">
@@ -511,37 +511,66 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
     <p class="reveal" style="text-align:center;color:var(--text-secondary);margin:2.5rem auto 0;max-width:760px">Three ways to call it: with defaults configured once, with the provider and model named in each call, or over HTTP from any OpenAI client.</p>
     <div class="code-tabs reveal">
       <div class="tab-nav">
-        <button class="tab-btn active" data-tab="mm-defaults">With configured defaults</button>
-        <button class="tab-btn" data-tab="mm-explicit">AbstractCore alone, explicit</button>
+        <button class="tab-btn active" data-tab="mm-defaults">With configured defaults (gateway or abstractcore config)</button>
+        <button class="tab-btn" data-tab="mm-explicit">AbstractCore alone, explicit per capability</button>
         <button class="tab-btn" data-tab="mm-api">OpenAI-compatible server</button>
       </div>
       <div class="tab-panel active" id="tab-mm-defaults">
         <div class="install-notes" style="border-top:none"><ul><li>Defaults come from the gateway console (<strong>Use recommended defaults</strong> or the Multimodal tab) or from <code>abstractcore config set-default</code>. Once a capability has a default, its call is one line.</li></ul></div>
-        <!-- PENDING-W2: E2 -->
+        <!-- E2 (W2 PASS): examples/E2-defaults/defaults.sh and snippet.py verbatim; E2-gateway-recommended proves the console writes the same store -->
 <div class="code-block">
-<pre><code><span class="line-cmt"># once, from a terminal (the gateway console writes the same defaults)</span>
+<pre><code><span class="line-cmt"># Configure AbstractCore's capability routes once (the gateway console's</span>
+<span class="line-cmt"># "Use recommended defaults" writes the same store)</span>
 abstractcore config set-default output.image --provider mlx-gen --model AbstractFramework/flux.2-klein-4b-8bit
+abstractcore config set-default output.voice --provider supertonic --model supertonic-3
+abstractcore config set-default output.music --provider acestep --model ACE-Step/acestep-v15-xl-turbo-diffusers
+abstractcore config defaults</code></pre>
+        </div>
+        <div class="code-block" style="margin-top:1rem">
+<pre><code><span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
 
-<span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+<span class="line-cmt"># The capability routes come from AbstractCore's config (defaults.sh above,</span>
+<span class="line-cmt"># or the gateway console's recommended defaults); the text model is explicit.</span>
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A lighthouse at sunset"</span>, output=<span class="line-str">"image"</span>)
-voice = llm.<span class="line-fn">generate</span>(<span class="line-str">"Welcome to AbstractFramework."</span>, output=<span class="line-str">"voice"</span>)
-music = llm.<span class="line-fn">generate</span>(<span class="line-str">"A calm piano loop"</span>, output=<span class="line-str">"music"</span>)</code></pre>
+image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, "</span>
+                     <span class="line-str">"soft light, calm sea, seagulls in the distance"</span>, output=<span class="line-str">"image"</span>)
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
+
+speech = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+                      output=<span class="line-str">"voice"</span>)
+<span class="line-fn">open</span>(<span class="line-str">"tagline.wav"</span>, <span class="line-str">"wb"</span>).write(speech.outputs[<span class="line-str">"voice"</span>][<span class="line-var">0</span>].data)
+
+music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"Calm ambient piano with soft strings, instrumental"</span>, output=<span class="line-str">"music"</span>)
+<span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).write(music.outputs[<span class="line-str">"music"</span>][<span class="line-var">0</span>].data)</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-mm-explicit">
         <div class="install-notes" style="border-top:none"><ul><li>No defaults and no server: name the provider and the model for each capability in the call.</li></ul></div>
-        <!-- PENDING-W2: E3 -->
+        <!-- E3 (W2 PASS): examples/E3-explicit/image.py verbatim, then the generate calls of voice.py and music.py verbatim; every route cleared first -->
 <div class="code-block">
-<pre><code><span class="line-kw">pip install</span> abstractcore abstractvision abstractvoice abstractmusic
-
+<pre><code><span class="line-cmt"># ran with: pip install "abstractframework[apple]" (AbstractCore, the plugins and the Apple silicon engines)</span>
 <span class="line-kw">from</span> abstractcore <span class="line-kw">import</span> <span class="line-fn">create_llm</span>
+
 llm = <span class="line-fn">create_llm</span>(<span class="line-str">"mlx"</span>, model=<span class="line-str">"mlx-community/Qwen3.5-4B-4bit"</span>)
 
-image = llm.<span class="line-fn">generate</span>(<span class="line-str">"A lighthouse at sunset"</span>,
-    output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>, <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>})
-png_bytes = image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data</code></pre>
+image = llm.<span class="line-fn">generate</span>(
+    <span class="line-str">"A watercolor illustration of a lighthouse on a rocky coast at dawn, soft light, calm sea"</span>,
+    output={<span class="line-str">"modality"</span>: <span class="line-str">"image"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"mlx-gen"</span>,
+            <span class="line-str">"model"</span>: <span class="line-str">"AbstractFramework/flux.2-klein-4b-8bit"</span>, <span class="line-str">"width"</span>: <span class="line-var">1024</span>, <span class="line-str">"height"</span>: <span class="line-var">1024</span>},
+)
+<span class="line-fn">open</span>(<span class="line-str">"lighthouse.png"</span>, <span class="line-str">"wb"</span>).write(image.outputs[<span class="line-str">"image"</span>][<span class="line-var">0</span>].data)
+
+speech = llm.<span class="line-fn">generate</span>(
+    text=<span class="line-str">"AbstractFramework: write once, generate everything, run anywhere."</span>,
+    output={<span class="line-str">"modality"</span>: <span class="line-str">"voice"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"supertonic"</span>, <span class="line-str">"model"</span>: <span class="line-str">"supertonic-3"</span>},
+)
+
+music = llm.<span class="line-fn">generate</span>(
+    text=<span class="line-str">"Calm ambient piano with soft strings, warm and hopeful, instrumental"</span>,
+    output={<span class="line-str">"modality"</span>: <span class="line-str">"music"</span>, <span class="line-str">"provider"</span>: <span class="line-str">"acestep"</span>,
+            <span class="line-str">"model"</span>: <span class="line-str">"ACE-Step/acestep-v15-xl-turbo-diffusers"</span>, <span class="line-str">"duration_s"</span>: <span class="line-var">15</span>},
+)</code></pre>
         </div>
       </div>
       <div class="tab-panel" id="tab-mm-api">
@@ -1065,7 +1094,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
     </div>
     <div class="reveal" style="margin-top:2rem">
       <h3 style="margin-bottom:1rem">Text-to-Video (Wan 2.2)</h3>
-      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generated on-device with Wan 2.2 TI2V 5B through MLX-Gen.</p>
+      <p style="color:var(--text-secondary);margin-bottom:1.5rem">Generated on-device with Wan 2.2 TI2V-5B through MLX-Gen. AbstractVision also runs the Wan 2.2 A14B text-to-video and image-to-video models. TI2V-5B needs about 63.5 GiB of memory while it generates at its default 1280&times;704 size: <a href="console.html#recommended" style="color:var(--accent-light)">which Mac fits which model</a>.</p>
       <div class="carousel">
         <div class="carousel-track">
           <div class="carousel-slide">
@@ -1119,7 +1148,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
     <div class="section-header reveal">
       <div class="section-label">Continuity</div>
       <h2 class="section-title">Start Anywhere. Continue Everywhere.</h2>
-      <p class="section-desc">Runs live on the gateway, not in the client, and every client shares one pool of gateway sessions. Start a conversation in AbstractAssistant on your MacBook Pro, continue it from your phone over SSH with the AbstractCode terminal client, and finish it in the AbstractCode web app in any browser.</p>
+      <p class="section-desc">Runs live on the gateway, not in the client. The AbstractCode terminal and browser clients share the same sessions, and the Assistant&rsquo;s Sessions tab lists every chat session on the gateway, whichever client started it. Start a conversation in AbstractAssistant on your MacBook Pro, continue it with the AbstractCode terminal client in an SSH app on your phone, and finish it in the AbstractCode web app in any browser.</p>
     </div>
     <div class="multimodal-visual reveal">
       <div class="mm-flow">
@@ -1139,7 +1168,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
         </div>
         <div class="mm-node output">
           <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:4px"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg><br>
-          Browser / Menu bar / Telegram<br><small style="opacity:.7">apps, Assistant, email</small>
+          Browser / Menu bar<br><small style="opacity:.7">web apps, Assistant; Telegram and email bridges</small>
         </div>
       </div>
     </div>
@@ -1163,7 +1192,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
           <div class="msg u m3">Draft a reply to the voice issue.</div>
           <div class="msg a m4">Here is a draft reply...</div>
         </div>
-        <div class="d-caption"><strong>Phone</strong> &middot; terminal over SSH</div>
+        <div class="d-caption"><strong>Phone</strong> &middot; AbstractCode terminal in an SSH app</div>
       </div>
       <div class="device">
         <div class="d-bar"><i></i><i></i><i></i><span>127.0.0.1:8080/apps/code/</span></div>
@@ -1176,7 +1205,7 @@ curl http://127.0.0.1:<span class="line-var">8000</span>/v1/images/generations -
         <div class="d-caption"><strong>Browser</strong> &middot; AbstractCode web</div>
       </div>
     </div>
-    <p class="reveal" style="color:var(--text-muted);margin-top:1.5rem;font-size:.9rem;text-align:center;max-width:820px;margin-inline:auto">Illustration. The append-only ledger captures every operation; any client that connects replays a run from its history and follows it live. On the gateway's own computer, SSH included, <code>abstractgateway apps tui-command code</code> prints a one-time line that opens <code>abstractcode</code> signed in.</p>
+    <p class="reveal" style="color:var(--text-muted);margin-top:1.5rem;font-size:.9rem;text-align:center;max-width:820px;margin-inline:auto">Illustration. The append-only ledger captures every operation; any client that connects replays a run from its history and follows it live. The terminal client signs in to a remote gateway with <code>abstractcode login --gateway-url &lt;url&gt; --token &lt;token&gt;</code>; on the gateway&rsquo;s own computer, SSH included, <code>abstractgateway apps tui-command code</code> prints a one-use line that opens <code>abstractcode</code> signed in.</p>
   </div>
 </section>
 
