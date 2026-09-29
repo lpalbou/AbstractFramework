@@ -270,9 +270,14 @@ abstractcore-console</code></pre></div>
   <div class="container">
     <div class="section-header reveal">
       <span class="section-label">Quickstart</span>
-      <h2 class="section-title">Code examples</h2>
-      <p class="section-desc">Each example uses the public API as documented in the <a href="https://github.com/lpalbou/AbstractCore/blob/main/README.md" target="_blank" rel="noopener noreferrer">AbstractCore README</a>.</p>
+      <h2 class="section-title">One call shape for every model and modality</h2>
+      <p class="section-desc">You create an LLM once, naming its provider (it is required: <a href="https://github.com/lpalbou/AbstractCore/blob/v2.19.0/abstractcore/core/factory.py#L10" target="_blank" rel="noopener noreferrer"><code>create_llm</code></a>), then every request goes through <a href="https://github.com/lpalbou/AbstractCore/blob/v2.19.0/abstractcore/providers/base.py#L9178" target="_blank" rel="noopener noreferrer"><code>generate</code></a>: inputs (images, audio, video, documents) go in <code>media=</code>, and the output modality (text by default, or voice, music, image, video, 3D) in <code>output=</code>.</p>
     </div>
+    <!-- VERIFIED-DOCS: schematic of the signatures, not a runnable example — abstractcore@v2.19.0 abstractcore/core/factory.py:10 (create_llm(provider, model=None, **kwargs)), abstractcore/providers/base.py:9178-9185 (generate(prompt, ..., media=...)), :9289 (output= read from the call) -->
+    <div class="code-block reveal" style="max-width:720px;margin:0 auto var(--space-xl)"><pre><code>llm = <span class="line-fn">create_llm</span>(provider, model=...)
+llm.<span class="line-fn">generate</span>(prompt, media=[...], output=...)</code></pre></div>
+    <!-- PENDING-W2: R5 (R5-with-defaults, R5-without-defaults, R5-http, R5-media-input) -->
+    <h3 class="reveal" style="margin-bottom:var(--space-md)">Code examples</h3>
     <div class="code-tabs reveal">
       <div class="tab-nav">
         <button class="tab-btn active" data-tab="stream">Streaming</button>
