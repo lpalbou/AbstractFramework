@@ -244,3 +244,33 @@ matching log text.
   (`mknocc.sh`, `mkzig.sh`, `generated-cc-wrapper.sh`, `serve.sh`, `bench.py`, `core_test.py`).
 - Earlier: `untracked/gpu-linux/10-vllm.log`, `21-vllm-after.log`.
 - Related: 0988 (gpu setting on Windows), 0989 (NVIDIA test machines).
+
+## Decision (operator, 2026-09-29): own environment, lifecycle owned by AbstractCore
+
+- vLLM runs in its **own environment** (like LM Studio and Ollama run as their own programs), not
+  in the gateway's Python: the gateway's torch pins vLLM to an older release (0.22.1 there vs 0.30),
+  a vLLM crash must not take the gateway down, and freeing GPU memory in-process is unreliable.
+- vLLM has **no API to load or switch models**: one `vllm serve` process serves one model (sleep
+  mode can free GPU memory for the same model; to verify on hardware). So AbstractCore supplies the
+  load API by **supervising the process**: "load model X" = start (or restart) `vllm serve X` with
+  the flags for this GPU; "unload" = stop (or sleep); "loaded" = the current process's model.
+- Ownership: **AbstractCore** owns the engine lifecycle (install into its environment, start, stop,
+  health, logs, GPU budget) behind the same load / list-loaded / unload contract the gateway and
+  the console already use for in-process engines. The gateway's Engines card and model manager
+  only call it; no vLLM-specific logic in the gateway beyond the card.
+
+### Plan
+
+1. AbstractCore: a vLLM engine manager: a dedicated uv environment under the data dir (pinned
+   vLLM + ziglang, generated CC wrapper, compiler self-test); start/stop/status/logs with a state
+   file, a free loopback port, health check, per-compute-capability flags.
+2. AbstractCore residency contract for provider `vllm`: load (start or restart with the model,
+   typed progress), unload (stop), list loaded; the `vllm` provider's base URL comes from the
+   manager. A route to `vllm/<model>` loads on demand with progress, within the GPU budget.
+3. GPU memory coordination with the other local engines (llama.cpp, Diffusers, Whisper): budget
+   from NVML naming who holds the card; eject or refuse with the cause and the fix.
+4. Gateway: the Engines card (install, start, stop, live progress through the existing job
+   events) and re-attach to a running vLLM after a gateway restart (state file).
+5. Tests with a fake `vllm` executable (lifecycle, restart on switch, failure causes); a real run
+   on the NVIDIA test machines (0989), Turing and Ampere+.
+6. Docs (coredoc), release in one wave: core, then gateway, then root.
