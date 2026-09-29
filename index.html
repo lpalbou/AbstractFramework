@@ -431,17 +431,18 @@ response = llm.<span class="line-fn">generate</span>(<span class="line-str">"Des
         <div class="mm-item"><span class="mm-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg></span><div><h4>3D <small>Abstract3D</small></h4><p>Image-to-3D and text-to-3D, with GLB output.</p></div></div>
       </div>
     </div>
-    <!-- directions: abstractcore README.md:43, 340-355 (inputs); plugin entry points (outputs); abstractcamera/README.md:67-73 (capture); music input planned: docs/backlog/planned/0986_input_output_modality_parity_voice_music.md -->
+    <!-- directions: abstractcore README.md:43, 340-355 (inputs); plugin entry points (outputs); abstractcamera/README.md:67-73 (capture); music understanding in through audio-capable models, no dedicated engine: abstractcore@v2.19.0 core/generate_contract.py:540-547; a dedicated music input is planned: docs/backlog/planned/0986_input_output_modality_parity_voice_music.md -->
     <ul class="mm-dir reveal" aria-label="Direction of each modality">
       <li><b>Text</b><span>in &amp; out</span></li>
       <li><b>Documents</b><span>in</span></li>
       <li><b>Images</b><span>in &amp; out</span></li>
       <li><b>Video</b><span>in &amp; out</span></li>
       <li><b>Voice</b><span>in &amp; out</span></li>
-      <li><b>Music</b><span>out (input planned)</span></li>
+      <li><b>Music</b><span>out; understanding in via audio models</span></li>
       <li><b>3D</b><span>out</span></li>
       <li><b>Camera</b><span>in (capture)</span></li>
     </ul>
+    <p class="mm-dir-note reveal">Music: generated through AbstractMusic; music understanding comes in through audio-capable models (no dedicated engine); a dedicated music input is planned.</p>
     <p class="mm-foot reveal">Media input follows explicit policies, never silent changes. AbstractCamera is a capability too, for capture rather than generation: it opens real cameras, takes photos and clips, and gives an agent camera tools. The one-line <code>output="image"</code> form needs a default route for that capability; without one, name the provider and model in the call: the tabs in <a href="#generate">One call for every modality</a> show it in Python with defaults, over HTTP, without defaults, and with media input.</p>
 
     <p class="reveal" style="text-align:center;margin-top:1.5rem"><a class="comp-link" href="#generate">The code for each modality, in Python and over HTTP, and what it produced &rarr;</a></p>
