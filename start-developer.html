@@ -138,6 +138,7 @@ agent.<span class="line-fn">start</span>(<span class="line-str">"List the files 
 agent.<span class="line-fn">save_state</span>(<span class="line-str">"agent_state.json"</span>)       <span class="line-cmt"># the run id; the state itself is in .runs/</span>
 <span class="line-cmt"># ... the process stops here (crash, restart, deploy): nothing in memory survives</span></code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm);margin:.75rem 0 .25rem">Process 2, after the first one stopped:</p>
+        <!-- W2 PASS: SNIPPETS.md E5-durable-resume (examples/E5-agent/durable_resume.py) -->
         <div class="code-block"><pre><code><span class="line-kw">from</span> abstractagent <span class="line-kw">import</span> create_react_agent
 <span class="line-kw">from</span> abstractruntime.storage.json_files <span class="line-kw">import</span> JsonFileRunStore, JsonlLedgerStore
 
