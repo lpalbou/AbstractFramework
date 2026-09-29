@@ -253,25 +253,7 @@ pip install <span class="str">"abstractvoice[gpu]"</span></code></pre>
       </div>
 
       <h3 style="margin-top:2rem;margin-bottom:.75rem">Python</h3>
-      <!-- VERIFIED-DOCS: abstractvoice@v0.13.0 abstractvoice/vm/manager.py:23 (VoiceManager); RESULTS.md E8 voice.html:251 api-names-check (parameters and methods); not run: plays audio and needs reference.wav -->
-<div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractvoice <span class="line-kw">import</span> <span class="line-fn">VoiceManager</span>
-
-<span class="line-cmt"># Local stack: pip install "abstractvoice[supertonic,stt,omnivoice]"</span>
-<span class="line-var">vm</span> = <span class="line-fn">VoiceManager</span>(
-    tts_engine=<span class="line-str">"supertonic"</span>,
-    stt_engine=<span class="line-str">"faster_whisper"</span>,
-    cloning_engine=<span class="line-str">"omnivoice"</span>,
-)
-<span class="line-var">vm</span>.<span class="line-fn">speak</span>(<span class="line-str">"Hello from the local stack."</span>)
-
-<span class="line-var">wav</span> = <span class="line-var">vm</span>.<span class="line-fn">speak_to_bytes</span>(<span class="line-str">"Headless speech."</span>, format=<span class="line-str">"wav"</span>)
-<span class="line-var">text</span> = <span class="line-var">vm</span>.<span class="line-fn">transcribe_file</span>(<span class="line-str">"speech.wav"</span>)
-
-<span class="line-cmt"># Clone a voice from a short reference recording, then speak with it</span>
-<span class="line-var">voice_id</span> = <span class="line-var">vm</span>.<span class="line-fn">clone_voice</span>(<span class="line-str">"reference.wav"</span>, name=<span class="line-str">"my-voice"</span>)
-<span class="line-var">vm</span>.<span class="line-fn">speak</span>(<span class="line-str">"This is my cloned voice."</span>, voice=<span class="line-var">voice_id</span>)</code></pre>
-      </div>
+        <p style="color:var(--text-secondary);line-height:1.7">In Python, <a href="https://github.com/lpalbou/AbstractVoice/blob/v0.13.0/abstractvoice/vm/manager.py#L23" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>VoiceManager</code></a> takes a text-to-speech, a speech-to-text and a cloning engine (for example Supertonic, faster-whisper and OmniVoice with <code>abstractvoice[supertonic,stt,omnivoice]</code>) and offers <code>speak</code>, <code>speak_to_bytes</code>, <code>transcribe_file</code> and <code>clone_voice</code>. The verified AbstractCore call is in the <a href="#api">examples below</a>.</p>
     </div>
   </div>
 </section>

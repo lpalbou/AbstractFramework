@@ -343,15 +343,7 @@ music = llm.<span class="line-fn">generate</span>(text=<span class="line-str">"C
 <span class="line-fn">open</span>(<span class="line-str">"ambient.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(music.outputs[<span class="line-str">"music"</span>][0].data)</code></pre></div>
       </div>
       <div class="tab-panel" id="tab-embed">
-        <!-- VERIFIED-DOCS: abstractcore@v2.18.0 abstractcore/embeddings/manager.py:325 (EmbeddingManager), :558 (embed), :1324 (compute_similarity); models.py:326-328 (default all-minilm-l6-v2); not run (model not cached, RESULTS.md E8 core.html:328) -->
-<div class="code-block"><pre><code><span class="line-cmt"># pip install "abstractcore[embeddings]"</span>
-<span class="line-kw">from</span> abstractcore.embeddings <span class="line-kw">import</span> <span class="line-fn">EmbeddingManager</span>
-
-embedder = <span class="line-fn">EmbeddingManager</span>()   <span class="line-cmt"># local all-MiniLM-L6-v2 by default</span>
-embedding = embedder.<span class="line-fn">embed</span>(<span class="line-str">"Machine learning transforms how we process information"</span>)
-print(len(embedding))
-
-print(embedder.<span class="line-fn">compute_similarity</span>(<span class="line-str">"artificial intelligence"</span>, <span class="line-str">"machine learning"</span>))</code></pre></div>
+        <p style="color:var(--text-secondary);line-height:1.7">With <code>abstractcore[embeddings]</code>, <a href="https://github.com/lpalbou/AbstractCore/blob/v2.18.0/abstractcore/embeddings/manager.py#L325" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>EmbeddingManager</code></a> embeds text with a local model (all-MiniLM-L6-v2 by default) or an embeddings endpoint; <code>embed(text)</code> returns a vector and <a href="https://github.com/lpalbou/AbstractCore/blob/v2.18.0/abstractcore/embeddings/manager.py#L1324" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>compute_similarity(a, b)</code></a> compares two texts.</p>
       </div>
     </div>
   </div>

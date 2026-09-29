@@ -336,48 +336,10 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
         <button class="tab-btn" data-tab="vision-core">AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-vision-remote">
-        <!-- VERIFIED-DOCS: abstractvision@v0.3.30 src/abstractvision/backends/openai_compatible.py:301 (OpenAICompatibleBackendConfig), vision_manager.py:26 (VisionManager), artifacts.py:84 (LocalAssetStore); RESULTS.md E8 vision.html:334 api-names-check; not run (needs a server) -->
-<div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">LocalAssetStore</span>, <span class="line-fn">VisionManager</span>
-<span class="line-kw">from</span> abstractvision.backends <span class="line-kw">import</span> <span class="line-fn">OpenAICompatibleBackendConfig</span>, <span class="line-fn">OpenAICompatibleVisionBackend</span>
-
-<span class="line-var">backend</span> = <span class="line-fn">OpenAICompatibleVisionBackend</span>(
-    config=<span class="line-fn">OpenAICompatibleBackendConfig</span>(base_url=<span class="line-str">"http://localhost:1234/v1"</span>)
-)
-<span class="line-var">vm</span> = <span class="line-fn">VisionManager</span>(backend=<span class="line-var">backend</span>, store=<span class="line-fn">LocalAssetStore</span>())
-
-<span class="line-var">ref</span> = <span class="line-var">vm</span>.<span class="line-fn">generate_image</span>(<span class="line-str">"a cinematic photo of a red fox in snow"</span>)
-<span class="line-fn">print</span>(<span class="line-var">ref</span>)   <span class="line-cmt"># {"$artifact": "...", "content_type": "...", ...}</span>
-<span class="line-var">png_bytes</span> = <span class="line-var">vm</span>.store.<span class="line-fn">load_bytes</span>(<span class="line-var">ref</span>[<span class="line-str">"$artifact"</span>])</code></pre>
-        </div>
+        <p style="color:var(--text-secondary);line-height:1.7">Against any OpenAI-compatible image server, <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/vision_manager.py#L26" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>VisionManager</code></a> takes an <code>OpenAICompatibleVisionBackend</code> built from <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/backends/openai_compatible.py#L301" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>OpenAICompatibleBackendConfig</code></a>, and can keep results in a <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/artifacts.py#L84" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>LocalAssetStore</code></a>.</p>
       </div>
       <div class="tab-panel" id="tab-vision-local">
-        <!-- VERIFIED-DOCS: abstractvision@v0.3.30 src/abstractvision/backends/__init__.py:18, :47-50 (MLXGenBackendConfig, MLXGenVisionBackend), vision_manager.py:140 (generate_image), :176 (edit_image), :270 (image_to_video); RESULTS.md E8 vision.html:349 api-names-check; not run (GPU lock, no video generation) -->
-<div class="code-block">
-<pre><code><span class="line-kw">from</span> pathlib <span class="line-kw">import</span> <span class="line-fn">Path</span>
-<span class="line-kw">from</span> abstractvision <span class="line-kw">import</span> <span class="line-fn">VisionManager</span>
-<span class="line-kw">from</span> abstractvision.backends <span class="line-kw">import</span> <span class="line-fn">MLXGenBackendConfig</span>, <span class="line-fn">MLXGenVisionBackend</span>
-
-<span class="line-cmt"># Download each model first with `abstractvision download ... --provider mlx-gen`</span>
-<span class="line-var">images</span> = <span class="line-fn">VisionManager</span>(backend=<span class="line-fn">MLXGenVisionBackend</span>(
-    config=<span class="line-fn">MLXGenBackendConfig</span>(model=<span class="line-str">"AbstractFramework/flux.2-klein-9b-8bit"</span>)))
-<span class="line-var">image</span> = <span class="line-var">images</span>.<span class="line-fn">generate_image</span>(<span class="line-str">"a studio photo of a red toy race car"</span>,
-                              width=<span class="line-str">768</span>, height=<span class="line-str">512</span>, steps=<span class="line-str">12</span>, guidance_scale=<span class="line-str">1.0</span>)
-
-<span class="line-cmt"># Edits and image-to-video take the source image as bytes</span>
-<span class="line-var">edit</span> = <span class="line-var">images</span>.<span class="line-fn">edit_image</span>(<span class="line-str">"turn it into a watercolor"</span>,
-                          image=<span class="line-fn">Path</span>(<span class="line-str">"subject.png"</span>).<span class="line-fn">read_bytes</span>())
-
-<span class="line-var">video</span> = <span class="line-fn">VisionManager</span>(backend=<span class="line-fn">MLXGenVisionBackend</span>(
-    config=<span class="line-fn">MLXGenBackendConfig</span>(model=<span class="line-str">"AbstractFramework/wan2.2-i2v-a14b-diffusers-8bit"</span>)))
-<span class="line-var">clip</span> = <span class="line-var">video</span>.<span class="line-fn">image_to_video</span>(
-    <span class="line-fn">Path</span>(<span class="line-str">"first-frame.png"</span>).<span class="line-fn">read_bytes</span>(),
-    prompt=<span class="line-str">"slow camera push-in"</span>,
-    width=<span class="line-str">432</span>, height=<span class="line-str">240</span>, num_frames=<span class="line-str">41</span>, fps=<span class="line-str">10</span>, steps=<span class="line-str">20</span>,
-    guidance_scale=<span class="line-str">3.5</span>, guidance_2=<span class="line-str">3.5</span>,
-)
-<span class="line-fn">Path</span>(<span class="line-str">"clip.mp4"</span>).<span class="line-fn">write_bytes</span>(<span class="line-var">clip</span>.data)   <span class="line-cmt"># no store: a GeneratedAsset</span></code></pre>
-        </div>
+        <p style="color:var(--text-secondary);line-height:1.7">For local models on Apple Silicon, <code>VisionManager</code> takes an <code>MLXGenVisionBackend</code> with an <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/backends/__init__.py#L47" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>MLXGenBackendConfig</code></a>(model=...); it offers <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/vision_manager.py#L140" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>generate_image</code></a>, <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/vision_manager.py#L176" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>edit_image</code></a> and <a href="https://github.com/lpalbou/AbstractVision/blob/v0.3.30/src/abstractvision/vision_manager.py#L270" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>image_to_video</code></a>. The next tab shows the verified MLX-Gen call through AbstractCore.</p>
       </div>
       <div class="tab-panel" id="tab-vision-core">
         <!-- W2 PASS: SNIPPETS.md E3-image -->

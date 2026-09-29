@@ -253,35 +253,10 @@ pip install <span class="str">"abstractmusic[acestep]"</span></code></pre>
         <button class="tab-btn" data-tab="music-core">AbstractCore</button>
       </div>
       <div class="tab-panel active" id="tab-music-remote">
-        <!-- VERIFIED-DOCS: abstractmusic@v0.1.15 src/abstractmusic/music_manager.py:22 (MusicManager), backends/acemusic.py:167 (AceMusicBackendConfig); RESULTS.md E8 music.html:252 api-names-check; needs an API key, not run -->
-<div class="code-block">
-<pre><code><span class="line-kw">from</span> abstractmusic <span class="line-kw">import</span> <span class="line-fn">MusicManager</span>
-<span class="line-kw">from</span> abstractmusic.backends <span class="line-kw">import</span> <span class="line-fn">AceMusicBackend</span>, <span class="line-fn">AceMusicBackendConfig</span>
-
-<span class="line-var">backend</span> = <span class="line-fn">AceMusicBackend</span>(config=<span class="line-fn">AceMusicBackendConfig</span>(api_key=<span class="line-str">"..."</span>))
-<span class="line-var">mm</span> = <span class="line-fn">MusicManager</span>(backend=<span class="line-var">backend</span>)
-
-<span class="line-var">wav_bytes</span> = <span class="line-var">mm</span>.<span class="line-fn">t2m</span>(<span class="line-str">"uplifting synthwave with punchy drums"</span>, duration_s=<span class="line-str">30.0</span>)
-<span class="line-fn">open</span>(<span class="line-str">"out.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(<span class="line-var">wav_bytes</span>)</code></pre>
-        </div>
+        <p style="color:var(--text-secondary);line-height:1.7">Remote generation uses <a href="https://github.com/lpalbou/AbstractMusic/blob/v0.1.15/src/abstractmusic/music_manager.py#L22" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>MusicManager</code></a> with <code>AceMusicBackend</code> and its <a href="https://github.com/lpalbou/AbstractMusic/blob/v0.1.15/src/abstractmusic/backends/acemusic.py#L167" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>AceMusicBackendConfig</code></a> (your ACE Music API key); <code>t2m(prompt, duration_s=...)</code> returns the audio as bytes.</p>
       </div>
       <div class="tab-panel" id="tab-music-local">
-        <!-- VERIFIED-DOCS: abstractmusic@v0.1.15 src/abstractmusic/backends/acestep.py:264 (AceStepBackendConfig; its default model is the cached turbo model per RESULTS.md E8 music.html:264); not run (GPU lock); the same backend ran through AbstractCore in E3-music -->
-<div class="code-block">
-<pre><code><span class="line-cmt"># pip install "abstractmusic[acestep]"</span>
-<span class="line-kw">from</span> abstractmusic <span class="line-kw">import</span> <span class="line-fn">MusicManager</span>
-<span class="line-kw">from</span> abstractmusic.backends <span class="line-kw">import</span> <span class="line-fn">AceStepBackend</span>, <span class="line-fn">AceStepBackendConfig</span>
-
-<span class="line-var">mm</span> = <span class="line-fn">MusicManager</span>(backend=<span class="line-fn">AceStepBackend</span>(config=<span class="line-fn">AceStepBackendConfig</span>()))
-
-<span class="line-var">wav_bytes</span> = <span class="line-var">mm</span>.<span class="line-fn">t2m</span>(
-    <span class="line-str">"smooth jazz trio, brushed drums, warm upright bass"</span>,
-    duration_s=<span class="line-str">20.0</span>,
-    lyrics=<span class="line-str">"[Instrumental]"</span>,
-    seed=<span class="line-str">42</span>,
-)
-<span class="line-fn">open</span>(<span class="line-str">"jazz.wav"</span>, <span class="line-str">"wb"</span>).<span class="line-fn">write</span>(<span class="line-var">wav_bytes</span>)</code></pre>
-        </div>
+        <p style="color:var(--text-secondary);line-height:1.7">Local generation installs <code>abstractmusic[acestep]</code> and gives <code>MusicManager</code> an <code>AceStepBackend</code> with its <a href="https://github.com/lpalbou/AbstractMusic/blob/v0.1.15/src/abstractmusic/backends/acestep.py#L264" style="color:var(--accent-light)" target="_blank" rel="noopener noreferrer"><code>AceStepBackendConfig</code></a>; the same backend, called through AbstractCore, is the verified example in the next tab.</p>
       </div>
       <div class="tab-panel" id="tab-music-core">
         <!-- E3 (W2 PASS): examples/E3-explicit/music.py verbatim -->
