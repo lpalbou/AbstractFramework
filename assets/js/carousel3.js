@@ -25,6 +25,41 @@
     return e;
   }
 
+  // ── video autoplay while in view (Q10) ────────────────────────────────
+  // A managed video (the `autoplay` attribute, plus muted/loop/playsinline)
+  // plays muted while it is on screen or focused, and pauses otherwise. The
+  // script takes over from the native attribute so that it can pause off
+  // screen and honour prefers-reduced-motion (no autoplay; controls shown).
+  // A viewer's own pause is respected until the video leaves and comes back.
+  function manage(v) {
+    if (v._afManaged) return;
+    v._afManaged = true;
+    v.removeAttribute('autoplay');
+    v.autoplay = false;
+    v.muted = true;
+    v.setAttribute('playsinline', '');
+    if (!v.hasAttribute('controls') && v.dataset.c3Controls === undefined) v.setAttribute('controls', '');
+    v.addEventListener('pause', function () {
+      if (v._afAuto) { v._afAuto = false; return; }
+      if (!v.ended) v._afUserPaused = true;
+    });
+    v.addEventListener('play', function () { v._afUserPaused = false; });
+    if (!v.paused) autoPause(v);
+  }
+  function autoPlay(v) {
+    if (reduceMQ.matches || v._afUserPaused || !v.paused) return;
+    v.muted = true;
+    var pr = v.play();
+    if (pr && pr.catch) pr.catch(function () {});
+  }
+  function autoPause(v, forget) {
+    if (forget) v._afUserPaused = false;
+    if (v.paused) return;
+    v._afAuto = true;
+    v.pause();
+  }
+  function hasFocus(el) { return el.contains(document.activeElement); }
+
   var ICON_PREV = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>';
   var ICON_NEXT = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>';
   var ICON_PAUSE = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
@@ -67,7 +102,7 @@
       s.setAttribute('aria-label', (i + 1) + ' of ' + self.n);
       s.dataset.c3Index = String(i);
       var v = s.querySelector('video');
-      if (v) { s.classList.add('c3-has-video'); v.dataset.c3Controls = v.hasAttribute('controls') ? '1' : '0'; }
+      if (v) { s.classList.add('c3-has-video'); v.dataset.c3Controls = v.hasAttribute('controls') || v.hasAttribute('autoplay') ? '1' : '0'; if (v.hasAttribute('autoplay')) manage(v); }
     });
 
     var kind = root.querySelector('video') && !root.querySelector('img:not([aria-hidden="true"])') ? 'video' : 'image';
@@ -148,7 +183,7 @@
         if (center) {
           if (v.dataset.c3Controls === '1') v.setAttribute('controls', '');
         } else {
-          if (!v.paused) v.pause();
+          if (v._afManaged) autoPause(v, true); else if (!v.paused) v.pause();
           v.removeAttribute('controls');
         }
       }
@@ -167,7 +202,19 @@
     capEl.textContent = cap;
     this.live.appendChild(count);
     this.live.appendChild(capEl);
+    this.syncVideos();
 
+  };
+
+  Carousel.prototype.syncVideos = function () {
+    var self = this;
+    var active = !!this.inView || hasFocus(this.root);
+    this.slides.forEach(function (s, i) {
+      var v = s.querySelector('video');
+      if (!v || !v._afManaged) return;
+      if (i === self.index && active) autoPlay(v);
+      else autoPause(v, i !== self.index || !self.inView);
+    });
   };
 
   Carousel.prototype.go = function (i, fromUser) {
@@ -248,6 +295,22 @@
       this.syncPlayBtn();
     }
 
+    // Managed videos: play the centre one while the carousel is on screen or focused.
+    if (this.root.querySelector('video')) {
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          self.inView = entries[0].isIntersecting;
+          self.syncVideos();
+        }, { threshold: 0.4 }).observe(root);
+      } else { this.inView = true; }
+      root.addEventListener('focusin', function () { self.syncVideos(); });
+      root.addEventListener('focusout', function () { setTimeout(function () { self.syncVideos(); }, 0); });
+      if (reduceMQ.addEventListener) reduceMQ.addEventListener('change', function () {
+        if (reduceMQ.matches) self.slides.forEach(function (s) { var v = s.querySelector('video'); if (v && v._afManaged) autoPause(v); });
+        else self.syncVideos();
+      });
+    }
+
     // A video that starts playing in the centre stops the slide show from moving on.
     this.slides.forEach(function (s) {
       var v = s.querySelector('video');
@@ -255,11 +318,35 @@
     });
   };
 
+  // Standalone videos with the `autoplay` attribute (outside a carousel).
+  function initStandalone(scope) {
+    var vids = Array.prototype.filter.call((scope || document).querySelectorAll('video[autoplay]'), function (v) {
+      return !v.closest('[data-c3]') && !v._afManaged;
+    });
+    if (!vids.length) return;
+    var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        e.target._afInView = e.isIntersecting;
+        if (e.isIntersecting || hasFocus(e.target)) autoPlay(e.target); else autoPause(e.target, true);
+      });
+    }, { threshold: 0.4 }) : null;
+    vids.forEach(function (v) {
+      manage(v);
+      v.addEventListener('focus', function () { autoPlay(v); });
+      v.addEventListener('blur', function () { if (!v._afInView) autoPause(v); });
+      if (io) io.observe(v); else autoPlay(v);
+    });
+    if (reduceMQ.addEventListener) reduceMQ.addEventListener('change', function () {
+      vids.forEach(function (v) { if (reduceMQ.matches) autoPause(v); else if (v._afInView) autoPlay(v); });
+    });
+  }
+
   function init(scope) {
     Array.prototype.forEach.call((scope || document).querySelectorAll('[data-c3]'), function (root) {
       if (root._c3) return;
       root._c3 = new Carousel(root);
     });
+    initStandalone(scope);
   }
 
   window.Carousel3 = { init: init };
