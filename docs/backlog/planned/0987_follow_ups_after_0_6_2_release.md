@@ -22,7 +22,8 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
 1. After a TI2V-5B run the backend drops the model (the denoiser is released before decode), but
    the AbstractCore plugin's `list_loaded_models` still reports it resident
    (`abstractcore_plugin.py:1748`). Drop the record, or make the release optional for a preloaded
-   model (each rebuild costs about a minute).
+   model (each rebuild costs about a minute). **Tracked in abstractvision
+   `docs/backlog/planned/029_loaded_model_records_follow_backend_truth.md`.**
 2. The TI2V `flow_shift` default reads 3.0 in the registry and provider metadata at every canvas
    (`mflux.py:488`); above 832x480 the backend leaves mlx-gen's 5.0. A form pre-filled from the
    metadata sends 3.0 with a 1280x704 request.
@@ -33,7 +34,8 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
 5. Playground text-to-video width defaults to 720, which TI2V rejects (multiples of 32).
 6. `[gpu]`/`[all-gpu]` pull mlx-gen → `mlx[cuda13]` on Linux: about 2.1 GB of CUDA 13 wheels
    that core never routes (mlx-gen is Apple-only in core) and a glibc 2.35 floor for `[gpu]`.
-   Make the mlx-gen marker Darwin-only for `gpu`/`all-gpu`.
+   Measure mlx-gen on CUDA first, else make the marker Darwin-only. **Tracked in abstractvision
+   `docs/backlog/planned/030_gpu_parity_with_mlx_gen.md` (GPU parity with MLX-Gen).**
 
 **AbstractCore**
 7. `model_fit.py` (~416) still adds the "KV cache estimated without model geometry" note before the
@@ -43,7 +45,8 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
    vLLM. Point to the direct install, as the HuggingFace hint now does.
 9. Remaining bare-package hints: `vision_config.py:231`, `openai_provider.py:1315/1355/1407`,
    `base.py:3611`, `pil_text_renderer.py:60`, `apps/extractor.py:516`, `apps/judge.py:626`,
-   `embeddings/manager.py:709`.
+   `embeddings/manager.py:709`. **Items 8, 9, 11, 12: in progress (operator 2026-09-29: only the
+   three settings are ever advised; sweep across repos, unreleased).**
 10. The 24 GB TI2V sentence says "It fits once macOS lets the GPU use 20 GiB"; the raised verdict
     is tight. Say tight.
 11. Direct-install hints print a POSIX-quoted command (`shlex.join`), which breaks in cmd.exe when
