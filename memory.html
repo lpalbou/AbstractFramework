@@ -85,7 +85,7 @@
       <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractMemory/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- VERIFIED-DOCS abstractmemory/README.md:56-57 (lowercase distribution name; pip is case-insensitive, README.md:60) -->
+    <!-- VERIFIED-DOCS abstractmemory/README.md:56-57 (lowercase distribution name; pip is case-insensitive, abstractmemory/README.md:60) -->
 <div class="hero-code">
 <pre><code>python -m pip install abstractmemory
 python -m pip install <span class="line-str">"abstractmemory[lancedb]"</span>   <span class="line-cmt"># LanceDB backend</span></code></pre>
@@ -279,15 +279,8 @@ print(hits[0].subject, hits[0].predicate, hits[0].object)   # scrooge related_to
     </div>
 
     <h3 class="reveal" style="margin:var(--space-2xl) 0 var(--space-md)">Semantic search with an embedder</h3>
-    <!-- VERIFIED-DOCS abstractmemory/docs/getting-started.md:72-90 (endpoint and model names are examples); abstractmemory/docs/api.md:61,76 -->
-<div class="code-block reveal"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> OpenAICompatTextEmbedder, SQLiteTripleStore, TripleAssertion, TripleQuery
-
-<span class="line-cmt"># any OpenAI-compatible /embeddings endpoint; base_url includes the version prefix</span>
-embedder = <span class="line-fn">OpenAICompatTextEmbedder</span>(<span class="line-str">"http://127.0.0.1:1234/v1"</span>, <span class="line-str">"your-embedding-model"</span>)
-store = <span class="line-fn">SQLiteTripleStore</span>(<span class="line-str">"kg.sqlite3"</span>, embedder=embedder)
-store.<span class="line-fn">add</span>([<span class="line-fn">TripleAssertion</span>(subject=<span class="line-str">"e:scrooge"</span>, predicate=<span class="line-str">"is_a"</span>, object=<span class="line-str">"person"</span>, scope=<span class="line-str">"global"</span>)])
-hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(query_text=<span class="line-str">"scrooge"</span>, limit=<span class="line-var">5</span>))
-print(hits[<span class="line-var">0</span>].attributes[<span class="line-str">"_retrieval"</span>])       <span class="line-cmt"># score, metric</span></code></pre></div>
+    <!-- API sentence, not run (REVIEW-3 A): abstractmemory/docs/api.md:61,76; abstractmemory/docs/getting-started.md:72-90 -->
+    <p class="reveal" style="color:var(--text-secondary)">Give a store an embedder and <code>TripleQuery(query_text=...)</code> ranks by vector similarity: <code style="white-space:normal;overflow-wrap:anywhere">OpenAICompatTextEmbedder(base_url, model)</code> works with any OpenAI-compatible <code>/embeddings</code> endpoint (the <code>base_url</code> includes the version prefix, for example <code>http://127.0.0.1:1234/v1</code>), passed as <code>SQLiteTripleStore(path, embedder=embedder)</code>. Results carry <code>attributes["_retrieval"]</code> with the score and metric. See <a href="https://github.com/lpalbou/abstractmemory/blob/main/docs/getting-started.md" target="_blank" rel="noopener noreferrer">getting started</a> and the <a href="https://github.com/lpalbou/abstractmemory/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">API reference</a>.</p>
     <p class="reveal" style="color:var(--text-secondary);margin-top:var(--space-md)">For an AbstractGateway deployment, use <code style="white-space:normal;overflow-wrap:anywhere">AbstractGatewayTextEmbedder(base_url=..., auth_token=...)</code>; it posts to <code style="white-space:normal;overflow-wrap:anywhere">/api/gateway/embeddings</code> by default.</p>
   </div>
 </section>

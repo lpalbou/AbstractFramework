@@ -89,7 +89,7 @@
       <a href="https://github.com/lpalbou/AbstractFlow/blob/main/llms.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms.txt</a>
       <a href="https://github.com/lpalbou/AbstractFlow/blob/main/llms-full.txt" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">llms-full.txt</a>
     </div>
-    <!-- VERIFIED-DOCS abstractflow/README.md:10 (npx line); abstractgateway/docs/apps.md:380-381 (apps install … --launch form) -->
+    <!-- VERIFIED-DOCS abstractflow/README.md:10 (npx line); untracked/site-rethink/examples/RESULTS.md E8 flow.html:254 (apps install flow --launch helpcheck) -->
 <div class="hero-code">
 <pre><code><span class="line-cmt"># Gateway console: Apps &gt; Flow Editor &gt; Open</span>
 <span class="line-cmt"># (served at /apps/flow/, already signed in)</span>
@@ -300,7 +300,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Packing a bundle from Python</h3>
     <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:1rem">Outside the editor, AbstractRuntime packs a bundle from VisualFlow JSON files. Upload the result with <code>POST /api/gateway/bundles/upload</code>, or place it in the directory named by <code>ABSTRACTGATEWAY_FLOWS_DIR</code>.</p>
-    <!-- E8 flow-220-check (W2 PASS, signature): untracked/site-rethink/examples/E8-snippets/flow-220-check/run.log -->
+    <!-- VERIFIED-DOCS: RESULTS.md E8 flow.html:220 (signature check, untracked/site-rethink/examples/E8-snippets/flow-220-check/run.log) -->
 <div class="code-block reveal">
 <pre><code><span class="line-kw">from</span> abstractruntime.workflow_bundle <span class="line-kw">import</span> <span class="line-fn">pack_workflow_bundle</span>
 
@@ -335,7 +335,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
         <button class="tab-btn" data-tab="npx">On its own</button>
       </div>
       <div class="tab-panel active" id="tab-console">
-        <!-- VERIFIED-DOCS abstractgateway/docs/apps.md:380-381 (apps install <app> --launch); abstractflow/docs/cli.md:48-51 (console Apps > Flow Editor > Open, served at /apps/flow/) -->
+        <!-- VERIFIED-DOCS untracked/site-rethink/examples/RESULTS.md E8 flow.html:254 (apps install flow --launch helpcheck); abstractflow/docs/cli.md:48-51 (console Apps > Flow Editor > Open, served at /apps/flow/) -->
 <div class="code-block">
 <pre><code><span class="line-cmt"># Gateway console: Apps &gt; Flow Editor &gt; Install, then Open</span>
 <span class="line-cmt"># or from a terminal:</span>
