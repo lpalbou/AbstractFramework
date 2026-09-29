@@ -284,7 +284,7 @@ The terminal console and an `abstractcode` built by the installer are upgraded b
 
 ```bash
 abstractgateway --version                    # the installed gateway
-uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.7.3])
+uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.7.4])
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
@@ -360,7 +360,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.7.3"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.7.4"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]"`: Supertonic text-to-speech and Whisper speech-to-text,
@@ -476,8 +476,9 @@ Transformers, vLLM and llama.cpp run on the processor; the installer says so. Up
 (`sudo ubuntu-drivers install` on Ubuntu) and run the installer again. Whisper uses its own CUDA 12
 libraries, which need driver 525 or newer.
 
-**Measured on real hardware (AbstractFramework 0.6.3).** The release was rehearsed on Ubuntu 26.04
-with a Quadro RTX 5000: 16 GB, compute capability 7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and
+**Measured on real hardware (AbstractFramework 0.6.3 release candidate).** The release candidate
+(AbstractGateway 0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2, AbstractVoice 0.13.1,
+AbstractVision 0.3.32) was rehearsed on Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability 7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and
 26 GB RAM. The previous install was removed with `uninstall.sh --yes --purge` and uv's download
 cache cleared first. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already
 on the machine. The installer ran without a terminal, so start at login stayed off.
@@ -485,7 +486,7 @@ on the machine. The installer ran without a terminal, so start at login stayed o
 | Step | Result |
 |---|---|
 | Whole install (`install.sh`, profile picked automatically: gpu) | 3 min 1 s; 14.2 GB added on disk |
-| Python packages (`uv tool install`, exactly this release's versions) | 39 s, about 5.8 GB of wheels |
+| Python packages (`uv tool install`, exactly the candidate's versions) | 39 s, about 5.8 GB of wheels |
 | llama.cpp `cu130` build swapped in | 18 s (726 MB); loads, GPU offload |
 | Terminal console and AbstractCode compiled with cargo | 62 s and 48 s, no output meanwhile |
 | Checks | PyTorch 2.11.0 on CUDA 13.0; Whisper on the GPU; vLLM 0.22.1 installed |
@@ -499,24 +500,28 @@ timed separately where the path allows it):
 |---|---|---|
 | Text | LM Studio, `qwen/qwen3.5-9b` Q4_K_M, 6.5 GB on the GPU | first gateway request 23 s including the model load; then 12 s for 318 tokens; about 41 tokens/s from AbstractCore in Python |
 | Text-to-speech | Supertonic, on the processor | 1.1 to 1.4 s per sentence; 3.2 s for the first gateway request |
-| Speech-to-text | faster-whisper `base` on CUDA, 0.3 GB of GPU memory | works only after two fixes (below); then 1.0 to 2.3 s per gateway request, no OpenAI key |
-| Image | FLUX.2 [klein] 4B, Diffusers, model CPU offload, 7.8 GB peak | 41 s to load, then 15 to 16 s per 1024x1024 image; 54 to 59 s per gateway request, which loads the model each time |
+| Speech-to-text | faster-whisper `base` on CUDA, 0.3 GB of GPU memory | with the route set by hand and PyAV 18 (both part of the final release, below): 1.0 to 2.3 s per gateway request, no OpenAI key |
+| Image | FLUX.2 [klein] 4B, Diffusers, model CPU offload, 7.8 GB peak | 41 s to load, then 15 to 16 s per 1024x1024 image; 54 to 59 s per gateway request, which loads the model each time; after **Load** (AbstractRuntime 0.7.3), 17 to 19 s per gateway request on the loaded model |
 
-**Known issues on this machine:**
+**Found in the rehearsal, and what the final 0.6.3 versions do:**
 
-- **Speech-to-text needs two fixes.** First, **Use recommended defaults** does not set Voice Input
-  (`input.voice`). Without it, transcription uses OpenAI and asks for `OPENAI_API_KEY`. Set Voice
-  Input to `faster-whisper`, model `base`, in either console. Second, PyAV 19.0.0 (released
-  2026-09-29) breaks faster-whisper 1.2.1's file reading: transcription fails with
-  `open() got an unexpected keyword argument 'metadata_errors'`. Run
-  `uv pip install --python ~/.local/share/uv/tools/abstractgateway/bin/python "av<19"`, then
-  restart the gateway.
-- **The image model and the text model do not fit on the GPU together.** While LM Studio keeps
-  `qwen/qwen3.5-9b` loaded (6.5 GB), an image request fails with CUDA out of memory. Unload the
-  text model first (`lms unload --all`).
-- **The image route may not be saved.** **Use recommended defaults** can report the image route as
-  already set without saving it, when the console read the routes a few seconds earlier. Use it a
-  second time.
+- **Speech-to-text.** The candidate's **Use recommended defaults** did not set Voice Input
+  (`input.voice`), so transcription used OpenAI and asked for `OPENAI_API_KEY`; and PyAV 19.0.0
+  (released 2026-09-29) broke faster-whisper 1.2.1's file reading (`open() got an unexpected
+  keyword argument 'metadata_errors'`). In 0.6.3 the fresh setup and **Use recommended defaults**
+  set Voice Input to `faster-whisper`, model `base` (AbstractCore 2.19.2), and PyAV is held below 19
+  (AbstractVoice 0.13.2).
+- **The image model and the text model on the GPU together.** While LM Studio kept
+  `qwen/qwen3.5-9b` loaded (6.5 GB), an image request failed with CUDA out of memory. In 0.6.3
+  Diffusers falls back to sequential CPU offload in this case (AbstractVision 0.3.33), which is much
+  slower; unload the text model first (`lms unload --all`) to keep model CPU offload.
+- **The image route was not always saved.** The candidate's **Use recommended defaults** could
+  report the image route as already set without saving it, when the console read the routes a few
+  seconds earlier. In 0.6.3 it saves every route it reports (AbstractCore 2.19.2).
+- **Image requests reloaded the model.** Each gateway image request loaded the model again (54 to
+  59 s). In 0.6.3, after **Load** in the console (or `POST /models/load`), requests run on the
+  loaded model (17 to 19 s on this machine), and an unload frees the model's memory (AbstractRuntime
+  0.7.3, AbstractVision 0.3.33).
 
 Not validated: vLLM (installed, never started a model here) and the Windows gpu setting.
 
@@ -702,7 +707,7 @@ instead of starting a browser.
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.7.3"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.7.4"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -822,10 +827,10 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.6.3 pins `abstractgateway==0.7.3`, `abstractassistant==0.9.1`,
-`abstractcore==2.19.1`, `AbstractRuntime==0.7.2`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
-`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.1`,
-`abstractvision==0.3.32`, `abstractmusic==0.1.15` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
+`abstractframework` 0.6.3 pins `abstractgateway==0.7.4`, `abstractassistant==0.9.1`,
+`abstractcore==2.19.2`, `AbstractRuntime==0.7.3`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
+`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.2`,
+`abstractvision==0.3.33`, `abstractmusic==0.1.15` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
 installed package whose version differs from these pins.
@@ -913,10 +918,10 @@ Run or install them next to the Python stack:
 
 | Tool | Command | Version released with 0.6.3 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.7.3 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.19.1 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.7.4 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.19.2 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.4.1 |
-| Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.11.1 |
+| Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.11.2 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.4.0 |
 | Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.6.1 |
 | Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.2.1 |
@@ -965,7 +970,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.7.3
+  ghcr.io/lpalbou/abstractgateway:0.7.4
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -973,7 +978,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.19.1`.
+`ghcr.io/lpalbou/abstractcore-server:2.19.2`.
 
 ## How installs are designed
 

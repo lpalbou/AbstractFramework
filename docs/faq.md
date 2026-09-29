@@ -34,7 +34,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity> --gateway-url <url>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.7.3` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.7.4` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -275,10 +275,11 @@ Yes, on Linux and Windows x64: when `nvidia-smi` works, the installer picks the 
 (`--profile gpu` / `-Profile gpu` forces it). On Linux it installs llama.cpp's CUDA build matching
 PyTorch's CUDA and checks that PyTorch, llama.cpp and Whisper use the GPU. PyPI's PyTorch for Linux is
 a CUDA 13 build and needs NVIDIA driver 580 or newer; with an older driver the engines run on the
-processor. The 0.6.3 release was rehearsed on a Quadro RTX 5000 (16 GB, driver 595, CUDA 13) on
-Ubuntu 26.04: text, text-to-speech and image generation worked with **Use recommended defaults**;
-speech-to-text needed two fixes, and the image model and a loaded 9B text model did not fit on the
-GPU together ([measured results and known issues](install.md#gpu-on-linux-nvidia)). On Windows it installs PyTorch's CUDA build and
+processor. The 0.6.3 release candidate was rehearsed on a Quadro RTX 5000 (16 GB, driver 595,
+CUDA 13) on Ubuntu 26.04: text, text-to-speech and image generation worked with **Use recommended
+defaults**; speech-to-text needed two fixes and the image model and a loaded 9B text model did not
+fit on the GPU together, which the final 0.6.3 versions address
+([measured results and what changed](install.md#gpu-on-linux-nvidia)). On Windows it installs PyTorch's CUDA build and
 llama.cpp's prebuilt CUDA build, chosen from your driver version; this path is implemented but not
 yet validated on real NVIDIA hardware. Each installer prints what runs where (`PyTorch:`, `GGUF:`
 and Whisper lines) and falls back to the CPU for any part that does not work. See

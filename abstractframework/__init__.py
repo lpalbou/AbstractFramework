@@ -15,15 +15,15 @@ __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.19.1",
-    "abstractruntime": "0.7.2",
+    "abstractcore": "2.19.2",
+    "abstractruntime": "0.7.3",
     "abstractagent": "0.3.17",
-    "abstractgateway": "0.7.3",
+    "abstractgateway": "0.7.4",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
-    "abstractvoice": "0.13.1",
-    "abstractvision": "0.3.32",
+    "abstractvoice": "0.13.2",
+    "abstractvision": "0.3.33",
     "abstractmusic": "0.1.15",
     "abstract3d": "0.3.2",
     "abstractassistant": "0.9.1",
@@ -55,7 +55,7 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
 # or by the bootstrap scripts: the gateway console and abstractcode by default).
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
-    "abstractgateway-console": "0.11.1",
+    "abstractgateway-console": "0.11.2",
     "abstractcore-console": "0.4.1",
     "abstractcode": "0.7.1",
     "abstracttui": "0.6.0",

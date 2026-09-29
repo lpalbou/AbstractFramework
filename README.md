@@ -46,8 +46,8 @@ button of gateway 0.7.1 cannot upgrade. Gateway only, apps, and version checks:
 
 On Linux or Windows with an NVIDIA GPU (`nvidia-smi` works), the installer picks the `gpu` profile:
 PyTorch and llama.cpp on CUDA, Whisper on the GPU, Diffusers image generation. On Linux it needs
-NVIDIA driver 580 or newer. It was rehearsed on a Quadro RTX 5000 on Ubuntu 26.04; speech-to-text
-needs two fixes there, described in GPU on Linux. The Windows gpu install is
+NVIDIA driver 580 or newer. Its release candidate was rehearsed on a Quadro RTX 5000 on Ubuntu
+26.04; the measured results, and what the final versions changed, are in GPU on Linux. The Windows gpu install is
 implemented but not yet validated on real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) and
 [GPU on Windows](docs/install.md#gpu-on-windows-nvidia).
 
@@ -171,7 +171,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.7.3` and `ghcr.io/lpalbou/abstractcore-server:2.19.1`.
+`ghcr.io/lpalbou/abstractgateway:0.7.4` and `ghcr.io/lpalbou/abstractcore-server:2.19.2`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -326,16 +326,16 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.7.3 |
+| PyPI | `abstractgateway` | 0.7.4 |
 | PyPI | `abstractassistant` | 0.9.1 |
-| PyPI | `abstractcore` | 2.19.1 |
-| PyPI | `AbstractRuntime` | 0.7.2 |
+| PyPI | `abstractcore` | 2.19.2 |
+| PyPI | `AbstractRuntime` | 0.7.3 |
 | PyPI | `abstractagent` | 0.3.17 |
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.13.1 |
-| PyPI | `abstractvision` | 0.3.32 |
+| PyPI | `abstractvoice` | 0.13.2 |
+| PyPI | `abstractvision` | 0.3.33 |
 | PyPI | `abstractmusic` | 0.1.15 |
 | PyPI | `abstract3d` | 0.3.2 |
 | npm | `@abstractframework/flow` | 0.4.0 |
@@ -344,11 +344,11 @@ and tested together.
 | npm | `@abstractframework/continuum` | 0.4.0 |
 | npm | `@abstractframework/entity` | 0.3.0 |
 | crates.io | `abstractcode` | 0.7.1 |
-| crates.io | `abstractgateway-console` | 0.11.1 |
+| crates.io | `abstractgateway-console` | 0.11.2 |
 | crates.io | `abstractcore-console` | 0.4.1 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.7.3 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.19.1 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.7.4 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.19.2 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
 not part of any profile installs separately: `pip install abstractcamera` (0.2.1). `abstractskill` (pinned above)

@@ -6,15 +6,19 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [0.6.3] - 2026-09-29
 
-The `gpu` setting on NVIDIA machines. Pins: AbstractGateway 0.7.3, AbstractCore 2.19.1,
-AbstractRuntime 0.7.2, AbstractVoice 0.13.1, AbstractVision 0.3.32 and Abstract3D 0.3.2; every other
-version, and the terminal consoles, are unchanged from 0.6.2.
+The `gpu` setting on NVIDIA machines, speech-to-text in the fresh setup, and loaded image models
+that are reused. Pins: AbstractGateway 0.7.4, AbstractCore 2.19.2, AbstractRuntime 0.7.3,
+AbstractVoice 0.13.2, AbstractVision 0.3.33 and Abstract3D 0.3.2; the gateway's terminal console is
+`abstractgateway-console` 0.11.2. Every other version, and the other terminal clients, are unchanged
+from 0.6.2.
 
 ### Added
 
 - **The `gpu` setting on Linux + NVIDIA, rehearsed on real hardware with this release.** On
   Ubuntu 26.04 with a Quadro RTX 5000 (16 GB, driver 595.91.07, CUDA 13.2; 4 vCPU, 26 GB RAM),
-  `install.sh` installed exactly this release's versions from PyPI in 3 min 1 s. The previous
+  `install.sh` installed this release's candidate versions from PyPI in 3 min 1 s (AbstractGateway
+  0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2, AbstractVoice 0.13.1 and AbstractVision 0.3.32;
+  the patch releases listed under Fixed came after this run). The previous
   install had been removed with `uninstall.sh --yes --purge` and uv's download cache cleared; model
   weights, LM Studio and a Rust toolchain were already on the machine. The Python packages took 39 s
   (about 5.8 GB of wheels), llama.cpp's `cu130` build 18 s (726 MB), compiling the two terminal
@@ -74,38 +78,55 @@ version, and the terminal consoles, are unchanged from 0.6.2.
 
 - **Speech-to-text without an OpenAI key.** Transcription runs on the configured `input.voice`
   route (for example local Whisper) and no longer needs TTS credentials (AbstractCore 2.19.1,
-  AbstractVoice 0.13.1). The route must be set by hand; see Known issues.
+  AbstractVoice 0.13.1).
+- **Speech-to-text in the fresh setup.** The fresh-install defaults and **Use recommended defaults**
+  set speech input (`input.voice`: faster-whisper, model `base`) with text, voice and images, so a
+  new install transcribes locally without an OpenAI key (AbstractCore 2.19.2, AbstractGateway
+  0.7.4). An install that earlier release defaults seeded gains the route once, when it is empty; a
+  route you set yourself is kept. PyAV is held below 19, which faster-whisper 1.2.1 needs to read
+  audio files (AbstractVoice 0.13.2).
+- **Use recommended defaults saves every route it reports**, including on a fresh install right
+  after the console read the routes (AbstractCore 2.19.2).
 - **Whisper on NVIDIA GPUs.** faster-whisper uses CUDA only when CUDA 12 cuBLAS loads (installed
   with the gpu setting on Linux and Windows), and otherwise runs on the CPU with a warning.
 - **llama.cpp on CUDA** loads without importing PyTorch first on Linux, and a GGUF model too large
   for the GPU at its full context tries smaller contexts on the GPU before falling back to the CPU.
 - **Image generation on smaller GPUs.** A Diffusers pipeline that does not fit the GPU's free
-  memory loads with model CPU offload instead of failing with CUDA out of memory.
+  memory loads with model CPU offload instead of failing with CUDA out of memory. When even the
+  largest component does not fit (for example next to a loaded text model), it falls back to
+  sequential CPU offload, which runs in far less GPU memory but is much slower (AbstractVision
+  0.3.33).
+- **A loaded image model is reused.** After **Load** in the console (or `POST /models/load`), image
+  and video requests for that model run on the loaded pipeline instead of loading the model again
+  for each request (AbstractRuntime 0.7.3, AbstractGateway 0.7.4). On the rehearsal machine,
+  FLUX.2 [klein] 4B images through the gateway took 17 to 19 s each instead of 54 to 59 s. A model
+  that was not loaded still runs each request in its own process.
+- **Unloading an image model frees its memory.** On CUDA, FLUX.2 [klein] 4B with model CPU offload
+  left 16.3 GB held after an unload; it now leaves 0.86 GB (AbstractVision 0.3.33).
 
-### Known issues
+### Found in the rehearsal
 
-Found in the rehearsal on the Quadro RTX 5000 described above.
+Found in the rehearsal on the Quadro RTX 5000 described above, which ran the candidate versions. The
+Fixed entries above address each one.
 
-- **Speech-to-text fails on a fresh gpu install**, for two reasons:
-  - **Use recommended defaults** does not set the speech input route (`input.voice`). With no route,
-    transcription uses OpenAI and fails with "OpenAI audio requires OPENAI_API_KEY". Set Voice
-    Input to `faster-whisper`, model `base`, in either console.
+- **Speech-to-text failed on a fresh gpu install**, for two reasons:
+  - **Use recommended defaults** did not set the speech input route (`input.voice`). With no route,
+    transcription used OpenAI and failed with "OpenAI audio requires OPENAI_API_KEY".
   - PyAV 19.0.0, released on 2026-09-29, removed an option that faster-whisper 1.2.1 uses to read
-    audio files. Every transcription through the gateway then fails with `open() got an unexpected
-    keyword argument 'metadata_errors'`. To fix it, run
-    `uv pip install --python ~/.local/share/uv/tools/abstractgateway/bin/python "av<19"` and
-    restart the gateway.
+    audio files. Every transcription through the gateway then failed with `open() got an unexpected
+    keyword argument 'metadata_errors'`.
 
-  With both fixes, faster-whisper transcribed on the GPU with no OpenAI key: 1.0 to 2.3 s per
-  gateway request, and 0.3 GB of GPU memory.
-- **An image next to a loaded text model runs out of GPU memory on a 16 GB card.** LM Studio's
-  `qwen/qwen3.5-9b` keeps 6.5 GB on the GPU while it is loaded. FLUX.2 [klein] needs 7.8 GB even
+  With the route set to faster-whisper `base` by hand and PyAV 18, faster-whisper transcribed on the
+  GPU with no OpenAI key: 1.0 to 2.3 s per gateway request, and 0.3 GB of GPU memory.
+- **An image next to a loaded text model ran out of GPU memory on a 16 GB card.** LM Studio's
+  `qwen/qwen3.5-9b` keeps 6.5 GB on the GPU while it is loaded. FLUX.2 [klein] needed 7.8 GB even
   with model CPU offload, so the image request failed with CUDA out of memory after three attempts
-  (about 2.5 minutes). Unload the text model first (`lms unload --all`, or the console's model
-  list), and the same request works.
-- **Use recommended defaults can skip the image route on a fresh install.** On an NVIDIA machine,
-  if the button is used within a few seconds of the console reading the routes, it can report the
-  image route as already set without saving it. Using it again saves it.
+  (about 2.5 minutes). With the text model unloaded (`lms unload --all`, or the console's model
+  list), the same request worked. In this case AbstractVision 0.3.33 falls back to sequential CPU
+  offload, which is much slower; unloading the text model first keeps the faster model CPU offload.
+- **Use recommended defaults could skip the image route on a fresh install.** On an NVIDIA machine,
+  if the button was used within a few seconds of the console reading the routes, it could report the
+  image route as already set without saving it. Using it again saved it.
 
 ## [0.6.2] - 2026-09-29
 

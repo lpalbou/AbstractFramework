@@ -60,8 +60,8 @@ The meta-package version (`0.6.3` for this release).
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.6.3:
-`abstractcore` 2.19.1, `abstractruntime` 0.7.2, `abstractagent` 0.3.17, `abstractgateway` 0.7.3,
-`abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.1, `abstractvision` 0.3.32,
+`abstractcore` 2.19.2, `abstractruntime` 0.7.3, `abstractagent` 0.3.17, `abstractgateway` 0.7.4,
+`abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.2, `abstractvision` 0.3.33,
 `abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.9.1.
 
 ### `PACKAGE_DISTRIBUTIONS`
@@ -79,7 +79,7 @@ The npm apps released with this version, each runnable with `npx <package>`:
 ### `CRATE_RELEASE_VERSIONS`
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.11.1, `abstractcore-console` 0.4.1, `abstractcode` 0.7.1 and the
+`abstractgateway-console` 0.11.2, `abstractcore-console` 0.4.1, `abstractcode` 0.7.1 and the
 `abstracttui` engine 0.6.0. The bootstrap scripts build `abstractgateway-console` at this version by default
 (`--no-console` skips it) and `abstractcode` next to it (`--no-code-cli` skips it).
 

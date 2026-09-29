@@ -105,7 +105,7 @@
         "summary": "Remove the service and uv tools (purge also deletes the data dir)."
       }
     ],
-    "gateway_version": "0.7.3",
+    "gateway_version": "0.7.4",
     "optional_extras": [
       "tray"
     ],
@@ -148,7 +148,7 @@
       "wait for GET /api/health",
       "abstractgateway-config claim-url (when supported) and open /console"
     ],
-    "tool_requirement": "abstractgateway[{extras}]==0.7.3",
+    "tool_requirement": "abstractgateway[{extras}]==0.7.4",
     "uninstall": [
       [
         "abstractgateway",
@@ -353,13 +353,13 @@
       "distribution": "abstractcore",
       "id": "abstractcore",
       "registry": "pypi",
-      "version": "2.19.1"
+      "version": "2.19.2"
     },
     {
       "distribution": "AbstractRuntime",
       "id": "abstractruntime",
       "registry": "pypi",
-      "version": "0.7.2"
+      "version": "0.7.3"
     },
     {
       "distribution": "abstractagent",
@@ -371,7 +371,7 @@
       "distribution": "abstractgateway",
       "id": "abstractgateway",
       "registry": "pypi",
-      "version": "0.7.3"
+      "version": "0.7.4"
     },
     {
       "distribution": "abstractskill",
@@ -395,13 +395,13 @@
       "distribution": "abstractvoice",
       "id": "abstractvoice",
       "registry": "pypi",
-      "version": "0.13.1"
+      "version": "0.13.2"
     },
     {
       "distribution": "abstractvision",
       "id": "abstractvision",
       "registry": "pypi",
-      "version": "0.3.32"
+      "version": "0.3.33"
     },
     {
       "distribution": "abstractmusic",
