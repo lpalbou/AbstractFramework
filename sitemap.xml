@@ -21,10 +21,12 @@
   <url><loc>https://abstractframework.ai/continuum.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
   <url><loc>https://abstractframework.ai/entity.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
   <url><loc>https://abstractframework.ai/voice.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
-  <url><loc>https://abstractframework.ai/vision.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
   <url><loc>https://abstractframework.ai/music.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
+  <url><loc>https://abstractframework.ai/vision.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
   <url><loc>https://abstractframework.ai/3d.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
   <url><loc>https://abstractframework.ai/camera.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
   <url><loc>https://abstractframework.ai/memory.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
   <url><loc>https://abstractframework.ai/semantics.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
+  <url><loc>https://abstractframework.ai/tui.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
+  <url><loc>https://abstractframework.ai/uic.html</loc><lastmod>2026-09-29</lastmod><priority>0.7</priority></url>
 </urlset>
