@@ -550,3 +550,20 @@ plan decides the final numbers.
   for the restricted Gmail scope, usable by up to 100 test users until Google's verification and
   security assessment pass) and (b) "bring your own OAuth client" as a gateway admin setting for
   self-hosted deployments. App passwords stay as the fallback.
+
+### WP2 status (runtime, branch feat/email-accounts @ ff69f60, 2026-09-30)
+
+- `fetch_url` / `browser_probe` are withheld from unattended grants of automations whose trigger
+  delivers untrusted content (`email.received@1`); schedule/manual automations keep them
+  auto-approved (withholding them everywhere would stop every research automation for approval).
+  Follow-up: a core refiner id `url_destination@v1` plus `policy.allowed_destinations`. Residual
+  channels: `skim_url` (fetches a model-chosen URL, no destination flag in core) and `web_search`
+  queries.
+- Decision needed: `_risk_row_for_tool` prefers the entity's own `fetch_url` row, which lacks core's
+  "model chooses the destination" flag, so the tier-ceiling rule never applied to `fetch_url` in
+  chat runs; fixing it changes approval behaviour in chats.
+- Found and fixed: `send_email` / `reply_email` attachments and `get_email_attachment` output were
+  not confined to the run workspace (now confined).
+- Core follow-up: `fetch_new` returns a UID-0 cursor after a UIDVALIDITY rebuild with no new mail
+  (the runtime feeder re-baselines; fix at the source in core).
+- Limit: the durable event inbox is never pruned (retention setting to add).
