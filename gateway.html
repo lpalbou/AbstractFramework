@@ -146,11 +146,11 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
       </div>
       <div class="comp-card">
         <h3>Turns on user accounts</h3>
-        <p>It creates the admin user <code>default/admin</code> and keeps its first token in <code>&lt;data dir&gt;/auth/bootstrap-admin-token</code> (file mode 0600).</p>
+        <p>It creates the admin user <code>default/admin</code> and keeps its first token in <code style="white-space:normal;overflow-wrap:anywhere">&lt;data dir&gt;/auth/bootstrap-admin-token</code> (file mode 0600).</p>
       </div>
       <div class="comp-card">
         <h3>Prints a one-time link</h3>
-        <p><code>http://127.0.0.1:8080/console#claim=…</code> signs you in as the admin and opens a short setup guide. The link works once, for 10 minutes, from this machine only.</p>
+        <p><code style="white-space:normal;overflow-wrap:anywhere">http://127.0.0.1:8080/console#claim=…</code> signs you in as the admin and opens a short setup guide. The link works once, for 10 minutes, from this machine only.</p>
       </div>
     </div>
 
@@ -161,7 +161,7 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
 
     <div class="callout reveal" style="margin-top:1rem">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div><strong>Upgrade.</strong> Re-run the same install line: it upgrades or repairs the install in place. The console&rsquo;s Gateway card (terminal console: F3) and the tray icon also offer <strong>Update</strong>; an Update that runs the installer itself is coming with AbstractGateway 0.7.2. See <a href="install.html#upgrade">Upgrade</a>. A <code>pip install abstractgateway</code> upgrades with <code>pip install -U</code>.</div>
+      <div><strong>Upgrade.</strong> Re-run the same install line: it upgrades or repairs the install in place. The console&rsquo;s Gateway card (terminal console: F3) and the tray icon also offer <strong>Update</strong>; an Update that runs the installer itself is coming with AbstractGateway 0.7.2. See <a href="install.html#upgrade">Upgrade</a>. A <code style="white-space:normal;overflow-wrap:anywhere">pip install abstractgateway</code> upgrades with <code>pip install -U</code>.</div>
     </div>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Users and sign-in</h3>
@@ -179,7 +179,7 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
         <p>Only someone who can write the data folder can mint one, it is stored as a SHA-256 digest, and the gateway redeems it only from a loopback connection without proxy headers.</p>
       </div>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><code>ABSTRACTGATEWAY_AUTH_TOKEN</code> is an optional shared server bearer token. It is not a browser sign-in token, and a normal install does not need it.</p>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px"><code style="white-space:normal;overflow-wrap:anywhere">ABSTRACTGATEWAY_AUTH_TOKEN</code> is an optional shared server bearer token. It is not a browser sign-in token, and a normal install does not need it.</p>
   </div>
 </section>
 
@@ -189,7 +189,7 @@ abstractgateway service install  <span class="line-cmt"># start at login</span><
     <div class="section-header reveal">
       <div class="section-label">Network &amp; security</div>
       <h2 class="section-title">Loopback first, open on purpose</h2>
-      <p class="section-desc">One setting decides who can reach the gateway. The console's Network tab, the terminal console, the tray icon and <code>abstractgateway network</code> all edit it, and it applies at the next start (or at once with <code>abstractgateway network restart</code>).</p>
+      <p class="section-desc">One setting decides who can reach the gateway. The console's Network tab, the terminal console, the tray icon and <code>abstractgateway network</code> all edit it, and it applies at the next start (or at once with <code style="white-space:normal;overflow-wrap:anywhere">abstractgateway network restart</code>).</p>
     </div>
 
     <div class="table-wrap reveal">
@@ -235,7 +235,7 @@ abstractgateway network set --allowed-origins https://ui.example.com   <span cla
       </div>
       <div class="comp-card">
         <h3>Start at login</h3>
-        <p><code>abstractgateway service install</code> registers a LaunchAgent, systemd user unit, desktop autostart entry or Windows Run entry; <code>status</code>, <code>enable</code>, <code>disable</code> and <code>uninstall</code> manage it. The same <strong>Start at login</strong> switch is in the web console's Gateway card, on the setup guide's last step and in the terminal console (F3).</p>
+        <p><code style="white-space:normal;overflow-wrap:anywhere">abstractgateway service install</code> registers a LaunchAgent, systemd user unit, desktop autostart entry or Windows Run entry; <code>status</code>, <code>enable</code>, <code>disable</code> and <code>uninstall</code> manage it. The same <strong>Start at login</strong> switch is in the web console's Gateway card, on the setup guide's last step and in the terminal console (F3).</p>
       </div>
     </div>
   </div>
@@ -264,7 +264,7 @@ abstractgateway apps open observer               <span class="line-cmt"># a one-
     </div>
     <div class="callout reveal" style="margin-top:1.5rem">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div><strong>The local gateway pointer.</strong> Once bound, <code>serve</code> writes <code>~/.abstractframework/gateway.json</code> (its URL, port and data folder). The terminal consoles, the Node apps and the Assistant read it to find this computer's gateway, and follow it when the gateway moves to another port. <code>abstractgateway network status</code> shows it.</div>
+      <div><strong>The local gateway pointer.</strong> Once bound, <code>serve</code> writes <code style="white-space:normal;overflow-wrap:anywhere">~/.abstractframework/gateway.json</code> (its URL, port and data folder). The terminal consoles, the Node apps and the Assistant read it to find this computer's gateway, and follow it when the gateway moves to another port. <code style="white-space:normal;overflow-wrap:anywhere">abstractgateway network status</code> shows it.</div>
     </div>
   </div>
 </section>
@@ -286,7 +286,7 @@ abstractgateway models download ollama qwen3:8b
 abstractgateway models list                      <span class="line-cmt"># installed models with sizes</span>
 abstractgateway models loaded                    <span class="line-cmt"># what is in memory (also: load, unload)</span></code></pre>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px">Each build gets a fit verdict for this computer: <strong>Fits</strong>, <strong>Tight</strong>, <strong>Partial offload</strong>, <strong>Too large</strong> or <strong>Unknown</strong>. On a Mac, <strong>Needs GPU limit</strong> shows the exact command that raises the GPU memory limit (<code>sudo sysctl iogpu.wired_limit_mb=&lt;MB&gt;</code>). The commands talk to the running gateway, so admin rules and the audit log apply; add <code>--local</code> to run them in-process.</p>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px">Each build gets a fit verdict for this computer: <strong>Fits</strong>, <strong>Tight</strong>, <strong>Partial offload</strong>, <strong>Too large</strong> or <strong>Unknown</strong>. On a Mac, <strong>Needs GPU limit</strong> shows the exact command that raises the GPU memory limit (<code style="white-space:normal;overflow-wrap:anywhere">sudo sysctl iogpu.wired_limit_mb=&lt;MB&gt;</code>). The commands talk to the running gateway, so admin rules and the audit log apply; add <code>--local</code> to run them in-process.</p>
   </div>
 </section>
 
@@ -308,7 +308,7 @@ abstractgateway models loaded                    <span class="line-cmt"># what i
           <tr><td><code>co-scientist</code></td><td><code>co-scientist</code></td><td>A multi-agent hypothesis engine: literature grounding, then generation, reflection, Elo-ranked debate and evolution into a reviewed research overview.</td></tr>
           <tr><td><code>docs-qa</code></td><td>default</td><td>Documentation Q&amp;A grounded on the asking app's <code>llms.txt</code> corpus.</td></tr>
           <tr><td><code>react-agent</code>, <code>codeact-agent</code>, <code>memact-agent</code></td><td><code>react</code>, <code>codeact</code>, <code>memact</code></td><td>The native ReAct, CodeAct and MemAct agent loops from <a href="agent.html">AbstractAgent</a>.</td></tr>
-          <tr><td><code>abstractassistant-orchestrator</code></td><td>default</td><td>The orchestrator behind the <a href="assistant.html">AbstractAssistant</a> tray app.</td></tr>
+          <tr><td><code style="white-space:normal;overflow-wrap:anywhere">abstractassistant-orchestrator</code></td><td>default</td><td>The orchestrator behind the <a href="assistant.html">AbstractAssistant</a> tray app.</td></tr>
         </tbody>
       </table>
     </div>
@@ -361,7 +361,7 @@ abstractgateway models loaded                    <span class="line-cmt"># what i
       <h2 class="section-title">The client contract</h2>
       <p class="section-desc">Clients start runs, act with durable commands and render by replaying or streaming the ledger. The live OpenAPI spec is at <code>/openapi.json</code> and Swagger UI at <code>/docs</code>.</p>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:.75rem"><code>GW</code> is the gateway address, <code>TOKEN</code> the admin token (<code>&lt;data dir&gt;/auth/bootstrap-admin-token</code>) and <code>RUN_ID</code> the <code>run_id</code> field of the start response.</p>
+    <p class="reveal" style="color:var(--text-secondary);max-width:860px;margin-bottom:.75rem"><code>GW</code> is the gateway address, <code>TOKEN</code> the admin token (<code style="white-space:normal;overflow-wrap:anywhere">&lt;data dir&gt;/auth/bootstrap-admin-token</code>) and <code>RUN_ID</code> the <code>run_id</code> field of the start response.</p>
     <!-- W2 PASS: SNIPPETS.md E6 (the SSE line: VERIFIED-DOCS abstractgateway@v0.7.1 src/abstractgateway/routes/gateway.py:10416) -->
 <div class="code-block reveal">
 <pre><code><span class="line-cmt"># Start a run of a shipped workflow (flow_id omitted: the bundle's default entrypoint)</span>
@@ -391,11 +391,11 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Discovery</h3>
-        <p><code>GET /api/gateway/discovery/capabilities</code> is a versioned contract of packages, endpoints and feature gates. Voice, speech, music and vision catalogs, artifact search, knowledge-graph queries and prompt-cache controls sit beside it.</p>
+        <p><code style="white-space:normal;overflow-wrap:anywhere">GET /api/gateway/discovery/capabilities</code> is a versioned contract of packages, endpoints and feature gates. Voice, speech, music and vision catalogs, artifact search, knowledge-graph queries and prompt-cache controls sit beside it.</p>
       </div>
       <div class="mode-card" style="text-align:left">
         <h3>Telegram and email</h3>
-        <p>Optional bridges turn incoming messages into durable runs: <code>ABSTRACT_TELEGRAM_BRIDGE=1</code> (Bot API or TDLib, with an allowlist of users) and <code>ABSTRACT_EMAIL_BRIDGE=1</code> (IMAP). The Telegram bridge runs the shipped <code>basic-agent</code> unless you name another workflow.</p>
+        <p>Optional bridges turn incoming messages into durable runs: <code style="white-space:normal;overflow-wrap:anywhere">ABSTRACT_TELEGRAM_BRIDGE=1</code> (Bot API or TDLib, with an allowlist of users) and <code>ABSTRACT_EMAIL_BRIDGE=1</code> (IMAP). The Telegram bridge runs the shipped <code>basic-agent</code> unless you name another workflow.</p>
       </div>
     </div>
   </div>
@@ -452,7 +452,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer &lt;admin token&gt;"</
   -v <span class="line-str">"$PWD/runtime:/data"</span> \
   ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);margin-top:1rem;max-width:860px">On first start the container creates <code>default/admin</code> and writes its token to <code>runtime/auth/bootstrap-admin-token</code>; use it to sign in to <code>/console</code>, then rotate it or create named users. On Apple Silicon, keep MLX inference native on macOS and point the container at it.</p>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1rem;max-width:860px">On first start the container creates <code>default/admin</code> and writes its token to <code style="white-space:normal;overflow-wrap:anywhere">runtime/auth/bootstrap-admin-token</code>; use it to sign in to <code>/console</code>, then rotate it or create named users. On Apple Silicon, keep MLX inference native on macOS and point the container at it.</p>
 
     <h3 class="reveal" style="margin:2.5rem 0 1rem">Split API and runner, SQLite</h3>
     <!-- VERIFIED-DOCS: RESULTS.md E8 gateway.html:439 (helpcheck: runner, serve --no-runner, migrate) -->

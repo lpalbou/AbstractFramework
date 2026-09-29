@@ -108,20 +108,20 @@
             <li><a href="https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg">Download AbstractFramework-Installer.pkg</a> (attached to every <a href="https://github.com/lpalbou/AbstractFramework/releases" target="_blank" rel="noopener noreferrer">GitHub release</a>) and double-click it.</li>
             <li>The package is not signed with an Apple Developer ID, so macOS blocks it the first time. Close the warning, open <strong>System Settings &gt; Privacy &amp; Security</strong>, click <strong>Open Anyway</strong> next to the installer's name and confirm. You do this once per download.</li>
             <li>Click <strong>Continue</strong>, then <strong>Install</strong>; it installs for you only, so it does not ask for your password. A Terminal window then shows each step and asks one question: <em>Start AbstractFramework automatically when you log in?</em> Press Return for yes.</li>
-            <li>It also leaves <strong>Install AbstractFramework.command</strong> (run it again to repair or upgrade) and <strong>Uninstall AbstractFramework.command</strong> in <code>~/Library/Application Support/AbstractFramework/Installer</code>.</li>
+            <li>It also leaves <strong>Install AbstractFramework.command</strong> (run it again to repair or upgrade) and <strong>Uninstall AbstractFramework.command</strong> in <code style="white-space:normal;overflow-wrap:anywhere">~/Library/Application Support/AbstractFramework/Installer</code>.</li>
           </ul><p style="margin:.9rem 0 .2rem"><strong>With Terminal: one line.</strong> Paste it and press Return; it runs the same installer.</p></div>
           <!-- VERIFIED-DOCS docs/install.md:57 -->
 <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
           <div class="install-notes"><ul>
             <li>macOS 13 or later (the Apple Silicon engines need macOS 14), about 5 GB of free disk before models, and an internet connection.</li>
-            <li>With no answer to the start-at-login question within 25 seconds, it leaves start at login off. Pass options after <code>sh -s --</code>, for example <code>… | sh -s -- --with-ollama</code>. See <a href="#options">Options</a>.</li>
+            <li>With no answer to the start-at-login question within 25 seconds, it leaves start at login off. Pass options after <code>sh -s --</code>, for example <code style="white-space:normal;overflow-wrap:anywhere">… | sh -s -- --with-ollama</code>. See <a href="#options">Options</a>.</li>
           </ul></div>
         </div>
         <div class="tab-panel" id="tab-i-linux">
           <!-- VERIFIED-DOCS docs/install.md:57 -->
 <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
           <div class="install-notes"><ul>
-            <li>Paste it in a terminal and press Return. It asks whether to start at login (a <code>systemd --user</code> service); Enter = yes, no answer within 25 seconds leaves it off. Your data lives in <code>~/.local/share/abstractgateway</code>.</li>
+            <li>Paste it in a terminal and press Return. It asks whether to start at login (a <code>systemd --user</code> service); Enter = yes, no answer within 25 seconds leaves it off. Your data lives in <code style="white-space:normal;overflow-wrap:anywhere">~/.local/share/abstractgateway</code>.</li>
             <li>x86_64 or aarch64 (on musl Linux such as Alpine, local voice and llama.cpp are skipped); about 5 GB of free disk before models. The <code>gpu</code> profile is picked when <code>nvidia-smi</code> or <code>rocminfo</code> works.</li>
             <li><strong>Headless or over SSH:</strong> the same line works. It does not open a browser on the server; it offers the terminal console at the end instead, and one SSH tunnel reaches the web console and every app. See <a href="#headless">Headless or remote server</a>.</li>
           </ul></div>
@@ -156,12 +156,12 @@ abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></
       <div class="install-step"><h4>Checks this machine</h4><p>OS, CPU, disk, a free port, internet access, NVIDIA or ROCm. It picks a profile: <code>apple</code> on Apple Silicon (macOS 14+), <code>gpu</code> with a working NVIDIA or ROCm GPU, <code>light</code> otherwise.</p></div>
       <div class="install-step"><h4>Installs in your account</h4><p>uv and a private Python 3.12, then the gateway as an isolated tool, with local voice (Supertonic text-to-speech and Whisper speech-to-text, on CPU). Prebuilt wheels only: no compiler needed.</p></div>
       <div class="install-step"><h4>Puts the commands on PATH</h4><p>Builds the terminal console and AbstractCode&rsquo;s terminal client with cargo (Rust from rustup when missing), and exposes the library commands, all in <code>~/.local/bin</code> next to <code>abstractgateway</code>. A failed build never fails the install. <a href="#commands">Commands you get</a></p></div>
-      <div class="install-step"><h4>Opens the console</h4><p>Starts the gateway on <code>127.0.0.1:8080</code>, writes <code>~/.abstractframework/gateway.json</code> so every client finds it, and opens the web console through a one-time sign-in link.</p></div>
+      <div class="install-step"><h4>Opens the console</h4><p>Starts the gateway on <code>127.0.0.1:8080</code>, writes <code style="white-space:normal;overflow-wrap:anywhere">~/.abstractframework/gateway.json</code> so every client finds it, and opens the web console through a one-time sign-in link.</p></div>
     </div>
 
     <div class="callout reveal" style="max-width:900px;margin:2rem auto 0">
       <svg class="c-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div>Afterwards, AbstractFramework is at <code>http://127.0.0.1:8080/console</code> (bookmark it). The gateway&rsquo;s tray icon (the menu bar on macOS, the system tray on Windows, a panel on Linux) opens it and shows its status. The browser apps open from the console's <strong>Apps</strong> page at <code>http://127.0.0.1:8080/apps/&lt;app&gt;/</code>. Next: <a href="console.html">what the console does</a>, or <a href="index.html#start">pick a starting point</a>.</div>
+      <div>Afterwards, AbstractFramework is at <code style="white-space:normal;overflow-wrap:anywhere">http://127.0.0.1:8080/console</code> (bookmark it). The gateway&rsquo;s tray icon (the menu bar on macOS, the system tray on Windows, a panel on Linux) opens it and shows its status. The browser apps open from the console's <strong>Apps</strong> page at <code style="white-space:normal;overflow-wrap:anywhere">http://127.0.0.1:8080/apps/&lt;app&gt;/</code>. Next: <a href="console.html">what the console does</a>, or <a href="index.html#start">pick a starting point</a>.</div>
     </div>
   </div>
 </section>
@@ -257,7 +257,7 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
         <h3>Configure from the terminal console</h3>
         <!-- VERIFIED-DOCS: RESULTS.md E8 install.html:221-232 (helpcheck-crates) -->
 <div class="code-block"><pre><code>abstractgateway-console --gateway-url http://127.0.0.1:8080 --token &lt;admin token&gt;</code></pre></div>
-        <p>The installer's summary prints this command with your port and token filled in; the admin token is also in <code>~/.local/share/abstractgateway/auth/bootstrap-admin-token</code>. The console runs the same setup guide as the web console. Press <code>N</code> for <strong>Network</strong>, <code>A</code> for <strong>Apps</strong>, <code>F3</code> for the gateway host (restart, update, start at login).</p>
+        <p>The installer's summary prints this command with your port and token filled in; the admin token is also in <code style="white-space:normal;overflow-wrap:anywhere">~/.local/share/abstractgateway/auth/bootstrap-admin-token</code>. The console runs the same setup guide as the web console. Press <code>N</code> for <strong>Network</strong>, <code>A</code> for <strong>Apps</strong>, <code>F3</code> for the gateway host (restart, update, start at login).</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
         <h3>Reach the web console and apps through one tunnel</h3>
@@ -265,7 +265,7 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
 <div class="code-block"><pre><code>ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
 <span class="line-cmt"># on the server, print a one-time sign-in link for your browser:</span>
 abstractgateway-config claim-url --base-url http://127.0.0.1:8080</code></pre></div>
-        <p>Open the link in your browser, then open the apps from the console's <strong>Apps</strong> page: each one is served at <code>http://127.0.0.1:8080/apps/&lt;app&gt;/</code> (<code>observer</code>, <code>code</code>, <code>flow</code>, <code>continuum</code>, <code>entity</code>).</p>
+        <p>Open the link in your browser, then open the apps from the console's <strong>Apps</strong> page: each one is served at <code style="white-space:normal;overflow-wrap:anywhere">http://127.0.0.1:8080/apps/&lt;app&gt;/</code> (<code>observer</code>, <code>code</code>, <code>flow</code>, <code>continuum</code>, <code>entity</code>).</p>
       </div></div>
     </div>
   </div>
@@ -317,7 +317,7 @@ abstractgateway service uninstall  <span class="line-cmt"># data is kept</span><
       <table class="data-table">
         <thead><tr><th>macOS / Linux</th><th>Windows</th><th>What it does</th></tr></thead>
         <tbody>
-          <tr><td><code>--profile auto|light|apple|gpu</code></td><td><code>-Profile</code></td><td>Override the profile choice</td></tr>
+          <tr><td><code style="white-space:normal;overflow-wrap:anywhere">--profile auto|light|apple|gpu</code></td><td><code>-Profile</code></td><td>Override the profile choice</td></tr>
           <tr><td><code>--port N</code></td><td><code>-Port N</code></td><td>Gateway port (default 8080; the next free port when 8080 is busy)</td></tr>
           <tr><td><code>--with-ollama</code></td><td><code>-WithOllama</code></td><td>Run Ollama's official installer</td></tr>
           <tr><td><code>--with-lmstudio</code></td><td><code>-WithLmStudio</code></td><td>Install LM Studio (headless daemon on macOS/Linux)</td></tr>
@@ -348,10 +348,10 @@ abstractgateway service uninstall  <span class="line-cmt"># data is kept</span><
       <table class="data-table">
         <thead><tr><th>What you see</th><th>What to do</th></tr></thead>
         <tbody>
-          <tr><td><code>no internet connection: the installer could not reach pypi.org</code></td><td>Connect to the internet and run it again. Nothing was changed.</td></tr>
-          <tr><td><code>this Terminal runs in Intel (Rosetta) mode on an Apple Silicon Mac</code></td><td>Untick <strong>Open using Rosetta</strong> in Terminal's Get Info window, then run it again.</td></tr>
-          <tr><td><code>the Apple Silicon engines (MLX) need macOS 14 or later</code></td><td>You get the light version. Update macOS and run the installer again to add the local engines.</td></tr>
-          <tr><td>The browser page asks for a token</td><td>The one-time link lasts 10 minutes. Run the installer again for a fresh link, or run <code>abstractgateway claim --open</code>.</td></tr>
+          <tr><td><code style="white-space:normal;overflow-wrap:anywhere">no internet connection: the installer could not reach pypi.org</code></td><td>Connect to the internet and run it again. Nothing was changed.</td></tr>
+          <tr><td><code style="white-space:normal;overflow-wrap:anywhere">this Terminal runs in Intel (Rosetta) mode on an Apple Silicon Mac</code></td><td>Untick <strong>Open using Rosetta</strong> in Terminal's Get Info window, then run it again.</td></tr>
+          <tr><td><code style="white-space:normal;overflow-wrap:anywhere">the Apple Silicon engines (MLX) need macOS 14 or later</code></td><td>You get the light version. Update macOS and run the installer again to add the local engines.</td></tr>
+          <tr><td>The browser page asks for a token</td><td>The one-time link lasts 10 minutes. Run the installer again for a fresh link, or run <code style="white-space:normal;overflow-wrap:anywhere">abstractgateway claim --open</code>.</td></tr>
           <tr><td>Anything else</td><td>Run it again. If it stops at the same step, report it with the log file named at the end of the message.</td></tr>
         </tbody>
       </table>
@@ -372,7 +372,7 @@ curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scri
         <h3 style="margin:1.25rem 0 .75rem">Remove</h3>
         <!-- VERIFIED-DOCS docs/install.md:109 -->
 <div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh</code></pre></div>
-        <p style="color:var(--text-secondary);font-size:var(--text-sm)">It asks before deleting anything, keeps your data unless you say yes, and keeps model weights and shared caches. Windows: <code>install.ps1 -Uninstall [-Purge]</code>.</p>
+        <p style="color:var(--text-secondary);font-size:var(--text-sm)">It asks before deleting anything, keeps your data unless you say yes, and keeps model weights and shared caches. Windows: <code style="white-space:normal;overflow-wrap:anywhere">install.ps1 -Uninstall [-Purge]</code>.</p>
       </div>
     </div>
   </div>
@@ -421,8 +421,8 @@ abstractgateway serve     <span class="line-cmt"># prints a one-time console lin
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
   ghcr.io/lpalbou/abstractgateway:0.7.1</code></pre></div>
           <div class="install-notes"><ul>
-            <li>The light container: every framework capability through remote or endpoint inference. On first start it creates <code>default/admin</code> and writes the login token to <code>runtime/auth/bootstrap-admin-token</code>.</li>
-            <li><code>ghcr.io/lpalbou/abstractgateway:gpu-latest</code> is an experimental local GPU image for NVIDIA hosts. The AbstractCore OpenAI-compatible server is <code>ghcr.io/lpalbou/abstractcore-server:2.18.0</code>.</li>
+            <li>The light container: every framework capability through remote or endpoint inference. On first start it creates <code>default/admin</code> and writes the login token to <code style="white-space:normal;overflow-wrap:anywhere">runtime/auth/bootstrap-admin-token</code>.</li>
+            <li><code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractgateway:gpu-latest</code> is an experimental local GPU image for NVIDIA hosts. The AbstractCore OpenAI-compatible server is <code style="white-space:normal;overflow-wrap:anywhere">ghcr.io/lpalbou/abstractcore-server:2.18.0</code>.</li>
           </ul></div>
         </div>
       </div>

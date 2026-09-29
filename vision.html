@@ -116,7 +116,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
     <div class="components-grid reveal">
       <div class="comp-card">
         <h3>Light base install</h3>
-        <p><code>pip install abstractvision</code> brings the API, the CLI, the capability registry, the AbstractCore plugin and a stdlib-only OpenAI-compatible HTTP backend. Torch, Diffusers and MLX come only with the extras you pick.</p>
+        <p><code style="white-space:normal;overflow-wrap:anywhere">pip install abstractvision</code> brings the API, the CLI, the capability registry, the AbstractCore plugin and a stdlib-only OpenAI-compatible HTTP backend. Torch, Diffusers and MLX come only with the extras you pick.</p>
       </div>
       <div class="comp-card">
         <h3>Capability registry</h3>
@@ -124,7 +124,7 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
       </div>
       <div class="comp-card">
         <h3>Artifact refs</h3>
-        <p>Give the manager a store and each result comes back as a small JSON ref (<code>{"$artifact": ...}</code>) instead of raw bytes, so it can travel between processes. <code>RuntimeArtifactStoreAdapter</code> writes into an <a href="runtime.html">AbstractRuntime</a> <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#artifact" target="_blank" rel="noopener noreferrer">artifact</a> store.</p>
+        <p>Give the manager a store and each result comes back as a small JSON ref (<code>{"$artifact": ...}</code>) instead of raw bytes, so it can travel between processes. <code style="white-space:normal;overflow-wrap:anywhere">RuntimeArtifactStoreAdapter</code> writes into an <a href="runtime.html">AbstractRuntime</a> <a href="https://github.com/lpalbou/AbstractFramework/blob/main/docs/glossary.md#artifact" target="_blank" rel="noopener noreferrer">artifact</a> store.</p>
       </div>
     </div>
     <div class="callout ok reveal" style="max-width:900px;margin:2rem auto 0">
@@ -278,15 +278,15 @@ pip install <span class="str">"abstractvision[local]"</span></code></pre>
       <table class="data-table">
         <thead><tr><th>GPU memory</th><th>Model</th><th>Why</th></tr></thead>
         <tbody>
-          <tr><td>&le; 16 GB</td><td><code>runwayml/stable-diffusion-v1-5</code></td><td>Small, stable, widely compatible</td></tr>
-          <tr><td>24&ndash;32 GB</td><td><code>black-forest-labs/FLUX.2-klein-4B</code></td><td>Not gated (needs Diffusers from source)</td></tr>
-          <tr><td>32 GB</td><td><code>stabilityai/stable-diffusion-3.5-large-turbo</code></td><td>High quality at low step counts (gated)</td></tr>
+          <tr><td>&le; 16 GB</td><td><code style="white-space:normal;overflow-wrap:anywhere">runwayml/stable-diffusion-v1-5</code></td><td>Small, stable, widely compatible</td></tr>
+          <tr><td>24&ndash;32 GB</td><td><code style="white-space:normal;overflow-wrap:anywhere">black-forest-labs/FLUX.2-klein-4B</code></td><td>Not gated (needs Diffusers from source)</td></tr>
+          <tr><td>32 GB</td><td><code style="white-space:normal;overflow-wrap:anywhere">stabilityai/stable-diffusion-3.5-large-turbo</code></td><td>High quality at low step counts (gated)</td></tr>
           <tr><td>64 GB</td><td><code>Qwen/Qwen-Image-2512</code></td><td>Strong prompt following and text rendering</td></tr>
-          <tr><td>128 GB</td><td><code>black-forest-labs/FLUX.2-dev</code></td><td>Very high quality; non-commercial license, gated</td></tr>
+          <tr><td>128 GB</td><td><code style="white-space:normal;overflow-wrap:anywhere">black-forest-labs/FLUX.2-dev</code></td><td>Very high quality; non-commercial license, gated</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="reveal" style="color:var(--text-muted);font-size:.85rem;margin-top:1rem;text-align:center">On Apple Silicon, <code>AbstractFramework/flux.2-klein-4b-4bit</code> through MLX-Gen is usually the most practical first model.</p>
+    <p class="reveal" style="color:var(--text-muted);font-size:.85rem;margin-top:1rem;text-align:center">On Apple Silicon, <code style="white-space:normal;overflow-wrap:anywhere">AbstractFramework/flux.2-klein-4b-4bit</code> through MLX-Gen is usually the most practical first model.</p>
   </div>
 </section>
 

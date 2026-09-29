@@ -117,7 +117,7 @@ abstractgateway apps tui-command code
     <div class="modes-grid reveal">
       <div class="mode-card" style="text-align:left">
         <h3>Terminal client <span class="ver">v0.7.1</span></h3>
-        <p>A Rust application built on <a href="tui.html" style="color:var(--accent-light)">AbstractTUI</a>, the framework&rsquo;s terminal UI toolkit: live reasoning cycles and tool cards, a multiline composer, approval modals, slash commands and 26 themes. The one-line installer builds it into <code>~/.local/bin</code>, next to <code>abstractgateway</code> (<code>--no-code-cli</code> skips it), and the console&rsquo;s Apps page installs and updates it in the same folder. Or install it with <code>cargo install abstractcode</code> (Rust 1.87+) or download a prebuilt binary from the <a href="https://github.com/lpalbou/AbstractCode/releases" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">GitHub releases</a>. macOS and Linux are the verified platforms.</p>
+        <p>A Rust application built on <a href="tui.html" style="color:var(--accent-light)">AbstractTUI</a>, the framework&rsquo;s terminal UI toolkit: live reasoning cycles and tool cards, a multiline composer, approval modals, slash commands and 26 themes. The one-line installer builds it into <code>~/.local/bin</code>, next to <code>abstractgateway</code> (<code>--no-code-cli</code> skips it), and the console&rsquo;s Apps page installs and updates it in the same folder. Or install it with <code style="white-space:normal;overflow-wrap:anywhere">cargo install abstractcode</code> (Rust 1.87+) or download a prebuilt binary from the <a href="https://github.com/lpalbou/AbstractCode/releases" target="_blank" rel="noopener noreferrer" style="color:var(--accent-light)">GitHub releases</a>. macOS and Linux are the verified platforms.</p>
         <div class="mode-tags"><span class="mode-tag">Rust</span><span class="mode-tag">crates.io</span><span class="mode-tag">abstractcode</span></div>
       </div>
       <div class="mode-card" style="text-align:left">
@@ -161,7 +161,7 @@ abstractgateway apps tui-command code
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
         </div>
         <h3>Approval-gated tools</h3>
-        <p>Tools stop and wait for you by default; approve or deny from either client. In the terminal, <code>/permissions read|write|all</code> sets the auto-approval level and per-tool pins override it. <code>all</code> is never the default.</p>
+        <p>Tools stop and wait for you by default; approve or deny from either client. In the terminal, <code style="white-space:normal;overflow-wrap:anywhere">/permissions read|write|all</code> sets the auto-approval level and per-tool pins override it. <code>all</code> is never the default.</p>
       </div>
 
       <div class="comp-card reveal">
@@ -177,7 +177,7 @@ abstractgateway apps tui-command code
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4.5a2 2 0 012 2V14M6.5 10v4.5a2 2 0 002 2H14"/></svg>
         </div>
         <h3>Workflows</h3>
-        <p>Run the gateway's default agent workflow, resolved by the gateway at every new turn, or pick a named agent bundle: <code>/workflow</code> or <code>--workflow &lt;bundle[:flow]|default&gt;</code> in the terminal, the workflow selector in the web toolbar.</p>
+        <p>Run the gateway's default agent workflow, resolved by the gateway at every new turn, or pick a named agent bundle: <code>/workflow</code> or <code style="white-space:normal;overflow-wrap:anywhere">--workflow &lt;bundle[:flow]|default&gt;</code> in the terminal, the workflow selector in the web toolbar.</p>
       </div>
 
       <div class="comp-card reveal">
@@ -276,7 +276,7 @@ abstractcode                                 <span class="line-cmt"># launch the
 abstractcode --resume                        <span class="line-cmt"># reopen the last session</span>
 abstractcode --workflow <span class="line-str">default</span>             <span class="line-cmt"># the gateway's default agent workflow</span></code></pre>
         </div>
-        <div class="install-notes"><ul><li>Started without a valid sign-in, <code>abstractcode</code> says so and prints both ways to sign in instead of opening. The installer never saves the token for you; the admin token is in <code>&lt;data dir&gt;/auth/bootstrap-admin-token</code>.</li><li><code>login</code> checks the credentials against the gateway before saving them in <code>~/.abstractcode/gateway.json</code>. Without <code>--gateway-url</code> or a saved login, the client uses the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>), else <code>http://127.0.0.1:8080</code>. <code>--provider</code> and <code>--model</code> only override the gateway's route.</li></ul></div>
+        <div class="install-notes"><ul><li>Started without a valid sign-in, <code>abstractcode</code> says so and prints both ways to sign in instead of opening. The installer never saves the token for you; the admin token is in <code style="white-space:normal;overflow-wrap:anywhere">&lt;data dir&gt;/auth/bootstrap-admin-token</code>.</li><li><code>login</code> checks the credentials against the gateway before saving them in <code style="white-space:normal;overflow-wrap:anywhere">~/.abstractcode/gateway.json</code>. Without <code>--gateway-url</code> or a saved login, the client uses the gateway installed on this computer (<code style="white-space:normal;overflow-wrap:anywhere">~/.abstractframework/gateway.json</code>), else <code>http://127.0.0.1:8080</code>. <code>--provider</code> and <code>--model</code> only override the gateway's route.</li></ul></div>
       </div>
       <div class="tab-panel" id="tab-web">
         <!-- VERIFIED-DOCS: RESULTS.md E8 code.html:282 (npm bin: --gateway-url, --port, 3002) -->
@@ -318,7 +318,7 @@ abstractcode exec <span class="line-str">"List the TODO comments in src/"</span>
         <tbody>
           <tr><td><code>/workflow</code></td><td>Pick the agent: <strong>Gateway default</strong> first, then every published workflow implementing <code>abstractcode.agent.v1</code>.</td></tr>
           <tr><td><code>/model</code></td><td>Pick provider and model, then reasoning effort and multi-token prediction.</td></tr>
-          <tr><td><code>/permissions read|write|all</code></td><td>Auto-approve proven read-only tools, then workspace file writes, then everything. Sticky per session.</td></tr>
+          <tr><td><code style="white-space:normal;overflow-wrap:anywhere">/permissions read|write|all</code></td><td>Auto-approve proven read-only tools, then workspace file writes, then everything. Sticky per session.</td></tr>
           <tr><td><code>/files</code></td><td>Browse the run's workspace on the gateway host and preview text, Markdown, JSON or images.</td></tr>
           <tr><td><code>/goal &lt;text&gt;</code></td><td>Start a self-verifying goal loop; <code>/goal</code> shows status, <code>/goal stop</code> cancels it.</td></tr>
           <tr><td><code>@name</code>, <code>/entities</code></td><td>Talk with a summoned entity hosted by the gateway; <code>Alt+E</code> cycles focus between the agent and open visits.</td></tr>

@@ -275,16 +275,16 @@ abstractobserver --gateway-url http://127.0.0.1:8080
       <table class="data-table">
         <thead><tr><th>Flag</th><th>Meaning</th></tr></thead>
         <tbody>
-          <tr><td><code>--gateway-url &lt;url&gt;</code></td><td>The gateway this server signs in to and proxies <code>/api</code> to (aliases <code>--gateway</code>, <code>--url</code>). Default: the gateway installed on this computer (<code>~/.abstractframework/gateway.json</code>, followed when it moves port), else <code>http://127.0.0.1:8080</code>.</td></tr>
+          <tr><td><code>--gateway-url &lt;url&gt;</code></td><td>The gateway this server signs in to and proxies <code>/api</code> to (aliases <code>--gateway</code>, <code>--url</code>). Default: the gateway installed on this computer (<code style="white-space:normal;overflow-wrap:anywhere">~/.abstractframework/gateway.json</code>, followed when it moves port), else <code>http://127.0.0.1:8080</code>.</td></tr>
           <tr><td><code>--port &lt;n&gt;</code></td><td>The port to listen on (default <code>3001</code>).</td></tr>
           <tr><td><code>--host &lt;addr&gt;</code></td><td>The address to listen on (default <code>127.0.0.1</code>). Pass <code>0.0.0.0</code> only to reach it directly from other machines, or open it through the gateway.</td></tr>
           <tr><td><code>--monitor-gpu</code></td><td>Shows the optional GPU widget.</td></tr>
-          <tr><td><code>--entity-app-url &lt;url&gt;</code></td><td>Where the entity app lives, for the "Entities" links (default <code>http://127.0.0.1:3007</code>).</td></tr>
+          <tr><td><code style="white-space:normal;overflow-wrap:anywhere">--entity-app-url &lt;url&gt;</code></td><td>Where the entity app lives, for the "Entities" links (default <code>http://127.0.0.1:3007</code>).</td></tr>
           <tr><td><code>--gateway-dir &lt;dir&gt;</code></td><td>The base for relative run workspace paths.</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px">Pin a version for deployments with <code>npx --yes --package @abstractframework/observer@0.2.1 -- abstractobserver</code>. <code>abstractobserver --help</code> lists the flags. The <code>PORT</code>, <code>HOST</code> and <code>ABSTRACTOBSERVER_*</code> environment variables are also read; a flag takes precedence over them.</p>
+    <p class="reveal" style="color:var(--text-secondary);margin-top:1.5rem;max-width:860px">Pin a version for deployments with <code style="white-space:normal;overflow-wrap:anywhere">npx --yes --package @abstractframework/observer@0.2.1 -- abstractobserver</code>. <code>abstractobserver --help</code> lists the flags. The <code>PORT</code>, <code>HOST</code> and <code>ABSTRACTOBSERVER_*</code> environment variables are also read; a flag takes precedence over them.</p>
   </div>
 </section>
 
