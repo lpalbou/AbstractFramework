@@ -4195,3 +4195,8 @@ li code, p code, td code, .mm-foot code { white-space: nowrap; overflow-wrap: no
 .profile-cards .mode-card { display: grid; grid-row: span 4; grid-template-rows: subgrid; align-content: start; row-gap: 0; }
 .profile-cards .mode-card .mode-tags { margin-top: 0; padding-top: 1rem; align-self: start; }
 @media (max-width: 768px) { .profile-cards { grid-template-rows: none; row-gap: var(--space-lg); } .profile-cards .mode-card { grid-row: auto; grid-template-rows: none; } }
+.profile-cards { grid-template-rows: repeat(5, auto); }
+.profile-cards .mode-card { grid-row: span 5; }
+.profile-note { color: var(--text-muted); font-size: .75rem; line-height: 1.5; margin-top: .75rem; }
+@media (max-width: 768px) { .profile-cards { grid-template-rows: none; } .profile-cards .mode-card { grid-row: auto; } .profile-note:empty { display: none; } }
+.profile-cards .mode-card p.profile-note { color: var(--text-muted); font-size: .75rem; line-height: 1.5; margin-top: .75rem; }

@@ -685,25 +685,28 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
         <div class="mode-tags"><span class="mode-tag">SSH</span><span class="mode-tag">systemd --user</span><span class="mode-tag">GHCR</span></div>
       </div>
     </div>
-    <!-- profile badges: abstractcore main ee9a115 (2.19.0, coming) pyproject.toml:66-72 (light incl. OpenAI and Anthropic SDKs), apple :144-172, gpu :174-200; abstractvision pyproject all-apple / all-gpu (MLX-Gen on Apple only, Diffusers, stable-diffusion.cpp); providers v2.18.0 registry.py:162-290 -->
+    <!-- profile badges and notes: names as core.html (21180fb); abstractcore@v2.18.0 pyproject.toml:169-176 (apple = MLX only), :194-198 (gpu = vLLM only); abstractcore main ee9a115 (2.19.0, coming) pyproject.toml:66-72 (light incl. OpenAI and Anthropic SDKs), apple :144-172, gpu :174-200; abstractvision pyproject all-apple / all-gpu (MLX-Gen on Apple only, Diffusers, stable-diffusion.cpp); providers v2.18.0 registry.py:162-290 -->
     <div class="modes-grid profile-cards reveal" style="margin-top:1.5rem">
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <h3>Light</h3>
         <p>Remote inference: OpenAI, Anthropic, OpenRouter, Portkey, LM Studio, Ollama, vLLM and any OpenAI-compatible endpoint. Runs anywhere Python runs.</p>
         <div class="mode-tags"><span class="mode-tag">OpenAI</span><span class="mode-tag">Anthropic</span><span class="mode-tag">OpenRouter</span><span class="mode-tag">Portkey</span><span class="mode-tag">LM Studio</span><span class="mode-tag">Ollama</span><span class="mode-tag">vLLM</span><span class="mode-tag">OpenAI-compatible</span></div>
+        <p class="profile-note" aria-hidden="true"></p>
       </div>
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--green)" stroke="none" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg></div>
         <h3>Apple</h3>
         <p>Everything in Light, plus the local MLX and Metal engines on Apple Silicon (macOS 14 or later) for text, voice, images and video.</p>
-        <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">MLX</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">llama.cpp</span><span class="mode-tag">MLX-Gen</span><span class="mode-tag">Diffusers</span><span class="mode-tag">Voice engines</span><span class="mode-tag">Music engines</span></div>
+        <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">MLX</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">MLX-Gen (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span><span class="mode-tag">Headless browser</span></div>
+        <p class="profile-note">With 2.18.0 this installs the MLX engine; the rest comes with AbstractCore 2.19.0 (coming).</p>
       </div>
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg></div>
         <h3>GPU</h3>
         <p>Everything in Light, plus the local engines for NVIDIA CUDA or AMD ROCm on Linux, and Windows where the wheels exist.</p>
-        <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">vLLM</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">llama.cpp</span><span class="mode-tag">Diffusers</span><span class="mode-tag">stable-diffusion.cpp</span><span class="mode-tag">Voice engines</span><span class="mode-tag">Music engines</span></div>
+        <div class="mode-tags"><span class="mode-tag light-plus">Light +</span><span class="mode-tag">vLLM engine</span><span class="mode-tag">Hugging Face</span><span class="mode-tag">GGUF (llama.cpp)</span><span class="mode-tag">Local embeddings</span><span class="mode-tag">AbstractVoice local</span><span class="mode-tag">Diffusers (AbstractVision)</span><span class="mode-tag">AbstractMusic local</span><span class="mode-tag">Headless browser</span></div>
+        <p class="profile-note">With 2.18.0 this installs the vLLM engine; the rest comes with AbstractCore 2.19.0 (coming).</p>
       </div>
     </div>
     <!-- VERIFIED-DOCS docs/install.md:393 (not runnable hermetically: needs a remote server) -->
