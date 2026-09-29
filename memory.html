@@ -212,26 +212,27 @@ python -m pip install <span class="line-str">"abstractmemory[lancedb]"</span>   
       </div>
     </div>
 
-    <!-- E8 B075 (W2 PASS): examples/E8-snippets/B075-print/snippet.py (SNIPPETS.md "memory-system"; identical minus the print line) -->
-<div class="code-block reveal" style="margin-top:var(--space-2xl)"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> (
+    <!-- E8 B075 (W2 PASS): examples/E8-snippets/B075-print/snippet.py (SNIPPETS.md "memory-system", verbatim) -->
+<div class="code-block reveal" style="margin-top:var(--space-2xl)"><pre><code>from abstractmemory import (
     MemorySystem, MemoryRecordInput, SQLiteTripleStore, SQLiteJournal, Stimulus,
 )
 
-store = <span class="line-fn">SQLiteTripleStore</span>(<span class="line-str">"memory.sqlite3"</span>)
-journal = <span class="line-fn">SQLiteJournal</span>(<span class="line-str">"memory.sqlite3"</span>)   <span class="line-cmt"># sidecar tables in the same file</span>
-system = <span class="line-fn">MemorySystem</span>(store=store, journal=journal)
+store = SQLiteTripleStore("memory.sqlite3")
+journal = SQLiteJournal("memory.sqlite3")   # sidecar tables in the same file
+system = MemorySystem(store=store, journal=journal)
 
-<span class="line-cmt"># Form a typed record (idempotent by key; forming is not using).</span>
-[record_id] = system.<span class="line-fn">remember_many</span>(
-    [<span class="line-fn">MemoryRecordInput</span>(kind=<span class="line-str">"episode"</span>, title=<span class="line-str">"Pool outage"</span>,
-                       digest=<span class="line-str">"The connection pool saturated at noon."</span>,
-                       keywords=(<span class="line-str">"pool"</span>, <span class="line-str">"outage"</span>))],
-    scope=<span class="line-str">"session"</span>, owner_id=<span class="line-str">"s1"</span>, idempotency_key=<span class="line-str">"turn-1"</span>,
+# Form a typed record (idempotent by key; forming is not using).
+[record_id] = system.remember_many(
+    [MemoryRecordInput(kind="episode", title="Pool outage",
+                       digest="The connection pool saturated at noon.",
+                       keywords=("pool", "outage"))],
+    scope="session", owner_id="s1", idempotency_key="turn-1",
 )
 
-<span class="line-cmt"># Reconstruct working memory for a cue (pure read), then commit what you used.</span>
-result = system.<span class="line-fn">reconstruct</span>(<span class="line-fn">Stimulus</span>(cue_text=<span class="line-str">"pool outage"</span>), scopes=[(<span class="line-str">"session"</span>, <span class="line-str">"s1"</span>)])
-system.<span class="line-fn">commit_selection</span>(result.trace_id, [h.record_id <span class="line-kw">for</span> h <span class="line-kw">in</span> result.handles[:<span class="line-var">2</span>]])</code></pre></div>
+# Reconstruct working memory for a cue (pure read), then commit what you used.
+result = system.reconstruct(Stimulus(cue_text="pool outage"), scopes=[("session", "s1")])
+system.commit_selection(result.trace_id, [h.record_id for h in result.handles[:2]])
+print(record_id, [h.record_id for h in result.handles])</code></pre></div>
   </div>
 </section>
 
@@ -255,24 +256,25 @@ system.<span class="line-fn">commit_selection</span>(result.trace_id, [h.record_
         </ul>
       </div>
       <div style="min-width:0">
-        <!-- E8 B076 (W2 PASS): examples/E8-snippets/B076-print/snippet.py (SNIPPETS.md "memory-triples"; identical minus the print line) -->
-<div class="code-block"><pre><code><span class="line-kw">from</span> abstractmemory <span class="line-kw">import</span> InMemoryTripleStore, TripleAssertion, TripleQuery
+        <!-- E8 B076 (W2 PASS): examples/E8-snippets/B076-print/snippet.py (SNIPPETS.md "memory-triples", verbatim) -->
+<div class="code-block"><pre><code>from abstractmemory import InMemoryTripleStore, TripleAssertion, TripleQuery
 
-store = <span class="line-fn">InMemoryTripleStore</span>()
-store.<span class="line-fn">add</span>([
-    <span class="line-fn">TripleAssertion</span>(
-        subject=<span class="line-str">"Scrooge"</span>,
-        predicate=<span class="line-str">"related_to"</span>,
-        object=<span class="line-str">"Christmas"</span>,
-        scope=<span class="line-str">"session"</span>,
-        owner_id=<span class="line-str">"sess-1"</span>,
-        provenance={<span class="line-str">"span_id"</span>: <span class="line-str">"span_123"</span>},
+store = InMemoryTripleStore()
+store.add([
+    TripleAssertion(
+        subject="Scrooge",
+        predicate="related_to",
+        object="Christmas",
+        scope="session",
+        owner_id="sess-1",
+        provenance={"span_id": "span_123"},
     )
 ])
 
-hits = store.<span class="line-fn">query</span>(<span class="line-fn">TripleQuery</span>(subject=<span class="line-str">"scrooge"</span>, scope=<span class="line-str">"session"</span>, owner_id=<span class="line-str">"sess-1"</span>))
-<span class="line-kw">assert</span> hits[<span class="line-var">0</span>].object == <span class="line-str">"christmas"</span>      <span class="line-cmt"># terms are canonicalized</span>
-<span class="line-kw">assert</span> hits[<span class="line-var">0</span>].assertion_id <span class="line-kw">is not</span> <span class="line-var">None</span>   <span class="line-cmt"># read-side identity</span></code></pre></div>
+hits = store.query(TripleQuery(subject="scrooge", scope="session", owner_id="sess-1"))
+assert hits[0].object == "christmas"      # terms are canonicalized
+assert hits[0].assertion_id is not None   # read-side identity
+print(hits[0].subject, hits[0].predicate, hits[0].object)   # scrooge related_to christmas</code></pre></div>
       </div>
     </div>
 
