@@ -633,7 +633,17 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
         <a class="comp-link" href="observer.html">AbstractObserver: browse any ledger &rarr;</a>
         <a class="comp-link" href="https://github.com/lpalbou/abstractgateway/blob/main/docs/api.md" target="_blank" rel="noopener noreferrer">Gateway ledger API &rarr;</a>
       </div>
-      <!-- PENDING-W2: SHOT observer-ledger (a real Observer ledger view) -->
+    </div>
+    <div class="showcase-grid reverse reveal" style="margin-top:2.5rem">
+      <div class="showcase-content">
+        <h3>For the Apps, the Ledger Is the Run</h3>
+        <p>For the apps, the ledger is the run: they hold no state of their own; they load the run's history from the gateway and follow it live. The Observer's Ledger tab shows each record with its JSON payload.</p>
+        <div class="comp-links" style="margin-top:1rem"><a class="comp-link" href="observer.html">AbstractObserver &rarr;</a></div>
+      </div>
+      <div class="showcase-img">
+        <!-- W2 MANIFEST.md (deliver/img/shots): observer-run-ledger.webp, Observer 0.2.1, alt verbatim -->
+        <img src="assets/img/shots/observer-run-ledger.webp" alt="Observer Ledger tab of a completed run: ledger records node-2::done, node-2::reason (llm_call, completed and started) and ANSWERING (on_flow_end) with their JSON payloads and Unfold / Copy buttons, plus Steps / Cycles / Condensed / Copy JSONL controls" loading="lazy">
+      </div>
     </div>
   </div>
 </section>
@@ -689,11 +699,11 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> <span c
       <div class="mode-card">
         <div class="mode-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h2v4H6zM10 10h2v4h-2zM14 10h2v4h-2zM18 10h.01"/><path d="M6 2v4M10 2v4M14 2v4M18 2v4M6 18v4M10 18v4M14 18v4M18 18v4"/></svg></div>
         <h3>GPU</h3>
-        <p>Adds the local engines for NVIDIA CUDA or AMD ROCm on Linux, next to everything in Light.</p>
+        <p>Adds the local engines for NVIDIA CUDA or AMD ROCm on Linux, and Windows where the wheels exist, next to everything in Light.</p>
         <div class="mode-tags"><span class="mode-tag">vLLM</span><span class="mode-tag">HuggingFace</span><span class="mode-tag">Diffusers</span><span class="mode-tag">CUDA</span></div>
       </div>
     </div>
-    <!-- PENDING-W2: E8 -->
+    <!-- VERIFIED-DOCS docs/install.md:389-392 (not runnable hermetically: needs a remote server) -->
 <div class="code-block reveal" style="max-width:720px;margin:1.5rem auto 0">
 <pre><code><span class="line-cmt"># From your computer: one tunnel for the console, the API and every app</span>
 ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
@@ -1055,8 +1065,8 @@ ssh -L 8080:127.0.0.1:8080 &lt;server&gt;
 
     <div class="showcase-grid reveal">
       <div class="showcase-img">
-        <!-- PENDING-W2: SHOT flow -->
-        <img src="assets/img/shots/flow-map-reduce.webp" alt="The AbstractFlow editor with a map-reduce workflow: inputs, a for-each loop, a per-item LLM call, append and persist steps, a reduce LLM call and the result node" loading="lazy">
+        <!-- W2 MANIFEST.md (deliver/img/shots): flow-coding-agent.webp, Flow Editor 0.4.0, alt verbatim -->
+        <img src="assets/img/shots/flow-coding-agent.webp" alt="AbstractFlow editor with the coding-agent workflow: a builder loop with verification gates and delivery branches, minimap at the bottom right" loading="lazy">
       </div>
       <div class="showcase-content">
         <h3>Loop engineering, graph engineering</h3>
@@ -1129,16 +1139,26 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       <h2 class="section-title">AbstractCode &mdash; Terminal and Web</h2>
       <p class="section-desc">A coding agent that runs durably on the gateway, with two interchangeable clients. Start a task in the terminal, close your laptop, and pick the same session up in the browser: tool approvals, workspace files and streamed replies in both.</p>
     </div>
-    <div class="showcase-grid reveal">
+    <!-- W2 MANIFEST.md (deliver/img/shots): code-tui-chat.webp (AbstractCode terminal 0.7.1), code-chat.webp (AbstractCode web 0.6.1), code-tui-approval.webp (terminal 0.7.1); alt verbatim -->
+    <div class="gallery reveal">
+      <div class="gallery-item">
+        <img src="assets/img/shots/code-tui-chat.webp" alt="AbstractCode terminal conversation: the question &quot;How long should I steep green tea?&quot;, the cycle line, the reply (green tea 75-80 °C for 2 to 3 minutes, black tea 3 to 5 minutes, herbal 5 to 7 minutes), then &quot;done · 1 llm calls&quot; and the status bar" loading="lazy">
+        <div class="gallery-caption">The terminal client, <code>abstractcode</code> 0.7.1</div>
+      </div>
+      <div class="gallery-item">
+        <img src="assets/img/shots/code-chat.webp" alt="AbstractCode web conversation: &quot;Summarise the attached release notes in three bullets.&quot; and the agent's three bullets (installer picks a free port, automations pause and resume from every client, replies stream live), with token, tool and time chips; the Files tab shows the conversation workspace" loading="lazy">
+        <div class="gallery-caption">The browser client at <code>/apps/code/</code>, 0.6.1</div>
+      </div>
+    </div>
+    <div class="showcase-grid reveal" style="margin-top:2rem">
       <div class="showcase-img">
-        <!-- PENDING-W2: SHOT code-terminal (the AbstractCode terminal client; the former slot held a gateway console image) -->
-        <img src="assets/img/shots/code-web.webp" alt="The AbstractCode web client with a conversation" loading="lazy">
+        <img src="assets/img/shots/code-tui-approval.webp" alt="AbstractCode terminal tool approval dialog: &quot;tool approval — 1 call(s)&quot;, execute_command needs permission level all, the command `mkdir -p archive &amp;&amp; mv *.dmg archive/`, working directory, and the buttons &quot;approve (a)&quot;, &quot;approve all (A — sets permissions: all)&quot; and &quot;deny (d)&quot;; status line &quot;approval needed — press Enter to open the prompt&quot;" loading="lazy">
       </div>
       <div class="showcase-content">
         <h3>One Session, Two Clients</h3>
-        <p>The terminal client, <code>abstractcode</code>, and the browser client at <code>/apps/code/</code> are views of the same durable session on the gateway.</p>
+        <p>The terminal client and the browser client are views of the same durable session on the gateway. A tool waits for your approval before it runs.</p>
         <ul class="showcase-features">
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Tool approvals before a tool touches your files</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Approve once, approve all, or deny</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Workspace files, steering and streamed replies</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Automations from the same session</li>
         </ul>
@@ -1158,8 +1178,8 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
     </div>
     <div class="showcase-grid reveal">
       <div class="showcase-img">
-        <!-- PENDING-W2: SHOT observer-automations -->
-        <img src="assets/img/shots/observer-automations.webp" alt="The Observer's Automations page with an automation opened, showing its schedule, context mode, next run and runs as a conversation" loading="lazy">
+        <!-- W2 MANIFEST.md (deliver/img/shots): observer-automations.webp (copied as observer-automations-list.webp so the sub-pages' file is untouched), Observer 0.2.1, alt verbatim -->
+        <img src="assets/img/shots/observer-automations-list.webp" alt="Observer Automations: four automations (Inbox triage, Downloads clean-up with &quot;1 waiting for you&quot;, Weekly dependency check paused, Morning research digest), and the opened digest with schedule, growing context, next run, workspace, controls, and run #1 as a Trigger bubble and the Automation's answer listing three papers" loading="lazy">
       </div>
       <div class="showcase-content">
         <h3>Every Run, a Readable Conversation</h3>
@@ -1190,12 +1210,12 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
     </div>
     <div class="gallery reveal">
       <div class="gallery-item">
-        <!-- PENDING-W2: SHOT assistant-palette -->
+        <!-- Assistant 0.9.1 capture, reused per W2 MANIFEST.md ("Reused, not retaken"; untracked/site-refresh/shots/assistant/MANIFEST.md) -->
         <img src="assets/img/shots/assistant-palette.webp" alt="The AbstractAssistant palette with a conversation" loading="lazy">
         <div class="gallery-caption">The palette and its session switcher</div>
       </div>
       <div class="gallery-item">
-        <!-- PENDING-W2: SHOT assistant-voice -->
+        <!-- Assistant 0.9.1 capture, reused per W2 MANIFEST.md -->
         <img src="assets/img/shots/assistant-voice.webp" alt="AbstractAssistant in voice mode" loading="lazy">
         <div class="gallery-caption">Voice mode</div>
       </div>
@@ -1306,7 +1326,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
       <h2 class="section-title">Start Anywhere. Continue Everywhere.</h2>
       <p class="section-desc">Runs live on the gateway, not in the client. The AbstractCode terminal and browser clients share the same sessions, and the Assistant&rsquo;s Sessions tab lists every chat session on the gateway, whichever client started it. Start a conversation in AbstractAssistant on your MacBook Pro, continue it with the AbstractCode terminal client in an SSH app on your phone, and finish it in the AbstractCode web app in any browser.</p>
     </div>
-    <!-- W5 fragment deliver/fragments/devices.html (P13); PENDING-W2: code-tui and code-tui-phone screenshots for its placeholder slots -->
+    <!-- W5 fragment deliver/fragments/devices.html (P13); shots from W2 MANIFEST.md: code-tui-chat.webp (terminal 0.7.1), code-web-phone.webp (web 0.6.1, phone emulation) -->
     <div class="dv-hub reveal" role="group" aria-label="One gateway and one ledger, four live views on four devices">
       <svg class="dv-wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <defs>
@@ -1348,7 +1368,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
             <span class="dv-url"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>127.0.0.1:8080/apps/code/</span>
           </div>
           <div class="dv-display">
-            <img src="assets/img/shots/code-web.webp" alt="The AbstractCode web app in a browser, signed in to the gateway" loading="lazy">
+            <img src="assets/img/shots/code-start.webp" alt="AbstractCode web start screen &quot;What are we building?&quot; with four starter cards, a sidebar listing automations (Inbox triage, Downloads clean-up, Weekly dependency check) and conversations, and the Workspace panel with Files, Activity and Artifacts tabs" loading="lazy">
           </div>
         </div>
         <figcaption class="dv-cap"><strong>Browser</strong> &middot; AbstractCode web</figcaption>
@@ -1361,7 +1381,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
             <span class="dv-title">abstractcode</span>
           </div>
           <div class="dv-display">
-            <div class="dv-placeholder">AbstractCode terminal client<br>(screenshot pending)</div>
+            <img src="assets/img/shots/code-tui-chat.webp" alt="AbstractCode terminal conversation: the question &quot;How long should I steep green tea?&quot;, the cycle line, the reply (green tea 75-80 °C for 2 to 3 minutes, black tea 3 to 5 minutes, herbal 5 to 7 minutes), then &quot;done · 1 llm calls&quot; and the status bar" loading="lazy">
           </div>
         </div>
         <figcaption class="dv-cap"><strong>Terminal</strong> &middot; AbstractCode terminal client</figcaption>
@@ -1372,7 +1392,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
           <div class="dv-body">
             <span class="dv-island" aria-hidden="true"></span>
             <div class="dv-display">
-              <div class="dv-placeholder">AbstractCode web in a phone browser<br>(screenshot pending)</div>
+              <img src="assets/img/shots/code-web-phone.webp" alt="AbstractCode web on a phone: the question &quot;How long should I steep green tea?&quot; and the agent's answer about steeping times, with the message box below" loading="lazy">
             </div>
           </div>
         </div>
@@ -1531,7 +1551,7 @@ curl -sS -H <span class="line-str">"Authorization: Bearer $TOKEN"</span> -H <spa
 
     <div class="showcase-grid reveal" style="margin-top:2.5rem">
       <div class="showcase-img">
-        <!-- PENDING-W2: SHOT entity-list -->
+        <!-- Entity 0.3.0 capture, reused per W2 MANIFEST.md ("Reused, not retaken"; untracked/site-refresh/shots/MANIFEST.md) -->
         <img src="assets/img/shots/entity-list.webp" alt="The AbstractEntity Summoned entities page with one newly created demo entity shown asleep, and its visit, work, personal and sleep modes" loading="lazy">
       </div>
       <div class="showcase-content">
