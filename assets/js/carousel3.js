@@ -373,7 +373,26 @@
     });
   }
 
+  // Video figures with a poster play overlay (.vfig, components.css): click to play, never autoplay.
+  function initVideoFigures(scope) {
+    Array.prototype.forEach.call((scope || document).querySelectorAll('.vfig'), function (fig) {
+      if (fig._vfig) return;
+      var v = fig.querySelector('video'), btn = fig.querySelector('.vfig-play');
+      if (!v || !btn) return;
+      fig._vfig = true;
+      if (!btn.innerHTML.trim()) btn.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+      var sync = function () { fig.classList.toggle('is-playing', !v.paused || v.currentTime > 0); };
+      btn.addEventListener('click', function () { var p = v.play(); if (p && p.catch) p.catch(function () {}); v.focus({ preventScroll: true }); });
+      v.addEventListener('play', sync);
+      v.addEventListener('pause', sync);
+      v.addEventListener('ended', function () { v.currentTime = 0; fig.classList.remove('is-playing'); });
+      fig.classList.add('vfig-ready');
+      sync();
+    });
+  }
+
   function init(scope) {
+    initVideoFigures(scope);
     Array.prototype.forEach.call((scope || document).querySelectorAll('[data-c3]'), function (root) {
       if (root._c3) return;
       root._c3 = new Carousel(root);

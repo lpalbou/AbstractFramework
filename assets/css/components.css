@@ -614,3 +614,31 @@
 .mg-error { padding: 2rem; color: #fca5a5; font-family: var(--mono); font-size: .8rem; }
 @media (max-width: 480px) { .mg-canvas { padding: .7rem; } .mg-visit { position: static; margin-bottom: .4rem; } }
 @media (prefers-reduced-motion: reduce) { .mg .mg-node, .mg .mg-edge, .mg-svg { transition: none; } }
+
+/* ── vfig: a plain video figure with a poster play overlay (behaviour in carousel3.js) ──
+   <figure class="vfig">
+     <div class="vfig-media">
+       <video controls playsinline preload="none" poster="poster.jpg" aria-label="..."><source src="clip.mp4" type="video/mp4"></video>
+       <button type="button" class="vfig-play" aria-label="Play the recording">…svg…</button>
+     </div>
+     <figcaption>…</figcaption>
+   </figure>
+   Never autoplays (reduced-motion safe by construction). Without JS the overlay is hidden and the
+   native controls work. */
+.vfig { margin: 0; }
+.vfig-media { position: relative; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-hover); background: #000; box-shadow: var(--shadow-lg); }
+.vfig-media video { display: block; width: 100%; height: auto; }
+.vfig-play {
+  position: absolute; inset: 0; margin: auto; width: 76px; height: 76px; border-radius: 50%;
+  display: none; place-items: center; cursor: pointer; color: #fff;
+  background: rgba(10, 10, 18, .6); border: 1px solid rgba(255, 255, 255, .35);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 0 0 6px rgba(99, 102, 241, .22), 0 0 40px rgba(34, 211, 238, .35);
+  transition: transform var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+.vfig-play:hover { transform: scale(1.06); background: rgba(99, 102, 241, .5); }
+.vfig-play:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 4px; }
+.vfig.vfig-ready:not(.is-playing) .vfig-play { display: grid; }
+.vfig figcaption { margin-top: .8rem; font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.55; }
+@media (max-width: 480px) { .vfig-play { width: 60px; height: 60px; } }
+@media (prefers-reduced-motion: reduce) { .vfig-play { transition: none; } }
