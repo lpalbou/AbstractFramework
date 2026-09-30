@@ -6,7 +6,18 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [0.7.2] - 2026-09-30
 
-A patch release. Pins AbstractGateway 0.8.2; every other version is unchanged from 0.7.1.
+Every screen works on phones, tablets and any window size. Pins: AbstractGateway 0.9.0 and
+AbstractCore 2.21.0 (responsive web consoles); the browser apps Flow 0.5.0, Code 0.8.0, Observer
+0.4.0, Continuum 0.5.0 and Entity 0.4.0 (responsive layouts, on `@abstractframework/ui-kit` 0.3.2
+and `panel-chat` 0.2.1). Every other version is unchanged from 0.7.1.
+
+### Changed
+
+- **Responsive everywhere.** The gateway and AbstractCore web consoles and the five browser apps
+  follow one responsive system: the framework breakpoints (480, 768, 1024 and 1440 px wide, plus
+  500 px tall for phone landscape), sidebars that become drawers below 1024 px, dialogs that open
+  as bottom sheets on small screens, 44 px touch targets and 16 px form fields on touch screens, and
+  pages that respect the notch and home-indicator areas. See each app's changelog for details.
 
 ### Fixed
 

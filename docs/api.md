@@ -60,7 +60,7 @@ The meta-package version (`0.7.2` for this release).
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.7.2:
-`abstractcore` 2.20.2, `abstractruntime` 0.8.1, `abstractagent` 0.3.17, `abstractgateway` 0.8.2,
+`abstractcore` 2.21.0, `abstractruntime` 0.8.1, `abstractagent` 0.3.17, `abstractgateway` 0.9.0,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.2, `abstractvision` 0.3.33,
 `abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.10.0.
 
@@ -72,9 +72,9 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.4.0, `@abstractframework/code` 0.7.0,
-`@abstractframework/observer` 0.3.0, `@abstractframework/continuum` 0.4.0 and
-`@abstractframework/entity` 0.3.0. They also appear as `npm_apps` in the install manifest.
+`@abstractframework/flow` 0.5.0, `@abstractframework/code` 0.8.0,
+`@abstractframework/observer` 0.4.0, `@abstractframework/continuum` 0.5.0 and
+`@abstractframework/entity` 0.4.0. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`
 

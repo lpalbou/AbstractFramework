@@ -15,10 +15,10 @@ __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.20.2",
+    "abstractcore": "2.21.0",
     "abstractruntime": "0.8.1",
     "abstractagent": "0.3.17",
-    "abstractgateway": "0.8.2",
+    "abstractgateway": "0.9.0",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
@@ -45,11 +45,11 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.4.0",
-    "@abstractframework/code": "0.7.0",
-    "@abstractframework/observer": "0.3.0",
-    "@abstractframework/continuum": "0.4.0",
-    "@abstractframework/entity": "0.3.0",
+    "@abstractframework/flow": "0.5.0",
+    "@abstractframework/code": "0.8.0",
+    "@abstractframework/observer": "0.4.0",
+    "@abstractframework/continuum": "0.5.0",
+    "@abstractframework/entity": "0.4.0",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
