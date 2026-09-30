@@ -293,9 +293,9 @@ function Test-RecordNamesThisGateway($Record, [string]$DataDir) {
 }
 # Test-PidFileGateway: gateway.pid names process $ProcessId and it is this install's background gateway:
 # a live process of this user running `abstractgateway serve` (uv's abstractgateway.exe launcher), whose
-# declared --data-dir is this data dir, or that declares none and either the serve record names it or it
-# started before gateway.pid was written (a pid reused after that gateway exited started later). A pid
-# file naming anything else never gets Stop-Process.
+# declared --data-dir (if any) is this data dir, and that started before gateway.pid was written (a pid
+# reused after that gateway exited started later). A pid file naming anything else never gets
+# Stop-Process.
 function Test-PidFileGateway([int]$ProcessId, [string]$PidFile, [string]$DataDir) {
     if (-not $ProcessId -or -not (Test-Path -LiteralPath $PidFile -PathType Leaf)) { return $false }
     $named = 0; try { $named = [int]((Get-Content -LiteralPath $PidFile -ErrorAction Stop | Select-Object -First 1) -replace '[^0-9]', '') } catch { $named = 0 }
@@ -303,9 +303,10 @@ function Test-PidFileGateway([int]$ProcessId, [string]$PidFile, [string]$DataDir
     if (-not (Test-ProcessAlive $ProcessId) -or -not (Test-SameUser $ProcessId)) { return $false }
     $cmd = Get-ProcessCommandLine $ProcessId
     if (-not (Test-GatewayCommandLine $cmd)) { return $false }
-    if (Get-DeclaredDataDir $cmd) { return (Test-CommandLineDataDir $cmd $DataDir) }
-    $record = Read-ServeRecord $DataDir
-    if ($record -and "$($record.pid)" -eq "$ProcessId" -and (Test-RecordNamesThisGateway $record $DataDir)) { return $true }
+    if ((Get-DeclaredDataDir $cmd) -and -not (Test-CommandLineDataDir $cmd $DataDir)) { return $false }
+    # Always: the process started before gateway.pid was written (the installer writes it right after
+    # starting its gateway); a pid reused later started later, even when its command line names this
+    # data dir.
     $started = Get-ProcessStartUtc $ProcessId
     try { $written = (Get-Item -LiteralPath $PidFile -ErrorAction Stop).LastWriteTimeUtc } catch { $written = $null }
     return ($null -ne $started -and $null -ne $written -and $started -le $written.AddSeconds(2))

@@ -901,9 +901,9 @@ pid_alive() { [ -f "$PID_FILE" ] && _p="$(cat "$PID_FILE" 2>/dev/null)" && [ -n 
 # file_mtime FILE: its modification time in seconds since the epoch (GNU stat, else BSD stat).
 file_mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null; }
 # bg_pid_ours: gateway.pid names this install's background gateway (its pid in BG_PID): a process of
-# this user running `abstractgateway serve` that serves this data dir (gw_serves_this_data_dir:
-# the --data-dir it declares, else the serve record naming it), or that declares no data dir and
-# started before gateway.pid was written (a pid reused after that gateway exited started later).
+# this user running `abstractgateway serve`, that serves this data dir (gw_serves_this_data_dir:
+# the --data-dir it declares, else the serve record naming it) or declares none, and that started
+# before gateway.pid was written (a pid reused after that gateway exited started later).
 # A pid file naming anything else never gets a signal from this installer.
 BG_PID=""
 bg_pid_ours() {
@@ -913,9 +913,12 @@ bg_pid_ours() {
     gw_process "$_bp" || return 1
     if ! gw_serves_this_data_dir "$_bp"; then
         [ -z "$(gw_declared_data_dir "$_bp")" ] || return 1
-        _bpm="$(file_mtime "$PID_FILE")"; _bps="$(proc_start_epoch "$_bp")"
-        [ -n "$_bpm" ] && [ -n "$_bps" ] && [ "$_bps" -le $((_bpm + 2)) ] || return 1
     fi
+    # Always: the process started before gateway.pid was written. The installer writes the file
+    # right after starting its gateway; a pid reused after that gateway exited started later, even
+    # when its command line happens to name this data dir.
+    _bpm="$(file_mtime "$PID_FILE")"; _bps="$(proc_start_epoch "$_bp")"
+    [ -n "$_bpm" ] && [ -n "$_bps" ] && [ "$_bps" -le $((_bpm + 2)) ] || return 1
     BG_PID="$_bp"
 }
 
