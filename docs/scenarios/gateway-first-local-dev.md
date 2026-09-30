@@ -44,8 +44,7 @@ mkdir -p ./runtime/gateway
 ## Step 2: Configure the gateway
 
 ```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+# User auth and the http://localhost:* / http://127.0.0.1:* browser origins are on by default.
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
 # Source checkout only. Packaged installs can omit this and use the shipped bundle path.

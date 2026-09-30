@@ -90,10 +90,11 @@ run the installer again: it continues where it stopped.
 - **Fix**: `abstractgateway claim --open` opens a fresh link (or `abstractgateway-config claim-url`
   prints one). Re-running the installer also opens one.
 - **Alternative**: sign in with the `admin` token stored in `<data>/auth/bootstrap-admin-token`.
-- **From another device, or without your token**: sign in with your gateway user name and token.
-  When your account has email set up (**Users → My email**), choose **Email me a sign-in code** or
-  **Forgot your token?** on the sign-in page: an 8-digit code arrives at your registered address,
-  works once and expires after 10 minutes. Without email, an administrator rotates your token. See
+- **From another device, or without your token**: sign in with your gateway user name and token,
+  or choose **Email me a sign-in code** or **Forgot your token?** on the sign-in page (offered
+  unless an administrator turned sign-in by email off): an 8-digit code arrives at your registered
+  address, works once and expires after 10 minutes. It reaches you only when your account has
+  email set up (**Users → My email**). Without email, an administrator rotates your token. See
   [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### The gateway does not answer

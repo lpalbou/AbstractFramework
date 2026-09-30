@@ -166,13 +166,14 @@ day by default), and a send to anyone but you (or the recipients an automation l
 your approval. Agents get the email tools only when an administrator made them available to you and
 you turned them on; administrators never read users' mail. An email-triggered automation treats
 mail as untrusted data and never follows its links unless you allow those tools, and mail the
-framework sends automatically never triggers an automation. See
+framework sends automatically through your account never triggers an automation. See
 [Email integration](guide/email-integration.md) and [Email automations](automations.md#email-automations).
 
 ## Can I use the console and the apps on my phone?
 
 Yes. The gateway's web console and the five browser apps work on phones, tablets and any window
-size. Let the phone reach the gateway (`abstractgateway network set lan`), then open the console on
+size. Let the phone reach the gateway (`abstractgateway network set lan`, then
+`abstractgateway network restart`), then open the console on
 the phone at the gateway's address; every installed app opens from its **Apps** page at
 `/apps/<app>/` on that same address. See [Phones and tablets](guide/deployment-iphone.md).
 
@@ -327,9 +328,10 @@ The one-time link is valid for 10 minutes and works only from the same machine. 
 `abstractgateway claim --open` (or `abstractgateway-config claim-url`). The admin token also stays
 in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path.
 
-From another device, sign in with your gateway user name and token. When your account has email set
-up (**Users → My email**), the sign-in page also offers **Email me a sign-in code** and **Forgot
-your token?**: an 8-digit code sent to your registered address, valid once for 10 minutes. See
+From another device, sign in with your gateway user name and token. The sign-in page also offers
+**Email me a sign-in code** and **Forgot your token?** (unless an administrator turned sign-in by
+email off): an 8-digit code sent to your registered address, valid once for 10 minutes. The code
+reaches you only when your account has email set up (**Users → My email**). See
 [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?

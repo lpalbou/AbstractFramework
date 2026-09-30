@@ -2155,7 +2155,8 @@ exchanges the token for a browser session and does not persist the token in brow
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
 The console and every browser app work on phones, tablets and any window size. To open them from
-another device, set the gateway's Network setting to `lan` and open the same `/console` and
+another device, set the gateway's Network setting to `lan` (`abstractgateway network set lan`, then
+`abstractgateway network restart`) and open the same `/console` and
 `/apps/<app>/` paths on the gateway's address; see [Phones and tablets](guide/deployment-iphone.md).
 
 ### 5. Automate recurring work
@@ -2953,8 +2954,8 @@ reply, download an attachment) only when all three hold:
    (terminal console) or with `PUT /api/gateway/me/email/agent-tools`.
 
 The rule applies to every client (AbstractCode, the Assistant, the Observer, the consoles). An
-automation that only sends you its results, notifications and sign-in codes do not need the
-switch; they need a connected, allowed account.
+automation's own send-email action (fixed templates you wrote), notifications and sign-in codes do
+not need the switch; they need a connected, allowed account.
 
 ## Automations on new mail
 
@@ -3022,7 +3023,7 @@ user; turn it off where mailboxes are less protected than gateway tokens.
 ## AbstractCore on its own
 
 An AbstractCore install without a gateway has one account of its own, set with
-`abstractcore email connect`, the core web console's **Email** page or the core terminal console's
+`abstractcore email connect`, the core web console's **Email** tab or the core terminal console's
 Email screen. From a script, pass the password on stdin so it never appears on a command line:
 
 ```bash
@@ -3036,8 +3037,8 @@ abstractcore email connect --address me@example.com \
 ## Coming from the environment variables
 
 The `ABSTRACT_EMAIL_*` environment variables and the gateway email bridge are not used. A gateway or
-AbstractCore install that still has those variables imports that account once into the
-administrator's email settings, then names each variable still set and the setting that replaced
+AbstractCore install that still has those variables imports that account once (a gateway into the
+administrator's email settings, AbstractCore into its own), then names each variable still set and the setting that replaced
 it. Email automations (`email.received@1`) replace the bridge.
 
 --- docs/guide/deployment-iphone.md ---
@@ -3057,8 +3058,9 @@ browser origin to allow.
    change its Network setting: `abstractgateway network set lan`, the console's **Network** tab or
    the menu-bar icon, then restart the gateway when asked (`abstractgateway network restart`). User
    accounts stay on. `abstractgateway network addresses` lists the addresses to use.
-2. **Install the apps** you want from the console's **Apps** page (on any device signed in as an
-   administrator).
+2. **Install the apps** you want from the console's **Apps** page, signed in as an administrator
+   on the gateway's own computer (installs from another device need an administrator to allow them
+   first, with the `allow_engine_install` setting).
 3. **Open the console on the phone**, for example `http://192.168.1.20:8080/console`, and sign in
    with your gateway user name and token, or with **Email me a sign-in code** when your account has
    email set up ([Email integration](email-integration.md#sign-in-by-email)). The one-time claim
@@ -3067,7 +3069,8 @@ browser origin to allow.
 5. Optional: add the page to the home screen (Safari: **Share → Add to Home Screen**).
 
 For access from outside your network, put the gateway behind a reverse proxy with HTTPS (one proxy
-block covers the console, the API and every app) or choose the `internet` Network setting. See
+block covers the console, the API and every app), or choose the `internet` Network setting (no
+HTTPS; you handle port forwarding). See
 [Gateway exposure security](gateway-security.md) and
 [AbstractGateway: Deployment](https://github.com/lpalbou/AbstractGateway/blob/main/docs/deployment.md).
 
@@ -4146,9 +4149,12 @@ Transformers, vLLM and llama.cpp run on the processor; the installer says so. Up
 libraries, which need driver 525 or newer.
 
 **Measured on real hardware.** Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability
-7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and 26 GB RAM. The install measured AbstractGateway
-0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2, AbstractVoice 0.13.1 and AbstractVision 0.3.32
-on a machine without a previous install and with uv's download cache cleared. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already on the
+7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and 26 GB RAM, with the AbstractFramework 0.6.3 stack:
+the install and text rows with AbstractGateway 0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2,
+AbstractVoice 0.13.1 and AbstractVision 0.3.32; speech-to-text with Voice Input set to
+faster-whisper and PyAV 18; the **Load** timings with AbstractRuntime 0.7.3; sequential CPU offload
+with AbstractVision 0.3.33. The machine had no previous install and uv's download cache was
+cleared. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already on the
 machine. The installer ran without a terminal, so start at login stayed off.
 
 | Step | Result |
@@ -4175,7 +4181,7 @@ What to expect on a GPU of this size:
 
 - **Speech input.** The fresh setup and **Use recommended defaults** set Voice Input
   (`input.voice`) to `faster-whisper`, model `base`, so transcription runs locally without an OpenAI
-  key. PyAV is held below 19, which faster-whisper 1.2.1 cannot read files with.
+  key. PyAV is held below 19, because PyAV 19 breaks faster-whisper 1.2.1's file reading.
 - **The image model next to a loaded text model.** When LM Studio keeps a 9B text model loaded
   (6.5 GB), Diffusers switches to sequential CPU offload for the image model: much less GPU memory
   (near 1.4 GB for FLUX.2 [klein] 4B at 768x768) and slower per step (about 2.3 s against 1.5 s),
@@ -5989,13 +5995,14 @@ day by default), and a send to anyone but you (or the recipients an automation l
 your approval. Agents get the email tools only when an administrator made them available to you and
 you turned them on; administrators never read users' mail. An email-triggered automation treats
 mail as untrusted data and never follows its links unless you allow those tools, and mail the
-framework sends automatically never triggers an automation. See
+framework sends automatically through your account never triggers an automation. See
 [Email integration](guide/email-integration.md) and [Email automations](automations.md#email-automations).
 
 ## Can I use the console and the apps on my phone?
 
 Yes. The gateway's web console and the five browser apps work on phones, tablets and any window
-size. Let the phone reach the gateway (`abstractgateway network set lan`), then open the console on
+size. Let the phone reach the gateway (`abstractgateway network set lan`, then
+`abstractgateway network restart`), then open the console on
 the phone at the gateway's address; every installed app opens from its **Apps** page at
 `/apps/<app>/` on that same address. See [Phones and tablets](guide/deployment-iphone.md).
 
@@ -6150,9 +6157,10 @@ The one-time link is valid for 10 minutes and works only from the same machine. 
 `abstractgateway claim --open` (or `abstractgateway-config claim-url`). The admin token also stays
 in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path.
 
-From another device, sign in with your gateway user name and token. When your account has email set
-up (**Users → My email**), the sign-in page also offers **Email me a sign-in code** and **Forgot
-your token?**: an 8-digit code sent to your registered address, valid once for 10 minutes. See
+From another device, sign in with your gateway user name and token. The sign-in page also offers
+**Email me a sign-in code** and **Forgot your token?** (unless an administrator turned sign-in by
+email off): an 8-digit code sent to your registered address, valid once for 10 minutes. The code
+reaches you only when your account has email set up (**Users → My email**). See
 [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?
@@ -6292,10 +6300,11 @@ run the installer again: it continues where it stopped.
 - **Fix**: `abstractgateway claim --open` opens a fresh link (or `abstractgateway-config claim-url`
   prints one). Re-running the installer also opens one.
 - **Alternative**: sign in with the `admin` token stored in `<data>/auth/bootstrap-admin-token`.
-- **From another device, or without your token**: sign in with your gateway user name and token.
-  When your account has email set up (**Users → My email**), choose **Email me a sign-in code** or
-  **Forgot your token?** on the sign-in page: an 8-digit code arrives at your registered address,
-  works once and expires after 10 minutes. Without email, an administrator rotates your token. See
+- **From another device, or without your token**: sign in with your gateway user name and token,
+  or choose **Email me a sign-in code** or **Forgot your token?** on the sign-in page (offered
+  unless an administrator turned sign-in by email off): an 8-digit code arrives at your registered
+  address, works once and expires after 10 minutes. It reaches you only when your account has
+  email set up (**Users → My email**). Without email, an administrator rotates your token. See
   [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### The gateway does not answer
@@ -7404,6 +7413,10 @@ the console.
 
 ## Run the UIs
 
+The simplest way: install and open them from the gateway console's **Apps** page. The gateway
+serves each app at `/apps/<app>/` on its own address, signed in; no separate server or origin is
+needed. To run one on its own instead:
+
 ```bash
 npx @abstractframework/observer
 npx @abstractframework/flow
@@ -8133,9 +8146,8 @@ This is a practical checklist to verify access control + approvals end-to-end.
 1. Configure the bridge (Bot API):
 
 ```bash
-# Gateway (required for `abstractgateway serve`).
-export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # directory containing *.flow bundles (incl. shipped `basic-agent`)
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+# Gateway: optional custom bundle directory (incl. the shipped `basic-agent`).
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."               # from @BotFather
@@ -8205,7 +8217,6 @@ Set env vars on the gateway host:
 
 ```bash
 export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # directory containing *.flow bundles
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"  # required
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
 
@@ -8312,8 +8323,10 @@ Note: `/tools` is intentionally disabled in thin-client mode; use `/approve` and
 --- docs/guide/process-manager-env-vars.md ---
 # Process manager environment overrides (write-only) - Operator guide
 
-The gateway's process manager can store write-only environment overrides for the processes it
-launches, from AbstractObserver, without ever returning the values to browsers or clients.
+In this release the allowlist of this mechanism is empty, so nothing can be set here; it is
+described for completeness. The gateway's process manager can store write-only environment
+overrides for allowlisted keys of the processes it launches, from AbstractObserver, without ever
+returning the values to browsers or clients.
 
 ## Security model
 
@@ -8498,8 +8511,7 @@ mkdir -p ./runtime/gateway
 ## Step 2: Configure the gateway
 
 ```bash
-export ABSTRACTGATEWAY_USER_AUTH=1
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
+# User auth and the http://localhost:* / http://127.0.0.1:* browser origins are on by default.
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
 # Source checkout only. Packaged installs can omit this and use the shipped bundle path.
@@ -8757,8 +8769,6 @@ You need a normal gateway configuration plus Telegram bridge settings. At minimu
 ```bash
 # Bundles (*.flow). Include the shipped `basic-agent` bundle (and any custom bundles).
 export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"
-export ABSTRACTGATEWAY_AUTH_TOKEN="..."  # required
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
 # Tool execution + approvals:
@@ -8926,7 +8936,7 @@ This is useful for:
    abstractgateway network addresses     # the addresses to open on the phone
    ```
 
-2. Install the apps you want from the console's **Apps** page.
+2. Install the apps you want from the console's **Apps** page, on the gateway's own computer.
 3. On the phone, open `http://<address>:8080/console` and sign in with your gateway user name and
    token (or **Email me a sign-in code**).
 4. Open Code, Observer or another app from the Apps page: it opens at `/apps/<app>/` on the same

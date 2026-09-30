@@ -66,8 +66,8 @@ reply, download an attachment) only when all three hold:
    (terminal console) or with `PUT /api/gateway/me/email/agent-tools`.
 
 The rule applies to every client (AbstractCode, the Assistant, the Observer, the consoles). An
-automation that only sends you its results, notifications and sign-in codes do not need the
-switch; they need a connected, allowed account.
+automation's own send-email action (fixed templates you wrote), notifications and sign-in codes do
+not need the switch; they need a connected, allowed account.
 
 ## Automations on new mail
 
@@ -135,7 +135,7 @@ user; turn it off where mailboxes are less protected than gateway tokens.
 ## AbstractCore on its own
 
 An AbstractCore install without a gateway has one account of its own, set with
-`abstractcore email connect`, the core web console's **Email** page or the core terminal console's
+`abstractcore email connect`, the core web console's **Email** tab or the core terminal console's
 Email screen. From a script, pass the password on stdin so it never appears on a command line:
 
 ```bash
@@ -149,6 +149,6 @@ abstractcore email connect --address me@example.com \
 ## Coming from the environment variables
 
 The `ABSTRACT_EMAIL_*` environment variables and the gateway email bridge are not used. A gateway or
-AbstractCore install that still has those variables imports that account once into the
-administrator's email settings, then names each variable still set and the setting that replaced
+AbstractCore install that still has those variables imports that account once (a gateway into the
+administrator's email settings, AbstractCore into its own), then names each variable still set and the setting that replaced
 it. Email automations (`email.received@1`) replace the bridge.

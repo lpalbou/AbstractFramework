@@ -521,9 +521,12 @@ Transformers, vLLM and llama.cpp run on the processor; the installer says so. Up
 libraries, which need driver 525 or newer.
 
 **Measured on real hardware.** Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability
-7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and 26 GB RAM. The install measured AbstractGateway
-0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2, AbstractVoice 0.13.1 and AbstractVision 0.3.32
-on a machine without a previous install and with uv's download cache cleared. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already on the
+7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and 26 GB RAM, with the AbstractFramework 0.6.3 stack:
+the install and text rows with AbstractGateway 0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2,
+AbstractVoice 0.13.1 and AbstractVision 0.3.32; speech-to-text with Voice Input set to
+faster-whisper and PyAV 18; the **Load** timings with AbstractRuntime 0.7.3; sequential CPU offload
+with AbstractVision 0.3.33. The machine had no previous install and uv's download cache was
+cleared. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already on the
 machine. The installer ran without a terminal, so start at login stayed off.
 
 | Step | Result |
@@ -550,7 +553,7 @@ What to expect on a GPU of this size:
 
 - **Speech input.** The fresh setup and **Use recommended defaults** set Voice Input
   (`input.voice`) to `faster-whisper`, model `base`, so transcription runs locally without an OpenAI
-  key. PyAV is held below 19, which faster-whisper 1.2.1 cannot read files with.
+  key. PyAV is held below 19, because PyAV 19 breaks faster-whisper 1.2.1's file reading.
 - **The image model next to a loaded text model.** When LM Studio keeps a 9B text model loaded
   (6.5 GB), Diffusers switches to sequential CPU offload for the image model: much less GPU memory
   (near 1.4 GB for FLUX.2 [klein] 4B at 768x768) and slower per step (about 2.3 s against 1.5 s),

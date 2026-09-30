@@ -14,8 +14,9 @@ browser origin to allow.
    change its Network setting: `abstractgateway network set lan`, the console's **Network** tab or
    the menu-bar icon, then restart the gateway when asked (`abstractgateway network restart`). User
    accounts stay on. `abstractgateway network addresses` lists the addresses to use.
-2. **Install the apps** you want from the console's **Apps** page (on any device signed in as an
-   administrator).
+2. **Install the apps** you want from the console's **Apps** page, signed in as an administrator
+   on the gateway's own computer (installs from another device need an administrator to allow them
+   first, with the `allow_engine_install` setting).
 3. **Open the console on the phone**, for example `http://192.168.1.20:8080/console`, and sign in
    with your gateway user name and token, or with **Email me a sign-in code** when your account has
    email set up ([Email integration](email-integration.md#sign-in-by-email)). The one-time claim
@@ -24,7 +25,8 @@ browser origin to allow.
 5. Optional: add the page to the home screen (Safari: **Share → Add to Home Screen**).
 
 For access from outside your network, put the gateway behind a reverse proxy with HTTPS (one proxy
-block covers the console, the API and every app) or choose the `internet` Network setting. See
+block covers the console, the API and every app), or choose the `internet` Network setting (no
+HTTPS; you handle port forwarding). See
 [Gateway exposure security](gateway-security.md) and
 [AbstractGateway: Deployment](https://github.com/lpalbou/AbstractGateway/blob/main/docs/deployment.md).
 

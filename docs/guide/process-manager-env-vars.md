@@ -1,7 +1,9 @@
 # Process manager environment overrides (write-only) - Operator guide
 
-The gateway's process manager can store write-only environment overrides for the processes it
-launches, from AbstractObserver, without ever returning the values to browsers or clients.
+In this release the allowlist of this mechanism is empty, so nothing can be set here; it is
+described for completeness. The gateway's process manager can store write-only environment
+overrides for allowlisted keys of the processes it launches, from AbstractObserver, without ever
+returning the values to browsers or clients.
 
 ## Security model
 

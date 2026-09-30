@@ -256,7 +256,8 @@ exchanges the token for a browser session and does not persist the token in brow
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
 The console and every browser app work on phones, tablets and any window size. To open them from
-another device, set the gateway's Network setting to `lan` and open the same `/console` and
+another device, set the gateway's Network setting to `lan` (`abstractgateway network set lan`, then
+`abstractgateway network restart`) and open the same `/console` and
 `/apps/<app>/` paths on the gateway's address; see [Phones and tablets](guide/deployment-iphone.md).
 
 ### 5. Automate recurring work
