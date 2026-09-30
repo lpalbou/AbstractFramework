@@ -173,10 +173,16 @@ jobs:
       - name: Re-run keeps the running gateway (install.ps1, Windows PowerShell 5.1)
         if: runner.os == 'Windows'
         shell: powershell
+        timeout-minutes: 20
         run: |
-          $out = powershell -NoProfile -ExecutionPolicy ByPass -File scripts/install.ps1 -NoService -NoOpen -NoModifyPath -Profile light -Port 18080 *>&1 | Out-String
+          # Output to a file, not a pipe: a gateway the re-run (re)starts inherits the pipe and
+          # would keep it open forever, hanging the step instead of reporting what happened.
+          $log = Join-Path $env:RUNNER_TEMP 'rerun.log'
+          $p = Start-Process -FilePath powershell -ArgumentList '-NoProfile','-ExecutionPolicy','ByPass','-File','scripts/install.ps1','-NoService','-NoOpen','-NoModifyPath','-Profile','light','-Port','18080' -RedirectStandardOutput $log -RedirectStandardError "$log.err" -PassThru -NoNewWindow
+          if (-not $p.WaitForExit(900000)) { Stop-Process -Id $p.Id -Force; Get-Content $log, "$log.err" -ErrorAction SilentlyContinue; throw 'the re-run did not finish within 15 minutes' }
+          $out = (Get-Content -Raw $log) + (Get-Content -Raw "$log.err" -ErrorAction SilentlyContinue)
           Write-Output $out
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($p.ExitCode -ne 0) { exit $p.ExitCode }
           if ($out -notmatch 'already running \(pid \d+\), unchanged') { throw 'the re-run did not keep the running gateway' }
           if ($out -match 'started by hand') { throw 'the re-run took the installer''s own gateway for one started by hand' }
 
