@@ -176,7 +176,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.8.0` and `ghcr.io/lpalbou/abstractcore-server:2.20.0`.
+`ghcr.io/lpalbou/abstractgateway:0.8.0` and `ghcr.io/lpalbou/abstractcore-server:2.20.1`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -333,7 +333,7 @@ and tested together.
 |---|---|---|
 | PyPI | `abstractgateway` | 0.8.0 |
 | PyPI | `abstractassistant` | 0.10.0 |
-| PyPI | `abstractcore` | 2.20.0 |
+| PyPI | `abstractcore` | 2.20.1 |
 | PyPI | `AbstractRuntime` | 0.8.0 |
 | PyPI | `abstractagent` | 0.3.17 |
 | PyPI | `abstractskill` | 0.3.0 |
@@ -353,7 +353,7 @@ and tested together.
 | crates.io | `abstractcore-console` | 0.5.0 |
 | crates.io | `abstracttui` | 0.6.0 |
 | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.8.0 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.20.0 |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.20.1 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
 not part of any profile installs separately: `pip install abstractcamera` (0.2.1). `abstractskill` (pinned above)
@@ -577,8 +577,8 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.7.0 pins (PyPI, `==`): abstractgateway 0.8.0, abstractassistant 0.10.0, abstractcore 2.20.0, AbstractRuntime 0.8.0, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.13.2, abstractvision 0.3.33, abstractmusic 0.1.15, abstract3d 0.3.2.
-- Released with it: npm `@abstractframework/flow` 0.4.0, `code` 0.7.0, `observer` 0.3.0, `continuum` 0.4.0, `entity` 0.3.0 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.12.0 (built by the installer by default), `abstractcore-console` 0.5.0, `abstractcode` 0.7.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.8.0`, `ghcr.io/lpalbou/abstractcore-server:2.20.0`.
+- abstractframework 0.7.0 pins (PyPI, `==`): abstractgateway 0.8.0, abstractassistant 0.10.0, abstractcore 2.20.1, AbstractRuntime 0.8.0, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.13.2, abstractvision 0.3.33, abstractmusic 0.1.15, abstract3d 0.3.2.
+- Released with it: npm `@abstractframework/flow` 0.4.0, `code` 0.7.0, `observer` 0.3.0, `continuum` 0.4.0, `entity` 0.3.0 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.12.0 (built by the installer by default), `abstractcore-console` 0.5.0, `abstractcode` 0.7.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.8.0`, `ghcr.io/lpalbou/abstractcore-server:2.20.1`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
@@ -656,7 +656,7 @@ dependencies = [
     "abstractassistant==0.10.0",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.20.0",
+    "abstractcore==2.20.1",
     "AbstractRuntime==0.8.0",
     "abstractagent==0.3.17",
     "abstractskill==0.3.0",
@@ -745,7 +745,7 @@ __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.20.0",
+    "abstractcore": "2.20.1",
     "abstractruntime": "0.8.0",
     "abstractagent": "0.3.17",
     "abstractgateway": "0.8.0",
@@ -3512,7 +3512,11 @@ The line always runs the installer of the latest AbstractFramework release. It:
 - replaces a gateway of this install that you started yourself (it serves the same data directory)
   on its port, instead of moving to another port and starting a second gateway on the same data;
   a program that is not this install's gateway keeps the port, and the installer takes the next
-  free one;
+  free one. The installer signals only a process of your user running `abstractgateway serve` for
+  this data directory; a stale `gateway.pid` or serve record naming another program is left alone.
+  On Windows with start at login on, the installer cannot tell which process the login item started,
+  so a gateway of this data directory that you started yourself on the install's port is taken for
+  the login item and left running (stop it, then re-run the installer, to have the login item's);
 - asks PyPI again for the packages it pins (`uv tool install --refresh-package ...`), so a release
   published minutes earlier installs without clearing uv's cache;
 - never leaves the gateway stopped: when the login item cannot be registered, the gateway starts in
@@ -4195,7 +4199,7 @@ installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
 `abstractframework` 0.7.0 pins `abstractgateway==0.8.0`, `abstractassistant==0.10.0`,
-`abstractcore==2.20.0`, `AbstractRuntime==0.8.0`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
+`abstractcore==2.20.1`, `AbstractRuntime==0.8.0`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.2`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.15` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
@@ -4286,7 +4290,7 @@ Run or install them next to the Python stack:
 | Tool | Command | Version released with 0.7.0 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.8.0 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.20.0 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.20.1 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.5.0 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.12.0 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.4.0 |
@@ -4345,7 +4349,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.20.0`.
+`ghcr.io/lpalbou/abstractcore-server:2.20.1`.
 
 ## How installs are designed
 
@@ -6128,7 +6132,7 @@ The meta-package version (`0.7.0` for this release).
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.7.0:
-`abstractcore` 2.20.0, `abstractruntime` 0.8.0, `abstractagent` 0.3.17, `abstractgateway` 0.8.0,
+`abstractcore` 2.20.1, `abstractruntime` 0.8.0, `abstractagent` 0.3.17, `abstractgateway` 0.8.0,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.2, `abstractvision` 0.3.33,
 `abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.10.0.
 

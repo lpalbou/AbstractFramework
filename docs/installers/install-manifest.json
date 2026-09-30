@@ -353,7 +353,7 @@
       "distribution": "abstractcore",
       "id": "abstractcore",
       "registry": "pypi",
-      "version": "2.20.0"
+      "version": "2.20.1"
     },
     {
       "distribution": "AbstractRuntime",

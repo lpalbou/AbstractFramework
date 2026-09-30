@@ -128,7 +128,7 @@ AF_GATEWAY_PIN_DEFAULT="0.8.0"
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
 AF_FRAMEWORK_VERSION="0.7.0"
-AF_PY_MATRIX="abstractcore==2.20.0 AbstractRuntime==0.8.0 abstractagent==0.3.17 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.13.2 abstractvision==0.3.33 abstractmusic==0.1.15 abstract3d==0.3.2"
+AF_PY_MATRIX="abstractcore==2.20.1 AbstractRuntime==0.8.0 abstractagent==0.3.17 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.13.2 abstractvision==0.3.33 abstractmusic==0.1.15 abstract3d==0.3.2"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.7.0 @abstractframework/observer@0.3.0 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"
 AF_CRATE_CONSOLE="abstractgateway-console@0.12.0"
@@ -895,17 +895,48 @@ seed_network_setting() {
     return 0
 }
 
+# pid_alive: the pid in gateway.pid is running. Only for the gateway this run just started (the
+# health wait); a pid file left by an earlier run is trusted only through bg_pid_ours.
 pid_alive() { [ -f "$PID_FILE" ] && _p="$(cat "$PID_FILE" 2>/dev/null)" && [ -n "$_p" ] && kill -0 "$_p" 2>/dev/null; }
+# file_mtime FILE: its modification time in seconds since the epoch (GNU stat, else BSD stat).
+file_mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null; }
+# bg_pid_ours: gateway.pid names this install's background gateway (its pid in BG_PID): a process of
+# this user running `abstractgateway serve` that serves this data dir (gw_serves_this_data_dir:
+# the --data-dir it declares, else the serve record naming it), or that declares no data dir and
+# started before gateway.pid was written (a pid reused after that gateway exited started later).
+# A pid file naming anything else never gets a signal from this installer.
+BG_PID=""
+bg_pid_ours() {
+    BG_PID=""
+    [ -f "$PID_FILE" ] || return 1
+    _bp="$(head -n 1 "$PID_FILE" 2>/dev/null | tr -cd 0-9)"
+    gw_process "$_bp" || return 1
+    if ! gw_serves_this_data_dir "$_bp"; then
+        [ -z "$(gw_declared_data_dir "$_bp")" ] || return 1
+        _bpm="$(file_mtime "$PID_FILE")"; _bps="$(proc_start_epoch "$_bp")"
+        [ -n "$_bpm" ] && [ -n "$_bps" ] && [ "$_bps" -le $((_bpm + 2)) ] || return 1
+    fi
+    BG_PID="$_bp"
+}
 
 stop_background_gateway() {
-    if pid_alive; then
-        _p="$(cat "$PID_FILE")"
-        run "stop the background gateway" kill "$_p"
-        if [ "$PRINT" = 0 ]; then
-            _i=0; while kill -0 "$_p" 2>/dev/null && [ "$_i" -lt 20 ]; do sleep 0.5; _i=$((_i + 1)); done
-            kill -0 "$_p" 2>/dev/null && kill -9 "$_p" 2>/dev/null || true
-            rm -f "$PID_FILE"
-        fi
+    [ -f "$PID_FILE" ] || return 0
+    _p="$(head -n 1 "$PID_FILE" 2>/dev/null | tr -cd 0-9)"
+    if [ -z "$_p" ] || ! kill -0 "$_p" 2>/dev/null; then
+        [ "$PRINT" = 1 ] || rm -f "$PID_FILE"
+        return 0
+    fi
+    if ! bg_pid_ours; then
+        info "gateway.pid names pid $_p, which is not this install's gateway ($(ps -o args= -p "$_p" 2>/dev/null | cut -c1-80)): left alone"
+        [ "$PRINT" = 1 ] || rm -f "$PID_FILE"
+        return 0
+    fi
+    run "stop the background gateway" kill "$_p"
+    if [ "$PRINT" = 0 ]; then
+        _i=0; while kill -0 "$_p" 2>/dev/null && [ "$_i" -lt 20 ]; do sleep 0.5; _i=$((_i + 1)); done
+        # identity checked again before a SIGKILL: the pid may belong to another program by now
+        if kill -0 "$_p" 2>/dev/null && bg_pid_ours; then kill -9 "$_p" 2>/dev/null || true; fi
+        rm -f "$PID_FILE"
     fi
 }
 
@@ -1086,6 +1117,11 @@ stop_hand_gateway() {
             warn "pid $HAND_GW_PID did not exit within $AF_STOP_TIMEOUT s: stopping it with SIGKILL"
             kill -9 "$HAND_GW_PID" 2>/dev/null || true
             _i=0; while kill -0 "$HAND_GW_PID" 2>/dev/null && [ "$_i" -lt 10 ]; do sleep 0.5; _i=$((_i + 1)); done
+        else
+            # the pid now runs another program: it is not signalled again
+            info "pid $HAND_GW_PID is no longer this install's gateway (it now runs: $(ps -o args= -p "$HAND_GW_PID" 2>/dev/null | cut -c1-60)): left alone"
+            _i=0; while port_busy "$HAND_GW_PORT" && [ "$_i" -lt 20 ]; do sleep 0.5; _i=$((_i + 1)); done
+            HAND_GW_PID=""; return 0
         fi
     fi
     if kill -0 "$HAND_GW_PID" 2>/dev/null; then
@@ -1133,7 +1169,7 @@ gw_record_pids() {
     for _f in "$DATA_DIR/run/gateway-serve.json" "$DATA_DIR"/run/apps/*.json; do
         [ -f "$_f" ] && sed -n 's/.*"pid": *\([0-9][0-9]*\).*/\1/p' "$_f" 2>/dev/null | head -n 1
     done
-    [ -f "$PID_FILE" ] && sed -n '1s/[^0-9]//gp' "$PID_FILE" 2>/dev/null
+    [ -f "$PID_FILE" ] && { head -n 1 "$PID_FILE" 2>/dev/null | tr -cd 0-9; echo; }
     return 0
 }
 # gw_scan: one "PID<TAB>COMMAND" line per live process of the gateway tree.
@@ -1828,7 +1864,7 @@ case "$ASK_WAIT" in ''|*[!0-9]*) die "--ask-wait must be a number of seconds (go
 # The gateways this installer manages: its background start (gateway.pid) and the login item (its
 # pid when the service manager reports it). A listener with another pid is not one of them, even
 # on the recorded port.
-_bg_pid=""; pid_alive && _bg_pid="$(cat "$PID_FILE" 2>/dev/null)"
+_bg_pid=""; bg_pid_ours && _bg_pid="$BG_PID"
 _svc_pid=""; [ "$LOGIN_WAS" = y ] && _svc_pid="$(service_main_pid)"
 if port_busy "$PORT"; then
     _lp="$(port_listener_pids "$PORT")"
@@ -2521,7 +2557,7 @@ else
         warn "gateway $AFTER has no 'abstractgateway service' command: it will not start at login"
         info "re-run this installer after the gateway upgrades, or set up a login item by hand: $AF_DOCS#run-at-login"
     fi
-    if [ "$REUSE_RUNNING" = 1 ] && [ "$CHANGED" = 0 ] && pid_alive; then
+    if [ "$REUSE_RUNNING" = 1 ] && [ "$CHANGED" = 0 ] && bg_pid_ours; then
         ok "already running (pid $(cat "$PID_FILE")), unchanged"
     else
         start_background

@@ -405,6 +405,7 @@ bg_case() {
     local name="$1" network="$2" stored="${3:-}"
     local bin="$WORK/$name/bin" toolbin="${BG_TOOLBIN:-$WORK/$name/toolbin}"
     mkdir -p "$bin" "$toolbin" "$WORK/$name/home"
+    rm -f "$WORK/$name/uv-hook" "$WORK/$name/svc-mainpid"
     GWLOG="$WORK/$name/gw.log"
     cat >"$bin/curl" <<CURL
 #!/bin/sh
@@ -484,7 +485,8 @@ GW
 #!/bin/sh
 echo "systemctl \$*" >>"$SYSTEMCTL_LOG"
 [ "\$2" = is-active ] && exit \$([ "${BG_UNIT_ACTIVE:-0}" = 1 ] && echo 0 || echo 3)
-# BG_SVC_MAINPID: what \`systemctl --user show -p MainPID --value\` answers (0 = the unit is not running)
+# BG_SVC_MAINPID: what \`systemctl --user show -p MainPID --value\` answers (0 = the unit is not running; hand = the hand-started fake)
+[ "\$2" = show ] && [ -f "$WORK/$name/svc-mainpid" ] && { cat "$WORK/$name/svc-mainpid"; exit 0; }
 [ "\$2" = show ] && [ -n "${BG_SVC_MAINPID:-}" ] && echo "${BG_SVC_MAINPID:-}"
 exit 0
 SCTL
@@ -525,7 +527,45 @@ CARGO
     # BG_FOREIGN=1: a gateway answers on the port but this installer did not start it (no gateway.pid,
     # no login item: a hand-started `serve`); its pid is PRE_PID too.
     PRE_PID=""
-    if [[ "${BG_PRERUN:-0}" == 1 || "${BG_FOREIGN:-0}" == 1 ]]; then
+    # the fake gateway program a hand start or the installer's background start runs (see BG_HAND below)
+    local hb="$WORK/$name/handbin"; mkdir -p "$hb"
+    cat >"$hb/abstractgateway" <<'HAND'
+import http.server, os, sys, threading, time
+port = int(sys.argv[sys.argv.index("--port") + 1])
+service = os.environ.get("HAND_HEALTH", "abstractgateway")
+linger = int(os.environ.get("HAND_LINGER", "0"))
+class H(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200); self.end_headers(); self.wfile.write(('{"service": "%s"}' % service).encode())
+    def log_message(self, *a): pass
+srv = http.server.HTTPServer(("127.0.0.1", port), H)
+import signal as _s
+def unlisten(*a):  # SIGUSR1: stop listening, keep running (no longer a gateway on its port)
+    srv.socket.close()
+    while True:
+        time.sleep(1)
+_s.signal(_s.SIGUSR1, unlisten)
+if os.environ.get("HAND_TERM") == "exec-sleep":
+    # SIGTERM: become another program (same pid, not a gateway any more)
+    _s.signal(_s.SIGTERM, lambda *a: os.execv("/bin/sleep", ["sleep", "60"]))
+if linger and os.fork() == 0:
+    _s.signal(_s.SIGTERM, _s.SIG_IGN)
+    parent = os.getppid()
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    while os.getppid() == parent:
+        time.sleep(0.1)
+    time.sleep(linger)
+    os._exit(0)
+srv.serve_forever()
+HAND
+    if [[ "${BG_PRERUN:-0}" == 1 ]]; then
+        # the previous install's background gateway, as the installer starts it: `abstractgateway serve --data-dir <data dir>`
+        mkdir -p "$DATA_T"
+        (exec env -u ABSTRACTGATEWAY_DATA_DIR /usr/bin/python3 "$hb/abstractgateway" serve --port "$BG_PORT" --data-dir "$DATA_T" </dev/null >/dev/null 2>&1) &
+        PRE_PID=$!; disown "$PRE_PID" 2>/dev/null; echo "$PRE_PID" >"$DATA_T/gateway.pid"
+        for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 && break; sleep 0.3; done
+    fi
+    if [[ "${BG_FOREIGN:-0}" == 1 ]]; then
         mkdir -p "$DATA_T"
         /usr/bin/python3 -c 'import http.server, sys
 class H(http.server.BaseHTTPRequestHandler):
@@ -533,7 +573,7 @@ class H(http.server.BaseHTTPRequestHandler):
         self.send_response(200); self.end_headers(); self.wfile.write(b"{\"service\": \"abstractgateway\"}")
     def log_message(self, *a): pass
 http.server.HTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()' "$BG_PORT" </dev/null >/dev/null 2>&1 &
-        PRE_PID=$!; [[ "${BG_FOREIGN:-0}" == 1 ]] || echo "$PRE_PID" >"$DATA_T/gateway.pid"
+        PRE_PID=$!
         for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1 && break; sleep 0.3; done
     fi
     # A serve record in this data dir, as a real gateway writes it at start: rec_write PID PORT [DATA_DIR] [STARTED_AT].
@@ -558,47 +598,25 @@ http.server.HTTPServer(("127.0.0.1", int(sys.argv[1])), H).serve_forever()' "$BG
     # BG_NO_LSOF=1 hides lsof from the installer (a double that fails); BG_NO_SS=1 hides ss too.
     HAND_PID=""; HAND_ALIVE_AFTER=""; LISTENER_AFTER=""; BUSY_NEXT_AFTER=0; TAIL_PID=""; TAIL_ALIVE_AFTER=""
     if [[ "${BG_HAND:-0}" == 1 ]]; then
-        local hp="${BG_HAND_PORT:-$BG_PORT}" hb="$WORK/$name/handbin" hcwd="$WORK"
-        mkdir -p "$hb" "$DATA_T"
-        cat >"$hb/abstractgateway" <<'HAND'
-import http.server, os, sys, threading, time
-port = int(sys.argv[sys.argv.index("--port") + 1])
-service = os.environ.get("HAND_HEALTH", "abstractgateway")
-linger = int(os.environ.get("HAND_LINGER", "0"))
-class H(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200); self.end_headers(); self.wfile.write(('{"service": "%s"}' % service).encode())
-    def log_message(self, *a): pass
-srv = http.server.HTTPServer(("127.0.0.1", port), H)
-def unlisten(*a):  # SIGUSR1: stop listening, keep running (no longer a gateway on its port)
-    srv.socket.close()
-    while True:
-        time.sleep(1)
-import signal as _s
-_s.signal(_s.SIGUSR1, unlisten)
-if linger and os.fork() == 0:
-    import signal
-    signal.signal(signal.SIGTERM, signal.SIG_IGN)
-    parent = os.getppid()
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
-    while os.getppid() == parent:
-        time.sleep(0.1)
-    time.sleep(linger)
-    os._exit(0)
-srv.serve_forever()
-HAND
+        local hp="${BG_HAND_PORT:-$BG_PORT}" hcwd="$WORK"
+        mkdir -p "$DATA_T"
         local hargs=(serve --host 127.0.0.1 --port "$hp") harg="${BG_HAND_ARG:-}"
         [[ "$harg" == self ]] && harg="$DATA_T"
         if [[ "$harg" == rel ]]; then harg="$(basename "$DATA_T")"; hcwd="$(dirname "$DATA_T")"; fi
         [[ -n "$harg" ]] && hargs+=(--data-dir "$harg")
-        (cd "$hcwd" && exec env -u ABSTRACTGATEWAY_DATA_DIR HAND_HEALTH="${BG_HAND_HEALTH:-abstractgateway}" HAND_LINGER="${BG_HAND_LINGER:-0}" \
+        (cd "$hcwd" && exec env -u ABSTRACTGATEWAY_DATA_DIR HAND_HEALTH="${BG_HAND_HEALTH:-abstractgateway}" HAND_LINGER="${BG_HAND_LINGER:-0}" HAND_TERM="${BG_HAND_TERM:-}" \
             /usr/bin/python3 "$hb/abstractgateway" "${hargs[@]}" </dev/null >/dev/null 2>&1) &
         HAND_PID=$!; disown "$HAND_PID" 2>/dev/null
         for _ in 1 2 3 4 5 6 7 8 9 10; do lsof -nP -iTCP:"$hp" -sTCP:LISTEN >/dev/null 2>&1 && break; sleep 0.3; done
-        [[ "${BG_HAND_RECORD:-0}" == 1 ]] && rec_write "$HAND_PID" "$hp" "${BG_HAND_DD:-$DATA_T}" "${BG_HAND_STARTED:-}"
+        # BG_HAND_RECORD_PID / BG_HAND_RECORD_PORT: the record names another pid / port than the process's
+        [[ "${BG_HAND_RECORD:-0}" == 1 ]] && rec_write "${BG_HAND_RECORD_PID:-$HAND_PID}" "${BG_HAND_RECORD_PORT:-$hp}" "${BG_HAND_DD:-$DATA_T}" "${BG_HAND_STARTED:-}"
+        # BG_SVC_MAINPID=hand: the systemd unit's MainPID is this process (it is the login item's gateway)
+        [[ "${BG_SVC_MAINPID:-}" == hand ]] && echo "$HAND_PID" >"$WORK/$name/svc-mainpid"
         [[ "${BG_HAND_PIDFILE:-0}" == 1 ]] && echo "$HAND_PID" >"$DATA_T/gateway.pid"
+        # BG_HAND_PIDFILE_OLD=1: gateway.pid was written long before this process started (a reused pid)
+        [[ "${BG_HAND_PIDFILE_OLD:-0}" == 1 ]] && { echo "$HAND_PID" >"$DATA_T/gateway.pid"; touch -t 202001010000 "$DATA_T/gateway.pid"; }
         # BG_HAND_UNLISTEN=1: during the install (uv tool install) it stops listening but keeps running.
-        rm -f "$WORK/$name/uv-hook"; [[ "${BG_HAND_UNLISTEN:-0}" == 1 ]] && echo "kill -USR1 $HAND_PID; sleep 0.5" >"$WORK/$name/uv-hook"
+        [[ "${BG_HAND_UNLISTEN:-0}" == 1 ]] && echo "kill -USR1 $HAND_PID; sleep 0.5" >"$WORK/$name/uv-hook"
     fi
     # BG_RECORD_TAIL=1: the serve record names a `tail -f` of a file under a folder named
     # abstractgateway-logs (a program that listens on nothing), on port BG_PORT+3; its pid: TAIL_PID.
@@ -608,7 +626,9 @@ HAND
         sleep 1; rec_write "$TAIL_PID" "$((BG_PORT + 3))"
     fi
     # BG_STALE_PIDFILE=1: gateway.pid names a live process that is not the gateway (a reused pid).
-    if [[ "${BG_STALE_PIDFILE:-0}" == 1 ]]; then mkdir -p "$DATA_T"; sleep 120 </dev/null >/dev/null 2>&1 & echo $! >"$DATA_T/gateway.pid"; disown $! 2>/dev/null; fi
+    # Its pid: STALE_PID; STALE_ALIVE_AFTER=1 when it still runs after the installer.
+    STALE_PID=""; STALE_ALIVE_AFTER=""
+    if [[ "${BG_STALE_PIDFILE:-0}" == 1 ]]; then mkdir -p "$DATA_T"; sleep 120 </dev/null >/dev/null 2>&1 & STALE_PID=$!; echo "$STALE_PID" >"$DATA_T/gateway.pid"; disown "$STALE_PID" 2>/dev/null; fi
     # BG_OTHER_UID=1: `ps -o uid=` reports another user for the hand-started process (a double around ps).
     if [[ "${BG_OTHER_UID:-0}" == 1 && -n "$HAND_PID" ]]; then
         printf '#!/bin/sh\ncase " $* " in *" -o uid= -p %s "*) echo 0; exit 0 ;; esac\nfor d in /bin /usr/bin; do [ -x "$d/ps" ] && exec "$d/ps" "$@"; done\n' "$HAND_PID" >"$bin/ps"; chmod +x "$bin/ps"
@@ -674,6 +694,7 @@ sys.exit(proc.wait())')
     run_in "$name" ${BG_ENV:-} -- ${wrap[@]+"${wrap[@]}"} "${BG_SHELL:-sh}" "$SCRIPTS_DIR/install.sh" --profile light ${port_flag[@]+"${port_flag[@]}"} ${svc_flag[@]+"${svc_flag[@]}"} ${open_flag[@]+"${open_flag[@]}"} --no-modify-path ${BG_ARGS:---no-console}
     local pid f
     if [[ -n "$HAND_PID" ]]; then HAND_ALIVE_AFTER=0; kill -0 "$HAND_PID" 2>/dev/null && HAND_ALIVE_AFTER=1; fi
+    if [[ -n "$STALE_PID" ]]; then STALE_ALIVE_AFTER=0; kill -0 "$STALE_PID" 2>/dev/null && STALE_ALIVE_AFTER=1; kill "$STALE_PID" 2>/dev/null; fi
     PRE_ALIVE_AFTER=""; if [[ -n "$PRE_PID" ]]; then PRE_ALIVE_AFTER=0; kill -0 "$PRE_PID" 2>/dev/null && PRE_ALIVE_AFTER=1; fi
     if [[ -n "$TAIL_PID" ]]; then TAIL_ALIVE_AFTER=0; kill -0 "$TAIL_PID" 2>/dev/null && TAIL_ALIVE_AFTER=1; kill "$TAIL_PID" 2>/dev/null; fi
     LISTENER_AFTER="$(lsof -nP -t -iTCP:"$BG_PORT" -sTCP:LISTEN 2>/dev/null | tr '\n' ' ')"; LISTENER_AFTER="${LISTENER_AFTER% }"
@@ -1081,6 +1102,7 @@ else
     # gateway.pid names a live process that is not the one listening (a reused pid): the listener decides.
     BG_STALE_PIDFILE=1 BG_HAND=1 BG_HAND_RECORD=1 BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case hand_stalepid 1
     hand_replaced "a stale gateway.pid"
+    check "a stale gateway.pid: its foreign process (sleep) is never signalled, and survives" "$([[ "$STALE_ALIVE_AFTER" == 1 ]] && ! has "$OUT" "kill $STALE_PID"; echo $?)" "$OUT"
     # A gateway of ANOTHER data dir on the port (its --data-dir names it; no record here): foreign, as before.
     BG_HAND=1 BG_HAND_ARG="$WORK/other-gateway-data" BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case hand_other 1
     check "a gateway of another data dir on the port is foreign: moved to the next free port, left running" "$([[ $RC == 0 ]] && has "$OUT" "port $BG_PORT is in use by another process; using $((BG_PORT + 1)) (kept for future runs)" && [[ "$HAND_ALIVE_AFTER" == 1 ]] && ! has "$OUT" "started by hand"; echo $?)" "$OUT"
@@ -1133,6 +1155,34 @@ else
     # (j) no lsof nor ss, a gateway of another program's on the port and this install's on another: the record's port decides
     BG_NO_LSOF=1 BG_NO_SS=1 BG_FOREIGN=1 BG_HAND=1 BG_HAND_RECORD=1 BG_HAND_PORT=$((BG_PORT + 2)) BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case hand_notools_other 1
     check "without lsof and ss, a serve record naming another port does not make the port's listener this install's" "$([[ $RC == 0 && "$PRE_ALIVE_AFTER" == 1 ]] && has "$OUT" "using $((BG_PORT + 1))" && ! has "$OUT" "port $BG_PORT: this install's gateway runs there"; echo $?)" "$OUT"
+    # (k) gateway.pid names a foreign program: never signalled, with a gateway on the port and with the port free
+    BG_STALE_PIDFILE=1 BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case stale_only 1
+    check "port free, gateway.pid naming a foreign process: it survives, is said to be left alone, and the gateway starts" "$([[ $RC == 0 && "$STALE_ALIVE_AFTER" == 1 ]] && has "$OUT" "gateway.pid names pid $STALE_PID, which is not this install's gateway" && ! has "$OUT" "kill $STALE_PID" && grep -qxF "abstractgateway serve --data-dir $DATA_T" "$GWLOG"; echo $?)" "$OUT"
+    # (l) the serve record names another pid: a process declaring no data dir is not vouched for by it
+    BG_HAND=1 BG_HAND_RECORD=1 BG_HAND_RECORD_PID=1 BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case hand_recpid 1
+    check "a serve record naming another pid does not make the listener this install's: foreign, left running" "$([[ $RC == 0 && "$HAND_ALIVE_AFTER" == 1 ]] && has "$OUT" "using $((BG_PORT + 1))" && ! has "$OUT" "started by hand"; echo $?)" "$OUT"
+    # (m) the record names this process on a port where another program's gateway listens: the listener decides
+    BG_FOREIGN=1 BG_HAND=1 BG_HAND_RECORD=1 BG_HAND_PORT=$((BG_PORT + 2)) BG_HAND_RECORD_PORT=$BG_PORT BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case hand_wrongport 1
+    check "a recorded pid that does not listen on the recorded port is never stopped as 'also runs on port'" "$([[ $RC == 0 && "$HAND_ALIVE_AFTER" == 1 && "$PRE_ALIVE_AFTER" == 1 ]] && ! has "$OUT" "also runs on port" && ! has "$OUT" "started by hand"; echo $?)" "$OUT"
+    # (n) it ignores SIGTERM by becoming another program (same pid): no SIGKILL for what is no longer the gateway
+    BG_ENV="AF_STOP_TIMEOUT=1" BG_HAND=1 BG_HAND_RECORD=1 BG_HAND_TERM=exec-sleep BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case hand_exec 1
+    check "a process that became another program after SIGTERM is not SIGKILLed; the install goes on" "$([[ $RC == 0 && "$HAND_ALIVE_AFTER" == 1 ]] && ! has "$OUT" "stopping it with SIGKILL" && has "$OUT" "pid $HAND_PID is no longer this install's gateway"; echo $?)" "$OUT"
+    # (o) Linux login item: the unit's gateway (MainPID) on another port is the login item's, not "started by hand"
+    BG_LINUX=1 BG_SERVICE=1 BG_SVC_MAINPID=hand BG_HAND=1 BG_HAND_RECORD=1 BG_HAND_PORT=$((BG_PORT + 2)) BG_NO_PORT=1 BG_UV_LIST="abstractgateway v$GW_PIN" BG_FREEZE_BEFORE="abstractgateway==$GW_PIN\n" \
+        BG_STATE="PORT=$BG_PORT\nMODE=service\nPROFILE=light\nFRAMEWORK_VERSION=$FW\nCONSOLE=0\nGATEWAY_SPEC=abstractgateway==$GW_PIN\nVOICE_SPEC=abstractvoice[supertonic,stt]\n" bg_case hand_svc_elsewhere 1
+    check "login item (systemd): the unit's own gateway on another port is not stopped as started by hand" "$([[ $RC == 0 && "$HAND_ALIVE_AFTER" == 1 ]] && ! has "$OUT" "also runs on port" && ! has "$OUT" "started by hand"; echo $?)" "$OUT"
+    # (p) gateway.pid names a gateway process that declares no data dir, has no serve record, and started after the file: foreign
+    BG_HAND=1 BG_HAND_PIDFILE_OLD=1 BG_HAND_PORT=$((BG_PORT + 2)) BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case pid_reused_gw 1
+    check "gateway.pid older than the gateway process it names (a reused pid): left alone" "$([[ $RC == 0 && "$HAND_ALIVE_AFTER" == 1 ]] && has "$OUT" "gateway.pid names pid $HAND_PID, which is not this install's gateway" && ! has "$OUT" "kill $HAND_PID$"; echo $?)" "$OUT"
+    # ... and the same process with a gateway.pid written after it started is the installer's background gateway
+    BG_HAND=1 BG_HAND_PIDFILE=1 BG_HAND_PORT=$((BG_PORT + 2)) BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case pid_fresh_gw 1
+    check "gateway.pid written after the gateway it names started: stopped as the background gateway" "$([[ $RC == 0 && "$HAND_ALIVE_AFTER" == 0 ]] && has "$OUT" "kill $HAND_PID$" && ! has "$OUT" "not this install's gateway"; echo $?)" "$OUT"
+    # (q) no lsof nor ss, gateway.pid naming a foreign process and another program's gateway on the port: not "already running"
+    BG_NO_LSOF=1 BG_NO_SS=1 BG_STALE_PIDFILE=1 BG_FOREIGN=1 BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case stale_notools 1
+    check "without lsof and ss, a gateway.pid naming a foreign process never makes the port's gateway this install's" "$([[ $RC == 0 && "$STALE_ALIVE_AFTER" == 1 && "$PRE_ALIVE_AFTER" == 1 ]] && has "$OUT" "using $((BG_PORT + 1))" && ! has "$OUT" "already running"; echo $?)" "$OUT"
+    # (r) the background gateway becomes another program on SIGTERM (same pid): no SIGKILL for it
+    BG_HAND=1 BG_HAND_RECORD=1 BG_HAND_PIDFILE=1 BG_HAND_TERM=exec-sleep BG_HAND_PORT=$((BG_PORT + 2)) BG_NO_PORT=1 BG_STATE="$HAND_STATE" BG_UV_LIST="abstractgateway v$GW_PIN" bg_case bg_exec 1
+    check "a background gateway that became another program after SIGTERM is not SIGKILLed" "$([[ $RC == 0 && "$HAND_ALIVE_AFTER" == 1 ]] && has "$OUT" "kill $HAND_PID$" && grep -qxF "abstractgateway serve --data-dir $DATA_T" "$GWLOG"; echo $?)" "$OUT"
     # The installer's own background gateway (gateway.pid) on the port: still reused, nothing stopped (unchanged).
     BG_PRERUN=1 BG_NO_PORT=1 BG_STATE="$HAND_STATE\nVOICE_SPEC=abstractvoice[supertonic,stt]\n" BG_UV_LIST="abstractgateway v$GW_PIN" BG_FREEZE_BEFORE="abstractgateway==$GW_PIN\n" bg_case hand_managed 1
     check "the installer's own background gateway is still reused as before (not treated as started by hand)" "$([[ $RC == 0 ]] && has "$OUT" "already running (pid $PRE_PID), unchanged" && ! has "$OUT" "started by hand"; echo $?)" "$OUT"

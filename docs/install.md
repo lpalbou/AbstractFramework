@@ -154,7 +154,11 @@ The line always runs the installer of the latest AbstractFramework release. It:
 - replaces a gateway of this install that you started yourself (it serves the same data directory)
   on its port, instead of moving to another port and starting a second gateway on the same data;
   a program that is not this install's gateway keeps the port, and the installer takes the next
-  free one;
+  free one. The installer signals only a process of your user running `abstractgateway serve` for
+  this data directory; a stale `gateway.pid` or serve record naming another program is left alone.
+  On Windows with start at login on, the installer cannot tell which process the login item started,
+  so a gateway of this data directory that you started yourself on the install's port is taken for
+  the login item and left running (stop it, then re-run the installer, to have the login item's);
 - asks PyPI again for the packages it pins (`uv tool install --refresh-package ...`), so a release
   published minutes earlier installs without clearing uv's cache;
 - never leaves the gateway stopped: when the login item cannot be registered, the gateway starts in
@@ -837,7 +841,7 @@ installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
 `abstractframework` 0.7.0 pins `abstractgateway==0.8.0`, `abstractassistant==0.10.0`,
-`abstractcore==2.20.0`, `AbstractRuntime==0.8.0`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
+`abstractcore==2.20.1`, `AbstractRuntime==0.8.0`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.2`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.15` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
@@ -928,7 +932,7 @@ Run or install them next to the Python stack:
 | Tool | Command | Version released with 0.7.0 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.8.0 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.20.0 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.20.1 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command) | 0.5.0 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.12.0 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.4.0 |
@@ -987,7 +991,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.20.0`.
+`ghcr.io/lpalbou/abstractcore-server:2.20.1`.
 
 ## How installs are designed
 

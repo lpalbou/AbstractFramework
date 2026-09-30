@@ -27,7 +27,8 @@ SH = ROOT / "scripts" / "install.sh"
 needs_pwsh = pytest.mark.skipif(shutil.which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
 
 REAL = ["Read-ServeRecord", "Test-CommandLineDataDir", "Get-DeclaredDataDir", "Test-OwnGatewayPid", "Find-OwnGateway",
-        "Test-OurBackgroundListener", "Test-RecordNamesThisGateway", "Resolve-DirPath", "Get-RefreshPackages"]
+        "Test-OurBackgroundListener", "Test-RecordNamesThisGateway", "Resolve-DirPath", "Get-RefreshPackages",
+        "Test-SameUser", "Test-GatewayCommandLine", "Test-PidFileGateway", "Test-GatewayPidStillOurs"]
 STARTED = "2026-09-30T10:00:00Z"          # when the fake process started (UTC)
 WRITTEN = "2026-09-30T10:00:05.123456Z"   # the serve record's started_at, as the gateway writes it
 
@@ -56,7 +57,8 @@ def _ps(value: str) -> str:
 
 
 def _find(tmp_path: Path, *, listener: int, cmdline: str, alive: bool = True, health: bool = True,
-          record: dict | None = None, port: int = 8080, started: str = STARTED, in_parent: bool = False) -> int:
+          record: dict | None = None, port: int = 8080, started: str = STARTED, in_parent: bool = False,
+          owner: str = "SAME") -> int:
     data = tmp_path / "App Data" / "AbstractGateway"
     (data / "run").mkdir(parents=True, exist_ok=True)
     rec = data / "run" / "gateway-serve.json"
@@ -68,6 +70,7 @@ def _find(tmp_path: Path, *, listener: int, cmdline: str, alive: bool = True, he
 function Get-PortListenerPid([int]$Port) {{ return {listener} }}
 function Get-ProcessCommandLine([int]$ProcessId) {{ return {_ps(cmdline.replace('DATA', str(data)))} }}
 function Test-ProcessAlive([int]$ProcessId) {{ return ${'true' if alive else 'false'} }}
+function Get-ProcessOwner([int]$ProcessId) {{ if ({_ps(owner)} -eq 'SAME') {{ return [Environment]::UserName }}; return {_ps(owner)} }}
 function Get-ProcessStartUtc([int]$ProcessId) {{ return [DateTime]::Parse('{started}', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal) }}
 function Get-Http([string]$Url) {{ if (${'true' if health else 'false'} -and $Url -eq 'http://127.0.0.1:{port}/api/health') {{ return '{{"status": "healthy", "service": "abstractgateway"}}' }}; return $null }}
 {'Set-Location ' + _ps(str(data.parent)) if in_parent else ''}
@@ -141,7 +144,7 @@ def test_install_ps1_wires_the_own_gateway_check_and_the_refresh() -> None:
     ps1 = SCRIPT.read_text(encoding="utf-8")
     port = ps1[ps1.index("    if (Test-PortBusy $Port) {"):ps1.index("    $baseUrl = \"http://127.0.0.1:$Port\"")]
     # recognised before the -NoStart hold, the explicit-port refusal and the move to the next port
-    order = [port.index(s) for s in ("if ($ours)", "Find-OwnGateway $Port $DataDir", "elseif ($NoStart", "elseif ($explicitPort)", "using $p (kept for future runs)")]
+    order = [port.index(s) for s in ("if ($ours)", "elseif (($script:HandGatewayPid = Find-OwnGateway $Port $DataDir))", "elseif ($NoStart", "elseif ($explicitPort)", "using $p (kept for future runs)")]
     assert order == sorted(order)
     # the gateway.pid process counts only when it (or its child: uv's launcher runs python.exe) is the listener
     assert "Test-OurBackgroundListener $listener ([int]$ourPid)" in port
@@ -185,6 +188,10 @@ def test_the_gate_repros_are_foreign(tmp_path: Path) -> None:
     assert _find(tmp_path, listener=4242, cmdline=r"tail -f C:\x\abstractgateway-logs\x", record=rec) == 0
     # the listener named, but /api/health there is not a gateway's
     assert _find(tmp_path, listener=4242, cmdline=GW, record=rec, health=False) == 0
+    # a gateway of another user (its owner is not the user running the installer)
+    assert _find(tmp_path, listener=4242, cmdline=GW, record=rec, owner="someoneelse") == 0
+    # the owner cannot be told: not ours
+    assert _find(tmp_path, listener=4242, cmdline=GW, record=rec, owner="") == 0
 
 
 @needs_pwsh
@@ -204,6 +211,7 @@ def test_a_stale_record_never_adds_a_reused_pid_to_the_gateways_stopped(tmp_path
     def names(cmd: str, started: str) -> str:
         body = f"""
 function Test-ProcessAlive([int]$ProcessId) {{ return $true }}
+function Get-ProcessOwner([int]$ProcessId) {{ return [Environment]::UserName }}
 function Get-ProcessCommandLine([int]$ProcessId) {{ return {_ps(cmd)} }}
 function Get-ProcessStartUtc([int]$ProcessId) {{ return [DateTime]::Parse('{started}', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal) }}
 Test-RecordNamesThisGateway ([pscustomobject]@{{ pid = 4242; port = 8080; data_dir = {_ps(str(data))}; started_at = '{WRITTEN}' }}) {_ps(str(data))}
@@ -213,3 +221,75 @@ Test-RecordNamesThisGateway ([pscustomobject]@{{ pid = 4242; port = 8080; data_d
     assert names(GW, "2026-09-30T11:00:00Z") == "False"
     assert names(r"tail -f C:\x\abstractgateway-logs\x", STARTED) == "False"
     assert names(GW + ' --data-dir "/elsewhere/gw"', STARTED) == "False"
+
+
+
+def _pidfile_case(tmp_path: Path, *, named: int, pid: int, cmd: str, started: str, owner: str = "SAME",
+                  record: dict | None = None, hand: int = 0, own_found: int = 0, fn: str = "Test-PidFileGateway") -> str:
+    data = tmp_path / "gw"
+    (data / "run").mkdir(parents=True, exist_ok=True)
+    pidfile = data / "gateway.pid"
+    pidfile.write_text(f"{named}\n")
+    os.utime(pidfile, (1790762405, 1790762405))  # 2026-09-30T10:00:05Z, when the installer wrote it
+    rec = data / "run" / "gateway-serve.json"
+    if record is not None:
+        rec.write_text(json.dumps({"started_at": WRITTEN, "data_dir": str(data), **record}), encoding="utf-8")
+    elif rec.exists():
+        rec.unlink()
+    call = (f"Test-PidFileGateway {pid} {_ps(str(pidfile))} {_ps(str(data))}" if fn == "Test-PidFileGateway"
+            else f"Test-GatewayPidStillOurs {pid} {_ps(str(pidfile))} {_ps(str(data))} 8080 {hand}")
+    body = f"""
+function Test-ProcessAlive([int]$ProcessId) {{ return $true }}
+function Get-ProcessOwner([int]$ProcessId) {{ if ({_ps(owner)} -eq 'SAME') {{ return [Environment]::UserName }}; return {_ps(owner)} }}
+function Get-ProcessCommandLine([int]$ProcessId) {{ return {_ps(cmd.replace('DATA', str(data)))} }}
+function Get-ProcessStartUtc([int]$ProcessId) {{ return [DateTime]::Parse('{started}', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal) }}
+function Find-OwnGateway([int]$Port, [string]$DataDir) {{ return {own_found} }}
+{call}
+"""
+    return _pwsh(body, tmp_path).splitlines()[-1]
+
+
+LAUNCHER = r'"C:\Users\x\.local\bin\abstractgateway.exe" serve'
+
+
+@needs_pwsh
+def test_gateway_pid_is_trusted_only_for_this_installs_gateway(tmp_path: Path) -> None:
+    # the installer's background gateway (uv's launcher), started before gateway.pid was written
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd=LAUNCHER, started=STARTED) == "True"
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd=LAUNCHER + ' --data-dir "DATA"', started=STARTED) == "True"
+    # the gate's repro: gateway.pid names a foreign `sleep 120`
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd="sleep 120", started=STARTED) == "False"
+    # a gateway process that started after gateway.pid was written (the pid was reused)
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd=LAUNCHER, started="2026-09-30T11:00:00Z") == "False"
+    # ... unless the serve record names it (it wrote the record after it started)
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd=LAUNCHER, started="2026-09-30T10:00:04Z",
+                         record={"pid": 100, "port": 8080}) == "True"
+    # a gateway of another data dir, of another user, or a pid the file does not name
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd=LAUNCHER + ' --data-dir "/elsewhere/gw"', started=STARTED) == "False"
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd=LAUNCHER, started=STARTED, owner="someoneelse") == "False"
+    assert _pidfile_case(tmp_path, named=101, pid=100, cmd=LAUNCHER, started=STARTED) == "False"
+
+
+@needs_pwsh
+def test_every_stop_target_is_checked_again_right_before_stop_process(tmp_path: Path) -> None:
+    kw = {"fn": "Test-GatewayPidStillOurs", "started": STARTED}
+    # the hand-started gateway: only while Find-OwnGateway still finds that pid on the port
+    assert _pidfile_case(tmp_path, named=100, pid=200, cmd=GW, hand=200, own_found=200, **kw) == "True"
+    assert _pidfile_case(tmp_path, named=100, pid=200, cmd=GW, hand=200, own_found=0, **kw) == "False"
+    # the pid-file gateway: only while it is still that gateway
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd=LAUNCHER, **kw) == "True"
+    assert _pidfile_case(tmp_path, named=100, pid=100, cmd="sleep 120", **kw) == "False"
+    # the serve record's gateway (the login item): only while the record still names a gateway that predates it
+    assert _pidfile_case(tmp_path, named=100, pid=300, cmd=GW, record={"pid": 300, "port": 8080}, **kw) == "True"
+    assert _pidfile_case(tmp_path, named=100, pid=300, cmd="notepad.exe", record={"pid": 300, "port": 8080}, **kw) == "False"
+
+
+def test_install_ps1_checks_every_pid_before_stopping_it() -> None:
+    ps1 = SCRIPT.read_text(encoding="utf-8")
+    stop = ps1[ps1.index("    function Stop-RunningGateway {"):ps1.index("    if (-not $script:DryRun) {\n        New-Item -ItemType Directory -Force -Path $logDir")]
+    assert stop.index("Test-GatewayPidStillOurs $p $pidFile $DataDir $Port $script:HandGatewayPid") < stop.index("Stop-Process -Id $p -Force")
+    our = ps1[ps1.index("    function Get-OurPid {"):ps1.index("    function Stop-OurGateway {")]
+    assert "Test-PidFileGateway $p $pidFile $DataDir" in our
+    port = ps1[ps1.index("    if (Test-PortBusy $Port) {"):ps1.index("    $baseUrl = \"http://127.0.0.1:$Port\"")]
+    # the login item (service mode): a healthy gateway of THIS data dir, when the listener can be named
+    assert "(-not $listener -or (Find-OwnGateway $Port $DataDir) -eq $listener)" in port

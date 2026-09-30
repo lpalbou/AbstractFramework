@@ -6,7 +6,7 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [0.7.0] - 2026-09-30
 
-Email for each user, and installer fixes. Pins: AbstractCore 2.20.0, AbstractRuntime 0.8.0,
+Email for each user, and installer fixes. Pins: AbstractCore 2.20.1, AbstractRuntime 0.8.0,
 AbstractGateway 0.8.0 and AbstractAssistant 0.10.0; the terminal consoles are
 `abstractgateway-console` 0.12.0 and `abstractcore-console` 0.5.0, and the browser apps
 AbstractCode web 0.7.0 and AbstractObserver 0.3.0 (built on AbstractUIC ui-kit 0.2.0 and panel-chat
@@ -23,6 +23,8 @@ AbstractCode web 0.7.0 and AbstractObserver 0.3.0 (built on AbstractUIC ui-kit 0
   day by default); every send passes them. AbstractCore on its own gets the same account, one per
   install: `abstractcore email ...`, the core web console's **Email** tab and the core terminal
   console's Email screen. See [Configuration](docs/configuration.md#email-accounts).
+  `abstractcore email connect --password-stdin` (and `--client-secret-stdin` for OAuth) reads the
+  secret from stdin, so it never appears on a command line (AbstractCore 2.20.1).
 - **Email automations.** The Assistant, the Observer and AbstractCode's browser client offer **When
   an email arrives** (the `email.received@1` trigger: typed filters on sender, recipient, subject and
   attachments; hourly batches by default for automations that run a model, never more often than
@@ -62,6 +64,14 @@ AbstractCode web 0.7.0 and AbstractObserver 0.3.0 (built on AbstractUIC ui-kit 0
   hand-started one was given. With `--no-start` (`-NoStart`, the console's Update) it keeps
   running and the summary says a restart is due. A program that is not this install's gateway
   keeps the port, as before.
+- **The installers signal only this install's gateway.** Before any stop, the process must belong
+  to your user, run `abstractgateway serve` and serve this data directory; the identity is checked
+  again right before the signal (and before a SIGKILL). A `gateway.pid` or serve record left behind
+  that names another program (a reused pid) is left alone and said so.
+- **Known limit on Windows with start at login on:** Windows does not tell the installer which
+  process the login item started, so a gateway of this data directory that you started yourself on
+  the install's port is taken for the login item and left running. Stop it and re-run the
+  installer to get the login item's gateway.
 - **A release published minutes earlier installs at once.** The installers pass
   `--refresh-package` for `abstractgateway` and every package of the release matrix to
   `uv tool install`, so uv asks PyPI again instead of using its cached index page (which could say
