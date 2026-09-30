@@ -55,12 +55,12 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.7.1` for this release).
+The meta-package version (`0.7.2` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.7.1:
-`abstractcore` 2.20.2, `abstractruntime` 0.8.1, `abstractagent` 0.3.17, `abstractgateway` 0.8.1,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.7.2:
+`abstractcore` 2.20.2, `abstractruntime` 0.8.1, `abstractagent` 0.3.17, `abstractgateway` 0.8.2,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.2, `abstractvision` 0.3.33,
 `abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.10.0.
 

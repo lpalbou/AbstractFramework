@@ -4,10 +4,21 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-Planned as the 0.7.2 patch release (installers only; no package pin changes).
+## [0.7.2] - 2026-09-30
+
+A patch release. Pins AbstractGateway 0.8.2; every other version is unchanged from 0.7.1.
 
 ### Fixed
 
+- **A new email automation reacts to the mail you send to test it.** Mail sent right after
+  creating a "When an email arrives" automation could be missed: the mail watcher, which reads
+  nothing until an email automation exists, marked where new mail starts up to a minute later and
+  treated that minute's mail as already there. Creating an email automation now wakes it and the
+  mark is taken within seconds.
+- **A new or resumed email automation no longer runs on old mail.** After a time with no email
+  automation active, the next one received everything that had arrived meanwhile as new mail. That
+  mail is now treated as already there (mail that arrives while the gateway itself is down is
+  still read when it is back).
 - **An upgrade right after a release no longer installs less.** When one of PyPI's mirrors had not
   yet listed a version the release pins, uv answered `there is no version of
   abstractgateway[gpu]==0.8.1`, and the installer took that for a system without the voice
