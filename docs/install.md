@@ -120,11 +120,13 @@ paste on Windows) treats that as a delay:
 - if the version is still missing after that, it stops with the cause and what to do. uv stops
   before it changes anything, so the previous install keeps working.
 
-Only this exact case waits: uv exits with code 1, its output starts with uv's resolution failure
-(`No solution found when resolving dependencies`), and it says `there is no version of
-<package>==<version>` for a package at the exact version this release pins (the gateway and the
-release's libraries: AbstractCore, AbstractRuntime, AbstractVoice, ...). The voice requirement
-carries its pinned version for this reason. Every other failure is handled as before: a system
+Only these cases wait, for a package at the exact version this release pins (the gateway and the
+release's libraries: AbstractCore, AbstractRuntime, AbstractVoice, ...): uv exits with code 1, its
+output contains uv's resolution failure (`No solution found when resolving dependencies`) and it
+says `there is no version of <package>==<version>`; or uv exits with code 2 because the download
+of that version's own file answered `404` (`Failed to fetch: .../<package>-<version>-py3-none-any.whl`:
+the package list already shows the new version but the file is not served yet). The voice
+requirement carries its pinned version for this reason. Every other failure is handled as before: a system
 without the voice or llama.cpp wheels still installs without them and the summary says so. An
 install with `--pin latest` or `--from` pins nothing, so nothing is waited for.
 

@@ -198,14 +198,26 @@ function Get-VoiceRequirement([string]$Spec, [bool]$IsRelease) {
     foreach ($c in $AfPyMatrix) { if ($c -like 'abstractvoice==*') { return "$Spec==$(($c -split '==', 2)[1])" } }
     return $Spec
 }
-# The pinned "name==version" uv's resolver reported as not on the index, or '' for any other failure.
-function Find-IndexLag([string]$Text, [string[]]$Pins) {
+# The pinned "name==version" that is not on the index yet, or '' for any other failure. Exit 1: uv's
+# resolver reports the pin missing (above). Exit 2: uv's download of the pin's own file answered HTTP
+# 404 (the index lists the new version but the file host does not serve it yet), same as install.sh.
+function Find-IndexLag([string]$Text, [string[]]$Pins, [int]$Code = 1) {
     $t = $Text -replace "$([char]27)\[[0-9;]*m", '' -replace [string][char]0x2502, ' '
     $t = ($t -replace '\s+', ' ').ToLowerInvariant()
-    if (-not $t.Contains('no solution found when resolving dependencies')) { return '' }
+    if ($Code -eq 1) {
+        if (-not $t.Contains('no solution found when resolving dependencies')) { return '' }
+    } elseif ($Code -eq 2) {
+        if (-not ($t.Contains('failed to fetch') -and $t.Contains('404'))) { return '' }
+    } else { return '' }
     foreach ($p in $Pins) {
         $nv = $p -split '==', 2
-        $re = 'there is no version of ' + [regex]::Escape($nv[0].ToLowerInvariant()) + '(\[[a-z0-9,._-]*\])?==' + [regex]::Escape($nv[1].ToLowerInvariant()) + '([^0-9a-z.+!-]|$)'
+        $n = $nv[0].ToLowerInvariant()
+        $v = [regex]::Escape($nv[1].ToLowerInvariant())
+        if ($Code -eq 2) {
+            $re = 'failed to fetch: `[^`]*/' + [regex]::Escape(($n -replace '[.-]', '_')) + '-' + $v + '(-|\.tar\.gz)'
+        } else {
+            $re = 'there is no version of ' + [regex]::Escape($n) + '(\[[a-z0-9,._-]*\])?==' + $v + '([^0-9a-z.+!-]|$)'
+        }
         if ($t -match $re) { return $p }
     }
     return ''
@@ -719,8 +731,8 @@ function Invoke-Native {
         } finally {
             $ErrorActionPreference = $old
         }
-        if ($code -ne 1 -or -not $IndexPins.Count) { break }
-        $lag = Find-IndexLag (Read-LogFrom $script:LogFile $mark) $IndexPins
+        if (($code -ne 1 -and $code -ne 2) -or -not $IndexPins.Count) { break }
+        $lag = Find-IndexLag (Read-LogFrom $script:LogFile $mark) $IndexPins $code
         if (-not $lag) { break }
         $lagName, $lagVer = $lag -split '==', 2
         if ($try -ge $tries) {

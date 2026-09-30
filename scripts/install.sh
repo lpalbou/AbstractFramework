@@ -337,16 +337,29 @@ af_voice_req() {
     printf '%s\n' "$_avr"
 }
 re_escape() { printf '%s' "$1" | sed 's/[].[^$*+?(){}|\\/]/\\&/g'; }
-# uv_index_lag LOGFILE FROM_LINE: the "name==version" of the pinned package uv's resolver reported
-# as not on the index, in LOGFILE's lines after FROM_LINE (one uv run); nothing when the failure
-# is anything else. See the block above.
+# uv_index_lag LOGFILE FROM_LINE RC: the "name==version" of the pinned package that is not on the
+# index yet, in LOGFILE's lines after FROM_LINE (one uv run that exited RC); nothing when the failure
+# is anything else. Two forms: exit 1 with uv's resolution failure naming the pin ("there is no
+# version of <name>[<extras>]==<pin>", see the block above), or exit 2 with uv's download failure
+# for the pin's own file, HTTP 404 (the index already lists the new version but the file host does
+# not serve it yet: `Failed to fetch: .../<name>-<pin>-py3-none-any.whl` ... `404`).
 uv_index_lag() {
     _ul_esc="$(printf '\033')"
     _ul_text="$(sed -n "$(($2 + 1)),\$p" "$1" | sed "s/${_ul_esc}\[[0-9;]*m//g; s/│/ /g" | tr -s '[:space:]' ' ' | tr 'A-Z' 'a-z')"
-    case "$_ul_text" in *"no solution found when resolving dependencies"*) ;; *) return 0 ;; esac
+    case "${3:-1}" in
+        1) case "$_ul_text" in *"no solution found when resolving dependencies"*) ;; *) return 0 ;; esac ;;
+        2) case "$_ul_text" in *"failed to fetch"*"404"*) ;; *) return 0 ;; esac ;;
+        *) return 0 ;;
+    esac
     for _ul_pin in $(af_index_pins); do
         _ul_n="$(printf '%s' "${_ul_pin%%==*}" | tr 'A-Z' 'a-z')"
-        _ul_re="there is no version of $(re_escape "$_ul_n")(\[[a-z0-9,._-]*\])?==$(re_escape "${_ul_pin#*==}")([^0-9a-z.+!-]|\$)"
+        if [ "${3:-1}" = 2 ]; then
+            # The file name: the name with - and . as _, then -<version>- (wheel) or -<version>.tar.gz.
+            _ul_f="$(printf '%s' "$_ul_n" | tr '.-' '__')"
+            _ul_re="failed to fetch: \`[^\`]*/$(re_escape "$_ul_f")-$(re_escape "${_ul_pin#*==}")(-|\.tar\.gz)"
+        else
+            _ul_re="there is no version of $(re_escape "$_ul_n")(\[[a-z0-9,._-]*\])?==$(re_escape "${_ul_pin#*==}")([^0-9a-z.+!-]|\$)"
+        fi
         if printf '%s\n' "$_ul_text" | grep -Eq "$_ul_re"; then printf '%s\n' "$_ul_pin"; return 0; fi
     done
     return 0
@@ -555,8 +568,8 @@ run() {
             printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
             "$@" >>"$LOG_FILE" 2>&1 || _rc=$?
         fi
-        [ "$_rc" = 1 ] && [ "$_lagck" = 1 ] || break
-        _lag="$(uv_index_lag "$LOG_FILE" "$_mark")"
+        { [ "$_rc" = 1 ] || [ "$_rc" = 2 ]; } && [ "$_lagck" = 1 ] || break
+        _lag="$(uv_index_lag "$LOG_FILE" "$_mark" "$_rc")"
         [ -n "$_lag" ] || break
         _lagname="${_lag%%==*}"; _lagver="${_lag#*==}"
         if [ "$_try" -ge "$_tries" ]; then

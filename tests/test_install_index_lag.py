@@ -56,6 +56,15 @@ LAG_VOICE = f"""  × No solution found when resolving dependencies:
   ╰─▶ Because there is no version of abstractvoice[supertonic]=={VOICE_PIN} and
       you require abstractvoice[supertonic]=={VOICE_PIN}, we can conclude that your
       requirements are unsatisfiable."""
+# The index already lists the new version but the file host does not serve its file yet: uv exits 2
+# (uv 0.11.14's exact output against an index listing a file that answers 404).
+F404_GATEWAY = f"""error: Failed to fetch: `https://files.pythonhosted.org/packages/9a/1c/0f/abstractgateway-{GW_PIN}-py3-none-any.whl`
+  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/packages/9a/1c/0f/abstractgateway-{GW_PIN}-py3-none-any.whl)"""
+F404_RUNTIME_SDIST = f"""error: Failed to fetch: `https://files.pythonhosted.org/packages/77/ab/abstractruntime-{MATRIX['AbstractRuntime']}.tar.gz`
+  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/packages/77/ab/abstractruntime-{MATRIX['AbstractRuntime']}.tar.gz)"""
+# Not lag: a 404 for a file the installer did not pin (a dependency's), and a 404 without uv's fetch failure.
+F404_OTHER = """error: Failed to fetch: `https://files.pythonhosted.org/packages/11/22/onnxruntime-1.22.0-cp312-cp312-manylinux_2_27_x86_64.whl`
+  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/packages/11/22/onnxruntime-1.22.0-cp312-cp312-manylinux_2_27_x86_64.whl)"""
 # Not lag: a platform without the voice engine's wheels (a real conflict), and a pin that is not
 # the installer's release pin (an older gateway version than the one pinned).
 NO_WHEEL = f"""  × No solution found when resolving dependencies:
@@ -158,6 +167,28 @@ def test_install_sh_retries_the_same_full_install_through_index_lag(tmp_path: Pa
     assert "retrying without it" not in out
     assert "Voice:      Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU" in proc.stdout
     assert "did not succeed" not in out
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+@pytest.mark.parametrize("message,name,version", [(F404_GATEWAY, "abstractgateway", GW_PIN),
+                                                  (F404_RUNTIME_SDIST, "AbstractRuntime", MATRIX["AbstractRuntime"])],
+                         ids=["gateway-wheel", "runtime-sdist"])
+def test_install_sh_retries_when_the_new_file_is_not_served_yet(tmp_path: Path, shell: str, message: str, name: str, version: str) -> None:
+    proc, installs, slept = _run_sh(shell, tmp_path, fail_first=2, message=message, exit_code=2)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert len(installs) == 3 and len(set(installs)) == 1, installs
+    assert VOICE_ARG in installs[0]
+    assert slept == ["15", "30"]
+    assert f"PyPI hasn't published {name} {version} to every mirror yet; retrying in 15 s (attempt 2/8)" in proc.stdout
+    assert "retrying without it" not in out
+
+
+def test_install_sh_a_404_for_a_file_it_did_not_pin_is_not_lag(tmp_path: Path) -> None:
+    proc, installs, slept = _run_sh("sh", tmp_path, fail_first=99, message=F404_OTHER, exit_code=2)
+    assert slept == []
+    assert "PyPI hasn't published" not in proc.stdout
+    assert "retrying without it" in proc.stdout
 
 
 @pytest.mark.parametrize("shell", SHELLS)
@@ -283,6 +314,18 @@ def test_install_ps1_retries_the_same_install_through_index_lag(tmp_path: Path, 
 
 
 @needs_pwsh
+@pytest.mark.parametrize("message", [F404_GATEWAY, F404_RUNTIME_SDIST], ids=["gateway-wheel", "runtime-sdist"])
+def test_install_ps1_retries_when_the_new_file_is_not_served_yet(tmp_path: Path, message: str) -> None:
+    proc = _pwsh_native(tmp_path, fail_first=2, message=message, soft=True, exit_code=2)
+    out = proc.stdout + proc.stderr
+    assert "RESULT=True" in out, out
+    assert "SLEPT=15,30" in out
+    installs = _installs(tmp_path)
+    assert len(installs) == 3 and len(set(installs)) == 1
+    assert "to every mirror yet; retrying in 15 s (attempt 2/8)" in out
+
+
+@needs_pwsh
 def test_install_ps1_index_lag_beyond_the_budget_throws_even_when_soft(tmp_path: Path) -> None:
     proc = _pwsh_native(tmp_path, fail_first=99, message=LAG_GATEWAY, soft=True)
     out = proc.stdout + proc.stderr
@@ -293,8 +336,8 @@ def test_install_ps1_index_lag_beyond_the_budget_throws_even_when_soft(tmp_path:
 
 
 @needs_pwsh
-@pytest.mark.parametrize("message,exit_code", [(NO_WHEEL, 1), (OTHER_VERSION, 1), (LAG_GATEWAY, 2), (NO_HEADER, 1)],
-                         ids=["no-wheel", "unpinned-version", "exit-2", "no-resolution-header"])
+@pytest.mark.parametrize("message,exit_code", [(NO_WHEEL, 1), (OTHER_VERSION, 1), (LAG_GATEWAY, 2), (NO_HEADER, 1), (F404_OTHER, 2)],
+                         ids=["no-wheel", "unpinned-version", "exit-2", "no-resolution-header", "404-unpinned-file"])
 def test_install_ps1_other_failures_keep_the_soft_fallback(tmp_path: Path, message: str, exit_code: int) -> None:
     proc = _pwsh_native(tmp_path, fail_first=99, message=message, soft=True, exit_code=exit_code)
     out = proc.stdout + proc.stderr

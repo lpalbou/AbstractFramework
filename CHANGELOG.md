@@ -25,7 +25,8 @@ A patch release. Pins AbstractGateway 0.8.2; every other version is unchanged fr
   wheels: the 0.7.1 upgrade of a Linux machine went through without local voice (a second run was
   clean). install.sh and install.ps1 (and so the consoles' **Update** action, which runs install.sh) now recognise that
   case from uv's exit code 1, its resolution failure, and its exact-pin wording for a package the
-  installer itself pinned, and run the same install again, with every feature, after 15 s, 30 s,
+  installer itself pinned (or from uv's exit code 2 when the download of that pinned version's own
+  file answers 404: the list shows it, the file is not served yet), and run the same install again, with every feature, after 15 s, 30 s,
   60 s and 120 s waits (8 attempts, about 10 minutes), printing `PyPI hasn't published
   abstractgateway 0.8.1 to every mirror yet; retrying in 30 s (attempt 3/8)`. After that they stop
   with the cause and what to do, never with a smaller install. The fallbacks for systems without
