@@ -101,6 +101,7 @@ where it stopped.
 | The browser page asks for a token | The one-time sign-in link lasts 10 minutes. Run the installer again: it opens a fresh link. |
 | `another AbstractFramework installer is already running` | An installer, or an **Update** from a console or the menu-bar icon, is running for this data directory. Wait until it finishes, then run the line again. |
 | `PyPI hasn't published abstractgateway 0.8.1 to every mirror yet; retrying in 30 s (attempt 3/8)` | Nothing to do: a release published minutes ago has not reached every PyPI mirror yet. The installer waits and runs the same install again (see [Right after a release](#right-after-a-release)). |
+| `PyPI lists … but still does not serve its file after 8 attempts over about 10 minutes` | The package list shows the version but the file host has not served its file for 10 minutes. Nothing was left out and the previous install is unchanged. Run the installer again in a few minutes. |
 | `PyPI still does not list … after 8 attempts over about 10 minutes` | The package index this computer reads has not caught up after 10 minutes (often a company package mirror set in `UV_INDEX_URL`, `PIP_INDEX_URL` or `uv.toml`). Nothing was left out and the previous install is unchanged. Run the installer again in a few minutes; with a mirror, ask its administrator to refresh the package the message names. |
 | Anything else | Run the installer again. If it stops at the same step, report it with the log file named at the end of the message (`~/Library/Application Support/AbstractGateway/logs/install-….log`). |
 
@@ -196,7 +197,7 @@ The line always runs the installer of the latest AbstractFramework release. It:
   the background and the summary says how to turn start at login on;
 - ends with what changed, old -> new, under **Changes** (`Changes: none` when nothing moved), and
   `Upgraded: AbstractFramework <yours> -> <latest>` (`Upgraded: AbstractFramework (not recorded) ->
-  0.7.0` for the first upgrade of a 0.6.1 or earlier install) or `Already up to date:
+  <latest>` for the first upgrade of a 0.6.1 or earlier install) or `Already up to date:
   AbstractFramework <yours>; nothing changed.`
 
 #### Upgrading from 0.6.1 or earlier
@@ -519,17 +520,16 @@ Transformers, vLLM and llama.cpp run on the processor; the installer says so. Up
 (`sudo ubuntu-drivers install` on Ubuntu) and run the installer again. Whisper uses its own CUDA 12
 libraries, which need driver 525 or newer.
 
-**Measured on real hardware (AbstractFramework 0.6.3 release candidate).** The release candidate
-(AbstractGateway 0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2, AbstractVoice 0.13.1,
-AbstractVision 0.3.32) was rehearsed on Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability 7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and
-26 GB RAM. The previous install was removed with `uninstall.sh --yes --purge` and uv's download
-cache cleared first. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already
-on the machine. The installer ran without a terminal, so start at login stayed off.
+**Measured on real hardware.** Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability
+7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and 26 GB RAM. The install measured AbstractGateway
+0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2, AbstractVoice 0.13.1 and AbstractVision 0.3.32
+on a machine without a previous install and with uv's download cache cleared. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already on the
+machine. The installer ran without a terminal, so start at login stayed off.
 
 | Step | Result |
 |---|---|
 | Whole install (`install.sh`, profile picked automatically: gpu) | 3 min 1 s; 14.2 GB added on disk |
-| Python packages (`uv tool install`, exactly the candidate's versions) | 39 s, about 5.8 GB of wheels |
+| Python packages (`uv tool install`, exact pinned versions) | 39 s, about 5.8 GB of wheels |
 | llama.cpp `cu130` build swapped in | 18 s (726 MB); loads, GPU offload |
 | Terminal console and AbstractCode compiled with cargo | 62 s and 48 s, no output meanwhile |
 | Checks | PyTorch 2.11.0 on CUDA 13.0; Whisper on the GPU; vLLM 0.22.1 installed |
@@ -543,31 +543,22 @@ timed separately where the path allows it):
 |---|---|---|
 | Text | LM Studio, `qwen/qwen3.5-9b` Q4_K_M, 6.5 GB on the GPU | first gateway request 23 s including the model load; then 12 s for 318 tokens; about 41 tokens/s from AbstractCore in Python |
 | Text-to-speech | Supertonic, on the processor | 1.1 to 1.4 s per sentence; 3.2 s for the first gateway request |
-| Speech-to-text | faster-whisper `base` on CUDA, 0.3 GB of GPU memory | with the route set by hand and PyAV 18 (both part of the final release, below): 1.0 to 2.3 s per gateway request, no OpenAI key |
-| Image | FLUX.2 [klein] 4B, Diffusers, model CPU offload, 7.8 GB peak | 41 s to load, then 15 to 16 s per 1024x1024 image; 54 to 59 s per gateway request, which loads the model each time; after **Load** (AbstractRuntime 0.7.3), 17 to 19 s per gateway request on the loaded model |
+| Speech-to-text | faster-whisper `base` on CUDA, 0.3 GB of GPU memory | 1.0 to 2.3 s per gateway request, no OpenAI key |
+| Image | FLUX.2 [klein] 4B, Diffusers, model CPU offload, 7.8 GB peak | 41 s to load, then 15 to 16 s per 1024x1024 image; after **Load** in the console, 17 to 19 s per gateway request on the loaded model (54 to 59 s when each request loads the model) |
 
-**Found in the rehearsal, and what the final 0.6.3 versions do:**
+What to expect on a GPU of this size:
 
-- **Speech-to-text.** The candidate's **Use recommended defaults** did not set Voice Input
-  (`input.voice`), so transcription used OpenAI and asked for `OPENAI_API_KEY`; and PyAV 19.0.0
-  (released 2026-09-29) broke faster-whisper 1.2.1's file reading (`open() got an unexpected
-  keyword argument 'metadata_errors'`). In 0.6.3 the fresh setup and **Use recommended defaults**
-  set Voice Input to `faster-whisper`, model `base` (AbstractCore 2.19.2), and PyAV is held below 19
-  (AbstractVoice 0.13.2).
-- **The image model and the text model on the GPU together.** While LM Studio kept
-  `qwen/qwen3.5-9b` loaded (6.5 GB), an image request failed with CUDA out of memory. In 0.6.3
-  Diffusers falls back to sequential CPU offload in this case (AbstractVision 0.3.33): much less GPU
-  memory (near 1.4 GB for FLUX.2 [klein] 4B at 768x768) and slower per step (about 2.3 s against
-  1.5 s), so a 4-step image took 10.9 to 15.6 s against 13.4 to 18.5 s with model CPU offload, and
-  models that run many steps are slower. Unloading the text model first (`lms unload --all`) gives
-  model CPU offload back, which is faster for those.
-- **The image route was not always saved.** The candidate's **Use recommended defaults** could
-  report the image route as already set without saving it, when the console read the routes a few
-  seconds earlier. In 0.6.3 it saves every route it reports (AbstractCore 2.19.2).
-- **Image requests reloaded the model.** Each gateway image request loaded the model again (54 to
-  59 s). In 0.6.3, after **Load** in the console (or `POST /models/load`), requests run on the
-  loaded model (17 to 19 s on this machine), and an unload frees the model's memory (AbstractRuntime
-  0.7.3, AbstractVision 0.3.33).
+- **Speech input.** The fresh setup and **Use recommended defaults** set Voice Input
+  (`input.voice`) to `faster-whisper`, model `base`, so transcription runs locally without an OpenAI
+  key. PyAV is held below 19, which faster-whisper 1.2.1 cannot read files with.
+- **The image model next to a loaded text model.** When LM Studio keeps a 9B text model loaded
+  (6.5 GB), Diffusers switches to sequential CPU offload for the image model: much less GPU memory
+  (near 1.4 GB for FLUX.2 [klein] 4B at 768x768) and slower per step (about 2.3 s against 1.5 s),
+  so a 4-step image takes 10.9 to 15.6 s against 13.4 to 18.5 s with model CPU offload, and models
+  that run many steps are slower. Unloading the text model first (`lms unload --all`) gives model
+  CPU offload back, which is faster for those.
+- **Loaded image models are reused.** After **Load** in the console (or `POST /models/load`),
+  image requests run on the loaded model, and an unload frees its memory.
 
 Not validated: vLLM (installed, never started a model here) and the Windows gpu setting.
 

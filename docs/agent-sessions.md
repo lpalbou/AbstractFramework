@@ -149,7 +149,7 @@ the calls of sub-agents it starts. What does not stream, with a one-line note in
 - a workflow step that turns streaming off for its model call;
 - entity chat and an entity's own-time loop.
 
-Scheduled runs and the Telegram and email bridges do not stream by default.
+Automations, scheduled runs and the Telegram bridge do not stream by default.
 
 Live text travels as `llm.delta` / `llm.delta_end` events on the run's existing SSE stream
 (`GET /api/gateway/runs/{run_id}/ledger/stream`). They are not ledger records: the ledger holds

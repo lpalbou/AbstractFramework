@@ -38,8 +38,9 @@ Start with **AbstractGateway** + **AbstractFlow**:
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
 - Automations: workflows that run on a fixed interval, when an email arrives, or on demand ([Automations](automations.md))
+- Email for each user: your own mailbox for email automations, email notifications and sign-in by email ([Email integration](guide/email-integration.md))
 - Multi-client: terminal, browser, tray, Telegram, email
-- Start on one device, continue on another
+- Start on one device, continue on another: the web console and every browser app work on phones, tablets and any window size ([Phones and tablets](guide/deployment-iphone.md))
 
 Read **[Getting Started](getting-started.md)** → "Gateway-first" section.
 
@@ -79,6 +80,8 @@ The full component diagram, with memory, semantics and the consoles, is in
 | **[Automations](automations.md)** | How automations work in practice and how to manage them: an automation is a durable run, each tick a turn; independent vs growing context; creating one from the Assistant, the Observer, AbstractCode or a workflow's defaults; email triggers and email notifications; two worked examples; reading results in every client; pause, run now, resume, edit, archive, discuss; notifications, typed waits, restart safety, limits, troubleshooting |
 | **[Architecture](architecture.md)** | Component diagram, distribution by registry, how a turn flows and the live-reply lane, app proxies, model eject, framework identity, durable execution primitives, comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway, email accounts |
+| **[Email integration](guide/email-integration.md)** | Your own mailbox on the gateway: connecting it, recipient policy and send limits, agent email tools (off by default), email automations, notifications, sign-in by email, what administrators decide |
+| **[Phones and tablets](guide/deployment-iphone.md)** | Opening the console and the browser apps on a phone through the gateway's one address, and what adapts on a small screen |
 | **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
@@ -155,7 +158,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | **AbstractCode** | Terminal agentic dev client (local, durable sessions) |
 | **AbstractAssistant** | macOS tray client (gateway-first, gateway default or picked workflow, live replies, voice); **Open** in the gateway console starts it signed in |
 | **AbstractObserver** | Browser UI to monitor and control gateway runs and to create and manage [automations](automations.md) |
-| **Code Web UI** | Browser coding assistant (gateway-backed): workflow selector, Files tab, live replies |
+| **Code Web UI** | Browser coding assistant (gateway-backed): workflow selector, Files tab, live replies; works on phones and tablets |
 
 ---
 

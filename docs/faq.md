@@ -161,10 +161,20 @@ their own mailbox in the web console (**Users → My email**) or the terminal co
 screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
 rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
 deleted. Every send passes your recipient policy (an allowlist or a denylist of addresses and
-domains) and your send limits, and a send to anyone but you (or the recipients an automation
-lists) waits for your approval. Agents get the email tools only when an administrator made them
-available to you and you turned them on; administrators never read users' mail. See
-[AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md) and [Email automations](automations.md#email-automations).
+domains; a new account allows only your own address) and your send limits (20 per hour, 100 per
+day by default), and a send to anyone but you (or the recipients an automation lists) waits for
+your approval. Agents get the email tools only when an administrator made them available to you and
+you turned them on; administrators never read users' mail. An email-triggered automation treats
+mail as untrusted data and never follows its links unless you allow those tools, and mail the
+framework sends automatically never triggers an automation. See
+[Email integration](guide/email-integration.md) and [Email automations](automations.md#email-automations).
+
+## Can I use the console and the apps on my phone?
+
+Yes. The gateway's web console and the five browser apps work on phones, tablets and any window
+size. Let the phone reach the gateway (`abstractgateway network set lan`), then open the console on
+the phone at the gateway's address; every installed app opens from its **Apps** page at
+`/apps/<app>/` on that same address. See [Phones and tablets](guide/deployment-iphone.md).
 
 ## Which workflow answers when I chat with an agent?
 
@@ -295,11 +305,8 @@ Yes, on Linux and Windows x64: when `nvidia-smi` works, the installer picks the 
 (`--profile gpu` / `-Profile gpu` forces it). On Linux it installs llama.cpp's CUDA build matching
 PyTorch's CUDA and checks that PyTorch, llama.cpp and Whisper use the GPU. PyPI's PyTorch for Linux is
 a CUDA 13 build and needs NVIDIA driver 580 or newer; with an older driver the engines run on the
-processor. The 0.6.3 release candidate was rehearsed on a Quadro RTX 5000 (16 GB, driver 595,
-CUDA 13) on Ubuntu 26.04: text, text-to-speech and image generation worked with **Use recommended
-defaults**; speech-to-text needed two fixes and the image model and a loaded 9B text model did not
-fit on the GPU together, which the final 0.6.3 versions address
-([measured results and what changed](install.md#gpu-on-linux-nvidia)). On Windows it installs PyTorch's CUDA build and
+processor. Install and per-capability timings measured on a Quadro RTX 5000 (16 GB, driver 595,
+CUDA 13) with Ubuntu 26.04 are in [GPU on Linux (NVIDIA)](install.md#gpu-on-linux-nvidia). On Windows it installs PyTorch's CUDA build and
 llama.cpp's prebuilt CUDA build, chosen from your driver version; this path is implemented but not
 yet validated on real NVIDIA hardware. Each installer prints what runs where (`PyTorch:`, `GGUF:`
 and Whisper lines) and falls back to the CPU for any part that does not work. See
@@ -319,6 +326,11 @@ run; use the one-liner or ask your administrator. The installer reports this dur
 The one-time link is valid for 10 minutes and works only from the same machine. Mint a new one with
 `abstractgateway claim --open` (or `abstractgateway-config claim-url`). The admin token also stays
 in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path.
+
+From another device, sign in with your gateway user name and token. When your account has email set
+up (**Users → My email**), the sign-in page also offers **Email me a sign-in code** and **Forgot
+your token?**: an 8-digit code sent to your registered address, valid once for 10 minutes. See
+[Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?
 

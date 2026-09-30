@@ -29,9 +29,10 @@ Start here if you're building persistent AI applications — agents that run for
 
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
-- Automations: workflows that run on a fixed interval or on demand ([Automations](automations.md))
+- Automations: workflows that run on a fixed interval, when an email arrives, or on demand ([Automations](automations.md))
+- Email for each user: your own mailbox for email automations, notifications and sign-in by email ([Email integration](guide/email-integration.md))
 - Multi-client: terminal, browser, tray, Telegram, email
-- Start on one device, continue on another
+- Start on one device, continue on another: the web console and the browser apps work on phones, tablets and any window size
 
 The composition root when you need a control plane (local or remote).
 
@@ -70,6 +71,7 @@ flowchart TB
         SESS["agent sessions<br/>default workflow · workspace guard<br/>skills shelf · live-reply hub"]
         WEB["web /console<br/>first-run guide · Models · Engines · Resources"]
         TRAY["menu-bar icon<br/>status · Network · open apps"]
+        MAIL["per-user email<br/>account · mail watcher · outbox<br/>sign-in by email"]
     end
 
     AGENT["AbstractAgent<br/>ReAct · CodeAct · MemAct"]
@@ -82,6 +84,7 @@ flowchart TB
     CSRV["abstractcore serve<br/>/v1 · /acore · web /console"]
     CCON["abstractcore-console<br/>terminal console + shared screens"]
     PROV[("LLM providers and local engines<br/>Ollama · LM Studio · MLX · llama.cpp · vLLM · cloud APIs")]
+    MBOX[("each user's mailbox<br/>IMAP (read-only) · SMTP")]
 
     CLIENTS -->|HTTP/SSE| API
     BR -->|"/console, /apps/&lt;app&gt;/"| APXY
@@ -91,6 +94,9 @@ flowchart TB
     TRAY --> API
     TRAY -.->|"Open: starts it signed in"| ASSIST
     API --> SESS
+    API --> MAIL
+    MAIL -->|"new mail: event inbox, wakes email automations"| RT
+    MAIL -->|"watch, send (recipient policy, limits)"| MBOX
     SESS --> SKILL
     SESS --> RT
     API --> AGENT
@@ -116,8 +122,12 @@ The layers, from the top:
 - **AbstractGateway** owns the run lifecycle (start, resume, cancel), durable schedules, private
   bundle discovery and the shared workflow catalog, users and auth, the Network setting, and
   ledger/artifact serving. For agent sessions it also resolves the default agent workflow, gives
-  every run a guarded workspace, seeds and serves the skill shelf, and relays live replies. Its
-  web console and menu-bar icon are part of the same package.
+  every run a guarded workspace, seeds and serves the skill shelf, and relays live replies. Each
+  user can connect their own mailbox: the gateway keeps the account encrypted in that user's data
+  folder, runs the read-only mail watcher while the user has an email automation, sends
+  notifications from a durable outbox, and offers sign-in by email
+  ([Email integration](guide/email-integration.md)). Its web console and menu-bar icon are part of
+  the same package; the console and the browser apps adapt to phones, tablets and any window size.
 - **AbstractAgent** provides ready-made agent loops; **AbstractRuntime** is the durable kernel that
   executes them, compiles VisualFlow graphs from `.flow` bundles into workflows, and tracks which
   models are resident and who uses them.

@@ -317,14 +317,19 @@ Email is configured as settings, never through environment variables:
 - **On a gateway, per user**: each person connects their own mailbox (IMAP/SMTP with a password or
   app password, or OAuth2 for Google and Microsoft) in the web console (**Users → My email**), the
   terminal console (`@` on the Users screen) or `PUT /api/gateway/me/email`. The account lives in
-  that user's own data folder with its credentials encrypted, and sets the recipient policy, the send
-  limits (20 per hour, 100 per day by default), the email notifications and the **Agent email tools**
-  switch. Administrators decide what is available to users (email, agent email tools, sign-in by
-  email), gateway-wide and per user, and never see mail content. See
+  that user's own data folder with its credentials encrypted, and sets the recipient policy (a new
+  account starts with an allowlist holding the user's own address), the send limits (20 per hour,
+  100 per day by default), the email notifications and the **Agent email tools** switch (off until
+  an administrator makes the tools available and the user turns them on). A connected account also
+  gives the user sign-in by email on the sign-in page. Administrators decide what is available to
+  users (email, agent email tools, sign-in by email), gateway-wide and per user, and never see mail
+  content. See [Email integration](guide/email-integration.md) and
   [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md).
 - **AbstractCore on its own**: one account for the install, with `abstractcore email connect
   --address <address> --imap-host <host> --smtp-host <host> --password <value>`, the core web console's
-  **Email** tab or the core terminal console's Email screen. See
+  **Email** tab or the core terminal console's Email screen. From a script, `--password-stdin` (and
+  `--client-secret-stdin` for an OAuth client secret) reads the secret from stdin so it never
+  appears on a command line. See
   [AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md).
 
 The `ABSTRACT_EMAIL_*` environment variables and the email accounts file are no longer read: a

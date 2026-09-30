@@ -50,9 +50,9 @@ button of gateway 0.7.1 cannot upgrade. Gateway only, apps, and version checks:
 
 On Linux or Windows with an NVIDIA GPU (`nvidia-smi` works), the installer picks the `gpu` profile:
 PyTorch and llama.cpp on CUDA, Whisper on the GPU, Diffusers image generation. On Linux it needs
-NVIDIA driver 580 or newer. Its release candidate was rehearsed on a Quadro RTX 5000 on Ubuntu
-26.04; the measured results, and what the final versions changed, are in GPU on Linux. The Windows gpu install is
-implemented but not yet validated on real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) and
+NVIDIA driver 580 or newer; measured install and per-capability timings on a Quadro RTX 5000 with
+Ubuntu 26.04 are in GPU on Linux. The Windows gpu install is implemented but not yet validated on
+real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) and
 [GPU on Windows](docs/install.md#gpu-on-windows-nvidia).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
@@ -130,7 +130,8 @@ Start here if you're building persistent AI applications — agents that run for
 - Automations: a workflow that runs on a fixed interval, when an email arrives, or on demand, kept as a readable conversation ([Automations](docs/automations.md))
 - Email for each user: connect your own mailbox, get automation results and approvals by email, and let agents use email tools when an administrator allows it ([Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md))
 - Multi-client: terminal, browser, tray, Telegram, email
-- Start on one device, continue on another
+- Start on one device, continue on another: the web console and every browser app work on phones,
+  tablets and any window size ([Phones and tablets](docs/guide/deployment-iphone.md))
 
 ```bash
 pip install abstractgateway
@@ -269,6 +270,10 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 | `abstractsound`, `abstractvideo`, `abstractspatial`, `abstractgeometry`, `abstractcognition` | Reserved capability packages (namespaces held; APIs landing incrementally) |
 
 ### Apps and clients
+
+The gateway's web console and the five browser apps (Code Web UI, Flow Editor, Observer, Entity,
+Continuum) adapt to phones, tablets and windows of any size: drawers below 1024 px, bottom-sheet
+dialogs and touch-sized controls on phones.
 
 | App | What it does | Install |
 |---|---|---|
@@ -428,7 +433,7 @@ AbstractCode is a Rust terminal client (`cargo install abstractcode`) plus a bro
 Quick commands:
 - Mac installer: download `https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg` and double-click it; the package is not signed with an Apple Developer ID, so the first time allow it with Open Anyway in System Settings > Privacy & Security; it runs `install.sh --interactive` in Terminal. Remove with `Uninstall AbstractFramework.command` or `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`
 - One-line install (gateway + console, no admin, no system Python): `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh` (Windows: `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`); installs uv + Python 3.12 + the pinned gateway (with local voice) as a uv tool, asks whether to start at login whenever a terminal exists (Enter = yes; no terminal or no answer within `--ask-wait` = off on a first install, kept on a re-run; the summary says how to turn it on), starts it on 127.0.0.1:8080, writes the local gateway pointer `~/.abstractframework/gateway.json` for this install (address only; `serve` keeps it current under its ownership rule) and opens `/console` through a one-time claim link; browser apps open through the gateway at `/apps/<app>/`; `--print` dry run, `--uninstall` to remove
-- Upgrade: run the same install line again (the latest AbstractFramework release; profile, port, start at login, data and apps kept; Mac package: install the latest .pkg again); add `sh -s -- --pin latest` (Windows `-Pin latest`) for the newest gateway on PyPI; `uv tool upgrade abstractgateway` does not upgrade an installer install (it keeps the exact pinned version); apps: console Apps page or `abstractgateway apps update <app>`; see docs/install.md#upgrade
+- Upgrade: run the same install line again (the latest AbstractFramework release; profile, port, start at login, data and apps kept; Mac package: install the latest .pkg again); add `sh -s -- --pin latest` (Windows `-Pin latest`) for the newest gateway on PyPI; `uv tool upgrade abstractgateway` does not upgrade an installer install (it keeps the exact pinned version); apps: console Apps page or `abstractgateway apps update <app>`; right after a release, when a PyPI mirror does not list or serve a pinned version yet, the installer retries the same full install (15/30/60/120 s waits, 8 attempts, about 10 minutes) and never installs less; see docs/install.md#upgrade
 - Network exposure: the gateway listens on this computer only (`localhost`) until you run `abstractgateway network set lan|internet` (or use the console / menu-bar icon); `service install` takes `--port`, and the login item runs plain `serve` so the Network setting applies
 - Start either entry point and open the printed one-time link: `abstractcore serve` (http://127.0.0.1:8000/console#claim=…) or `abstractgateway serve` (http://127.0.0.1:8080/console#claim=…); both consoles have Models (catalog + fit verdict, download, delete) and Engines (detect, install) tabs, mirrored by `abstractcore models|engines` and `abstractgateway models|engines`
 - Install pinned stack: `pip install abstractframework`
@@ -527,22 +532,39 @@ Notes for LLMs working in this repo:
   and one tunnel for every app). App proxies (AbstractCode web server, Flow Editor server, ui-kit app-server) overwrite
   `X-Forwarded-For` with the browser's address and add `X-AbstractFramework-App-Proxy`;
   the gateway believes the header only from a loopback peer, so LAN browsers stay remote.
+- Responsive: the gateway and AbstractCore web consoles and the five browser apps (Code web 0.8.0,
+  Flow 0.5.0, Observer 0.4.0, Continuum 0.5.0, Entity 0.4.0, on `@abstractframework/ui-kit` 0.3.2)
+  work on phones, tablets and any window size (breakpoints 480/768/1024/1440 px wide plus 500 px
+  tall; drawers below 1024 px; bottom-sheet dialogs on phones; 44 px touch targets). A phone opens
+  `/console` and `/apps/<app>/` on the gateway's address after `abstractgateway network set lan`.
+- Email is per gateway user, set in the consoles (**Users → My email**, `@` in the terminal
+  console, `PUT /api/gateway/me/email`), never with environment variables (the `ABSTRACT_EMAIL_*`
+  variables and the email bridge were removed in 0.7.0; a leftover account is imported once).
+  Administrators make capabilities available (email on, agent email tools off, sign-in by email on
+  by default); users turn them on. Recipient policy allowlist/denylist (a new account allows its own
+  address), send limits 20/h and 100/day. `email.received@1` automations read mail read-only, treat
+  it as untrusted (links not followed; network, code and sending tools ask unless named in
+  `policy.untrusted_input_tools`) and never run on the framework's own automatic mail
+  (`Auto-Submitted`, `X-AbstractFramework-Automation`; `auto_submitted: "admit"` accepts others'
+  automatic mail). Sign-in by email: **Forgot your token?** / **Email me a sign-in code**.
 
 ## Start Here
 
 - [README.md](README.md): Ecosystem overview and install paths.
 - [docs/README.md](docs/README.md): Docs index for this repo.
-- [docs/install.md](docs/install.md): Mac installer (with the one-time Open Anyway step), one-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, Network setting, uninstall), terminal console and AbstractCode's terminal client built by default (`--no-console`, `--no-code-cli`), the commands you get (every command on PATH with what it does: `abstractgateway-config` is the gateway's admin command; all of AbstractCore's commands, its apps `summarizer`/`extractor`/`judge`/`intent`/`deepsearch` included, and the voice, vision and music commands, unless `--no-core-cli`; a package whose name is taken is left out), signing `abstractcode` in (`abstractcode login --token <admin token>` once, or `abstractgateway apps tui-command code` on the gateway's computer), headless or remote machine setup (the start-at-login question and the console offer over SSH, the terminal console with `--gateway-url` and `--token`, its Network screen `N`, one SSH tunnel for the console and every app at `/apps/<app>/`), the local gateway pointer, Light / Apple / GPU chooser, GPU on Linux and Windows (NVIDIA; the 0.6.3 release-candidate rehearsal on a Quadro RTX 5000: measured install and per-capability timings, and what the final versions changed: speech input in the fresh setup and `av<19`, sequential CPU offload next to a loaded text model, loaded image models reused), generated manifest contract.
+- [docs/install.md](docs/install.md): Mac installer (with the one-time Open Anyway step), one-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, Network setting, uninstall), terminal console and AbstractCode's terminal client built by default (`--no-console`, `--no-code-cli`), the commands you get (every command on PATH with what it does: `abstractgateway-config` is the gateway's admin command; all of AbstractCore's commands, its apps `summarizer`/`extractor`/`judge`/`intent`/`deepsearch` included, and the voice, vision and music commands, unless `--no-core-cli`; a package whose name is taken is left out), signing `abstractcode` in (`abstractcode login --token <admin token>` once, or `abstractgateway apps tui-command code` on the gateway's computer), headless or remote machine setup (the start-at-login question and the console offer over SSH, the terminal console with `--gateway-url` and `--token`, its Network screen `N`, one SSH tunnel for the console and every app at `/apps/<app>/`), the local gateway pointer, Light / Apple / GPU chooser, GPU on Linux and Windows (NVIDIA; measured install and per-capability timings on a Quadro RTX 5000; speech input set in the fresh setup and `av<19`, sequential CPU offload next to a loaded text model, loaded image models reused), right after a release (the PyPI index-lag retry), generated manifest contract.
 - [docs/installers/README.md](docs/installers/README.md): Install design: script bootstrap + gateway console (strategy, per-OS journeys, components, OS security/sudo/UAC/execution policy, manifest, operations).
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
 - [docs/agent-sessions.md](docs/agent-sessions.md): What every client shares when it chats with an agent: the gateway's default agent workflow (`agents.default_workflow.<interface>`), the conversation workspace on the gateway host and its built-in deny list, the curated skill shelf (`skills.shelf`), live replies (`agents.streaming_default` + per-client Stream replies; what does not stream), opening the Assistant signed in from the console.
 - [AbstractGateway shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
-- [docs/automations.md](docs/automations.md): How automations work and how to manage them: an automation is a durable controller run, each tick an occurrence (a child run shown as a chat turn); independent vs growing context (growing replays the most recent 50 000 tokens of whole turns); quiet by default (`notify` output, final failures, typed waits `ask_user` / `tool_approval` / `event`); creation is the tool consent (`policy.tool_approval` `auto`/`ask`, MCP tools still ask); creating from the Assistant (Schedule this conversation…), the Observer (Launch → Automate), AbstractCode (`/automations`, `/schedule`, the browser Automations section) or a workflow's `automation_defaults`; email automations (`email.received@1` with typed filters and hourly/60 s batches, each message once, untrusted input with `fetch_url`/`browser_probe` withheld; **Email me the result** = `notify.channels` with opt-in email notifications; `policy.email_allowed_recipients`, only you by default); two worked examples with request bodies; pause / run now (also while paused) / resume without catch-up / revise / archive / discuss; restart safety; limits (fixed UTC intervals, triggers `schedule@1`, `email.received@1` and `manual@1`); troubleshooting. Needs a gateway advertising `contracts.common.automations` (AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later).
+- [docs/automations.md](docs/automations.md): How automations work and how to manage them: an automation is a durable controller run, each tick an occurrence (a child run shown as a chat turn); independent vs growing context (growing replays the most recent 50 000 tokens of whole turns); quiet by default (`notify` output, final failures, typed waits `ask_user` / `tool_approval` / `event`); creation is the tool consent (`policy.tool_approval` `auto`/`ask`, MCP tools still ask); creating from the Assistant (Schedule this conversation…), the Observer (Launch → Automate), AbstractCode (`/automations`, `/schedule`, the browser Automations section) or a workflow's `automation_defaults`; email automations (`email.received@1` with typed filters and hourly/60 s batches, each message once, untrusted input with network, code and sending tools asking unless named in `policy.untrusted_input_tools`, own automatic mail never an event, `auto_submitted: "admit"`; **Email me the result** = `notify.channels` with opt-in email notifications; `policy.email_allowed_recipients`, only you by default); two worked examples with request bodies; pause / run now (also while paused) / resume without catch-up / revise / archive / discuss; restart safety; limits (fixed UTC intervals, triggers `schedule@1`, `email.received@1` and `manual@1`); troubleshooting. Needs a gateway advertising `contracts.common.automations` (AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later; email automations need 0.8.0 of both).
 - [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid diagrams: components, distribution, how a turn flows, the live-reply lane, the framework identity flow), app proxies and the forwarded-address rule, model residency and eject.
-- [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, email accounts (per gateway user or per AbstractCore install; no environment variables), client configuration.
+- [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, email accounts (per gateway user or per AbstractCore install; no environment variables; `--password-stdin`), client configuration.
+- [docs/guide/email-integration.md](docs/guide/email-integration.md): Your own mailbox on the gateway: connect, recipient policy and send limits, agent email tools (off by default), email automations (new mail only, untrusted input, own automatic mail never triggers), notifications, sign-in by email, administrator capabilities, AbstractCore's own account.
+- [docs/guide/deployment-iphone.md](docs/guide/deployment-iphone.md): Phones and tablets: the console and the browser apps on the gateway's one address (`/console`, `/apps/<app>/`), the Network setting, sign-in, what adapts on a small screen.
 - [docs/api.md](docs/api.md): Meta-package API: release pins, helpers, `abstractframework doctor` and `manifest`.
 - [docs/faq.md](docs/faq.md): Common questions, comparisons, limits.
-- [docs/troubleshooting.md](docs/troubleshooting.md): Symptoms, checks and fixes (installer blocked by macOS, sign-in links, ports, network access, providers, logs).
+- [docs/troubleshooting.md](docs/troubleshooting.md): Symptoms, checks and fixes (installer blocked by macOS, PyPI index lag right after a release, sign-in links and sign-in by email, ports, network access, providers, email automations and agent email tools, logs).
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
 - [docs/workspace-scripts.md](docs/workspace-scripts.md): Working from source: package inventory (scripts/lib/packages.txt), dependency tiers, build/status/pull/commit/push scripts.
 - [docs/adr/README.md](docs/adr/README.md): Cross-package ADR index and accepted platform contracts.
@@ -554,22 +576,22 @@ Notes for LLMs working in this repo:
 - [docs/scenarios/gateway-first-local-dev.md](docs/scenarios/gateway-first-local-dev.md): Local gateway + web UIs.
 - [docs/scenarios/specialized-agent-flow.md](docs/scenarios/specialized-agent-flow.md): Portable `.flow` agent across clients.
 - [docs/scenarios/workflow-bundle-lifecycle.md](docs/scenarios/workflow-bundle-lifecycle.md): Publish/install/deprecate bundles.
-- [docs/scenarios/phone-thin-client.md](docs/scenarios/phone-thin-client.md): iPhone via Web/PWA + gateway.
+- [docs/scenarios/phone-thin-client.md](docs/scenarios/phone-thin-client.md): Console and apps on a phone through the gateway's address.
 - [docs/scenarios/telegram-permanent-contact.md](docs/scenarios/telegram-permanent-contact.md): Telegram bridge + workflow.
-- [docs/scenarios/email-inbox-agent.md](docs/scenarios/email-inbox-agent.md): Email bridge + workflow.
+- [docs/scenarios/email-inbox-agent.md](docs/scenarios/email-inbox-agent.md): Your mailbox + a "When an email arrives" automation that emails you the result.
 
 ## Guides
 
 - [docs/guide/README.md](docs/guide/README.md): Guides index.
 - [docs/guide/deployment-topologies.md](docs/guide/deployment-topologies.md): Supported deployment patterns.
 - [docs/guide/deployment-web.md](docs/guide/deployment-web.md): Browser UIs and gateway setup.
-- [docs/guide/deployment-iphone.md](docs/guide/deployment-iphone.md): iPhone/PWA notes.
+- [docs/guide/email-integration.md](docs/guide/email-integration.md): Per-user email (see Start Here).
 - [docs/guide/gateway-security.md](docs/guide/gateway-security.md): Safe gateway exposure defaults.
 - [docs/guide/capability-routing-defaults.md](docs/guide/capability-routing-defaults.md): Provider/model/base URL defaults for input, output, embedding, and rerank routes.
 - [docs/guide/runtime-artifacts.md](docs/guide/runtime-artifacts.md): Runtime artifact descriptors, Gateway artifact search, Observer views, ledger/KG boundaries, and safe retrieval practice.
 - [docs/guide/workflow-bundles.md](docs/guide/workflow-bundles.md): `.flow` bundles and lifecycle.
 - [docs/guide/agent-skills.md](docs/guide/agent-skills.md): Agent Skills (SKILL.md): skills vs flows, the AbstractSkill library and curated shelf, the trust gate, attaching skills to a run.
-- [docs/guide/process-manager-env-vars.md](docs/guide/process-manager-env-vars.md): Write-only env var config from Observer.
+- [docs/guide/process-manager-env-vars.md](docs/guide/process-manager-env-vars.md): The process manager's write-only environment overrides (empty allowlist; email is a per-user setting).
 
 ## Release Profile (Pinned Versions)
 
@@ -1738,8 +1760,9 @@ Start with **AbstractGateway** + **AbstractFlow**:
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
 - Automations: workflows that run on a fixed interval, when an email arrives, or on demand ([Automations](automations.md))
+- Email for each user: your own mailbox for email automations, email notifications and sign-in by email ([Email integration](guide/email-integration.md))
 - Multi-client: terminal, browser, tray, Telegram, email
-- Start on one device, continue on another
+- Start on one device, continue on another: the web console and every browser app work on phones, tablets and any window size ([Phones and tablets](guide/deployment-iphone.md))
 
 Read **[Getting Started](getting-started.md)** → "Gateway-first" section.
 
@@ -1779,6 +1802,8 @@ The full component diagram, with memory, semantics and the consoles, is in
 | **[Automations](automations.md)** | How automations work in practice and how to manage them: an automation is a durable run, each tick a turn; independent vs growing context; creating one from the Assistant, the Observer, AbstractCode or a workflow's defaults; email triggers and email notifications; two worked examples; reading results in every client; pause, run now, resume, edit, archive, discuss; notifications, typed waits, restart safety, limits, troubleshooting |
 | **[Architecture](architecture.md)** | Component diagram, distribution by registry, how a turn flows and the live-reply lane, app proxies, model eject, framework identity, durable execution primitives, comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway, email accounts |
+| **[Email integration](guide/email-integration.md)** | Your own mailbox on the gateway: connecting it, recipient policy and send limits, agent email tools (off by default), email automations, notifications, sign-in by email, what administrators decide |
+| **[Phones and tablets](guide/deployment-iphone.md)** | Opening the console and the browser apps on a phone through the gateway's one address, and what adapts on a small screen |
 | **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
@@ -1855,7 +1880,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | **AbstractCode** | Terminal agentic dev client (local, durable sessions) |
 | **AbstractAssistant** | macOS tray client (gateway-first, gateway default or picked workflow, live replies, voice); **Open** in the gateway console starts it signed in |
 | **AbstractObserver** | Browser UI to monitor and control gateway runs and to create and manage [automations](automations.md) |
-| **Code Web UI** | Browser coding assistant (gateway-backed): workflow selector, Files tab, live replies |
+| **Code Web UI** | Browser coding assistant (gateway-backed): workflow selector, Files tab, live replies; works on phones and tablets |
 
 ---
 
@@ -2129,6 +2154,10 @@ exchanges the token for a browser session and does not persist the token in brow
 
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
+The console and every browser app work on phones, tablets and any window size. To open them from
+another device, set the gateway's Network setting to `lan` and open the same `/console` and
+`/apps/<app>/` paths on the gateway's address; see [Phones and tablets](guide/deployment-iphone.md).
+
 ### 5. Automate recurring work
 
 An automation runs a workflow on a fixed interval and keeps every run as a conversation. Create
@@ -2157,7 +2186,9 @@ To run an automation when an email arrives, or to get its results by email, firs
 mailbox in the gateway console (**Users → My email**, or `@` on the Users screen of the terminal
 console). The Assistant, the Observer and AbstractCode's browser client then offer **When an email
 arrives**, **Email me the result** and the recipients the automation may email without asking. See
-[Email automations](automations.md#email-automations).
+[Email automations](automations.md#email-automations). The same account gives you sign-in by email,
+and your agents get the email tools only when an administrator makes them available and you turn
+them on ([Email integration](guide/email-integration.md)).
 
 ---
 
@@ -2313,7 +2344,8 @@ curl -s -H "Authorization: Bearer <admin token>" \
 
 The answer is `{"available": true, "version": 1, …}` on a gateway that runs them. The API ships in
 AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later (`abstractframework` 0.5.0 and later);
-earlier gateways do not include it. On a gateway without
+earlier gateways do not include it. Email automations need AbstractGateway 0.8.0 and
+AbstractRuntime 0.8.0 or later (`abstractframework` 0.7.0 and later). On a gateway without
 it, the Assistant shows no automation controls and the Observer's Automate mode and Automations
 page say so and stay disabled.
 
@@ -2496,8 +2528,10 @@ usable account the forms say "Email isn't set up — open My email" and send not
   since its previous run: at most once an hour by default when it runs a model, every minute when
   it does not, never more often than every 60 seconds, and at most 100 emails per run by default.
   Each message is read at most once by each automation, across restarts. Mail that arrived before
-  the automation existed, or while it was paused, is not processed. The gateway only reads the
-  mailbox: it never marks, moves or deletes mail.
+  the automation existed, or while it was paused, is not processed, nor is mail that arrived while
+  none of your email automations was active; mail sent right after you create the automation
+  counts. Mail that arrives while the gateway is stopped is read when it is back. The gateway only
+  reads the mailbox: it never marks, moves or deletes mail.
 - **Email me the result** — `notify: {"channels": ["console", "email"]}`: the attention items the
   automation raises (a result that asks for attention, a final failure) are also emailed to your
   registered address, through your own account, for the events you turned on in **My email →
@@ -2517,9 +2551,20 @@ usable account the forms say "Email isn't set up — open My email" and send not
 
 Inbound mail is data, never instructions. The occurrence receives the emails marked as untrusted,
 inside a fixed frame that tells the agent not to follow links or instructions in them and to act
-only on the automation's task. An email-triggered automation never runs `fetch_url` or
-`browser_probe` without asking, even under "Tools run without asking", unless you name them in
-`policy.untrusted_input_tools`.
+only on the automation's task. An email-triggered automation never follows links from an email:
+under "Tools run without asking" it runs unattended only tools that cannot reach the network,
+execute code, send messages or write outside its folder (file reads, mailbox reads, workspace
+writes). `fetch_url`, `browser_probe`, `web_search`, `execute_command`, the memory-writing tools and
+MCP tools ask for approval unless you name them in `policy.untrusted_input_tools`; sending tools are
+never granted that way.
+
+An automation never runs on mail the framework sent itself. Every message sent automatically through
+your account (notifications, sign-in codes, anything an automation sends, including its send-email
+action) carries `Auto-Submitted: auto-generated` and an `X-AbstractFramework-Automation` header, and
+its Message-ID is recorded, so a filter that matches an automation's own result email never
+re-triggers it. By default the trigger also ignores automatic mail from others (auto-replies,
+vacation notices, other automations); set `"auto_submitted": "admit"` in the trigger's `config` to
+run on those too.
 
 Every send — an agent's, an automation's, a notification — also passes your recipient policy and
 your send limits (20 per hour and 100 per day by default), which you set in **My email**. Agents
@@ -2829,12 +2874,221 @@ recorded. A wait the gateway does not type is shown without answer controls.
 | Every tick waits for a tool approval | the automation was created with **Ask each time** | answer each wait, or send `PATCH` with `{"changes": {"policy": {"tool_approval": "auto"}}}` (applies from the next run) |
 | No notification ever arrives | quiet is the default; only `notify` in the output, final failures and waits notify | return `notify` from the workflow (see the memory example) |
 | Ticks are late or merged | a tick takes longer than the interval; missed ticks are coalesced | lengthen the interval or share the model with fewer automations |
+| An email automation never runs | the mail was already there, arrived while no email automation was active, or is automatic mail (auto-replies, the framework's own mail); a model-running automation runs at most once an hour by default | send a new message after creating it; shorten `every`; set `"auto_submitted": "admit"` for others' automatic mail; check the mailbox state in **My email** |
+| "Email isn't set up — open My email" in the form | no connected, allowed mailbox | connect it in **Users → My email**, or ask an administrator to turn email on for you |
+| An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve it, add the recipient in **May send email without asking to**, or edit the policy and limits in **My email** |
 | A schedule shows `legacy` | it was created with `POST /api/gateway/runs/schedule` | it keeps its own controls; **Recreate as automation** in the Observer copies it into an automation (suspend the old one yourself) |
 
 Legacy schedules are listed on the last page of `GET /api/gateway/automations` with `legacy:
 true`, `revision: null` and `capabilities: ["legacy"]`; they are never converted, and
 `GET /api/gateway/automations/{id}` answers 404 for them. For install, sign-in and provider
 problems, see [Troubleshooting](troubleshooting.md).
+
+--- docs/guide/email-integration.md ---
+# Email integration
+
+Every signed-in person on an AbstractGateway can connect **their own** mailbox. That account is used
+for three things:
+
+- **automations on new mail**: the **When an email arrives** trigger (`email.received@1`);
+- **email notifications**: automation results and failures, approvals waiting for you, finished or
+  failed runs, sent through your own account to your own address;
+- **sign-in by email**: **Forgot your token?** and **Email me a sign-in code** on the gateway's
+  sign-in page.
+
+Email is configured as settings in the consoles, never through environment variables. Nothing is
+active until you choose it: no mail is read until you create an email automation, notifications stay
+in the console until you turn them on, and agents get no email tools until an administrator makes
+them available and you turn them on.
+
+The package guides hold the full references:
+
+| Topic | Reference |
+|---|---|
+| Your mailbox, notifications, sign-in by email, what administrators decide, where things are stored | [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md) |
+| The `email.received@1` trigger, the event inbox, sending without asking, mail sent by automations | [AbstractRuntime: Email](https://github.com/lpalbou/AbstractRuntime/blob/main/docs/email.md) |
+| The account of an AbstractCore install, the `abstractcore email` commands, the recipient policy | [AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md) |
+| Creating and managing email automations in the apps | [Automations: Email automations](../automations.md#email-automations) |
+
+## Connect your mailbox
+
+Open **My email** in any of these places; they share the same fields:
+
+- the gateway web console: **Users → My email** (every signed-in user);
+- the gateway terminal console (`abstractgateway-console`): the Users screen, then `@`;
+- the HTTP API: `PUT /api/gateway/me/email`.
+
+Give the address, the password (or an app password) and the IMAP and SMTP servers, or choose
+**Sign in with OAuth2** for Google or Microsoft. The gateway signs in to both servers before it saves
+anything and names the cause and the fix when a server refuses. The account is stored in your own
+data folder with its credentials encrypted, and every connection verifies TLS. The mailbox is only
+read: nothing is marked read, moved or deleted.
+
+Many providers (Gmail, iCloud, Fastmail) accept an **app password** when two-step verification is
+on; Microsoft 365 and Outlook need OAuth2.
+
+## Who can receive mail: recipient policy and send limits
+
+Every send (an agent's email tool, an automation's send action, a notification, a sign-in code)
+passes the same checks:
+
+1. email is turned on, by you and by the administrator;
+2. your **recipient policy**: an **allowlist** (only the listed addresses and domains) or a
+   **denylist** (everyone except them), applied to To, Cc and Bcc. A new account starts with an
+   allowlist that holds your own registered address;
+3. your **send limits**: 20 messages per rolling hour and 100 per day by default, which you can
+   change.
+
+On top of the policy, an agent's send to anyone but you (or the recipients an automation lists)
+waits for your approval.
+
+## Agent email tools (off by default)
+
+Your agents and workflows get the email tools (list, search and read mail, list folders, send,
+reply, download an attachment) only when all three hold:
+
+1. an administrator made **Agent email tools** available to you (they are not, by default);
+2. your account is connected and email is allowed for you;
+3. you turned on **Agent email tools** in **My email** (web console), **Policy, limits & tools**
+   (terminal console) or with `PUT /api/gateway/me/email/agent-tools`.
+
+The rule applies to every client (AbstractCode, the Assistant, the Observer, the consoles). An
+automation that only sends you its results, notifications and sign-in codes do not need the
+switch; they need a connected, allowed account.
+
+## Automations on new mail
+
+With your mailbox connected, the Assistant, the Observer and AbstractCode's browser client offer
+**When an email arrives**, **Email me the result** and the recipients an automation may email without
+asking. The rules that matter:
+
+- **Only new mail.** Mail already in your mailbox when the watcher starts, or that arrived while none
+  of your email automations was active, is never processed. Mail that arrives while the gateway is
+  stopped is read when it is back.
+- **Batches.** An automation that runs a model runs at most once an hour by default, one that needs
+  no model every 60 seconds, on the matching mail received since its previous run. Each automation
+  reads a message at most once.
+- **Mail is data, never instructions.** An occurrence receives the emails as untrusted content in a
+  fixed frame. An email-triggered automation never follows links from an email: tools such as
+  `fetch_url`, `browser_probe`, `web_search` and `execute_command` ask for your approval even when
+  the automation runs its tools without asking, unless you name them in
+  `policy.untrusted_input_tools`. Sending tools are never granted that way.
+- **Your own automatic mail never triggers an automation.** Every message the framework sends automatically
+  through your account carries `Auto-Submitted: auto-generated` and an
+  `X-AbstractFramework-Automation` header, and its Message-ID is recorded, so an automation never
+  runs on its own result email. The trigger also ignores automatic mail from others (auto-replies,
+  vacation notices) unless its configuration sets `"auto_submitted": "admit"`.
+
+### In a workflow
+
+An email-triggered occurrence receives the batch in `input_data.trigger`
+(`source: "email.received@1"`, `content_trust: "untrusted"`, `count`, `emails`, each with its
+headers, whole bodies and attachment list). A target with a string `prompt` also gets the emails
+appended inside the untrusted frame. Automations whose steps need no model ("forward invoices to
+me") can use the runtime's send-email action with fixed templates instead of an agent. See
+[AbstractRuntime: Email](https://github.com/lpalbou/AbstractRuntime/blob/main/docs/email.md).
+
+## Notifications
+
+Email notifications are off until you turn each event on in **My email → Notifications**:
+automation results and failures (for automations set to **Email me the result**), a run waiting for
+your approval, and runs started with an email notice. Each notice is queued once and sent once,
+through your own account, to your registered address.
+
+## Sign-in by email
+
+When at least one account on the gateway has email set up, the sign-in page offers **Forgot your
+token?** (a new token, shown once; the old one stops working) and **Email me a sign-in code**. Enter
+your gateway user name; an 8-digit code is sent to your registered address. A code works once,
+expires after 10 minutes and allows 5 tries. Users without email ask an administrator to rotate
+their token.
+
+## What administrators decide
+
+Administrators make email available; users turn it on for themselves. In the web console's
+**Users** tab (**Email for users** and the row buttons) or the terminal console's Users screen, an
+administrator sets, gateway-wide and per user:
+
+| Capability | Default | Meaning |
+|---|---|---|
+| Email | available | users may connect their own mailbox |
+| Agent email tools | not available | users may turn on the email tools for their own agents |
+| Sign-in by email | available (gateway-wide) | **Forgot your token?** and **Email me a sign-in code** |
+
+Administrators see each user's mailbox state, address and last error, never messages, recipient
+lists or credentials. Sign-in by email means whoever controls a user's mailbox can sign in as that
+user; turn it off where mailboxes are less protected than gateway tokens.
+
+## AbstractCore on its own
+
+An AbstractCore install without a gateway has one account of its own, set with
+`abstractcore email connect`, the core web console's **Email** page or the core terminal console's
+Email screen. From a script, pass the password on stdin so it never appears on a command line:
+
+```bash
+abstractcore email connect --address me@example.com \
+  --imap-host imap.example.com --smtp-host smtp.example.com --password-stdin
+```
+
+`--client-secret-stdin` does the same for an OAuth client secret. See
+[AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md).
+
+## Coming from the environment variables
+
+The `ABSTRACT_EMAIL_*` environment variables and the gateway email bridge are not used. A gateway or
+AbstractCore install that still has those variables imports that account once into the
+administrator's email settings, then names each variable still set and the setting that replaced
+it. Email automations (`email.received@1`) replace the bridge.
+
+--- docs/guide/deployment-iphone.md ---
+# Phones and tablets (Safari, Chrome, home-screen apps)
+
+The gateway's web console and the five browser apps (Code, Flow Editor, Observer, Continuum,
+Entity) work on phones, tablets and windows of any size. A phone is a thin client: the gateway's
+computer runs the models, the tools and the durable runs; the phone shows them and sends commands.
+
+## One address for everything
+
+The gateway serves the console at `/console` and every installed app at `/apps/<app>/` on its own
+address, so a phone needs only that one address. There is no separate app server to run and no
+browser origin to allow.
+
+1. **Let the phone reach the gateway.** The gateway listens on its own computer only until you
+   change its Network setting: `abstractgateway network set lan`, the console's **Network** tab or
+   the menu-bar icon, then restart the gateway when asked (`abstractgateway network restart`). User
+   accounts stay on. `abstractgateway network addresses` lists the addresses to use.
+2. **Install the apps** you want from the console's **Apps** page (on any device signed in as an
+   administrator).
+3. **Open the console on the phone**, for example `http://192.168.1.20:8080/console`, and sign in
+   with your gateway user name and token, or with **Email me a sign-in code** when your account has
+   email set up ([Email integration](email-integration.md#sign-in-by-email)). The one-time claim
+   link only works on the gateway's own computer.
+4. **Open an app** from the Apps page. It opens at `/apps/<app>/`, already signed in.
+5. Optional: add the page to the home screen (Safari: **Share → Add to Home Screen**).
+
+For access from outside your network, put the gateway behind a reverse proxy with HTTPS (one proxy
+block covers the console, the API and every app) or choose the `internet` Network setting. See
+[Gateway exposure security](gateway-security.md) and
+[AbstractGateway: Deployment](https://github.com/lpalbou/AbstractGateway/blob/main/docs/deployment.md).
+
+## What adapts on a small screen
+
+- Sidebars and side panels become drawers below 1024 px wide; Escape, a tap outside or the close
+  button closes them.
+- Dialogs open as bottom sheets on phones (below 768 px wide, or in landscape under 500 px tall),
+  with their buttons always visible.
+- Touch screens get 44 px targets and 16 px form fields, so iOS does not zoom when you focus a
+  field.
+- Pages respect the notch and home-indicator areas.
+
+Each app's changelog describes its own layout (for example, AbstractCode's composer and the
+Observer's one-pane run view on phones).
+
+## Limits
+
+- The phone does not run tools or models; files are the gateway computer's files.
+- Mobile browsers suspend background tabs. Runs keep going on the gateway, and the page catches up by
+  replaying the ledger when you return.
 
 --- docs/architecture.md ---
 # Architecture
@@ -2868,9 +3122,10 @@ Start here if you're building persistent AI applications — agents that run for
 
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
-- Automations: workflows that run on a fixed interval or on demand ([Automations](automations.md))
+- Automations: workflows that run on a fixed interval, when an email arrives, or on demand ([Automations](automations.md))
+- Email for each user: your own mailbox for email automations, notifications and sign-in by email ([Email integration](guide/email-integration.md))
 - Multi-client: terminal, browser, tray, Telegram, email
-- Start on one device, continue on another
+- Start on one device, continue on another: the web console and the browser apps work on phones, tablets and any window size
 
 The composition root when you need a control plane (local or remote).
 
@@ -2909,6 +3164,7 @@ flowchart TB
         SESS["agent sessions<br/>default workflow · workspace guard<br/>skills shelf · live-reply hub"]
         WEB["web /console<br/>first-run guide · Models · Engines · Resources"]
         TRAY["menu-bar icon<br/>status · Network · open apps"]
+        MAIL["per-user email<br/>account · mail watcher · outbox<br/>sign-in by email"]
     end
 
     AGENT["AbstractAgent<br/>ReAct · CodeAct · MemAct"]
@@ -2921,6 +3177,7 @@ flowchart TB
     CSRV["abstractcore serve<br/>/v1 · /acore · web /console"]
     CCON["abstractcore-console<br/>terminal console + shared screens"]
     PROV[("LLM providers and local engines<br/>Ollama · LM Studio · MLX · llama.cpp · vLLM · cloud APIs")]
+    MBOX[("each user's mailbox<br/>IMAP (read-only) · SMTP")]
 
     CLIENTS -->|HTTP/SSE| API
     BR -->|"/console, /apps/&lt;app&gt;/"| APXY
@@ -2930,6 +3187,9 @@ flowchart TB
     TRAY --> API
     TRAY -.->|"Open: starts it signed in"| ASSIST
     API --> SESS
+    API --> MAIL
+    MAIL -->|"new mail: event inbox, wakes email automations"| RT
+    MAIL -->|"watch, send (recipient policy, limits)"| MBOX
     SESS --> SKILL
     SESS --> RT
     API --> AGENT
@@ -2955,8 +3215,12 @@ The layers, from the top:
 - **AbstractGateway** owns the run lifecycle (start, resume, cancel), durable schedules, private
   bundle discovery and the shared workflow catalog, users and auth, the Network setting, and
   ledger/artifact serving. For agent sessions it also resolves the default agent workflow, gives
-  every run a guarded workspace, seeds and serves the skill shelf, and relays live replies. Its
-  web console and menu-bar icon are part of the same package.
+  every run a guarded workspace, seeds and serves the skill shelf, and relays live replies. Each
+  user can connect their own mailbox: the gateway keeps the account encrypted in that user's data
+  folder, runs the read-only mail watcher while the user has an email automation, sends
+  notifications from a durable outbox, and offers sign-in by email
+  ([Email integration](guide/email-integration.md)). Its web console and menu-bar icon are part of
+  the same package; the console and the browser apps adapt to phones, tablets and any window size.
 - **AbstractAgent** provides ready-made agent loops; **AbstractRuntime** is the durable kernel that
   executes them, compiles VisualFlow graphs from `.flow` bundles into workflows, and tracks which
   models are resident and who uses them.
@@ -3462,6 +3726,7 @@ where it stopped.
 | The browser page asks for a token | The one-time sign-in link lasts 10 minutes. Run the installer again: it opens a fresh link. |
 | `another AbstractFramework installer is already running` | An installer, or an **Update** from a console or the menu-bar icon, is running for this data directory. Wait until it finishes, then run the line again. |
 | `PyPI hasn't published abstractgateway 0.8.1 to every mirror yet; retrying in 30 s (attempt 3/8)` | Nothing to do: a release published minutes ago has not reached every PyPI mirror yet. The installer waits and runs the same install again (see [Right after a release](#right-after-a-release)). |
+| `PyPI lists … but still does not serve its file after 8 attempts over about 10 minutes` | The package list shows the version but the file host has not served its file for 10 minutes. Nothing was left out and the previous install is unchanged. Run the installer again in a few minutes. |
 | `PyPI still does not list … after 8 attempts over about 10 minutes` | The package index this computer reads has not caught up after 10 minutes (often a company package mirror set in `UV_INDEX_URL`, `PIP_INDEX_URL` or `uv.toml`). Nothing was left out and the previous install is unchanged. Run the installer again in a few minutes; with a mirror, ask its administrator to refresh the package the message names. |
 | Anything else | Run the installer again. If it stops at the same step, report it with the log file named at the end of the message (`~/Library/Application Support/AbstractGateway/logs/install-….log`). |
 
@@ -3557,7 +3822,7 @@ The line always runs the installer of the latest AbstractFramework release. It:
   the background and the summary says how to turn start at login on;
 - ends with what changed, old -> new, under **Changes** (`Changes: none` when nothing moved), and
   `Upgraded: AbstractFramework <yours> -> <latest>` (`Upgraded: AbstractFramework (not recorded) ->
-  0.7.0` for the first upgrade of a 0.6.1 or earlier install) or `Already up to date:
+  <latest>` for the first upgrade of a 0.6.1 or earlier install) or `Already up to date:
   AbstractFramework <yours>; nothing changed.`
 
 #### Upgrading from 0.6.1 or earlier
@@ -3880,17 +4145,16 @@ Transformers, vLLM and llama.cpp run on the processor; the installer says so. Up
 (`sudo ubuntu-drivers install` on Ubuntu) and run the installer again. Whisper uses its own CUDA 12
 libraries, which need driver 525 or newer.
 
-**Measured on real hardware (AbstractFramework 0.6.3 release candidate).** The release candidate
-(AbstractGateway 0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2, AbstractVoice 0.13.1,
-AbstractVision 0.3.32) was rehearsed on Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability 7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and
-26 GB RAM. The previous install was removed with `uninstall.sh --yes --purge` and uv's download
-cache cleared first. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already
-on the machine. The installer ran without a terminal, so start at login stayed off.
+**Measured on real hardware.** Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability
+7.5, driver 595.91.07 (CUDA 13.2), 4 vCPU and 26 GB RAM. The install measured AbstractGateway
+0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2, AbstractVoice 0.13.1 and AbstractVision 0.3.32
+on a machine without a previous install and with uv's download cache cleared. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already on the
+machine. The installer ran without a terminal, so start at login stayed off.
 
 | Step | Result |
 |---|---|
 | Whole install (`install.sh`, profile picked automatically: gpu) | 3 min 1 s; 14.2 GB added on disk |
-| Python packages (`uv tool install`, exactly the candidate's versions) | 39 s, about 5.8 GB of wheels |
+| Python packages (`uv tool install`, exact pinned versions) | 39 s, about 5.8 GB of wheels |
 | llama.cpp `cu130` build swapped in | 18 s (726 MB); loads, GPU offload |
 | Terminal console and AbstractCode compiled with cargo | 62 s and 48 s, no output meanwhile |
 | Checks | PyTorch 2.11.0 on CUDA 13.0; Whisper on the GPU; vLLM 0.22.1 installed |
@@ -3904,31 +4168,22 @@ timed separately where the path allows it):
 |---|---|---|
 | Text | LM Studio, `qwen/qwen3.5-9b` Q4_K_M, 6.5 GB on the GPU | first gateway request 23 s including the model load; then 12 s for 318 tokens; about 41 tokens/s from AbstractCore in Python |
 | Text-to-speech | Supertonic, on the processor | 1.1 to 1.4 s per sentence; 3.2 s for the first gateway request |
-| Speech-to-text | faster-whisper `base` on CUDA, 0.3 GB of GPU memory | with the route set by hand and PyAV 18 (both part of the final release, below): 1.0 to 2.3 s per gateway request, no OpenAI key |
-| Image | FLUX.2 [klein] 4B, Diffusers, model CPU offload, 7.8 GB peak | 41 s to load, then 15 to 16 s per 1024x1024 image; 54 to 59 s per gateway request, which loads the model each time; after **Load** (AbstractRuntime 0.7.3), 17 to 19 s per gateway request on the loaded model |
+| Speech-to-text | faster-whisper `base` on CUDA, 0.3 GB of GPU memory | 1.0 to 2.3 s per gateway request, no OpenAI key |
+| Image | FLUX.2 [klein] 4B, Diffusers, model CPU offload, 7.8 GB peak | 41 s to load, then 15 to 16 s per 1024x1024 image; after **Load** in the console, 17 to 19 s per gateway request on the loaded model (54 to 59 s when each request loads the model) |
 
-**Found in the rehearsal, and what the final 0.6.3 versions do:**
+What to expect on a GPU of this size:
 
-- **Speech-to-text.** The candidate's **Use recommended defaults** did not set Voice Input
-  (`input.voice`), so transcription used OpenAI and asked for `OPENAI_API_KEY`; and PyAV 19.0.0
-  (released 2026-09-29) broke faster-whisper 1.2.1's file reading (`open() got an unexpected
-  keyword argument 'metadata_errors'`). In 0.6.3 the fresh setup and **Use recommended defaults**
-  set Voice Input to `faster-whisper`, model `base` (AbstractCore 2.19.2), and PyAV is held below 19
-  (AbstractVoice 0.13.2).
-- **The image model and the text model on the GPU together.** While LM Studio kept
-  `qwen/qwen3.5-9b` loaded (6.5 GB), an image request failed with CUDA out of memory. In 0.6.3
-  Diffusers falls back to sequential CPU offload in this case (AbstractVision 0.3.33): much less GPU
-  memory (near 1.4 GB for FLUX.2 [klein] 4B at 768x768) and slower per step (about 2.3 s against
-  1.5 s), so a 4-step image took 10.9 to 15.6 s against 13.4 to 18.5 s with model CPU offload, and
-  models that run many steps are slower. Unloading the text model first (`lms unload --all`) gives
-  model CPU offload back, which is faster for those.
-- **The image route was not always saved.** The candidate's **Use recommended defaults** could
-  report the image route as already set without saving it, when the console read the routes a few
-  seconds earlier. In 0.6.3 it saves every route it reports (AbstractCore 2.19.2).
-- **Image requests reloaded the model.** Each gateway image request loaded the model again (54 to
-  59 s). In 0.6.3, after **Load** in the console (or `POST /models/load`), requests run on the
-  loaded model (17 to 19 s on this machine), and an unload frees the model's memory (AbstractRuntime
-  0.7.3, AbstractVision 0.3.33).
+- **Speech input.** The fresh setup and **Use recommended defaults** set Voice Input
+  (`input.voice`) to `faster-whisper`, model `base`, so transcription runs locally without an OpenAI
+  key. PyAV is held below 19, which faster-whisper 1.2.1 cannot read files with.
+- **The image model next to a loaded text model.** When LM Studio keeps a 9B text model loaded
+  (6.5 GB), Diffusers switches to sequential CPU offload for the image model: much less GPU memory
+  (near 1.4 GB for FLUX.2 [klein] 4B at 768x768) and slower per step (about 2.3 s against 1.5 s),
+  so a 4-step image takes 10.9 to 15.6 s against 13.4 to 18.5 s with model CPU offload, and models
+  that run many steps are slower. Unloading the text model first (`lms unload --all`) gives model
+  CPU offload back, which is faster for those.
+- **Loaded image models are reused.** After **Load** in the console (or `POST /models/load`),
+  image requests run on the loaded model, and an unload frees its memory.
 
 Not validated: vLLM (installed, never started a model here) and the Windows gpu setting.
 
@@ -4560,7 +4815,7 @@ the calls of sub-agents it starts. What does not stream, with a one-line note in
 - a workflow step that turns streaming off for its model call;
 - entity chat and an entity's own-time loop.
 
-Scheduled runs and the Telegram and email bridges do not stream by default.
+Automations, scheduled runs and the Telegram bridge do not stream by default.
 
 Live text travels as `llm.delta` / `llm.delta_end` events on the run's existing SSE stream
 (`GET /api/gateway/runs/{run_id}/ledger/stream`). They are not ledger records: the ledger holds
@@ -4921,14 +5176,19 @@ Email is configured as settings, never through environment variables:
 - **On a gateway, per user**: each person connects their own mailbox (IMAP/SMTP with a password or
   app password, or OAuth2 for Google and Microsoft) in the web console (**Users → My email**), the
   terminal console (`@` on the Users screen) or `PUT /api/gateway/me/email`. The account lives in
-  that user's own data folder with its credentials encrypted, and sets the recipient policy, the send
-  limits (20 per hour, 100 per day by default), the email notifications and the **Agent email tools**
-  switch. Administrators decide what is available to users (email, agent email tools, sign-in by
-  email), gateway-wide and per user, and never see mail content. See
+  that user's own data folder with its credentials encrypted, and sets the recipient policy (a new
+  account starts with an allowlist holding the user's own address), the send limits (20 per hour,
+  100 per day by default), the email notifications and the **Agent email tools** switch (off until
+  an administrator makes the tools available and the user turns them on). A connected account also
+  gives the user sign-in by email on the sign-in page. Administrators decide what is available to
+  users (email, agent email tools, sign-in by email), gateway-wide and per user, and never see mail
+  content. See [Email integration](guide/email-integration.md) and
   [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md).
 - **AbstractCore on its own**: one account for the install, with `abstractcore email connect
   --address <address> --imap-host <host> --smtp-host <host> --password <value>`, the core web console's
-  **Email** tab or the core terminal console's Email screen. See
+  **Email** tab or the core terminal console's Email screen. From a script, `--password-stdin` (and
+  `--client-secret-stdin` for an OAuth client secret) reads the secret from stdin so it never
+  appears on a command line. See
   [AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md).
 
 The `ABSTRACT_EMAIL_*` environment variables and the email accounts file are no longer read: a
@@ -5214,6 +5474,7 @@ If you're new, read these groups first:
 - **Workflows**: flow, bundle, interface contract
 - **Control plane**: gateway, observer, gateway console, Network setting
 - **Automations**: automation, trigger source, tick, occurrence, discussion
+- **Email**: My email, mail watcher, recipient policy, agent email tools, automatic mail, sign-in by email
 - **Agent sessions**: default agent workflow, conversation workspace, built-in deny list, skill shelf, live replies
 - **Distribution**: Mac installer, bootstrap script, install profile, release pins
 
@@ -5412,7 +5673,7 @@ A workflow that the gateway runs again and again on a trigger. It is one durable
 
 ### Trigger source
 
-What fires an automation, as a versioned adapter: `schedule@1` (a fixed UTC interval, see [Schedule](#schedule)) and `manual@1` (only **Run now**). `GET /api/gateway/trigger-sources` lists the sources a gateway serves; packages add sources through the `abstractruntime.trigger_sources` entry-point group.
+What fires an automation, as a versioned adapter: `schedule@1` (a fixed UTC interval, see [Schedule](#schedule)), `email.received@1` (new mail in your own mailbox, see [Mail watcher](#mail-watcher)) and `manual@1` (only **Run now**). `GET /api/gateway/trigger-sources` lists the sources a gateway serves; packages add sources through the `abstractruntime.trigger_sources` entry-point group.
 
 ### Tick
 
@@ -5420,11 +5681,56 @@ One scheduled firing time of a `schedule@1` trigger, on a fixed grid (`start_at 
 
 ### Occurrence
 
-One run of an automation's workflow for one tick or one **Run now**: a child run of the controller with a deterministic id, shown in clients as one question/answer turn. In *independent* context each occurrence is its own one-turn session; in *growing* context occurrences are the successive turns of the session `automation:<id>`.
+One run of an automation's workflow for one tick, one batch of new mail or one **Run now**: a child run of the controller with a deterministic id, shown in clients as one question/answer turn. In *independent* context each occurrence is its own one-turn session; in *growing* context occurrences are the successive turns of the session `automation:<id>`.
 
 ### Discussion
 
 A conversation forked from an automation occurrence (**Discuss**): a new root run in its own session, seeded with the automation's history up to that occurrence, able to read the automation's folder but not change it, and never written back into the automation.
+
+---
+
+## Email
+
+See [Email integration](guide/email-integration.md) for the whole picture.
+
+### My email
+
+Where each gateway user connects their own mailbox (IMAP/SMTP with a password or app password, or
+OAuth2 for Google and Microsoft) and sets its recipient policy, send limits, notifications and agent
+email tools: the web console's **Users → My email**, `@` on the terminal console's Users screen, or
+`/api/gateway/me/email`. The account is stored encrypted in that user's data folder. AbstractCore on
+its own has one account per install (`abstractcore email`).
+
+### Mail watcher
+
+The gateway's read-only reader of a user's mailbox. It runs only while that user has an active
+`email.received@1` automation, checks every 60 seconds, and records each new message in the
+runtime's event inbox before any automation reads it. Mail that was already there when it started
+is never an event.
+
+### Recipient policy
+
+Who may receive mail from an account: an allowlist (only the listed addresses and domains; a new
+account starts with its own registered address) or a denylist (everyone except them), applied with
+the send limits (20 per hour and 100 per day by default) to every send.
+
+### Agent email tools
+
+The email tools of agents and workflows (list, search, read, send, reply, download an attachment).
+Off by default: an agent gets them only when an administrator made them available to the user, the
+user's account is connected and the user turned them on.
+
+### Automatic mail
+
+Mail the framework sends without a person writing it (notifications, sign-in codes, anything an
+automation sends). It carries `Auto-Submitted: auto-generated` and an
+`X-AbstractFramework-Automation` header. Your own automatic mail never triggers an automation;
+automatic mail from others is ignored unless the trigger sets `"auto_submitted": "admit"`.
+
+### Sign-in by email
+
+**Forgot your token?** and **Email me a sign-in code** on the gateway's sign-in page: a single-use
+8-digit code sent to the user's registered address, valid 10 minutes. Administrators can turn it off.
 
 ---
 
@@ -5678,10 +5984,20 @@ their own mailbox in the web console (**Users → My email**) or the terminal co
 screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
 rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
 deleted. Every send passes your recipient policy (an allowlist or a denylist of addresses and
-domains) and your send limits, and a send to anyone but you (or the recipients an automation
-lists) waits for your approval. Agents get the email tools only when an administrator made them
-available to you and you turned them on; administrators never read users' mail. See
-[AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md) and [Email automations](automations.md#email-automations).
+domains; a new account allows only your own address) and your send limits (20 per hour, 100 per
+day by default), and a send to anyone but you (or the recipients an automation lists) waits for
+your approval. Agents get the email tools only when an administrator made them available to you and
+you turned them on; administrators never read users' mail. An email-triggered automation treats
+mail as untrusted data and never follows its links unless you allow those tools, and mail the
+framework sends automatically never triggers an automation. See
+[Email integration](guide/email-integration.md) and [Email automations](automations.md#email-automations).
+
+## Can I use the console and the apps on my phone?
+
+Yes. The gateway's web console and the five browser apps work on phones, tablets and any window
+size. Let the phone reach the gateway (`abstractgateway network set lan`), then open the console on
+the phone at the gateway's address; every installed app opens from its **Apps** page at
+`/apps/<app>/` on that same address. See [Phones and tablets](guide/deployment-iphone.md).
 
 ## Which workflow answers when I chat with an agent?
 
@@ -5812,11 +6128,8 @@ Yes, on Linux and Windows x64: when `nvidia-smi` works, the installer picks the 
 (`--profile gpu` / `-Profile gpu` forces it). On Linux it installs llama.cpp's CUDA build matching
 PyTorch's CUDA and checks that PyTorch, llama.cpp and Whisper use the GPU. PyPI's PyTorch for Linux is
 a CUDA 13 build and needs NVIDIA driver 580 or newer; with an older driver the engines run on the
-processor. The 0.6.3 release candidate was rehearsed on a Quadro RTX 5000 (16 GB, driver 595,
-CUDA 13) on Ubuntu 26.04: text, text-to-speech and image generation worked with **Use recommended
-defaults**; speech-to-text needed two fixes and the image model and a loaded 9B text model did not
-fit on the GPU together, which the final 0.6.3 versions address
-([measured results and what changed](install.md#gpu-on-linux-nvidia)). On Windows it installs PyTorch's CUDA build and
+processor. Install and per-capability timings measured on a Quadro RTX 5000 (16 GB, driver 595,
+CUDA 13) with Ubuntu 26.04 are in [GPU on Linux (NVIDIA)](install.md#gpu-on-linux-nvidia). On Windows it installs PyTorch's CUDA build and
 llama.cpp's prebuilt CUDA build, chosen from your driver version; this path is implemented but not
 yet validated on real NVIDIA hardware. Each installer prints what runs where (`PyTorch:`, `GGUF:`
 and Whisper lines) and falls back to the CPU for any part that does not work. See
@@ -5836,6 +6149,11 @@ run; use the one-liner or ask your administrator. The installer reports this dur
 The one-time link is valid for 10 minutes and works only from the same machine. Mint a new one with
 `abstractgateway claim --open` (or `abstractgateway-config claim-url`). The admin token also stays
 in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path.
+
+From another device, sign in with your gateway user name and token. When your account has email set
+up (**Users → My email**), the sign-in page also offers **Email me a sign-in code** and **Forgot
+your token?**: an 8-digit code sent to your registered address, valid once for 10 minutes. See
+[Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?
 
@@ -5930,6 +6248,19 @@ Every stop names its cause and the next step. The full list of messages and what
 table in [If something goes wrong](install.md#if-something-goes-wrong). After fixing the cause,
 run the installer again: it continues where it stopped.
 
+### The installer says PyPI hasn't published a version yet
+
+- **Cause**: a release published minutes ago has not reached every PyPI mirror, so the package list
+  or the file of a pinned version is not served yet.
+- **What happens**: the installer (and the consoles' **Update**) runs the same full install again
+  after 15 s, 30 s, 60 s and 120 s waits, 8 attempts over about 10 minutes, printing
+  `PyPI hasn't published <package> <version> to every mirror yet; retrying in 30 s (attempt 3/8)`.
+  It never installs less while it waits.
+- **Fix**: nothing while it retries. If it stops after 10 minutes, the previous install is
+  unchanged: run the installer again a few minutes later; with a company package mirror, ask its
+  administrator to refresh the package the message names. See
+  [Right after a release](install.md#right-after-a-release).
+
 ### macOS asks to install the command line developer tools
 
 - **Cause**: something tried to compile a package. The installer itself uses prebuilt wheels only.
@@ -5961,6 +6292,11 @@ run the installer again: it continues where it stopped.
 - **Fix**: `abstractgateway claim --open` opens a fresh link (or `abstractgateway-config claim-url`
   prints one). Re-running the installer also opens one.
 - **Alternative**: sign in with the `admin` token stored in `<data>/auth/bootstrap-admin-token`.
+- **From another device, or without your token**: sign in with your gateway user name and token.
+  When your account has email set up (**Users → My email**), choose **Email me a sign-in code** or
+  **Forgot your token?** on the sign-in page: an 8-digit code arrives at your registered address,
+  works once and expires after 10 minutes. Without email, an administrator rotates your token. See
+  [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### The gateway does not answer
 
@@ -5995,15 +6331,18 @@ run the installer again: it continues where it stopped.
 - **Cause**: the gateway listens on this computer only until you change its Network setting.
 - **Fix**: `abstractgateway network set lan`, then apply it (`abstractgateway network restart`,
   the console, or the menu-bar icon). `abstractgateway network addresses` lists the URLs to use.
-  See [Network setting](install.md#network-setting-who-can-reach-the-gateway).
+  The console and every browser app then open on that address (`/console`, `/apps/<app>/`), phones
+  and tablets included. See [Network setting](install.md#network-setting-who-can-reach-the-gateway)
+  and [Phones and tablets](guide/deployment-iphone.md).
 
 ### A browser app (Observer, Flow, Code Web) cannot connect
 
 - **Check**: the gateway URL in the app, then `curl http://127.0.0.1:8080/api/health`.
-- **Fix**: sign in with a Gateway user and that user's token (the `admin` token file on a fresh
-  install), not the legacy `ABSTRACTGATEWAY_AUTH_TOKEN`. For apps served from another origin,
-  include that origin in `ABSTRACTGATEWAY_ALLOWED_ORIGINS` (local development:
-  `http://localhost:*,http://127.0.0.1:*`) or `abstractgateway network set --allowed-origins …`.
+- **Fix**: open the app from the console's **Apps** page, which serves it at `/apps/<app>/` on the
+  gateway's own address, signed in. For an app you run yourself, sign in with a Gateway user and
+  that user's token (the `admin` token file on a fresh install), not the legacy
+  `ABSTRACTGATEWAY_AUTH_TOKEN`; an app served from an origin other than `http://localhost:*` or
+  `http://127.0.0.1:*` needs `abstractgateway network set --allowed-origins <origin>`.
 - See [Configuration](configuration.md#client-configuration-observer--flow-editor--code-web-ui).
 
 ## Models and providers
@@ -6090,6 +6429,30 @@ run the installer again: it continues where it stopped.
   confirmation),
   or restart the gateway.
 - **Verify**: the meter returns to the baseline and the resident-models table is empty.
+
+## Email
+
+### An email automation does not run, or the mailbox shows "needs action"
+
+- **Check**: **Users → My email** shows the mailbox state and the last error with its fix (for
+  example an app password the server refused). Administrators see the same state in the Users
+  table.
+- **Cause**: mail that was already in the mailbox, or that arrived while none of your email
+  automations was active, is never processed; an automation that runs a model runs at most once an
+  hour by default; automatic mail (auto-replies, and mail the framework sends through your account)
+  is skipped.
+- **Fix**: send a new test message after creating the automation, shorten its `every`, or set
+  `"auto_submitted": "admit"` to accept automatic mail from others. See
+  [Email automations](automations.md#email-automations).
+
+### An agent has no email tools, or a send is refused
+
+- **Cause**: agent email tools are off until an administrator makes them available to you and you
+  turn them on in **My email**; every send also passes your recipient policy (a new account allows
+  only your own address) and your send limits.
+- **Fix**: ask an administrator to make **Agent email tools** available, turn them on, and add the
+  recipient to your allowlist. The refusal names the refused addresses or the limit reached. See
+  [Email integration](guide/email-integration.md).
 
 ## Automations
 
@@ -6491,7 +6854,7 @@ Short, focused guides for common framework questions.
 - [Capability routing defaults](capability-routing-defaults.md)
 - [Deployment topologies](deployment-topologies.md)
 - [Web deployment (browser UI + gateway)](deployment-web.md)
-- [iPhone notes (Safari / PWA)](deployment-iphone.md)
+- [Phones and tablets (Safari, Chrome, home-screen apps)](deployment-iphone.md)
 - [Gateway exposure security](gateway-security.md)
 - [Runtime scope (run/session/global/all)](runtime-scope.md)
 - [Runtime artifacts and retrieval](runtime-artifacts.md)
@@ -6502,7 +6865,7 @@ Short, focused guides for common framework questions.
 - [WorkflowBundles (`.flow`) lifecycle](workflow-bundles.md)
 - [Telegram integration](telegram-integration.md)
 - [Email integration](email-integration.md)
-- [Process manager env vars (write-only)](process-manager-env-vars.md)
+- [Process manager environment overrides (write-only)](process-manager-env-vars.md)
 
 --- docs/guide/agent-vs-llm.md ---
 # Agent vs LLM Call (VisualFlow)
@@ -7086,32 +7449,6 @@ only to the former. See
 
 See [Guide: Gateway exposure security](gateway-security.md).
 
---- docs/guide/deployment-iphone.md ---
-# iPhone Notes (Safari / PWA)
-
-Code Web UI is designed to run on iPhone as a thin host UI that connects to a remote gateway deployment.
-
-## Prereqs (recommended)
-
-- Gateway reachable over HTTPS (reverse proxy + TLS).
-- Web UI hosted over HTTPS.
-- Gateway configured with:
-  - `ABSTRACTGATEWAY_USER_AUTH=1` so each browser user signs in with a Gateway user token
-  - `ABSTRACTGATEWAY_ALLOWED_ORIGINS` including your web UI origin (exact host recommended for prod)
-
-## Steps
-
-1. Open the web UI URL in Safari.
-2. In Settings:
-   - set Gateway URL (for example `https://gateway.example.com`)
-   - sign in with your Gateway user id and user token
-3. Optional: Safari -> Share -> Add to Home Screen.
-
-## Constraints
-
-- iOS suspends background tabs aggressively; durability depends on ledger replay, not "staying connected".
-- File access is remote (via gateway); the phone does not run local tools in v1.
-
 --- docs/guide/gateway-security.md ---
 # Gateway Exposure Security (Checklist)
 
@@ -7142,7 +7479,7 @@ export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.to
 
 1. Run behind TLS (reverse proxy or a trusted tunnel).
 2. Use a strong token and rotate it periodically.
-3. Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
+3. Open the browser apps through the gateway (`/apps/<app>/`, one origin). For apps served elsewhere, allow only their exact origins with `abstractgateway network set --allowed-origins <origin>` (avoid broad wildcards).
 4. Protect reads as well as writes (ledgers contain prompts and tool outputs).
 
 ## Hosted file-source terms
@@ -7254,8 +7591,8 @@ locale are present, country grounding prefers the timezone mapping over the
 locale region because browser language is not a reliable location signal.
 
 Gateway keeps operator surfaces admin-only through a central route-family
-policy. User management, audit/process/backlog/triage/report routes, email
-bridge routes, host metrics, model residency list/load/unload, server workspace
+policy. User management, audit/process/backlog/triage/report routes, the
+administrators' email routes (email capabilities and OAuth clients), host metrics, model residency list/load/unload, server workspace
 file helpers, and server workspace artifact import/export require an admin
 principal. Browser local files should use upload routes; server filesystem
 read/import/export is not exposed to ordinary hosted users.
@@ -7972,107 +8309,41 @@ the bridge sends an approval prompt into the chat. Reply with:
  
 Note: `/tools` is intentionally disabled in thin-client mode; use `/approve` and `/deny`.
 
---- docs/guide/email-integration.md ---
-# Email Integration (Inbound IMAP -> Events, Outbound SMTP Defaults)
-
-This guide explains how to use framework-native email tooling:
-
-- Outbound: `send_email` with centralized SMTP defaults (no repeated host/user per call)
-- Inbound: gateway email bridge polls IMAP and emits durable `email.message` events into stable sessions, with
-  artifact-backed attachments
-
-## Minimal outbound configuration (SMTP defaults)
-
-Configure on the process that executes tools (gateway local tools, CLI host, or tool worker):
-
-```bash
-export ABSTRACT_EMAIL_SMTP_HOST="smtp.example.com"
-export ABSTRACT_EMAIL_SMTP_USERNAME="me@example.com"
-export ABSTRACT_EMAIL_SMTP_PASSWORD_ENV_VAR="EMAIL_PASSWORD"
-export EMAIL_PASSWORD="..."
-```
-
-Then a minimal tool call can be:
-
-```json
-{ "name": "send_email", "arguments": { "to": "you@example.com", "subject": "Hello", "body_text": "Hi!" } }
-```
-
-## Minimal inbound configuration (gateway email bridge)
-
-Configure IMAP + enable the bridge on the gateway host:
-
-```bash
-export ABSTRACT_EMAIL_BRIDGE=1
-export ABSTRACT_EMAIL_IMAP_HOST="imap.example.com"
-export ABSTRACT_EMAIL_IMAP_USERNAME="me@example.com"
-export ABSTRACT_EMAIL_IMAP_PASSWORD_ENV_VAR="EMAIL_PASSWORD"
-export ABSTRACT_EMAIL_POLL_SECONDS=60
-```
-
-Recommended for v0: auto-start a workflow per thread/session:
-
-```bash
-export ABSTRACT_EMAIL_FLOW_ID="<bundle_id>:<flow_id>"
-```
-
-## Workflow wiring
-
-Create a flow that:
-1. handles `email.message` (On Event; scope `session`)
-2. reads `payload.email.*` (subject/from/body and artifact-backed attachments)
-3. optionally opens attachments via `open_attachment(artifact_id=...)`
-4. replies with `send_email(...)`
-
-## See also
-
-Gateway maintenance docs mention the bridge and email inbox endpoints:
-- https://github.com/lpalbou/abstractgateway/blob/main/docs/maintenance.md
-
-
 --- docs/guide/process-manager-env-vars.md ---
-# Process Manager Env Vars (Write-only) - Operator Guide
+# Process manager environment overrides (write-only) - Operator guide
 
-This guide explains how to configure a small allowlist of environment variables on the gateway host via AbstractObserver,
-without exposing the values back to browsers/clients.
+The gateway's process manager can store write-only environment overrides for the processes it
+launches, from AbstractObserver, without ever returning the values to browsers or clients.
 
-## What this is (and why)
+## Security model
 
-- Goal: configure framework integrations (for example email) from the UI.
-- Security model:
-  - allowlist-only keys (no arbitrary env var editing)
-  - write-only values (the gateway API never returns env var values)
-  - values are persisted on the gateway host with restrictive file permissions
+- Allowlist-only keys: no arbitrary environment editing (`PATH`, `LD_PRELOAD`, `PYTHONPATH`,
+  `NODE_OPTIONS` and the like are never accepted).
+- Write-only values: the gateway API never returns them.
+- Values are stored on the gateway host with restrictive file permissions, in
+  `<data dir>/process_manager/env_overrides.json`.
 
 ## Requirements
 
-- Gateway process manager enabled: `ABSTRACTGATEWAY_ENABLE_PROCESS_MANAGER=1`
-- AbstractObserver connected to that gateway
-
-## Where values are stored (host-side)
-
-- `<ABSTRACTGATEWAY_DATA_DIR>/process_manager/env_overrides.json`
-
-## How values are applied
-
-- When you set/unset an allowlisted env var in the UI:
-  - the gateway persists it to `env_overrides.json`
-  - the gateway applies it to its own `os.environ` (so integrations reading env vars can see it)
-- When the process manager launches managed processes, it merges:
-  1. gateway `os.environ`
-  2. allowlisted overrides
-  3. per-process env (static)
-
-If a service reads env vars only at startup, restart that service after changing env vars.
+- The gateway process manager enabled (`ABSTRACTGATEWAY_ENABLE_PROCESS_MANAGER=1`).
+- AbstractObserver connected to that gateway.
 
 ## Allowlisted keys
 
-The allowlist is gateway-defined. Email-related keys are commonly allowlisted for inbox and SMTP defaults.
+The gateway ships with an **empty** allowlist: framework settings are configured in the consoles,
+not through environment variables. Email in particular is a per-user setting (**Users → My email**;
+see [Email integration](email-integration.md)). Email values saved here by an earlier gateway are
+imported once into the administrator's email settings and then ignored.
+
+## How overrides apply
+
+When the process manager launches a managed process, it merges the gateway's own environment, the
+allowlisted overrides, then the process's own static environment. A service that reads its
+environment only at startup needs a restart after a change.
 
 ## See also
 
-- AbstractGateway docs: https://github.com/lpalbou/abstractgateway
-
+- [AbstractGateway: Maintenance](https://github.com/lpalbou/AbstractGateway/blob/main/docs/maintenance.md)
 
 --- docs/scenarios/README.md ---
 # Scenarios
@@ -8085,7 +8356,7 @@ This section is use-case oriented. Each scenario is an end-to-end path with conc
 - [Workflow bundle lifecycle (publish/install/deprecate)](workflow-bundle-lifecycle.md)
 - [Telegram permanent contact](telegram-permanent-contact.md)
 - [Email inbox agent](email-inbox-agent.md)
-- [Phone thin client (iPhone via Web/PWA)](phone-thin-client.md)
+- [Phone thin client (console and apps on a phone)](phone-thin-client.md)
 
 If you prefer component-first docs, start with [Getting Started](../getting-started.md).
 
@@ -8305,7 +8576,7 @@ See [Specialized agent as a portable `.flow`](specialized-agent-flow.md).
 
 ## Troubleshooting
 
-- CORS errors in browser: widen `ABSTRACTGATEWAY_ALLOWED_ORIGINS` for your UI origin.
+- CORS errors in browser: open the app through the gateway (`/apps/<app>/`), or allow your UI origin with `abstractgateway network set --allowed-origins <origin>`.
 - "Unauthorized": ensure the browser UI is signed in with a Gateway user token, not the admin token.
 - Bundles not showing up: verify `ABSTRACTGATEWAY_FLOWS_DIR` contains the shipped `basic-agent` bundle and any custom `.flow`
   files, then reload bundles from the UI (or restart the gateway).
@@ -8559,88 +8830,119 @@ Send a Telegram message to the AI contact. You should see:
 - [Guide: Telegram integration](../guide/telegram-integration.md) — configuration and TDLib details
 
 --- docs/scenarios/email-inbox-agent.md ---
-# Scenario: Email Inbox Agent (IMAP Bridge + SMTP Replies)
+# Scenario: Email inbox agent
 
-Goal: ingest inbound emails as durable events and let a workflow reply (or take actions) with framework-native email tools.
+Goal: let an agent read the mail you receive, act on it (summarise, sort, draft), and email you the
+result, with your own mailbox and nothing configured outside the consoles.
 
-## High-level architecture
+## How it fits together
 
-- Inbound: gateway email bridge polls IMAP, stores raw + attachments as artifacts, emits `email.message` events into a
-  stable `session_id` per thread.
-- Outbound: workflows call `send_email` with centralized SMTP defaults (no repeating host/user per tool call).
+- You connect your own mailbox to the gateway. The account is yours alone and stored encrypted in
+  your data folder.
+- An automation with the **When an email arrives** trigger (`email.received@1`) runs your workflow
+  on each batch of new mail that matches its filters.
+- The gateway's mail watcher reads the mailbox read-only while at least one of your email
+  automations is active; the runtime records each new message durably before the automation reads
+  it.
+- **Email me the result** sends the automation's results to your own address, through your own
+  account.
 
-## Step 1: Configure email accounts on the tool-execution host
+See [Guide: Email integration](../guide/email-integration.md) for the rules (recipient policy, send
+limits, agent email tools, sign-in by email).
 
-Email tools are account-scoped: IMAP/SMTP host/user are configured on the process that executes tools (gateway local
-tools, CLI host, or a tool worker).
+## Step 1: Connect your mailbox
 
-For the full configuration matrix (env vs YAML vs AbstractCore config), use the canonical guide in the main framework
-workspace:
-- [Guide: Email integration](../guide/email-integration.md)
+In the gateway web console, open **Users → My email** (terminal console: the Users screen, then
+`@`). Enter the address, an app password and the IMAP and SMTP servers, or use **Sign in with
+OAuth2** for Google or Microsoft. The gateway tests both servers before it saves the account.
 
-## Step 2: Enable the inbound email bridge on the gateway host
+Check the recipient policy in the same place: a new account allows mail only to your own address,
+which is what this scenario needs.
 
-Minimum env vars (plus your email account config):
+## Step 2: Create the automation
 
-```bash
-export ABSTRACT_EMAIL_BRIDGE=1
-export ABSTRACT_EMAIL_POLL_SECONDS=60
+From the Assistant, the Observer (**Launch → Automate**) or AbstractCode's browser client, create an
+automation with:
 
-export ABSTRACT_EMAIL_FLOW_ID="<bundle_id>:<flow_id>"   # autostart/attach a workflow per thread/session
+- **When an email arrives**, with typed filters (from these addresses or domains, sent to these
+  addresses, subject contains, has attachments);
+- the task for the agent, for example "Summarise these emails and list what needs an answer";
+- **Email me the result**, then turn on **Automation results** in **My email → Notifications**.
+
+The same definition through the API:
+
+```text
+"trigger": {"source_id": "email.received", "source_version": 1,
+            "config": {"every": "1h", "filter": {"subject_contains": "invoice"}}},
+"notify":  {"channels": ["console", "email"]},
+"policy":  {"tool_approval": "auto", "email_allowed_recipients": ["self"]}
 ```
 
-Start the gateway with a persistent `ABSTRACTGATEWAY_DATA_DIR` so bridge state survives restarts.
+An automation that runs a model runs at most once an hour by default, on all matching mail received
+since its previous run.
 
-## Step 3: Wire the workflow
+## Step 3: Test
 
-Create a workflow that:
-1. handles the `email.message` event
-2. reads `payload.email.*` (subject/from/body and artifact-backed attachments)
-3. optionally opens attachments via `open_attachment(artifact_id=...)`
-4. replies with `send_email(to=..., subject=..., body_text=...)`
+Send yourself an email that matches the filter after creating the automation. Expected:
 
-## Step 4: Test
+- the automation runs on the next batch and shows the run as a question/answer turn in every client;
+- its result reaches you by email when the workflow asks for attention;
+- the result email does not trigger the automation again (mail the framework sends automatically
+  through your account is never an event).
 
-Send an email into the mailbox. Expected:
-- the bridge emits `email.message`
-- a session-run starts (or is resumed) for that thread
-- your workflow replies via `send_email`
+Mail that was already in the mailbox, or that arrived while no email automation was active, is not
+processed.
+
+## Letting the agent use email itself
+
+To let the agent search your mailbox or send mail during a run, an administrator first makes
+**Agent email tools** available to you; then turn them on in **My email**. A send to anyone but you
+waits for your approval, and every send passes your recipient policy and send limits.
 
 --- docs/scenarios/phone-thin-client.md ---
-# Scenario: Phone Thin Client (iPhone via Web/PWA) + Gateway
+# Scenario: Phone thin client
 
-Goal: run a thin client UI on a phone that attaches to runs and controls them, while the gateway host owns durability and
-execution.
+Goal: follow and steer your agents from a phone or a tablet while the gateway's computer runs the
+models, the tools and the durable runs.
 
-This is especially useful for:
-- remote coding/agent sessions from a phone
-- observing runs while away from your workstation
+This is useful for:
+- checking on long coding or research sessions away from your desk;
+- answering tool approvals and questions from an automation;
+- reading automation results as conversations.
 
 ## Mental model (thin client)
 
-- The phone does not tick the runtime.
-- It renders by replaying/streaming the ledger.
-- It acts by sending durable commands (resume/pause/cancel/emit_event).
+- The phone does not run the runtime.
+- It renders by replaying and streaming the ledger.
+- It acts by sending durable commands (resume, pause, cancel, answers to waits).
 
-## Quickstart (LAN dev, no HTTPS)
+## Quickstart (local network)
 
-1. Run the gateway bound to all interfaces (still use auth):
-   - `abstractgateway serve --host 0.0.0.0 --port 8080`
-2. Run the web UI host on all interfaces (dev server):
-   - `npx @abstractframework/code`
-3. Allow the dev origin in gateway CORS/origin allowlist.
-4. Open the web UI URL on your iPhone Safari and connect it to the gateway.
+1. On the gateway's computer, let other devices reach it (user accounts stay on):
 
-## Production note (recommended)
+   ```bash
+   abstractgateway network set lan
+   abstractgateway network restart
+   abstractgateway network addresses     # the addresses to open on the phone
+   ```
 
-For installable iOS PWA behavior, host the web UI over HTTPS and run the gateway behind HTTPS termination (reverse proxy
-or tunnel). Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to the exact UI origin.
+2. Install the apps you want from the console's **Apps** page.
+3. On the phone, open `http://<address>:8080/console` and sign in with your gateway user name and
+   token (or **Email me a sign-in code**).
+4. Open Code, Observer or another app from the Apps page: it opens at `/apps/<app>/` on the same
+   address, already signed in. The console and every app adapt to the phone's screen.
 
-## Canonical iPhone guide (deeper)
+## Away from home
 
-For a step-by-step iPhone/PWA guide, see:
+Put the gateway behind a reverse proxy with HTTPS: one proxy block covers the console, the API and
+every app at `/apps/<app>/`. A home-screen app (Safari: **Share → Add to Home Screen**) then opens
+the same address.
+
+## Deeper guides
+
+- [Guide: Phones and tablets](../guide/deployment-iphone.md)
 - [Guide: Web deployment](../guide/deployment-web.md)
-- [Guide: iPhone notes](../guide/deployment-iphone.md)
+- [Guide: Gateway exposure security](../guide/gateway-security.md)
 
 --- docs/installers/README.md ---
 # Installers

@@ -255,6 +255,10 @@ exchanges the token for a browser session and does not persist the token in brow
 
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
+The console and every browser app work on phones, tablets and any window size. To open them from
+another device, set the gateway's Network setting to `lan` and open the same `/console` and
+`/apps/<app>/` paths on the gateway's address; see [Phones and tablets](guide/deployment-iphone.md).
+
 ### 5. Automate recurring work
 
 An automation runs a workflow on a fixed interval and keeps every run as a conversation. Create
@@ -283,7 +287,9 @@ To run an automation when an email arrives, or to get its results by email, firs
 mailbox in the gateway console (**Users → My email**, or `@` on the Users screen of the terminal
 console). The Assistant, the Observer and AbstractCode's browser client then offer **When an email
 arrives**, **Email me the result** and the recipients the automation may email without asking. See
-[Email automations](automations.md#email-automations).
+[Email automations](automations.md#email-automations). The same account gives you sign-in by email,
+and your agents get the email tools only when an administrator makes them available and you turn
+them on ([Email integration](guide/email-integration.md)).
 
 ---
 
