@@ -35,6 +35,8 @@ from 0.7.0.
   email tools.
 - Moving a model route to another provider drops the old engine's speculation setting (an LM Studio
   route no longer keeps an MLX route's `native_mtp`).
+- A live reply no longer misses its end when the run finished just as the gateway was reading its
+  stream.
 - `install.sh` on Linux with an NVIDIA GPU: **The same steps by hand** now include llama.cpp's CUDA
   build (the listed install line takes its CPU build).
 
