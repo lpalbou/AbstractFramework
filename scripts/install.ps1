@@ -198,27 +198,24 @@ function Get-VoiceRequirement([string]$Spec, [bool]$IsRelease) {
     foreach ($c in $AfPyMatrix) { if ($c -like 'abstractvoice==*') { return "$Spec==$(($c -split '==', 2)[1])" } }
     return $Spec
 }
-# The pinned "name==version" that is not on the index yet, or '' for any other failure. Exit 1: uv's
-# resolver reports the pin missing (above). Exit 2: uv's download of the pin's own file answered HTTP
-# 404 (the index lists the new version but the file host does not serve it yet), same as install.sh.
+# The pinned "name==version" that is not on the index yet, followed by " 404" when the index lists it
+# but its file is not served yet, or '' for any other failure (same rule as install.sh's uv_index_lag).
+# Exit 1: uv's resolver reports the pin missing (above). Exit 1 or 2: uv's download of the pin's own
+# file answered HTTP 404 ("Failed to fetch: `.../<name>-<pin>-py3-none-any.whl`" ... "HTTP status
+# client error (404").
 function Find-IndexLag([string]$Text, [string[]]$Pins, [int]$Code = 1) {
+    if ($Code -ne 1 -and $Code -ne 2) { return '' }
     $t = $Text -replace "$([char]27)\[[0-9;]*m", '' -replace [string][char]0x2502, ' '
     $t = ($t -replace '\s+', ' ').ToLowerInvariant()
-    if ($Code -eq 1) {
-        if (-not $t.Contains('no solution found when resolving dependencies')) { return '' }
-    } elseif ($Code -eq 2) {
-        if (-not ($t.Contains('failed to fetch') -and $t.Contains('404'))) { return '' }
-    } else { return '' }
+    $res = ($Code -eq 1) -and $t.Contains('no solution found when resolving dependencies')
+    $f404 = $t -match 'failed to fetch.*http status client error \(404'
+    if (-not $res -and -not $f404) { return '' }
     foreach ($p in $Pins) {
         $nv = $p -split '==', 2
         $n = $nv[0].ToLowerInvariant()
         $v = [regex]::Escape($nv[1].ToLowerInvariant())
-        if ($Code -eq 2) {
-            $re = 'failed to fetch: `[^`]*/' + [regex]::Escape(($n -replace '[.-]', '_')) + '-' + $v + '(-|\.tar\.gz)'
-        } else {
-            $re = 'there is no version of ' + [regex]::Escape($n) + '(\[[a-z0-9,._-]*\])?==' + $v + '([^0-9a-z.+!-]|$)'
-        }
-        if ($t -match $re) { return $p }
+        if ($res -and $t -match ('there is no version of ' + [regex]::Escape($n) + '(\[[a-z0-9,._-]*\])?==' + $v + '([^0-9a-z.+!-]|$)')) { return $p }
+        if ($f404 -and $t -match ('failed to fetch: `[^`]*/' + [regex]::Escape(($n -replace '[.-]', '_')) + '-' + $v + '(-|\.tar\.gz)')) { return "$p 404" }
     }
     return ''
 }
@@ -734,11 +731,18 @@ function Invoke-Native {
         if (($code -ne 1 -and $code -ne 2) -or -not $IndexPins.Count) { break }
         $lag = Find-IndexLag (Read-LogFrom $script:LogFile $mark) $IndexPins $code
         if (-not $lag) { break }
+        $lagKind = ''
+        if ($lag.Contains(' ')) { $lag, $lagKind = $lag -split ' ', 2 }
         $lagName, $lagVer = $lag -split '==', 2
         if ($try -ge $tries) {
             Add-Content -Path $script:LogFile -Value "`r`n# index lag: $lagName $lagVer still missing after $try attempts; stopping" -Encoding UTF8
             $minutes = [int][Math]::Floor((($script:IndexRetryDelays | Measure-Object -Sum).Sum + 30) / 60)
-            Stop-Install ("$Description failed: PyPI still does not list $lagName $lagVer after $try attempts over about $minutes minutes (uv: `"there is no version of $lagName==$lagVer`").`n" +
+            if ($lagKind -eq '404') {
+                $lagWhat = "PyPI lists $lagName $lagVer but still does not serve its file after $try attempts over about $minutes minutes (uv: HTTP 404 fetching $lagName $lagVer)"
+            } else {
+                $lagWhat = "PyPI still does not list $lagName $lagVer after $try attempts over about $minutes minutes (uv: `"there is no version of $lagName==$lagVer`")"
+            }
+            Stop-Install ("$Description failed: $lagWhat.`n" +
                 "The release is published, but the package index this computer reads (one of PyPI's mirrors, or a`n" +
                 "package mirror/proxy set in UV_INDEX_URL, PIP_INDEX_URL or uv.toml) has not caught up with it yet.`n" +
                 "Nothing was left out and the previous gateway install is unchanged (uv stops before it installs).`n" +

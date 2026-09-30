@@ -56,15 +56,39 @@ LAG_VOICE = f"""  × No solution found when resolving dependencies:
   ╰─▶ Because there is no version of abstractvoice[supertonic]=={VOICE_PIN} and
       you require abstractvoice[supertonic]=={VOICE_PIN}, we can conclude that your
       requirements are unsatisfiable."""
-# The index already lists the new version but the file host does not serve its file yet: uv exits 2
-# (uv 0.11.14's exact output against an index listing a file that answers 404).
-F404_GATEWAY = f"""error: Failed to fetch: `https://files.pythonhosted.org/packages/9a/1c/0f/abstractgateway-{GW_PIN}-py3-none-any.whl`
-  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/packages/9a/1c/0f/abstractgateway-{GW_PIN}-py3-none-any.whl)"""
-F404_RUNTIME_SDIST = f"""error: Failed to fetch: `https://files.pythonhosted.org/packages/77/ab/abstractruntime-{MATRIX['AbstractRuntime']}.tar.gz`
-  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/packages/77/ab/abstractruntime-{MATRIX['AbstractRuntime']}.tar.gz)"""
-# Not lag: a 404 for a file the installer did not pin (a dependency's), and a 404 without uv's fetch failure.
-F404_OTHER = """error: Failed to fetch: `https://files.pythonhosted.org/packages/11/22/onnxruntime-1.22.0-cp312-cp312-manylinux_2_27_x86_64.whl`
-  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/packages/11/22/onnxruntime-1.22.0-cp312-cp312-manylinux_2_27_x86_64.whl)"""
+# The index already lists the new version but the file host does not serve its file yet (uv 0.11.14's
+# wording, captured against a local index answering 404; the URLs are PyPI-shaped). Exit 1 when the
+# metadata was served and only the wheel answers 404 (the PyPI case), exit 2 when the metadata file
+# answers 404 too.
+_H = "packages/4f/04/1c/9e8e2f1a404d1b1c2f3d6a4c3f0bd2e8f3a6c1d0e9b8a7c6d5e4f3a2b1c0d9e8"
+F404_GATEWAY_DOWNLOAD = f"""Resolved 1 package in 2ms
+  × Failed to download `abstractgateway=={GW_PIN}`
+  ├─▶ Failed to fetch:
+  │   `https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}-py3-none-any.whl`
+  ╰─▶ HTTP status client error (404 Not Found) for url
+      (https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}-py3-none-any.whl)"""
+F404_GATEWAY = f"""error: Failed to fetch: `https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}-py3-none-any.whl.metadata`
+  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}-py3-none-any.whl.metadata)"""
+F404_RUNTIME_SDIST = f"""error: Failed to fetch: `https://files.pythonhosted.org/{_H}/abstractruntime-{MATRIX['AbstractRuntime']}.tar.gz`
+  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/{_H}/abstractruntime-{MATRIX['AbstractRuntime']}.tar.gz)"""
+# Not lag: a 404 for a file the installer did not pin (a dependency's, or another version of a
+# pinned package), a server error, and a failure whose URL merely contains "404" in its hash.
+F404_OTHER = f"""error: Failed to fetch: `https://files.pythonhosted.org/{_H}/onnxruntime-1.22.0-cp312-cp312-manylinux_2_27_x86_64.whl`
+  Caused by: HTTP status client error (404 Not Found) for url (https://files.pythonhosted.org/{_H}/onnxruntime-1.22.0-cp312-cp312-manylinux_2_27_x86_64.whl)"""
+F404_OTHER_VERSION = f"""  × Failed to download `abstractgateway=={GW_PIN}0`
+  ├─▶ Failed to fetch:
+  │   `https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}0-py3-none-any.whl`
+  ╰─▶ HTTP status client error (404 Not Found) for url
+      (https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}0-py3-none-any.whl)"""
+F503_GATEWAY = f"""  × Failed to download `abstractgateway=={GW_PIN}`
+  ├─▶ Request failed after 3 retries in 10.9s
+  ├─▶ Failed to fetch:
+  │   `https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}-py3-none-any.whl`
+  ╰─▶ HTTP status server error (503 Service Unavailable) for url
+      (https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}-py3-none-any.whl)"""
+RESET_WITH_404_IN_HASH = f"""error: Failed to fetch: `https://files.pythonhosted.org/{_H}/abstractgateway-{GW_PIN}-py3-none-any.whl`
+  Caused by: Request failed after 3 retries
+  Caused by: connection reset by peer"""
 # Not lag: a platform without the voice engine's wheels (a real conflict), and a pin that is not
 # the installer's release pin (an older gateway version than the one pinned).
 NO_WHEEL = f"""  × No solution found when resolving dependencies:
@@ -170,11 +194,12 @@ def test_install_sh_retries_the_same_full_install_through_index_lag(tmp_path: Pa
 
 
 @pytest.mark.parametrize("shell", SHELLS)
-@pytest.mark.parametrize("message,name,version", [(F404_GATEWAY, "abstractgateway", GW_PIN),
-                                                  (F404_RUNTIME_SDIST, "AbstractRuntime", MATRIX["AbstractRuntime"])],
-                         ids=["gateway-wheel", "runtime-sdist"])
-def test_install_sh_retries_when_the_new_file_is_not_served_yet(tmp_path: Path, shell: str, message: str, name: str, version: str) -> None:
-    proc, installs, slept = _run_sh(shell, tmp_path, fail_first=2, message=message, exit_code=2)
+@pytest.mark.parametrize("message,exit_code,name,version", [(F404_GATEWAY_DOWNLOAD, 1, "abstractgateway", GW_PIN),
+                                                            (F404_GATEWAY, 2, "abstractgateway", GW_PIN),
+                                                            (F404_RUNTIME_SDIST, 2, "AbstractRuntime", MATRIX["AbstractRuntime"])],
+                         ids=["gateway-wheel-exit-1", "gateway-metadata-exit-2", "runtime-sdist"])
+def test_install_sh_retries_when_the_new_file_is_not_served_yet(tmp_path: Path, shell: str, message: str, exit_code: int, name: str, version: str) -> None:
+    proc, installs, slept = _run_sh(shell, tmp_path, fail_first=2, message=message, exit_code=exit_code)
     out = proc.stdout + proc.stderr
     assert proc.returncode == 0, out
     assert len(installs) == 3 and len(set(installs)) == 1, installs
@@ -184,11 +209,22 @@ def test_install_sh_retries_when_the_new_file_is_not_served_yet(tmp_path: Path, 
     assert "retrying without it" not in out
 
 
-def test_install_sh_a_404_for_a_file_it_did_not_pin_is_not_lag(tmp_path: Path) -> None:
-    proc, installs, slept = _run_sh("sh", tmp_path, fail_first=99, message=F404_OTHER, exit_code=2)
+@pytest.mark.parametrize("shell", SHELLS)
+@pytest.mark.parametrize("message,exit_code", [(F404_OTHER, 2), (F404_OTHER_VERSION, 1), (F503_GATEWAY, 1), (RESET_WITH_404_IN_HASH, 2)],
+                         ids=["dependency-file", "other-version", "server-error", "404-only-in-the-url"])
+def test_install_sh_other_download_failures_are_not_lag(tmp_path: Path, shell: str, message: str, exit_code: int) -> None:
+    proc, installs, slept = _run_sh(shell, tmp_path, fail_first=99, message=message, exit_code=exit_code)
     assert slept == []
     assert "PyPI hasn't published" not in proc.stdout
     assert "retrying without it" in proc.stdout
+
+
+def test_install_sh_a_file_still_not_served_after_the_budget_says_so(tmp_path: Path) -> None:
+    proc, installs, slept = _run_sh("sh", tmp_path, fail_first=99, message=F404_GATEWAY_DOWNLOAD, exit_code=1)
+    assert proc.returncode != 0
+    assert len(installs) == 8 and len(set(installs)) == 1, installs
+    assert f"PyPI lists abstractgateway {GW_PIN} but still does not serve its file after 8 attempts over about 10 minutes (uv: HTTP 404 fetching abstractgateway {GW_PIN})" in proc.stderr
+    assert "retrying without it" not in proc.stdout + proc.stderr
 
 
 @pytest.mark.parametrize("shell", SHELLS)
@@ -314,9 +350,10 @@ def test_install_ps1_retries_the_same_install_through_index_lag(tmp_path: Path, 
 
 
 @needs_pwsh
-@pytest.mark.parametrize("message", [F404_GATEWAY, F404_RUNTIME_SDIST], ids=["gateway-wheel", "runtime-sdist"])
-def test_install_ps1_retries_when_the_new_file_is_not_served_yet(tmp_path: Path, message: str) -> None:
-    proc = _pwsh_native(tmp_path, fail_first=2, message=message, soft=True, exit_code=2)
+@pytest.mark.parametrize("message,exit_code", [(F404_GATEWAY_DOWNLOAD, 1), (F404_GATEWAY, 2), (F404_RUNTIME_SDIST, 2)],
+                         ids=["gateway-wheel-exit-1", "gateway-metadata-exit-2", "runtime-sdist"])
+def test_install_ps1_retries_when_the_new_file_is_not_served_yet(tmp_path: Path, message: str, exit_code: int) -> None:
+    proc = _pwsh_native(tmp_path, fail_first=2, message=message, soft=True, exit_code=exit_code)
     out = proc.stdout + proc.stderr
     assert "RESULT=True" in out, out
     assert "SLEPT=15,30" in out
@@ -336,8 +373,10 @@ def test_install_ps1_index_lag_beyond_the_budget_throws_even_when_soft(tmp_path:
 
 
 @needs_pwsh
-@pytest.mark.parametrize("message,exit_code", [(NO_WHEEL, 1), (OTHER_VERSION, 1), (LAG_GATEWAY, 2), (NO_HEADER, 1), (F404_OTHER, 2)],
-                         ids=["no-wheel", "unpinned-version", "exit-2", "no-resolution-header", "404-unpinned-file"])
+@pytest.mark.parametrize("message,exit_code", [(NO_WHEEL, 1), (OTHER_VERSION, 1), (LAG_GATEWAY, 2), (NO_HEADER, 1), (F404_OTHER, 2),
+                                                (F404_OTHER_VERSION, 1), (F503_GATEWAY, 1), (RESET_WITH_404_IN_HASH, 2)],
+                         ids=["no-wheel", "unpinned-version", "exit-2", "no-resolution-header", "404-unpinned-file",
+                              "404-other-version", "server-error", "404-only-in-the-url"])
 def test_install_ps1_other_failures_keep_the_soft_fallback(tmp_path: Path, message: str, exit_code: int) -> None:
     proc = _pwsh_native(tmp_path, fail_first=99, message=message, soft=True, exit_code=exit_code)
     out = proc.stdout + proc.stderr
@@ -345,6 +384,14 @@ def test_install_ps1_other_failures_keep_the_soft_fallback(tmp_path: Path, messa
     assert "SLEPT=\n" in out or out.rstrip().endswith("SLEPT=")
     assert len(_installs(tmp_path)) == 1
     assert "PyPI hasn't published" not in out
+
+
+@needs_pwsh
+def test_install_ps1_a_file_still_not_served_after_the_budget_says_so(tmp_path: Path) -> None:
+    proc = _pwsh_native(tmp_path, fail_first=99, message=F404_GATEWAY_DOWNLOAD, soft=True, exit_code=1)
+    out = proc.stdout + proc.stderr
+    assert f"THROWN=AFBOOT: install abstractgateway failed: PyPI lists abstractgateway {GW_PIN} but still does not serve its file after 8 attempts over about 10 minutes (uv: HTTP 404 fetching abstractgateway {GW_PIN})" in out, out
+    assert len(_installs(tmp_path)) == 8
 
 
 @needs_pwsh

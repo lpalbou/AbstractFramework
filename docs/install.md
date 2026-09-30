@@ -123,9 +123,11 @@ paste on Windows) treats that as a delay:
 Only these cases wait, for a package at the exact version this release pins (the gateway and the
 release's libraries: AbstractCore, AbstractRuntime, AbstractVoice, ...): uv exits with code 1, its
 output contains uv's resolution failure (`No solution found when resolving dependencies`) and it
-says `there is no version of <package>==<version>`; or uv exits with code 2 because the download
-of that version's own file answered `404` (`Failed to fetch: .../<package>-<version>-py3-none-any.whl`:
-the package list already shows the new version but the file is not served yet). The voice
+says `there is no version of <package>==<version>`; or the download of that version's own file
+answered `HTTP status client error (404` (`Failed to fetch: .../<package>-<version>-py3-none-any.whl`:
+the package list already shows the new version but the file is not served yet; uv exits with code
+1, or 2 when even the file's metadata answered 404). A server error (5xx) or a refused download
+(403) is not a delay and is handled as before. The voice
 requirement carries its pinned version for this reason. Every other failure is handled as before: a system
 without the voice or llama.cpp wheels still installs without them and the summary says so. An
 install with `--pin latest` or `--from` pins nothing, so nothing is waited for.

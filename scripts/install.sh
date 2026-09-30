@@ -338,29 +338,35 @@ af_voice_req() {
 }
 re_escape() { printf '%s' "$1" | sed 's/[].[^$*+?(){}|\\/]/\\&/g'; }
 # uv_index_lag LOGFILE FROM_LINE RC: the "name==version" of the pinned package that is not on the
-# index yet, in LOGFILE's lines after FROM_LINE (one uv run that exited RC); nothing when the failure
-# is anything else. Two forms: exit 1 with uv's resolution failure naming the pin ("there is no
-# version of <name>[<extras>]==<pin>", see the block above), or exit 2 with uv's download failure
-# for the pin's own file, HTTP 404 (the index already lists the new version but the file host does
-# not serve it yet: `Failed to fetch: .../<name>-<pin>-py3-none-any.whl` ... `404`).
+# index yet, in LOGFILE's lines after FROM_LINE (one uv run that exited RC), followed by " 404" when
+# the index lists it but its file is not served yet; nothing when the failure is anything else.
+# Two forms: exit 1 with uv's resolution failure naming the pin ("there is no version of
+# <name>[<extras>]==<pin>", see the block above); or exit 1 or 2 with uv's download of the pin's own
+# file answering HTTP 404 ("Failed to fetch: `.../<name>-<pin>-py3-none-any.whl`" ... "HTTP status
+# client error (404"; exit 1 as "Failed to download `<name>==<pin>`" when the metadata was served,
+# exit 2 when the metadata file also answered 404).
 uv_index_lag() {
     _ul_esc="$(printf '\033')"
     _ul_text="$(sed -n "$(($2 + 1)),\$p" "$1" | sed "s/${_ul_esc}\[[0-9;]*m//g; s/│/ /g" | tr -s '[:space:]' ' ' | tr 'A-Z' 'a-z')"
+    _ul_res=0; _ul_404=0
     case "${3:-1}" in
-        1) case "$_ul_text" in *"no solution found when resolving dependencies"*) ;; *) return 0 ;; esac ;;
-        2) case "$_ul_text" in *"failed to fetch"*"404"*) ;; *) return 0 ;; esac ;;
+        1) case "$_ul_text" in *"no solution found when resolving dependencies"*) _ul_res=1 ;; esac ;;
+        2) ;;
         *) return 0 ;;
     esac
+    case "$_ul_text" in *"failed to fetch"*"http status client error (404"*) _ul_404=1 ;; esac
+    [ "$_ul_res" = 1 ] || [ "$_ul_404" = 1 ] || return 0
     for _ul_pin in $(af_index_pins); do
         _ul_n="$(printf '%s' "${_ul_pin%%==*}" | tr 'A-Z' 'a-z')"
-        if [ "${3:-1}" = 2 ]; then
-            # The file name: the name with - and . as _, then -<version>- (wheel) or -<version>.tar.gz.
-            _ul_f="$(printf '%s' "$_ul_n" | tr '.-' '__')"
-            _ul_re="failed to fetch: \`[^\`]*/$(re_escape "$_ul_f")-$(re_escape "${_ul_pin#*==}")(-|\.tar\.gz)"
-        else
-            _ul_re="there is no version of $(re_escape "$_ul_n")(\[[a-z0-9,._-]*\])?==$(re_escape "${_ul_pin#*==}")([^0-9a-z.+!-]|\$)"
+        _ul_v="$(re_escape "${_ul_pin#*==}")"
+        if [ "$_ul_res" = 1 ] && printf '%s\n' "$_ul_text" | grep -Eq "there is no version of $(re_escape "$_ul_n")(\[[a-z0-9,._-]*\])?==${_ul_v}([^0-9a-z.+!-]|\$)"; then
+            printf '%s\n' "$_ul_pin"; return 0
         fi
-        if printf '%s\n' "$_ul_text" | grep -Eq "$_ul_re"; then printf '%s\n' "$_ul_pin"; return 0; fi
+        # The file name: the name with - and . as _, then -<version>- (wheel) or -<version>.tar.gz.
+        _ul_f="$(printf '%s' "$_ul_n" | tr '.-' '__')"
+        if [ "$_ul_404" = 1 ] && printf '%s\n' "$_ul_text" | grep -Eq "failed to fetch: \`[^\`]*/$(re_escape "$_ul_f")-${_ul_v}(-|\.tar\.gz)"; then
+            printf '%s 404\n' "$_ul_pin"; return 0
+        fi
     done
     return 0
 }
@@ -571,10 +577,17 @@ run() {
         { [ "$_rc" = 1 ] || [ "$_rc" = 2 ]; } && [ "$_lagck" = 1 ] || break
         _lag="$(uv_index_lag "$LOG_FILE" "$_mark" "$_rc")"
         [ -n "$_lag" ] || break
+        _lagkind=""; case "$_lag" in *" "*) _lagkind="${_lag#* }"; _lag="${_lag%% *}" ;; esac
         _lagname="${_lag%%==*}"; _lagver="${_lag#*==}"
         if [ "$_try" -ge "$_tries" ]; then
             printf '\n# index lag: %s %s still missing after %s attempts; stopping\n' "$_lagname" "$_lagver" "$_try" >>"$LOG_FILE"
-            die "$_desc failed: PyPI still does not list $_lagname $_lagver after $_try attempts over about $(($(printf '%s\n' $AF_INDEX_RETRY_DELAYS | awk '{ s += $1 } END { print int((s + 30) / 60) }'))) minutes (uv: \"there is no version of $_lagname==$_lagver\").
+            _lagmin="$(printf '%s\n' $AF_INDEX_RETRY_DELAYS | awk '{ s += $1 } END { print int((s + 30) / 60) }')"
+            if [ "$_lagkind" = 404 ]; then
+                _lagwhat="PyPI lists $_lagname $_lagver but still does not serve its file after $_try attempts over about $_lagmin minutes (uv: HTTP 404 fetching $_lagname $_lagver)"
+            else
+                _lagwhat="PyPI still does not list $_lagname $_lagver after $_try attempts over about $_lagmin minutes (uv: \"there is no version of $_lagname==$_lagver\")"
+            fi
+            die "$_desc failed: $_lagwhat.
 The release is published, but the package index this computer reads (one of PyPI's mirrors, or a
 package mirror/proxy set in UV_INDEX_URL, PIP_INDEX_URL or uv.toml) has not caught up with it yet.
 Nothing was left out and the previous gateway install is unchanged (uv stops before it installs).
