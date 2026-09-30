@@ -82,10 +82,11 @@ asking. The rules that matter:
   no model every 60 seconds, on the matching mail received since its previous run. Each automation
   reads a message at most once.
 - **Mail is data, never instructions.** An occurrence receives the emails as untrusted content in a
-  fixed frame. An email-triggered automation never follows links from an email: tools such as
-  `fetch_url`, `browser_probe`, `web_search` and `execute_command` ask for your approval even when
-  the automation runs its tools without asking, unless you name them in
-  `policy.untrusted_input_tools`. Sending tools are never granted that way.
+  fixed frame. An email-triggered automation does not open links or run commands on its own:
+  tools such as `fetch_url`, `browser_probe`, `web_search`, `execute_command`, the memory-writing
+  tools, MCP tools and camera tools ask for your approval even when the automation runs its tools
+  without asking, unless you name them in `policy.untrusted_input_tools`. Sending tools are never
+  granted that way.
 - **Your own automatic mail never triggers an automation.** Every message the framework sends automatically
   through your account carries `Auto-Submitted: auto-generated` and an
   `X-AbstractFramework-Automation` header, and its Message-ID is recorded, so an automation never

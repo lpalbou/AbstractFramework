@@ -128,7 +128,7 @@ run the installer again: it continues where it stopped.
 ### Another device cannot reach the gateway
 
 - **Cause**: the gateway listens on this computer only until you change its Network setting.
-- **Fix**: `abstractgateway network set lan`, then apply it (`abstractgateway network restart`,
+- **Fix**: `abstractgateway network set lan`, then apply it (`abstractgateway network restart --token <admin token>`,
   the console, or the menu-bar icon). `abstractgateway network addresses` lists the URLs to use.
   The console and every browser app then open on that address (`/console`, `/apps/<app>/`), phones
   and tablets included. See [Network setting](install.md#network-setting-who-can-reach-the-gateway)

@@ -525,8 +525,8 @@ libraries, which need driver 525 or newer.
 the install and text rows with AbstractGateway 0.7.3, AbstractCore 2.19.1, AbstractRuntime 0.7.2,
 AbstractVoice 0.13.1 and AbstractVision 0.3.32; speech-to-text with Voice Input set to
 faster-whisper and PyAV 18; the **Load** timings with AbstractRuntime 0.7.3; sequential CPU offload
-with AbstractVision 0.3.33. The machine had no previous install and uv's download cache was
-cleared. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already on the
+with AbstractVision 0.3.33. Any previous install was removed (`uninstall.sh --yes --purge`) and uv's download
+cache cleared first. Model weights, LM Studio (`qwen/qwen3.5-9b`) and a Rust toolchain were already on the
 machine. The installer ran without a terminal, so start at login stayed off.
 
 | Step | Result |

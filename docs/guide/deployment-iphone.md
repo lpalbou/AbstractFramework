@@ -12,7 +12,7 @@ browser origin to allow.
 
 1. **Let the phone reach the gateway.** The gateway listens on its own computer only until you
    change its Network setting: `abstractgateway network set lan`, the console's **Network** tab or
-   the menu-bar icon, then restart the gateway when asked (`abstractgateway network restart`). User
+   the menu-bar icon, then restart the gateway when asked (`abstractgateway network restart --token <admin token>`). User
    accounts stay on. `abstractgateway network addresses` lists the addresses to use.
 2. **Install the apps** you want from the console's **Apps** page, signed in as an administrator
    on the gateway's own computer (installs from another device need an administrator to allow them

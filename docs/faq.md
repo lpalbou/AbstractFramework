@@ -173,7 +173,7 @@ framework sends automatically through your account never triggers an automation.
 
 Yes. The gateway's web console and the five browser apps work on phones, tablets and any window
 size. Let the phone reach the gateway (`abstractgateway network set lan`, then
-`abstractgateway network restart`), then open the console on
+`abstractgateway network restart --token <admin token>`), then open the console on
 the phone at the gateway's address; every installed app opens from its **Apps** page at
 `/apps/<app>/` on that same address. See [Phones and tablets](guide/deployment-iphone.md).
 

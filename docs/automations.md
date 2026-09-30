@@ -245,12 +245,13 @@ usable account the forms say "Email isn't set up — open My email" and send not
 
 Inbound mail is data, never instructions. The occurrence receives the emails marked as untrusted,
 inside a fixed frame that tells the agent not to follow links or instructions in them and to act
-only on the automation's task. An email-triggered automation never follows links from an email:
-under "Tools run without asking" it runs unattended only tools that cannot reach the network,
-execute code, send messages or write outside its folder (file reads, mailbox reads, workspace
-writes). `fetch_url`, `browser_probe`, `web_search`, `execute_command`, the memory-writing tools and
-MCP tools ask for approval unless you name them in `policy.untrusted_input_tools`; sending tools are
-never granted that way.
+only on the automation's task. An email-triggered automation does not open links or run commands
+on its own: under "Tools run without asking" it runs unattended only tools that reach no network
+service beyond the ones you or your administrator configured, run no code, send no messages,
+delegate to no other agent and write nothing outside its folder (file reads, mailbox reads,
+workspace writes). `fetch_url`, `browser_probe`, `web_search`, `execute_command`, the
+memory-writing tools, MCP tools and camera tools ask for approval unless you name them in
+`policy.untrusted_input_tools`; sending tools are never granted that way.
 
 An automation never runs on mail the framework sent itself. Every message sent automatically through
 your account (notifications, sign-in codes, anything an automation sends, including its send-email

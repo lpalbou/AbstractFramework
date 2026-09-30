@@ -39,9 +39,12 @@ export OPENAI_API_KEY="local"
 **Cloud APIs**:
 
 ```bash
-export OPENAI_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
+abstractcore --set-api-key openai <key>
+abstractcore --set-api-key anthropic <key>
 ```
+
+The keys are saved in AbstractCore's configuration (also from `abstractcore --config`) and win
+over `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` in the environment.
 
 ---
 

@@ -122,6 +122,6 @@ See [Specialized agent as a portable `.flow`](specialized-agent-flow.md).
 ## Troubleshooting
 
 - CORS errors in browser: open the app through the gateway (`/apps/<app>/`), or allow your UI origin with `abstractgateway network set --allowed-origins <origin>`.
-- "Unauthorized": ensure the browser UI is signed in with a Gateway user token, not the admin token.
+- "Unauthorized": ensure the browser UI is signed in with a Gateway user and that user's token, not the legacy `ABSTRACTGATEWAY_AUTH_TOKEN`.
 - Bundles not showing up: verify `ABSTRACTGATEWAY_FLOWS_DIR` contains the shipped `basic-agent` bundle and any custom `.flow`
   files, then reload bundles from the UI (or restart the gateway).

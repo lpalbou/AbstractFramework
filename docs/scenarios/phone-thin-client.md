@@ -20,7 +20,7 @@ This is useful for:
 
    ```bash
    abstractgateway network set lan
-   abstractgateway network restart
+   abstractgateway network restart --token <admin token>
    abstractgateway network addresses     # the addresses to open on the phone
    ```
 
