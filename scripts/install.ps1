@@ -183,6 +183,42 @@ function Get-NoBuildPackages([bool]$WithCompiledExtras) {
 function Get-RefreshPackages {
     return @('abstractgateway') + @($AfPyMatrix | ForEach-Object { ($_ -split '==', 2)[0] })
 }
+# PyPI index lag (root backlog 0987 item 28; same rule as install.sh's uv_index_lag, see its comment).
+# Right after a release some of PyPI's mirrors still list no file for the new version for a few
+# minutes, even with --refresh-package. Lag never drops a feature (voice, llama.cpp, PyTorch's CUDA
+# build): the SAME install is run again after each of these delays (about 10 minutes in all), then it
+# stops with the cause. A failure is lag only when uv exits 1, its output carries uv's resolution
+# failure header "No solution found when resolving dependencies", and it names a package this run
+# pinned exactly (-IndexPins) in uv's empty-version form "there is no version of <name>[<extras>]==<pin>".
+$script:IndexRetryDelays = @(15, 30, 60, 120, 120, 120, 120)
+# The voice requirement with abstractvoice's matrix pin on a release install (the constraint already
+# forces it; the explicit pin makes uv report a missing abstractvoice in the exact-pin form).
+function Get-VoiceRequirement([string]$Spec, [bool]$IsRelease) {
+    if (-not $IsRelease -or -not $Spec -or $Spec.Contains('==') -or $Spec -notmatch '^abstractvoice(\[|$)') { return $Spec }
+    foreach ($c in $AfPyMatrix) { if ($c -like 'abstractvoice==*') { return "$Spec==$(($c -split '==', 2)[1])" } }
+    return $Spec
+}
+# The pinned "name==version" uv's resolver reported as not on the index, or '' for any other failure.
+function Find-IndexLag([string]$Text, [string[]]$Pins) {
+    $t = $Text -replace "$([char]27)\[[0-9;]*m", '' -replace [string][char]0x2502, ' '
+    $t = ($t -replace '\s+', ' ').ToLowerInvariant()
+    if (-not $t.Contains('no solution found when resolving dependencies')) { return '' }
+    foreach ($p in $Pins) {
+        $nv = $p -split '==', 2
+        $re = 'there is no version of ' + [regex]::Escape($nv[0].ToLowerInvariant()) + '(\[[a-z0-9,._-]*\])?==' + [regex]::Escape($nv[1].ToLowerInvariant()) + '([^0-9a-z.+!-]|$)'
+        if ($t -match $re) { return $p }
+    }
+    return ''
+}
+# The log's text after byte $Offset (one command's output).
+function Read-LogFrom([string]$Path, [long]$Offset) {
+    if (-not (Test-Path -LiteralPath $Path)) { return '' }
+    $fs = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    try {
+        [void]$fs.Seek([Math]::Min($Offset, $fs.Length), [System.IO.SeekOrigin]::Begin)
+        return (New-Object System.IO.StreamReader($fs, [System.Text.Encoding]::UTF8)).ReadToEnd()
+    } finally { $fs.Close() }
+}
 
 # ---------------------------------------------------------------------------
 # This install's gateway, whoever started it (root backlog 0987 item 20; same rule as install.sh).
@@ -651,7 +687,7 @@ function Format-Cmd([string[]]$Argv) { return (($Argv | ForEach-Object { Format-
 
 # Run a native command: print it, log its output, fail loudly on a non-zero exit.
 function Invoke-Native {
-    param([string]$Description, [string[]]$Argv, [switch]$Soft, [string]$Shown = '', [switch]$Live)
+    param([string]$Description, [string[]]$Argv, [switch]$Soft, [string]$Shown = '', [switch]$Live, [string[]]$IndexPins = @())
     if (-not $Shown) { $Shown = Format-Cmd $Argv }
     Write-Host "  `$ $Shown" -ForegroundColor DarkGray
     $script:Twins.Add($Shown)
@@ -659,22 +695,49 @@ function Invoke-Native {
     $exe = $Argv[0]
     $rest = @()
     if ($Argv.Count -gt 1) { $rest = $Argv[1..($Argv.Count - 1)] }
-    $old = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'   # PS 5.1 turns native stderr into errors
-    try {
-        Add-Content -Path $script:LogFile -Value "`r`n`$ $Shown" -Encoding UTF8
-        if ($Live) {
-            # Long downloads and builds: the output as it comes, and a heartbeat (Invoke-LiveProcess).
-            $code = Invoke-LiveProcess -Exe $exe -Arguments $rest -Log $script:LogFile
-        } else {
-            & $exe @rest 2>&1 | ForEach-Object { "$_" } | Add-Content -Path $script:LogFile -Encoding UTF8
-            $code = $LASTEXITCODE
+    # -IndexPins: a failure that is PyPI index lag for one of these exact pins runs the same command
+    # again after each of $script:IndexRetryDelays (Find-IndexLag), and never ends in the -Soft path.
+    $tries = $script:IndexRetryDelays.Count + 1
+    $try = 1
+    while ($true) {
+        $mark = 0L
+        if (Test-Path -LiteralPath $script:LogFile) { $mark = (Get-Item -LiteralPath $script:LogFile).Length }
+        $old = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'   # PS 5.1 turns native stderr into errors
+        try {
+            Add-Content -Path $script:LogFile -Value "`r`n`$ $Shown" -Encoding UTF8
+            if ($Live) {
+                # Long downloads and builds: the output as it comes, and a heartbeat (Invoke-LiveProcess).
+                $code = Invoke-LiveProcess -Exe $exe -Arguments $rest -Log $script:LogFile
+            } else {
+                & $exe @rest 2>&1 | ForEach-Object { "$_" } | Add-Content -Path $script:LogFile -Encoding UTF8
+                $code = $LASTEXITCODE
+            }
+        } catch {
+            Add-Content -Path $script:LogFile -Value "$_" -Encoding UTF8
+            $code = 1
+        } finally {
+            $ErrorActionPreference = $old
         }
-    } catch {
-        Add-Content -Path $script:LogFile -Value "$_" -Encoding UTF8
-        $code = 1
-    } finally {
-        $ErrorActionPreference = $old
+        if ($code -ne 1 -or -not $IndexPins.Count) { break }
+        $lag = Find-IndexLag (Read-LogFrom $script:LogFile $mark) $IndexPins
+        if (-not $lag) { break }
+        $lagName, $lagVer = $lag -split '==', 2
+        if ($try -ge $tries) {
+            Add-Content -Path $script:LogFile -Value "`r`n# index lag: $lagName $lagVer still missing after $try attempts; stopping" -Encoding UTF8
+            $minutes = [int][Math]::Floor((($script:IndexRetryDelays | Measure-Object -Sum).Sum + 30) / 60)
+            Stop-Install ("$Description failed: PyPI still does not list $lagName $lagVer after $try attempts over about $minutes minutes (uv: `"there is no version of $lagName==$lagVer`").`n" +
+                "The release is published, but the package index this computer reads (one of PyPI's mirrors, or a`n" +
+                "package mirror/proxy set in UV_INDEX_URL, PIP_INDEX_URL or uv.toml) has not caught up with it yet.`n" +
+                "Nothing was left out and the previous gateway install is unchanged (uv stops before it installs).`n" +
+                "What to do: run the installer again in a few minutes; it installs everything, local voice included.`n" +
+                "With a package mirror, ask its administrator to refresh $lagName. Log: $($script:LogFile)")
+        }
+        $delay = $script:IndexRetryDelays[$try - 1]
+        $try++
+        Write-Warn2 "PyPI hasn't published $lagName $lagVer to every mirror yet; retrying in $delay s (attempt $try/$tries)"
+        Add-Content -Path $script:LogFile -Value "`r`n# index lag: $lagName $lagVer not listed yet; attempt $try/$tries in $delay s" -Encoding UTF8
+        Start-Sleep -Seconds $delay
     }
     if ($code -eq 0) { return $true }
     if ($Soft) {
@@ -1224,6 +1287,11 @@ function Main {
         } else { $gwSpec = $From }
     } elseif ($Pin -eq 'latest') { $gwSpec = "abstractgateway$extraText" }
     else { $gwSpec = "abstractgateway$extraText==$Pin" }
+    # The exact pins this run takes from the package index (Find-IndexLag): the gateway (unless
+    # -From or -Pin latest) and, on a release install, the release matrix. Same as install.sh.
+    $indexPins = @()
+    if (-not $From -and $Pin -ne 'latest') { $indexPins += "abstractgateway==$Pin" }
+    if ($isRelease) { $indexPins += $AfPyMatrix }
     Write-Ok "gateway: $gwSpec  (pin from $pinSource)"
 
     # Disk.
@@ -1415,7 +1483,7 @@ function Main {
             [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-constraints.txt'), ($constraints -join "`n") + "`n")
         }
         $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels)
-        if ($voice.Spec) { $argv += @('--with', $voice.Spec) }
+        if ($voice.Spec) { $argv += @('--with', (Get-VoiceRequirement $voice.Spec $isRelease)) }
         if ($Gguf) { $argv += @('--with', "llama-cpp-python==$ggufPin") }
         elseif ($Full) { $argv += @('--with', 'llama-cpp-python') }
         if ($constraints.Count) { $argv += @('--constraints', 'uv-constraints.txt') }
@@ -1436,7 +1504,7 @@ function Main {
         $desc = if ($Gguf) { "install abstractgateway with the llama.cpp $ggufVariant wheel" } else { 'install abstractgateway' }
         if (-not $script:DryRun) { Push-Location -LiteralPath $DataDir }
         try {
-            return (Invoke-Native -Description $desc -Argv ($argv + @($gwSpec)) -Shown $shownInstall -Soft:$Soft -Live)
+            return (Invoke-Native -Description $desc -Argv ($argv + @($gwSpec)) -Shown $shownInstall -Soft:$Soft -Live -IndexPins $indexPins)
         } finally {
             if (-not $script:DryRun) { Pop-Location }
         }

@@ -3461,7 +3461,33 @@ where it stopped.
 | `the gateway did not answer … within 180 s` | Restart the computer (the login item starts it) or run the installer again, then open `http://127.0.0.1:8080/console`. |
 | The browser page asks for a token | The one-time sign-in link lasts 10 minutes. Run the installer again: it opens a fresh link. |
 | `another AbstractFramework installer is already running` | An installer, or an **Update** from a console or the menu-bar icon, is running for this data directory. Wait until it finishes, then run the line again. |
+| `PyPI hasn't published abstractgateway 0.8.1 to every mirror yet; retrying in 30 s (attempt 3/8)` | Nothing to do: a release published minutes ago has not reached every PyPI mirror yet. The installer waits and runs the same install again (see [Right after a release](#right-after-a-release)). |
+| `PyPI still does not list … after 8 attempts over about 10 minutes` | The package index this computer reads has not caught up after 10 minutes (often a company package mirror set in `UV_INDEX_URL`, `PIP_INDEX_URL` or `uv.toml`). Nothing was left out and the previous install is unchanged. Run the installer again in a few minutes; with a mirror, ask its administrator to refresh the package the message names. |
 | Anything else | Run the installer again. If it stops at the same step, report it with the log file named at the end of the message (`~/Library/Application Support/AbstractGateway/logs/install-….log`). |
+
+### Right after a release
+
+For a few minutes after a release, some of PyPI's mirrors can still serve a package list without
+the new versions. uv then answers `there is no version of abstractgateway==0.8.1` even though the
+release is published. The installer (install.sh and install.ps1; the **Update** action of the
+consoles and the menu-bar icon runs install.sh on macOS and Linux, and gives the install.ps1 line to
+paste on Windows) treats that as a delay:
+
+- it runs the **same** install again, with every part it was asked for (local voice, llama.cpp,
+  PyTorch's CUDA build): a delay never makes it install less;
+- it waits 15 s, 30 s, 60 s, then 120 s between attempts, 8 attempts over about 10 minutes, and
+  says so: `PyPI hasn't published abstractgateway 0.8.1 to every mirror yet; retrying in 30 s
+  (attempt 3/8)`;
+- if the version is still missing after that, it stops with the cause and what to do. uv stops
+  before it changes anything, so the previous install keeps working.
+
+Only this exact case waits: uv exits with code 1, its output starts with uv's resolution failure
+(`No solution found when resolving dependencies`), and it says `there is no version of
+<package>==<version>` for a package at the exact version this release pins (the gateway and the
+release's libraries: AbstractCore, AbstractRuntime, AbstractVoice, ...). The voice requirement
+carries its pinned version for this reason. Every other failure is handled as before: a system
+without the voice or llama.cpp wheels still installs without them and the summary says so. An
+install with `--pin latest` or `--from` pins nothing, so nothing is waited for.
 
 ## Upgrade
 
@@ -3521,7 +3547,8 @@ The line always runs the installer of the latest AbstractFramework release. It:
   so a gateway of this data directory that you started yourself on the install's port is taken for
   the login item and left running (stop it, then re-run the installer, to have the login item's);
 - asks PyPI again for the packages it pins (`uv tool install --refresh-package ...`), so a release
-  published minutes earlier installs without clearing uv's cache;
+  published minutes earlier installs without clearing uv's cache, and waits for PyPI's mirrors when
+  they have not caught up yet ([Right after a release](#right-after-a-release));
 - never leaves the gateway stopped: when the login item cannot be registered, the gateway starts in
   the background and the summary says how to turn start at login on;
 - ends with what changed, old -> new, under **Changes** (`Changes: none` when nothing moved), and
@@ -3734,10 +3761,12 @@ The Mac package, the `.command` files and the one line all run the same script,
    `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.8.1"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
-   `--with "abstractvoice[supertonic,stt]"`: Supertonic text-to-speech and Whisper speech-to-text,
-   both on CPU (skipped on musl Linux and macOS before 13, where no wheels exist; Windows ARM64 gets
-   Supertonic only). If those packages do not install on a system (for example glibc older than
-   2.28), the gateway is installed without them and the summary says so. The same install puts
+   `--with "abstractvoice[supertonic,stt]==0.13.2"` (the release's AbstractVoice): Supertonic
+   text-to-speech and Whisper speech-to-text, both on CPU (skipped on musl Linux and macOS before
+   13, where no wheels exist; Windows ARM64 gets Supertonic only). If those packages do not install
+   on a system (for example glibc older than 2.28), the gateway is installed without them and the
+   summary says so. A release that PyPI has not yet published to every mirror never causes that:
+   see [Right after a release](#right-after-a-release). The same install puts
    AbstractCore's commands and those of its voice, vision and music packages on PATH next to the
    gateway's (`--with-executables-from`; `--no-core-cli` leaves them out): see
    [Commands you get](#commands-you-get).

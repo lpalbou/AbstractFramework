@@ -161,7 +161,7 @@ echo "rc=$rc"
 
 def test_the_gateway_install_and_the_llama_swap_run_live():
     text = SCRIPT.read_text()
-    assert 'RUN_LIVE=1 RUN_SOFT="$_gsoft" run "install abstractgateway' in text
+    assert 'RUN_LIVE=1 RUN_SOFT="$_gsoft" RUN_INDEX_RETRY=1 run "install abstractgateway' in text
     assert "RUN_LIVE=1 RUN_SOFT=1 run \"install llama.cpp's $_lb build\"" in text
 
 

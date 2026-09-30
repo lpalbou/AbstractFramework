@@ -293,6 +293,64 @@ af_no_build_packages() {
     echo "webrtcvad vllm"
     [ "$FULL" = 1 ] || echo "$AF_COMPILED_EXTRAS llama-cpp-python"
 }
+# ---------------------------------------------------------------------------
+# PyPI index lag (root backlog 0987 item 28). Right after a release, some of PyPI's CDN edges
+# (or a mirror/proxy the machine reads) still serve an index page without the new version for a few
+# minutes, even with --refresh-package: the 0.7.1 upgrade on the Linux box got "there is no version
+# of abstractgateway[gpu]==0.8.1" and the voice fallback below then dropped local voice for good.
+# Index lag is never a reason to drop a feature: the SAME install (same extras, same --with) is run
+# again after AF_INDEX_RETRY_DELAYS seconds (about 10 minutes in all), and when the budget runs out
+# the installer stops with the cause instead of installing less.
+#
+# How a failure is classified (typed signals only, no guessing from free text):
+#   - uv's exit code is 1 (uv: 1 = the command failed, e.g. an unsatisfiable resolution; 2 = an error);
+#   - its output carries uv's resolution-failure header "No solution found when resolving dependencies";
+#   - and uv's resolver names a package THIS run pinned exactly (af_index_pins) in its documented
+#     empty-version form "there is no version of <name>[<extras>]==<pinned version>". uv states that
+#     form when the index lists no file for an exact pin; the pinned packages are all pure-Python
+#     wheels, so for them it means "not on the index yet", never "no wheel for this platform".
+# Everything else (a missing platform wheel for voice or llama.cpp, a real conflict, an unpinned or
+# third-party package) keeps the existing handling: the soft fallbacks, or a clear failure.
+# The voice requirement is given with its matrix pin on a release install (af_voice_req): with only the
+# constraint, uv words a missing abstractvoice as "only abstractvoice==<older> is available", which
+# is not the exact-pin form. The output is matched with its lines joined (uv wraps at 80 columns),
+# lower-cased (uv prints normalized names: AbstractRuntime -> abstractruntime), box-drawing and
+# colour codes removed.
+# ---------------------------------------------------------------------------
+AF_INDEX_RETRY_DELAYS="15 30 60 120 120 120 120"
+# af_index_pins: "name==version" for every package this run pins exactly on the index: the gateway
+# (unless --from or --pin latest) and, on a release install, the release matrix.
+af_index_pins() {
+    if [ -z "$FROM" ] && [ "$PIN" != latest ]; then echo "abstractgateway==$PIN"; fi
+    if [ "$IS_RELEASE" = 1 ]; then for _c in $AF_PY_MATRIX; do echo "$_c"; done; fi
+    return 0
+}
+# af_voice_req SPEC: SPEC with abstractvoice's matrix pin on a release install (the constraint already
+# forces that version; the explicit pin makes uv report its absence in the exact-pin form).
+af_voice_req() {
+    _avr="$1"
+    if [ "$IS_RELEASE" = 1 ]; then
+        case "$_avr" in *"=="*) ;; abstractvoice\[*|abstractvoice)
+            for _c in $AF_PY_MATRIX; do case "$_c" in abstractvoice==*) _avr="$_avr==${_c#*==}" ;; esac; done ;;
+        esac
+    fi
+    printf '%s\n' "$_avr"
+}
+re_escape() { printf '%s' "$1" | sed 's/[].[^$*+?(){}|\\/]/\\&/g'; }
+# uv_index_lag LOGFILE FROM_LINE: the "name==version" of the pinned package uv's resolver reported
+# as not on the index, in LOGFILE's lines after FROM_LINE (one uv run); nothing when the failure
+# is anything else. See the block above.
+uv_index_lag() {
+    _ul_esc="$(printf '\033')"
+    _ul_text="$(sed -n "$(($2 + 1)),\$p" "$1" | sed "s/${_ul_esc}\[[0-9;]*m//g; s/│/ /g" | tr -s '[:space:]' ' ' | tr 'A-Z' 'a-z')"
+    case "$_ul_text" in *"no solution found when resolving dependencies"*) ;; *) return 0 ;; esac
+    for _ul_pin in $(af_index_pins); do
+        _ul_n="$(printf '%s' "${_ul_pin%%==*}" | tr 'A-Z' 'a-z')"
+        _ul_re="there is no version of $(re_escape "$_ul_n")(\[[a-z0-9,._-]*\])?==$(re_escape "${_ul_pin#*==}")([^0-9a-z.+!-]|\$)"
+        if printf '%s\n' "$_ul_text" | grep -Eq "$_ul_re"; then printf '%s\n' "$_ul_pin"; return 0; fi
+    done
+    return 0
+}
 
 # ---------------------------------------------------------------------------
 # Options
@@ -474,18 +532,48 @@ run() {
     twin "$_shown"
     _soft="$RUN_SOFT"; RUN_SOFT=0
     _live="$RUN_LIVE"; RUN_LIVE=0
+    _lagck="$RUN_INDEX_RETRY"; RUN_INDEX_RETRY=0
     RUN_RC=0
     [ "$PRINT" = 1 ] && return 0
-    _rc=0
-    if [ "$VERBOSE" = 1 ] || [ -z "$LOG_FILE" ]; then
-        "$@" || _rc=$?
-    elif [ "$_live" = 1 ]; then
-        printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
-        live_exec "$@" || _rc=$?
-    else
-        printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
-        "$@" >>"$LOG_FILE" 2>&1 || _rc=$?
-    fi
+    [ -n "$LOG_FILE" ] || _lagck=0
+    _try=1; _tries=$(($(printf '%s\n' $AF_INDEX_RETRY_DELAYS | wc -l) + 1))
+    while :; do
+        _rc=0
+        _mark=0; [ -z "$LOG_FILE" ] || _mark="$(wc -l <"$LOG_FILE" | tr -d ' ')"
+        if [ "$VERBOSE" = 1 ] && [ "$_lagck" = 1 ]; then
+            # -v shows the output, and the index-lag check still needs it in the log.
+            printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
+            _rcf="$(mktemp "${TMPDIR:-/tmp}/af-rc.XXXXXX")"
+            { _x=0; "$@" 2>&1 || _x=$?; echo "$_x" >"$_rcf"; } | tee -a "$LOG_FILE"
+            _rc="$(cat "$_rcf" 2>/dev/null || echo 1)"; rm -f "$_rcf"
+        elif [ "$VERBOSE" = 1 ] || [ -z "$LOG_FILE" ]; then
+            "$@" || _rc=$?
+        elif [ "$_live" = 1 ]; then
+            printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
+            live_exec "$@" || _rc=$?
+        else
+            printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
+            "$@" >>"$LOG_FILE" 2>&1 || _rc=$?
+        fi
+        [ "$_rc" = 1 ] && [ "$_lagck" = 1 ] || break
+        _lag="$(uv_index_lag "$LOG_FILE" "$_mark")"
+        [ -n "$_lag" ] || break
+        _lagname="${_lag%%==*}"; _lagver="${_lag#*==}"
+        if [ "$_try" -ge "$_tries" ]; then
+            printf '\n# index lag: %s %s still missing after %s attempts; stopping\n' "$_lagname" "$_lagver" "$_try" >>"$LOG_FILE"
+            die "$_desc failed: PyPI still does not list $_lagname $_lagver after $_try attempts over about $(($(printf '%s\n' $AF_INDEX_RETRY_DELAYS | awk '{ s += $1 } END { print int((s + 30) / 60) }'))) minutes (uv: \"there is no version of $_lagname==$_lagver\").
+The release is published, but the package index this computer reads (one of PyPI's mirrors, or a
+package mirror/proxy set in UV_INDEX_URL, PIP_INDEX_URL or uv.toml) has not caught up with it yet.
+Nothing was left out and the previous gateway install is unchanged (uv stops before it installs).
+What to do: run the installer again in a few minutes; it installs everything, local voice included.
+With a package mirror, ask its administrator to refresh $_lagname. Log: $LOG_FILE"
+        fi
+        _delay="$(printf '%s\n' $AF_INDEX_RETRY_DELAYS | sed -n "${_try}p")"
+        _try=$((_try + 1))
+        warn "PyPI hasn't published $_lagname $_lagver to every mirror yet; retrying in $_delay s (attempt $_try/$_tries)"
+        printf '\n# index lag: %s %s not listed yet; attempt %s/%s in %s s\n' "$_lagname" "$_lagver" "$_try" "$_tries" "$_delay" >>"$LOG_FILE"
+        sleep "$_delay"
+    done
     RUN_RC="$_rc"
     [ "$_rc" = 0 ] && return 0
     if [ "$_soft" = 1 ]; then
@@ -514,6 +602,9 @@ same step, report it with the log file: ${LOG_FILE:-the output above} ($AF_DOCS#
 }
 RUN_SOFT=0
 RUN_LIVE=0
+# RUN_INDEX_RETRY=1: a uv install whose failure is PyPI index lag for a pinned package is run again
+# (see uv_index_lag); only after AF_INDEX_RETRY_DELAYS runs out does it fail, even with RUN_SOFT=1.
+RUN_INDEX_RETRY=0
 # live_exec CMD...: runs CMD with its output appended to the log, shows uv's progress lines as they
 # come ("    | Downloading torch (1.9GiB)"; package lists " + name==version" stay in the log), and
 # prints "... still working (Nm SSs elapsed; last: <line>)" after AF_HEARTBEAT seconds of silence,
@@ -2010,7 +2101,7 @@ install_gateway() {
         af_uv_constraints "$_gguf" >"$DATA_DIR/uv-constraints.txt"
     fi
     set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS"
-    [ -n "$VOICE_SPEC" ] && set -- "$@" --with "$VOICE_SPEC"
+    [ -n "$VOICE_SPEC" ] && set -- "$@" --with "$(af_voice_req "$VOICE_SPEC")"
     if [ "$_gguf" = 1 ]; then set -- "$@" --with "llama-cpp-python==$GGUF_PIN"
     elif [ "$FULL" = 1 ]; then set -- "$@" --with llama-cpp-python; fi
     [ -n "$(af_uv_constraints "$_gguf")" ] && set -- "$@" --constraints uv-constraints.txt
@@ -2028,7 +2119,7 @@ install_gateway() {
     _cwd="$(pwd)"
     RUN_SHOW="cd $(q "$DATA_DIR") && $(show_cmd "$@" "$GW_SPEC")"
     [ "$PRINT" = 1 ] || cd "$DATA_DIR"
-    RUN_LIVE=1 RUN_SOFT="$_gsoft" run "install abstractgateway$([ "$_gguf" = 1 ] && echo " with the llama.cpp $GGUF_KIND wheel")" "$@" "$GW_SPEC"
+    RUN_LIVE=1 RUN_SOFT="$_gsoft" RUN_INDEX_RETRY=1 run "install abstractgateway$([ "$_gguf" = 1 ] && echo " with the llama.cpp $GGUF_KIND wheel")" "$@" "$GW_SPEC"
     [ "$PRINT" = 1 ] || cd "$_cwd" 2>/dev/null || cd "$HOME"
     return "$RUN_RC"
 }

@@ -151,6 +151,19 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
     (`engine_missing`) in every grid, but does not rewrite a stored route. Decide whether
     `upgrade_recommended_seed` should replace a SEEDED (never operator-edited) route whose engine
     is missing. Owner: abstractcore config.
+28. PyPI index lag right after a release dropped local voice (0.7.1 upgrade, Linux box, 2026-09-30:
+    uv "there is no version of abstractgateway[gpu]==0.8.1" despite `--refresh-package`; the
+    voice fallback then installed without voice; a rerun was clean). Operator: "the upgrade should
+    never fail; if there is a lag or delay, it should auto retry." Fixed on branch
+    `fix/installer-retry` (planned 0.7.2): install.sh `run` with `RUN_INDEX_RETRY=1` /
+    install.ps1 `Invoke-Native -IndexPins` classify lag from uv exit 1 + "No solution found when
+    resolving dependencies" + "there is no version of <pinned name>[extras]==<pinned version>"
+    for the installer's own exact pins, rerun the same install (15/30/60/120 s, 8 attempts,
+    ~10 min), then fail with cause; the voice requirement carries its matrix pin. Tests:
+    `tests/test_install_index_lag.py` (sh, dash, pwsh), mutation-checked
+    (`untracked/retry-gate/mutate.py` in the branch worktree). Open: the terminal console and
+    AbstractCode crates (`cargo install ...@=<pin>`) and the npm apps have no such wait for their
+    own registries' lag. Owner: framework (root installers).
 
 ## Acceptance criteria
 

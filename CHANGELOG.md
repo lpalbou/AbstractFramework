@@ -4,6 +4,25 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+Planned as the 0.7.2 patch release (installers only; no package pin changes).
+
+### Fixed
+
+- **An upgrade right after a release no longer installs less.** When one of PyPI's mirrors had not
+  yet listed a version the release pins, uv answered `there is no version of
+  abstractgateway[gpu]==0.8.1`, and the installer took that for a system without the voice
+  wheels: the 0.7.1 upgrade of a Linux machine went through without local voice (a second run was
+  clean). install.sh and install.ps1 (and so the consoles' **Update** action, which runs install.sh) now recognise that
+  case from uv's exit code 1, its resolution failure, and its exact-pin wording for a package the
+  installer itself pinned, and run the same install again, with every feature, after 15 s, 30 s,
+  60 s and 120 s waits (8 attempts, about 10 minutes), printing `PyPI hasn't published
+  abstractgateway 0.8.1 to every mirror yet; retrying in 30 s (attempt 3/8)`. After that they stop
+  with the cause and what to do, never with a smaller install. The fallbacks for systems without
+  the voice or llama.cpp wheels are unchanged. The voice requirement now carries the release's
+  AbstractVoice version (`abstractvoice[supertonic,stt]==0.13.2`), which the release matrix already
+  enforced, so uv names a missing AbstractVoice in the same exact-pin form. See
+  [Right after a release](docs/install.md#right-after-a-release).
+
 ## [0.7.1] - 2026-09-30
 
 A patch release. Pins: AbstractCore 2.20.2, AbstractRuntime 0.8.1 and AbstractGateway 0.8.1; every

@@ -400,6 +400,13 @@ def _release_matrix() -> list[str]:
             if p["id"] not in ("abstractgateway", "abstractassistant")]
 
 
+def _voice_req() -> str:
+    """The voice requirement a release install passes to uv: abstractvoice's extras with its matrix pin
+    (uv then names a missing abstractvoice in its exact-pin form; tests/test_install_index_lag.py)."""
+    pin = next(c.split("==", 1)[1] for c in _release_matrix() if c.startswith("abstractvoice=="))
+    return f"abstractvoice[supertonic,stt]=={pin}"
+
+
 def _fake_bin(tmp_path: Path, *, compiler: bool, machine: str | None = None) -> Path:
     """xcode-select/cc stubs (`compiler=False` simulates a Mac without Xcode CLT) and an
     optional `uname -m` override to simulate another CPU."""
@@ -475,7 +482,7 @@ def test_install_sh_default_takes_llama_cpp_from_the_prebuilt_wheel(tmp_path: Pa
     # Support"), so the install runs from the data dir with relative file names
     assert install.lstrip().startswith("$ cd ")
     assert (
-        f"--with 'webrtcvad-wheels>=2.0.14' --with 'abstractvoice[supertonic,stt]' --with llama-cpp-python=={pin} --constraints uv-constraints.txt "
+        f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --with llama-cpp-python=={pin} --constraints uv-constraints.txt "
         f"--find-links {_LLAMA}/{kind}/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
     assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
@@ -497,7 +504,7 @@ def test_install_sh_skips_gguf_where_no_wheel_exists(tmp_path: Path) -> None:
     assert "--find-links" not in install
     # No llama.cpp pin: the constraints are the release matrix alone.
     assert _printed_block(out, "uv-constraints.txt:") == _release_matrix()
-    assert "--with 'webrtcvad-wheels>=2.0.14' --with 'abstractvoice[supertonic,stt]' --constraints uv-constraints.txt --overrides uv-overrides.txt " in install
+    assert f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --constraints uv-constraints.txt --overrides uv-overrides.txt " in install
     assert "GGUF:       skipped (no prebuilt wheel for " in out
 
 
@@ -983,7 +990,7 @@ def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_pa
     assert _printed_block(out, "uv-constraints.txt:") == [*_release_matrix(), "llama-cpp-python==0.3.35"]
     install = _install_line(out)
     assert (
-        "--with 'webrtcvad-wheels>=2.0.14' --with 'abstractvoice[supertonic,stt]' --with llama-cpp-python==0.3.35 --constraints uv-constraints.txt "
+        f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --with llama-cpp-python==0.3.35 --constraints uv-constraints.txt "
         f"--find-links {_LLAMA}/vulkan/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
     assert " ".join(f"--no-build-package {p}" for p in _PS1_NO_BUILD) in install
@@ -1100,7 +1107,7 @@ def test_install_sh_installs_local_voice_on_every_profile(tmp_path: Path) -> Non
         sub.mkdir()
         proc = _install_sh_print(sub, "--no-tray", "--no-console", profile=profile, compiler=True)
         assert proc.returncode == 0, proc.stderr
-        assert "--with 'abstractvoice[supertonic,stt]' " in _install_line(proc.stdout)
+        assert f"--with '{_voice_req()}' " in _install_line(proc.stdout)
         assert "Voice:      Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU" in proc.stdout
 
 
@@ -1108,7 +1115,7 @@ def test_install_ps1_installs_local_voice_supertonic_only_on_arm64() -> None:
     ps1 = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
     assert "$AfWithVoice = 'abstractvoice[supertonic,stt]'" in ps1
     assert "$AfWithVoiceArm64 = 'abstractvoice[supertonic]'" in ps1
-    assert "if ($voice.Spec) { $argv += @('--with', $voice.Spec) }" in ps1
+    assert "if ($voice.Spec) { $argv += @('--with', (Get-VoiceRequirement $voice.Spec $isRelease)) }" in ps1
     # Voice never fails an install: one retry without it, then the normal install.
     assert "function Install-GatewayVoice" in ps1
     assert "Install-Gateway $Gguf -Soft) { $voice.Result = $voice.Ok; return $true }" in ps1
