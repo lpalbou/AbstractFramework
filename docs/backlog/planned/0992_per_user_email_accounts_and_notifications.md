@@ -567,3 +567,19 @@ plan decides the final numbers.
 - Core follow-up: `fetch_new` returns a UID-0 cursor after a UIDVALIDITY rebuild with no new mail
   (the runtime feeder re-baselines; fix at the source in core).
 - Limit: the durable event inbox is never pruned (retention setting to add).
+
+### Operator decisions (2026-09-30, night)
+
+- **Attachments:** agents can send email with attachments (a report, a screenshot of their work),
+  limited to files in the run's workspace.
+- **Capability model:** the admin decides which capabilities are AVAILABLE to users (gateway-wide
+  and per user); a user can then turn on, on their own runtime, only what the admin made available.
+  Agent email tools are off by default for every user; a user can switch them on only if the admin
+  lists them as available, the account is configured and enabled.
+- **Email-triggered automations act only within the user's mission/contract.** Inbound mail is
+  data, never instructions: the agent never follows links from an email and never acts beyond what
+  the automation's mission asks. `fetch_url` / `browser_probe` stay withheld for email-triggered
+  automations even under "allow all tools"; only an explicit, user-named tool in the automation's
+  definition grants them.
+- **Consoles:** a clean per-user email setup in the gateway web and terminal consoles for every
+  user, the admin (first user) included, and in core's consoles for core-only use.
