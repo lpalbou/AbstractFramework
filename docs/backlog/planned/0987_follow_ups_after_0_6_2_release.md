@@ -89,7 +89,9 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
     `run/gateway-serve.json`, its `--data-dir`, Linux `/proc/<pid>/environ`) is this install's
     gateway: the port is kept and the installer's start replaces it; one on another port is stopped
     too; `--no-start` leaves it running. Tests: `test_install_user_path.sh` [21] (sh + dash),
-    `tests/test_install_ps1_own_gateway.py`; mutation-checked; validated on the OVH GPU VM.
+    `tests/test_install_ps1_own_gateway.py`; mutation-checked. Validated on Linux only (the OVH GPU
+    VM, `install.sh`); `install.ps1` has function-level tests and a CI re-run step on Windows, no
+    real Windows validation of a hand-started gateway.
 21. Gateway image requests reload the model in a subprocess on every request: 54-59 s per image
     through the gateway (`29-gateway-image-unloaded-{1,2}.json`: 54.3 s, 59.0 s) against 16 s per
     image in one process (`30-direct-flux-klein.log`: load 40.6 s once, then 16.4 s and 15.4 s),

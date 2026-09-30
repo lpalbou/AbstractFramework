@@ -26,7 +26,10 @@ SH = ROOT / "scripts" / "install.sh"
 
 needs_pwsh = pytest.mark.skipif(shutil.which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
 
-REAL = ["Read-ServeRecord", "Test-CommandLineDataDir", "Find-OwnGateway", "Resolve-DirPath", "Get-RefreshPackages"]
+REAL = ["Read-ServeRecord", "Test-CommandLineDataDir", "Get-DeclaredDataDir", "Test-OwnGatewayPid", "Find-OwnGateway",
+        "Test-OurBackgroundListener", "Test-RecordNamesThisGateway", "Resolve-DirPath", "Get-RefreshPackages"]
+STARTED = "2026-09-30T10:00:00Z"          # when the fake process started (UTC)
+WRITTEN = "2026-09-30T10:00:05.123456Z"   # the serve record's started_at, as the gateway writes it
 
 
 def _pwsh(body: str, tmp_path: Path) -> str:
@@ -53,19 +56,21 @@ def _ps(value: str) -> str:
 
 
 def _find(tmp_path: Path, *, listener: int, cmdline: str, alive: bool = True, health: bool = True,
-          record: dict | None = None, port: int = 8080) -> int:
+          record: dict | None = None, port: int = 8080, started: str = STARTED, in_parent: bool = False) -> int:
     data = tmp_path / "App Data" / "AbstractGateway"
     (data / "run").mkdir(parents=True, exist_ok=True)
     rec = data / "run" / "gateway-serve.json"
     if record is not None:
-        rec.write_text(json.dumps({k: (str(data) if v == "SELF" else v) for k, v in record.items()}), encoding="utf-8")
+        rec.write_text(json.dumps({"started_at": WRITTEN, **{k: (str(data) if v == "SELF" else v) for k, v in record.items()}}), encoding="utf-8")
     elif rec.exists():
         rec.unlink()
     body = f"""
 function Get-PortListenerPid([int]$Port) {{ return {listener} }}
 function Get-ProcessCommandLine([int]$ProcessId) {{ return {_ps(cmdline.replace('DATA', str(data)))} }}
 function Test-ProcessAlive([int]$ProcessId) {{ return ${'true' if alive else 'false'} }}
+function Get-ProcessStartUtc([int]$ProcessId) {{ return [DateTime]::Parse('{started}', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal) }}
 function Get-Http([string]$Url) {{ if (${'true' if health else 'false'} -and $Url -eq 'http://127.0.0.1:{port}/api/health') {{ return '{{"status": "healthy", "service": "abstractgateway"}}' }}; return $null }}
+{'Set-Location ' + _ps(str(data.parent)) if in_parent else ''}
 Find-OwnGateway {port} {_ps(str(data))}
 """
     return int(_pwsh(body, tmp_path).splitlines()[-1])
@@ -138,8 +143,8 @@ def test_install_ps1_wires_the_own_gateway_check_and_the_refresh() -> None:
     # recognised before the -NoStart hold, the explicit-port refusal and the move to the next port
     order = [port.index(s) for s in ("if ($ours)", "Find-OwnGateway $Port $DataDir", "elseif ($NoStart", "elseif ($explicitPort)", "using $p (kept for future runs)")]
     assert order == sorted(order)
-    # the gateway.pid process counts only when it is the listener
-    assert "(-not $listener -or $listener -eq $ourPid)" in port
+    # the gateway.pid process counts only when it (or its child: uv's launcher runs python.exe) is the listener
+    assert "Test-OurBackgroundListener $listener ([int]$ourPid)" in port
     # the hand-started gateway is among the gateways stopped before the installer's start
     running = ps1[ps1.index("function Get-RunningGatewayPids"):ps1.index("function Stop-RunningGateway")]
     assert "$script:HandGatewayPid" in running
@@ -163,3 +168,48 @@ def test_install_ps1_print_refreshes_the_pins_and_starts_with_launch_flags(tmp_p
     assert "-ArgumentList 'serve --host 127.0.0.1 --port 18999 --data-dir " in start
     assert "ABSTRACTGATEWAY_" not in start
     assert not (tmp_path / "lad").exists(), "-Print must not write anything"
+
+
+@needs_pwsh
+def test_the_gate_repros_are_foreign(tmp_path: Path) -> None:
+    rec = {"pid": 4242, "port": 8080, "data_dir": "SELF"}
+    # a gateway whose own --data-dir is another one, although the record here names it
+    assert _find(tmp_path, listener=4242, cmdline=GW + ' --data-dir "/elsewhere/gw"', record=rec) == 0
+    # a relative --data-dir this installer cannot resolve (no working directory of another process on Windows)
+    assert _find(tmp_path, listener=4242, cmdline=GW + " --data-dir AbstractGateway", record=rec) == 0
+    # ... even when the installer itself runs in the folder that would make it this data dir
+    assert _find(tmp_path, listener=4242, cmdline=GW + " --data-dir AbstractGateway", record=rec, in_parent=True) == 0
+    # a stale record: the process started after the record was written (a reused pid)
+    assert _find(tmp_path, listener=4242, cmdline=GW, record=rec, started="2026-09-30T11:00:00Z") == 0
+    # a program that mentions abstractgateway but does not run `abstractgateway serve`
+    assert _find(tmp_path, listener=4242, cmdline=r"tail -f C:\x\abstractgateway-logs\x", record=rec) == 0
+    # the listener named, but /api/health there is not a gateway's
+    assert _find(tmp_path, listener=4242, cmdline=GW, record=rec, health=False) == 0
+
+
+@needs_pwsh
+def test_the_installers_background_gateway_is_its_launcher_or_the_launchers_child(tmp_path: Path) -> None:
+    # uv's abstractgateway.exe (gateway.pid = 100) runs python.exe (pid 101), the listener.
+    body = """
+function Get-ParentProcessId([int]$ProcessId) { if ($ProcessId -eq 101) { return 100 }; return 1 }
+@((Test-OurBackgroundListener 101 100), (Test-OurBackgroundListener 100 100), (Test-OurBackgroundListener 0 100),
+  (Test-OurBackgroundListener 555 100), (Test-OurBackgroundListener 101 0)) -join ' '
+"""
+    assert _pwsh(body, tmp_path).splitlines()[-1] == "True True True False False"
+
+
+@needs_pwsh
+def test_a_stale_record_never_adds_a_reused_pid_to_the_gateways_stopped(tmp_path: Path) -> None:
+    data = tmp_path / "gw"
+    def names(cmd: str, started: str) -> str:
+        body = f"""
+function Test-ProcessAlive([int]$ProcessId) {{ return $true }}
+function Get-ProcessCommandLine([int]$ProcessId) {{ return {_ps(cmd)} }}
+function Get-ProcessStartUtc([int]$ProcessId) {{ return [DateTime]::Parse('{started}', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal) }}
+Test-RecordNamesThisGateway ([pscustomobject]@{{ pid = 4242; port = 8080; data_dir = {_ps(str(data))}; started_at = '{WRITTEN}' }}) {_ps(str(data))}
+"""
+        return _pwsh(body, tmp_path).splitlines()[-1]
+    assert names(GW, STARTED) == "True"
+    assert names(GW, "2026-09-30T11:00:00Z") == "False"
+    assert names(r"tail -f C:\x\abstractgateway-logs\x", STARTED) == "False"
+    assert names(GW + ' --data-dir "/elsewhere/gw"', STARTED) == "False"

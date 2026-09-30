@@ -16,7 +16,9 @@ Installer fixes. Every package version is unchanged from 0.6.3.
   (`<data dir>/run/gateway-serve.json`) or its `--data-dir` says. `install.sh` and `install.ps1` now
   keep that port and replace the gateway with their own start, instead of moving to the next port
   and starting a second gateway on the same data. A gateway of this install started by hand on
-  another port is stopped too. With `--no-start` (`-NoStart`, the console's Update) it keeps
+  another port is stopped too. The replacement starts the way the installer starts every gateway, so
+  it binds as the gateway's Network setting says (for example 127.0.0.1), not with the `--host` the
+  hand-started one was given. With `--no-start` (`-NoStart`, the console's Update) it keeps
   running and the summary says a restart is due. A program that is not this install's gateway
   keeps the port, as before.
 - **A release published minutes earlier installs at once.** The installers pass
@@ -26,10 +28,13 @@ Installer fixes. Every package version is unchanged from 0.6.3.
 
 ### Changed
 
-- **Launch flags, not environment variables.** The summary's Start line and the background start
-  use `abstractgateway serve --data-dir <data dir>` (plus `--host`/`--port` when the gateway has
-  no Network setting) instead of `ABSTRACTGATEWAY_DATA_DIR=... ABSTRACTGATEWAY_USER_AUTH=1`; the
-  gateway starts with user auth on by itself. Gateways before 0.3 (`--pin`) keep the environment.
+- **Launch flags in the commands the installers print.** The summary's Start line and the
+  background start's command (the "same steps by hand" list) read
+  `abstractgateway serve --data-dir <data dir>` (plus `--host`/`--port` when the gateway has no
+  Network setting) instead of `ABSTRACTGATEWAY_DATA_DIR=... ABSTRACTGATEWAY_USER_AUTH=1 ...`; the
+  gateway starts with user auth on by itself. The installers themselves still pass the data dir to
+  the gateway commands they run (`network`, `service install`, `claim-url`) through
+  `ABSTRACTGATEWAY_DATA_DIR`. Gateways before 0.3 (`--pin`) keep the environment form.
 
 ## [0.6.3] - 2026-09-29
 

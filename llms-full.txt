@@ -577,7 +577,7 @@ Notes for LLMs working in this repo:
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
 - abstractframework 0.6.4 pins (PyPI, `==`): abstractgateway 0.7.4, abstractassistant 0.9.1, abstractcore 2.19.2, AbstractRuntime 0.7.3, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.13.2, abstractvision 0.3.33, abstractmusic 0.1.15, abstract3d 0.3.2.
-- Released with it: npm `@abstractframework/flow` 0.4.0, `code` 0.6.1, `observer` 0.2.1, `continuum` 0.4.0, `entity` 0.3.0 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.11.2 (built by the installer by default), `abstractcore-console` 0.4.1, `abstractcode` 0.7.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.7.4`, `ghcr.io/lpalbou/abstractcore-server:2.19.2`.
+- Released with it: npm `@abstractframework/flow` 0.4.0, `code` 0.6.2, `observer` 0.2.1, `continuum` 0.4.0, `entity` 0.3.0 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.11.2 (built by the installer by default), `abstractcore-console` 0.4.1, `abstractcode` 0.7.1, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.7.4`, `ghcr.io/lpalbou/abstractcore-server:2.19.2`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
@@ -5645,7 +5645,9 @@ for later runs, and prints the console URL. Choose one with `--port N` (`-Port N
 A gateway of this install that you started yourself (for example with `abstractgateway serve
 --data-dir <data dir>`) is not "something else": the installer recognizes it (it serves the same
 data directory, from its serve record `<data dir>/run/gateway-serve.json` or its `--data-dir`), keeps
-its port and replaces it with its own start, so one gateway serves your data. With `--no-start`
+its port and replaces it with its own start, so one gateway serves your data. The replacement binds
+as the gateway's Network setting says (`abstractgateway network status`), so a gateway you started
+with `--host 0.0.0.0` comes back on the Network setting's address. With `--no-start`
 (`-NoStart`) it leaves that gateway running and says a restart is due.
 
 ### Will it ask for my password or admin rights?
@@ -6039,7 +6041,7 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.4.0, `@abstractframework/code` 0.6.1,
+`@abstractframework/flow` 0.4.0, `@abstractframework/code` 0.6.2,
 `@abstractframework/observer` 0.2.1, `@abstractframework/continuum` 0.4.0 and
 `@abstractframework/entity` 0.3.0. They also appear as `npm_apps` in the install manifest.
 

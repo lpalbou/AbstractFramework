@@ -188,11 +188,14 @@ function Get-RefreshPackages {
 # This install's gateway, whoever started it (root backlog 0987 item 20; same rule as install.sh).
 # A gateway started by hand has no gateway.pid and is not the login item, yet it serves this
 # install's data dir: a re-run must replace it on the same port, never move to the next port and
-# start a second gateway on the same data. Only typed signals decide: the pid listening on the port
-# (Get-NetTCPConnection); that process runs abstractgateway (its command line); it serves THIS data
-# dir (the serve record <data dir>\run\gateway-serve.json names its pid and data dir, or its command
-# line passes --data-dir <this data dir>). When the listener cannot be named, the serve record decides
-# alone: its pid runs abstractgateway, it names this port, and /api/health there is a gateway's.
+# start a second gateway on the same data. Only typed signals decide, and all must agree: the pid
+# listening on the port (Get-NetTCPConnection) and /api/health there is a gateway's; that process runs
+# `abstractgateway serve` (its command line); it serves THIS data dir. A --data-dir on its command
+# line decides alone (another data dir, or a relative one this installer cannot resolve, makes it
+# foreign whatever the serve record says); without one, the serve record <data dir>\run\gateway-serve.json
+# must name its pid and this data dir, and the process must have started before the record was
+# written (a reused pid started later). When the listener cannot be named, the serve record must name
+# this port too.
 # ---------------------------------------------------------------------------
 function Read-ServeRecord([string]$DataDir) {
     $rec = Join-Path $DataDir 'run\gateway-serve.json'
@@ -210,30 +213,73 @@ function Get-ProcessCommandLine([int]$ProcessId) {
     try { return [string](Get-CimInstance Win32_Process -Filter "ProcessId=$ProcessId" -ErrorAction Stop).CommandLine } catch { }
     try { return [string](Get-Process -Id $ProcessId -ErrorAction Stop).CommandLine } catch { return '' }
 }
-function Test-ProcessAlive([int]$ProcessId) { return [bool]($ProcessId -and (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)) }
-# Test-CommandLineDataDir: the command line passes --data-dir <DataDir> (quoted or not, or --data-dir=).
-function Test-CommandLineDataDir([string]$CommandLine, [string]$DataDir) {
-    $line = " $CommandLine "
-    foreach ($d in @($DataDir, (Resolve-DirPath $DataDir))) {
-        foreach ($form in @(" --data-dir $d ", " --data-dir `"$d`" ", " --data-dir=$d ", " `"--data-dir=$d`" ")) {
-            if ($line.IndexOf($form, [StringComparison]::OrdinalIgnoreCase) -ge 0) { return $true }
-        }
-    }
-    return $false
+# The parent of a process: uv's abstractgateway.exe is a launcher whose child python.exe is the listener.
+function Get-ParentProcessId([int]$ProcessId) {
+    try { return [int](Get-CimInstance Win32_Process -Filter "ProcessId=$ProcessId" -ErrorAction Stop).ParentProcessId } catch { return 0 }
 }
-# Find-OwnGateway: the pid of the gateway listening on $Port when it serves $DataDir, else 0.
+function Get-ProcessStartUtc([int]$ProcessId) {
+    try { return (Get-Process -Id $ProcessId -ErrorAction Stop).StartTime.ToUniversalTime() } catch { return $null }
+}
+function Test-ProcessAlive([int]$ProcessId) { return [bool]($ProcessId -and (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)) }
+# Test-OurBackgroundListener: the listener is the installer's background gateway (gateway.pid), or
+# its child (the launcher's python.exe). No listener named: the gateway.pid process counts.
+function Test-OurBackgroundListener([int]$Listener, [int]$OurPid) {
+    if (-not $OurPid) { return $false }
+    if (-not $Listener -or $Listener -eq $OurPid) { return $true }
+    return ((Get-ParentProcessId $Listener) -eq $OurPid)
+}
+# Get-DeclaredDataDir: the --data-dir on a command line (quoted or not, or --data-dir=), '' when none.
+function Get-DeclaredDataDir([string]$CommandLine) {
+    $q = [regex]::Match(" $CommandLine", '\s"--data-dir=([^"]*)"')
+    if ($q.Success) { return $q.Groups[1].Value }
+    $m = [regex]::Match(" $CommandLine", '\s--data-dir(?:=|\s+)(?:"([^"]*)"|([^\s"]+))')
+    if (-not $m.Success) { return '' }
+    if ($m.Groups[1].Success) { return $m.Groups[1].Value }
+    return $m.Groups[2].Value
+}
+function Test-CommandLineDataDir([string]$CommandLine, [string]$DataDir) {
+    $d = Get-DeclaredDataDir $CommandLine
+    if (-not $d -or -not [IO.Path]::IsPathRooted($d)) { return $false }
+    # Windows: \foo is relative to the current drive of that process, which this installer cannot know.
+    if ((($PSVersionTable.PSEdition -eq 'Desktop') -or $IsWindows) -and $d -notmatch '^([A-Za-z]:[\\/]|\\\\)') { return $false }
+    return ((Resolve-DirPath $d) -eq (Resolve-DirPath $DataDir))
+}
+# Test-OwnGatewayPid: process $GwPid, listening on $Port, is this install's gateway.
+function Test-OwnGatewayPid([int]$GwPid, [int]$Port, [string]$DataDir, $Record, [bool]$ListenerKnown) {
+    if (-not $GwPid -or -not (Test-ProcessAlive $GwPid)) { return $false }
+    if (-not ((Get-Http "http://127.0.0.1:$Port/api/health") -match 'abstractgateway')) { return $false }
+    $cmd = Get-ProcessCommandLine $GwPid
+    if ($cmd -notmatch '(?i)abstractgateway' -or $cmd -notmatch '(?i)(^|[\s"])serve(\s|"|$)') { return $false }
+    if (Get-DeclaredDataDir $cmd) { return (Test-CommandLineDataDir $cmd $DataDir) }
+    if (-not $Record -or "$($Record.pid)" -ne "$GwPid" -or -not $Record.data_dir) { return $false }
+    if (-not $ListenerKnown -and "$($Record.port)" -ne "$Port") { return $false }
+    if ((Resolve-DirPath ([string]$Record.data_dir)) -ne (Resolve-DirPath $DataDir)) { return $false }
+    $started = Get-ProcessStartUtc $GwPid
+    try { $written = [DateTime]::Parse([string]$Record.started_at, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal -bor [Globalization.DateTimeStyles]::AssumeUniversal) } catch { $written = $null }
+    if ($null -eq $started -or $null -eq $written) { return $false }
+    return ($started -le $written.AddSeconds(2))
+}
+# Test-RecordNamesThisGateway: the serve record's pid is still the gateway that wrote it: a live
+# `abstractgateway serve` process that started before the record was written and declares no other
+# data dir (a stale record may name a reused pid).
+function Test-RecordNamesThisGateway($Record, [string]$DataDir) {
+    if (-not $Record -or -not $Record.pid) { return $false }
+    $rp = [int]$Record.pid
+    if (-not (Test-ProcessAlive $rp)) { return $false }
+    $cmd = Get-ProcessCommandLine $rp
+    if ($cmd -notmatch '(?i)abstractgateway' -or $cmd -notmatch '(?i)(^|[\s"])serve(\s|"|$)') { return $false }
+    if ((Get-DeclaredDataDir $cmd) -and -not (Test-CommandLineDataDir $cmd $DataDir)) { return $false }
+    $started = Get-ProcessStartUtc $rp
+    try { $written = [DateTime]::Parse([string]$Record.started_at, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal -bor [Globalization.DateTimeStyles]::AssumeUniversal) } catch { $written = $null }
+    return ($null -ne $started -and $null -ne $written -and $started -le $written.AddSeconds(2))
+}
+# Find-OwnGateway: the pid of the gateway listening on $Port when it is this install's, else 0.
 function Find-OwnGateway([int]$Port, [string]$DataDir) {
     $record = Read-ServeRecord $DataDir
     $gwPid = Get-PortListenerPid $Port
-    if (-not $gwPid) {
-        if (-not $record -or "$($record.port)" -ne "$Port" -or -not ((Get-Http "http://127.0.0.1:$Port/api/health") -match 'abstractgateway')) { return 0 }
-        $gwPid = [int]$record.pid
-    }
-    if (-not (Test-ProcessAlive $gwPid)) { return 0 }
-    $cmd = Get-ProcessCommandLine $gwPid
-    if ($cmd -notmatch 'abstractgateway') { return 0 }
-    if ($record -and "$($record.pid)" -eq "$gwPid" -and (-not $record.data_dir -or (Resolve-DirPath ([string]$record.data_dir)) -eq (Resolve-DirPath $DataDir))) { return $gwPid }
-    if (Test-CommandLineDataDir $cmd $DataDir) { return $gwPid }
+    $known = [bool]$gwPid
+    if (-not $known) { if ($record) { $gwPid = [int]$record.pid } else { return 0 } }
+    if (Test-OwnGatewayPid $gwPid $Port $DataDir $record $known) { return $gwPid }
     return 0
 }
 
@@ -840,17 +886,17 @@ function Main {
         if (Test-Path -LiteralPath $rec) {
             $rp = 0
             try { $rp = [int]((Get-Content -LiteralPath $rec -Raw | ConvertFrom-Json).pid) } catch { $rp = 0 }
-            if ($rp -and ($pids -notcontains $rp) -and (Get-Process -Id $rp -ErrorAction SilentlyContinue)) {
-                $cmd = ''
-                try { $cmd = [string](Get-CimInstance Win32_Process -Filter "ProcessId=$rp" -ErrorAction Stop).CommandLine } catch { $cmd = '' }
-                if ($cmd -match 'abstractgateway') { $pids += $rp }
-            }
+            if ($rp -and ($pids -notcontains $rp) -and (Test-RecordNamesThisGateway (Read-ServeRecord $DataDir) $DataDir)) { $pids += $rp }
         }
         return $pids
     }
     function Stop-RunningGateway {
         foreach ($p in @(Get-RunningGatewayPids)) {
-            if ($p -eq $script:HandGatewayPid) { Write-Info "stopping this install's gateway started by hand (pid $p); the installer's own start replaces it on port $Port" }
+            if ($p -eq $script:HandGatewayPid) {
+                # Checked again right before the signal: a process that is no longer that gateway is left alone.
+                if (-not $script:DryRun -and (Find-OwnGateway $Port $DataDir) -ne $p) { Write-Info "pid $p is no longer this install's gateway on port ${Port}: left alone"; $script:HandGatewayPid = 0; continue }
+                Write-Info "stopping this install's gateway started by hand (pid $p); the installer's own start replaces it on port $Port"
+            }
             Write-Host "  `$ Stop-Process -Id $p" -ForegroundColor DarkGray
             $script:Twins.Add("Stop-Process -Id $p")
             if (-not $script:DryRun) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }
@@ -1162,7 +1208,7 @@ function Main {
         # (when the listener can be named): a reused pid in gateway.pid is not the gateway.
         $listener = Get-PortListenerPid $Port
         $ourPid = Get-OurPid
-        $ours = ("$Port" -eq $state['PORT']) -and ((($ourPid) -and (-not $listener -or $listener -eq $ourPid)) -or ($state['MODE'] -eq 'service' -and ((Get-Http "http://127.0.0.1:$Port/api/health") -match 'abstractgateway')))
+        $ours = ("$Port" -eq $state['PORT']) -and ((Test-OurBackgroundListener $listener ([int]$ourPid)) -or ($state['MODE'] -eq 'service' -and ((Get-Http "http://127.0.0.1:$Port/api/health") -match 'abstractgateway')))
         if ($ours) { $reuseRunning = $true; Write-Ok "port ${Port}: this install's gateway is already running (restarted if the package changes)" }
         elseif (($script:HandGatewayPid = Find-OwnGateway $Port $DataDir)) {
             if ($NoStart) { Write-Info "port ${Port}: this install's gateway runs there, started by hand (pid $($script:HandGatewayPid), data dir $DataDir); kept (-NoStart restarts nothing)" }

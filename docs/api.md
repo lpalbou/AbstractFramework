@@ -72,7 +72,7 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.4.0, `@abstractframework/code` 0.6.1,
+`@abstractframework/flow` 0.4.0, `@abstractframework/code` 0.6.2,
 `@abstractframework/observer` 0.2.1, `@abstractframework/continuum` 0.4.0 and
 `@abstractframework/entity` 0.3.0. They also appear as `npm_apps` in the install manifest.
 

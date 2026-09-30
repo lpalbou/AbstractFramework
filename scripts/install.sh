@@ -913,85 +913,143 @@ stop_background_gateway() {
 # This install's gateway, whoever started it (root backlog 0987 item 20). A gateway started by
 # hand (for example with the summary's Start line) has no gateway.pid and is not the login item,
 # yet it serves this install's data dir: a re-run must replace it on the same port, never move to
-# the next port and start a second gateway on the same data. Only typed signals decide:
-#   - the pid listening on the port (lsof, else ss; both report this user's own processes);
-#   - that process belongs to this user and runs the abstractgateway command;
-#   - it serves THIS data dir: the serve record every gateway writes at start,
-#     <data dir>/run/gateway-serve.json, names its pid (and the data dir it resolved), or its
-#     command line passes --data-dir <this data dir>, or (Linux) its environment sets
-#     ABSTRACTGATEWAY_DATA_DIR to it.
-# When neither lsof nor ss can name the listener, the serve record decides alone: its pid is a live
-# abstractgateway process of this user, it names this port, and /api/health there is a gateway's.
-# Anything else on the port (another program, or a gateway of another data dir) is foreign.
+# the next port and start a second gateway on the same data. Only typed signals decide, and all of
+# them must agree before the installer stops anything (hand_identity PID PORT):
+#   - the process belongs to this user and runs `abstractgateway serve` (its argv: a program named
+#     abstractgateway followed by `serve`; Linux reads /proc/PID/cmdline, elsewhere `ps`);
+#   - it listens on the port (lsof, else ss: both name this user's own processes) and
+#     /api/health there is a gateway's; when neither lsof nor ss can name the listeners, the serve
+#     record must name this pid and this port;
+#   - it serves THIS data dir. The --data-dir its command line declares (a relative one resolved
+#     against the process's own working directory) or, declaring none, its ABSTRACTGATEWAY_DATA_DIR
+#     (Linux /proc/PID/environ) decides alone: another data dir makes it foreign whatever the serve
+#     record says. When the process declares none, the serve record every gateway writes at start
+#     (<data dir>/run/gateway-serve.json) must name its pid and this data dir, and the process must
+#     have started before the record was written (a pid reused after that gateway exited started
+#     later, so a stale record never names another program).
+# Anything else (another program, a gateway of another data dir) is foreign and left alone.
 # ---------------------------------------------------------------------------
 SERVE_RECORD="$DATA_DIR/run/gateway-serve.json"
 serve_record_num() {  # serve_record_num KEY: a numeric value of the serve record, empty when none
     [ -f "$SERVE_RECORD" ] && [ -r "$SERVE_RECORD" ] || return 0
     tr '\n\r' '  ' <"$SERVE_RECORD" 2>/dev/null | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p" | head -n 1
 }
-serve_record_data_dir() {
+serve_record_str() {  # serve_record_str KEY: a string value of the serve record, empty when none
     [ -f "$SERVE_RECORD" ] && [ -r "$SERVE_RECORD" ] || return 0
     tr '\n\r' '  ' <"$SERVE_RECORD" 2>/dev/null \
-        | sed -nE 's/.*"data_dir"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' | head -n 1 \
+        | sed -nE "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"(([^\"\\\\]|\\\\.)*)\".*/\\1/p" | head -n 1 \
         | sed 's/\\"/"/g; s/\\\\/\\/g'
 }
-# port_listener_pid PORT: the pid listening on PORT, when lsof or ss can say; empty otherwise.
-port_listener_pid() {
+# port_listener_pids PORT: the pids listening on PORT (space-separated), when lsof or ss can say.
+port_listener_pids() {
     _plp=""
-    if have lsof; then _plp="$(lsof -nP -t -iTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -n 1)"; fi
+    if have lsof; then _plp="$(lsof -nP -t -iTCP:"$1" -sTCP:LISTEN 2>/dev/null | grep -E '^[0-9]+$' | sort -un | tr '\n' ' ')"; fi
     if [ -z "$_plp" ] && have ss; then
-        _plp="$(ss -ltnpH "sport = :$1" 2>/dev/null | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' | head -n 1)"
+        _plp="$(ss -ltnpH "sport = :$1" 2>/dev/null | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -un | tr '\n' ' ')"
     fi
-    case "$_plp" in *[!0-9]*) _plp="" ;; esac
-    printf '%s' "$_plp"
+    printf '%s' "${_plp% }"
 }
-# gw_process PID: a live process of this user whose command line runs abstractgateway.
+pid_in() { case " $1 " in *" $2 "*) return 0 ;; esac; return 1; }   # pid_in "PIDS" PID
+# gw_process PID: a live process of this user running `abstractgateway serve`.
 gw_process() {
     case "$1" in ''|*[!0-9]*) return 1 ;; esac
     kill -0 "$1" 2>/dev/null || return 1
     have ps || return 1
     [ "$(ps -o uid= -p "$1" 2>/dev/null | tr -d ' ')" = "$(id -u)" ] || return 1
-    ps -o args= -p "$1" 2>/dev/null | grep -q abstractgateway
-}
-# gw_data_dir_arg PID: the --data-dir its command line passes (Linux: /proc/PID/cmdline, exact),
-# else its ABSTRACTGATEWAY_DATA_DIR (Linux: /proc/PID/environ); empty when neither says.
-gw_data_dir_arg() {
-    [ -r "/proc/$1/cmdline" ] || return 0
-    _gda="$(tr '\0' '\n' <"/proc/$1/cmdline" 2>/dev/null | awk '
-        p { print; exit } $0 == "--data-dir" { p = 1; next } /^--data-dir=/ { sub(/^--data-dir=/, ""); print; exit }')"
-    if [ -z "$_gda" ] && [ -r "/proc/$1/environ" ]; then
-        _gda="$(tr '\0' '\n' <"/proc/$1/environ" 2>/dev/null | sed -n 's/^ABSTRACTGATEWAY_DATA_DIR=//p' | head -n 1)"
+    if [ -r "/proc/$1/cmdline" ]; then
+        tr '\0' '\n' <"/proc/$1/cmdline" 2>/dev/null | awk '
+            { if (p == "abstractgateway" && $0 == "serve") { f = 1; exit }; p = $0; sub(/.*\//, "", p) }
+            END { exit !f }'
+    else
+        ps -o args= -p "$1" 2>/dev/null | grep -Eq '(^|[ /])abstractgateway serve( |$)'
     fi
-    printf '%s' "$_gda"
+}
+# gw_proc_cwd PID: the process's working directory (Linux /proc, else lsof); empty when unknown.
+gw_proc_cwd() {
+    if [ -e "/proc/$1/cwd" ]; then readlink "/proc/$1/cwd" 2>/dev/null; return 0; fi
+    have lsof && lsof -a -p "$1" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -n 1
+    return 0
+}
+# gw_declared_data_dir PID: the absolute data dir the process declares: its --data-dir (Linux:
+# /proc/PID/cmdline, exact; elsewhere the `ps` command line, up to the next option), else its
+# ABSTRACTGATEWAY_DATA_DIR (Linux /proc/PID/environ); a relative one is resolved against the
+# process's own working directory. Empty when it declares none; "?" when it cannot be resolved.
+gw_declared_data_dir() {
+    _dv=""
+    if [ -r "/proc/$1/cmdline" ]; then
+        _dv="$(tr '\0' '\n' <"/proc/$1/cmdline" 2>/dev/null | awk '
+            p { print; exit } $0 == "--data-dir" { p = 1; next } /^--data-dir=/ { sub(/^--data-dir=/, ""); print; exit }')"
+        if [ -z "$_dv" ] && [ -r "/proc/$1/environ" ]; then
+            _dv="$(tr '\0' '\n' <"/proc/$1/environ" 2>/dev/null | sed -n 's/^ABSTRACTGATEWAY_DATA_DIR=//p' | head -n 1)"
+        fi
+    else
+        _dargs=" $(ps -o args= -p "$1" 2>/dev/null) "
+        case "$_dargs" in
+            *" --data-dir="*) _dv="${_dargs#* --data-dir=}"; _dv="${_dv%% --*}" ;;
+            *" --data-dir "*) _dv="${_dargs#* --data-dir }"; _dv="${_dv%% --*}" ;;
+        esac
+        while :; do case "$_dv" in *" ") _dv="${_dv% }" ;; *) break ;; esac; done
+    fi
+    [ -n "$_dv" ] || return 0
+    case "$_dv" in
+        /*) ;;
+        "~"|"~/"*) _dv="$HOME${_dv#\~}" ;;
+        *) _dcwd="$(gw_proc_cwd "$1")"
+           if [ -z "$_dcwd" ]; then printf '?'; return 0; fi
+           _dv="${_dcwd%/}/$_dv" ;;
+    esac
+    printf '%s' "$_dv"
+}
+# iso_epoch ISO-8601-UTC: seconds since the epoch (the serve record's started_at); empty if unreadable.
+iso_epoch() {
+    printf '%s\n' "$1" | awk -F'[-T:.Z]' 'NF >= 6 && $1 ~ /^[0-9]+$/ && $6 ~ /^[0-9]+$/ {
+        y = $1 + 0; m = $2 + 0; d = $3 + 0; if (m <= 2) { y--; m += 12 }
+        days = 365 * y + int(y / 4) - int(y / 100) + int(y / 400) + int((153 * (m - 3) + 2) / 5) + d - 719469
+        printf "%d\n", days * 86400 + $4 * 3600 + $5 * 60 + $6 }'
+}
+# proc_start_epoch PID: when the process started (now minus its elapsed time), to the second.
+proc_start_epoch() {
+    ps -o etime= -p "$1" 2>/dev/null | tr -d ' ' | awk -v now="$(date +%s)" -F'[-:]' '
+        /^[0-9]+-/ { print now - ((($1 * 24 + $2) * 60 + $3) * 60 + $4); exit }
+        NF == 3 { print now - (($1 * 60 + $2) * 60 + $3); exit }
+        NF == 2 { print now - ($1 * 60 + $2); exit }'
 }
 # gw_serves_this_data_dir PID: the gateway process PID serves this install's data dir.
 gw_serves_this_data_dir() {
     _mine="$(real_dir "$DATA_DIR")"
-    if [ "$(serve_record_num pid)" = "$1" ]; then
-        _rd="$(serve_record_data_dir)"
-        { [ -z "$_rd" ] || [ "$(real_dir "$_rd")" = "$_mine" ]; } && return 0
+    _dd="$(gw_declared_data_dir "$1")"
+    if [ -n "$_dd" ]; then
+        [ "$_dd" != "?" ] && [ "$(real_dir "$_dd")" = "$_mine" ]
+        return
     fi
-    _ad="$(gw_data_dir_arg "$1")"
-    if [ -n "$_ad" ]; then [ "$(real_dir "$_ad")" = "$_mine" ]; return; fi
-    # No /proc (macOS): the exact argument on its command line.
-    _args=" $(ps -o args= -p "$1" 2>/dev/null) "
-    for _dd in "$DATA_DIR" "$DATA_DIR_ABS_GIVEN"; do
-        case "$_args" in *" --data-dir $_dd "*|*" --data-dir=$_dd "*) return 0 ;; esac
-    done
-    return 1
+    [ "$(serve_record_num pid)" = "$1" ] || return 1
+    _rd="$(serve_record_str data_dir)"
+    [ -n "$_rd" ] && [ "$(real_dir "$_rd")" = "$_mine" ] || return 1
+    _rs="$(iso_epoch "$(serve_record_str started_at)")"; _pst="$(proc_start_epoch "$1")"
+    [ -n "$_rs" ] && [ -n "$_pst" ] && [ "$_pst" -le $((_rs + 2)) ]
 }
-# own_gateway_on_port PORT: 0 when the gateway listening on PORT serves this install's data dir;
-# its pid in OWN_GW_PID.
+# gw_listens PID PORT: PID is among the listeners of PORT, and a gateway answers there.
+gw_listens() {
+    _gl="$(port_listener_pids "$2")"
+    if [ -n "$_gl" ]; then pid_in "$_gl" "$1" || return 1
+    else
+        # neither lsof nor ss can name the listeners: the serve record must name this pid and port
+        [ "$(serve_record_num pid)" = "$1" ] && [ "$(serve_record_num port)" = "$2" ] || return 1
+    fi
+    is_our_gateway "$2"
+}
+# hand_identity PID PORT: PID is this install's gateway, listening on PORT (all of the above).
+hand_identity() { gw_process "$1" && gw_listens "$1" "$2" && gw_serves_this_data_dir "$1"; }
+# own_gateway_on_port PORT: 0 when a gateway listening on PORT is this install's; pid in OWN_GW_PID.
 OWN_GW_PID=""
 own_gateway_on_port() {
     OWN_GW_PID=""
-    _og="$(port_listener_pid "$1")"
-    if [ -z "$_og" ]; then
-        _og="$(serve_record_num pid)"
-        [ -n "$_og" ] && [ "$(serve_record_num port)" = "$1" ] && is_our_gateway "$1" || return 1
-    fi
-    gw_process "$_og" && gw_serves_this_data_dir "$_og" || return 1
-    OWN_GW_PID="$_og"
+    _cands="$(port_listener_pids "$1")"
+    [ -n "$_cands" ] || _cands="$(serve_record_num pid)"
+    for _c in $_cands; do
+        if hand_identity "$_c" "$1"; then OWN_GW_PID="$_c"; return 0; fi
+    done
+    return 1
 }
 # service_main_pid: the login item's gateway pid as the service manager reports it; 0 when the
 # service is not running; empty when it cannot say.
@@ -1009,19 +1067,26 @@ service_main_pid() {
     printf '%s' "$_smp"
 }
 # stop_hand_gateway: stop this install's gateway found running outside the installer's control
-# (HAND_GW_PID), so the installer's own start takes its place; waits until its port is free.
+# (HAND_GW_PID on HAND_GW_PORT), so the installer's own start takes its place. Its identity is
+# checked again right before the signal (and before a SIGKILL): a process that is no longer that
+# gateway is left alone. Then waits until its port is free.
 HAND_GW_PID=""; HAND_GW_PORT=""
 stop_hand_gateway() {
     [ -n "$HAND_GW_PID" ] || return 0
-    if ! kill -0 "$HAND_GW_PID" 2>/dev/null; then HAND_GW_PID=""; return 0; fi
+    if [ "$PRINT" = 0 ] && ! hand_identity "$HAND_GW_PID" "$HAND_GW_PORT"; then
+        info "pid $HAND_GW_PID is no longer this install's gateway on port $HAND_GW_PORT: left alone"
+        HAND_GW_PID=""; return 0
+    fi
     run "stop this install's gateway started by hand (pid $HAND_GW_PID, port $HAND_GW_PORT)" kill "$HAND_GW_PID"
     [ "$PRINT" = 1 ] && return 0
     _i=0; _max=$((AF_STOP_TIMEOUT * 2))
     while kill -0 "$HAND_GW_PID" 2>/dev/null && [ "$_i" -lt "$_max" ]; do sleep 0.5; _i=$((_i + 1)); done
     if kill -0 "$HAND_GW_PID" 2>/dev/null; then
-        warn "pid $HAND_GW_PID did not exit within $AF_STOP_TIMEOUT s: stopping it with SIGKILL"
-        kill -9 "$HAND_GW_PID" 2>/dev/null || true
-        _i=0; while kill -0 "$HAND_GW_PID" 2>/dev/null && [ "$_i" -lt 10 ]; do sleep 0.5; _i=$((_i + 1)); done
+        if gw_process "$HAND_GW_PID" && gw_serves_this_data_dir "$HAND_GW_PID"; then
+            warn "pid $HAND_GW_PID did not exit within $AF_STOP_TIMEOUT s: stopping it with SIGKILL"
+            kill -9 "$HAND_GW_PID" 2>/dev/null || true
+            _i=0; while kill -0 "$HAND_GW_PID" 2>/dev/null && [ "$_i" -lt 10 ]; do sleep 0.5; _i=$((_i + 1)); done
+        fi
     fi
     if kill -0 "$HAND_GW_PID" 2>/dev/null; then
         die "this install's gateway started by hand (pid $HAND_GW_PID) could not be stopped.
@@ -1766,9 +1831,9 @@ case "$ASK_WAIT" in ''|*[!0-9]*) die "--ask-wait must be a number of seconds (go
 _bg_pid=""; pid_alive && _bg_pid="$(cat "$PID_FILE" 2>/dev/null)"
 _svc_pid=""; [ "$LOGIN_WAS" = y ] && _svc_pid="$(service_main_pid)"
 if port_busy "$PORT"; then
-    _lp="$(port_listener_pid "$PORT")"
-    if [ "$PORT" = "$ST_PORT" ] && { { [ -n "$_bg_pid" ] && { [ -z "$_lp" ] || [ "$_lp" = "$_bg_pid" ]; }; } \
-        || { [ "$LOGIN_WAS" = y ] && is_our_gateway "$PORT" && { [ -z "$_lp" ] || [ -z "$_svc_pid" ] || [ "$_lp" = "$_svc_pid" ]; }; }; }; then
+    _lp="$(port_listener_pids "$PORT")"
+    if [ "$PORT" = "$ST_PORT" ] && { { [ -n "$_bg_pid" ] && { [ -z "$_lp" ] || pid_in "$_lp" "$_bg_pid"; }; } \
+        || { [ "$LOGIN_WAS" = y ] && is_our_gateway "$PORT" && { [ -z "$_lp" ] || [ -z "$_svc_pid" ] || pid_in "$_lp" "$_svc_pid"; }; }; }; then
         REUSE_RUNNING=1
         ok "port $PORT: this install's gateway is already running (it will be restarted if the package changes)"
     elif own_gateway_on_port "$PORT"; then
@@ -1803,7 +1868,7 @@ if [ -z "$HAND_GW_PID" ]; then
     _rp="$(serve_record_num pid)"; _rport="$(serve_record_num port)"
     if [ -n "$_rp" ] && [ -n "$_rport" ] && [ "$_rport" != "$PORT" ] && [ "$_rp" != "$_bg_pid" ] \
         && { [ "$LOGIN_WAS" != y ] || { [ -n "$_svc_pid" ] && [ "$_rp" != "$_svc_pid" ]; }; } \
-        && gw_process "$_rp" && gw_serves_this_data_dir "$_rp"; then
+        && hand_identity "$_rp" "$_rport"; then
         HAND_GW_PID="$_rp"; HAND_GW_PORT="$_rport"
         if [ "$NO_START" = 1 ]; then
             info "this install's gateway also runs on port $_rport, started by hand (pid $_rp); kept (--no-start restarts nothing)"
