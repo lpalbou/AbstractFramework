@@ -1761,7 +1761,9 @@ function Main {
         } elseif ((Test-GatewaySupports 'network') -and (Set-NetworkSettingForStart)) {
             $netSetting = $true
         }
-        $serveArgs = if ($netSetting) { @('serve') } else { @('serve', '--host', '127.0.0.1', '--port', "$Port") }
+        # @(...) keeps an array even with one element: `if` unrolls a one-element array to a string,
+        # and `+=` would then concatenate text ("serve--data-dir ..."), not append arguments.
+        $serveArgs = @(if ($netSetting) { 'serve' } else { 'serve', '--host', '127.0.0.1', '--port', "$Port" })
         # Launch flags, not environment variables: `serve --data-dir` (gateways 0.3 and later also
         # start with user auth on by themselves; older ones, -Pin 0.1/0.2, keep the environment above).
         $envPrefix = ''
