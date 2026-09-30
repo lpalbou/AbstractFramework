@@ -37,7 +37,7 @@ Start with **AbstractGateway** + **AbstractFlow**:
 
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
-- Automations: workflows that run on a fixed interval or on demand ([Automations](automations.md))
+- Automations: workflows that run on a fixed interval, when an email arrives, or on demand ([Automations](automations.md))
 - Multi-client: terminal, browser, tray, Telegram, email
 - Start on one device, continue on another
 
@@ -76,9 +76,9 @@ The full component diagram, with memory, semantics and the consoles, is in
 | **[Install](install.md)** | Mac installer, one-line install (`install.sh` / `install.ps1`), start at login, headless or remote install, the local gateway pointer, options, Network setting and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Agent sessions](agent-sessions.md)** | What every client shares when it chats with an agent: the gateway's default agent workflow, the conversation workspace and its built-in protection, skills, live replies, opening the Assistant signed in |
-| **[Automations](automations.md)** | How automations work in practice and how to manage them: an automation is a durable run, each tick a turn; independent vs growing context; creating one from the Assistant, the Observer or a workflow's defaults; two worked examples; reading results in every client; pause, run now, resume, edit, archive, discuss; notifications, typed waits, restart safety, limits, troubleshooting |
+| **[Automations](automations.md)** | How automations work in practice and how to manage them: an automation is a durable run, each tick a turn; independent vs growing context; creating one from the Assistant, the Observer, AbstractCode or a workflow's defaults; email triggers and email notifications; two worked examples; reading results in every client; pause, run now, resume, edit, archive, discuss; notifications, typed waits, restart safety, limits, troubleshooting |
 | **[Architecture](architecture.md)** | Component diagram, distribution by registry, how a turn flows and the live-reply lane, app proxies, model eject, framework identity, durable execution primitives, comparisons |
-| **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway |
+| **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway, email accounts |
 | **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |

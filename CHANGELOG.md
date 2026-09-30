@@ -4,9 +4,50 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-## [0.6.4] - 2026-09-30
+## [0.7.0] - 2026-09-30
 
-Installer fixes. Every package version is unchanged from 0.6.3.
+Email for each user, and installer fixes. Pins: AbstractCore 2.20.0, AbstractRuntime 0.8.0,
+AbstractGateway 0.8.0 and AbstractAssistant 0.10.0; the terminal consoles are
+`abstractgateway-console` 0.12.0 and `abstractcore-console` 0.5.0, and the browser apps
+AbstractCode web 0.7.0 and AbstractObserver 0.3.0 (built on AbstractUIC ui-kit 0.2.0 and panel-chat
+0.1.21). Every other version is unchanged from 0.6.3.
+
+### Added
+
+- **Your own mailbox on the gateway.** Each user connects their own email account (IMAP/SMTP with a
+  password or app password, or OAuth2 for Google and Microsoft) in the web console (**Users → My
+  email**), the terminal console (`@` on the Users screen) or `PUT /api/gateway/me/email`. The
+  account is tested before it is saved, stored in the user's own data folder with its credentials
+  encrypted, and every connection verifies TLS. The mailbox is read-only. Each user sets a recipient
+  policy (allowlist or denylist of addresses and domains) and send limits (20 per hour and 100 per
+  day by default); every send passes them. AbstractCore on its own gets the same account, one per
+  install: `abstractcore email ...`, the core web console's **Email** tab and the core terminal
+  console's Email screen. See [Configuration](docs/configuration.md#email-accounts).
+- **Email automations.** The Assistant, the Observer and AbstractCode's browser client offer **When
+  an email arrives** (the `email.received@1` trigger: typed filters on sender, recipient, subject and
+  attachments; hourly batches by default for automations that run a model, never more often than
+  every 60 seconds; each message read once), **Email me the result**, and the recipients an
+  automation may email without asking (only you, by default). Inbound mail reaches the agent as
+  untrusted data in a fixed frame; an email-triggered automation never follows links from an email
+  (`fetch_url` and `browser_probe` ask) unless you name those tools. See
+  [Email automations](docs/automations.md#email-automations).
+- **Email notifications**, off until you turn them on in **My email → Notifications**: automation
+  results and failures (for automations set to email you), a run waiting for your approval, and
+  runs started with an email notice. Each notice is sent once from a durable outbox, through your
+  own account, to your registered address.
+- **Sign-in by email**: "Forgot your token?" and "Email me a sign-in code" on the gateway's sign-in
+  page for users with a connected account (single-use codes, 10-minute expiry).
+- **What administrators decide**: whether email, agent email tools and sign-in by email are
+  available, gateway-wide and per user. Agent email tools are off by default: an agent gets the
+  email tools only when an administrator made them available, the user's account is connected, and
+  the user turned them on. Administrators see a user's mailbox state, never mail.
+
+### Removed
+
+- The `ABSTRACT_EMAIL_*` environment variables, the email accounts file and the gateway's email
+  bridge. A gateway or an AbstractCore install that still has them imports that account once into
+  the new settings; afterwards each variable still set is named at startup with the setting that
+  replaced it.
 
 ### Fixed
 

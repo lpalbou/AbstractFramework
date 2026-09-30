@@ -34,7 +34,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity> --gateway-url <url>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.7.4` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.8.0` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -147,12 +147,24 @@ starts one **occurrence**, a run of your workflow that clients show as a questio
   `notify`, when a run fails after its last retry, or when a run waits for you.
 - Creating an automation is the consent for the framework tools its workflow uses; choose **Ask
   each time** to approve every tool batch. MCP tools always ask.
-- Schedules are fixed UTC intervals (`5m`, `8h`, `7d`); there is no cron, time of day or external
-  trigger in v1.
+- Triggers are fixed UTC intervals (`5m`, `8h`, `7d`), new mail in your own mailbox
+  (`email.received@1`) and **Run now**; there is no cron, time of day, webhook or file trigger.
 
 The full guide, with two worked examples and troubleshooting, is **[Automations](automations.md)**.
 
 ---
+
+## Can the framework read and send my email?
+
+Only with an account you connect yourself, and only as far as you allow. Each gateway user connects
+their own mailbox in the web console (**Users → My email**) or the terminal console (`@` on the Users
+screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
+rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
+deleted. Every send passes your recipient policy (an allowlist or a denylist of addresses and
+domains) and your send limits, and a send to anyone but you (or the recipients an automation
+lists) waits for your approval. Agents get the email tools only when an administrator made them
+available to you and you turned them on; administrators never read users' mail. See
+[AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md) and [Email automations](automations.md#email-automations).
 
 ## Which workflow answers when I chat with an agent?
 

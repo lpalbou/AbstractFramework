@@ -55,14 +55,14 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.6.4` for this release).
+The meta-package version (`0.7.0` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.6.4:
-`abstractcore` 2.19.2, `abstractruntime` 0.7.3, `abstractagent` 0.3.17, `abstractgateway` 0.7.4,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.7.0:
+`abstractcore` 2.20.0, `abstractruntime` 0.8.0, `abstractagent` 0.3.17, `abstractgateway` 0.8.0,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.2, `abstractvision` 0.3.33,
-`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.9.1.
+`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.10.0.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -72,14 +72,14 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.4.0, `@abstractframework/code` 0.6.2,
-`@abstractframework/observer` 0.2.1, `@abstractframework/continuum` 0.4.0 and
+`@abstractframework/flow` 0.4.0, `@abstractframework/code` 0.7.0,
+`@abstractframework/observer` 0.3.0, `@abstractframework/continuum` 0.4.0 and
 `@abstractframework/entity` 0.3.0. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.11.2, `abstractcore-console` 0.4.1, `abstractcode` 0.7.1 and the
+`abstractgateway-console` 0.12.0, `abstractcore-console` 0.5.0, `abstractcode` 0.7.1 and the
 `abstracttui` engine 0.6.0. The bootstrap scripts build `abstractgateway-console` at this version by default
 (`--no-console` skips it) and `abstractcode` next to it (`--no-code-cli` skips it).
 

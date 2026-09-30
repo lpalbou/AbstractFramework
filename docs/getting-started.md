@@ -279,6 +279,12 @@ The automation survives restarts, runs each tick once, and stays quiet unless it
 attention. See [Automations](automations.md) for the mental model, worked examples, management
 and limits.
 
+To run an automation when an email arrives, or to get its results by email, first connect your own
+mailbox in the gateway console (**Users → My email**, or `@` on the Users screen of the terminal
+console). The Assistant, the Observer and AbstractCode's browser client then offer **When an email
+arrives**, **Email me the result** and the recipients the automation may email without asking. See
+[Email automations](automations.md#email-automations).
+
 ---
 
 ## Author orchestration with AbstractFlow

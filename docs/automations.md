@@ -3,8 +3,8 @@
 How automations work in practice and how to manage them.
 
 An **automation** runs a workflow again and again on a trigger: "search every 5 minutes for the trade
-value of a market share", "monitor the memory usage of this computer every 2 minutes", "run this
-report when I ask". The gateway runs it, keeps every run as a readable conversation, and tells you
+value of a market share", "monitor the memory usage of this computer every 2 minutes", "summarize
+the invoices I receive, once an hour", "run this report when I ask". The gateway runs it, keeps every run as a readable conversation, and tells you
 only when something needs you. You create and manage automations from the Assistant, the
 Observer or AbstractCode (terminal and browser), and you can read their results in every gateway
 client.
@@ -20,6 +20,8 @@ This page is the cross-package guide. The package pages hold the full references
 | `/automations` and `/schedule` in the terminal, the Automations section in the browser | [AbstractCode: Automations](https://github.com/lpalbou/AbstractCode/blob/main/docs/automations.md) |
 | Automation defaults on a workflow | [AbstractFlow: Web editor → Automation Defaults](https://github.com/lpalbou/AbstractFlow/blob/main/docs/web-editor.md#automation-defaults) |
 | `AutomationPanel`, `AfScheduleDialog`, the shared client | [AbstractUIC: Automations](https://github.com/lpalbou/AbstractUIC/blob/main/docs/automations.md) |
+| Your mailbox, email notifications, what administrators make available | [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md) |
+| The `email.received@1` trigger, the event inbox, sending without asking | [AbstractRuntime: Email](https://github.com/lpalbou/AbstractRuntime/blob/main/docs/email.md) |
 
 For the concepts this page builds on (run, ledger, wait, session), see the [Glossary](glossary.md);
 for how the gateway, runtime and clients fit together, see [Architecture](architecture.md).
@@ -129,6 +131,8 @@ The clock button in the palette header opens **Schedule this conversation…**:
   minutes/hours/days, or once at a date and time; an optional first-run time (empty means now).
 - **Context**: Independent (default) or Growing.
 - **Tools**: Tools run without asking (default) or Ask each time.
+- **Email**: **When an email arrives** as the When choice, **Email me the result** and the
+  recipients it may email without asking (see [Email automations](#email-automations)).
 
 **Schedule** creates the automation and opens it in the Assistant's Automations section.
 
@@ -142,6 +146,8 @@ Open **Launch** and switch **Run once | Automate** to **Automate**:
 2. **When (UTC)**: **Repeat** every N minutes, hours or days, or **Once at** a date and time.
 3. **Context**: Independent or Growing.
 4. **Tools**: Tools run without asking, or Ask each time.
+5. **Email**: **When an email arrives** (a When choice), **Email me the result** and the recipients
+   it may email without asking (see [Email automations](#email-automations)).
 
 **Advanced** holds the title, the first run time, "stop after this many runs", "stop at", skills
 and the workspace. **Create automation** opens the new automation on the Automations page.
@@ -155,7 +161,8 @@ text after `/schedule`), when (UTC), context (Independent or Growing) and tools 
 asking, or ask before each tool call). Enter on the last step creates the automation and opens it.
 In the browser client, select **+** in the sidebar's **Automations** section; the dialog runs the
 toolbar's workflow, and **Advanced** holds the title, the first run time, "stop after this many
-runs" and "stop at".
+runs" and "stop at". The browser dialog also offers the email options (see
+[Email automations](#email-automations)); the terminal client creates scheduled automations.
 
 ### From a workflow's automation defaults
 
@@ -200,6 +207,50 @@ to requests that leave `title` or `trigger` out.
   conversation workspace (see [Agent sessions](agent-sessions.md)). Keys the server owns
   (`_meta`, `workspace_read_only`, `_runtime.tool_policy`) are dropped from `input_data`;
   `policy.tool_approval` is the way to set tool approval.
+
+## Email automations
+
+With **your own mailbox connected** to the gateway (web console **Users → My email**, the terminal
+console's **My email**, or `PUT /api/gateway/me/email`; see [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md)),
+the Assistant, the Observer and AbstractCode's browser client offer three more options. Without a
+usable account the forms say "Email isn't set up — open My email" and send nothing email-related.
+
+- **When an email arrives** — the trigger `email.received@1`. Filters are typed: from these
+  addresses or domains, sent to these addresses, subject contains (one literal text), has
+  attachments; there are no patterns. The automation runs on the batch of matching mail received
+  since its previous run: at most once an hour by default when it runs a model, every minute when
+  it does not, never more often than every 60 seconds, and at most 100 emails per run by default.
+  Each message is read at most once by each automation, across restarts. Mail that arrived before
+  the automation existed, or while it was paused, is not processed. The gateway only reads the
+  mailbox: it never marks, moves or deletes mail.
+- **Email me the result** — `notify: {"channels": ["console", "email"]}`: the attention items the
+  automation raises (a result that asks for attention, a final failure) are also emailed to your
+  registered address, through your own account, for the events you turned on in **My email →
+  Notifications** (automation results, automation failures; every email notification is off until
+  you turn it on). A notice is queued once and never sent twice.
+- **May send email without asking to** — `policy.email_allowed_recipients`: **Only me** (the
+  default, `["self"]`) or **Me and these addresses**. A send to anyone else waits for your
+  approval, even with "Tools run without asking".
+
+```text
+"trigger": {"source_id": "email.received", "source_version": 1,
+            "config": {"every": "1h", "max_batch": 100,
+                       "filter": {"from_domain_in": ["example.com"], "subject_contains": "invoice"}}},
+"notify":  {"channels": ["console", "email"]},
+"policy":  {"tool_approval": "auto", "email_allowed_recipients": ["self"]}
+```
+
+Inbound mail is data, never instructions. The occurrence receives the emails marked as untrusted,
+inside a fixed frame that tells the agent not to follow links or instructions in them and to act
+only on the automation's task. An email-triggered automation never runs `fetch_url` or
+`browser_probe` without asking, even under "Tools run without asking", unless you name them in
+`policy.untrusted_input_tools`.
+
+Every send — an agent's, an automation's, a notification — also passes your recipient policy and
+your send limits (20 per hour and 100 per day by default), which you set in **My email**. Agents
+and workflows get the email tools themselves only when an administrator made **Agent email tools**
+available to you and you turned them on; automations that only send you their results do not need
+them.
 
 ## Two worked examples
 
@@ -422,6 +473,11 @@ disabled, and its tooltip first says why.
 | A failure that a retry fixed, or a cancelled run | none | the history |
 | A run waiting for you | counted in `attention.pending_waits` until answered | Assistant tray notification + `WAITING`; Observer "waiting for you" |
 
+With **Email me the result**, the `notify` and final-failure items above are also emailed to you,
+for the events you turned on in **My email → Notifications** (automation results, automation
+failures). There you can also choose to be emailed when one of your runs waits for your approval or
+answer. Every email notification is off until you turn it on.
+
 The Assistant checks the list every 60 seconds while its palette is open and every 5 minutes while
 it is hidden, and shows each notification once (also across relaunches). What you have seen is
 kept by the gateway per user: opening an automation marks the items it shows as seen, and waiting
@@ -455,17 +511,18 @@ recorded. A wait the gateway does not type is shown without answer controls.
 - **Every decision is recorded once.** Each command and each controller step writes its ledger
   record once and applies it once, whatever the moment of a crash.
 - **Retries are not exactly-once for the outside world.** A retried occurrence runs your workflow
-  again, so a workflow that sends an email may send it again on a retry.
+  again, so a workflow that sends an email may send it again on a retry. Email notifications are
+  different: each one is recorded in a durable outbox before it is sent and is never sent twice.
 
 ## Limits
 
 - **Fixed UTC intervals only.** `every` is a fixed duration in seconds, minutes, hours or days.
   There is no cron expression, no time of day, no weekdays and no time zone: "every 24 hours"
   means 24 hours after the previous tick, never "daily at 08:00". Write weeks as `7d`.
-- **Two trigger sources.** `schedule@1` and `manual@1` (runs only on **Run now**). There are no
-  external triggers (webhooks, e-mail, file changes) yet; packages can register new sources through
-  the `abstractruntime.trigger_sources` entry-point group, and `GET /api/gateway/trigger-sources`
-  lists what your gateway serves.
+- **Three trigger sources.** `schedule@1`, `email.received@1` (your own mailbox) and `manual@1`
+  (runs only on **Run now**). There are no webhook or file-change triggers yet; packages can
+  register new sources through the `abstractruntime.trigger_sources` entry-point group, and
+  `GET /api/gateway/trigger-sources` lists what your gateway serves.
 - **Bounded growing history.** A growing automation replays the most recent 50 000 tokens of whole
   turns; older ticks drop out of its context (they stay in the history), and the oldest replayed
   message says how many were dropped. Automatic
@@ -477,7 +534,7 @@ recorded. A wait the gateway does not type is shown without answer controls.
   them, such as a third-party MCP tool, still waits for approval on every call.
 - **One writer per data folder.** Run one gateway process per data folder; automation controllers
   assume a single writer per store.
-- **Editing in the apps covers title, interval and context.** The workflow, its inputs, retries and
+- **Editing in the apps covers title, interval, context and the email options.** The workflow, its inputs, retries and
   tool approval change through `PATCH /api/gateway/automations/{id}` (`changes.target`,
   `changes.policy`).
 
