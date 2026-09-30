@@ -124,7 +124,7 @@ Start here if you're building persistent AI applications — agents that run for
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
 - Automations: a workflow that runs on a fixed interval, when an email arrives, or on demand, kept as a readable conversation ([Automations](docs/automations.md))
-- Email for each user: connect your own mailbox, get automation results and approvals by email, and let agents use email tools when an administrator allows it ([Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md))
+- Email for each user: connect your own mailbox, get failed jobs, approvals and automation results by email, and let your agents use email tools when you switch them on ([Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md))
 - Multi-client: terminal, browser, tray, Telegram, email
 - Start on one device, continue on another: the web console and every browser app work on phones,
   tablets and any window size ([Phones and tablets](docs/guide/deployment-iphone.md))

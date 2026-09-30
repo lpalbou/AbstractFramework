@@ -18,8 +18,9 @@ browser origin to allow.
    on the gateway's own computer (installs from another device need an administrator to allow them
    first, with the `allow_engine_install` setting).
 3. **Open the console on the phone**, for example `http://192.168.1.20:8080/console`, and sign in
-   with your gateway user name and token, or with **Email me a sign-in code** when your account has
-   email set up ([Email integration](email-integration.md#sign-in-by-email)). The one-time claim
+   with your gateway user name and token, or with **Forgot your token? Email me a sign-in code** when
+   your account has an email address and a connected mailbox
+   ([Email integration](email-integration.md#sign-in-by-email)). The one-time claim
    link only works on the gateway's own computer.
 4. **Open an app** from the Apps page. It opens at `/apps/<app>/`, already signed in.
 5. Optional: add the page to the home screen (Safari: **Share → Add to Home Screen**).

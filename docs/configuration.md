@@ -317,16 +317,19 @@ bundles should not contain raw secrets.
 
 Email is configured as settings, never through environment variables:
 
-- **On a gateway, per user**: each person connects their own mailbox (IMAP/SMTP with a password or
-  app password, or OAuth2 for Google and Microsoft) in the web console (**Users → My email**), the
-  terminal console (`@` on the Users screen) or `PUT /api/gateway/me/email`. The account lives in
-  that user's own data folder with its credentials encrypted, and sets the recipient policy (a new
-  account starts with an allowlist holding the user's own address), the send limits (20 per hour,
-  100 per day by default), the email notifications and the **Agent email tools** switch (off until
-  an administrator makes the tools available and the user turns them on). A connected account also
-  gives the user sign-in by email on the sign-in page. Administrators decide what is available to
-  users (email, agent email tools, sign-in by email), gateway-wide and per user, and never see mail
-  content. See [Email integration](guide/email-integration.md) and
+- **On a gateway, per user**: each person has an **email address** (where sign-in codes and
+  notifications go; set in **Create user** or on the account page) and connects their own
+  **mailbox** (**Google** or **Microsoft** sign-in, or **Other**: address and password, the servers
+  found automatically) on their account page: the web console's **Users & Entities → My email
+  address and mailbox**, the terminal console (`@` on the Users screen) or
+  `PUT /api/gateway/me/email`. The mailbox lives in that user's own data folder with its
+  credentials encrypted. The same page holds the two notification switches (**Job failed**,
+  **Approval needed**, on by default), the **Agent email tools** switch (off by default) and, under
+  **Advanced**, the recipient rules (a new account starts with an allowlist holding the user's own
+  email address), the send limits (20 per hour, 100 per day by default) and the folder. A connected
+  mailbox also gives the user sign-in by email on the sign-in page. Administrators decide what is
+  available with one switch, **Mailboxes for users**, and two under **Advanced** (**Agent email
+  tools for users**, **Sign-in by email**), all on by default, and never see mail content. See [Email integration](guide/email-integration.md) and
   [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md).
 - **AbstractCore on its own**: one account for the install, with `abstractcore email connect
   --address <address> --imap-host <host> --smtp-host <host> --password <value>`, the core web console's

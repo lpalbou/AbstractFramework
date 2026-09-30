@@ -8,7 +8,7 @@ If you're new, read these groups first:
 - **Workflows**: flow, bundle, interface contract
 - **Control plane**: gateway, observer, gateway console, Network setting
 - **Automations**: automation, trigger source, tick, occurrence, discussion
-- **Email**: My email, mail watcher, recipient policy, agent email tools, automatic mail, sign-in by email
+- **Email**: email address, mailbox, mail watcher, recipient policy, agent email tools, email notifications, automatic mail, sign-in by email
 - **Agent sessions**: default agent workflow, conversation workspace, built-in deny list, skill shelf, live replies
 - **Distribution**: Mac installer, bootstrap script, install profile, release pins
 
@@ -227,13 +227,22 @@ A conversation forked from an automation occurrence (**Discuss**): a new root ru
 
 See [Email integration](guide/email-integration.md) for the whole picture.
 
-### My email
+### Email address
 
-Where each gateway user connects their own mailbox (IMAP/SMTP with a password or app password, or
-OAuth2 for Google and Microsoft) and sets its recipient policy, send limits, notifications and agent
-email tools: the web console's **Users → My email**, `@` on the terminal console's Users screen, or
-`/api/gateway/me/email`. The account is stored encrypted in that user's data folder. AbstractCore on
-its own has one account per install (`abstractcore email`).
+A gateway user's own address: where sign-in codes, "Forgot your token?" and notifications go, and
+the first address the user's agents may write to. It has no password. An administrator sets it in
+**Create user**, or the user sets it on their account page (**Users & Entities → My email address
+and mailbox** in the web console, `@` on the terminal console's Users screen).
+
+### Mailbox
+
+A connection a gateway user makes so that their agents and automations can read and send mail as
+them: **Google** or **Microsoft** sign-in, or **Other** (email address and password, the mail
+servers found automatically, **Server settings** folded). One **Connect** saves and tests it; once
+connected, **Test** and **Disconnect**. It is stored encrypted in that user's data folder, and
+administrators never see or touch it. Its recipient rules, send limits and folder sit under
+**Advanced** on the same account page. AbstractCore on its own has one account per install
+(`abstractcore email`).
 
 ### Mail watcher
 
@@ -245,14 +254,21 @@ is never an event.
 ### Recipient policy
 
 Who may receive mail from an account: an allowlist (only the listed addresses and domains; a new
-account starts with its own registered address) or a denylist (everyone except them), applied with
+account starts with the user's own email address) or a denylist (everyone except them), applied with
 the send limits (20 per hour and 100 per day by default) to every send.
 
 ### Agent email tools
 
 The email tools of agents and workflows (list, search, read, send, reply, download an attachment).
-Off by default: an agent gets them only when an administrator made them available to the user, the
-user's account is connected and the user turned them on.
+A switch on the user's account page, off by default: an agent gets them only when the user's
+mailbox is connected, the administrator's **Agent email tools for users** is on (the default) and
+the user switched **Agent email tools** on.
+
+### Email notifications
+
+Mail the gateway sends a user about their own runs, through that user's mailbox: two switches on
+the account page, **Job failed** and **Approval needed**, both on by default once a mailbox is
+connected. An automation set to **Email me the result** also emails its results.
 
 ### Automatic mail
 
@@ -263,8 +279,9 @@ automatic mail from others is ignored unless the trigger sets `"auto_submitted":
 
 ### Sign-in by email
 
-**Forgot your token?** and **Email me a sign-in code** on the gateway's sign-in page: a single-use
-8-digit code sent to the user's registered address, valid 10 minutes. Administrators can turn it off.
+**Forgot your token? Email me a sign-in code** on the gateway's sign-in page: a single-use 8-digit
+code sent to the user's email address through their own mailbox, valid 10 minutes. Administrators
+can switch **Sign-in by email** off.
 
 ---
 

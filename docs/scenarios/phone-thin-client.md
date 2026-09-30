@@ -26,7 +26,7 @@ This is useful for:
 
 2. Install the apps you want from the console's **Apps** page, on the gateway's own computer.
 3. On the phone, open `http://<address>:8080/console` and sign in with your gateway user name and
-   token (or **Email me a sign-in code**).
+   token (or **Forgot your token? Email me a sign-in code**).
 4. Open Code, Observer or another app from the Apps page: it opens at `/apps/<app>/` on the same
    address, already signed in. The console and every app adapt to the phone's screen.
 

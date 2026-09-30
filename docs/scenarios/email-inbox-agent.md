@@ -12,20 +12,22 @@ result, with your own mailbox and nothing configured outside the consoles.
 - The gateway's mail watcher reads the mailbox read-only while at least one of your email
   automations is active; the runtime records each new message durably before the automation reads
   it.
-- **Email me the result** sends the automation's results to your own address, through your own
-  account.
+- **Email me the result** sends the automation's results to your own email address, through your
+  own mailbox.
 
 See [Guide: Email integration](../guide/email-integration.md) for the rules (recipient policy, send
-limits, agent email tools, sign-in by email).
+limits, agent email tools, notifications, sign-in by email).
 
 ## Step 1: Connect your mailbox
 
-In the gateway web console, open **Users → My email** (terminal console: the Users screen, then
-`@`). Enter the address, an app password and the IMAP and SMTP servers, or use **Sign in with
-OAuth2** for Google or Microsoft. The gateway tests both servers before it saves the account.
+In the gateway web console, open **Users & Entities → My email address and mailbox** (terminal
+console: the Users screen, then `@`). Check your **Email address** at the top: results and
+notifications go there. In the **Mailbox** card, pick **Google** or **Microsoft** to sign in with
+the provider, or **Other** to give your email address and an app password (the gateway finds the
+mail servers itself), then **Connect**. The gateway tests both servers before it saves anything.
 
-Check the recipient policy in the same place: a new account allows mail only to your own address,
-which is what this scenario needs.
+The recipient rules sit under **Advanced** on the same page: a new account allows mail only to your
+own email address, which is what this scenario needs.
 
 ## Step 2: Create the automation
 
@@ -35,7 +37,7 @@ automation with:
 - **When an email arrives**, with typed filters (from these addresses or domains, sent to these
   addresses, subject contains, has attachments);
 - the task for the agent, for example "Summarise these emails and list what needs an answer";
-- **Email me the result**, then turn on **Automation results** in **My email → Notifications**.
+- **Email me the result**, so the results that ask for your attention reach you by email.
 
 The same definition through the API:
 
@@ -63,6 +65,7 @@ processed.
 
 ## Letting the agent use email itself
 
-To let the agent search your mailbox or send mail during a run, an administrator first makes
-**Agent email tools** available to you; then turn them on in **My email**. A send to anyone but you
-waits for your approval, and every send passes your recipient policy and send limits.
+To let the agent search your mailbox or send mail during a run, switch **Agent email tools** on
+on your account page (it is off by default and unavailable until your mailbox is connected; an
+administrator can withhold it with **Agent email tools for users**). A send to anyone but you waits
+for your approval, and every send passes your recipient rules and send limits.

@@ -91,10 +91,11 @@ run the installer again: it continues where it stopped.
   prints one). Re-running the installer also opens one.
 - **Alternative**: sign in with the `admin` token stored in `<data>/auth/bootstrap-admin-token`.
 - **From another device, or without your token**: sign in with your gateway user name and token,
-  or choose **Email me a sign-in code** or **Forgot your token?** on the sign-in page (offered
-  unless an administrator turned sign-in by email off): an 8-digit code arrives at your registered
-  address, works once and expires after 10 minutes. It reaches you only when your account has
-  email set up (**Users → My email**). Without email, an administrator rotates your token. See
+  or select **Forgot your token? Email me a sign-in code** on the sign-in page (shown unless an
+  administrator switched **Sign-in by email** off): an 8-digit code arrives at your email address,
+  works once and expires after 10 minutes. It reaches you only when your account has an email
+  address and a connected mailbox (**Users & Entities → My email address and mailbox**); otherwise
+  the sign-in page says so under the link. Without them, an administrator gives you a new token. See
   [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### The gateway does not answer
@@ -233,9 +234,10 @@ run the installer again: it continues where it stopped.
 
 ### An email automation does not run, or the mailbox shows "needs action"
 
-- **Check**: **Users → My email** shows the mailbox state and the last error with its fix (for
-  example an app password the server refused). Administrators see the same state in the Users
-  table.
+- **Check**: the **Mailbox** card on your account page (**Users & Entities → My email address and
+  mailbox**) shows the mailbox state and the last error with its fix (for example an app password
+  the server refused); **Test** checks it again. Administrators see the same state in the users
+  table's **Mailbox** column.
 - **Cause**: mail that was already in the mailbox, or that arrived while none of your email
   automations was active, is never processed; an automation that runs a model runs at most once an
   hour by default; automatic mail (auto-replies, and mail the framework sends through your account)
@@ -246,11 +248,12 @@ run the installer again: it continues where it stopped.
 
 ### An agent has no email tools, or a send is refused
 
-- **Cause**: agent email tools are off until an administrator makes them available to you and you
-  turn them on in **My email**; every send also passes your recipient policy (a new account allows
-  only your own address) and your send limits.
-- **Fix**: ask an administrator to make **Agent email tools** available, turn them on, and add the
-  recipient to your allowlist. The refusal names the refused addresses or the limit reached. See
+- **Cause**: **Agent email tools** is off until you switch it on on your account page (it is
+  unavailable, with the reason, until your mailbox is connected or when an administrator switched
+  **Agent email tools for users** off); every send also passes your recipient rules (a new account
+  allows only your own email address) and your send limits.
+- **Fix**: connect your mailbox, switch **Agent email tools** on, and add the recipient under
+  **Advanced → Recipient rules**. The refusal names the refused addresses or the limit reached. See
   [Email integration](guide/email-integration.md).
 
 ## Automations

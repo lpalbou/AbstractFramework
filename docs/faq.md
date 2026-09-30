@@ -157,14 +157,14 @@ The full guide, with two worked examples and troubleshooting, is **[Automations]
 ## Can the framework read and send my email?
 
 Only with an account you connect yourself, and only as far as you allow. Each gateway user connects
-their own mailbox in the web console (**Users → My email**) or the terminal console (`@` on the Users
-screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
+their own mailbox in the web console (**Users & Entities → My email address and mailbox**) or the
+terminal console (`@` on the Users screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
 rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
-deleted. Every send passes your recipient policy (an allowlist or a denylist of addresses and
-domains; a new account allows only your own address) and your send limits (20 per hour, 100 per
+deleted. Every send passes your recipient rules (an allowlist or a denylist of addresses and
+domains; a new account allows only your own email address) and your send limits (20 per hour, 100 per
 day by default), and a send to anyone but you (or the recipients an automation lists) waits for
-your approval. Agents get the email tools only when an administrator made them available to you and
-you turned them on; administrators never read users' mail. An email-triggered automation treats
+your approval. Agents get the email tools only when you switch **Agent email tools** on (off by
+default); administrators never read users' mail. An email-triggered automation treats
 mail as untrusted data and never follows its links unless you allow those tools, and mail the
 framework sends automatically through your account never triggers an automation. See
 [Email integration](guide/email-integration.md) and [Email automations](automations.md#email-automations).
@@ -329,9 +329,10 @@ The one-time link is valid for 10 minutes and works only from the same machine. 
 in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path.
 
 From another device, sign in with your gateway user name and token. The sign-in page also offers
-**Email me a sign-in code** and **Forgot your token?** (unless an administrator turned sign-in by
-email off): an 8-digit code sent to your registered address, valid once for 10 minutes. The code
-reaches you only when your account has email set up (**Users → My email**). See
+**Forgot your token? Email me a sign-in code** (unless an administrator switched **Sign-in by
+email** off): an 8-digit code sent to your email address, valid once for 10 minutes. The code
+reaches you only when your account has an email address and a connected mailbox (**Users &
+Entities → My email address and mailbox**). See
 [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?
