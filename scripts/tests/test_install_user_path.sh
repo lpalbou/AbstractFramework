@@ -746,6 +746,17 @@ assert d["data_dir"] == sys.argv[3] and d["written_by"] == "installer" and d["up
     bg_case bg_lan_port 1 "lan 18999"
     check "stored lan on another port: mode kept, port aligned" "$([[ $RC == 0 ]] && grep -qx "abstractgateway network set lan --port $BG_PORT" "$GWLOG" && [[ "$(cat "$NETF")" == "lan $BG_PORT" ]]; echo $?)" "$GWLOG"
 
+    # Upgrade safety D-A: a port changed in a console, the tray or `network set` (the Network setting)
+    # survives a re-run without --port (the gateway's Update runs the installer that way): bootstrap.env
+    # says one port more, the setting wins, nothing is written over it, and the summary says which.
+    NETSTATE="PORT=$((BG_PORT + 1))\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=0.7.1\nCONSOLE=0\nCODE_CLI=0\nCORE_CLI=0\nTRAY=1\nFULL=0\nGATEWAY_VERSION=0.8.1\n"
+    BG_NO_PORT=1 BG_STATE="$NETSTATE" bg_case net_stored 1 "localhost $BG_PORT"
+    check "D-A: a port stored in the Network setting is kept without --port (no network set over it)" "$([[ $RC == 0 ]] && ! grep -q "network set" "$GWLOG" && [[ "$(cat "$NETF")" == "localhost $BG_PORT" ]] && grep -qxF "abstractgateway serve --data-dir $DATA_T" "$GWLOG"; echo $?)" "$OUT"
+    check "D-A: the summary and bootstrap.env name the stored port, and say why" "$(has "$OUT" "Console:    http://127.0.0.1:$BG_PORT/console" && grep -qx "PORT=$BG_PORT" "$DATA_T/bootstrap.env" && has "$OUT" "port $BG_PORT: kept from the gateway's Network setting (bootstrap.env said $((BG_PORT + 1))"; echo $?)" "$OUT"
+    # --port still changes it.
+    BG_STATE="$NETSTATE" bg_case net_explicit 1 "localhost $((BG_PORT + 2))"
+    check "D-A: --port changes a stored port" "$([[ $RC == 0 ]] && grep -qx "abstractgateway network set localhost --port $BG_PORT" "$GWLOG" && [[ "$(cat "$NETF")" == "localhost $BG_PORT" ]]; echo $?)" "$GWLOG"
+
     bg_case bg_old 0
     check "old gateway: installer succeeds" "$([[ $RC == 0 ]]; echo $?)" "$OUT"
     check "old gateway: keeps the pinned argv, seeds nothing" "$(grep -qxF "abstractgateway serve --host 127.0.0.1 --port $BG_PORT --data-dir $DATA_T" "$GWLOG" && ! grep -q "network set\|network status" "$GWLOG" && [[ ! -e "$NETF" ]]; echo $?)" "$GWLOG"
@@ -1020,14 +1031,15 @@ if lsof -nP -iTCP:"$BG_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
 else
     GW_PIN="$(sed -n 's/^AF_GATEWAY_PIN_DEFAULT="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
     # A 0.6.1-era bootstrap.env: no FRAMEWORK_VERSION, CONSOLE, CODE_CLI, CORE_CLI, TRAY or FULL.
-    PRE062="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nGATEWAY_SPEC=abstractgateway==0.7.0\n"
+    # (gateway 0.7.1 = AbstractFramework 0.6.1, the first installer with --no-code-cli and --no-core-cli.)
+    PRE062="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nGATEWAY_SPEC=abstractgateway==0.7.1\nGATEWAY_VERSION=0.7.1\n"
     # (a) made with --no-console --no-core-cli --no-tray, no abstractcode, no --full: nothing of
     # them on disk. A plain re-run (no options) must not add Rust/console, abstractcode, the tray
     # or the library commands.
     mkdir -p "$WORK/pre_min/tools/abstractgateway" "$WORK/pre_min/home/$DATA_REL"
-    printf '[tool]\nrequirements = [{ name = "abstractgateway", specifier = "==0.7.0" }, { name = "webrtcvad-wheels", specifier = ">=2.0.14" }]\nentrypoints = [\n    { name = "abstractgateway", install-path = "/x/abstractgateway", from = "abstractgateway" },\n]\n' >"$WORK/pre_min/tools/abstractgateway/uv-receipt.toml"
+    printf '[tool]\nrequirements = [{ name = "abstractgateway", specifier = "==0.7.1" }, { name = "webrtcvad-wheels", specifier = ">=2.0.14" }]\nentrypoints = [\n    { name = "abstractgateway", install-path = "/x/abstractgateway", from = "abstractgateway" },\n]\n' >"$WORK/pre_min/tools/abstractgateway/uv-receipt.toml"
     printf "webrtcvad; sys_platform == 'never'\nstable-diffusion-cpp-python; sys_platform == 'never'\naec-audio-processing; sys_platform == 'never'\n" >"$WORK/pre_min/home/$DATA_REL/uv-overrides.txt"
-    BG_TOOLDIR="$WORK/pre_min/tools" BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="$PRE062" BG_CARGO=1 BG_ARGS=" " bg_case pre_min 1
+    BG_TOOLDIR="$WORK/pre_min/tools" BG_UV_LIST='abstractgateway v0.7.1' BG_STATE="$PRE062" BG_CARGO=1 BG_ARGS=" " bg_case pre_min 1
     check "pre-0.6.2, nothing extra on disk: says the options were read from disk" "$([[ $RC == 0 ]] && has "$OUT" "recorded no options (before AbstractFramework 0.6.2): read from disk: terminal console absent, abstractcode absent, library commands not exposed"; echo $?)" "$OUT"
     check "pre-0.6.2, nothing extra on disk: no console or abstractcode build, no library commands, recorded" "$([[ $RC == 0 ]] && [[ ! -s "$CARGOLOG" ]] && ! grep "tool install " "$UVLOG" | grep -q -- "--with-executables-from" && grep -qx "CONSOLE=0" "$DATA_T/bootstrap.env" && grep -qx "CODE_CLI=0" "$DATA_T/bootstrap.env" && grep -qx "CORE_CLI=0" "$DATA_T/bootstrap.env" && grep -qx "FULL=0" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
     if [[ "$IS_MAC" == 1 ]]; then
@@ -1041,6 +1053,14 @@ else
     BG_TOOLDIR="$WORK/pre_all/tools" BG_UV_LIST='abstractgateway v0.7.0' BG_STATE="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nGATEWAY_SPEC=abstractgateway[tray]==0.7.0\n" BG_CARGO=1 BG_ARGS=" " bg_case pre_all 1
     check "pre-0.6.2, everything on disk: console, abstractcode, library commands, tray and --full kept and recorded" "$([[ $RC == 0 ]] && grep -qx "CONSOLE=1" "$DATA_T/bootstrap.env" && grep -qx "CODE_CLI=1" "$DATA_T/bootstrap.env" && grep -qx "CORE_CLI=1" "$DATA_T/bootstrap.env" && grep -qx "TRAY=1" "$DATA_T/bootstrap.env" && grep -qx "FULL=1" "$DATA_T/bootstrap.env" && has "$OUT" "compiled extras built (--full)"; echo $?)" "$OUT"
     check "pre-0.6.2, everything on disk: the install keeps --full (no llama.cpp wheel pin) and the library commands" "$({ grep "tool install " "$UVLOG" | grep -q -- "--with llama-cpp-python --constraints" || has "$OUT" "needs a C compiler"; } && grep "tool install " "$UVLOG" | grep -q -- "--with-executables-from abstractcore" && grep -q "abstractgateway-console" "$CARGOLOG"; echo $?)" "$UVLOG"
+    # (c) upgrade safety D-C: made before the option existed (gateway 0.5.0 = AbstractFramework 0.4.0: no
+    # --no-console, --no-code-cli, --no-core-cli yet), nothing of them on disk: that was the old default,
+    # not an opt-out, so the first upgrade takes today's defaults.
+    mkdir -p "$WORK/pre_050/tools/abstractgateway" "$WORK/pre_050/home/$DATA_REL"
+    printf '[tool]\nrequirements = [{ name = "abstractgateway", specifier = "==0.5.0" }]\nentrypoints = [\n    { name = "abstractgateway", install-path = "/x/abstractgateway", from = "abstractgateway" },\n]\n' >"$WORK/pre_050/tools/abstractgateway/uv-receipt.toml"
+    BG_TOOLDIR="$WORK/pre_050/tools" BG_UV_LIST='abstractgateway v0.5.0' BG_STATE="PORT=$BG_PORT\nMODE=background\nPROFILE=light\nGATEWAY_SPEC=abstractgateway==0.5.0\nGATEWAY_VERSION=0.5.0\n" BG_CARGO=1 BG_ARGS=" " bg_case pre_050 1
+    check "D-C: gateway 0.5.0 install, no library commands in its receipt: WITH_CORE_CLI=1 (the option did not exist), recorded" "$([[ $RC == 0 ]] && grep "tool install " "$UVLOG" | grep -q -- "--with-executables-from abstractcore" && grep -qx "CORE_CLI=1" "$DATA_T/bootstrap.env" && has "$OUT" "library commands not exposed (no such option before gateway 0.5.0's installer: today's default, on)"; echo $?)" "$OUT"
+    check "D-C: the same for the terminal console and abstractcode (built, recorded on)" "$([[ $RC == 0 ]] && grep -q "abstractgateway-console" "$CARGOLOG" && grep -q " abstractcode " "$CARGOLOG" && grep -qx "CONSOLE=1" "$DATA_T/bootstrap.env" && grep -qx "CODE_CLI=1" "$DATA_T/bootstrap.env"; echo $?)" "$OUT"
 fi
 
 echo "[20] one installer at a time per data dir: a running one is refused cleanly, a stale lock is taken over"

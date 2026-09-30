@@ -1228,10 +1228,11 @@ def test_install_ps1_pin_latest_has_no_release_matrix(tmp_path: Path) -> None:
     assert _printed_block(out, "uv-constraints.txt:") == ["llama-cpp-python==0.3.35"]
 
 
-def _pre_062_install(tmp_path: Path, *, everything: bool) -> Path:
-    """A 0.6.1-era install for install.ps1 -Print: bootstrap.env without the choices, a gateway uv
-    tool (a fake uv answers `tool list`/`tool dir`), its receipt, uv-overrides.txt and, with
-    everything=True, the terminal console and abstractcode next to the gateway's commands."""
+def _pre_062_install(tmp_path: Path, *, everything: bool, gateway: str = "0.7.1") -> Path:
+    """A 0.6.1-era install (gateway 0.7.1, the first installer with -NoCodeCli/-NoCoreCli) for
+    install.ps1 -Print: bootstrap.env without the choices, a gateway uv tool (a fake uv answers
+    `tool list`/`tool dir`), its receipt, uv-overrides.txt and, with everything=True, the terminal
+    console and abstractcode next to the gateway's commands. GATEWAY: an older install's version."""
     tools, bin_ = tmp_path / "tools", tmp_path / ".local" / "bin"
     (tools / "abstractgateway").mkdir(parents=True)
     bin_.mkdir(parents=True)
@@ -1240,15 +1241,16 @@ def _pre_062_install(tmp_path: Path, *, everything: bool) -> Path:
     uv = fake / "uv"
     uv.write_text("#!/bin/sh\ncase \"$1 $2\" in\n  \"--version \"*) echo 'uv 0.0.0' ;;\n  \"tool list\") echo 'abstractgateway v0.7.0' ;;\n"
                   f"  \"tool dir\") if [ \"$3\" = --bin ]; then echo '{bin_}'; else echo '{tools}'; fi ;;\nesac\nexit 0\n")
+    uv.write_text(uv.read_text().replace("abstractgateway v0.7.0", f"abstractgateway v{gateway}"))
     uv.chmod(0o755)
     data = tmp_path / "lad" / "AbstractGateway"
     data.mkdir(parents=True)
-    spec = "abstractgateway[tray]==0.7.0" if everything else "abstractgateway==0.7.0"
-    (data / "bootstrap.env").write_text(f"PORT=18999\nMODE=background\nPROFILE=light\nGATEWAY_SPEC={spec}\n")
+    spec = f"abstractgateway[tray]=={gateway}" if everything else f"abstractgateway=={gateway}"
+    (data / "bootstrap.env").write_text(f"PORT=18999\nMODE=background\nPROFILE=light\nGATEWAY_SPEC={spec}\nGATEWAY_VERSION={gateway}\n")
     extras = ', extras = ["tray"]' if everything else ""
     core = '    { name = "abstractcore", install-path = "/x/abstractcore", from = "abstractcore" },\n' if everything else ""
     (tools / "abstractgateway" / "uv-receipt.toml").write_text(
-        f'[tool]\nrequirements = [{{ name = "abstractgateway"{extras}, specifier = "==0.7.0" }}]\nentrypoints = [\n'
+        f'[tool]\nrequirements = [{{ name = "abstractgateway"{extras}, specifier = "=={gateway}" }}]\nentrypoints = [\n'
         f'    {{ name = "abstractgateway", install-path = "/x/abstractgateway", from = "abstractgateway" }},\n{core}]\n')
     never = "" if everything else "stable-diffusion-cpp-python; sys_platform == 'never'\naec-audio-processing; sys_platform == 'never'\n"
     (data / "uv-overrides.txt").write_text("webrtcvad; sys_platform == 'never'\n" + never)
@@ -1277,6 +1279,63 @@ def test_install_ps1_first_upgrade_from_before_0_6_2_reads_the_choices_from_disk
     install = _install_line(full)
     assert f" {_CLI_FROM} " in install and "abstractgateway[tray]==" in install, install
     assert "--with llama-cpp-python " in install and "llama-cpp-python==" not in install, install
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_an_option_that_did_not_exist_yet_takes_todays_default(tmp_path: Path) -> None:
+    """Upgrade safety D-C (same rule as install.sh [19c]): a gateway 0.5.0 install (AbstractFramework
+    0.4.0) had no -NoCoreCli, -NoCodeCli or -NoConsole, so their absence on disk is the old default:
+    the first upgrade exposes the library commands and builds the console and abstractcode."""
+    out = _ps1_print(tmp_path, path_prefix=_pre_062_install(tmp_path, everything=False, gateway="0.5.0"))
+    older = "(no such option before gateway 0.5.0's installer: today's default, on)"
+    assert f"terminal console absent {older}, abstractcode absent {older}, library commands not exposed {older}" in out, out
+    assert f" {_CLI_FROM} " in _install_line(out)
+    assert "Terminal console (" in out
+
+
+def _ps1_fake_network_gateway(tmp_path: Path, stored_port: int) -> Path:
+    """A previous install for install.ps1: bootstrap.env says port 18095 and the installed gateway's
+    Network setting stores STORED_PORT (a fake `abstractgateway network status --json`; `network set`
+    is logged, so an overwrite shows)."""
+    bin_ = tmp_path / ".local" / "bin"
+    bin_.mkdir(parents=True)
+    fake = tmp_path / "fakeuv"
+    fake.mkdir()
+    (fake / "uv").write_text("#!/bin/sh\ncase \"$1 $2\" in\n  \"--version \"*) echo 'uv 0.0.0' ;;\n  \"tool list\") echo 'abstractgateway v0.8.1' ;;\n"
+                             f"  \"tool dir\") echo '{bin_}' ;;\nesac\nexit 0\n")
+    (fake / "uv").chmod(0o755)
+    (bin_ / "abstractgateway").write_text(
+        "#!/bin/sh\n"
+        f"echo \"$* data=$ABSTRACTGATEWAY_DATA_DIR\" >> '{tmp_path}/gw.log'\n"
+        "case \"$1 $2\" in\n"
+        f"  \"network status\") printf '{{\\n  \"configured\": {{\\n    \"mode\": \"localhost\",\\n    \"port\": {stored_port},\\n"
+        "    \"source\": \"stored\",\\n    \"port_source\": \"stored\"\\n  }\\n}\\n' ;;\n"
+        "esac\nexit 0\n")
+    (bin_ / "abstractgateway").chmod(0o755)
+    data = tmp_path / "lad" / "AbstractGateway"
+    data.mkdir(parents=True)
+    (data / "bootstrap.env").write_text("PORT=18095\nMODE=background\nPROFILE=light\nFRAMEWORK_VERSION=0.7.1\nCONSOLE=0\nCODE_CLI=0\n"
+                                        "CORE_CLI=0\nTRAY=0\nFULL=0\nGATEWAY_VERSION=0.8.1\n")
+    return fake
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_install_ps1_keeps_a_port_stored_in_the_network_setting(tmp_path: Path) -> None:
+    """Upgrade safety D-A (same rule as install.sh [10]): without -Port, the Network setting's stored
+    port (18094) wins over bootstrap.env's (18095); with -Port the given port is used."""
+    env = {**os.environ, "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad"),
+           "PROCESSOR_ARCHITECTURE": "AMD64", "PATH": f"{_ps1_fake_network_gateway(tmp_path, 18094)}{os.pathsep}{os.environ.get('PATH', '')}"}
+    for key in [k for k in env if k.upper().endswith(("_KEY", "_TOKEN"))]:
+        del env[key]
+    argv = ["pwsh", "-NoProfile", "-File", str(ROOT / "scripts" / "install.ps1"), "-Print", "-Profile", "light"]
+    out = subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
+    assert "port 18094: kept from the gateway's Network setting (bootstrap.env said 18095" in out, out
+    assert "Console:    http://127.0.0.1:18094/console" in out
+    assert "18095" not in out.split("bootstrap.env said 18095", 1)[1]
+    gwlog = (tmp_path / "gw.log").read_text()
+    assert "network status --json" in gwlog and "data=" + str(tmp_path / "lad" / "AbstractGateway") in gwlog, gwlog
+    explicit = subprocess.run([*argv, "-Port", "18999"], check=True, capture_output=True, text=True, env=env).stdout
+    assert "Console:    http://127.0.0.1:18999/console" in explicit and "kept from the gateway's Network setting" not in explicit
 
 
 def test_install_ps1_upgrades_like_install_sh() -> None:

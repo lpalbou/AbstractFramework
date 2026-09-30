@@ -4,6 +4,39 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **An upgrade never installs less because of the network.** A server error while downloading (a
+  502 on PyTorch's wheel) made the installer drop local voice and finish green without it. Now any
+  network failure of a uv install (HTTP 5xx, 429, 408, a DNS, connect, reset or closed connection, a
+  timeout, a download cut off, uv's `Request failed after N retries`) runs the same full install
+  again on the index-lag waits (15, 30, 60, then 120 s; 8 attempts over about 10 minutes), then stops
+  with exit code 1, uv's cause in red and the exact command to run again. uv changes the gateway's
+  environment only after every download succeeded, so the previous gateway stays installed and
+  working (new test with the real uv against a local index). Python's download and nodejs-wheel get
+  the same retries. `install.sh` and `install.ps1`.
+- **Local voice left out is said in red.** The voice fallback now runs only for a deterministic
+  incompatibility (uv's resolution failure, e.g. `has no wheels with a matching platform tag`, a failed
+  build, a broken file). The warning gives uv's reason, the summary's first line says `… but NOT
+  everything was installed:`, the `Voice:` line is red, the output ends with `NOT installed:` and
+  `bootstrap.env` records `VOICE_SKIPPED=<reason>`.
+- **The terminal console and abstractcode wait for crates.io.** Right after a crate publish, `cargo
+  install --version <pin>` answered `could not find ... in registry` and the console was skipped with a
+  warning. crates.io's index lag and cargo's network failures now get the same waits; when they run
+  out the rest of the install goes on, the summary says in red which crate was not built, and the
+  installer exits with code 1.
+- **A port changed in a console survives an upgrade.** A re-run without `--port` (the consoles'
+  **Update**) read the port from `bootstrap.env`, wrote it over the gateway's Network setting and
+  restarted the gateway on the old port. The installer now reads `abstractgateway network status
+  --json` first: a stored port wins, is recorded in `bootstrap.env`, and is never overwritten unless
+  `--port` is given; a stored port held by another program stops the install with what to do
+  instead of moving to another port.
+- **Upgrading an install older than 0.6.1 no longer turns options off.** An option the installer did
+  not have when that install was made (the terminal console before gateway 0.6.0, abstractcode and the
+  AbstractCore commands before gateway 0.7.1) was read as opted out, so a 0.4.0 install kept
+  `--no-core-cli` on its first upgrade. Such an option now takes today's default, dated by the
+  recorded `GATEWAY_VERSION`, and the installer says so.
+
 ## [0.7.2] - 2026-09-30
 
 Every screen works on phones, tablets and any window size. Pins: AbstractGateway 0.9.0 and

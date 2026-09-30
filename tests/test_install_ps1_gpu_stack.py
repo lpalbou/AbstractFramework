@@ -411,7 +411,7 @@ def test_install_steps_use_live_output_and_the_fallbacks_are_wired() -> None:
     """Static wiring the dry run cannot show (the script refuses a real install off Windows)."""
     ps1 = SCRIPT.read_text(encoding="utf-8")
     # The gateway install and every llama.cpp swap stream their output.
-    assert "-Shown $shownInstall -Soft:$Soft -Live -IndexPins $indexPins)" in ps1
+    assert "-Shown $shownInstall -Soft:$Soft -Live -IndexPins $indexPins -Retry uv)" in ps1
     assert "'--refresh-package', 'llama-cpp-python', \"llama-cpp-python==$ggufPin\") -Soft -Live" in ps1
     # CUDA install fails -> without llama.cpp -> PyTorch's CPU build (and CUDA llama builds dropped).
     a = ps1.index("attempt: PyTorch $($stack.Label) build with the llama.cpp $ggufVariant build")

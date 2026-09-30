@@ -219,6 +219,52 @@ function Find-IndexLag([string]$Text, [string[]]$Pins, [int]$Code = 1) {
     }
     return ''
 }
+# Transient network failures (operator requirement 2026-09-30; same rule and strings as install.sh,
+# see its comment above AF_UV_DETERMINISTIC): the SAME install runs again on $script:IndexRetryDelays,
+# then stops with the cause and the command to run again; never the voice/llama.cpp fallback. uv
+# changes a tool environment only after every download succeeded (tests/test_uv_tool_install_atomicity.py).
+# Strings as uv 0.11.14 and cargo 1.98 print them, matched lower-cased with lines joined.
+$script:UvDeterministic = 'no solution found when resolving dependencies|the build backend returned an error|failed to build|hash mismatch for|computed crc32 value did not match|checksum|the wheel is invalid|is not a valid wheel filename|http status client error \(4([13-9][0-9]|0[0-79]|2[0-8])'
+$script:UvTransient = 'http status server error \(5|http status client error \((429|408)|request failed after [0-9]+ retr|due to network timeout|error sending request for url|connection reset|connection refused|connection closed before message completed|broken pipe|operation timed out|connection timed out|dns error|failed to lookup address information|tcp connect error|network unreachable|host unreachable|error decoding response body|request or response body error|unexpected end of file|unexpected eof'
+$script:CargoLag = 'could not find `[^`]*` in registry|failed to select a version for the requirement|no matching package named'
+$script:CargoDeterministic = 'could not compile|error\[e[0-9]|linker `'
+$script:CargoTransient = 'spurious network error|failed to get successful http response from .*got (5[0-9][0-9]|429)|couldn.t resolve host|couldn.t connect to server|timeout was reached|operation timed out|ssl connect error|empty reply from server|failure when receiving data|transferred a partial file|failed to download from|download of [^ ]* failed|connection reset|early eof'
+function ConvertTo-RetryText([string]$Text) {
+    $t = $Text -replace "$([char]27)\[[0-9;]*m", '' -replace [string][char]0x2502, ' ' -replace "$([char]0x251C)$([char]0x2500)$([char]0x25B6)", ' ' -replace "$([char]0x2570)$([char]0x2500)$([char]0x25B6)", ' '
+    return ($t -replace '\s+', ' ').ToLowerInvariant()
+}
+# The first line of $Text matching $Pattern, as printed (box drawing, "Caused by:", "error:" removed).
+function Get-RetryCause([string]$Text, [string]$Pattern) {
+    foreach ($l in ($Text -split "`r?`n")) {
+        $c = ($l -replace "$([char]27)\[[0-9;]*m", '')
+        if ($c -match "(?i)$Pattern") {
+            $c = ($c -replace "^[\s$([char]0x2502)$([char]0x251C)$([char]0x2570)$([char]0x2500)$([char]0x25B6)$([char]0x00D7)]*", '') -replace '^(?i)caused by: *', '' -replace '^(?i)(error|warning): *', ''
+            if ($c.Length -gt 240) { $c = $c.Substring(0, 240) }
+            return $c
+        }
+    }
+    return ''
+}
+# Find-Transient TEXT CODE: the cause line when uv's failure (exit 1 or 2) is a transient network failure.
+function Find-Transient([string]$Text, [int]$Code = 1) {
+    if ($Code -ne 1 -and $Code -ne 2) { return '' }
+    $t = ConvertTo-RetryText $Text
+    if ($t -match $script:UvDeterministic) { return '' }
+    if ($t -match $script:UvTransient) { return (Get-RetryCause $Text $script:UvTransient) }
+    if ($t -match 'failed to download|failed to fetch') { return (Get-RetryCause $Text 'failed to download|failed to fetch') }
+    return ''
+}
+# Find-CargoRetry TEXT: 'lag <cause>' (crates.io's index has not listed it yet) or 'transient <cause>'.
+function Find-CargoRetry([string]$Text) {
+    $t = ConvertTo-RetryText $Text
+    if ($t -match $script:CargoDeterministic) { return '' }
+    if ($t -match $script:CargoLag) { return ('lag ' + (Get-RetryCause $Text $script:CargoLag)) }
+    if ($t -match $script:CargoTransient) {
+        $c = (Get-RetryCause $Text $script:CargoTransient) -replace '^.*spurious network error \([^)]*\): *', ''
+        return ('transient ' + $c)
+    }
+    return ''
+}
 # The log's text after byte $Offset (one command's output).
 function Read-LogFrom([string]$Path, [long]$Offset) {
     if (-not (Test-Path -LiteralPath $Path)) { return '' }
@@ -652,6 +698,15 @@ function Write-Ok([string]$Text) { Write-Host '  + ' -ForegroundColor Green -NoN
 function Write-Info([string]$Text) { Write-Host '  . ' -ForegroundColor Cyan -NoNewline; Write-Host $Text }
 function Write-Warn2([string]$Text) { Write-Host '  ! ' -ForegroundColor Yellow -NoNewline; Write-Host $Text }
 function Stop-Install([string]$Text) { throw "AFBOOT: $Text" }
+# What this run could not install (same rule as install.sh's incomplete_add): the summary and the last
+# lines say it in red; -Fail (a part a re-run installs once the network or crates.io caught up) also
+# makes the exit status 1.
+$script:Incomplete = New-Object System.Collections.Generic.List[string]
+$script:AfExit = 0
+function Add-Incomplete([string]$Label, [string]$Why, [switch]$Fail) {
+    $script:Incomplete.Add("  ${Label}: $Why")
+    if ($Fail) { $script:AfExit = 1 }
+}
 # One installer at a time per data dir (same rule as install.sh): a re-run and the gateway's Update
 # must never install over each other. The lock is <data dir>\update\install.lock, a directory
 # (created atomically) holding the owner's pid; a lock whose pid is gone is taken over.
@@ -693,10 +748,19 @@ function Format-Arg([string]$Value) {
     return "'" + ($Value -replace "'", "''") + "'"
 }
 function Format-Cmd([string[]]$Argv) { return (($Argv | ForEach-Object { Format-Arg $_ }) -join ' ') }
+# This exact command again (same options), for the messages that stop an install on a network failure.
+$script:RerunArgs = @(foreach ($k in $PSBoundParameters.Keys) {
+    $v = $PSBoundParameters[$k]
+    if ($v -is [System.Management.Automation.SwitchParameter]) { if ($v.IsPresent) { "-$k" } }
+    else { "-$k"; Format-Arg "$v" }
+})
+$script:RerunCmd = if ($script:RanAsFile) { "powershell -ExecutionPolicy ByPass -File $(Format-Arg $PSCommandPath) $($script:RerunArgs -join ' ')".TrimEnd() }
+    elseif ($script:RerunArgs.Count) { "& ([scriptblock]::Create((irm $AfScriptUrl))) $($script:RerunArgs -join ' ')" }
+    else { "powershell -ExecutionPolicy ByPass -c `"irm $AfScriptUrl | iex`"" }
 
 # Run a native command: print it, log its output, fail loudly on a non-zero exit.
 function Invoke-Native {
-    param([string]$Description, [string[]]$Argv, [switch]$Soft, [string]$Shown = '', [switch]$Live, [string[]]$IndexPins = @())
+    param([string]$Description, [string[]]$Argv, [switch]$Soft, [string]$Shown = '', [switch]$Live, [string[]]$IndexPins = @(), [string]$Retry = '')
     if (-not $Shown) { $Shown = Format-Cmd $Argv }
     Write-Host "  `$ $Shown" -ForegroundColor DarkGray
     $script:Twins.Add($Shown)
@@ -706,6 +770,12 @@ function Invoke-Native {
     if ($Argv.Count -gt 1) { $rest = $Argv[1..($Argv.Count - 1)] }
     # -IndexPins: a failure that is PyPI index lag for one of these exact pins runs the same command
     # again after each of $script:IndexRetryDelays (Find-IndexLag), and never ends in the -Soft path.
+    # -Retry uv (implied by -IndexPins): a transient network failure (Find-Transient) too; when the
+    # ladder runs out it stops the install, even with -Soft. -Retry cargo: crates.io lag and network
+    # failures (Find-CargoRetry); when the ladder runs out, $script:RunGaveUp holds the cause and the
+    # -Soft path returns $false (the caller reports it in red, and the exit status is 1).
+    if ($IndexPins.Count -and -not $Retry) { $Retry = 'uv' }
+    $script:RunGaveUp = ''
     $tries = $script:IndexRetryDelays.Count + 1
     $try = 1
     while ($true) {
@@ -728,9 +798,41 @@ function Invoke-Native {
         } finally {
             $ErrorActionPreference = $old
         }
-        if (($code -ne 1 -and $code -ne 2) -or -not $IndexPins.Count) { break }
-        $lag = Find-IndexLag (Read-LogFrom $script:LogFile $mark) $IndexPins $code
-        if (-not $lag) { break }
+        if ($code -eq 0 -or -not $Retry) { break }
+        $out = Read-LogFrom $script:LogFile $mark
+        $script:RunMarkText = $out
+        $lag = ''; $tr = ''; $trKind = 'network'
+        if ($Retry -eq 'cargo') {
+            $cr = Find-CargoRetry $out
+            if ($cr -like 'lag *') { $tr = $cr.Substring(4); $trKind = 'lag' } elseif ($cr -like 'transient *') { $tr = $cr.Substring(10) }
+        } else {
+            if ($IndexPins.Count) { $lag = Find-IndexLag $out $IndexPins $code }
+            if (-not $lag) { $tr = Find-Transient $out $code }
+        }
+        if (-not $lag -and -not $tr) { break }
+        $minutes = [int][Math]::Floor((($script:IndexRetryDelays | Measure-Object -Sum).Sum + 30) / 60)
+        if ($tr) {
+            if ($try -ge $tries) {
+                Add-Content -Path $script:LogFile -Value "`r`n# ${trKind}: still failing after $try attempts; stopping" -Encoding UTF8
+                if ($Retry -eq 'cargo') {
+                    if ($trKind -eq 'lag') { $script:RunGaveUp = "crates.io has not listed it yet after $try attempts over about $minutes minutes (cargo: $tr)" }
+                    else { $script:RunGaveUp = "a network error while downloading from crates.io, still failing after $try attempts over about $minutes minutes (cargo: $tr)" }
+                    break
+                }
+                Stop-Install ("$Description failed: a network error while downloading, still failing after $try attempts over about $minutes minutes (uv: $tr).`n" +
+                    "Nothing was left out and nothing was changed: uv changes the gateway's environment only after every`n" +
+                    "download succeeded, so a gateway already installed here is still there and still works.`n" +
+                    "What to do: check this computer's internet connection (or its proxy), then run the installer again:`n" +
+                    "    $($script:RerunCmd)`nLog: $($script:LogFile)")
+            }
+            $delay = $script:IndexRetryDelays[$try - 1]
+            $try++
+            if ($trKind -eq 'lag') { Write-Warn2 "crates.io hasn't listed it yet ($tr); retrying in $delay s (attempt $try/$tries)" }
+            else { Write-Warn2 "a network error while downloading ($(if ($Retry -eq 'cargo') { 'cargo' } else { 'uv' }): $tr); retrying in $delay s (attempt $try/$tries)" }
+            Add-Content -Path $script:LogFile -Value "`r`n# ${trKind}: $tr; attempt $try/$tries in $delay s" -Encoding UTF8
+            Start-Sleep -Seconds $delay
+            continue
+        }
         $lagKind = ''
         if ($lag.Contains(' ')) { $lag, $lagKind = $lag -split ' ', 2 }
         $lagName, $lagVer = $lag -split '==', 2
@@ -746,7 +848,7 @@ function Invoke-Native {
                 "The release is published, but the package index this computer reads (one of PyPI's mirrors, or a`n" +
                 "package mirror/proxy set in UV_INDEX_URL, PIP_INDEX_URL or uv.toml) has not caught up with it yet.`n" +
                 "Nothing was left out and the previous gateway install is unchanged (uv stops before it installs).`n" +
-                "What to do: run the installer again in a few minutes; it installs everything, local voice included.`n" +
+                "What to do: run the installer again in a few minutes; it installs everything, local voice included:`n    $($script:RerunCmd)`n" +
                 "With a package mirror, ask its administrator to refresh $lagName. Log: $($script:LogFile)")
         }
         $delay = $script:IndexRetryDelays[$try - 1]
@@ -973,6 +1075,12 @@ function Main {
         }
         if ("$($cfg.source)" -ne 'stored') {
             Invoke-Native -Description 'store the Network setting' -Argv @($gw, 'network', 'set', 'localhost', '--port', "$Port") | Out-Null
+        } elseif ("$($cfg.port_source)" -eq 'stored' -and "$($cfg.port)" -ne "$Port" -and -not $explicitPort) {
+            # A stored port is the user's: only -Port changes it (upgrade safety D-A).
+            Write-Warn2 "the Network setting holds port $($cfg.port) (this run's port is $Port): kept, the gateway starts on port $($cfg.port); give -Port to change it"
+            # Main's $Port and $baseUrl (this runs inside Start-BackgroundGateway, called from Main).
+            Set-Variable -Name Port -Value ([int]$cfg.port) -Scope 2
+            Set-Variable -Name baseUrl -Value "http://127.0.0.1:$($cfg.port)" -Scope 2
         } elseif ("$($cfg.port_source)" -ne 'stored' -or "$($cfg.port)" -ne "$Port") {
             # `internet` was acknowledged when it was chosen; only the port changes here.
             $argv = @($gw, 'network', 'set', "$($cfg.mode)", '--port', "$Port")
@@ -1179,6 +1287,22 @@ function Main {
     # entrypoints `from = "abstractcore"`. The tray: the tray extra in the receipt's gateway
     # requirement (else the recorded GATEWAY_SPEC). -Full: uv-overrides.txt without the compiled
     # extras' "never" lines (else the tool environment holds one of them).
+    # An option this installer did not have yet when that install was made was never a choice: its
+    # absence on disk is the old default, and the option takes today's default (same rule and versions
+    # as install.sh, upgrade safety D-C): the terminal console became a default with gateway 0.6.0
+    # (AbstractFramework 0.5.0), AbstractCode's terminal client and the library commands with gateway
+    # 0.7.1 (AbstractFramework 0.6.1). The version: GATEWAY_VERSION, else GATEWAY_SPEC's pin, else the
+    # uv tool's; an unknown version keeps reading the disk.
+    $prevGwVersion = [string]$state['GATEWAY_VERSION']
+    if (-not $prevGwVersion -and [string]$state['GATEWAY_SPEC'] -match '==([0-9][0-9.]*)') { $prevGwVersion = $Matches[1] }
+    if (-not $prevGwVersion) { $prevGwVersion = $prevGw }
+    $optionExisted = {
+        param([string]$Min)
+        $v = $null
+        if (-not [version]::TryParse(($prevGwVersion -replace '^([0-9]+)$', '$1.0'), [ref]$v)) { return $true }
+        return ($v -ge [version]$Min)
+    }
+    $older = " (no such option before gateway $prevGwVersion's installer: today's default, on)"
     $inferred = @()
     if ((Test-Path -LiteralPath $stateFile) -and $prevGw) {
         $cargoBinPrev = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
@@ -1186,14 +1310,18 @@ function Main {
         $crateBinPrev = if ($rootsPrev.Console) { Join-Path $rootsPrev.Console 'bin' } else { $cargoBinPrev }
         $receipt = if ($toolVenv) { Join-Path $toolVenv 'uv-receipt.toml' } else { '' }
         $receiptText = if ($receipt -and (Test-Path -LiteralPath $receipt)) { [string](Get-Content -Raw -LiteralPath $receipt) } else { '' }
-        foreach ($c in @(@{ Key = 'CONSOLE'; Name = ($AfCrateConsole -split '@', 2)[0]; Label = 'terminal console' }, @{ Key = 'CODE_CLI'; Name = ($AfCrateCodeCli -split '@', 2)[0]; Label = 'abstractcode' })) {
+        foreach ($c in @(@{ Key = 'CONSOLE'; Name = ($AfCrateConsole -split '@', 2)[0]; Label = 'terminal console'; Since = '0.6.0' }, @{ Key = 'CODE_CLI'; Name = ($AfCrateCodeCli -split '@', 2)[0]; Label = 'abstractcode'; Since = '0.7.1' })) {
             if ($state[$c.Key]) { continue }
             $has = (Test-Path -LiteralPath (Join-Path $crateBinPrev "$($c.Name)$exeSuffix")) -or (Test-Path -LiteralPath (Join-Path $cargoBinPrev "$($c.Name)$exeSuffix"))
-            $state[$c.Key] = $(if ($has) { '1' } else { '0' }); $inferred += "$($c.Label) $(if ($has) { 'present' } else { 'absent' })"
+            if ($has) { $state[$c.Key] = '1'; $inferred += "$($c.Label) present" }
+            elseif (& $optionExisted $c.Since) { $state[$c.Key] = '0'; $inferred += "$($c.Label) absent" }
+            else { $state[$c.Key] = '1'; $inferred += "$($c.Label) absent$older" }
         }
         if (-not $state['CORE_CLI'] -and $receiptText) {
             $has = $receiptText -match 'from = "abstractcore"'
-            $state['CORE_CLI'] = $(if ($has) { '1' } else { '0' }); $inferred += "library commands $(if ($has) { 'exposed' } else { 'not exposed' })"
+            if ($has) { $state['CORE_CLI'] = '1'; $inferred += 'library commands exposed' }
+            elseif (& $optionExisted '0.7.1') { $state['CORE_CLI'] = '0'; $inferred += 'library commands not exposed' }
+            else { $state['CORE_CLI'] = '1'; $inferred += "library commands not exposed$older" }
         }
         if (-not $state['TRAY']) {
             $gwReq = [regex]::Match($receiptText, '\{ *name = "abstractgateway"[^}]*\}').Value
@@ -1329,9 +1457,28 @@ function Main {
         } catch { }
     }
 
-    # Port.
+    # Port: -Port, else the port stored in the installed gateway's Network setting (a user who changed
+    # it in a console, the tray or with `abstractgateway network set` keeps it; same rule as install.sh,
+    # upgrade safety D-A), else bootstrap.env's, else 8080.
     $explicitPort = ($Port -ne 0)
-    if (-not $explicitPort) { $Port = if ($state['PORT']) { [int]$state['PORT'] } else { 8080 } }
+    $portFromNet = $false
+    if (-not $explicitPort -and (Test-GatewaySupports 'network')) {
+        $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        $hadDataDir = Test-Path Env:ABSTRACTGATEWAY_DATA_DIR; $prevDataDir = $env:ABSTRACTGATEWAY_DATA_DIR
+        $netCfg = $null
+        try { $env:ABSTRACTGATEWAY_DATA_DIR = $DataDir; $netCfg = ((& $gw network status --json 2>$null) -join "`n" | ConvertFrom-Json).configured } catch { $netCfg = $null }
+        finally {
+            $ErrorActionPreference = $old
+            if ($hadDataDir) { $env:ABSTRACTGATEWAY_DATA_DIR = $prevDataDir } else { Remove-Item Env:ABSTRACTGATEWAY_DATA_DIR -ErrorAction SilentlyContinue }
+        }
+        if ($netCfg -and "$($netCfg.port_source)" -eq 'stored' -and "$($netCfg.port)" -match '^[0-9]+$') {
+            $Port = [int]$netCfg.port; $portFromNet = $true
+            if ($state['PORT'] -and $state['PORT'] -ne "$Port") { Write-Info "port ${Port}: kept from the gateway's Network setting (bootstrap.env said $($state['PORT']); the setting wins, -Port changes it)" }
+            # This install's port is the stored one from here on (its running gateway is recognised there).
+            $state['PORT'] = "$Port"
+        }
+    }
+    if (-not $explicitPort -and -not $portFromNet) { $Port = if ($state['PORT']) { [int]$state['PORT'] } else { 8080 } }
     $reuseRunning = $false
     # $portHeld: -NoStart, and this install's recorded port is taken by a process this installer does
     # not recognise as its own (a gateway started by hand, or another program). Nothing starts, so the
@@ -1358,6 +1505,10 @@ function Main {
             Write-Info "port $Port (this install's) is in use by a process this installer did not start; kept (-NoStart starts nothing)"
         }
         elseif ($explicitPort) { Stop-Install "port $Port is already in use by another process; pick another one with -Port" }
+        elseif ($portFromNet -and -not $NoStart) {
+            # Never move a port the user stored: say so, and let them free it or choose.
+            Stop-Install "port $Port (the gateway's Network setting) is already in use by another process.`nWhat to do: stop that program, or choose another port with -Port (it becomes the Network setting's port), then run the installer again:`n    $($script:RerunCmd)"
+        }
         else {
             $p = $Port + 1
             while ($p -le $Port + 20 -and (Test-PortBusy $p)) { $p++ }
@@ -1417,7 +1568,7 @@ function Main {
     }
 
     Write-Step "Python $AfPython (managed by uv, isolated from any system Python)"
-    Invoke-Native -Description "install Python $AfPython" -Argv @($uv, 'python', 'install', $AfPython) | Out-Null
+    Invoke-Native -Description "install Python $AfPython" -Argv @($uv, 'python', 'install', $AfPython) -Retry uv | Out-Null
 
     # --- 3. gateway ---------------------------------------------------------------------------
     # Windows keeps a running program's files locked, so uv cannot replace the gateway's while it
@@ -1520,7 +1671,7 @@ function Main {
         $desc = if ($Gguf) { "install abstractgateway with the llama.cpp $ggufVariant wheel" } else { 'install abstractgateway' }
         if (-not $script:DryRun) { Push-Location -LiteralPath $DataDir }
         try {
-            return (Invoke-Native -Description $desc -Argv ($argv + @($gwSpec)) -Shown $shownInstall -Soft:$Soft -Live -IndexPins $indexPins)
+            return (Invoke-Native -Description $desc -Argv ($argv + @($gwSpec)) -Shown $shownInstall -Soft:$Soft -Live -IndexPins $indexPins -Retry uv)
         } finally {
             if (-not $script:DryRun) { Pop-Location }
         }
@@ -1529,8 +1680,11 @@ function Main {
         if ($voice.Wanted) {
             $voice.Spec = $voice.Wanted
             if (Install-Gateway $Gguf -Soft) { $voice.Result = $voice.Ok; return $true }
-            Write-Warn2 'local voice (Supertonic, Whisper) did not install on this system: retrying without it'
-            $voice.Spec = ''; $voice.Result = "skipped: its packages did not install on this system (see $($script:LogFile))"
+            # Only a deterministic failure gets here (Invoke-Native retries network failures and index
+            # lag, then stops): uv's reason, when it names a missing wheel, goes into the summary.
+            $vwhy = [regex]::Match((ConvertTo-RetryText $script:RunMarkText), '[a-z0-9_.-]+(==[^ ]+)? has no wheels with a matching [a-z ]*tag').Value
+            Write-Warn2 "local voice (Supertonic, Whisper) did not install on this system$(if ($vwhy) { " ($vwhy)" }): retrying without it"
+            $voice.Spec = ''; $voice.Result = "skipped: its packages did not install on this system$(if ($vwhy) { ": $vwhy" }) (see $($script:LogFile))"
         }
         return (Install-Gateway $Gguf -Soft:$Soft)
     }
@@ -1725,7 +1879,7 @@ function Main {
         elseif (Test-Path -LiteralPath (Join-Path $toolBin "node$exeSuffix")) { Write-Ok "Node.js from nodejs-wheel: $(Join-Path $toolBin "node$exeSuffix")" }
         else {
             Write-Info "no Node.js >= 18: installing the nodejs-wheel uv tool (node, npm, npx in $toolBin; no admin, no UAC)"
-            Invoke-Native -Description 'install nodejs-wheel' -Argv @($uv, 'tool', 'install', 'nodejs-wheel') | Out-Null
+            Invoke-Native -Description 'install nodejs-wheel' -Argv @($uv, 'tool', 'install', 'nodejs-wheel') -Retry uv | Out-Null
             $nodeWheel = '1'
         }
         Write-Info "the browser apps open through the gateway: in the console's Apps page, Install, then Open (each at $baseUrl/apps/<app>/)"
@@ -1767,9 +1921,18 @@ function Main {
         $argv = @($cargo, 'install', '--locked', '--force')
         if ($Root) { $argv += @('--root', $Root) }
         $argv += @($Name, '--version', $CratePin)
-        $built = Invoke-Native -Description "build $What" -Argv $argv -Soft
+        # crates.io lag right after a publish and network failures are retried (-Retry cargo); when the
+        # ladder runs out, $script:CrateGaveUp holds the cause. cargo replaces the binary only after a
+        # successful build, so a failed upgrade keeps the previous one.
+        $script:CrateGaveUp = ''
+        $built = Invoke-Native -Description "build $What" -Argv $argv -Soft -Retry cargo
         if ($script:DryRun) { return $true }
         if ($built) { Write-Ok "installed $Name $CratePin`: $Exe"; return $true }
+        if ($script:RunGaveUp) {
+            $script:CrateGaveUp = "$Name $CratePin was not built: $($script:RunGaveUp); run the installer again: $($script:RerunCmd)"
+            Write-Host '  ! ' -ForegroundColor Red -NoNewline; Write-Host $script:CrateGaveUp -ForegroundColor Red
+            return $false
+        }
         Write-Info "build it by hand: $(Format-Cmd $argv)"
         return $false
     }
@@ -1787,6 +1950,7 @@ function Main {
         if ($consoleHave) { Write-Ok "$consoleName $consolePin already installed: $consoleExe"; $consoleOk = $true }
         elseif (-not $cargo) { $consoleWhy = $noCargoWhy; Write-Warn2 "$($rustFor -join ' and ') skipped: $noCargoWhy"; $rustWarned = $true }
         elseif (Install-Crate 'the terminal console' $consoleName $consolePin $consoleExe $roots.Console) { $consoleOk = $true }
+        elseif ($script:CrateGaveUp) { $consoleWhy = $script:CrateGaveUp; Add-Incomplete 'terminal console' $script:CrateGaveUp -Fail }
         else { $consoleWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
     }
     if ($NoCodeCli) { $codeOk = $codeHave }
@@ -1795,6 +1959,7 @@ function Main {
         if ($codeHave) { Write-Ok "$codeName $codeHaveVersion already installed ($codePin or later): $codeExe"; $codeOk = $true }
         elseif (-not $cargo) { $codeWhy = $noCargoWhy; if (-not $rustWarned) { Write-Warn2 "$($rustFor -join ' and ') skipped: $noCargoWhy" } }
         elseif (Install-Crate 'AbstractCode''s terminal client' $codeName $codePin $codeExe $roots.Code) { $codeOk = $true }
+        elseif ($script:CrateGaveUp) { $codeWhy = $script:CrateGaveUp; Add-Incomplete 'AbstractCode''s terminal client' $script:CrateGaveUp -Fail }
         else { $codeWhy = 'the cargo build failed (Rust 1.87+ and the MSVC Build Tools are needed)' }
     }
 
@@ -1926,6 +2091,8 @@ function Main {
             "# written by AbstractFramework install.ps1 on $((Get-Date).ToUniversalTime().ToString('s'))Z",
             "PORT=$Port", "MODE=$mode", "PROFILE=$profileName", "NODE_WHEEL=$nodeWheel",
             "GATEWAY_SPEC=$gwSpec", "GATEWAY_VERSION=$after",
+            # Local voice as installed, and why it is not (empty when it is), like install.sh.
+            "VOICE_SPEC=$($voice.Spec)", "VOICE_SKIPPED=$(if (-not $voice.Spec) { $voice.Result -replace '\r?\n', ' ' })",
             # The release this install is (empty after -Pin/-From), and the choices a re-run keeps.
             "FRAMEWORK_VERSION=$(if ($isRelease) { $AfFrameworkVersion })",
             "CONSOLE=$(if ($NoConsole) { 0 } else { 1 })", "CODE_CLI=$(if ($NoCodeCli) { 0 } else { 1 })",
@@ -2013,8 +2180,14 @@ function Main {
         elseif ($isRelease) { $upgradeLine = "Upgraded: AbstractFramework $was -> $AfFrameworkVersion (what changed is listed below)." }
         else { $upgradeLine = "Upgraded: $target (what changed is listed below)." }
     }
+    # Local voice not installed: never a silent green (same rule as install.sh).
+    if (-not $script:DryRun -and -not $voice.Spec) { Add-Incomplete 'local voice (Supertonic, Whisper)' $voice.Result }
     Write-Host ''
     if ($script:DryRun) { Write-Host 'Plan printed (-Print): nothing was changed.' -ForegroundColor White }
+    elseif ($script:Incomplete.Count) {
+        Write-Host 'AbstractFramework is installed, but NOT everything was installed:' -ForegroundColor Red
+        foreach ($l in $script:Incomplete) { Write-Host $l -ForegroundColor Red }
+    }
     else { Write-Host 'AbstractFramework is installed.' -ForegroundColor Green }
     if ($upgradeLine) { Write-Host "  $upgradeLine" }
     if ($serviceFallback) { Write-Host '  Start at login is off: the login item could not be registered (see the warning above). The gateway runs in the background until you sign out; once the cause is fixed, turn start at login on (At login, below).' }
@@ -2100,7 +2273,7 @@ function Main {
     if ($stack) { Write-Host "  GPU stack:  $($stack.Label) ($($stack.Why))" }
     if ($torchResult) { Write-Host "  PyTorch:    $torchResult" }
     Write-Host "  GGUF:       $ggufResult"
-    Write-Host "  Voice:      $($voice.Result)"
+    if ($voice.Spec) { Write-Host "  Voice:      $($voice.Result)" } else { Write-Host "  Voice:      $($voice.Result)" -ForegroundColor Red }
     if ($whisperResult) { Write-Host "  Whisper:    $whisperResult" }
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     Write-Host "  Apps:       $baseUrl/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
@@ -2112,6 +2285,16 @@ function Main {
         foreach ($t in $script:Twins) { Write-Host "    $t" -ForegroundColor Gray }
     }
     if ($script:LogFile) { Write-Host ''; Write-Host "  Full log: $($script:LogFile)" -ForegroundColor DarkGray }
+    # The last lines: what is missing, in red, so the end of the output never reads as complete.
+    if (-not $script:DryRun -and $script:Incomplete.Count) {
+        Write-Host ''
+        Write-Host 'NOT installed:' -ForegroundColor Red
+        foreach ($l in $script:Incomplete) { Write-Host $l -ForegroundColor Red }
+        if ($script:AfExit) {
+            Write-Host 'What to do: run the installer again once the network (or crates.io) has caught up; it installs what is missing:' -ForegroundColor Red
+            Write-Host "    $($script:RerunCmd)"
+        }
+    }
 }
 
 try {
@@ -2127,3 +2310,5 @@ try {
 } finally {
     Unlock-Install
 }
+# 1 when a part a re-run can install is missing (crates.io lag or the network after the retries).
+if ($script:AfExit -and $script:RanAsFile) { exit 1 }

@@ -101,7 +101,12 @@ where it stopped.
 | The browser page asks for a token | The one-time sign-in link lasts 10 minutes. Run the installer again: it opens a fresh link. |
 | `another AbstractFramework installer is already running` | An installer, or an **Update** from a console or the menu-bar icon, is running for this data directory. Wait until it finishes, then run the line again. |
 | `PyPI hasn't published abstractgateway 0.8.1 to every mirror yet; retrying in 30 s (attempt 3/8)` | Nothing to do: a release published minutes ago has not reached every PyPI mirror yet. The installer waits and runs the same install again (see [Right after a release](#right-after-a-release)). |
-| `PyPI still does not list … after 8 attempts over about 10 minutes` | The package index this computer reads has not caught up after 10 minutes (often a company package mirror set in `UV_INDEX_URL`, `PIP_INDEX_URL` or `uv.toml`). Nothing was left out and the previous install is unchanged. Run the installer again in a few minutes; with a mirror, ask its administrator to refresh the package the message names. |
+| `PyPI still does not list … after 8 attempts over about 10 minutes` | The package index this computer reads has not caught up after 10 minutes (often a company package mirror set in `UV_INDEX_URL`, `PIP_INDEX_URL` or `uv.toml`). Nothing was left out and the previous install is unchanged. Run the installer again in a few minutes (the message ends with the exact command); with a mirror, ask its administrator to refresh the package the message names. |
+| `a network error while downloading (uv: HTTP status server error (502 Bad Gateway) …); retrying in 15 s (attempt 2/8)` | Nothing to do: a download failed on the way (a server error, a rate limit, a dropped or reset connection, a timeout). The installer runs the same install again, with every part (see [Right after a release](#right-after-a-release)). |
+| `… failed: a network error while downloading, still failing after 8 attempts over about 10 minutes` | The network (or the proxy) kept failing for 10 minutes. Nothing was left out and nothing was changed: the gateway you had is still installed and still works. Check the connection, then run the command the message ends with (the same command, same options). |
+| `crates.io hasn't listed it yet (…); retrying in 15 s` | Nothing to do: the terminal console or `abstractcode` was published minutes ago and crates.io's index has not caught up; the installer builds it again. |
+| `NOT installed:` at the end, in red | Something was left out, and the line says what and why. For `terminal console` or `AbstractCode's terminal client` (crates.io or the network still failing after 10 minutes; exit code 1) run the command shown again later; the gateway is installed and running. For `local voice` this system cannot run it (no wheels for it); the rest is installed. |
+| `port N (the gateway's Network setting) is already in use by another process` | The port you chose in a console (or the tray) is taken by another program. Stop that program, or choose another port with `--port` (Windows: `-Port`); it becomes the Network setting's port. |
 | Anything else | Run the installer again. If it stops at the same step, report it with the log file named at the end of the message (`~/Library/Application Support/AbstractGateway/logs/install-….log`). |
 
 ### Right after a release
@@ -117,8 +122,9 @@ paste on Windows) treats that as a delay:
 - it waits 15 s, 30 s, 60 s, then 120 s between attempts, 8 attempts over about 10 minutes, and
   says so: `PyPI hasn't published abstractgateway 0.8.1 to every mirror yet; retrying in 30 s
   (attempt 3/8)`;
-- if the version is still missing after that, it stops with the cause and what to do. uv stops
-  before it changes anything, so the previous install keeps working.
+- if the version is still missing after that, it stops with the cause and what to do, ending with
+  the exact command to run again. uv stops before it changes anything, so the previous install keeps
+  working.
 
 Only these cases wait, for a package at the exact version this release pins (the gateway and the
 release's libraries: AbstractCore, AbstractRuntime, AbstractVoice, ...): uv exits with code 1, its
@@ -126,11 +132,39 @@ output contains uv's resolution failure (`No solution found when resolving depen
 says `there is no version of <package>==<version>`; or the download of that version's own file
 answered `HTTP status client error (404` (`Failed to fetch: .../<package>-<version>-py3-none-any.whl`:
 the package list already shows the new version but the file is not served yet; uv exits with code
-1, or 2 when even the file's metadata answered 404). A server error (5xx) or a refused download
-(403) is not a delay and is handled as before. The voice
-requirement carries its pinned version for this reason. Every other failure is handled as before: a system
-without the voice or llama.cpp wheels still installs without them and the summary says so. An
-install with `--pin latest` or `--from` pins nothing, so nothing is waited for.
+1, or 2 when even the file's metadata answered 404). The voice requirement carries its pinned version
+for this reason. An install with `--pin latest` or `--from` pins nothing, so no version is waited for.
+
+A network failure is handled the same way, on any download: the same full install runs again on the
+same waits, then the installer stops (exit code 1) with uv's cause and the command to run again; it
+never installs less because of the network. uv changes the gateway's environment only after every
+download succeeded, so a failed upgrade leaves the previous gateway installed and working. A network failure
+is any uv failure that names one of: an HTTP server error (`HTTP status server error (5…`), a rate
+limit or request timeout (`429`, `408`), `Request failed after N retries` (uv's own retries ran out),
+`Failed to download distribution due to network timeout`, a DNS, connect, reset, refused or closed
+connection, a body cut off mid-download, or a plain `Failed to download` / `Failed to fetch` with no
+other cause. These are never retried: uv's resolution failure (`No solution found when resolving
+dependencies`, e.g. `has no wheels with a matching platform tag`), a failed source build, a broken
+file (hash or CRC mismatch, an invalid wheel) and an HTTP 4xx other than 408/429 that is not the
+index lag above. The installer's comment above `AF_UV_DETERMINISTIC` lists the exact strings and the
+uv version they come from.
+
+Only such a deterministic failure takes the soft paths: a system without the voice engine's wheels
+(`onnxruntime … has no wheels with a matching platform tag`) installs without local voice, and says so
+in red: in the warning (with uv's reason), in the summary's first line (`… but NOT everything was
+installed:`), on the `Voice:` line, and in the last lines of the output (`NOT installed:`); the data
+directory's `bootstrap.env` records the reason as `VOICE_SKIPPED=`. The llama.cpp wheel works the
+same way.
+
+The terminal console and `abstractcode` are built with `cargo install --version <pin>`. Right after
+their publish, crates.io's index can still answer ``could not find `abstractcode` in registry
+`crates-io` with version `=<pin>` ``; that, and cargo's network failures (`spurious network error`,
+`failed to get successful HTTP response … got 502`, `Couldn't connect to server`, ...), get the same
+waits. When they run out, the rest of the install goes on (the gateway is installed and started), the
+summary says in red which one was not built and why, and the installer exits with code 1. A compile
+error is not retried. The browser apps are not installed by the installer: the gateway's **Apps** page
+downloads them from the npm registry when you choose **Install** (the latest published version), and
+says so when the registry cannot be reached; press **Install** again then.
 
 ## Upgrade
 
@@ -192,6 +226,13 @@ The line always runs the installer of the latest AbstractFramework release. It:
 - asks PyPI again for the packages it pins (`uv tool install --refresh-package ...`), so a release
   published minutes earlier installs without clearing uv's cache, and waits for PyPI's mirrors when
   they have not caught up yet ([Right after a release](#right-after-a-release));
+- keeps the port of the gateway's Network setting when you changed it in a console, the menu-bar
+  icon or with `abstractgateway network set`: that port wins over the one the previous install
+  recorded, the installer says so (`port 18094: kept from the gateway's Network setting (bootstrap.env
+  said 18095 …)`) and records it. Only `--port` (Windows: `-Port`) changes it. When another program
+  holds that port, the installer stops and says so instead of moving to another port;
+- retries a download that fails on the way (a server error, a dropped connection) with the same full
+  install, and never installs less because of the network ([Right after a release](#right-after-a-release));
 - never leaves the gateway stopped: when the login item cannot be registered, the gateway starts in
   the background and the summary says how to turn start at login on;
 - ends with what changed, old -> new, under **Changes** (`Changes: none` when nothing moved), and
@@ -206,7 +247,12 @@ options. The first re-run says `AbstractFramework found (abstractgateway <versio
 not recorded): upgrading to AbstractFramework 0.7.2`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
 there, whether the gateway has the tray extra and the AbstractCore commands, whether the compiled
 extras were built (`--full`), and a custom data directory through the gateway pointer. It prints
-what it found (`read from disk: …`) and records it for later runs. You can also repeat your
+what it found (`read from disk: …`) and records it for later runs. An option the installer did not
+have yet when that install was made was never a choice, so it takes today's default instead: the
+terminal console for installs before AbstractFramework 0.5.0 (gateway 0.6.0), `abstractcode` and the
+AbstractCore commands for installs before 0.6.1 (gateway 0.7.1); the installer dates the install by
+the gateway version it recorded and says `(no such option before gateway <version>'s installer:
+today's default, on)`. You can also repeat your
 original options once on that first run. The **Update** button of gateway 0.7.1 and earlier cannot
 upgrade an installer install: re-run the line once, and from gateway 0.7.2 on **Update** runs the
 installer.

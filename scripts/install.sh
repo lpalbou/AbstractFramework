@@ -370,6 +370,87 @@ uv_index_lag() {
     done
     return 0
 }
+# ---------------------------------------------------------------------------
+# Transient download failures (operator requirement 2026-09-30: "the upgrade should never fail; if
+# there is a lag or delay, it should auto retry"). A 502 while downloading torch made uv exit 2, and
+# the voice fallback then installed WITHOUT local voice and finished green. A network failure is
+# never a reason to install less: the SAME install runs again on the AF_INDEX_RETRY_DELAYS ladder,
+# then the installer stops (exit 1) with the cause and the command to run again. uv changes a tool
+# environment only after every download succeeded, so the previous install is still there and still
+# works (proven with uv 0.11.14 against a local index answering 502, 429 and a connection reset: an
+# upgrade, an added --with, a new Python and --reinstall all left the old tool working;
+# tests/test_uv_tool_install_atomicity.py).
+#
+# The strings, as uv 0.11.14 prints them (read from its binary, and captured from it against a local
+# index; matched lower-cased, lines joined, box drawing and colour removed, like uv_index_lag):
+#   deterministic, checked first (never retried; the existing fallbacks or a clear failure):
+#     "No solution found when resolving dependencies"   exit 1: a conflict, no wheel for this platform
+#                                                       ("has no wheels with a matching platform tag")
+#     "The build backend returned an error", "Failed to build"   a source build failed
+#     "Hash mismatch for", "a computed CRC32 value did not match", "checksum", "The wheel is invalid",
+#     "is not a valid wheel filename"                   a broken file (e.g. the 0.3.32+ Metal llama.cpp
+#                                                       wheels' zip CRC), the same on every attempt
+#     "HTTP status client error (4xx" except 408/429    the server refused this file (a 404 that is
+#                                                       not index lag, 401, 403)
+#   transient:
+#     "HTTP status server error (5"                     any 5xx (reqwest's wording)
+#     "HTTP status client error (429" / "(408"          rate limited / request timeout
+#     "Request failed after <n> retr"                   uv's own retries of a retryable error ran out
+#     "Failed to download distribution due to network timeout"
+#     "error sending request for url", "connection reset", "connection refused",
+#     "connection closed before message completed", "broken pipe", "operation timed out",
+#     "connection timed out", "dns error", "failed to lookup address information",
+#     "tcp connect error", "network unreachable", "host unreachable", "error decoding response body",
+#     "request or response body error", "unexpected end of file", "unexpected eof"
+#     "Failed to download" / "Failed to fetch" with no deterministic string: a download that broke off
+# ---------------------------------------------------------------------------
+AF_UV_DETERMINISTIC='no solution found when resolving dependencies|the build backend returned an error|failed to build|hash mismatch for|computed crc32 value did not match|checksum|the wheel is invalid|is not a valid wheel filename|http status client error \(4([13-9][0-9]|0[0-79]|2[0-8])'
+AF_UV_TRANSIENT='http status server error \(5|http status client error \((429|408)|request failed after [0-9]+ retr|due to network timeout|error sending request for url|connection reset|connection refused|connection closed before message completed|broken pipe|operation timed out|connection timed out|dns error|failed to lookup address information|tcp connect error|network unreachable|host unreachable|error decoding response body|request or response body error|unexpected end of file|unexpected eof'
+# cargo (1.98, read from its binary and captured from it: crates.io with an unknown version, a dead
+# proxy, a local sparse index answering 502), for the terminal console and abstractcode:
+#   registry lag (crates.io's index has not listed a crate published minutes ago):
+#     "could not find `<crate>` in registry `crates-io` with version `=<pin>`",
+#     "failed to select a version for the requirement `<dep> = ...`", "no matching package named `<crate>`"
+#   deterministic, checked first: "could not compile", "error[E", "linker `" (a build failure)
+#   transient: "spurious network error", "failed to get successful HTTP response from ... got 5xx|429",
+#     libcurl's "[6] Couldn't resolve host", "[7] Couldn't connect to server", "[28] Timeout was reached",
+#     "[35] SSL connect error", "[52] Empty reply", "[56] Failure when receiving data", "[18] Transferred
+#     a partial file", "failed to download from", "download of ... failed", "connection reset", "early eof"
+AF_CARGO_LAG='could not find `[^`]*` in registry|failed to select a version for the requirement|no matching package named'
+AF_CARGO_DETERMINISTIC='could not compile|error\[e[0-9]|linker `'
+AF_CARGO_TRANSIENT='spurious network error|failed to get successful http response from .*got (5[0-9][0-9]|429)|couldn.t resolve host|couldn.t connect to server|timeout was reached|operation timed out|ssl connect error|empty reply from server|failure when receiving data|transferred a partial file|failed to download from|download of [^ ]* failed|connection reset|early eof'
+# retry_text LOGFILE FROM_LINE: the log's lines after FROM_LINE, joined, lower-cased, box drawing and
+# colour removed (uv wraps at 80 columns and draws its causes as a tree).
+retry_text() {
+    _rt_esc="$(printf '\033')"
+    sed -n "$(($2 + 1)),\$p" "$1" | sed "s/${_rt_esc}\[[0-9;]*m//g; s/│/ /g; s/├─▶/ /g; s/╰─▶/ /g" | tr -s '[:space:]' ' ' | tr 'A-Z' 'a-z'
+}
+# retry_cause LOGFILE FROM_LINE PATTERN: the first log line (after FROM_LINE) matching PATTERN, as
+# printed (box drawing, "Caused by:" and indentation removed), for the message.
+retry_cause() {
+    _rc_esc="$(printf '\033')"
+    sed -n "$(($2 + 1)),\$p" "$1" | sed "s/${_rc_esc}\[[0-9;]*m//g" | grep -i -E -m 1 "$3" \
+        | sed 's/^[[:space:]│├╰─▶×]*//; s/^[Cc]aused by: *//; s/^error: *//; s/^warning: *//' | cut -c1-240
+}
+# uv_transient LOGFILE FROM_LINE RC: the cause line when uv's failure (exit 1 or 2) is a transient
+# network failure (see the list above); nothing otherwise.
+uv_transient() {
+    case "${3:-1}" in 1|2) ;; *) return 0 ;; esac
+    _ut="$(retry_text "$1" "$2")"
+    printf '%s\n' "$_ut" | grep -Eq "$AF_UV_DETERMINISTIC" && return 0
+    if printf '%s\n' "$_ut" | grep -Eq "$AF_UV_TRANSIENT"; then retry_cause "$1" "$2" "$AF_UV_TRANSIENT"; return 0; fi
+    if printf '%s\n' "$_ut" | grep -Eq 'failed to download|failed to fetch'; then retry_cause "$1" "$2" 'failed to download|failed to fetch'; fi
+    return 0
+}
+# cargo_retry LOGFILE FROM_LINE: "lag <cause>" or "transient <cause>" for a cargo install that failed on
+# crates.io's index lag or the network (see the list above); nothing otherwise.
+cargo_retry() {
+    _ct="$(retry_text "$1" "$2")"
+    printf '%s\n' "$_ct" | grep -Eq "$AF_CARGO_DETERMINISTIC" && return 0
+    if printf '%s\n' "$_ct" | grep -Eq "$AF_CARGO_LAG"; then printf 'lag %s\n' "$(retry_cause "$1" "$2" "$AF_CARGO_LAG")"; return 0; fi
+    if printf '%s\n' "$_ct" | grep -Eq "$AF_CARGO_TRANSIENT"; then printf 'transient %s\n' "$(retry_cause "$1" "$2" "$AF_CARGO_TRANSIENT" | sed 's/^.*spurious network error ([^)]*): *//')"; fi
+    return 0
+}
 
 # ---------------------------------------------------------------------------
 # Options
@@ -399,6 +480,26 @@ usage() {
 }
 
 need_arg() { [ $# -ge 2 ] && [ -n "$2" ] || { echo "ERROR: $1 needs a value" >&2; exit 2; }; }
+
+# Shell-quote one word for display.
+q() {
+    case "$1" in
+        ''|*[!A-Za-z0-9_./:=@,+%-]*) printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")" ;;
+        *) printf '%s' "$1" ;;
+    esac
+}
+# RERUN_CMD: this exact command again (same options), for the messages that end an install on a
+# network failure: the file when this script runs as one (the gateway's Update, a download), else
+# the one-line `curl | sh` form.
+RERUN_CMD=""
+for _a in "$@"; do RERUN_CMD="$RERUN_CMD $(q "$_a")"; done
+if [ -f "$0" ] && head -n 3 "$0" 2>/dev/null | grep -q "AbstractFramework bootstrap"; then
+    RERUN_CMD="sh $(q "$0")$RERUN_CMD"
+elif [ -n "$RERUN_CMD" ]; then
+    RERUN_CMD="curl -LsSf $AF_SCRIPT_URL | sh -s --$RERUN_CMD"
+else
+    RERUN_CMD="curl -LsSf $AF_SCRIPT_URL | sh"
+fi
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -468,7 +569,7 @@ step() { STEP=$((STEP + 1)); printf '\n%s[%s] %s%s\n' "$C_B" "$STEP" "$1" "$C_0"
 ok()   { printf '  %s✓%s %s\n' "$C_G" "$C_0" "$1"; }
 info() { printf '  %s·%s %s\n' "$C_C" "$C_0" "$1"; }
 warn() { printf '  %s!%s %s\n' "$C_Y" "$C_0" "$1"; }
-die()  { printf '\n%sERROR:%s %s\n' "$C_R" "$C_0" "$1" >&2; exit 1; }
+die()  { printf '\n%sERROR: %s%s\n' "$C_R" "$1" "$C_0" >&2; exit 1; }
 
 # ask_yes QUESTION DEFAULT(y|n): 0 for yes. Only with --interactive and a
 # terminal to ask on (/dev/tty, so it also works through `curl | sh`); otherwise
@@ -525,13 +626,6 @@ ask_timed() {
     printf '%s\n' "$_at_said" >/dev/tty
 }
 
-# Shell-quote one word for display.
-q() {
-    case "$1" in
-        ''|*[!A-Za-z0-9_./:=@,+%-]*) printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")" ;;
-        *) printf '%s' "$1" ;;
-    esac
-}
 show_cmd() {
     _line=""
     for _w in "$@"; do _line="$_line $(q "$_w")"; done
@@ -552,14 +646,14 @@ run() {
     _soft="$RUN_SOFT"; RUN_SOFT=0
     _live="$RUN_LIVE"; RUN_LIVE=0
     _lagck="$RUN_INDEX_RETRY"; RUN_INDEX_RETRY=0
-    RUN_RC=0
+    RUN_RC=0; RUN_GAVE_UP=""
     [ "$PRINT" = 1 ] && return 0
     [ -n "$LOG_FILE" ] || _lagck=0
     _try=1; _tries=$(($(printf '%s\n' $AF_INDEX_RETRY_DELAYS | wc -l) + 1))
     while :; do
         _rc=0
         _mark=0; [ -z "$LOG_FILE" ] || _mark="$(wc -l <"$LOG_FILE" | tr -d ' ')"
-        if [ "$VERBOSE" = 1 ] && [ "$_lagck" = 1 ]; then
+        if [ "$VERBOSE" = 1 ] && [ "$_lagck" != 0 ]; then
             # -v shows the output, and the index-lag check still needs it in the log.
             printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
             _rcf="$(mktemp "${TMPDIR:-/tmp}/af-rc.XXXXXX")"
@@ -574,9 +668,53 @@ run() {
             printf '\n$ %s\n' "$_shown" >>"$LOG_FILE"
             "$@" >>"$LOG_FILE" 2>&1 || _rc=$?
         fi
-        { [ "$_rc" = 1 ] || [ "$_rc" = 2 ]; } && [ "$_lagck" = 1 ] || break
-        _lag="$(uv_index_lag "$LOG_FILE" "$_mark" "$_rc")"
-        [ -n "$_lag" ] || break
+        [ "$_rc" != 0 ] && [ "$_lagck" != 0 ] || break
+        # What kind of failure: PyPI index lag for a pinned package (uv_index_lag), crates.io lag
+        # (cargo_retry), or a transient network failure (uv_transient, cargo_retry). Anything else is
+        # not retried: the caller's fallback, or the failure below.
+        _lag=""; _tr=""; _trwho=uv
+        if [ "$_lagck" = cargo ]; then
+            _trwho=cargo
+            _cr="$(cargo_retry "$LOG_FILE" "$_mark")"
+            case "$_cr" in "lag "*) _tr="${_cr#lag }"; _trkind=lag ;; "transient "*) _tr="${_cr#transient }"; _trkind=network ;; esac
+        else
+            _trkind=network
+            { [ "$_rc" = 1 ] || [ "$_rc" = 2 ]; } && _lag="$(uv_index_lag "$LOG_FILE" "$_mark" "$_rc")"
+            [ -n "$_lag" ] || _tr="$(uv_transient "$LOG_FILE" "$_mark" "$_rc")"
+        fi
+        [ -n "$_lag" ] || [ -n "$_tr" ] || break
+        _lagmin="$(printf '%s\n' $AF_INDEX_RETRY_DELAYS | awk '{ s += $1 } END { print int((s + 30) / 60) }')"
+        if [ -n "$_tr" ]; then
+            if [ "$_try" -ge "$_tries" ]; then
+                printf '\n# %s: still failing after %s attempts; stopping\n' "$_trkind" "$_try" >>"$LOG_FILE"
+                if [ "$_trwho" = cargo ]; then
+                    # The terminal console and abstractcode: the rest of the install goes on (the gateway
+                    # is installed already), the summary says in red what is missing, the exit is 1.
+                    if [ "$_trkind" = lag ]; then
+                        RUN_GAVE_UP="crates.io has not listed it yet after $_try attempts over about $_lagmin minutes (cargo: $_tr)"
+                    else
+                        RUN_GAVE_UP="a network error while downloading from crates.io, still failing after $_try attempts over about $_lagmin minutes (cargo: $_tr)"
+                    fi
+                    break
+                fi
+                die "$_desc failed: a network error while downloading, still failing after $_try attempts over about $_lagmin minutes (uv: $_tr).
+Nothing was left out and nothing was changed: uv changes the gateway's environment only after every
+download succeeded, so a gateway already installed here is still there and still works.
+What to do: check this computer's internet connection (or its proxy), then run the installer again:
+    $RERUN_CMD
+Log: $LOG_FILE"
+            fi
+            _delay="$(printf '%s\n' $AF_INDEX_RETRY_DELAYS | sed -n "${_try}p")"
+            _try=$((_try + 1))
+            if [ "$_trkind" = lag ]; then
+                warn "crates.io hasn't listed it yet ($_tr); retrying in $_delay s (attempt $_try/$_tries)"
+            else
+                warn "a network error while downloading ($_trwho: $_tr); retrying in $_delay s (attempt $_try/$_tries)"
+            fi
+            printf '\n# %s: %s; attempt %s/%s in %s s\n' "$_trkind" "$_tr" "$_try" "$_tries" "$_delay" >>"$LOG_FILE"
+            sleep "$_delay"
+            continue
+        fi
         _lagkind=""; case "$_lag" in *" "*) _lagkind="${_lag#* }"; _lag="${_lag%% *}" ;; esac
         _lagname="${_lag%%==*}"; _lagver="${_lag#*==}"
         if [ "$_try" -ge "$_tries" ]; then
@@ -591,7 +729,8 @@ run() {
 The release is published, but the package index this computer reads (one of PyPI's mirrors, or a
 package mirror/proxy set in UV_INDEX_URL, PIP_INDEX_URL or uv.toml) has not caught up with it yet.
 Nothing was left out and the previous gateway install is unchanged (uv stops before it installs).
-What to do: run the installer again in a few minutes; it installs everything, local voice included.
+What to do: run the installer again in a few minutes; it installs everything, local voice included:
+    $RERUN_CMD
 With a package mirror, ask its administrator to refresh $_lagname. Log: $LOG_FILE"
         fi
         _delay="$(printf '%s\n' $AF_INDEX_RETRY_DELAYS | sed -n "${_try}p")"
@@ -600,7 +739,7 @@ With a package mirror, ask its administrator to refresh $_lagname. Log: $LOG_FIL
         printf '\n# index lag: %s %s not listed yet; attempt %s/%s in %s s\n' "$_lagname" "$_lagver" "$_try" "$_tries" "$_delay" >>"$LOG_FILE"
         sleep "$_delay"
     done
-    RUN_RC="$_rc"
+    RUN_RC="$_rc"; RUN_MARK="$_mark"
     [ "$_rc" = 0 ] && return 0
     if [ "$_soft" = 1 ]; then
         warn "$_desc did not succeed (exit $_rc; details in ${LOG_FILE:-the output above}); continuing"
@@ -628,9 +767,24 @@ same step, report it with the log file: ${LOG_FILE:-the output above} ($AF_DOCS#
 }
 RUN_SOFT=0
 RUN_LIVE=0
-# RUN_INDEX_RETRY=1: a uv install whose failure is PyPI index lag for a pinned package is run again
-# (see uv_index_lag); only after AF_INDEX_RETRY_DELAYS runs out does it fail, even with RUN_SOFT=1.
+# RUN_INDEX_RETRY=1: a uv install whose failure is PyPI index lag for a pinned package (uv_index_lag) or
+# a transient network failure (uv_transient) is run again; only after AF_INDEX_RETRY_DELAYS runs out
+# does it fail, even with RUN_SOFT=1 (a soft fallback never runs for a network failure).
+# RUN_INDEX_RETRY=cargo: the same for `cargo install` (cargo_retry: crates.io lag or the network); when
+# the ladder runs out, RUN_GAVE_UP holds the cause and the soft path returns (the caller reports it).
 RUN_INDEX_RETRY=0
+RUN_GAVE_UP=""
+RUN_MARK=0   # the log's line count before the last attempt of the last command (its output follows)
+# What this run could not install, for the summary (red) and the last lines of the output:
+# incomplete_add LABEL WHY [fail]; "fail" also makes the exit status 1 (a part that a re-run can
+# install once the network or crates.io catches up), as opposed to a part this system cannot run.
+INCOMPLETE=""; AF_EXIT=0
+incomplete_add() {
+    INCOMPLETE="${INCOMPLETE}  $1: $2
+"
+    [ "${3:-}" = fail ] && AF_EXIT=1
+    return 0
+}
 # live_exec CMD...: runs CMD with its output appended to the log, shows uv's progress lines as they
 # come ("    | Downloading torch (1.9GiB)"; package lists " + name==version" stay in the log), and
 # prints "... still working (Nm SSs elapsed; last: <line>)" after AF_HEARTBEAT seconds of silence,
@@ -982,15 +1136,22 @@ gateway_supports() {  # gateway_supports service|claim-url
 # (127.0.0.1, the bind the installer always used). A stored mode (e.g. `lan` chosen in
 # the tray) is KEPT; only its port is aligned to $PORT when it differs. Returns 1 when the
 # setting cannot be read: the caller then starts the old pinned command line, and says so.
-seed_network_setting() {
-    _net="$("$GW" network status --json 2>/dev/null | awk '
+# network_configured GW [DATA_DIR]: "mode port source port_source" from `GW network status --json`
+# (its `configured` block, gateway_network_v1; checked against abstractgateway 0.9.0's real output),
+# or nothing when the gateway cannot say. DATA_DIR: the gateway's data dir (else the environment's).
+network_configured() {
+    if [ -n "${2:-}" ]; then set -- env ABSTRACTGATEWAY_DATA_DIR="$2" "$1"; else set -- "$1"; fi
+    "$@" network status --json 2>/dev/null | awk '
         /^  "configured": \{/ { inb = 1; next }
         inb && /^  \}/ { inb = 0 }
         inb && /"mode":/ { v = $2; gsub(/[",]/, "", v); m = v }
         inb && /"port":/ { v = $2; gsub(/[",]/, "", v); p = v }
         inb && /"source":/ { v = $2; gsub(/[",]/, "", v); s = v }
         inb && /"port_source":/ { v = $2; gsub(/[",]/, "", v); ps = v }
-        END { if (m != "") print m, p, s, ps }')" || _net=""
+        END { if (m != "") print m, p, s, ps }'
+}
+seed_network_setting() {
+    _net="$(network_configured "$GW")" || _net=""
     if [ -z "$_net" ]; then
         warn "could not read the gateway's Network setting ('abstractgateway network status' failed); starting it pinned to 127.0.0.1:$PORT, so a Network choice will not apply until the next run"
         return 1
@@ -999,6 +1160,12 @@ seed_network_setting() {
     set -- $_net
     if [ "$3" != stored ]; then
         run "store the Network setting: this machine only (localhost), port $PORT" "$GW" network set localhost --port "$PORT"
+    elif [ "$4" = stored ] && [ "$2" != "$PORT" ] && [ "$PORT_EXPLICIT" = 0 ]; then
+        # A port stored in the Network setting (a console, the tray, `network set`) is the user's:
+        # only --port changes it (root backlog: upgrade safety D-A). PORT normally is that port
+        # already (read before the preflight); keep it and start there.
+        warn "the Network setting holds port $2 (this run's port is $PORT): kept, the gateway starts on port $2; give --port to change it"
+        PORT="$2"; BASE_URL="http://127.0.0.1:$PORT"
     elif [ "$4" != stored ] || [ "$2" != "$PORT" ]; then
         # `internet` was acknowledged when it was chosen; only the port changes here.
         if [ "$1" = internet ]; then
@@ -1772,22 +1939,45 @@ if [ "$PRINT" = 0 ] && [ "$ACTION" != install ]; then ENV_BEFORE="$(env_snapshot
 # without it, off only where the installer would have added it (macOS, or a display).
 # --full: uv-overrides.txt without the compiled extras' "never" lines (else the tool environment
 # holds one of them).
+# An option this installer did not have yet when that install was made was never a choice: its
+# absence on disk is then the old default, not an opt-out, and the option takes today's default
+# (root backlog, upgrade safety D-C: a 0.4.0 install kept --no-core-cli on its first upgrade). The
+# gateway version the previous install recorded (GATEWAY_VERSION, else its GATEWAY_SPEC's pin, else
+# the uv tool's) dates it: the terminal console became a default (--no-console) with gateway 0.6.0
+# (AbstractFramework 0.5.0); AbstractCode's terminal client and the library commands (--no-code-cli,
+# --no-core-cli) with gateway 0.7.1 (AbstractFramework 0.6.1). An unknown version keeps reading the disk.
+PREV_GW_VERSION=""
+if [ -f "$STATE_FILE" ]; then
+    PREV_GW_VERSION="$(st_get GATEWAY_VERSION)"
+    [ -n "$PREV_GW_VERSION" ] || PREV_GW_VERSION="$(st_get GATEWAY_SPEC | sed -n 's/.*==\([0-9][0-9.]*\).*/\1/p')"
+fi
+[ -n "$PREV_GW_VERSION" ] || PREV_GW_VERSION="$PREV_GW"
+# option_existed MIN_GATEWAY_VERSION: 0 when the previous install's gateway is that version or later
+# (or its version is unknown), 1 when the option did not exist yet.
+option_existed() {
+    case "$PREV_GW_VERSION" in ''|*[!0-9.]*) return 0 ;; esac
+    version_at_least "$PREV_GW_VERSION" "$1"
+}
 INFERRED=""
 if [ -f "$STATE_FILE" ] && [ -n "$PREV_GW" ]; then
     _cargo_bin="${CARGO_HOME:-$HOME/.cargo}/bin"
     _rcpt="$TOOL_VENV/uv-receipt.toml"; [ -f "$_rcpt" ] || _rcpt="$TOOL_VENV2/uv-receipt.toml"
     [ -f "$_rcpt" ] || _rcpt=""
+    _older=" (no such option before gateway $PREV_GW_VERSION's installer: today's default, on)"
     if [ -z "$ST_CONSOLE" ]; then
-        if [ -x "$CONSOLE_BIN" ] || [ -x "$_cargo_bin/$CONSOLE_NAME" ]; then ST_CONSOLE=1; else ST_CONSOLE=0; fi
-        INFERRED="${INFERRED:+$INFERRED, }terminal console $([ "$ST_CONSOLE" = 1 ] && echo present || echo absent)"
+        if [ -x "$CONSOLE_BIN" ] || [ -x "$_cargo_bin/$CONSOLE_NAME" ]; then ST_CONSOLE=1; INFERRED="${INFERRED:+$INFERRED, }terminal console present"
+        elif option_existed 0.6.0; then ST_CONSOLE=0; INFERRED="${INFERRED:+$INFERRED, }terminal console absent"
+        else ST_CONSOLE=1; INFERRED="${INFERRED:+$INFERRED, }terminal console absent$_older"; fi
     fi
     if [ -z "$ST_CODE_CLI" ]; then
-        if [ -x "$CODE_BIN" ] || [ -x "$_cargo_bin/$CODE_NAME" ]; then ST_CODE_CLI=1; else ST_CODE_CLI=0; fi
-        INFERRED="${INFERRED:+$INFERRED, }abstractcode $([ "$ST_CODE_CLI" = 1 ] && echo present || echo absent)"
+        if [ -x "$CODE_BIN" ] || [ -x "$_cargo_bin/$CODE_NAME" ]; then ST_CODE_CLI=1; INFERRED="${INFERRED:+$INFERRED, }abstractcode present"
+        elif option_existed 0.7.1; then ST_CODE_CLI=0; INFERRED="${INFERRED:+$INFERRED, }abstractcode absent"
+        else ST_CODE_CLI=1; INFERRED="${INFERRED:+$INFERRED, }abstractcode absent$_older"; fi
     fi
     if [ -z "$ST_CORE_CLI" ] && [ -n "$_rcpt" ]; then
-        if grep -q 'from = "abstractcore"' "$_rcpt"; then ST_CORE_CLI=1; else ST_CORE_CLI=0; fi
-        INFERRED="${INFERRED:+$INFERRED, }library commands $([ "$ST_CORE_CLI" = 1 ] && echo exposed || echo not exposed)"
+        if grep -q 'from = "abstractcore"' "$_rcpt"; then ST_CORE_CLI=1; INFERRED="${INFERRED:+$INFERRED, }library commands exposed"
+        elif option_existed 0.7.1; then ST_CORE_CLI=0; INFERRED="${INFERRED:+$INFERRED, }library commands not exposed"
+        else ST_CORE_CLI=1; INFERRED="${INFERRED:+$INFERRED, }library commands not exposed$_older"; fi
     fi
     if [ -z "$ST_TRAY" ]; then
         _gw_req=""
@@ -1977,7 +2167,27 @@ REUSE_RUNNING=0
 # does not recognise as its own (a gateway started by hand, or another program). Nothing starts,
 # so the recorded port is kept: moving it would point the next start at a different port.
 PORT_HELD=0
-if [ -z "$PORT" ]; then PORT="${ST_PORT:-8080}"; PORT_EXPLICIT=0; else PORT_EXPLICIT=1; fi
+# The port: --port, else the port stored in the installed gateway's Network setting (a user who changed
+# it in a console, the tray or with `abstractgateway network set` keeps it: root backlog, upgrade
+# safety D-A), else bootstrap.env's, else 8080. PORT_FROM_NET=1: it came from the Network setting.
+PORT_FROM_NET=0
+if [ -z "$PORT" ]; then
+    PORT_EXPLICIT=0
+    find_uv >/dev/null 2>&1 || true; [ -n "$TOOL_BIN" ] || tool_bin
+    if gateway_supports network; then
+        _snet="$(network_configured "$TOOL_BIN/abstractgateway" "$DATA_DIR")" || _snet=""
+        _sport="$(printf '%s\n' "$_snet" | awk '$4 == "stored" && $2 ~ /^[0-9]+$/ { print $2 }')"
+        if [ -n "$_sport" ]; then
+            PORT="$_sport"; PORT_FROM_NET=1
+            if [ -n "$ST_PORT" ] && [ "$ST_PORT" != "$PORT" ]; then
+                info "port $PORT: kept from the gateway's Network setting (bootstrap.env said $ST_PORT; the setting wins, --port changes it)"
+            fi
+            # This install's port is the stored one from here on (its running gateway is recognised there).
+            ST_PORT="$PORT"
+        fi
+    fi
+    [ -n "$PORT" ] || PORT="${ST_PORT:-8080}"
+else PORT_EXPLICIT=1; fi
 case "$PORT" in ''|*[!0-9]*) die "--port must be a number (got '$PORT')" ;; esac
 case "$ASK_WAIT" in ''|*[!0-9]*) die "--ask-wait must be a number of seconds (got '$ASK_WAIT')" ;; esac
 [ "$ASK_WAIT" -le 25 ] || ASK_WAIT=25
@@ -2006,6 +2216,11 @@ if port_busy "$PORT"; then
         info "port $PORT (this install's) is in use by a process this installer did not start; kept (--no-start starts nothing)"
     elif [ "$PORT_EXPLICIT" = 1 ]; then
         die "port $PORT is already in use by another process; pick another one with --port"
+    elif [ "$PORT_FROM_NET" = 1 ] && [ "$NO_START" = 0 ]; then
+        # Never move a port the user stored: say so, and let them free it or choose.
+        die "port $PORT (the gateway's Network setting) is already in use by another process.
+What to do: stop that program, or choose another port with --port (it becomes the Network setting's port), then run the installer again:
+    $RERUN_CMD"
     else
         _p=$((PORT + 1))
         while [ "$_p" -le $((PORT + 20)) ] && port_busy "$_p"; do _p=$((_p + 1)); done
@@ -2102,7 +2317,7 @@ fi
 if [ "$PRINT" = 1 ] && [ "$UV" = uv ]; then TOOL_BIN="${UV_TOOL_BIN_DIR:-${XDG_BIN_HOME:-$HOME/.local/bin}}"; else tool_bin; fi
 
 step "Python $AF_PYTHON (managed by uv, isolated from any system Python)"
-run "install Python $AF_PYTHON" "$UV" python install "$AF_PYTHON"
+RUN_INDEX_RETRY=1 run "install Python $AF_PYTHON" "$UV" python install "$AF_PYTHON"
 
 # ---------------------------------------------------------------------------
 # 3. Gateway
@@ -2159,8 +2374,11 @@ install_gateway_voice() {
             VOICE_RESULT="Supertonic (text-to-speech) and Whisper (speech-to-text), local on CPU"
             return 0
         fi
-        warn "local voice (Supertonic, Whisper) did not install on this system: retrying without it"
-        VOICE_SPEC=""; VOICE_RESULT="skipped: its packages did not install on this system (see $LOG_FILE)"
+        # Only a deterministic failure gets here (run retries network failures and index lag, then
+        # stops): uv's reason, when it names a missing wheel, goes into the summary and bootstrap.env.
+        _vwhy="$(retry_text "$LOG_FILE" "$RUN_MARK" | grep -o -E '[a-z0-9_.-]+(==[^ ]+)? has no wheels with a matching [a-z ]*tag' | head -n 1)" || _vwhy=""
+        warn "local voice (Supertonic, Whisper) did not install on this system${_vwhy:+ ($_vwhy)}: retrying without it"
+        VOICE_SPEC=""; VOICE_RESULT="skipped: its packages did not install on this system${_vwhy:+: $_vwhy} (see $LOG_FILE)"
     fi
     install_gateway "$1" "$2"
 }
@@ -2423,7 +2641,7 @@ if [ "$WITH_APPS" = 1 ]; then
         ok "Node.js from nodejs-wheel: $TOOL_BIN/node"
     else
         info "no Node.js >= 18: installing the nodejs-wheel uv tool (node, npm, npx in $TOOL_BIN; no admin)"
-        run "install nodejs-wheel" "$UV" tool install nodejs-wheel
+        RUN_INDEX_RETRY=1 run "install nodejs-wheel" "$UV" tool install nodejs-wheel
         NODE_WHEEL=1
     fi
     info "the browser apps open through the gateway: in the console's Apps page, Install, then Open (each at $BASE_URL/apps/<app>/)"
@@ -2498,15 +2716,25 @@ rust_cargo() {
     [ -n "$CARGO" ]
 }
 # build_crate "what it is" NAME PIN BIN ROOT: cargo install it with --root ROOT ("" = cargo's
-# own). Soft: a failure is one warning plus the command to run by hand; returns 1.
+# own). Soft: a failure is one warning plus the command to run by hand; returns 1. crates.io's index
+# lag right after a publish, and network failures, are retried on the AF_INDEX_RETRY_DELAYS ladder
+# (cargo_retry); when it runs out, BC_GAVE_UP holds the cause (the caller reports it in red, exit 1).
+# cargo builds into a temporary folder and replaces the binary only once the build succeeded, so a
+# failed upgrade leaves the previous binary in place.
+BC_GAVE_UP=""
 build_crate() {
-    _bc_what="$1"; _bc_name="$2"; _bc_pin="$3"; _bc_bin="$4"; _bc_root="$5"
+    _bc_what="$1"; _bc_name="$2"; _bc_pin="$3"; _bc_bin="$4"; _bc_root="$5"; BC_GAVE_UP=""
     info "compiling it from crates.io (a few minutes the first time)"
     set -- "$CARGO" install --locked --force
     [ -n "$_bc_root" ] && set -- "$@" --root "$_bc_root"
     set -- "$@" "$_bc_name" --version "$_bc_pin"
-    RUN_SOFT=1 run "build $_bc_what" "$@"
+    RUN_SOFT=1 RUN_INDEX_RETRY=cargo run "build $_bc_what" "$@"
     [ "$PRINT" = 1 ] && return 0
+    if [ -n "$RUN_GAVE_UP" ]; then
+        BC_GAVE_UP="$_bc_name $_bc_pin was not built: $RUN_GAVE_UP; run the installer again: $RERUN_CMD"
+        printf '  %s!%s %s%s%s\n' "$C_R" "$C_0" "$C_R" "$BC_GAVE_UP" "$C_0"
+        return 1
+    fi
     if [ "$RUN_RC" = 0 ] && crate_installed "$_bc_bin" "$_bc_name" "$_bc_pin"; then
         ok "installed $_bc_name $_bc_pin: $_bc_bin"; return 0
     fi
@@ -2522,6 +2750,7 @@ else
         ok "$CONSOLE_NAME $CONSOLE_PIN already installed: $CONSOLE_BIN"; CONSOLE_OK=1
     elif ! rust_cargo; then CONSOLE_WHY="$RUST_WHY"
     elif build_crate "the terminal console" "$CONSOLE_NAME" "$CONSOLE_PIN" "$CONSOLE_BIN" "$CRATE_ROOT"; then CONSOLE_OK=1
+    elif [ -n "$BC_GAVE_UP" ]; then CONSOLE_WHY="$BC_GAVE_UP"; incomplete_add "terminal console" "$BC_GAVE_UP" fail
     else CONSOLE_WHY="the build failed (see $LOG_FILE)"; fi
 fi
 if [ "$WITH_CODE_CLI" = 0 ]; then
@@ -2535,6 +2764,7 @@ else
         # Under --no-console nothing above said it (the console step warns for both).
         [ "$WITH_CONSOLE" = 0 ] && info "AbstractCode's terminal client skipped: $CODE_WHY"
     elif build_crate "AbstractCode's terminal client" "$CODE_NAME" "$CODE_PIN" "$CODE_BIN" "$CODE_ROOT"; then CODE_OK=1
+    elif [ -n "$BC_GAVE_UP" ]; then CODE_WHY="$BC_GAVE_UP"; incomplete_add "AbstractCode's terminal client" "$BC_GAVE_UP" fail
     else CODE_WHY="the build failed (see $LOG_FILE)"; fi
 fi
 
@@ -2578,6 +2808,8 @@ write_state() {
         echo "PORT=$PORT"; echo "MODE=$MODE"; echo "PROFILE=$PROFILE"
         echo "NODE_WHEEL=$NODE_WHEEL"; echo "GATEWAY_SPEC=$GW_SPEC"; echo "GATEWAY_VERSION=$AFTER"
         echo "UV_BY_INSTALLER=$UV_BY_US"; echo "RUST_BY_INSTALLER=$RUST_BY_US"; echo "VOICE_SPEC=$VOICE_SPEC"
+        # Why local voice is not installed (empty when it is): the summary's reason, on one line.
+        echo "VOICE_SKIPPED=$([ -n "$VOICE_SPEC" ] || printf '%s' "$VOICE_RESULT" | tr '\n' ' ')"
         # The release this install is (empty after --pin/--from), and the choices a re-run keeps.
         echo "FRAMEWORK_VERSION=$([ "$IS_RELEASE" = 1 ] && echo "$AF_FRAMEWORK_VERSION")"
         echo "CONSOLE=$WITH_CONSOLE"; echo "CODE_CLI=$WITH_CODE_CLI"; echo "CORE_CLI=$WITH_CORE_CLI"
@@ -2825,9 +3057,17 @@ TUI_CMD="$_tui_exe --gateway-url $BASE_URL $_tok_arg"
 # finds the gateway through its data dir: a custom one is passed on).
 CODE_LOGIN="$_code_exe login $_tok_arg"
 TUI_COMMAND="abstractgateway apps tui-command code"; [ "$DATA_DIR_CUSTOM" = 1 ] && TUI_COMMAND="$TUI_COMMAND --data-dir $(q "$DATA_DIR")"
+# Local voice not installed (a platform without its wheels, or its packages failed to install here):
+# never a silent green, the summary and the last lines say so in red.
+[ "$PRINT" = 0 ] && [ -z "$VOICE_SPEC" ] && incomplete_add "local voice (Supertonic, Whisper)" "$VOICE_RESULT"
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     # The plain-language part first: what a non-technical user needs to know.
-    printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
+    if [ -n "$INCOMPLETE" ]; then
+        printf '\n%s%sAbstractFramework is running, but NOT everything was installed:%s\n' "$C_B" "$C_R" "$C_0"
+        printf '%s' "$INCOMPLETE" | sed "s/^/$C_R/; s/\$/$C_0/"
+    else
+        printf '\n%s%sAbstractFramework is ready.%s\n' "$C_B" "$C_G" "$C_0"
+    fi
     [ -n "$UPGRADE_LINE" ] && echo "  $UPGRADE_LINE"
     [ "$SERVICE_FALLBACK" = 1 ] && echo "  Start at login is off: the login item could not be registered (see the warning above). Once its cause is fixed, turn it on as below."
     [ "$OPENED" = 1 ] && echo "  Your browser now shows its web console. Its address is $BASE_URL/console (bookmark it)."
@@ -2871,7 +3111,12 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     echo "  To remove it: run the uninstaller (Uninstall AbstractFramework.command), or: sh install.sh --uninstall"
 fi
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 1 ]; then
-    printf '\n%sAbstractFramework is installed (--no-start).%s\n' "$C_B" "$C_0"
+    if [ -n "$INCOMPLETE" ]; then
+        printf '\n%s%sAbstractFramework is installed (--no-start), but NOT everything was installed:%s\n' "$C_B" "$C_R" "$C_0"
+        printf '%s' "$INCOMPLETE" | sed "s/^/$C_R/; s/\$/$C_0/"
+    else
+        printf '\n%sAbstractFramework is installed (--no-start).%s\n' "$C_B" "$C_0"
+    fi
     [ -n "$UPGRADE_LINE" ] && echo "  $UPGRADE_LINE"
     if [ "$CHANGED" = 1 ] && [ "$ACTION" != install ]; then
         echo "  A gateway that is running still runs the previous version until it restarts: the console's"
@@ -2926,7 +3171,7 @@ echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && 
 echo "  Check:      uvx abstractframework doctor"
 [ -z "$TORCH_RESULT" ] || echo "  PyTorch:    $TORCH_RESULT"
 echo "  GGUF:       $GGUF_RESULT"
-echo "  Voice:      $VOICE_RESULT"
+if [ -n "$VOICE_SPEC" ]; then echo "  Voice:      $VOICE_RESULT"; else printf '  Voice:      %s%s%s\n' "$C_R" "$VOICE_RESULT" "$C_0"; fi
 [ -z "$GPU_RESULT" ] || echo "  vLLM:       $GPU_RESULT"
 if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
     echo "  $AF_SKIPPED_LINE"
@@ -2940,6 +3185,14 @@ if [ -n "$TWINS" ]; then
     printf '%s' "$TWINS"
 fi
 [ -n "$LOG_FILE" ] && printf '\n  %sFull log: %s%s\n' "$C_D" "$LOG_FILE" "$C_0"
+# The last lines: what is missing, in red, so the end of the output never reads as a complete install.
+if [ "$PRINT" = 0 ] && [ -n "$INCOMPLETE" ]; then
+    printf '\n%s%sNOT installed:%s\n' "$C_B" "$C_R" "$C_0"
+    printf '%s' "$INCOMPLETE" | sed "s/^/$C_R/; s/\$/$C_0/"
+    if [ "$AF_EXIT" = 1 ]; then
+        printf '%sWhat to do: run the installer again once the network (or crates.io) has caught up; it installs what is missing:%s\n    %s\n' "$C_R" "$C_0" "$RERUN_CMD"
+    fi
+fi
 
 # Remote or headless: offer the terminal console, signed in, the way a Mac opens the web console.
 # It is ASKED (Enter within --ask-wait s), never assumed: a pseudo-terminal with nobody at it
@@ -2974,4 +3227,5 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ] && [ "$NO_OPEN" = 0 ] && [ "$REMOTE_S
     fi
     trap - INT
 fi
-exit 0
+# 1 when a part a re-run can install is missing (crates.io lag or the network after the retries).
+exit "$AF_EXIT"
