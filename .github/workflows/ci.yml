@@ -102,7 +102,7 @@ jobs:
 
       - name: Re-run is idempotent (install.sh)
         if: runner.os != 'Windows'
-        run: sh scripts/install.sh --no-service --no-open --no-modify-path --profile light --port 18080 | tee rerun.log && grep -q "already installed" rerun.log
+        run: sh scripts/install.sh --no-service --no-open --no-modify-path --profile light --port 18080 | tee rerun.log && grep -q "already installed" rerun.log && grep -q "already running (pid [0-9]*), unchanged" rerun.log && ! grep -q "started by hand" rerun.log
 
       - name: Gateway log on failure (Unix)
         if: failure() && runner.os != 'Windows'
@@ -166,6 +166,19 @@ jobs:
           if ($h.service -ne 'abstractgateway') { throw 'not a gateway' }
           $c = Invoke-WebRequest http://127.0.0.1:18080/console -UseBasicParsing
           if ($c.StatusCode -ne 200) { throw "console answered $($c.StatusCode)" }
+
+      # A re-run finds the installer's own background gateway (gateway.pid is uv's abstractgateway.exe
+      # launcher; its child python.exe listens) and leaves it running: never "started by hand" (root
+      # backlog 0987 item 20, the 0.6.4 gate's B3).
+      - name: Re-run keeps the running gateway (install.ps1, Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $out = powershell -NoProfile -ExecutionPolicy ByPass -File scripts/install.ps1 -NoService -NoOpen -NoModifyPath -Profile light -Port 18080 *>&1 | Out-String
+          Write-Output $out
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($out -notmatch 'already running \(pid \d+\), unchanged') { throw 'the re-run did not keep the running gateway' }
+          if ($out -match 'started by hand') { throw 'the re-run took the installer''s own gateway for one started by hand' }
 
       - name: GGUF from the prebuilt llama.cpp wheel (Windows)
         if: runner.os == 'Windows'

@@ -132,7 +132,7 @@ The line always runs the installer of the latest AbstractFramework release. It:
   <latest>`, or `AbstractFramework <yours> found: already up to date` (every part is still checked,
   and repaired when needed). An install made by 0.6.1 or earlier recorded no release, so its first
   upgrade says `AbstractFramework found (abstractgateway 0.7.1; its release was not recorded):
-  upgrading to AbstractFramework 0.6.3` (with the gateway version you have);
+  upgrading to AbstractFramework 0.6.4` (with the gateway version you have);
 - installs the gateway version that release pins, and every library the gateway uses
   (AbstractCore, AbstractRuntime, AbstractAgent, AbstractSkill, AbstractMemory, AbstractSemantics
   and the voice, vision, music and 3D packages) at the exact version released and tested with it ([Check your versions](#check-your-versions) shows
@@ -151,18 +151,24 @@ The line always runs the installer of the latest AbstractFramework release. It:
   launchd, a running Linux `systemd --user` service with `systemctl --user restart`, and a
   background gateway is started again. On Windows the installer stops the running gateway before it
   changes any file (Windows locks the files of a running program) and starts it again afterwards;
+- replaces a gateway of this install that you started yourself (it serves the same data directory)
+  on its port, instead of moving to another port and starting a second gateway on the same data;
+  a program that is not this install's gateway keeps the port, and the installer takes the next
+  free one;
+- asks PyPI again for the packages it pins (`uv tool install --refresh-package ...`), so a release
+  published minutes earlier installs without clearing uv's cache;
 - never leaves the gateway stopped: when the login item cannot be registered, the gateway starts in
   the background and the summary says how to turn start at login on;
 - ends with what changed, old -> new, under **Changes** (`Changes: none` when nothing moved), and
   `Upgraded: AbstractFramework <yours> -> <latest>` (`Upgraded: AbstractFramework (not recorded) ->
-  0.6.3` for the first upgrade of a 0.6.1 or earlier install) or `Already up to date:
+  0.6.4` for the first upgrade of a 0.6.1 or earlier install) or `Already up to date:
   AbstractFramework <yours>; nothing changed.`
 
 #### Upgrading from 0.6.1 or earlier
 
 Installs made by AbstractFramework 0.6.1 or earlier recorded neither their release nor your install
 options. The first re-run says `AbstractFramework found (abstractgateway <version>; its release was
-not recorded): upgrading to AbstractFramework 0.6.3`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
+not recorded): upgrading to AbstractFramework 0.6.4`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
 there, whether the gateway has the tray extra and the AbstractCore commands, whether the compiled
 extras were built (`--full`), and a custom data directory through the gateway pointer. It prints
 what it found (`read from disk: …`) and records it for later runs. You can also repeat your
@@ -830,7 +836,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.6.3 pins `abstractgateway==0.7.4`, `abstractassistant==0.9.1`,
+`abstractframework` 0.6.4 pins `abstractgateway==0.7.4`, `abstractassistant==0.9.1`,
 `abstractcore==2.19.2`, `AbstractRuntime==0.7.3`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.2`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.15` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
@@ -919,7 +925,7 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version released with 0.6.3 |
+| Tool | Command | Version released with 0.6.4 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.7.4 |
 | Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.19.2 |

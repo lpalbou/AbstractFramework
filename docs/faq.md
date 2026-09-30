@@ -252,6 +252,14 @@ terminals. Open a new terminal, or call `~/.local/bin/abstractgateway` directly.
 `mlx_lm.server`, which also default to 8080), the script picks the next free port, remembers it
 for later runs, and prints the console URL. Choose one with `--port N` (`-Port N`).
 
+A gateway of this install that you started yourself (for example with `abstractgateway serve
+--data-dir <data dir>`) is not "something else": the installer recognizes it (it serves the same
+data directory, from its serve record `<data dir>/run/gateway-serve.json` or its `--data-dir`), keeps
+its port and replaces it with its own start, so one gateway serves your data. The replacement binds
+as the gateway's Network setting says (`abstractgateway network status`), so a gateway you started
+with `--host 0.0.0.0` comes back on the Network setting's address. With `--no-start`
+(`-NoStart`) it leaves that gateway running and says a restart is due.
+
 ### Will it ask for my password or admin rights?
 
 Not for the default install: uv, Python, the gateway and Node (`nodejs-wheel`) install in your
