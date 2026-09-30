@@ -120,6 +120,38 @@ Released: abstractvision 0.3.31 (c307d1d), abstractcore 2.19.0 (ee9a115, crate
     a Linux sandbox without a display does not install). Receipt: `untracked/root-064-vm/suite-linux*.txt`.
     Owner: root tests.
 
+**0.7.0 end-to-end proofs (Mac + Linux GPU, 2026-09-30; fixed items are in the 0.7.1 patch wave)**
+25. Uploaded and published workflows land in `site-packages/abstractgateway/flows/bundles`, which
+    `uv tool install` of a new version wipes (Linux end-to-end F3). `GatewayHostConfig.from_env()`
+    (`config.py`) sets `flows_dir` to the packaged directory unless `ABSTRACTGATEWAY_FLOWS_DIR` is
+    set; `/bundles/upload`, `DELETE /bundles/{id}` and publish write `host.bundles_dir`. A data-dir
+    mechanism exists only for hosted per-user runtimes (`service.py`: `<data>/users/<t>/<u>/flows`
+    with the shared dir mounted read-only). Not small: with no override, `flows_dir =
+    <data_dir>/flows` (created at boot) and `framework_flows_dir` = the packaged dir;
+    `bundle_host.load_from_dir` / `reload_bundles_from_disk` take a SEQUENCE of read-only framework
+    dirs (per-user hosts get `[<root data>/flows, packaged]`); a boot migration COPIES (never moves)
+    every `*.flow` in the packaged dir that is not in the distribution's file list
+    (`importlib.metadata.files("abstractgateway")`) into `<data_dir>/flows`, logging each; shipped
+    bundles become read-only (`source_kind: "framework"`: check the UIs keyed on it);
+    `verify_basic_agent_loadable` runs on the packaged dir; docs (install/upgrade, workflows,
+    `config_cli`). Tests: an upload survives a simulated package-dir wipe; packaged bundles still
+    load; per-user hosts see admin uploads; the migration copies only non-shipped files.
+    Owner: abstractgateway.
+26. AbstractCode web fills the tool list only on first connect
+    (`abstractcode/web/src/lib/settings_defaults.ts:65-90`: the reconnect branch only removes tools
+    that disappeared), so an existing user never sees tools enabled later (the email tools after
+    "Agent email tools" is turned on; Linux end-to-end F2). The gateway side is fixed in 0.7.1 (a run
+    started without `input_data.tools` gets the email tools when they are active). Small fix: a
+    `tools_known?: string[]` field in `Settings` (`web/src/lib/storage.ts`), set on first connect to
+    every enabled name; on reconnect append enabled names not in `tools_known`, then store the
+    current enabled set (tools the user switched off stay off: they are already known).
+    Owner: abstractcode web.
+27. Existing installs keep a stored text route their install cannot run (a light install that
+    was seeded `mlx/...` by 0.7.0): 0.7.1 never recommends or seeds such a route and flags it
+    (`engine_missing`) in every grid, but does not rewrite a stored route. Decide whether
+    `upgrade_recommended_seed` should replace a SEEDED (never operator-edited) route whose engine
+    is missing. Owner: abstractcore config.
+
 ## Acceptance criteria
 
 - [ ] Each item fixed with a test that goes RED without it, or closed with a recorded decision.

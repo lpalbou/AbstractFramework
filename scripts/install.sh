@@ -121,14 +121,14 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.8.0"
+AF_GATEWAY_PIN_DEFAULT="0.8.1"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.7.0"
-AF_PY_MATRIX="abstractcore==2.20.1 AbstractRuntime==0.8.0 abstractagent==0.3.17 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.13.2 abstractvision==0.3.33 abstractmusic==0.1.15 abstract3d==0.3.2"
+AF_FRAMEWORK_VERSION="0.7.1"
+AF_PY_MATRIX="abstractcore==2.20.2 AbstractRuntime==0.8.1 abstractagent==0.3.17 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.13.2 abstractvision==0.3.33 abstractmusic==0.1.15 abstract3d==0.3.2"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.4.0 @abstractframework/code@0.7.0 @abstractframework/observer@0.3.0 @abstractframework/continuum@0.4.0 @abstractframework/entity@0.3.0"
 AF_CRATE_CONSOLE="abstractgateway-console@0.12.0"
@@ -2123,6 +2123,11 @@ if [ "$PROFILE" = gpu ] && [ "$OS_ID" = linux ]; then
     fi
     if [ "$PRINT" = 1 ]; then
         info "then: PyTorch's CUDA check; llama.cpp's CUDA build matching PyTorch's CUDA ($AF_LLAMA_CUDA13 for CUDA 13 with driver 580+, $AF_LLAMA_CUDA12 for CUDA 12 with driver 525+), kept only when it loads and offloads to the GPU; Whisper's device"
+        # The by-hand twin of that swap (the install line takes the cpu wheel): CUDA 13 shown,
+        # the CUDA 12 folder named (0.7.0 Linux end-to-end F4).
+        [ -n "$GGUF_PIN" ] && twin "$(show_cmd "$UV" pip install --python "<the gateway's tool environment>/bin/python" --no-index \
+            --find-links "$AF_LLAMA_INDEX/$AF_LLAMA_CUDA13/llama-cpp-python/" --no-deps --reinstall-package llama-cpp-python \
+            --refresh-package llama-cpp-python "llama-cpp-python==$GGUF_PIN")   # PyTorch CUDA 13, driver 580+; CUDA 12: $AF_LLAMA_CUDA12 instead of $AF_LLAMA_CUDA13"
     else
         tool_venv
         GPY="$TOOL_VENV/bin/python"
@@ -2195,6 +2200,13 @@ print("AFSMOKE cuda_build=" + ("1" if lib and any(lib.glob("libggml-cuda.so*")) 
                         if RUN_LIVE=1 RUN_SOFT=1 run "install llama.cpp's $_lb build" "$UV" pip install --python "$GPY" --no-index \
                             --find-links "$AF_LLAMA_INDEX/$_lb/llama-cpp-python/" --no-deps --reinstall-package llama-cpp-python \
                             --refresh-package llama-cpp-python "llama-cpp-python==$GGUF_PIN" && [ "$RUN_RC" = 0 ]; then _swapped=1; fi
+                    else
+                        # The CUDA build is already there (an upgrade kept it), so nothing runs, but the
+                        # by-hand twin must still swap it in: the install line above takes the cpu wheel
+                        # (0.7.0 Linux end-to-end F4: the printed steps gave a CPU-only llama.cpp).
+                        twin "$(show_cmd "$UV" pip install --python "$GPY" --no-index \
+                            --find-links "$AF_LLAMA_INDEX/$_lb/llama-cpp-python/" --no-deps --reinstall-package llama-cpp-python \
+                            --refresh-package llama-cpp-python "llama-cpp-python==$GGUF_PIN")"
                     fi
                     _r="$(gpu_smoke "$_llama_check")"
                     if [ "$(smoke_val "$_r" import)" = 1 ] && [ "$(smoke_val "$_r" offload)" = 1 ]; then

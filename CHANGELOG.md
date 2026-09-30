@@ -4,6 +4,47 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-30
+
+A patch release. Pins: AbstractCore 2.20.2, AbstractRuntime 0.8.1 and AbstractGateway 0.8.1; every
+other version (the terminal consoles, the browser apps, AbstractAssistant 0.10.0) is unchanged
+from 0.7.0.
+
+### Fixed
+
+- **Email automations never trigger themselves.** An automation set to "Email me the result" whose
+  filter matched its own result email ran again on every result. Every message the framework sends
+  automatically (notifications, sign-in codes, anything an automation sends) now carries
+  `Auto-Submitted: auto-generated` (RFC 3834) and an `X-AbstractFramework-Automation` header, its
+  Message-ID is recorded, and the mail watcher never runs an automation on your own automatic
+  mail. **When an email arrives** also ignores automatic mail from others (auto-replies, vacation
+  notices) by default; its `auto_submitted: "admit"` option turns that off. See the gateway's
+  email guide.
+- **Voice on a light install.** Text-to-speech returned an error on a fresh light install of a
+  large Mac: the recommended text model there was an MLX build, which the light profile does not
+  install, and speech went through the text model. Speech, transcription and image generation no
+  longer need a text model, and recommendations only name engines your install has: without MLX
+  the Mac's memory tier runs on LM Studio (`qwen/qwen3.5-9b` below 24 GB, `qwen/qwen3.8-27b` from
+  24 GB). A light install seeded by 0.7.0 keeps its stored route and sees it flagged; set the text
+  route in the console (Models, or Settings) to change it.
+- The gateway no longer marks a media request's child run failed ("workflow ... not registered
+  (after 40 consecutive attempts)").
+- A chat's email to your own address runs without asking, and "your own address" is the one **My
+  email** shows (your user email, else the connected mailbox's address).
+- A run started through the API without a tool list gets the email tools when you turned on agent
+  email tools.
+- Moving a model route to another provider drops the old engine's speculation setting (an LM Studio
+  route no longer keeps an MLX route's `native_mtp`).
+- `install.sh` on Linux with an NVIDIA GPU: **The same steps by hand** now include llama.cpp's CUDA
+  build (the listed install line takes its CPU build).
+
+### Changed
+
+- The installers do not build the AbstractCore terminal console (`abstractcore-console`); it is
+  listed with each release and installed with `cargo install abstractcore-console` for a
+  standalone `abstractcore serve` (the gateway's terminal console has its Models and Engines
+  screens). See [Install](docs/install.md#apps-and-tools-outside-pip).
+
 ## [0.7.0] - 2026-09-30
 
 Email for each user, and installer fixes. Pins: AbstractCore 2.20.1, AbstractRuntime 0.8.0,
