@@ -10,15 +10,15 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.22.0",
-    "abstractruntime": "0.8.2",
+    "abstractcore": "2.23.0",
+    "abstractruntime": "0.8.3",
     "abstractagent": "0.3.17",
-    "abstractgateway": "0.10.0",
+    "abstractgateway": "0.11.0",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
@@ -26,7 +26,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.33",
     "abstractmusic": "0.1.15",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.11.0",
+    "abstractassistant": "0.12.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -45,11 +45,11 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.6.0",
-    "@abstractframework/code": "0.9.0",
-    "@abstractframework/observer": "0.5.0",
+    "@abstractframework/flow": "0.7.0",
+    "@abstractframework/code": "0.10.0",
+    "@abstractframework/observer": "0.6.0",
     "@abstractframework/continuum": "0.6.0",
-    "@abstractframework/entity": "0.5.0",
+    "@abstractframework/entity": "0.6.0",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
@@ -58,8 +58,8 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 # `abstractcore serve`, and the gateway's terminal console already carries its Models and
 # Engines screens; it is listed here as a release version only.
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
-    "abstractgateway-console": "0.13.0",
-    "abstractcore-console": "0.6.0",
+    "abstractgateway-console": "0.14.0",
+    "abstractcore-console": "0.7.0",
     "abstractcode": "0.8.0",
     "abstracttui": "0.6.0",
 }

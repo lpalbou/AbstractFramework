@@ -55,7 +55,7 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.8.0` for this release).
+The meta-package version (`0.9.0` for this release).
 
 ### `RELEASE_VERSIONS`
 
@@ -79,7 +79,7 @@ The npm apps released with this version, each runnable with `npx <package>`:
 ### `CRATE_RELEASE_VERSIONS`
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.13.0, `abstractcore-console` 0.6.0, `abstractcode` 0.8.0 and the
+`abstractgateway-console` 0.14.0, `abstractcore-console` 0.7.0, `abstractcode` 0.8.0 and the
 `abstracttui` engine 0.6.0. The bootstrap scripts build `abstractgateway-console` at this version by default
 (`--no-console` skips it) and `abstractcode` next to it (`--no-code-cli` skips it).
 

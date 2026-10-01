@@ -4,6 +4,14 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.9.0] - 2026-10-01
+
+### Changed
+
+- Pins abstractgateway 0.11.0 (accounts: users + entities in one table, archive instead of delete, entity mailboxes, self token rotation; recipient rules with Allowed/Denied lists; workflows ownership, availability and Open; Skills & MCP with tools of enabled servers offered to agent runs; Providers and Engines merged; the Sandbox on the kit chat; apps behind an https proxy; a health check that never blocks the event loop; the entity door without environment variables), abstractcore 2.23.0 (recipient rules, mailbox discovery, MCP client handshake, console Email tab), AbstractRuntime 0.8.3 (MCP facade), abstractassistant 0.12.0 (executable workflows only); npm apps flow 0.7.0, code 0.10.0, observer 0.6.0, entity 0.6.0 (responsive polish, shared WorkflowPicker, Code sidebar panels, Observer run view, Entity settings on the kit pickers); crate abstractgateway-console 0.14.0; install matrices and the manifest regenerated.
+
 ## [0.8.0] - 2026-10-01
 
 The consoles' email and accounts screens are redesigned, the installer never installs less because
