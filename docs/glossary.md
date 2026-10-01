@@ -8,6 +8,7 @@ If you're new, read these groups first:
 - **Workflows**: flow, bundle, interface contract
 - **Control plane**: gateway, observer, gateway console, Network setting
 - **Automations**: automation, trigger source, tick, occurrence, discussion
+- **Email**: email address, mailbox, mail watcher, recipient policy, agent email tools, email notifications, automatic mail, sign-in by email
 - **Agent sessions**: default agent workflow, conversation workspace, built-in deny list, skill shelf, live replies
 - **Distribution**: Mac installer, bootstrap script, install profile, release pins
 
@@ -206,7 +207,7 @@ A workflow that the gateway runs again and again on a trigger. It is one durable
 
 ### Trigger source
 
-What fires an automation, as a versioned adapter: `schedule@1` (a fixed UTC interval, see [Schedule](#schedule)) and `manual@1` (only **Run now**). `GET /api/gateway/trigger-sources` lists the sources a gateway serves; packages add sources through the `abstractruntime.trigger_sources` entry-point group.
+What fires an automation, as a versioned adapter: `schedule@1` (a fixed UTC interval, see [Schedule](#schedule)), `email.received@1` (new mail in your own mailbox, see [Mail watcher](#mail-watcher)) and `manual@1` (only **Run now**). `GET /api/gateway/trigger-sources` lists the sources a gateway serves; packages add sources through the `abstractruntime.trigger_sources` entry-point group.
 
 ### Tick
 
@@ -214,11 +215,73 @@ One scheduled firing time of a `schedule@1` trigger, on a fixed grid (`start_at 
 
 ### Occurrence
 
-One run of an automation's workflow for one tick or one **Run now**: a child run of the controller with a deterministic id, shown in clients as one question/answer turn. In *independent* context each occurrence is its own one-turn session; in *growing* context occurrences are the successive turns of the session `automation:<id>`.
+One run of an automation's workflow for one tick, one batch of new mail or one **Run now**: a child run of the controller with a deterministic id, shown in clients as one question/answer turn. In *independent* context each occurrence is its own one-turn session; in *growing* context occurrences are the successive turns of the session `automation:<id>`.
 
 ### Discussion
 
 A conversation forked from an automation occurrence (**Discuss**): a new root run in its own session, seeded with the automation's history up to that occurrence, able to read the automation's folder but not change it, and never written back into the automation.
+
+---
+
+## Email
+
+See [Email integration](guide/email-integration.md) for the whole picture.
+
+### Email address
+
+A gateway user's own address: where sign-in codes, "Forgot your token?" and notifications go, and
+the first address the user's agents may write to. It has no password. An administrator sets it in
+**Create user**, or the user sets it on their account page (**Users & Entities → My email address
+and mailbox** in the web console, `@` on the terminal console's Users screen).
+
+### Mailbox
+
+A connection a gateway user makes so that their agents and automations can read and send mail as
+them: **Google** or **Microsoft** sign-in, or **Other** (email address and password, the mail
+servers found automatically, **Server settings** folded). One **Connect** saves and tests it; once
+connected, **Test** and **Disconnect**. It is stored encrypted in that user's data folder, and
+administrators never see or touch it. Its recipient rules, send limits and folder sit under
+**Advanced** on the same account page. AbstractCore on its own has one account per install
+(`abstractcore email`).
+
+### Mail watcher
+
+The gateway's read-only reader of a user's mailbox. It runs only while that user has an active
+`email.received@1` automation, checks every 60 seconds, and records each new message in the
+runtime's event inbox before any automation reads it. Mail that was already there when it started
+is never an event.
+
+### Recipient policy
+
+Who may receive mail from an account: an allowlist (only the listed addresses and domains; a new
+account starts with the user's own email address) or a denylist (everyone except them), applied with
+the send limits (20 per hour and 100 per day by default) to every send.
+
+### Agent email tools
+
+The email tools of agents and workflows (list, search, read, send, reply, download an attachment).
+A switch on the user's account page, off by default: an agent gets them only when the user's
+mailbox is connected, the administrator's **Agent email tools for users** is on (the default) and
+the user switched **Agent email tools** on.
+
+### Email notifications
+
+Mail the gateway sends a user about their own runs, through that user's mailbox: two switches on
+the account page, **Job failed** and **Approval needed**, both on by default once a mailbox is
+connected. An automation set to **Email me the result** also emails its results.
+
+### Automatic mail
+
+Mail the framework sends without a person writing it (notifications, sign-in codes, anything an
+automation sends). It carries `Auto-Submitted: auto-generated` and an
+`X-AbstractFramework-Automation` header. Your own automatic mail never triggers an automation;
+automatic mail from others is ignored unless the trigger sets `"auto_submitted": "admit"`.
+
+### Sign-in by email
+
+**Forgot your token? Email me a sign-in code** on the gateway's sign-in page: a single-use 8-digit
+code sent to the user's email address through their own mailbox, valid 10 minutes. Administrators
+can switch **Sign-in by email** off.
 
 ---
 

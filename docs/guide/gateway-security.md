@@ -27,7 +27,7 @@ export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.to
 
 1. Run behind TLS (reverse proxy or a trusted tunnel).
 2. Use a strong token and rotate it periodically.
-3. Restrict `ABSTRACTGATEWAY_ALLOWED_ORIGINS` to exact UI origins (avoid broad wildcards).
+3. Open the browser apps through the gateway (`/apps/<app>/`, one origin). For apps served elsewhere, allow only their exact origins with `abstractgateway network set --allowed-origins <origin>` (avoid broad wildcards).
 4. Protect reads as well as writes (ledgers contain prompts and tool outputs).
 
 ## Hosted file-source terms
@@ -139,8 +139,8 @@ locale are present, country grounding prefers the timezone mapping over the
 locale region because browser language is not a reliable location signal.
 
 Gateway keeps operator surfaces admin-only through a central route-family
-policy. User management, audit/process/backlog/triage/report routes, email
-bridge routes, host metrics, model residency list/load/unload, server workspace
+policy. User management, audit/process/backlog/triage/report routes, the
+administrators' email routes (email capabilities and OAuth clients), host metrics, model residency list/load/unload, server workspace
 file helpers, and server workspace artifact import/export require an admin
 principal. Browser local files should use upload routes; server filesystem
 read/import/export is not exposed to ordinary hosted users.

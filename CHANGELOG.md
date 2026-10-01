@@ -37,6 +37,18 @@ All notable changes to AbstractFramework will be documented in this file.
   `--no-core-cli` on its first upgrade. Such an option now takes today's default, dated by the
   recorded `GATEWAY_VERSION`, and the installer says so.
 
+### Documentation
+
+- The root docs describe the 0.7.2 framework: per-user email in
+  [Email integration](docs/guide/email-integration.md) and the
+  [Email inbox agent](docs/scenarios/email-inbox-agent.md) scenario (settings in the consoles;
+  agent email tools off by default; recipient allowlist starting with your own address; the
+  framework's own automatic mail never triggers an automation; sign-in by email), phones and
+  tablets through the gateway's one address in [Phones and tablets](docs/guide/deployment-iphone.md)
+  and the [Phone thin client](docs/scenarios/phone-thin-client.md) scenario, responsive apps in the
+  README, index, architecture, FAQ and getting started, email terms in the glossary, and email rows
+  in Troubleshooting and Automations.
+
 ## [0.7.2] - 2026-09-30
 
 Every screen works on phones, tablets and any window size. Pins: AbstractGateway 0.9.0 and
@@ -54,20 +66,17 @@ and `panel-chat` 0.2.1). Every other version is unchanged from 0.7.1.
 
 ### Fixed
 
-- **A new email automation reacts to the mail you send to test it.** Mail sent right after
-  creating a "When an email arrives" automation could be missed: the mail watcher, which reads
-  nothing until an email automation exists, marked where new mail starts up to a minute later and
-  treated that minute's mail as already there. Creating an email automation now wakes it and the
-  mark is taken within seconds.
+- **A new email automation reacts to the mail you send to test it.** Creating a "When an email
+  arrives" automation wakes the mail watcher, which marks where new mail starts within seconds, so
+  a message sent right after creation is processed.
 - **A new or resumed email automation no longer runs on old mail.** After a time with no email
   automation active, the next one received everything that had arrived meanwhile as new mail. That
   mail is now treated as already there (mail that arrives while the gateway itself is down is
   still read when it is back).
 - **An upgrade right after a release no longer installs less.** When one of PyPI's mirrors had not
   yet listed a version the release pins, uv answered `there is no version of
-  abstractgateway[gpu]==0.8.1`, and the installer took that for a system without the voice
-  wheels: the 0.7.1 upgrade of a Linux machine went through without local voice (a second run was
-  clean). install.sh and install.ps1 (and so the consoles' **Update** action, which runs install.sh) now recognise that
+  abstractgateway[gpu]==0.8.1`, and the installer took that for a system without the voice wheels
+  and installed without local voice. install.sh and install.ps1 (and so the consoles' **Update** action, which runs install.sh) now recognise that
   case from uv's exit code 1, its resolution failure, and its exact-pin wording for a package the
   installer itself pinned (or from a download of that pinned version's own file that answers 404:
   the list shows it, the file is not served yet), and run the same install again, with every feature, after 15 s, 30 s,

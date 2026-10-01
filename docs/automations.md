@@ -38,7 +38,8 @@ curl -s -H "Authorization: Bearer <admin token>" \
 
 The answer is `{"available": true, "version": 1, …}` on a gateway that runs them. The API ships in
 AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later (`abstractframework` 0.5.0 and later);
-earlier gateways do not include it. On a gateway without
+earlier gateways do not include it. Email automations need AbstractGateway 0.8.0 and
+AbstractRuntime 0.8.0 or later (`abstractframework` 0.7.0 and later). On a gateway without
 it, the Assistant shows no automation controls and the Observer's Automate mode and Automations
 page say so and stay disabled.
 
@@ -131,7 +132,7 @@ The clock button in the palette header opens **Schedule this conversation…**:
   minutes/hours/days, or once at a date and time; an optional first-run time (empty means now).
 - **Context**: Independent (default) or Growing.
 - **Tools**: Tools run without asking (default) or Ask each time.
-- **Email**: **When an email arrives** as the When choice, **Email me the result** and the
+- **Mailbox**: **When an email arrives** as the When choice, **Email me the result** and the
   recipients it may email without asking (see [Email automations](#email-automations)).
 
 **Schedule** creates the automation and opens it in the Assistant's Automations section.
@@ -146,7 +147,7 @@ Open **Launch** and switch **Run once | Automate** to **Automate**:
 2. **When (UTC)**: **Repeat** every N minutes, hours or days, or **Once at** a date and time.
 3. **Context**: Independent or Growing.
 4. **Tools**: Tools run without asking, or Ask each time.
-5. **Email**: **When an email arrives** (a When choice), **Email me the result** and the recipients
+5. **Mailbox**: **When an email arrives** (a When choice), **Email me the result** and the recipients
    it may email without asking (see [Email automations](#email-automations)).
 
 **Advanced** holds the title, the first run time, "stop after this many runs", "stop at", skills
@@ -210,10 +211,12 @@ to requests that leave `title` or `trigger` out.
 
 ## Email automations
 
-With **your own mailbox connected** to the gateway (web console **Users → My email**, the terminal
-console's **My email**, or `PUT /api/gateway/me/email`; see [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md)),
-the Assistant, the Observer and AbstractCode's browser client offer three more options. Without a
-usable account the forms say "Email isn't set up — open My email" and send nothing email-related.
+With **your own mailbox connected** to the gateway (web console **Users & Entities → My email
+address and mailbox**, `@` on the terminal console's Users screen, or `PUT /api/gateway/me/email`;
+see [Email integration](guide/email-integration.md) and [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md)),
+the Assistant, the Observer and AbstractCode's browser client offer three more options in the
+form's **Mailbox** section. Without a connected, allowed mailbox the section says "Connect a
+mailbox first — open My email", its controls are unavailable, and nothing email-related is sent.
 
 - **When an email arrives** — the trigger `email.received@1`. Filters are typed: from these
   addresses or domains, sent to these addresses, subject contains (one literal text), has
@@ -221,13 +224,14 @@ usable account the forms say "Email isn't set up — open My email" and send not
   since its previous run: at most once an hour by default when it runs a model, every minute when
   it does not, never more often than every 60 seconds, and at most 100 emails per run by default.
   Each message is read at most once by each automation, across restarts. Mail that arrived before
-  the automation existed, or while it was paused, is not processed. The gateway only reads the
-  mailbox: it never marks, moves or deletes mail.
-- **Email me the result** — `notify: {"channels": ["console", "email"]}`: the attention items the
-  automation raises (a result that asks for attention, a final failure) are also emailed to your
-  registered address, through your own account, for the events you turned on in **My email →
-  Notifications** (automation results, automation failures; every email notification is off until
-  you turn it on). A notice is queued once and never sent twice.
+  the automation existed, or while it was paused, is not processed, nor is mail that arrived while
+  none of your email automations was active; mail sent right after you create the automation
+  counts. Mail that arrives while the gateway is stopped is read when it is back. The gateway only
+  reads the mailbox: it never marks, moves or deletes mail.
+- **Email me the result** — a switch, `notify: {"channels": ["console", "email"]}`: when a run
+  notifies you, or fails for good, the notice is also emailed to your email address, through your
+  own mailbox. A final failure is emailed anyway while your **Job failed** notification is on (the
+  default). A notice is queued once and never sent twice.
 - **May send email without asking to** — `policy.email_allowed_recipients`: **Only me** (the
   default, `["self"]`) or **Me and these addresses**. A send to anyone else waits for your
   approval, even with "Tools run without asking".
@@ -242,15 +246,27 @@ usable account the forms say "Email isn't set up — open My email" and send not
 
 Inbound mail is data, never instructions. The occurrence receives the emails marked as untrusted,
 inside a fixed frame that tells the agent not to follow links or instructions in them and to act
-only on the automation's task. An email-triggered automation never runs `fetch_url` or
-`browser_probe` without asking, even under "Tools run without asking", unless you name them in
-`policy.untrusted_input_tools`.
+only on the automation's task. An email-triggered automation does not open links or run commands
+on its own: under "Tools run without asking" it runs unattended only tools that reach no network
+service beyond the ones you or your administrator configured, run no code, send no messages,
+delegate to no other agent and write nothing outside its folder (file reads, mailbox reads,
+workspace writes). `fetch_url`, `browser_probe`, `web_search`, `execute_command`, the
+memory-writing tools, MCP tools and camera tools ask for approval unless you name them in
+`policy.untrusted_input_tools`; sending tools are never granted that way.
+
+An automation never runs on mail the framework sent itself. Every message sent automatically through
+your account (notifications, sign-in codes, anything an automation sends, including its send-email
+action) carries `Auto-Submitted: auto-generated` and an `X-AbstractFramework-Automation` header, and
+its Message-ID is recorded, so a filter that matches an automation's own result email never
+re-triggers it. By default the trigger also ignores automatic mail from others (auto-replies,
+vacation notices, other automations); set `"auto_submitted": "admit"` in the trigger's `config` to
+run on those too.
 
 Every send — an agent's, an automation's, a notification — also passes your recipient policy and
-your send limits (20 per hour and 100 per day by default), which you set in **My email**. Agents
-and workflows get the email tools themselves only when an administrator made **Agent email tools**
-available to you and you turned them on; automations that only send you their results do not need
-them.
+your send limits (20 per hour and 100 per day by default), both under **Advanced** on your account
+page. Agents and workflows get the email tools themselves only when you switch **Agent email
+tools** on (off by default; an administrator can withhold it); automations that only send you
+their results do not need them.
 
 ## Two worked examples
 
@@ -473,10 +489,10 @@ disabled, and its tooltip first says why.
 | A failure that a retry fixed, or a cancelled run | none | the history |
 | A run waiting for you | counted in `attention.pending_waits` until answered | Assistant tray notification + `WAITING`; Observer "waiting for you" |
 
-With **Email me the result**, the `notify` and final-failure items above are also emailed to you,
-for the events you turned on in **My email → Notifications** (automation results, automation
-failures). There you can also choose to be emailed when one of your runs waits for your approval or
-answer. Every email notification is off until you turn it on.
+With **Email me the result**, the `notify` and final-failure items above are also emailed to you.
+Your account page's two **Notifications** switches, both on by default once your mailbox is
+connected, email you in any case when an automation fails after its last retry (**Job failed**)
+and when one of your runs waits for your answer (**Approval needed**).
 
 The Assistant checks the list every 60 seconds while its palette is open and every 5 minutes while
 it is hidden, and shows each notification once (also across relaunches). What you have seen is
@@ -554,6 +570,9 @@ recorded. A wait the gateway does not type is shown without answer controls.
 | Every tick waits for a tool approval | the automation was created with **Ask each time** | answer each wait, or send `PATCH` with `{"changes": {"policy": {"tool_approval": "auto"}}}` (applies from the next run) |
 | No notification ever arrives | quiet is the default; only `notify` in the output, final failures and waits notify | return `notify` from the workflow (see the memory example) |
 | Ticks are late or merged | a tick takes longer than the interval; missed ticks are coalesced | lengthen the interval or share the model with fewer automations |
+| An email automation never runs | the mail was already there, arrived while no email automation was active, or is automatic mail (auto-replies, the framework's own mail); a model-running automation runs at most once an hour by default | send a new message after creating it; shorten `every`; set `"auto_submitted": "admit"` for others' automatic mail; check the mailbox state on your account page |
+| "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it under **Users & Entities → My email address and mailbox**, or ask an administrator to switch **Mailboxes for users** on |
+| An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve it, add the recipient in **May send email without asking to**, or edit the recipient rules and send limits under **Advanced** on your account page |
 | A schedule shows `legacy` | it was created with `POST /api/gateway/runs/schedule` | it keeps its own controls; **Recreate as automation** in the Observer copies it into an automation (suspend the old one yourself) |
 
 Legacy schedules are listed on the last page of `GET /api/gateway/automations` with `legacy:

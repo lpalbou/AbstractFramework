@@ -1,46 +1,71 @@
-# Scenario: Email Inbox Agent (IMAP Bridge + SMTP Replies)
+# Scenario: Email inbox agent
 
-Goal: ingest inbound emails as durable events and let a workflow reply (or take actions) with framework-native email tools.
+Goal: let an agent read the mail you receive, act on it (summarise, sort, draft), and email you the
+result, with your own mailbox and nothing configured outside the consoles.
 
-## High-level architecture
+## How it fits together
 
-- Inbound: gateway email bridge polls IMAP, stores raw + attachments as artifacts, emits `email.message` events into a
-  stable `session_id` per thread.
-- Outbound: workflows call `send_email` with centralized SMTP defaults (no repeating host/user per tool call).
+- You connect your own mailbox to the gateway. The account is yours alone and stored encrypted in
+  your data folder.
+- An automation with the **When an email arrives** trigger (`email.received@1`) runs your workflow
+  on each batch of new mail that matches its filters.
+- The gateway's mail watcher reads the mailbox read-only while at least one of your email
+  automations is active; the runtime records each new message durably before the automation reads
+  it.
+- **Email me the result** sends the automation's results to your own email address, through your
+  own mailbox.
 
-## Step 1: Configure email accounts on the tool-execution host
+See [Guide: Email integration](../guide/email-integration.md) for the rules (recipient policy, send
+limits, agent email tools, notifications, sign-in by email).
 
-Email tools are account-scoped: IMAP/SMTP host/user are configured on the process that executes tools (gateway local
-tools, CLI host, or a tool worker).
+## Step 1: Connect your mailbox
 
-For the full configuration matrix (env vs YAML vs AbstractCore config), use the canonical guide in the main framework
-workspace:
-- [Guide: Email integration](../guide/email-integration.md)
+In the gateway web console, open **Users & Entities → My email address and mailbox** (terminal
+console: the Users screen, then `@`). Check your **Email address** at the top: results and
+notifications go there. In the **Mailbox** card, pick **Google** or **Microsoft** to sign in with
+the provider, or **Other** to give your email address and an app password (the gateway finds the
+mail servers itself), then **Connect**. The gateway tests both servers before it saves anything.
 
-## Step 2: Enable the inbound email bridge on the gateway host
+The recipient rules sit under **Advanced** on the same page: a new account allows mail only to your
+own email address, which is what this scenario needs.
 
-Minimum env vars (plus your email account config):
+## Step 2: Create the automation
 
-```bash
-export ABSTRACT_EMAIL_BRIDGE=1
-export ABSTRACT_EMAIL_POLL_SECONDS=60
+From the Assistant, the Observer (**Launch → Automate**) or AbstractCode's browser client, create an
+automation with:
 
-export ABSTRACT_EMAIL_FLOW_ID="<bundle_id>:<flow_id>"   # autostart/attach a workflow per thread/session
+- **When an email arrives**, with typed filters (from these addresses or domains, sent to these
+  addresses, subject contains, has attachments);
+- the task for the agent, for example "Summarise these emails and list what needs an answer";
+- **Email me the result**, so the results that ask for your attention reach you by email.
+
+The same definition through the API:
+
+```text
+"trigger": {"source_id": "email.received", "source_version": 1,
+            "config": {"every": "1h", "filter": {"subject_contains": "invoice"}}},
+"notify":  {"channels": ["console", "email"]},
+"policy":  {"tool_approval": "auto", "email_allowed_recipients": ["self"]}
 ```
 
-Start the gateway with a persistent `ABSTRACTGATEWAY_DATA_DIR` so bridge state survives restarts.
+An automation that runs a model runs at most once an hour by default, on all matching mail received
+since its previous run.
 
-## Step 3: Wire the workflow
+## Step 3: Test
 
-Create a workflow that:
-1. handles the `email.message` event
-2. reads `payload.email.*` (subject/from/body and artifact-backed attachments)
-3. optionally opens attachments via `open_attachment(artifact_id=...)`
-4. replies with `send_email(to=..., subject=..., body_text=...)`
+Send yourself an email that matches the filter after creating the automation. Expected:
 
-## Step 4: Test
+- the automation runs on the next batch and shows the run as a question/answer turn in every client;
+- its result reaches you by email when the workflow asks for attention;
+- the result email does not trigger the automation again (mail the framework sends automatically
+  through your account is never an event).
 
-Send an email into the mailbox. Expected:
-- the bridge emits `email.message`
-- a session-run starts (or is resumed) for that thread
-- your workflow replies via `send_email`
+Mail that was already in the mailbox, or that arrived while no email automation was active, is not
+processed.
+
+## Letting the agent use email itself
+
+To let the agent search your mailbox or send mail during a run, switch **Agent email tools** on
+on your account page (it is off by default and unavailable until your mailbox is connected; an
+administrator can withhold it with **Agent email tools for users**). A send to anyone but you waits
+for your approval, and every send passes your recipient rules and send limits.

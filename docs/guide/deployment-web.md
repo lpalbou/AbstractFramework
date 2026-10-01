@@ -27,6 +27,10 @@ the console.
 
 ## Run the UIs
 
+The simplest way: install and open them from the gateway console's **Apps** page. The gateway
+serves each app at `/apps/<app>/` on its own address, signed in; no separate server or origin is
+needed. To run one on its own instead:
+
 ```bash
 npx @abstractframework/observer
 npx @abstractframework/flow

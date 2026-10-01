@@ -138,9 +138,12 @@ export OPENAI_API_KEY="local"
 **Cloud APIs**:
 
 ```bash
-export OPENAI_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
+abstractcore --set-api-key openai <key>
+abstractcore --set-api-key anthropic <key>
 ```
+
+The keys are saved in AbstractCore's configuration (also from `abstractcore --config`) and win
+over `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` in the environment.
 
 **Or use a console.** `abstractcore serve` starts the server on `127.0.0.1:8000` and prints a
 one-time link to its web console, where the **Engines** tab detects and installs local engines
@@ -255,6 +258,11 @@ exchanges the token for a browser session and does not persist the token in brow
 
 AbstractObserver is replay-first: it renders runs by replaying the ledger, then streams new steps live via SSE.
 
+The console and every browser app work on phones, tablets and any window size. To open them from
+another device, set the gateway's Network setting to `lan` (`abstractgateway network set lan`, then
+`abstractgateway network restart --token <admin token>`) and open the same `/console` and
+`/apps/<app>/` paths on the gateway's address; see [Phones and tablets](guide/deployment-iphone.md).
+
 ### 5. Automate recurring work
 
 An automation runs a workflow on a fixed interval and keeps every run as a conversation. Create
@@ -280,10 +288,12 @@ attention. See [Automations](automations.md) for the mental model, worked exampl
 and limits.
 
 To run an automation when an email arrives, or to get its results by email, first connect your own
-mailbox in the gateway console (**Users → My email**, or `@` on the Users screen of the terminal
-console). The Assistant, the Observer and AbstractCode's browser client then offer **When an email
+mailbox in the gateway console (**Users & Entities → My email address and mailbox**, or `@` on the
+Users screen of the terminal console). The Assistant, the Observer and AbstractCode's browser client then offer **When an email
 arrives**, **Email me the result** and the recipients the automation may email without asking. See
-[Email automations](automations.md#email-automations).
+[Email automations](automations.md#email-automations). The same account gives you sign-in by email,
+and your agents get the email tools only when you switch **Agent email tools** on
+([Email integration](guide/email-integration.md)).
 
 ---
 

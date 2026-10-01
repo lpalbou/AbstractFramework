@@ -51,9 +51,8 @@ This is a practical checklist to verify access control + approvals end-to-end.
 1. Configure the bridge (Bot API):
 
 ```bash
-# Gateway (required for `abstractgateway serve`).
-export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # directory containing *.flow bundles (incl. shipped `basic-agent`)
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+# Gateway: optional custom bundle directory (incl. the shipped `basic-agent`).
+export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
 export ABSTRACT_TELEGRAM_BOT_TOKEN="..."               # from @BotFather
@@ -123,7 +122,6 @@ Set env vars on the gateway host:
 
 ```bash
 export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"  # directory containing *.flow bundles
-export ABSTRACTGATEWAY_AUTH_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"  # required
 
 export ABSTRACT_TELEGRAM_BRIDGE=1
 

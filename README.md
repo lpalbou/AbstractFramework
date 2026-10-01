@@ -46,9 +46,9 @@ button of gateway 0.7.1 cannot upgrade. Gateway only, apps, and version checks:
 
 On Linux or Windows with an NVIDIA GPU (`nvidia-smi` works), the installer picks the `gpu` profile:
 PyTorch and llama.cpp on CUDA, Whisper on the GPU, Diffusers image generation. On Linux it needs
-NVIDIA driver 580 or newer. Its release candidate was rehearsed on a Quadro RTX 5000 on Ubuntu
-26.04; the measured results, and what the final versions changed, are in GPU on Linux. The Windows gpu install is
-implemented but not yet validated on real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) and
+NVIDIA driver 580 or newer; measured install and per-capability timings on a Quadro RTX 5000 with
+Ubuntu 26.04 are in GPU on Linux. The Windows gpu install is implemented but not yet validated on
+real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) and
 [GPU on Windows](docs/install.md#gpu-on-windows-nvidia).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
@@ -124,9 +124,10 @@ Start here if you're building persistent AI applications — agents that run for
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
 - Automations: a workflow that runs on a fixed interval, when an email arrives, or on demand, kept as a readable conversation ([Automations](docs/automations.md))
-- Email for each user: connect your own mailbox, get automation results and approvals by email, and let agents use email tools when an administrator allows it ([Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md))
+- Email for each user: connect your own mailbox, get failed jobs, approvals and automation results by email, and let your agents use email tools when you switch them on ([Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md))
 - Multi-client: terminal, browser, tray, Telegram, email
-- Start on one device, continue on another
+- Start on one device, continue on another: the web console and every browser app work on phones,
+  tablets and any window size ([Phones and tablets](docs/guide/deployment-iphone.md))
 
 ```bash
 pip install abstractgateway
@@ -265,6 +266,10 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 | `abstractsound`, `abstractvideo`, `abstractspatial`, `abstractgeometry`, `abstractcognition` | Reserved capability packages (namespaces held; APIs landing incrementally) |
 
 ### Apps and clients
+
+The gateway's web console and the five browser apps (Code Web UI, Flow Editor, Observer, Entity,
+Continuum) adapt to phones, tablets and windows of any size: drawers below 1024 px, bottom-sheet
+dialogs and touch-sized controls on phones.
 
 | App | What it does | Install |
 |---|---|---|

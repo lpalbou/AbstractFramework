@@ -8,6 +8,6 @@ This section is use-case oriented. Each scenario is an end-to-end path with conc
 - [Workflow bundle lifecycle (publish/install/deprecate)](workflow-bundle-lifecycle.md)
 - [Telegram permanent contact](telegram-permanent-contact.md)
 - [Email inbox agent](email-inbox-agent.md)
-- [Phone thin client (iPhone via Web/PWA)](phone-thin-client.md)
+- [Phone thin client (console and apps on a phone)](phone-thin-client.md)
 
 If you prefer component-first docs, start with [Getting Started](../getting-started.md).

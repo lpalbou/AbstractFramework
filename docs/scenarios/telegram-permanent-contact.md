@@ -38,8 +38,6 @@ You need a normal gateway configuration plus Telegram bridge settings. At minimu
 ```bash
 # Bundles (*.flow). Include the shipped `basic-agent` bundle (and any custom bundles).
 export ABSTRACTGATEWAY_FLOWS_DIR="/path/to/bundles"
-export ABSTRACTGATEWAY_AUTH_TOKEN="..."  # required
-export ABSTRACTGATEWAY_ALLOWED_ORIGINS="http://localhost:*,http://127.0.0.1:*"
 export ABSTRACTGATEWAY_DATA_DIR="$PWD/runtime/gateway"
 
 # Tool execution + approvals:

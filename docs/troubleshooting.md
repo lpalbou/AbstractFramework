@@ -46,6 +46,19 @@ Every stop names its cause and the next step. The full list of messages and what
 table in [If something goes wrong](install.md#if-something-goes-wrong). After fixing the cause,
 run the installer again: it continues where it stopped.
 
+### The installer says PyPI hasn't published a version yet
+
+- **Cause**: a release published minutes ago has not reached every PyPI mirror, so the package list
+  or the file of a pinned version is not served yet.
+- **What happens**: the installer (and the consoles' **Update**) runs the same full install again
+  after 15 s, 30 s, 60 s and 120 s waits, 8 attempts over about 10 minutes, printing
+  `PyPI hasn't published <package> <version> to every mirror yet; retrying in 30 s (attempt 3/8)`.
+  It never installs less while it waits.
+- **Fix**: nothing while it retries. If it stops after 10 minutes, the previous install is
+  unchanged: run the installer again a few minutes later; with a company package mirror, ask its
+  administrator to refresh the package the message names. See
+  [Right after a release](install.md#right-after-a-release).
+
 ### macOS asks to install the command line developer tools
 
 - **Cause**: something tried to compile a package. The installer itself uses prebuilt wheels only.
@@ -77,6 +90,13 @@ run the installer again: it continues where it stopped.
 - **Fix**: `abstractgateway claim --open` opens a fresh link (or `abstractgateway-config claim-url`
   prints one). Re-running the installer also opens one.
 - **Alternative**: sign in with the `admin` token stored in `<data>/auth/bootstrap-admin-token`.
+- **From another device, or without your token**: sign in with your gateway user name and token,
+  or select **Forgot your token? Email me a sign-in code** on the sign-in page (shown unless an
+  administrator switched **Sign-in by email** off): an 8-digit code arrives at your email address,
+  works once and expires after 10 minutes. It reaches you only when your account has an email
+  address and a connected mailbox (**Users & Entities → My email address and mailbox**); otherwise
+  the sign-in page says so under the link. Without them, an administrator gives you a new token. See
+  [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### The gateway does not answer
 
@@ -109,17 +129,20 @@ run the installer again: it continues where it stopped.
 ### Another device cannot reach the gateway
 
 - **Cause**: the gateway listens on this computer only until you change its Network setting.
-- **Fix**: `abstractgateway network set lan`, then apply it (`abstractgateway network restart`,
+- **Fix**: `abstractgateway network set lan`, then apply it (`abstractgateway network restart --token <admin token>`,
   the console, or the menu-bar icon). `abstractgateway network addresses` lists the URLs to use.
-  See [Network setting](install.md#network-setting-who-can-reach-the-gateway).
+  The console and every browser app then open on that address (`/console`, `/apps/<app>/`), phones
+  and tablets included. See [Network setting](install.md#network-setting-who-can-reach-the-gateway)
+  and [Phones and tablets](guide/deployment-iphone.md).
 
 ### A browser app (Observer, Flow, Code Web) cannot connect
 
 - **Check**: the gateway URL in the app, then `curl http://127.0.0.1:8080/api/health`.
-- **Fix**: sign in with a Gateway user and that user's token (the `admin` token file on a fresh
-  install), not the legacy `ABSTRACTGATEWAY_AUTH_TOKEN`. For apps served from another origin,
-  include that origin in `ABSTRACTGATEWAY_ALLOWED_ORIGINS` (local development:
-  `http://localhost:*,http://127.0.0.1:*`) or `abstractgateway network set --allowed-origins …`.
+- **Fix**: open the app from the console's **Apps** page, which serves it at `/apps/<app>/` on the
+  gateway's own address, signed in. For an app you run yourself, sign in with a Gateway user and
+  that user's token (the `admin` token file on a fresh install), not the legacy
+  `ABSTRACTGATEWAY_AUTH_TOKEN`; an app served from an origin other than `http://localhost:*` or
+  `http://127.0.0.1:*` needs `abstractgateway network set --allowed-origins <origin>`.
 - See [Configuration](configuration.md#client-configuration-observer--flow-editor--code-web-ui).
 
 ## Models and providers
@@ -206,6 +229,32 @@ run the installer again: it continues where it stopped.
   confirmation),
   or restart the gateway.
 - **Verify**: the meter returns to the baseline and the resident-models table is empty.
+
+## Email
+
+### An email automation does not run, or the mailbox shows "needs action"
+
+- **Check**: the **Mailbox** card on your account page (**Users & Entities → My email address and
+  mailbox**) shows the mailbox state and the last error with its fix (for example an app password
+  the server refused); **Test** checks it again. Administrators see the same state in the users
+  table's **Mailbox** column.
+- **Cause**: mail that was already in the mailbox, or that arrived while none of your email
+  automations was active, is never processed; an automation that runs a model runs at most once an
+  hour by default; automatic mail (auto-replies, and mail the framework sends through your account)
+  is skipped.
+- **Fix**: send a new test message after creating the automation, shorten its `every`, or set
+  `"auto_submitted": "admit"` to accept automatic mail from others. See
+  [Email automations](automations.md#email-automations).
+
+### An agent has no email tools, or a send is refused
+
+- **Cause**: **Agent email tools** is off until you switch it on on your account page (it is
+  unavailable, with the reason, until your mailbox is connected or when an administrator switched
+  **Agent email tools for users** off); every send also passes your recipient rules (a new account
+  allows only your own email address) and your send limits.
+- **Fix**: connect your mailbox, switch **Agent email tools** on, and add the recipient under
+  **Advanced → Recipient rules**. The refusal names the refused addresses or the limit reached. See
+  [Email integration](guide/email-integration.md).
 
 ## Automations
 
