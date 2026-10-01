@@ -118,8 +118,8 @@ Notes for LLMs working in this repo:
   allowed recipient; set in **Create user** or on the account page) and their **mailbox** (a
   connection: tabs **IMAP** (first, selected; address + password, server fields visible and
   pre-filled, no user name field) / **Google** / **Microsoft**; one **Connect**, then an **Active**
-  switch, **Test** / **Disconnect**). Account page: web console **Accounts** (an administrator uses
-  **Email** on their own row), `@` on the terminal console's Accounts screen,
+  switch, **Test** / **Disconnect**). Account page: web console **Accounts** (**Email** on your own
+  row), `@` on the terminal console's Accounts screen,
   `PUT /api/gateway/me/email`. Notifications: two switches **Job failed** and
   **Approval needed** (on by default, sent only with a connected mailbox). **Agent email tools**: the
   user's switch, off by default, unavailable until a mailbox is connected. **Advanced**: recipient

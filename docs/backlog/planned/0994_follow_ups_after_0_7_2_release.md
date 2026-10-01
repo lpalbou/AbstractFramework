@@ -32,7 +32,8 @@ AbstractRuntime 0.8.2, abstractassistant 0.11.0 and the apps code 0.9.0, flow 0.
 in 0.8.0** close when that wave is published (cite the tags then). Still open: 36 (Windows lag CI
 job), 39 (operator token rotation), 42 (Update job log token redaction), 46
 (`apps.adopt_external`), 47 (`--no-print-token` for the service), 48 (admin boundary around a
-user's sealed mailbox), 50 (Apps page npm retry). Gateway-native TLS (item 45's last part) is
+user's sealed mailbox), 50 (Apps page npm retry), and 51–54 (recorded during the 0.8.0 preparation: Assistant test
+segfault, Telegram bridge setting, llms copies refresh, site screenshots). Gateway-native TLS (item 45's last part) is
 [0995](../proposed/0995_gateway_native_tls_for_remote_browsers.md); the console and app UI notes
 of the round-1 rework are
 [0996](../proposed/0996_console_and_app_ui_follow_ups_after_the_round_1_rework.md).
@@ -172,6 +173,21 @@ of the round-1 rework are
     npm registry lag or a transient network error; it asks the user to try again. Give it the same
     bounded retry ladder as the installer (`scripts/install.sh` `AF_INDEX_RETRY_DELAYS`), with the
     cause shown when the ladder runs out. Owner: gateway.
+
+**Recorded during the 0.8.0 release preparation (2026-10-01)**
+51. AbstractAssistant: an intermittent local segfault in the setup of `tests/test_live_replies.py`
+    (a Qt callback in `abstractassistant/ui/session_switcher.py`), 3 of 7 local full runs, never seen
+    in CI. Reproduce headless, find the callback that outlives its widget, fix with a test that
+    crashes without the fix. Owner: assistant.
+52. The Telegram bridge can only be switched on with an environment variable. Settings are never
+    environment variables: give it a console setting (web + terminal) and a CLI flag, with the
+    variable imported once like the email variables. Owner: gateway.
+53. The per-package llms copies (each package's `llms.txt` / `llms-full.txt` as vendored or quoted
+    elsewhere, e.g. the docs assistant's corpus and the site) need a refresh after the 0.8.0 docs
+    passes. Owner: root + each package.
+54. Site screenshots to recapture for 0.8.0: the Accounts page (desktop), the Apps page with the
+    grouped sidebar, the terminal console shots, Code web (desktop and phone), the Assistant's and
+    the Observer's Active switch. Owner: site.
 
 **Operator actions**
 39. Rotate the Linux GPU box's gateway admin token: it sat unredacted in local evidence logs until

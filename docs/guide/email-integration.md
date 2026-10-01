@@ -34,9 +34,8 @@ The package guides hold the full references:
 
 Every signed-in user has the same account page:
 
-- the gateway web console: the **Accounts** page. A user sees their own page there (**My email
-  address and mailbox**); an administrator opens it with **Email** on their own row of the accounts
-  table;
+- the gateway web console: **Email** on your own row of the **Accounts** page opens it (**My email
+  address and mailbox**);
 - the gateway terminal console (`abstractgateway-console`): the Accounts screen (`2`), then `@`;
 - the HTTP API: `GET /api/gateway/me/email` and the routes below.
 

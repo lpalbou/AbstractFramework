@@ -295,8 +295,8 @@ attention. See [Automations](automations.md) for the mental model, worked exampl
 and limits.
 
 To run an automation when an email arrives, or to get its results by email, first connect your own
-mailbox on your account page in the gateway console (**Accounts**; an administrator uses **Email**
-on their own row), or `@` on the Accounts screen of the terminal console. The Assistant, the Observer and AbstractCode's browser client then offer **When an email
+mailbox on your account page in the gateway console (**Email** on your own row of
+the **Accounts** page), or `@` on the Accounts screen of the terminal console. The Assistant, the Observer and AbstractCode's browser client then offer **When an email
 arrives**, **Email me the result** and the recipients the automation may email without asking. See
 [Email automations](automations.md#email-automations). The same account gives you sign-in by email,
 and your agents get the email tools only when you switch **Agent email tools** on

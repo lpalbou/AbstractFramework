@@ -94,7 +94,7 @@ run the installer again: it continues where it stopped.
   or select **Forgot your token? Email me a sign-in code** on the sign-in page (shown unless an
   administrator switched **Sign-in by email** off): an 8-digit code arrives at your email address,
   works once and expires after 10 minutes. It reaches you only when your account has an email
-  address and a connected mailbox (your account page on the **Accounts** page); otherwise
+  address and a connected mailbox (**Email** on your row of the **Accounts** page); otherwise
   the sign-in page says so under the link. Without them, an administrator gives you a new token. See
   [Email integration](guide/email-integration.md#sign-in-by-email).
 
@@ -246,7 +246,7 @@ run the installer again: it continues where it stopped.
 
 ### An email automation does not run, or the mailbox shows "needs action"
 
-- **Check**: the **Mailbox** card on your account page (on the **Accounts** page) shows the mailbox state and the last error with its fix (for example an app password
+- **Check**: the **Mailbox** card on your account page (**Email** on your row of the **Accounts** page) shows the mailbox state and the last error with its fix (for example an app password
   the server refused); **Test** checks it again. Administrators see the same state in the accounts
   table's **Mailbox** column.
 - **Cause**: mail that was already in the mailbox, or that arrived while none of your email

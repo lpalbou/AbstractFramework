@@ -321,7 +321,7 @@ Email is configured as settings, never through environment variables:
   notifications go; set in **Create user** or on the account page) and connects their own
   **mailbox** (**IMAP** with address and password, the server fields visible and pre-filled, or
   **Google** or **Microsoft** sign-in) on their account page: the web console's **Accounts** page
-  (an administrator opens it with **Email** on their own row), the terminal console (`@` on the
+  (**Email** on their own row), the terminal console (`@` on the
   Accounts screen) or
   `PUT /api/gateway/me/email`. The mailbox lives in that user's own data folder with its
   credentials encrypted. The same page holds the two notification switches (**Job failed**,

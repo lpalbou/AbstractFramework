@@ -20,8 +20,8 @@ limits, agent email tools, notifications, sign-in by email).
 
 ## Step 1: Connect your mailbox
 
-In the gateway web console, open your account page on the **Accounts** page (an administrator
-selects **Email** on their own row; terminal console: the Accounts screen, then `@`). Check **Your
+In the gateway web console, open the **Accounts** page and select **Email** on your own row
+(terminal console: the Accounts screen, then `@`). Check **Your
 email address** at the top: results and notifications go there. In the **Mailbox** card, the
 **IMAP** tab is selected: give your mailbox address and an app password (the server fields fill in
 from the address; change one only if your provider uses others), or pick **Google** or

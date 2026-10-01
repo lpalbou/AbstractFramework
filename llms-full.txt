@@ -544,8 +544,8 @@ Notes for LLMs working in this repo:
   allowed recipient; set in **Create user** or on the account page) and their **mailbox** (a
   connection: tabs **IMAP** (first, selected; address + password, server fields visible and
   pre-filled, no user name field) / **Google** / **Microsoft**; one **Connect**, then an **Active**
-  switch, **Test** / **Disconnect**). Account page: web console **Accounts** (an administrator uses
-  **Email** on their own row), `@` on the terminal console's Accounts screen,
+  switch, **Test** / **Disconnect**). Account page: web console **Accounts** (**Email** on your own
+  row), `@` on the terminal console's Accounts screen,
   `PUT /api/gateway/me/email`. Notifications: two switches **Job failed** and
   **Approval needed** (on by default, sent only with a connected mailbox). **Agent email tools**: the
   user's switch, off by default, unavailable until a mailbox is connected. **Advanced**: recipient
@@ -2206,8 +2206,8 @@ attention. See [Automations](automations.md) for the mental model, worked exampl
 and limits.
 
 To run an automation when an email arrives, or to get its results by email, first connect your own
-mailbox on your account page in the gateway console (**Accounts**; an administrator uses **Email**
-on their own row), or `@` on the Accounts screen of the terminal console. The Assistant, the Observer and AbstractCode's browser client then offer **When an email
+mailbox on your account page in the gateway console (**Email** on your own row of
+the **Accounts** page), or `@` on the Accounts screen of the terminal console. The Assistant, the Observer and AbstractCode's browser client then offer **When an email
 arrives**, **Email me the result** and the recipients the automation may email without asking. See
 [Email automations](automations.md#email-automations). The same account gives you sign-in by email,
 and your agents get the email tools only when you switch **Agent email tools** on
@@ -2540,7 +2540,7 @@ to requests that leave `title` or `trigger` out.
 
 ## Email automations
 
-With **your own mailbox connected** to the gateway (your account page on the web console's
+With **your own mailbox connected** to the gateway (**Email** on your own row of the web console's
 **Accounts** page, `@` on the terminal console's Accounts screen, or `PUT /api/gateway/me/email`;
 see [Email integration](guide/email-integration.md) and [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md)),
 the Assistant, the Observer and AbstractCode's browser client offer three more options in the
@@ -2900,7 +2900,7 @@ recorded. A wait the gateway does not type is shown without answer controls.
 | No notification ever arrives | quiet is the default; only `notify` in the output, final failures and waits notify | return `notify` from the workflow (see the memory example) |
 | Ticks are late or merged | a tick takes longer than the interval; missed ticks are coalesced | lengthen the interval or share the model with fewer automations |
 | An email automation never runs | the mail was already there, arrived while no email automation was active, or is automatic mail (auto-replies, the framework's own mail); a model-running automation runs at most once an hour by default | send a new message after creating it; shorten `every`; set `"auto_submitted": "admit"` for others' automatic mail; check the mailbox state on your account page |
-| "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it on your account page (**Accounts**), or ask an administrator to switch **Mailboxes for users** on |
+| "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it on your account page (**Email** on your row of **Accounts**), or ask an administrator to switch **Mailboxes for users** on |
 | An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve it, add the recipient in **May send email without asking to**, or edit the recipient rules and send limits under **Advanced** on your account page |
 | A schedule shows `legacy` | it was created with `POST /api/gateway/runs/schedule` | it keeps its own controls; **Recreate as automation** in the Observer copies it into an automation (suspend the old one yourself) |
 
@@ -2946,9 +2946,8 @@ The package guides hold the full references:
 
 Every signed-in user has the same account page:
 
-- the gateway web console: the **Accounts** page. A user sees their own page there (**My email
-  address and mailbox**); an administrator opens it with **Email** on their own row of the accounts
-  table;
+- the gateway web console: **Email** on your own row of the **Accounts** page opens it (**My email
+  address and mailbox**);
 - the gateway terminal console (`abstractgateway-console`): the Accounts screen (`2`), then `@`;
 - the HTTP API: `GET /api/gateway/me/email` and the routes below.
 
@@ -5350,7 +5349,7 @@ Email is configured as settings, never through environment variables:
   notifications go; set in **Create user** or on the account page) and connects their own
   **mailbox** (**IMAP** with address and password, the server fields visible and pre-filled, or
   **Google** or **Microsoft** sign-in) on their account page: the web console's **Accounts** page
-  (an administrator opens it with **Email** on their own row), the terminal console (`@` on the
+  (**Email** on their own row), the terminal console (`@` on the
   Accounts screen) or
   `PUT /api/gateway/me/email`. The mailbox lives in that user's own data folder with its
   credentials encrypted. The same page holds the two notification switches (**Job failed**,
@@ -5805,7 +5804,7 @@ The operator console for one gateway. The web console is built into `abstractgat
 
 ### Accounts
 
-The gateway console page for the people who use the gateway and the entities that act on it: one table of users and entities (**Name** with a kind chip, **Role**, **Email address**, **Mailbox**, **Runtime**, an **Active** switch, and the actions **Email**, **Logs**, **Workspace**, **Rotate**, **Manage** for entities and **Delete**), with **Create user** and **Create entity** above it and **Email for everyone** below. An action that cannot apply shows its reason. Turning **Active** off signs a user out until it is turned back on, or suspends an entity. **Logs** lists the account's recorded activity from the gateway's audit log. An administrator sees every account; a user sees only themself and the entities they created.
+The gateway console page for the people who use the gateway and the entities that act on it: one table of users and entities (**Name** with a kind chip, Admin, User or Entity, **Email address**, **Mailbox**, **Runtime**, an **Active** switch, and the actions **Email**, **Logs**, **Workspace**, **Rotate**, **Manage** for entities and **Delete**), with **Create user** and **Create entity** above it and **Email for everyone** below. An action that cannot apply shows its reason. Turning **Active** off signs a user out until it is turned back on, or suspends an entity. **Logs** lists the account's recorded activity from the gateway's audit log. An administrator sees every account; a user sees only themself and the entities they created.
 
 ### Core console
 
@@ -5878,8 +5877,8 @@ See [Email integration](guide/email-integration.md) for the whole picture.
 
 A gateway user's own address: where sign-in codes, "Forgot your token?" and notifications go, and
 the first address the user's agents may write to. It has no password. An administrator sets it in
-**Create user**, or the user sets it on their account page (**Accounts** in the web console, where
-an administrator uses **Email** on their own row; `@` on the terminal console's Accounts screen).
+**Create user**, or the user sets it on their account page (**Email** on their own row of the web console's
+**Accounts** page; `@` on the terminal console's Accounts screen).
 
 ### Mailbox
 
@@ -6180,7 +6179,8 @@ The full guide, with two worked examples and troubleshooting, is **[Automations]
 ## Can the framework read and send my email?
 
 Only with an account you connect yourself, and only as far as you allow. Each gateway user connects
-their own mailbox on their account page in the web console (**Accounts**) or the terminal console
+their own mailbox on their account page in the web console (**Email** on their row of
+**Accounts**) or the terminal console
 (`@` on the Accounts screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
 rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
 deleted. Every send passes your recipient rules (an allowlist or a denylist of addresses and
@@ -6357,7 +6357,7 @@ in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path
 From another device, sign in with your gateway user name and token. The sign-in page also offers
 **Forgot your token? Email me a sign-in code** (unless an administrator switched **Sign-in by
 email** off): an 8-digit code sent to your email address, valid once for 10 minutes. The code
-reaches you only when your account has an email address and a connected mailbox (your account page on the console's **Accounts** page). See
+reaches you only when your account has an email address and a connected mailbox (**Email** on your row of the console's **Accounts** page). See
 [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?
@@ -6504,7 +6504,7 @@ run the installer again: it continues where it stopped.
   or select **Forgot your token? Email me a sign-in code** on the sign-in page (shown unless an
   administrator switched **Sign-in by email** off): an 8-digit code arrives at your email address,
   works once and expires after 10 minutes. It reaches you only when your account has an email
-  address and a connected mailbox (your account page on the **Accounts** page); otherwise
+  address and a connected mailbox (**Email** on your row of the **Accounts** page); otherwise
   the sign-in page says so under the link. Without them, an administrator gives you a new token. See
   [Email integration](guide/email-integration.md#sign-in-by-email).
 
@@ -6656,7 +6656,7 @@ run the installer again: it continues where it stopped.
 
 ### An email automation does not run, or the mailbox shows "needs action"
 
-- **Check**: the **Mailbox** card on your account page (on the **Accounts** page) shows the mailbox state and the last error with its fix (for example an app password
+- **Check**: the **Mailbox** card on your account page (**Email** on your row of the **Accounts** page) shows the mailbox state and the last error with its fix (for example an app password
   the server refused); **Test** checks it again. Administrators see the same state in the accounts
   table's **Mailbox** column.
 - **Cause**: mail that was already in the mailbox, or that arrived while none of your email
@@ -9076,8 +9076,8 @@ limits, agent email tools, notifications, sign-in by email).
 
 ## Step 1: Connect your mailbox
 
-In the gateway web console, open your account page on the **Accounts** page (an administrator
-selects **Email** on their own row; terminal console: the Accounts screen, then `@`). Check **Your
+In the gateway web console, open the **Accounts** page and select **Email** on your own row
+(terminal console: the Accounts screen, then `@`). Check **Your
 email address** at the top: results and notifications go there. In the **Mailbox** card, the
 **IMAP** tab is selected: give your mailbox address and an app password (the server fields fill in
 from the address; change one only if your provider uses others), or pick **Google** or

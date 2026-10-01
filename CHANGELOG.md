@@ -31,14 +31,14 @@ version is unchanged from 0.7.2.
   connected. **Send a test** answers with a sentence: "Sent to …" or why not ("Not sent: hourly
   limit reached (100 of 100 this hour) — resets at 14:05."), with reset times in your local time.
 - **One Accounts page.** The gateway web console's **Accounts** page is one table of users and
-  entities (Name, Role, Email address, Mailbox, Runtime, an **Active** switch; actions Email, Logs,
+  entities (Name with an Admin / User / Entity chip, Email address, Mailbox, Runtime, an **Active** switch; actions Email, Logs,
   Workspace, Rotate, Manage, Delete, each with its reason when it cannot apply), with **Create
   user** and **Create entity**. **Email for everyone** below it holds the administrator's
   **Mailboxes for users** switch, with **Agent email tools for users** and **Sign-in by email**
   under Advanced. **Logs** shows an account's activity from the gateway's audit log. An
   administrator sees every account; a user sees only themself and the entities they created, in
   the consoles and the API.
-- **Sidebar groups and a Setup button.** The web console groups its pages as Accounts; Work
+- **Sidebar groups and Setup.** The web console groups its pages as Accounts; Work
   (Workflows, Runtimes, Apps); Models (Providers, Models, Engines, Multimodal); System (Resources,
   Sandbox, Network). **Setup** at the bottom of the sidebar runs the first-run guide again and keeps
   your choices unless you replace them. The terminal console uses the same groups and `S` for
@@ -115,7 +115,7 @@ version is unchanged from 0.7.2.
 ### Documentation
 
 - The root docs describe the email address and mailbox screens, the Accounts page, the sidebar
-  groups and Setup button, sign-in by email, the installer's retry, and https through Tailscale
+  groups and Setup, sign-in by email, the installer's retry, and https through Tailscale
   ([Email integration](docs/guide/email-integration.md),
   [Phones and tablets](docs/guide/deployment-iphone.md), [Install](docs/install.md),
   [Glossary](docs/glossary.md)).

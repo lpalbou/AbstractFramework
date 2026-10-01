@@ -116,7 +116,7 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| 0994 | [Follow-ups after the 0.7.2 release](planned/0994_follow_ups_after_0_7_2_release.md) | Planned | Items 29–50 after root 0.7.2. Completed in 0.8.0 (close on publication): installer never-fail (29), stored port (30, D-A), old-install options (31, D-C), unknown core keys (32, D-B), resume nudge (33), Node install race (34), startup stop (35), flakes (37), Docker tags (38), pause during backoff (40), kit type scale (41), secure context (43), manifest (44), proxy sign-in 403 (45), `/files/read` (49). Open: 36, 39, 42, 46, 47, 48, 50. |
+| 0994 | [Follow-ups after the 0.7.2 release](planned/0994_follow_ups_after_0_7_2_release.md) | Planned | Items 29–54 after root 0.7.2. Completed in 0.8.0 (close on publication): installer never-fail (29), stored port (30, D-A), old-install options (31, D-C), unknown core keys (32, D-B), resume nudge (33), Node install race (34), startup stop (35), flakes (37), Docker tags (38), pause during backoff (40), kit type scale (41), secure context (43), manifest (44), proxy sign-in 403 (45), `/files/read` (49). Open: 36, 39, 42, 46, 47, 48, 50, 51 (Assistant test segfault), 52 (Telegram bridge setting), 53 (llms copies), 54 (site screenshots). |
 | 0993 | [One ledger replay, many views](planned/0993_one_ledger_replay_many_views.md) | Planned (high) | Clients rebuild run state their own way (live SSE vs. history bundle vs. snapshots); the 2026-09-29 approval gate showed only in the originating client. One replay contract + conformance suite for every client. |
 | 0992 | [Per-user email accounts and notifications](planned/0992_per_user_email_accounts_and_notifications.md) | Planned (high) | Design + plan, no code: typed mail library and encrypted account store in Core; one mailbox per principal in its gateway plane (`/me/email`, web console + TUI); `email.received@1` trigger on the 0929 inbox; notification dispatcher with durable outbox and rate limits. Found: TLS unverified on every IMAP/SMTP connection, the default automation grant lets an agent email any address, the email bridge never starts under multi-user auth. 12 operator decisions open. |
 | 0991 | [Model residency and GPU memory management](planned/0991_model_residency_and_gpu_memory_management.md) | Planned (high) | One registry of loaded models across engines (in-process text/media, LM Studio/Ollama/vLLM, one-shot subprocesses), resident/protected/ejectable reusing the text lock, NVML/Metal memory budget naming holders, LRU eviction of ejectable models before a load, typed progress, honest errors. Fixed 2026-09-29 (unreleased): resident image models now serve generation (VM 17–19 s vs 54–59 s), a Diffusers unload frees its 18.8 GB. |
@@ -367,8 +367,9 @@ binding: no lossy truncation inside the loop. Source analysis:
 Branch `release-prep/2026-10-01` of every package (worktrees `untracked/release-r2/<repo>`). Root
 abstractframework 0.8.0 pins abstractgateway 0.10.0, abstractcore 2.22.0, AbstractRuntime 0.8.2,
 abstractassistant 0.11.0; crates abstractgateway-console 0.13.0, abstractcore-console 0.6.0; npm
-code 0.9.0, flow 0.6.0, observer 0.5.0, continuum 0.6.0, entity 0.5.0 (provisional until each is
-published). Closes the 0994 items marked Completed in 0.8.0 on publication.
+code 0.9.0, flow 0.6.0, observer 0.5.0, continuum 0.6.0, entity 0.5.0; crate abstractcode 0.8.0.
+Published by 2026-10-01 early morning: ui-kit 0.4.0, runtime 0.8.2, assistant 0.11.0, the five apps,
+abstractcode 0.8.0; core 2.22.0 and gateway 0.10.0 (with their console crates) in progress. Closes the 0994 items marked Completed in 0.8.0 on publication.
 
 Released on 2026-09-24 (two waves) and verified again on 2026-09-25 by the backlog trace (PyPI,
 npm, crates.io APIs; GitHub releases). Record: [0867](completed/0867_release_waves_2026_09_24_and_coredoc_pass.md).

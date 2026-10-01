@@ -162,7 +162,7 @@ The operator console for one gateway. The web console is built into `abstractgat
 
 ### Accounts
 
-The gateway console page for the people who use the gateway and the entities that act on it: one table of users and entities (**Name** with a kind chip, **Role**, **Email address**, **Mailbox**, **Runtime**, an **Active** switch, and the actions **Email**, **Logs**, **Workspace**, **Rotate**, **Manage** for entities and **Delete**), with **Create user** and **Create entity** above it and **Email for everyone** below. An action that cannot apply shows its reason. Turning **Active** off signs a user out until it is turned back on, or suspends an entity. **Logs** lists the account's recorded activity from the gateway's audit log. An administrator sees every account; a user sees only themself and the entities they created.
+The gateway console page for the people who use the gateway and the entities that act on it: one table of users and entities (**Name** with a kind chip, Admin, User or Entity, **Email address**, **Mailbox**, **Runtime**, an **Active** switch, and the actions **Email**, **Logs**, **Workspace**, **Rotate**, **Manage** for entities and **Delete**), with **Create user** and **Create entity** above it and **Email for everyone** below. An action that cannot apply shows its reason. Turning **Active** off signs a user out until it is turned back on, or suspends an entity. **Logs** lists the account's recorded activity from the gateway's audit log. An administrator sees every account; a user sees only themself and the entities they created.
 
 ### Core console
 
@@ -235,8 +235,8 @@ See [Email integration](guide/email-integration.md) for the whole picture.
 
 A gateway user's own address: where sign-in codes, "Forgot your token?" and notifications go, and
 the first address the user's agents may write to. It has no password. An administrator sets it in
-**Create user**, or the user sets it on their account page (**Accounts** in the web console, where
-an administrator uses **Email** on their own row; `@` on the terminal console's Accounts screen).
+**Create user**, or the user sets it on their account page (**Email** on their own row of the web console's
+**Accounts** page; `@` on the terminal console's Accounts screen).
 
 ### Mailbox
 

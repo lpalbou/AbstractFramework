@@ -157,7 +157,8 @@ The full guide, with two worked examples and troubleshooting, is **[Automations]
 ## Can the framework read and send my email?
 
 Only with an account you connect yourself, and only as far as you allow. Each gateway user connects
-their own mailbox on their account page in the web console (**Accounts**) or the terminal console
+their own mailbox on their account page in the web console (**Email** on their row of
+**Accounts**) or the terminal console
 (`@` on the Accounts screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
 rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
 deleted. Every send passes your recipient rules (an allowlist or a denylist of addresses and
@@ -334,7 +335,7 @@ in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path
 From another device, sign in with your gateway user name and token. The sign-in page also offers
 **Forgot your token? Email me a sign-in code** (unless an administrator switched **Sign-in by
 email** off): an 8-digit code sent to your email address, valid once for 10 minutes. The code
-reaches you only when your account has an email address and a connected mailbox (your account page on the console's **Accounts** page). See
+reaches you only when your account has an email address and a connected mailbox (**Email** on your row of the console's **Accounts** page). See
 [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?
