@@ -249,6 +249,32 @@ of the round-1 rework are
     its own) and [0998](../proposed/0998_at_mentions_of_agents_and_entities_in_a_session.md)
     (@-mentions of agents and entities; agora/collaborative workspaces, with 0212/0213/008).
 
+**Recorded during the 0.9.0 release (round 3, 2026-10-01/02)**
+67. MCP tools in entity (AI user) runs and plain `llm_call` nodes: an entity run and an `llm_call` node can call `mcp::<server>::<tool>` under the same Ask gate; red-first tests. Owner: runtime + gateway.
+68. MCP client pooling: `abstractruntime` `mcp_facade` starts a stdio server once per run (not per call) and closes it at run end. Owner: runtime.
+69. Gateway terminal console: an "Enabled for agents" switch for MCP servers, parity with the web switch and its note. Owner: gateway.
+70. Code web tool picker labels MCP tools `Mcp:<server>`; use `MCP · <server>` as the console does. Owner: code.
+71. Cold boot under load: `abstractcore` `mlx_provider.py` imports `outlines` eagerly (lines 24-30); constructing MLXProvider must leave outlines, transformers and torch out of `sys.modules` (test). Owner: core.
+72. Cold boot: `abstractruntime` `llm_client.py` (~10247, 10281, 10424) builds the default client eagerly; build it on first use (counting-factory test). Owner: runtime.
+73. `tests/test_abstractflow_editor_gateway_contract.py` triggers remote provider probes (acemusic, elevenlabs) caught by the network guard at teardown; loading the editor contract makes no outbound call. Owner: gateway.
+74. Code web e2e timing at load (automation occurrence lag, 15 s event wait, cold first sign-in): bind waits to gateway readiness; 3 consecutive green runs at load ≥ 30. Owner: code.
+75. Code sidebar: sticky section headers need an opaque background so both stay visible while scrolling. Owner: code.
+76. Observer: dead CSS from the removed Story view (`.run_overview`, `.timeline_event`, `.lc*`, `.produced_row`, `.subrun_chip` in styles.css/observe.css/space.css); and no obvious way from the Board into a run view. Owner: observer.
+77. Kit sign-in form: confirm the "Keychain Not Found" toast is gone on the operator's Mac (token field autoComplete=off + password-manager ignore attributes; the user field keeps autoComplete="username"). Owner: kit.
+78. Entity Settings after-shots (1440/834/390, Mind/Voice) and their report were not captured (worker died at the capture step). Owner: gateway/entity.
+79. Console warm-up: pages that wait on the warm-up say so inline (today only a pill). Owner: gateway.
+80. Operator dev flow `multiagent-coding` 0.0.19 (imported into runtime/) fails to compile: `text_of` shadows a sandbox helper since runtime 0.4.32; rename it in the flow. Owner: operator flow.
+81. Islands/theme re-sync after every kit change is manual; the deploy build and gateway CI fail loudly when the drift pin is stale (the 0.10.0/0.11.0 wheels carry islands stamped with an older kit). Owner: gateway (see 55).
+82. Kit WorkflowPicker shots: fixtures carry basic-agent so the "Gateway default" entry is realistic. Owner: kit.
+83. Console Accounts head has a dead zero-size duplicate `#open-create-entity`; keep one element with that id. Owner: gateway.
+84. `POST /runs/start` with a crafted ref to a NONEXISTENT artifact of another session starts the run (the guard fires only for existing session-private artifacts; no leak): answer 400 too. Owner: gateway.
+85. Entity own-time loop ignores the MTP setting (visits and summons honour it). Owner: gateway.
+86. Kit AfSelect: Enter in its search box does not pick the highlighted option (click works). Owner: kit.
+87. Console entity voice picker lost the per-provider "needs an API key" labels after the move to the kit VoiceSettings. Owner: gateway + kit.
+88. `ABSTRACTGATEWAY_ENTITY_MAX_OUTPUT_TOKENS` is still an env var: move it to a gateway setting (settings are never env vars); root `scripts/plan_walkthrough.py` (~125-135, ~1149-1151) still documents/exports `ABSTRACTGATEWAY_ENTITY_*` variables the gateway no longer reads. Owner: gateway + root.
+89. The round-3 adversary skipped WebKit, the light theme and the wide-width matrix (budget) and the release-content check of the 0.9.0 branches: re-run before the next UI release. Owner: release.
+90. Release-prep checklist (0.9.0 wave needed fixes at publish time): bump EVERY version source — AbstractUIC root `package.json` (the tag validates it), `abstractassistant/_version.py`, the gateway FastAPI `app.py` version and `live_deltas.ABSTRACTRUNTIME_FLOOR` with the install-profile tests, Code's CHANGELOG heading `[web X]`; widen panel-chat's ui-kit peer range with every kit minor (0.2.3 shipped without `^0.5.0` → 0.2.4). Add a pre-tag script per repo that greps these. Owner: release.
+
 **Operator decisions (raised 2026-10-01, round 2)**
 60. Light installs include local voice (Supertonic, faster-whisper) although "light" reads as
     external providers only: keep or strip?
