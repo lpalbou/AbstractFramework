@@ -95,6 +95,41 @@ session pool for all clients; "the run waits for your approval, in every client"
 
 - Changing the ledger's append-only semantics or storage format beyond what the contract needs.
 
+## Use case: thin clients hold no run-input state (operator, 2026-10-01)
+
+Architecture principle (operator, 2026-10-01): "logic should not be in the thin client — full
+execution must happen in gateway/runtime and clients just read what's happening + forward
+execution parameters and requests/interactions from the user; all of that should be handled by
+the replayable ledger." The replay contract therefore covers a session's **inputs** as well as
+its run state: the server is the single source of truth for a session's inputs, attachments and
+history; a client keeps only unsent composer text and view preferences, never run-input state
+the server could replay.
+
+**Trigger (cross-session attachment bleed, AbstractCode web 0.9.0).** A new conversation sent a
+previous conversation's attachments: the client restored hidden `context.attachments` /
+`context.media` form state from the earlier conversation into the new one, and the gateway
+accepted the artifact refs because they belonged to the same user. Fixed in round 3 on both
+sides, unreleased at the time of writing: client-side in AbstractCode web @53b36ae (attachments
+are per turn), server-side in abstractgateway @9c7475c (a session-private artifact referenced by
+a run of another session is refused with a typed 400 `artifact_not_in_session`). Release
+tracking: [0994](0994_follow_ups_after_0_7_2_release.md) item 70.
+
+**Clients to audit for client-held execution state** (add each to the inventory, step 1 of the
+scope, with file:line): AbstractCode web, the AbstractCode terminal client (Rust), the Assistant
+(Python/Qt), Observer Discuss, the Entity app, the AbstractFlow run panel. For each: which
+run-input fields it keeps between turns or across sessions (attachments, media, route/model
+overrides, tool grants, workspace), whether a reload or a second client would reproduce them
+from the server, and what moves server-side.
+
+Additional acceptance for this use case:
+
+- [ ] Every audited client starts a turn from server-held session state plus what the person
+      typed or picked for that turn; no client restores run inputs from local storage or a
+      previous session.
+- [ ] The gateway refuses cross-session input references (`artifact_not_in_session` and its
+      equivalents) with a test per input kind; references to other sessions only through the
+      supervised grant of [0997](../proposed/0997_cross_session_references_under_user_supervision.md).
+
 ## Acceptance criteria
 
 - [ ] Inventory document with every replay path and divergence risk (file:line).

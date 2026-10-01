@@ -33,7 +33,8 @@ in 0.8.0** close when that wave is published (cite the tags then). Still open: 3
 job), 39 (operator token rotation), 42 (Update job log token redaction), 46
 (`apps.adopt_external`), 47 (`--no-print-token` for the service), 48 (admin boundary around a
 user's sealed mailbox), 50 (Apps page npm retry), and 51–54 (recorded during the 0.8.0 preparation: Assistant test
-segfault, Telegram bridge setting, llms copies refresh, site screenshots). Gateway-native TLS (item 45's last part) is
+segfault, Telegram bridge setting, llms copies refresh, site screenshots), and 67–71 (recorded in round 3: thin-client principle, no-env
+settings and shared pickers, contract-test probes, session-bleed patch releases, future features). Gateway-native TLS (item 45's last part) is
 [0995](../proposed/0995_gateway_native_tls_for_remote_browsers.md); the console and app UI notes
 of the round-1 rework are
 [0996](../proposed/0996_console_and_app_ui_follow_ups_after_the_round_1_rework.md).
@@ -219,6 +220,34 @@ of the round-1 rework are
 66. A light install does not build `abstractcore-console` (the gateway console and `abstractcode` are
     built); decide whether light installs it too and make the installer summary say which consoles
     were built. Owner: root.
+
+**Recorded during round 3 (2026-10-01)**
+67. Thin clients hold no run-input state (operator principle, 2026-10-01): execution and its
+    inputs live in gateway/runtime and the replayable ledger; clients read and forward. Recorded
+    as a use case of [0993](0993_one_ledger_replay_many_views.md) with the clients to audit (Code
+    web, Code TUI, Assistant, Observer Discuss, Entity, Flow run panel). Owner: 0993.
+68. No environment variables for settings (rule reminder, fixed in round 3): the entity "mind
+    substrate" fallback `ABSTRACTGATEWAY_ENTITY_CHAT_PROVIDER` / `_MODEL`
+    (`abstractgateway/entity_chat.py`, `env_registry.py` `entities.substrate`) is removed in favour
+    of the gateway text route default plus a per-entity override set in the console and the Entity
+    app. General rule: **apps use the shared AbstractUIC pickers (route, voice); no bespoke
+    provider/model/voice forms** — the Entity app moves onto the kit pickers. ADR state: the rule
+    belongs in ADR-0032 (gateway-first apps) or a new ADR; record it there before closing. Owner:
+    gateway + entity + kit. Close with the round-3 release, citing the tags.
+69. A contract test must never trigger remote provider probes: the abstractflow editor contract
+    test reached `api.acemusic.ai` and `api.elevenlabs.io` during setup on flow 0.10.0 (round-3
+    gates). Product fix: provider probes run only on an explicit request (never on load/setup);
+    test fix: refuse network in the contract suite so a probe goes RED. Owner: flow (+ gateway if
+    the probe is server-side). See [0849](0849_test_suites_must_not_reach_the_operators_live_stack.md).
+70. Release impact of the session bleed: AbstractCode web 0.9.1 (round 3 @53b36ae) and
+    abstractgateway 0.10.1 (@9c7475c, `artifact_not_in_session`) patch releases. Release notes and
+    docs must not claim the fix before both are published; close citing both tags. Owner: root
+    release sequence.
+71. Future features recorded from the same discussion:
+    [0997](../proposed/0997_cross_session_references_under_user_supervision.md) (reference other
+    sessions and their attachments under a ledger-recorded user grant; today a session sees only
+    its own) and [0998](../proposed/0998_at_mentions_of_agents_and_entities_in_a_session.md)
+    (@-mentions of agents and entities; agora/collaborative workspaces, with 0212/0213/008).
 
 **Operator decisions (raised 2026-10-01, round 2)**
 60. Light installs include local voice (Supertonic, faster-whisper) although "light" reads as
