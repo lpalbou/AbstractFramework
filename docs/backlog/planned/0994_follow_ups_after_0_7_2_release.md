@@ -207,6 +207,19 @@ of the round-1 rework are
     needs a console re-sync), and `monitor-memory/README.md` keeps an incident-history sentence;
     fix both with the next kit release that bumps those packages. Owner: kit.
 
+64. Agent runs ignore the default text route's `base_url`: `PUT
+    /api/gateway/config/capability-defaults/input/text` with `base_url` is stored and read back, but
+    `abstractgateway/core_config.py` `text_default()` returns provider, model and reasoning only, so the
+    run's `llm_call` goes to the provider's default address (a remote LM Studio set as the default text
+    route is bypassed for the local one). Present in 0.7.2 and 0.8.0 (macOS verification 2026-10-01,
+    `untracked/release-r2/reports/verify.md` B1). Fix with a red-first test through a real run start.
+    Owner: gateway (+ runtime if the payload drops it). Priority: high for remote-model setups.
+65. The default workspace root is the folder the installer was run from, so an upgrade run from
+    another folder moves it. Record it at first install and keep it. Owner: root installers + gateway.
+66. A light install does not build `abstractcore-console` (the gateway console and `abstractcode` are
+    built); decide whether light installs it too and make the installer summary say which consoles
+    were built. Owner: root.
+
 **Operator decisions (raised 2026-10-01, round 2)**
 60. Light installs include local voice (Supertonic, faster-whisper) although "light" reads as
     external providers only: keep or strip?
