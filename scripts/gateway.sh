@@ -26,7 +26,7 @@ verify_gateway_runner_lock_free "$PY" "$GATEWAY_DATA_DIR/gateway_runner.lock"
 export ABSTRACTGATEWAY_DATA_DIR="$GATEWAY_DATA_DIR"
 info "Starting AbstractGateway (published) on http://${GATEWAY_HOST}:${GATEWAY_PORT}"
 info "  data dir: ${GATEWAY_DATA_DIR}"
-info "  entity chat defaults: shelf 36 / context 65536 (code defaults; override with ABSTRACTGATEWAY_ENTITY_CHAT_*)"
+info "  entity chat defaults: shelf 36 / context 65536 (code defaults)"
 info "  apps: flow.sh / observer.sh / entity.sh / console.sh / code.sh — or everything at once: af.sh"
 # -P (safe path, Python 3.11+): never put the launch cwd on sys.path — a repo
 # folder named like an installed package (abstractvoice/) otherwise shadows it

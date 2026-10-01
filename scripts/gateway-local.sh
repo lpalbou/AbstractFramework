@@ -26,7 +26,7 @@ info "Starting AbstractGateway (local checkout) on http://${GATEWAY_HOST}:${GATE
 info "  python:   ${PY}"
 info "  data dir: ${GATEWAY_DATA_DIR}"
 info "  PYTHONPATH: ${PYTHONPATH}"
-info "  entity chat defaults: shelf 36 / context 65536 (code defaults; override with ABSTRACTGATEWAY_ENTITY_CHAT_*)"
+info "  entity chat defaults: shelf 36 / context 65536 (code defaults)"
 info "  apps: flow-local.sh / observer-local.sh / entity-local.sh / console-local.sh / code-local.sh — or everything at once: af-local.sh"
 # -P (safe path, Python 3.11+): never put the launch cwd on sys.path — a repo
 # folder named like an installed package (abstractvoice/) otherwise shadows it
