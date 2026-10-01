@@ -532,7 +532,9 @@ def test_install_sh_retries_without_llama_cpp_when_the_wheel_fails(tmp_path: Pat
     uv.chmod(0o755)
     proc = subprocess.run(
         ["sh", str(ROOT / "scripts" / "install.sh"), "--profile", "light", "--port", "18998",
-         "--no-start", "--no-service", "--no-open", "--no-modify-path"],
+         "--no-start", "--no-service", "--no-open", "--no-modify-path",
+         # The gateway install step only: never fetch rustup or build crates from crates.io here.
+         "--no-console", "--no-code-cli"],
         capture_output=True, text=True,
         env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb",
              "XDG_DATA_HOME": str(tmp_path / "data")},
@@ -577,7 +579,9 @@ def test_install_sh_repairs_a_gateway_command_that_does_not_start(tmp_path: Path
     uv.chmod(0o755)
     proc = subprocess.run(
         ["sh", str(ROOT / "scripts" / "install.sh"), "--profile", "light", "--port", "18998",
-         "--no-start", "--no-service", "--no-open", "--no-modify-path"],
+         "--no-start", "--no-service", "--no-open", "--no-modify-path",
+         # The gateway install step only: never fetch rustup or build crates from crates.io here.
+         "--no-console", "--no-code-cli"],
         capture_output=True, text=True,
         env={"HOME": str(tmp_path), "PATH": f"{fake}:/usr/bin:/bin:/usr/sbin:/sbin", "TERM": "dumb",
              "XDG_DATA_HOME": str(tmp_path / "data")},
