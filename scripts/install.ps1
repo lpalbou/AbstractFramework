@@ -95,14 +95,14 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.9.0'
+$AfGatewayPinDefault = '0.10.0'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.7.2'
-$AfPyMatrix = @('abstractcore==2.21.0', 'AbstractRuntime==0.8.1', 'abstractagent==0.3.17', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.13.2', 'abstractvision==0.3.33', 'abstractmusic==0.1.15', 'abstract3d==0.3.2')
+$AfFrameworkVersion = '0.8.0'
+$AfPyMatrix = @('abstractcore==2.22.0', 'AbstractRuntime==0.8.2', 'abstractagent==0.3.17', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.13.2', 'abstractvision==0.3.33', 'abstractmusic==0.1.15', 'abstract3d==0.3.2')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.5.0', '@abstractframework/code@0.8.0', '@abstractframework/observer@0.4.0', '@abstractframework/continuum@0.5.0', '@abstractframework/entity@0.4.0')
-$AfCrateConsole = 'abstractgateway-console@0.12.0'
+$AfNpmApps = @('@abstractframework/flow@0.6.0', '@abstractframework/code@0.9.0', '@abstractframework/observer@0.5.0', '@abstractframework/continuum@0.6.0', '@abstractframework/entity@0.5.0')
+$AfCrateConsole = 'abstractgateway-console@0.13.0'
 $AfCrateCodeCli = 'abstractcode@0.7.1'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
 # the parent of the uv tool bin folder, so they land next to abstractgateway.exe (the folder the
