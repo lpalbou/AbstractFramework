@@ -60,7 +60,7 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstractgateway-console": "0.13.0",
     "abstractcore-console": "0.6.0",
-    "abstractcode": "0.7.1",
+    "abstractcode": "0.8.0",
     "abstracttui": "0.6.0",
 }
 

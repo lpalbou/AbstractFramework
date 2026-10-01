@@ -9,7 +9,8 @@ All notable changes to AbstractFramework will be documented in this file.
 The consoles' email and accounts screens are redesigned, the installer never installs less because
 of the network, and the console and the apps work over https through `tailscale serve`. Pins:
 AbstractGateway 0.10.0, AbstractCore 2.22.0, AbstractRuntime 0.8.2 and AbstractAssistant 0.11.0;
-the terminal consoles `abstractgateway-console` 0.13.0 and `abstractcore-console` 0.6.0; the
+the terminal consoles `abstractgateway-console` 0.13.0 and `abstractcore-console` 0.6.0 and
+AbstractCode's terminal client `abstractcode` 0.8.0; the
 browser apps Code 0.9.0, Flow 0.6.0, Observer 0.5.0, Continuum 0.6.0 and Entity 0.5.0. Every other
 version is unchanged from 0.7.2.
 

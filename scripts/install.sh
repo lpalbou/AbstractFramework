@@ -132,7 +132,7 @@ AF_PY_MATRIX="abstractcore==2.22.0 AbstractRuntime==0.8.2 abstractagent==0.3.17 
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.6.0 @abstractframework/code@0.9.0 @abstractframework/observer@0.5.0 @abstractframework/continuum@0.6.0 @abstractframework/entity@0.5.0"
 AF_CRATE_CONSOLE="abstractgateway-console@0.13.0"
-AF_CRATE_CODE_CLI="abstractcode@0.7.1"
+AF_CRATE_CODE_CLI="abstractcode@0.8.0"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
 # `abstractgateway-config` (uv tool install --with-executables-from; --no-core-cli leaves them
 # out): AbstractCore and its voice, vision and music packages. Not abstractruntime (its one
