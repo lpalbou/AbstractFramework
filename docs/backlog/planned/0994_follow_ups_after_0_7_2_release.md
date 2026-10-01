@@ -189,6 +189,33 @@ of the round-1 rework are
     grouped sidebar, the terminal console shots, Code web (desktop and phone), the Assistant's and
     the Observer's Active switch. Owner: site.
 
+55. The AbstractGateway 0.10.0 wheel carries `console_islands.py` stamped with ui-kit 0.3.3 and the
+    0.3.3 islands bundle hash, while ui-kit 0.4.0's islands differ by one comment line (no
+    functional drift; the 2026-10-01 local deploy re-synced on its build branch only). Re-sync from
+    the released kit at the next gateway release; the drift test passes only with
+    `ABSTRACTUIC_SRC` pointing at the kit the sync used, so pin that in CI. Owner: gateway.
+56. `abstractcore.testing.mailserver.free_port()` picks a free port and binds it later, so parallel
+    suites can collide (Errno 48); the gateway's SMTP test fixture retries on EADDRINUSE since
+    0.10.0. Bind port 0 inside the server instead and return the bound port. Owner: core.
+57. AbstractCore `tests/.../test_mlx_residency_eject_leak_unit` fails on a Mac where the real `mlx`
+    package is installed (also at v2.21.0; Linux CI has no `mlx`). Make it independent of an
+    installed `mlx`. Owner: core.
+58. Gateway docs (README, getting-started, api, automations, security) build curl examples with
+    `$(cat …/bootstrap-admin-token)`; the convention is the token as a direct `--token <value>` /
+    `Authorization: Bearer <admin token>` placeholder. Owner: gateway.
+59. ui-kit `theme.css` still carries "0.3.3" comments (copied verbatim into the consoles, so a change
+    needs a console re-sync), and `monitor-memory/README.md` keeps an incident-history sentence;
+    fix both with the next kit release that bumps those packages. Owner: kit.
+
+**Operator decisions (raised 2026-10-01, round 2)**
+60. Light installs include local voice (Supertonic, faster-whisper) although "light" reads as
+    external providers only: keep or strip?
+61. The display name on mail the runtime sends: the part before the @, or none?
+62. Entities have no permanent end, so Delete is unavailable for them (greyed out with the reason):
+    add one?
+63. Bundles that ship with the gateway can be deleted (with a warning that only a reinstall brings
+    them back): keep deletable?
+
 **Operator actions**
 39. Rotate the Linux GPU box's gateway admin token: it sat unredacted in local evidence logs until
     13:53 on 2026-09-30 (the logs were redacted then; the token itself was not changed). Owner:
