@@ -4,6 +4,19 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.9.1] - 2026-10-02
+
+### Changed
+
+- Pins abstractgateway 0.11.1: the gateway never caps an entity's output (the model works at its
+  full capacity; the `ABSTRACTGATEWAY_ENTITY_MAX_OUTPUT_TOKENS` variable is gone and the chat-open
+  `max_output_tokens` field is ignored with a deprecation line), and its boot applies the
+  installer's `apps-upgrade.pending`. Install matrices, the manifest, README and docs regenerated;
+  the docs' app and core console version tables now name the 0.9.0 releases (flow 0.7.0, code
+  0.10.0, observer 0.6.0, entity 0.6.0, abstractcore 2.23.0, abstractcore-console 0.7.0).
+
 ### Fixed
 
 - The installer upgrades the browser apps: on every install and upgrade (`install.sh`, `install.ps1`,
