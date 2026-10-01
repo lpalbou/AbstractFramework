@@ -20,11 +20,12 @@ limits, agent email tools, notifications, sign-in by email).
 
 ## Step 1: Connect your mailbox
 
-In the gateway web console, open **Users & Entities → My email address and mailbox** (terminal
-console: the Users screen, then `@`). Check your **Email address** at the top: results and
-notifications go there. In the **Mailbox** card, pick **Google** or **Microsoft** to sign in with
-the provider, or **Other** to give your email address and an app password (the gateway finds the
-mail servers itself), then **Connect**. The gateway tests both servers before it saves anything.
+In the gateway web console, open your account page on the **Accounts** page (an administrator
+selects **Email** on their own row; terminal console: the Accounts screen, then `@`). Check **Your
+email address** at the top: results and notifications go there. In the **Mailbox** card, the
+**IMAP** tab is selected: give your mailbox address and an app password (the server fields fill in
+from the address; change one only if your provider uses others), or pick **Google** or
+**Microsoft** to sign in with the provider, then **Connect**. The gateway tests both servers before it saves anything.
 
 The recipient rules sit under **Advanced** on the same page: a new account allows mail only to your
 own email address, which is what this scenario needs.

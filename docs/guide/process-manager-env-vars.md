@@ -21,7 +21,7 @@ returning the values to browsers or clients.
 ## Allowlisted keys
 
 The gateway ships with an **empty** allowlist: framework settings are configured in the consoles,
-not through environment variables. Email in particular is a per-user setting (**Users & Entities → My email address and mailbox**;
+not through environment variables. Email in particular is a per-user setting (the account page on the console's **Accounts** page;
 see [Email integration](email-integration.md)). Email values saved here by an earlier gateway are
 imported once into the administrator's own mailbox settings and then ignored.
 

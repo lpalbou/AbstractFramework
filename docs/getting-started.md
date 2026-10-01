@@ -31,7 +31,10 @@ unattended install leaves it off and its summary says how to turn it on), starts
 `127.0.0.1:8080`, and opens its console in your browser already signed in. The console's first-run
 guide sets up a local engine or a cloud key and a default model (the **Models** tab lists the
 models that fit your machine and downloads them), and its **Apps** page installs and opens the
-browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The installer also
+browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The **Setup** button
+at the bottom of the sidebar runs the guide again; it keeps your choices unless you replace them. The
+console's sidebar groups its pages: **Accounts**; **Work** (Workflows, Runtimes, Apps); **Models**
+(Providers, Models, Engines, Multimodal); **System** (Resources, Sandbox, Network). The installer also
 builds the terminal console, `abstractgateway-console`, which offers the same guide on a server
 without a browser (its **Network** screen, `N`, decides who can reach the gateway); over SSH the
 installer offers to open it at the end, and its summary prints the command (see
@@ -233,7 +236,7 @@ AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operato
 path; it does not sign in browsers.
 
 To start the gateway at login, turn on **Start at login** in the console (web: the Gateway
-section; terminal: `F3`), or run `abstractgateway service install --port 8080`. The login item
+section of **Resources**; terminal: `F3`), or run `abstractgateway service install --port 8080`. The login item
 listens where the gateway's Network setting says (this computer only until you change it; see
 [Network setting](install.md#network-setting-who-can-reach-the-gateway)).
 
@@ -262,6 +265,10 @@ The console and every browser app work on phones, tablets and any window size. T
 another device, set the gateway's Network setting to `lan` (`abstractgateway network set lan`, then
 `abstractgateway network restart --token <admin token>`) and open the same `/console` and
 `/apps/<app>/` paths on the gateway's address; see [Phones and tablets](guide/deployment-iphone.md).
+With Tailscale, `tailscale serve --bg http://127.0.0.1:<port>` on the gateway's computer gives an
+https address (`https://<host>.<tailnet>.ts.net/`) and the Network setting can stay `localhost`;
+voice and camera in the browser need https
+([Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https)).
 
 ### 5. Automate recurring work
 
@@ -288,8 +295,8 @@ attention. See [Automations](automations.md) for the mental model, worked exampl
 and limits.
 
 To run an automation when an email arrives, or to get its results by email, first connect your own
-mailbox in the gateway console (**Users & Entities → My email address and mailbox**, or `@` on the
-Users screen of the terminal console). The Assistant, the Observer and AbstractCode's browser client then offer **When an email
+mailbox on your account page in the gateway console (**Accounts**; an administrator uses **Email**
+on their own row), or `@` on the Accounts screen of the terminal console. The Assistant, the Observer and AbstractCode's browser client then offer **When an email
 arrives**, **Email me the result** and the recipients the automation may email without asking. See
 [Email automations](automations.md#email-automations). The same account gives you sign-in by email,
 and your agents get the email tools only when you switch **Agent email tools** on

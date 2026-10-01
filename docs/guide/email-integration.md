@@ -5,8 +5,8 @@ Two things carry the word "email" on an AbstractGateway, and every console names
 - your **email address**: where sign-in codes, "Forgot your token?" and notifications go, and the
   first address your agents may write to. It has no password. An administrator sets it in
   **Create user**, or you set it on your account page;
-- your **mailbox**: a connection you make (Google or Microsoft sign-in, or address and password for
-  other providers) so that your agents and automations can read and send mail as you. Only you
+- your **mailbox**: a connection you make (an IMAP account with its password, or Google or
+  Microsoft sign-in) so that your agents and automations can read and send mail as you. Only you
   connect it; administrators never see or touch it.
 
 Every signed-in person can connect **their own** mailbox. It is used for three things:
@@ -34,33 +34,44 @@ The package guides hold the full references:
 
 Every signed-in user has the same account page:
 
-- the gateway web console: **Users & Entities → My email address and mailbox**;
-- the gateway terminal console (`abstractgateway-console`): the Users screen, then `@`
-  (**My account — email**);
+- the gateway web console: the **Accounts** page. A user sees their own page there (**My email
+  address and mailbox**); an administrator opens it with **Email** on their own row of the accounts
+  table;
+- the gateway terminal console (`abstractgateway-console`): the Accounts screen (`2`), then `@`;
 - the HTTP API: `GET /api/gateway/me/email` and the routes below.
 
-It shows, in order: **Email address** (the only field with its own **Save**), **Mailbox**,
-**Notifications**, **Agent email tools** and a folded **Advanced** section. Switches apply at once;
-there is no other Save button.
+It shows, in order: **Your email address** (the only field with its own **Save**: "Where sign-in
+codes and notifications go."), **Mailbox**, **Notifications**, **Agent email tools** and a folded
+**Advanced** section. Switches apply at once; there is no other Save button. One address is
+editable at a time: when your email address is empty, the mailbox form's address is the only
+address field and connecting fills **Your email address**; when it is set, the mailbox form shows
+"Mailbox account: you@example.com" with **Use a different account**. A note under your email
+address appears only when your mailbox is a different account.
 
 ## Connect your mailbox
 
-The **Mailbox** card has three tabs:
+The **Mailbox** card has three tabs, **IMAP** first and selected:
 
+- **IMAP**: **Mailbox address** ("The account your agents read and send from — usually your own
+  address."), **Password** ("Use an app password if your provider needs one."), then **Incoming
+  mail (IMAP)** and **Outgoing mail (SMTP)**, each with **Server**, **Port** and **Security** (SSL
+  or STARTTLS). The server fields are always visible: as soon as the address has a domain they
+  hold the standard settings (`imap.<domain>` 993 SSL, `smtp.<domain>` 465 SSL), then the settings
+  the gateway discovers for that domain; a field you edited is never overwritten. There is no user
+  name field: the login is the one discovered for the provider, else the address; **My provider
+  uses a different login name** reveals a **Login** field for the few providers that need one.
 - **Google** and **Microsoft**: **Sign in with Google** / **Sign in with Microsoft**. Microsoft
   shows a code to enter in any browser; Google opens a browser on the gateway's own computer. Your
-  own sign-in client goes under the tab's **Advanced**.
-- **Other**: your **Email address** and **Password** (an app password when your provider needs
-  one). The gateway finds the mail servers from the address and shows them on one line with
-  **Edit**; **Server settings** stay folded and open by themselves only when the servers cannot be
-  found.
+  own sign-in client goes under the tab's **Advanced**; **Cancel sign-in** shows while a sign-in is
+  pending.
 
 **Connect** saves and tests in one step: the gateway signs in to both servers first, stores nothing
-when a step fails, and the error names the step ("Sign-in refused by imap.example.com — check the
-password."). Once connected, the card shows the status line ("Connected as me@example.com ·
-Google · checked 2 min ago"), **Test** and **Disconnect** (with an inline confirmation; your
-policy and limits are kept). Over HTTP, `PUT /api/gateway/me/email` with `address` and `password`
-does the same.
+when a step fails, and the error names the step and the cause ("Sign-in refused by
+imap.example.com — check the password."). Once connected, the card shows the status line
+("Connected as me@example.com · IMAP · checked 2 min ago"), an **Active** switch ("Off pauses
+watching, sending and notifications; your settings are kept."), **Test** and **Disconnect** (with
+an inline confirmation; your policy and limits are kept). Over HTTP, `PUT /api/gateway/me/email`
+with `address` and `password` does the same.
 
 The mailbox is stored in your own data folder with its credentials encrypted, and every connection
 verifies TLS. It is only read: nothing is marked read, moved or deleted. Many providers (Gmail,
@@ -72,16 +83,15 @@ Outlook need the Microsoft sign-in.
 Every send (an agent's email tool, an automation's send action, a notification, a sign-in code)
 passes the same checks:
 
-1. your mailbox is connected and in use (**Use this mailbox** under **Advanced**), and your
-   administrator allows mailboxes;
-2. your **Recipient rules**: **Only these recipients** (an allowlist of addresses and domains) or
-   **Everyone except these** (a denylist), applied to To, Cc and Bcc. A new account starts with an
-   allowlist that holds your own email address;
-3. your **Send limits**: 20 messages per rolling hour and 100 per day by default.
+1. your mailbox is connected and **Active**, and your administrator allows mailboxes;
+2. your recipient rules, **Your agents may send to**: **Only these recipients** (an allowlist of
+   addresses and domains) or **Everyone except these** (a denylist), applied to To, Cc and Bcc. A
+   new account starts with an allowlist that holds your own email address;
+3. your send limits: "At most 100 per hour and 1000 per day." by default (a rolling hour and day).
 
-Both sit under **Advanced** on your account page, with the **Folder** automations watch (INBOX by
-default) and **Send a test notification**. On top of the rules, an agent's send to anyone but you
-(or the recipients an automation lists) waits for your approval.
+Both sit under **Advanced** on your account page, as sentences that save as you edit them, with
+the **Watch folder** automations read (INBOX by default). On top of the rules, an agent's send to
+anyone but you (or the recipients an automation lists) waits for your approval.
 
 ## Agent email tools (off by default)
 
@@ -145,6 +155,11 @@ An automation set to **Email me the result** also emails you the results that as
 attention, and a run started with an email notice emails you when it finishes or fails, as
 asked. Each notice is queued once and sent once, through your own mailbox, to your email address.
 
+**Send a test** sends one notification now and always answers with a sentence: "Sent to
+me@example.com.", or why not ("Not sent: hourly limit reached (100 of 100 this hour) — resets at
+14:05.", "Not sent: no mailbox connected.", "Not sent: your mailbox is paused."). A notice held by
+a send limit goes out when the limit resets; reset times are shown in your local time.
+
 ## Sign-in by email
 
 When at least one account on the gateway has a connected mailbox, the sign-in page shows one link:
@@ -160,9 +175,10 @@ sent. Ask your gateway admin for a token."
 
 ## What administrators decide
 
-Administrators decide what is available; users switch features on for themselves. Above the users
-table in the web console's **Users & Entities** tab (and on the terminal console's Users screen)
-there is one switch, **Mailboxes for users**, and two more under its **Advanced** disclosure:
+Administrators decide what is available; users switch features on for themselves. Under the
+accounts table on the web console's **Accounts** page, the section **Email for everyone** has one
+switch, **Mailboxes for users**, and two more under its **Advanced** disclosure (the terminal
+console's Accounts screen has the same switches):
 
 | Switch | Default | Meaning |
 |---|---|---|
@@ -170,17 +186,24 @@ there is one switch, **Mailboxes for users**, and two more under its **Advanced*
 | **Agent email tools for users** (Advanced) | on | users may let their agents use their mailbox; each user still switches **Agent email tools** on |
 | **Sign-in by email** (Advanced) | on | shows **Forgot your token? Email me a sign-in code** on the sign-in page |
 
-The users table shows each user's **Email address** and **Mailbox** state ("connected as …",
-"not connected"), never messages, recipient lists or credentials. **Create user** asks for the
+The accounts table shows each account's **Email address** and **Mailbox** state ("Connected as
+…", "Not connected", "Paused"), never messages, recipient lists or credentials. **Email** on another
+user's row opens only that user's **Email address** ("Where <user>'s sign-in codes and
+notifications go.") and a read-only mailbox status: only the user connects a mailbox. Entities
+have no mailbox of their own: mailboxes belong to a user's runtime. **Create user** asks for the
 user's **Email address** at the top level. Sign-in by email means whoever controls a user's mailbox
 can sign in as that user; switch it off where mailboxes are less protected than gateway tokens.
+
+An administrator sees every account. A user sees only themself and the entities they created, in
+the consoles and in every API route that lists, reads or manages accounts, email or activity.
 
 ## AbstractCore on its own
 
 An AbstractCore install without a gateway has one account of its own, set with
 `abstractcore email connect`, the core web console's **Email** tab or the core terminal console's
-Email screen (`@`); both show the same **Email address**, **Mailbox** and **Agent email tools**
-sections. From a script, pass the password on stdin so it never appears on a command line:
+Email screen (`@`); both show the same **Email address**, **Mailbox** (tabs **IMAP**, first and
+selected, **Google** and **Microsoft**, with the same visible server fields) and **Agent email
+tools** sections. From a script, pass the password on stdin so it never appears on a command line:
 
 ```bash
 abstractcore email connect --address me@example.com \

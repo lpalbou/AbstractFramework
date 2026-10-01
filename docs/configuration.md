@@ -319,14 +319,15 @@ Email is configured as settings, never through environment variables:
 
 - **On a gateway, per user**: each person has an **email address** (where sign-in codes and
   notifications go; set in **Create user** or on the account page) and connects their own
-  **mailbox** (**Google** or **Microsoft** sign-in, or **Other**: address and password, the servers
-  found automatically) on their account page: the web console's **Users & Entities → My email
-  address and mailbox**, the terminal console (`@` on the Users screen) or
+  **mailbox** (**IMAP** with address and password, the server fields visible and pre-filled, or
+  **Google** or **Microsoft** sign-in) on their account page: the web console's **Accounts** page
+  (an administrator opens it with **Email** on their own row), the terminal console (`@` on the
+  Accounts screen) or
   `PUT /api/gateway/me/email`. The mailbox lives in that user's own data folder with its
   credentials encrypted. The same page holds the two notification switches (**Job failed**,
   **Approval needed**, on by default), the **Agent email tools** switch (off by default) and, under
   **Advanced**, the recipient rules (a new account starts with an allowlist holding the user's own
-  email address), the send limits (20 per hour, 100 per day by default) and the folder. A connected
+  email address), the send limits (100 per hour, 1000 per day by default) and the watch folder. A connected
   mailbox also gives the user sign-in by email on the sign-in page. Administrators decide what is
   available with one switch, **Mailboxes for users**, and two under **Advanced** (**Agent email
   tools for users**, **Sign-in by email**), all on by default, and never see mail content. See [Email integration](guide/email-integration.md) and

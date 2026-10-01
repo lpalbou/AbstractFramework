@@ -158,7 +158,11 @@ A thin-client browser UI for operations: monitor runs, inspect ledger history, w
 
 ### Gateway console
 
-The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens, a **Resources** view of resident models and memory, and the agent session settings.
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens, a **Resources** view of resident models and memory, and the agent session settings. The web console's sidebar groups its pages as **Accounts** (Accounts), **Work** (Workflows, Runtimes, Apps), **Models** (Providers, Models, Engines, Multimodal) and **System** (Resources, Sandbox, Network), with the **Setup** button and the **Technical details** switch at the bottom; the terminal console lists its screens in the same groups (no Sandbox), with `S` for Setup.
+
+### Accounts
+
+The gateway console page for the people who use the gateway and the entities that act on it: one table of users and entities (**Name** with a kind chip, **Role**, **Email address**, **Mailbox**, **Runtime**, an **Active** switch, and the actions **Email**, **Logs**, **Workspace**, **Rotate**, **Manage** for entities and **Delete**), with **Create user** and **Create entity** above it and **Email for everyone** below. An action that cannot apply shows its reason. Turning **Active** off signs a user out until it is turned back on, or suspends an entity. **Logs** lists the account's recorded activity from the gateway's audit log. An administrator sees every account; a user sees only themself and the entities they created.
 
 ### Core console
 
@@ -170,7 +174,7 @@ A one-time console sign-in link (`/console#claim=<code>`), single use, valid for
 
 ### First-run guide
 
-The gateway console's setup flow, opened once per data folder by the claim link and later from the **Setup** button: host summary, local engines, a default model that fits the machine, and the apps.
+The gateway console's setup flow, opened once per data folder by the claim link and later from the **Setup** button at the bottom of the sidebar (administrators): host summary, local engines, a default model that fits the machine, the apps and the network. Running it again keeps your current choices unless you replace them.
 
 ### Network setting
 
@@ -231,16 +235,18 @@ See [Email integration](guide/email-integration.md) for the whole picture.
 
 A gateway user's own address: where sign-in codes, "Forgot your token?" and notifications go, and
 the first address the user's agents may write to. It has no password. An administrator sets it in
-**Create user**, or the user sets it on their account page (**Users & Entities → My email address
-and mailbox** in the web console, `@` on the terminal console's Users screen).
+**Create user**, or the user sets it on their account page (**Accounts** in the web console, where
+an administrator uses **Email** on their own row; `@` on the terminal console's Accounts screen).
 
 ### Mailbox
 
 A connection a gateway user makes so that their agents and automations can read and send mail as
-them: **Google** or **Microsoft** sign-in, or **Other** (email address and password, the mail
-servers found automatically, **Server settings** folded). One **Connect** saves and tests it; once
-connected, **Test** and **Disconnect**. It is stored encrypted in that user's data folder, and
-administrators never see or touch it. Its recipient rules, send limits and folder sit under
+them: tabs **IMAP** (first and selected: mailbox address, password, and the incoming and outgoing
+server, port and security, always visible and pre-filled from the address), **Google** and
+**Microsoft** (sign-in with the provider). One **Connect** saves and tests it; once connected, an
+**Active** switch (off pauses watching, sending and notifications), **Test** and **Disconnect**.
+It is stored encrypted in that user's data folder, and administrators never see or touch it. Its
+recipient rules, send limits and watch folder sit under
 **Advanced** on the same account page. AbstractCore on its own has one account per install
 (`abstractcore email`).
 
@@ -255,7 +261,7 @@ is never an event.
 
 Who may receive mail from an account: an allowlist (only the listed addresses and domains; a new
 account starts with the user's own email address) or a denylist (everyone except them), applied with
-the send limits (20 per hour and 100 per day by default) to every send.
+the send limits (100 per hour and 1000 per day by default) to every send.
 
 ### Agent email tools
 

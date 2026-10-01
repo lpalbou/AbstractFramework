@@ -4,7 +4,81 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-01
+
+The consoles' email and accounts screens are redesigned, the installer never installs less because
+of the network, and the console and the apps work over https through `tailscale serve`. Pins:
+AbstractGateway 0.10.0, AbstractCore 2.22.0, AbstractRuntime 0.8.2 and AbstractAssistant 0.11.0;
+the terminal consoles `abstractgateway-console` 0.13.0 and `abstractcore-console` 0.6.0; the
+browser apps Code 0.9.0, Flow 0.6.0, Observer 0.5.0, Continuum 0.6.0 and Entity 0.5.0. Every other
+version is unchanged from 0.7.2.
+
+### Changed
+
+- **Email address and mailbox, named apart.** Your **email address** is where sign-in codes and
+  notifications go; your **mailbox** is the connection your agents and automations read and send
+  with. The mailbox tabs are **IMAP** (first and selected), **Google** and **Microsoft**. The IMAP
+  form shows every server field, pre-filled from the address with the standard settings and then
+  the discovered ones (never over a field you edited), asks for no user name, and offers a Login
+  field only through **My provider uses a different login name**. Connecting fills your email
+  address when it is empty. A connected mailbox has an **Active** switch; **Advanced** holds three
+  sentences: who your agents may send to, "At most 100 per hour and 1000 per day.", and the watch
+  folder. Same layout in the gateway's web and terminal consoles and AbstractCore's.
+- **Send limits default to 100 per hour and 1000 per day** (were 20 and 100). Limits you set
+  yourself are kept on upgrade; an account that kept the old defaults follows the new ones.
+- **Notifications are two switches, Job failed and Approval needed**, both on once a mailbox is
+  connected. **Send a test** answers with a sentence: "Sent to …" or why not ("Not sent: hourly
+  limit reached (100 of 100 this hour) — resets at 14:05."), with reset times in your local time.
+- **One Accounts page.** The gateway web console's **Accounts** page is one table of users and
+  entities (Name, Role, Email address, Mailbox, Runtime, an **Active** switch; actions Email, Logs,
+  Workspace, Rotate, Manage, Delete, each with its reason when it cannot apply), with **Create
+  user** and **Create entity**. **Email for everyone** below it holds the administrator's
+  **Mailboxes for users** switch, with **Agent email tools for users** and **Sign-in by email**
+  under Advanced. **Logs** shows an account's activity from the gateway's audit log. An
+  administrator sees every account; a user sees only themself and the entities they created, in
+  the consoles and the API.
+- **Sidebar groups and a Setup button.** The web console groups its pages as Accounts; Work
+  (Workflows, Runtimes, Apps); Models (Providers, Models, Engines, Multimodal); System (Resources,
+  Sandbox, Network). **Setup** at the bottom of the sidebar runs the first-run guide again and keeps
+  your choices unless you replace them. The terminal console uses the same groups and `S` for
+  Setup.
+- **Sign-in by email says what happened.** **Forgot your token? Email me a sign-in code** answers
+  with the outcome: the code is on its way to a masked address, the account has no email address or
+  no mailbox to send from, or the send failed.
+- Every on/off setting in the consoles and the apps is a switch named by what it controls.
+
+### Added
+
+- **https through Tailscale.** `tailscale serve --bg http://127.0.0.1:<port>` on the gateway's
+  computer serves the console and every app at `https://<host>.<tailnet>.ts.net/`, with sign-in,
+  `Secure` cookies and app handover, and the Network setting can stay `localhost`. Voice and camera
+  in the browser need this https address. See
+  [Phones and tablets: Reached through Tailscale](docs/guide/deployment-iphone.md#reached-through-tailscale-https).
+- **The apps work over plain http from another machine.** Opened at `http://<address>:8080/apps/<app>/`
+  (a LAN or Tailscale address), the apps start and copy buttons work; a feature that needs https
+  says so.
+- AbstractCode's web sidebar shows 25 conversations with **Load more**; the Observer opens a run
+  from a `#run/<run_id>` link (the Accounts page's Logs link to it).
+
 ### Fixed
+
+- **Transcription no longer shows "Engine missing: unknown AbstractVoice engine 'huggingface'".**
+  The recommended setup stores the transcription engine's route; a route written that way before
+  is repaired when the configuration loads (a backup is written first).
+- **Sign-in through a proxy on the gateway's computer** (such as `tailscale serve`) no longer answers
+  403 "origin not allowed"; app manifests and icons load without an app session.
+- **Pausing an automation also stops its retries**: an occurrence waiting in retry backoff is
+  cancelled.
+- **Resuming an email automation wakes the mail watcher at once**, so mail that arrives right after
+  the resume triggers it.
+- **Two Node.js installs at once** (two apps, or an app and **Install Node.js**) no longer fail one
+  of them; Node.js is downloaded once.
+- **Stopping the gateway while it starts** waits for the startup and stops what it started.
+- **AbstractCore keeps settings it does not know.** A settings save keeps keys you added to
+  `abstractcore.json` and keys written by a newer version.
+- **Server file routes never serve the gateway's data folder or credential folders**, so received
+  mail and run ledgers of other users cannot be read through `/files/read`. Administrators never
+  read mail.
 
 - **An upgrade never installs less because of the network.** A server error while downloading (a
   502 on PyTorch's wheel) made the installer drop local voice and finish green without it. Now any
@@ -13,7 +87,7 @@ All notable changes to AbstractFramework will be documented in this file.
   again on the index-lag waits (15, 30, 60, then 120 s; 8 attempts over about 10 minutes), then stops
   with exit code 1, uv's cause in red and the exact command to run again. uv changes the gateway's
   environment only after every download succeeded, so the previous gateway stays installed and
-  working (new test with the real uv against a local index). Python's download and nodejs-wheel get
+  working. Python's download and nodejs-wheel get
   the same retries. `install.sh` and `install.ps1`.
 - **Local voice left out is said in red.** The voice fallback now runs only for a deterministic
   incompatibility (uv's resolution failure, e.g. `has no wheels with a matching platform tag`, a failed
@@ -39,7 +113,12 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ### Documentation
 
-- The root docs describe the 0.7.2 framework: per-user email in
+- The root docs describe the email address and mailbox screens, the Accounts page, the sidebar
+  groups and Setup button, sign-in by email, the installer's retry, and https through Tailscale
+  ([Email integration](docs/guide/email-integration.md),
+  [Phones and tablets](docs/guide/deployment-iphone.md), [Install](docs/install.md),
+  [Glossary](docs/glossary.md)).
+- Per-user email in
   [Email integration](docs/guide/email-integration.md) and the
   [Email inbox agent](docs/scenarios/email-inbox-agent.md) scenario (settings in the consoles;
   agent email tools off by default; recipient allowlist starting with your own address; the

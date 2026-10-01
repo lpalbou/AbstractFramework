@@ -94,7 +94,7 @@ run the installer again: it continues where it stopped.
   or select **Forgot your token? Email me a sign-in code** on the sign-in page (shown unless an
   administrator switched **Sign-in by email** off): an 8-digit code arrives at your email address,
   works once and expires after 10 minutes. It reaches you only when your account has an email
-  address and a connected mailbox (**Users & Entities → My email address and mailbox**); otherwise
+  address and a connected mailbox (your account page on the **Accounts** page); otherwise
   the sign-in page says so under the link. Without them, an administrator gives you a new token. See
   [Email integration](guide/email-integration.md#sign-in-by-email).
 
@@ -144,6 +144,18 @@ run the installer again: it continues where it stopped.
   `ABSTRACTGATEWAY_AUTH_TOKEN`; an app served from an origin other than `http://localhost:*` or
   `http://127.0.0.1:*` needs `abstractgateway network set --allowed-origins <origin>`.
 - See [Configuration](configuration.md#client-configuration-observer--flow-editor--code-web-ui).
+
+### Voice or camera is unavailable on another device, or sign-in through a proxy is refused
+
+- **Cause**: browsers offer the microphone, the camera and the clipboard only on https pages (or on
+  the gateway's own computer); a plain `http://<address>:8080` page says the feature needs https.
+  A proxy on another computer, or one that rewrites the `Host` header, sends an origin the gateway
+  does not know, and sign-in answers `Forbidden (origin not allowed)`.
+- **Fix**: with Tailscale, run `tailscale serve --bg http://127.0.0.1:<port>` on the gateway's
+  computer and open `https://<host>.<tailnet>.ts.net/` (no allowed origin needed). For another
+  proxy, allow its origin once:
+  `abstractgateway network set --allowed-origins https://gateway.example.com`. See
+  [Phones and tablets: Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https).
 
 ## Models and providers
 
@@ -234,9 +246,8 @@ run the installer again: it continues where it stopped.
 
 ### An email automation does not run, or the mailbox shows "needs action"
 
-- **Check**: the **Mailbox** card on your account page (**Users & Entities → My email address and
-  mailbox**) shows the mailbox state and the last error with its fix (for example an app password
-  the server refused); **Test** checks it again. Administrators see the same state in the users
+- **Check**: the **Mailbox** card on your account page (on the **Accounts** page) shows the mailbox state and the last error with its fix (for example an app password
+  the server refused); **Test** checks it again. Administrators see the same state in the accounts
   table's **Mailbox** column.
 - **Cause**: mail that was already in the mailbox, or that arrived while none of your email
   automations was active, is never processed; an automation that runs a model runs at most once an
@@ -253,7 +264,7 @@ run the installer again: it continues where it stopped.
   **Agent email tools for users** off); every send also passes your recipient rules (a new account
   allows only your own email address) and your send limits.
 - **Fix**: connect your mailbox, switch **Agent email tools** on, and add the recipient under
-  **Advanced → Recipient rules**. The refusal names the refused addresses or the limit reached. See
+  **Advanced → Your agents may send to**. The refusal names the refused addresses or the limit reached. See
   [Email integration](guide/email-integration.md).
 
 ## Automations

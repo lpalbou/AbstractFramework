@@ -116,15 +116,19 @@ Notes for LLMs working in this repo:
   `ABSTRACT_EMAIL_*` variables were removed in 0.7.0; a leftover account is imported once). Two
   words: the user's **email address** (sign-in codes, "Forgot your token?", notifications, default
   allowed recipient; set in **Create user** or on the account page) and their **mailbox** (a
-  connection: tabs **Google** / **Microsoft** / **Other**; Other = address + password, servers found
-  automatically, **Server settings** folded; one **Connect**, then **Test** / **Disconnect**). Account
-  page: web console **Users & Entities → My email address and mailbox**, `@` on the terminal
-  console's Users screen, `PUT /api/gateway/me/email`. Notifications: two switches **Job failed** and
+  connection: tabs **IMAP** (first, selected; address + password, server fields visible and
+  pre-filled, no user name field) / **Google** / **Microsoft**; one **Connect**, then an **Active**
+  switch, **Test** / **Disconnect**). Account page: web console **Accounts** (an administrator uses
+  **Email** on their own row), `@` on the terminal console's Accounts screen,
+  `PUT /api/gateway/me/email`. Notifications: two switches **Job failed** and
   **Approval needed** (on by default, sent only with a connected mailbox). **Agent email tools**: the
   user's switch, off by default, unavailable until a mailbox is connected. **Advanced**: recipient
-  rules (a new account allows its own email address), send limits 20/h and 100/day, folder.
-  Administrators: one switch **Mailboxes for users** (on), and under Advanced **Agent email tools for
-  users** (on) and **Sign-in by email** (on). `email.received@1` automations read mail read-only, treat
+  rules (a new account allows its own email address), send limits 100/h and 1000/day, watch folder.
+  Administrators: under the accounts table, **Email for everyone** with one switch **Mailboxes for
+  users** (on), and under Advanced **Agent email tools for users** (on) and **Sign-in by email** (on).
+  The **Accounts** page is one table of users and entities (Create user / Create entity; per row
+  Active switch, Email, Logs, Workspace, Rotate, Manage, Delete); an administrator sees every
+  account, a user only themself and the entities they created. `email.received@1` automations read mail read-only, treat
   it as untrusted (links not followed; network, code and sending tools ask unless named in
   `policy.untrusted_input_tools`) and never run on the framework's own automatic mail
   (`Auto-Submitted`, `X-AbstractFramework-Automation`; `auto_submitted: "admit"` accepts others'
@@ -142,7 +146,7 @@ Notes for LLMs working in this repo:
 - [docs/automations.md](docs/automations.md): How automations work and how to manage them: an automation is a durable controller run, each tick an occurrence (a child run shown as a chat turn); independent vs growing context (growing replays the most recent 50 000 tokens of whole turns); quiet by default (`notify` output, final failures, typed waits `ask_user` / `tool_approval` / `event`); creation is the tool consent (`policy.tool_approval` `auto`/`ask`, MCP tools still ask); creating from the Assistant (Schedule this conversation…), the Observer (Launch → Automate), AbstractCode (`/automations`, `/schedule`, the browser Automations section) or a workflow's `automation_defaults`; email automations (`email.received@1` with typed filters and hourly/60 s batches, each message once, untrusted input with network, code and sending tools asking unless named in `policy.untrusted_input_tools`, own automatic mail never an event, `auto_submitted: "admit"`; **Email me the result** = `notify.channels` with `email`, a switch in the form's **Mailbox** section; `policy.email_allowed_recipients`, only you by default); two worked examples with request bodies; pause / run now (also while paused) / resume without catch-up / revise / archive / discuss; restart safety; limits (fixed UTC intervals, triggers `schedule@1`, `email.received@1` and `manual@1`); troubleshooting. Needs a gateway advertising `contracts.common.automations` (AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later; email automations need 0.8.0 of both).
 - [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid diagrams: components, distribution, how a turn flows, the live-reply lane, the framework identity flow), app proxies and the forwarded-address rule, model residency and eject.
 - [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, email accounts (per gateway user or per AbstractCore install; no environment variables; `--password-stdin`), client configuration.
-- [docs/guide/email-integration.md](docs/guide/email-integration.md): Your email address and your own mailbox on the gateway: the account page, connecting a mailbox (Google / Microsoft / Other), recipient rules and send limits, agent email tools (off by default), email automations (new mail only, untrusted input, own automatic mail never triggers), notifications (Job failed, Approval needed), sign-in by email, the administrator's Mailboxes for users switch, AbstractCore's own account.
+- [docs/guide/email-integration.md](docs/guide/email-integration.md): Your email address and your own mailbox on the gateway: the account page, connecting a mailbox (IMAP / Google / Microsoft), recipient rules and send limits, agent email tools (off by default), email automations (new mail only, untrusted input, own automatic mail never triggers), notifications (Job failed, Approval needed), sign-in by email, the administrator's Mailboxes for users switch and the Accounts table, who sees which accounts, AbstractCore's own account.
 - [docs/guide/deployment-iphone.md](docs/guide/deployment-iphone.md): Phones and tablets: the console and the browser apps on the gateway's one address (`/console`, `/apps/<app>/`), the Network setting, sign-in, what adapts on a small screen.
 - [docs/api.md](docs/api.md): Meta-package API: release pins, helpers, `abstractframework doctor` and `manifest`.
 - [docs/faq.md](docs/faq.md): Common questions, comparisons, limits.

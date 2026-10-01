@@ -157,11 +157,11 @@ The full guide, with two worked examples and troubleshooting, is **[Automations]
 ## Can the framework read and send my email?
 
 Only with an account you connect yourself, and only as far as you allow. Each gateway user connects
-their own mailbox in the web console (**Users & Entities → My email address and mailbox**) or the
-terminal console (`@` on the Users screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
+their own mailbox on their account page in the web console (**Accounts**) or the terminal console
+(`@` on the Accounts screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
 rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
 deleted. Every send passes your recipient rules (an allowlist or a denylist of addresses and
-domains; a new account allows only your own email address) and your send limits (20 per hour, 100 per
+domains; a new account allows only your own email address) and your send limits (100 per hour, 1000 per
 day by default), and a send to anyone but you (or the recipients an automation lists) waits for
 your approval. Agents get the email tools only when you switch **Agent email tools** on (off by
 default); administrators never read users' mail. An email-triggered automation treats
@@ -175,7 +175,10 @@ Yes. The gateway's web console and the five browser apps work on phones, tablets
 size. Let the phone reach the gateway (`abstractgateway network set lan`, then
 `abstractgateway network restart --token <admin token>`), then open the console on
 the phone at the gateway's address; every installed app opens from its **Apps** page at
-`/apps/<app>/` on that same address. See [Phones and tablets](guide/deployment-iphone.md).
+`/apps/<app>/` on that same address. With Tailscale, `tailscale serve --bg http://127.0.0.1:<port>`
+on the gateway's computer gives an https address (`https://<host>.<tailnet>.ts.net/`) that also
+works away from home and lets voice and camera work in the browser. See
+[Phones and tablets](guide/deployment-iphone.md).
 
 ## Which workflow answers when I chat with an agent?
 
@@ -331,8 +334,7 @@ in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path
 From another device, sign in with your gateway user name and token. The sign-in page also offers
 **Forgot your token? Email me a sign-in code** (unless an administrator switched **Sign-in by
 email** off): an 8-digit code sent to your email address, valid once for 10 minutes. The code
-reaches you only when your account has an email address and a connected mailbox (**Users &
-Entities → My email address and mailbox**). See
+reaches you only when your account has an email address and a connected mailbox (your account page on the console's **Accounts** page). See
 [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?
@@ -363,7 +365,10 @@ Run the install line again: it installs the latest AbstractFramework release, ke
 settings, options and data, restarts the gateway when anything changed, and lists what changed.
 On macOS and Linux, **Update** in the web console, the terminal console or the menu-bar icon runs
 the same installer with `--no-start`: the running gateway keeps serving, and the console or icon
-then offers the restart. Coming from 0.6.1 or earlier, re-run the line once (the Update button of
+then offers the restart. An upgrade never installs less because of the network: a download that
+fails, or a release not yet on every mirror, makes the installer run the same full install again
+for about 10 minutes, then stop with the cause and the command to run again, the previous version
+still installed and working. Coming from 0.6.1 or earlier, re-run the line once (the Update button of
 gateway 0.7.1 cannot upgrade an installer install). `--pin latest` (`-Pin latest`) installs the
 newest gateway instead. See [Upgrade](install.md#upgrade).
 

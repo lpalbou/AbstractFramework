@@ -858,6 +858,13 @@ A new mode or port applies at the next start: `network restart`, the console, th
 `localhost` unless you need another device to connect; see
 [Gateway security](guide/gateway-security.md) before choosing `internet`.
 
+Reached through Tailscale? On the gateway machine run
+`tailscale serve --bg http://127.0.0.1:<port>` and open `https://<host>.<tailnet>.ts.net/`;
+`tailscale serve reset` undoes it. The Network setting can stay `localhost`. Voice and camera in
+the browser need this https address (browsers offer them only on https pages or on the gateway's
+own computer). See
+[Phones and tablets: Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https).
+
 ### Upgrade and uninstall
 
 - Upgrade: re-run the one-liner, or use **Update** in a console or the menu-bar icon, which runs the

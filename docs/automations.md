@@ -211,8 +211,8 @@ to requests that leave `title` or `trigger` out.
 
 ## Email automations
 
-With **your own mailbox connected** to the gateway (web console **Users & Entities → My email
-address and mailbox**, `@` on the terminal console's Users screen, or `PUT /api/gateway/me/email`;
+With **your own mailbox connected** to the gateway (your account page on the web console's
+**Accounts** page, `@` on the terminal console's Accounts screen, or `PUT /api/gateway/me/email`;
 see [Email integration](guide/email-integration.md) and [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md)),
 the Assistant, the Observer and AbstractCode's browser client offer three more options in the
 form's **Mailbox** section. Without a connected, allowed mailbox the section says "Connect a
@@ -263,7 +263,7 @@ vacation notices, other automations); set `"auto_submitted": "admit"` in the tri
 run on those too.
 
 Every send — an agent's, an automation's, a notification — also passes your recipient policy and
-your send limits (20 per hour and 100 per day by default), both under **Advanced** on your account
+your send limits (100 per hour and 1000 per day by default), both under **Advanced** on your account
 page. Agents and workflows get the email tools themselves only when you switch **Agent email
 tools** on (off by default; an administrator can withhold it); automations that only send you
 their results do not need them.
@@ -571,7 +571,7 @@ recorded. A wait the gateway does not type is shown without answer controls.
 | No notification ever arrives | quiet is the default; only `notify` in the output, final failures and waits notify | return `notify` from the workflow (see the memory example) |
 | Ticks are late or merged | a tick takes longer than the interval; missed ticks are coalesced | lengthen the interval or share the model with fewer automations |
 | An email automation never runs | the mail was already there, arrived while no email automation was active, or is automatic mail (auto-replies, the framework's own mail); a model-running automation runs at most once an hour by default | send a new message after creating it; shorten `every`; set `"auto_submitted": "admit"` for others' automatic mail; check the mailbox state on your account page |
-| "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it under **Users & Entities → My email address and mailbox**, or ask an administrator to switch **Mailboxes for users** on |
+| "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it on your account page (**Accounts**), or ask an administrator to switch **Mailboxes for users** on |
 | An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve it, add the recipient in **May send email without asking to**, or edit the recipient rules and send limits under **Advanced** on your account page |
 | A schedule shows `legacy` | it was created with `POST /api/gateway/runs/schedule` | it keeps its own controls; **Recreate as automation** in the Observer copies it into an automation (suspend the old one yourself) |
 

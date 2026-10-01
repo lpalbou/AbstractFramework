@@ -25,11 +25,28 @@ browser origin to allow.
 4. **Open an app** from the Apps page. It opens at `/apps/<app>/`, already signed in.
 5. Optional: add the page to the home screen (Safari: **Share → Add to Home Screen**).
 
-For access from outside your network, put the gateway behind a reverse proxy with HTTPS (one proxy
-block covers the console, the API and every app), or choose the `internet` Network setting (no
+For access from outside your network, use Tailscale (below) or put the gateway behind a reverse
+proxy with HTTPS (one proxy block covers the console, the API and every app), or choose the `internet` Network setting (no
 HTTPS; you handle port forwarding). See
 [Gateway exposure security](gateway-security.md) and
 [AbstractGateway: Deployment](https://github.com/lpalbou/AbstractGateway/blob/main/docs/deployment.md).
+
+### Reached through Tailscale (https)
+
+Reached through Tailscale? On the gateway machine run
+`tailscale serve --bg http://127.0.0.1:<port>` and open `https://<host>.<tailnet>.ts.net/` (the
+console at `/console`, the apps at `/apps/<app>/`); `tailscale serve reset` undoes it. The gateway
+can stay in its `localhost` Network setting, and no allowed origin is needed: it accepts an https
+page served through a proxy on its own computer that keeps the browser's address, and marks the
+sign-in cookies `Secure`. Voice and camera in the browser need this https address: browsers offer
+the microphone, the camera and the clipboard only on https pages (or on the gateway's own
+computer), never on a plain `http://` address such as `http://100.x.y.z:8080` or
+`http://192.168.1.20:8080`. Over plain http the console and the apps still work, and a feature
+that needs https says so. A reverse proxy (nginx, Caddy) on the gateway's computer that keeps the
+`Host` header and sets `X-Forwarded-Proto` works the same way; a proxy on another computer, or one
+that rewrites `Host`, needs its origin allowed once with
+`abstractgateway network set --allowed-origins https://gateway.example.com`. See
+[AbstractGateway: Configuration](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md#reached-through-tailscale-https).
 
 ## What adapts on a small screen
 

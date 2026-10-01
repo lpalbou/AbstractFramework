@@ -57,7 +57,8 @@ at login (Enter = yes; an unattended install leaves it off and says how to turn 
 on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
 then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
 machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
-installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
+**Setup** button at the bottom of the console's sidebar runs the guide again, keeping your choices
+unless you replace them. The installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
 a server without a browser and offers itself at the end of an install over SSH
 ([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
 
@@ -124,7 +125,7 @@ Start here if you're building persistent AI applications — agents that run for
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
 - Automations: a workflow that runs on a fixed interval, when an email arrives, or on demand, kept as a readable conversation ([Automations](docs/automations.md))
-- Email for each user: connect your own mailbox, get failed jobs, approvals and automation results by email, and let your agents use email tools when you switch them on ([Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md))
+- Email for each user: your email address receives sign-in codes and notifications; connect your own mailbox (IMAP, Google or Microsoft) to get failed jobs, approvals and automation results by email, and let your agents use email tools when you switch them on ([Email integration](docs/guide/email-integration.md))
 - Multi-client: terminal, browser, tray, Telegram, email
 - Start on one device, continue on another: the web console and every browser app work on phones,
   tablets and any window size ([Phones and tablets](docs/guide/deployment-iphone.md))
@@ -278,7 +279,7 @@ dialogs and touch-sized controls on phones.
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | the gateway console's **Apps** page (served at `/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | the gateway console's **Apps** page (served at `/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | the gateway console's **Apps** page (served at `/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` |
-| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` (the same setup guide and screens, Network and Apps included, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
+| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (sidebar groups Accounts, Work, Models and System; the **Setup** button; one Accounts table of users and entities), terminal via `abstractgateway-console` (the same setup guide and screens, Network and Apps included, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | the gateway console's **Apps** page (served at `/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` |
 | **Flow Editor** | Visual workflow authoring in the browser | the gateway console's **Apps** page (served at `/apps/flow/`), or `npx @abstractframework/flow --gateway-url <url>` |

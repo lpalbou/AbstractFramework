@@ -66,10 +66,10 @@ flowchart TB
     end
 
     subgraph GATEWAY["AbstractGateway (control plane)"]
-        API["HTTP/SSE API<br/>runs · schedules · automations · workflow catalog<br/>ledger + artifacts · users · network · /about"]
+        API["HTTP/SSE API<br/>runs · schedules · automations · workflow catalog<br/>ledger + artifacts · accounts · network · /about"]
         APXY["app proxy /apps/&lt;app&gt;/<br/>one address, one port for every app"]
         SESS["agent sessions<br/>default workflow · workspace guard<br/>skills shelf · live-reply hub"]
-        WEB["web /console<br/>first-run guide · Models · Engines · Resources"]
+        WEB["web /console<br/>Accounts · Work · Models · System<br/>Setup guide"]
         TRAY["menu-bar icon<br/>status · Network · open apps"]
         MAIL["per-user email<br/>account · mail watcher · outbox<br/>sign-in by email"]
     end
@@ -120,14 +120,16 @@ The layers, from the top:
   gateway; the others start, observe and steer runs. Every app has an About screen with the
   framework identity (see [Framework identity](#framework-identity-and-about-screens)).
 - **AbstractGateway** owns the run lifecycle (start, resume, cancel), durable schedules, private
-  bundle discovery and the shared workflow catalog, users and auth, the Network setting, and
-  ledger/artifact serving. For agent sessions it also resolves the default agent workflow, gives
+  bundle discovery and the shared workflow catalog, accounts (users and entities; an administrator
+  sees every account, a user only themself and the entities they created) and auth, the Network
+  setting, and ledger/artifact serving. For agent sessions it also resolves the default agent workflow, gives
   every run a guarded workspace, seeds and serves the skill shelf, and relays live replies. Each
   user can connect their own mailbox: the gateway keeps the account encrypted in that user's data
   folder, runs the read-only mail watcher while the user has an email automation, sends
   notifications from a durable outbox, and offers sign-in by email
   ([Email integration](guide/email-integration.md)). Its web console and menu-bar icon are part of
-  the same package; the console and the browser apps adapt to phones, tablets and any window size.
+  the same package; the console and the browser apps adapt to phones, tablets and any window size,
+  and a proxy on the gateway's own computer (such as `tailscale serve`) gives them an https address.
 - **AbstractAgent** provides ready-made agent loops; **AbstractRuntime** is the durable kernel that
   executes them, compiles VisualFlow graphs from `.flow` bundles into workflows, and tracks which
   models are resident and who uses them.

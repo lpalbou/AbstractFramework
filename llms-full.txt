@@ -61,7 +61,8 @@ at login (Enter = yes; an unattended install leaves it off and says how to turn 
 on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
 then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
 machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
-installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
+**Setup** button at the bottom of the console's sidebar runs the guide again, keeping your choices
+unless you replace them. The installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
 a server without a browser and offers itself at the end of an install over SSH
 ([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
 
@@ -128,7 +129,7 @@ Start here if you're building persistent AI applications — agents that run for
 - Durable execution that survives crashes and restarts
 - Append-only ledger (replay-first) for auditability
 - Automations: a workflow that runs on a fixed interval, when an email arrives, or on demand, kept as a readable conversation ([Automations](docs/automations.md))
-- Email for each user: connect your own mailbox, get failed jobs, approvals and automation results by email, and let your agents use email tools when you switch them on ([Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md))
+- Email for each user: your email address receives sign-in codes and notifications; connect your own mailbox (IMAP, Google or Microsoft) to get failed jobs, approvals and automation results by email, and let your agents use email tools when you switch them on ([Email integration](docs/guide/email-integration.md))
 - Multi-client: terminal, browser, tray, Telegram, email
 - Start on one device, continue on another: the web console and every browser app work on phones,
   tablets and any window size ([Phones and tablets](docs/guide/deployment-iphone.md))
@@ -282,7 +283,7 @@ dialogs and touch-sized controls on phones.
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | the gateway console's **Apps** page (served at `/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | the gateway console's **Apps** page (served at `/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | the gateway console's **Apps** page (served at `/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` |
-| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (first-run guide, Models, Engines, providers, users), terminal via `abstractgateway-console` (the same setup guide and screens, Network and Apps included, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
+| **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (sidebar groups Accounts, Work, Models and System; the **Setup** button; one Accounts table of users and entities), terminal via `abstractgateway-console` (the same setup guide and screens, Network and Apps included, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | the gateway console's **Apps** page (served at `/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` |
 | **Flow Editor** | Visual workflow authoring in the browser | the gateway console's **Apps** page (served at `/apps/flow/`), or `npx @abstractframework/flow --gateway-url <url>` |
@@ -541,15 +542,19 @@ Notes for LLMs working in this repo:
   `ABSTRACT_EMAIL_*` variables were removed in 0.7.0; a leftover account is imported once). Two
   words: the user's **email address** (sign-in codes, "Forgot your token?", notifications, default
   allowed recipient; set in **Create user** or on the account page) and their **mailbox** (a
-  connection: tabs **Google** / **Microsoft** / **Other**; Other = address + password, servers found
-  automatically, **Server settings** folded; one **Connect**, then **Test** / **Disconnect**). Account
-  page: web console **Users & Entities → My email address and mailbox**, `@` on the terminal
-  console's Users screen, `PUT /api/gateway/me/email`. Notifications: two switches **Job failed** and
+  connection: tabs **IMAP** (first, selected; address + password, server fields visible and
+  pre-filled, no user name field) / **Google** / **Microsoft**; one **Connect**, then an **Active**
+  switch, **Test** / **Disconnect**). Account page: web console **Accounts** (an administrator uses
+  **Email** on their own row), `@` on the terminal console's Accounts screen,
+  `PUT /api/gateway/me/email`. Notifications: two switches **Job failed** and
   **Approval needed** (on by default, sent only with a connected mailbox). **Agent email tools**: the
   user's switch, off by default, unavailable until a mailbox is connected. **Advanced**: recipient
-  rules (a new account allows its own email address), send limits 20/h and 100/day, folder.
-  Administrators: one switch **Mailboxes for users** (on), and under Advanced **Agent email tools for
-  users** (on) and **Sign-in by email** (on). `email.received@1` automations read mail read-only, treat
+  rules (a new account allows its own email address), send limits 100/h and 1000/day, watch folder.
+  Administrators: under the accounts table, **Email for everyone** with one switch **Mailboxes for
+  users** (on), and under Advanced **Agent email tools for users** (on) and **Sign-in by email** (on).
+  The **Accounts** page is one table of users and entities (Create user / Create entity; per row
+  Active switch, Email, Logs, Workspace, Rotate, Manage, Delete); an administrator sees every
+  account, a user only themself and the entities they created. `email.received@1` automations read mail read-only, treat
   it as untrusted (links not followed; network, code and sending tools ask unless named in
   `policy.untrusted_input_tools`) and never run on the framework's own automatic mail
   (`Auto-Submitted`, `X-AbstractFramework-Automation`; `auto_submitted: "admit"` accepts others'
@@ -567,7 +572,7 @@ Notes for LLMs working in this repo:
 - [docs/automations.md](docs/automations.md): How automations work and how to manage them: an automation is a durable controller run, each tick an occurrence (a child run shown as a chat turn); independent vs growing context (growing replays the most recent 50 000 tokens of whole turns); quiet by default (`notify` output, final failures, typed waits `ask_user` / `tool_approval` / `event`); creation is the tool consent (`policy.tool_approval` `auto`/`ask`, MCP tools still ask); creating from the Assistant (Schedule this conversation…), the Observer (Launch → Automate), AbstractCode (`/automations`, `/schedule`, the browser Automations section) or a workflow's `automation_defaults`; email automations (`email.received@1` with typed filters and hourly/60 s batches, each message once, untrusted input with network, code and sending tools asking unless named in `policy.untrusted_input_tools`, own automatic mail never an event, `auto_submitted: "admit"`; **Email me the result** = `notify.channels` with `email`, a switch in the form's **Mailbox** section; `policy.email_allowed_recipients`, only you by default); two worked examples with request bodies; pause / run now (also while paused) / resume without catch-up / revise / archive / discuss; restart safety; limits (fixed UTC intervals, triggers `schedule@1`, `email.received@1` and `manual@1`); troubleshooting. Needs a gateway advertising `contracts.common.automations` (AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later; email automations need 0.8.0 of both).
 - [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid diagrams: components, distribution, how a turn flows, the live-reply lane, the framework identity flow), app proxies and the forwarded-address rule, model residency and eject.
 - [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, email accounts (per gateway user or per AbstractCore install; no environment variables; `--password-stdin`), client configuration.
-- [docs/guide/email-integration.md](docs/guide/email-integration.md): Your email address and your own mailbox on the gateway: the account page, connecting a mailbox (Google / Microsoft / Other), recipient rules and send limits, agent email tools (off by default), email automations (new mail only, untrusted input, own automatic mail never triggers), notifications (Job failed, Approval needed), sign-in by email, the administrator's Mailboxes for users switch, AbstractCore's own account.
+- [docs/guide/email-integration.md](docs/guide/email-integration.md): Your email address and your own mailbox on the gateway: the account page, connecting a mailbox (IMAP / Google / Microsoft), recipient rules and send limits, agent email tools (off by default), email automations (new mail only, untrusted input, own automatic mail never triggers), notifications (Job failed, Approval needed), sign-in by email, the administrator's Mailboxes for users switch and the Accounts table, who sees which accounts, AbstractCore's own account.
 - [docs/guide/deployment-iphone.md](docs/guide/deployment-iphone.md): Phones and tablets: the console and the browser apps on the gateway's one address (`/console`, `/apps/<app>/`), the Network setting, sign-in, what adapts on a small screen.
 - [docs/api.md](docs/api.md): Meta-package API: release pins, helpers, `abstractframework doctor` and `manifest`.
 - [docs/faq.md](docs/faq.md): Common questions, comparisons, limits.
@@ -1937,7 +1942,10 @@ unattended install leaves it off and its summary says how to turn it on), starts
 `127.0.0.1:8080`, and opens its console in your browser already signed in. The console's first-run
 guide sets up a local engine or a cloud key and a default model (the **Models** tab lists the
 models that fit your machine and downloads them), and its **Apps** page installs and opens the
-browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The installer also
+browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The **Setup** button
+at the bottom of the sidebar runs the guide again; it keeps your choices unless you replace them. The
+console's sidebar groups its pages: **Accounts**; **Work** (Workflows, Runtimes, Apps); **Models**
+(Providers, Models, Engines, Multimodal); **System** (Resources, Sandbox, Network). The installer also
 builds the terminal console, `abstractgateway-console`, which offers the same guide on a server
 without a browser (its **Network** screen, `N`, decides who can reach the gateway); over SSH the
 installer offers to open it at the end, and its summary prints the command (see
@@ -2139,7 +2147,7 @@ AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operato
 path; it does not sign in browsers.
 
 To start the gateway at login, turn on **Start at login** in the console (web: the Gateway
-section; terminal: `F3`), or run `abstractgateway service install --port 8080`. The login item
+section of **Resources**; terminal: `F3`), or run `abstractgateway service install --port 8080`. The login item
 listens where the gateway's Network setting says (this computer only until you change it; see
 [Network setting](install.md#network-setting-who-can-reach-the-gateway)).
 
@@ -2168,6 +2176,10 @@ The console and every browser app work on phones, tablets and any window size. T
 another device, set the gateway's Network setting to `lan` (`abstractgateway network set lan`, then
 `abstractgateway network restart --token <admin token>`) and open the same `/console` and
 `/apps/<app>/` paths on the gateway's address; see [Phones and tablets](guide/deployment-iphone.md).
+With Tailscale, `tailscale serve --bg http://127.0.0.1:<port>` on the gateway's computer gives an
+https address (`https://<host>.<tailnet>.ts.net/`) and the Network setting can stay `localhost`;
+voice and camera in the browser need https
+([Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https)).
 
 ### 5. Automate recurring work
 
@@ -2194,8 +2206,8 @@ attention. See [Automations](automations.md) for the mental model, worked exampl
 and limits.
 
 To run an automation when an email arrives, or to get its results by email, first connect your own
-mailbox in the gateway console (**Users & Entities → My email address and mailbox**, or `@` on the
-Users screen of the terminal console). The Assistant, the Observer and AbstractCode's browser client then offer **When an email
+mailbox on your account page in the gateway console (**Accounts**; an administrator uses **Email**
+on their own row), or `@` on the Accounts screen of the terminal console. The Assistant, the Observer and AbstractCode's browser client then offer **When an email
 arrives**, **Email me the result** and the recipients the automation may email without asking. See
 [Email automations](automations.md#email-automations). The same account gives you sign-in by email,
 and your agents get the email tools only when you switch **Agent email tools** on
@@ -2528,8 +2540,8 @@ to requests that leave `title` or `trigger` out.
 
 ## Email automations
 
-With **your own mailbox connected** to the gateway (web console **Users & Entities → My email
-address and mailbox**, `@` on the terminal console's Users screen, or `PUT /api/gateway/me/email`;
+With **your own mailbox connected** to the gateway (your account page on the web console's
+**Accounts** page, `@` on the terminal console's Accounts screen, or `PUT /api/gateway/me/email`;
 see [Email integration](guide/email-integration.md) and [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md)),
 the Assistant, the Observer and AbstractCode's browser client offer three more options in the
 form's **Mailbox** section. Without a connected, allowed mailbox the section says "Connect a
@@ -2580,7 +2592,7 @@ vacation notices, other automations); set `"auto_submitted": "admit"` in the tri
 run on those too.
 
 Every send — an agent's, an automation's, a notification — also passes your recipient policy and
-your send limits (20 per hour and 100 per day by default), both under **Advanced** on your account
+your send limits (100 per hour and 1000 per day by default), both under **Advanced** on your account
 page. Agents and workflows get the email tools themselves only when you switch **Agent email
 tools** on (off by default; an administrator can withhold it); automations that only send you
 their results do not need them.
@@ -2888,7 +2900,7 @@ recorded. A wait the gateway does not type is shown without answer controls.
 | No notification ever arrives | quiet is the default; only `notify` in the output, final failures and waits notify | return `notify` from the workflow (see the memory example) |
 | Ticks are late or merged | a tick takes longer than the interval; missed ticks are coalesced | lengthen the interval or share the model with fewer automations |
 | An email automation never runs | the mail was already there, arrived while no email automation was active, or is automatic mail (auto-replies, the framework's own mail); a model-running automation runs at most once an hour by default | send a new message after creating it; shorten `every`; set `"auto_submitted": "admit"` for others' automatic mail; check the mailbox state on your account page |
-| "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it under **Users & Entities → My email address and mailbox**, or ask an administrator to switch **Mailboxes for users** on |
+| "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it on your account page (**Accounts**), or ask an administrator to switch **Mailboxes for users** on |
 | An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve it, add the recipient in **May send email without asking to**, or edit the recipient rules and send limits under **Advanced** on your account page |
 | A schedule shows `legacy` | it was created with `POST /api/gateway/runs/schedule` | it keeps its own controls; **Recreate as automation** in the Observer copies it into an automation (suspend the old one yourself) |
 
@@ -2905,8 +2917,8 @@ Two things carry the word "email" on an AbstractGateway, and every console names
 - your **email address**: where sign-in codes, "Forgot your token?" and notifications go, and the
   first address your agents may write to. It has no password. An administrator sets it in
   **Create user**, or you set it on your account page;
-- your **mailbox**: a connection you make (Google or Microsoft sign-in, or address and password for
-  other providers) so that your agents and automations can read and send mail as you. Only you
+- your **mailbox**: a connection you make (an IMAP account with its password, or Google or
+  Microsoft sign-in) so that your agents and automations can read and send mail as you. Only you
   connect it; administrators never see or touch it.
 
 Every signed-in person can connect **their own** mailbox. It is used for three things:
@@ -2934,33 +2946,44 @@ The package guides hold the full references:
 
 Every signed-in user has the same account page:
 
-- the gateway web console: **Users & Entities → My email address and mailbox**;
-- the gateway terminal console (`abstractgateway-console`): the Users screen, then `@`
-  (**My account — email**);
+- the gateway web console: the **Accounts** page. A user sees their own page there (**My email
+  address and mailbox**); an administrator opens it with **Email** on their own row of the accounts
+  table;
+- the gateway terminal console (`abstractgateway-console`): the Accounts screen (`2`), then `@`;
 - the HTTP API: `GET /api/gateway/me/email` and the routes below.
 
-It shows, in order: **Email address** (the only field with its own **Save**), **Mailbox**,
-**Notifications**, **Agent email tools** and a folded **Advanced** section. Switches apply at once;
-there is no other Save button.
+It shows, in order: **Your email address** (the only field with its own **Save**: "Where sign-in
+codes and notifications go."), **Mailbox**, **Notifications**, **Agent email tools** and a folded
+**Advanced** section. Switches apply at once; there is no other Save button. One address is
+editable at a time: when your email address is empty, the mailbox form's address is the only
+address field and connecting fills **Your email address**; when it is set, the mailbox form shows
+"Mailbox account: you@example.com" with **Use a different account**. A note under your email
+address appears only when your mailbox is a different account.
 
 ## Connect your mailbox
 
-The **Mailbox** card has three tabs:
+The **Mailbox** card has three tabs, **IMAP** first and selected:
 
+- **IMAP**: **Mailbox address** ("The account your agents read and send from — usually your own
+  address."), **Password** ("Use an app password if your provider needs one."), then **Incoming
+  mail (IMAP)** and **Outgoing mail (SMTP)**, each with **Server**, **Port** and **Security** (SSL
+  or STARTTLS). The server fields are always visible: as soon as the address has a domain they
+  hold the standard settings (`imap.<domain>` 993 SSL, `smtp.<domain>` 465 SSL), then the settings
+  the gateway discovers for that domain; a field you edited is never overwritten. There is no user
+  name field: the login is the one discovered for the provider, else the address; **My provider
+  uses a different login name** reveals a **Login** field for the few providers that need one.
 - **Google** and **Microsoft**: **Sign in with Google** / **Sign in with Microsoft**. Microsoft
   shows a code to enter in any browser; Google opens a browser on the gateway's own computer. Your
-  own sign-in client goes under the tab's **Advanced**.
-- **Other**: your **Email address** and **Password** (an app password when your provider needs
-  one). The gateway finds the mail servers from the address and shows them on one line with
-  **Edit**; **Server settings** stay folded and open by themselves only when the servers cannot be
-  found.
+  own sign-in client goes under the tab's **Advanced**; **Cancel sign-in** shows while a sign-in is
+  pending.
 
 **Connect** saves and tests in one step: the gateway signs in to both servers first, stores nothing
-when a step fails, and the error names the step ("Sign-in refused by imap.example.com — check the
-password."). Once connected, the card shows the status line ("Connected as me@example.com ·
-Google · checked 2 min ago"), **Test** and **Disconnect** (with an inline confirmation; your
-policy and limits are kept). Over HTTP, `PUT /api/gateway/me/email` with `address` and `password`
-does the same.
+when a step fails, and the error names the step and the cause ("Sign-in refused by
+imap.example.com — check the password."). Once connected, the card shows the status line
+("Connected as me@example.com · IMAP · checked 2 min ago"), an **Active** switch ("Off pauses
+watching, sending and notifications; your settings are kept."), **Test** and **Disconnect** (with
+an inline confirmation; your policy and limits are kept). Over HTTP, `PUT /api/gateway/me/email`
+with `address` and `password` does the same.
 
 The mailbox is stored in your own data folder with its credentials encrypted, and every connection
 verifies TLS. It is only read: nothing is marked read, moved or deleted. Many providers (Gmail,
@@ -2972,16 +2995,15 @@ Outlook need the Microsoft sign-in.
 Every send (an agent's email tool, an automation's send action, a notification, a sign-in code)
 passes the same checks:
 
-1. your mailbox is connected and in use (**Use this mailbox** under **Advanced**), and your
-   administrator allows mailboxes;
-2. your **Recipient rules**: **Only these recipients** (an allowlist of addresses and domains) or
-   **Everyone except these** (a denylist), applied to To, Cc and Bcc. A new account starts with an
-   allowlist that holds your own email address;
-3. your **Send limits**: 20 messages per rolling hour and 100 per day by default.
+1. your mailbox is connected and **Active**, and your administrator allows mailboxes;
+2. your recipient rules, **Your agents may send to**: **Only these recipients** (an allowlist of
+   addresses and domains) or **Everyone except these** (a denylist), applied to To, Cc and Bcc. A
+   new account starts with an allowlist that holds your own email address;
+3. your send limits: "At most 100 per hour and 1000 per day." by default (a rolling hour and day).
 
-Both sit under **Advanced** on your account page, with the **Folder** automations watch (INBOX by
-default) and **Send a test notification**. On top of the rules, an agent's send to anyone but you
-(or the recipients an automation lists) waits for your approval.
+Both sit under **Advanced** on your account page, as sentences that save as you edit them, with
+the **Watch folder** automations read (INBOX by default). On top of the rules, an agent's send to
+anyone but you (or the recipients an automation lists) waits for your approval.
 
 ## Agent email tools (off by default)
 
@@ -3045,6 +3067,11 @@ An automation set to **Email me the result** also emails you the results that as
 attention, and a run started with an email notice emails you when it finishes or fails, as
 asked. Each notice is queued once and sent once, through your own mailbox, to your email address.
 
+**Send a test** sends one notification now and always answers with a sentence: "Sent to
+me@example.com.", or why not ("Not sent: hourly limit reached (100 of 100 this hour) — resets at
+14:05.", "Not sent: no mailbox connected.", "Not sent: your mailbox is paused."). A notice held by
+a send limit goes out when the limit resets; reset times are shown in your local time.
+
 ## Sign-in by email
 
 When at least one account on the gateway has a connected mailbox, the sign-in page shows one link:
@@ -3060,9 +3087,10 @@ sent. Ask your gateway admin for a token."
 
 ## What administrators decide
 
-Administrators decide what is available; users switch features on for themselves. Above the users
-table in the web console's **Users & Entities** tab (and on the terminal console's Users screen)
-there is one switch, **Mailboxes for users**, and two more under its **Advanced** disclosure:
+Administrators decide what is available; users switch features on for themselves. Under the
+accounts table on the web console's **Accounts** page, the section **Email for everyone** has one
+switch, **Mailboxes for users**, and two more under its **Advanced** disclosure (the terminal
+console's Accounts screen has the same switches):
 
 | Switch | Default | Meaning |
 |---|---|---|
@@ -3070,17 +3098,24 @@ there is one switch, **Mailboxes for users**, and two more under its **Advanced*
 | **Agent email tools for users** (Advanced) | on | users may let their agents use their mailbox; each user still switches **Agent email tools** on |
 | **Sign-in by email** (Advanced) | on | shows **Forgot your token? Email me a sign-in code** on the sign-in page |
 
-The users table shows each user's **Email address** and **Mailbox** state ("connected as …",
-"not connected"), never messages, recipient lists or credentials. **Create user** asks for the
+The accounts table shows each account's **Email address** and **Mailbox** state ("Connected as
+…", "Not connected", "Paused"), never messages, recipient lists or credentials. **Email** on another
+user's row opens only that user's **Email address** ("Where <user>'s sign-in codes and
+notifications go.") and a read-only mailbox status: only the user connects a mailbox. Entities
+have no mailbox of their own: mailboxes belong to a user's runtime. **Create user** asks for the
 user's **Email address** at the top level. Sign-in by email means whoever controls a user's mailbox
 can sign in as that user; switch it off where mailboxes are less protected than gateway tokens.
+
+An administrator sees every account. A user sees only themself and the entities they created, in
+the consoles and in every API route that lists, reads or manages accounts, email or activity.
 
 ## AbstractCore on its own
 
 An AbstractCore install without a gateway has one account of its own, set with
 `abstractcore email connect`, the core web console's **Email** tab or the core terminal console's
-Email screen (`@`); both show the same **Email address**, **Mailbox** and **Agent email tools**
-sections. From a script, pass the password on stdin so it never appears on a command line:
+Email screen (`@`); both show the same **Email address**, **Mailbox** (tabs **IMAP**, first and
+selected, **Google** and **Microsoft**, with the same visible server fields) and **Agent email
+tools** sections. From a script, pass the password on stdin so it never appears on a command line:
 
 ```bash
 abstractcore email connect --address me@example.com \
@@ -3125,11 +3160,28 @@ browser origin to allow.
 4. **Open an app** from the Apps page. It opens at `/apps/<app>/`, already signed in.
 5. Optional: add the page to the home screen (Safari: **Share → Add to Home Screen**).
 
-For access from outside your network, put the gateway behind a reverse proxy with HTTPS (one proxy
-block covers the console, the API and every app), or choose the `internet` Network setting (no
+For access from outside your network, use Tailscale (below) or put the gateway behind a reverse
+proxy with HTTPS (one proxy block covers the console, the API and every app), or choose the `internet` Network setting (no
 HTTPS; you handle port forwarding). See
 [Gateway exposure security](gateway-security.md) and
 [AbstractGateway: Deployment](https://github.com/lpalbou/AbstractGateway/blob/main/docs/deployment.md).
+
+### Reached through Tailscale (https)
+
+Reached through Tailscale? On the gateway machine run
+`tailscale serve --bg http://127.0.0.1:<port>` and open `https://<host>.<tailnet>.ts.net/` (the
+console at `/console`, the apps at `/apps/<app>/`); `tailscale serve reset` undoes it. The gateway
+can stay in its `localhost` Network setting, and no allowed origin is needed: it accepts an https
+page served through a proxy on its own computer that keeps the browser's address, and marks the
+sign-in cookies `Secure`. Voice and camera in the browser need this https address: browsers offer
+the microphone, the camera and the clipboard only on https pages (or on the gateway's own
+computer), never on a plain `http://` address such as `http://100.x.y.z:8080` or
+`http://192.168.1.20:8080`. Over plain http the console and the apps still work, and a feature
+that needs https says so. A reverse proxy (nginx, Caddy) on the gateway's computer that keeps the
+`Host` header and sets `X-Forwarded-Proto` works the same way; a proxy on another computer, or one
+that rewrites `Host`, needs its origin allowed once with
+`abstractgateway network set --allowed-origins https://gateway.example.com`. See
+[AbstractGateway: Configuration](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md#reached-through-tailscale-https).
 
 ## What adapts on a small screen
 
@@ -3219,10 +3271,10 @@ flowchart TB
     end
 
     subgraph GATEWAY["AbstractGateway (control plane)"]
-        API["HTTP/SSE API<br/>runs · schedules · automations · workflow catalog<br/>ledger + artifacts · users · network · /about"]
+        API["HTTP/SSE API<br/>runs · schedules · automations · workflow catalog<br/>ledger + artifacts · accounts · network · /about"]
         APXY["app proxy /apps/&lt;app&gt;/<br/>one address, one port for every app"]
         SESS["agent sessions<br/>default workflow · workspace guard<br/>skills shelf · live-reply hub"]
-        WEB["web /console<br/>first-run guide · Models · Engines · Resources"]
+        WEB["web /console<br/>Accounts · Work · Models · System<br/>Setup guide"]
         TRAY["menu-bar icon<br/>status · Network · open apps"]
         MAIL["per-user email<br/>account · mail watcher · outbox<br/>sign-in by email"]
     end
@@ -3273,14 +3325,16 @@ The layers, from the top:
   gateway; the others start, observe and steer runs. Every app has an About screen with the
   framework identity (see [Framework identity](#framework-identity-and-about-screens)).
 - **AbstractGateway** owns the run lifecycle (start, resume, cancel), durable schedules, private
-  bundle discovery and the shared workflow catalog, users and auth, the Network setting, and
-  ledger/artifact serving. For agent sessions it also resolves the default agent workflow, gives
+  bundle discovery and the shared workflow catalog, accounts (users and entities; an administrator
+  sees every account, a user only themself and the entities they created) and auth, the Network
+  setting, and ledger/artifact serving. For agent sessions it also resolves the default agent workflow, gives
   every run a guarded workspace, seeds and serves the skill shelf, and relays live replies. Each
   user can connect their own mailbox: the gateway keeps the account encrypted in that user's data
   folder, runs the read-only mail watcher while the user has an email automation, sends
   notifications from a durable outbox, and offers sign-in by email
   ([Email integration](guide/email-integration.md)). Its web console and menu-bar icon are part of
-  the same package; the console and the browser apps adapt to phones, tablets and any window size.
+  the same package; the console and the browser apps adapt to phones, tablets and any window size,
+  and a proxy on the gateway's own computer (such as `tailscale serve`) gives them an https address.
 - **AbstractAgent** provides ready-made agent loops; **AbstractRuntime** is the durable kernel that
   executes them, compiles VisualFlow graphs from `.flow` bundles into workflows, and tracks which
   models are resident and who uses them.
@@ -4543,6 +4597,13 @@ A new mode or port applies at the next start: `network restart`, the console, th
 `localhost` unless you need another device to connect; see
 [Gateway security](guide/gateway-security.md) before choosing `internet`.
 
+Reached through Tailscale? On the gateway machine run
+`tailscale serve --bg http://127.0.0.1:<port>` and open `https://<host>.<tailnet>.ts.net/`;
+`tailscale serve reset` undoes it. The Network setting can stay `localhost`. Voice and camera in
+the browser need this https address (browsers offer them only on https pages or on the gateway's
+own computer). See
+[Phones and tablets: Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https).
+
 ### Upgrade and uninstall
 
 - Upgrade: re-run the one-liner, or use **Update** in a console or the menu-bar icon, which runs the
@@ -4691,7 +4752,7 @@ Run or install them next to the Python stack:
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.10.0 |
 | Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.22.0 |
-| Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.5.0 |
+| Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.6.0 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.13.0 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.6.0 |
 | Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.9.0 |
@@ -5287,14 +5348,15 @@ Email is configured as settings, never through environment variables:
 
 - **On a gateway, per user**: each person has an **email address** (where sign-in codes and
   notifications go; set in **Create user** or on the account page) and connects their own
-  **mailbox** (**Google** or **Microsoft** sign-in, or **Other**: address and password, the servers
-  found automatically) on their account page: the web console's **Users & Entities → My email
-  address and mailbox**, the terminal console (`@` on the Users screen) or
+  **mailbox** (**IMAP** with address and password, the server fields visible and pre-filled, or
+  **Google** or **Microsoft** sign-in) on their account page: the web console's **Accounts** page
+  (an administrator opens it with **Email** on their own row), the terminal console (`@` on the
+  Accounts screen) or
   `PUT /api/gateway/me/email`. The mailbox lives in that user's own data folder with its
   credentials encrypted. The same page holds the two notification switches (**Job failed**,
   **Approval needed**, on by default), the **Agent email tools** switch (off by default) and, under
   **Advanced**, the recipient rules (a new account starts with an allowlist holding the user's own
-  email address), the send limits (20 per hour, 100 per day by default) and the folder. A connected
+  email address), the send limits (100 per hour, 1000 per day by default) and the watch folder. A connected
   mailbox also gives the user sign-in by email on the sign-in page. Administrators decide what is
   available with one switch, **Mailboxes for users**, and two under **Advanced** (**Agent email
   tools for users**, **Sign-in by email**), all on by default, and never see mail content. See [Email integration](guide/email-integration.md) and
@@ -5739,7 +5801,11 @@ A thin-client browser UI for operations: monitor runs, inspect ledger history, w
 
 ### Gateway console
 
-The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens, a **Resources** view of resident models and memory, and the agent session settings.
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens, a **Resources** view of resident models and memory, and the agent session settings. The web console's sidebar groups its pages as **Accounts** (Accounts), **Work** (Workflows, Runtimes, Apps), **Models** (Providers, Models, Engines, Multimodal) and **System** (Resources, Sandbox, Network), with the **Setup** button and the **Technical details** switch at the bottom; the terminal console lists its screens in the same groups (no Sandbox), with `S` for Setup.
+
+### Accounts
+
+The gateway console page for the people who use the gateway and the entities that act on it: one table of users and entities (**Name** with a kind chip, **Role**, **Email address**, **Mailbox**, **Runtime**, an **Active** switch, and the actions **Email**, **Logs**, **Workspace**, **Rotate**, **Manage** for entities and **Delete**), with **Create user** and **Create entity** above it and **Email for everyone** below. An action that cannot apply shows its reason. Turning **Active** off signs a user out until it is turned back on, or suspends an entity. **Logs** lists the account's recorded activity from the gateway's audit log. An administrator sees every account; a user sees only themself and the entities they created.
 
 ### Core console
 
@@ -5751,7 +5817,7 @@ A one-time console sign-in link (`/console#claim=<code>`), single use, valid for
 
 ### First-run guide
 
-The gateway console's setup flow, opened once per data folder by the claim link and later from the **Setup** button: host summary, local engines, a default model that fits the machine, and the apps.
+The gateway console's setup flow, opened once per data folder by the claim link and later from the **Setup** button at the bottom of the sidebar (administrators): host summary, local engines, a default model that fits the machine, the apps and the network. Running it again keeps your current choices unless you replace them.
 
 ### Network setting
 
@@ -5812,16 +5878,18 @@ See [Email integration](guide/email-integration.md) for the whole picture.
 
 A gateway user's own address: where sign-in codes, "Forgot your token?" and notifications go, and
 the first address the user's agents may write to. It has no password. An administrator sets it in
-**Create user**, or the user sets it on their account page (**Users & Entities → My email address
-and mailbox** in the web console, `@` on the terminal console's Users screen).
+**Create user**, or the user sets it on their account page (**Accounts** in the web console, where
+an administrator uses **Email** on their own row; `@` on the terminal console's Accounts screen).
 
 ### Mailbox
 
 A connection a gateway user makes so that their agents and automations can read and send mail as
-them: **Google** or **Microsoft** sign-in, or **Other** (email address and password, the mail
-servers found automatically, **Server settings** folded). One **Connect** saves and tests it; once
-connected, **Test** and **Disconnect**. It is stored encrypted in that user's data folder, and
-administrators never see or touch it. Its recipient rules, send limits and folder sit under
+them: tabs **IMAP** (first and selected: mailbox address, password, and the incoming and outgoing
+server, port and security, always visible and pre-filled from the address), **Google** and
+**Microsoft** (sign-in with the provider). One **Connect** saves and tests it; once connected, an
+**Active** switch (off pauses watching, sending and notifications), **Test** and **Disconnect**.
+It is stored encrypted in that user's data folder, and administrators never see or touch it. Its
+recipient rules, send limits and watch folder sit under
 **Advanced** on the same account page. AbstractCore on its own has one account per install
 (`abstractcore email`).
 
@@ -5836,7 +5904,7 @@ is never an event.
 
 Who may receive mail from an account: an allowlist (only the listed addresses and domains; a new
 account starts with the user's own email address) or a denylist (everyone except them), applied with
-the send limits (20 per hour and 100 per day by default) to every send.
+the send limits (100 per hour and 1000 per day by default) to every send.
 
 ### Agent email tools
 
@@ -6112,11 +6180,11 @@ The full guide, with two worked examples and troubleshooting, is **[Automations]
 ## Can the framework read and send my email?
 
 Only with an account you connect yourself, and only as far as you allow. Each gateway user connects
-their own mailbox in the web console (**Users & Entities → My email address and mailbox**) or the
-terminal console (`@` on the Users screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
+their own mailbox on their account page in the web console (**Accounts**) or the terminal console
+(`@` on the Accounts screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
 rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
 deleted. Every send passes your recipient rules (an allowlist or a denylist of addresses and
-domains; a new account allows only your own email address) and your send limits (20 per hour, 100 per
+domains; a new account allows only your own email address) and your send limits (100 per hour, 1000 per
 day by default), and a send to anyone but you (or the recipients an automation lists) waits for
 your approval. Agents get the email tools only when you switch **Agent email tools** on (off by
 default); administrators never read users' mail. An email-triggered automation treats
@@ -6130,7 +6198,10 @@ Yes. The gateway's web console and the five browser apps work on phones, tablets
 size. Let the phone reach the gateway (`abstractgateway network set lan`, then
 `abstractgateway network restart --token <admin token>`), then open the console on
 the phone at the gateway's address; every installed app opens from its **Apps** page at
-`/apps/<app>/` on that same address. See [Phones and tablets](guide/deployment-iphone.md).
+`/apps/<app>/` on that same address. With Tailscale, `tailscale serve --bg http://127.0.0.1:<port>`
+on the gateway's computer gives an https address (`https://<host>.<tailnet>.ts.net/`) that also
+works away from home and lets voice and camera work in the browser. See
+[Phones and tablets](guide/deployment-iphone.md).
 
 ## Which workflow answers when I chat with an agent?
 
@@ -6286,8 +6357,7 @@ in `<data dir>/auth/bootstrap-admin-token`; the install summary prints that path
 From another device, sign in with your gateway user name and token. The sign-in page also offers
 **Forgot your token? Email me a sign-in code** (unless an administrator switched **Sign-in by
 email** off): an 8-digit code sent to your email address, valid once for 10 minutes. The code
-reaches you only when your account has an email address and a connected mailbox (**Users &
-Entities → My email address and mailbox**). See
+reaches you only when your account has an email address and a connected mailbox (your account page on the console's **Accounts** page). See
 [Email integration](guide/email-integration.md#sign-in-by-email).
 
 ### How do I stop or restart the gateway?
@@ -6318,7 +6388,10 @@ Run the install line again: it installs the latest AbstractFramework release, ke
 settings, options and data, restarts the gateway when anything changed, and lists what changed.
 On macOS and Linux, **Update** in the web console, the terminal console or the menu-bar icon runs
 the same installer with `--no-start`: the running gateway keeps serving, and the console or icon
-then offers the restart. Coming from 0.6.1 or earlier, re-run the line once (the Update button of
+then offers the restart. An upgrade never installs less because of the network: a download that
+fails, or a release not yet on every mirror, makes the installer run the same full install again
+for about 10 minutes, then stop with the cause and the command to run again, the previous version
+still installed and working. Coming from 0.6.1 or earlier, re-run the line once (the Update button of
 gateway 0.7.1 cannot upgrade an installer install). `--pin latest` (`-Pin latest`) installs the
 newest gateway instead. See [Upgrade](install.md#upgrade).
 
@@ -6431,7 +6504,7 @@ run the installer again: it continues where it stopped.
   or select **Forgot your token? Email me a sign-in code** on the sign-in page (shown unless an
   administrator switched **Sign-in by email** off): an 8-digit code arrives at your email address,
   works once and expires after 10 minutes. It reaches you only when your account has an email
-  address and a connected mailbox (**Users & Entities → My email address and mailbox**); otherwise
+  address and a connected mailbox (your account page on the **Accounts** page); otherwise
   the sign-in page says so under the link. Without them, an administrator gives you a new token. See
   [Email integration](guide/email-integration.md#sign-in-by-email).
 
@@ -6481,6 +6554,18 @@ run the installer again: it continues where it stopped.
   `ABSTRACTGATEWAY_AUTH_TOKEN`; an app served from an origin other than `http://localhost:*` or
   `http://127.0.0.1:*` needs `abstractgateway network set --allowed-origins <origin>`.
 - See [Configuration](configuration.md#client-configuration-observer--flow-editor--code-web-ui).
+
+### Voice or camera is unavailable on another device, or sign-in through a proxy is refused
+
+- **Cause**: browsers offer the microphone, the camera and the clipboard only on https pages (or on
+  the gateway's own computer); a plain `http://<address>:8080` page says the feature needs https.
+  A proxy on another computer, or one that rewrites the `Host` header, sends an origin the gateway
+  does not know, and sign-in answers `Forbidden (origin not allowed)`.
+- **Fix**: with Tailscale, run `tailscale serve --bg http://127.0.0.1:<port>` on the gateway's
+  computer and open `https://<host>.<tailnet>.ts.net/` (no allowed origin needed). For another
+  proxy, allow its origin once:
+  `abstractgateway network set --allowed-origins https://gateway.example.com`. See
+  [Phones and tablets: Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https).
 
 ## Models and providers
 
@@ -6571,9 +6656,8 @@ run the installer again: it continues where it stopped.
 
 ### An email automation does not run, or the mailbox shows "needs action"
 
-- **Check**: the **Mailbox** card on your account page (**Users & Entities → My email address and
-  mailbox**) shows the mailbox state and the last error with its fix (for example an app password
-  the server refused); **Test** checks it again. Administrators see the same state in the users
+- **Check**: the **Mailbox** card on your account page (on the **Accounts** page) shows the mailbox state and the last error with its fix (for example an app password
+  the server refused); **Test** checks it again. Administrators see the same state in the accounts
   table's **Mailbox** column.
 - **Cause**: mail that was already in the mailbox, or that arrived while none of your email
   automations was active, is never processed; an automation that runs a model runs at most once an
@@ -6590,7 +6674,7 @@ run the installer again: it continues where it stopped.
   **Agent email tools for users** off); every send also passes your recipient rules (a new account
   allows only your own email address) and your send limits.
 - **Fix**: connect your mailbox, switch **Agent email tools** on, and add the recipient under
-  **Advanced → Recipient rules**. The refusal names the refused addresses or the limit reached. See
+  **Advanced → Your agents may send to**. The refusal names the refused addresses or the limit reached. See
   [Email integration](guide/email-integration.md).
 
 ## Automations
@@ -8474,7 +8558,7 @@ returning the values to browsers or clients.
 ## Allowlisted keys
 
 The gateway ships with an **empty** allowlist: framework settings are configured in the consoles,
-not through environment variables. Email in particular is a per-user setting (**Users & Entities → My email address and mailbox**;
+not through environment variables. Email in particular is a per-user setting (the account page on the console's **Accounts** page;
 see [Email integration](email-integration.md)). Email values saved here by an earlier gateway are
 imported once into the administrator's own mailbox settings and then ignored.
 
@@ -8992,11 +9076,12 @@ limits, agent email tools, notifications, sign-in by email).
 
 ## Step 1: Connect your mailbox
 
-In the gateway web console, open **Users & Entities → My email address and mailbox** (terminal
-console: the Users screen, then `@`). Check your **Email address** at the top: results and
-notifications go there. In the **Mailbox** card, pick **Google** or **Microsoft** to sign in with
-the provider, or **Other** to give your email address and an app password (the gateway finds the
-mail servers itself), then **Connect**. The gateway tests both servers before it saves anything.
+In the gateway web console, open your account page on the **Accounts** page (an administrator
+selects **Email** on their own row; terminal console: the Accounts screen, then `@`). Check **Your
+email address** at the top: results and notifications go there. In the **Mailbox** card, the
+**IMAP** tab is selected: give your mailbox address and an app password (the server fields fill in
+from the address; change one only if your provider uses others), or pick **Google** or
+**Microsoft** to sign in with the provider, then **Connect**. The gateway tests both servers before it saves anything.
 
 The recipient rules sit under **Advanced** on the same page: a new account allows mail only to your
 own email address, which is what this scenario needs.
@@ -9077,8 +9162,13 @@ This is useful for:
 
 ## Away from home
 
-Put the gateway behind a reverse proxy with HTTPS: one proxy block covers the console, the API and
-every app at `/apps/<app>/`. A home-screen app (Safari: **Share → Add to Home Screen**) then opens
+With Tailscale on the gateway's computer and the phone, run
+`tailscale serve --bg http://127.0.0.1:<port>` on the gateway's computer and open
+`https://<host>.<tailnet>.ts.net/console` on the phone (`tailscale serve reset` undoes it). The
+gateway can keep its `localhost` Network setting, and voice and camera work because the page is
+https. Or put the gateway behind a reverse proxy with HTTPS: one proxy block covers the console,
+the API and every app at `/apps/<app>/`. See
+[Phones and tablets: Reached through Tailscale](../guide/deployment-iphone.md#reached-through-tailscale-https). A home-screen app (Safari: **Share → Add to Home Screen**) then opens
 the same address.
 
 ## Deeper guides

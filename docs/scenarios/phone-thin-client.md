@@ -32,8 +32,13 @@ This is useful for:
 
 ## Away from home
 
-Put the gateway behind a reverse proxy with HTTPS: one proxy block covers the console, the API and
-every app at `/apps/<app>/`. A home-screen app (Safari: **Share → Add to Home Screen**) then opens
+With Tailscale on the gateway's computer and the phone, run
+`tailscale serve --bg http://127.0.0.1:<port>` on the gateway's computer and open
+`https://<host>.<tailnet>.ts.net/console` on the phone (`tailscale serve reset` undoes it). The
+gateway can keep its `localhost` Network setting, and voice and camera work because the page is
+https. Or put the gateway behind a reverse proxy with HTTPS: one proxy block covers the console,
+the API and every app at `/apps/<app>/`. See
+[Phones and tablets: Reached through Tailscale](../guide/deployment-iphone.md#reached-through-tailscale-https). A home-screen app (Safari: **Share → Add to Home Screen**) then opens
 the same address.
 
 ## Deeper guides
