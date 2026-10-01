@@ -707,6 +707,114 @@ function Add-Incomplete([string]$Label, [string]$Why, [switch]$Fail) {
     $script:Incomplete.Add("  ${Label}: $Why")
     if ($Fail) { $script:AfExit = 1 }
 }
+# The browser apps follow the release (install.sh's apps-upgrade block, same rule): every app the
+# gateway has installed is brought to its $AfNpmApps version through the gateway's own
+# `abstractgateway apps update` (the gateway owns the install, so its registry stays right, and a
+# running app restarts on the new bundle). A fresh install installs none: the console's Apps page
+# installs them, at these versions. With no gateway answering (-NoStart while it is stopped) the
+# versions go to <data dir>\apps-upgrade.pending, which the gateway applies at its next start.
+# tests/test_install_app_upgrade.py loads these four functions on their own.
+$script:AppsLines = @()
+function Get-AppPin([string]$Id) {
+    foreach ($s in $AfNpmApps) {
+        $n = $s -replace '^@abstractframework/', ''; $i = $n.LastIndexOf('@')
+        if ($n.Substring(0, $i) -eq $Id) { return $n.Substring($i + 1) }
+    }
+    return $null
+}
+function Get-AppsInstalled([string]$Gw, [string]$BaseUrl, [string]$DataDir) {
+    # -> @{id; version} per app the running gateway installed; $null when the list cannot be read
+    $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try {
+        $raw = (& $Gw apps list --json --no-latest --url $BaseUrl --data-dir $DataDir 2>$null) -join "`n"
+        if ($LASTEXITCODE -ne 0 -or -not $raw) { return $null }
+        $rows = @()
+        foreach ($a in @(($raw | ConvertFrom-Json).apps)) {
+            if ($a.version -and $a.source -ne 'external') { $rows += [pscustomobject]@{ id = [string]$a.id; version = [string]$a.version } }
+        }
+        return ,$rows
+    } catch { return $null } finally { $ErrorActionPreference = $old }
+}
+function Write-AppsMarker([string]$DataDir) {
+    try {
+        New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
+        $lines = foreach ($s in $AfNpmApps) { $n = $s -replace '^@abstractframework/', ''; $i = $n.LastIndexOf('@'); "$($n.Substring(0, $i)) $($n.Substring($i + 1))" }
+        $tmp = Join-Path $DataDir 'apps-upgrade.pending.tmp'
+        [System.IO.File]::WriteAllText($tmp, (($lines -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
+        Move-Item -LiteralPath $tmp -Destination (Join-Path $DataDir 'apps-upgrade.pending') -Force
+        return $true
+    } catch { return $false }
+}
+function Invoke-AppsStep([bool]$Up, [string]$Gw, [string]$BaseUrl, [string]$DataDir) {
+    $script:AppsLines = @()
+    $pins = (@($AfNpmApps | ForEach-Object { $n = $_ -replace '^@abstractframework/', ''; $i = $n.LastIndexOf('@'); "$($n.Substring(0, $i)) $($n.Substring($i + 1))" }) -join ', ')
+    if (-not $Up) {
+        if ($script:DryRun) {
+            Write-Info "would bring every browser app the gateway has installed to this release's version ($pins), restarting the running ones:"
+            Write-Info '    abstractgateway apps update <app> --version <version>'
+            return
+        }
+        if (Write-AppsMarker $DataDir) {
+            Write-Info "no gateway answers at ${BaseUrl}: it brings its installed apps to $pins at its next start"
+            Write-Info "    ($(Join-Path $DataDir 'apps-upgrade.pending'))"
+            $script:AppsLines = @("upgraded at the gateway's next start: $pins")
+        } else {
+            Write-Warn2 "could not write $(Join-Path $DataDir 'apps-upgrade.pending')"
+            Add-Incomplete 'browser apps' "not brought to $pins; once the gateway runs: abstractgateway apps update <app> --version <version>" -Fail
+            $script:AppsLines = @('NOT upgraded (see above)')
+        }
+        return
+    }
+    $before = Get-AppsInstalled $Gw $BaseUrl $DataDir
+    if ($null -eq $before) {
+        Write-Warn2 "could not read the gateway's apps (abstractgateway apps list)"
+        if ($script:DryRun) { return }
+        Add-Incomplete 'browser apps' 'their versions could not be read from the gateway; check with: abstractgateway apps list' -Fail
+        $script:AppsLines = @('unknown: abstractgateway apps list failed')
+        return
+    }
+    $did = $false
+    foreach ($r in $before) {
+        $pin = Get-AppPin $r.id
+        if (-not $pin) { continue }
+        if ($r.version -eq $pin) { Write-Ok "$($r.id) $($r.version) (this release's version)" }
+        elseif ($script:DryRun) { Write-Info "would update $($r.id) $($r.version) -> $pin (restarted if running): abstractgateway apps update $($r.id) --version $pin" }
+        else {
+            $shown = "abstractgateway apps update $($r.id) --version $pin"
+            Write-Host "  `$ $shown" -ForegroundColor DarkGray
+            $script:Twins.Add($shown)
+            $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+            try { & $Gw apps update $r.id --version $pin --url $BaseUrl --data-dir $DataDir *> $null } catch { } finally { $ErrorActionPreference = $old }
+            $did = $true
+        }
+    }
+    if (-not $before.Count) { Write-Info "no browser app installed yet: the console's Apps page installs them ($pins)" }
+    if ($script:DryRun) { return }
+    # What the gateway reports now is what the summary says: a failed update is never silent.
+    $after = $before
+    if ($did) {
+        $after = Get-AppsInstalled $Gw $BaseUrl $DataDir
+        if ($null -eq $after) {
+            Add-Incomplete 'browser apps' 'their versions could not be read back from the gateway; check with: abstractgateway apps list' -Fail
+            $script:AppsLines = @('unknown: abstractgateway apps list failed after the update')
+            return
+        }
+    }
+    foreach ($r in $after) {
+        $pin = Get-AppPin $r.id
+        if (-not $pin) { continue }
+        $prev = @($before | Where-Object { $_.id -eq $r.id } | ForEach-Object { $_.version }) | Select-Object -First 1
+        if ($r.version -ne $pin) {
+            Write-Warn2 "the $($r.id) app is still $($r.version), not $pin"
+            Add-Incomplete "the $($r.id) app" "still $($r.version), not this release's $pin; retry: abstractgateway apps update $($r.id) --version $pin" -Fail
+            $script:AppsLines += "$($r.id) $($r.version) (NOT ${pin}: update failed)"
+        } elseif ($prev -and $prev -ne $r.version) {
+            Write-Ok "the $($r.id) app is now $($r.version)"
+            $script:AppsLines += "$($r.id) $prev -> $($r.version)"
+        } else { $script:AppsLines += "$($r.id) $($r.version)" }
+    }
+    if (-not $after.Count) { $script:AppsLines = @("none installed (the console's Apps page installs them)") }
+}
 # One installer at a time per data dir (same rule as install.sh): a re-run and the gateway's Update
 # must never install over each other. The lock is <data dir>\update\install.lock, a directory
 # (created atomically) holding the owner's pid; a lock whose pid is gone is taken over.
@@ -2158,6 +2266,10 @@ function Main {
         }
     }
 
+    Write-Step "Browser apps (this release's versions)"
+    $appsUp = (Test-Path -LiteralPath $gw) -and ((Get-Http "$baseUrl/api/health" 3) -match 'abstractgateway')
+    Invoke-AppsStep -Up $appsUp -Gw $gw -BaseUrl $baseUrl -DataDir $DataDir
+
     # --- summary -------------------------------------------------------------------------------------
     # What this run changed: the release, the gateway, the release's libraries (old -> new), then
     # how many other packages of the environment moved.
@@ -2209,6 +2321,10 @@ function Main {
         foreach ($l in $changeLines) { Write-Host "      $l" }
         if ($changeOthers) { Write-Host "      (and $changeOthers other packages of the gateway's environment)" }
     } elseif ($upgradeLine) { Write-Host '  Changes:    none' }
+    if (-not $script:DryRun -and $script:AppsLines.Count) {
+        Write-Host '  Apps:'
+        foreach ($l in $script:AppsLines) { Write-Host "      $l" }
+    }
     # The terminal console signs in with the admin token (`--token`), printed ready to paste; the
     # gateway keeps it in its data dir. Before the gateway has written it, the command names that file.
     $tokenPath = Join-Path $DataDir 'auth\bootstrap-admin-token'

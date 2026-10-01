@@ -355,9 +355,24 @@ Running workflows pause at their next step and continue after the restart.
 
 ### Upgrade the apps
 
-The browser apps (Flow, Code, Observer, Continuum, Entity) and the desktop Assistant are installed
-by the gateway, so the installer does not change them. When npm has a newer version, the app's card
-on the console's **Apps** page offers **Update** under **Technical details**. In a terminal:
+The browser apps (Flow, Code, Observer, Continuum, Entity) are installed by the gateway, and the
+installer keeps them on the release: on every install and upgrade, once the gateway answers, each
+browser app the gateway has installed is brought to this release's version (`--print` lists the
+planned updates) through the gateway's own `abstractgateway apps update <app> --version <version>`,
+so the gateway's apps registry stays right and a running app restarts on the new version. The
+summary's **Apps** line lists each app's version; an app that could not be updated is listed in red
+with the command to retry, and the installer exits 1. A fresh install installs no app: the console's
+**Apps** page installs them.
+
+When no gateway answers (`--no-start` while the gateway is stopped), the installer writes the
+release's versions to `<data dir>/apps-upgrade.pending` instead, and the gateway (0.11.1 and later)
+brings its installed apps to those versions when it next starts, then removes the file. The
+console's **Update** runs the installer with `--no-start` while the gateway is running, so its apps
+are updated right away.
+
+The desktop Assistant is a Python app the gateway installs; the installer leaves it as it is. When
+npm has a newer version of an app, its card on the console's **Apps** page offers **Update** under
+**Technical details**. In a terminal:
 
 ```bash
 abstractgateway apps list                # installed and latest version of every app

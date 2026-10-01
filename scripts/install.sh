@@ -785,6 +785,108 @@ incomplete_add() {
     [ "${3:-}" = fail ] && AF_EXIT=1
     return 0
 }
+# >>> apps-upgrade (tests/test_install_app_upgrade.py loads this block on its own)
+# The browser apps follow the release. Every app the gateway has installed is brought to its
+# AF_NPM_APPS version through the gateway's own `abstractgateway apps update` (the gateway owns
+# the install, so its registry stays right, and a running app restarts on the new bundle). A
+# fresh install installs none: the console's Apps page installs them, at these versions. With no
+# gateway answering (--no-start while it is stopped) the versions go to
+# <data dir>/apps-upgrade.pending, which the gateway applies at its next start.
+af_app_pin() {  # af_app_pin ID -> this release's version of that browser app; non-zero when none
+    for _s in $AF_NPM_APPS; do
+        _n="${_s#@abstractframework/}"
+        [ "${_n%@*}" = "$1" ] && { printf '%s\n' "${_n##*@}"; return 0; }
+    done
+    return 1
+}
+af_apps_installed() {  # -> "ID:VERSION" per app the running gateway installed; non-zero when unreadable
+    _aj="$("$GW" apps list --json --no-latest --url "$BASE_URL" --data-dir "$DATA_DIR" 2>>"${LOG_FILE:-/dev/null}" </dev/null)" || return 1
+    printf '%s' "$_aj" | "$APPS_PY" -c '
+import json, sys
+for a in json.load(sys.stdin).get("apps") or []:
+    if a.get("version") and a.get("source") != "external":
+        print("%s:%s" % (a["id"], a["version"]))'
+}
+af_apps_marker() {  # the pins the gateway applies at its next start (one "ID VERSION" per line)
+    mkdir -p "$DATA_DIR" && : >"$DATA_DIR/apps-upgrade.pending.tmp" || return 1
+    for _s in $AF_NPM_APPS; do
+        _n="${_s#@abstractframework/}"; printf '%s %s\n' "${_n%@*}" "${_n##*@}" >>"$DATA_DIR/apps-upgrade.pending.tmp"
+    done
+    mv -f "$DATA_DIR/apps-upgrade.pending.tmp" "$DATA_DIR/apps-upgrade.pending"
+}
+APPS_LINES=""
+af_apps_step() {  # af_apps_step UP (1 = a gateway answers at BASE_URL); sets APPS_LINES for the summary
+    APPS_LINES=""
+    _pins=""; for _s in $AF_NPM_APPS; do _n="${_s#@abstractframework/}"; _pins="$_pins ${_n%@*} ${_n##*@},"; done
+    _pins="${_pins# }"; _pins="${_pins%,}"
+    if [ "$1" != 1 ]; then
+        if [ "$PRINT" = 1 ]; then
+            info "would bring every browser app the gateway has installed to this release's version ($_pins), restarting the running ones:"
+            info "    $(show_cmd abstractgateway apps update "<app>" --version "<version>")"
+            return 0
+        fi
+        if af_apps_marker; then
+            info "no gateway answers at $BASE_URL: it brings its installed apps to $_pins at its next start"
+            info "    ($DATA_DIR/apps-upgrade.pending)"
+            APPS_LINES="upgraded at the gateway's next start: $_pins"
+        else
+            warn "could not write $DATA_DIR/apps-upgrade.pending"
+            incomplete_add "browser apps" "not brought to $_pins; once the gateway runs: abstractgateway apps update <app> --version <version>" fail
+            APPS_LINES="NOT upgraded (see above)"
+        fi
+        return 0
+    fi
+    if ! _rows="$(af_apps_installed)"; then
+        warn "could not read the gateway's apps (abstractgateway apps list; see ${LOG_FILE:-the output above})"
+        [ "$PRINT" = 1 ] && return 0
+        incomplete_add "browser apps" "their versions could not be read from the gateway; check with: abstractgateway apps list" fail
+        APPS_LINES="unknown: abstractgateway apps list failed"
+        return 0
+    fi
+    _before="$_rows"; _did=0
+    for _r in $_rows; do
+        _id="${_r%%:*}"; _ver="${_r#*:}"
+        _pin="$(af_app_pin "$_id")" || continue
+        if [ "$_ver" = "$_pin" ]; then
+            ok "$_id $_ver (this release's version)"
+        elif [ "$PRINT" = 1 ]; then
+            info "would update $_id $_ver -> $_pin (restarted if running): $(show_cmd abstractgateway apps update "$_id" --version "$_pin")"
+        else
+            RUN_SOFT=1 run "update the $_id app to $_pin" "$GW" apps update "$_id" --version "$_pin" --url "$BASE_URL" --data-dir "$DATA_DIR"
+            _did=1
+        fi
+    done
+    [ -n "$_rows" ] || info "no browser app installed yet: the console's Apps page installs them ($_pins)"
+    [ "$PRINT" = 1 ] && return 0
+    # What the gateway reports now is what the summary says: a failed update is never silent.
+    if [ "$_did" = 1 ] && ! _rows="$(af_apps_installed)"; then
+        incomplete_add "browser apps" "their versions could not be read back from the gateway; check with: abstractgateway apps list" fail
+        APPS_LINES="unknown: abstractgateway apps list failed after the update"
+        return 0
+    fi
+    for _r in $_rows; do
+        _id="${_r%%:*}"; _ver="${_r#*:}"
+        _pin="$(af_app_pin "$_id")" || continue
+        _old=""; for _b in $_before; do [ "${_b%%:*}" = "$_id" ] && _old="${_b#*:}"; done
+        if [ "$_ver" != "$_pin" ]; then
+            warn "the $_id app is still $_ver, not $_pin"
+            incomplete_add "the $_id app" "still $_ver, not this release's $_pin; retry: abstractgateway apps update $_id --version $_pin" fail
+            APPS_LINES="${APPS_LINES}$_id $_ver (NOT $_pin: update failed)
+"
+        elif [ -n "$_old" ] && [ "$_old" != "$_ver" ]; then
+            ok "the $_id app is now $_ver"
+            APPS_LINES="${APPS_LINES}$_id $_old -> $_ver
+"
+        else
+            APPS_LINES="${APPS_LINES}$_id $_ver
+"
+        fi
+    done
+    [ -n "$_rows" ] || APPS_LINES="none installed (the console's Apps page installs them)"
+    return 0
+}
+# <<< apps-upgrade
+
 # live_exec CMD...: runs CMD with its output appended to the log, shows uv's progress lines as they
 # come ("    | Downloading torch (1.9GiB)"; package lists " + name==version" stay in the log), and
 # prints "... still working (Nm SSs elapsed; last: <line>)" after AF_HEARTBEAT seconds of silence,
@@ -3007,6 +3109,12 @@ What to do: restart the computer (the login item starts it again) or run the ins
     fi
 fi
 
+step "Browser apps (this release's versions)"
+APPS_PY="$TOOL_VENV/bin/python"; [ -x "$APPS_PY" ] || APPS_PY="${TOOL_VENV2:+$TOOL_VENV2/bin/python}"
+_apps_up=0
+if [ -x "$GW" ] && [ -n "$APPS_PY" ] && [ -x "$APPS_PY" ] && http_get "$BASE_URL/api/health" | grep -q '"abstractgateway"'; then _apps_up=1; fi
+af_apps_step "$_apps_up"
+
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
@@ -3139,6 +3247,10 @@ if [ -n "$CHANGE_LINES" ] || [ "${CHANGE_OTHERS:-0}" != 0 ]; then
     [ "${CHANGE_OTHERS:-0}" != 0 ] && echo "      (and $CHANGE_OTHERS other packages of the gateway's environment)"
 elif [ -n "$UPGRADE_LINE" ]; then
     echo "  Changes:    none"
+fi
+if [ "$PRINT" = 0 ] && [ -n "$APPS_LINES" ]; then
+    echo "  Apps:"
+    printf '%s\n' "$APPS_LINES" | sed '/^$/d; s/^/      /'
 fi
 printf '  %-11s %s\n' "Console:" "$BASE_URL/console" \
     "Release:" "$([ "$IS_RELEASE" = 1 ] && echo "AbstractFramework $AF_FRAMEWORK_VERSION" || echo "$TARGET (not a recorded AbstractFramework release)")" \

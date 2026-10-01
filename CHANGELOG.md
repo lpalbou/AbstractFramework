@@ -4,7 +4,15 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- The installer upgrades the browser apps: on every install and upgrade (`install.sh`, `install.ps1`,
+  and the console's **Update**, which runs `--no-start`), each app the gateway has installed is
+  brought to the release's pinned version through `abstractgateway apps update <app> --version
+  <version>` (a running app restarts on the new bundle); `--print` lists the planned updates, the
+  summary lists each app's version, and a failed update is reported in red with exit status 1. With
+  no gateway running, the versions go to `<data dir>/apps-upgrade.pending` for the gateway's next
+  start. Before, an upgrade left the apps on their old versions (Code web 0.9.0 after 0.9.0).
 
 ## [0.9.0] - 2026-10-01
 
