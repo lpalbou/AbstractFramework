@@ -4097,7 +4097,9 @@ The browser apps (Flow, Code, Observer, Continuum, Entity) are installed by the 
 installer keeps them on the release: on every install and upgrade, once the gateway answers, each
 browser app the gateway has installed is brought to this release's version (`--print` lists the
 planned updates) through the gateway's own `abstractgateway apps update <app> --version <version>`,
-so the gateway's apps registry stays right and a running app restarts on the new version. The
+so the gateway's apps registry stays right and a running app restarts on the new version. It is a
+command-line call against the running gateway (signed in with `<data dir>/auth/bootstrap-admin-token`),
+so it works the same on a headless or terminal-only machine: no browser or web console is involved. The
 summary's **Apps** line lists each app's version; an app that could not be updated is listed in red
 with the command to retry, and the installer exits 1. A fresh install installs no app: the console's
 **Apps** page installs them.
