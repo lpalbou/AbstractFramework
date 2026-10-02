@@ -13,7 +13,8 @@ Nothing yet.
 - Pins abstractgateway 0.11.1: the gateway never caps an entity's output (the model works at its
   full capacity; the `ABSTRACTGATEWAY_ENTITY_MAX_OUTPUT_TOKENS` variable is gone and the chat-open
   `max_output_tokens` field is ignored with a deprecation line), and its boot applies the
-  installer's `apps-upgrade.pending`. Install matrices, the manifest, README and docs regenerated;
+  installer's `apps-upgrade.pending`, and AbstractCode runs get `send_email` when Agent email tools
+  are on (the run input schema serves the effective tools default). Install matrices, the manifest, README and docs regenerated;
   the docs' app and core console version tables now name the 0.9.0 releases (flow 0.7.0, code
   0.10.0, observer 0.6.0, entity 0.6.0, abstractcore 2.23.0, abstractcore-console 0.7.0).
 
