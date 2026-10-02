@@ -174,7 +174,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.10.0` and `ghcr.io/lpalbou/abstractcore-server:2.22.0`.
+`ghcr.io/lpalbou/abstractgateway:0.11.1` and `ghcr.io/lpalbou/abstractcore-server:2.23.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -324,7 +324,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.9.1)
+### Release matrix (abstractframework 0.9.2)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -346,7 +346,7 @@ and tested together.
 | PyPI | `abstractmusic` | 0.1.15 |
 | PyPI | `abstract3d` | 0.3.2 |
 | npm | `@abstractframework/flow` | 0.7.0 |
-| npm | `@abstractframework/code` | 0.10.0 |
+| npm | `@abstractframework/code` | 0.10.1 |
 | npm | `@abstractframework/observer` | 0.6.0 |
 | npm | `@abstractframework/continuum` | 0.6.0 |
 | npm | `@abstractframework/entity` | 0.6.0 |

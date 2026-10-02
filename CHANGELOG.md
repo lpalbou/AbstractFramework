@@ -6,6 +6,17 @@ All notable changes to AbstractFramework will be documented in this file.
 
 Nothing yet.
 
+## [0.9.2] - 2026-10-02
+
+### Changed
+
+- Installs AbstractCode web 0.10.1 (`@abstractframework/code`, `AF_NPM_APPS` in `install.sh` and
+  `install.ps1`, `NPM_RELEASE_VERSIONS`, the install manifest): New conversation is a "+" in the
+  Conversations header, the run header drops its duplicated workflow text and opens Run settings from
+  a gear icon, the live model progress line stays visible at phone width, and a subflow finishing
+  reads "subflow finished" in the Activity panel. Python pins unchanged from 0.9.1. README matrix,
+  docs and llms regenerated.
+
 ## [0.9.1] - 2026-10-02
 
 ### Changed
