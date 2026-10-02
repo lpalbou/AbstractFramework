@@ -6,6 +6,22 @@ All notable changes to AbstractFramework will be documented in this file.
 
 Nothing yet.
 
+## [0.9.3] - 2026-10-02
+
+### Fixed
+
+- Pins abstractcore 2.23.1: on the in-gateway MLX lane the prefix cache is sized to the machine
+  (`min(8 GiB, working set / 4)` with a 512 MiB reserve), so a 24 GB Mac running Qwen3.8-27B keeps
+  the conversation warm instead of re-prefilling it every turn; and a text route with no
+  `speculation` key inherits optional MTP on a verified MTP model (only "Off" turns it off), which
+  restores speculative decoding where a console save had dropped the key.
+- Pins abstractgateway 0.11.2: "Default workflow per app" always resolves a default for every app
+  interface that has an available workflow (shipped bundle first, else the newest); "Clients choose"
+  is gone, and each workflow is listed once across registry scopes.
+- Pins abstractassistant 0.12.1: runs any registry scope the gateway resolves (fixes "Not sent —
+  Unsupported workflow registry_scope for AbstractAssistant: private"), and Settings no longer offers
+  "Keep the session after this app closes" (sessions belong to the gateway).
+
 ## [0.9.2] - 2026-10-02
 
 ### Changed
