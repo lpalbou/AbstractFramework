@@ -72,8 +72,8 @@ mutate_and_expect_fail "abstractgateway claims the wrong tier" \
     's/^(abstractgateway +\|.*\| )5( +\|)/\14\2/'
 mutate_and_expect_fail "flow gets the wrong npm name" \
     's#@abstractframework/flow #@abstractframework/flows#'
-mutate_and_expect_fail "observer loses its panel-chat source alias" \
-    's/^(observer .*)panel-chat:alias,/\1/'
+mutate_and_expect_fail "observer loses its panel-chat registry dependency" \
+    's/^(observer .*)panel-chat:dep,/\1/'
 
 # --- 3. bash loader == python helper ---------------------------------------------------
 py_order="$(python3 "$SCRIPTS_DIR/lib/af_inventory.py" order | cut -f3 | sort)"

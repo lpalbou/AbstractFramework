@@ -178,7 +178,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.11.2` and `ghcr.io/lpalbou/abstractcore-server:2.23.1`.
+`ghcr.io/lpalbou/abstractgateway:0.11.3` and `ghcr.io/lpalbou/abstractcore-server:2.23.1`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -328,7 +328,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.9.3)
+### Release matrix (abstractframework 0.9.4)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -337,10 +337,10 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.11.2 |
-| PyPI | `abstractassistant` | 0.12.1 |
+| PyPI | `abstractgateway` | 0.11.3 |
+| PyPI | `abstractassistant` | 0.12.2 |
 | PyPI | `abstractcore` | 2.23.1 |
-| PyPI | `AbstractRuntime` | 0.8.3 |
+| PyPI | `AbstractRuntime` | 0.8.4 |
 | PyPI | `abstractagent` | 0.3.17 |
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
@@ -350,15 +350,15 @@ and tested together.
 | PyPI | `abstractmusic` | 0.1.15 |
 | PyPI | `abstract3d` | 0.3.2 |
 | npm | `@abstractframework/flow` | 0.7.0 |
-| npm | `@abstractframework/code` | 0.10.1 |
-| npm | `@abstractframework/observer` | 0.6.0 |
+| npm | `@abstractframework/code` | 0.10.2 |
+| npm | `@abstractframework/observer` | 0.6.1 |
 | npm | `@abstractframework/continuum` | 0.6.0 |
 | npm | `@abstractframework/entity` | 0.6.0 |
 | crates.io | `abstractcode` | 0.8.0 |
 | crates.io | `abstractgateway-console` | 0.14.0 |
 | crates.io | `abstractcore-console` | 0.7.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.11.2 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.11.3 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.23.1 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
@@ -569,7 +569,7 @@ Notes for LLMs working in this repo:
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
 - [docs/agent-sessions.md](docs/agent-sessions.md): What every client shares when it chats with an agent: the gateway's default agent workflow (`agents.default_workflow.<interface>`), the conversation workspace on the gateway host and its built-in deny list, the curated skill shelf (`skills.shelf`), live replies (`agents.streaming_default` + per-client Stream replies; what does not stream), opening the Assistant signed in from the console.
 - [AbstractGateway shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
-- [docs/automations.md](docs/automations.md): How automations work and how to manage them: an automation is a durable controller run, each tick an occurrence (a child run shown as a chat turn); independent vs growing context (growing replays the most recent 50 000 tokens of whole turns); quiet by default (`notify` output, final failures, typed waits `ask_user` / `tool_approval` / `event`); creation is the tool consent (`policy.tool_approval` `auto`/`ask`, MCP tools still ask); creating from the Assistant (Schedule this conversation…), the Observer (Launch → Automate), AbstractCode (`/automations`, `/schedule`, the browser Automations section) or a workflow's `automation_defaults`; email automations (`email.received@1` with typed filters and hourly/60 s batches, each message once, untrusted input with network, code and sending tools asking unless named in `policy.untrusted_input_tools`, own automatic mail never an event, `auto_submitted: "admit"`; **Email me the result** = `notify.channels` with `email`, a switch in the form's **Mailbox** section; `policy.email_allowed_recipients`, only you by default); two worked examples with request bodies; pause / run now (also while paused) / resume without catch-up / revise / archive / discuss; restart safety; limits (fixed UTC intervals, triggers `schedule@1`, `email.received@1` and `manual@1`); troubleshooting. Needs a gateway advertising `contracts.common.automations` (AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later; email automations need 0.8.0 of both).
+- [docs/automations.md](docs/automations.md): How automations work and how to manage them: an automation is a durable controller run, each tick an occurrence (a child run shown as a chat turn); independent vs configurable growing context (growing replays the most recent 50 000 tokens of whole turns); quiet by default (`notify` output, final failures, typed waits `ask_user` / `tool_approval` / `event`); creation is the tool consent (`policy.tool_approval` `auto`/`ask`, MCP tools still ask); creating from the Assistant (Schedule this conversation…), the Observer (Launch → Automate), AbstractCode (`/automations`, `/schedule`, the browser Automations section) or a workflow's `automation_defaults`; email automations (`email.received@1` with typed filters and hourly/60 s batches, each message once, untrusted input with network, code and sending tools asking unless named in `policy.untrusted_input_tools`, own automatic mail never an event, `auto_submitted: "admit"`; **Email result** = every completed result via `notify.channels` with `email` and `notify.recipients`, a switch in the form's **Mailbox** section; `policy.email_allowed_recipients`, only you by default); two worked examples with request bodies; pause / run now (also while paused) / resume without catch-up / revise / archive / discuss; restart safety; limits (fixed UTC intervals, triggers `schedule@1`, `email.received@1` and `manual@1`); troubleshooting. Needs a gateway advertising `contracts.common.automations` (AbstractGateway 0.6.0 and AbstractRuntime 0.6.0 and later; email automations need 0.8.0 of both).
 - [docs/architecture.md](docs/architecture.md): How the stack fits together (Mermaid diagrams: components, distribution, how a turn flows, the live-reply lane, the framework identity flow), app proxies and the forwarded-address rule, model residency and eject.
 - [docs/configuration.md](docs/configuration.md): Minimal config, Core vs Gateway defaults, Network exposure, email accounts (per gateway user or per AbstractCore install; no environment variables; `--password-stdin`), client configuration.
 - [docs/guide/email-integration.md](docs/guide/email-integration.md): Your email address and your own mailbox on the gateway: the account page, connecting a mailbox (IMAP / Google / Microsoft), recipient rules and send limits, agent email tools (off by default), email automations (new mail only, untrusted input, own automatic mail never triggers), notifications (Job failed, Approval needed), sign-in by email, the administrator's Mailboxes for users switch and the Accounts table, who sees which accounts, AbstractCore's own account.
@@ -640,7 +640,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.9.3"
+version = "0.9.4"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -684,14 +684,14 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.11.2",
+    "abstractgateway==0.11.3",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.12.1",
+    "abstractassistant==0.12.2",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
     "abstractcore==2.23.1",
-    "AbstractRuntime==0.8.3",
+    "AbstractRuntime==0.8.4",
     "abstractagent==0.3.17",
     "abstractskill==0.3.0",
     "AbstractMemory==0.3.0",
@@ -718,13 +718,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.11.2",
-    "abstractassistant[apple]==0.12.1; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.11.3",
+    "abstractassistant[apple]==0.12.2; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.11.2",
-    "abstractassistant[gpu]==0.12.1",
+    "abstractgateway[gpu]==0.11.3",
+    "abstractassistant[gpu]==0.12.2",
 ]
 
 [project.urls]
@@ -774,15 +774,15 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.9.3"
+__version__ = "0.9.4"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.23.1",
-    "abstractruntime": "0.8.3",
+    "abstractruntime": "0.8.4",
     "abstractagent": "0.3.17",
-    "abstractgateway": "0.11.2",
+    "abstractgateway": "0.11.3",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
@@ -790,7 +790,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.33",
     "abstractmusic": "0.1.15",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.12.1",
+    "abstractassistant": "0.12.2",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -810,8 +810,8 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.7.0",
-    "@abstractframework/code": "0.10.1",
-    "@abstractframework/observer": "0.6.0",
+    "@abstractframework/code": "0.10.2",
+    "@abstractframework/observer": "0.6.1",
     "@abstractframework/continuum": "0.6.0",
     "@abstractframework/entity": "0.6.0",
 }
@@ -2387,12 +2387,11 @@ page say so and stay disabled.
     one-turn conversation. Use it for checks that stand on their own (memory use, disk space, a
     health probe).
   - *Growing*: every occurrence is the next turn of one conversation (session
-    `automation:<id>`) and receives the previous turns as history: the most recent 50 000 tokens
-    of whole turns (no message is ever cut; the model keeps the rest of its context window). Use it
+    `automation:<id>`) and receives the previous turns as history: whole turns within the configured budget (50,000 tokens by default) (no message is ever cut; the model keeps the rest of its context window). Use it
     when the answer depends on previous ticks ("the change since the previous check"). Each
     occurrence run records what was replayed and dropped in `_runtime.session_history`.
 - **Quiet by default.** An ordinary result updates the automation's history and notifies no one.
-  An occurrence asks for your attention only when its output carries `notify`, when it failed after
+  An occurrence asks for your attention when result email is enabled, when its output carries `notify`, when it failed after
   its last retry, or while it waits for you (see [What notifies you](#what-notifies-you-and-when)).
 - **Creating an automation is the consent for its tools.** An automation runs unattended, so it
   cannot stop to ask before every tool call. With the default tool approval (`auto`, shown in the
@@ -2461,8 +2460,8 @@ The clock button in the palette header opens **Schedule this conversation…**:
   minutes/hours/days, or once at a date and time; an optional first-run time (empty means now).
 - **Context**: Independent (default) or Growing.
 - **Tools**: Tools run without asking (default) or Ask each time.
-- **Mailbox**: **When an email arrives** as the When choice, **Email me the result** and the
-  recipients it may email without asking (see [Email automations](#email-automations)).
+- **Mailbox**: **When an email arrives** as the When choice, **Email result** and the
+  result recipients (see [Email automations](#email-automations)).
 
 **Schedule** creates the automation and opens it in the Assistant's Automations section.
 
@@ -2476,8 +2475,7 @@ Open **Launch** and switch **Run once | Automate** to **Automate**:
 2. **When (UTC)**: **Repeat** every N minutes, hours or days, or **Once at** a date and time.
 3. **Context**: Independent or Growing.
 4. **Tools**: Tools run without asking, or Ask each time.
-5. **Mailbox**: **When an email arrives** (a When choice), **Email me the result** and the recipients
-   it may email without asking (see [Email automations](#email-automations)).
+5. **Mailbox**: **When an email arrives** (a When choice), **Email result** and the result recipients (see [Email automations](#email-automations)).
 
 **Advanced** holds the title, the first run time, "stop after this many runs", "stop at", skills
 and the workspace. **Create automation** opens the new automation on the Automations page.
@@ -2557,20 +2555,17 @@ mailbox first — open My email", its controls are unavailable, and nothing emai
   none of your email automations was active; mail sent right after you create the automation
   counts. Mail that arrives while the gateway is stopped is read when it is back. The gateway only
   reads the mailbox: it never marks, moves or deletes mail.
-- **Email me the result** — a switch, `notify: {"channels": ["console", "email"]}`: when a run
-  notifies you, or fails for good, the notice is also emailed to your email address, through your
-  own mailbox. A final failure is emailed anyway while your **Job failed** notification is on (the
-  default). A notice is queued once and never sent twice.
-- **May send email without asking to** — `policy.email_allowed_recipients`: **Only me** (the
-  default, `["self"]`) or **Me and these addresses**. A send to anyone else waits for your
-  approval, even with "Tools run without asking".
+- **Email result** sends every completed run’s full result through your mailbox.
+- **Recipients** appears when Email result is enabled: **Only me** (default) or **Me and
+  these addresses**. Destinations are stored in `notify.recipients`; email-tool permissions
+  remain separate. Mailbox availability, recipient policy and send limits still apply.
 
 ```text
 "trigger": {"source_id": "email.received", "source_version": 1,
             "config": {"every": "1h", "max_batch": 100,
                        "filter": {"from_domain_in": ["example.com"], "subject_contains": "invoice"}}},
-"notify":  {"channels": ["console", "email"]},
-"policy":  {"tool_approval": "auto", "email_allowed_recipients": ["self"]}
+"notify":  {"channels": ["console", "email"], "recipients": ["self"]},
+"policy":  {"tool_approval": "auto"}
 ```
 
 Inbound mail is data, never instructions. The occurrence receives the emails marked as untrusted,
@@ -2818,7 +2813,8 @@ disabled, and its tooltip first says why.
 | A failure that a retry fixed, or a cancelled run | none | the history |
 | A run waiting for you | counted in `attention.pending_waits` until answered | Assistant tray notification + `WAITING`; Observer "waiting for you" |
 
-With **Email me the result**, the `notify` and final-failure items above are also emailed to you.
+With **Email result**, every completed run’s full result is emailed to the selected recipients,
+even when the workflow does not return `notify`.
 Your account page's two **Notifications** switches, both on by default once your mailbox is
 connected, email you in any case when an automation fails after its last retry (**Job failed**)
 and when one of your runs waits for your answer (**Approval needed**).
@@ -2897,17 +2893,27 @@ recorded. A wait the gateway does not type is shown without answer controls.
 | An occurrence reads **running** for a long time | the agent is still working (LLM calls, tools), or waits for the shared model | open its ledger in the Observer to watch the steps |
 | An occurrence reads **waiting** | it waits for a **person** (a question, a tool approval, an event) | answer it in the Assistant or the Observer |
 | Every tick waits for a tool approval | the automation was created with **Ask each time** | answer each wait, or send `PATCH` with `{"changes": {"policy": {"tool_approval": "auto"}}}` (applies from the next run) |
-| No notification ever arrives | quiet is the default; only `notify` in the output, final failures and waits notify | return `notify` from the workflow (see the memory example) |
+| No notification ever arrives | quiet is the default unless result email is enabled | enable **Email result** for completed results, or return `notify` from the workflow for selected console notices |
 | Ticks are late or merged | a tick takes longer than the interval; missed ticks are coalesced | lengthen the interval or share the model with fewer automations |
 | An email automation never runs | the mail was already there, arrived while no email automation was active, or is automatic mail (auto-replies, the framework's own mail); a model-running automation runs at most once an hour by default | send a new message after creating it; shorten `every`; set `"auto_submitted": "admit"` for others' automatic mail; check the mailbox state on your account page |
 | "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it on your account page (**Email** on your row of **Accounts**), or ask an administrator to switch **Mailboxes for users** on |
-| An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve it, add the recipient in **May send email without asking to**, or edit the recipient rules and send limits under **Advanced** on your account page |
+| An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve the tool call, or edit the recipient rules and send limits under **Advanced** on your account page |
 | A schedule shows `legacy` | it was created with `POST /api/gateway/runs/schedule` | it keeps its own controls; **Recreate as automation** in the Observer copies it into an automation (suspend the old one yourself) |
 
 Legacy schedules are listed on the last page of `GET /api/gateway/automations` with `legacy:
 true`, `revision: null` and `capabilities: ["legacy"]`; they are never converted, and
 `GET /api/gateway/automations/{id}` answers 404 for them. For install, sign-in and provider
 problems, see [Troubleshooting](troubleshooting.md).
+
+## Max growing context
+
+In Assistant, Code Web and Observer, select **Growing** to reveal **Max growing context
+(tokens)**. Set it when creating or editing an automation; for example, enter `30000`
+for a 30,000-token history budget. It defaults to 50,000 and is hidden for Independent runs.
+The API field is `context.growing.max_tokens`, a positive integer. Changes apply to future
+occurrences; retries retain the history admitted with that occurrence. The newest whole turn
+is retained even when it alone exceeds the budget. These settings and result recipients
+require AbstractGateway 0.11.3 with AbstractRuntime 0.8.4 or later.
 
 --- docs/guide/email-integration.md ---
 # Email integration
@@ -2925,7 +2931,7 @@ Every signed-in person can connect **their own** mailbox. It is used for three t
 
 - **automations on new mail**: the **When an email arrives** trigger (`email.received@1`);
 - **email notifications**: **Job failed** and **Approval needed**, plus the results of automations
-  set to **Email me the result**, sent through your own mailbox to your own email address;
+  set to **Email result**, sent through your own mailbox to the selected recipients;
 - **sign-in by email**: **Forgot your token? Email me a sign-in code** on the gateway's sign-in
   page.
 
@@ -3022,8 +3028,7 @@ switch; they need a connected, allowed mailbox.
 ## Automations on new mail
 
 With your mailbox connected, the Assistant, the Observer and AbstractCode's browser client offer
-**When an email arrives**, **Email me the result** and the recipients an automation may email without
-asking. The rules that matter:
+**When an email arrives**, **Email result** and the result **Recipients**. The rules that matter:
 
 - **Only new mail.** Mail already in your mailbox when the watcher starts, or that arrived while none
   of your email automations was active, is never processed. Mail that arrives while the gateway is
@@ -3062,9 +3067,8 @@ is connected (until then they show "Connect a mailbox first."):
 | **Job failed** | an automation of yours, or a run you asked to be emailed about, failed after its retries |
 | **Approval needed** | a run is waiting for your answer |
 
-An automation set to **Email me the result** also emails you the results that ask for your
-attention, and a run started with an email notice emails you when it finishes or fails, as
-asked. Each notice is queued once and sent once, through your own mailbox, to your email address.
+An automation set to **Email result** emails every completed run’s full result to its selected recipients, and a run started with an email notice emails you when it finishes or fails, as
+asked. Each notice is queued once and sent once, through your own mailbox; other notices use your own email address.
 
 **Send a test** sends one notification now and always answers with a sentence: "Sent to
 me@example.com.", or why not ("Not sent: hourly limit reached (100 of 100 this hour) — resets at
@@ -3935,7 +3939,7 @@ The line always runs the installer of the latest AbstractFramework release. It:
   <latest>`, or `AbstractFramework <yours> found: already up to date` (every part is still checked,
   and repaired when needed). An install made by 0.6.1 or earlier recorded no release, so its first
   upgrade says `AbstractFramework found (abstractgateway 0.7.1; its release was not recorded):
-  upgrading to AbstractFramework 0.9.3` (with the gateway version you have);
+  upgrading to AbstractFramework 0.9.4` (with the gateway version you have);
 - installs the gateway version that release pins, and every library the gateway uses
   (AbstractCore, AbstractRuntime, AbstractAgent, AbstractSkill, AbstractMemory, AbstractSemantics
   and the voice, vision, music and 3D packages) at the exact version released and tested with it ([Check your versions](#check-your-versions) shows
@@ -3983,7 +3987,7 @@ The line always runs the installer of the latest AbstractFramework release. It:
 
 Installs made by AbstractFramework 0.6.1 or earlier recorded neither their release nor your install
 options. The first re-run says `AbstractFramework found (abstractgateway <version>; its release was
-not recorded): upgrading to AbstractFramework 0.9.3`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
+not recorded): upgrading to AbstractFramework 0.9.4`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
 there, whether the gateway has the tray extra and the AbstractCore commands, whether the compiled
 extras were built (`--full`), and a custom data directory through the gateway pointer. It prints
 what it found (`read from disk: …`) and records it for later runs. An option the installer did not
@@ -4203,7 +4207,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.11.2"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.11.3"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]==0.13.2"` (the release's AbstractVoice): Supertonic
@@ -4548,7 +4552,7 @@ instead of starting a browser.
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.11.2"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.11.3"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -4675,8 +4679,8 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.9.3 pins `abstractgateway==0.11.2`, `abstractassistant==0.12.1`,
-`abstractcore==2.23.1`, `AbstractRuntime==0.8.3`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
+`abstractframework` 0.9.4 pins `abstractgateway==0.11.3`, `abstractassistant==0.12.2`,
+`abstractcore==2.23.1`, `AbstractRuntime==0.8.4`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.2`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.15` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
@@ -4771,8 +4775,8 @@ Run or install them next to the Python stack:
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.7.0 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.14.0 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.7.0 |
-| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.10.1 |
-| Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.6.0 |
+| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.10.2 |
+| Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.6.1 |
 | Continuum console | the console's **Apps** page (`/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` | 0.6.0 |
 | Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.6.0 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.8.0 |
@@ -4818,7 +4822,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.11.2
+  ghcr.io/lpalbou/abstractgateway:0.11.3
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -6073,7 +6077,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity> --gateway-url <url>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.11.2` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.11.3` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -6766,14 +6770,14 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.9.3` for this release).
+The meta-package version (`0.9.4` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.9.3:
-`abstractcore` 2.23.1, `abstractruntime` 0.8.3, `abstractagent` 0.3.17, `abstractgateway` 0.11.2,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.9.4:
+`abstractcore` 2.23.1, `abstractruntime` 0.8.4, `abstractagent` 0.3.17, `abstractgateway` 0.11.3,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.2, `abstractvision` 0.3.33,
-`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.12.1.
+`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.12.2.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -6783,8 +6787,8 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.7.0, `@abstractframework/code` 0.10.1,
-`@abstractframework/observer` 0.6.0, `@abstractframework/continuum` 0.6.0 and
+`@abstractframework/flow` 0.7.0, `@abstractframework/code` 0.10.2,
+`@abstractframework/observer` 0.6.1, `@abstractframework/continuum` 0.6.0 and
 `@abstractframework/entity` 0.6.0. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`

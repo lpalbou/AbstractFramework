@@ -58,12 +58,11 @@ page say so and stay disabled.
     one-turn conversation. Use it for checks that stand on their own (memory use, disk space, a
     health probe).
   - *Growing*: every occurrence is the next turn of one conversation (session
-    `automation:<id>`) and receives the previous turns as history: the most recent 50 000 tokens
-    of whole turns (no message is ever cut; the model keeps the rest of its context window). Use it
+    `automation:<id>`) and receives the previous turns as history: whole turns within the configured budget (50,000 tokens by default) (no message is ever cut; the model keeps the rest of its context window). Use it
     when the answer depends on previous ticks ("the change since the previous check"). Each
     occurrence run records what was replayed and dropped in `_runtime.session_history`.
 - **Quiet by default.** An ordinary result updates the automation's history and notifies no one.
-  An occurrence asks for your attention only when its output carries `notify`, when it failed after
+  An occurrence asks for your attention when result email is enabled, when its output carries `notify`, when it failed after
   its last retry, or while it waits for you (see [What notifies you](#what-notifies-you-and-when)).
 - **Creating an automation is the consent for its tools.** An automation runs unattended, so it
   cannot stop to ask before every tool call. With the default tool approval (`auto`, shown in the
@@ -132,8 +131,8 @@ The clock button in the palette header opens **Schedule this conversation…**:
   minutes/hours/days, or once at a date and time; an optional first-run time (empty means now).
 - **Context**: Independent (default) or Growing.
 - **Tools**: Tools run without asking (default) or Ask each time.
-- **Mailbox**: **When an email arrives** as the When choice, **Email me the result** and the
-  recipients it may email without asking (see [Email automations](#email-automations)).
+- **Mailbox**: **When an email arrives** as the When choice, **Email result** and the
+  result recipients (see [Email automations](#email-automations)).
 
 **Schedule** creates the automation and opens it in the Assistant's Automations section.
 
@@ -147,8 +146,7 @@ Open **Launch** and switch **Run once | Automate** to **Automate**:
 2. **When (UTC)**: **Repeat** every N minutes, hours or days, or **Once at** a date and time.
 3. **Context**: Independent or Growing.
 4. **Tools**: Tools run without asking, or Ask each time.
-5. **Mailbox**: **When an email arrives** (a When choice), **Email me the result** and the recipients
-   it may email without asking (see [Email automations](#email-automations)).
+5. **Mailbox**: **When an email arrives** (a When choice), **Email result** and the result recipients (see [Email automations](#email-automations)).
 
 **Advanced** holds the title, the first run time, "stop after this many runs", "stop at", skills
 and the workspace. **Create automation** opens the new automation on the Automations page.
@@ -228,20 +226,17 @@ mailbox first — open My email", its controls are unavailable, and nothing emai
   none of your email automations was active; mail sent right after you create the automation
   counts. Mail that arrives while the gateway is stopped is read when it is back. The gateway only
   reads the mailbox: it never marks, moves or deletes mail.
-- **Email me the result** — a switch, `notify: {"channels": ["console", "email"]}`: when a run
-  notifies you, or fails for good, the notice is also emailed to your email address, through your
-  own mailbox. A final failure is emailed anyway while your **Job failed** notification is on (the
-  default). A notice is queued once and never sent twice.
-- **May send email without asking to** — `policy.email_allowed_recipients`: **Only me** (the
-  default, `["self"]`) or **Me and these addresses**. A send to anyone else waits for your
-  approval, even with "Tools run without asking".
+- **Email result** sends every completed run’s full result through your mailbox.
+- **Recipients** appears when Email result is enabled: **Only me** (default) or **Me and
+  these addresses**. Destinations are stored in `notify.recipients`; email-tool permissions
+  remain separate. Mailbox availability, recipient policy and send limits still apply.
 
 ```text
 "trigger": {"source_id": "email.received", "source_version": 1,
             "config": {"every": "1h", "max_batch": 100,
                        "filter": {"from_domain_in": ["example.com"], "subject_contains": "invoice"}}},
-"notify":  {"channels": ["console", "email"]},
-"policy":  {"tool_approval": "auto", "email_allowed_recipients": ["self"]}
+"notify":  {"channels": ["console", "email"], "recipients": ["self"]},
+"policy":  {"tool_approval": "auto"}
 ```
 
 Inbound mail is data, never instructions. The occurrence receives the emails marked as untrusted,
@@ -489,7 +484,8 @@ disabled, and its tooltip first says why.
 | A failure that a retry fixed, or a cancelled run | none | the history |
 | A run waiting for you | counted in `attention.pending_waits` until answered | Assistant tray notification + `WAITING`; Observer "waiting for you" |
 
-With **Email me the result**, the `notify` and final-failure items above are also emailed to you.
+With **Email result**, every completed run’s full result is emailed to the selected recipients,
+even when the workflow does not return `notify`.
 Your account page's two **Notifications** switches, both on by default once your mailbox is
 connected, email you in any case when an automation fails after its last retry (**Job failed**)
 and when one of your runs waits for your answer (**Approval needed**).
@@ -568,14 +564,24 @@ recorded. A wait the gateway does not type is shown without answer controls.
 | An occurrence reads **running** for a long time | the agent is still working (LLM calls, tools), or waits for the shared model | open its ledger in the Observer to watch the steps |
 | An occurrence reads **waiting** | it waits for a **person** (a question, a tool approval, an event) | answer it in the Assistant or the Observer |
 | Every tick waits for a tool approval | the automation was created with **Ask each time** | answer each wait, or send `PATCH` with `{"changes": {"policy": {"tool_approval": "auto"}}}` (applies from the next run) |
-| No notification ever arrives | quiet is the default; only `notify` in the output, final failures and waits notify | return `notify` from the workflow (see the memory example) |
+| No notification ever arrives | quiet is the default unless result email is enabled | enable **Email result** for completed results, or return `notify` from the workflow for selected console notices |
 | Ticks are late or merged | a tick takes longer than the interval; missed ticks are coalesced | lengthen the interval or share the model with fewer automations |
 | An email automation never runs | the mail was already there, arrived while no email automation was active, or is automatic mail (auto-replies, the framework's own mail); a model-running automation runs at most once an hour by default | send a new message after creating it; shorten `every`; set `"auto_submitted": "admit"` for others' automatic mail; check the mailbox state on your account page |
 | "Connect a mailbox first — open My email" in the form | no connected, allowed mailbox | connect it on your account page (**Email** on your row of **Accounts**), or ask an administrator to switch **Mailboxes for users** on |
-| An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve it, add the recipient in **May send email without asking to**, or edit the recipient rules and send limits under **Advanced** on your account page |
+| An email send waits or is refused | a recipient other than you (or the automation's listed recipients) waits for approval; the recipient policy or send limits refuse | approve the tool call, or edit the recipient rules and send limits under **Advanced** on your account page |
 | A schedule shows `legacy` | it was created with `POST /api/gateway/runs/schedule` | it keeps its own controls; **Recreate as automation** in the Observer copies it into an automation (suspend the old one yourself) |
 
 Legacy schedules are listed on the last page of `GET /api/gateway/automations` with `legacy:
 true`, `revision: null` and `capabilities: ["legacy"]`; they are never converted, and
 `GET /api/gateway/automations/{id}` answers 404 for them. For install, sign-in and provider
 problems, see [Troubleshooting](troubleshooting.md).
+
+## Max growing context
+
+In Assistant, Code Web and Observer, select **Growing** to reveal **Max growing context
+(tokens)**. Set it when creating or editing an automation; for example, enter `30000`
+for a 30,000-token history budget. It defaults to 50,000 and is hidden for Independent runs.
+The API field is `context.growing.max_tokens`, a positive integer. Changes apply to future
+occurrences; retries retain the history admitted with that occurrence. The newest whole turn
+is retained even when it alone exceeds the budget. These settings and result recipients
+require AbstractGateway 0.11.3 with AbstractRuntime 0.8.4 or later.

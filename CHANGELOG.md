@@ -6,6 +6,12 @@ All notable changes to AbstractFramework will be documented in this file.
 
 Nothing yet.
 
+## [0.9.4] - 2026-10-02
+
+- Automations in Assistant, Code Web and Observer support a configurable growing-context budget at creation and editing, defaulting to 50,000 tokens. The budget control appears only for Growing context.
+- Email result delivers each completed result to the selected Recipients. Code shows loading messages and spinners for conversations and automations, including initial gateway discovery.
+- Pins AbstractRuntime 0.8.4, AbstractGateway 0.11.3 and AbstractAssistant 0.12.2. Installer app versions are Code 0.10.2 and Observer 0.6.1, both using UI Kit 0.5.1 (AbstractUIC release 0.5.2).
+
 ## [0.9.3] - 2026-10-02
 
 ### Fixed

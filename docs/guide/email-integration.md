@@ -13,7 +13,7 @@ Every signed-in person can connect **their own** mailbox. It is used for three t
 
 - **automations on new mail**: the **When an email arrives** trigger (`email.received@1`);
 - **email notifications**: **Job failed** and **Approval needed**, plus the results of automations
-  set to **Email me the result**, sent through your own mailbox to your own email address;
+  set to **Email result**, sent through your own mailbox to the selected recipients;
 - **sign-in by email**: **Forgot your token? Email me a sign-in code** on the gateway's sign-in
   page.
 
@@ -110,8 +110,7 @@ switch; they need a connected, allowed mailbox.
 ## Automations on new mail
 
 With your mailbox connected, the Assistant, the Observer and AbstractCode's browser client offer
-**When an email arrives**, **Email me the result** and the recipients an automation may email without
-asking. The rules that matter:
+**When an email arrives**, **Email result** and the result **Recipients**. The rules that matter:
 
 - **Only new mail.** Mail already in your mailbox when the watcher starts, or that arrived while none
   of your email automations was active, is never processed. Mail that arrives while the gateway is
@@ -150,9 +149,8 @@ is connected (until then they show "Connect a mailbox first."):
 | **Job failed** | an automation of yours, or a run you asked to be emailed about, failed after its retries |
 | **Approval needed** | a run is waiting for your answer |
 
-An automation set to **Email me the result** also emails you the results that ask for your
-attention, and a run started with an email notice emails you when it finishes or fails, as
-asked. Each notice is queued once and sent once, through your own mailbox, to your email address.
+An automation set to **Email result** emails every completed run’s full result to its selected recipients, and a run started with an email notice emails you when it finishes or fails, as
+asked. Each notice is queued once and sent once, through your own mailbox; other notices use your own email address.
 
 **Send a test** sends one notification now and always answers with a sentence: "Sent to
 me@example.com.", or why not ("Not sent: hourly limit reached (100 of 100 this hour) — resets at
