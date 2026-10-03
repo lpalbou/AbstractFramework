@@ -4,6 +4,16 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.5] - 2026-10-03
+
+### Added
+
+- Gateway Network controls for exposing AbstractCore’s OpenAI-compatible endpoint, including dedicated token management and open local-network access.
+
+### Changed
+
+- Pin AbstractCore 2.24.0, AbstractRuntime 0.8.5 and AbstractGateway 0.12.0; update the installer release matrix so `install.sh` upgrades to these versions.
+
 Nothing yet.
 
 ## [0.9.4] - 2026-10-02
