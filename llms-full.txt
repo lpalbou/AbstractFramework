@@ -328,7 +328,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.9.5)
+### Release matrix (abstractframework 0.9.6)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -338,7 +338,7 @@ and tested together.
 | Registry | Package | Version |
 |---|---|---|
 | PyPI | `abstractgateway` | 0.12.0 |
-| PyPI | `abstractassistant` | 0.12.2 |
+| PyPI | `abstractassistant` | 0.12.3 |
 | PyPI | `abstractcore` | 2.24.0 |
 | PyPI | `AbstractRuntime` | 0.8.5 |
 | PyPI | `abstractagent` | 0.3.17 |
@@ -350,8 +350,8 @@ and tested together.
 | PyPI | `abstractmusic` | 0.1.15 |
 | PyPI | `abstract3d` | 0.3.2 |
 | npm | `@abstractframework/flow` | 0.7.0 |
-| npm | `@abstractframework/code` | 0.10.2 |
-| npm | `@abstractframework/observer` | 0.6.1 |
+| npm | `@abstractframework/code` | 0.10.3 |
+| npm | `@abstractframework/observer` | 0.6.2 |
 | npm | `@abstractframework/continuum` | 0.6.0 |
 | npm | `@abstractframework/entity` | 0.6.0 |
 | crates.io | `abstractcode` | 0.8.0 |
@@ -640,7 +640,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.9.5"
+version = "0.9.6"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -687,7 +687,7 @@ dependencies = [
     "abstractgateway==0.12.0",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.12.2",
+    "abstractassistant==0.12.3",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
     "abstractcore==2.24.0",
@@ -719,12 +719,12 @@ dependencies = [
 # then adds user-facing apps.
 apple = [
     "abstractgateway[apple]==0.12.0",
-    "abstractassistant[apple]==0.12.2; platform_system == \"Darwin\"",
+    "abstractassistant[apple]==0.12.3; platform_system == \"Darwin\"",
 ]
 
 gpu = [
     "abstractgateway[gpu]==0.12.0",
-    "abstractassistant[gpu]==0.12.2",
+    "abstractassistant[gpu]==0.12.3",
 ]
 
 [project.urls]
@@ -774,7 +774,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.9.5"
+__version__ = "0.9.6"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -790,7 +790,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.33",
     "abstractmusic": "0.1.15",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.12.2",
+    "abstractassistant": "0.12.3",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -810,8 +810,8 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.7.0",
-    "@abstractframework/code": "0.10.2",
-    "@abstractframework/observer": "0.6.1",
+    "@abstractframework/code": "0.10.3",
+    "@abstractframework/observer": "0.6.2",
     "@abstractframework/continuum": "0.6.0",
     "@abstractframework/entity": "0.6.0",
 }
@@ -3939,7 +3939,7 @@ The line always runs the installer of the latest AbstractFramework release. It:
   <latest>`, or `AbstractFramework <yours> found: already up to date` (every part is still checked,
   and repaired when needed). An install made by 0.6.1 or earlier recorded no release, so its first
   upgrade says `AbstractFramework found (abstractgateway 0.7.1; its release was not recorded):
-  upgrading to AbstractFramework 0.9.5` (with the gateway version you have);
+  upgrading to AbstractFramework 0.9.6` (with the gateway version you have);
 - installs the gateway version that release pins, and every library the gateway uses
   (AbstractCore, AbstractRuntime, AbstractAgent, AbstractSkill, AbstractMemory, AbstractSemantics
   and the voice, vision, music and 3D packages) at the exact version released and tested with it ([Check your versions](#check-your-versions) shows
@@ -3987,7 +3987,7 @@ The line always runs the installer of the latest AbstractFramework release. It:
 
 Installs made by AbstractFramework 0.6.1 or earlier recorded neither their release nor your install
 options. The first re-run says `AbstractFramework found (abstractgateway <version>; its release was
-not recorded): upgrading to AbstractFramework 0.9.5`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
+not recorded): upgrading to AbstractFramework 0.9.6`, and reads your options from what is installed: whether the terminal console and `abstractcode` are
 there, whether the gateway has the tray extra and the AbstractCore commands, whether the compiled
 extras were built (`--full`), and a custom data directory through the gateway pointer. It prints
 what it found (`read from disk: …`) and records it for later runs. An option the installer did not
@@ -4679,7 +4679,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.9.5 pins `abstractgateway==0.12.0`, `abstractassistant==0.12.2`,
+`abstractframework` 0.9.6 pins `abstractgateway==0.12.0`, `abstractassistant==0.12.3`,
 `abstractcore==2.24.0`, `AbstractRuntime==0.8.5`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.13.2`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.15` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
@@ -4775,8 +4775,8 @@ Run or install them next to the Python stack:
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.7.0 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.14.0 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.7.0 |
-| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.10.2 |
-| Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.6.1 |
+| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.10.3 |
+| Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.6.2 |
 | Continuum console | the console's **Apps** page (`/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` | 0.6.0 |
 | Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.6.0 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.8.0 |
@@ -6774,14 +6774,14 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.9.5` for this release).
+The meta-package version (`0.9.6` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.9.5:
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.9.6:
 `abstractcore` 2.24.0, `abstractruntime` 0.8.5, `abstractagent` 0.3.17, `abstractgateway` 0.12.0,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.2, `abstractvision` 0.3.33,
-`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.12.2.
+`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.12.3.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -6791,8 +6791,8 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.7.0, `@abstractframework/code` 0.10.2,
-`@abstractframework/observer` 0.6.1, `@abstractframework/continuum` 0.6.0 and
+`@abstractframework/flow` 0.7.0, `@abstractframework/code` 0.10.3,
+`@abstractframework/observer` 0.6.2, `@abstractframework/continuum` 0.6.0 and
 `@abstractframework/entity` 0.6.0. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`

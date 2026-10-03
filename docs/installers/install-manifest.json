@@ -169,7 +169,7 @@
     "name": "AbstractFramework",
     "python_requires": ">=3.10",
     "registry": "pypi",
-    "version": "0.9.5"
+    "version": "0.9.6"
   },
   "minimum_installer_version": "0.2.0",
   "npm_apps": [
@@ -185,14 +185,14 @@
       "id": "code",
       "package": "@abstractframework/code",
       "registry": "npm",
-      "version": "0.10.2"
+      "version": "0.10.3"
     },
     {
       "command": "npx @abstractframework/observer",
       "id": "observer",
       "package": "@abstractframework/observer",
       "registry": "npm",
-      "version": "0.6.1"
+      "version": "0.6.2"
     },
     {
       "command": "npx @abstractframework/continuum",
@@ -286,7 +286,7 @@
       "local_inference": false,
       "name": "Light",
       "pip_requirements": [
-        "abstractframework==0.9.5"
+        "abstractframework==0.9.6"
       ],
       "platforms": [
         "macos",
@@ -310,7 +310,7 @@
       "local_inference": true,
       "name": "Apple",
       "pip_requirements": [
-        "abstractframework[apple]==0.9.5"
+        "abstractframework[apple]==0.9.6"
       ],
       "platforms": [
         "macos"
@@ -334,7 +334,7 @@
       "local_inference": true,
       "name": "GPU",
       "pip_requirements": [
-        "abstractframework[gpu]==0.9.5"
+        "abstractframework[gpu]==0.9.6"
       ],
       "platforms": [
         "linux",
@@ -419,7 +419,7 @@
       "distribution": "abstractassistant",
       "id": "abstractassistant",
       "registry": "pypi",
-      "version": "0.12.2"
+      "version": "0.12.3"
     }
   ],
   "schema_version": 2,

@@ -4,6 +4,13 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.6] - 2026-10-03
+
+- Assistant, Code Web and Observer include workflow and tool selection when creating or editing automations, alongside the growing-context budget and Email result recipients.
+- Code Web groups workspace settings into a responsive drawer with six categories. Appearance, About, connection and the docs assistant remain in the top bar. User and trigger cards occupy 75% of the panel, aligned to the right with normal text alignment.
+- Conversation and automation answers share narration controls, an animated loading indicator and incremental audio playback. Sidebar refreshes preserve their layout.
+- Pin AbstractAssistant 0.12.3, Code Web 0.10.3 and Observer 0.6.2. The browser apps include UI Kit 0.5.2 and Panel Chat 0.2.5 from AbstractUIC 0.5.3. Both installers upgrade installed apps to these versions.
+
 ## [0.9.5] - 2026-10-03
 
 ### Added
@@ -14,7 +21,6 @@ All notable changes to AbstractFramework will be documented in this file.
 
 - Pin AbstractCore 2.24.0, AbstractRuntime 0.8.5 and AbstractGateway 0.12.0; update the installer release matrix so `install.sh` upgrades to these versions.
 
-Nothing yet.
 
 ## [0.9.4] - 2026-10-02
 
