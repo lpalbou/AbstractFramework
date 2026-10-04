@@ -76,8 +76,9 @@ pip install abstractcore && abstractcore serve        # http://127.0.0.1:8000/co
 pip install abstractgateway && abstractgateway serve  # http://127.0.0.1:8080/console#claim=…
 ```
 
-Both consoles have **Models** (browse models that fit this machine, download, delete) and
-**Engines** (detect and install local engines) tabs; every action also shows its command-line
+Both consoles let you browse models that fit this machine, download and delete them (**Models**),
+and detect and install local engines (**Engines** in the Core console, **Providers** in the gateway
+console); every action also shows its command-line
 equivalent (`abstractcore models …`, `abstractcore engines …`, `abstractgateway models …`).
 
 ---
@@ -174,7 +175,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.12.0` and `ghcr.io/lpalbou/abstractcore-server:2.24.0`.
+`ghcr.io/lpalbou/abstractgateway:0.13.0` and `ghcr.io/lpalbou/abstractcore-server:2.25.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -324,7 +325,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.9.6)
+### Release matrix (abstractframework 0.10.0)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -333,29 +334,29 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.12.0 |
-| PyPI | `abstractassistant` | 0.12.3 |
-| PyPI | `abstractcore` | 2.24.0 |
-| PyPI | `AbstractRuntime` | 0.8.5 |
+| PyPI | `abstractgateway` | 0.13.0 |
+| PyPI | `abstractassistant` | 0.13.0 |
+| PyPI | `abstractcore` | 2.25.0 |
+| PyPI | `AbstractRuntime` | 0.9.0 |
 | PyPI | `abstractagent` | 0.3.17 |
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.13.2 |
+| PyPI | `abstractvoice` | 0.14.0 |
 | PyPI | `abstractvision` | 0.3.33 |
 | PyPI | `abstractmusic` | 0.1.15 |
 | PyPI | `abstract3d` | 0.3.2 |
-| npm | `@abstractframework/flow` | 0.7.0 |
-| npm | `@abstractframework/code` | 0.10.3 |
-| npm | `@abstractframework/observer` | 0.6.2 |
-| npm | `@abstractframework/continuum` | 0.6.0 |
-| npm | `@abstractframework/entity` | 0.6.0 |
-| crates.io | `abstractcode` | 0.8.0 |
-| crates.io | `abstractgateway-console` | 0.14.0 |
-| crates.io | `abstractcore-console` | 0.7.0 |
+| npm | `@abstractframework/flow` | 0.8.0 |
+| npm | `@abstractframework/code` | 0.11.0 |
+| npm | `@abstractframework/observer` | 0.7.0 |
+| npm | `@abstractframework/continuum` | 0.7.0 |
+| npm | `@abstractframework/entity` | 0.7.0 |
+| crates.io | `abstractcode` | 0.9.0 |
+| crates.io | `abstractgateway-console` | 0.15.0 |
+| crates.io | `abstractcore-console` | 0.8.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.12.0 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.24.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.13.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.25.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
 not part of any profile installs separately: `pip install abstractcamera` (0.2.1). `abstractskill` (pinned above)

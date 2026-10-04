@@ -55,14 +55,14 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.9.6` for this release).
+The meta-package version (`0.10.0` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.9.6:
-`abstractcore` 2.24.0, `abstractruntime` 0.8.5, `abstractagent` 0.3.17, `abstractgateway` 0.12.0,
-`abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.13.2, `abstractvision` 0.3.33,
-`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.12.3.
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.10.0:
+`abstractcore` 2.25.0, `abstractruntime` 0.9.0, `abstractagent` 0.3.17, `abstractgateway` 0.13.0,
+`abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.14.0, `abstractvision` 0.3.33,
+`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.13.0.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -72,14 +72,14 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.7.0, `@abstractframework/code` 0.10.3,
-`@abstractframework/observer` 0.6.2, `@abstractframework/continuum` 0.6.0 and
-`@abstractframework/entity` 0.6.0. They also appear as `npm_apps` in the install manifest.
+`@abstractframework/flow` 0.8.0, `@abstractframework/code` 0.11.0,
+`@abstractframework/observer` 0.7.0, `@abstractframework/continuum` 0.7.0 and
+`@abstractframework/entity` 0.7.0. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.14.0, `abstractcore-console` 0.7.0, `abstractcode` 0.8.0 and the
+`abstractgateway-console` 0.15.0, `abstractcore-console` 0.8.0, `abstractcode` 0.9.0 and the
 `abstracttui` engine 0.6.0. The bootstrap scripts build `abstractgateway-console` at this version by default
 (`--no-console` skips it) and `abstractcode` next to it (`--no-code-cli` skips it).
 

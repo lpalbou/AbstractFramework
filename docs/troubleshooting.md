@@ -162,8 +162,8 @@ run the installer again: it continues where it stopped.
 ### Provider calls fail
 
 - **Check**: `abstractcore --status` for the persisted configuration, and whether a local server
-  (Ollama, LM Studio) is running. The console's **Engines** tab and `abstractframework doctor` show
-  which engines answer.
+  (Ollama, LM Studio) is running. The gateway console's **Providers** page (the Core console's
+  **Engines** tab) and `abstractframework doctor` show which engines answer.
 - **Fix**: set the provider's environment variables or configure it in a console
   ([Configuration](configuration.md)); start the local server.
 

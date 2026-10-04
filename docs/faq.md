@@ -34,7 +34,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity> --gateway-url <url>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.12.0` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.13.0` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -349,8 +349,8 @@ login on with the **Start at login** switch in either console or `abstractgatewa
 
 ### How do I download a model or install Ollama later?
 
-Open the console's **Engines** tab (detect, install with the exact command shown first) and
-**Models** tab (models that fit this machine, download, delete). From a terminal:
+Open the gateway console's **Providers** page (local engines: detect, install with the exact command
+shown first, start, stop) and **Models** page (models that fit this machine, download, delete). From a terminal:
 `abstractgateway engines status|install` and `abstractgateway models catalog|download|delete`.
 Engine installs from the console run on the gateway host and are enabled by default only when the
 gateway listens on loopback.

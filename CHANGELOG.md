@@ -4,6 +4,42 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-04
+
+### Added
+
+- The gateway serves its OpenAI-compatible API at `http://<host>:<port>/v1` with its own console page,
+  **Models → OpenAI API**: status and base URL, your API key (your gateway token, masked with reveal
+  and copy), access settings for admins (Protected or Open, and who can connect: this machine, your
+  network, your tailnet or anywhere), a per-account **OpenAI API** switch, example requests, and a log
+  of recent requests that opens to the recorded request and response. Structured outputs
+  (`response_format` `json_object` and `json_schema`) work for every provider the gateway routes to.
+- The gateway web and terminal consoles share one layout: Accounts (users and entities in one list,
+  archive and unarchive), Workflows, Skills & MCP, Runtimes, Apps, Providers (local engines included),
+  OpenAI API, Models (one list with downloads not in the catalog; delete a downloaded model), Multimodal,
+  Resources, Sandbox, Network (every detected address, Tailscale included) and About.
+- Code Web: Automations and Conversations drawers with compact cards, archive and unarchive for
+  conversations and automations (`Archived · N`), and a right-hand rail (Activity, Files, Model,
+  Workflow, Workspace, Tools, Skills, Voice) whose settings follow the selected conversation or
+  automation. The Code terminal client offers the same panels, cards, archive and voice.
+- Voice everywhere through the gateway: the shared Voice settings show the gateway's own default
+  engines, let you pick the output device and the microphone, and test both; Code (web and terminal),
+  Observer and Entity speak replies and take dictation through the gateway.
+- One About card in every app and console (app, AbstractFramework and gateway versions, links), and a
+  shared audio player for audio files.
+- A hung gateway restarts: when its event loop has not run for `--watchdog-seconds` (default 30, `0`
+  turns it off), `abstractgateway serve` exits with code 75 and its supervisor starts it again;
+  `/api/health` reports the watchdog.
+
+### Changed
+
+- `/core/v1` answers with a 308 redirect to `/v1` for this release and is deprecated: point clients at
+  `/v1`.
+- Pin AbstractGateway 0.13.0, AbstractCore 2.25.0, AbstractRuntime 0.9.0, AbstractVoice 0.14.0 and
+  AbstractAssistant 0.13.0; the installers install Code Web 0.11.0, Observer 0.7.0, Flow 0.8.0,
+  Continuum 0.7.0 and Entity 0.7.0 (built with UI Kit 0.8.0 and Panel Chat 0.3.1 from AbstractUIC
+  0.6.0), the gateway terminal console 0.15.0 and AbstractCode 0.9.0.
+
 ## [0.9.6] - 2026-10-03
 
 - Assistant, Code Web and Observer include workflow and tool selection when creating or editing automations, alongside the growing-context budget and Email result recipients.

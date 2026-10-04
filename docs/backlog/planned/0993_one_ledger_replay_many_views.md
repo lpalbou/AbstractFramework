@@ -130,6 +130,16 @@ Additional acceptance for this use case:
       equivalents) with a test per input kind; references to other sessions only through the
       supervised grant of [0997](../proposed/0997_cross_session_references_under_user_supervision.md).
 
+## Use case: status derived from a timer wait without a resume record (2026-10-04)
+
+Code web's Activity showed "Start · Waiting for you" on a completed run: the run's `wait_until`
+timer had no resume record in the ledger, so a client deriving status from the last wait saw the run
+still waiting (182 of 3,278 runs on the operator's gateway). Code fixed it in its own reducer
+(`web/src/lib/activity_rows.ts`: a later step of the same run ends the wait; test red on removal), on
+branch `round4/2026-10-03`. The shared replay must derive the same answer for every client: a wait is
+over when a later step of the same run exists, whether or not a resume record was written. Add this
+case to the conformance fixtures.
+
 ## Acceptance criteria
 
 - [ ] Inventory document with every replay path and divergence risk (file:line).

@@ -158,7 +158,7 @@ A thin-client browser UI for operations: monitor runs, inspect ledger history, w
 
 ### Gateway console
 
-The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include AbstractCore's **Models** and **Engines** screens, a **Resources** view of resident models and memory, and the agent session settings. The web console's sidebar groups its pages as **Accounts** (Accounts), **Work** (Workflows, Runtimes, Apps), **Models** (Providers, Models, Engines, Multimodal) and **System** (Resources, Sandbox, Network), with the **Setup** button and the **Technical details** switch at the bottom; the terminal console lists its screens in the same groups (no Sandbox), with `S` for Setup.
+The operator console for one gateway. The web console is built into `abstractgateway` and served at `/console`; the terminal console is the separate `abstractgateway-console` crate (`cargo install abstractgateway-console`). Both include a **Models** page (one list of catalog models and downloads, with delete), local engines on the **Providers** page, an **OpenAI API** page, a **Resources** view of resident models and memory, and the agent session settings. The web console's sidebar groups its pages as **Accounts** (Accounts), **Work** (Workflows, Skills & MCP, Runtimes, Apps), **Models** (Providers, OpenAI API, Models, Multimodal) and **System** (Resources, Sandbox, Network), with the **Setup** button and the **Technical details** switch at the bottom; the terminal console lists the same pages in the same groups, with a key per page (`S` for Setup, `I` for About).
 
 ### Accounts
 
