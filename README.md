@@ -164,7 +164,8 @@ AbstractFlow, AbstractCode Web or AbstractObserver, or to the console without a 
 sign-in token.
 
 Monitor runs from a browser, or from a terminal with the gateway console. The console's **Apps**
-page installs and opens the browser apps, served by the gateway at `/apps/<app>/`
+page installs, opens and updates the browser apps and the Assistant (**Update to x.y.z** when a newer
+release exists); the browser apps are served by the gateway at `/apps/<app>/`
 (`http://127.0.0.1:8080/apps/observer/`), so one address (and one SSH tunnel) reaches them all:
 
 ```bash

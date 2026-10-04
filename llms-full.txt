@@ -168,7 +168,8 @@ AbstractFlow, AbstractCode Web or AbstractObserver, or to the console without a 
 sign-in token.
 
 Monitor runs from a browser, or from a terminal with the gateway console. The console's **Apps**
-page installs and opens the browser apps, served by the gateway at `/apps/<app>/`
+page installs, opens and updates the browser apps and the Assistant (**Update to x.y.z** when a newer
+release exists); the browser apps are served by the gateway at `/apps/<app>/`
 (`http://127.0.0.1:8080/apps/observer/`), so one address (and one SSH tunnel) reaches them all:
 
 ```bash
@@ -351,7 +352,7 @@ and tested together.
 | PyPI | `abstractsemantics` | 0.0.5 |
 | PyPI | `abstractvoice` | 0.14.0 |
 | PyPI | `abstractvision` | 0.3.33 |
-| PyPI | `abstractmusic` | 0.1.15 |
+| PyPI | `abstractmusic` | 0.1.16 |
 | PyPI | `abstract3d` | 0.3.2 |
 | npm | `@abstractframework/flow` | 0.8.0 |
 | npm | `@abstractframework/code` | 0.11.0 |
@@ -615,7 +616,7 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.10.0 pins (PyPI, `==`): abstractgateway 0.13.0, abstractassistant 0.13.0, abstractcore 2.25.0, AbstractRuntime 0.9.0, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.14.0, abstractvision 0.3.33, abstractmusic 0.1.15, abstract3d 0.3.2.
+- abstractframework 0.10.0 pins (PyPI, `==`): abstractgateway 0.13.0, abstractassistant 0.13.0, abstractcore 2.25.0, AbstractRuntime 0.9.0, abstractagent 0.3.17, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.14.0, abstractvision 0.3.33, abstractmusic 0.1.16, abstract3d 0.3.2.
 - Released with it: npm `@abstractframework/flow` 0.8.0, `code` 0.11.0, `observer` 0.7.0, `continuum` 0.7.0, `entity` 0.7.0 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.15.0 (built by the installer by default), `abstractcore-console` 0.8.0, `abstractcode` 0.9.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.13.0`, `ghcr.io/lpalbou/abstractcore-server:2.25.0`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
@@ -705,7 +706,7 @@ dependencies = [
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
     "abstractvoice==0.14.0",
     "abstractvision==0.3.33",
-    "abstractmusic==0.1.15",
+    "abstractmusic==0.1.16",
     "abstract3d==0.3.2",
 ]
 
@@ -792,7 +793,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.14.0",
     "abstractvision": "0.3.33",
-    "abstractmusic": "0.1.15",
+    "abstractmusic": "0.1.16",
     "abstract3d": "0.3.2",
     "abstractassistant": "0.13.0",
 }
@@ -1945,8 +1946,8 @@ your user account (no admin password), asks whether to start it at login (Enter 
 unattended install leaves it off and its summary says how to turn it on), starts it on
 `127.0.0.1:8080`, and opens its console in your browser already signed in. The console's first-run
 guide sets up a local engine or a cloud key and a default model (the **Models** tab lists the
-models that fit your machine and downloads them), and its **Apps** page installs and opens the
-browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The **Setup** button
+models that fit your machine and downloads them), and its **Apps** page installs, opens and updates
+the browser apps (**Update to x.y.z** when a newer release exists), which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The **Setup** button
 at the bottom of the sidebar runs the guide again; it keeps your choices unless you replace them. The
 console's sidebar groups its pages: **Accounts**; **Work** (Workflows, Runtimes, Apps); **Models**
 (Providers, Models, Engines, Multimodal); **System** (Resources, Sandbox, Network). The installer also
@@ -4689,7 +4690,7 @@ installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 `abstractframework` 0.10.0 pins `abstractgateway==0.13.0`, `abstractassistant==0.13.0`,
 `abstractcore==2.25.0`, `AbstractRuntime==0.9.0`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.14.0`,
-`abstractvision==0.3.33`, `abstractmusic==0.1.15` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
+`abstractvision==0.3.33`, `abstractmusic==0.1.16` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
 installed package whose version differs from these pins.
@@ -6854,7 +6855,7 @@ The meta-package version (`0.10.0` for this release).
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.10.0:
 `abstractcore` 2.25.0, `abstractruntime` 0.9.0, `abstractagent` 0.3.17, `abstractgateway` 0.13.0,
 `abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.14.0, `abstractvision` 0.3.33,
-`abstractmusic` 0.1.15, `abstract3d` 0.3.2, `abstractassistant` 0.13.0.
+`abstractmusic` 0.1.16, `abstract3d` 0.3.2, `abstractassistant` 0.13.0.
 
 ### `PACKAGE_DISTRIBUTIONS`
 

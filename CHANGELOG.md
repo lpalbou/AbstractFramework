@@ -65,12 +65,18 @@ All notable changes to AbstractFramework will be documented in this file.
   web console for this release.
 - **Apps → Assistant** reports, opens and watches the same Assistant: the installed package, else the
   app bundle. When the other one is running, the card and the tray say so.
-
+- **Apps** shows an available update on every row: the browser apps and the Assistant offer **Update
+  to x.y.z** (the Assistant is quit and opened again on the new version when the gateway started it);
+  an app started elsewhere or installed from a source checkout shows **Latest x.y.z** with where to
+  update it. An update whose version did not land fails and restarts nothing. The web and terminal
+  consoles (`u`) show the same labels; new releases appear within 10 minutes without a restart.
 - `/core/v1` answers with a 308 redirect to `/v1` for this release and is deprecated: point clients at
   `/v1`.
 - Pin AbstractGateway 0.13.0, AbstractCore 2.25.0, AbstractRuntime 0.9.0, AbstractVoice 0.14.0,
-  AbstractMusic 0.1.16 (the sound-effect checkpoint and length fix) and AbstractAssistant 0.13.0; the installers install Code Web 0.11.0, Observer 0.7.0, Flow 0.8.0,
-  Continuum 0.7.0 and Entity 0.7.0 (built with UI Kit 0.8.1 and Panel Chat 0.4.0 from AbstractUIC), the gateway terminal console 0.15.0 and AbstractCode 0.9.0.
+  AbstractMusic 0.1.16 (the sound-effect checkpoint and length fix) and AbstractAssistant 0.13.0;
+  the installers install Code Web 0.11.0, Observer 0.7.0, Flow 0.8.0, Continuum 0.7.0 and Entity
+  0.7.0 (built with UI Kit 0.8.1 and Panel Chat 0.4.0 from AbstractUIC), the gateway terminal
+  console 0.15.0 and AbstractCode 0.9.0.
 
 ## [0.9.6] - 2026-10-03
 

@@ -30,8 +30,8 @@ your user account (no admin password), asks whether to start it at login (Enter 
 unattended install leaves it off and its summary says how to turn it on), starts it on
 `127.0.0.1:8080`, and opens its console in your browser already signed in. The console's first-run
 guide sets up a local engine or a cloud key and a default model (the **Models** tab lists the
-models that fit your machine and downloads them), and its **Apps** page installs and opens the
-browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The **Setup** button
+models that fit your machine and downloads them), and its **Apps** page installs, opens and updates
+the browser apps (**Update to x.y.z** when a newer release exists), which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The **Setup** button
 at the bottom of the sidebar runs the guide again; it keeps your choices unless you replace them. The
 console's sidebar groups its pages: **Accounts**; **Work** (Workflows, Runtimes, Apps); **Models**
 (Providers, Models, Engines, Multimodal); **System** (Resources, Sandbox, Network). The installer also
