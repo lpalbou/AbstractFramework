@@ -65,7 +65,7 @@ dependencies = [
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
     "abstractvoice==0.14.0",
     "abstractvision==0.3.33",
-    "abstractmusic==0.1.15",
+    "abstractmusic==0.1.16",
     "abstract3d==0.3.2",
 ]
 

@@ -68,8 +68,8 @@ All notable changes to AbstractFramework will be documented in this file.
 
 - `/core/v1` answers with a 308 redirect to `/v1` for this release and is deprecated: point clients at
   `/v1`.
-- Pin AbstractGateway 0.13.0, AbstractCore 2.25.0, AbstractRuntime 0.9.0, AbstractVoice 0.14.0 and
-  AbstractAssistant 0.13.0; the installers install Code Web 0.11.0, Observer 0.7.0, Flow 0.8.0,
+- Pin AbstractGateway 0.13.0, AbstractCore 2.25.0, AbstractRuntime 0.9.0, AbstractVoice 0.14.0,
+  AbstractMusic 0.1.16 (the sound-effect checkpoint and length fix) and AbstractAssistant 0.13.0; the installers install Code Web 0.11.0, Observer 0.7.0, Flow 0.8.0,
   Continuum 0.7.0 and Entity 0.7.0 (built with UI Kit 0.8.1 and Panel Chat 0.4.0 from AbstractUIC), the gateway terminal console 0.15.0 and AbstractCode 0.9.0.
 
 ## [0.9.6] - 2026-10-03
