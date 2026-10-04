@@ -3850,6 +3850,7 @@ where it stopped.
 | `crates.io hasn't listed it yet (…); retrying in 15 s` | Nothing to do: the terminal console or `abstractcode` was published minutes ago and crates.io's index has not caught up; the installer builds it again. |
 | `NOT installed:` at the end, in red | Something was left out, and the line says what and why. For `terminal console` or `AbstractCode's terminal client` (crates.io or the network still failing after 10 minutes; exit code 1) run the command shown again later; the gateway is installed and running. For `local voice` this system cannot run it (no wheels for it); the rest is installed. |
 | `port N (the gateway's Network setting) is already in use by another process` | The port you chose in a console (or the tray) is taken by another program. Stop that program, or choose another port with `--port` (Windows: `-Port`); it becomes the Network setting's port. |
+| The gateway stopped answering for a while, then came back; its log shows `[FATAL] gateway watchdog` (exit code 75) | Nothing to do: the gateway's event loop was blocked, so it wrote the stack of the code that blocked it to its log and exited, and was started again (by the LaunchAgent or systemd service, by the installer's background mode, or by `scripts/start-local.sh`). Report it with the `[FATAL]` lines of the log (macOS: `~/Library/Logs/AbstractGateway/gateway.err.log`; background mode: the gateway log the installer names; Linux service: `journalctl --user -u abstractgateway`). A gateway started by hand in a terminal is not restarted. `abstractgateway serve --watchdog-seconds N` sets the limit (default 30, `0` = off). |
 | Anything else | Run the installer again. If it stops at the same step, report it with the log file named at the end of the message (`~/Library/Application Support/AbstractGateway/logs/install-….log`). |
 
 ### Right after a release
@@ -4238,6 +4239,12 @@ The Mac package, the `.command` files and the one line all run the same script,
    starts the gateway in the background instead and removes a login item an earlier run
    registered; the summary then says how to turn start at login on: the **Start at login** switch
    in either console (web: the Gateway section; terminal: F3), or `abstractgateway service enable`.
+   Both restart a gateway that exits with an error after running, which is how a hung gateway ends
+   (its event-loop watchdog exits with code 75): the login item through the service manager
+   (`KeepAlive` with `SuccessfulExit: false` on macOS, `Restart=on-failure` on Linux), the
+   background mode (install.sh) through a small loop that starts it again 10 s later, unless it
+   was stopped (a signal, a clean exit, or `gateway.pid` removed) or failed in its first 30 s. The
+   Windows login entry and the Windows background start do not restart it.
 7. Waits up to 180 seconds for `/api/health`, then writes the local gateway pointer,
    `~/.abstractframework/gateway.json` (Windows: `%USERPROFILE%\.abstractframework\gateway.json`):
    the gateway's address on this computer, its port and data directory, never a token. Clients on

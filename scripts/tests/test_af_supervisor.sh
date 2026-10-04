@@ -9,7 +9,9 @@
 #   4. an app dying while the critical service is down is PARKED (no budget
 #      charge) and returns after critical recovery
 #   5. a hung critical service (alive, health probes failing) is killed and
-#      respawned
+#      respawned after SUP_HEALTH_FAILS_MAX probes, with a log line saying so,
+#      at most SUP_HANG_RESTART_MAX times per window (then loud, not lethal);
+#      SUP_HANG_KILL=0 warns only. Exit 75 (gateway watchdog) is named.
 #   6. shutdown stops everything, apps first, critical last
 #   7. singleton guard: with SUP_SINGLETON_TAKEOVER=0 a second acquire on a
 #      live pidfile is refused; a stale pidfile (dead pid) is reclaimed; by
@@ -38,6 +40,8 @@ SUP_HEALTH_FAILS_MAX=2
 SUP_PROBE_TIMEOUT_S=2
 SUP_KILL_GRACE_S=2
 SUP_FAILED_RETRY_S=5
+SUP_HANG_RESTART_MAX=2
+SUP_HANG_RESTART_WINDOW_S=300
 
 source "$LIB_DIR/af_supervisor.sh"
 
@@ -169,10 +173,12 @@ check "test4: both recovered after joint kill" "$?"
 check "test4: app budget reset after control-plane recovery (was: $BUDGET_AFTER_PARK)" "$?"
 
 # --- test 5: hung critical (alive, failing health) ------------------------------
-# DEFAULT (operator ruling 2026-08-20): a hung-but-alive service is WARNED
-# about loudly, NEVER killed — the supervisor restarts on death only.
-# The banner assertion needs the supervisor log SINK (the harness normally
-# logs to the terminal only).
+# DEFAULT (2026-10-04 incident: the gateway hung 10+ min, the supervisor only
+# counted): a hung-but-alive critical service is killed and respawned after
+# SUP_HEALTH_FAILS_MAX consecutive failed probes, with a log line saying so,
+# at most SUP_HANG_RESTART_MAX times per SUP_HANG_RESTART_WINDOW_S.
+# The log assertions need the supervisor log SINK (the harness normally logs
+# to the terminal only).
 SUP_LOG_FILE="$WORK/sup5.log"
 sup_register "hung" 1 \
     "$(stub_server $((CRIT_PORT + 10)))" \
@@ -182,38 +188,53 @@ HUNG=$SUP_LAST_INDEX
 sup_start_service "$HUNG"
 sup_await_state "$HUNG" "running" 15
 HUNG_PID_BEFORE="${SUP_PID[$HUNG]}"
-# Enough ticks for well over SUP_HEALTH_FAILS_MAX failed probes.
-run_ticks $((SUP_HEALTH_FAILS_MAX * SUP_HEALTH_EVERY_S + 8))
-kill -0 "$HUNG_PID_BEFORE" 2>/dev/null
-check "test5: hung critical is NEVER killed by default (pid survives ${SUP_HEALTH_FAILS_MAX}+ failed probes)" "$?"
-grep -q "NOT restarting it" "$SUP_LOG_FILE"
-check "test5: the sustained-unhealthy banner is in the supervisor log" "$?"
-[[ "${SUP_STATE[$HUNG]}" == "running" ]]
-check "test5: state stays running while unhealthy-but-alive" "$?"
-
-# --- test 5b: SUP_HANG_KILL=1 restores kill + respawn on hang --------------------
-SUP_HANG_KILL=1
-SUP_HEALTH_FAILS[$HUNG]=0
-# The dead health URL keeps failing after every respawn, so the service loops
-# kill -> backoff -> respawn indefinitely (correct for a critical service).
-# Poll for the respawn EVENT instead of asserting a phase: old pid dead AND a
-# NEW pid observed. A phase snapshot after a fixed sleep is timing-fragile.
-RESPAWNED=1
-END=$(( $(sup_now) + 25 ))
+# The dead health URL keeps failing after every respawn: poll for respawn
+# EVENTS (new pid observed) instead of asserting a phase after a fixed sleep.
+SEEN_PIDS="$HUNG_PID_BEFORE"
+LAST_PID="$HUNG_PID_BEFORE"
+RESPAWNS=0
+END=$(( $(sup_now) + 60 ))
 while [[ "$(sup_now)" -lt "$END" ]]; do
     sup_tick
-    if ! kill -0 "$HUNG_PID_BEFORE" 2>/dev/null \
-        && [[ -n "${SUP_PID[$HUNG]}" && "${SUP_PID[$HUNG]}" != "$HUNG_PID_BEFORE" ]]; then
-        RESPAWNED=0
-        break
+    if [[ -n "${SUP_PID[$HUNG]}" && "${SUP_PID[$HUNG]}" != "$LAST_PID" ]]; then
+        LAST_PID="${SUP_PID[$HUNG]}"
+        RESPAWNS=$((RESPAWNS + 1))
     fi
+    grep -q "hang-restart budget exhausted" "$SUP_LOG_FILE" 2>/dev/null && break
     sleep 1
 done
-check "test5b: with SUP_HANG_KILL=1 the hung critical is killed and respawned" "$RESPAWNED"
+! kill -0 "$HUNG_PID_BEFORE" 2>/dev/null && [[ "$RESPAWNS" -ge 1 ]]
+check "test5: by default the hung critical is killed and respawned (respawns: $RESPAWNS)" "$?"
+grep -q "HUNG — alive but ${SUP_HEALTH_FAILS_MAX} consecutive health probes failed" "$SUP_LOG_FILE" \
+    && grep -q "restarting it (hang restart 1/${SUP_HANG_RESTART_MAX}" "$SUP_LOG_FILE"
+check "test5: the supervisor log says it restarts the hung service and why" "$?"
+[[ "$(grep -c "restarting it (hang restart" "$SUP_LOG_FILE")" == "$SUP_HANG_RESTART_MAX" ]]
+check "test5: hang restarts are bounded (${SUP_HANG_RESTART_MAX} per ${SUP_HANG_RESTART_WINDOW_S}s)" "$?"
+grep -q "hang-restart budget exhausted" "$SUP_LOG_FILE"
+check "test5: past the bound it is reported loudly instead of killed" "$?"
+BOUNDED_PID="${SUP_PID[$HUNG]}"
+run_ticks $((SUP_HEALTH_FAILS_MAX * SUP_HEALTH_EVERY_S + 4))
+[[ -n "$BOUNDED_PID" ]] && kill -0 "$BOUNDED_PID" 2>/dev/null && [[ "${SUP_PID[$HUNG]}" == "$BOUNDED_PID" ]]
+check "test5: past the bound the hung service is left alive (no restart loop)" "$?"
 [[ "${SUP_STATE[$HUNG]}" != "failed" ]]
-check "test5b: critical never converges to FAILED" "$?"
+check "test5: critical never converges to FAILED" "$?"
+
+# --- test 5b: SUP_HANG_KILL=0 = warn only (the 2026-08-20 behaviour) -------------
 SUP_HANG_KILL=0
+SUP_HANG_LOG[$HUNG]=""
+SUP_HEALTH_FAILS[$HUNG]=0
+WARN_PID="${SUP_PID[$HUNG]}"
+run_ticks $((SUP_HEALTH_FAILS_MAX * SUP_HEALTH_EVERY_S + 8))
+kill -0 "$WARN_PID" 2>/dev/null && [[ "${SUP_PID[$HUNG]}" == "$WARN_PID" ]]
+check "test5b: with SUP_HANG_KILL=0 the hung critical is never killed" "$?"
+grep -q "NOT restarting it (SUP_HANG_KILL=0" "$SUP_LOG_FILE"
+check "test5b: the sustained-unhealthy banner is in the supervisor log" "$?"
+SUP_HANG_KILL=1
 SUP_LOG_FILE=""
+
+# --- test 5c: the gateway watchdog's exit code is named in the incident ------------
+sup_describe_status 75 | grep -q "event-loop WATCHDOG fired"
+check "test5c: exit 75 is described as the gateway watchdog (not a bare crash)" "$?"
 
 # --- test 7: singleton guard ------------------------------------------------------
 PIDFILE="$WORK/af_stack.pid"

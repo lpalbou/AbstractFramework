@@ -11,7 +11,9 @@
 #     - restarted on death with UNLIMITED attempts and capped exponential
 #       backoff (a control plane is never abandoned);
 #     - actively health-probed: a hung-but-alive process (serving nothing) is
-#       killed and respawned after a sustained probe-failure streak;
+#       killed and respawned after SUP_HEALTH_FAILS_MAX consecutive failed
+#       probes, at most SUP_HANG_RESTART_MAX times per
+#       SUP_HANG_RESTART_WINDOW_S (beyond that: loud, never lethal);
 #     - a pre-start hook runs before EVERY spawn (first and respawns), so
 #       preflight guarantees (port free, stale processes stopped, singleton
 #       locks free) hold on the restart path too.
@@ -62,14 +64,23 @@ SUP_CRIT_BACKOFF_CAP_S="${SUP_CRIT_BACKOFF_CAP_S:-30}"      # critical backoff c
 SUP_CRIT_STABLE_RESET_S="${SUP_CRIT_STABLE_RESET_S:-60}"    # uptime that resets backoff
 SUP_HEALTH_EVERY_S="${SUP_HEALTH_EVERY_S:-10}"              # active probe cadence
 SUP_HEALTH_FAILS_MAX="${SUP_HEALTH_FAILS_MAX:-6}"           # consecutive fails = hung
-# Hang-kill DISARMED by default (operator ruling 2026-08-20: "the supervisor
-# is here ONLY to relaunch the gateway if it crashes"). One day of af-stack.log
-# showed the probe-kill executing a healthy-but-busy gateway (in-process MLX
-# pins the GIL long enough to miss 6 probes) while every other restart that
-# day was an EXTERNAL kill the supervisor mislabeled as its own concern. A
-# sustained unhealthy streak now logs LOUDLY and keeps logging; set
-# SUP_HANG_KILL=1 to restore kill-and-respawn on hang.
-SUP_HANG_KILL="${SUP_HANG_KILL:-0}"
+# Hang-kill ARMED by default again (2026-10-04 03:15 incident): a TTS stream
+# blocked the gateway's event loop for 10+ minutes at 95% CPU; this supervisor
+# logged "health probe failed (n/6)" every ~11 s and restarted nothing, and
+# the stack served nothing until a human noticed. History: it was disarmed on
+# 2026-08-20 ("the supervisor is here ONLY to relaunch the gateway if it
+# crashes") after it killed a healthy-but-busy gateway whose in-process MLX
+# call starved /api/health. What changed: the gateway now carries its own
+# event-loop watchdog (`serve --watchdog-seconds`, default 30) that EXITS
+# (code 75, stacks in the log) when its loop is blocked — so a gateway that
+# misses SUP_HEALTH_FAILS_MAX probes (~60 s+) without exiting is not "busy",
+# it is hung past its own watchdog. Restarts are rate-bounded
+# (SUP_HANG_RESTART_MAX per SUP_HANG_RESTART_WINDOW_S); past the bound the
+# supervisor goes back to loud-never-lethal. SUP_HANG_KILL=0 restores the
+# 2026-08-20 behaviour (warn only).
+SUP_HANG_KILL="${SUP_HANG_KILL:-1}"
+SUP_HANG_RESTART_MAX="${SUP_HANG_RESTART_MAX:-3}"           # hang restarts per window
+SUP_HANG_RESTART_WINDOW_S="${SUP_HANG_RESTART_WINDOW_S:-3600}"
 # Shared kill-receipt ledger: apps_common.sh's stop helpers append a line for
 # every kill they issue, so a signal death here can name its killer. Lives in
 # the user's home, not /tmp (adversarial review 2026-08-20: /tmp is world-
@@ -86,7 +97,7 @@ SUP_NAME=(); SUP_CMD=(); SUP_LOG=(); SUP_READY_URL=(); SUP_HEALTH_URL=()
 SUP_CRITICAL=(); SUP_PRESTART=()
 SUP_PID=(); SUP_STATE=(); SUP_STARTED_AT=(); SUP_READY_DEADLINE=()
 SUP_NEXT_START_AT=(); SUP_RESTART_LOG=(); SUP_BACKOFF_N=()
-SUP_HEALTH_FAILS=(); SUP_LAST_PROBE=(); SUP_EXIT_STATUS=()
+SUP_HEALTH_FAILS=(); SUP_LAST_PROBE=(); SUP_EXIT_STATUS=(); SUP_HANG_LOG=()
 SUP_COUNT=0
 SUP_SHUTDOWN=0
 SUP_LOG_FILE="${SUP_LOG_FILE:-}"
@@ -135,6 +146,7 @@ sup_describe_status() {
     local status="${1:-}"
     case "$status" in
         0)   echo "exit 0 — clean exit (something asked it to stop; NOT a crash)" ;;
+        75)  echo "exit 75 — the gateway's event-loop WATCHDOG fired: its loop was blocked past --watchdog-seconds; the stack of the blocking code is in the log tail below ([FATAL] gateway watchdog)" ;;
         129) echo "SIGHUP (129) — hangup from outside (NOT a crash)" ;;
         130) echo "SIGINT (130) — interrupted from outside (NOT a crash)" ;;
         137) echo "SIGKILL (137) — killed from outside: an explicit kill -9 (bench/untracked scripts do this), or memory pressure (NOT a crash)" ;;
@@ -329,6 +341,7 @@ sup_register() {
     SUP_HEALTH_FAILS[$i]=0
     SUP_LAST_PROBE[$i]=0
     SUP_EXIT_STATUS[$i]=""
+    SUP_HANG_LOG[$i]=""
     SUP_COUNT=$((SUP_COUNT + 1))
     SUP_LAST_INDEX="$i"
 }
@@ -355,6 +368,25 @@ sup_budget_charge() {
     local i="$1"
     SUP_RESTART_LOG[$i]="${SUP_RESTART_LOG[$i]} $SECONDS"
     SUP_RESTART_LOG[$i]="${SUP_RESTART_LOG[$i]# }"
+}
+
+# Hang-restart budget (critical services too): a rolling window like the app
+# budget, so a service that hangs again right after every restart is not
+# killed in a loop — past the bound it is reported, never killed.
+sup_hang_budget_allows() {
+    local i="$1" now cutoff kept ts n=0
+    now="$SECONDS"
+    cutoff=$((now - SUP_HANG_RESTART_WINDOW_S))
+    kept=""
+    for ts in ${SUP_HANG_LOG[$i]:-}; do
+        if [[ "$ts" -gt "$cutoff" ]]; then
+            kept="$kept $ts"
+            n=$((n + 1))
+        fi
+    done
+    SUP_HANG_LOG[$i]="${kept# }"
+    SUP_HANG_USED="$n"
+    [[ "$n" -lt "$SUP_HANG_RESTART_MAX" ]]
 }
 
 sup_budget_used() {
@@ -556,10 +588,18 @@ sup_tick() {
                             SUP_HEALTH_FAILS[$i]=$((SUP_HEALTH_FAILS[$i] + 1))
                             sup_log "${SUP_NAME[$i]}: health probe failed (${SUP_HEALTH_FAILS[$i]}/${SUP_HEALTH_FAILS_MAX})"
                             if [[ "${SUP_HEALTH_FAILS[$i]}" -ge "$SUP_HEALTH_FAILS_MAX" ]]; then
-                                if [[ "$SUP_HANG_KILL" == "1" ]]; then
-                                    sup_log "${SUP_NAME[$i]}: hung (alive but unhealthy for ${SUP_HEALTH_FAILS_MAX} probes) — killing for restart (SUP_HANG_KILL=1)"
+                                if [[ "$SUP_HANG_KILL" == "1" ]] && sup_hang_budget_allows "$i"; then
+                                    SUP_HANG_LOG[$i]="${SUP_HANG_LOG[$i]} $now"
+                                    SUP_HANG_LOG[$i]="${SUP_HANG_LOG[$i]# }"
+                                    sup_log "!! ${SUP_NAME[$i]}: HUNG — alive but ${SUP_HEALTH_FAILS[$i]} consecutive health probes failed (~$((SUP_HEALTH_FAILS[$i] * SUP_HEALTH_EVERY_S))s); restarting it (hang restart $((SUP_HANG_USED + 1))/${SUP_HANG_RESTART_MAX} in ${SUP_HANG_RESTART_WINDOW_S}s; SUP_HANG_KILL=0 = warn only)"
                                     sup_kill_pid "${SUP_PID[$i]}"
-                                    sup_handle_death "$i" "hung"
+                                    sup_handle_death "$i" "hung: ${SUP_HEALTH_FAILS[$i]} consecutive failed health probes"
+                                elif [[ "$SUP_HANG_KILL" == "1" && $((SUP_HEALTH_FAILS[$i] % SUP_HEALTH_FAILS_MAX)) -eq 0 ]]; then
+                                    sup_log "=================================================================="
+                                    sup_log "!! ${SUP_NAME[$i]}: UNHEALTHY for ${SUP_HEALTH_FAILS[$i]} probes (~$((SUP_HEALTH_FAILS[$i] * SUP_HEALTH_EVERY_S))s) — alive but not answering ${SUP_HEALTH_URL[$i]}"
+                                    sup_log "!! NOT restarting it: hang-restart budget exhausted (${SUP_HANG_RESTART_MAX} in ${SUP_HANG_RESTART_WINDOW_S}s) — it hangs again after every restart"
+                                    sup_log "!! investigate: tail -f ${SUP_LOG[$i]}"
+                                    sup_log "=================================================================="
                                 elif [[ $((SUP_HEALTH_FAILS[$i] % SUP_HEALTH_FAILS_MAX)) -eq 0 ]]; then
                                     # Operator ruling 2026-08-20: the supervisor
                                     # restarts on DEATH only. A busy gateway
@@ -570,7 +610,7 @@ sup_tick() {
                                     # fails), never lethal.
                                     sup_log "=================================================================="
                                     sup_log "!! ${SUP_NAME[$i]}: UNHEALTHY for ${SUP_HEALTH_FAILS[$i]} probes (~$((SUP_HEALTH_FAILS[$i] * SUP_HEALTH_EVERY_S))s) — alive but not answering ${SUP_HEALTH_URL[$i]}"
-                                    sup_log "!! NOT restarting it (this supervisor restarts on death only; SUP_HANG_KILL=1 restores hang-recycling)"
+                                    sup_log "!! NOT restarting it (SUP_HANG_KILL=0: this supervisor restarts on death only; unset it to restart a hung service)"
                                     sup_log "!! likely busy (in-process model inference); investigate: tail -f ${SUP_LOG[$i]}"
                                     sup_log "=================================================================="
                                 fi

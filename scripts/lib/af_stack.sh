@@ -21,10 +21,12 @@
 # with separated failure domains.
 #   - The GATEWAY is critical: app failures never touch it; if it DIES it is
 #     restarted with capped backoff, unlimited attempts, and a loud incident
-#     banner naming the cause. A hung-but-alive gateway is WARNED ABOUT, never
-#     killed (operator ruling 2026-08-20: restart on death only; an in-process
-#     model call can starve /api/health while doing real work — SUP_HANG_KILL=1
-#     restores hang-recycling). Every spawn repeats the proven preflight
+#     banner naming the cause. A HUNG gateway is restarted too (2026-10-04):
+#     first by itself — `serve`'s event-loop watchdog exits with code 75 when
+#     its loop is blocked for 30 s — and, should that fail, by the supervisor
+#     after SUP_HEALTH_FAILS_MAX (6) consecutive failed health probes, at most
+#     SUP_HANG_RESTART_MAX (3) times per hour (SUP_HANG_KILL=0: warn only, the
+#     2026-08-20 behaviour). Every spawn repeats the proven preflight
 #     (stop stray serves, free port, runner-lock probe).
 #   - APPS self-restart with a bounded budget (default 5 restarts / 300s);
 #     a crash-looping app converges to FAILED loudly while the rest of the

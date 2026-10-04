@@ -2928,7 +2928,39 @@ MODE=none
 NET_SETTING=0   # 1 = the background gateway starts plain `serve` (the Network setting binds it)
 SERVICE_FALLBACK=0   # 1 = the login item failed to register, so the gateway runs in the background
 AF_SYSTEMD_UNIT="abstractgateway.service"
-# start_background: (re)start the gateway as a background process of this user, pid in gateway.pid.
+# >>> af-gateway-loop (scripts/tests/test_install_gateway_loop.sh runs this text)
+# AF_GW_LOOP: the background gateway's restart loop, run as
+#   sh -c "$AF_GW_LOOP" af-gateway-loop PID_FILE MIN_RUN_S DELAY_S GATEWAY_ARGV...
+# A hung gateway exits by itself (`serve`'s event-loop watchdog: code 75, stacks in the log) and
+# a login service restarts it (LaunchAgent KeepAlive/SuccessfulExit=false, systemd
+# Restart=on-failure); this loop is the same for the background mode, which has no service
+# manager. gateway.pid always names the GATEWAY (never this loop), so every identity check
+# (bg_pid_ours) and every stop (`kill $(cat gateway.pid)`) keeps working. Restarted: a non-zero,
+# non-signal exit after at least MIN_RUN_S of running, DELAY_S later. Not restarted: a clean exit
+# (0: quit from the tray or console), a stop by signal (130/137/143: the installer, `kill`, the
+# uninstaller), a start failure (exit before MIN_RUN_S: no restart loop on a bad config), and any
+# exit after gateway.pid was removed or rewritten (the installer took over or stopped it).
+AF_GW_LOOP='pidf=$1; min_run=$2; delay=$3; shift 3
+while :; do
+    started=$(date +%s)
+    "$@" </dev/null &
+    gp=$!
+    echo "$gp" >"$pidf"
+    wait "$gp"; rc=$?
+    ran=$(( $(date +%s) - started ))
+    case "$rc" in 0|130|137|143) exit "$rc" ;; esac
+    [ "$(cat "$pidf" 2>/dev/null)" = "$gp" ] || exit "$rc"
+    if [ "$ran" -lt "$min_run" ]; then
+        echo "[af-install] the gateway exited with code $rc after ${ran}s (a start failure): not restarted; run the installer again"
+        exit "$rc"
+    fi
+    echo "[af-install] the gateway exited with code $rc after ${ran}s (75 = its event-loop watchdog found it hung); restarting it in ${delay}s"
+    sleep "$delay"
+    [ "$(cat "$pidf" 2>/dev/null)" = "$gp" ] || exit "$rc"
+done'
+# <<< af-gateway-loop
+# start_background: (re)start the gateway as a background process of this user, pid in gateway.pid,
+# under AF_GW_LOOP (restarted when it exits non-zero after running, e.g. its watchdog fired).
 start_background() {
     stop_background_gateway
     # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
@@ -2949,9 +2981,11 @@ start_background() {
     twin "$_cmd"
     if [ "$PRINT" = 0 ]; then
         ( umask 077; : >>"$GATEWAY_LOG" )
-        nohup "$GW" "$@" >>"$GATEWAY_LOG" 2>&1 </dev/null &
-        echo $! >"$PID_FILE"
-        ok "started (pid $(cat "$PID_FILE")), log: $GATEWAY_LOG"
+        rm -f "$PID_FILE"
+        nohup sh -c "$AF_GW_LOOP" af-gateway-loop "$PID_FILE" 30 10 "$GW" "$@" >>"$GATEWAY_LOG" 2>&1 </dev/null &
+        # The loop writes the gateway's pid as soon as it has spawned it.
+        _i=0; while [ ! -s "$PID_FILE" ] && [ "$_i" -lt 100 ]; do sleep 0.1; _i=$((_i + 1)); done
+        ok "started (pid $(cat "$PID_FILE" 2>/dev/null)), log: $GATEWAY_LOG; restarted if it exits with an error after running (a hang ends in such an exit)"
     fi
 }
 SERVICE_OK=0
@@ -3058,6 +3092,8 @@ if [ "$NO_START" = 0 ]; then
         until http_get "$BASE_URL/api/health" | grep -q '"abstractgateway"'; do
             _i=$((_i + 1))
             if [ "$MODE" = background ] && ! pid_alive; then
+                # The restart loop stops once gateway.pid is gone (no gateway behind a failed install).
+                rm -f "$PID_FILE"
                 tail -n 30 "$GATEWAY_LOG" >&2 || true
                 die "the gateway stopped while starting (log: $GATEWAY_LOG).
 What to do: run the installer again; if it stops here again, report it with that log file ($AF_DOCS#if-something-goes-wrong)."
