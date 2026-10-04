@@ -40,11 +40,12 @@ _START_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _START_ROOT_DIR="$(dirname "$_START_SCRIPT_DIR")"
 
 START_DO_BUILD=false
+START_RESTART_ON_HANG=0
 START_BUILD_PROFILE="${AF_BUILD_PROFILE:-auto}"
 
 usage() {
     cat <<'EOF'
-Usage: ./scripts/start-local.sh [--build[=PROFILE]] [--no-build]
+Usage: ./scripts/start-local.sh [--build[=PROFILE]] [--no-build] [--restart-on-hang]
 
   (no flag)           start the stack from what is already installed in .venv
   --build             rebuild every local package first, then start
@@ -52,6 +53,11 @@ Usage: ./scripts/start-local.sh [--build[=PROFILE]] [--no-build]
                       (default: auto — resolves to apple on macOS, i.e. the
                        abstractcore[apple], which carries mlx / mlx-lm / mlx-vlm)
   --no-build          explicit form of the default
+  --restart-on-hang   also restart a gateway that is alive but failed 6
+                      consecutive health probes (~60 s), at most 3 times an
+                      hour. Default: restart on death only — the gateway's
+                      own watchdog exits (code 75) when its event loop is
+                      blocked for 30 s, and that exit is restarted.
   -h, --help          this message
 EOF
 }
@@ -61,6 +67,7 @@ for arg in "$@"; do
         --build)        START_DO_BUILD=true ;;
         --build=*)      START_DO_BUILD=true; START_BUILD_PROFILE="${arg#--build=}" ;;
         --no-build)     START_DO_BUILD=false ;;
+        --restart-on-hang) START_RESTART_ON_HANG=1 ;;
         -h|--help)      usage; exit 0 ;;
         *)
             echo "error: unknown argument: $arg" >&2
@@ -95,4 +102,10 @@ export ABSTRACTENTITY_PORT="${ABSTRACTENTITY_PORT:-3004}"
 export ABSTRACTFLOW_PORT="${ABSTRACTFLOW_PORT:-3005}"
 
 AF_STACK_SUFFIX="-local"
-source "$_START_SCRIPT_DIR/lib/af_stack.sh"
+# The stack's launch flags are passed to af_stack.sh as arguments (never as
+# environment variables); `--` keeps this script's own arguments out of it.
+if [[ "$START_RESTART_ON_HANG" == 1 ]]; then
+    source "$_START_SCRIPT_DIR/lib/af_stack.sh" --restart-on-hang
+else
+    source "$_START_SCRIPT_DIR/lib/af_stack.sh" --
+fi

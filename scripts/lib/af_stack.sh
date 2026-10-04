@@ -21,12 +21,13 @@
 # with separated failure domains.
 #   - The GATEWAY is critical: app failures never touch it; if it DIES it is
 #     restarted with capped backoff, unlimited attempts, and a loud incident
-#     banner naming the cause. A HUNG gateway is restarted too (2026-10-04):
-#     first by itself — `serve`'s event-loop watchdog exits with code 75 when
-#     its loop is blocked for 30 s — and, should that fail, by the supervisor
-#     after SUP_HEALTH_FAILS_MAX (6) consecutive failed health probes, at most
-#     SUP_HANG_RESTART_MAX (3) times per hour (SUP_HANG_KILL=0: warn only, the
-#     2026-08-20 behaviour). Every spawn repeats the proven preflight
+#     banner naming the cause. A hung-but-alive gateway is WARNED ABOUT, never
+#     killed (operator ruling 2026-08-20: restart on death only); since
+#     2026-10-04 the gateway's own event-loop watchdog exits with code 75 when
+#     its loop is blocked for 30 s, which IS a death and is restarted.
+#     `start-local.sh --restart-on-hang` additionally kills it after 6
+#     consecutive failed health probes, at most 3 times an hour. Every spawn
+#     repeats the proven preflight
 #     (stop stray serves, free port, runner-lock probe).
 #   - APPS self-restart with a bounded budget (default 5 restarts / 300s);
 #     a crash-looping app converges to FAILED loudly while the rest of the
@@ -46,6 +47,17 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/apps_common.sh"
 STARTUP_TIMEOUT_S="${STARTUP_TIMEOUT_S:-120}"
 SUP_READY_TIMEOUT_S="${SUP_READY_TIMEOUT_S:-$STARTUP_TIMEOUT_S}"
 source "$APPS_LIB_DIR/af_supervisor.sh"
+
+# Launch flags handed to this file by its caller (`source af_stack.sh FLAG...`).
+# --restart-on-hang: also kill and restart a gateway that is alive but failed
+# SUP_HEALTH_FAILS_MAX consecutive health probes (bounded; af_supervisor.sh).
+# Default: restart on death only (operator ruling 2026-08-20).
+for _af_stack_arg in "$@"; do
+    case "$_af_stack_arg" in
+        --restart-on-hang) SUP_HANG_KILL=1 ;;
+    esac
+done
+unset _af_stack_arg
 
 SFX="${AF_STACK_SUFFIX:-}"
 

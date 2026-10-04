@@ -7,7 +7,7 @@ All notable changes to AbstractFramework will be documented in this file.
 ### Fixed
 
 - A hung gateway is restarted (2026-10-04: a text-to-speech stream blocked the gateway for 10+ minutes and nothing restarted it). The gateway now exits with code 75 when its event loop is blocked for 30 s (`serve --watchdog-seconds`, AbstractGateway [Unreleased]); every way the installers and scripts run it restarts that exit:
-  - `scripts/start-local.sh` (af-stack supervisor) restarts a gateway that failed 6 consecutive health probes, with a log line saying so, at most 3 times an hour (then it reports instead of killing); `SUP_HANG_KILL=0` restores warn-only. The incident banner names exit 75 as the watchdog.
+  - `scripts/start-local.sh` (af-stack supervisor) restarts the watchdog's exit like any death (restart on death only stays the default) and its incident banner names exit 75 as the watchdog. New flag `--restart-on-hang`: also restart a gateway that is alive but failed 6 consecutive health probes, with a log line saying so, at most 3 times an hour (then it reports instead of killing).
   - `install.sh` background mode (`--no-service`, or when the login item cannot be registered) runs the gateway under a restart loop: a non-zero exit after 30 s of running is restarted 10 s later; a clean exit, a stop by signal, a start failure, or a removed `gateway.pid` is not. `gateway.pid` still names the gateway itself.
   - The LaunchAgent (`KeepAlive` with `SuccessfulExit: false`) and the systemd user unit (`Restart=on-failure`) written by `abstractgateway service install` already restart any non-zero exit; `scripts/install_gateway_launchd.sh` uses `KeepAlive: true`.
 

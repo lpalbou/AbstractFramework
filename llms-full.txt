@@ -3850,7 +3850,7 @@ where it stopped.
 | `crates.io hasn't listed it yet (…); retrying in 15 s` | Nothing to do: the terminal console or `abstractcode` was published minutes ago and crates.io's index has not caught up; the installer builds it again. |
 | `NOT installed:` at the end, in red | Something was left out, and the line says what and why. For `terminal console` or `AbstractCode's terminal client` (crates.io or the network still failing after 10 minutes; exit code 1) run the command shown again later; the gateway is installed and running. For `local voice` this system cannot run it (no wheels for it); the rest is installed. |
 | `port N (the gateway's Network setting) is already in use by another process` | The port you chose in a console (or the tray) is taken by another program. Stop that program, or choose another port with `--port` (Windows: `-Port`); it becomes the Network setting's port. |
-| The gateway stopped answering for a while, then came back; its log shows `[FATAL] gateway watchdog` (exit code 75) | Nothing to do: the gateway's event loop was blocked, so it wrote the stack of the code that blocked it to its log and exited, and was started again (by the LaunchAgent or systemd service, by the installer's background mode, or by `scripts/start-local.sh`). Report it with the `[FATAL]` lines of the log (macOS: `~/Library/Logs/AbstractGateway/gateway.err.log`; background mode: the gateway log the installer names; Linux service: `journalctl --user -u abstractgateway`). A gateway started by hand in a terminal is not restarted. `abstractgateway serve --watchdog-seconds N` sets the limit (default 30, `0` = off). |
+| The gateway stopped answering for a while, then came back; its log shows `[FATAL] gateway watchdog` (exit code 75) | Nothing to do: the gateway's event loop was blocked, so it wrote the stack of the code that blocked it to its log and exited, and was started again (by the LaunchAgent or systemd service, by the installer's background mode, or by the `scripts/start-local.sh` supervisor). Report it with the `[FATAL]` lines of the log (macOS: `~/Library/Logs/AbstractGateway/gateway.err.log`; background mode: the gateway log the installer names; Linux service: `journalctl --user -u abstractgateway`). A gateway started by hand in a terminal is not restarted. `abstractgateway serve --watchdog-seconds N` sets the limit (default 30, `0` = off). |
 | Anything else | Run the installer again. If it stops at the same step, report it with the log file named at the end of the message (`~/Library/Application Support/AbstractGateway/logs/install-….log`). |
 
 ### Right after a release
@@ -5661,15 +5661,24 @@ The stack launchers use one port map: gateway 8080, observer 3001, continuum 300
 entity 3004, flow 3005 (each overridable with `ABSTRACT<APP>_PORT`). `start-local.sh --build`
 runs `build.sh` first.
 
+The supervisor restarts a service that exits. A gateway that hangs exits on its own: its event-loop
+watchdog (`abstractgateway serve --watchdog-seconds`, default 30) writes the blocked code's stack to
+`gateway.log` and exits with code 75, and the supervisor restarts it (the incident banner in
+`af-stack.log` names the watchdog). A gateway that is alive but does not answer its health probe is
+reported, never killed, unless you start the stack with `start-local.sh --restart-on-hang`: it is
+then restarted after 6 consecutive failed probes (about 60 s), at most 3 times an hour, after which
+it is reported again instead of killed.
+
 ## Script tests
 
 ```bash
 bash scripts/tests/test_inventory.sh      # inventory vs package files, install pins vs manifest
 bash scripts/tests/test_repo_scripts.sh   # clone/status/commit/push/pull/build in an offline sandbox
 bash scripts/tests/test_af_supervisor.sh  # stack supervisor semantics with stub services
+bash scripts/tests/test_install_gateway_loop.sh  # install.sh background-gateway restart loop
 ```
 
-All three run against temporary directories and stub services; they do not modify the workspace.
+All four run against temporary directories and stub services; they do not modify the workspace.
 
 --- docs/glossary.md ---
 # Glossary

@@ -11,9 +11,11 @@
 #     - restarted on death with UNLIMITED attempts and capped exponential
 #       backoff (a control plane is never abandoned);
 #     - actively health-probed: a hung-but-alive process (serving nothing) is
-#       killed and respawned after SUP_HEALTH_FAILS_MAX consecutive failed
-#       probes, at most SUP_HANG_RESTART_MAX times per
-#       SUP_HANG_RESTART_WINDOW_S (beyond that: loud, never lethal);
+#       reported loudly (restart on death only, operator ruling 2026-08-20;
+#       the gateway's own event-loop watchdog turns a hang into a death, exit
+#       75). Opt-in (start-local.sh --restart-on-hang): killed and respawned
+#       after SUP_HEALTH_FAILS_MAX consecutive failed probes, at most
+#       SUP_HANG_RESTART_MAX times per SUP_HANG_RESTART_WINDOW_S;
 #     - a pre-start hook runs before EVERY spawn (first and respawns), so
 #       preflight guarantees (port free, stale processes stopped, singleton
 #       locks free) hold on the restart path too.
@@ -64,21 +66,23 @@ SUP_CRIT_BACKOFF_CAP_S="${SUP_CRIT_BACKOFF_CAP_S:-30}"      # critical backoff c
 SUP_CRIT_STABLE_RESET_S="${SUP_CRIT_STABLE_RESET_S:-60}"    # uptime that resets backoff
 SUP_HEALTH_EVERY_S="${SUP_HEALTH_EVERY_S:-10}"              # active probe cadence
 SUP_HEALTH_FAILS_MAX="${SUP_HEALTH_FAILS_MAX:-6}"           # consecutive fails = hung
-# Hang-kill ARMED by default again (2026-10-04 03:15 incident): a TTS stream
-# blocked the gateway's event loop for 10+ minutes at 95% CPU; this supervisor
-# logged "health probe failed (n/6)" every ~11 s and restarted nothing, and
-# the stack served nothing until a human noticed. History: it was disarmed on
-# 2026-08-20 ("the supervisor is here ONLY to relaunch the gateway if it
-# crashes") after it killed a healthy-but-busy gateway whose in-process MLX
-# call starved /api/health. What changed: the gateway now carries its own
-# event-loop watchdog (`serve --watchdog-seconds`, default 30) that EXITS
-# (code 75, stacks in the log) when its loop is blocked — so a gateway that
-# misses SUP_HEALTH_FAILS_MAX probes (~60 s+) without exiting is not "busy",
-# it is hung past its own watchdog. Restarts are rate-bounded
-# (SUP_HANG_RESTART_MAX per SUP_HANG_RESTART_WINDOW_S); past the bound the
-# supervisor goes back to loud-never-lethal. SUP_HANG_KILL=0 restores the
-# 2026-08-20 behaviour (warn only).
-SUP_HANG_KILL="${SUP_HANG_KILL:-1}"
+# Hang-kill DISARMED by default (operator ruling 2026-08-20: "the supervisor
+# is here ONLY to relaunch the gateway if it crashes"). One day of af-stack.log
+# showed the probe-kill executing a healthy-but-busy gateway (in-process MLX
+# pins the GIL long enough to miss 6 probes). A sustained unhealthy streak
+# logs LOUDLY and keeps logging.
+# 2026-10-04 03:15 (a TTS stream blocked the gateway's loop for 10+ minutes;
+# this supervisor only counted failed probes): the gateway now carries its
+# own event-loop watchdog (`serve --watchdog-seconds`, default 30) that EXITS
+# with code 75 when its loop is blocked — a DEATH, restarted through the
+# normal death path below, so the default needs no probe-kill.
+# Opt-in probe-kill: the `--restart-on-hang` FLAG of start-local.sh (parsed by
+# af_stack.sh, which sets SUP_HANG_KILL=1 after sourcing this file) kills and
+# respawns after SUP_HEALTH_FAILS_MAX consecutive failed probes, at most
+# SUP_HANG_RESTART_MAX per SUP_HANG_RESTART_WINDOW_S (past the bound: loud,
+# never lethal). Never read from the environment (operator rule: settings are
+# launch flags): an exported SUP_HANG_KILL is overwritten here.
+SUP_HANG_KILL=0
 SUP_HANG_RESTART_MAX="${SUP_HANG_RESTART_MAX:-3}"           # hang restarts per window
 SUP_HANG_RESTART_WINDOW_S="${SUP_HANG_RESTART_WINDOW_S:-3600}"
 # Shared kill-receipt ledger: apps_common.sh's stop helpers append a line for
@@ -591,7 +595,7 @@ sup_tick() {
                                 if [[ "$SUP_HANG_KILL" == "1" ]] && sup_hang_budget_allows "$i"; then
                                     SUP_HANG_LOG[$i]="${SUP_HANG_LOG[$i]} $now"
                                     SUP_HANG_LOG[$i]="${SUP_HANG_LOG[$i]# }"
-                                    sup_log "!! ${SUP_NAME[$i]}: HUNG — alive but ${SUP_HEALTH_FAILS[$i]} consecutive health probes failed (~$((SUP_HEALTH_FAILS[$i] * SUP_HEALTH_EVERY_S))s); restarting it (hang restart $((SUP_HANG_USED + 1))/${SUP_HANG_RESTART_MAX} in ${SUP_HANG_RESTART_WINDOW_S}s; SUP_HANG_KILL=0 = warn only)"
+                                    sup_log "!! ${SUP_NAME[$i]}: HUNG — alive but ${SUP_HEALTH_FAILS[$i]} consecutive health probes failed (~$((SUP_HEALTH_FAILS[$i] * SUP_HEALTH_EVERY_S))s); restarting it (hang restart $((SUP_HANG_USED + 1))/${SUP_HANG_RESTART_MAX} in ${SUP_HANG_RESTART_WINDOW_S}s; --restart-on-hang)"
                                     sup_kill_pid "${SUP_PID[$i]}"
                                     sup_handle_death "$i" "hung: ${SUP_HEALTH_FAILS[$i]} consecutive failed health probes"
                                 elif [[ "$SUP_HANG_KILL" == "1" && $((SUP_HEALTH_FAILS[$i] % SUP_HEALTH_FAILS_MAX)) -eq 0 ]]; then
@@ -610,7 +614,7 @@ sup_tick() {
                                     # fails), never lethal.
                                     sup_log "=================================================================="
                                     sup_log "!! ${SUP_NAME[$i]}: UNHEALTHY for ${SUP_HEALTH_FAILS[$i]} probes (~$((SUP_HEALTH_FAILS[$i] * SUP_HEALTH_EVERY_S))s) — alive but not answering ${SUP_HEALTH_URL[$i]}"
-                                    sup_log "!! NOT restarting it (SUP_HANG_KILL=0: this supervisor restarts on death only; unset it to restart a hung service)"
+                                    sup_log "!! NOT restarting it (this supervisor restarts on death only; the gateway's own watchdog exits a blocked loop and is then restarted; start-local.sh --restart-on-hang kills after ${SUP_HEALTH_FAILS_MAX} failed probes)"
                                     sup_log "!! likely busy (in-process model inference); investigate: tail -f ${SUP_LOG[$i]}"
                                     sup_log "=================================================================="
                                 fi

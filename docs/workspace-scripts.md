@@ -133,12 +133,21 @@ The stack launchers use one port map: gateway 8080, observer 3001, continuum 300
 entity 3004, flow 3005 (each overridable with `ABSTRACT<APP>_PORT`). `start-local.sh --build`
 runs `build.sh` first.
 
+The supervisor restarts a service that exits. A gateway that hangs exits on its own: its event-loop
+watchdog (`abstractgateway serve --watchdog-seconds`, default 30) writes the blocked code's stack to
+`gateway.log` and exits with code 75, and the supervisor restarts it (the incident banner in
+`af-stack.log` names the watchdog). A gateway that is alive but does not answer its health probe is
+reported, never killed, unless you start the stack with `start-local.sh --restart-on-hang`: it is
+then restarted after 6 consecutive failed probes (about 60 s), at most 3 times an hour, after which
+it is reported again instead of killed.
+
 ## Script tests
 
 ```bash
 bash scripts/tests/test_inventory.sh      # inventory vs package files, install pins vs manifest
 bash scripts/tests/test_repo_scripts.sh   # clone/status/commit/push/pull/build in an offline sandbox
 bash scripts/tests/test_af_supervisor.sh  # stack supervisor semantics with stub services
+bash scripts/tests/test_install_gateway_loop.sh  # install.sh background-gateway restart loop
 ```
 
-All three run against temporary directories and stub services; they do not modify the workspace.
+All four run against temporary directories and stub services; they do not modify the workspace.
