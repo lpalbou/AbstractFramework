@@ -365,7 +365,7 @@
       "distribution": "abstractagent",
       "id": "abstractagent",
       "registry": "pypi",
-      "version": "0.3.17"
+      "version": "0.3.18"
     },
     {
       "distribution": "abstractgateway",

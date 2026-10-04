@@ -938,7 +938,7 @@ installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
 `abstractframework` 0.10.0 pins `abstractgateway==0.13.0`, `abstractassistant==0.13.0`,
-`abstractcore==2.25.0`, `AbstractRuntime==0.9.0`, `abstractagent==0.3.17`, `abstractskill==0.3.0`,
+`abstractcore==2.25.0`, `AbstractRuntime==0.9.0`, `abstractagent==0.3.18`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.14.0`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.16` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions

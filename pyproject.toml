@@ -56,7 +56,7 @@ dependencies = [
     # Pin the core Python stack for release determinism (also pulled transitively).
     "abstractcore==2.25.0",
     "AbstractRuntime==0.9.0",
-    "abstractagent==0.3.17",
+    "abstractagent==0.3.18",
     "abstractskill==0.3.0",
     "AbstractMemory==0.3.0",
     "abstractsemantics==0.0.5",

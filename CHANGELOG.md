@@ -40,6 +40,16 @@ All notable changes to AbstractFramework will be documented in this file.
 - The agent is told its workspaces: every tool-using call lists its working directory, the shared
   workspace and each allowed workspace with its mode. A file it writes without a full path lands in
   the conversation's private folder, never in the shared workspace.
+- Shell commands are held to the run's workspaces by the operating system (AbstractCore 2.25.0,
+  AbstractRuntime 0.9.0, AbstractAgent 0.3.18, AbstractGateway 0.13.0): `execute_command`, the
+  persistent shell session, local helpers and `execute_python` run inside an OS sandbox built from the
+  same workspaces the file tools get (macOS `sandbox-exec`; Linux bubblewrap, or Landlock for **Deny
+  everything, allow listed workspaces**), with the gateway's environment stripped of tokens and keys.
+  A host with no sandbox refuses commands with one sentence and the run continues;
+  `abstractgateway serve --unsandboxed-commands` allows them again (audited). The run ledger records
+  the sandbox and the enforced paths of every command; the Assistant and Code tool settings show the
+  state (**Sandboxed to this run's workspaces**), and the Observer and Code run views show one
+  `Sandbox: …` line per command. The Linux sandbox is verified in CI (bubblewrap on Ubuntu).
 - The console's top bar shows memory used, GPU load and the number of loaded models (refreshed every
   5 seconds, a click opens **Resources**); every address, with **Copy**, is on **Network**.
 - The tray's Workflows submenu lists running runs first, then runs waiting for a person or an event,
@@ -70,10 +80,15 @@ All notable changes to AbstractFramework will be documented in this file.
   an app started elsewhere or installed from a source checkout shows **Latest x.y.z** with where to
   update it. An update whose version did not land fails and restarts nothing. The web and terminal
   consoles (`u`) show the same labels; new releases appear within 10 minutes without a restart.
+- Workspace nesting: the most specific workspace wins. Refusing a folder and allowing a folder inside
+  it is valid (the inner folder is reachable, the rest stays refused); a refused folder inside an
+  allowed one refuses its subtree; built-in protected folders stay refused whatever is listed inside.
+  The gateway, the agent's file tools and the command sandbox apply the same rule.
 - `/core/v1` answers with a 308 redirect to `/v1` for this release and is deprecated: point clients at
   `/v1`.
-- Pin AbstractGateway 0.13.0, AbstractCore 2.25.0, AbstractRuntime 0.9.0, AbstractVoice 0.14.0,
-  AbstractMusic 0.1.16 (the sound-effect checkpoint and length fix) and AbstractAssistant 0.13.0;
+- Pin AbstractGateway 0.13.0, AbstractCore 2.25.0, AbstractRuntime 0.9.0, AbstractAgent 0.3.18
+  (`execute_python` inside the command sandbox), AbstractVoice 0.14.0, AbstractMusic 0.1.16 (the
+  sound-effect checkpoint and length fix) and AbstractAssistant 0.13.0;
   the installers install Code Web 0.11.0, Observer 0.7.0, Flow 0.8.0, Continuum 0.7.0 and Entity
   0.7.0 (built with UI Kit 0.8.1 and Panel Chat 0.4.0 from AbstractUIC), the gateway terminal
   console 0.15.0 and AbstractCode 0.9.0.
