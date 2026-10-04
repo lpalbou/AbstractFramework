@@ -30,15 +30,47 @@ All notable changes to AbstractFramework will be documented in this file.
 - A hung gateway restarts: when its event loop has not run for `--watchdog-seconds` (default 30, `0`
   turns it off), `abstractgateway serve` exits with code 75 and its supervisor starts it again;
   `/api/health` reports the watchdog.
+- Workspaces in two dimensions (AbstractGateway 0.13.0, AbstractRuntime 0.9.0, UI Kit 0.8.1): the
+  admin chooses a posture, **Deny everything, allow listed workspaces** (the default) or **Allow
+  everything, refuse listed workspaces** (with a Read-only or Read & write default for everything
+  else), one **Shared workspace** (always Read & write) and workspaces that are Read-only, Read &
+  write or Refused, in one modal at the top of **Accounts**. Each account can only narrow them, from
+  its **Workspace** row action or the Workspace settings of AbstractCode, Observer, Flow and the
+  Assistant, which share one chooser and one wording with the gateway's one-line summary.
+- The agent is told its workspaces: every tool-using call lists its working directory, the shared
+  workspace and each allowed workspace with its mode. A file it writes without a full path lands in
+  the conversation's private folder, never in the shared workspace.
+- The console's top bar shows memory used, GPU load and the number of loaded models (refreshed every
+  5 seconds, a click opens **Resources**); every address, with **Copy**, is on **Network**.
+- The tray's Workflows submenu lists running runs first, then runs waiting for a person or an event,
+  then the runs finished in the last 24 hours, each opening in Observer.
+- Themed tooltips on every icon button of the consoles and apps (UI Kit 0.8.1).
+- Sound effects and music take a length in seconds: AbstractCore's `/v1/audio/music` `seconds`, the
+  gateway Sandbox's **Length (seconds)** field and the Assistant's media requests ("a 3 s laser
+  sound"); a sound effect runs the Stable Audio 3 SFX checkpoint and lasts 5 seconds by default,
+  music 30.
+- AbstractAssistant 0.13.0: **New automation** opens the same schedule form as AbstractCode and
+  Observer; Settings → **Workflow** is its own page (**Gateway default** first, **Open in
+  AbstractFlow**); Settings → Tools groups tools in collapsible categories; Settings → Appearance
+  shows the Accessibility permission with **Configure**; the Voice page shows the gateway's engines
+  read-only with **Change under Models**.
 
 ### Changed
+
+- A gateway upgraded from 0.12 converts its workspace settings once at its first start: the old access
+  modes, per-user allow and deny lists, launch-folder trust and "Any folder (old clients)" become the
+  posture and rows above; the old settings keys and routes are refused afterwards. A fresh gateway's
+  shared workspace is `<data dir>/workspace`; an existing install keeps its current one.
+- The gateway terminal console's **Workspaces** page says workspaces are managed from Accounts in the
+  web console for this release.
+- **Apps → Assistant** reports, opens and watches the same Assistant: the installed package, else the
+  app bundle. When the other one is running, the card and the tray say so.
 
 - `/core/v1` answers with a 308 redirect to `/v1` for this release and is deprecated: point clients at
   `/v1`.
 - Pin AbstractGateway 0.13.0, AbstractCore 2.25.0, AbstractRuntime 0.9.0, AbstractVoice 0.14.0 and
   AbstractAssistant 0.13.0; the installers install Code Web 0.11.0, Observer 0.7.0, Flow 0.8.0,
-  Continuum 0.7.0 and Entity 0.7.0 (built with UI Kit 0.8.0 and Panel Chat 0.3.1 from AbstractUIC
-  0.6.0), the gateway terminal console 0.15.0 and AbstractCode 0.9.0.
+  Continuum 0.7.0 and Entity 0.7.0 (built with UI Kit 0.8.1 and Panel Chat 0.4.0 from AbstractUIC), the gateway terminal console 0.15.0 and AbstractCode 0.9.0.
 
 ## [0.9.6] - 2026-10-03
 

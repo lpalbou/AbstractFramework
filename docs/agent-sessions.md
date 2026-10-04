@@ -58,10 +58,48 @@ Reference: [AbstractGateway configuration: default agent workflow](https://githu
 
 An agent reads and writes files **on the gateway's computer**, in its run's workspace folder:
 
-- the conversation's own folder, which the gateway creates under
-  `<data dir>/workspaces/session-…`; or
-- the folder you started the AbstractCode terminal client from, when the gateway runs on the same
-  machine.
+- the conversation's own private folder, which the gateway creates under
+  `<data dir>/workspaces/session-…` (a run outside a conversation gets its own
+  `<data dir>/workspaces/<run>`); or
+- a workspace the client names, for example the folder you started the AbstractCode terminal
+  client from, when the gateway's workspace policy reaches it. A workspace the policy does not
+  reach makes the run start fail with the gateway's reason.
+
+A file the agent writes without a full path (`out.txt`) lands in that folder, never in the
+shared workspace.
+
+### Which workspaces an agent may use
+
+The gateway admin sets one workspace policy in the console (**Accounts → Shared workspace & allowed
+workspaces**), in two dimensions:
+
+1. **What can be reached: the posture.**
+   - **Deny everything, allow listed workspaces** (the default): the agent may use the shared
+     workspace and the **Allowed workspaces**, nothing else. A refused row can carve a
+     sub-directory out of an allowed one.
+   - **Allow everything, refuse listed workspaces**: every directory is reachable at one default
+     mode (**Everything else**: Read-only or Read & write), except the **Refused workspaces** and
+     the rows that carry their own mode.
+2. **How: each workspace's mode**, **Read-only** or **Read & write**.
+
+The **Shared workspace** is always reachable and always Read & write, for every account. A fresh
+gateway uses `<data dir>/workspace` (created on first use); an existing install keeps the value it
+already had. Each account can only narrow the admin's policy: lower a workspace to Read-only,
+refuse it, or lower "everything else" to Read-only; it never raises a mode. The same chooser, with
+the same words, is the account's **Workspace** row action in the console and the Workspace settings
+of AbstractCode, Observer, Flow and the Assistant; the gateway's one-line summary is shown verbatim
+everywhere, for example
+`Deny everything, allow listed workspaces · Shared workspace (rw) · /data/project (rw) · /archive (ro)`.
+
+The agent is told its workspaces: every tool-using call lists its working directory, the shared
+workspace and the allowed workspaces with their modes, for example
+`Shared workspace: "/srv/shared" (read & write)` and `"/archive" (read-only)`. Refused workspaces
+are not listed.
+
+A gateway upgraded from 0.12 converts its old workspace settings once, at its first start: the old
+access modes, per-user allow and deny lists, launch-folder trust and "Any folder (old clients)"
+become the posture and rows above, and the old keys are refused afterwards. See
+[AbstractGateway security: workspaces](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md#workspaces-two-dimensions).
 
 You can see that folder from AbstractCode: the **Files** tab in the browser and `/files` in the
 terminal show its absolute path on the gateway host, the host name, the folder tree, and a
@@ -72,7 +110,8 @@ gateway host. Another user's run is never visible: its workspace routes answer 4
 ### Built-in protection for every run
 
 Whatever starts a run (a client, a schedule, the Telegram, email or agora bridges, an entity
-summons), the gateway gives it a workspace folder and a built-in deny list. These folders of the
+summons), the gateway gives it a workspace folder, its account's workspace policy and a built-in
+deny list. These folders of the
 gateway's user account are never listed or served by the workspace browser, and the agent's file
 tools cannot read or write them:
 

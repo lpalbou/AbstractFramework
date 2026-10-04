@@ -192,10 +192,13 @@ chats with agents through the same gateway rules:
 - **One default agent workflow.** The gateway decides which workflow answers each agent interface
   (`agents.default_workflow.<interface>`; the shipped `basic-agent` for AbstractCode until you
   choose another). Clients list **Gateway default** first and follow a change at the next turn.
-- **A workspace you can see, with built-in protection.** An agent works in a folder on the
-  gateway's computer; AbstractCode's **Files** tab and `/files` show its absolute path and
-  preview its files. Credential folders (`~/.ssh`, `~/.aws`, …) and the gateway's data folder are
-  denied to every run.
+- **A workspace you can see, with built-in protection.** An agent works in its conversation's
+  private folder on the gateway's computer; AbstractCode's **Files** tab and `/files` show its
+  absolute path and preview its files. The admin chooses a posture (**Deny everything, allow
+  listed workspaces** or **Allow everything, refuse listed workspaces**), one **Shared workspace**
+  (always Read & write) and workspaces that are Read-only, Read & write or Refused; each account
+  can only narrow them. Credential folders (`~/.ssh`, `~/.aws`, …) and the gateway's data folder
+  are denied to every run.
 - **Curated skills.** The skill shelf that ships with `abstractskill` is copied into the gateway's
   data folder at each start, without overwriting your edits (`skills.shelf` points elsewhere).
 - **Live replies.** Watch answers as the model writes them: the gateway's
@@ -3450,7 +3453,7 @@ flowchart LR
     START["POST /runs/start<br/>flow_id @default + interface<br/>_runtime.stream · skills"]
     subgraph GW["AbstractGateway"]
         WF["default agent workflow<br/>agents.default_workflow.*"]
-        WS["workspace guard<br/>conversation folder + built-in deny list"]
+        WS["workspace guard<br/>private conversation folder · account's workspace policy<br/>(posture, Shared workspace, allowed / refused) · built-in deny list"]
         SK["skill selection<br/>shelf + trust gate"]
         STR["stream switch<br/>run value, else agents.streaming_default"]
     end
@@ -3463,10 +3466,13 @@ flowchart LR
   setting's name and value; it never falls back silently. The response's `resolved_workflow`
   names what ran.
 - **Workspace guard.** One guard runs at every run start, whatever started the run (HTTP routes,
-  schedules, bridges, entity summons): it assigns the conversation's folder when none was named,
-  refuses a folder inside the gateway's data folder (other than the caller's own conversation
-  folder), and adds the built-in deny list for credential folders and the data folder. The file
-  tools enforce the list without writing it into the prompt.
+  schedules, bridges, entity summons): it assigns the conversation's private folder when none was
+  named, refuses a folder the account's workspace policy does not reach or one inside the gateway's
+  data folder (other than the caller's own conversation folder), applies the account's policy (the
+  posture, the Shared workspace, allowed workspaces Read-only or Read & write, refused workspaces;
+  an account narrows only) and adds the built-in deny list for credential folders and the data
+  folder. The agent's context lists the shared and allowed workspaces with their modes; the deny
+  list is enforced without being written into the prompt.
 - **Skills.** Names in `input_data.skills` pass through the same trust gate as the skill listing;
   validated skills reach the run as a stable index plus a `read_skill` tool, and every decision is
   recorded on the run.
@@ -4927,10 +4933,48 @@ Reference: [AbstractGateway configuration: default agent workflow](https://githu
 
 An agent reads and writes files **on the gateway's computer**, in its run's workspace folder:
 
-- the conversation's own folder, which the gateway creates under
-  `<data dir>/workspaces/session-…`; or
-- the folder you started the AbstractCode terminal client from, when the gateway runs on the same
-  machine.
+- the conversation's own private folder, which the gateway creates under
+  `<data dir>/workspaces/session-…` (a run outside a conversation gets its own
+  `<data dir>/workspaces/<run>`); or
+- a workspace the client names, for example the folder you started the AbstractCode terminal
+  client from, when the gateway's workspace policy reaches it. A workspace the policy does not
+  reach makes the run start fail with the gateway's reason.
+
+A file the agent writes without a full path (`out.txt`) lands in that folder, never in the
+shared workspace.
+
+### Which workspaces an agent may use
+
+The gateway admin sets one workspace policy in the console (**Accounts → Shared workspace & allowed
+workspaces**), in two dimensions:
+
+1. **What can be reached: the posture.**
+   - **Deny everything, allow listed workspaces** (the default): the agent may use the shared
+     workspace and the **Allowed workspaces**, nothing else. A refused row can carve a
+     sub-directory out of an allowed one.
+   - **Allow everything, refuse listed workspaces**: every directory is reachable at one default
+     mode (**Everything else**: Read-only or Read & write), except the **Refused workspaces** and
+     the rows that carry their own mode.
+2. **How: each workspace's mode**, **Read-only** or **Read & write**.
+
+The **Shared workspace** is always reachable and always Read & write, for every account. A fresh
+gateway uses `<data dir>/workspace` (created on first use); an existing install keeps the value it
+already had. Each account can only narrow the admin's policy: lower a workspace to Read-only,
+refuse it, or lower "everything else" to Read-only; it never raises a mode. The same chooser, with
+the same words, is the account's **Workspace** row action in the console and the Workspace settings
+of AbstractCode, Observer, Flow and the Assistant; the gateway's one-line summary is shown verbatim
+everywhere, for example
+`Deny everything, allow listed workspaces · Shared workspace (rw) · /data/project (rw) · /archive (ro)`.
+
+The agent is told its workspaces: every tool-using call lists its working directory, the shared
+workspace and the allowed workspaces with their modes, for example
+`Shared workspace: "/srv/shared" (read & write)` and `"/archive" (read-only)`. Refused workspaces
+are not listed.
+
+A gateway upgraded from 0.12 converts its old workspace settings once, at its first start: the old
+access modes, per-user allow and deny lists, launch-folder trust and "Any folder (old clients)"
+become the posture and rows above, and the old keys are refused afterwards. See
+[AbstractGateway security: workspaces](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md#workspaces-two-dimensions).
 
 You can see that folder from AbstractCode: the **Files** tab in the browser and `/files` in the
 terminal show its absolute path on the gateway host, the host name, the folder tree, and a
@@ -4941,7 +4985,8 @@ gateway host. Another user's run is never visible: its workspace routes answer 4
 ### Built-in protection for every run
 
 Whatever starts a run (a client, a schedule, the Telegram, email or agora bridges, an entity
-summons), the gateway gives it a workspace folder and a built-in deny list. These folders of the
+summons), the gateway gives it a workspace folder, its account's workspace policy and a built-in
+deny list. These folders of the
 gateway's user account are never listed or served by the workspace browser, and the agent's file
 tools cannot read or write them:
 
@@ -5977,9 +6022,24 @@ run start. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
 
 ### Conversation workspace
 
-The folder on the gateway's computer where a run's file tools work: the conversation's own folder
-under `<data dir>/workspaces/`, or the AbstractCode terminal client's launch folder. AbstractCode's
-**Files** tab and `/files` browse and preview it.
+The folder on the gateway's computer where a run's file tools work and where a relative path lands:
+the conversation's own private folder under `<data dir>/workspaces/`, or a workspace the client
+names (such as the AbstractCode terminal client's launch folder) when the workspace policy reaches
+it. AbstractCode's **Files** tab and `/files` browse and preview it.
+
+### Shared workspace
+
+The one workspace every account's agents may always use, always Read & write, set by the gateway
+admin (a fresh gateway uses `<data dir>/workspace`). It is not where a run writes by default: a
+relative path lands in the conversation workspace.
+
+### Workspace posture
+
+The gateway's rule for what an agent may reach: **Deny everything, allow listed workspaces** (only
+the shared workspace and the **Allowed workspaces**) or **Allow everything, refuse listed
+workspaces** (everything at one default mode, **Everything else**, except the **Refused
+workspaces**). Each workspace is **Read-only** or **Read & write**; an account can only narrow the
+admin's choices. See [Agent sessions](agent-sessions.md#which-workspaces-an-agent-may-use).
 
 ### Built-in deny list
 
@@ -6247,9 +6307,13 @@ turn. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
 
 ## Where does the agent work, and can it read my credentials?
 
-In a folder on the gateway's computer: the conversation's own folder under the gateway's data
-folder, or the folder you started the AbstractCode terminal client from. AbstractCode's **Files**
-tab and `/files` show its absolute path and preview its files. Credential folders (`~/.ssh`,
+In a folder on the gateway's computer: the conversation's own private folder under the gateway's
+data folder, or a workspace the client names (such as the folder you started the AbstractCode
+terminal client from) when the gateway's workspace policy reaches it. A file written without a full
+path lands there, not in the shared workspace. Beyond that folder the agent may use the **Shared
+workspace** and the workspaces the admin's posture allows, each Read-only or Read & write; it is
+told their paths and modes. AbstractCode's **Files** tab and `/files` show its absolute path and
+preview its files. Credential folders (`~/.ssh`,
 `~/.aws`, `~/.gnupg`, `~/.config/gcloud`, `~/.kube`, `~/Library/Keychains`), the framework's own
 settings folders and the gateway's data folder are denied to every run's file tools and never
 shown by the workspace browser. Shell commands a run may execute are not confined by that list,

@@ -241,7 +241,7 @@ flowchart LR
     START["POST /runs/start<br/>flow_id @default + interface<br/>_runtime.stream · skills"]
     subgraph GW["AbstractGateway"]
         WF["default agent workflow<br/>agents.default_workflow.*"]
-        WS["workspace guard<br/>conversation folder + built-in deny list"]
+        WS["workspace guard<br/>private conversation folder · account's workspace policy<br/>(posture, Shared workspace, allowed / refused) · built-in deny list"]
         SK["skill selection<br/>shelf + trust gate"]
         STR["stream switch<br/>run value, else agents.streaming_default"]
     end
@@ -254,10 +254,13 @@ flowchart LR
   setting's name and value; it never falls back silently. The response's `resolved_workflow`
   names what ran.
 - **Workspace guard.** One guard runs at every run start, whatever started the run (HTTP routes,
-  schedules, bridges, entity summons): it assigns the conversation's folder when none was named,
-  refuses a folder inside the gateway's data folder (other than the caller's own conversation
-  folder), and adds the built-in deny list for credential folders and the data folder. The file
-  tools enforce the list without writing it into the prompt.
+  schedules, bridges, entity summons): it assigns the conversation's private folder when none was
+  named, refuses a folder the account's workspace policy does not reach or one inside the gateway's
+  data folder (other than the caller's own conversation folder), applies the account's policy (the
+  posture, the Shared workspace, allowed workspaces Read-only or Read & write, refused workspaces;
+  an account narrows only) and adds the built-in deny list for credential folders and the data
+  folder. The agent's context lists the shared and allowed workspaces with their modes; the deny
+  list is enforced without being written into the prompt.
 - **Skills.** Names in `input_data.skills` pass through the same trust gate as the skill listing;
   validated skills reach the run as a stable index plus a `read_skill` tool, and every decision is
   recorded on the run.

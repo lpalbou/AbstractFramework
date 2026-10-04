@@ -188,10 +188,13 @@ chats with agents through the same gateway rules:
 - **One default agent workflow.** The gateway decides which workflow answers each agent interface
   (`agents.default_workflow.<interface>`; the shipped `basic-agent` for AbstractCode until you
   choose another). Clients list **Gateway default** first and follow a change at the next turn.
-- **A workspace you can see, with built-in protection.** An agent works in a folder on the
-  gateway's computer; AbstractCode's **Files** tab and `/files` show its absolute path and
-  preview its files. Credential folders (`~/.ssh`, `~/.aws`, …) and the gateway's data folder are
-  denied to every run.
+- **A workspace you can see, with built-in protection.** An agent works in its conversation's
+  private folder on the gateway's computer; AbstractCode's **Files** tab and `/files` show its
+  absolute path and preview its files. The admin chooses a posture (**Deny everything, allow
+  listed workspaces** or **Allow everything, refuse listed workspaces**), one **Shared workspace**
+  (always Read & write) and workspaces that are Read-only, Read & write or Refused; each account
+  can only narrow them. Credential folders (`~/.ssh`, `~/.aws`, …) and the gateway's data folder
+  are denied to every run.
 - **Curated skills.** The skill shelf that ships with `abstractskill` is copied into the gateway's
   data folder at each start, without overwriting your edits (`skills.shelf` points elsewhere).
 - **Live replies.** Watch answers as the model writes them: the gateway's

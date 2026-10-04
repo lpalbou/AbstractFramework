@@ -191,9 +191,13 @@ turn. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
 
 ## Where does the agent work, and can it read my credentials?
 
-In a folder on the gateway's computer: the conversation's own folder under the gateway's data
-folder, or the folder you started the AbstractCode terminal client from. AbstractCode's **Files**
-tab and `/files` show its absolute path and preview its files. Credential folders (`~/.ssh`,
+In a folder on the gateway's computer: the conversation's own private folder under the gateway's
+data folder, or a workspace the client names (such as the folder you started the AbstractCode
+terminal client from) when the gateway's workspace policy reaches it. A file written without a full
+path lands there, not in the shared workspace. Beyond that folder the agent may use the **Shared
+workspace** and the workspaces the admin's posture allows, each Read-only or Read & write; it is
+told their paths and modes. AbstractCode's **Files** tab and `/files` show its absolute path and
+preview its files. Credential folders (`~/.ssh`,
 `~/.aws`, `~/.gnupg`, `~/.config/gcloud`, `~/.kube`, `~/Library/Keychains`), the framework's own
 settings folders and the gateway's data folder are denied to every run's file tools and never
 shown by the workspace browser. Shell commands a run may execute are not confined by that list,

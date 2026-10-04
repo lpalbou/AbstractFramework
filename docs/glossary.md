@@ -301,9 +301,24 @@ run start. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
 
 ### Conversation workspace
 
-The folder on the gateway's computer where a run's file tools work: the conversation's own folder
-under `<data dir>/workspaces/`, or the AbstractCode terminal client's launch folder. AbstractCode's
-**Files** tab and `/files` browse and preview it.
+The folder on the gateway's computer where a run's file tools work and where a relative path lands:
+the conversation's own private folder under `<data dir>/workspaces/`, or a workspace the client
+names (such as the AbstractCode terminal client's launch folder) when the workspace policy reaches
+it. AbstractCode's **Files** tab and `/files` browse and preview it.
+
+### Shared workspace
+
+The one workspace every account's agents may always use, always Read & write, set by the gateway
+admin (a fresh gateway uses `<data dir>/workspace`). It is not where a run writes by default: a
+relative path lands in the conversation workspace.
+
+### Workspace posture
+
+The gateway's rule for what an agent may reach: **Deny everything, allow listed workspaces** (only
+the shared workspace and the **Allowed workspaces**) or **Allow everything, refuse listed
+workspaces** (everything at one default mode, **Everything else**, except the **Refused
+workspaces**). Each workspace is **Read-only** or **Read & write**; an account can only narrow the
+admin's choices. See [Agent sessions](agent-sessions.md#which-workspaces-an-agent-may-use).
 
 ### Built-in deny list
 
