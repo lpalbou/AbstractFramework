@@ -69,12 +69,27 @@ verdicts: `untracked/round4/ADVERSARY.md`, `untracked/round4/COORD.md`, `untrack
 14. Console islands and AbstractCore's vendored kit theme CSS must be re-synced after every kit
     version (see 0994 items 55 and 81); confirm both carry ui-kit 0.8.0 before tagging the gateway
     and core. Owner: gateway, core.
+15. Observer automation rows label the action "Archive…" (`automations_page.tsx`); the rule is the
+    short label "Archive" with an inline confirm. Observer has no Unarchive for automations (it lists
+    runs, not sessions, so session archive does not apply there). Owner: observer.
+16. AbstractVoice `_configured_provider_id` (`abstractvoice/integrations/abstractcore_plugin.py`
+    ~2383) still falls back to a hardcoded `"openai"` and lists openai first when an OpenAI key is in
+    the environment; the gateway now answers the true defaults (`GET /api/gateway/voice/defaults`),
+    but the library fallback should follow the configured routes too. Owner: voice.
+17. AbstractAssistant docs advise `pip install "abstractassistant[voice]"` for microphone capture
+    while the base install already pulls `abstractvoice[audio-io]`; confirm what the extra adds and
+    align the hint with the three install profiles. Owner: assistant.
+18. Kit Archive hint for automations ("Stop it for good: it will not run again") contradicts
+    Unarchive; reword (archive hides and stops; Unarchive brings it back paused). Owner: kit.
+19. Package docs outside the rounds 4–7 scope still give `pip install abstractgateway[...]` install
+    hints (gateway README/docs); the rule is the three AbstractFramework profiles only
+    (`abstractframework`, `[apple]`, `[gpu]`). Sweep the gateway docs. Owner: gateway.
 
 ## Acceptance criteria
 
 - [ ] Items 1–6 fixed with a test that goes RED without the change.
 - [ ] Items 11–14 checked off in the 0.10.0 release wave (or carried with a reason).
-- [ ] Items 7–10 fixed or moved to their own item with a screenshot.
+- [ ] Items 7–10 and 15–19 fixed or moved to their own item with a screenshot.
 
 ## Receipts
 
