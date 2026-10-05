@@ -7,8 +7,8 @@ Current framework release: `abstractframework` 0.6.2 (2026-09-29). It pins Abstr
 Release history and each release's pins: https://github.com/lpalbou/AbstractFramework/blob/main/CHANGELOG.md
 
 Install:
-- macOS / Linux: `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
-- Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`
+- macOS / Linux: `curl -LsSf https://abstractframework.ai/install.sh | sh`
+- Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"`
 - macOS package: https://github.com/lpalbou/AbstractFramework/releases/latest/download/AbstractFramework-Installer.pkg
 - Python: `pip install abstractframework` (light), `"abstractframework[apple]"`, `"abstractframework[gpu]"`
 - Container: `ghcr.io/lpalbou/abstractgateway:0.7.2`

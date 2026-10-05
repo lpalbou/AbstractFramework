@@ -146,7 +146,7 @@
             <li>It also leaves <strong>Install AbstractFramework.command</strong> (run it again to repair or upgrade) and <strong>Uninstall AbstractFramework.command</strong> in <code style="white-space:normal;overflow-wrap:anywhere">~/Library/Application Support/AbstractFramework/Installer</code>.</li>
           </ul><p style="margin:.9rem 0 .2rem"><strong>With Terminal: one line.</strong> Paste it and press Return; it runs the same installer.</p></div>
           <!-- VERIFIED-DOCS docs/install.md:57 -->
-<div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+<div class="code-block"><pre><code>curl -LsSf https://abstractframework.ai/install.sh | sh</code></pre></div>
           <div class="install-notes"><ul>
             <li>macOS 13 or later (the Apple Silicon engines need macOS 14), about 5 GB of free disk before models, and an internet connection.</li>
             <li>With no answer to the start-at-login question within 25 seconds, it leaves start at login off. Pass options after <code>sh -s --</code>, for example <code style="white-space:normal;overflow-wrap:anywhere">… | sh -s -- --with-ollama</code>. See <a href="#options">Options</a>.</li>
@@ -154,7 +154,7 @@
         </div>
         <div class="tab-panel" id="tab-i-linux">
           <!-- VERIFIED-DOCS docs/install.md:57 -->
-<div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+<div class="code-block"><pre><code>curl -LsSf https://abstractframework.ai/install.sh | sh</code></pre></div>
           <div class="install-notes"><ul>
             <li>Paste it in a terminal and press Return. It asks whether to start at login (a <code>systemd --user</code> service); Enter = yes, no answer within 25 seconds leaves it off. Your data lives in <code style="white-space:normal;overflow-wrap:anywhere">~/.local/share/abstractgateway</code>.</li>
             <li>x86_64 or aarch64 (on musl Linux such as Alpine, local voice and llama.cpp are skipped); about 5 GB of free disk before models. The <code>gpu</code> profile is picked when <code>nvidia-smi</code> or <code>rocminfo</code> works.</li>
@@ -163,7 +163,7 @@
         </div>
         <div class="tab-panel" id="tab-i-win">
           <!-- VERIFIED-DOCS docs/install.md:74 -->
-<div class="code-block"><pre><code>powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"</code></pre></div>
+<div class="code-block"><pre><code>powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"</code></pre></div>
           <div class="install-notes"><ul>
             <li>Windows 10 22H2 or later, or Windows 11. Open PowerShell, paste the line and press Enter.</li>
             <li>It installs under your user account (no administrator rights), asks whether to start AbstractFramework at sign-in (Enter = yes) and opens it in your browser.</li>
@@ -286,7 +286,7 @@ abstractgateway apps tui-command code</code></pre></div>
         <h3>Install over SSH</h3>
         <!-- VERIFIED-DOCS docs/install.md:57 -->
 <div class="code-block"><pre><code>ssh -t &lt;server&gt;
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+curl -LsSf https://abstractframework.ai/install.sh | sh</code></pre></div>
         <p>It asks the start-at-login question in your SSH terminal, installs local voice like every install, and at the end offers to open the terminal console, signed in ("Press Enter within 25 s"). No answer skips it, so a scripted install never hangs. Over SSH it does not open a browser on the server.</p>
       </div></div>
       <div class="j-step reveal"><div class="j-body">
@@ -443,11 +443,11 @@ abstractgateway service uninstall  <span class="line-cmt"># data is kept</span><
         <h3 id="upgrade" style="margin-bottom:.75rem">Upgrade</h3>
         <!-- VERIFIED-DOCS docs/install.md:57 -->
 <div class="code-block"><pre><code><span class="line-cmt"># re-run the same line you installed with</span>
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh</code></pre></div>
+curl -LsSf https://abstractframework.ai/install.sh | sh</code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm)">Re-running the script upgrades or repairs the install in place and keeps your profile, port and start-at-login choice. On Windows, run the PowerShell line again; on a Mac without Terminal, double-click <strong>Install AbstractFramework.command</strong> again. The console&rsquo;s <strong>Gateway</strong> card (<strong>Check now</strong>), the terminal console (<code>F3</code>, then <code>u</code>) and the gateway&rsquo;s tray icon (<strong>Check for Updates</strong>) also offer the update: on an installer install it compares your AbstractFramework release with the newest one and runs the installer.</p>
         <h3 style="margin:1.25rem 0 .75rem">Remove</h3>
         <!-- VERIFIED-DOCS docs/install.md:109 -->
-<div class="code-block"><pre><code>curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh</code></pre></div>
+<div class="code-block"><pre><code>curl -LsSf https://abstractframework.ai/uninstall.sh | sh</code></pre></div>
         <p style="color:var(--text-secondary);font-size:var(--text-sm)">It asks before deleting anything, keeps your data unless you say yes, and keeps model weights and shared caches. Windows: <code style="white-space:normal;overflow-wrap:anywhere">install.ps1 -Uninstall [-Purge]</code>.</p>
       </div>
     </div>
