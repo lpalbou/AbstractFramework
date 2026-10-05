@@ -16,7 +16,7 @@
 #   sh uninstall.sh                 # asks before removing, and about your data
 #   sh uninstall.sh --yes           # no questions; keeps your data
 #   sh uninstall.sh --yes --purge   # no questions; deletes your data too
-#   curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh
+#   curl -LsSf https://abstractframework.ai/uninstall.sh | sh
 #
 # It is a thin front end: the removal itself is `install.sh --uninstall`, run
 # from next to this file or downloaded from the same place, so the two can
@@ -33,7 +33,7 @@
 if [ -n "${ZSH_VERSION:-}" ]; then emulate sh; fi
 set -eu
 
-AF_INSTALL_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
+AF_INSTALL_URL="https://abstractframework.ai/install.sh"
 YES=0
 PASS=""
 while [ $# -gt 0 ]; do

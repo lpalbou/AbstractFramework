@@ -4,7 +4,7 @@
 # =============================================================================
 # One line, no admin rights, no system Python needed:
 #
-#   curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+#   curl -LsSf https://abstractframework.ai/install.sh | sh
 #   curl -LsSf .../install.sh | sh -s -- --with-apps --with-ollama
 #
 # What it does (every step prints its command; `--print` shows them all and
@@ -112,7 +112,7 @@ if [ "$(uname -s)" = Darwin ] && [ "$(sysctl -n sysctl.proc_translated 2>/dev/nu
     printf 'would set up the slow Intel version without the Apple Silicon engines.\n' >&2
     printf 'What to do: quit Terminal; in Finder open Applications > Utilities, select Terminal, choose\n' >&2
     printf 'File > Get Info, untick "Open using Rosetta", open Terminal again and run the installer again.\n' >&2
-    printf '(Or paste: curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | arch -arm64 sh)\n' >&2
+    printf '(Or paste: curl -LsSf https://abstractframework.ai/install.sh | arch -arm64 sh)\n' >&2
     exit 1
 fi
 
@@ -158,7 +158,7 @@ af_cli_about() {  # one line for the summary's command list
     esac
 }
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
-AF_SCRIPT_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
+AF_SCRIPT_URL="https://abstractframework.ai/install.sh"
 
 # ---------------------------------------------------------------------------
 # Prebuilt wheels only: by default no C compiler (Xcode CLT, gcc) is needed.
