@@ -4,7 +4,7 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-## [0.10.0] - 2026-10-04
+## [0.10.0] - 2026-10-05
 
 ### Added
 
