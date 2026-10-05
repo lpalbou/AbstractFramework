@@ -13,13 +13,13 @@ This guide helps you build a correct mental model quickly, then run something en
 - **macOS / Linux, one line** in Terminal:
 
   ```bash
-  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  curl -LsSf https://abstractframework.ai/install.sh | sh
   ```
 
 - **Windows 10 22H2+ / 11** (PowerShell):
 
   ```powershell
-  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
   ```
 
 To upgrade later, run the same line again, or, on macOS and Linux, press **Update** in a

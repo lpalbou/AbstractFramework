@@ -13,7 +13,7 @@ files to `~/Library/Application Support/AbstractFramework/Installer` and opens
 then runs the steps below. The one-line path:
 
 1. Paste in Terminal:
-   `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
+   `curl -LsSf https://abstractframework.ai/install.sh | sh`
 2. **Preflight** (read-only): macOS version and CPU (`sw_vers`, `uname -m`), profile choice
    (`apple` on Apple Silicon with macOS 14+, else `light`), free disk under your home, port 8080
    (the next free port is used and remembered when 8080 is taken).
@@ -66,7 +66,7 @@ Same one-liner and steps, with these differences:
 ## First install on Windows
 
 1. In PowerShell:
-   `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`
+   `powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"`
 2. **Preflight**: Windows build (22H2/19045 or later), architecture, execution policy set by Group
    Policy (reported and explained), long-path support, free disk, port.
 3. **uv**: the official `install.ps1` from astral.sh into `%USERPROFILE%\.local\bin`.
@@ -82,7 +82,7 @@ Same one-liner and steps, with these differences:
    file under `%LOCALAPPDATA%\AbstractGateway\auth\`, then the console opens.
 
 To pass options through the one-liner, use a script block:
-`& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -WithApps`.
+`& ([scriptblock]::Create((irm https://abstractframework.ai/install.ps1))) -WithApps`.
 
 ## Apps
 

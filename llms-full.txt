@@ -31,13 +31,13 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 - **macOS / Linux, one line:**
 
   ```bash
-  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  curl -LsSf https://abstractframework.ai/install.sh | sh
   ```
 
 - **Windows 10 22H2+ / 11** (PowerShell):
 
   ```powershell
-  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
   ```
 
 To upgrade, run the same line again (on a Mac, double-clicking **Install AbstractFramework.command**
@@ -69,7 +69,7 @@ a server without a browser and offers itself at the end of an install over SSH
 Every failure says what to do next; running the installer again repairs the install in place. To
 remove it, double-click `Uninstall AbstractFramework.command` (in
 `~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
-`curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`.
+`curl -LsSf https://abstractframework.ai/uninstall.sh | sh`.
 Step by step, the failure table, options (`--with-apps`, `--with-ollama`, `--print`, …):
 [Install](docs/install.md). Something not working: [Troubleshooting](docs/troubleshooting.md).
 
@@ -1929,13 +1929,13 @@ This guide helps you build a correct mental model quickly, then run something en
 - **macOS / Linux, one line** in Terminal:
 
   ```bash
-  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  curl -LsSf https://abstractframework.ai/install.sh | sh
   ```
 
 - **Windows 10 22H2+ / 11** (PowerShell):
 
   ```powershell
-  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
   ```
 
 To upgrade later, run the same line again, or, on macOS and Linux, press **Update** in a
@@ -3805,7 +3805,7 @@ The package also leaves two double-clickable files in
 On macOS and Linux, open Terminal, paste this line and press Return:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+curl -LsSf https://abstractframework.ai/install.sh | sh
 ```
 
 It asks the same start-at-login question in your terminal: press Return for yes or type `n`. With
@@ -3822,7 +3822,7 @@ says how to turn it on. `--no-service` always leaves it off and asks nothing.
 Windows 10 22H2+ / 11: open PowerShell, paste this line and press Enter:
 
 ```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
 ```
 
 It installs under your user account (no administrator rights) and opens AbstractFramework in your
@@ -3924,13 +3924,13 @@ says so when the registry cannot be reached; press **Install** again then.
 The line you installed with also upgrades and repairs. Run it again:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+curl -LsSf https://abstractframework.ai/install.sh | sh
 ```
 
 On Windows:
 
 ```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
 ```
 
 On a Mac without Terminal, double-click **Install AbstractFramework.command** in
@@ -4023,13 +4023,13 @@ A gateway release can reach PyPI before the next AbstractFramework release. To i
 gateway with the same profile, voice and llama.cpp setup:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --pin latest
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --pin latest
 ```
 
 On Windows:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -Pin latest
+& ([scriptblock]::Create((irm https://abstractframework.ai/install.ps1))) -Pin latest
 ```
 
 `--pin latest` moves the gateway and its libraries to their newest releases on PyPI; `--pin 0.7.1`
@@ -4060,7 +4060,7 @@ For a gateway installed by the AbstractFramework installer on macOS or Linux:
    reads `AbstractFramework <yours> · gateway <version> · AbstractFramework <latest> available`.
 2. **Update to AbstractFramework <latest>** asks you to confirm and shows exactly what runs:
    - the address of the installer,
-     `https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh`;
+     `https://abstractframework.ai/install.sh`;
    - the commit it comes from and the script's sha256;
    - the command:
      `/bin/sh install.sh --yes --no-start --no-open --no-modify-path --data-dir <data dir>`.
@@ -4143,7 +4143,7 @@ uv tool list --show-version-specifiers       # the gateway uv tool and its pin (
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --print-versions   # what the latest release installs
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --print-versions   # what the latest release installs
 ```
 
 The web console shows the running gateway's version under **Resources > Gateway > Version**.
@@ -4154,7 +4154,7 @@ Double-click **Uninstall AbstractFramework.command** (in
 `~/Library/Application Support/AbstractFramework/Installer` after a package install), or paste:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh
+curl -LsSf https://abstractframework.ai/uninstall.sh | sh
 ```
 
 It asks before removing anything, then asks two more questions, both defaulting to no:
@@ -4515,11 +4515,11 @@ installer does not touch it (delete it with `cargo uninstall abstractcode`).
 Pass options through the one-liner like this:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --with-apps --with-ollama
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --with-apps --with-ollama
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -WithApps -WithOllama
+& ([scriptblock]::Create((irm https://abstractframework.ai/install.ps1))) -WithApps -WithOllama
 ```
 
 ### Headless or remote machine
@@ -9306,8 +9306,8 @@ behind them. The decision is recorded in
 
 | OS | Script | One-liner |
 |---|---|---|
-| macOS, Linux | [`scripts/install.sh`](../../scripts/install.sh) | `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh \| sh` |
-| Windows 10 22H2+ / 11 | [`scripts/install.ps1`](../../scripts/install.ps1) | `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 \| iex"` |
+| macOS, Linux | [`scripts/install.sh`](../../scripts/install.sh) | `curl -LsSf https://abstractframework.ai/install.sh \| sh` |
+| Windows 10 22H2+ / 11 | [`scripts/install.ps1`](../../scripts/install.ps1) | `powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 \| iex"` |
 
 --- docs/installers/strategy.md ---
 # Installer Strategy
@@ -9406,7 +9406,7 @@ files to `~/Library/Application Support/AbstractFramework/Installer` and opens
 then runs the steps below. The one-line path:
 
 1. Paste in Terminal:
-   `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh`
+   `curl -LsSf https://abstractframework.ai/install.sh | sh`
 2. **Preflight** (read-only): macOS version and CPU (`sw_vers`, `uname -m`), profile choice
    (`apple` on Apple Silicon with macOS 14+, else `light`), free disk under your home, port 8080
    (the next free port is used and remembered when 8080 is taken).
@@ -9459,7 +9459,7 @@ Same one-liner and steps, with these differences:
 ## First install on Windows
 
 1. In PowerShell:
-   `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"`
+   `powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"`
 2. **Preflight**: Windows build (22H2/19045 or later), architecture, execution policy set by Group
    Policy (reported and explained), long-path support, free disk, port.
 3. **uv**: the official `install.ps1` from astral.sh into `%USERPROFILE%\.local\bin`.
@@ -9475,7 +9475,7 @@ Same one-liner and steps, with these differences:
    file under `%LOCALAPPDATA%\AbstractGateway\auth\`, then the console opens.
 
 To pass options through the one-liner, use a script block:
-`& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -WithApps`.
+`& ([scriptblock]::Create((irm https://abstractframework.ai/install.ps1))) -WithApps`.
 
 ## Apps
 

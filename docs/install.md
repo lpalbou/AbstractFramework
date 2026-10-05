@@ -55,7 +55,7 @@ The package also leaves two double-clickable files in
 On macOS and Linux, open Terminal, paste this line and press Return:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+curl -LsSf https://abstractframework.ai/install.sh | sh
 ```
 
 It asks the same start-at-login question in your terminal: press Return for yes or type `n`. With
@@ -72,7 +72,7 @@ says how to turn it on. `--no-service` always leaves it off and asks nothing.
 Windows 10 22H2+ / 11: open PowerShell, paste this line and press Enter:
 
 ```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
 ```
 
 It installs under your user account (no administrator rights) and opens AbstractFramework in your
@@ -174,13 +174,13 @@ says so when the registry cannot be reached; press **Install** again then.
 The line you installed with also upgrades and repairs. Run it again:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+curl -LsSf https://abstractframework.ai/install.sh | sh
 ```
 
 On Windows:
 
 ```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
 ```
 
 On a Mac without Terminal, double-click **Install AbstractFramework.command** in
@@ -273,13 +273,13 @@ A gateway release can reach PyPI before the next AbstractFramework release. To i
 gateway with the same profile, voice and llama.cpp setup:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --pin latest
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --pin latest
 ```
 
 On Windows:
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -Pin latest
+& ([scriptblock]::Create((irm https://abstractframework.ai/install.ps1))) -Pin latest
 ```
 
 `--pin latest` moves the gateway and its libraries to their newest releases on PyPI; `--pin 0.7.1`
@@ -310,7 +310,7 @@ For a gateway installed by the AbstractFramework installer on macOS or Linux:
    reads `AbstractFramework <yours> · gateway <version> · AbstractFramework <latest> available`.
 2. **Update to AbstractFramework <latest>** asks you to confirm and shows exactly what runs:
    - the address of the installer,
-     `https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh`;
+     `https://abstractframework.ai/install.sh`;
    - the commit it comes from and the script's sha256;
    - the command:
      `/bin/sh install.sh --yes --no-start --no-open --no-modify-path --data-dir <data dir>`.
@@ -393,7 +393,7 @@ uv tool list --show-version-specifiers       # the gateway uv tool and its pin (
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --print-versions   # what the latest release installs
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --print-versions   # what the latest release installs
 ```
 
 The web console shows the running gateway's version under **Resources > Gateway > Version**.
@@ -404,7 +404,7 @@ Double-click **Uninstall AbstractFramework.command** (in
 `~/Library/Application Support/AbstractFramework/Installer` after a package install), or paste:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh
+curl -LsSf https://abstractframework.ai/uninstall.sh | sh
 ```
 
 It asks before removing anything, then asks two more questions, both defaulting to no:
@@ -765,11 +765,11 @@ installer does not touch it (delete it with `cargo uninstall abstractcode`).
 Pass options through the one-liner like this:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh -s -- --with-apps --with-ollama
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --with-apps --with-ollama
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1))) -WithApps -WithOllama
+& ([scriptblock]::Create((irm https://abstractframework.ai/install.ps1))) -WithApps -WithOllama
 ```
 
 ### Headless or remote machine

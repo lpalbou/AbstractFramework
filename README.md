@@ -27,13 +27,13 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 - **macOS / Linux, one line:**
 
   ```bash
-  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  curl -LsSf https://abstractframework.ai/install.sh | sh
   ```
 
 - **Windows 10 22H2+ / 11** (PowerShell):
 
   ```powershell
-  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
   ```
 
 To upgrade, run the same line again (on a Mac, double-clicking **Install AbstractFramework.command**
@@ -65,7 +65,7 @@ a server without a browser and offers itself at the end of an install over SSH
 Every failure says what to do next; running the installer again repairs the install in place. To
 remove it, double-click `Uninstall AbstractFramework.command` (in
 `~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
-`curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`.
+`curl -LsSf https://abstractframework.ai/uninstall.sh | sh`.
 Step by step, the failure table, options (`--with-apps`, `--with-ollama`, `--print`, …):
 [Install](docs/install.md). Something not working: [Troubleshooting](docs/troubleshooting.md).
 
