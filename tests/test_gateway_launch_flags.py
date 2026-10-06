@@ -6,7 +6,8 @@ ABSTRACTGATEWAY_TRIAGE_REPO_ROOT / ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER variables
 leftover value once into the saved setting). scripts/lib/gateway_flags.sh builds the flags when
 `abstractgateway --version` is 0.13.0 or newer; for an older gateway it exports the two variables
 and prints one note. scripts/gateway.sh and scripts/gateway-local.sh take `--print` (show the
-serve command, then exit before anything is stopped or created).
+serve command, then exit before anything is stopped or created); the data dir is passed as
+`serve --data-dir` (the gateway exports it to its own children) instead of an exported variable.
 
 A fake python stands in for the real one: `-P -m abstractgateway --version` prints the version in
 $FAKE_GATEWAY_VERSION (nothing and exit 1 when it is empty).
@@ -82,6 +83,7 @@ def test_new_gateway_gets_flags_not_variables(sandbox, launcher, version):
     assert args[args.index("--backlog-root") + 1] == str(ROOT)
     assert args[args.index("--exec-runner") + 1] == "on"
     assert "--host" in args and "--port" in args
+    assert args[args.index("--data-dir") + 1] == str(sandbox["tmp"] / "runtime")
     assert "note:" not in err
 
 
@@ -91,6 +93,7 @@ def test_old_or_unknown_gateway_keeps_variables_with_one_note(sandbox, launcher,
     argv, err = _print(launcher, sandbox, FAKE_GATEWAY_VERSION=version)
     args = _after_serve(argv)
     assert "--backlog-root" not in args and "--exec-runner" not in args
+    assert args[args.index("--data-dir") + 1] == str(sandbox["tmp"] / "runtime")
     notes = [line for line in err.splitlines() if line.startswith("note:")]
     assert len(notes) == 1 and "older than 0.13.0" in notes[0], err
 

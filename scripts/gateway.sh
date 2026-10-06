@@ -16,7 +16,7 @@ gateway_backlog_flags "$PY" "$ROOT_DIR"
 # folder named like an installed package (abstractvoice/) otherwise shadows it
 # as a namespace package and pkgutil.get_data returns None (2026-07-17 piper
 # TTS incident: "Capability asset not found"). PYTHONPATH entries are kept.
-SERVE_CMD=("$PY" -P -m abstractgateway serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" ${GATEWAY_SERVE_FLAGS[@]+"${GATEWAY_SERVE_FLAGS[@]}"})
+SERVE_CMD=("$PY" -P -m abstractgateway serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" --data-dir "$GATEWAY_DATA_DIR" ${GATEWAY_SERVE_FLAGS[@]+"${GATEWAY_SERVE_FLAGS[@]}"})
 # --print: show the serve command this launcher would run, then exit — before
 # anything is stopped, freed or created (tests, and "what would this start?").
 if [[ "${1:-}" == "--print" ]]; then
@@ -37,7 +37,6 @@ stop_gateway_serve_processes "AbstractGateway"
 free_port "$GATEWAY_PORT" "AbstractGateway"
 verify_gateway_runner_lock_free "$PY" "$GATEWAY_DATA_DIR/gateway_runner.lock"
 
-export ABSTRACTGATEWAY_DATA_DIR="$GATEWAY_DATA_DIR"
 info "Starting AbstractGateway (published) on http://${GATEWAY_HOST}:${GATEWAY_PORT}"
 info "  data dir: ${GATEWAY_DATA_DIR}"
 info "  entity chat defaults: shelf 36 / context 65536 (code defaults)"
