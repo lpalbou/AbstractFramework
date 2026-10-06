@@ -127,7 +127,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
 | [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic image generation |
 | [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio capability plugin |
-| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstract3d](https://github.com/lpalbou/Abstract3D) | Local-first 3D generation |
 | [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
 
 ### Apps and clients

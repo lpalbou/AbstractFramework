@@ -200,9 +200,9 @@ Notes for LLMs working in this repo:
 - [SECURITY.md](SECURITY.md): Reporting a vulnerability.
 - [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md): Credits.
 
-- [AbstractCore](https://github.com/lpalbou/abstractcore): LLM providers, tools, structured output, media.
-- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): Durable execution (runs, effects, waits, ledger, stores).
-- [AbstractAgent](https://github.com/lpalbou/abstractagent): Agent patterns (ReAct/CodeAct/MemAct) built on runtime + core.
-- [AbstractFlow](https://github.com/lpalbou/abstractflow): npm web editor for VisualFlow authoring on top of AbstractGateway.
-- [AbstractGateway](https://github.com/lpalbou/abstractgateway): HTTP/SSE control plane for gateway-first deployments.
-- [AbstractCode](https://github.com/lpalbou/abstractcode): Terminal + web host UIs for durable runs.
+- [AbstractCore](https://github.com/lpalbou/AbstractCore): LLM providers, tools, structured output, media.
+- [AbstractRuntime](https://github.com/lpalbou/AbstractRuntime): Durable execution (runs, effects, waits, ledger, stores).
+- [AbstractAgent](https://github.com/lpalbou/AbstractAgent): Agent patterns (ReAct/CodeAct/MemAct) built on runtime + core.
+- [AbstractFlow](https://github.com/lpalbou/AbstractFlow): npm web editor for VisualFlow authoring on top of AbstractGateway.
+- [AbstractGateway](https://github.com/lpalbou/AbstractGateway): HTTP/SSE control plane for gateway-first deployments.
+- [AbstractCode](https://github.com/lpalbou/AbstractCode): Terminal + web host UIs for durable runs.

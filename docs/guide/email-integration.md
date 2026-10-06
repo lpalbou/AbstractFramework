@@ -27,7 +27,7 @@ The package guides hold the full references:
 |---|---|
 | Your email address and mailbox, notifications, sign-in by email, what administrators decide, where things are stored | [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md) |
 | The `email.received@1` trigger, the event inbox, sending without asking, mail sent by automations | [AbstractRuntime: Email](https://github.com/lpalbou/AbstractRuntime/blob/main/docs/email.md) |
-| The account of an AbstractCore install, the `abstractcore email` commands, the recipient policy | [AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md) |
+| The account of an AbstractCore install, the `abstractcore email` commands, the recipient policy | [AbstractCore: Email](https://github.com/lpalbou/AbstractCore/blob/main/docs/email.md) |
 | Creating and managing email automations in the apps | [Automations: Email automations](../automations.md#email-automations) |
 
 ## Your account page
@@ -208,7 +208,7 @@ abstractcore email connect --address me@example.com \
 ```
 
 `--client-secret-stdin` does the same for an OAuth client secret. See
-[AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md).
+[AbstractCore: Email](https://github.com/lpalbou/AbstractCore/blob/main/docs/email.md).
 
 ## Coming from the environment variables
 

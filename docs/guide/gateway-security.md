@@ -196,4 +196,4 @@ behind approval on machines that hold secrets. See
 ## See also
 
 AbstractGateway has a deeper security guide (env vars, limits, lockouts, audit log):
-- https://github.com/lpalbou/abstractgateway/blob/main/docs/security.md
+- https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md

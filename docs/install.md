@@ -1128,4 +1128,4 @@ detected) or anywhere. The API key is the caller's own gateway token, so request
 an admin turns it off for one account with that account's **OpenAI API** switch (Accounts → **OpenAI API**). In Open mode, requests without a key run
 as an account the admin picks (a restricted guest by default, never an admin). `/core/v1` answers with a
 308 redirect to `/v1` for this release and is deprecated. See
-[AbstractGateway: OpenAI API](https://github.com/lpalbou/abstractgateway/blob/main/docs/openai-api.md).
+[AbstractGateway: OpenAI API](https://github.com/lpalbou/AbstractGateway/blob/main/docs/openai-api.md).
