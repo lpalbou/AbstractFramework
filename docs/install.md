@@ -95,7 +95,7 @@ where it stopped.
 | `this Terminal runs in Intel (Rosetta) mode on an Apple Silicon Mac` | Quit Terminal. In Finder open **Applications > Utilities**, select **Terminal**, choose **File > Get Info**, untick **Open using Rosetta**, then run the installer again. (Double-clicking the installer restarts itself in the right mode on its own.) |
 | `the folder … belongs to 'root', so the installer … cannot write there` | An earlier command was run with `sudo`. Run the `sudo chown -R …` line the message shows (it asks for your password once), then run the installer again. |
 | `macOS … is older than the versions AbstractFramework is tested on` | A warning, not a stop. If the install then fails, update macOS in **System Settings > General > Software Update**. |
-| `the Apple Silicon engines (MLX) need macOS 14 or later` | You get the light version (remote and endpoint engines). Update macOS and run the installer again to add the local engines. |
+| `the Apple Silicon engines (MLX) need macOS 14 or later` | You get the light version (remote and endpoint engines). Update macOS and run the installer again to add the local engines (a light install made by 0.10.0 or older keeps light on a re-run: add `--profile apple`). |
 | `the installed gateway does not start … reinstalling it` | Nothing to do: an earlier install was interrupted and the installer repairs it. |
 | `the gateway did not answer … within 180 s` | Restart the computer (the login item starts it) or run the installer again, then open `http://127.0.0.1:8080/console`. |
 | The browser page asks for a token | The one-time sign-in link lasts 10 minutes. Run the installer again: it opens a fresh link. |
@@ -927,6 +927,13 @@ whether local inference engines are installed.
 | Light | macOS, Linux, Windows | 3.10–3.13 | No local inference engines. |
 | Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 | GPU | Linux with NVIDIA CUDA or AMD ROCm drivers; Windows x64 with NVIDIA (see [GPU on Windows](#gpu-on-windows-nvidia)) | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
+
+`[apple]` needs macOS 14 or newer: MLX publishes no wheels for macOS 13 (its wheels start at
+`macosx_14_0_arm64`, and there is no source package), so `pip install "abstractframework[apple]"`
+on macOS 13 fails to resolve (`mlx … has no wheels with a matching platform tag`). Use the light
+profile there (`pip install abstractframework`). The one-line installer and the `.pkg` pick the
+light profile on macOS 13 on their own, refuse `--profile apple` below 14, and switch to apple on
+the re-run after a macOS update.
 
 A plain `pip install` of the `apple` profile, or of the `gpu` profile on Linux, builds the
 [compiled extras](#compiled-extras) (`llama-cpp-python`, `stable-diffusion-cpp-python`,

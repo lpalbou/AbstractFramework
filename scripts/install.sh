@@ -1130,7 +1130,7 @@ remove_pointer() {
 
 # Previous run state (port, service mode, whether we installed Node, the release, the choices).
 ST_PORT=""; ST_MODE=""; ST_NODE_WHEEL=""; ST_PROFILE=""; ST_UV_BY_US=""; ST_RUST_BY_US=""; ST_VOICE=""
-ST_FRAMEWORK=""; ST_CONSOLE=""; ST_CODE_CLI=""; ST_CORE_CLI=""; ST_TRAY=""; ST_FULL=""
+ST_FRAMEWORK=""; ST_CONSOLE=""; ST_CODE_CLI=""; ST_CORE_CLI=""; ST_TRAY=""; ST_FULL=""; ST_PROFILE_WHY=""
 st_get() { sed -n "s/^$1=//p" "$STATE_FILE" | tail -n 1; }
 if [ -f "$STATE_FILE" ]; then
     ST_FRAMEWORK="$(st_get FRAMEWORK_VERSION)"
@@ -1143,6 +1143,7 @@ if [ -f "$STATE_FILE" ]; then
     ST_MODE="$(sed -n 's/^MODE=//p' "$STATE_FILE" | tail -n 1)"
     ST_NODE_WHEEL="$(sed -n 's/^NODE_WHEEL=//p' "$STATE_FILE" | tail -n 1)"
     ST_PROFILE="$(sed -n 's/^PROFILE=//p' "$STATE_FILE" | tail -n 1)"
+    ST_PROFILE_WHY="$(st_get PROFILE_WHY)"
 fi
 # The choices a re-run keeps: this command line's, else the previous install's, else the default.
 # KEPT lists the ones taken from the previous install that differ from the default.
@@ -2155,11 +2156,19 @@ if have rocminfo && rocminfo >/dev/null 2>&1; then HAS_ROCM=1; fi
 APPLE_OK=0
 if [ "$OS_ID" = macos ] && [ "$ARCH" = arm64 ] && [ "$MACOS_MAJOR" -ge 14 ] 2>/dev/null; then APPLE_OK=1; fi
 
+# PROFILE_WHY (kept in the state file): "macos" when the light profile was picked only because
+# macOS was older than 14, so the re-run after a macOS update adds the Apple Silicon engines
+# instead of keeping light; empty for every other choice (an explicit --profile light stays light).
+PROFILE_WHY=""
 case "$PROFILE" in
     auto|"")
-        if [ -n "$ST_PROFILE" ]; then PROFILE="$ST_PROFILE"; _why="kept from the previous install"
+        if [ "$ST_PROFILE" = light ] && [ "$ST_PROFILE_WHY" = macos ] && [ "$APPLE_OK" = 1 ]; then PROFILE=apple
+            _why="Apple Silicon, macOS $MACOS_VERSION: the previous install was light only because macOS was older than 14"
+        elif [ "$ST_PROFILE" = light ] && [ "$ST_PROFILE_WHY" = macos ]; then PROFILE=light; PROFILE_WHY=macos
+            _why="macOS $MACOS_VERSION: the Apple Silicon engines (MLX) need macOS 14 or later; update macOS and run the installer again to add them"
+        elif [ -n "$ST_PROFILE" ]; then PROFILE="$ST_PROFILE"; _why="kept from the previous install"
         elif [ "$APPLE_OK" = 1 ]; then PROFILE=apple; _why="Apple Silicon, macOS $MACOS_VERSION"
-        elif [ "$OS_ID" = macos ] && [ "$ARCH" = arm64 ]; then PROFILE=light
+        elif [ "$OS_ID" = macos ] && [ "$ARCH" = arm64 ]; then PROFILE=light; PROFILE_WHY=macos
             _why="macOS $MACOS_VERSION: the Apple Silicon engines (MLX) need macOS 14 or later; update macOS and run the installer again to add them"
         elif [ "$HAS_NVIDIA" = 1 ]; then PROFILE=gpu; _why="nvidia-smi found a GPU"
         elif [ "$HAS_ROCM" = 1 ]; then PROFILE=gpu; _why="rocminfo found a GPU"
@@ -2907,7 +2916,7 @@ write_state() {
     mkdir -p "$DATA_DIR"
     {
         echo "# written by AbstractFramework install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        echo "PORT=$PORT"; echo "MODE=$MODE"; echo "PROFILE=$PROFILE"
+        echo "PORT=$PORT"; echo "MODE=$MODE"; echo "PROFILE=$PROFILE"; echo "PROFILE_WHY=$PROFILE_WHY"
         echo "NODE_WHEEL=$NODE_WHEEL"; echo "GATEWAY_SPEC=$GW_SPEC"; echo "GATEWAY_VERSION=$AFTER"
         echo "UV_BY_INSTALLER=$UV_BY_US"; echo "RUST_BY_INSTALLER=$RUST_BY_US"; echo "VOICE_SPEC=$VOICE_SPEC"
         # Why local voice is not installed (empty when it is): the summary's reason, on one line.

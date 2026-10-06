@@ -308,6 +308,16 @@ llama.cpp on machines without a prebuilt wheel ([Compiled extras](install.md#com
 On Linux with the gpu profile, vLLM also needs a C compiler (`build-essential`) the first time it
 starts a model ([GPU on Linux (NVIDIA)](install.md#gpu-on-linux-nvidia)).
 
+### Does it work on macOS 13?
+
+Yes, with the light profile (remote and endpoint engines). `[apple]` needs macOS 14 or newer:
+MLX publishes no wheels for macOS 13, so the installer picks the light profile on 13 (it prints
+"the Apple Silicon engines (MLX) need macOS 14 or later") and refuses `--profile apple`, and
+`pip install "abstractframework[apple]"` on macOS 13 fails to resolve. After updating macOS to 14 or
+later, run the installer again to add the local engines (an install made by 0.10.0 or older keeps
+light on a re-run: add `--profile apple`)
+([Requirements per profile](install.md#requirements-per-profile)).
+
 ### Does the installer use my NVIDIA GPU?
 
 Yes, on Linux and Windows x64: when `nvidia-smi` works, the installer picks the `gpu` profile
