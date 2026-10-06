@@ -68,9 +68,10 @@ LOG_DIR="${LOG_DIR:-$RUNTIME_DIR/logs}"
 # /backlog + /reports family answers "not configured" and the continuum
 # board has no data source (operator incidents 2026-07-13 + 2026-07-16).
 # The exec worker default matches the production posture (continuum's
-# backlog-execution pipeline; executions stay operator-triggered).
-export ABSTRACTGATEWAY_TRIAGE_REPO_ROOT="${ABSTRACTGATEWAY_TRIAGE_REPO_ROOT:-$ROOT_DIR}"
-export ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER="${ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER:-1}"
+# backlog-execution pipeline; executions stay operator-triggered). Both reach
+# the gateway as `serve --backlog-root/--exec-runner` flags (gateway >= 0.13.0;
+# older gateways get the variables): see gateway_flags.sh.
+source "$APPS_LIB_DIR/gateway_flags.sh"
 
 # Static admin bearer: honor the env first, else the dev token file the
 # production launcher (gateway-flow[-local].sh) has always read/written.

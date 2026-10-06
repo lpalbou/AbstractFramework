@@ -41,7 +41,9 @@ GATEWAY_FLOWS_DIR="${GATEWAY_FLOWS_DIR:-${ABSTRACTGATEWAY_FLOWS_DIR:-$ROOT_DIR/a
 LOG_DIR="${LOG_DIR:-$RUNTIME_DIR/logs}"
 # Backlog/triage browsing needs the repo root; without it the whole /backlog +
 # /reports family answers 404 "not configured" (operator incident 2026-07-13).
-export ABSTRACTGATEWAY_TRIAGE_REPO_ROOT="${ABSTRACTGATEWAY_TRIAGE_REPO_ROOT:-$ROOT_DIR}"
+# Passed as `serve --backlog-root` (gateway >= 0.13.0; older: the variable) —
+# see lib/gateway_flags.sh. No exec-runner choice here (the saved setting).
+source "$SCRIPT_DIR/lib/gateway_flags.sh"
 DEFAULT_TOKEN_FILE="${DEFAULT_TOKEN_FILE:-$RUNTIME_DIR/dev/gateway-token}"
 LOCAL_GATEWAY_USERS="${LOCAL_GATEWAY_USERS:-${ABSTRACTGATEWAY_LOCAL_USERS:-admin}}"
 LOCAL_GATEWAY_USER_TENANT="${LOCAL_GATEWAY_USER_TENANT:-default}"
@@ -929,7 +931,8 @@ echo "Starting AbstractGateway: http://${GATEWAY_HOST}:${GATEWAY_PORT}"
 is_truthy "$VERBOSE" && echo "  command: $PYTHON_BIN -P -m abstractgateway.cli serve"
 # -P (safe path): keep the launch cwd off sys.path so repo folders named like
 # installed packages (abstractvoice/) cannot shadow them (2026-07-17 incident).
-"$PYTHON_BIN" -P -m abstractgateway.cli serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" >"$GATEWAY_LOG" 2>&1 &
+gateway_backlog_flags "$PYTHON_BIN" "$ROOT_DIR" ""
+"$PYTHON_BIN" -P -m abstractgateway.cli serve --host "$GATEWAY_HOST" --port "$GATEWAY_PORT" ${GATEWAY_SERVE_FLAGS[@]+"${GATEWAY_SERVE_FLAGS[@]}"} >"$GATEWAY_LOG" 2>&1 &
 GATEWAY_PID=$!
 
 if ! wait_for_url "$GATEWAY_HEALTH_URL" "$STARTUP_TIMEOUT_S" "$GATEWAY_PID"; then
