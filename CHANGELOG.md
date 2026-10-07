@@ -10,6 +10,9 @@ with 0.10.0.
 
 ### Fixed
 
+- **A gateway no longer restarts when the computer wakes from sleep** (AbstractGateway 0.13.1). The
+  watchdog decides that the gateway hung from whether its event loop makes progress, not from how
+  much time passed, so the clock jump of a wake is not mistaken for a hang.
 - **The gateway no longer hangs on Read aloud** (AbstractGateway 0.13.1, AbstractRuntime 0.9.1).
   Streamed speech is never a wait of the run: nothing durable exists while audio plays, and the child
   run is recorded completed when the stream ends, so a conversation no longer shows "Waiting for an
