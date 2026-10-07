@@ -66,6 +66,9 @@ with 0.10.0.
 - **Flow uses dedicated icons** (Flow 0.8.1, UI Kit 0.8.6): image, video, camera, music, database,
   branch, loop, variable, minus, divide, function, zoom in, zoom out, fit view and lock, in the
   palette, the canvas cards and the canvas controls.
+- **Flow reads at a glance** (Flow 0.8.1): one colour per node category in the palette and on the
+  canvas (light and dark), run status icons on the node cards, and a tap on a node opens its
+  properties while a drag only moves it.
 
 ### Security
 
