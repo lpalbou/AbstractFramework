@@ -4,6 +4,25 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- The gateway launchers (`scripts/gateway.sh`, `gateway-local.sh`, `gateway-flow-local.sh`, and the
+  `af.sh`/`start.sh` stacks that run them) pass the backlog folder and the backlog exec runner as
+  `serve --backlog-root <folder> --exec-runner on|off`, and the data dir as `serve --data-dir`,
+  instead of exporting `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT` / `ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER` /
+  `ABSTRACTGATEWAY_DATA_DIR`. A gateway older than 0.13.0 still gets the variables, with one printed
+  note. `gateway.sh --print` and `gateway-local.sh --print` show the serve command and change nothing.
+- Repository links use the canonical GitHub names (`lpalbou/AbstractCore`, `lpalbou/Abstract3D`, …);
+  `scripts/clone.sh` clones `lpalbou/Abstract3D`.
+
+### Fixed
+
+- macOS 13: the installer already picks the light profile there (MLX publishes no wheels below
+  macOS 14). It now records why, so running it again after a macOS update adds the apple profile
+  instead of keeping light. An explicit `--profile light` is still kept. The install guide and the
+  FAQ say that `[apple]` needs macOS 14 or newer and that `pip install "abstractframework[apple]"`
+  does not resolve on macOS 13.
+
 ## [0.10.0] - 2026-10-05
 
 ### Added

@@ -271,7 +271,7 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 | [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
 | [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic generative vision (images, optional video) |
 | [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio (Core capability plugin) |
-| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstract3d](https://github.com/lpalbou/Abstract3D) | Local-first 3D generation |
 | [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
 | `abstractsound`, `abstractvideo`, `abstractspatial`, `abstractgeometry`, `abstractcognition` | Reserved capability packages (namespaces held; APIs landing incrementally) |
 
@@ -631,12 +631,12 @@ Notes for LLMs working in this repo:
 - [SECURITY.md](SECURITY.md): Reporting a vulnerability.
 - [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md): Credits.
 
-- [AbstractCore](https://github.com/lpalbou/abstractcore): LLM providers, tools, structured output, media.
-- [AbstractRuntime](https://github.com/lpalbou/abstractruntime): Durable execution (runs, effects, waits, ledger, stores).
-- [AbstractAgent](https://github.com/lpalbou/abstractagent): Agent patterns (ReAct/CodeAct/MemAct) built on runtime + core.
-- [AbstractFlow](https://github.com/lpalbou/abstractflow): npm web editor for VisualFlow authoring on top of AbstractGateway.
-- [AbstractGateway](https://github.com/lpalbou/abstractgateway): HTTP/SSE control plane for gateway-first deployments.
-- [AbstractCode](https://github.com/lpalbou/abstractcode): Terminal + web host UIs for durable runs.
+- [AbstractCore](https://github.com/lpalbou/AbstractCore): LLM providers, tools, structured output, media.
+- [AbstractRuntime](https://github.com/lpalbou/AbstractRuntime): Durable execution (runs, effects, waits, ledger, stores).
+- [AbstractAgent](https://github.com/lpalbou/AbstractAgent): Agent patterns (ReAct/CodeAct/MemAct) built on runtime + core.
+- [AbstractFlow](https://github.com/lpalbou/AbstractFlow): npm web editor for VisualFlow authoring on top of AbstractGateway.
+- [AbstractGateway](https://github.com/lpalbou/AbstractGateway): HTTP/SSE control plane for gateway-first deployments.
+- [AbstractCode](https://github.com/lpalbou/AbstractCode): Terminal + web host UIs for durable runs.
 
 --- pyproject.toml ---
 [build-system]
@@ -1866,7 +1866,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
 | [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic image generation |
 | [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio capability plugin |
-| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstract3d](https://github.com/lpalbou/Abstract3D) | Local-first 3D generation |
 | [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
 
 ### Apps and clients
@@ -2950,7 +2950,7 @@ The package guides hold the full references:
 |---|---|
 | Your email address and mailbox, notifications, sign-in by email, what administrators decide, where things are stored | [AbstractGateway: Email](https://github.com/lpalbou/AbstractGateway/blob/main/docs/email.md) |
 | The `email.received@1` trigger, the event inbox, sending without asking, mail sent by automations | [AbstractRuntime: Email](https://github.com/lpalbou/AbstractRuntime/blob/main/docs/email.md) |
-| The account of an AbstractCore install, the `abstractcore email` commands, the recipient policy | [AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md) |
+| The account of an AbstractCore install, the `abstractcore email` commands, the recipient policy | [AbstractCore: Email](https://github.com/lpalbou/AbstractCore/blob/main/docs/email.md) |
 | Creating and managing email automations in the apps | [Automations: Email automations](../automations.md#email-automations) |
 
 ## Your account page
@@ -3131,7 +3131,7 @@ abstractcore email connect --address me@example.com \
 ```
 
 `--client-secret-stdin` does the same for an OAuth client secret. See
-[AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md).
+[AbstractCore: Email](https://github.com/lpalbou/AbstractCore/blob/main/docs/email.md).
 
 ## Coming from the environment variables
 
@@ -3845,7 +3845,7 @@ where it stopped.
 | `this Terminal runs in Intel (Rosetta) mode on an Apple Silicon Mac` | Quit Terminal. In Finder open **Applications > Utilities**, select **Terminal**, choose **File > Get Info**, untick **Open using Rosetta**, then run the installer again. (Double-clicking the installer restarts itself in the right mode on its own.) |
 | `the folder … belongs to 'root', so the installer … cannot write there` | An earlier command was run with `sudo`. Run the `sudo chown -R …` line the message shows (it asks for your password once), then run the installer again. |
 | `macOS … is older than the versions AbstractFramework is tested on` | A warning, not a stop. If the install then fails, update macOS in **System Settings > General > Software Update**. |
-| `the Apple Silicon engines (MLX) need macOS 14 or later` | You get the light version (remote and endpoint engines). Update macOS and run the installer again to add the local engines. |
+| `the Apple Silicon engines (MLX) need macOS 14 or later` | You get the light version (remote and endpoint engines). Update macOS and run the installer again to add the local engines (a light install made by 0.10.0 or older keeps light on a re-run: add `--profile apple`). |
 | `the installed gateway does not start … reinstalling it` | Nothing to do: an earlier install was interrupted and the installer repairs it. |
 | `the gateway did not answer … within 180 s` | Restart the computer (the login item starts it) or run the installer again, then open `http://127.0.0.1:8080/console`. |
 | The browser page asks for a token | The one-time sign-in link lasts 10 minutes. Run the installer again: it opens a fresh link. |
@@ -4678,6 +4678,13 @@ whether local inference engines are installed.
 | Apple | macOS 14 or later on Apple Silicon | 3.10–3.13 | MLX wheels need macOS 14+. F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 | GPU | Linux with NVIDIA CUDA or AMD ROCm drivers; Windows x64 with NVIDIA (see [GPU on Windows](#gpu-on-windows-nvidia)) | 3.10–3.13 | F5-TTS voice cloning needs Python 3.11+; the rest of the profile works on 3.10. |
 
+`[apple]` needs macOS 14 or newer: MLX publishes no wheels for macOS 13 (its wheels start at
+`macosx_14_0_arm64`, and there is no source package), so `pip install "abstractframework[apple]"`
+on macOS 13 fails to resolve (`mlx … has no wheels with a matching platform tag`). Use the light
+profile there (`pip install abstractframework`). The one-line installer and the `.pkg` pick the
+light profile on macOS 13 on their own, refuse `--profile apple` below 14, and switch to apple on
+the re-run after a macOS update.
+
 A plain `pip install` of the `apple` profile, or of the `gpu` profile on Linux, builds the
 [compiled extras](#compiled-extras) (`llama-cpp-python`, `stable-diffusion-cpp-python`,
 `aec-audio-processing`) from source, so it needs a C/C++ compiler. The one-line install above
@@ -4871,7 +4878,7 @@ detected) or anywhere. The API key is the caller's own gateway token, so request
 an admin turns it off for one account with that account's **OpenAI API** switch (Accounts → **OpenAI API**). In Open mode, requests without a key run
 as an account the admin picks (a restricted guest by default, never an admin). `/core/v1` answers with a
 308 redirect to `/v1` for this release and is deprecated. See
-[AbstractGateway: OpenAI API](https://github.com/lpalbou/abstractgateway/blob/main/docs/openai-api.md).
+[AbstractGateway: OpenAI API](https://github.com/lpalbou/AbstractGateway/blob/main/docs/openai-api.md).
 
 --- docs/agent-sessions.md ---
 # Agent sessions on a gateway
@@ -5445,7 +5452,7 @@ Email is configured as settings, never through environment variables:
   **Email** tab or the core terminal console's Email screen. From a script, `--password-stdin` (and
   `--client-secret-stdin` for an OAuth client secret) reads the secret from stdin so it never
   appears on a command line. See
-  [AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md).
+  [AbstractCore: Email](https://github.com/lpalbou/AbstractCore/blob/main/docs/email.md).
 
 The `ABSTRACT_EMAIL_*` environment variables and the email accounts file are no longer read: a
 gateway or a core install that still has them imports that account once into the new settings, then
@@ -5559,10 +5566,10 @@ Modalities are optional and become available when installed:
 
 This repo covers the overview. Each component repo owns its detailed configuration surface:
 
-- **AbstractCore**: [centralized config](https://github.com/lpalbou/abstractcore/blob/main/docs/centralized-config.md), [prerequisites](https://github.com/lpalbou/abstractcore/blob/main/docs/prerequisites.md)
+- **AbstractCore**: [centralized config](https://github.com/lpalbou/AbstractCore/blob/main/docs/centralized-config.md), [prerequisites](https://github.com/lpalbou/AbstractCore/blob/main/docs/prerequisites.md)
 - **AbstractGateway**: [configuration](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md), [security](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md)
-- **AbstractVoice**: [installation](https://github.com/lpalbou/abstractvoice/blob/main/docs/installation.md), [model management](https://github.com/lpalbou/abstractvoice/blob/main/docs/model-management.md)
-- **AbstractVision**: [configuration](https://github.com/lpalbou/abstractvision/blob/main/docs/reference/configuration.md), [backends](https://github.com/lpalbou/abstractvision/blob/main/docs/reference/backends.md)
+- **AbstractVoice**: [installation](https://github.com/lpalbou/AbstractVoice/blob/main/docs/installation.md), [model management](https://github.com/lpalbou/AbstractVoice/blob/main/docs/model-management.md)
+- **AbstractVision**: [configuration](https://github.com/lpalbou/AbstractVision/blob/main/docs/reference/configuration.md), [backends](https://github.com/lpalbou/AbstractVision/blob/main/docs/reference/backends.md)
 
 ---
 
@@ -5709,12 +5716,22 @@ The stack launchers use one port map: gateway 8080, observer 3001, continuum 300
 entity 3004, flow 3005 (each overridable with `ABSTRACT<APP>_PORT`). `start-local.sh --build`
 runs `build.sh` first.
 
+`gateway.sh` and `gateway-local.sh` start `abstractgateway serve` with `--data-dir <data dir>`,
+`--backlog-root <checkout root>` (Continuum's Board and Backlog read its `docs/backlog`) and
+`--exec-runner on`. The flags hold for that run only; the gateway's saved settings stay as they
+are. `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT=<folder>` and `ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER=0` choose
+other values. The launcher reads them and passes them as flags, and does not hand them on to the
+gateway. A gateway older than 0.13.0 gets them as variables instead, with one printed note.
+`gateway.sh --print` shows the serve command and exits without stopping, starting or creating
+anything.
+
 ## Script tests
 
 ```bash
 bash scripts/tests/test_inventory.sh      # inventory vs package files, install pins vs manifest
 bash scripts/tests/test_repo_scripts.sh   # clone/status/commit/push/pull/build in an offline sandbox
 bash scripts/tests/test_af_supervisor.sh  # stack supervisor semantics with stub services
+python -m pytest -q tests/test_gateway_launch_flags.py  # the gateway launchers' serve flags (stub python)
 ```
 
 All three run against temporary directories and stub services; they do not modify the workspace.
@@ -6424,6 +6441,16 @@ need a compiler only for `--full`, which adds stable-diffusion.cpp and (macOS, L
 llama.cpp on machines without a prebuilt wheel ([Compiled extras](install.md#compiled-extras)).
 On Linux with the gpu profile, vLLM also needs a C compiler (`build-essential`) the first time it
 starts a model ([GPU on Linux (NVIDIA)](install.md#gpu-on-linux-nvidia)).
+
+### Does it work on macOS 13?
+
+Yes, with the light profile (remote and endpoint engines). `[apple]` needs macOS 14 or newer:
+MLX publishes no wheels for macOS 13, so the installer picks the light profile on 13 (it prints
+"the Apple Silicon engines (MLX) need macOS 14 or later") and refuses `--profile apple`, and
+`pip install "abstractframework[apple]"` on macOS 13 fails to resolve. After updating macOS to 14 or
+later, run the installer again to add the local engines (an install made by 0.10.0 or older keeps
+light on a re-run: add `--profile apple`)
+([Requirements per profile](install.md#requirements-per-profile)).
 
 ### Does the installer use my NVIDIA GPU?
 
@@ -7974,7 +8001,7 @@ behind approval on machines that hold secrets. See
 ## See also
 
 AbstractGateway has a deeper security guide (env vars, limits, lockouts, audit log):
-- https://github.com/lpalbou/abstractgateway/blob/main/docs/security.md
+- https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md
 
 --- docs/guide/runtime-scope.md ---
 # Runtime Scope (run / session / global / all)
@@ -8611,7 +8638,7 @@ TDLib requires:
 
 Because TDLib is platform-specific, keep your setup steps close to your deployment scripts. The gateway integration code
 and configuration surface live in:
-- https://github.com/lpalbou/abstractgateway
+- https://github.com/lpalbou/AbstractGateway
 
 ## Testing checklist
 
