@@ -928,7 +928,7 @@ else
     GW_PIN="$(sed -n 's/^AF_GATEWAY_PIN_DEFAULT="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh")"
     BG_UV_LIST='abstractgateway v0.7.0\n- abstractgateway' BG_STATE="$UP_STATE" bg_case up_default 1
     check "a plain re-run installs the release pin, without --upgrade" "$([[ $RC == 0 ]] && grep "tool install " "$OUT" | grep -q "abstractgateway\[[a-z,]*\]==$GW_PIN" && ! grep "tool install " "$OUT" | grep -q -- " --upgrade "; echo $?)" "$OUT"
-    check "summary: the upgrade lines are the one-liner and --pin latest, not uv tool upgrade" "$(has "$OUT" "Upgrade:    curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh " && has "$OUT" "install.sh | sh -s -- --pin latest " && ! has "$OUT" "uv tool upgrade"; echo $?)" "$OUT"
+    check "summary: the upgrade lines are the one-liner and --pin latest, not uv tool upgrade" "$(has "$OUT" "Upgrade:    curl -LsSf $(sed -n 's/^AF_SCRIPT_URL="\(.*\)"$/\1/p' "$SCRIPTS_DIR/install.sh") | sh " && has "$OUT" "install.sh | sh -s -- --pin latest " && ! has "$OUT" "uv tool upgrade"; echo $?)" "$OUT"
 fi
 
 echo "[17] re-running the line upgrades in place: detection, remembered choices, release matrix, restart, changes"
