@@ -2,7 +2,70 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
-## [Unreleased]
+## [0.10.1] - 2026-10-07
+
+A patch release: the gateway no longer hangs on Read aloud, upgrades from 0.9.x keep every allowed
+folder, and the Linux sandbox, the browser probe, the terminal clients and the Flow editor catch up
+with 0.10.0.
+
+### Fixed
+
+- **The gateway no longer hangs on Read aloud** (AbstractGateway 0.13.1, AbstractRuntime 0.9.1).
+  Streamed speech is never a wait of the run: nothing durable exists while audio plays, and the child
+  run is recorded completed when the stream ends, so a conversation no longer shows "Waiting for an
+  event" during Read aloud. A Read aloud left unfinished by a restart is closed at the next start
+  ("Read aloud was interrupted because the gateway restarted …"). Each stream runs off the event loop
+  within the voice synthesis limit; past it a request gets "Read aloud is busy", and a busy engine is
+  announced with a `queued` line ("Waiting for the voice engine: …"). Buffered request bodies are
+  replayed through one helper, which removes a second busy loop in the core endpoint.
+- **Upgrading from 0.9.x keeps every allowed folder** (AbstractGateway 0.13.1). The 0.13.0 workspace
+  migration hid allowed folders under the folder the gateway was started in (usually your home
+  folder): they were missing from Accounts → Workspaces and were not listed as dropped. The
+  migration no longer guesses that folder, and a store 0.13.0 already migrated is repaired once at
+  the next start (the lost rows come back, a path already listed keeps its mode, each restored row is
+  in the audit log).
+- **Linux command sandbox: an allowed workspace inside a refused folder is reachable** (AbstractCore
+  2.25.1). Under bubblewrap every command in such a workspace failed; the most specific workspace now
+  wins on Linux as on macOS.
+- **The agent repairs a rejected tool-call format** (AbstractAgent 0.3.19). When the model's tool
+  call is refused (invalid syntax or an unavailable tool) and no call was accepted, ReAct asks again
+  with the available tools, at most twice per turn.
+- macOS 13: the installer already picks the light profile there (MLX publishes no wheels below
+  macOS 14). It now records why, so running it again after a macOS update adds the apple profile
+  instead of keeping light. An explicit `--profile light` is still kept. The install guide and the
+  FAQ say that `[apple]` needs macOS 14 or newer and that `pip install "abstractframework[apple]"`
+  does not resolve on macOS 13.
+
+### Added
+
+- **Default workflow per account** (AbstractGateway 0.13.1, AbstractAssistant 0.13.1, Code Web
+  0.11.1). The gateway keeps each account's default workflow per app (`GET`/`PUT
+  /api/gateway/accounts/{me|account}/preferences`); the admin's setting stays the gateway default.
+  The console's Accounts page has a **Preferences** action on every row, the Assistant's Settings →
+  Workflow and Code's Workflow → **Default for new conversations** read and write it (a choice kept
+  on the device is uploaded once, then the gateway's value is used everywhere).
+- **Last restart after a hang** (AbstractGateway 0.13.1). Before the watchdog restarts a hung gateway
+  it writes `<data dir>/incidents/watchdog-<stamp>.json` and a stack dump; the console's Resources
+  page and the terminal console's F3 show **Last restart** with the reason and the files.
+- **The gateway terminal console matches the web console** (`abstractgateway-console` 0.15.1):
+  workspaces on Accounts (`E` Eligible workspaces, `w` on every row) with the web's words,
+  **Preferences** (`p`), the memory and compute line in the title bar, **Last restart** in F3; the
+  separate Workspaces page is gone (`W` opens Accounts).
+- **AbstractCode's terminal client has workspaces and the sandbox line** (`abstractcode` 0.9.1):
+  `/workspace` opens this conversation's workspace chooser (and **My default workspaces**),
+  `/schedule` has Workspaces and Title and limits steps, tool cards show the command sandbox state and
+  every command shows its `Sandbox:` line.
+- **Flow uses dedicated icons** (Flow 0.8.1, UI Kit 0.8.6): image, video, camera, music, database,
+  branch, loop, variable, minus, divide, function, zoom in, zoom out, fit view and lock, in the
+  palette, the canvas cards and the canvas controls.
+
+### Security
+
+- **`browser_probe` keeps local pages inside the run's workspaces** (AbstractCore 2.25.1,
+  AbstractRuntime 0.9.1). A local page is served to the headless browser from a private loopback
+  address limited to the files the run may read, never as `file://`, so a page in an allowed
+  workspace cannot show a refused folder's files (`<img src="file:///…">`, `../` links, symlinks);
+  refused loads are listed in the report.
 
 ### Changed
 
@@ -14,14 +77,13 @@ All notable changes to AbstractFramework will be documented in this file.
   note. `gateway.sh --print` and `gateway-local.sh --print` show the serve command and change nothing.
 - Repository links use the canonical GitHub names (`lpalbou/AbstractCore`, `lpalbou/Abstract3D`, …);
   `scripts/clone.sh` clones `lpalbou/Abstract3D`.
-
-### Fixed
-
-- macOS 13: the installer already picks the light profile there (MLX publishes no wheels below
-  macOS 14). It now records why, so running it again after a macOS update adds the apple profile
-  instead of keeping light. An explicit `--profile light` is still kept. The install guide and the
-  FAQ say that `[apple]` needs macOS 14 or newer and that `pip install "abstractframework[apple]"`
-  does not resolve on macOS 13.
+- The browser apps' CI fails when `package-lock.json` lags `package.json` or resolves a shared UI
+  package below its floor (`npm run check:lock` in Code Web, Flow, Observer, Continuum and Entity).
+- Pin AbstractGateway 0.13.1, AbstractCore 2.25.1, AbstractRuntime 0.9.1, AbstractAgent 0.3.19 and
+  AbstractAssistant 0.13.1; the installers install Code Web 0.11.1 and Flow 0.8.1 (UI Kit 0.8.6 from
+  AbstractUIC 0.6.1), Observer 0.7.0, Continuum 0.7.0 and Entity 0.7.0 (unchanged), the gateway
+  terminal console 0.15.1 and AbstractCode 0.9.1. AbstractVoice 0.14.0, AbstractMusic 0.1.16 and the
+  other pins are unchanged.
 
 ## [0.10.0] - 2026-10-05
 

@@ -121,18 +121,18 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.13.0"
+AF_GATEWAY_PIN_DEFAULT="0.13.1"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.10.0"
-AF_PY_MATRIX="abstractcore==2.25.0 AbstractRuntime==0.9.0 abstractagent==0.3.18 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.14.0 abstractvision==0.3.33 abstractmusic==0.1.16 abstract3d==0.3.2"
+AF_FRAMEWORK_VERSION="0.10.1"
+AF_PY_MATRIX="abstractcore==2.25.1 AbstractRuntime==0.9.1 abstractagent==0.3.19 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.14.0 abstractvision==0.3.33 abstractmusic==0.1.16 abstract3d==0.3.2"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.8.0 @abstractframework/code@0.11.0 @abstractframework/observer@0.7.0 @abstractframework/continuum@0.7.0 @abstractframework/entity@0.7.0"
-AF_CRATE_CONSOLE="abstractgateway-console@0.15.0"
-AF_CRATE_CODE_CLI="abstractcode@0.9.0"
+AF_NPM_APPS="@abstractframework/flow@0.8.1 @abstractframework/code@0.11.1 @abstractframework/observer@0.7.0 @abstractframework/continuum@0.7.0 @abstractframework/entity@0.7.0"
+AF_CRATE_CONSOLE="abstractgateway-console@0.15.1"
+AF_CRATE_CODE_CLI="abstractcode@0.9.1"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
 # `abstractgateway-config` (uv tool install --with-executables-from; --no-core-cli leaves them
 # out): AbstractCore and its voice, vision and music packages. Not abstractruntime (its one
