@@ -66,6 +66,10 @@ with 0.10.0.
   address limited to the files the run may read, never as `file://`, so a page in an allowed
   workspace cannot show a refused folder's files (`<img src="file:///…">`, `../` links, symlinks);
   refused loads are listed in the report.
+- **macOS command sandbox: the shared temp folders are denied** (AbstractCore 2.25.1). Under "Deny
+  everything, allow listed workspaces", `/private/tmp` and `/private/var/folders` are now unreadable
+  and unwritable like user data (an unlisted file there was readable before); system folders stay
+  readable and unwritable, and the run's private temporary folder keeps working.
 
 ### Changed
 
