@@ -30,6 +30,11 @@ with 0.10.0.
 - **The agent repairs a rejected tool-call format** (AbstractAgent 0.3.19). When the model's tool
   call is refused (invalid syntax or an unavailable tool) and no call was accepted, ReAct asks again
   with the available tools, at most twice per turn.
+- **Console pages read cleanly** (AbstractGateway 0.13.1, AbstractCore 2.25.1). Multimodal shows
+  each route and capability in its own column, and its Weights cell says whether the model's weights
+  are on this computer (a pill, one sentence and a tooltip) for every provider a route can name. No
+  settings hide behind "Advanced" any more: the Email settings show **Sign-in app** and **Recipients
+  and limits** as sections. Tables keep their columns and come back from cards when the window grows.
 - macOS 13: the installer already picks the light profile there (MLX publishes no wheels below
   macOS 14). It now records why, so running it again after a macOS update adds the apple profile
   instead of keeping light. An explicit `--profile light` is still kept. The install guide and the
