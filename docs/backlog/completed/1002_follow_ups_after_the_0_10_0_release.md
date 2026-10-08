@@ -105,3 +105,48 @@ the 0.10.0 publish.
 - Release ledger: `untracked/round4/RELEASE-0.10.0.md`; report `untracked/round4/RELEASE-REPORT-0.10.0.md`.
 - Source notes: `untracked/round4/BACKLOG-R5.md`, `untracked/round4/BACKLOG-R13.md`, `untracked/round4/COORD.md`.
 - Runtime CI: https://github.com/lpalbou/AbstractRuntime/actions/runs/37245682201
+
+## Completion report (2026-10-08, root 0.10.1)
+
+> Completed: 2026-10-08. Original path: `planned/1002_follow_ups_after_the_0_10_0_release.md`.
+> Leftovers: [1003](../planned/1003_follow_ups_after_the_0_10_1_release.md).
+
+Shipped in the 0.10.1 wave (ledger `untracked/round14/RELEASE-0.10.1.md`, report
+`untracked/round14/RELEASE-REPORT-0.10.1.md`):
+
+1. **Linux nested workspaces: DONE.** abstractcore 2.25.1 binds the allowed child after it masks the
+   refused parent under bubblewrap. Runtime `linux-sandbox` CI job green on main at the 0.9.1 release
+   commit (CI run 37711135648); core's Linux job green too.
+2. **Hang recovery / incident surface (R13.1 B1–B5): DONE.** Gateway 0.13.1 + runtime 0.9.1: Read aloud
+   is never a run wait, orphaned voice waits closed at start, the voice stream is bounded and off-loop,
+   one `replay_body_receive` helper, the watchdog incident file and **Last restart** (console Resources,
+   TUI F3). The watchdog also tells a sleep/wake clock jump from a hang.
+3. **browser_probe `file://` residual: DONE** (option b). abstractcore 2.25.1 / runtime 0.9.1 serve a
+   local page from a private loopback origin limited to the run's readable files.
+4. **Per-account client preferences: DONE** for the gateway (0.13.1), the Assistant (0.13.1) and
+   Code Web (0.11.1). The Code terminal client still keeps the choice per device: 1003 item 2.
+5. **Root launchers use gateway flags: DONE** (`serve --backlog-root`, `--exec-runner`, `--data-dir`;
+   older gateways keep the variables with one note). Named per-user keys stay in 1000.
+6. **Assistant offscreen harness: DONE** (abstractassistant `tests/conftest.py` offscreen Qt harness).
+7. **TUI parity rounds 9–13: DONE** for this round (`abstractgateway-console` 0.15.1: workspaces on
+   Accounts, Preferences, Last restart; `abstractcode` 0.9.1: `/workspace`, `/schedule` Workspaces and
+   Title and limits steps, sandbox line). The round-15 redesign and the Code TUI gaps continue in 1003.
+8. **Kit icons: DONE.** ui-kit 0.8.6 (15 icons, `ICON_NAMES`); Flow 0.8.1 uses them.
+9. **Lockfile guard: DONE.** `npm run check:lock` in the CI of Code Web, Flow, Observer, Continuum and
+   Entity; app-server relocked to 0.1.12.
+10. **Parked abstractagent 55c9fe8: SHIPPED** as abstractagent 0.3.19 (ReAct repairs a rejected
+    tool-call format, at most twice per turn).
+
+Validation owed for 0.10.0:
+- Linux sandbox: green in CI (item 1).
+- Upgrade 0.9.6 → 0.10.0: verified hermetically with the released installer in round 14
+  (`untracked/round14/w6/UPGRADE-0.9.6-0.10.0.md`): 4 of 5 proofs passed; the fifth found D1 (allowed
+  folders under the gateway's start folder dropped by the workspace migration). Gateway 0.13.1 fixes
+  it and repairs a store 0.13.0 already migrated (gateway 0c572b0, tests with real boots). The
+  hermetic upgrade was not re-run end to end on the 0.10.1 matrix: 1003 keeps it under validation.
+- Email end-to-end: PASS on the 0.10.0 matrix in round 14 (`untracked/round14/w6/EMAIL-E2E.md`:
+  connect, send from a real run, email-triggered automation with one occurrence and no loop,
+  disconnect).
+- Sleep/wake: gateway 0.13.1 watchdog fires on loop progress, tested with a simulated sleep
+  (SIGSTOP/SIGCONT, gateway a0440da).
+- Windows install: still not verified on real hardware: 1003 item 7.
