@@ -2,7 +2,7 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
-## [0.10.1] - 2026-10-07
+## [0.10.1] - 2026-10-08
 
 A patch release: the gateway no longer hangs on Read aloud, upgrades from 0.9.x keep every allowed
 folder, and the Linux sandbox, the browser probe, the terminal clients and the Flow editor catch up
