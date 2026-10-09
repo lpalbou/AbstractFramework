@@ -100,9 +100,11 @@ Issues = "https://github.com/lpalbou/AbstractFramework/issues"
 [project.scripts]
 abstractframework = "abstractframework.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["abstractframework*"]
+[tool.setuptools]
+# Explicit package list: setuptools' find() walks the WHOLE checkout (nested repos,
+# untracked/models, node_modules, runtime ledgers) before filtering — an editable
+# install sat >1 h in readdir on 2026-10-09. Never use packages.find here.
+packages = ["abstractframework"]
 
 [tool.setuptools.package-data]
 abstractframework = ["py.typed"]
