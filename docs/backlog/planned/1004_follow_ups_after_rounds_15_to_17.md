@@ -106,3 +106,7 @@ adversary's non-blocking notes are scratch files; the root backlog is the durabl
 - `untracked/round4/ADVERSARY.md` — AV5 verdict (line ~1166), console SHOULD notes (~1128–1208),
   Round 17 section (~1239) with the AY/AZ verdicts and the "Open (non-blocking)" line.
 - Root staged release: `release-prep/0.10.2` f3e011b.
+
+## Added 2026-10-09
+
+- GitHub Dependabot reports 8 vulnerabilities on AbstractCode main (2 critical, 1 high, 3 moderate, 2 low; npm dependencies of the web app) — run `npm audit` and upgrade in every browser app before the next npm publish; add an audit step to the apps CI (`npm audit --omit=dev --audit-level=high`).
