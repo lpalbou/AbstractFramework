@@ -2,13 +2,29 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
-## [0.10.2] - 2026-10-09 (staged, not published)
+## [0.11.0] - 2026-10-15
 
-Round 16 — pins abstractcore 2.26.0, AbstractRuntime 0.10.0, abstractgateway 0.14.0 (console crate 0.16.0),
-abstractvoice 0.15.0, abstractassistant 0.13.2; npm code 0.11.2 (crate abstractcode 0.9.2), observer 0.7.1,
-entity 0.7.1, ui-kit 0.8.7; flow 0.8.1, continuum 0.7.0, abstractagent 0.3.19, abstractmusic 0.1.16 unchanged.
+Workflows without code, and round 16 — pins abstractcore 2.26.0, AbstractRuntime 0.10.0, abstractgateway 0.14.0
+(console crate 0.16.0), abstractvoice 0.15.0, abstractassistant 0.13.2; npm flow 0.9.0, code 0.11.2 (crate
+abstractcode 0.10.0), observer 0.7.1, entity 0.7.1, ui-kit 0.8.7; continuum 0.7.0, abstractagent 0.3.19,
+abstractmusic 0.1.16 unchanged.
 
 ### Added
+- Flow editor (AbstractFlow 0.9.0, AbstractRuntime 0.10.0): workflows without code. **String Template** is a text
+  written on the node with variable chips (type `@` to pick a run variable or one of the node's inputs);
+  **Set Variables** has one row per variable (name, type, value), and **Get Variables**, **Add to List Variable**
+  and **Loop Limit** are nodes. A **limit on a repeating wire**: the editor finds the execution wires that make a
+  path repeat (an If/Else wired back to a ForEach), shows a ↺ badge halfway along each, and a click sets "repeat
+  at most N times"; at the limit the flow goes on through the If/Else's other branch, with no exit pin to wire.
+  Relay dots route one output to several inputs; dropping a wire on empty canvas opens a small menu; If/Else
+  branches can be swapped on the canvas; per-path wires can be drawn.
+- Flow editor: the execution view has bigger nodes, straight wires and a card on hover for every node (model,
+  inputs, outputs and system prompt for LLM calls and Agents; what Set Variables sets; what a ForEach loops
+  over; a wire's limit); a run pulse (time so far, estimate, model calls, tokens) and an optional run spotlight;
+  Publish is a labelled green button; a start screen with Create Flow and Open Flow; a New flow dialog with an
+  interface picker.
+- AbstractCode terminal 0.10.0: a user card, folded reasoning cycle panels, hold Space to talk, a JSON view, a
+  theme menu; sessions, the prompt queue and `/goal` live on the gateway (nothing kept in local files).
 - Automations: calendar schedules (`schedule@2`: daily at HH:MM, weekly on chosen days, monthly on day N) in the
   owner's time zone (account preference `time_zone`), DST-correct next run; the gateway serves `next_run_at`,
   `schedule_text` and a schedule preview, and every client shows the served words (kit dialog, Code, Observer,
@@ -24,11 +40,21 @@ entity 0.7.1, ui-kit 0.8.7; flow 0.8.1, continuum 0.7.0, abstractagent 0.3.19, a
   confirmations with buttons) on every screen, incl. the new Preferences time zone, OpenAI keys and entity pages.
 
 ### Changed
+- AbstractRuntime 0.10.0: an execution wire that loops back out of a ForEach / For / While body (from inside the
+  body to the loop node itself or to anything before it) is refused when the flow compiles: "… goes back out of
+  <loop>'s loop body: the run would never end. A path inside a loop body can only repeat within the body; to
+  repeat the whole loop, wire the loop-back after the loop's done." The editor's run checks say the same before
+  Run or Publish (backlog 1018).
 - Publishing a workflow no longer rebuilds every service: bundle-only changes swap the workflow registry on the
   running runtime (prompt caches survive, `/api/health` keeps answering); runs in flight finish on the version they
   started with; every publish response says what it reloaded.
 
 ### Fixed
+- AbstractCode terminal: the answer is no longer shown twice when the last reasoning cycle is the answer.
+- AbstractAssistant 0.13.2: no empty reply bubble while a sub-agent thinks; the live card appears with the first
+  words of the reply, the thinking folded under a small toggle.
+- Set Variables writes only what its own pins carry; keys of the previous step's output are no longer written as
+  variables.
 - Admins can manage entities that live in a member's runtime (no silent 404).
 
 ## [0.10.1] - 2026-10-08

@@ -155,3 +155,19 @@ case to the conformance fixtures.
 Conformance suite in each repo's CI; a multi-client end-to-end (two browsers + terminal client +
 Assistant against one hermetic gateway); a manual cross-machine check on the operator's gateway
 (Tailscale) after upgrade.
+
+## Related (2026-10-11)
+
+- 1016 (proposed): step identity and status should come from the runtime; the approved-tool-call case (a new step id with the same idempotency key) was fixed client-side in AbstractFlow and Observer and is a rule this shared replay should own.
+- Case 2 (2026-10-11, run b683459f, flow `assist`): one Agent node execution is several root-ledger
+  steps with different step ids (`start_subworkflow` started/waiting, `resume`, the
+  `resp_schema` structured-output `llm_call`), and nothing in the records names the execution.
+  AbstractFlow's run window showed every Agent twice ("Reviewer 0ms" + "Reviewer 14.5s"; the real
+  run was 37 s). Fixed client-side (unreleased) by `executionIdFor` in AbstractFlow
+  `src/utils/ledgerEvents.ts`: five rules recognise the phases (same step; a resume joins the
+  execution whose wait key it answers; a repeated idempotency key; the structured-output result key
+  `_temp.agent.<node>.structured`; the terminal record). An adversarial scan of all 9,476 ledgers on
+  the operator's gateway: 1,668 duplicate rows removed, none added; "same node with nothing in
+  between" is NOT a valid rule (loops, If/Else and Set Variable write no records). Every client that
+  lists steps needs the same rules today (Observer, Code, panel-chat): the shared replay, or an
+  execution id written by the runtime (1016 option 2), should own them.

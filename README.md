@@ -329,7 +329,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.10.2)
+### Release matrix (abstractframework 0.11.0)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -350,12 +350,12 @@ and tested together.
 | PyPI | `abstractvision` | 0.3.33 |
 | PyPI | `abstractmusic` | 0.1.16 |
 | PyPI | `abstract3d` | 0.3.2 |
-| npm | `@abstractframework/flow` | 0.8.1 |
+| npm | `@abstractframework/flow` | 0.9.0 |
 | npm | `@abstractframework/code` | 0.11.2 |
 | npm | `@abstractframework/observer` | 0.7.1 |
 | npm | `@abstractframework/continuum` | 0.7.0 |
 | npm | `@abstractframework/entity` | 0.7.1 |
-| crates.io | `abstractcode` | 0.9.2 |
+| crates.io | `abstractcode` | 0.10.0 |
 | crates.io | `abstractgateway-console` | 0.16.0 |
 | crates.io | `abstractcore-console` | 0.8.0 |
 | crates.io | `abstracttui` | 0.6.0 |
