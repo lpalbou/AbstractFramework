@@ -2,6 +2,35 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.10.2] - 2026-10-09 (staged, not published)
+
+Round 16 — pins abstractcore 2.26.0, AbstractRuntime 0.10.0, abstractgateway 0.14.0 (console crate 0.16.0),
+abstractvoice 0.15.0, abstractassistant 0.13.2; npm code 0.11.2 (crate abstractcode 0.9.2), observer 0.7.1,
+entity 0.7.1, ui-kit 0.8.7; flow 0.8.1, continuum 0.7.0, abstractagent 0.3.19, abstractmusic 0.1.16 unchanged.
+
+### Added
+- Automations: calendar schedules (`schedule@2`: daily at HH:MM, weekly on chosen days, monthly on day N) in the
+  owner's time zone (account preference `time_zone`), DST-correct next run; the gateway serves `next_run_at`,
+  `schedule_text` and a schedule preview, and every client shows the served words (kit dialog, Code, Observer,
+  Assistant, both consoles).
+- Named, endpoint-only API keys for the OpenAI-compatible endpoint (`/api/gateway/me/openai-keys`): shown once,
+  valid only at `/v1`, revocable one by one, admin view per account; the console offers named keys as the key.
+- Speech-to-text on the GPU: a new `mlx-whisper` engine (Apple Silicon, Metal) behind the same voice engine
+  interface; large-v3 recommended everywhere (Apple → mlx-whisper, NVIDIA → faster-whisper on CUDA with cuDNN 9);
+  a served hint on stored faster-whisper routes; fresh Apple installs default to mlx-whisper/large-v3.
+- Entities: the creator configures their entity (mind, voice, instructions, skills, preferences, workspaces,
+  archive/unarchive, Active) within what the admin offers; admins always; roles are exactly admin and member.
+- Gateway terminal console 0.16.0: the mouse-first redesign (clickable tabs and row actions, form modals,
+  confirmations with buttons) on every screen, incl. the new Preferences time zone, OpenAI keys and entity pages.
+
+### Changed
+- Publishing a workflow no longer rebuilds every service: bundle-only changes swap the workflow registry on the
+  running runtime (prompt caches survive, `/api/health` keeps answering); runs in flight finish on the version they
+  started with; every publish response says what it reloaded.
+
+### Fixed
+- Admins can manage entities that live in a member's runtime (no silent 404).
+
 ## [0.10.1] - 2026-10-08
 
 A patch release: the gateway no longer hangs on Read aloud, upgrades from 0.9.x keep every allowed

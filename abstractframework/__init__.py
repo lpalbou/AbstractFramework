@@ -10,23 +10,23 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.10.1"
+__version__ = "0.10.2"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.25.1",
-    "abstractruntime": "0.9.1",
+    "abstractcore": "2.26.0",
+    "abstractruntime": "0.10.0",
     "abstractagent": "0.3.19",
-    "abstractgateway": "0.13.1",
+    "abstractgateway": "0.14.0",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
-    "abstractvoice": "0.14.0",
+    "abstractvoice": "0.15.0",
     "abstractvision": "0.3.33",
     "abstractmusic": "0.1.16",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.13.1",
+    "abstractassistant": "0.13.2",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -46,10 +46,10 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.8.1",
-    "@abstractframework/code": "0.11.1",
-    "@abstractframework/observer": "0.7.0",
+    "@abstractframework/code": "0.11.2",
+    "@abstractframework/observer": "0.7.1",
     "@abstractframework/continuum": "0.7.0",
-    "@abstractframework/entity": "0.7.0",
+    "@abstractframework/entity": "0.7.1",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
@@ -58,9 +58,9 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 # `abstractcore serve`, and the gateway's terminal console already carries its Models and
 # Engines screens; it is listed here as a release version only.
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
-    "abstractgateway-console": "0.15.1",
+    "abstractgateway-console": "0.16.0",
     "abstractcore-console": "0.8.0",
-    "abstractcode": "0.9.1",
+    "abstractcode": "0.9.2",
     "abstracttui": "0.6.0",
 }
 
