@@ -43,6 +43,9 @@ be the isolation layer of what a user do".
 ### Out of scope
 - What admins may do in other planes (1020); plane isolation for tools (1021); entities (1022).
 
+## Ruling taken (2026-10-15)
+- "Admin is a user with admin powers": the admin gets a normal owned runtime like everyone else; the gateway folder keeps only gateway files. Rows 3, 4, 15 are buildable (Q7 answered for the registry admin; the static token and tray map to that admin).
+
 ## Decision gates (operator)
 - Q7: are the static token and the tray a distinct admin with its own plane, or "system"?
 - Q10: is "one admin" a hard cap?

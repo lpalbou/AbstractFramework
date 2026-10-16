@@ -49,6 +49,10 @@ anyone's data, for traceability and auditability reasons."
 ### Out of scope
 - Tool/workspace ceilings (1023); entity ownership (1022).
 
+## Rulings taken (2026-10-15)
+- Rows 7–8: a runtime folder is bound to its account forever — never adoptable, never re-bindable; archive read-only only. Buildable now.
+- Row 6: ADOPTED — the claim-code design (`evidence/TOKEN-RESET-best-practices.md`): admins only invalidate or regenerate; a one-time, short-TTL, hashed claim code (mailed, else shown once to the admin) is exchanged by the user at sign-in for the real token; audited; claimed-at/from visible to the user; re-issue invalidates; entities and scripts bootstrap the same way. Buildable now.
+
 ## Decision gates (operator)
 - Q1: the exact unlock list — suspend/resume account, rotate token, host pause, cancel/resume a
   stuck run in another plane, answer a tool-approval wait, clear an entity seat or maintenance hold;

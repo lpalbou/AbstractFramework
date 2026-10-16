@@ -59,6 +59,9 @@ and run B with another workflow B and with authorization subset B. authorization
 ### Out of scope
 - New tool kinds; MCP credential scoping (1021 row 17).
 
+## Ruling taken (2026-10-15)
+- Q9 answered: strict chain — "a run must never get more privileges than its user's default, and the user must never have more privileges than what the admin allows." Rows 25–26 are buildable.
+
 ## Decision gates (operator)
 - Q8: "Use my default" follows the live default, or freezes per (run, workflow) at creation?
 - Q9: strict chain admin ceiling ≥ user default ≥ run, and may `tool_approval: auto` exceed the user default?

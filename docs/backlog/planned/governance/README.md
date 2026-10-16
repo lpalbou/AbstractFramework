@@ -45,6 +45,7 @@ realm.
 | 1022 | [Entities are digital users with their own runtime](1022_entities_are_digital_users.md) | 19–24 | P0 |
 | 1023 | [Authorization per (run, workflow) within the admin realm](1023_authorization_per_run_workflow.md) | 25–28 | P1 |
 | 1024 | [Requester attribution on every run](../../proposed/1024_requester_attribution.md) (proposed) | — | P1 |
+| 1025 | [Cross-user read as a principal privilege](../../proposed/1025_cross_user_read_as_principal_privilege.md) (proposed) | 13 (read side) | decision |
 
 Evidence copies: `evidence/REQUESTER-proposal.md`, `evidence/REQUESTER-adversary.md` (the
 who-requested-a-run proposal and its adversarial review, 2026-10-14).
@@ -91,6 +92,16 @@ who-requested-a-run proposal and its adversarial review, 2026-10-14).
 - Accounts are archived, never deleted; last-admin and no-self-deactivation guards exist; entity principals' token, roles and `runtime_id` are guarded at the registry (users.py:597-608, 716-729).
 - Visit and summon participants are derived by the door and speaker claims are checked (routes/entities.py:1706-1712); the gateway's own session prompt-cache controls are scoped to the principal (routes/gateway.py:26491-26546).
 - Cross-plane reads are admin-only and return summaries; turning availability back on does not resume users' automations.
+
+## Build state (2026-10-15)
+Branch `governance-security-1` in abstractgateway (uncommitted, not released): R3 runtimes bound forever (owner files + startup backfill, create/update refusals, archive/unarchive instead of transfer/purge), R4 claim-code tokens (`POST /auth/claim`, 24 h hold on admin-set addresses, old-address notice, console rendering), the unliftable plane deny (hard list stamped on every run incl. listener children and occurrences; entity runs reach their own `workspace/` only). Gate 1: NO-GO (1 P0, 4 P1) → fixed; Gate 2: GO-with-fixes → fixed (N1 TUI claim surfacing, N4 docs, lock-out backfill pass). Reports: `abstractgateway/untracked/governance/{LANE-ACCOUNTS,LANE-DENY,GATE-1,FIX-ACCOUNTS,FIX-DENY,GATE-2}.md`. Follow-ups: terminal console claim modal + archive controls; `docs/security.md` recovery disclosure (GATE-2 N3); runtime door message (abstractruntime workspace_scoped_tools.py:278-281).
+
+## Operator rulings taken (2026-10-15)
+- R1 **Admin is a user with admin powers and its own runtime** (1019): the gateway folder keeps only gateway files; one admin, one runtime.
+- R2 **Privileges are a strict chain** (1023): "a run must never get more privileges than its user's default, and the user must never have more privileges than what the admin allows."
+- R3 **A runtime folder stays bound to its account forever** (1020 rows 7–8): never adoptable, never re-bindable; archive (read-only) is the admin's only option when a user leaves; the two ownerless live folders get reserved to their original identity.
+- R5 **Nothing is deleted, ever** (2026-10-15): "we never delete anything (we deprecate/archive), for auditability and interoperability / search accessibility of the data, both for human users and digital users. So a user never really disappears, it loses his access, but the history of everything that happened does not." Archived runtimes stay readable through the gateway's read paths (1020, 1021); cross-user READ is under study (`evidence/CROSS-USER-READ-best-practices.md`).
+- R4 **Tokens: the claim-code design** (1020 row 6), adopted 2026-10-15 after `evidence/TOKEN-RESET-best-practices.md` (NIST SP 800-63B §4.1.2.2/4.2, Vault response wrapping, Entra Temporary Access Pass, Keycloak/Okta/Auth0 reset links, GitHub/Stripe show-once tokens): an admin can only invalidate or regenerate a token and never sees it; regeneration issues a one-time, short-TTL (1 h default, 24 h max), hashed claim code — mailed when SMTP is configured, else shown once to the admin to hand over — that the user exchanges at sign-in for the real token; every issue/claim/revoke audited; the user sees claimed-at/from; a new code invalidates the previous; entities and scripts bootstrap the same way.
 
 ## Operator rulings needed (the model is ambiguous here)
 1. "Unlock": which acts — suspend/resume an account, rotate a token, host pause, cancel or resume another plane's stuck run, answer someone's tool-approval wait, clear an entity's seat or maintenance hold? Is writing a pause command into a user's automation (#9) an unlock or an alteration?
