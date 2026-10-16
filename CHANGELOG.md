@@ -4,10 +4,11 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [0.11.1] - 2026-10-16
 
-Fast listings, task cards and standard-library imports in Code nodes — pins AbstractRuntime 0.10.2, abstractgateway 0.15.0 and the npm observer 0.8.0; every other package unchanged from 0.11.0.
+Fast listings, task cards, standard-library imports in Code nodes and the Code assistant — pins AbstractRuntime 0.10.2, abstractgateway 0.15.0, the npm observer 0.8.0 and the npm flow 0.10.0; every other package unchanged from 0.11.0.
 
 ### Changed
 
+- **AbstractFlow 0.10.0** (npm): the Code node editor gains a **Code assistant** — a chat with the gateway's default text model that knows the node (variables, current body, test input, the sandbox's import rule) and answers in Python with **Insert into editor**; a Code node body returning a value JSON cannot carry (a module, a set…) is reported by the sandbox with its place instead of an HTTP 500.
 - **AbstractRuntime 0.10.2**: Code nodes in the `sandbox` permission can import Python's standard library (`json`, `re`, `datetime`, `math`, `collections`, `itertools`, `urllib.parse`…); the modules that reach the machine (processes, files, the network, code loading or evaluation), third-party packages and `__import__` stay refused, each refusal naming the reason. `full_access` is unchanged.
 - **AbstractRuntime 0.10.1**: the JSON run store answers "which runs are running or waiting" from an in-memory index that re-verifies every candidate against disk, instead of globbing and stat()ing every run file on every poll; the rows are exactly the scan's (differential proof in the runtime's changelog). A store with ten thousand runs answers in milliseconds beside a generating model instead of minutes.
 - **abstractgateway 0.15.0**: `GET /runs` shares one computation among identical concurrent asks (1.5 s TTL per plane and query) and answers an archived-only page at once when nothing is archived; the desktop tray gains a Sessions menu with per-session actions, shows the gateway's own memory share next to the machine's, and reports an eject as a measured before → after.

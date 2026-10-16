@@ -178,7 +178,7 @@
       "id": "flow",
       "package": "@abstractframework/flow",
       "registry": "npm",
-      "version": "0.9.0"
+      "version": "0.10.0"
     },
     {
       "command": "npx @abstractframework/code",
