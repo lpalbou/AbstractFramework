@@ -2,6 +2,16 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.1] - 2026-10-16
+
+Fast listings and task cards — pins AbstractRuntime 0.10.1, abstractgateway 0.15.0 and the npm observer 0.8.0; every other package unchanged from 0.11.0.
+
+### Changed
+
+- **AbstractRuntime 0.10.1**: the JSON run store answers "which runs are running or waiting" from an in-memory index that re-verifies every candidate against disk, instead of globbing and stat()ing every run file on every poll; the rows are exactly the scan's (differential proof in the runtime's changelog). A store with ten thousand runs answers in milliseconds beside a generating model instead of minutes.
+- **abstractgateway 0.15.0**: `GET /runs` shares one computation among identical concurrent asks (1.5 s TTL per plane and query) and answers an archived-only page at once when nothing is archived; the desktop tray gains a Sessions menu with per-session actions, shows the gateway's own memory share next to the machine's, and reports an eject as a measured before → after.
+- **Observer 0.8.0**: the board shows one card per task with the chain of subruns inside (each with its own words, stop control and ask), a lane-level cancel-all that cancels task roots, stuck runs named by the step whose subrun ended, the last known board painted at once on reload, and app-level fetch failures reported as one connection notice instead of among a run's steps; the run header counts failed steps of every kind.
+
 ## [0.11.0] - 2026-10-15
 
 Workflows without code, and round 16 — pins abstractcore 2.26.0, AbstractRuntime 0.10.0, abstractgateway 0.14.0

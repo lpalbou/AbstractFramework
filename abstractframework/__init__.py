@@ -10,15 +10,15 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.11.0"
+__version__ = "0.11.1"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.26.0",
-    "abstractruntime": "0.10.0",
+    "abstractruntime": "0.10.1",
     "abstractagent": "0.3.19",
-    "abstractgateway": "0.14.0",
+    "abstractgateway": "0.15.0",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
@@ -47,7 +47,7 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.9.0",
     "@abstractframework/code": "0.11.2",
-    "@abstractframework/observer": "0.7.1",
+    "@abstractframework/observer": "0.8.0",
     "@abstractframework/continuum": "0.7.0",
     "@abstractframework/entity": "0.7.1",
 }

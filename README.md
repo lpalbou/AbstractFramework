@@ -176,7 +176,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.14.0` and `ghcr.io/lpalbou/abstractcore-server:2.26.0`.
+`ghcr.io/lpalbou/abstractgateway:0.15.0` and `ghcr.io/lpalbou/abstractcore-server:2.26.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -338,10 +338,10 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.14.0 |
+| PyPI | `abstractgateway` | 0.15.0 |
 | PyPI | `abstractassistant` | 0.13.2 |
 | PyPI | `abstractcore` | 2.26.0 |
-| PyPI | `AbstractRuntime` | 0.10.0 |
+| PyPI | `AbstractRuntime` | 0.10.1 |
 | PyPI | `abstractagent` | 0.3.19 |
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
@@ -352,14 +352,14 @@ and tested together.
 | PyPI | `abstract3d` | 0.3.2 |
 | npm | `@abstractframework/flow` | 0.9.0 |
 | npm | `@abstractframework/code` | 0.11.2 |
-| npm | `@abstractframework/observer` | 0.7.1 |
+| npm | `@abstractframework/observer` | 0.8.0 |
 | npm | `@abstractframework/continuum` | 0.7.0 |
 | npm | `@abstractframework/entity` | 0.7.1 |
 | crates.io | `abstractcode` | 0.10.0 |
 | crates.io | `abstractgateway-console` | 0.16.0 |
 | crates.io | `abstractcore-console` | 0.8.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.14.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.15.0 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.26.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
