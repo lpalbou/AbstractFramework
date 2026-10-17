@@ -98,7 +98,7 @@ param(
 $AfGatewayPinDefault = '0.15.1'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.11.3'
+$AfFrameworkVersion = '0.11.4'
 $AfPyMatrix = @('abstractcore==2.26.0', 'AbstractRuntime==0.10.2', 'abstractagent==0.3.19', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.15.0', 'abstractvision==0.3.33', 'abstractmusic==0.1.16', 'abstract3d==0.3.2')
 $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.10.0', '@abstractframework/code@0.11.2', '@abstractframework/observer@0.8.0', '@abstractframework/continuum@0.7.0', '@abstractframework/entity@0.7.1')
@@ -722,18 +722,69 @@ function Get-AppPin([string]$Id) {
     }
     return $null
 }
+# Why the apps step is more than "update what the list shows" (root backlog 1026; a remote upgrade
+# on 2026-10-17 moved the gateway and left Flow where it was, with nothing in red): a gateway
+# answers /api/health with "status": "starting" while it boots and starts its enabled apps
+# (Test-GwBooted, Get-AppsSettled); the shell's ABSTRACTGATEWAY_AUTH_TOKEN (set for another
+# gateway, or stale) wins over the data dir's bootstrap token in `abstractgateway apps`
+# (Get-AppsToken: passed as a parameter); and a copy of an app started outside the gateway holds
+# the app's port, so the gateway lists THAT copy as "external" with its own install hidden behind
+# it (the install is updated all the same, and the summary says in red which copy runs).
+function Test-GwBooted([string]$Body) {
+    # $true when $Body is a gateway's /api/health answer and its boot is over (gateways 0.15 and
+    # later answer "status": "starting" while they load and start their apps).
+    if (-not $Body -or $Body -notmatch 'abstractgateway') { return $false }
+    if ($Body -match '"status":\s*"starting"') { return $false }
+    return $true
+}
+function Get-AppsToken([string]$DataDir) {
+    # the data dir's admin token, for `abstractgateway apps` as a direct parameter
+    try { return ([string](Get-Content -Raw -LiteralPath (Join-Path $DataDir 'auth\bootstrap-admin-token') -ErrorAction Stop)).Trim() } catch { return '' }
+}
 function Get-AppsInstalled([string]$Gw, [string]$BaseUrl, [string]$DataDir) {
-    # -> @{id; version} per app the running gateway installed; $null when the list cannot be read
+    # -> @{id; version; source; status; extVersion; extPort; extPid} per app the gateway knows (version
+    # $null when it installed none: a copy outside it only); $null when the list cannot be read
     $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
     try {
-        $raw = (& $Gw apps list --json --no-latest --url $BaseUrl --data-dir $DataDir 2>$null) -join "`n"
+        $cmdArgs = @('apps', 'list', '--json', '--no-latest', '--url', $BaseUrl, '--data-dir', $DataDir)
+        $tok = Get-AppsToken $DataDir; if ($tok) { $cmdArgs += @('--token', $tok) }
+        $raw = ''
+        for ($try = 1; $try -le 3; $try++) {
+            $raw = (& $Gw @cmdArgs 2>$null) -join "`n"
+            if ($LASTEXITCODE -eq 0 -and $raw) { break }
+            if ($try -lt 3) { Start-Sleep -Seconds 2 }
+        }
         if ($LASTEXITCODE -ne 0 -or -not $raw) { return $null }
         $rows = @()
         foreach ($a in @(($raw | ConvertFrom-Json).apps)) {
-            if ($a.version -and $a.source -ne 'external') { $rows += [pscustomobject]@{ id = [string]$a.id; version = [string]$a.version } }
+            $ext = $null; if ($a.PSObject.Properties['external'] -and $a.external) { $ext = $a.external }
+            # An "external" row describes the copy running outside the gateway; what the gateway
+            # itself installed is its managed_version ($null when it installed nothing).
+            $version = if ($a.source -eq 'external') { $a.managed_version } else { $a.version }
+            if (-not $version -and -not $ext) { continue }
+            $rows += [pscustomobject]@{
+                id = [string]$a.id; version = $(if ($version) { [string]$version } else { $null })
+                source = [string]$a.source; status = [string]$a.status
+                extVersion = $(if ($ext) { [string]$ext.version } else { '' }); extPort = $(if ($ext) { [string]$ext.port } else { '' }); extPid = $(if ($ext) { [string]$ext.pid } else { '' })
+            }
         }
         return ,$rows
     } catch { return $null } finally { $ErrorActionPreference = $old }
+}
+if (-not (Get-Variable -Scope Script -Name AppsStartWait -ErrorAction SilentlyContinue)) { $script:AppsStartWait = 90 }   # seconds to wait for apps the gateway is starting
+function Get-AppsSettled([string]$Gw, [string]$BaseUrl, [string]$DataDir) {
+    # -> Get-AppsInstalled's rows once no app of this release is still "starting"
+    $w = 0
+    while ($true) {
+        $rows = Get-AppsInstalled $Gw $BaseUrl $DataDir
+        if ($null -eq $rows) { return $null }
+        $starting = @($rows | Where-Object { $_.status -eq 'starting' -and (Get-AppPin $_.id) } | ForEach-Object { $_.id })
+        if (-not $starting.Count) { break }
+        if ($w -ge $script:AppsStartWait) { Write-Warn2 "still starting after $($script:AppsStartWait) s: $($starting -join ' ') (updated as it is)"; break }
+        if ($w -eq 0) { Write-Info "the gateway is still starting $($starting -join ' '): waiting for it" }
+        Start-Sleep -Seconds 2; $w += 2
+    }
+    return ,$rows
 }
 function Write-AppsMarker([string]$DataDir) {
     try {
@@ -765,30 +816,34 @@ function Invoke-AppsStep([bool]$Up, [string]$Gw, [string]$BaseUrl, [string]$Data
         }
         return
     }
-    $before = Get-AppsInstalled $Gw $BaseUrl $DataDir
+    $before = Get-AppsSettled $Gw $BaseUrl $DataDir
     if ($null -eq $before) {
         Write-Warn2 "could not read the gateway's apps (abstractgateway apps list)"
         if ($script:DryRun) { return }
-        Add-Incomplete 'browser apps' 'their versions could not be read from the gateway; check with: abstractgateway apps list' -Fail
+        Add-Incomplete 'browser apps' "their versions could not be read from the gateway; check with: abstractgateway apps list --url $BaseUrl --data-dir $DataDir" -Fail
         $script:AppsLines = @('unknown: abstractgateway apps list failed')
         return
     }
-    $did = $false
+    $did = $false; $any = $false
     foreach ($r in $before) {
         $pin = Get-AppPin $r.id
         if (-not $pin) { continue }
-        if ($r.version -eq $pin) { Write-Ok "$($r.id) $($r.version) (this release's version)" }
+        $any = $true
+        if (-not $r.version) { Write-Info "$($r.id): a copy started outside the gateway runs on port $($r.extPort) (version $($r.extVersion)); the gateway installed none, so there is nothing to update" }
+        elseif ($r.version -eq $pin) { Write-Ok "$($r.id) $($r.version) (this release's version)" }
         elseif ($script:DryRun) { Write-Info "would update $($r.id) $($r.version) -> $pin (restarted if running): abstractgateway apps update $($r.id) --version $pin" }
         else {
             $shown = "abstractgateway apps update $($r.id) --version $pin"
             Write-Host "  `$ $shown" -ForegroundColor DarkGray
             $script:Twins.Add($shown)
+            $cmdArgs = @('apps', 'update', $r.id, '--version', $pin, '--url', $BaseUrl, '--data-dir', $DataDir)
+            $tok = Get-AppsToken $DataDir; if ($tok) { $cmdArgs += @('--token', $tok) }
             $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-            try { & $Gw apps update $r.id --version $pin --url $BaseUrl --data-dir $DataDir *> $null } catch { } finally { $ErrorActionPreference = $old }
+            try { & $Gw @cmdArgs *> $null } catch { } finally { $ErrorActionPreference = $old }
             $did = $true
         }
     }
-    if (-not $before.Count) { Write-Info "no browser app installed yet: the console's Apps page installs them ($pins)" }
+    if (-not $any) { Write-Info "no browser app installed yet: the console's Apps page installs them ($pins)" }
     if ($script:DryRun) { return }
     # What the gateway reports now is what the summary says: a failed update is never silent.
     $after = $before
@@ -804,16 +859,27 @@ function Invoke-AppsStep([bool]$Up, [string]$Gw, [string]$BaseUrl, [string]$Data
         $pin = Get-AppPin $r.id
         if (-not $pin) { continue }
         $prev = @($before | Where-Object { $_.id -eq $r.id } | ForEach-Object { $_.version }) | Select-Object -First 1
-        if ($r.version -ne $pin) {
+        if (-not $r.version) { $line = "$($r.id): not installed by the gateway; a copy started outside it runs on port $($r.extPort) ($($r.extVersion))" }
+        elseif ($r.version -ne $pin) {
             Write-Warn2 "the $($r.id) app is still $($r.version), not $pin"
             Add-Incomplete "the $($r.id) app" "still $($r.version), not this release's $pin; retry: abstractgateway apps update $($r.id) --version $pin" -Fail
-            $script:AppsLines += "$($r.id) $($r.version) (NOT ${pin}: update failed)"
+            $line = "$($r.id) $($r.version) (NOT ${pin}: update failed)"
         } elseif ($prev -and $prev -ne $r.version) {
             Write-Ok "the $($r.id) app is now $($r.version)"
-            $script:AppsLines += "$($r.id) $prev -> $($r.version)"
-        } else { $script:AppsLines += "$($r.id) $($r.version)" }
+            $line = "$($r.id) $prev -> $($r.version)"
+        } else { $line = "$($r.id) $($r.version)" }
+        if ($r.source -eq 'external' -and $r.version) {
+            # The gateway's install is at $r.version, but the copy on the port is not the gateway's:
+            # the gateway cannot restart it, so that copy is what people get until it is stopped.
+            $line += "; RUNNING: a copy started outside the gateway, $($r.extVersion) on port $($r.extPort) (pid $($r.extPid))"
+            if ($r.extVersion -ne $pin) {
+                Write-Warn2 "the $($r.id) app that runs is a copy started outside the gateway ($($r.extVersion) on port $($r.extPort), pid $($r.extPid)), not the gateway's $($r.version)"
+                Add-Incomplete "the $($r.id) app" "what runs is a copy started outside the gateway ($($r.extVersion) on port $($r.extPort), pid $($r.extPid)), not this release's $pin; stop it (Stop-Process -Id $($r.extPid)), then: abstractgateway apps launch $($r.id)" -Fail
+            } else { Write-Info "$($r.id): the copy running on port $($r.extPort) was started outside the gateway (pid $($r.extPid)); it is at $($r.extVersion) too" }
+        }
+        $script:AppsLines += $line
     }
-    if (-not $after.Count) { $script:AppsLines = @("none installed (the console's Apps page installs them)") }
+    if (-not $any) { $script:AppsLines = @("none installed (the console's Apps page installs them)") }
 }
 # One installer at a time per data dir (same rule as install.sh): a re-run and the gateway's Update
 # must never install over each other. The lock is <data dir>\update\install.lock, a directory
@@ -2218,7 +2284,7 @@ function Main {
         if ($script:DryRun) { Write-Info "would wait up to 60 s for $baseUrl/api/health" }
         else {
             $i = 0
-            while (-not ((Get-Http "$baseUrl/api/health" 3) -match 'abstractgateway')) {
+            while (-not (Test-GwBooted (Get-Http "$baseUrl/api/health" 3))) {
                 $i++
                 if ($mode -eq 'background' -and -not (Get-OurPid)) {
                     if (Test-Path -LiteralPath $gatewayErr) { Get-Content -LiteralPath $gatewayErr -Tail 30 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray } }
@@ -2267,7 +2333,7 @@ function Main {
     }
 
     Write-Step "Browser apps (this release's versions)"
-    $appsUp = (Test-Path -LiteralPath $gw) -and ((Get-Http "$baseUrl/api/health" 3) -match 'abstractgateway')
+    $appsUp = (Test-Path -LiteralPath $gw) -and (Test-GwBooted (Get-Http "$baseUrl/api/health" 3))
     Invoke-AppsStep -Up $appsUp -Gw $gw -BaseUrl $baseUrl -DataDir $DataDir
 
     # --- summary -------------------------------------------------------------------------------------

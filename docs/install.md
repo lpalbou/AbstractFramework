@@ -360,11 +360,21 @@ installer keeps them on the release: on every install and upgrade, once the gate
 browser app the gateway has installed is brought to this release's version (`--print` lists the
 planned updates) through the gateway's own `abstractgateway apps update <app> --version <version>`,
 so the gateway's apps registry stays right and a running app restarts on the new version. It is a
-command-line call against the running gateway (signed in with `<data dir>/auth/bootstrap-admin-token`),
-so it works the same on a headless or terminal-only machine: no browser or web console is involved. The
-summary's **Apps** line lists each app's version; an app that could not be updated is listed in red
-with the command to retry, and the installer exits 1. A fresh install installs no app: the console's
-**Apps** page installs them.
+command-line call against the running gateway, signed in with `<data dir>/auth/bootstrap-admin-token`
+passed as a parameter (an `ABSTRACTGATEWAY_AUTH_TOKEN` in your shell, set for another gateway, is
+not used), so it works the same on a headless or terminal-only machine: no browser or web console is
+involved. The step starts only once the gateway's boot is over (`/api/health` no longer says
+`"status": "starting"`) and waits, up to 90 s, for an app the gateway is still starting, so the
+update restarts it on the new version. The summary's **Apps** line lists each app's version; an app
+that could not be updated is listed in red with the command to retry, and the installer exits 1. A
+fresh install installs no app: the console's **Apps** page installs them.
+
+An app's port may be held by a copy the gateway did not start: a leftover of a gateway that died
+hard, or an app run by hand with `npx`. The gateway lists that copy as *external* and cannot stop or
+restart it, so the gateway's own install is updated and the **Apps** line says `RUNNING: a copy
+started outside the gateway, <version> on port <port> (pid <pid>)`; when that copy is not at this
+release's version, the summary shows it in red with the pid to stop (`kill <pid>`, then
+`abstractgateway apps launch <app>`).
 
 When no gateway answers (`--no-start` while the gateway is stopped), the installer writes the
 release's versions to `<data dir>/apps-upgrade.pending` instead, and the gateway (0.11.1 and later)
@@ -944,7 +954,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.11.3 pins `abstractgateway==0.15.1`, `abstractassistant==0.14.0`,
+`abstractframework` 0.11.4 pins `abstractgateway==0.15.1`, `abstractassistant==0.14.0`,
 `abstractcore==2.26.0`, `AbstractRuntime==0.10.2`, `abstractagent==0.3.19`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.0`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.16` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select

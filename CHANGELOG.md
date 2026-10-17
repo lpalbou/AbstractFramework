@@ -2,6 +2,24 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.4] - 2026-10-17
+
+Installer fix: upgrades keep the browser apps on the release. Package pins are unchanged from 0.11.3
+(AbstractGateway 0.15.1 across the light, Apple and GPU profiles).
+
+- Re-running `install.sh` or `install.ps1` brings every browser app the gateway has installed (Flow,
+  Code, Observer, Continuum, Entity) to this release's version in every case the step covers: it
+  starts once the gateway's boot is over, waits up to 90 s for an app the gateway is still starting,
+  and signs its `abstractgateway apps` calls with the data dir's token passed as a parameter, so an
+  `ABSTRACTGATEWAY_AUTH_TOKEN` set in your shell for another gateway no longer makes the step fail.
+- A copy of an app running outside the gateway on the app's port no longer hides the gateway's own
+  install: the install is updated, the summary's Apps line names the outside copy (`RUNNING: a copy
+  started outside the gateway, <version> on port <port> (pid <pid>)`), and a copy not at this release's
+  version is listed in red with the pid to stop. See [Upgrade the apps](docs/install.md#upgrade-the-apps).
+- Who is affected: anyone upgrading with the one-line installers (`curl -LsSf https://abstractframework.ai/install.sh | sh`,
+  `powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"`). A fresh
+  `pip install abstractframework==0.11.4` resolves the same packages as 0.11.3.
+
 ## [0.11.3] - 2026-10-17
 
 Pins **AbstractGateway 0.15.1** across the light, Apple and GPU profiles. Other package pins are unchanged.

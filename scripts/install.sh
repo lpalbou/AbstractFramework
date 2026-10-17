@@ -127,7 +127,7 @@ AF_GATEWAY_PIN_DEFAULT="0.15.1"
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.11.3"
+AF_FRAMEWORK_VERSION="0.11.4"
 AF_PY_MATRIX="abstractcore==2.26.0 AbstractRuntime==0.10.2 abstractagent==0.3.19 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.15.0 abstractvision==0.3.33 abstractmusic==0.1.16 abstract3d==0.3.2"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.10.0 @abstractframework/code@0.11.2 @abstractframework/observer@0.8.0 @abstractframework/continuum@0.7.0 @abstractframework/entity@0.7.1"
@@ -792,6 +792,17 @@ incomplete_add() {
 # fresh install installs none: the console's Apps page installs them, at these versions. With no
 # gateway answering (--no-start while it is stopped) the versions go to
 # <data dir>/apps-upgrade.pending, which the gateway applies at its next start.
+# Three things a plain "update what the list shows" got wrong (root backlog 1026; a remote
+# upgrade on 2026-10-17 moved the gateway and left Flow where it was, with nothing in red):
+#   - a gateway answers /api/health with "status": "starting" while it boots and starts its
+#     enabled apps: nothing here runs before gw_booted says the boot is over, and an app the
+#     gateway is still starting is waited for (af_apps_settled), so the update restarts it;
+#   - the shell's ABSTRACTGATEWAY_AUTH_TOKEN (set for another gateway, or stale) wins over the
+#     data dir's bootstrap token in `abstractgateway apps`: the token is passed as a parameter;
+#   - a copy of an app started outside the gateway (a leftover of a gateway that died hard, or
+#     `npx` by hand) holds the app's port: the gateway lists THAT copy as "external" and keeps
+#     its own install hidden behind it. The install is updated all the same, and the summary
+#     says in red which copy is the one running and how to stop it.
 af_app_pin() {  # af_app_pin ID -> this release's version of that browser app; non-zero when none
     for _s in $AF_NPM_APPS; do
         _n="${_s#@abstractframework/}"
@@ -799,13 +810,55 @@ af_app_pin() {  # af_app_pin ID -> this release's version of that browser app; n
     done
     return 1
 }
-af_apps_installed() {  # -> "ID:VERSION" per app the running gateway installed; non-zero when unreadable
-    _aj="$("$GW" apps list --json --no-latest --url "$BASE_URL" --data-dir "$DATA_DIR" 2>>"${LOG_FILE:-/dev/null}" </dev/null)" || return 1
+gw_booted() {  # gw_booted BODY: 0 when BODY is a gateway's /api/health answer and its boot is over
+    printf '%s' "$1" | grep -q '"abstractgateway"' || return 1
+    # Gateways 0.15 and later answer "status": "starting" while they load and start their apps.
+    printf '%s' "$1" | grep -Eq '"status": *"starting"' && return 1
+    return 0
+}
+af_apps_token() {  # the data dir's admin token, for `abstractgateway apps` as a direct parameter
+    tr -d '\r\n' <"$DATA_DIR/auth/bootstrap-admin-token" 2>/dev/null || :
+}
+af_apps_installed() {  # -> one "ID VERSION SOURCE STATUS EXTVERSION EXTPORT EXTPID" line per app ("-": none); non-zero when unreadable
+    set -- "$GW" apps list --json --no-latest --url "$BASE_URL" --data-dir "$DATA_DIR"
+    _tok="$(af_apps_token)"; [ -z "$_tok" ] || set -- "$@" --token "$_tok"
+    _aj=""; _try=0
+    until _aj="$("$@" 2>>"${LOG_FILE:-/dev/null}" </dev/null)"; do
+        _try=$((_try + 1)); [ "$_try" -lt 3 ] || return 1
+        sleep 2
+    done
     printf '%s' "$_aj" | "$APPS_PY" -c '
 import json, sys
 for a in json.load(sys.stdin).get("apps") or []:
-    if a.get("version") and a.get("source") != "external":
-        print("%s:%s" % (a["id"], a["version"]))'
+    ext = a.get("external") if isinstance(a.get("external"), dict) else None
+    # An "external" row describes the copy running outside the gateway; what the gateway
+    # itself installed is its managed_version (None when it installed nothing).
+    version = a.get("managed_version") if a.get("source") == "external" else a.get("version")
+    if not version and ext is None:
+        continue
+    row = [a.get("id"), version, a.get("source"), a.get("status"),
+           (ext or {}).get("version"), (ext or {}).get("port"), (ext or {}).get("pid")]
+    print(" ".join(str(v) if v not in (None, "") else "-" for v in row))'
+}
+AF_APPS_START_WAIT="${AF_APPS_START_WAIT:-90}"   # seconds to wait for apps the gateway is starting
+af_apps_settled() {  # -> af_apps_installed's rows once no app of this release is still "starting"
+    _w=0
+    while :; do
+        _rows="$(af_apps_installed)" || return 1
+        _starting=""
+        _ifs="$IFS"; IFS="$AF_NL"
+        for _r in $_rows; do
+            IFS="$_ifs"; set -- $_r
+            [ "${4:-}" = starting ] && af_app_pin "$1" >/dev/null && _starting="$_starting $1"
+        done
+        IFS="$_ifs"
+        [ -n "$_starting" ] || break
+        # (this function runs in a command substitution: what it says goes to the terminal, not the rows)
+        [ "$_w" -lt "$AF_APPS_START_WAIT" ] || { warn "still starting after $AF_APPS_START_WAIT s:$_starting (updated as it is)" >&2; break; }
+        [ "$_w" = 0 ] && info "the gateway is still starting$_starting: waiting for it" >&2
+        sleep 2; _w=$((_w + 2))
+    done
+    printf '%s\n' "$_rows"
 }
 af_apps_marker() {  # the pins the gateway applies at its next start (one "ID VERSION" per line)
     mkdir -p "$DATA_DIR" && : >"$DATA_DIR/apps-upgrade.pending.tmp" || return 1
@@ -814,12 +867,22 @@ af_apps_marker() {  # the pins the gateway applies at its next start (one "ID VE
     done
     mv -f "$DATA_DIR/apps-upgrade.pending.tmp" "$DATA_DIR/apps-upgrade.pending"
 }
+AF_NL='
+'
+af_rows_version() {  # af_rows_version ROWS ID -> the VERSION field of ID's row ("" when none)
+    _want="$2"; _ifs2="$IFS"; IFS="$AF_NL"
+    for _b in $1; do
+        IFS="$_ifs2"; set -- $_b
+        [ "$1" = "$_want" ] && { printf '%s\n' "$2"; break; }
+    done
+    IFS="$_ifs2"
+}
 APPS_LINES=""
 af_apps_step() {  # af_apps_step UP (1 = a gateway answers at BASE_URL); sets APPS_LINES for the summary
-    APPS_LINES=""
+    APPS_LINES=""; _up="$1"
     _pins=""; for _s in $AF_NPM_APPS; do _n="${_s#@abstractframework/}"; _pins="$_pins ${_n%@*} ${_n##*@},"; done
     _pins="${_pins# }"; _pins="${_pins%,}"
-    if [ "$1" != 1 ]; then
+    if [ "$_up" != 1 ]; then
         if [ "$PRINT" = 1 ]; then
             info "would bring every browser app the gateway has installed to this release's version ($_pins), restarting the running ones:"
             info "    $(show_cmd abstractgateway apps update "<app>" --version "<version>")"
@@ -836,27 +899,36 @@ af_apps_step() {  # af_apps_step UP (1 = a gateway answers at BASE_URL); sets AP
         fi
         return 0
     fi
-    if ! _rows="$(af_apps_installed)"; then
+    if ! _rows="$(af_apps_settled)"; then
         warn "could not read the gateway's apps (abstractgateway apps list; see ${LOG_FILE:-the output above})"
         [ "$PRINT" = 1 ] && return 0
-        incomplete_add "browser apps" "their versions could not be read from the gateway; check with: abstractgateway apps list" fail
+        incomplete_add "browser apps" "their versions could not be read from the gateway; check with: abstractgateway apps list --url $BASE_URL --data-dir $DATA_DIR" fail
         APPS_LINES="unknown: abstractgateway apps list failed"
         return 0
     fi
-    _before="$_rows"; _did=0
+    _before="$_rows"; _did=0; _any=0
+    _ifs="$IFS"; IFS="$AF_NL"
     for _r in $_rows; do
-        _id="${_r%%:*}"; _ver="${_r#*:}"
+        IFS="$_ifs"; set -- $_r
+        _id="$1"; _ver="$2"; _xv="${5:-}"; _xp="${6:-}"
         _pin="$(af_app_pin "$_id")" || continue
-        if [ "$_ver" = "$_pin" ]; then
+        _any=1
+        if [ "$_ver" = - ]; then
+            info "$_id: a copy started outside the gateway runs on port $_xp (version $_xv); the gateway installed none, so there is nothing to update"
+        elif [ "$_ver" = "$_pin" ]; then
             ok "$_id $_ver (this release's version)"
         elif [ "$PRINT" = 1 ]; then
             info "would update $_id $_ver -> $_pin (restarted if running): $(show_cmd abstractgateway apps update "$_id" --version "$_pin")"
         else
-            RUN_SOFT=1 run "update the $_id app to $_pin" "$GW" apps update "$_id" --version "$_pin" --url "$BASE_URL" --data-dir "$DATA_DIR"
+            set -- "$GW" apps update "$_id" --version "$_pin" --url "$BASE_URL" --data-dir "$DATA_DIR"
+            RUN_SHOW="$(show_cmd abstractgateway apps update "$_id" --version "$_pin")"
+            _tok="$(af_apps_token)"; [ -z "$_tok" ] || set -- "$@" --token "$_tok"
+            RUN_SOFT=1 run "update the $_id app to $_pin" "$@"
             _did=1
         fi
     done
-    [ -n "$_rows" ] || info "no browser app installed yet: the console's Apps page installs them ($_pins)"
+    IFS="$_ifs"
+    [ "$_any" = 1 ] || info "no browser app installed yet: the console's Apps page installs them ($_pins)"
     [ "$PRINT" = 1 ] && return 0
     # What the gateway reports now is what the summary says: a failed update is never silent.
     if [ "$_did" = 1 ] && ! _rows="$(af_apps_installed)"; then
@@ -864,25 +936,39 @@ af_apps_step() {  # af_apps_step UP (1 = a gateway answers at BASE_URL); sets AP
         APPS_LINES="unknown: abstractgateway apps list failed after the update"
         return 0
     fi
+    _ifs="$IFS"; IFS="$AF_NL"
     for _r in $_rows; do
-        _id="${_r%%:*}"; _ver="${_r#*:}"
+        IFS="$_ifs"; set -- $_r
+        _id="$1"; _ver="$2"; _src="${3:-}"; _xv="${5:-}"; _xp="${6:-}"; _xpid="${7:-}"
         _pin="$(af_app_pin "$_id")" || continue
-        _old=""; for _b in $_before; do [ "${_b%%:*}" = "$_id" ] && _old="${_b#*:}"; done
-        if [ "$_ver" != "$_pin" ]; then
+        _old="$(af_rows_version "$_before" "$_id")"
+        if [ "$_ver" = - ]; then
+            _line="$_id: not installed by the gateway; a copy started outside it runs on port $_xp ($_xv)"
+        elif [ "$_ver" != "$_pin" ]; then
             warn "the $_id app is still $_ver, not $_pin"
             incomplete_add "the $_id app" "still $_ver, not this release's $_pin; retry: abstractgateway apps update $_id --version $_pin" fail
-            APPS_LINES="${APPS_LINES}$_id $_ver (NOT $_pin: update failed)
-"
+            _line="$_id $_ver (NOT $_pin: update failed)"
         elif [ -n "$_old" ] && [ "$_old" != "$_ver" ]; then
             ok "the $_id app is now $_ver"
-            APPS_LINES="${APPS_LINES}$_id $_old -> $_ver
-"
+            _line="$_id $_old -> $_ver"
         else
-            APPS_LINES="${APPS_LINES}$_id $_ver
-"
+            _line="$_id $_ver"
         fi
+        if [ "$_src" = external ] && [ "$_ver" != - ]; then
+            # The gateway's install is at $_ver, but the copy on the port is not the gateway's:
+            # the gateway cannot restart it, so that copy is what people get until it is stopped.
+            _line="$_line; RUNNING: a copy started outside the gateway, $_xv on port $_xp (pid $_xpid)"
+            if [ "$_xv" != "$_pin" ]; then
+                warn "the $_id app that runs is a copy started outside the gateway ($_xv on port $_xp, pid $_xpid), not the gateway's $_ver"
+                incomplete_add "the $_id app" "what runs is a copy started outside the gateway ($_xv on port $_xp, pid $_xpid), not this release's $_pin; stop it (kill $_xpid), then: abstractgateway apps launch $_id" fail
+            else
+                info "$_id: the copy running on port $_xp was started outside the gateway (pid $_xpid); it is at $_xv too"
+            fi
+        fi
+        APPS_LINES="${APPS_LINES}${_line}${AF_NL}"
     done
-    [ -n "$_rows" ] || APPS_LINES="none installed (the console's Apps page installs them)"
+    IFS="$_ifs"
+    [ "$_any" = 1 ] || APPS_LINES="none installed (the console's Apps page installs them)"
     return 0
 }
 # <<< apps-upgrade
@@ -3064,7 +3150,7 @@ if [ "$NO_START" = 0 ]; then
         _svc_log="$HOME/Library/Logs/AbstractGateway"
         [ "$OS_ID" = macos ] || _svc_log="journalctl --user -u abstractgateway"
         _glog="$([ "$MODE" = service ] && echo "$_svc_log" || echo "$GATEWAY_LOG")"
-        until http_get "$BASE_URL/api/health" | grep -q '"abstractgateway"'; do
+        until _hb="$(http_get "$BASE_URL/api/health")" && gw_booted "$_hb"; do
             _i=$((_i + 1))
             if [ "$MODE" = background ] && ! pid_alive; then
                 tail -n 30 "$GATEWAY_LOG" >&2 || true
@@ -3121,7 +3207,7 @@ fi
 step "Browser apps (this release's versions)"
 APPS_PY="$TOOL_VENV/bin/python"; [ -x "$APPS_PY" ] || APPS_PY="${TOOL_VENV2:+$TOOL_VENV2/bin/python}"
 _apps_up=0
-if [ -x "$GW" ] && [ -n "$APPS_PY" ] && [ -x "$APPS_PY" ] && http_get "$BASE_URL/api/health" | grep -q '"abstractgateway"'; then _apps_up=1; fi
+if [ -x "$GW" ] && [ -n "$APPS_PY" ] && [ -x "$APPS_PY" ] && gw_booted "$(http_get "$BASE_URL/api/health")"; then _apps_up=1; fi
 af_apps_step "$_apps_up"
 
 # ---------------------------------------------------------------------------
