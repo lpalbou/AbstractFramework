@@ -2,6 +2,13 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.3] - 2026-10-17
+
+Pins **AbstractGateway 0.15.1** across the light, Apple and GPU profiles. Other package pins are unchanged.
+
+- Admin-configured provider endpoints are shared by default with human users and entities. New accounts can run workflows using the gateway's default endpoint without supplying their own provider URL or key. Existing root connections are inherited automatically.
+- Bootstrap installers and the generated install manifest select Gateway 0.15.1.
+
 ## [0.11.2] - 2026-10-17
 
 Hold to talk in the Assistant — pins abstractassistant 0.14.0; every other package unchanged from 0.11.1.

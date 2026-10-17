@@ -53,6 +53,23 @@ across Gateway discovery, import/export, and Runtime execution.
 Current UI surfaces may still say `Workspace` in some places. The engineering
 term remains `Workspace File` / `Workspace Folder`.
 
+## Shared provider access
+
+With AbstractGateway 0.15.1 or later, every enabled provider connection configured
+by an admin is available by default to human users and digital users/entities on
+that gateway. New users inherit the gateway's capability defaults, so workflows
+without provider/model overrides use the admin's selected endpoint. Users do not
+need a copy of its upstream API key or a separate provider configuration.
+The gateway-wide default is the operator's baseline; an account can override
+its own model preference without changing other accounts' defaults.
+
+Shared access permits use through the gateway; editing or deleting an admin
+connection still requires an admin. Provider keys remain server-side, disabled
+connections remain unavailable, and users' own private connections remain private.
+Existing root connections are inherited automatically, including connections
+stored with the legacy `scope: user` value. Per-user provider restrictions are
+not part of this release.
+
 ## User isolation
 
 When Gateway user auth is enabled, each user token resolves to a Gateway
