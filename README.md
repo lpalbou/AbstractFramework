@@ -339,7 +339,7 @@ and tested together.
 | Registry | Package | Version |
 |---|---|---|
 | PyPI | `abstractgateway` | 0.15.0 |
-| PyPI | `abstractassistant` | 0.13.2 |
+| PyPI | `abstractassistant` | 0.14.0 |
 | PyPI | `abstractcore` | 2.26.0 |
 | PyPI | `AbstractRuntime` | 0.10.2 |
 | PyPI | `abstractagent` | 0.3.19 |

@@ -2,6 +2,12 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.2] - 2026-10-17
+
+Hold to talk in the Assistant — pins abstractassistant 0.14.0; every other package unchanged from 0.11.1.
+
+- **AbstractAssistant 0.14.0**: the composer has one microphone button. Hold it while you speak and release it: the gateway transcribes the recording and the words are sent as your next message. A short tap records nothing. The hands-free voice conversation starts from ⌘⇧V, the microphone's right-click menu or the tray menu.
+
 ## [0.11.1] - 2026-10-16
 
 Fast listings, task cards, standard-library imports in Code nodes and the Code assistant — pins AbstractRuntime 0.10.2, abstractgateway 0.15.0, the npm observer 0.8.0 and the npm flow 0.10.0; every other package unchanged from 0.11.0.

@@ -944,7 +944,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.11.1 pins `abstractgateway==0.15.0`, `abstractassistant==0.13.2`,
+`abstractframework` 0.11.2 pins `abstractgateway==0.15.0`, `abstractassistant==0.14.0`,
 `abstractcore==2.26.0`, `AbstractRuntime==0.10.2`, `abstractagent==0.3.19`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.0`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.16` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select

@@ -343,7 +343,7 @@ and tested together.
 | Registry | Package | Version |
 |---|---|---|
 | PyPI | `abstractgateway` | 0.15.0 |
-| PyPI | `abstractassistant` | 0.13.2 |
+| PyPI | `abstractassistant` | 0.14.0 |
 | PyPI | `abstractcore` | 2.26.0 |
 | PyPI | `AbstractRuntime` | 0.10.2 |
 | PyPI | `abstractagent` | 0.3.19 |
@@ -645,7 +645,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.11.1"
+version = "0.11.2"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -692,7 +692,7 @@ dependencies = [
     "abstractgateway==0.15.0",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.13.2",
+    "abstractassistant==0.14.0",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
     "abstractcore==2.26.0",
@@ -724,12 +724,12 @@ dependencies = [
 # then adds user-facing apps.
 apple = [
     "abstractgateway[apple]==0.15.0",
-    "abstractassistant[apple]==0.13.2; platform_system == \"Darwin\"",
+    "abstractassistant[apple]==0.14.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
     "abstractgateway[gpu]==0.15.0",
-    "abstractassistant[gpu]==0.13.2",
+    "abstractassistant[gpu]==0.14.0",
 ]
 
 [project.urls]
@@ -781,7 +781,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.11.1"
+__version__ = "0.11.2"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -797,7 +797,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.33",
     "abstractmusic": "0.1.16",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.13.2",
+    "abstractassistant": "0.14.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -4696,7 +4696,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.11.1 pins `abstractgateway==0.15.0`, `abstractassistant==0.13.2`,
+`abstractframework` 0.11.2 pins `abstractgateway==0.15.0`, `abstractassistant==0.14.0`,
 `abstractcore==2.26.0`, `AbstractRuntime==0.10.2`, `abstractagent==0.3.19`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.0`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.16` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select

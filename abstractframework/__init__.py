@@ -10,7 +10,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.11.1"
+__version__ = "0.11.2"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -26,7 +26,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.33",
     "abstractmusic": "0.1.16",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.13.2",
+    "abstractassistant": "0.14.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
