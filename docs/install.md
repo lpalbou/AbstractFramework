@@ -130,7 +130,7 @@ where it stopped.
 ### Right after a release
 
 For a few minutes after a release, some of PyPI's mirrors can still serve a package list without
-the new versions. uv then answers `there is no version of abstractgateway==0.15.5` even though the
+the new versions. uv then answers `there is no version of abstractgateway==0.15.6` even though the
 release is published. The installer (install.sh and install.ps1; the **Update** action of the
 consoles and the menu-bar icon runs install.sh on macOS and Linux, and gives the install.ps1 line to
 paste on Windows) treats that as a delay:
@@ -193,6 +193,21 @@ The line you installed with also upgrades and repairs. Run it again:
 ```bash
 curl -LsSf https://abstractframework.ai/install.sh | sh
 ```
+
+From a gateway 0.15.6 or later, the same upgrade is one command of the gateway, with a preview of
+what changes first:
+
+```bash
+abstractgateway update --check   # what would change: each package installed -> new, and the release notes in between
+abstractgateway update           # the preview, one confirmation, then the installer runs and restarts the gateway
+```
+
+`update --check` exits 0 when you have the newest release and 10 when an update exists, so a script
+can use it. `update` runs the same `install.sh` as the line above (sha-checked, with `--yes`,
+`--no-open`, `--no-modify-path` and this install's data dir), keeps your port, profile and login
+choices, and restarts the gateway service itself. A gateway that runs from a source checkout, a
+container or a plain `pip` install is told how to upgrade instead. `abstractgateway --update` is
+the same command.
 
 On Windows:
 
@@ -284,6 +299,13 @@ a console's **Update** is running, stops with `another AbstractFramework install
 running` and changes nothing; run it again when the first has finished. A run that was interrupted
 (a closed terminal, a crash) leaves a lock that the next run takes over by itself.
 
+### Open the terminal console
+
+`abstractgateway console` (also `abstractgateway --console`) opens the terminal console signed in:
+it finds `abstractgateway-console` next to `abstractgateway` (the installer builds it there) or on
+PATH, and passes it this install's gateway address and admin token; `--url` and `--token` override
+them. Without the console it says how to get it (`cargo install abstractgateway-console`).
+
 ### Upgrade only the gateway
 
 A gateway release can reach PyPI before the next AbstractFramework release. To install the newest
@@ -314,7 +336,8 @@ overrides the installer added are gone. Use the installer.
 
 ### From the console or the menu-bar icon
 
-The gateway's **Update** runs the same installer as the line above. You find it in three places:
+The gateway's **Update** runs the same installer as the line above. You find it in three places
+(and in the terminal as `abstractgateway update`, above):
 
 - the web console: **Resources > Gateway > Version**, then **Check now**;
 - the menu-bar icon: **Check for Updates…**;
@@ -431,7 +454,7 @@ The terminal console and an `abstractcode` built by the installer are upgraded b
 
 ```bash
 abstractgateway --version                    # the installed gateway
-uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.5])
+uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.6])
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
@@ -507,7 +530,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.5"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.6"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]==0.15.2"` (the release's AbstractVoice): Supertonic
@@ -861,7 +884,7 @@ instead of starting a browser.
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.15.5"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.15.6"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -995,7 +1018,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.11.8 pins `abstractgateway==0.15.5`, `abstractassistant==0.14.1`,
+`abstractframework` 0.11.9 pins `abstractgateway==0.15.6`, `abstractassistant==0.14.1`,
 `abstractcore==2.26.3`, `AbstractRuntime==0.10.5`, `abstractagent==0.3.19`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.2`,
 `abstractvision==0.3.34`, `abstractmusic==0.1.17` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
@@ -1138,7 +1161,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.15.5
+  ghcr.io/lpalbou/abstractgateway:0.15.6
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without

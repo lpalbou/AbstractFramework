@@ -172,11 +172,13 @@ release exists); the browser apps are served by the gateway at `/apps/<app>/`
 npx @abstractframework/observer --gateway-url http://127.0.0.1:8080   # or run one on its own
 
 cargo install abstractgateway-console   # Rust 1.87+; the installer builds it for you
+abstractgateway console                 # opens it signed in (gateway 0.15.6+); or by hand:
 abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>   # <data dir>/auth/bootstrap-admin-token
+abstractgateway update --check          # what the next upgrade changes; `abstractgateway update` runs it (gateway 0.15.6+)
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.15.5` and `ghcr.io/lpalbou/abstractcore-server:2.26.3`.
+`ghcr.io/lpalbou/abstractgateway:0.15.6` and `ghcr.io/lpalbou/abstractcore-server:2.26.3`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -338,7 +340,7 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.15.5 |
+| PyPI | `abstractgateway` | 0.15.6 |
 | PyPI | `abstractassistant` | 0.14.1 |
 | PyPI | `abstractcore` | 2.26.3 |
 | PyPI | `AbstractRuntime` | 0.10.5 |
@@ -359,7 +361,7 @@ and tested together.
 | crates.io | `abstractgateway-console` | 0.16.0 |
 | crates.io | `abstractcore-console` | 0.8.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.15.5 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.15.6 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.26.3 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is

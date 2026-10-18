@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.11.8"
+version = "0.11.9"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -48,7 +48,7 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.15.5",
+    "abstractgateway==0.15.6",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
     "abstractassistant==0.14.1",
@@ -82,12 +82,12 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.15.5",
+    "abstractgateway[apple]==0.15.6",
     "abstractassistant[apple]==0.14.1; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.15.5",
+    "abstractgateway[gpu]==0.15.6",
     "abstractassistant[gpu]==0.14.1",
 ]
 

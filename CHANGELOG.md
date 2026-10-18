@@ -2,6 +2,19 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.9] - 2026-10-18
+
+Pins **AbstractGateway 0.15.6** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.8.
+
+- `abstractgateway update` upgrades an installer install from a terminal: it previews every package
+  whose version changes and the release notes in between, asks once, then runs the same installer as
+  the one-line command and restarts the gateway; `--check` only reports (exit 10 when an update
+  exists). `abstractgateway console` opens the terminal console signed in. Both also work as
+  `--update` and `--console`. See [Upgrade](docs/install.md#upgrade).
+- Who is affected: anyone running a gateway installed by the one-line installer; a gateway run from a
+  source checkout or a container is told how to upgrade instead.
+
 ## [0.11.8] - 2026-10-18
 
 Pins **AbstractGateway 0.15.5** and **AbstractRuntime 0.10.5** across the light, Apple and GPU
