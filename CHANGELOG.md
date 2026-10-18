@@ -2,6 +2,24 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.10] - 2026-10-18
+
+Pins **AbstractGateway 0.15.7**, **AbstractRuntime 0.10.6**, **abstractassistant 0.14.2**,
+**abstractskill 0.3.1** and the npm app **flow 0.10.1** across the light, Apple and GPU profiles.
+Other package pins are unchanged from 0.11.9.
+
+- Conversation search: `GET /api/gateway/sessions/search` finds your own conversations by words in
+  the question, the answer or the media they produced or received (a per-plane index the gateway
+  builds on first search and keeps current; exact matches first, a fuzzy pass when nothing matches).
+  The Apple Watch and the consoles use it.
+- Automations keep durable named tool policies; conversations record tool approvals and answer
+  metrics; the built-in Assistant orchestrator ships as bundle 0.0.13 with a voice mode (ask for a
+  spoken answer and get a recording) and a router that follows the run's text route. The desktop
+  Assistant 0.14.2 carries the same workflow.
+- Flow: releasing a wire dragged from a boolean output on empty canvas offers If/Else first.
+- Who is affected: everyone upgrading; `abstractgateway update` (0.15.6 and later) shows exactly this
+  and runs the upgrade.
+
 ## [0.11.9] - 2026-10-18
 
 Pins **AbstractGateway 0.15.6** across the light, Apple and GPU profiles. Other package pins are
