@@ -2,6 +2,20 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.11] - 2026-10-18
+
+Pins **AbstractGateway 0.15.8** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.10.
+
+- Web console: a connected mailbox can be reconfigured in place (**Configure** next to Test and
+  Disconnect; a failed update keeps the existing connection; passwords and secrets are never shown).
+  A Google or Microsoft sign-in cancelled while its approval was pending can no longer replace the
+  mailbox afterwards. The test notification carries a console link, a security notice and an HTML
+  part. Sign-in pages accept the account's registered email in place of the account id.
+- Entities carry an appearance for client apps (orb colour and shape), set at creation or through
+  `PUT /api/gateway/entities/{name}/appearance` by an admin or the entity's creator.
+- Who is affected: everyone upgrading; `abstractgateway update` shows exactly this and runs it.
+
 ## [0.11.10] - 2026-10-18
 
 Pins **AbstractGateway 0.15.7**, **AbstractRuntime 0.10.6**, **abstractassistant 0.14.2**,
