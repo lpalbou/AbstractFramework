@@ -2,6 +2,19 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.12] - 2026-10-19
+
+Pins **AbstractGateway 0.15.9** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.11.
+
+- Notification emails are written for the person who receives them: one AbstractFramework layout for
+  every notice, a subject that names the workflow or entity (never a node id), the context (who
+  started it and when), what is asked (each tool call with its label and its whole arguments, or the
+  question and its choices), an **Open in the console** button to the exact run and an **Open in
+  AbstractCode** button when the run has a session, a plain-text twin, and one email per wait instead
+  of one per retry. Answering from the email itself is backlog 1028.
+- Who is affected: everyone with email notifications on; `abstractgateway update` shows this and runs it.
+
 ## [0.11.11] - 2026-10-18
 
 Pins **AbstractGateway 0.15.8** across the light, Apple and GPU profiles. Other package pins are
