@@ -121,14 +121,14 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.15.2"
+AF_GATEWAY_PIN_DEFAULT="0.15.3"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.11.5"
-AF_PY_MATRIX="abstractcore==2.26.0 AbstractRuntime==0.10.2 abstractagent==0.3.19 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.15.2 abstractvision==0.3.33 abstractmusic==0.1.16 abstract3d==0.3.2"
+AF_FRAMEWORK_VERSION="0.11.6"
+AF_PY_MATRIX="abstractcore==2.26.3 AbstractRuntime==0.10.3 abstractagent==0.3.19 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.15.2 abstractvision==0.3.34 abstractmusic==0.1.17 abstract3d==0.3.2"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.10.0 @abstractframework/code@0.11.2 @abstractframework/observer@0.8.0 @abstractframework/continuum@0.7.0 @abstractframework/entity@0.7.1"
 AF_CRATE_CONSOLE="abstractgateway-console@0.16.0"
@@ -297,7 +297,7 @@ af_no_build_packages() {
 # PyPI index lag (root backlog 0987 item 28). Right after a release, some of PyPI's CDN edges
 # (or a mirror/proxy the machine reads) still serve an index page without the new version for a few
 # minutes, even with --refresh-package: the 0.7.1 upgrade on the Linux box got "there is no version
-# of abstractgateway[gpu]==0.8.1" and the voice fallback below then dropped local voice for good.
+# of abstractgateway[gpu]==0.15.3" and the voice fallback below then dropped local voice for good.
 # Index lag is never a reason to drop a feature: the SAME install (same extras, same --with) is run
 # again after AF_INDEX_RETRY_DELAYS seconds (about 10 minutes in all), and when the budget runs out
 # the installer stops with the cause instead of installing less.
@@ -2786,6 +2786,18 @@ try:
     print("AFSMOKE import=1")
     print("AFSMOKE version=" + str(getattr(llama_cpp, "__version__", "")))
     print("AFSMOKE offload=" + ("1" if llama_cpp.llama_supports_gpu_offload() else "0"))
+    # A build compiled for AVX-512 imports on a CPU without it, then dies with an illegal
+    # instruction at its first model load: compare its CPU flags with this processor'"'"'s.
+    info = llama_cpp.llama_print_system_info()
+    info = info.decode("utf-8", "replace") if isinstance(info, bytes) else str(info or "")
+    built = [k.strip() for k, _, v in (p.partition("=") for p in info.split("|")) if v.strip() == "1"]
+    try:
+        flags = set(open("/proc/cpuinfo").read().split())
+    except OSError:
+        flags = None
+    need = {"AVX": "avx", "AVX2": "avx2", "AVX512": "avx512f"}
+    if flags is not None:
+        print("AFSMOKE cpu_missing=" + ",".join(k for k in built if k in need and need[k] not in flags))
 except BaseException as e:
     print("AFSMOKE error=%s: %s" % (type(e).__name__, str(e).splitlines()[0] if str(e) else ""))'
                 _cur="$(smoke_val "$(gpu_smoke 'import importlib.util, pathlib
@@ -2811,11 +2823,14 @@ print("AFSMOKE cuda_build=" + ("1" if lib and any(lib.glob("libggml-cuda.so*")) 
                             --refresh-package llama-cpp-python "llama-cpp-python==$GGUF_PIN")"
                     fi
                     _r="$(gpu_smoke "$_llama_check")"
-                    if [ "$(smoke_val "$_r" import)" = 1 ] && [ "$(smoke_val "$_r" offload)" = 1 ]; then
+                    _cpu_missing="$(smoke_val "$_r" cpu_missing)"
+                    if [ "$(smoke_val "$_r" import)" = 1 ] && [ "$(smoke_val "$_r" offload)" = 1 ] && [ -z "$_cpu_missing" ]; then
                         ok "llama.cpp $(smoke_val "$_r" version) ($_lb build): loads, GPU offload"
                         GGUF_RESULT="llama-cpp-python $GGUF_PIN ($_lb CUDA build from $AF_LLAMA_INDEX/$_lb/llama-cpp-python/), GPU offload"
                     else
-                        _why="$(smoke_val "$_r" error | cut -c1-240)"; [ -n "$_why" ] || _why="loads, but reports no GPU offload"
+                        _why="$(smoke_val "$_r" error | cut -c1-240)"
+                        [ -n "$_why" ] || { [ -n "$_cpu_missing" ] && _why="it is built for CPU instructions this processor lacks ($_cpu_missing)"; }
+                        [ -n "$_why" ] || _why="loads, but reports no GPU offload"
                         case "$_why" in
                             *GLIBC*|*glibc*) _whyhint="; this system's glibc is older than the build needs (2.35)" ;;
                             *libcudart*|*libcublas*) _whyhint="; an AbstractCore older than 2.19.1 does not preload PyTorch's CUDA libraries for it" ;;

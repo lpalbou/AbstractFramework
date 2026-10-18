@@ -2,6 +2,36 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.6] - 2026-10-18
+
+Windows fixes: a fresh Windows install works from the one-liner, with its local engines, the
+console's downloads, the desktop Assistant and the command-line tools; image routes can use an
+OpenAI-compatible endpoint that serves an image model. Pins **abstractcore 2.26.3**,
+**abstractgateway 0.15.3**, **abstractassistant 0.14.1**, **AbstractRuntime 0.10.3** and
+**abstractvision 0.3.34**; every other package is unchanged from 0.11.5.
+
+### Fixed
+
+- **First install from the one-liner**: `powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"` completes on Windows PowerShell 5.1. A first install no longer stops at step [4] with `ERROR: No tools installed`. The installer runs under PowerShell's default error handling whatever the calling session sets, and gives the caller's setting back when it ends.
+- **Gateway pointer**: the installer updates `%USERPROFILE%\.abstractframework\gateway.json` when the gateway has already written it, instead of warning that it could not write the pointer.
+- **Browser apps step**: right after the health check, the installer gives a gateway that is still finishing its start (including `"status": "starting"`) up to about 45 seconds before it defers the app upgrades to the next start.
+- **Re-runs**: the installer recognizes its own background gateway when uv's launcher starts the interpreter through the virtual environment's `python.exe`, keeps it running, and no longer reports it as started by hand.
+- **Local engines on Windows (AbstractGateway 0.15.3)**: llama.cpp and Hugging Face (transformers) show as ready on a Windows gpu install instead of "Not for this computer". vLLM explains that it runs in WSL2 or on a Linux machine.
+- **Workspace files on Windows (AbstractGateway 0.15.3)**: opening or downloading a file from a run's workspace works; Windows credential folders join the built-in protected folders.
+- **Command-line tools on Windows** (AbstractCore 2.26.3, AbstractGateway 0.15.3, AbstractVoice 0.15.1 and later, AbstractMusic 0.1.17): `abstractcore --status`, `abstractgateway network status`, `abstractvoice tts`, `abstractmusic --help` and the other commands no longer stop with `UnicodeEncodeError` when their output is piped or redirected.
+- **llama.cpp on processors without AVX-512**: llama.cpp's `cu130` Windows build is compiled with AVX-512; on a processor without it (most desktop Intel CPUs) it passed the installer's check and then ended the gateway's Python with an illegal instruction at its first GGUF model load. The installer now compares the instructions each build was compiled for with the processor's and tries `cu132` next (same CUDA 13 libraries, no AVX-512); `install.sh` puts the CPU build back on Linux in the same case. A re-run fixes an existing install.
+- **Hugging Face downloads on Windows (AbstractCore 2.26.3)**: downloads from the gateway console run to the end; they stopped a second after starting with "the Hugging Face download process exited 75" (for example faster-whisper `large-v3`, the default speech-to-text model). `abstractcore models download huggingface <repo>` also completes in a cache that holds copies instead of symbolic links (Windows without Developer Mode).
+- **No flashing console windows (AbstractGateway 0.15.3)**: a gateway started at login no longer opens a console window for a moment each time it runs a program such as `nvidia-smi` for the GPU meter.
+- **Desktop Assistant on Windows (AbstractAssistant 0.14.1, AbstractGateway 0.15.3)**: opening the Assistant from the gateway console signs it in (its sign-in file was refused with "permissions are 0o666, not 0o600"), and it opens without an empty console window next to it.
+- **Stopped tools on Windows (AbstractCore 2.26.3)**: a command or browser tool that is stopped ends every process it started.
+- **Install summary on Windows** says that agents' shell commands are refused there (no command sandbox); [Install](docs/install.md#windows) lists what runs locally on Windows.
+
+- **Image routes on OpenAI-compatible endpoints (AbstractGateway 0.15.3, AbstractVision 0.3.34, AbstractRuntime 0.10.3)**: an endpoint connection that serves an image model (for example a relay with `gpt-image-2`) is offered for text-to-image and image edits in the consoles, and a route set to it runs on that endpoint.
+
+### Changed
+
+- CI runs the Windows install the way the one-liner does: a script block evaluated under `$ErrorActionPreference = 'Stop'`.
+
 ## [0.11.5] - 2026-10-18
 
 Pins **AbstractGateway 0.15.2** across the light, Apple and GPU profiles: the gateway stops browser apps

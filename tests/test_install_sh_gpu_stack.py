@@ -193,7 +193,7 @@ if grep -q 'import torch' "$f"; then
   echo "AFSMOKE version=2.11.0+cu130"; echo "AFSMOKE cuda_build=$FAKE_TORCH_CUDA"; echo "AFSMOKE cuda=$FAKE_TORCH_SEES"
   [ "$FAKE_TORCH_SEES" = 1 ] && echo "AFSMOKE device=Fake GPU"
 elif grep -q 'find_spec("llama_cpp")' "$f"; then echo "AFSMOKE cuda_build=0"
-elif grep -q 'import llama_cpp' "$f"; then echo "AFSMOKE import=1"; echo "AFSMOKE version=0.3.35"; echo "AFSMOKE offload=1"
+elif grep -q 'import llama_cpp' "$f"; then echo "AFSMOKE import=1"; echo "AFSMOKE version=0.3.35"; echo "AFSMOKE offload=1"; echo "AFSMOKE cpu_missing=$FAKE_LLAMA_CPU_MISSING"
 elif grep -q 'best_faster_whisper_device' "$f"; then echo "AFSMOKE device=cpu"
 fi
 exit 0
@@ -201,7 +201,7 @@ exit 0
 
 
 def _run_gpu_block(tmp_path: Path, *, smi: str | None, torch_cuda: str = "13.0", torch_sees: str = "1",
-                   glibc: str = "2.39") -> tuple[int, str, str]:
+                   glibc: str = "2.39", cpu_missing: str = "") -> tuple[int, str, str]:
     bindir = tmp_path / "bin"
     bindir.mkdir(exist_ok=True)
     if smi is not None:
@@ -232,7 +232,7 @@ def _run_gpu_block(tmp_path: Path, *, smi: str | None, torch_cuda: str = "13.0",
     ])
     body = _gpu_block() + '\necho "END GGUF_RESULT=$GGUF_RESULT"\necho "END TORCH_RESULT=$TORCH_RESULT"\n'
     env = {"PATH": f"{bindir}:/usr/bin:/bin", "HOME": str(tmp_path), "LC_ALL": "C",
-           "FAKE_TORCH_CUDA": torch_cuda, "FAKE_TORCH_SEES": torch_sees}
+           "FAKE_TORCH_CUDA": torch_cuda, "FAKE_TORCH_SEES": torch_sees, "FAKE_LLAMA_CPU_MISSING": cpu_missing}
     shell = shutil.which("dash") or "/bin/sh"
     proc = subprocess.run([shell, "-c", prelude + "\n" + body], capture_output=True, text=True, env=env, timeout=60)
     return proc.returncode, proc.stdout + proc.stderr, runs.read_text() if runs.exists() else ""
@@ -244,6 +244,15 @@ def test_gpu_block_completes_when_nvidia_smi_is_missing_but_torch_sees_the_gpu(t
     assert rc == 0, out
     assert "END GGUF_RESULT=llama-cpp-python 0.3.35 (cu130 CUDA build" in out, out
     assert "cu130/llama-cpp-python/" in runs
+
+
+def test_gpu_block_puts_the_cpu_build_back_when_the_cuda_build_needs_missing_cpu_instructions(tmp_path):
+    # A CUDA build compiled for AVX-512 loads on a CPU without it and then dies with an illegal
+    # instruction at its first model load: the check compares the build's flags with the processor's.
+    rc, out, runs = _run_gpu_block(tmp_path, smi=None, cpu_missing="AVX512")
+    assert rc == 0, out
+    assert "it is built for CPU instructions this processor lacks (AVX512)" in out and "putting the CPU build back" in out
+    assert "END GGUF_RESULT=llama-cpp-python 0.3.35 (cu130 CUDA build" not in out
 
 
 def test_gpu_block_keeps_the_cpu_build_with_its_reason_when_torch_sees_no_gpu(tmp_path):

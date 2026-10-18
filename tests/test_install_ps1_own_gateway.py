@@ -206,6 +206,21 @@ function Get-ParentProcessId([int]$ProcessId) { if ($ProcessId -eq 101) { return
 
 
 @needs_pwsh
+def test_the_background_gateway_two_levels_below_its_launcher_is_ours(tmp_path: Path) -> None:
+    # Windows, uv-managed Python 3.12: abstractgateway.exe (gateway.pid = 100) runs the tool venv's
+    # python.exe (101), a redirector that runs the base interpreter (102), the listener. A chain that
+    # never reaches gateway.pid (555 -> 556 -> 557 -> 558 -> 100: deeper than the launcher's own
+    # children) or ends at a system pid is not ours.
+    body = """
+$parents = @{ 102 = 101; 101 = 100; 100 = 50; 555 = 556; 556 = 557; 557 = 558; 558 = 100; 700 = 4 }
+function Get-ParentProcessId([int]$ProcessId) { if ($parents.ContainsKey($ProcessId)) { return $parents[$ProcessId] }; return 0 }
+@((Test-OurBackgroundListener 102 100), (Test-OurBackgroundListener 101 100), (Test-OurBackgroundListener 555 100),
+  (Test-OurBackgroundListener 700 100), (Test-OurBackgroundListener 900 100)) -join ' '
+"""
+    assert _pwsh(body, tmp_path).splitlines()[-1] == "True True False False False"
+
+
+@needs_pwsh
 def test_a_stale_record_never_adds_a_reused_pid_to_the_gateways_stopped(tmp_path: Path) -> None:
     data = tmp_path / "gw"
     def names(cmd: str, started: str) -> str:

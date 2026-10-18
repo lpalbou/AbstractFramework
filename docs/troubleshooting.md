@@ -81,6 +81,21 @@ run the installer again: it continues where it stopped.
 - **Fix**: paste the one-liner from [Install](install.md#windows), which runs a command rather than
   a script file, or ask your administrator.
 
+### Windows: the installer stops at `[4] AbstractGateway` with `ERROR: No tools installed`
+
+- **Cause**: the installer of AbstractFramework 0.11.3 stopped when it ran through the one-liner
+  on Windows PowerShell 5.1 and found no uv tool installed yet.
+- **Fix**: paste the one-liner from [Install](install.md#windows) again. It always fetches the
+  current installer, which resumes from the uv and Python already in place.
+- **Verify**: `abstractgateway --version` in a new terminal.
+
+### Windows: console windows flash on the desktop every few seconds
+
+- **Cause**: an AbstractGateway older than 0.15.3 started at login (through `pythonw.exe`) opens a
+  console window for each program it runs, such as `nvidia-smi` for the GPU meter.
+- **Fix**: paste the one-liner from [Install](install.md#windows) again, then sign out and back
+  in, or restart the gateway from its tray icon.
+
 ## Starting and signing in
 
 ### The browser page asks for a token, or the sign-in link expired
@@ -158,6 +173,14 @@ run the installer again: it continues where it stopped.
   [Phones and tablets: Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https).
 
 ## Models and providers
+
+### Windows: a model download stops with "the Hugging Face download process exited 75"
+
+- **Cause**: with AbstractCore older than 2.26.3, Hugging Face downloads started from the gateway
+  console on Windows (for example faster-whisper `large-v3`, the default speech-to-text model)
+  stop a second after they start.
+- **Fix**: paste the one-liner from [Install](install.md#windows) again, then start the download
+  again from the console. Files that already finished are kept.
 
 ### Provider calls fail
 
