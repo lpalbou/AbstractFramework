@@ -2,6 +2,32 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.5] - 2026-10-18
+
+Pins **AbstractGateway 0.15.2** across the light, Apple and GPU profiles: the gateway stops browser apps
+left running by a previous gateway run and starts the installed version, at start and on every launch or
+update, and its systemd user unit stops its children with it. Pins **AbstractVoice 0.15.2**: read aloud
+speaks whole sentences in one language per reply, without a pause after the first words (0.15.1: the
+voice command-line tools write piped output on Windows). Other package pins are unchanged.
+
+Installer fix: an app left running by a previous gateway run no longer keeps an older version on its
+port across upgrades.
+
+- `install.sh` and `install.ps1` tell a leftover of a previous gateway run — an "external" copy whose
+  process runs a program under `<data dir>/apps/`, which only the gateway puts there — from a copy
+  started elsewhere. The leftover is stopped (its command line checked before each signal; SIGTERM,
+  then SIGKILL after 20 s) and the updated install is started with `abstractgateway apps launch`;
+  the summary's Apps line says `leftover of a previous gateway run (<version>, pid <pid>) stopped;
+  <app> <version> started`. A copy that is not provably this install's is left alone and listed as
+  `a copy not started by this gateway` with what was checked, never as "started outside the gateway".
+- The summary's closing line for app failures now says what to do for the apps (run the command on
+  their line, then `abstractgateway apps list`), instead of advising a re-run once the network has
+  caught up. See [Upgrade the apps](docs/install.md#upgrade-the-apps).
+- Who is affected: anyone upgrading with the one-line installers whose gateway runs the browser apps;
+  most visibly Linux servers where the gateway runs as a `systemd --user` service. Gateways from
+  0.15.2 on stop such leftovers themselves at start and on every launch or update; the installer's
+  stop covers earlier gateways.
+
 ## [0.11.4] - 2026-10-17
 
 Installer fix: upgrades keep the browser apps on the release. Package pins are unchanged from 0.11.3

@@ -369,12 +369,26 @@ update restarts it on the new version. The summary's **Apps** line lists each ap
 that could not be updated is listed in red with the command to retry, and the installer exits 1. A
 fresh install installs no app: the console's **Apps** page installs them.
 
-An app's port may be held by a copy the gateway did not start: a leftover of a gateway that died
-hard, or an app run by hand with `npx`. The gateway lists that copy as *external* and cannot stop or
-restart it, so the gateway's own install is updated and the **Apps** line says `RUNNING: a copy
-started outside the gateway, <version> on port <port> (pid <pid>)`; when that copy is not at this
-release's version, the summary shows it in red with the pid to stop (`kill <pid>`, then
-`abstractgateway apps launch <app>`).
+An app's port may be held by a copy this gateway did not start. The gateway's own install is
+updated all the same, and what happens to the copy depends on what it is:
+
+- **A leftover of a previous gateway run** — the process runs a program under `<data dir>/apps/`,
+  which only the gateway puts there (an app that outlived a stop or restart of the gateway, for
+  example on a Linux server, and kept serving an older version). The installer stops it (its command
+  line is checked again before each signal; SIGTERM, then SIGKILL after 20 s) and starts the updated
+  install in its place with `abstractgateway apps launch <app>`; the **Apps** line says
+  `leftover of a previous gateway run (<version>, pid <pid>) stopped; <app> <version> started`. If
+  the leftover could not be stopped or the app did not start, the summary says so in red with the
+  command to run. Gateways from 0.15.2 on do this themselves at every start and on every
+  `apps launch` or `apps update`, so the installer's stop is only needed with an older gateway.
+- **A copy not started by this gateway** — anything else (an app run by hand with `npx`, a checkout,
+  a process this system cannot inspect). It is left alone: the **Apps** line says `RUNNING: a copy
+  not started by this gateway, <version> on port <port> (pid <pid>)` and, when that copy is not at
+  this release's version, the summary shows it in red with what was checked and the pid to stop,
+  then `abstractgateway apps launch <app>`.
+
+The summary's last line then points at the apps (`What to do for the apps: run the command given on
+their line above, then check them with: abstractgateway apps list …`), not at a re-run.
 
 When no gateway answers (`--no-start` while the gateway is stopped), the installer writes the
 release's versions to `<data dir>/apps-upgrade.pending` instead, and the gateway (0.11.1 and later)
@@ -399,7 +413,7 @@ The terminal console and an `abstractcode` built by the installer are upgraded b
 
 ```bash
 abstractgateway --version                    # the installed gateway
-uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.1])
+uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.2])
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
@@ -475,10 +489,10 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.1"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.2"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
-   `--with "abstractvoice[supertonic,stt]==0.15.0"` (the release's AbstractVoice): Supertonic
+   `--with "abstractvoice[supertonic,stt]==0.15.2"` (the release's AbstractVoice): Supertonic
    text-to-speech and Whisper speech-to-text, both on CPU (skipped on musl Linux and macOS before
    13, where no wheels exist; Windows ARM64 gets Supertonic only). If those packages do not install
    on a system (for example glibc older than 2.28), the gateway is installed without them and the
@@ -820,7 +834,7 @@ instead of starting a browser.
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.15.1"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.15.2"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -954,9 +968,9 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.11.4 pins `abstractgateway==0.15.1`, `abstractassistant==0.14.0`,
+`abstractframework` 0.11.5 pins `abstractgateway==0.15.2`, `abstractassistant==0.14.0`,
 `abstractcore==2.26.0`, `AbstractRuntime==0.10.2`, `abstractagent==0.3.19`, `abstractskill==0.3.0`,
-`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.0`,
+`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.2`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.16` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
@@ -1097,7 +1111,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.15.1
+  ghcr.io/lpalbou/abstractgateway:0.15.2
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without

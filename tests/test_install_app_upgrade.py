@@ -13,6 +13,13 @@ for another gateway, is not what the fake accepts), an app the gateway is still 
 waited for, a copy running outside the gateway ("external") no longer hides the gateway's own
 install (that is updated, and the summary says in red which copy runs), and a gateway whose
 /api/health still says "starting" is not booted yet.
+
+Leftovers (a gateway 0.15.1 upgraded on a Linux server kept its apps on old versions): an
+"external" copy whose command line runs a program under <data dir>/apps/ is this install's own,
+left by a previous gateway run; the installer stops it (SIGTERM, then SIGKILL after
+AF_STOP_TIMEOUT s, its command line checked before each signal) and starts the updated install
+with `abstractgateway apps launch`. A copy that is not provably this install's is left alone and
+said to be "not started by this gateway", with what was checked.
 """
 
 from __future__ import annotations
@@ -68,6 +75,26 @@ for r in rows:
 json.dump(rows, open(p, "w"))
 PY
         ;;
+  launch) case " $FAKE_LAUNCH_FAIL " in *" $3 "*) exit 1 ;; esac
+        "$FAKE_PY" - "$FAKE_APPS" "$3" <<'PY'
+import json, os, sys
+p, app = sys.argv[1:]
+rows = json.load(open(p))
+for r in rows:
+    if r["id"] == app:
+        # a gateway 0.15.1: its install starts only once the port is free (the leftover gone)
+        pid = (r.get("external") or {}).get("pid")
+        try:
+            os.kill(int(pid), 0); alive = True
+        except Exception:
+            alive = False
+        if alive:
+            sys.exit(1)
+        r.update({"source": "gateway", "version": r.get("managed_version"), "running": True, "status": "running"})
+        r.pop("external", None)
+json.dump(rows, open(p, "w"))
+PY
+        ;;
   *) exit 9 ;;
 esac
 """
@@ -99,6 +126,41 @@ def _env(tmp_path: Path, apps: list, **extra: str) -> dict:
 def _calls(tmp_path: Path) -> list:
     f = tmp_path / "calls"
     return [c for c in f.read_text().splitlines() if " update " in f" {c} "] if f.exists() else []
+
+
+def _all_calls(tmp_path: Path) -> list:
+    f = tmp_path / "calls"
+    return [c for c in f.read_text().splitlines() if c.startswith("apps ") and not c.startswith("apps list")] if f.exists() else []
+
+
+_LEFTOVER_PY = "import signal, sys, time\nif '--stubborn' in sys.argv: signal.signal(signal.SIGTERM, signal.SIG_IGN)\nprint('up', flush=True)\ntime.sleep(300)"
+
+
+def _leftover(tmp_path: Path, *, script: str, stubborn: bool = False) -> subprocess.Popen:
+    """A process whose command line names `script` (what a leftover of a previous gateway
+    run looks like: `node … <data dir>/apps/<app>/<version>/…/bin/cli.js --port N`)."""
+    argv = [sys.executable, "-c", _LEFTOVER_PY, script, "--port", "3005"] + (["--stubborn"] if stubborn else [])
+    proc = subprocess.Popen(argv, stdout=subprocess.PIPE, text=True)
+    assert proc.stdout and proc.stdout.readline().strip() == "up"
+    import threading
+
+    threading.Thread(target=proc.wait, daemon=True).start()  # reaped at once: never a zombie that looks alive
+    return proc
+
+
+def _own_script(tmp_path: Path, app: str, version: str) -> str:
+    return str(tmp_path / "data" / "apps" / app / version / "node_modules" / "@abstractframework" / app / "bin" / "cli.js")
+
+
+def _gone(proc: subprocess.Popen, timeout: float = 10.0) -> bool:
+    import time
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if proc.poll() is not None:
+            return True
+        time.sleep(0.05)
+    return proc.poll() is not None
 
 
 def _versions(tmp_path: Path) -> dict:
@@ -142,7 +204,7 @@ INCOMPLETE=""; incomplete_add() {{ INCOMPLETE="${{INCOMPLETE}}$1: $2
 "; }}
 AF_NPM_APPS="{PINS}"; GW="{tmp_path}/abstractgateway"; APPS_PY="{sys.executable}"
 BASE_URL="http://127.0.0.1:18999"; DATA_DIR="{tmp_path}/data"; LOG_FILE=""; PRINT={print_mode}
-AF_APPS_START_WAIT=6
+AF_APPS_START_WAIT=6; AF_STOP_TIMEOUT=1
 {block.group(0)}
 af_apps_step {up}
 printf 'APPS<<%s>>\\nINCOMPLETE<<%s>>\\n' "$APPS_LINES" "$INCOMPLETE"
@@ -153,20 +215,22 @@ printf 'APPS<<%s>>\\nINCOMPLETE<<%s>>\\n' "$APPS_LINES" "$INCOMPLETE"
 
 
 def _ps(tmp_path: Path, env: dict, up: int, print_mode: int = 0) -> str:
-    names = ["Get-AppPin", "Test-GwBooted", "Get-AppsToken", "Get-AppsInstalled", "Get-AppsSettled", "Write-AppsMarker", "Invoke-AppsStep"]
+    names = ["Get-AppPin", "Test-GwBooted", "Get-AppsToken", "Get-AppsInstalled", "Get-AppsSettled", "Write-AppsMarker", "Invoke-AppsStep",
+             "Get-PidArgs", "Test-AppLeftover", "Stop-AppLeftover", "Start-AppLaunch"]
     loader = f"""
 $ast = [System.Management.Automation.Language.Parser]::ParseFile('{PS1}', [ref]$null, [ref]$null)
 $names = @({", ".join(repr(n) for n in names)})
 $found = @($ast.FindAll({{ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $names -contains $n.Name }}, $true))
 if ($found.Count -ne $names.Count) {{ throw "install.ps1 lost an apps-upgrade function" }}
 $script:AppsStartWait = 6
+$script:StopTimeout = 1
 foreach ($f in $found) {{ Invoke-Expression $f.Extent.Text }}
 # Write-Host, like the installer's own: a message must never join a function's return value.
 function Write-Info([string]$Text) {{ Write-Host "INFO $Text" }}
 function Write-Ok([string]$Text) {{ Write-Host "OK $Text" }}
 function Write-Warn2([string]$Text) {{ Write-Host "WARN $Text" }}
 $script:Incomplete = New-Object System.Collections.Generic.List[string]
-function Add-Incomplete([string]$Label, [string]$Why, [switch]$Fail) {{ $script:Incomplete.Add("${{Label}}: $Why") }}
+function Add-Incomplete([string]$Label, [string]$Why, [switch]$Fail, [string]$Kind = 'retry') {{ $script:Incomplete.Add("${{Label}}: $Why") }}
 $script:Twins = New-Object System.Collections.Generic.List[string]
 $script:DryRun = ${'true' if print_mode else 'false'}
 $AfNpmApps = @({", ".join(repr(s) for s in PINS.split())})
@@ -266,11 +330,100 @@ def test_an_outside_copy_does_not_hide_the_gateways_install(runner, tmp_path: Pa
     rows = _rows(tmp_path)
     assert rows["flow"]["managed_version"] == "0.7.0" and rows["flow"]["version"] == "0.6.0", "the outside copy is not the gateway's to restart"
     apps = out.split("APPS<<", 1)[1].split(">>", 1)[0]
-    assert "flow 0.6.0 -> 0.7.0; RUNNING: a copy started outside the gateway, 0.6.0 on port 3005 (pid 4242)" in apps
-    assert "code: not installed by the gateway; a copy started outside it runs on port 3003 (0.10.0)" in apps
+    assert "flow 0.6.0 -> 0.7.0; RUNNING: a copy not started by this gateway, 0.6.0 on port 3005 (pid 4242)" in apps
+    assert "code: not installed by the gateway; a copy not started by it runs on port 3003 (0.10.0)" in apps
     inc = out.split("INCOMPLETE<<", 1)[1]
     assert "the flow app" in inc and "4242" in inc and "apps launch flow" in inc, inc
+    # pid 4242 is nobody's: what was checked is said, and nothing is called "started outside".
+    assert "could not be inspected" in inc and "started outside" not in out, out
     assert "the code app" not in inc, "an outside copy at the pin is a note, not a failure"
+    assert not any(c.startswith("apps launch") for c in _all_calls(tmp_path)), "a copy that is not provably ours is never replaced"
+
+
+def _leftover_rows(pid: int, version: str = "0.6.0") -> list:
+    return [
+        # Flow: the gateway installed 0.6.0; the copy on the port is this install's own 0.6.0, left
+        # by a previous gateway run (its command line runs <data dir>/apps/flow/0.6.0/...).
+        {"id": "flow", "version": version, "running": True, "source": "external", "status": "running", "managed_version": version,
+         "external": {"version": version, "port": 3005, "pid": pid}},
+        {"id": "entity", "version": "0.6.0", "running": False, "source": "gateway", "status": "stopped"},
+    ]
+
+
+@pytest.mark.parametrize("stubborn", [False, True], ids=["exits-on-sigterm", "needs-sigkill"])
+@pytest.mark.parametrize("runner", RUNNERS)
+def test_a_leftover_of_a_previous_gateway_run_is_stopped_and_the_install_started(runner, tmp_path: Path, stubborn: bool) -> None:
+    proc = _leftover(tmp_path, script=_own_script(tmp_path, "flow", "0.6.0"), stubborn=stubborn)
+    try:
+        out = runner(tmp_path, _env(tmp_path, _leftover_rows(proc.pid)), up=1)
+        assert _gone(proc), "the leftover was not stopped"
+        calls = _all_calls(tmp_path)
+        assert calls.index("apps update flow --version 0.7.0 --url http://127.0.0.1:18999 --data-dir " + str(tmp_path / "data")) < calls.index(
+            "apps launch flow --url http://127.0.0.1:18999 --data-dir " + str(tmp_path / "data")), calls
+        rows = _rows(tmp_path)
+        assert rows["flow"]["source"] == "gateway" and rows["flow"]["version"] == "0.7.0"
+        apps = out.split("APPS<<", 1)[1].split(">>", 1)[0]
+        assert f"flow 0.6.0 -> 0.7.0; leftover of a previous gateway run (0.6.0, pid {proc.pid}) stopped; flow 0.7.0 started" in apps, apps
+        assert "INCOMPLETE<<>>" in out, out
+        assert "started outside" not in out and "not started by this gateway" not in out
+        if stubborn:
+            assert "SIGKILL" in out or "stopping it hard" in out, out
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+
+
+@pytest.mark.parametrize("runner", RUNNERS)
+def test_a_copy_running_from_elsewhere_is_left_alone_and_named(runner, tmp_path: Path) -> None:
+    # Same app, same port habit, but its command line runs a checkout, not <data dir>/apps/.
+    proc = _leftover(tmp_path, script=str(tmp_path / "checkout" / "abstractflow" / "bin" / "cli.js"))
+    try:
+        out = runner(tmp_path, _env(tmp_path, _leftover_rows(proc.pid)), up=1)
+        assert proc.poll() is None, "a copy that is not provably this install's must not be signalled"
+        assert not any(c.startswith("apps launch") for c in _all_calls(tmp_path))
+        apps = out.split("APPS<<", 1)[1].split(">>", 1)[0]
+        assert f"flow 0.6.0 -> 0.7.0; RUNNING: a copy not started by this gateway, 0.6.0 on port 3005 (pid {proc.pid})" in apps, apps
+        inc = out.split("INCOMPLETE<<", 1)[1]
+        assert "the flow app" in inc and "its command line does not run" in inc and "apps launch flow" in inc, inc
+        assert "started outside" not in out
+    finally:
+        proc.kill()
+
+
+@pytest.mark.parametrize("runner", RUNNERS)
+def test_a_leftover_stopped_but_not_restarted_is_loud(runner, tmp_path: Path) -> None:
+    proc = _leftover(tmp_path, script=_own_script(tmp_path, "flow", "0.6.0"))
+    try:
+        out = runner(tmp_path, _env(tmp_path, _leftover_rows(proc.pid), FAKE_LAUNCH_FAIL="flow"), up=1)
+        assert _gone(proc)
+        apps = out.split("APPS<<", 1)[1].split(">>", 1)[0]
+        assert f"leftover of a previous gateway run (0.6.0, pid {proc.pid}) stopped; flow 0.7.0 NOT started" in apps, apps
+        inc = out.split("INCOMPLETE<<", 1)[1]
+        assert "the flow app" in inc and "did not start" in inc and "apps launch flow" in inc, inc
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+
+
+def test_app_failures_get_their_own_closing_hint() -> None:
+    """incomplete_add's 4th word picks the summary's last line: a browser app that needs the
+    command on its line is not "run the installer again once the network has caught up"."""
+    text = SH.read_text()
+    fn = re.search(r"^INCOMPLETE=\"\"; AF_EXIT=0.*?^}\n", text, re.S | re.M)
+    assert fn, "install.sh lost incomplete_add"
+    script = fn.group(0) + """
+incomplete_add "the flow app" "what runs is not this release's" fail apps
+echo "apps: AF_EXIT=$AF_EXIT retry=$AF_RETRY_FAILS apps=$AF_APP_FAILS"
+incomplete_add "terminal console" "crates.io gave up" fail
+echo "both: AF_EXIT=$AF_EXIT retry=$AF_RETRY_FAILS apps=$AF_APP_FAILS"
+"""
+    out = subprocess.run(["sh", "-c", script], capture_output=True, text=True, env={"PATH": "/usr/bin:/bin"}, timeout=30).stdout.splitlines()
+    assert out == ["apps: AF_EXIT=1 retry=0 apps=1", "both: AF_EXIT=1 retry=1 apps=1"], out
+    closing = text[text.index("NOT installed:"):]
+    assert 'if [ "$AF_RETRY_FAILS" = 1 ]' in closing and 'if [ "$AF_APP_FAILS" = 1 ]' in closing
+    assert "What to do for the apps" in closing
+    ps = PS1.read_text()
+    assert "if ($script:AfRetryFails)" in ps and "if ($script:AfAppFails)" in ps and "What to do for the apps" in ps
 
 
 def test_gw_booted_refuses_a_gateway_still_starting() -> None:

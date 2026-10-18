@@ -180,7 +180,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.15.1` and `ghcr.io/lpalbou/abstractcore-server:2.26.0`.
+`ghcr.io/lpalbou/abstractgateway:0.15.2` and `ghcr.io/lpalbou/abstractcore-server:2.26.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -342,7 +342,7 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.15.1 |
+| PyPI | `abstractgateway` | 0.15.2 |
 | PyPI | `abstractassistant` | 0.14.0 |
 | PyPI | `abstractcore` | 2.26.0 |
 | PyPI | `AbstractRuntime` | 0.10.2 |
@@ -350,7 +350,7 @@ and tested together.
 | PyPI | `abstractskill` | 0.3.0 |
 | PyPI | `AbstractMemory` | 0.3.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.15.0 |
+| PyPI | `abstractvoice` | 0.15.2 |
 | PyPI | `abstractvision` | 0.3.33 |
 | PyPI | `abstractmusic` | 0.1.16 |
 | PyPI | `abstract3d` | 0.3.2 |
@@ -363,7 +363,7 @@ and tested together.
 | crates.io | `abstractgateway-console` | 0.16.0 |
 | crates.io | `abstractcore-console` | 0.8.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.15.1 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.15.2 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.26.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
@@ -616,8 +616,8 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.11.4 pins (PyPI, `==`): abstractgateway 0.15.1, abstractassistant 0.14.0, abstractcore 2.26.0, AbstractRuntime 0.10.2, abstractagent 0.3.19, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.15.0, abstractvision 0.3.33, abstractmusic 0.1.16, abstract3d 0.3.2.
-- Released with it: npm `@abstractframework/flow` 0.10.0, `code` 0.11.2, `observer` 0.8.0, `continuum` 0.7.0, `entity` 0.7.1 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.16.0 (built by the installer by default), `abstractcore-console` 0.8.0, `abstractcode` 0.10.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.15.1`, `ghcr.io/lpalbou/abstractcore-server:2.26.0`.
+- abstractframework 0.11.5 pins (PyPI, `==`): abstractgateway 0.15.2, abstractassistant 0.14.0, abstractcore 2.26.0, AbstractRuntime 0.10.2, abstractagent 0.3.19, abstractskill 0.3.0, AbstractMemory 0.3.0, abstractsemantics 0.0.5, abstractvoice 0.15.2, abstractvision 0.3.33, abstractmusic 0.1.16, abstract3d 0.3.2.
+- Released with it: npm `@abstractframework/flow` 0.10.0, `code` 0.11.2, `observer` 0.8.0, `continuum` 0.7.0, `entity` 0.7.1 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.16.0 (built by the installer by default), `abstractcore-console` 0.8.0, `abstractcode` 0.10.0, `abstracttui` 0.6.0; images `ghcr.io/lpalbou/abstractgateway:0.15.2`, `ghcr.io/lpalbou/abstractcore-server:2.26.0`.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
@@ -645,7 +645,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.11.4"
+version = "0.11.5"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -689,7 +689,7 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.15.1",
+    "abstractgateway==0.15.2",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
     "abstractassistant==0.14.0",
@@ -704,7 +704,7 @@ dependencies = [
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
-    "abstractvoice==0.15.0",
+    "abstractvoice==0.15.2",
     "abstractvision==0.3.33",
     "abstractmusic==0.1.16",
     "abstract3d==0.3.2",
@@ -723,12 +723,12 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.15.1",
+    "abstractgateway[apple]==0.15.2",
     "abstractassistant[apple]==0.14.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.15.1",
+    "abstractgateway[gpu]==0.15.2",
     "abstractassistant[gpu]==0.14.0",
 ]
 
@@ -781,7 +781,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.11.4"
+__version__ = "0.11.5"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -789,11 +789,11 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.26.0",
     "abstractruntime": "0.10.2",
     "abstractagent": "0.3.19",
-    "abstractgateway": "0.15.1",
+    "abstractgateway": "0.15.2",
     "abstractskill": "0.3.0",
     "abstractmemory": "0.3.0",
     "abstractsemantics": "0.0.5",
-    "abstractvoice": "0.15.0",
+    "abstractvoice": "0.15.2",
     "abstractvision": "0.3.33",
     "abstractmusic": "0.1.16",
     "abstract3d": "0.3.2",
@@ -4121,12 +4121,26 @@ update restarts it on the new version. The summary's **Apps** line lists each ap
 that could not be updated is listed in red with the command to retry, and the installer exits 1. A
 fresh install installs no app: the console's **Apps** page installs them.
 
-An app's port may be held by a copy the gateway did not start: a leftover of a gateway that died
-hard, or an app run by hand with `npx`. The gateway lists that copy as *external* and cannot stop or
-restart it, so the gateway's own install is updated and the **Apps** line says `RUNNING: a copy
-started outside the gateway, <version> on port <port> (pid <pid>)`; when that copy is not at this
-release's version, the summary shows it in red with the pid to stop (`kill <pid>`, then
-`abstractgateway apps launch <app>`).
+An app's port may be held by a copy this gateway did not start. The gateway's own install is
+updated all the same, and what happens to the copy depends on what it is:
+
+- **A leftover of a previous gateway run** — the process runs a program under `<data dir>/apps/`,
+  which only the gateway puts there (an app that outlived a stop or restart of the gateway, for
+  example on a Linux server, and kept serving an older version). The installer stops it (its command
+  line is checked again before each signal; SIGTERM, then SIGKILL after 20 s) and starts the updated
+  install in its place with `abstractgateway apps launch <app>`; the **Apps** line says
+  `leftover of a previous gateway run (<version>, pid <pid>) stopped; <app> <version> started`. If
+  the leftover could not be stopped or the app did not start, the summary says so in red with the
+  command to run. Gateways from 0.15.2 on do this themselves at every start and on every
+  `apps launch` or `apps update`, so the installer's stop is only needed with an older gateway.
+- **A copy not started by this gateway** — anything else (an app run by hand with `npx`, a checkout,
+  a process this system cannot inspect). It is left alone: the **Apps** line says `RUNNING: a copy
+  not started by this gateway, <version> on port <port> (pid <pid>)` and, when that copy is not at
+  this release's version, the summary shows it in red with what was checked and the pid to stop,
+  then `abstractgateway apps launch <app>`.
+
+The summary's last line then points at the apps (`What to do for the apps: run the command given on
+their line above, then check them with: abstractgateway apps list …`), not at a re-run.
 
 When no gateway answers (`--no-start` while the gateway is stopped), the installer writes the
 release's versions to `<data dir>/apps-upgrade.pending` instead, and the gateway (0.11.1 and later)
@@ -4151,7 +4165,7 @@ The terminal console and an `abstractcode` built by the installer are upgraded b
 
 ```bash
 abstractgateway --version                    # the installed gateway
-uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.1])
+uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.2])
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
@@ -4227,10 +4241,10 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.1"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.2"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
-   `--with "abstractvoice[supertonic,stt]==0.15.0"` (the release's AbstractVoice): Supertonic
+   `--with "abstractvoice[supertonic,stt]==0.15.2"` (the release's AbstractVoice): Supertonic
    text-to-speech and Whisper speech-to-text, both on CPU (skipped on musl Linux and macOS before
    13, where no wheels exist; Windows ARM64 gets Supertonic only). If those packages do not install
    on a system (for example glibc older than 2.28), the gateway is installed without them and the
@@ -4572,7 +4586,7 @@ instead of starting a browser.
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.15.1"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.15.2"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -4706,9 +4720,9 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.11.4 pins `abstractgateway==0.15.1`, `abstractassistant==0.14.0`,
+`abstractframework` 0.11.5 pins `abstractgateway==0.15.2`, `abstractassistant==0.14.0`,
 `abstractcore==2.26.0`, `AbstractRuntime==0.10.2`, `abstractagent==0.3.19`, `abstractskill==0.3.0`,
-`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.0`,
+`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.2`,
 `abstractvision==0.3.33`, `abstractmusic==0.1.16` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
@@ -4849,7 +4863,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.15.1
+  ghcr.io/lpalbou/abstractgateway:0.15.2
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -6887,13 +6901,13 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.11.4` for this release).
+The meta-package version (`0.11.5` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.11.4:
-`abstractcore` 2.26.0, `abstractruntime` 0.10.2, `abstractagent` 0.3.19, `abstractgateway` 0.15.1,
-`abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.15.0, `abstractvision` 0.3.33,
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.11.5:
+`abstractcore` 2.26.0, `abstractruntime` 0.10.2, `abstractagent` 0.3.19, `abstractgateway` 0.15.2,
+`abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.15.2, `abstractvision` 0.3.33,
 `abstractmusic` 0.1.16, `abstract3d` 0.3.2, `abstractassistant` 0.14.0.
 
 ### `PACKAGE_DISTRIBUTIONS`

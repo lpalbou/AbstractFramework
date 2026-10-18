@@ -121,14 +121,14 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.15.1"
+AF_GATEWAY_PIN_DEFAULT="0.15.2"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.11.4"
-AF_PY_MATRIX="abstractcore==2.26.0 AbstractRuntime==0.10.2 abstractagent==0.3.19 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.15.0 abstractvision==0.3.33 abstractmusic==0.1.16 abstract3d==0.3.2"
+AF_FRAMEWORK_VERSION="0.11.5"
+AF_PY_MATRIX="abstractcore==2.26.0 AbstractRuntime==0.10.2 abstractagent==0.3.19 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.15.2 abstractvision==0.3.33 abstractmusic==0.1.16 abstract3d==0.3.2"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.10.0 @abstractframework/code@0.11.2 @abstractframework/observer@0.8.0 @abstractframework/continuum@0.7.0 @abstractframework/entity@0.7.1"
 AF_CRATE_CONSOLE="abstractgateway-console@0.16.0"
@@ -776,13 +776,18 @@ RUN_INDEX_RETRY=0
 RUN_GAVE_UP=""
 RUN_MARK=0   # the log's line count before the last attempt of the last command (its output follows)
 # What this run could not install, for the summary (red) and the last lines of the output:
-# incomplete_add LABEL WHY [fail]; "fail" also makes the exit status 1 (a part that a re-run can
-# install once the network or crates.io catches up), as opposed to a part this system cannot run.
-INCOMPLETE=""; AF_EXIT=0
+# incomplete_add LABEL WHY [fail [KIND]]; "fail" also makes the exit status 1. KIND says what the
+# closing "What to do" line advises: "retry" (default: a part a re-run installs once the network or
+# crates.io catches up) or "apps" (a browser app that needs the command listed, not a re-run); a
+# part this system cannot run is listed without "fail".
+INCOMPLETE=""; AF_EXIT=0; AF_RETRY_FAILS=0; AF_APP_FAILS=0
 incomplete_add() {
     INCOMPLETE="${INCOMPLETE}  $1: $2
 "
-    [ "${3:-}" = fail ] && AF_EXIT=1
+    if [ "${3:-}" = fail ]; then
+        AF_EXIT=1
+        if [ "${4:-retry}" = apps ]; then AF_APP_FAILS=1; else AF_RETRY_FAILS=1; fi
+    fi
     return 0
 }
 # >>> apps-upgrade (tests/test_install_app_upgrade.py loads this block on its own)
@@ -799,10 +804,16 @@ incomplete_add() {
 #     gateway is still starting is waited for (af_apps_settled), so the update restarts it;
 #   - the shell's ABSTRACTGATEWAY_AUTH_TOKEN (set for another gateway, or stale) wins over the
 #     data dir's bootstrap token in `abstractgateway apps`: the token is passed as a parameter;
-#   - a copy of an app started outside the gateway (a leftover of a gateway that died hard, or
-#     `npx` by hand) holds the app's port: the gateway lists THAT copy as "external" and keeps
-#     its own install hidden behind it. The install is updated all the same, and the summary
-#     says in red which copy is the one running and how to stop it.
+#   - a copy of an app this gateway did not start holds the app's port: the gateway lists THAT
+#     copy as "external" and keeps its own install hidden behind it. The install is updated all
+#     the same. When that copy is this install's own — its command line runs a program under
+#     <data dir>/apps/, which only the gateway puts there: an app a previous gateway run left
+#     behind, found by gateways before 0.15.2 as "external" — the installer stops it (its
+#     command line is checked again before each signal, SIGTERM then SIGKILL after
+#     AF_STOP_TIMEOUT s, as stop_hand_gateway does) and starts the updated install in its place
+#     (`abstractgateway apps launch`); the summary says so. A copy that is not provably this
+#     install's (another command line, or a process this system cannot inspect) is left alone,
+#     and the summary says in red what runs and what was checked.
 af_app_pin() {  # af_app_pin ID -> this release's version of that browser app; non-zero when none
     for _s in $AF_NPM_APPS; do
         _n="${_s#@abstractframework/}"
@@ -869,11 +880,50 @@ af_apps_marker() {  # the pins the gateway applies at its next start (one "ID VE
 }
 AF_NL='
 '
+af_pid_args() {  # af_pid_args PID -> the command line of PID ("" when gone, or without ps)
+    command -v ps >/dev/null 2>&1 || return 0
+    ps -ww -o args= -p "$1" 2>/dev/null | head -n 1
+}
+af_app_leftover() {  # af_app_leftover PID: 0 when PID runs a program under this install's <data dir>/apps/
+    case "$1" in ''|*[!0-9]*) return 1 ;; esac
+    case "$(af_pid_args "$1")" in *"$DATA_DIR/apps/"*) return 0 ;; esac
+    return 1
+}
+af_apps_stop_leftover() {  # af_apps_stop_leftover ID PID: stop a leftover of a previous gateway run; 0 once it is gone
+    _lp="$2"
+    af_app_leftover "$_lp" || return 0
+    RUN_SOFT=1 run "stop the $1 app left running by a previous gateway run (pid $_lp)" kill "$_lp"
+    _i=0; _max=$(( ${AF_STOP_TIMEOUT:-20} * 2 ))
+    while kill -0 "$_lp" 2>/dev/null && [ "$_i" -lt "$_max" ]; do sleep 0.5; _i=$((_i + 1)); done
+    if kill -0 "$_lp" 2>/dev/null; then
+        # identity checked again: a pid that now runs another program is not signalled
+        af_app_leftover "$_lp" || return 0
+        warn "pid $_lp did not exit within ${AF_STOP_TIMEOUT:-20} s: stopping it with SIGKILL"
+        kill -9 "$_lp" 2>/dev/null || true
+        _i=0; while kill -0 "$_lp" 2>/dev/null && [ "$_i" -lt 10 ]; do sleep 0.5; _i=$((_i + 1)); done
+    fi
+    ! kill -0 "$_lp" 2>/dev/null
+}
+af_apps_launch() {  # af_apps_launch ID: start the gateway's install of ID (abstractgateway apps launch)
+    set -- "$GW" apps launch "$1" --url "$BASE_URL" --data-dir "$DATA_DIR"
+    RUN_SHOW="$(show_cmd abstractgateway apps launch "$4")"
+    _tok="$(af_apps_token)"; [ -z "$_tok" ] || set -- "$@" --token "$_tok"
+    RUN_SOFT=1 run "start the $4 app" "$@"
+    [ "$RUN_RC" = 0 ]
+}
 af_rows_version() {  # af_rows_version ROWS ID -> the VERSION field of ID's row ("" when none)
     _want="$2"; _ifs2="$IFS"; IFS="$AF_NL"
     for _b in $1; do
         IFS="$_ifs2"; set -- $_b
         [ "$1" = "$_want" ] && { printf '%s\n' "$2"; break; }
+    done
+    IFS="$_ifs2"
+}
+af_rows_source() {  # af_rows_source ROWS ID -> the SOURCE field of ID's row ("" when none)
+    _want="$2"; _ifs2="$IFS"; IFS="$AF_NL"
+    for _b in $1; do
+        IFS="$_ifs2"; set -- $_b
+        [ "$1" = "$_want" ] && { printf '%s\n' "${3:-}"; break; }
     done
     IFS="$_ifs2"
 }
@@ -914,7 +964,7 @@ af_apps_step() {  # af_apps_step UP (1 = a gateway answers at BASE_URL); sets AP
         _pin="$(af_app_pin "$_id")" || continue
         _any=1
         if [ "$_ver" = - ]; then
-            info "$_id: a copy started outside the gateway runs on port $_xp (version $_xv); the gateway installed none, so there is nothing to update"
+            info "$_id: a copy not started by this gateway runs on port $_xp (version $_xv); the gateway installed none, so there is nothing to update"
         elif [ "$_ver" = "$_pin" ]; then
             ok "$_id $_ver (this release's version)"
         elif [ "$PRINT" = 1 ]; then
@@ -943,10 +993,10 @@ af_apps_step() {  # af_apps_step UP (1 = a gateway answers at BASE_URL); sets AP
         _pin="$(af_app_pin "$_id")" || continue
         _old="$(af_rows_version "$_before" "$_id")"
         if [ "$_ver" = - ]; then
-            _line="$_id: not installed by the gateway; a copy started outside it runs on port $_xp ($_xv)"
+            _line="$_id: not installed by the gateway; a copy not started by it runs on port $_xp ($_xv)"
         elif [ "$_ver" != "$_pin" ]; then
             warn "the $_id app is still $_ver, not $_pin"
-            incomplete_add "the $_id app" "still $_ver, not this release's $_pin; retry: abstractgateway apps update $_id --version $_pin" fail
+            incomplete_add "the $_id app" "still $_ver, not this release's $_pin; retry: abstractgateway apps update $_id --version $_pin" fail apps
             _line="$_id $_ver (NOT $_pin: update failed)"
         elif [ -n "$_old" ] && [ "$_old" != "$_ver" ]; then
             ok "the $_id app is now $_ver"
@@ -954,15 +1004,35 @@ af_apps_step() {  # af_apps_step UP (1 = a gateway answers at BASE_URL); sets AP
         else
             _line="$_id $_ver"
         fi
-        if [ "$_src" = external ] && [ "$_ver" != - ]; then
-            # The gateway's install is at $_ver, but the copy on the port is not the gateway's:
-            # the gateway cannot restart it, so that copy is what people get until it is stopped.
-            _line="$_line; RUNNING: a copy started outside the gateway, $_xv on port $_xp (pid $_xpid)"
-            if [ "$_xv" != "$_pin" ]; then
-                warn "the $_id app that runs is a copy started outside the gateway ($_xv on port $_xp, pid $_xpid), not the gateway's $_ver"
-                incomplete_add "the $_id app" "what runs is a copy started outside the gateway ($_xv on port $_xp, pid $_xpid), not this release's $_pin; stop it (kill $_xpid), then: abstractgateway apps launch $_id" fail
+        if [ "$_src" = external ] && [ "$_ver" != - ] && af_app_leftover "$_xpid"; then
+            # The copy on the port runs a program under this install's <data dir>/apps/: an app a
+            # previous gateway run left behind (gateways before 0.15.2 list it as "external" and
+            # do not replace it). It is stopped, and the gateway's install ($_ver) starts instead.
+            info "$_id: the copy on port $_xp ($_xv, pid $_xpid) is a leftover of a previous gateway run (it runs $DATA_DIR/apps/): stopping it, then starting $_ver"
+            if ! af_apps_stop_leftover "$_id" "$_xpid"; then
+                warn "the $_id app that runs is a leftover of a previous gateway run ($_xv on port $_xp, pid $_xpid) that could not be stopped"
+                incomplete_add "the $_id app" "a leftover of a previous gateway run ($_xv on port $_xp, pid $_xpid) could not be stopped; stop it (kill -9 $_xpid), then: abstractgateway apps launch $_id" fail apps
+                _line="$_line; RUNNING: a leftover of a previous gateway run, $_xv on port $_xp (pid $_xpid), not stopped"
+            elif af_apps_launch "$_id" && _after="$(af_apps_installed)" && [ "$(af_rows_source "$_after" "$_id")" = gateway ] && [ "$(af_rows_version "$_after" "$_id")" = "$_ver" ]; then
+                ok "the $_id app that runs is now the gateway's $_ver (a leftover of a previous gateway run, $_xv pid $_xpid, stopped)"
+                _line="$_line; leftover of a previous gateway run ($_xv, pid $_xpid) stopped; $_id $_ver started"
             else
-                info "$_id: the copy running on port $_xp was started outside the gateway (pid $_xpid); it is at $_xv too"
+                warn "the $_id app's leftover ($_xv, pid $_xpid) was stopped, but $_id $_ver did not start"
+                incomplete_add "the $_id app" "a leftover of a previous gateway run ($_xv, pid $_xpid) was stopped, but $_id $_ver did not start; retry: abstractgateway apps launch $_id" fail apps
+                _line="$_line; leftover of a previous gateway run ($_xv, pid $_xpid) stopped; $_id $_ver NOT started"
+            fi
+        elif [ "$_src" = external ] && [ "$_ver" != - ]; then
+            # The gateway's install is at $_ver, but the copy on the port is not provably this
+            # install's (its command line runs something else, or cannot be read): the gateway
+            # cannot restart it, so that copy is what people get until it is stopped.
+            if [ -n "$(af_pid_args "$_xpid")" ]; then _checked="its command line does not run $DATA_DIR/apps/"
+            else _checked="its process (pid $_xpid) could not be inspected"; fi
+            _line="$_line; RUNNING: a copy not started by this gateway, $_xv on port $_xp (pid $_xpid)"
+            if [ "$_xv" != "$_pin" ]; then
+                warn "the $_id app that runs is a copy not started by this gateway ($_xv on port $_xp, pid $_xpid; $_checked), not the gateway's $_ver"
+                incomplete_add "the $_id app" "what runs is a copy not started by this gateway ($_xv on port $_xp, pid $_xpid; $_checked), not this release's $_pin; stop it where it was started (or kill $_xpid), then: abstractgateway apps launch $_id" fail apps
+            else
+                info "$_id: the copy running on port $_xp was not started by this gateway (pid $_xpid; $_checked); it is at $_xv too"
             fi
         fi
         APPS_LINES="${APPS_LINES}${_line}${AF_NL}"
@@ -3396,8 +3466,11 @@ fi
 if [ "$PRINT" = 0 ] && [ -n "$INCOMPLETE" ]; then
     printf '\n%s%sNOT installed:%s\n' "$C_B" "$C_R" "$C_0"
     printf '%s' "$INCOMPLETE" | sed "s/^/$C_R/; s/\$/$C_0/"
-    if [ "$AF_EXIT" = 1 ]; then
+    if [ "$AF_RETRY_FAILS" = 1 ]; then
         printf '%sWhat to do: run the installer again once the network (or crates.io) has caught up; it installs what is missing:%s\n    %s\n' "$C_R" "$C_0" "$RERUN_CMD"
+    fi
+    if [ "$AF_APP_FAILS" = 1 ]; then
+        printf '%sWhat to do for the apps: run the command given on their line above, then check them with:%s\n    abstractgateway apps list --url %s --data-dir %s\n' "$C_R" "$C_0" "$BASE_URL" "$(q "$DATA_DIR")"
     fi
 fi
 
