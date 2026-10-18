@@ -95,11 +95,11 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.15.2'
+$AfGatewayPinDefault = '0.15.4'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.11.5'
-$AfPyMatrix = @('abstractcore==2.26.0', 'AbstractRuntime==0.10.2', 'abstractagent==0.3.19', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.15.2', 'abstractvision==0.3.33', 'abstractmusic==0.1.16', 'abstract3d==0.3.2')
+$AfFrameworkVersion = '0.11.6'
+$AfPyMatrix = @('abstractcore==2.26.3', 'AbstractRuntime==0.10.3', 'abstractagent==0.3.19', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.15.2', 'abstractvision==0.3.34', 'abstractmusic==0.1.16', 'abstract3d==0.3.2')
 $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.10.0', '@abstractframework/code@0.11.2', '@abstractframework/observer@0.8.0', '@abstractframework/continuum@0.7.0', '@abstractframework/entity@0.7.1')
 $AfCrateConsole = 'abstractgateway-console@0.16.0'
@@ -746,6 +746,26 @@ function Test-GwBooted([string]$Body) {
     if (-not $Body -or $Body -notmatch 'abstractgateway') { return $false }
     if ($Body -match '"status":\s*"starting"') { return $false }
     return $true
+}
+if (-not (Get-Variable -Scope Script -Name AppsUpWait -ErrorAction SilentlyContinue)) { $script:AppsUpWait = 60 }   # seconds to wait for a gateway that answers late or is still booting
+function Test-GatewayUp([string]$BaseUrl) {
+    # One GET is not a verdict: right after its start a gateway loads its engines and can answer
+    # late, and a gateway 0.15 says "starting" while it boots. Nothing listening is a verdict at once.
+    $w = 0
+    while ($true) {
+        $body = Get-Http "$BaseUrl/api/health" 5
+        if (Test-GwBooted $body) { return $true }
+        if ($null -eq $body -and -not (Test-PortListening $BaseUrl)) { return $false }
+        if ($w -ge $script:AppsUpWait) { return $false }
+        if ($w -eq 0) { Write-Info "the gateway at $BaseUrl is $(if ($body) { 'still starting' } else { 'slow to answer' }): waiting for it" }
+        Start-Sleep -Seconds 2; $w += 2
+    }
+}
+function Test-PortListening([string]$BaseUrl) {
+    try {
+        $u = [uri]$BaseUrl; $c = New-Object System.Net.Sockets.TcpClient
+        $ok = $c.ConnectAsync($u.Host, $u.Port).Wait(2000) -and $c.Connected; $c.Dispose(); return [bool]$ok
+    } catch { return $false }
 }
 function Get-AppsToken([string]$DataDir) {
     # the data dir's admin token, for `abstractgateway apps` as a direct parameter
@@ -2421,7 +2441,7 @@ function Main {
     }
 
     Write-Step "Browser apps (this release's versions)"
-    $appsUp = (Test-Path -LiteralPath $gw) -and (Test-GwBooted (Get-Http "$baseUrl/api/health" 3))
+    $appsUp = (Test-Path -LiteralPath $gw) -and (Test-GatewayUp $baseUrl)
     Invoke-AppsStep -Up $appsUp -Gw $gw -BaseUrl $baseUrl -DataDir $DataDir
 
     # --- summary -------------------------------------------------------------------------------------
@@ -2448,6 +2468,11 @@ function Main {
     }
     # Local voice not installed: never a silent green (same rule as install.sh).
     if (-not $script:DryRun -and -not $voice.Spec) { Add-Incomplete 'local voice (Supertonic, Whisper)' $voice.Result }
+    # The gateway must still be there at the end: one that stopped after its health check (its
+    # event-loop watchdog, a crash) is never reported green (same rule as install.sh).
+    if (-not $script:DryRun -and -not $NoStart -and -not (Test-GatewayUp $baseUrl)) {
+        Add-Incomplete 'the gateway' "stopped after it started: see $gatewayErr and $(Join-Path $DataDir 'incidents') (a watchdog incident); run this installer again to start it" -Fail
+    }
     Write-Host ''
     if ($script:DryRun) { Write-Host 'Plan printed (-Print): nothing was changed.' -ForegroundColor White }
     elseif ($script:Incomplete.Count) {

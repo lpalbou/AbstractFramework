@@ -215,7 +215,7 @@ printf 'APPS<<%s>>\\nINCOMPLETE<<%s>>\\n' "$APPS_LINES" "$INCOMPLETE"
 
 
 def _ps(tmp_path: Path, env: dict, up: int, print_mode: int = 0) -> str:
-    names = ["Get-AppPin", "Test-GwBooted", "Get-AppsToken", "Get-AppsInstalled", "Get-AppsSettled", "Write-AppsMarker", "Invoke-AppsStep",
+    names = ["Get-AppPin", "Test-GwBooted", "Test-GatewayUp", "Test-PortListening", "Get-AppsToken", "Get-AppsInstalled", "Get-AppsSettled", "Write-AppsMarker", "Invoke-AppsStep",
              "Get-PidArgs", "Test-AppLeftover", "Stop-AppLeftover", "Start-AppLaunch"]
     loader = f"""
 $ast = [System.Management.Automation.Language.Parser]::ParseFile('{PS1}', [ref]$null, [ref]$null)
@@ -455,3 +455,65 @@ foreach ($b in @('{{"status":"healthy","service":"abstractgateway"}}', '{{"statu
     proc = subprocess.run([PWSH, "-NoProfile", "-Command", loader], capture_output=True, text=True, timeout=120)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert proc.stdout.split() == ["BOOTED", "BOOTED", "NOT", "NOT", "NOT", "NOT"], proc.stdout
+
+
+def _sh_gateway_up(tmp_path: Path, answers: list) -> tuple:
+    """Run af_gateway_up against a fake http_get that plays `answers` in turn: ("rc", body)."""
+    text = SH.read_text()
+    block = re.search(r"^# >>> apps-upgrade.*?^# <<< apps-upgrade$", text, re.S | re.M).group(0)
+    (tmp_path / "answers").write_text("\n".join(f"{rc}\t{body}" for rc, body in answers) + "\n")
+    script = f"""
+info() {{ echo "INFO $1"; }}; ok() {{ echo "OK $1"; }}; warn() {{ echo "WARN $1"; }}; show_cmd() {{ echo "$*"; }}
+http_get() {{ _l="$(sed -n "$(($(cat {tmp_path}/n 2>/dev/null || echo 0) + 1))p" {tmp_path}/answers)"; echo $(($(cat {tmp_path}/n 2>/dev/null || echo 0) + 1)) >{tmp_path}/n
+  printf '%s' "${{_l#*	}}"; return "${{_l%%	*}}"; }}
+BASE_URL="http://127.0.0.1:18999"; AF_APPS_UP_WAIT=6
+{block}
+if af_gateway_up; then echo "UP after $(cat {tmp_path}/n) calls"; else echo "DOWN after $(cat {tmp_path}/n) calls"; fi
+"""
+    proc = subprocess.run(["sh", "-c", script], capture_output=True, text=True, env={"PATH": "/usr/bin:/bin", "NO_COLOR": "1"}, timeout=60)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    return proc.stdout + proc.stderr, int((tmp_path / "n").read_text())
+
+
+HEALTHY = '{"status":"healthy","service":"abstractgateway"}'
+STARTING = '{"status":"starting","service":"abstractgateway"}'
+
+
+def test_a_gateway_that_answers_late_is_waited_for(tmp_path: Path) -> None:
+    # Right after its start the gateway loads its engines: one GET times out (curl 28), the next says starting.
+    out, calls = _sh_gateway_up(tmp_path, [("28", ""), ("0", STARTING), ("0", HEALTHY), ("0", HEALTHY)])
+    assert "UP after 3 calls" in out and "slow to answer" in out, out
+
+
+def test_nothing_listening_is_a_verdict_at_once(tmp_path: Path) -> None:
+    out, calls = _sh_gateway_up(tmp_path, [("7", ""), ("0", HEALTHY)])
+    assert "DOWN after 1 calls" in out, out
+
+
+def test_a_gateway_that_never_finishes_booting_is_given_up(tmp_path: Path) -> None:
+    out, calls = _sh_gateway_up(tmp_path, [("0", STARTING)] * 20)
+    assert "DOWN after" in out and calls >= 3, out
+
+
+@pytest.mark.skipif(PWSH is None, reason="needs pwsh")
+def test_ps1_a_gateway_that_answers_late_is_waited_for(tmp_path: Path) -> None:
+    names = ["Test-GwBooted", "Test-GatewayUp", "Test-PortListening"]
+    loader = f"""
+$ast = [System.Management.Automation.Language.Parser]::ParseFile('{PS1}', [ref]$null, [ref]$null)
+$names = @({", ".join(repr(n) for n in names)})
+$found = @($ast.FindAll({{ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $names -contains $n.Name }}, $true))
+if ($found.Count -ne $names.Count) {{ throw "install.ps1 lost a gateway-up function" }}
+$script:AppsUpWait = 6
+foreach ($f in $found) {{ Invoke-Expression $f.Extent.Text }}
+function Write-Info([string]$Text) {{ Write-Host "INFO $Text" }}
+$script:answers = @($null, '{STARTING}', '{HEALTHY}', '{HEALTHY}'); $script:n = 0
+function Get-Http([string]$Url, [int]$TimeoutSec = 5) {{ $a = $script:answers[[Math]::Min($script:n, $script:answers.Count - 1)]; $script:n++; return $a }}
+function Test-PortListening([string]$BaseUrl) {{ return $true }}
+if (Test-GatewayUp 'http://127.0.0.1:18999') {{ "UP after $($script:n) calls" }} else {{ "DOWN after $($script:n) calls" }}
+$script:answers = @($null); $script:n = 0
+function Test-PortListening([string]$BaseUrl) {{ return $false }}
+if (Test-GatewayUp 'http://127.0.0.1:18999') {{ "UP after $($script:n) calls" }} else {{ "DOWN after $($script:n) calls" }}
+"""
+    proc = subprocess.run([PWSH, "-NoProfile", "-Command", loader], capture_output=True, text=True, timeout=120)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "UP after 3 calls" in proc.stdout and "slow to answer" in proc.stdout and "DOWN after 1 calls" in proc.stdout, proc.stdout
