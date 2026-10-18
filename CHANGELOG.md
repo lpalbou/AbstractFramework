@@ -2,6 +2,22 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.8] - 2026-10-18
+
+Pins **AbstractGateway 0.15.5** and **AbstractRuntime 0.10.5** across the light, Apple and GPU
+profiles (0.10.5 is 0.10.4's fix with the pooled client's wiring done in one place, after an
+adversarial review). Other package pins are unchanged from 0.11.7.
+
+- Image generation routed to a provider endpoint profile (an OpenAI-compatible relay chosen as the
+  image route, in the console's sandbox or a workflow) reaches that endpoint with its stored
+  credential, in process. Before this, the runtime's call handler rewrote the route's `endpoint:<id>`
+  provider into a bare provider family before the media client saw it, and the generation failed
+  asking for a base URL the gateway already held. Nothing in the gateway asks for a URL or key that
+  is already configured.
+- Who is affected: anyone whose image (or video, or voice) route is set to a gateway endpoint
+  profile. Upgrade with the one-line installer; a gateway started from a checkout must be restarted
+  on the new packages.
+
 ## [0.11.7] - 2026-10-18
 
 Pins **AbstractGateway 0.15.4** across the light, Apple and GPU profiles: a cold first start no longer

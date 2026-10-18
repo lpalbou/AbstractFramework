@@ -1,0 +1,15 @@
+{
+  "bundle_version" : "0.0.13",
+  "gateway" : "https:\/\/gateway.abstractframework.ai",
+  "outcome" : "passed",
+  "session_id" : "iphone-media-verification-fdb3e6e5-bbeb-4566-b926-afacbfc88f50",
+  "stage" : "voice",
+  "voice" : {
+    "artifact_id" : "2ae6341031d11e20aab304516521bcf5",
+    "bytes" : 412478,
+    "content_type" : "audio\/wav",
+    "decoded_on_iphone" : true,
+    "run_id" : "bd997e3e-c523-40b0-9850-4d119f618a60",
+    "status" : "completed"
+  }
+}

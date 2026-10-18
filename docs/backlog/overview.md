@@ -6,21 +6,30 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files on 2026-10-01 (recursive, topic tracks included; README, overview, template and
-`evidence/` files excluded). The legacy part of the backlog still breaks the one-ID-one-item rule,
-so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findings) and 0889.
+On-disk item files recounted on 2026-10-18 (recursive, topic tracks included; README,
+overview, template and `evidence/` files excluded). Legacy duplicate IDs remain tracked by
+[0889](planned/0889_normalize_the_legacy_root_backlog.md); counts are files, not unique IDs.
+Before adding 1027, disk counts were 175 planned / 56 proposed / 266 completed / 1 deprecated /
+2 recurrent; the previous recorded snapshot was 176 / 55 / 264 / 1 / 2 respectively.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 176 | 128 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0962, 0964–0975, 0977–0979, 0981, 0983, 0985–0994, 0999, 1001, 1003–1007, 1011, 1013, 1014 included (0999 and 1001 added 2026-10-04, 1003 added 2026-10-08, 1004 added 2026-10-09, 1005 added 2026-10-10, 1006, 1007, 1008, 1010, 1011, 1013 and 1014 added 2026-10-11; 1002 added 2026-10-05, completed 2026-10-08); 0869, 0952, 0963 completed 2026-09-28, 0984 completed 2026-09-29; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5, governance 5 (1019–1023 added 2026-10-15). Includes 24 stale copies of completed items (0889). |
-| Proposed | 55 | 47 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931, 0976, 0995–0998, 1000, 1009, 1012, 1015–1017, 1024 included (1000 added 2026-10-04, 1009, 1012, 1015, 1016 and 1017 added 2026-10-11, 1024 added 2026-10-15; 1018 added 2026-10-14, completed 2026-10-15); 0901 promoted to planned) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 264 | 254 flat (1002 completed 2026-10-08 with root 0.10.1; 1008 and 1010 completed 2026-10-11; 1018 completed 2026-10-15, all released with root 0.11.0; 1026 added and completed 2026-10-17, released with root 0.11.4) + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0869, 0890, 0930, 0941, 0943, 0946–0950, 0952, 0963, 0980, 0982 (2026-09-28), 0984 (2026-09-29; 0941 released 2026-09-27 with root 0.5.0, 0980 is the patch wave's root record, root 0.6.1; 0982 is root 0.6.2's record, and 0869 is closed by the operator's tier ruling, carried by abstractcore 2.19.0). |
-| Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
-| Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
+| Planned | 176 | 128 flat + 48 in topic tracks. Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
+| Proposed | 56 | 48 flat + 8 in topic tracks. |
+| Completed | 266 | 256 flat + 10 in topic tracks; implementation and release history remain in the ledgers below. |
+| Deprecated | 1 | 0851: operator ruling that the temporary local Agora hub required no rotation. |
+| Recurrent | 2 | [recurrent/](recurrent/README.md): backlog/ADR hygiene and post-completion follow-up triage. |
 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
 
 ## Next Recommended Work
+
+**2026-10-18 media repair remains open:** [1027](planned/1027_restore_media_endpoint_resolution_and_verify_remote_iphone_images.md)
+records Runtime `80a1887`, the related orchestrator/iPhone commits and durable test/ledger
+[evidence](evidence/1027/README.md). Published-version reproduction is red before / green
+after the Runtime fix; real remote voice passes. Remote Runtime deployment/restart, the
+selected dependency combination and live t2i/i2i plus phone reload verification remain
+required. No remote deployment or package publication occurred in this task.
 
 **Release state (2026-09-26): the 2026-09-25/26 mission wave is RELEASED** (root `abstractframework`
 0.4.0; record [0921](completed/0921_release_wave_2026_09_26.md), ledger
@@ -116,6 +125,7 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 1027 | [Restore media endpoint resolution and verify remote iPhone images](planned/1027_restore_media_endpoint_resolution_and_verify_remote_iphone_images.md) | Planned | P1. Runtime fix committed; published-version probe 6 red → 6 green, real remote voice passes. Release/deployment, exact selected dependency combination and live images/edit/reload proof remain open. |
 | 1001 | [Operator decisions after the rounds 4–7 rework](planned/1001_operator_decisions_after_the_round_4_to_7_rework.md) | Planned (operator decision gate) | Apple STT default `large-v3-turbo` + Spoken language setting; mlx-whisper engine; build named per-user API keys (1000)?; admins reading API request bodies; token in browser storage; supervisor kill-on-probes default. |
 | 1002 | [Follow-ups after the 0.10.0 release](completed/1002_follow_ups_after_the_0_10_0_release.md) | Completed 2026-10-08 (root 0.10.1) | All ten items shipped in the 0.10.1 wave (Linux nested sandbox green in CI, Read aloud hang + incident surface, browser_probe loopback origin, per-account default workflow, launcher flags, Assistant harness, TUI parity 9–13, kit icons, lockfile guard, ReAct format repair); leftovers in 1003. |
 | 1003 | [Follow-ups after the 0.10.1 release](planned/1003_follow_ups_after_the_0_10_1_release.md) | Planned | Gateway console round-15 redesign (crate 0.16.0), Code TUI default workflow + /schedule Mailbox step, abstractcode-tui without origin, Flow run-window colours + late flow-start wiping the failed mark, runtime TMPDIR test, Windows coverage, cloning-probe tests skipped in CI, ACKNOWLEDGEMENTS gaps, upgrade re-run on 0.10.1, watchdog re-check under CPU load. |
@@ -625,6 +635,13 @@ Scan of 2026-09-26 (after the release, 0921):
   disk. The 2026-09-25 patch-wave gap above is unchanged.
 
 ## Planning Notes
+
+- 2026-10-18: added retrospective item 1027 after the operator identified a missing backlog
+  trace for already-committed Runtime/orchestrator/iPhone work. Kept it planned because the
+  remote image repair is not deployed/verified. Copied temporary evidence into the repository,
+  recorded test limits and mixed-workspace failures, reconciled current file counts, and
+  checked that 1027 is unused across all lifecycle/topic folders. Legacy numbering defects
+  are unchanged and remain tracked by 0889.
 
 - 2026-09-25 post-release trace: closed 0233 (shipped 2026-09-23, never moved); recorded 0863–0867
   for the 2026-09-24 waves; created 0868–0889 (two topic tracks: app-surfaces, docs-hygiene);
