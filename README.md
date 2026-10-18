@@ -176,7 +176,7 @@ abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.15.3` and `ghcr.io/lpalbou/abstractcore-server:2.26.3`.
+`ghcr.io/lpalbou/abstractgateway:0.15.4` and `ghcr.io/lpalbou/abstractcore-server:2.26.3`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -338,7 +338,7 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.15.3 |
+| PyPI | `abstractgateway` | 0.15.4 |
 | PyPI | `abstractassistant` | 0.14.1 |
 | PyPI | `abstractcore` | 2.26.3 |
 | PyPI | `AbstractRuntime` | 0.10.3 |
@@ -359,7 +359,7 @@ and tested together.
 | crates.io | `abstractgateway-console` | 0.16.0 |
 | crates.io | `abstractcore-console` | 0.8.0 |
 | crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.15.3 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.15.4 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.26.3 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is

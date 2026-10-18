@@ -121,13 +121,13 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.15.3"
+AF_GATEWAY_PIN_DEFAULT="0.15.4"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.11.6"
+AF_FRAMEWORK_VERSION="0.11.7"
 AF_PY_MATRIX="abstractcore==2.26.3 AbstractRuntime==0.10.3 abstractagent==0.3.19 abstractskill==0.3.0 AbstractMemory==0.3.0 abstractsemantics==0.0.5 abstractvoice==0.15.2 abstractvision==0.3.34 abstractmusic==0.1.17 abstract3d==0.3.2"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.10.0 @abstractframework/code@0.11.2 @abstractframework/observer@0.8.0 @abstractframework/continuum@0.7.0 @abstractframework/entity@0.7.1"
@@ -826,6 +826,21 @@ gw_booted() {  # gw_booted BODY: 0 when BODY is a gateway's /api/health answer a
     # Gateways 0.15 and later answer "status": "starting" while they load and start their apps.
     printf '%s' "$1" | grep -Eq '"status": *"starting"' && return 1
     return 0
+}
+AF_APPS_UP_WAIT="${AF_APPS_UP_WAIT:-60}"   # seconds to wait for a gateway that answers late (a busy loop) or is still booting
+af_gateway_up() {  # af_gateway_up -> 0 once the gateway at BASE_URL answers /api/health with its boot over
+    # One GET is not a verdict: right after its start a gateway loads its engines and can answer
+    # late, and a gateway 0.15 says "starting" while it boots. Nothing listening (connection
+    # refused) is a verdict at once: that is the --no-start case with the gateway stopped.
+    _w=0
+    while :; do
+        _hb="$(http_get "$BASE_URL/api/health")"; _rc=$?
+        [ "$_rc" = 0 ] && gw_booted "$_hb" && return 0
+        [ "$_rc" = 7 ] && return 1
+        [ "$_w" -lt "$AF_APPS_UP_WAIT" ] || return 1
+        [ "$_w" = 0 ] && info "the gateway at $BASE_URL is $([ "$_rc" = 0 ] && echo "still starting" || echo "slow to answer"): waiting for it" >&2
+        sleep 2; _w=$((_w + 2))
+    done
 }
 af_apps_token() {  # the data dir's admin token, for `abstractgateway apps` as a direct parameter
     tr -d '\r\n' <"$DATA_DIR/auth/bootstrap-admin-token" 2>/dev/null || :
@@ -3292,7 +3307,7 @@ fi
 step "Browser apps (this release's versions)"
 APPS_PY="$TOOL_VENV/bin/python"; [ -x "$APPS_PY" ] || APPS_PY="${TOOL_VENV2:+$TOOL_VENV2/bin/python}"
 _apps_up=0
-if [ -x "$GW" ] && [ -n "$APPS_PY" ] && [ -x "$APPS_PY" ] && gw_booted "$(http_get "$BASE_URL/api/health")"; then _apps_up=1; fi
+if [ -x "$GW" ] && [ -n "$APPS_PY" ] && [ -x "$APPS_PY" ] && af_gateway_up; then _apps_up=1; fi
 af_apps_step "$_apps_up"
 
 # ---------------------------------------------------------------------------
@@ -3349,6 +3364,12 @@ TUI_COMMAND="abstractgateway apps tui-command code"; [ "$DATA_DIR_CUSTOM" = 1 ] 
 # never a silent green, the summary and the last lines say so in red.
 [ "$PRINT" = 0 ] && [ -z "$VOICE_SPEC" ] && incomplete_add "local voice (Supertonic, Whisper)" "$VOICE_RESULT"
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
+    # The gateway must still be there at the end: one that stopped after its health check (its
+    # event-loop watchdog, a crash) is never reported green. Its log and, for the watchdog, the
+    # incident file say why; the installer's own start (or the service manager) brings it back.
+    if ! af_gateway_up 2>/dev/null; then
+        incomplete_add "the gateway" "stopped after it started: see $([ "$MODE" = service ] && echo "the service log ($_svc_log)" || echo "$GATEWAY_LOG") and $DATA_DIR/incidents/ (a watchdog incident); run this installer again to start it" fail
+    fi
     # The plain-language part first: what a non-technical user needs to know.
     if [ -n "$INCOMPLETE" ]; then
         printf '\n%s%sAbstractFramework is running, but NOT everything was installed:%s\n' "$C_B" "$C_R" "$C_0"

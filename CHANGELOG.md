@@ -2,6 +2,25 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.7] - 2026-10-18
+
+Pins **AbstractGateway 0.15.4** across the light, Apple and GPU profiles: a cold first start no longer
+exits on the gateway's event-loop watchdog while a signed-in caller's service is built (a fresh
+install's first minute; a background-started gateway stayed down). Other package pins are unchanged
+from 0.11.6.
+
+- The browser-apps step of `install.sh` and `install.ps1` no longer decides on one health request. A
+  gateway that is slow to answer right after its start (it loads its engines) or still says it is
+  starting is waited for, up to 60 s, before the apps are brought to this release's versions; only
+  a port with nothing listening (`--no-start` with the gateway stopped) sends the versions to
+  `<data dir>/apps-upgrade.pending` for the gateway's next start. Before this, a slow first answer
+  deferred the app updates to the next gateway restart without saying so in red.
+- The installers check that the gateway is still answering before the closing summary: a gateway
+  that stopped after its health check is reported in red with its log and incident folder, never as
+  "ready".
+- Who is affected: anyone running the one-line installers; most visibly fresh installs on machines
+  where the gateway's first start is slow.
+
 ## [0.11.6] - 2026-10-18
 
 Windows fixes: a fresh Windows install works from the one-liner, with its local engines, the

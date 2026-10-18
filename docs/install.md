@@ -130,7 +130,7 @@ where it stopped.
 ### Right after a release
 
 For a few minutes after a release, some of PyPI's mirrors can still serve a package list without
-the new versions. uv then answers `there is no version of abstractgateway==0.15.3` even though the
+the new versions. uv then answers `there is no version of abstractgateway==0.15.4` even though the
 release is published. The installer (install.sh and install.ps1; the **Update** action of the
 consoles and the menu-bar icon runs install.sh on macOS and Linux, and gives the install.ps1 line to
 paste on Windows) treats that as a delay:
@@ -381,8 +381,9 @@ command-line call against the running gateway, signed in with `<data dir>/auth/b
 passed as a parameter (an `ABSTRACTGATEWAY_AUTH_TOKEN` in your shell, set for another gateway, is
 not used), so it works the same on a headless or terminal-only machine: no browser or web console is
 involved. The step starts only once the gateway's boot is over (`/api/health` no longer says
-`"status": "starting"`) and waits, up to 90 s, for an app the gateway is still starting, so the
-update restarts it on the new version. The summary's **Apps** line lists each app's version; an app
+`"status": "starting"`), waiting up to 60 s for a gateway that is still booting or slow to answer
+right after its start, and then up to 90 s for an app the gateway is still starting, so the update
+restarts it on the new version. The summary's **Apps** line lists each app's version; an app
 that could not be updated is listed in red with the command to retry, and the installer exits 1. A
 fresh install installs no app: the console's **Apps** page installs them.
 
@@ -430,7 +431,7 @@ The terminal console and an `abstractcode` built by the installer are upgraded b
 
 ```bash
 abstractgateway --version                    # the installed gateway
-uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.3])
+uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.4])
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
@@ -506,7 +507,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.3"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.4"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]==0.15.2"` (the release's AbstractVoice): Supertonic
@@ -860,7 +861,7 @@ instead of starting a browser.
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.15.3"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.15.4"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -994,7 +995,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.11.6 pins `abstractgateway==0.15.3`, `abstractassistant==0.14.1`,
+`abstractframework` 0.11.7 pins `abstractgateway==0.15.4`, `abstractassistant==0.14.1`,
 `abstractcore==2.26.3`, `AbstractRuntime==0.10.3`, `abstractagent==0.3.19`, `abstractskill==0.3.0`,
 `AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.2`,
 `abstractvision==0.3.34`, `abstractmusic==0.1.17` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
@@ -1137,7 +1138,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.15.3
+  ghcr.io/lpalbou/abstractgateway:0.15.4
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
