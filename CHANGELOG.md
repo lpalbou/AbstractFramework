@@ -2,6 +2,21 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.14] - 2026-10-19
+
+Pins **AbstractGateway 0.15.11** and **AbstractMemory 0.3.1** across the light, Apple and GPU
+profiles. Other package pins are unchanged from 0.11.13.
+
+- The gateway carries an optional seam for AbstractNote (a notebook of your own notes as a temporal
+  knowledge graph, a separate package): when `abstractnote` is installed in the gateway's environment,
+  its tools are bound per plane next to the skills, its `/api/gateway/note` routes answer behind the
+  gateway sign-in and its workflows load in every plane; the console's Apps page lists the Note app.
+  Without the package the gateway behaves as before.
+- AbstractMemory's SQLite and in-memory stores can close an assertion in place (`close_assertion`),
+  which a superseded claim needs; nothing else changes for callers.
+- The `abstractnote` checkout is ignored by the root repository like the other sibling packages.
+- Who is affected: everyone upgrading; `abstractgateway update` shows this and runs it.
+
 ## [0.11.13] - 2026-10-19
 
 Pins **AbstractGateway 0.15.10** and **abstractassistant 0.14.3** across the light, Apple and GPU
