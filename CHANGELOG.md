@@ -2,6 +2,19 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.11.13] - 2026-10-19
+
+Pins **AbstractGateway 0.15.10** and **abstractassistant 0.14.3** across the light, Apple and GPU
+profiles. Other package pins are unchanged from 0.11.12.
+
+- The built-in Assistant orchestrator (revision 8, shipped in the gateway as bundle 0.0.15 and
+  republished by the desktop Assistant on its next launch): the routing decision no longer reads or
+  appends the conversation's turns, and a request for a spoken reading of a named passage or scene
+  routes to the voice route, never to audio generation.
+- ADR-0039: loading states in the clients (a spinner until a read answers, an error only once every
+  try has failed).
+- Who is affected: everyone upgrading; `abstractgateway update` shows this and runs it.
+
 ## [0.11.12] - 2026-10-19
 
 Pins **AbstractGateway 0.15.9** across the light, Apple and GPU profiles. Other package pins are
