@@ -1,0 +1,98 @@
+{
+  "gateway": "https://gateway.abstractframework.ai",
+  "profiles": [
+    {
+      "allowed_models": [],
+      "enabled": true,
+      "id": "airelays",
+      "provider_family": "openai-compatible",
+      "scope": "gateway",
+      "virtual_provider": "endpoint:airelays"
+    },
+    {
+      "allowed_models": [],
+      "enabled": true,
+      "id": "huggingface",
+      "provider_family": "huggingface",
+      "scope": "core"
+    },
+    {
+      "allowed_models": [],
+      "enabled": true,
+      "id": "ollama",
+      "provider_family": "ollama",
+      "scope": "core"
+    }
+  ],
+  "versions": {
+    "abstractframework": "0.11.7",
+    "abstractgateway": "0.15.4",
+    "packages": {
+      "abstract3d": "0.3.2",
+      "abstractagent": "0.3.19",
+      "abstractcore": "2.26.3",
+      "abstractgateway": "0.15.4",
+      "abstractmemory": "0.3.0",
+      "abstractmusic": "0.1.17",
+      "abstractruntime": "0.10.3",
+      "abstractsemantics": "0.0.5",
+      "abstractskill": "0.3.0",
+      "abstractvision": "0.3.34",
+      "abstractvoice": "0.15.2"
+    }
+  },
+  "routes": [
+    {
+      "configured": true,
+      "kind": "output",
+      "modality": "text",
+      "model": "gpt-5.6-terra",
+      "provider": "endpoint:airelays",
+      "source": "abstractcore.capability_defaults",
+      "task": "text_generation"
+    },
+    {
+      "configured": true,
+      "kind": "output",
+      "modality": "image",
+      "model": "gpt-image-2",
+      "provider": "endpoint:airelays",
+      "source": "abstractcore.capability_defaults",
+      "task": "image_generation"
+    },
+    {
+      "configured": true,
+      "kind": "output",
+      "modality": "image",
+      "model": "gpt-image-2",
+      "provider": "endpoint:airelays",
+      "source": "abstractcore.capability_defaults",
+      "task": "text_to_image"
+    },
+    {
+      "configured": true,
+      "kind": "output",
+      "modality": "image",
+      "model": "gpt-image-2",
+      "provider": "endpoint:airelays",
+      "source": "abstractcore.capability_defaults",
+      "task": "image_to_image"
+    },
+    {
+      "configured": false,
+      "kind": "output",
+      "modality": "image",
+      "source": "not_configured",
+      "task": "image_upscale"
+    },
+    {
+      "configured": true,
+      "kind": "output",
+      "modality": "voice",
+      "model": "supertonic-3",
+      "provider": "supertonic",
+      "source": "abstractcore.capability_defaults",
+      "task": "text_to_speech"
+    }
+  ]
+}

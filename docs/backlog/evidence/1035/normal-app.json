@@ -1,0 +1,6 @@
+{
+  "version": "0.6.16",
+  "build": "24",
+  "bundle": "ai.abstractframework.assistant.iphone",
+  "has_test_plugins": false
+}

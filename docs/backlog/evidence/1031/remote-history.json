@@ -1,0 +1,13 @@
+{
+  "complete_receipts" : 1,
+  "confirmed_reads" : 0,
+  "confirmed_sends" : 1,
+  "issues" : 0,
+  "outcome" : "passed",
+  "source_counts" : {
+    "filesChanged" : 1,
+    "filesRead" : 0,
+    "pages" : 0,
+    "searches" : 0
+  }
+}

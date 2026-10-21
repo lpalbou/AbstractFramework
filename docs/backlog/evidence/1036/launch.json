@@ -1,0 +1,57 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "process",
+      "launch",
+      "--device",
+      "33A1ED53-E782-53EB-8858-F2BDA5811593",
+      "ai.abstractframework.assistant.iphone",
+      "--quiet",
+      "--json-output",
+      "/tmp/iphone-1036-launch.json"
+    ],
+    "commandType" : "devicectl.device.process.launch",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "651.13.5"
+  },
+  "result" : {
+    "deviceIdentifier" : "33A1ED53-E782-53EB-8858-F2BDA5811593",
+    "launchOptions" : {
+      "activatedWhenStarted" : true,
+      "arguments" : [
+
+      ],
+      "environmentVariables" : {
+        "TERM" : "xterm-256color"
+      },
+      "platformSpecificOptions" : {
+
+      },
+      "startStopped" : false,
+      "terminateExistingInstances" : false,
+      "user" : {
+        "active" : true
+      }
+    },
+    "process" : {
+      "auditToken" : [
+        4294967295,
+        501,
+        501,
+        501,
+        501,
+        8968,
+        0,
+        24769
+      ],
+      "executable" : "file:///private/var/containers/Bundle/Application/9A33CACB-5255-4443-8BA8-BCEA6C8071C6/AbstractAssistantPhone.app/AbstractAssistantPhone",
+      "processIdentifier" : 8968
+    }
+  }
+}

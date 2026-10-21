@@ -1,0 +1,112 @@
+{
+  "0995340a-c904-4a31-b60e-8c835466dfd1" : {
+    "current_node" : "generate_image",
+    "error" : "Effect failed after 3 attempts: Unknown or disabled endpoint profile 'endpoint:airelays': neither the host's endpoint-profile resolver nor AbstractCore's provider profiles know it.",
+    "status" : "failed",
+    "steps" : [
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "route_call",
+        "status" : "started"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "route_call",
+        "status" : "completed"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "started"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "failed"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "started"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "failed"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "started"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "failed"
+      },
+      {
+        "effect_type" : "emit_event",
+        "node_id" : "generate_image",
+        "status" : "completed"
+      }
+    ],
+    "workflow_id" : "abstractassistant-orchestrator@0.0.12:c53b1579"
+  },
+  "45a19a0f-ae62-4931-9bf6-94c2e3843585" : {
+    "current_node" : "generate_image",
+    "error" : "Effect failed after 3 attempts: Unknown or disabled endpoint profile 'endpoint:airelays': neither the host's endpoint-profile resolver nor AbstractCore's provider profiles know it.",
+    "status" : "failed",
+    "steps" : [
+      {
+        "effect_type" : "llm_call",
+        "model" : "gpt-5.6-terra",
+        "node_id" : "route_call",
+        "provider" : "endpoint:airelays",
+        "status" : "started"
+      },
+      {
+        "effect_type" : "llm_call",
+        "model" : "gpt-5.6-terra",
+        "node_id" : "route_call",
+        "provider" : "endpoint:airelays",
+        "status" : "completed"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "started"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "failed"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "started"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "failed"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "started"
+      },
+      {
+        "effect_type" : "llm_call",
+        "node_id" : "generate_image",
+        "status" : "failed"
+      },
+      {
+        "effect_type" : "emit_event",
+        "node_id" : "generate_image",
+        "status" : "completed"
+      }
+    ],
+    "workflow_id" : "abstractassistant-orchestrator@0.0.13:c53b1579"
+  }
+}

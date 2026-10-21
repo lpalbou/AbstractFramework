@@ -1,0 +1,38 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "install",
+      "app",
+      "--device",
+      "33A1ED53-E782-53EB-8858-F2BDA5811593",
+      "abstractassistant/phone/iphone/build/DeviceDerivedData/Build/Products/Debug-iphoneos/AbstractAssistantPhone.app",
+      "--quiet",
+      "--json-output",
+      "/tmp/iphone-1036-install.json"
+    ],
+    "commandType" : "devicectl.device.install.app",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "651.13.5"
+  },
+  "result" : {
+    "deviceIdentifier" : "33A1ED53-E782-53EB-8858-F2BDA5811593",
+    "installedApplications" : [
+      {
+        "bundleID" : "ai.abstractframework.assistant.iphone",
+        "databaseSequenceNumber" : 2260,
+        "databaseUUID" : "E3FA4DF8-8C6B-4573-91A2-28692D68520B",
+        "installationURL" : "file:///private/var/containers/Bundle/Application/9A33CACB-5255-4443-8BA8-BCEA6C8071C6/AbstractAssistantPhone.app/",
+        "launchServicesIdentifier" : "unknown",
+        "options" : {
+
+        }
+      }
+    ]
+  }
+}

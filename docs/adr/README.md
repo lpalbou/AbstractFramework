@@ -63,6 +63,7 @@ The Abstract Framework is a multi-package ecosystem where architectural decision
 | 0036 | [Runtime-Owned Artifact Descriptor Contract](0036-artifact-descriptor-contract.md) | Accepted | 2026-06-06 | Runtime, Gateway, Observer, Core, capability plugins | Defines Runtime-owned artifact descriptors, access stats, legacy projection, and Gateway/Observer responsibilities |
 | 0037 | [Hosted File Source Contract And WorkspacePath Authority](0037-hosted-file-source-contract-and-workspacepath-authority.md) | Accepted | 2026-06-11 | Flow, Gateway, Runtime, Observer, Code | Defines hosted `Artifact` / `Local File` / `Server File` source terms, Gateway-owned server-path authority, and the `WorkspacePath` target contract |
 | 0038 | [Script Bootstrap and Gateway Console as the Install Experience](0038-script-bootstrap-and-gateway-console-install.md) | Accepted | 2026-09-23 | Root, Gateway, Core | One-line `install.sh`/`install.ps1` (uv) plus the gateway `/console` replace the planned GUI installer manager; signing only for native apps |
+| 0039 | [Loading States: A Spinner Until the Data Is In, an Error Only Once the Read Has Failed](0039-loading-states-spinner-until-a-read-has-failed.md) | Accepted | 2026-10-18 | All clients (Console, Observer, Flow, Assistant apps, TUIs) | A spinner until a read answers; transient read failures retried 3 times in the client library; errors only after every try failed; writes sent once |
 
 ### Package-Specific Decisions
 

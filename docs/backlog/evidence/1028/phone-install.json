@@ -1,0 +1,10 @@
+{
+  "version": "0.6.10",
+  "build": "18",
+  "bundle_id": "ai.abstractframework.assistant.iphone",
+  "test_plugins": false,
+  "installed": "success",
+  "launched": "success",
+  "date": "2026-10-18",
+  "watch_priority_guard": true
+}

@@ -1,0 +1,46 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "2332651D-D41D-4048-8121-3A6EA800D768",
+        "deviceName": "AbstractAssistant iPhone Preview",
+        "modelName": "iPhone 17 Pro",
+        "osBuildNumber": "23F77",
+        "osVersion": "26.5",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 1,
+      "passedTests": 5,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "AbstractAssistantPhoneUITests \u00b7 Built with macOS 27.0.1",
+  "expectedFailures": 0,
+  "failedTests": 1,
+  "finishTime": 1792342493.95,
+  "passedTests": 5,
+  "result": "Failed",
+  "runtimeWarnings": [],
+  "skippedTests": 0,
+  "startTime": 1792342394.502,
+  "statistics": [],
+  "testFailures": [
+    {
+      "failureText": "XCTAssertTrue failed",
+      "targetName": "AbstractAssistantPhoneUITests",
+      "testIdentifier": 5,
+      "testIdentifierString": "PhoneUITests/testWebSearchAndPageReceiptsStaySeparateAndScrollable()",
+      "testIdentifierURL": "test://com.apple.xcode/AbstractAssistantPhone/AbstractAssistantPhoneUITests/PhoneUITests/testWebSearchAndPageReceiptsStaySeparateAndScrollable",
+      "testName": "testWebSearchAndPageReceiptsStaySeparateAndScrollable()"
+    }
+  ],
+  "title": "Test - AbstractAssistantPhoneUITests",
+  "topInsights": [],
+  "totalTestCount": 6
+}
