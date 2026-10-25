@@ -19,7 +19,7 @@ Named by the workers and the two UX reviews (`untracked/ux-review/REPORT-2.md`);
 ### In scope
 
 - Release prerequisites: merge the diverged abstractgateway `main` with `origin/main` (31 commits behind incl. 0.15.2–0.15.11); publish order abstractcore 2.29.0 → abstractruntime 0.12.0 → abstractagent 0.4.0 → abstractgateway 0.16.0 → ui-kit 0.8.8 → observer (dependency `^0.8.8` + lockfile) → flow → assistant/code → root pins; Observer CI installs kit 0.8.7 until then.
-- Operator-side configuration: the admin's `endpoint:airelay` key is refused for background runs (401); a Google OAuth client registered on the gateway (or a built-in client shipped, a publisher decision) so "Sign in with Google" appears.
+- Operator-side configuration: a Google OAuth client registered on the gateway (or a built-in client shipped, a publisher decision) so "Sign in with Google" appears. (The admin's `endpoint:airelay` key was rotated on 2026-10-25 and background runs on it answer again; the gateway had to be restarted because abstractcore's server keeps a loaded runtime per provider/model with the old key. Follow-up: a changed endpoint-profile key should evict that provider's loaded runtime, no restart.)
 - Webhooks: accept GitHub's `X-Hub-Signature-256` and Svix-style headers, or document a relay; outbound webhook egress (0073) for servers.
 - Push: APNs relay (1049) for the watch and phone; the time-sensitive entitlement on the App IDs (operator decision).
 - Mail: the runtime resolves any of the person's mailboxes by address (needs a mailbox list from the gateway); the terminal console still calls the older `/me/email/discover`; password-added mailboxes show provider "imap" (derive from the IMAP host).
