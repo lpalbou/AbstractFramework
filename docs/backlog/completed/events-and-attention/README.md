@@ -29,5 +29,5 @@ delivery; Flow designs what runs on an event; the apps consume one stream.
 - [1046](1046_per_user_event_stream_with_catch_up_and_sse.md) per-user event stream + cap fix (gateway)
 - [1047](1047_event_consumers_in_the_apps_and_the_flow_trigger_interface.md) app consumers + Flow interface
 - [1048](1048_end_to_end_examples_tests_and_documentation_for_events_and_attention.md) E2E examples + coredoc
-- proposed: [1049](../../proposed/1049_apple_push_relay_for_watch_and_phone.md) Apple push relay
+- proposed: [1049](../../planned/1049_apple_push_relay_for_watch_and_phone.md) Apple push relay
 - proposed: [1050](../../proposed/1050_events_and_attention_follow_ups.md) follow-ups named by the lanes
