@@ -27,6 +27,13 @@ AbstractAssistant 0.15.0 (watch 0.5.0, iPhone 0.7.0) / AbstractCode 0.11.0 (web 
   `PUT /me/email/accounts/{id}/access` route, two plain refusals in the mail verbs, web and terminal console
   parity; Flow warns when a loop's body ends at On Flow End (the run would stop after the first item) with a
   one-click "Fix the loop", offers Break Email from an Email pin drop and ForEach from a list pin drop.
+- **Late round (2026-10-25)**: Flow Library by what starts a flow (Chat / Triggered / Other; schedules are set
+  in Observer and the Assistant, not in Flow), folded nodes show only their wired pins, New/Open/Save in colour
+  with a readable Save state; a catalogue of well-known open feeds (27, verified live, editable copy in the
+  data dir) in the console's New connection; RSS 1.0 (RDF) feeds parse; Apple push for the watch and the
+  phone on the gateway side (device routes, dispatcher with a SQLite outbox, `--push-relay` off by default,
+  `abstractgateway push-relay` with fixed localized messages; backlog 1049); ADR-0040 (critical workflows
+  live in the Flow library, agents draft, the operator publishes); backlog 1051–1053.
 - Live test on the operator's gateway: a Gmail message → inbox → automation → local-model judgement →
   attention → tray, console and email (`untracked/roadmap/FINAL.md`).
 
