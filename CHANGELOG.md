@@ -22,6 +22,11 @@ AbstractAssistant 0.15.0 (watch 0.5.0, iPhone 0.7.0) / AbstractCode 0.11.0 (web 
   on; Run as if triggered with real sampled data; an Email type with deterministic Mail nodes (search,
   get, mark, flag, label, move, delete, send, reply, forward, attachment) and Publish to channel.
 - **Observer and console**: triggers in words everywhere; My email as tabs; a one-field Add-mailbox form.
+- **Evening round (2026-10-25)**: a mailbox's access is an explicit choice, Read only (default) or Read and
+  write (change and send; sending also needs the outgoing server), with a switch on each mailbox row and a
+  `PUT /me/email/accounts/{id}/access` route, two plain refusals in the mail verbs, web and terminal console
+  parity; Flow warns when a loop's body ends at On Flow End (the run would stop after the first item) with a
+  one-click "Fix the loop", offers Break Email from an Email pin drop and ForEach from a list pin drop.
 - Live test on the operator's gateway: a Gmail message → inbox → automation → local-model judgement →
   attention → tray, console and email (`untracked/roadmap/FINAL.md`).
 
