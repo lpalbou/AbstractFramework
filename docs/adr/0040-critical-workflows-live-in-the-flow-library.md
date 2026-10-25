@@ -29,11 +29,11 @@ see `abstractgateway/docs/api.md`); those cannot be opened in Flow.
    models visible and editable. A compiled or native workflow with no visual flow is the
    exception, declared in `abstractgateway/docs/shipped-workflows.md` with the reason, never the
    default.
-2. **The operator publishes.** A bundle that the framework ships, or that an automation on the
-   operator's gateway runs, is published from Flow by the operator. Agents and scripts may build a
-   flow in the library and test it; they do not package bundles by hand and do not point
-   automations at bundles the operator has not published. An agent that needs a workflow for a
-   test publishes it under a test name on a hermetic gateway, never on the operator's.
+2. **Agents draft, the operator publishes.** Agents and scripts may build a flow in the library
+   as a draft for the operator to review and test; they never publish it, never package a bundle
+   by hand, and never point an automation at a bundle the operator has not published. An agent
+   that needs a workflow for a test publishes it under a test name on a hermetic gateway, never
+   on the operator's.
 3. **Packaging follows publishing.** A bundle enters the wheel (`pyproject.toml` package data)
    only after the operator has published that version from Flow; the packaged file is the
    published file, byte for byte.
@@ -60,7 +60,9 @@ see `abstractgateway/docs/api.md`); those cannot be opened in Flow.
 
 ## Enforcement
 - Code review: a change that adds a bundle to `pyproject.toml` package data or points an
-  automation at a bundle cites the library flow it was published from.
+  automation at a bundle cites the library flow it was published from and the operator's publish.
+- Agent briefs: a worker asked for a workflow delivers a library draft and stops; "publish" is
+  not in its scope unless the gateway is hermetic.
 - Gateway test (planned, backlog 1051): every wheel-shipped bundle's entrypoints carry a visual
   flow, except the ids listed in `shipped-workflows.md` under "Exceptions".
 - Completion reports for work that runs a workflow for the operator name the library flow and who
