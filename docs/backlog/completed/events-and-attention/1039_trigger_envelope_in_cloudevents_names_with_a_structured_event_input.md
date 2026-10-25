@@ -52,3 +52,17 @@ The operator wants triggers native to the framework with a clean interface on th
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1039_trigger_envelope_in_cloudevents_names_with_a_structured_event_input.md`
+> Final path: `docs/backlog/completed/events-and-attention/1039_trigger_envelope_in_cloudevents_names_with_a_structured_event_input.md`
+
+**Outcome.** CloudEvents names additive on the envelope; `input_data.event` plus flat typed inputs per source (messages/mailbox, items/feed, calls, scheduled_at/occurrence); schedule@1 kept byte-identical (series on schedule@2 only); Email record with flags and labels. Tests: trigger/automation/email/schedule 517 passed.
+
+**Commits.** runtime 724811d, 22729bf, a4bafd5, 9f8b6f7, dd45f68 (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

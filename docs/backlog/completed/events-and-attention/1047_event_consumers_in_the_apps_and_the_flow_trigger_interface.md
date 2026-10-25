@@ -48,3 +48,17 @@ This is the (c) of the operator's end-to-end: receiving the push in the apps tha
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1047_event_consumers_in_the_apps_and_the_flow_trigger_interface.md`
+> Final path: `docs/backlog/completed/events-and-attention/1047_event_consumers_in_the_apps_and_the_flow_trigger_interface.md`
+
+**Outcome.** Assistant desktop, watch, iPhone, Code TUI and WUI follow the stream with dedupe; Flow: automation-first New flow, human trigger picker, Growing budget from the gateway default, typed start/end pins, Turn it on (one automation per flow), Run as if triggered with real sampled data, Email type, Mail nodes, Publish to channel; Observer: prefilled form, triggers in words, run card. Tests: desktop 1289, watch 101, AssistantKit 276, code terminal 1138 / web 493, flow 1173, observer 663.
+
+**Commits.** assistant 206ea46, 3a3f6d1, c7005b8, 56dce7e, 09a2ab8, 8e1187a, 8800e9f, 69aa5d8, 97df40b, b69e7f4; code 9b7b4b0, df2e024, 39cf558; flow 4441300 … b6041a9 (22 commits); observer/ui-kit per the UX-O receipt (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

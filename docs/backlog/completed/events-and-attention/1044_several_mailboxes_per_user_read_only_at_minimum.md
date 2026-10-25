@@ -50,3 +50,17 @@ The operator wants to listen to several mailboxes (v0: read for X configured ema
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1044_several_mailboxes_per_user_read_only_at_minimum.md`
+> Final path: `docs/backlog/completed/events-and-attention/1044_several_mailboxes_per_user_read_only_at_minimum.md`
+
+**Outcome.** Several mailboxes per user (read-only by default), Google/Microsoft sign-in for further mailboxes, address-first autodiscovery, folders routes, mailbox ids accepted by email.received@1, batched watcher on one IMAP connection, flags and Gmail labels kept; the operator's Gmail registered live. Tests: mailbox 14, email suites 176–254 per repo.
+
+**Commits.** gateway b21d2345, 88b8fe35, d462c5b2, 9ed00ff0, 3a3d915a, 3c99b771; runtime d590c43, f88a216, a595ace; abstractcore 2142520c, df127af5, b888ccc2 (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

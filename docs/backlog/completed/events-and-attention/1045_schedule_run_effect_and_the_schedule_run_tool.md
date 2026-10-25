@@ -48,3 +48,17 @@ The operator wants an agent to spawn work later (in X minutes or on a trigger) w
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1045_schedule_run_effect_and_the_schedule_run_tool.md`
+> Final path: `docs/backlog/completed/events-and-attention/1045_schedule_run_effect_and_the_schedule_run_tool.md`
+
+**Outcome.** SCHEDULE_RUN effect + wakes planner + schedule_run ReAct tool (own session only, tools ⊆ parent, never schedule_run itself, note wakes notify by default); gateway host hook creating the one-shot automation in the caller's session; end-to-end test of a reminder firing as a new turn. Tests: runtime 8 + agent 475.
+
+**Commits.** runtime 0ad5ef0, f7ccaa6; agent 32711d9, 994747f; gateway d509124b, 888ad05a (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

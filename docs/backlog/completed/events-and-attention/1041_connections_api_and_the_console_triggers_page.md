@@ -49,3 +49,17 @@ This is the human-facing half of the operator's request: a page in the gateway t
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1041_connections_api_and_the_console_triggers_page.md`
+> Final path: `docs/backlog/completed/events-and-attention/1041_connections_api_and_the_console_triggers_page.md`
+
+**Outcome.** Connections API (principal-scoped, admin all=true, events, test-fire, webhook secret once) and the console Triggers tab (web /console#triggers + terminal): rows by label, Listening switch with the operator's semantics, loading/empty/error states, events as sentences, webhook setup panel with an in-browser signed test call. Tests: console unit 266, browser suites, terminal 980.
+
+**Commits.** gateway 1904ff7f, 19bd7cb3, 7858741a, d0aceb9c, 818e70ee, 7f2176da, 526a310e, 600145cd, 91017c8c, 78499020, 633630e9 (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

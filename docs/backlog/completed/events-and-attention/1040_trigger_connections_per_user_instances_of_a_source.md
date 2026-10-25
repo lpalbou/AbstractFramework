@@ -52,3 +52,17 @@ The operator wants to register the events one can listen to once, in the gateway
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1040_trigger_connections_per_user_instances_of_a_source.md`
+> Final path: `docs/backlog/completed/events-and-attention/1040_trigger_connections_per_user_instances_of_a_source.md`
+
+**Outcome.** TriggerConnectionStore (per-principal JSON, sealed secrets), needs_connection/connection_schema, streams trigger:<id>, test_fire, validate_binding_connection; connections fetched only while an active automation uses them or always_listen; paused; idle webhooks accepted (only Paused refuses). Tests: test_trigger_connection_listening 5 + trigger/wake 78.
+
+**Commits.** runtime fb3f02c, c823622, d12d605 (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

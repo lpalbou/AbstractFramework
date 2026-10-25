@@ -14,9 +14,9 @@ Before adding 1027, disk counts were 175 planned / 56 proposed / 266 completed /
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 187 | 128 flat + 59 in topic tracks (11 new in [events-and-attention](planned/events-and-attention/README.md), 2026-10-25). Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
-| Proposed | 57 | 49 flat + 8 in topic tracks (1049 Apple push relay, 2026-10-25). |
-| Completed | 276 | 266 flat + 10 in topic tracks; implementation and release history remain in the ledgers below. |
+| Planned | 176 | 128 flat + 48 in topic tracks. Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
+| Proposed | 58 | 50 flat + 8 in topic tracks (1049 Apple push relay, 1050 events follow-ups, 2026-10-25). |
+| Completed | 287 | 266 flat + 21 in topic tracks (11 in [events-and-attention](completed/events-and-attention/README.md), 2026-10-25); implementation and release history remain in the ledgers below. |
 | Deprecated | 1 | 0851: operator ruling that the temporary local Agora hub required no rotation. |
 | Recurrent | 2 | [recurrent/](recurrent/README.md): backlog/ADR hygiene and post-completion follow-up triage. |
 
@@ -24,8 +24,7 @@ Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis
 
 ## Next Recommended Work
 
-**2026-10-25 events and attention track OPEN** ([README](planned/events-and-attention/README.md), items 1038–1048,
-proposed 1049): run origin, CloudEvents trigger envelope, per-user trigger connections and the console Triggers page,
+**2026-10-25 events and attention track COMPLETED** ([README](completed/events-and-attention/README.md), items 1038–1048 built, tested and deployed locally, nothing published; proposed 1049 push relay and [1050](proposed/1050_events_and_attention_follow_ups.md) follow-ups incl. the release prerequisites): run origin, CloudEvents trigger envelope, per-user trigger connections and the console Triggers page,
 signed webhook ingress, RSS/Atom feed source, N mailboxes per user, the `SCHEDULE_RUN` effect, the per-user event
 stream (with the mailbox fan-out cap fix as prerequisite), app consumers and the Flow trigger interface, three E2E
 examples and the coredoc pass. Design record with two adversarial rounds: `untracked/design/attention-triggers-replay-2026-10-25.md`.

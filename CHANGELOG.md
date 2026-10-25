@@ -2,6 +2,29 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [Unreleased]
+
+Events, triggers and attention, built 2026-10-25 and deployed locally; nothing published yet. Every
+package pin below is a LOCAL version; the publish order is AbstractCore 2.29.0 → AbstractRuntime 0.12.0 →
+AbstractAgent 0.4.0 → AbstractGateway 0.16.0 → ui-kit 0.8.8 → AbstractObserver → AbstractFlow 0.11.0 →
+AbstractAssistant 0.15.0 (watch 0.5.0, iPhone 0.7.0) / AbstractCode 0.11.0 (web 0.12.0) → this root.
+
+- **Triggers native to the runtime**: per-user connections (a mailbox, a feed, a webhook) registered once
+  on the gateway's Triggers page and reused by name; CloudEvents-shaped envelopes; feed (RSS/Atom) and
+  signed webhook sources beside schedules and mail; several read-only mailboxes per user with Google or
+  Microsoft sign-in and address-first autodiscovery; a connection fetches only while an automation uses it.
+- **Attention stream**: one per-user event stream (run pointers, trigger events, wakes, attention items,
+  human waits, notifications) with catch-up and SSE routes and named channels; the gateway tray, the
+  Assistant desktop, the watch, the iPhone and Code follow it, with one notification per Mac.
+- **Reminders and wakes**: an agent schedules a later run in its own session (`schedule_run`), with at
+  most its own tools; a reminder notifies by default.
+- **Flow**: "+" asks what starts the flow; triggered flows open with typed start and end pins only; Turn it
+  on; Run as if triggered with real sampled data; an Email type with deterministic Mail nodes (search,
+  get, mark, flag, label, move, delete, send, reply, forward, attachment) and Publish to channel.
+- **Observer and console**: triggers in words everywhere; My email as tabs; a one-field Add-mailbox form.
+- Live test on the operator's gateway: a Gmail message → inbox → automation → local-model judgement →
+  attention → tray, console and email (`untracked/roadmap/FINAL.md`).
+
 ## [0.11.6] - 2026-10-18
 
 Pins **AbstractGateway 0.15.4** across the light, Apple and GPU profiles: a cold first start no longer

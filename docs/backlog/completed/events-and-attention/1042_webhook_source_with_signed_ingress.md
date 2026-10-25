@@ -50,3 +50,17 @@ Webhooks are the universal way external apps deliver events (n8n, Zapier, GitHub
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1042_webhook_source_with_signed_ingress.md`
+> Final path: `docs/backlog/completed/events-and-attention/1042_webhook_source_with_signed_ingress.md`
+
+**Outcome.** webhook.received@1 with Standard Webhooks verification; public ingress POST /triggers/webhooks/{id} (401/409/404/413/429); docs with set-up and try-it walkthroughs (GitHub's own signature not accepted: follow-up 1050). Tests: webhook ingress + e2e 22 passed.
+
+**Commits.** runtime f0552dd; gateway 55ef99a3, d3db1324, 08bd9459 (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

@@ -54,3 +54,17 @@ The operator asked for an explicit distinction between chat sessions, automation
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1038_run_origin_recorded_at_start.md`
+> Final path: `docs/backlog/completed/events-and-attention/1038_run_origin_recorded_at_start.md`
+
+**Outcome.** `_meta.origin {kind, actor, client, ref}` on every run (person at /runs/start, trigger on occurrences, agent on wakes, system on bridges); `actor_id` kept as the runner's ownership marker (deviation: the principal lives in origin.actor). Tests: runtime test_run_origin 4 + regression 342; gateway test_gateway_run_origin 3.
+
+**Commits.** runtime 051ca8a; gateway 142ebd66, 5d36a05e (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

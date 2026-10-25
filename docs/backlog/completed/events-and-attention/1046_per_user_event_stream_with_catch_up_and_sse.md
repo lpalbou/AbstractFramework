@@ -51,3 +51,17 @@ Every client polls full pages today and the watch waits 15 minutes; a per-user o
 ## Receipts
 
 - design note: `untracked/design/attention-triggers-replay-2026-10-25.md` (two adversarial rounds)
+
+## Completion report
+
+> Completed: 2026-10-25 18:30:00 +0200
+> Original path: `docs/backlog/planned/events-and-attention/1046_per_user_event_stream_with_catch_up_and_sse.md`
+> Final path: `docs/backlog/completed/events-and-attention/1046_per_user_event_stream_with_catch_up_and_sse.md`
+
+**Outcome.** Fan-out and due tracking off the 200-run scan (300 parked automations proven); per-user stream user:<id> with run pointers, attention (automation items and human waits), notifications; GET /me/events + SSE; channels and publish; notification channels tray/assistant/code/watch/phone with the per-device dedupe rule; tray consumer with plain wording; trigger_text on every automation. Tests: 435 regression + per-item suites.
+
+**Commits.** runtime ecc039d; gateway e7df8cbe, 1772d0fb, 64a2b307, 9a55b157, d3a22635, fa535dc5, d5e09a05, 052becc8, 9df3433f, 9d476479, 1613d05c (all local, unpushed, unpublished; per-repo receipts under `untracked/lanes/`).
+
+**Validation.** Lane receipts with per-item mutation checks: `untracked/lanes/L1-runtime.md`, `L2-gateway-triggers.md`, `L3-gateway-events.md`, `L4-flow-console.md`, `L5-consumers-e2e.md`, `UX-A-flow.md`, `UX-O-observer.md`; UX reviews `untracked/ux-review/REPORT.md` and `REPORT-2.md`; live evidence `abstractgateway/untracked/live-email-2026-10-25/`.
+
+**Follow-ups.** See proposed [1050](../../proposed/1050_events_and_attention_follow_ups.md).

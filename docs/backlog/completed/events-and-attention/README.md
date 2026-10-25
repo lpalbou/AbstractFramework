@@ -1,7 +1,7 @@
 # Events and attention track
 
 ## Status
-Planned (2026-10-25). Built in parallel lanes from the operator's 2026-10-25 request; two adversarial
+Completed 2026-10-25 (all eleven items built, tested, deployed locally, documented; nothing published). Completion reports at the end of each item. Built in parallel lanes from the operator's 2026-10-25 request; two adversarial
 architecture rounds recorded in `untracked/design/attention-triggers-replay-2026-10-25.md`.
 
 ## Purpose
@@ -30,3 +30,4 @@ delivery; Flow designs what runs on an event; the apps consume one stream.
 - [1047](1047_event_consumers_in_the_apps_and_the_flow_trigger_interface.md) app consumers + Flow interface
 - [1048](1048_end_to_end_examples_tests_and_documentation_for_events_and_attention.md) E2E examples + coredoc
 - proposed: [1049](../../proposed/1049_apple_push_relay_for_watch_and_phone.md) Apple push relay
+- proposed: [1050](../../proposed/1050_events_and_attention_follow_ups.md) follow-ups named by the lanes
