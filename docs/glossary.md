@@ -8,6 +8,7 @@ If you're new, read these groups first:
 - **Workflows**: flow, bundle, interface contract
 - **Control plane**: gateway, observer, gateway console, Network setting
 - **Automations**: automation, trigger source, tick, occurrence, discussion
+- **Events and attention**: trigger connection, event stream, attention item, push forwarder, Notify me, After the run, Flow library
 - **Email**: email address, mailbox, mail watcher, recipient policy, agent email tools, email notifications, automatic mail, sign-in by email
 - **Agent sessions**: default agent workflow, conversation workspace, built-in deny list, skill shelf, live replies
 - **Distribution**: Mac installer, bootstrap script, install profile, release pins
@@ -150,7 +151,7 @@ The control plane for durable runs: start/resume/cancel, persistence, scheduling
 
 ### Schedule
 
-The `schedule@1` [trigger source](#trigger-source) of an automation: a fixed UTC interval (`every: "5m"`, `"8h"`, `"7d"`) from a start time, optionally bounded by `until` or `count`; no cron, time of day or time zone. Schedules created with the older `POST /api/gateway/runs/schedule` route are listed as *legacy* and keep their own controls. See [Automations](automations.md).
+The time [trigger source](#trigger-source) of an automation. `schedule@1` is a fixed UTC interval (`every: "5m"`, `"8h"`, `"7d"`) from a start time, optionally bounded by `until` or `count`; `schedule@2` adds calendar rules on wall time in a time zone (`daily` at a time, `weekly` on given days, `monthly` on a day or the last day, `once`). There is no cron expression. Schedules created with the older `POST /api/gateway/runs/schedule` route are listed as *legacy* and keep their own controls. See [Automations](automations.md).
 
 ### Observer
 
@@ -211,7 +212,7 @@ A workflow that the gateway runs again and again on a trigger. It is one durable
 
 ### Trigger source
 
-What fires an automation, as a versioned adapter: `schedule@1` (a fixed UTC interval, see [Schedule](#schedule)), `email.received@1` (new mail in your own mailbox, see [Mail watcher](#mail-watcher)) and `manual@1` (only **Run now**). `GET /api/gateway/trigger-sources` lists the sources a gateway serves; packages add sources through the `abstractruntime.trigger_sources` entry-point group.
+What fires an automation, as a versioned adapter: `schedule@1` and `schedule@2` (an interval or a calendar rule, see [Schedule](#schedule)), `email.received@1` (new mail in a mailbox, see [Mail watcher](#mail-watcher)) and `manual@1` (only **Run now**); the next release adds `feed.item@1` and `webhook.received@1`, fed through [trigger connections](#trigger-connection). `GET /api/gateway/trigger-sources` lists the sources a gateway serves; packages add sources through the `abstractruntime.trigger_sources` entry-point group.
 
 ### Tick
 
@@ -224,6 +225,57 @@ One run of an automation's workflow for one tick, one batch of new mail or one *
 ### Discussion
 
 A conversation forked from an automation occurrence (**Discuss**): a new root run in its own session, seeded with the automation's history up to that occurrence, able to read the automation's folder but not change it, and never written back into the automation.
+
+---
+
+## Events and attention
+
+These terms belong to the next release (AbstractRuntime 0.12.0, AbstractGateway 0.16.0; not yet
+published). See [Triggers, attention and push](events-and-attention.md).
+
+### Trigger connection
+
+One person's instance of a trigger source that needs settings: a mailbox, a feed URL, a webhook
+with its signing secret. Registered once on the console's **Triggers** page and bound by
+automations by id; fetched only while an automation uses it.
+
+### Event stream
+
+One ordered stream per person on the gateway (`/api/gateway/me/events`, live at
+`/api/gateway/me/events/stream`): runs started and finished, trigger events, wakes, attention items
+and the notifications each device showed. Every client reads the same stream with a sequence
+cursor.
+
+### Attention item
+
+Something that waits for you: an approval or a question a run is parked on, an automation's result
+or failure, or an alert a flow published. It is open from its `attention.raised` until its
+`attention.seen`, on every device at once.
+
+### Push forwarder
+
+The service that signs the gateway's pushes for Apple and sends them to the AbstractAssistant apps
+on the watch and the iPhone: the publisher's built-in forwarder (not live yet) or your own
+(`abstractgateway push-relay`). One admin setting on the gateway; nothing to set on the devices.
+The push carries no content: the app reads the event from your gateway.
+
+### Notify me
+
+The Flow node that reaches you: an alert on the channels you choose (tray, watch, phone, email,
+console). Since [ADR-0041](adr/0041-no-hidden-effects-after-a-flow.md) every effect toward a person
+is such a node on the canvas; On Flow End only records the outcome (`response`, `success`, `note`).
+
+### After the run
+
+What happened after a run, from records only (`GET /api/gateway/runs/{run_id}/after`, shown in Flow
+and the Observer): what arrived, the note, every alert raised, each delivery with its channel and
+device, or why nothing rang.
+
+### Flow library
+
+AbstractFlow's list of saved flows, sorted by what starts them (Chat, Triggered, Other). It is the
+register of every workflow that runs for a person: agents may draft there, only the operator
+publishes ([ADR-0040](adr/0040-critical-workflows-live-in-the-flow-library.md)).
 
 ---
 
@@ -247,8 +299,10 @@ server, port and security, always visible and pre-filled from the address), **Go
 **Active** switch (off pauses watching, sending and notifications), **Test** and **Disconnect**.
 It is stored encrypted in that user's data folder, and administrators never see or touch it. Its
 recipient rules, send limits and watch folder sit under
-**Advanced** on the same account page. AbstractCore on its own has one account per install
-(`abstractcore email`).
+**Advanced** on the same account page. In the next release a person can connect several
+mailboxes, and each one's access is a choice: **Read only** (the default) or **Read and write**
+(mark, label, move, delete and send). AbstractCore on its own has one account per install
+(`abstractcore email`, with the same access choice from AbstractCore 2.29.0).
 
 ### Mail watcher
 

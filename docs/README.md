@@ -78,6 +78,7 @@ The full component diagram, with memory, semantics and the consoles, is in
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Agent sessions](agent-sessions.md)** | What every client shares when it chats with an agent: the gateway's default agent workflow, the conversation workspace and its built-in protection, skills, live replies, opening the Assistant signed in |
 | **[Automations](automations.md)** | How automations work in practice and how to manage them: an automation is a durable run, each tick a turn; independent vs growing context; creating one from the Assistant, the Observer, AbstractCode or a workflow's defaults; email triggers and email notifications; two worked examples; reading results in every client; pause, run now, resume, edit, archive, discuss; notifications, typed waits, restart safety, limits, troubleshooting |
+| **[Triggers, attention and push](events-and-attention.md)** | Next release (not yet published): trigger connections (mailboxes with Read only or Read and write access, feeds, webhooks), `schedule_run` wakes, your event stream and what waits for you, one notification per Mac, push to the Assistant on the watch and the iPhone through a push forwarder, the Flow library as the register (ADR-0040), no hidden effects after a flow and After the run (ADR-0041), the gateway under load |
 | **[Architecture](architecture.md)** | Component diagram, distribution by registry, how a turn flows and the live-reply lane, app proxies, model eject, framework identity, durable execution primitives, comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway, email accounts |
 | **[Email integration](guide/email-integration.md)** | Your email address and your own mailbox on the gateway: the account page, connecting a mailbox, recipient rules and send limits, agent email tools (off by default), email automations, notifications, sign-in by email, what administrators decide |
@@ -135,7 +136,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | Package | What it is |
 |---|---|
 | [abstractcode](https://github.com/lpalbou/AbstractCode) | Coding client with durable sessions and tool approvals: Rust terminal client (`cargo install abstractcode`) and browser client (`npx @abstractframework/code`) |
-| [abstractassistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client for gateway-native chat and voice |
+| [abstractassistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client for gateway-native chat and voice, and one app for iPhone and Apple Watch (pre-release through TestFlight) |
 | [abstractobserver](https://github.com/lpalbou/AbstractObserver) | Browser UI for monitoring, control, and scheduling |
 | [abstractentity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager and chat/replay UI |
 | [abstractcontinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console |

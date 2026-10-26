@@ -528,13 +528,17 @@ recorded. A wait the gateway does not type is shown without answer controls.
 
 ## Limits
 
-- **Fixed UTC intervals only.** `every` is a fixed duration in seconds, minutes, hours or days.
-  There is no cron expression, no time of day, no weekdays and no time zone: "every 24 hours"
-  means 24 hours after the previous tick, never "daily at 08:00". Write weeks as `7d`.
-- **Three trigger sources.** `schedule@1`, `email.received@1` (your own mailbox) and `manual@1`
-  (runs only on **Run now**). There are no webhook or file-change triggers yet; packages can
-  register new sources through the `abstractruntime.trigger_sources` entry-point group, and
-  `GET /api/gateway/trigger-sources` lists what your gateway serves.
+- **Intervals and calendar rules, no cron.** `schedule@1` is a fixed UTC interval (`every`, in
+  seconds, minutes, hours or days): "every 24 hours" means 24 hours after the previous tick. For
+  "daily at 08:00", weekdays or a day of the month in your time zone, use `schedule@2`
+  (`kind: daily | weekly | monthly | once`, `at`, `time_zone`); the Assistant's **When** choices
+  use it. There is no cron expression.
+- **Trigger sources.** `schedule@1`, `schedule@2`, `email.received@1` (your own mailbox) and
+  `manual@1` (runs only on **Run now**). The next release (not yet published) adds feeds
+  (`feed.item@1`) and webhooks (`webhook.received@1`) as trigger connections; see
+  [Triggers, attention and push](events-and-attention.md). There is no file-change trigger yet.
+  Packages can register new sources through the `abstractruntime.trigger_sources` entry-point
+  group, and `GET /api/gateway/trigger-sources` lists what your gateway serves.
 - **Bounded growing history.** A growing automation replays the most recent 50 000 tokens of whole
   turns; older ticks drop out of its context (they stay in the history), and the oldest replayed
   message says how many were dropped. Automatic

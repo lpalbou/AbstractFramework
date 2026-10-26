@@ -4,10 +4,23 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-Events, triggers and attention, built 2026-10-25 and deployed locally; nothing published yet. Every
-package pin below is a LOCAL version; the publish order is AbstractCore 2.29.0 → AbstractRuntime 0.12.0 →
-AbstractAgent 0.4.0 → AbstractGateway 0.16.0 → ui-kit 0.8.8 → AbstractObserver → AbstractFlow 0.11.0 →
-AbstractAssistant 0.15.0 (watch 0.5.0, iPhone 0.7.0) / AbstractCode 0.11.0 (web 0.12.0) → this root.
+Events, triggers and attention (2026-10-25) and the 2026-10-26 round, built and deployed locally;
+nothing published yet. The versions named here are LOCAL: `pyproject.toml` still pins the published
+releases until this wave ships. The user guide is
+[Triggers, attention and push](docs/events-and-attention.md). Publish order, each step on PyPI or
+npm before the next:
+
+1. AbstractCore 2.29.0 (the mailbox access choice the gateway calls).
+2. AbstractRuntime 0.12.0, published from commit 980f4ab or later: the gateway needs the trusted run
+   index, Publish to channel's `recipient` / `channels` and the split-mode index refresh, which
+   landed after the version number was set.
+3. AbstractAgent 0.4.0.
+4. AbstractGateway 0.16.0 (needs AbstractRuntime 0.12.0 as above, AbstractAgent 0.4.0 and
+   AbstractCore 2.29.0).
+5. ui-kit 0.8.8 (the Observer needs it), then AbstractObserver and AbstractFlow 0.11.0.
+6. AbstractAssistant 0.15.0 (desktop) and AbstractCode 0.11.0 (web 0.12.0); the iPhone and Apple
+   Watch app 0.16.0 ships separately through TestFlight.
+7. This root, with its pins moved to those versions.
 
 - **Triggers native to the runtime**: per-user connections (a mailbox, a feed, a webhook) registered once
   on the gateway's Triggers page and reused by name; CloudEvents-shaped envelopes; feed (RSS/Atom) and
@@ -31,9 +44,22 @@ AbstractAssistant 0.15.0 (watch 0.5.0, iPhone 0.7.0) / AbstractCode 0.11.0 (web 
   in Observer and the Assistant, not in Flow), folded nodes show only their wired pins, New/Open/Save in colour
   with a readable Save state; a catalogue of well-known open feeds (27, verified live, editable copy in the
   data dir) in the console's New connection; RSS 1.0 (RDF) feeds parse; Apple push for the watch and the
-  phone on the gateway side (device routes, dispatcher with a SQLite outbox, `--push-relay` off by default,
+  phone on the gateway side (device routes, dispatcher with a SQLite outbox,
   `abstractgateway push-relay` with fixed localized messages; backlog 1049); ADR-0040 (critical workflows
   live in the Flow library, agents draft, the operator publishes); backlog 1051–1053.
+- **2026-10-26 round**: ADR-0041 (no hidden effects after a flow): On Flow End records `response`,
+  `success` and `note`, **Notify me** chooses whom and where (tray, watch, phone, email, console), the
+  older `notify` pin is a labelled compatibility path, and every run answers **After the run**
+  (`GET /api/gateway/runs/{run_id}/after`, in Flow and the Observer). Push: the forwarder is one admin
+  setting (Built-in, Off or Your own forwarder; the built-in one is not live yet), the console lists
+  your devices, a recently registered watch takes an alert before the iPhone, and the packaged topics
+  are the merged app's ids. AbstractAssistant for iPhone and Apple Watch is one app (0.16.0): the
+  iPhone app carries the watch app, one sign-in in the Keychain shared through the app group,
+  notification service extensions that read each push's event from your gateway. The gateway under
+  load (backlog 1054): run listings from an in-memory index (shadow-checked by default), bounded work
+  pools, account services built off the event loop, garbage-collector tuning, a CI load test on
+  10,000 runs and 100,000 artifacts, and the API and the runs in two processes as an opt-in (split
+  mode).
 - Live test on the operator's gateway: a Gmail message → inbox → automation → local-model judgement →
   attention → tray, console and email (`untracked/roadmap/FINAL.md`).
 

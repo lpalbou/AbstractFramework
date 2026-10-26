@@ -280,7 +280,7 @@ dialogs and touch-sized controls on phones.
 | App | What it does | Install |
 |---|---|---|
 | [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, the gateway's default workflow, workspace files, live replies | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
-| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, follows the gateway's default workflow or your pick, live replies, voice support | `pip install abstractassistant`, or **Open** in the gateway console (starts it signed in) |
+| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client, and one app for iPhone and Apple Watch (pre-release through TestFlight) — gateway-native, follows the gateway's default workflow or your pick, live replies, voice support | `pip install abstractassistant`, or **Open** in the gateway console (starts it signed in) |
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | the gateway console's **Apps** page (served at `/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | the gateway console's **Apps** page (served at `/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | the gateway console's **Apps** page (served at `/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` |
@@ -381,6 +381,7 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/getting-started.md](docs/getting-started.md) | Two entry points + first end-to-end run |
 | [docs/agent-sessions.md](docs/agent-sessions.md) | Default agent workflow, the conversation workspace and its protection, skills, live replies, the Assistant hand-over |
 | [docs/automations.md](docs/automations.md) | Automations: how they work (controller run, occurrences, independent vs growing context), creating and managing them from the Assistant, the Observer or a workflow, notifications, limits |
+| [docs/events-and-attention.md](docs/events-and-attention.md) | Next release (not yet published): trigger connections (mailboxes, feeds, webhooks), your event stream, push to the watch and the iPhone, the Flow library and After the run |
 | [docs/architecture.md](docs/architecture.md) | Component diagram, how a turn flows, the live-reply lane, app proxies, model eject, framework identity, durable execution primitives |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |

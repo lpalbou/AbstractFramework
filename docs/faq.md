@@ -147,8 +147,10 @@ starts one **occurrence**, a run of your workflow that clients show as a questio
   `notify`, when a run fails after its last retry, or when a run waits for you.
 - Creating an automation is the consent for the framework tools its workflow uses; choose **Ask
   each time** to approve every tool batch. MCP tools always ask.
-- Triggers are fixed UTC intervals (`5m`, `8h`, `7d`), new mail in your own mailbox
-  (`email.received@1`) and **Run now**; there is no cron, time of day, webhook or file trigger.
+- Triggers are intervals (`5m`, `8h`, `7d`), calendar rules in your time zone (daily at a time,
+  weekly, monthly), new mail in your own mailbox (`email.received@1`) and **Run now**. Feeds and
+  webhooks come with the next release ([Triggers, attention and push](events-and-attention.md));
+  there is no cron expression and no file trigger.
 
 The full guide, with two worked examples and troubleshooting, is **[Automations](automations.md)**.
 
@@ -160,8 +162,9 @@ Only with an account you connect yourself, and only as far as you allow. Each ga
 their own mailbox on their account page in the web console (**Email** on their row of
 **Accounts**) or the terminal console
 (`@` on the Accounts screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
-rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
-deleted. Every send passes your recipient rules (an allowlist or a denylist of addresses and
+rest and every connection verifies TLS. Reading never changes the mailbox: nothing is marked,
+moved or deleted. In the next release each mailbox's access is your choice, **Read only** (the
+default) or **Read and write**, which lets your flows mark, label, move or delete mail and send. Every send passes your recipient rules (an allowlist or a denylist of addresses and
 domains; a new account allows only your own email address) and your send limits (100 per hour, 1000 per
 day by default), and a send to anyone but you (or the recipients an automation lists) waits for
 your approval. Agents get the email tools only when you switch **Agent email tools** on (off by
@@ -169,6 +172,23 @@ default); administrators never read users' mail. An email-triggered automation t
 mail as untrusted data and never follows its links unless you allow those tools, and mail the
 framework sends automatically through your account never triggers an automation. See
 [Email integration](guide/email-integration.md) and [Email automations](automations.md#email-automations).
+
+## How do notifications reach my watch and iPhone?
+
+Through the AbstractAssistant app (iPhone and Apple Watch, one app, in pre-release through
+TestFlight) and, in the next release, Apple push. On the devices there is nothing to configure:
+sign in and allow notifications. The gateway needs a push forwarder, set once by an admin in the
+console (My email → Notifications → Push forwarder); the built-in forwarder is not live yet, so
+until it is you run your own or the apps catch up when they open. See
+[Triggers, attention and push](events-and-attention.md#push-to-the-watch-and-the-iphone).
+
+## Can an agent publish a workflow for me?
+
+No. A workflow that runs for you is a visual flow in the Flow library that you can open and change;
+an agent may draft one there for your review, and only you publish it
+([ADR-0040](adr/0040-critical-workflows-live-in-the-flow-library.md)). Everything a flow does to
+reach you is a node on its canvas, and **After the run** shows what happened
+([ADR-0041](adr/0041-no-hidden-effects-after-a-flow.md)).
 
 ## Can I use the console and the apps on my phone?
 

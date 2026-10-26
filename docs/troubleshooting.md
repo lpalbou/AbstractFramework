@@ -157,6 +157,15 @@ run the installer again: it continues where it stopped.
   `abstractgateway network set --allowed-origins https://gateway.example.com`. See
   [Phones and tablets: Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https).
 
+### The watch or iPhone gets no notification while the app is closed
+
+Push needs the next release of the gateway (not yet published) and a push forwarder: an admin sets
+it in the console (My email → Notifications → Push forwarder). The built-in forwarder is not live
+yet; without your own, the apps catch up when they open (the watch also about every 15 minutes in
+the background). On the devices, allow notifications for AbstractAssistant; the app registers
+itself at sign-in, and **Devices** on the same console page lists each registered device with its
+last error. See [Triggers, attention and push](events-and-attention.md#push-to-the-watch-and-the-iphone).
+
 ## Models and providers
 
 ### Provider calls fail

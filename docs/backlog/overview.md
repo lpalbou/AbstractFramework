@@ -6,7 +6,7 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files recounted on 2026-10-18 (recursive, topic tracks included; README,
+On-disk item files recounted on 2026-10-26 (recursive, topic tracks included; README,
 overview, template and `evidence/` files excluded). Legacy duplicate IDs remain tracked by
 [0889](planned/0889_normalize_the_legacy_root_backlog.md); counts are files, not unique IDs.
 Before adding 1027, disk counts were 175 planned / 56 proposed / 266 completed / 1 deprecated /
@@ -14,7 +14,7 @@ Before adding 1027, disk counts were 175 planned / 56 proposed / 266 completed /
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 179 | 131 flat + 48 in topic tracks. 1049 Apple push, 1052 folder trigger (2026-10-25), 1054 gateway load (P0, 2026-10-26). Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
+| Planned | 180 | 132 flat + 48 in topic tracks. 1049 Apple push, 1052 folder trigger (2026-10-25), 1054 gateway load (P0, 2026-10-26). Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
 | Proposed | 59 | 51 flat + 8 in topic tracks (1050 events follow-ups, 1051 shipped workflows loadable in Flow, 1053 cloud drive triggers, 2026-10-25). |
 | Completed | 287 | 266 flat + 21 in topic tracks (11 in [events-and-attention](completed/events-and-attention/README.md), 2026-10-25); implementation and release history remain in the ledgers below. |
 | Deprecated | 1 | 0851: operator ruling that the temporary local Agora hub required no rotation. |

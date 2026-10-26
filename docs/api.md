@@ -162,6 +162,7 @@ Field reference: [release-and-manifest.md](installers/release-and-manifest.md).
 | Agent patterns (ReAct, CodeAct, MemAct) | `abstractagent` |
 | Control plane (HTTP server, bundle discovery, SSE) | `abstractgateway` |
 | Automations (recurring and on-demand runs: the object, triggers, commands; the `/api/gateway/automations` API) | `abstractruntime` (`abstractruntime.automations`, `abstractruntime.triggers`) and `abstractgateway`; see [Automations](automations.md) |
+| Trigger connections, your event stream, push devices and the push forwarder, After the run (next release, not yet published) | `abstractruntime` (`abstractruntime.triggers`) and `abstractgateway` (`/api/gateway/triggers/*`, `/me/events`, `/me/push/devices`, `/push/settings`, `/runs/{id}/after`); see [Triggers, attention and push](events-and-attention.md) |
 | Workflow authoring UI | `@abstractframework/flow` (npm) |
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
 | Coding client | `abstractcode` (crates.io) and `@abstractframework/code` (npm) |
@@ -205,7 +206,8 @@ Gateway-hosted automations (on a gateway whose capabilities list
   `POST …/seen` read the runs as chat turns and the attention items;
   `POST …/discuss` forks a discussion from an occurrence.
 - `GET /api/gateway/trigger-sources` lists what can start an automation
-  (`schedule@1`, `manual@1`).
+  (`schedule@1`, `schedule@2`, `manual@1`, `email.received@1` when mailboxes
+  are available; `feed.item@1` and `webhook.received@1` in the next release).
 - `GET /api/gateway/runs` rows carry `session_kind`, `role`, `automation_id`
   and `occurrence_index`.
 

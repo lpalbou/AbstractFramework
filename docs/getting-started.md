@@ -272,7 +272,8 @@ voice and camera in the browser need https
 
 ### 5. Automate recurring work
 
-An automation runs a workflow on a fixed interval and keeps every run as a conversation. Create
+An automation runs a workflow on a schedule (an interval, or a daily, weekly or monthly rule in your
+time zone), when mail arrives or when you ask, and keeps every run as a conversation. Create
 one from the Observer (**Launch → Automate**), from an Assistant conversation (**Schedule this
 conversation…**), or through the gateway API on a gateway that advertises the Automations API.
 `<admin token>` is the gateway's admin token: `abstractgateway serve` prints it when it starts
@@ -301,6 +302,10 @@ arrives**, **Email me the result** and the recipients the automation may email w
 [Email automations](automations.md#email-automations). The same account gives you sign-in by email,
 and your agents get the email tools only when you switch **Agent email tools** on
 ([Email integration](guide/email-integration.md)).
+
+The next release (not yet published) adds feeds and webhooks as triggers, one event stream that
+every client follows, and push to the Assistant on your watch and iPhone: see
+[Triggers, attention and push](events-and-attention.md).
 
 ---
 
@@ -402,11 +407,19 @@ assistant run --prompt "Summarize today's news"   # one turn in the terminal
 Each turn runs the gateway's default workflow for the Assistant, or the workflow you pick in
 Settings → Models → **Workflow**. See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
 
+On iPhone and Apple Watch, AbstractAssistant is one app (pre-release through TestFlight): the iPhone
+app carries the watch app, you sign in once on the iPhone with your gateway's address and an
+account token or an emailed code, and the watch takes the same sign-in. Your gateway must be
+reachable over HTTPS from the phone. See
+[AbstractAssistant for iPhone](https://github.com/lpalbou/AbstractAssistant/blob/main/phone/iphone/README.md)
+and [for Apple Watch](https://github.com/lpalbou/AbstractAssistant/blob/main/watch/apple/README.md).
+
 ---
 
 ## Next steps
 
 - **[Agent sessions](agent-sessions.md)** — default agent workflow, workspace, skills, live replies
+- **[Triggers, attention and push](events-and-attention.md)** — feeds, webhooks, your event stream, push to the watch and the iPhone (next release)
 - **[Architecture](architecture.md)** — the layered model (Core / Runtime / Agent / Gateway / Flow / Observer)
 - **[Configuration](configuration.md)** — where defaults live and how to configure them
 - **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)
