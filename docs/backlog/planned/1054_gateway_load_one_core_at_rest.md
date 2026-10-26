@@ -27,6 +27,12 @@ On the operator's gateway (11,500 runs, 106k artifacts, 13 automations, 23 mail 
 - Clone bench before → after rounds: artifacts 2.24 s → 3 ms, automations 1.04 s → 36 ms p99, `/runs` 172 → 35 ms p99, CPU at rest 24% → 11%; `/me` p99 under load 231 → 56 ms.
 - Live (02:15–03:30, A/B/C only, under five benchmark loads): CPU p50 27%, `/me` 3 ms, connections 3 ms, artifacts 3 ms, automations 26 ms p50; no watchdog restart since 02:07.
 
+## Incidents log (2026-10-26)
+- 00:46, 01:17: `GET /sessions/{id}/artifacts` read all artifacts on the loop (fixed c51f6c0f).
+- 02:05–02:07 (×2): `service.py:170 principal_service_cached` took `_service_lock` on the loop while a boot built services (fixed 8ce6b488).
+- 04:07: the loop blocked in the import lock (`importlib._bootstrap` via `core_config.py:1159 _local_core_payload`, lazy abstractcore config imports) while serving `GET /me/events/stream`, with the machine at load 140 (round 3 worker 2: eager imports at boot + the miss path off the loop).
+- Also: a draft test run hidden from listings raised a wait nobody could see (phantom phone/watch badge): fixed 0196916f, the stale run cancelled.
+
 ## Next (round 3)
 - Trust the run index after a clean night in verify mode (flip the `--run-index` default), GC report check, the remaining on-loop reads (`promote`, `/runs` and `/host/*` `to_thread` sites), the service build itself off the loop.
 - Split runner process opt-in after fixing the `/v1` double model and the cross-process event/mailbox indexes; the CI load test on the clone fixture; the SQLite index only if the in-memory index is not enough.
