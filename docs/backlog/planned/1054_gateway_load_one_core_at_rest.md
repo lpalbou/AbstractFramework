@@ -21,7 +21,17 @@ On the operator's gateway (11,500 runs, 106k artifacts, 13 automations, 23 mail 
 | `_active_consumers` full pass per feed/mail poll | runtime `email/automations.py:70-88` | ~5–7% of a core (fixed: runtime 4cb816b, consumer index) |
 | One process: API + 5 runners + 23 watchers + the model on one GIL; 408 `async def` routes, some doing file work on the loop; one 22-thread pool for 236 call sites | `service.py`, `routes/*` | a 1 ms request waits behind a 240 s one |
 
-## In flight (2026-10-26 night)
+## Done (2026-10-26 night, rounds 1–2; live since the 03:33 restart)
+- Round 1: session artifacts by session through the index, off-loop (2,148 ms → 16 ms; gateway c51f6c0f, runtime 22e6047); runner change token instead of the 0.5 s directory scan (runtime 1dbd19b, gateway 22263c2e); mail check skips when unchanged (966 → 1.2 ms; runtime e517daa, gateway 8e3d2884); automations list from the waiting-runs index + ledger tail, single-flight + 3 s cache, tray back-off (2.4 s → 0.25 s cold / 20 ms warm; runtime 4d33890, gateway 73b6fe85); consumer index (runtime 4cb816b, gateway 77d0a463); clone fixture + `scripts/perf/bench_gateway.sh` + `--gc-tuning` (317f276d).
+- Round 2: trusted in-memory run index (runtime 09d3b63; listing 110 ms → 0.3 ms, 77 s → 0.5 ms beside a busy thread), shipped in `verify` (shadow) mode by `serve --run-index` (f88c3d8e; counters in `/api/health` run_index); lockless service lookup (8ce6b488), pools by kind of work `--pool-light/heavy/watchers` (429dfcf5), sessions in memory (101c37b6); mail check index-only (640cf5ab), host-status caches (ae5325e9: tray polls 55 → 1.5 ms), on-loop scan routes off-loop with mtime caches (396f197c).
+- Clone bench before → after rounds: artifacts 2.24 s → 3 ms, automations 1.04 s → 36 ms p99, `/runs` 172 → 35 ms p99, CPU at rest 24% → 11%; `/me` p99 under load 231 → 56 ms.
+- Live (02:15–03:30, A/B/C only, under five benchmark loads): CPU p50 27%, `/me` 3 ms, connections 3 ms, artifacts 3 ms, automations 26 ms p50; no watchdog restart since 02:07.
+
+## Next (round 3)
+- Trust the run index after a clean night in verify mode (flip the `--run-index` default), GC report check, the remaining on-loop reads (`promote`, `/runs` and `/host/*` `to_thread` sites), the service build itself off the loop.
+- Split runner process opt-in after fixing the `/v1` double model and the cross-process event/mailbox indexes; the CI load test on the clone fixture; the SQLite index only if the in-memory index is not enough.
+
+## In flight (2026-10-26 night) — superseded by the sections above
 - Artifacts by session through the index, off-loop; `GET /runs` off-loop; runner change token instead of the directory scan; mail check skips when unchanged (worker A).
 - Automations list from the waiting-runs index + latest occurrence, single-flight + short cache + cancel on disconnect; tray back-off and "slow to answer" state (worker B).
 - Consumer index (done).
