@@ -140,6 +140,25 @@ branch `round4/2026-10-03`. The shared replay must derive the same answer for ev
 over when a later step of the same run exists, whether or not a resume record was written. Add this
 case to the conformance fixtures.
 
+## Use case: the conversation list and its counts (operator, 2026-10-26)
+
+The iPhone's Conversations list shows "1+" on every row while the watch shows a plain number for
+the same conversations. Checked on 2026-10-26: no client gets a list of conversations from the
+gateway, because no route lists sessions. Every client pages `GET /runs?root_only=true` and folds
+the page by `session_id` itself: the desktop Assistant since 0853 ("the gateway's root runs folded
+by `session_id`, the same fold AbstractCode uses"), AbstractCode's `--resume` asking for the newest
+session, the watch over an 80-run window, the iPhone over a 60-run window. When the window is full,
+every count a row shows (turns, tool calls) is a lower bound: the iPhone says so with "+", the
+watch does not. Three folds, three results, one gateway.
+
+The replay contract should settle it the same way it settles a run's status: the list of
+conversations with its per-conversation figures is a view the gateway serves from one
+reconstruction (an index kept as runs end, backfilled once from the ledger), and no client folds
+run pages to make it. Filed as gateway backlog 0939 (a sessions index with exact counts, one
+request, draft-test sessions hidden like runs). Add to the conformance fixtures: a store with more
+root runs than any client's window, whose conversation rows must carry the same counts in every
+client.
+
 ## Acceptance criteria
 
 - [ ] Inventory document with every replay path and divergence risk (file:line).
