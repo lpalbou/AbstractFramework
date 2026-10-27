@@ -21,7 +21,7 @@ ledger provenance, and (4) consolidates the shared UI primitives in abstractuic.
 | Voice library and personal voices | abstractvoice 0063, 0065 (done, 0.19.0/0.19.1); abstractruntime 0851, 0852 (done, 0.13.0/0.13.1); abstractgateway 0942 (done, unreleased); abstractcore 0857 (planned) | released up to the runtime; gateway main carries it |
 | Architecture rule: no direct lower-level imports | abstractruntime ADR 0008; abstractgateway ADR 0001 | accepted |
 | Shared UI: voice picker, create a voice | abstractuic 0.6.4 / ui-kit 0.8.9 (released); AbstractCode, Observer, Entity merged on main (unreleased); Assistant desktop branch; iPhone/watch branch | in progress |
-| Replayable ledger | root 0993 (master); abstractgateway 0082, 0075; abstractruntime 0853 (reducer + `/view`, in progress) | in progress (blocks gateway 0.16.0) |
+| Replayable ledger | root 0993 (master); abstractgateway 0082, 0075; abstractruntime 0854 + ADR 0010 (reducer, durable seq, conformance cases: released in AbstractRuntime 0.14.0); gateway `/view` routes in PR #8 | runtime done, gateway pending (blocks gateway 0.16.0) |
 | Memory graph consolidation | abstractnote 0033-0036; abstractmemory ADR + items (being written) | audit and design in progress |
 | Shared UI primitives consolidation | abstractuic items (being written): chat, attachments, questions and approvals, tool selection, provider/model/reasoning/MTP picker, voice controls, top-right widgets, drawers | audit in progress |
 
