@@ -41,7 +41,9 @@ client rendered it, and the granting client answered a moment later.
 - Storage: sqlite per data root (per account) beside the run store, keyed by `session_id`, read by
   every run of the session at decision time (turns, delegated children, resumes, restarts). Not in
   run vars (the tick-writer race the steer sidecar removed).
-- Never consulted for untrusted-input runs, automation occurrences, sessionless runs.
+- Approve never reaches untrusted-input runs, automation occurrences, entity visits; deny reaches
+  every run of the session and wins over an approval shown before it. The row is the run tree's
+  root session. POST merges never narrow and are guarded by the revision read.
 - Ledger: `emit_event` `abstract.tool_policy_decision` `{decision: auto_approved|denied, source:
   session_policy, session_id, node_id, tool_calls: [{call_id, name, matched}], policy: {revision,
   set_by, set_at}}`.
@@ -55,10 +57,10 @@ Full text: gateway `docs/api.md` (Session tool policy) and runtime `docs/tool-ap
 
 | Repo | Item | Branch / PR | State |
 |---|---|---|---|
-| abstractruntime | 0853 | `feat/session-tool-policy` | implemented, tests, mutation-checked |
-| abstractgateway | 0943 | `feat/session-tool-policy` | implemented, end-to-end tests through the app |
-| abstractuic (panel-chat) | 0039 | `feat/session-tool-policy` | controller + transport + opt-in approve-all, decision record as activity |
-| abstractassistant (desktop) | — | `feat/session-tool-policy` | grant/revoke through the route, decision record as activity |
+| abstractruntime | 0853 | [AbstractRuntime#7](https://github.com/lpalbou/AbstractRuntime/pull/7) | implemented, tests, mutation-checked, adversarial review fixed |
+| abstractgateway | 0943 | [AbstractGateway#9](https://github.com/lpalbou/AbstractGateway/pull/9) | implemented, end-to-end tests through the app, review fixed |
+| abstractuic (panel-chat) | 0039 | [AbstractUIC#10](https://github.com/lpalbou/AbstractUIC/pull/10) | controller + transport + opt-in approve-all, decision record as activity |
+| abstractassistant (desktop) | — | [AbstractAssistant#4](https://github.com/lpalbou/AbstractAssistant/pull/4) | grant/revoke through the route, decision record as activity, review fixed |
 | abstractassistant (iPhone/watch) | 1062 | — | follow-up: `AssistantStore.approveAll` / `applyConversationTrust` |
 | abstractcode (web, terminal) | — | — | follow-up: stop sending every enabled tool as `require_approval_tools`; use the route through panel-chat's `sessionPolicy` option |
 
