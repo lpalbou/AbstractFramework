@@ -20,8 +20,8 @@
 # If a repo already exists locally, the script fast-forwards it instead of
 # re-cloning (never rebases or merges local commits).
 #
-# The repository list is scripts/lib/packages.txt (21 repositories holding
-# 30 packages); the clone order is the dependency tier order.
+# The repository list is scripts/lib/packages.txt (22 repositories holding
+# 34 packages); the clone order is the dependency tier order.
 #
 # Prerequisites:
 #   - git

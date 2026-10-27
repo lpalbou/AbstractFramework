@@ -4,8 +4,9 @@
 # One row per PUBLISHED PACKAGE (not per repository): a repository can hold
 # several packages (AbstractUIC holds 7 npm packages; abstractgateway holds a
 # Python package and a Rust crate; abstractcode holds a Rust crate and an npm
-# app). Rows are grouped by repository; the scripts derive the repository list
-# from the `repo` column.
+# app; abstractnote holds a Python package and an npm app; abstracttui holds the
+# core crate and its extension crates). Rows are grouped by
+# repository; the scripts derive the repository list from the `repo` column.
 #
 # Format: pipe-separated columns, surrounding spaces ignored, `#` starts a
 # comment line. Loaded by scripts/lib/repo_groups.sh (bash 3.2 / zsh safe) and
@@ -51,6 +52,10 @@ abstractagent           | abstractagent     | lpalbou/AbstractAgent       | pyth
 abstractassistant       | abstractassistant | lpalbou/AbstractAssistant   | python | .                     | pypi     | abstractassistant                      | 4    | abstractcore:dep,abstractruntime:dep,abstractvoice:dep
 abstractgateway         | abstractgateway   | lpalbou/AbstractGateway     | python | .                     | pypi     | abstractgateway                        | 5    | abstractruntime:dep,abstractagent:dep,abstractmemory:dep,abstractcore:dep,abstractskill:dep,abstractvoice:dep
 gateway-console         | abstractgateway   | lpalbou/AbstractGateway     | rust   | console-tui           | crates   | abstractgateway-console                | 2    | abstracttui:dep,core-console:dep
+# AbstractNote: notes app on the gateway. Its graph logic lives in AbstractMemory; it reaches the
+# gateway through its `gateway` extra, and the gateway imports `abstractnote` lazily (optional seam).
+abstractnote            | abstractnote      | lpalbou/AbstractNote        | python | .                     | pypi     | abstractnote                           | 6    | abstractmemory:dep,abstractsemantics:dep,abstractruntime:dep,abstractcore:dep,abstractgateway:extra
+note-web                | abstractnote      | lpalbou/AbstractNote        | npm    | web                   | npm      | @abstractframework/note                | 2    | app-server:dep,ui-kit:dep,panel-chat:dep
 ui-kit                  | abstractuic       | lpalbou/AbstractUIC         | npm    | ui-kit                | npm      | @abstractframework/ui-kit              | 0    | -
 app-server              | abstractuic       | lpalbou/AbstractUIC         | npm    | app-server            | npm      | @abstractframework/app-server          | 0    | -
 monitor-flow            | abstractuic       | lpalbou/AbstractUIC         | npm    | monitor-flow          | npm      | @abstractframework/monitor-flow        | 0    | -
@@ -65,4 +70,6 @@ entity                  | abstractentity    | lpalbou/AbstractEntity      | npm 
 code-web                | abstractcode      | lpalbou/AbstractCode        | npm    | web                   | npm      | @abstractframework/code                | 2    | app-server:dep,ui-kit:dev,panel-chat:dev,monitor-flow:dev,monitor-gpu:dev
 code-cli                | abstractcode      | lpalbou/AbstractCode        | rust   | tui                   | crates   | abstractcode                           | 1    | abstracttui:dep
 abstracttui             | abstracttui       | lpalbou/AbstractTUI         | rust   | .                     | crates   | abstracttui                            | 0    | -
+tui-graph               | abstracttui       | lpalbou/AbstractTUI         | rust   | extensions/graph      | crates   | abstracttui-graph                      | 1    | abstracttui:dep
+tui-mermaid             | abstracttui       | lpalbou/AbstractTUI         | rust   | extensions/mermaid    | crates   | abstracttui-mermaid                    | 2    | abstracttui:dep,tui-graph:dep
 abstractframework       | .                 | lpalbou/AbstractFramework   | meta   | .                     | pypi     | abstractframework                      | 6    | abstractgateway:pin,abstractassistant:pin,abstractcore:pin,abstractruntime:pin,abstractagent:pin,abstractskill:pin,abstractmemory:pin,abstractsemantics:pin,abstractvoice:pin,abstractvision:pin,abstractmusic:pin,abstract3d:pin,flow:app,code-web:app,observer:app,continuum:app,entity:app
