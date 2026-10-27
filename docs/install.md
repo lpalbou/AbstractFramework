@@ -80,6 +80,23 @@ browser. It asks whether to start AbstractFramework at sign-in, like the Mac and
 Enter = yes, no answer within 25 seconds (or no console to ask on) leaves it off on a first install.
 `-NoService` leaves it off and asks nothing.
 
+What runs locally on Windows with the gpu profile (x86_64, NVIDIA):
+
+| Engine | On Windows |
+|---|---|
+| llama.cpp (GGUF models, in the gateway) | Yes: the installer adds llama.cpp's prebuilt CUDA, Vulkan or CPU build. |
+| Hugging Face Transformers | Yes, on PyTorch's CUDA build. |
+| Diffusers (image generation), faster-whisper (speech to text), sentence-transformers | Yes. |
+| Ollama, LM Studio | Yes: install them from the console's **Local engines** page (or `-WithOllama`, `-WithLmStudio`). |
+| vLLM | No native Windows build: run it in WSL2 or on a Linux machine, and point the gateway at that server. |
+| MLX | Apple silicon Macs only. |
+
+Agents' shell commands need a sandbox, and Windows has none that the gateway supports, so the
+gateway refuses those commands on Windows; every other tool works. AbstractGateway's
+[security guide](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md) explains
+`abstractgateway serve --unsandboxed-commands`, which runs them with your account's own file
+access, for a gateway you start yourself.
+
 ## If something goes wrong
 
 The installer stops at the first problem, says what happened in plain words, and says what to do.
@@ -113,7 +130,7 @@ where it stopped.
 ### Right after a release
 
 For a few minutes after a release, some of PyPI's mirrors can still serve a package list without
-the new versions. uv then answers `there is no version of abstractgateway==0.8.1` even though the
+the new versions. uv then answers `there is no version of abstractgateway==0.15.11` even though the
 release is published. The installer (install.sh and install.ps1; the **Update** action of the
 consoles and the menu-bar icon runs install.sh on macOS and Linux, and gives the install.ps1 line to
 paste on Windows) treats that as a delay:
@@ -176,6 +193,21 @@ The line you installed with also upgrades and repairs. Run it again:
 ```bash
 curl -LsSf https://abstractframework.ai/install.sh | sh
 ```
+
+From a gateway 0.15.6 or later, the same upgrade is one command of the gateway, with a preview of
+what changes first:
+
+```bash
+abstractgateway update --check   # what would change: each package installed -> new, and the release notes in between
+abstractgateway update           # the preview, one confirmation, then the installer runs and restarts the gateway
+```
+
+`update --check` exits 0 when you have the newest release and 10 when an update exists, so a script
+can use it. `update` runs the same `install.sh` as the line above (sha-checked, with `--yes`,
+`--no-open`, `--no-modify-path` and this install's data dir), keeps your port, profile and login
+choices, and restarts the gateway service itself. A gateway that runs from a source checkout, a
+container or a plain `pip` install is told how to upgrade instead. `abstractgateway --update` is
+the same command.
 
 On Windows:
 
@@ -267,6 +299,13 @@ a console's **Update** is running, stops with `another AbstractFramework install
 running` and changes nothing; run it again when the first has finished. A run that was interrupted
 (a closed terminal, a crash) leaves a lock that the next run takes over by itself.
 
+### Open the terminal console
+
+`abstractgateway console` (also `abstractgateway --console`) opens the terminal console signed in:
+it finds `abstractgateway-console` next to `abstractgateway` (the installer builds it there) or on
+PATH, and passes it this install's gateway address and admin token; `--url` and `--token` override
+them. Without the console it says how to get it (`cargo install abstractgateway-console`).
+
 ### Upgrade only the gateway
 
 A gateway release can reach PyPI before the next AbstractFramework release. To install the newest
@@ -297,7 +336,8 @@ overrides the installer added are gone. Use the installer.
 
 ### From the console or the menu-bar icon
 
-The gateway's **Update** runs the same installer as the line above. You find it in three places:
+The gateway's **Update** runs the same installer as the line above. You find it in three places
+(and in the terminal as `abstractgateway update`, above):
 
 - the web console: **Resources > Gateway > Version**, then **Check now**;
 - the menu-bar icon: **Check for Updates…**;
@@ -414,7 +454,7 @@ The terminal console and an `abstractcode` built by the installer are upgraded b
 
 ```bash
 abstractgateway --version                    # the installed gateway
-uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.4])
+uv tool list --show-version-specifiers       # the gateway uv tool and its pin ([required: ==0.15.11])
 abstractgateway-console --version            # the terminal console
 abstractcode --version                       # AbstractCode's terminal client
 abstractgateway apps list                    # the apps: installed and latest
@@ -490,7 +530,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.4"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.15.11"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]==0.15.2"` (the release's AbstractVoice): Supertonic
@@ -651,7 +691,7 @@ What to expect on a GPU of this size:
 - **Loaded image models are reused.** After **Load** in the console (or `POST /models/load`),
   image requests run on the loaded model, and an unload frees its memory.
 
-Not validated: vLLM (installed, never started a model here) and the Windows gpu setting.
+Not validated: vLLM (installed, never started a model here).
 
 ### GPU on Windows (NVIDIA)
 
@@ -661,7 +701,7 @@ capability, prints the stack it picks and why, and installs:
 
 | NVIDIA driver | PyTorch | llama.cpp builds tried, in order |
 |---|---|---|
-| 580 or newer, compute capability 7.5 or newer | CUDA 13 (`cu130`, about 1.9 GB) | `cu130`, Vulkan, CPU |
+| 580 or newer, compute capability 7.5 or newer | CUDA 13 (`cu130`, about 1.9 GB) | `cu130`, `cu132`, Vulkan, CPU |
 | 525 or newer | CUDA 12 (`cu126`, about 2.5 GB) | `cu125`, Vulkan, CPU |
 | older, or no working NVIDIA GPU | PyPI's CPU build | Vulkan, CPU |
 
@@ -672,13 +712,22 @@ It announces the big downloads before they start and shows uv's output as it hap
 AbstractCore loads it and reports GPU offload, and which device faster-whisper picks. A part that
 does not work is replaced by one that does: a CUDA install that fails is retried without llama.cpp,
 then with PyTorch's CPU build; a llama.cpp build that does not load (or reports no GPU offload) is
-replaced by the next one, and removed when none loads. The summary's `GPU stack:`, `PyTorch:`,
+replaced by the next one, and removed when none loads. A build is also replaced when it was compiled
+for CPU instructions your processor lacks: llama.cpp's `cu130` build uses AVX-512, which most desktop
+Intel processors do not have, so those computers get the `cu132` build. On a GPU newer than the
+build's CUDA architectures (RTX 50 series), the first model load takes a minute or two while the
+driver compiles the GPU code; later loads reuse it. The summary's `GPU stack:`, `PyTorch:`,
 `GGUF:` and `Whisper:` lines say what runs where, and why. vLLM (Linux only upstream) and
 stable-diffusion.cpp (a source build that needs an elevated MSVC install) are not part of the
-Windows gpu profile; Diffusers on PyTorch covers image and video generation.
+Windows gpu profile; Diffusers on PyTorch covers image generation. Local video generation runs on
+Apple silicon (MLX) only.
 
-The Windows gpu setting has not yet been validated on real NVIDIA hardware: the stack choice, the
-fallbacks and the wheel-only resolves are tested with simulated drivers (root backlog 0988).
+Validated on Windows 10 22H2 with an NVIDIA GeForce RTX 5060 Ti (compute capability 12.0, driver
+617) and an Intel Core i7-5820K (no AVX-512): PyTorch 2.14.1 `cu130` on the GPU; llama.cpp 0.3.35
+`cu132` with GPU offload answering a GGUF chat model; a Hugging Face (transformers) chat model on
+CUDA; Diffusers text-to-image (`stabilityai/sd-turbo`, fp16 on CUDA); Supertonic text-to-speech;
+and faster-whisper `large-v3` speech-to-text on CUDA. The
+stack choice and its fallbacks for older drivers are tested with simulated drivers.
 
 ### Compiled extras
 
@@ -835,7 +884,7 @@ instead of starting a browser.
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.15.4"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.15.11"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -969,10 +1018,10 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.11.6 pins `abstractgateway==0.15.4`, `abstractassistant==0.14.0`,
-`abstractcore==2.26.3`, `AbstractRuntime==0.10.3`, `abstractagent==0.3.19`, `abstractskill==0.3.0`,
-`AbstractMemory==0.3.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.2`,
-`abstractvision==0.3.34`, `abstractmusic==0.1.16` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
+`abstractframework` 0.11.14 pins `abstractgateway==0.15.11`, `abstractassistant==0.14.3`,
+`abstractcore==2.26.3`, `AbstractRuntime==0.10.6`, `abstractagent==0.3.19`, `abstractskill==0.3.1`,
+`AbstractMemory==0.3.1`, `abstractsemantics==0.0.5`, `abstractvoice==0.15.2`,
+`abstractvision==0.3.34`, `abstractmusic==0.1.17` and `abstract3d==0.3.2`. The `apple` and `gpu` extras select
 `abstractgateway[apple|gpu]` and `abstractassistant[apple|gpu]` at the same versions
 (`abstractassistant[apple]` is installed on macOS only). `abstractframework doctor` reports any
 installed package whose version differs from these pins.
@@ -1061,7 +1110,7 @@ Run or install them next to the Python stack:
 | Tool | Command | Version released with 0.11.0 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.14.0 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.26.0 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.26.3 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.8.0 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.16.0 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.9.0 |
@@ -1112,7 +1161,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.15.4
+  ghcr.io/lpalbou/abstractgateway:0.15.11
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without

@@ -95,13 +95,13 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.15.4'
+$AfGatewayPinDefault = '0.15.11'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.11.6'
-$AfPyMatrix = @('abstractcore==2.26.3', 'AbstractRuntime==0.10.3', 'abstractagent==0.3.19', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.15.2', 'abstractvision==0.3.34', 'abstractmusic==0.1.16', 'abstract3d==0.3.2')
+$AfFrameworkVersion = '0.11.14'
+$AfPyMatrix = @('abstractcore==2.26.3', 'AbstractRuntime==0.10.6', 'abstractagent==0.3.19', 'abstractskill==0.3.1', 'AbstractMemory==0.3.1', 'abstractsemantics==0.0.5', 'abstractvoice==0.15.2', 'abstractvision==0.3.34', 'abstractmusic==0.1.17', 'abstract3d==0.3.2')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.10.0', '@abstractframework/code@0.11.2', '@abstractframework/observer@0.8.0', '@abstractframework/continuum@0.7.0', '@abstractframework/entity@0.7.1')
+$AfNpmApps = @('@abstractframework/flow@0.10.1', '@abstractframework/code@0.11.2', '@abstractframework/observer@0.8.0', '@abstractframework/continuum@0.7.0', '@abstractframework/entity@0.7.1')
 $AfCrateConsole = 'abstractgateway-console@0.16.0'
 $AfCrateCodeCli = 'abstractcode@0.10.0'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
@@ -330,11 +330,20 @@ function Test-GatewayCommandLine([string]$CommandLine) {
     return ($CommandLine -match '(?i)abstractgateway' -and $CommandLine -match '(?i)(^|[\s"])serve(\s|"|$)')
 }
 # Test-OurBackgroundListener: the listener is the installer's background gateway (gateway.pid), or
-# its child (the launcher's python.exe). No listener named: the gateway.pid process counts.
+# a process it started. No listener named: the gateway.pid process counts. The listener can sit
+# two levels below gateway.pid: uv's abstractgateway.exe launcher starts the tool venv's python.exe,
+# which on Windows is itself a redirector that starts the base interpreter, and that one listens.
+# Checking only the direct parent took the installer's own gateway for one "started by hand".
 function Test-OurBackgroundListener([int]$Listener, [int]$OurPid) {
     if (-not $OurPid) { return $false }
     if (-not $Listener -or $Listener -eq $OurPid) { return $true }
-    return ((Get-ParentProcessId $Listener) -eq $OurPid)
+    $p = $Listener
+    for ($depth = 0; $depth -lt 3; $depth++) {
+        $p = Get-ParentProcessId $p
+        if (-not $p -or $p -le 4) { return $false }
+        if ($p -eq $OurPid) { return $true }
+    }
+    return $false
 }
 # Get-DeclaredDataDir: the --data-dir on a command line (quoted or not, or --data-dir=), '' when none.
 function Get-DeclaredDataDir([string]$CommandLine) {
@@ -424,7 +433,8 @@ function Find-OwnGateway([int]$Port, [string]$DataDir) {
 # ---------------------------------------------------------------------------
 # The gpu setting on Windows + NVIDIA (root backlog 0988). PyPI's Windows torch is a CPU build;
 # the CUDA builds live on download.pytorch.org. The stack follows the NVIDIA driver:
-#   driver >= 580 and compute capability >= 7.5 -> CUDA 13: torch cu130, llama.cpp cu130
+#   driver >= 580 and compute capability >= 7.5 -> CUDA 13: torch cu130, llama.cpp cu130, then cu132
+#                                                  (cu130 is built with AVX-512, cu132 is not)
 #   driver >= 525                               -> CUDA 12: torch cu126, llama.cpp cu125
 #   anything else (no NVIDIA, older driver)     -> PyTorch's CPU build, llama.cpp vulkan, else cpu
 # `uv tool install --torch-backend <cuXXX>` routes only the PyTorch packages to that index (uv
@@ -438,7 +448,7 @@ function Find-OwnGateway([int]$Port, [string]$DataDir) {
 $AfTorchIndex = 'https://download.pytorch.org/whl'
 # PyTorch versions of the release (uv resolves them; the explicit-index fallback pins them +cuXXX).
 $AfTorchPins = [ordered]@{ 'torch' = '2.14.0'; 'torchvision' = '0.29.0'; 'torchaudio' = '2.11.0' }
-$AfLlamaSizes = @{ 'cu130' = 'about 220 MB'; 'cu125' = 'about 480 MB'; 'vulkan' = 'about 45 MB'; 'cpu' = 'about 7 MB' }
+$AfLlamaSizes = @{ 'cu130' = 'about 220 MB'; 'cu132' = 'about 220 MB'; 'cu125' = 'about 480 MB'; 'vulkan' = 'about 45 MB'; 'cpu' = 'about 7 MB' }
 $script:HeartbeatSeconds = 15
 
 # What nvidia-smi says: Ok, Driver, DriverMajor, Cc (the lowest compute capability, or $null when
@@ -494,7 +504,7 @@ function Select-GpuStack($Info) {
             Why = "no working NVIDIA GPU ($($Info.Error)): PyTorch's CPU build; llama.cpp tries its Vulkan build, then its CPU build" }
     }
     if ($Info.DriverMajor -ge 580 -and $null -ne $Info.Cc -and $Info.Cc -ge 7.5) {
-        return @{ Name = 'cu130'; Torch = 'cu130'; Llama = @('cu130', 'vulkan', 'cpu'); Label = 'CUDA 13'; TorchSize = 'about 1.9 GB'
+        return @{ Name = 'cu130'; Torch = 'cu130'; Llama = @('cu130', 'cu132', 'vulkan', 'cpu'); Label = 'CUDA 13'; TorchSize = 'about 1.9 GB'
             Why = "${gpu}driver $($Info.Driver) (580 or newer) and compute capability $ccText (7.5 or newer)" }
     }
     if ($Info.DriverMajor -ge 525) {
@@ -614,6 +624,16 @@ try:
     if callable(init):
         init()
     r["offload"] = bool(llama_cpp.llama_supports_gpu_offload())
+    # The CPU instructions this build was compiled for, against this processor's: a build made
+    # with AVX-512 imports here but ends the process with an illegal instruction (0xc000001d)
+    # at its first model load on a CPU without it (most desktop Intel CPUs).
+    info = llama_cpp.llama_print_system_info()
+    info = info.decode("utf-8", "replace") if isinstance(info, bytes) else str(info or "")
+    built = [k.strip() for k, _, v in (p.partition("=") for p in info.split("|")) if v.strip() == "1"]
+    import ctypes
+    pf = {"AVX": 39, "AVX2": 40, "AVX512": 41}
+    have = ctypes.windll.kernel32.IsProcessorFeaturePresent
+    r["cpu_missing"] = [k for k in built if k in pf and not have(pf[k])]
 except BaseException as e:
     r["error"] = "%s: %s" % (type(e).__name__, e)
 print("AFSMOKE " + json.dumps(r))
@@ -674,12 +694,13 @@ function Resolve-LlamaBuild([string[]]$Variants, [string]$Installed, [scriptbloc
             $current = $v
         }
         $r = & $Check $v
-        if ($r -and $r.import -and ($v -eq 'cpu' -or $r.offload)) {
+        $cpuMissing = @(if ($r -and $r.cpu_missing) { $r.cpu_missing })
+        if ($r -and $r.import -and -not $cpuMissing.Count -and ($v -eq 'cpu' -or $r.offload)) {
             $where = if ($r.offload) { 'GPU offload' } else { 'CPU' }
             Write-Ok "llama.cpp $($r.version) ($v build): loads, $where"
             return @{ Kept = $v; Where = $where; Why = $why }
         }
-        $reason = if (-not $r) { 'no answer from the check' } elseif (-not $r.import) { "does not load: $($r.error)" } else { 'loads, but reports no GPU offload' }
+        $reason = if (-not $r) { 'no answer from the check' } elseif (-not $r.import) { "does not load: $($r.error)" } elseif ($cpuMissing.Count) { "is built for CPU instructions this processor lacks ($($cpuMissing -join ', '))" } else { 'loads, but reports no GPU offload' }
         Write-Warn2 "llama.cpp $v build $reason$(if ($v -ne $Variants[-1]) { '; trying the next build' })"
         $why += "${v}: $reason"
     }
@@ -2410,9 +2431,11 @@ function Main {
             try {
                 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $pointerFile) | Out-Null
                 $body = [ordered]@{ data_dir = $mine; port = $Port; schema = 1; updated_at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); url = $baseUrl; written_by = 'installer' }
+                # [NullString]::Value, not $null: PowerShell passes $null to a .NET string parameter as "", and
+                # File.Replace refuses "" as the backup path, so a pointer the gateway already wrote was never updated.
                 $tmp = "$pointerFile.$PID.tmp"
                 [System.IO.File]::WriteAllText($tmp, ($body | ConvertTo-Json) + "`n", (New-Object System.Text.UTF8Encoding($false)))
-                if (Test-Path -LiteralPath $pointerFile) { [System.IO.File]::Replace($tmp, $pointerFile, $null) } else { [System.IO.File]::Move($tmp, $pointerFile) }
+                if (Test-Path -LiteralPath $pointerFile) { [System.IO.File]::Replace($tmp, $pointerFile, [NullString]::Value) } else { [System.IO.File]::Move($tmp, $pointerFile) }
                 Write-Ok "gateway pointer: $pointerFile -> $baseUrl (the consoles and apps on this computer find the gateway there)"
             } catch {
                 Remove-Item -LiteralPath "$pointerFile.$PID.tmp" -Force -ErrorAction SilentlyContinue
@@ -2441,6 +2464,9 @@ function Main {
     }
 
     Write-Step "Browser apps (this release's versions)"
+    # The gateway answered the health check above, but it may still be finishing its start (runners,
+    # rehydration, its apps: "status": "starting") or answer late while it loads its engines:
+    # Test-GatewayUp waits for it (up to 60 s); a port with nothing listening is a verdict at once.
     $appsUp = (Test-Path -LiteralPath $gw) -and (Test-GatewayUp $baseUrl)
     Invoke-AppsStep -Up $appsUp -Gw $gw -BaseUrl $baseUrl -DataDir $DataDir
 
@@ -2571,6 +2597,9 @@ function Main {
     if ($voice.Spec) { Write-Host "  Voice:      $($voice.Result)" } else { Write-Host "  Voice:      $($voice.Result)" -ForegroundColor Red }
     if ($whisperResult) { Write-Host "  Whisper:    $whisperResult" }
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
+    if ($onWindows) {
+        Write-Host "  Shell:      agents' shell commands are refused on Windows (no command sandbox); every other tool works ($AfDocs#windows)"
+    }
     Write-Host "  Apps:       $baseUrl/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
     Write-Host "  Standalone: npx -y @abstractframework/flow --gateway-url $baseUrl   (advanced; also code, observer, continuum, entity)"
     Write-Host "  Docs:       $AfDocs"
@@ -2596,6 +2625,14 @@ function Main {
     }
 }
 
+# The caller's $ErrorActionPreference is not ours: the short address (abstractframework.ai/install.ps1)
+# sets 'Stop' before it runs this script with Invoke-Expression, which shares the caller's scope. Under
+# 'Stop', Windows PowerShell 5.1 turns any line a native program writes to stderr into a terminating
+# error, even with 2>$null (`uv tool list` printing "No tools installed" on a first install aborted
+# step [4]). The installer checks exit codes itself and passes -ErrorAction Stop where it wants a
+# throw, so it runs under the default 'Continue', as `-File` does; the caller's value comes back after.
+$AfCallerErrorAction = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
 try {
     Main
 } catch {
@@ -2608,6 +2645,7 @@ try {
     if ($script:RanAsFile) { exit 1 }
 } finally {
     Unlock-Install
+    $ErrorActionPreference = $AfCallerErrorAction
 }
 # 1 when a part a re-run can install is missing (crates.io lag or the network after the retries).
 if ($script:AfExit -and $script:RanAsFile) { exit 1 }

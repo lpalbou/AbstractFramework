@@ -73,6 +73,115 @@ entries for OpenAI-compatible endpoints that serve image models. With it, **Abst
 (endpoint image routes run in process), **AbstractCore 2.26.3** and **AbstractVision 0.3.34**. Other
 package pins are unchanged.
 
+## [0.11.14] - 2026-10-19
+
+Pins **AbstractGateway 0.15.11** and **AbstractMemory 0.3.1** across the light, Apple and GPU
+profiles. Other package pins are unchanged from 0.11.13.
+
+- The gateway carries an optional seam for AbstractNote (a notebook of your own notes as a temporal
+  knowledge graph, a separate package): when `abstractnote` is installed in the gateway's environment,
+  its tools are bound per plane next to the skills, its `/api/gateway/note` routes answer behind the
+  gateway sign-in and its workflows load in every plane; the console's Apps page lists the Note app.
+  Without the package the gateway behaves as before.
+- AbstractMemory's SQLite and in-memory stores can close an assertion in place (`close_assertion`),
+  which a superseded claim needs; nothing else changes for callers.
+- The `abstractnote` checkout is ignored by the root repository like the other sibling packages.
+- Who is affected: everyone upgrading; `abstractgateway update` shows this and runs it.
+
+## [0.11.13] - 2026-10-19
+
+Pins **AbstractGateway 0.15.10** and **abstractassistant 0.14.3** across the light, Apple and GPU
+profiles. Other package pins are unchanged from 0.11.12.
+
+- The built-in Assistant orchestrator (revision 8, shipped in the gateway as bundle 0.0.15 and
+  republished by the desktop Assistant on its next launch): the routing decision no longer reads or
+  appends the conversation's turns, and a request for a spoken reading of a named passage or scene
+  routes to the voice route, never to audio generation.
+- ADR-0039: loading states in the clients (a spinner until a read answers, an error only once every
+  try has failed).
+- Who is affected: everyone upgrading; `abstractgateway update` shows this and runs it.
+
+## [0.11.12] - 2026-10-19
+
+Pins **AbstractGateway 0.15.9** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.11.
+
+- Notification emails are written for the person who receives them: one AbstractFramework layout for
+  every notice, a subject that names the workflow or entity (never a node id), the context (who
+  started it and when), what is asked (each tool call with its label and its whole arguments, or the
+  question and its choices), an **Open in the console** button to the exact run and an **Open in
+  AbstractCode** button when the run has a session, a plain-text twin, and one email per wait instead
+  of one per retry. Answering from the email itself is backlog 1028.
+- Who is affected: everyone with email notifications on; `abstractgateway update` shows this and runs it.
+
+## [0.11.11] - 2026-10-18
+
+Pins **AbstractGateway 0.15.8** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.10.
+
+- Web console: a connected mailbox can be reconfigured in place (**Configure** next to Test and
+  Disconnect; a failed update keeps the existing connection; passwords and secrets are never shown).
+  A Google or Microsoft sign-in cancelled while its approval was pending can no longer replace the
+  mailbox afterwards. The test notification carries a console link, a security notice and an HTML
+  part. Sign-in pages accept the account's registered email in place of the account id.
+- Entities carry an appearance for client apps (orb colour and shape), set at creation or through
+  `PUT /api/gateway/entities/{name}/appearance` by an admin or the entity's creator.
+- Who is affected: everyone upgrading; `abstractgateway update` shows exactly this and runs it.
+
+## [0.11.10] - 2026-10-18
+
+Pins **AbstractGateway 0.15.7**, **AbstractRuntime 0.10.6**, **abstractassistant 0.14.2**,
+**abstractskill 0.3.1** and the npm app **flow 0.10.1** across the light, Apple and GPU profiles.
+Other package pins are unchanged from 0.11.9.
+
+- Conversation search: `GET /api/gateway/sessions/search` finds your own conversations by words in
+  the question, the answer or the media they produced or received (a per-plane index the gateway
+  builds on first search and keeps current; exact matches first, a fuzzy pass when nothing matches).
+  The Apple Watch and the consoles use it.
+- Automations keep durable named tool policies; conversations record tool approvals and answer
+  metrics; the built-in Assistant orchestrator ships as bundle 0.0.13 with a voice mode (ask for a
+  spoken answer and get a recording) and a router that follows the run's text route. The desktop
+  Assistant 0.14.2 carries the same workflow.
+- Flow: releasing a wire dragged from a boolean output on empty canvas offers If/Else first.
+- Who is affected: everyone upgrading; `abstractgateway update` (0.15.6 and later) shows exactly this
+  and runs the upgrade.
+
+## [0.11.9] - 2026-10-18
+
+Pins **AbstractGateway 0.15.6** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.8.
+
+- `abstractgateway update` upgrades an installer install from a terminal: it previews every package
+  whose version changes and the release notes in between, asks once, then runs the same installer as
+  the one-line command and restarts the gateway; `--check` only reports (exit 10 when an update
+  exists). `abstractgateway console` opens the terminal console signed in. Both also work as
+  `--update` and `--console`. See [Upgrade](docs/install.md#upgrade).
+- Who is affected: anyone running a gateway installed by the one-line installer; a gateway run from a
+  source checkout or a container is told how to upgrade instead.
+
+## [0.11.8] - 2026-10-18
+
+Pins **AbstractGateway 0.15.5** and **AbstractRuntime 0.10.5** across the light, Apple and GPU
+profiles (0.10.5 is 0.10.4's fix with the pooled client's wiring done in one place, after an
+adversarial review). Other package pins are unchanged from 0.11.7.
+
+- Image generation routed to a provider endpoint profile (an OpenAI-compatible relay chosen as the
+  image route, in the console's sandbox or a workflow) reaches that endpoint with its stored
+  credential, in process. Before this, the runtime's call handler rewrote the route's `endpoint:<id>`
+  provider into a bare provider family before the media client saw it, and the generation failed
+  asking for a base URL the gateway already held. Nothing in the gateway asks for a URL or key that
+  is already configured.
+- Who is affected: anyone whose image (or video, or voice) route is set to a gateway endpoint
+  profile. Upgrade with the one-line installer; a gateway started from a checkout must be restarted
+  on the new packages.
+
+## [0.11.7] - 2026-10-18
+
+Pins **AbstractGateway 0.15.4** across the light, Apple and GPU profiles: a cold first start no longer
+exits on the gateway's event-loop watchdog while a signed-in caller's service is built (a fresh
+install's first minute; a background-started gateway stayed down). Other package pins are unchanged
+from 0.11.6.
+
 - The browser-apps step of `install.sh` and `install.ps1` no longer decides on one health request. A
   gateway that is slow to answer right after its start (it loads its engines) or still says it is
   starting is waited for, up to 60 s, before the apps are brought to this release's versions; only

@@ -55,14 +55,14 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.11.6` for this release).
+The meta-package version (`0.11.14` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.11.6:
-`abstractcore` 2.26.3, `abstractruntime` 0.10.3, `abstractagent` 0.3.19, `abstractgateway` 0.15.4,
-`abstractskill` 0.3.0, `abstractmemory` 0.3.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.15.2, `abstractvision` 0.3.34,
-`abstractmusic` 0.1.16, `abstract3d` 0.3.2, `abstractassistant` 0.14.0.
+Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.11.14:
+`abstractcore` 2.26.3, `abstractruntime` 0.10.6, `abstractagent` 0.3.19, `abstractgateway` 0.15.11,
+`abstractskill` 0.3.1, `abstractmemory` 0.3.1, `abstractsemantics` 0.0.5, `abstractvoice` 0.15.2, `abstractvision` 0.3.34,
+`abstractmusic` 0.1.17, `abstract3d` 0.3.2, `abstractassistant` 0.14.3.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -72,7 +72,7 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.10.0, `@abstractframework/code` 0.11.2,
+`@abstractframework/flow` 0.10.1, `@abstractframework/code` 0.11.2,
 `@abstractframework/observer` 0.8.0, `@abstractframework/continuum` 0.7.0 and
 `@abstractframework/entity` 0.7.1. They also appear as `npm_apps` in the install manifest.
 
@@ -162,7 +162,6 @@ Field reference: [release-and-manifest.md](installers/release-and-manifest.md).
 | Agent patterns (ReAct, CodeAct, MemAct) | `abstractagent` |
 | Control plane (HTTP server, bundle discovery, SSE) | `abstractgateway` |
 | Automations (recurring and on-demand runs: the object, triggers, commands; the `/api/gateway/automations` API) | `abstractruntime` (`abstractruntime.automations`, `abstractruntime.triggers`) and `abstractgateway`; see [Automations](automations.md) |
-| Trigger connections, your event stream, push devices and the push forwarder, After the run (next release, not yet published) | `abstractruntime` (`abstractruntime.triggers`) and `abstractgateway` (`/api/gateway/triggers/*`, `/me/events`, `/me/push/devices`, `/push/settings`, `/runs/{id}/after`); see [Triggers, attention and push](events-and-attention.md) |
 | Workflow authoring UI | `@abstractframework/flow` (npm) |
 | Monitoring / operations UI | `@abstractframework/observer` (npm) |
 | Coding client | `abstractcode` (crates.io) and `@abstractframework/code` (npm) |
@@ -206,8 +205,7 @@ Gateway-hosted automations (on a gateway whose capabilities list
   `POST …/seen` read the runs as chat turns and the attention items;
   `POST …/discuss` forks a discussion from an occurrence.
 - `GET /api/gateway/trigger-sources` lists what can start an automation
-  (`schedule@1`, `schedule@2`, `manual@1`, `email.received@1` when mailboxes
-  are available; `feed.item@1` and `webhook.received@1` in the next release).
+  (`schedule@1`, `manual@1`).
 - `GET /api/gateway/runs` rows carry `session_kind`, `role`, `automation_id`
   and `occurrence_index`.
 

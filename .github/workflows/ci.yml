@@ -150,12 +150,25 @@ jobs:
           }
           $env:PATH = $plain
 
-      - name: Install the published pin (install.ps1, Windows PowerShell 5.1)
+      # The way the one-liner runs it: abstractframework.ai/install.ps1 sets $ErrorActionPreference
+      # 'Stop' and evaluates this script in its own scope, where Windows PowerShell 5.1 turns a native
+      # program's stderr line into a terminating error ("No tools installed" from `uv tool list`
+      # aborted a first install at step [4] in 0.11.3). `shell: powershell` steps run under 'Stop' too.
+      - name: Install the published pin (install.ps1 as the one-liner runs it, Windows PowerShell 5.1)
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          powershell -NoProfile -ExecutionPolicy ByPass -File scripts/install.ps1 -NoService -NoOpen -NoModifyPath -Profile light -Port 18080
+          # In a child powershell, like the one-liner (and so the background gateway outlives this step).
+          Set-Content -Path one-liner.ps1 -Encoding UTF8 -Value @'
+          $ErrorActionPreference = 'Stop'
+          & ([scriptblock]::Create((Get-Content -Raw scripts/install.ps1))) -NoService -NoOpen -NoModifyPath -Profile light -Port 18080
+          if ($ErrorActionPreference -ne 'Stop') { Write-Error "the installer left the caller's ErrorActionPreference at $ErrorActionPreference"; exit 3 }
+          '@
+          powershell -NoProfile -ExecutionPolicy ByPass -File one-liner.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $uvBin = Join-Path $env:USERPROFILE '.local\bin'
+          $toolBin = & (Join-Path $uvBin 'uv.exe') tool dir --bin
+          if (-not (Test-Path -LiteralPath (Join-Path $toolBin 'abstractgateway.exe'))) { throw 'abstractgateway was not installed' }
 
       - name: Health (Windows)
         if: runner.os == 'Windows'
