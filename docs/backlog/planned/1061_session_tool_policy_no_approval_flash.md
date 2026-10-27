@@ -1,6 +1,6 @@
 # 1061 — Session tool policy: "approve all" held server-side, no approval gate flash in any app
 
-> Package: abstractruntime (decision + store, its 0853), abstractgateway (routes + clamp, its 0943), abstractuic (`@abstractframework/panel-chat`, its 0039), abstractassistant (desktop; iPhone/watch follow-up, its 1062), abstractcode (web + terminal, follow-up)
+> Package: abstractruntime (decision + store, its 0853), abstractgateway (routes + clamp, its 0946), abstractuic (`@abstractframework/panel-chat`, its 0039), abstractassistant (desktop; iPhone/watch follow-up, its 1062), abstractcode (web + terminal, follow-up)
 > Type: feature
 > Created: 2026-10-27
 > Priority: high
@@ -57,9 +57,9 @@ Full text: gateway `docs/api.md` (Session tool policy) and runtime `docs/tool-ap
 
 | Repo | Item | Branch / PR | State |
 |---|---|---|---|
-| abstractruntime | 0853 | [AbstractRuntime#7](https://github.com/lpalbou/AbstractRuntime/pull/7) | implemented, tests, mutation-checked, adversarial review fixed |
-| abstractgateway | 0943 | [AbstractGateway#9](https://github.com/lpalbou/AbstractGateway/pull/9) | implemented, end-to-end tests through the app, review fixed |
-| abstractuic (panel-chat) | 0039 | [AbstractUIC#10](https://github.com/lpalbou/AbstractUIC/pull/10) | controller + transport + opt-in approve-all, decision record as activity |
+| abstractruntime | 0853 | [AbstractRuntime#7](https://github.com/lpalbou/AbstractRuntime/pull/7) | merged, released in 0.14.0 |
+| abstractgateway | 0946 | [AbstractGateway#9](https://github.com/lpalbou/AbstractGateway/pull/9) | implemented, end-to-end tests through the app, review fixed |
+| abstractuic (panel-chat) | 0039 | [AbstractUIC#11](https://github.com/lpalbou/AbstractUIC/pull/11) + [#9](https://github.com/lpalbou/AbstractUIC/pull/9) (UI-primitives track; supersede #10) | conversation grants through the route, decision record as activity |
 | abstractassistant (desktop) | — | [AbstractAssistant#4](https://github.com/lpalbou/AbstractAssistant/pull/4) | grant/revoke through the route, decision record as activity, review fixed |
 | abstractassistant (iPhone/watch) | 1062 | — | follow-up: `AssistantStore.approveAll` / `applyConversationTrust` |
 | abstractcode (web, terminal) | — | — | follow-up: stop sending every enabled tool as `require_approval_tools`; use the route through panel-chat's `sessionPolicy` option |
