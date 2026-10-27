@@ -15,7 +15,7 @@ Before adding 1027, disk counts were 175 planned / 56 proposed / 266 completed /
 | State | Files | Notes |
 |---|---|---|
 | Planned | 180 | 132 flat + 48 in topic tracks. 1049 Apple push, 1052 folder trigger (2026-10-25), 1054 gateway load (P0, 2026-10-26). Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
-| Proposed | 59 | 51 flat + 8 in topic tracks (1050 events follow-ups, 1051 shipped workflows loadable in Flow, 1053 cloud drive triggers, 2026-10-25). |
+| Proposed | 63 | 55 flat + 8 in topic tracks (1050 events follow-ups, 1051 shipped workflows loadable in Flow, 1053 cloud drive triggers, 2026-10-25; 1056 workflows as the central primitive, 1057 AbstractDesigner, 1058 unified push, 1059 queryable runtime holdings, 2026-10-27). Recurrent: 1060 gateway security, resilience and latency standing duty. |
 | Completed | 287 | 266 flat + 21 in topic tracks (11 in [events-and-attention](completed/events-and-attention/README.md), 2026-10-25); implementation and release history remain in the ledgers below. |
 | Deprecated | 1 | 0851: operator ruling that the temporary local Agora hub required no rotation. |
 | Recurrent | 2 | [recurrent/](recurrent/README.md): backlog/ADR hygiene and post-completion follow-up triage. |
