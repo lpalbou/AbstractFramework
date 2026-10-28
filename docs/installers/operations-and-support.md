@@ -48,8 +48,10 @@ Add `--json` for tooling and `--no-network` to skip the HTTP probes.
 
 ## Uninstall
 
-`sh uninstall.sh` (or the **Uninstall AbstractFramework.command** file) asks before removing
-anything; `sh install.sh --uninstall [--purge] [--remove-uv]` or `install.ps1 -Uninstall [-Purge]`
+`curl -LsSf https://abstractframework.ai/uninstall.sh | sh` (or `sh uninstall.sh`; on macOS, the
+**Uninstall AbstractFramework.command** file) asks before removing anything. It also removes a
+login item turned on after the install when it starts this install's gateway, and on Linux prints
+`sudo loginctl disable-linger <user>` when lingering is on (never run for you); `sh install.sh --uninstall [--purge] [--remove-uv]` or `install.ps1 -Uninstall [-Purge]`
 do the same without the questions. Data is kept unless you purge it. See
 [Remove AbstractFramework](../install.md#remove-abstractframework).
 

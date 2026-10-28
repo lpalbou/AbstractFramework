@@ -56,20 +56,22 @@ real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) an
 [GPU on Windows](docs/install.md#gpu-on-windows-nvidia).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
-with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
+with local voice (Supertonic text-to-speech and Whisper speech-to-text; the default voice downloads
+once: `abstractgateway models download supertonic supertonic-3`), asks whether to start it
 at login (Enter = yes; an unattended install leaves it off and says how to turn it on), starts it
 on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
 then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
 machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
 **Setup** button at the bottom of the console's sidebar runs the guide again, keeping your choices
-unless you replace them. The installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
+unless you replace them. The installer also builds the terminal console, `abstractgateway-console` (it needs a C compiler;
+without one the installer says it skipped it and how to add one), which runs the same guide on
 a server without a browser and offers itself at the end of an install over SSH
 ([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
 
 Every failure says what to do next; running the installer again repairs the install in place. To
-remove it, double-click `Uninstall AbstractFramework.command` (in
-`~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
-`curl -LsSf https://abstractframework.ai/uninstall.sh | sh`.
+remove it, run `curl -LsSf https://abstractframework.ai/uninstall.sh | sh` (macOS: or double-click
+`Uninstall AbstractFramework.command`, in `~/Library/Application Support/AbstractFramework/Installer`
+after a package install). On a Linux server, see [Deploy on a Linux server](docs/deploy-linux.md).
 Step by step, the failure table, options (`--with-apps`, `--with-ollama`, `--print`, …):
 [Install](docs/install.md). Something not working: [Troubleshooting](docs/troubleshooting.md).
 
@@ -574,6 +576,7 @@ Notes for LLMs working in this repo:
 - [docs/README.md](docs/README.md): Docs index for this repo.
 - [docs/install.md](docs/install.md): Mac installer (with the one-time Open Anyway step), one-line bootstrap (install.sh / install.ps1: what it does, options, CLI equivalents, run at login, Network setting, uninstall), upgrade (PyPI/crates.io index lag and network failures run the same full install again, then stop with exit 1 and the command to re-run; a port changed in a console is kept; anything left out, e.g. local voice on a system without its wheels, is said in red), terminal console and AbstractCode's terminal client built by default (`--no-console`, `--no-code-cli`), the commands you get (every command on PATH with what it does: `abstractgateway-config` is the gateway's admin command; all of AbstractCore's commands, its apps `summarizer`/`extractor`/`judge`/`intent`/`deepsearch` included, and the voice, vision and music commands, unless `--no-core-cli`; a package whose name is taken is left out), signing `abstractcode` in (`abstractcode login --token <admin token>` once, or `abstractgateway apps tui-command code` on the gateway's computer), headless or remote machine setup (the start-at-login question and the console offer over SSH, the terminal console with `--gateway-url` and `--token`, its Network screen `N`, one SSH tunnel for the console and every app at `/apps/<app>/`), the local gateway pointer, Light / Apple / GPU chooser, GPU on Linux and Windows (NVIDIA; measured install and per-capability timings on a Quadro RTX 5000; speech input set in the fresh setup and `av<19`, sequential CPU offload next to a loaded text model, loaded image models reused), right after a release (the index-lag and network retry), generated manifest contract.
 - [docs/installers/README.md](docs/installers/README.md): Install design: script bootstrap + gateway console (strategy, per-OS journeys, components, OS security/sudo/UAC/execution policy, manifest, operations).
+- [docs/deploy-linux.md](docs/deploy-linux.md): A fresh Linux server, copy-paste: NVIDIA driver (`ubuntu-drivers-common` first on cloud images), the one-line install, the gateway as a systemd user service with `sudo loginctl enable-linger` (without it the service stops at SSH logout and does not start at boot), sign-in through an SSH tunnel, a first GGUF model on llama.cpp (not LM Studio), the default voice download (`abstractgateway models download supertonic supertonic-3`), apps, uninstall, FAQ.
 - [docs/getting-started.md](docs/getting-started.md): Practical entry paths (core, runtime, gateway, UIs, bundles).
 - [docs/agent-sessions.md](docs/agent-sessions.md): What every client shares when it chats with an agent: the gateway's default agent workflow (`agents.default_workflow.<interface>`), the conversation workspace on the gateway host and its built-in deny list, the curated skill shelf (`skills.shelf`), live replies (`agents.streaming_default` + per-client Stream replies; what does not stream), opening the Assistant signed in from the console.
 - [AbstractGateway shipped workflows](https://github.com/lpalbou/AbstractGateway/blob/main/docs/shipped-workflows.md): Workflows a fresh Gateway install already serves (coder, deep research, co-scientist) + how to run one.
@@ -1819,6 +1822,7 @@ The full component diagram, with memory, semantics and the consoles, is in
 | Page | What it covers |
 |---|---|
 | **[Install](install.md)** | Mac installer, one-line install (`install.sh` / `install.ps1`), start at login, headless or remote install, the local gateway pointer, options, Network setting and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
+| **[Deploy on a Linux server](deploy-linux.md)** | A fresh Linux server, copy-paste: NVIDIA driver, the one-line install, the gateway as a systemd user service (linger), sign-in through an SSH tunnel, a first GGUF model, apps, uninstall, FAQ |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Agent sessions](agent-sessions.md)** | What every client shares when it chats with an agent: the gateway's default agent workflow, the conversation workspace and its built-in protection, skills, live replies, opening the Assistant signed in |
 | **[Automations](automations.md)** | How automations work in practice and how to manage them: an automation is a durable run, each tick a turn; independent vs growing context; creating one from the Assistant, the Observer, AbstractCode or a workflow's defaults; email triggers and email notifications; two worked examples; reading results in every client; pause, run now, resume, edit, archive, discuss; notifications, typed waits, restart safety, limits, troubleshooting |
@@ -4299,7 +4303,11 @@ It asks before removing anything, then asks two more questions, both defaulting 
 - **Also remove uv, its Python and its download cache** (about 2.5 GB)? Asked only when the
   installer is what added uv; answer no if you use uv for anything else.
 
-It always removes the login item, stops AbstractFramework and removes the gateway (and the
+It always removes the login item, including one turned on after the install (`abstractgateway
+service enable` or a console's Start at login switch) when it starts this install's gateway; a
+login item that starts another gateway is kept and the uninstaller prints the commands to remove
+it. On Linux it leaves lingering as it is (it never runs `sudo`) and, when lingering is on, prints
+`sudo loginctl disable-linger <user>` for you to run if nothing else needs it. It stops AbstractFramework and removes the gateway (and the
 Assistant, which lives in the gateway's environment), the terminal console and `abstractcode`,
 including an `abstractcode` that a gateway before 0.7.1 installed in `<data dir>/apps/bin` (that
 folder is removed when nothing else is in it). It also deletes the local gateway pointer,
@@ -4396,8 +4404,13 @@ upgrades or repairs the install in place (see [Upgrade](#upgrade)). The macOS pa
 
 ### No compiler needed
 
-By default the script never compiles anything, so you do not need Xcode Command Line Tools, gcc
-or the MSVC Build Tools. It passes uv a small overrides file (`uv-overrides.txt` in the gateway
+By default the script never compiles a Python package, so you do not need Xcode Command Line
+Tools, gcc or the MSVC Build Tools for the gateway. Two parts do need one: the terminal console and
+AbstractCode's terminal client are built with cargo (crates.io has no prebuilt binary), and vLLM
+compiles its GPU kernels the first time it starts a model. Without a compiler the installer says
+up front that it will skip the first two and why, says it again in its summary, and gives the fix
+(`sudo apt-get install -y build-essential` on Debian/Ubuntu, `xcode-select --install` on macOS);
+the console's Code app also installs a prebuilt `abstractcode`. It passes uv a small overrides file (`uv-overrides.txt` in the gateway
 data directory; `--print` shows it) that swaps `webrtcvad` for `webrtcvad-wheels`, keeps `vllm`
 to Linux, and leaves out the two compiled extras below, and it refuses to build those packages
 from source, so a gap fails with a clear error instead of starting a compiler. If macOS asks you
@@ -4454,7 +4467,8 @@ there, FlashInfer, compiles with the CUDA toolkit's `nvcc`, which a driver-only 
 **Driver.** PyPI's PyTorch for Linux (2.11 at this release) is a CUDA 13 build, which needs NVIDIA
 driver 580 or newer. With a driver from 525 to 579, PyTorch reports no GPU, so Diffusers,
 Transformers, vLLM and llama.cpp run on the processor; the installer says so. Update the driver
-(`sudo ubuntu-drivers install` on Ubuntu) and run the installer again. Whisper uses its own CUDA 12
+(on Ubuntu: `sudo apt-get install -y ubuntu-drivers-common`, which cloud images often lack, then
+`sudo ubuntu-drivers install` and a reboot) and run the installer again. Whisper uses its own CUDA 12
 libraries, which need driver 525 or newer.
 
 **Measured on real hardware.** Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability
@@ -4657,6 +4671,9 @@ curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --with-apps --with
 
 ### Headless or remote machine
 
+Step by step on a fresh Linux server (driver, service, tunnel, first model, uninstall):
+[Deploy on a Linux server](deploy-linux.md).
+
 Install over SSH with the same one-liner. It asks the start-at-login question in your SSH terminal
 (Enter = yes; a scripted install with no terminal leaves it off), installs local voice (Supertonic
 and Whisper, on CPU) like every other install, and at the end offers to open the terminal console,
@@ -4688,6 +4705,24 @@ browser, and open the apps from the console's **Apps** page: each opens at
 server itself, the terminal console's **Apps** screen shows the same link and the tunnel command
 instead of starting a browser.
 
+On a server, run text models with llama.cpp, which every profile installs (the CUDA build on an
+NVIDIA GPU: the summary's `GGUF:` line). The setup guide may recommend LM Studio, a desktop app
+that is not installed on a server: choose a GGUF model instead, for example this 2.5 GB one (the model of
+[Deploy on a Linux server](deploy-linux.md), measured there on a 16 GB GPU):
+
+```bash
+abstractgateway models download huggingface "unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M"
+abstractgateway-config set-default output.text --provider huggingface --model unsloth/Qwen3-4B-Instruct-2507-GGUF
+abstractgateway-config set-default input.text  --provider huggingface --model unsloth/Qwen3-4B-Instruct-2507-GGUF
+```
+
+Local voice is installed without its default voice: download it once (the installer's summary
+prints this line), or speech synthesis answers an error until you do:
+
+```bash
+abstractgateway models download supertonic supertonic-3
+```
+
 ### The same install by hand
 
 ```bash
@@ -4716,7 +4751,16 @@ abstractgateway service uninstall   # stop it and remove the login item (data is
 ```
 
 The login item runs plain `abstractgateway serve`, so the host and port come from the Network
-setting below. Passing `--host` to `service install` stores the matching mode in that setting.
+setting below.
+
+**Linux: lingering.** A `systemd --user` service runs only while you have a session: on a server
+it stops when your last SSH session ends and does not start at boot. Turn lingering on once
+(`loginctl show-user "$USER" -p Linger` says `Linger=yes` afterwards); the installer's summary
+prints this line when it is off:
+
+```bash
+sudo loginctl enable-linger "$USER"
+``` Passing `--host` to `service install` stores the matching mode in that setting.
 
 The bootstrap scripts use it by default. Gateways older than 0.3.0 (installed with `--pin`) have no
 `service` command: `install.sh` then starts the gateway in the background and `install.ps1` adds a
@@ -5012,6 +5056,165 @@ an admin turns it off for one account with that account's **OpenAI API** switch 
 as an account the admin picks (a restricted guest by default, never an admin). `/core/v1` answers with a
 308 redirect to `/v1` for this release and is deprecated. See
 [AbstractGateway: OpenAI API](https://github.com/lpalbou/AbstractGateway/blob/main/docs/openai-api.md).
+
+--- docs/deploy-linux.md ---
+# Deploy an AbstractFramework gateway on a fresh Linux server
+
+The sequence below was run end to end on a fresh Ubuntu 24.04 cloud instance (4 vCPU, 26 GB RAM, one
+NVIDIA Quadro RTX 5000) with AbstractFramework 0.11.17. Each step shows the line to expect. Run the
+commands as your normal user (here `ubuntu`), not as root. `<server>` is the server's address.
+
+## 1. Prerequisites
+
+- Ubuntu 22.04 or 24.04, x86_64, a user with `sudo`, SSH access with a key.
+- About 15 GB free disk for the gpu profile, plus your models. No firewall port to open (step 5).
+
+## 2. NVIDIA driver (GPU servers only)
+
+Skip this step on a server without an NVIDIA GPU: the installer then picks the light profile.
+
+```bash
+nvidia-smi                       # "command not found": no driver yet, continue
+sudo apt-get update && sudo apt-get install -y ubuntu-drivers-common
+sudo ubuntu-drivers install      # installs the recommended driver (595-open here)
+sudo reboot
+```
+
+After the reboot, `nvidia-smi --query-gpu=name,driver_version --format=csv` shows the GPU and a
+driver of 580 or newer (`Quadro RTX 5000, 595.99.02`), which PyTorch 2.11 (CUDA 13) needs.
+
+## 3. Install
+
+```bash
+curl -LsSf https://abstractframework.ai/install.sh | sh
+```
+
+Expected: `✓ profile: gpu (nvidia-smi found a GPU ...)` and, about 2-10 minutes later,
+`AbstractFramework is ready.` with `Gateway: abstractgateway[gpu]==0.17.0 (gpu profile)`. The start at
+login question can be left unanswered: step 4 sets it up. Then open a new SSH session (or
+`source ~/.bashrc`) so `~/.local/bin` is on PATH.
+
+```bash
+curl -s http://127.0.0.1:8080/api/health    # {"status":"healthy","service":"abstractgateway",...}
+```
+
+## 4. Run the gateway as a service
+
+```bash
+abstractgateway service enable          # start at login [on]: a systemd user unit
+sudo loginctl enable-linger "$USER"     # keep it running without an open SSH session, start at boot
+sudo reboot
+```
+
+Do not skip the second line: without lingering, a systemd user service stops when your last SSH
+session ends and does not start at boot (`loginctl show-user "$USER" -p Linger` answers
+`Linger=no`). After the reboot, `systemctl --user is-active abstractgateway` answers `active`.
+
+## 5. Open the console from your computer
+
+On your own computer, keep this tunnel open (use `-L 18080:127.0.0.1:8080` and port 18080 below if
+port 8080 is taken on your computer):
+
+```bash
+ssh -N -L 8080:127.0.0.1:8080 ubuntu@<server>
+```
+
+On the server, make a one-time sign-in link (valid 10 minutes, works once):
+
+```bash
+abstractgateway-config claim-url --base-url http://127.0.0.1:8080
+# http://127.0.0.1:8080/console#claim=agclaim_...
+```
+
+Open that link in your browser. Expected: the console, signed in as `default/admin`, on the setup
+guide ("Welcome to your gateway"). The admin token, for the apps and the API, is in
+`~/.local/share/abstractgateway/auth/bootstrap-admin-token`.
+
+## 6. A first local model
+
+On a server, use llama.cpp: the installer put it in (the CUDA build on an NVIDIA GPU, `GGUF:` in its
+summary), with no app to run. The setup guide may recommend LM Studio (`lmstudio · qwen/qwen3.5-9b`):
+that is a desktop app, not installed here; skip its recommendation and choose the model below. A
+small GGUF model that runs on the GPU through llama.cpp (2.5 GB):
+
+```bash
+abstractgateway models catalog --fits | grep GGUF        # what fits this server
+abstractgateway models download huggingface "unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M"
+# done: snapshot cached at ~/.cache/huggingface/hub/models--unsloth--Qwen3-4B-Instruct-2507-GGUF/...
+abstractgateway-config set-default output.text --provider huggingface --model unsloth/Qwen3-4B-Instruct-2507-GGUF
+abstractgateway-config set-default input.text  --provider huggingface --model unsloth/Qwen3-4B-Instruct-2507-GGUF
+# Set execution-host capability default: output.text  (then input.text)
+```
+
+Local voice is installed, but not its default voice: until you download it once, speech
+synthesis answers an error (`Supertonic 3 artifacts are not available locally`). The installer's
+summary prints the same line:
+
+```bash
+abstractgateway models download supertonic supertonic-3   # done: Supertonic 3 assets cached
+```
+
+## 7. Apps and a first chat
+
+In the console: **Apps** > **Install** on Observer, Continuum, Code, Entity and Flow Editor (the
+first install also installs Node.js for the gateway, about 20 s in all). Then **Open** on Code,
+type a question and press Enter. Expected: the answer, and under it the token count and time. The
+apps open at `http://127.0.0.1:8080/apps/<app>/` through the same tunnel.
+
+## 8. Uninstall
+
+```bash
+curl -LsSf https://abstractframework.ai/uninstall.sh | sh     # answer y; data and uv: Enter keeps them
+# · a login service was turned on after the install (/home/ubuntu/.config/systemd/user/abstractgateway.service): removing it
+# · lingering is on for ubuntu (...); if you turned it on only for the gateway: sudo loginctl disable-linger ubuntu
+# Done.
+sudo loginctl disable-linger "$USER"   # only if nothing else needs it
+```
+
+The uninstaller stops and removes the service from step 4 (`systemctl --user is-enabled
+abstractgateway` then answers `not-found`). It never runs `sudo`, so it prints the lingering line
+instead of running it. Kept on purpose: `~/.local/share/abstractgateway` (your data; add
+`--purge` to delete it), `~/.cache/huggingface` (models), `~/.cache/uv` (about 14 GB with the gpu
+profile; `--remove-uv` removes uv and its cache).
+
+## FAQ
+
+**`nvidia-smi: command not found`, or `sudo: ubuntu-drivers: command not found`.** Cloud images
+often ship without the driver and without `ubuntu-drivers`. Run step 2.
+
+**The gateway stops when I close SSH, or does not start after a reboot.** A systemd user service
+runs only while you are logged in unless lingering is on: `sudo loginctl enable-linger "$USER"`.
+
+**Can I open port 8080 instead of tunnelling?** Keep the default. The gateway binds `127.0.0.1`
+only, so nothing is exposed even with the firewall off. To serve other machines, choose it in the
+console's **Network** page, which explains the risks first.
+
+**`bind: Address already in use` when opening the tunnel.** Port 8080 is taken on your computer:
+use `ssh -N -L 18080:127.0.0.1:8080 ubuntu@<server>` and pass `--base-url http://127.0.0.1:18080`
+to `claim-url`.
+
+**The sign-in link says it expired, or I lost the token.** Make a new link with
+`abstractgateway-config claim-url --base-url http://127.0.0.1:8080`; the token itself stays in
+`~/.local/share/abstractgateway/auth/bootstrap-admin-token`.
+
+**The installer skipped the terminal console and `abstractcode`.** Cloud images often ship without a
+C compiler, and cargo needs one to build them; the installer says so before it starts (`no C
+compiler: the terminal console and AbstractCode's terminal client ... are skipped`) and again in its
+summary. Fix: `sudo apt-get install -y build-essential`, then the install line again. Installing the
+Code app in the console also installs a prebuilt `abstractcode`. vLLM needs the same compiler the
+first time it starts a model.
+
+**The setup guide recommends `lmstudio · qwen/qwen3.5-9b`.** LM Studio is a desktop app and is not
+installed on a server; use llama.cpp with a GGUF model as in step 6. (The guide does not yet
+recommend the engine that is installed. The llama.cpp card's "CPU on Linux" is also wrong when the
+installer's summary says `GGUF: ... cu130`: the CUDA build is in, and the model runs on the GPU.)
+
+**Speech synthesis fails with `Supertonic 3 artifacts are not available locally`.** Download the
+voice weights: `abstractgateway models download supertonic supertonic-3`.
+
+**`Failed to create llama_context` from the OpenAI API (`/v1`).** The GPU is full with another copy
+of the model. Free it with
+`abstractgateway models unload --provider huggingface --model <model>` and retry.
 
 --- docs/agent-sessions.md ---
 # Agent sessions on a gateway
@@ -10213,8 +10416,10 @@ Add `--json` for tooling and `--no-network` to skip the HTTP probes.
 
 ## Uninstall
 
-`sh uninstall.sh` (or the **Uninstall AbstractFramework.command** file) asks before removing
-anything; `sh install.sh --uninstall [--purge] [--remove-uv]` or `install.ps1 -Uninstall [-Purge]`
+`curl -LsSf https://abstractframework.ai/uninstall.sh | sh` (or `sh uninstall.sh`; on macOS, the
+**Uninstall AbstractFramework.command** file) asks before removing anything. It also removes a
+login item turned on after the install when it starts this install's gateway, and on Linux prints
+`sudo loginctl disable-linger <user>` when lingering is on (never run for you); `sh install.sh --uninstall [--purge] [--remove-uv]` or `install.ps1 -Uninstall [-Purge]`
 do the same without the questions. Data is kept unless you purge it. See
 [Remove AbstractFramework](../install.md#remove-abstractframework).
 

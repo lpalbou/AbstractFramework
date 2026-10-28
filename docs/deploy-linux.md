@@ -46,7 +46,9 @@ sudo loginctl enable-linger "$USER"     # keep it running without an open SSH se
 sudo reboot
 ```
 
-After the reboot, `systemctl --user is-active abstractgateway` answers `active`.
+Do not skip the second line: without lingering, a systemd user service stops when your last SSH
+session ends and does not start at boot (`loginctl show-user "$USER" -p Linger` answers
+`Linger=no`). After the reboot, `systemctl --user is-active abstractgateway` answers `active`.
 
 ## 5. Open the console from your computer
 
@@ -70,7 +72,10 @@ guide ("Welcome to your gateway"). The admin token, for the apps and the API, is
 
 ## 6. A first local model
 
-A small GGUF model that runs on the GPU through llama.cpp:
+On a server, use llama.cpp: the installer put it in (the CUDA build on an NVIDIA GPU, `GGUF:` in its
+summary), with no app to run. The setup guide may recommend LM Studio (`lmstudio · qwen/qwen3.5-9b`):
+that is a desktop app, not installed here; skip its recommendation and choose the model below. A
+small GGUF model that runs on the GPU through llama.cpp (2.5 GB):
 
 ```bash
 abstractgateway models catalog --fits | grep GGUF        # what fits this server
@@ -81,7 +86,9 @@ abstractgateway-config set-default input.text  --provider huggingface --model un
 # Set execution-host capability default: output.text  (then input.text)
 ```
 
-Local voice (Supertonic text-to-speech) needs its weights once:
+Local voice is installed, but not its default voice: until you download it once, speech
+synthesis answers an error (`Supertonic 3 artifacts are not available locally`). The installer's
+summary prints the same line:
 
 ```bash
 abstractgateway models download supertonic supertonic-3   # done: Supertonic 3 assets cached
@@ -98,14 +105,15 @@ apps open at `http://127.0.0.1:8080/apps/<app>/` through the same tunnel.
 
 ```bash
 curl -LsSf https://abstractframework.ai/uninstall.sh | sh     # answer y; data and uv: Enter keeps them
+# · a login service was turned on after the install (/home/ubuntu/.config/systemd/user/abstractgateway.service): removing it
+# · lingering is on for ubuntu (...); if you turned it on only for the gateway: sudo loginctl disable-linger ubuntu
 # Done.
-systemctl --user disable --now abstractgateway; rm -f ~/.config/systemd/user/abstractgateway.service
-systemctl --user daemon-reload
-sudo loginctl disable-linger "$USER"
+sudo loginctl disable-linger "$USER"   # only if nothing else needs it
 ```
 
-The last three lines remove the service from step 4 (`systemctl --user is-enabled abstractgateway`
-then answers `not-found`). Kept on purpose: `~/.local/share/abstractgateway` (your data; add
+The uninstaller stops and removes the service from step 4 (`systemctl --user is-enabled
+abstractgateway` then answers `not-found`). It never runs `sudo`, so it prints the lingering line
+instead of running it. Kept on purpose: `~/.local/share/abstractgateway` (your data; add
 `--purge` to delete it), `~/.cache/huggingface` (models), `~/.cache/uv` (about 14 GB with the gpu
 profile; `--remove-uv` removes uv and its cache).
 
@@ -129,12 +137,17 @@ to `claim-url`.
 `abstractgateway-config claim-url --base-url http://127.0.0.1:8080`; the token itself stays in
 `~/.local/share/abstractgateway/auth/bootstrap-admin-token`.
 
-**The installer skipped the terminal console and `abstractcode`.** Building them needs a C compiler:
-`sudo apt-get install -y build-essential`, then the install line again. Installing the Code app in
-the console also installs a prebuilt `abstractcode`. vLLM needs the same compiler.
+**The installer skipped the terminal console and `abstractcode`.** Cloud images often ship without a
+C compiler, and cargo needs one to build them; the installer says so before it starts (`no C
+compiler: the terminal console and AbstractCode's terminal client ... are skipped`) and again in its
+summary. Fix: `sudo apt-get install -y build-essential`, then the install line again. Installing the
+Code app in the console also installs a prebuilt `abstractcode`. vLLM needs the same compiler the
+first time it starts a model.
 
-**The setup guide recommends `lmstudio · qwen/qwen3.5-9b`.** LM Studio is a desktop app; on a
-server, use a GGUF model as in step 6.
+**The setup guide recommends `lmstudio · qwen/qwen3.5-9b`.** LM Studio is a desktop app and is not
+installed on a server; use llama.cpp with a GGUF model as in step 6. (The guide does not yet
+recommend the engine that is installed. The llama.cpp card's "CPU on Linux" is also wrong when the
+installer's summary says `GGUF: ... cu130`: the CUDA build is in, and the model runs on the GPU.)
 
 **Speech synthesis fails with `Supertonic 3 artifacts are not available locally`.** Download the
 voice weights: `abstractgateway models download supertonic supertonic-3`.

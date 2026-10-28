@@ -159,6 +159,7 @@ af_cli_about() {  # one line for the summary's command list
 }
 AF_DOCS="https://github.com/lpalbou/AbstractFramework/blob/main/docs/install.md"
 AF_SCRIPT_URL="https://abstractframework.ai/install.sh"
+AF_UNINSTALL_URL="https://abstractframework.ai/uninstall.sh"
 
 # ---------------------------------------------------------------------------
 # Prebuilt wheels only: by default no C compiler (Xcode CLT, gcc) is needed.
@@ -1955,7 +1956,47 @@ purge_targets() {
     echo "AbstractCode's login and preferences|$HOME/.abstractcode"
     echo "AbstractCode's older preferences|$HOME/.abstractcode-tui"
 }
-UNINSTALL_AGAIN="run the uninstaller again (sh uninstall.sh --yes, or double-click Uninstall AbstractFramework.command); it skips what is already gone."
+# linger_state: "yes" when systemd keeps this user's services running without a login (and
+# starts them at boot), "no" when it does not, "" when loginctl cannot tell.
+linger_state() {
+    loginctl show-user "$(id -un)" -p Linger 2>/dev/null | sed -n 's/^Linger=//p' | head -n 1
+}
+# unit_runs_this_gateway FILE: the login item FILE (LaunchAgent plist, systemd unit, XDG
+# autostart entry) starts this install's gateway: the uv tool's command or a program in its
+# environment. systemd writes the home folder as %h.
+unit_runs_this_gateway() {
+    _ur_text="$(awk -v h="$HOME" '{ gsub(/%h/, h); print }' "$1" 2>/dev/null)" || return 1
+    for _ur_p in "$TOOL_BIN/abstractgateway" "$TOOL_VENV/" ${TOOL_VENV2:+"$TOOL_VENV2/"}; do
+        case "$_ur_text" in *"$_ur_p"*) return 0 ;; esac
+    done
+    return 1
+}
+# service_leftovers: after the login item's removal, what is still registered, each with the
+# exact commands to remove it (never run for you: it is not this install's, or needs sudo).
+service_leftovers() {
+    for _u in "$UNIT_MAC" "$UNIT_LINUX" "$UNIT_XDG"; do
+        [ -f "$_u" ] || continue
+        # --print: the removal above only printed its commands; what it would remove is not left.
+        [ "$PRINT" = 1 ] && { [ "$_u" = "$UNIT_LATER" ] || [ "$SERVICE_REMOVAL" = 1 ]; } && continue
+        if [ "$_u" = "$UNIT_LATER" ] || [ "$SERVICE_REMOVAL" = 1 ]; then
+            warn "the login service is still registered: $_u"
+        else
+            info "kept: $_u starts a gateway this installer did not install"
+        fi
+        case "$_u" in
+            *.plist) info "  to remove it: launchctl bootout gui/$(id -u)/ai.abstractframework.gateway; rm -f $(q "$_u")" ;;
+            *.service) info "  to remove it: systemctl --user disable --now abstractgateway.service; rm -f $(q "$_u"); systemctl --user daemon-reload" ;;
+            *) info "  to remove it: rm -f $(q "$_u")" ;;
+        esac
+    done
+    # Lingering (`sudo loginctl enable-linger`, which the Linux guide sets for an always-on
+    # gateway) is not the installer's to undo: it may serve other user services.
+    if [ "$OS_ID" = linux ] && [ "$(linger_state)" = yes ]; then
+        info "lingering is on for $(id -un) (user services run without a login and start at boot); if you turned it on only for the gateway: sudo loginctl disable-linger $(id -un)"
+    fi
+}
+_uninst_mac=""; [ "$OS_ID" = macos ] && _uninst_mac=", or double-click Uninstall AbstractFramework.command"
+UNINSTALL_AGAIN="run the uninstaller again (curl -LsSf $AF_UNINSTALL_URL | sh -s -- --yes$_uninst_mac); it skips what is already gone."
 
 # ---------------------------------------------------------------------------
 # Uninstall
@@ -2000,29 +2041,47 @@ if [ "$UNINSTALL" = 1 ]; then
         printf 'What to do: check --data-dir (it must be the gateway'"'"'s own folder). Nothing was changed.\n' >&2
         exit 2
     fi
-    [ "$PURGE" = 1 ] && UNINSTALL_AGAIN="run the uninstaller again with --purge (sh uninstall.sh --yes --purge); it skips what is already gone."
+    [ "$PURGE" = 1 ] && UNINSTALL_AGAIN="run the uninstaller again with --purge (curl -LsSf $AF_UNINSTALL_URL | sh -s -- --yes --purge); it skips what is already gone."
     step "Gateway service and processes"
     # Only touch the login service when this install registered it (or when no state says
     # otherwise): a --no-service install must not unregister a service set up separately.
     UNIT_MAC="$HOME/Library/LaunchAgents/ai.abstractframework.gateway.plist"
     UNIT_LINUX="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/abstractgateway.service"
-    if [ "$ST_MODE" = background ] || [ "$ST_MODE" = none ]; then
+    UNIT_XDG="${XDG_CONFIG_HOME:-$HOME/.config}/autostart/abstractgateway.desktop"
+    # A login item turned on AFTER the install (`abstractgateway service enable`, which the
+    # summary suggests, or the consoles' Start at login switch) is not in the state file: one
+    # that runs this install's gateway is removed too (it would point at a deleted program).
+    # One that runs another gateway is kept, with the commands to remove it.
+    UNIT_LATER=""
+    for _u in "$UNIT_MAC" "$UNIT_LINUX" "$UNIT_XDG"; do
+        [ -f "$_u" ] && unit_runs_this_gateway "$_u" && UNIT_LATER="$_u"
+    done
+    SERVICE_REMOVAL=0
+    if { [ "$ST_MODE" = background ] || [ "$ST_MODE" = none ]; } && [ -z "$UNIT_LATER" ]; then
         info "no login service was registered by this install (mode: $ST_MODE)"
-    elif gateway_supports service; then
-        run "remove the gateway service" "$TOOL_BIN/abstractgateway" service uninstall
-    elif [ "$OS_ID" = macos ] && [ -f "$UNIT_MAC" ]; then
-        # A half-removed install (the tool is gone, the login item is not): the
-        # same two steps `abstractgateway service uninstall` runs.
-        RUN_SOFT=1 run "stop the login item" launchctl bootout "gui/$(id -u)/ai.abstractframework.gateway"
-        run "remove the login item" rm -f "$UNIT_MAC"
-    elif [ "$OS_ID" = linux ] && [ -f "$UNIT_LINUX" ]; then
-        RUN_SOFT=1 run "stop the login service" systemctl --user disable --now abstractgateway.service
-        run "remove the login service" rm -f "$UNIT_LINUX"
-    elif [ "$ST_MODE" = service ]; then
-        info "the state file says a service was registered, but none is installed now; nothing to remove"
     else
-        info "no login service found"
+        SERVICE_REMOVAL=1
+        [ -n "$UNIT_LATER" ] && [ "$ST_MODE" != service ] && info "a login service was turned on after the install ($UNIT_LATER): removing it"
+        if gateway_supports service; then
+            run "remove the gateway service" "$TOOL_BIN/abstractgateway" service uninstall
+        elif [ "$OS_ID" = macos ] && [ -f "$UNIT_MAC" ]; then
+            # A half-removed install (the tool is gone, the login item is not): the
+            # same two steps `abstractgateway service uninstall` runs.
+            RUN_SOFT=1 run "stop the login item" launchctl bootout "gui/$(id -u)/ai.abstractframework.gateway"
+            run "remove the login item" rm -f "$UNIT_MAC"
+        elif [ "$OS_ID" = linux ] && [ -f "$UNIT_LINUX" ]; then
+            RUN_SOFT=1 run "stop the login service" systemctl --user disable --now abstractgateway.service
+            run "remove the login service" rm -f "$UNIT_LINUX"
+            RUN_SOFT=1 run "reload systemd's user units" systemctl --user daemon-reload
+        elif [ "$OS_ID" = linux ] && [ -f "$UNIT_XDG" ]; then
+            run "remove the login entry" rm -f "$UNIT_XDG"
+        elif [ "$ST_MODE" = service ]; then
+            info "the state file says a service was registered, but none is installed now; nothing to remove"
+        else
+            info "no login service found"
+        fi
     fi
+    service_leftovers
     # Removing the login item does not wait for the gateway to exit (launchd), and
     # children in their own session outlive it: wait for the whole tree, then stop it.
     stop_gateway_tree
@@ -2310,7 +2369,9 @@ if [ "$HAS_CC" = 0 ]; then
         if [ "$OS_ID" = macos ]; then die "--full builds llama.cpp, stable-diffusion.cpp and echo cancellation from source and needs a C compiler: run 'xcode-select --install', then re-run with --full"
         else die "--full builds llama.cpp, stable-diffusion.cpp and echo cancellation from source and needs a C compiler: install one (Debian/Ubuntu: sudo apt-get install -y build-essential), then re-run with --full"; fi
     fi
-    info "no C compiler ($([ "$OS_ID" = macos ] && echo 'Xcode CLT' || echo 'cc/gcc')) – fine, all packages install as prebuilt wheels"
+    _cc_fix="$([ "$OS_ID" = macos ] && echo 'xcode-select --install' || echo 'sudo apt-get install -y build-essential (Debian/Ubuntu)')"
+    info "no C compiler ($([ "$OS_ID" = macos ] && echo 'Xcode CLT' || echo 'cc/gcc')): the Python packages install as prebuilt wheels"
+    { [ "$WITH_CONSOLE" = 1 ] || [ "$WITH_CODE_CLI" = 1 ]; } && warn "no C compiler: the terminal console and AbstractCode's terminal client are built with cargo and need one, so they are skipped unless already installed$([ "$OS_ID" = linux ] && [ "$PROFILE" = gpu ] && echo ', and vLLM cannot start a model'); to get them: $_cc_fix, then run the installer again"
 elif [ "$FULL" = 1 ]; then
     ok "C compiler found: --full builds the compiled extras from source (several minutes)"
 fi
@@ -3360,6 +3421,18 @@ TUI_CMD="$_tui_exe --gateway-url $BASE_URL $_tok_arg"
 # finds the gateway through its data dir: a custom one is passed on).
 CODE_LOGIN="$_code_exe login $_tok_arg"
 TUI_COMMAND="abstractgateway apps tui-command code"; [ "$DATA_DIR_CUSTOM" = 1 ] && TUI_COMMAND="$TUI_COMMAND --data-dir $(q "$DATA_DIR")"
+# Linux: a systemd user service stops with the user's last session (an SSH logout) and does not
+# start at boot unless lingering is on. Said wherever start at login is on or suggested.
+LINGER_LINE=""
+if [ "$OS_ID" = linux ] && [ "$SYSTEMD_USER" = 1 ] && [ "$(linger_state)" != yes ]; then
+    LINGER_LINE="  On a server: the login service stops when you log out and does not start at boot until you run once: sudo loginctl enable-linger $(id -un)"
+fi
+# Local voice installs the engines, not the default voice's weights (the gateway does not fetch
+# them at first use yet: abstractgateway backlog 0955 and 0959).
+VOICE_WEIGHTS="abstractgateway models download supertonic supertonic-3"
+# Without a C compiler cargo builds neither crate; the Code app brings a prebuilt abstractcode.
+CODE_ALT=""
+[ "$HAS_CC" = 0 ] && [ "$CODE_OK" = 0 ] && [ "$WITH_CODE_CLI" = 1 ] && CODE_ALT="or install the Code app (console > Apps): it brings a prebuilt abstractcode"
 # Local voice not installed (a platform without its wheels, or its packages failed to install here):
 # never a silent green, the summary and the last lines say so in red.
 [ "$PRINT" = 0 ] && [ -z "$VOICE_SPEC" ] && incomplete_add "local voice (Supertonic, Whisper)" "$VOICE_RESULT"
@@ -3403,21 +3476,26 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
         echo "    or, on this machine, without a token: $TUI_COMMAND"
     else
         echo "  AbstractCode (terminal): not installed: $CODE_WHY"
+        [ -n "$CODE_ALT" ] && echo "    $CODE_ALT"
     fi
     if [ "$MODE" = service ]; then
         echo "  It starts by itself when you log in; nothing to launch."
+        [ -n "$LINGER_LINE" ] && echo "$LINGER_LINE"
     else
         echo "  It runs until you restart the computer."
         if [ "$SERVICE_POSSIBLE" = 1 ] && [ "$SERVICE_OK" = 1 ]; then
             echo "  Start at login is off. To turn it on: the Start at login switch in either console (web: the Gateway"
             echo "    section; terminal: F3), or run: abstractgateway service enable"
+            [ -n "$LINGER_LINE" ] && echo "$LINGER_LINE"
         else
             echo "  Run the installer again to start it."
         fi
     fi
     case ",$EXTRAS," in *,tray,*) echo "  Its icon in the $([ "$OS_ID" = macos ] && echo 'menu bar' || echo 'system tray') opens the console and shows its status." ;; esac
     echo "  First steps in the console: pick an engine and a model; it shows what fits this computer."
-    echo "  To remove it: run the uninstaller (Uninstall AbstractFramework.command), or: sh install.sh --uninstall"
+    [ -n "$VOICE_SPEC" ] && echo "  Speech: download the default voice once (or in the console's Models page): $VOICE_WEIGHTS"
+    if [ "$OS_ID" = macos ]; then echo "  To remove it: double-click Uninstall AbstractFramework.command, or run: curl -LsSf $AF_UNINSTALL_URL | sh"
+    else echo "  To remove it: curl -LsSf $AF_UNINSTALL_URL | sh"; fi
 fi
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 1 ]; then
     if [ -n "$INCOMPLETE" ]; then
@@ -3480,11 +3558,11 @@ else _start_hint="abstractgateway serve --data-dir $(q "$DATA_DIR")$_start_bind"
 echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --port $PORT" || echo "re-run this installer, or: $_start_hint")"
 echo "  Upgrade:    curl -LsSf $AF_SCRIPT_URL | sh   (the latest AbstractFramework release; keeps your settings and data)"
 echo "              curl -LsSf $AF_SCRIPT_URL | sh -s -- --pin latest   (the newest abstractgateway on PyPI; see $AF_DOCS#upgrade)"
-echo "  Uninstall:  sh install.sh --uninstall   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
+echo "  Uninstall:  curl -LsSf $AF_UNINSTALL_URL | sh   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 echo "  Check:      uvx abstractframework doctor"
 [ -z "$TORCH_RESULT" ] || echo "  PyTorch:    $TORCH_RESULT"
 echo "  GGUF:       $GGUF_RESULT"
-if [ -n "$VOICE_SPEC" ]; then echo "  Voice:      $VOICE_RESULT"; else printf '  Voice:      %s%s%s\n' "$C_R" "$VOICE_RESULT" "$C_0"; fi
+if [ -n "$VOICE_SPEC" ]; then echo "  Voice:      $VOICE_RESULT"; echo "              its default voice downloads once: $VOICE_WEIGHTS"; else printf '  Voice:      %s%s%s\n' "$C_R" "$VOICE_RESULT" "$C_0"; fi
 [ -z "$GPU_RESULT" ] || echo "  vLLM:       $GPU_RESULT"
 if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
     echo "  $AF_SKIPPED_LINE"
