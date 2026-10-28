@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.11.14"
+version = "0.11.15"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -48,22 +48,22 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.15.11",
+    "abstractgateway==0.17.0",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.14.3",
+    "abstractassistant==0.15.0",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.26.3",
-    "AbstractRuntime==0.10.6",
-    "abstractagent==0.3.19",
-    "abstractskill==0.3.1",
-    "AbstractMemory==0.3.1",
+    "abstractcore==2.31.0",
+    "AbstractRuntime==0.15.0",
+    "abstractagent==0.4.0",
+    "abstractskill==0.3.3",
+    "AbstractMemory==0.4.0",
     "abstractsemantics==0.0.5",
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
-    "abstractvoice==0.15.2",
+    "abstractvoice==0.19.2",
     "abstractvision==0.3.34",
     "abstractmusic==0.1.17",
     "abstract3d==0.3.2",
@@ -82,13 +82,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.15.11",
-    "abstractassistant[apple]==0.14.3; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.17.0",
+    "abstractassistant[apple]==0.15.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.15.11",
-    "abstractassistant[gpu]==0.14.3",
+    "abstractgateway[gpu]==0.17.0",
+    "abstractassistant[gpu]==0.15.0",
 ]
 
 [project.urls]
