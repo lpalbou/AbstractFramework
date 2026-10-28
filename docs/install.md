@@ -848,6 +848,9 @@ curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --with-apps --with
 
 ### Headless or remote machine
 
+Step by step on a fresh Linux server (driver, service, tunnel, first model, uninstall):
+[Deploy on a Linux server](deploy-linux.md).
+
 Install over SSH with the same one-liner. It asks the start-at-login question in your SSH terminal
 (Enter = yes; a scripted install with no terminal leaves it off), installs local voice (Supertonic
 and Whisper, on CPU) like every other install, and at the end offers to open the terminal console,
