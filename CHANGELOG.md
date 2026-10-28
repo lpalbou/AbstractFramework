@@ -4,6 +4,18 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.11.18] - 2026-10-28
+
+Pins the fix releases of the closing pass: **AbstractGateway 0.17.2** (app manager installs the release
+matrix's app versions, `network status` auth wording, llama.cpp card copy, a typed answer when the default voice
+weights are missing; 0.17.1 before it), **AbstractAssistant 0.16.5** (desktop voice override honoured, readable
+attachment labels, automations as a conversation, voice playback states, web assistant on the replay view),
+**AbstractRuntime 0.15.1**, **AbstractVoice 0.19.3**, and the apps on ui-kit 0.9.5 / panel-chat 0.6.3:
+**Flow 0.12.1**, **AbstractCode web 0.13.2**, **Observer 0.10.2**, **Entity 0.9.2**, **Continuum 0.7.5**. Also:
+ADR-0043 (readable labels in end-user interfaces), the Linux server deployment guide (`docs/deploy-linux.md`)
+and the installer fixes from the fresh-Linux test (uninstaller removes the service it enabled, lingering and
+driver prerequisites, skipped parts named). Every other pin is unchanged from 0.11.17.
+
 ## [0.11.17] - 2026-10-28
 
 Thin clients render from the replay view: **Observer 0.10.0**, **AbstractCode web 0.13.0**, **Entity 0.9.0**,

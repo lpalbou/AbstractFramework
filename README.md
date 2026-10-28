@@ -180,7 +180,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.17.0` and `ghcr.io/lpalbou/abstractcore-server:2.31.0`.
+`ghcr.io/lpalbou/abstractgateway:0.17.2` and `ghcr.io/lpalbou/abstractcore-server:2.31.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -342,28 +342,28 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.17.0 |
-| PyPI | `abstractassistant` | 0.16.1 |
+| PyPI | `abstractgateway` | 0.17.2 |
+| PyPI | `abstractassistant` | 0.16.5 |
 | PyPI | `abstractcore` | 2.31.0 |
-| PyPI | `AbstractRuntime` | 0.15.0 |
+| PyPI | `AbstractRuntime` | 0.15.1 |
 | PyPI | `abstractagent` | 0.4.0 |
 | PyPI | `abstractskill` | 0.3.3 |
 | PyPI | `AbstractMemory` | 0.4.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.19.2 |
+| PyPI | `abstractvoice` | 0.19.3 |
 | PyPI | `abstractvision` | 0.3.34 |
 | PyPI | `abstractmusic` | 0.1.17 |
 | PyPI | `abstract3d` | 0.3.2 |
-| npm | `@abstractframework/flow` | 0.11.0 |
-| npm | `@abstractframework/code` | 0.13.0 |
-| npm | `@abstractframework/observer` | 0.10.0 |
-| npm | `@abstractframework/continuum` | 0.7.2 |
-| npm | `@abstractframework/entity` | 0.9.0 |
+| npm | `@abstractframework/flow` | 0.12.1 |
+| npm | `@abstractframework/code` | 0.13.2 |
+| npm | `@abstractframework/observer` | 0.10.2 |
+| npm | `@abstractframework/continuum` | 0.7.5 |
+| npm | `@abstractframework/entity` | 0.9.2 |
 | crates.io | `abstractcode` | 0.12.0 |
 | crates.io | `abstractgateway-console` | 0.16.0 |
 | crates.io | `abstractcore-console` | 0.8.0 |
 | crates.io | `abstracttui` | 0.7.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.17.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.17.2 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.31.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
