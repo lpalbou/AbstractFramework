@@ -1402,6 +1402,8 @@ gateway_supports() {  # gateway_supports service|claim-url
     case "$1" in
         service) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" service --help >/dev/null 2>&1 ;;
         claim-url) [ -x "$TOOL_BIN/abstractgateway-config" ] && "$TOOL_BIN/abstractgateway-config" claim-url --help >/dev/null 2>&1 ;;
+        # gateway >= 0.18.0: the six-word setup code a fresh gateway asks for from another machine.
+        setup-code) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" claim --help 2>/dev/null | grep -q -- '--code' ;;
         network) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" network --help >/dev/null 2>&1 ;;
     esac
 }
@@ -3317,7 +3319,7 @@ write_state
 # ---------------------------------------------------------------------------
 CONSOLE_URL="$BASE_URL/console"
 TOKEN_FILE="$DATA_DIR/auth/bootstrap-admin-token"
-CLAIMED=0; OPENED=0
+CLAIMED=0; OPENED=0; SETUP_CODE=""
 # A remote or headless session: SSH, or Linux with no graphical display. The installer then
 # opens the terminal console at the end instead of a browser.
 REMOTE_SESSION=0
@@ -3367,6 +3369,13 @@ What to do: restart the computer (the login item starts it again) or run the ins
         fi
     elif [ "$PRINT" = 1 ]; then
         info "$(show_cmd abstractgateway-config claim-url --base-url "$BASE_URL")   (when supported)"
+    fi
+    # A fresh gateway reached from another machine (a proxy, Tailscale Funnel, the LAN) asks for the
+    # admin password and this setup code on its "Set up your gateway" page (gateway 0.18.0).
+    if [ "$PRINT" = 0 ] && gateway_supports setup-code; then
+        SETUP_CODE="$("$GW" claim --code 2>>"$LOG_FILE" | tail -n 1)" || SETUP_CODE=""
+    elif [ "$PRINT" = 1 ]; then
+        info "$(show_cmd abstractgateway claim --code)   (gateway >= 0.18.0: the setup code for another machine)"
     fi
     if [ "$CLAIMED" = 0 ]; then
         info "sign in as 'admin' with the token in: $TOKEN_FILE"
@@ -3486,6 +3495,10 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
         echo "               one-time sign-in link (10 minutes); a new one: abstractgateway-config claim-url --base-url $BASE_URL"
     else
         echo "               sign in as 'admin' with the token in $TOKEN_FILE"
+    fi
+    if [ "$OPENED" = 0 ] && [ -n "$SETUP_CODE" ]; then
+        echo "               from another computer (a proxy, Tailscale, the LAN): open the console there, choose the admin password,"
+        echo "               and give this setup code: $SETUP_CODE   (again: abstractgateway claim --code)"
     fi
     [ "$OPENED" = 1 ] || echo "               from another computer, tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
     if [ "$CONSOLE_OK" = 1 ]; then
