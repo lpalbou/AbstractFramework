@@ -2430,25 +2430,31 @@ else die "$(offline_msg)"; fi
 # --server (Linux): validated here, after the OS is known. --server --gpu adds the driver step.
 if [ "$SERVER" = 1 ] || [ "$TS_FUNNEL" = 1 ] || [ "$GPU_DRIVER" = 1 ]; then
     [ "$OS_ID" = linux ] || die "--server, --gpu-driver and --tailscale-funnel are for a Linux server (this is $OS_ID)"
-    [ "$UNINSTALL" = 0 ] || die "--server is an install mode; to remove: --uninstall alone"
 fi
 if [ "$SERVER" = 1 ]; then
     [ "$NO_SERVICE" = 0 ] || die "--server runs the gateway as a login service; it cannot be combined with --no-service"
+    [ "$NO_START" = 0 ] || die "--server starts the gateway (and publishes it); it cannot be combined with --no-start"
     NO_OPEN=1
     [ "$PROFILE" = gpu ] && GPU_DRIVER=1
 fi
 if [ "$TS_FUNNEL" = 1 ] && [ "$SERVER" = 0 ]; then die "--tailscale-funnel goes with --server"; fi
-server_sudo() {  # DESCRIPTION CMD...: an administrator step of --server (sudo asks on this terminal)
+server_sudo() {  # DESCRIPTION CMD...: an administrator step of --server (sudo asks on /dev/tty;
+    # stdin is /dev/null: through `curl | sh` it is this script)
     _sd="$1"; shift
-    if [ "$(id -u)" = 0 ]; then run "$_sd" "$@"; else run "$_sd" sudo "$@"; fi
+    if [ "$(id -u)" = 0 ]; then
+        RUN_SHOW="$(show_cmd "$@")" run "$_sd" sh -c 'exec "$@" </dev/null' sh "$@"
+    else
+        RUN_SHOW="$(show_cmd sudo "$@")" run "$_sd" sh -c 'exec "$@" </dev/null' sh sudo "$@"
+    fi
 }
-json_field() {  # PY-EXPR: read JSON on stdin, print the expression (python3 when present)
+json_field() {  # PY-EXPR: read JSON on stdin, print "OK:<value>" (nothing when it cannot be read)
     if have python3; then python3 -c "import json,sys
 try:
-    d=json.load(sys.stdin); print($1)
+    d=json.load(sys.stdin); print('OK:' + str($1))
 except Exception:
     pass" 2>/dev/null; else cat >/dev/null; fi
 }
+json_value() { sed -n 's/^OK://p'; }  # the value part of json_field's answer
 # server_funnel: Tailscale Funnel in front of the gateway (idempotent: every part is checked
 # first). Sets PUBLIC_URL=https://<this machine's tailnet name>.
 server_funnel() {
@@ -2459,7 +2465,7 @@ server_funnel() {
     else
         ok "Tailscale: installed ($(tailscale version 2>/dev/null | head -n 1))"
     fi
-    _ts_state="$(tailscale status --json 2>/dev/null | json_field 'd.get("BackendState","")')"
+    _ts_state="$(tailscale status --json 2>/dev/null | json_field 'd.get("BackendState","")' | json_value)"
     if [ "$_ts_state" = Running ]; then
         ok "Tailscale: signed in"
     else
@@ -2475,16 +2481,18 @@ server_funnel() {
             sudo tailscale up --operator="$(id -un)" </dev/tty || { warn "tailscale up failed; the gateway stays on this machine only"; return 0; }
         fi
     fi
-    _ts_host="$(tailscale status --json 2>/dev/null | json_field '(d.get("Self") or {}).get("DNSName","").rstrip(".")')"
+    _ts_host="$(tailscale status --json 2>/dev/null | json_field '(d.get("Self") or {}).get("DNSName","").rstrip(".")' | json_value)"
     if [ "$PRINT" = 1 ]; then _ts_host="${_ts_host:-<this-server>.<tailnet>.ts.net}"; fi
     [ -n "$_ts_host" ] || { warn "Tailscale gave no DNS name for this machine (MagicDNS off?): turn MagicDNS and HTTPS on in the Tailscale admin console, then run the installer again"; return 0; }
-    if tailscale funnel status 2>/dev/null | grep -q "127.0.0.1:$PORT"; then
+    # On only when Funnel (public) is allowed for <host>:443 AND / proxies to this gateway's port.
+    _fun="$(tailscale funnel status --json 2>/dev/null | json_field "bool((d.get('AllowFunnel') or {}).get('$_ts_host:443')) and str((((d.get('Web') or {}).get('$_ts_host:443') or {}).get('Handlers') or {}).get('/', {}).get('Proxy','')).rstrip('/') in ('http://127.0.0.1:$PORT','127.0.0.1:$PORT','http://localhost:$PORT')" | json_value)"
+    if [ "$_fun" = True ]; then
         ok "Funnel: https://$_ts_host already serves 127.0.0.1:$PORT"
     else
         # Live: when Funnel is not allowed on the tailnet yet, Tailscale prints the URL that enables it.
         RUN_LIVE=1 RUN_SOFT=1 run "publish the gateway on https://$_ts_host" tailscale funnel --bg "$PORT"
         if [ "$PRINT" = 0 ] && [ "$RUN_RC" != 0 ]; then
-            RUN_SOFT=1 server_sudo "publish the gateway on https://$_ts_host (as root)" tailscale funnel --bg "$PORT"
+            RUN_LIVE=1 RUN_SOFT=1 server_sudo "publish the gateway on https://$_ts_host (as root)" tailscale funnel --bg "$PORT"
             if [ "$RUN_RC" != 0 ]; then
                 warn "Tailscale Funnel did not start (see above: Funnel must be allowed for this tailnet, and HTTPS certificates on)"
                 SERVER_NOTES="${SERVER_NOTES}    Funnel is NOT on: allow Funnel and HTTPS for your tailnet, then run the same command again
@@ -2496,30 +2504,50 @@ server_funnel() {
     PUBLIC_URL="https://$_ts_host"
     # The gateway accepts its own https name already when it detects Tailscale; the stored
     # origin makes it explicit (and survives a detection miss). Appended, never replaced.
-    _origins="$("$GW" network status --json 2>/dev/null | json_field '",".join(d["reverse_proxy"]["allowed_origins"]["value"])')"
+    if [ "$PRINT" = 0 ] && ! gateway_supports network; then
+        info "this gateway has no 'abstractgateway network': it accepts its Tailscale https name when it detects it"
+        return 0
+    fi
+    _ojs="$("$GW" network status --json 2>/dev/null | json_field '",".join(d["reverse_proxy"]["allowed_origins"]["value"])')"
+    if [ "$PRINT" = 0 ] && [ -z "$_ojs" ]; then
+        # Never replace the stored list blind (the flag replaces it): skip, and say how.
+        warn "could not read the gateway's allowed origins; add $PUBLIC_URL in the console's Network page"
+        SERVER_NOTES="${SERVER_NOTES}    Allowed origin NOT set: Network page > Allowed origins > add $PUBLIC_URL
+"
+        return 0
+    fi
+    _origins="$(printf '%s\n' "$_ojs" | json_value)"
     case ",$_origins," in
         *",$PUBLIC_URL,"*) ok "allowed origin: $PUBLIC_URL (already set)" ;;
-        *) run "allow the browser origin $PUBLIC_URL" "$GW" network set --allowed-origins "${_origins:+$_origins,}$PUBLIC_URL" ;;
+        *) RUN_SOFT=1 run "allow the browser origin $PUBLIC_URL" "$GW" network set --allowed-origins "${_origins:+$_origins,}$PUBLIC_URL"
+           [ "$RUN_RC" = 0 ] || SERVER_NOTES="${SERVER_NOTES}    Allowed origin NOT set (see $LOG_FILE): Network page > Allowed origins > add $PUBLIC_URL
+" ;;
     esac
 }
+# The NVIDIA driver (--server --gpu, --gpu-driver): decided here, installed after the log exists
+# (step "NVIDIA driver" below). DRIVER_ACTION: present | no_gpu | reboot_pending | install.
+has_nvidia_pci() {
+    if have lspci && lspci 2>/dev/null | grep -qi 'nvidia'; then return 0; fi
+    for _v in /sys/bus/pci/devices/*/vendor; do
+        [ -r "$_v" ] && [ "$(cat "$_v" 2>/dev/null)" = 0x10de ] && return 0
+    done
+    return 1
+}
+nvidia_driver_package() { have dpkg-query && dpkg-query -W -f='${Status} ${Package}\n' 'nvidia-driver-*' 2>/dev/null | grep -q '^install ok installed'; }
+DRIVER_ACTION=""
 if [ "$GPU_DRIVER" = 1 ]; then
     if have nvidia-smi && nvidia-smi -L >/dev/null 2>&1; then
+        DRIVER_ACTION=present
         ok "NVIDIA driver: present ($(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null | head -n 1))"
-    elif have lspci && ! lspci 2>/dev/null | grep -qi 'nvidia'; then
-        warn "--gpu: lspci shows no NVIDIA GPU, so no driver is installed"
+    elif ! has_nvidia_pci; then
+        DRIVER_ACTION=no_gpu
+        warn "--gpu: no NVIDIA GPU on the PCI bus (lspci, /sys/bus/pci), so no driver is installed"
+    elif nvidia_driver_package; then
+        DRIVER_ACTION=reboot_pending; REBOOT_NEEDED=1; PROFILE=gpu
+        warn "NVIDIA driver: installed but not loaded yet: reboot (sudo reboot), then run the installer again"
     else
-        info "NVIDIA driver: missing; installing the recommended one (the server needs a reboot after this)"
-        _drv=0
-        RUN_SOFT=1 server_sudo "refresh the package lists" apt-get update; [ "$RUN_RC" = 0 ] || _drv=1
-        [ "$_drv" = 0 ] && { RUN_SOFT=1 server_sudo "install ubuntu-drivers" apt-get install -y ubuntu-drivers-common; [ "$RUN_RC" = 0 ] || _drv=1; }
-        [ "$_drv" = 0 ] && { RUN_SOFT=1 server_sudo "install the recommended NVIDIA driver" ubuntu-drivers install; [ "$RUN_RC" = 0 ] || _drv=1; }
-        if [ "$_drv" = 0 ]; then
-            REBOOT_NEEDED=1; PROFILE=gpu
-        else
-            warn "the NVIDIA driver step failed (Ubuntu's ubuntu-drivers, see above); continuing without it: install the driver by hand (docs/deploy-linux.md, step 2), reboot, and run the installer again"
-            SERVER_NOTES="${SERVER_NOTES}    NVIDIA driver NOT installed: see the warning above
-"
-        fi
+        DRIVER_ACTION=install; PROFILE=gpu
+        info "NVIDIA driver: missing; it is installed below, then the server needs a reboot"
     fi
 fi
 
@@ -2793,6 +2821,25 @@ if [ "$PRINT" = 0 ]; then
     lock_take
     LOG_FILE="$LOG_DIR/install-$(date +%Y%m%d-%H%M%S).log"
     ( umask 077; : >"$LOG_FILE" )
+fi
+
+if [ "$DRIVER_ACTION" = install ]; then
+    step "NVIDIA driver (Ubuntu's recommended driver; a reboot follows)"
+    _drv=0
+    # Non-interactive: through `curl | sh` stdin is this script, and on a first boot
+    # unattended-upgrades often holds the dpkg lock for a few minutes.
+    _apt="env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600"
+    RUN_SOFT=1 server_sudo "refresh the package lists" $_apt update; [ "$RUN_RC" = 0 ] || _drv=1
+    [ "$_drv" = 0 ] && { RUN_SOFT=1 server_sudo "install ubuntu-drivers" $_apt install -y ubuntu-drivers-common; [ "$RUN_RC" = 0 ] || _drv=1; }
+    [ "$_drv" = 0 ] && { RUN_SOFT=1 server_sudo "install the recommended NVIDIA driver" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a ubuntu-drivers install; [ "$RUN_RC" = 0 ] || _drv=1; }
+    if [ "$PRINT" = 1 ]; then REBOOT_NEEDED=1
+    elif [ "$_drv" = 0 ] && nvidia_driver_package; then
+        REBOOT_NEEDED=1; ok "NVIDIA driver installed: reboot after the install, then run the same command again"
+    else
+        warn "the NVIDIA driver was not installed (see $LOG_FILE); continuing without it: install it by hand (docs/deploy-linux.md, step 2), reboot, and run the installer again"
+        SERVER_NOTES="${SERVER_NOTES}    NVIDIA driver NOT installed: see the warning above
+"
+    fi
 fi
 
 step "uv (Python toolchain manager)"
@@ -3648,17 +3695,21 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
             echo "    Setup code: $SETUP_CODE"
             echo "    Next: open the address, choose the admin password and give the setup code (\"Set up your gateway\");"
             echo "          the setup guide then opens (engines, default models, apps). Again: abstractgateway claim --code"
+        elif gateway_supports setup-code; then
+            echo "    Next: open the address and sign in with your account and password (this gateway is already set up;"
+            echo "          abstractgateway claim --code says so, or why there is no code)."
         else
-            echo "    Next: open the address and sign in with your account and password (this gateway is already set up)."
+            echo "    Next: open the address and sign in as admin with the token in $TOKEN_FILE"
+            echo "          (this gateway is older than 0.18.0, which adds \"Set up your gateway\" and passwords)."
         fi
         if [ "$REBOOT_NEEDED" = 1 ]; then
             echo "    The NVIDIA driver was installed: reboot now (sudo reboot), then run the same install command again"
             echo "    (it keeps everything and adds the CUDA build of llama.cpp). The gateway starts by itself after the reboot."
         fi
         [ -n "$SERVER_NOTES" ] && printf '%s' "$SERVER_NOTES"
-        echo "    Status: systemctl --user status abstractgateway   Logs: journalctl --user -u abstractgateway"
+        [ "$MODE" = service ] && echo "    Status: systemctl --user status abstractgateway   Logs: journalctl --user -u abstractgateway"
     fi
-    [ "$OPENED" = 1 ] || echo "               from another computer, tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
+    [ "$OPENED" = 1 ] || [ -n "$PUBLIC_URL" ] || echo "               from another computer, tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
     if [ "$CONSOLE_OK" = 1 ]; then
         echo "    Terminal:  $TUI_CMD"
     else
