@@ -4,6 +4,13 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.11.16] - 2026-10-28
+
+Pins **AbstractFlow 0.11.0** (npm `@abstractframework/flow`; the automations-first editor, triggers, mail nodes,
+*After the run*) and the **AbstractCode terminal crate 0.11.0** (crates.io `abstractcode`) in place of 0.10.1 and
+0.10.0: the installers, the install manifest, `NPM_RELEASE_VERSIONS` and `CRATE_RELEASE_VERSIONS` install them.
+Every Python pin is unchanged from 0.11.15.
+
 ## [0.11.15] - 2026-10-28
 
 Pins the 2026-10-27/28 release wave (backlog 1055) across the light, Apple and GPU profiles:
