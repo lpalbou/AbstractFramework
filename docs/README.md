@@ -75,6 +75,7 @@ The full component diagram, with memory, semantics and the consoles, is in
 | Page | What it covers |
 |---|---|
 | **[Install](install.md)** | Mac installer, one-line install (`install.sh` / `install.ps1`), start at login, headless or remote install, the local gateway pointer, options, Network setting and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
+| **[Deploy on a Linux server](deploy-linux.md)** | A fresh Linux server, copy-paste: NVIDIA driver, the one-line install, the gateway as a systemd user service (linger), sign-in through an SSH tunnel, a first GGUF model, apps, uninstall, FAQ |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Agent sessions](agent-sessions.md)** | What every client shares when it chats with an agent: the gateway's default agent workflow, the conversation workspace and its built-in protection, skills, live replies, opening the Assistant signed in |
 | **[Automations](automations.md)** | How automations work in practice and how to manage them: an automation is a durable run, each tick a turn; independent vs growing context; creating one from the Assistant, the Observer, AbstractCode or a workflow's defaults; email triggers and email notifications; two worked examples; reading results in every client; pause, run now, resume, edit, archive, discuss; notifications, typed waits, restart safety, limits, troubleshooting |

@@ -52,20 +52,22 @@ real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) an
 [GPU on Windows](docs/install.md#gpu-on-windows-nvidia).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
-with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
+with local voice (Supertonic text-to-speech and Whisper speech-to-text; the default voice downloads
+once: `abstractgateway models download supertonic supertonic-3`), asks whether to start it
 at login (Enter = yes; an unattended install leaves it off and says how to turn it on), starts it
 on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
 then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
 machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
 **Setup** button at the bottom of the console's sidebar runs the guide again, keeping your choices
-unless you replace them. The installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
+unless you replace them. The installer also builds the terminal console, `abstractgateway-console` (it needs a C compiler;
+without one the installer says it skipped it and how to add one), which runs the same guide on
 a server without a browser and offers itself at the end of an install over SSH
 ([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
 
 Every failure says what to do next; running the installer again repairs the install in place. To
-remove it, double-click `Uninstall AbstractFramework.command` (in
-`~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
-`curl -LsSf https://abstractframework.ai/uninstall.sh | sh`.
+remove it, run `curl -LsSf https://abstractframework.ai/uninstall.sh | sh` (macOS: or double-click
+`Uninstall AbstractFramework.command`, in `~/Library/Application Support/AbstractFramework/Installer`
+after a package install). On a Linux server, see [Deploy on a Linux server](docs/deploy-linux.md).
 Step by step, the failure table, options (`--with-apps`, `--with-ollama`, `--print`, …):
 [Install](docs/install.md). Something not working: [Troubleshooting](docs/troubleshooting.md).
 

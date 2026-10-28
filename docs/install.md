@@ -490,7 +490,11 @@ It asks before removing anything, then asks two more questions, both defaulting 
 - **Also remove uv, its Python and its download cache** (about 2.5 GB)? Asked only when the
   installer is what added uv; answer no if you use uv for anything else.
 
-It always removes the login item, stops AbstractFramework and removes the gateway (and the
+It always removes the login item, including one turned on after the install (`abstractgateway
+service enable` or a console's Start at login switch) when it starts this install's gateway; a
+login item that starts another gateway is kept and the uninstaller prints the commands to remove
+it. On Linux it leaves lingering as it is (it never runs `sudo`) and, when lingering is on, prints
+`sudo loginctl disable-linger <user>` for you to run if nothing else needs it. It stops AbstractFramework and removes the gateway (and the
 Assistant, which lives in the gateway's environment), the terminal console and `abstractcode`,
 including an `abstractcode` that a gateway before 0.7.1 installed in `<data dir>/apps/bin` (that
 folder is removed when nothing else is in it). It also deletes the local gateway pointer,
@@ -587,8 +591,13 @@ upgrades or repairs the install in place (see [Upgrade](#upgrade)). The macOS pa
 
 ### No compiler needed
 
-By default the script never compiles anything, so you do not need Xcode Command Line Tools, gcc
-or the MSVC Build Tools. It passes uv a small overrides file (`uv-overrides.txt` in the gateway
+By default the script never compiles a Python package, so you do not need Xcode Command Line
+Tools, gcc or the MSVC Build Tools for the gateway. Two parts do need one: the terminal console and
+AbstractCode's terminal client are built with cargo (crates.io has no prebuilt binary), and vLLM
+compiles its GPU kernels the first time it starts a model. Without a compiler the installer says
+up front that it will skip the first two and why, says it again in its summary, and gives the fix
+(`sudo apt-get install -y build-essential` on Debian/Ubuntu, `xcode-select --install` on macOS);
+the console's Code app also installs a prebuilt `abstractcode`. It passes uv a small overrides file (`uv-overrides.txt` in the gateway
 data directory; `--print` shows it) that swaps `webrtcvad` for `webrtcvad-wheels`, keeps `vllm`
 to Linux, and leaves out the two compiled extras below, and it refuses to build those packages
 from source, so a gap fails with a clear error instead of starting a compiler. If macOS asks you
@@ -645,7 +654,8 @@ there, FlashInfer, compiles with the CUDA toolkit's `nvcc`, which a driver-only 
 **Driver.** PyPI's PyTorch for Linux (2.11 at this release) is a CUDA 13 build, which needs NVIDIA
 driver 580 or newer. With a driver from 525 to 579, PyTorch reports no GPU, so Diffusers,
 Transformers, vLLM and llama.cpp run on the processor; the installer says so. Update the driver
-(`sudo ubuntu-drivers install` on Ubuntu) and run the installer again. Whisper uses its own CUDA 12
+(on Ubuntu: `sudo apt-get install -y ubuntu-drivers-common`, which cloud images often lack, then
+`sudo ubuntu-drivers install` and a reboot) and run the installer again. Whisper uses its own CUDA 12
 libraries, which need driver 525 or newer.
 
 **Measured on real hardware.** Ubuntu 26.04 with a Quadro RTX 5000: 16 GB, compute capability
@@ -848,6 +858,9 @@ curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --with-apps --with
 
 ### Headless or remote machine
 
+Step by step on a fresh Linux server (driver, service, tunnel, first model, uninstall):
+[Deploy on a Linux server](deploy-linux.md).
+
 Install over SSH with the same one-liner. It asks the start-at-login question in your SSH terminal
 (Enter = yes; a scripted install with no terminal leaves it off), installs local voice (Supertonic
 and Whisper, on CPU) like every other install, and at the end offers to open the terminal console,
@@ -879,6 +892,24 @@ browser, and open the apps from the console's **Apps** page: each opens at
 server itself, the terminal console's **Apps** screen shows the same link and the tunnel command
 instead of starting a browser.
 
+On a server, run text models with llama.cpp, which every profile installs (the CUDA build on an
+NVIDIA GPU: the summary's `GGUF:` line). The setup guide may recommend LM Studio, a desktop app
+that is not installed on a server: choose a GGUF model instead, for example this 2.5 GB one (the model of
+[Deploy on a Linux server](deploy-linux.md), measured there on a 16 GB GPU):
+
+```bash
+abstractgateway models download huggingface "unsloth/Qwen3-4B-Instruct-2507-GGUF:Q4_K_M"
+abstractgateway-config set-default output.text --provider huggingface --model unsloth/Qwen3-4B-Instruct-2507-GGUF
+abstractgateway-config set-default input.text  --provider huggingface --model unsloth/Qwen3-4B-Instruct-2507-GGUF
+```
+
+Local voice is installed without its default voice: download it once (the installer's summary
+prints this line), or speech synthesis answers an error until you do:
+
+```bash
+abstractgateway models download supertonic supertonic-3
+```
+
 ### The same install by hand
 
 ```bash
@@ -908,6 +939,15 @@ abstractgateway service uninstall   # stop it and remove the login item (data is
 
 The login item runs plain `abstractgateway serve`, so the host and port come from the Network
 setting below. Passing `--host` to `service install` stores the matching mode in that setting.
+
+**Linux: lingering.** A `systemd --user` service runs only while you have a session: on a server
+it stops when your last SSH session ends and does not start at boot. Turn lingering on once
+(`loginctl show-user "$USER" -p Linger` says `Linger=yes` afterwards); the installer's summary
+prints this line when it is off:
+
+```bash
+sudo loginctl enable-linger "$USER"
+```
 
 The bootstrap scripts use it by default. Gateways older than 0.3.0 (installed with `--pin`) have no
 `service` command: `install.sh` then starts the gateway in the background and `install.ps1` adds a
