@@ -1973,19 +1973,25 @@ unit_runs_this_gateway() {
 }
 # service_leftovers: after the login item's removal, what is still registered, each with the
 # exact commands to remove it (never run for you: it is not this install's, or needs sudo).
+# unit_kind FILE: mac, linux or xdg (which of the three login item files it is).
+unit_kind() {
+    case "$1" in *.plist) echo mac ;; *.service) echo linux ;; *) echo xdg ;; esac
+}
 service_leftovers() {
     for _u in "$UNIT_MAC" "$UNIT_LINUX" "$UNIT_XDG"; do
         [ -f "$_u" ] || continue
-        # --print: the removal above only printed its commands; what it would remove is not left.
-        [ "$PRINT" = 1 ] && { [ "$_u" = "$UNIT_LATER" ] || [ "$SERVICE_REMOVAL" = 1 ]; } && continue
-        if [ "$_u" = "$UNIT_LATER" ] || [ "$SERVICE_REMOVAL" = 1 ]; then
-            warn "the login service is still registered: $_u"
+        if unit_runs_this_gateway "$_u"; then
+            # --print: the removal above only printed its commands.
+            [ "$PRINT" = 1 ] && continue
+            warn "this install's login item is still registered: $_u"
         else
+            # --print with a state that says service (or none): the chain above may remove it.
+            [ "$PRINT" = 1 ] && [ "$SERVICE_CHAIN" = 1 ] && continue
             info "kept: $_u starts a gateway this installer did not install"
         fi
-        case "$_u" in
-            *.plist) info "  to remove it: launchctl bootout gui/$(id -u)/ai.abstractframework.gateway; rm -f $(q "$_u")" ;;
-            *.service) info "  to remove it: systemctl --user disable --now abstractgateway.service; rm -f $(q "$_u"); systemctl --user daemon-reload" ;;
+        case "$(unit_kind "$_u")" in
+            mac) info "  to remove it: launchctl bootout gui/$(id -u)/ai.abstractframework.gateway; rm -f $(q "$_u")" ;;
+            linux) info "  to remove it: systemctl --user disable --now abstractgateway.service; rm -f $(q "$_u"); systemctl --user daemon-reload" ;;
             *) info "  to remove it: rm -f $(q "$_u")" ;;
         esac
     done
@@ -1995,7 +2001,7 @@ service_leftovers() {
         info "lingering is on for $(id -un) (user services run without a login and start at boot); if you turned it on only for the gateway: sudo loginctl disable-linger $(id -un)"
     fi
 }
-_uninst_mac=""; [ "$OS_ID" = macos ] && _uninst_mac=", or double-click Uninstall AbstractFramework.command"
+_uninst_mac=""; [ -e "$HOME/Library/Application Support/AbstractFramework/Installer/Uninstall AbstractFramework.command" ] && _uninst_mac=", or double-click Uninstall AbstractFramework.command"
 UNINSTALL_AGAIN="run the uninstaller again (curl -LsSf $AF_UNINSTALL_URL | sh -s -- --yes$_uninst_mac); it skips what is already gone."
 
 # ---------------------------------------------------------------------------
@@ -2049,19 +2055,32 @@ if [ "$UNINSTALL" = 1 ]; then
     UNIT_LINUX="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/abstractgateway.service"
     UNIT_XDG="${XDG_CONFIG_HOME:-$HOME/.config}/autostart/abstractgateway.desktop"
     # A login item turned on AFTER the install (`abstractgateway service enable`, which the
-    # summary suggests, or the consoles' Start at login switch) is not in the state file: one
-    # that runs this install's gateway is removed too (it would point at a deleted program).
-    # One that runs another gateway is kept, with the commands to remove it.
-    UNIT_LATER=""
+    # summary suggests, or the consoles' Start at login switch) is not in the state file: each one
+    # that starts this install's gateway is removed too (it would point at a deleted program), file
+    # by file; one that starts another gateway is kept, with the commands to remove it.
+    UNITS_OURS=""
     for _u in "$UNIT_MAC" "$UNIT_LINUX" "$UNIT_XDG"; do
-        [ -f "$_u" ] && unit_runs_this_gateway "$_u" && UNIT_LATER="$_u"
+        [ -f "$_u" ] && unit_runs_this_gateway "$_u" && UNITS_OURS="$UNITS_OURS $(unit_kind "$_u")"
     done
-    SERVICE_REMOVAL=0
-    if { [ "$ST_MODE" = background ] || [ "$ST_MODE" = none ]; } && [ -z "$UNIT_LATER" ]; then
-        info "no login service was registered by this install (mode: $ST_MODE)"
+    SERVICE_CHAIN=0
+    if [ "$ST_MODE" = background ] || [ "$ST_MODE" = none ]; then
+        if [ -z "$UNITS_OURS" ]; then
+            info "no login service was registered by this install (mode: $ST_MODE)"
+        else
+            info "a login service was turned on after the install (it starts this install's gateway): removing it"
+            for _k in $UNITS_OURS; do
+                case "$_k" in
+                    mac) RUN_SOFT=1 run "stop the login item" launchctl bootout "gui/$(id -u)/ai.abstractframework.gateway"
+                         run "remove the login item" rm -f "$UNIT_MAC" ;;
+                    linux) RUN_SOFT=1 run "stop the login service" systemctl --user disable --now abstractgateway.service
+                           run "remove the login service" rm -f "$UNIT_LINUX"
+                           RUN_SOFT=1 run "reload systemd's user units" systemctl --user daemon-reload ;;
+                    xdg) run "remove the login entry" rm -f "$UNIT_XDG" ;;
+                esac
+            done
+        fi
     else
-        SERVICE_REMOVAL=1
-        [ -n "$UNIT_LATER" ] && [ "$ST_MODE" != service ] && info "a login service was turned on after the install ($UNIT_LATER): removing it"
+        SERVICE_CHAIN=1
         if gateway_supports service; then
             run "remove the gateway service" "$TOOL_BIN/abstractgateway" service uninstall
         elif [ "$OS_ID" = macos ] && [ -f "$UNIT_MAC" ]; then
@@ -2371,7 +2390,12 @@ if [ "$HAS_CC" = 0 ]; then
     fi
     _cc_fix="$([ "$OS_ID" = macos ] && echo 'xcode-select --install' || echo 'sudo apt-get install -y build-essential (Debian/Ubuntu)')"
     info "no C compiler ($([ "$OS_ID" = macos ] && echo 'Xcode CLT' || echo 'cc/gcc')): the Python packages install as prebuilt wheels"
-    { [ "$WITH_CONSOLE" = 1 ] || [ "$WITH_CODE_CLI" = 1 ]; } && warn "no C compiler: the terminal console and AbstractCode's terminal client are built with cargo and need one, so they are skipped unless already installed$([ "$OS_ID" = linux ] && [ "$PROFILE" = gpu ] && echo ', and vLLM cannot start a model'); to get them: $_cc_fix, then run the installer again"
+    _cc_skip=""
+    [ "$WITH_CONSOLE" = 1 ] && _cc_skip="the terminal console"
+    [ "$WITH_CODE_CLI" = 1 ] && _cc_skip="${_cc_skip:+$_cc_skip and }AbstractCode's terminal client"
+    _cc_verb="needs"; case "$_cc_skip" in *" and "*) _cc_verb="need" ;; esac
+    [ -n "$_cc_skip" ] && warn "no C compiler: $_cc_skip (built with cargo) $_cc_verb one, so they are skipped unless already installed; to get them: $_cc_fix, then run the installer again"
+    [ "$OS_ID" = linux ] && [ "$PROFILE" = gpu ] && warn "no C compiler: vLLM cannot start a model until you add one: $_cc_fix"
 elif [ "$FULL" = 1 ]; then
     ok "C compiler found: --full builds the compiled extras from source (several minutes)"
 fi
@@ -3494,7 +3518,8 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     case ",$EXTRAS," in *,tray,*) echo "  Its icon in the $([ "$OS_ID" = macos ] && echo 'menu bar' || echo 'system tray') opens the console and shows its status." ;; esac
     echo "  First steps in the console: pick an engine and a model; it shows what fits this computer."
     [ -n "$VOICE_SPEC" ] && echo "  Speech: download the default voice once (or in the console's Models page): $VOICE_WEIGHTS"
-    if [ "$OS_ID" = macos ]; then echo "  To remove it: double-click Uninstall AbstractFramework.command, or run: curl -LsSf $AF_UNINSTALL_URL | sh"
+    if [ "$OS_ID" = macos ] && [ -e "$HOME/Library/Application Support/AbstractFramework/Installer/Uninstall AbstractFramework.command" ]; then
+        echo "  To remove it: double-click Uninstall AbstractFramework.command (in ~/Library/Application Support/AbstractFramework/Installer), or run: curl -LsSf $AF_UNINSTALL_URL | sh"
     else echo "  To remove it: curl -LsSf $AF_UNINSTALL_URL | sh"; fi
 fi
 if [ "$PRINT" = 0 ] && [ "$NO_START" = 1 ]; then

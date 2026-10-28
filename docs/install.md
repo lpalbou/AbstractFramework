@@ -938,7 +938,7 @@ abstractgateway service uninstall   # stop it and remove the login item (data is
 ```
 
 The login item runs plain `abstractgateway serve`, so the host and port come from the Network
-setting below.
+setting below. Passing `--host` to `service install` stores the matching mode in that setting.
 
 **Linux: lingering.** A `systemd --user` service runs only while you have a session: on a server
 it stops when your last SSH session ends and does not start at boot. Turn lingering on once
@@ -947,7 +947,7 @@ prints this line when it is off:
 
 ```bash
 sudo loginctl enable-linger "$USER"
-``` Passing `--host` to `service install` stores the matching mode in that setting.
+```
 
 The bootstrap scripts use it by default. Gateways older than 0.3.0 (installed with `--pin`) have no
 `service` command: `install.sh` then starts the gateway in the background and `install.ps1` adds a

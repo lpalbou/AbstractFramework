@@ -105,7 +105,8 @@ apps open at `http://127.0.0.1:8080/apps/<app>/` through the same tunnel.
 
 ```bash
 curl -LsSf https://abstractframework.ai/uninstall.sh | sh     # answer y; data and uv: Enter keeps them
-# · a login service was turned on after the install (/home/ubuntu/.config/systemd/user/abstractgateway.service): removing it
+# expected (this uninstaller's messages; the 0.11.17 test above removed the unit by hand):
+# · a login service was turned on after the install (it starts this install's gateway): removing it
 # · lingering is on for ubuntu (...); if you turned it on only for the gateway: sudo loginctl disable-linger ubuntu
 # Done.
 sudo loginctl disable-linger "$USER"   # only if nothing else needs it

@@ -60,7 +60,7 @@ def test_uninstall_removes_a_service_enabled_after_a_background_install(tmp_path
     assert proc.returncode == 0, proc.stderr
     out = proc.stdout
     assert "no login service was registered by this install" not in out
-    assert f"a login service was turned on after the install ({unit}): removing it" in out
+    assert "a login service was turned on after the install (it starts this install's gateway): removing it" in out
     assert "$ systemctl --user disable --now abstractgateway.service" in out
     assert f"$ rm -f {unit}" in out
     assert "$ systemctl --user daemon-reload" in out
@@ -102,6 +102,29 @@ def test_no_compiler_says_what_is_skipped_and_the_apt_line(tmp_path: Path) -> No
     assert proc.returncode == 0, proc.stderr
     out = proc.stdout
     assert "fine, all packages install as prebuilt wheels" not in out
-    assert ("no C compiler: the terminal console and AbstractCode's terminal client are built with cargo and need one, "
-            "so they are skipped unless already installed; to get them: sudo apt-get install -y build-essential (Debian/Ubuntu)") in out
+    assert ("no C compiler: the terminal console and AbstractCode's terminal client (built with cargo) need one, so they "
+            "are skipped unless already installed; to get them: sudo apt-get install -y build-essential (Debian/Ubuntu), "
+            "then run the installer again") in out
     assert "not installed (building it needs a C compiler: sudo apt-get install -y build-essential (Debian/Ubuntu))" in out
+    # --no-console: only what is still wanted is named.
+    proc = _run(tmp_path, _linux_stubs(tmp_path, compiler=False), "--print", "--profile", "light", "--port", "18999",
+                "--no-tray", "--no-console", script=script)
+    assert proc.returncode == 0, proc.stderr
+    assert ("no C compiler: AbstractCode's terminal client (built with cargo) needs one") in proc.stdout
+    assert "no C compiler: the terminal console" not in proc.stdout
+
+
+def test_uninstall_removes_only_its_own_entry_when_another_gateway_has_the_unit(tmp_path: Path) -> None:
+    # This install's XDG autostart entry plus another gateway's systemd unit: the entry goes, the
+    # unit stays (with the commands to remove it), whatever order the files are checked in.
+    unit = _background_install(tmp_path, "/opt/other/bin/abstractgateway")
+    entry = tmp_path / ".config" / "autostart" / "abstractgateway.desktop"
+    entry.parent.mkdir(parents=True)
+    entry.write_text(f"[Desktop Entry]\nType=Application\nExec={tmp_path}/.local/share/uv/tools/abstractgateway/bin/python -m abstractgateway.os_service launch\n")
+    proc = _run(tmp_path, _linux_stubs(tmp_path), "--uninstall", "--print", "--yes")
+    assert proc.returncode == 0, proc.stderr
+    out = proc.stdout
+    assert f"$ rm -f {entry}" in out
+    assert f"$ rm -f {unit}" not in out
+    assert "$ systemctl --user disable" not in out
+    assert f"kept: {unit} starts a gateway this installer did not install" in out
