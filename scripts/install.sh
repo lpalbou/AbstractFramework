@@ -87,6 +87,21 @@
 #                            sessions, AbstractCode's settings; model weights stay;
 #                            --remove-uv also removes uv, its Pythons and its
 #                            download cache when this installer put uv there)
+#   --server                 a Linux server in one command (idempotent: run it again to
+#                            repair or upgrade): asks nothing, starts at login (the systemd
+#                            user service), turns lingering on (sudo loginctl enable-linger,
+#                            so it runs without an SSH session and starts at boot), opens no
+#                            browser, and ends with the address, the setup code for the
+#                            console's "Set up your gateway" page, and the next steps
+#   --gpu                    with --server, also the NVIDIA driver when nvidia-smi is missing
+#                            and lspci sees an NVIDIA GPU (sudo apt-get install -y
+#                            ubuntu-drivers-common; sudo ubuntu-drivers install; then reboot
+#                            and run the same command again); alone, the gpu profile
+#   --gpu-driver             the driver step without --gpu
+#   --tailscale-funnel       with --server: install Tailscale when missing, sign this server
+#                            in (prints the login URL and waits), publish the gateway with
+#                            `tailscale funnel --bg <port>` and allow its https address as a
+#                            browser origin; the summary's public address is that URL
 #   -y, --yes                ask nothing, not even start at login (it stays as it was)
 #   -v, --verbose            show the full output of every command
 #   -h, --help               this help
@@ -467,6 +482,7 @@ DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
 WITH_APPS=0; OPT_CONSOLE=""; OPT_CODE_CLI=""; OPT_CORE_CLI=""; OPT_TRAY=""; OPT_FULL=""
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
 NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
+SERVER=0; GPU_DRIVER=0; TS_FUNNEL=0; PUBLIC_URL=""; REBOOT_NEEDED=0; SERVER_NOTES=""
 PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0; ASK_WAIT=25; ASK_NOTHING=0
 INTERACTIVE="${AF_INTERACTIVE:-0}"
 
@@ -531,6 +547,9 @@ while [ $# -gt 0 ]; do
         --no-tray) OPT_TRAY=0 ;;
         --with-tray) OPT_TRAY=1 ;;
         --no-service) NO_SERVICE=1 ;;
+        --server) SERVER=1 ;;
+        --gpu-driver) GPU_DRIVER=1 ;;
+        --tailscale-funnel) TS_FUNNEL=1 ;;
         --no-start) NO_START=1 ;;
         --no-open) NO_OPEN=1 ;;
         --ask-wait|--console-wait) need_arg "$@"; ASK_WAIT="$2"; shift ;;
@@ -2408,6 +2427,102 @@ if net_ok; then ok "internet: pypi.org reachable"
 elif [ "$PRINT" = 1 ]; then warn "$(offline_msg | head -n 1)"
 else die "$(offline_msg)"; fi
 
+# --server (Linux): validated here, after the OS is known. --server --gpu adds the driver step.
+if [ "$SERVER" = 1 ] || [ "$TS_FUNNEL" = 1 ] || [ "$GPU_DRIVER" = 1 ]; then
+    [ "$OS_ID" = linux ] || die "--server, --gpu-driver and --tailscale-funnel are for a Linux server (this is $OS_ID)"
+    [ "$UNINSTALL" = 0 ] || die "--server is an install mode; to remove: --uninstall alone"
+fi
+if [ "$SERVER" = 1 ]; then
+    [ "$NO_SERVICE" = 0 ] || die "--server runs the gateway as a login service; it cannot be combined with --no-service"
+    NO_OPEN=1
+    [ "$PROFILE" = gpu ] && GPU_DRIVER=1
+fi
+if [ "$TS_FUNNEL" = 1 ] && [ "$SERVER" = 0 ]; then die "--tailscale-funnel goes with --server"; fi
+server_sudo() {  # DESCRIPTION CMD...: an administrator step of --server (sudo asks on this terminal)
+    _sd="$1"; shift
+    if [ "$(id -u)" = 0 ]; then run "$_sd" "$@"; else run "$_sd" sudo "$@"; fi
+}
+json_field() {  # PY-EXPR: read JSON on stdin, print the expression (python3 when present)
+    if have python3; then python3 -c "import json,sys
+try:
+    d=json.load(sys.stdin); print($1)
+except Exception:
+    pass" 2>/dev/null; else cat >/dev/null; fi
+}
+# server_funnel: Tailscale Funnel in front of the gateway (idempotent: every part is checked
+# first). Sets PUBLIC_URL=https://<this machine's tailnet name>.
+server_funnel() {
+    step "Tailscale Funnel (public https address)"
+    if ! have tailscale; then
+        RUN_SHOW="curl -fsSL https://tailscale.com/install.sh | sh" run "install Tailscale (its installer asks for sudo)" sh -c 'curl -fsSL https://tailscale.com/install.sh | sh'
+        [ "$PRINT" = 1 ] || have tailscale || { warn "Tailscale did not install (see $LOG_FILE); the gateway stays on this machine only"; return 0; }
+    else
+        ok "Tailscale: installed ($(tailscale version 2>/dev/null | head -n 1))"
+    fi
+    _ts_state="$(tailscale status --json 2>/dev/null | json_field 'd.get("BackendState","")')"
+    if [ "$_ts_state" = Running ]; then
+        ok "Tailscale: signed in"
+    else
+        info "Tailscale: sign this server in. Open the URL it prints in your browser; the installer waits until you authorize it."
+        # Live, not into the log: the login URL must reach the person. --operator lets this
+        # user run `tailscale funnel` without sudo afterwards.
+        if [ "$PRINT" = 1 ]; then
+            run "sign this server in to your tailnet" sudo tailscale up --operator="$(id -un)"
+        elif [ "$(id -u)" = 0 ]; then
+            printf '  %s$ tailscale up%s\n' "$C_D" "$C_0"; tailscale up || { warn "tailscale up failed; the gateway stays on this machine only"; return 0; }
+        else
+            printf '  %s$ sudo tailscale up --operator=%s%s\n' "$C_D" "$(id -un)" "$C_0"
+            sudo tailscale up --operator="$(id -un)" </dev/tty || { warn "tailscale up failed; the gateway stays on this machine only"; return 0; }
+        fi
+    fi
+    _ts_host="$(tailscale status --json 2>/dev/null | json_field '(d.get("Self") or {}).get("DNSName","").rstrip(".")')"
+    if [ "$PRINT" = 1 ]; then _ts_host="${_ts_host:-<this-server>.<tailnet>.ts.net}"; fi
+    [ -n "$_ts_host" ] || { warn "Tailscale gave no DNS name for this machine (MagicDNS off?): turn MagicDNS and HTTPS on in the Tailscale admin console, then run the installer again"; return 0; }
+    if tailscale funnel status 2>/dev/null | grep -q "127.0.0.1:$PORT"; then
+        ok "Funnel: https://$_ts_host already serves 127.0.0.1:$PORT"
+    else
+        # Live: when Funnel is not allowed on the tailnet yet, Tailscale prints the URL that enables it.
+        RUN_LIVE=1 RUN_SOFT=1 run "publish the gateway on https://$_ts_host" tailscale funnel --bg "$PORT"
+        if [ "$PRINT" = 0 ] && [ "$RUN_RC" != 0 ]; then
+            RUN_SOFT=1 server_sudo "publish the gateway on https://$_ts_host (as root)" tailscale funnel --bg "$PORT"
+            if [ "$RUN_RC" != 0 ]; then
+                warn "Tailscale Funnel did not start (see above: Funnel must be allowed for this tailnet, and HTTPS certificates on)"
+                SERVER_NOTES="${SERVER_NOTES}    Funnel is NOT on: allow Funnel and HTTPS for your tailnet, then run the same command again
+"
+                return 0
+            fi
+        fi
+    fi
+    PUBLIC_URL="https://$_ts_host"
+    # The gateway accepts its own https name already when it detects Tailscale; the stored
+    # origin makes it explicit (and survives a detection miss). Appended, never replaced.
+    _origins="$("$GW" network status --json 2>/dev/null | json_field '",".join(d["reverse_proxy"]["allowed_origins"]["value"])')"
+    case ",$_origins," in
+        *",$PUBLIC_URL,"*) ok "allowed origin: $PUBLIC_URL (already set)" ;;
+        *) run "allow the browser origin $PUBLIC_URL" "$GW" network set --allowed-origins "${_origins:+$_origins,}$PUBLIC_URL" ;;
+    esac
+}
+if [ "$GPU_DRIVER" = 1 ]; then
+    if have nvidia-smi && nvidia-smi -L >/dev/null 2>&1; then
+        ok "NVIDIA driver: present ($(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null | head -n 1))"
+    elif have lspci && ! lspci 2>/dev/null | grep -qi 'nvidia'; then
+        warn "--gpu: lspci shows no NVIDIA GPU, so no driver is installed"
+    else
+        info "NVIDIA driver: missing; installing the recommended one (the server needs a reboot after this)"
+        _drv=0
+        RUN_SOFT=1 server_sudo "refresh the package lists" apt-get update; [ "$RUN_RC" = 0 ] || _drv=1
+        [ "$_drv" = 0 ] && { RUN_SOFT=1 server_sudo "install ubuntu-drivers" apt-get install -y ubuntu-drivers-common; [ "$RUN_RC" = 0 ] || _drv=1; }
+        [ "$_drv" = 0 ] && { RUN_SOFT=1 server_sudo "install the recommended NVIDIA driver" ubuntu-drivers install; [ "$RUN_RC" = 0 ] || _drv=1; }
+        if [ "$_drv" = 0 ]; then
+            REBOOT_NEEDED=1; PROFILE=gpu
+        else
+            warn "the NVIDIA driver step failed (Ubuntu's ubuntu-drivers, see above); continuing without it: install the driver by hand (docs/deploy-linux.md, step 2), reboot, and run the installer again"
+            SERVER_NOTES="${SERVER_NOTES}    NVIDIA driver NOT installed: see the warning above
+"
+        fi
+    fi
+fi
+
 HAS_NVIDIA=0; HAS_ROCM=0
 if have nvidia-smi && nvidia-smi -L >/dev/null 2>&1; then HAS_NVIDIA=1; fi
 if have rocminfo && rocminfo >/dev/null 2>&1; then HAS_ROCM=1; fi
@@ -2636,6 +2751,10 @@ if [ "$OS_ID" = linux ]; then
     elif [ "$NO_SERVICE" = 0 ]; then
         warn "no systemd user session (container or minimal SSH host): the gateway will run in the background, not as a service"
     fi
+    if [ "$SERVER" = 1 ] && [ "$SYSTEMD_USER" = 0 ] && [ "$PRINT" = 0 ]; then
+        die "--server runs the gateway as a systemd user service, and this session has no systemd user bus.
+What to do: log in over SSH as $(id -un) directly (not through su or sudo -u), or run once: sudo loginctl enable-linger $(id -un), log out and in, then run the installer again."
+    fi
 fi
 
 # Start at login: asked here, before anything is downloaded, so the user answers once and
@@ -2647,9 +2766,12 @@ SERVICE_POSSIBLE=0
 { [ "$OS_ID" = macos ] || [ "$SYSTEMD_USER" = 1 ]; } && SERVICE_POSSIBLE=1
 if [ "$NO_START" = 0 ] && [ "$NO_SERVICE" = 0 ] && [ "$SERVICE_POSSIBLE" = 1 ]; then
     if [ -n "$LOGIN_WAS" ]; then _lnone="$([ "$LOGIN_WAS" = y ] && echo 'yes, as now' || echo 'no, as now')"; else _lnone=no; fi
+    if [ "$SERVER" = 1 ]; then ANSWER=""; else
     ask_timed "Start AbstractFramework automatically when you log in? (a per-user login item, no admin; the uninstaller removes it)" "${LOGIN_WAS:-y}" "$_lnone"
+    fi
     _lans="$ANSWER"
-    if [ -n "$_lans" ]; then _lwhy="your answer"
+    if [ "$SERVER" = 1 ]; then _lans=y; _lwhy="--server"
+    elif [ -n "$_lans" ]; then _lwhy="your answer"
     elif [ -n "$LOGIN_WAS" ]; then _lans="$LOGIN_WAS"; _lwhy="kept from the previous install"
     elif [ "$ASK_NOTHING" = 1 ]; then _lans=n; _lwhy="--yes: nothing is asked, a first install leaves it off"
     elif ! tty_ok; then _lans=n; _lwhy="no terminal to ask on, so a first install leaves it off"
@@ -3294,6 +3416,20 @@ elif [ "$USE_SERVICE" = 1 ]; then
     else
         MODE=service
     fi
+    # --server: keep the user service running without an SSH session, and start it at boot.
+    if [ "$SERVER" = 1 ] && [ "$OS_ID" = linux ]; then
+        step "Lingering (the service runs without a login and starts at boot)"
+        if [ "$(linger_state)" = yes ]; then
+            ok "lingering is already on for $(id -un)"
+        else
+            RUN_SOFT=1 server_sudo "turn lingering on for $(id -un)" loginctl enable-linger "$(id -un)"
+            if [ "$RUN_RC" != 0 ]; then
+                warn "lingering could not be turned on (see $LOG_FILE): the gateway stops when you log out. Run once: sudo loginctl enable-linger $(id -un)"
+                SERVER_NOTES="${SERVER_NOTES}    Lingering is OFF: run once  sudo loginctl enable-linger $(id -un)
+"
+            fi
+        fi
+    fi
 else
     step "Start in the background"
     if [ "$LOGIN_WAS" = y ] && [ "$SERVICE_OK" = 1 ]; then
@@ -3377,6 +3513,7 @@ What to do: restart the computer (the login item starts it again) or run the ins
     elif [ "$PRINT" = 1 ]; then
         info "$(show_cmd abstractgateway claim --code)   (gateway >= 0.18.0: the setup code for another machine)"
     fi
+    if [ "$TS_FUNNEL" = 1 ]; then server_funnel; fi
     if [ "$CLAIMED" = 0 ]; then
         info "sign in as 'admin' with the token in: $TOKEN_FILE"
         info "    cat $(q "$TOKEN_FILE")"
@@ -3496,9 +3633,30 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     else
         echo "               sign in as 'admin' with the token in $TOKEN_FILE"
     fi
-    if [ "$OPENED" = 0 ] && [ -n "$SETUP_CODE" ]; then
+    if [ "$OPENED" = 0 ] && [ -n "$SETUP_CODE" ] && [ "$SERVER" = 0 ]; then
         echo "               from another computer (a proxy, Tailscale, the LAN): open the console there, choose the admin password,"
         echo "               and give this setup code: $SETUP_CODE   (again: abstractgateway claim --code)"
+    fi
+    if [ "$SERVER" = 1 ]; then
+        printf '\n  %sThis server%s\n' "$C_B" "$C_0"
+        if [ -n "$PUBLIC_URL" ]; then
+            echo "    Public address: $PUBLIC_URL/console"
+        else
+            echo "    Address: $BASE_URL/console on this server; from your computer: ssh -N -L $PORT:127.0.0.1:$PORT $(id -un)@<this-server>, then http://127.0.0.1:$PORT/console"
+        fi
+        if [ -n "$SETUP_CODE" ]; then
+            echo "    Setup code: $SETUP_CODE"
+            echo "    Next: open the address, choose the admin password and give the setup code (\"Set up your gateway\");"
+            echo "          the setup guide then opens (engines, default models, apps). Again: abstractgateway claim --code"
+        else
+            echo "    Next: open the address and sign in with your account and password (this gateway is already set up)."
+        fi
+        if [ "$REBOOT_NEEDED" = 1 ]; then
+            echo "    The NVIDIA driver was installed: reboot now (sudo reboot), then run the same install command again"
+            echo "    (it keeps everything and adds the CUDA build of llama.cpp). The gateway starts by itself after the reboot."
+        fi
+        [ -n "$SERVER_NOTES" ] && printf '%s' "$SERVER_NOTES"
+        echo "    Status: systemctl --user status abstractgateway   Logs: journalctl --user -u abstractgateway"
     fi
     [ "$OPENED" = 1 ] || echo "               from another computer, tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
     if [ "$CONSOLE_OK" = 1 ]; then
