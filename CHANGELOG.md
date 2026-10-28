@@ -4,6 +4,16 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.11.17] - 2026-10-28
+
+Thin clients render from the replay view: **Observer 0.10.0**, **AbstractCode web 0.13.0**, **Entity 0.9.0**,
+and AbstractAssistant desktop and web (**AbstractAssistant 0.16.1**, in place of 0.15.0) read the gateway's
+reconstruction of a run (`GET /runs/{id}/view`, AbstractGateway 0.17.0) instead of folding ledgers themselves;
+**Continuum 0.7.2**. The AbstractCode terminal client (crates.io `abstractcode` **0.12.0**) draws its chrome with
+**abstracttui 0.7.0** (was 0.6.0). The installers, the install manifest, `NPM_RELEASE_VERSIONS` and
+`CRATE_RELEASE_VERSIONS` install them; every other Python pin is unchanged from 0.11.16. AbstractNote web is
+unchanged here: its 0.3.0 is merged but not yet on npm (the publish is blocked), and the root does not pin it.
+
 ## [0.11.16] - 2026-10-28
 
 Pins **AbstractFlow 0.11.0** (npm `@abstractframework/flow`; the automations-first editor, triggers, mail nodes,
