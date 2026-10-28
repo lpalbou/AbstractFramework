@@ -55,14 +55,14 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.11.17` for this release).
+The meta-package version (`0.11.18` for this release).
 
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.11.17:
-`abstractcore` 2.31.0, `abstractruntime` 0.15.0, `abstractagent` 0.4.0, `abstractgateway` 0.17.0,
-`abstractskill` 0.3.3, `abstractmemory` 0.4.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.19.2, `abstractvision` 0.3.34,
-`abstractmusic` 0.1.17, `abstract3d` 0.3.2, `abstractassistant` 0.16.1.
+`abstractcore` 2.31.0, `abstractruntime` 0.15.1, `abstractagent` 0.4.0, `abstractgateway` 0.17.2,
+`abstractskill` 0.3.3, `abstractmemory` 0.4.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.19.3, `abstractvision` 0.3.34,
+`abstractmusic` 0.1.17, `abstract3d` 0.3.2, `abstractassistant` 0.16.5.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -72,9 +72,9 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 ### `NPM_RELEASE_VERSIONS`
 
 The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.11.0, `@abstractframework/code` 0.13.0,
-`@abstractframework/observer` 0.10.0, `@abstractframework/continuum` 0.7.2 and
-`@abstractframework/entity` 0.9.0. They also appear as `npm_apps` in the install manifest.
+`@abstractframework/flow` 0.12.1, `@abstractframework/code` 0.13.2,
+`@abstractframework/observer` 0.10.2, `@abstractframework/continuum` 0.7.5 and
+`@abstractframework/entity` 0.9.2. They also appear as `npm_apps` in the install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`
 
