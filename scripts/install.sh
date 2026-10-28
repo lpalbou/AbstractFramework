@@ -121,7 +121,7 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.17.0"
+AF_GATEWAY_PIN_DEFAULT="0.17.2"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as

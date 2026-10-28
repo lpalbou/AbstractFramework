@@ -95,7 +95,7 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.17.0'
+$AfGatewayPinDefault = '0.17.2'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
 $AfFrameworkVersion = '0.11.17'
