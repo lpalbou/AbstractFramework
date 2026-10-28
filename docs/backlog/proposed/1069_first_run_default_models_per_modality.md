@@ -5,6 +5,7 @@
 > Created: 2026-10-28
 > Priority: high
 > Labels: first-run, models, recommendations
+> Status: gateway part implemented (AbstractGateway branch feat/first-run-default-models: the Default models step, Use recommended / Download / Choose per capability, Use recommended for all, the subscription path, the band table in first-run.md); the picks themselves move to AbstractCore in 1072
 
 ## Summary
 
