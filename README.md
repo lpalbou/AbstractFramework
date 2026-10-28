@@ -341,7 +341,7 @@ and tested together.
 | Registry | Package | Version |
 |---|---|---|
 | PyPI | `abstractgateway` | 0.17.0 |
-| PyPI | `abstractassistant` | 0.15.0 |
+| PyPI | `abstractassistant` | 0.16.1 |
 | PyPI | `abstractcore` | 2.31.0 |
 | PyPI | `AbstractRuntime` | 0.15.0 |
 | PyPI | `abstractagent` | 0.4.0 |
@@ -353,14 +353,14 @@ and tested together.
 | PyPI | `abstractmusic` | 0.1.17 |
 | PyPI | `abstract3d` | 0.3.2 |
 | npm | `@abstractframework/flow` | 0.11.0 |
-| npm | `@abstractframework/code` | 0.12.0 |
-| npm | `@abstractframework/observer` | 0.9.0 |
-| npm | `@abstractframework/continuum` | 0.7.1 |
-| npm | `@abstractframework/entity` | 0.8.0 |
-| crates.io | `abstractcode` | 0.11.0 |
+| npm | `@abstractframework/code` | 0.13.0 |
+| npm | `@abstractframework/observer` | 0.10.0 |
+| npm | `@abstractframework/continuum` | 0.7.2 |
+| npm | `@abstractframework/entity` | 0.9.0 |
+| crates.io | `abstractcode` | 0.12.0 |
 | crates.io | `abstractgateway-console` | 0.16.0 |
 | crates.io | `abstractcore-console` | 0.8.0 |
-| crates.io | `abstracttui` | 0.6.0 |
+| crates.io | `abstracttui` | 0.7.0 |
 | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.17.0 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.31.0 |
 

@@ -127,12 +127,12 @@ AF_GATEWAY_PIN_DEFAULT="0.17.0"
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.11.16"
+AF_FRAMEWORK_VERSION="0.11.17"
 AF_PY_MATRIX="abstractcore==2.31.0 AbstractRuntime==0.15.0 abstractagent==0.4.0 abstractskill==0.3.3 AbstractMemory==0.4.0 abstractsemantics==0.0.5 abstractvoice==0.19.2 abstractvision==0.3.34 abstractmusic==0.1.17 abstract3d==0.3.2"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.11.0 @abstractframework/code@0.12.0 @abstractframework/observer@0.9.0 @abstractframework/continuum@0.7.1 @abstractframework/entity@0.8.0"
+AF_NPM_APPS="@abstractframework/flow@0.11.0 @abstractframework/code@0.13.0 @abstractframework/observer@0.10.0 @abstractframework/continuum@0.7.2 @abstractframework/entity@0.9.0"
 AF_CRATE_CONSOLE="abstractgateway-console@0.16.0"
-AF_CRATE_CODE_CLI="abstractcode@0.11.0"
+AF_CRATE_CODE_CLI="abstractcode@0.12.0"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
 # `abstractgateway-config` (uv tool install --with-executables-from; --no-core-cli leaves them
 # out): AbstractCore and its voice, vision and music packages. Not abstractruntime (its one

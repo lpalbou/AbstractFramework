@@ -10,7 +10,7 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.11.16"
+__version__ = "0.11.17"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -26,7 +26,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.34",
     "abstractmusic": "0.1.17",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.15.0",
+    "abstractassistant": "0.16.1",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -46,10 +46,10 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.11.0",
-    "@abstractframework/code": "0.12.0",
-    "@abstractframework/observer": "0.9.0",
-    "@abstractframework/continuum": "0.7.1",
-    "@abstractframework/entity": "0.8.0",
+    "@abstractframework/code": "0.13.0",
+    "@abstractframework/observer": "0.10.0",
+    "@abstractframework/continuum": "0.7.2",
+    "@abstractframework/entity": "0.9.0",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
@@ -60,8 +60,8 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstractgateway-console": "0.16.0",
     "abstractcore-console": "0.8.0",
-    "abstractcode": "0.11.0",
-    "abstracttui": "0.6.0",
+    "abstractcode": "0.12.0",
+    "abstracttui": "0.7.0",
 }
 
 # The light profile installs plain `abstractcore` (no extra): AbstractCore's light setting already
