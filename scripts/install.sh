@@ -97,7 +97,8 @@
 #                            and lspci sees an NVIDIA GPU (sudo apt-get install -y
 #                            ubuntu-drivers-common; sudo ubuntu-drivers install; then reboot
 #                            and run the same command again); alone, the gpu profile
-#   --gpu-driver             the driver step without --gpu
+#   --gpu-driver             the driver step without --gpu (the profile is not changed: after
+#                            the reboot, re-run with --profile gpu; prefer --server --gpu)
 #   --tailscale-funnel       with --server: install Tailscale when missing, sign this server
 #                            in (prints the login URL and waits), publish the gateway with
 #                            `tailscale funnel --bg <port>` and allow its https address as a
@@ -2543,10 +2544,10 @@ if [ "$GPU_DRIVER" = 1 ]; then
         DRIVER_ACTION=no_gpu
         warn "--gpu: no NVIDIA GPU on the PCI bus (lspci, /sys/bus/pci), so no driver is installed"
     elif nvidia_driver_package; then
-        DRIVER_ACTION=reboot_pending; REBOOT_NEEDED=1; PROFILE=gpu
+        DRIVER_ACTION=reboot_pending; REBOOT_NEEDED=1
         warn "NVIDIA driver: installed but not loaded yet: reboot (sudo reboot), then run the installer again"
     else
-        DRIVER_ACTION=install; PROFILE=gpu
+        DRIVER_ACTION=install  # the profile stays as chosen (--gpu = the gpu profile)
         info "NVIDIA driver: missing; it is installed below, then the server needs a reboot"
     fi
 fi
@@ -2831,7 +2832,16 @@ if [ "$DRIVER_ACTION" = install ]; then
     _apt="env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600"
     RUN_SOFT=1 server_sudo "refresh the package lists" $_apt update; [ "$RUN_RC" = 0 ] || _drv=1
     [ "$_drv" = 0 ] && { RUN_SOFT=1 server_sudo "install ubuntu-drivers" $_apt install -y ubuntu-drivers-common; [ "$RUN_RC" = 0 ] || _drv=1; }
-    [ "$_drv" = 0 ] && { RUN_SOFT=1 server_sudo "install the recommended NVIDIA driver" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a ubuntu-drivers install; [ "$RUN_RC" = 0 ] || _drv=1; }
+    if [ "$_drv" = 0 ]; then
+        RUN_SOFT=1 server_sudo "install the recommended NVIDIA driver" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a ubuntu-drivers install
+        if [ "$RUN_RC" != 0 ] && [ "$PRINT" = 0 ]; then
+            # ubuntu-drivers has no lock wait: unattended-upgrades may hold dpkg again; one retry a minute later.
+            info "ubuntu-drivers failed (often the package lock on a first boot); retrying in 60 s"
+            sleep 60
+            RUN_SOFT=1 server_sudo "install the recommended NVIDIA driver (retry)" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a ubuntu-drivers install
+        fi
+        [ "$RUN_RC" = 0 ] || _drv=1
+    fi
     if [ "$PRINT" = 1 ]; then REBOOT_NEEDED=1
     elif [ "$_drv" = 0 ] && nvidia_driver_package; then
         REBOOT_NEEDED=1; ok "NVIDIA driver installed: reboot after the install, then run the same command again"
