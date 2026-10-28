@@ -6,7 +6,7 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files recounted on 2026-10-26 (recursive, topic tracks included; README,
+On-disk item files recounted on 2026-10-28 (recursive, topic tracks included; README,
 overview, template and `evidence/` files excluded). Legacy duplicate IDs remain tracked by
 [0889](planned/0889_normalize_the_legacy_root_backlog.md); counts are files, not unique IDs.
 Before adding 1027, disk counts were 175 planned / 56 proposed / 266 completed / 1 deprecated /
@@ -14,11 +14,11 @@ Before adding 1027, disk counts were 175 planned / 56 proposed / 266 completed /
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 180 | 132 flat + 48 in topic tracks. 1049 Apple push, 1052 folder trigger (2026-10-25), 1054 gateway load (P0, 2026-10-26). Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
+| Planned | 181 | 133 flat + 48 in topic tracks. 1061 session tool policy (2026-10-27; runtime, gateway, panel-chat and desktop Assistant released, live check and iPhone/AbstractCode follow-ups open). 1055 moved to completed (root 0.11.15). 1049 Apple push, 1052 folder trigger (2026-10-25), 1054 gateway load (P0, 2026-10-26). Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
 | Proposed | 63 | 55 flat + 8 in topic tracks (1050 events follow-ups, 1051 shipped workflows loadable in Flow, 1053 cloud drive triggers, 2026-10-25; 1056 workflows as the central primitive, 1057 AbstractDesigner, 1058 unified push, 1059 queryable runtime holdings, 2026-10-27). Recurrent: 1060 gateway security, resilience and latency standing duty. |
-| Completed | 287 | 266 flat + 21 in topic tracks (11 in [events-and-attention](completed/events-and-attention/README.md), 2026-10-25); implementation and release history remain in the ledgers below. |
+| Completed | 288 | 267 flat + 21 in topic tracks (11 in [events-and-attention](completed/events-and-attention/README.md), 2026-10-25; 1055 release wave, 2026-10-28); implementation and release history remain in the ledgers below. |
 | Deprecated | 1 | 0851: operator ruling that the temporary local Agora hub required no rotation. |
-| Recurrent | 2 | [recurrent/](recurrent/README.md): backlog/ADR hygiene and post-completion follow-up triage. |
+| Recurrent | 3 | [recurrent/](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage, and 1060 gateway security, resilience and latency standing duty. |
 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
 
@@ -525,6 +525,7 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 1055 | [Release wave 2026-10-27: voice library, replay, memory graph, UI primitives](completed/1055_release_wave_2026_10_27_voice_library_replay_memory.md) | 2026-10-28 | Moved from `planned/`. Root 0.11.15 pins abstractcore 2.31.0, AbstractRuntime 0.15.0, abstractagent 0.4.0, abstractgateway 0.17.0, AbstractMemory 0.4.0 (one-way vector/graph migration), abstractvoice 0.19.2, abstractassistant 0.15.0, abstractskill 0.3.3; npm Code 0.12.0, Observer 0.9.0, Entity 0.8.0, Continuum 0.7.1. Open: `@abstractframework/note` 0.2.0 npm publish failed; Flow 0.11.0 and the abstractcode 0.11.0 crate unreleased. |
 | 1037 | [iPhone rich sharing with original files](completed/1037_iphone_rich_conversation_sharing_with_original_files.md) | 2026-10-18 | Moved from `planned/1037_iphone_rich_conversation_sharing_with_original_files.md`; created/completed 2026-10-18. Mint New, rich ordered transcript and original artifacts/recorded writes, owned cleanup and context guards. 235 package + five native + one physical export test passed; screenshot/adversary approved. Normal 0.6.18 (26) installed/launched. Actual Mail/Notes destination rendering unverified; uncommitted. [Evidence](evidence/1037/README.md). |
 | 1036 | [iPhone three-island navigation and conversation sharing](completed/1036_iphone_three_island_navigation_and_conversation_share.md) | 2026-10-18 | Moved from `planned/1036_iphone_three_island_navigation_and_conversation_share.md`; created/completed 2026-10-18. Conversations / Share-Files-Tools / Settings islands, responder below, New preserves responder; explicit loaded-text export. 230 package + three native tests passed, screenshots/adversary approved. Guard yielded to Watch; normal 0.6.17 (25) installed/launched; uncommitted. [Evidence](evidence/1036/README.md). |
 | 1035 | [iPhone cycle graph and separate tool call details](completed/1035_iphone_cycle_graph_and_tool_call_details.md) | 2026-10-18 | Moved from `planned/1035_iphone_cycle_graph_and_tool_call_details.md`; created/completed 2026-10-18. Separate per-agent cycle graph and searchable calls with input/output; amber approvals/lavender tools. 228 package + three native tests passed, physical saved history 12 cycles/four calls/four approvals, zero issues; adversary approved. Normal 0.6.16 (24) installed/launched; uncommitted. [Evidence](evidence/1035/README.md). |

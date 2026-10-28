@@ -4,23 +4,58 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-Events, triggers and attention (2026-10-25) and the 2026-10-26 round, built and deployed locally;
-nothing published yet. The versions named here are LOCAL: `pyproject.toml` still pins the published
-releases until this wave ships. The user guide is
-[Triggers, attention and push](docs/events-and-attention.md). Publish order, each step on PyPI or
-npm before the next:
+## [0.11.15] - 2026-10-28
 
-1. AbstractCore 2.29.0 (the mailbox access choice the gateway calls).
-2. AbstractRuntime 0.12.0, published from commit 980f4ab or later: the gateway needs the trusted run
-   index, Publish to channel's `recipient` / `channels` and the split-mode index refresh, which
-   landed after the version number was set.
-3. AbstractAgent 0.4.0.
-4. AbstractGateway 0.16.0 (needs AbstractRuntime 0.12.0 as above, AbstractAgent 0.4.0 and
-   AbstractCore 2.29.0).
-5. ui-kit 0.8.8 (the Observer needs it), then AbstractObserver and AbstractFlow 0.11.0.
-6. AbstractAssistant 0.15.0 (desktop) and AbstractCode 0.11.0 (web 0.12.0); the iPhone and Apple
-   Watch app 0.16.0 ships separately through TestFlight.
-7. This root, with its pins moved to those versions.
+Pins the 2026-10-27/28 release wave (backlog 1055) across the light, Apple and GPU profiles:
+**AbstractCore 2.31.0**, **AbstractRuntime 0.15.0**, **AbstractAgent 0.4.0**, **AbstractGateway 0.17.0**,
+**AbstractMemory 0.4.0**, **AbstractVoice 0.19.2**, **AbstractAssistant 0.15.0** and **AbstractSkill 0.3.3**
+(AbstractSemantics 0.0.5, AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers
+and the install manifest install gateway 0.17.0 and the npm apps **AbstractCode web 0.12.0**, **Observer 0.9.0**,
+**Entity 0.8.0** and **Continuum 0.7.1**; container images `ghcr.io/lpalbou/abstractgateway:0.17.0` and
+`ghcr.io/lpalbou/abstractcore-server:2.31.0`. AbstractAgent moves to 0.4.0 because gateway 0.17.0 requires it.
+
+### Upgrade notes (one-way)
+
+- **AbstractMemory 0.4.0 migrates a memory home on first write**: a SQLite home's JSON-text vectors are rewritten as
+  float32 BLOBs, and graph homes gain four tables (`memg_revisions`, `memg_provenance`, `memg_derivations`,
+  `memg_history`). A 0.3.x reader then finds no vectors. Back up the data folder before upgrading if you may need to
+  roll back to 0.11.14.
+- **AbstractRuntime 0.15.0** writes a `ledger_<run_id>.idx` row index beside each JSON-file ledger; older readers
+  ignore it.
+- **`/kg/query` is owner-scoped for non-admins** (gateway 0.17.0): a client that read another principal's
+  `owner_id` or `all_owners` now gets only its own owners.
+
+### The wave
+
+- **Voice library and personal voices**: the gateway lists the languages each voice engine accepts and the cloned
+  voices, and with user accounts each account keeps the voices it clones or designs in its own store; the shared
+  voice picker and Create a voice reach the console, Code, Entity and the desktop Assistant (voices grouped by whose
+  they are). AbstractVoice 0.19.2 keeps clones listed when a TTS model is selected and lists the cloning checkpoints;
+  AbstractCore 2.31.0 takes the clone language over HTTP.
+- **Session tool policy** (backlog 1061): "approve all" / "approve this kind" / "deny" for a conversation is held by
+  the gateway (`/api/gateway/sessions/{session_id}/tool-policy`), clamped to the account's authorized tools and read
+  by the runtime before any wait: an approved call runs with no approval gate flashing in any app, and each decision
+  is an `abstract.tool_policy_decision` ledger record. Runtime 0.14.0+, gateway 0.16.0+, panel-chat 0.5.0, desktop
+  Assistant 0.15.0; the iPhone/watch and AbstractCode still use their local grants.
+- **Replay view**: one replayable ledger (runtime reducer, durable per-run `seq`, `LedgerStore.get_record`) and the
+  gateway's replay view routes that every thin client builds on.
+- **Memory graph consolidation**: `abstractmemory.graph` is the one write path of a mind (revisions, provenance,
+  history, `narrow_assertion`, the `merged` closure kind); the runtime reaches it through its memory facade
+  (`MEMORY_REVISE`, provenance stamping) and the gateway through new memory graph routes. AbstractNote 0.2.0 (statements
+  that say where they came from) builds on it; it is not pinned by the root (an optional gateway seam).
+- **Prefix-cache reuse**: AbstractCore 2.31.0 places the MLX prefix-cache snapshot before per-call system riders, so a
+  tool loop with attachments restores the cached prefix instead of re-prefilling the conversation at every call;
+  AbstractAgent 0.4.0 keeps the loop prompts' prefix byte-stable (iteration counters and scratchpad out of the cached
+  system prompt, byte-stable turn grounding).
+- **UI kit consolidation**: ui-kit 0.9.2 and panel-chat 0.5.0 (AbstractUIC 0.7.x) carry the shared chat, approvals,
+  voice and session-policy primitives the apps now compose.
+- **App releases**: AbstractCode web 0.12.0, Observer 0.9.0, Entity 0.8.0, Continuum 0.7.1, desktop Assistant 0.15.0.
+- **Events, triggers and attention** (2026-10-25/26 rounds, built before this wave and first pinned here). User
+  guide: [Triggers, attention and push](docs/events-and-attention.md).
+
+Not in this release: `@abstractframework/note` 0.2.0 (its npm publish failed; the Python package is on PyPI),
+`@abstractframework/flow` 0.11.0 and the `abstractcode` 0.11.0 crate (not published; the root keeps Flow 0.10.1 and
+the crate 0.10.0). The iPhone and Apple Watch app 0.16.0 ships separately through TestFlight.
 
 - **Triggers native to the runtime**: per-user connections (a mailbox, a feed, a webhook) registered once
   on the gateway's Triggers page and reused by name; CloudEvents-shaped envelopes; feed (RSS/Atom) and
