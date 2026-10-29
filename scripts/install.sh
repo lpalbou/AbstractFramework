@@ -312,16 +312,16 @@ af_dist_norm() { printf '%s' "$1" | tr 'A-Z' 'a-z' | sed 's/[-_.][-_.]*/-/g'; }
 af_with_wheel_dists() {
     [ -n "$WITH_WHEELS" ] || return 0
     _ifs=$IFS; IFS='
-'
+'; set -f
     for _w in $WITH_WHEELS; do _b="${_w##*/}"; printf '%s ' "$(af_dist_norm "${_b%%-*}")"; done
-    IFS=$_ifs
+    set +f; IFS=$_ifs
 }
 # af_check_with_wheels: every --with-wheel is an existing .whl of a framework package the
 # matrix pins (the gateway itself is --from; abstractvoice rides with its extras, --from-less).
 af_check_with_wheels() {
     [ -n "$WITH_WHEELS" ] || return 0
     _ifs=$IFS; IFS='
-'
+'; set -f
     for _w in $WITH_WHEELS; do
         IFS=$_ifs
         case "$_w" in *.whl) ;; *) echo "ERROR: --with-wheel $_w is not a wheel (.whl) file" >&2; exit 2 ;; esac
@@ -337,7 +337,7 @@ af_check_with_wheels() {
         IFS='
 '
     done
-    IFS=$_ifs
+    set +f; IFS=$_ifs
 }
 # af_refresh_packages: the packages whose index pages uv revalidates on every install (root backlog
 # 0987): uv caches PyPI's simple pages as PyPI's headers allow (10 minutes), so right after a release
@@ -525,7 +525,9 @@ FROM="${AF_FROM:-}"
 # (2026-10-29): wheels side-loaded with `uv pip install` while the receipt and uv-constraints.txt
 # still pinned abstractcore==2.31.0 / AbstractRuntime==0.15.0, which any later `uv tool upgrade`
 # or installer re-run put back.
-WITH_WHEELS="${AF_WITH_WHEEL:-}"
+# af_abs_path PATH: PATH made absolute (the install runs from the data dir).
+af_abs_path() { case "$1" in /*) printf '%s' "$1" ;; *) printf '%s/%s' "$(pwd)" "${1#./}" ;; esac; }
+WITH_WHEELS="${AF_WITH_WHEEL:+$(af_abs_path "$AF_WITH_WHEEL")}"
 MANIFEST=""
 DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
 # The choices that change what is installed are remembered (bootstrap.env) and kept by a plain
@@ -581,9 +583,9 @@ while [ $# -gt 0 ]; do
         --from) need_arg "$@"; FROM="$2"; shift ;;
         --from=*) FROM="${1#*=}" ;;
         --with-wheel) need_arg "$@"; WITH_WHEELS="$WITH_WHEELS${WITH_WHEELS:+
-}$2"; shift ;;
+}$(af_abs_path "$2")"; shift ;;
         --with-wheel=*) WITH_WHEELS="$WITH_WHEELS${WITH_WHEELS:+
-}${1#*=}" ;;
+}$(af_abs_path "${1#*=}")" ;;
         --manifest) need_arg "$@"; MANIFEST="$2"; shift ;;
         --manifest=*) MANIFEST="${1#*=}" ;;
         --data-dir) need_arg "$@"; DATA_DIR="$2"; shift ;;
@@ -2948,9 +2950,9 @@ install_gateway() {
     [ -n "$VOICE_SPEC" ] && set -- "$@" --with "$(af_voice_req "$VOICE_SPEC")"
     if [ -n "$WITH_WHEELS" ]; then
         _ifs=$IFS; IFS='
-'
+'; set -f
         for _w in $WITH_WHEELS; do set -- "$@" --with "$_w"; done
-        IFS=$_ifs
+        set +f; IFS=$_ifs
     fi
     if [ "$_gguf" = 1 ]; then set -- "$@" --with "llama-cpp-python==$GGUF_PIN"
     elif [ "$FULL" = 1 ]; then set -- "$@" --with llama-cpp-python; fi

@@ -85,3 +85,18 @@ def test_wheels_it_cannot_take_are_refused(tmp_path, name, why):
 def test_a_missing_wheel_is_refused(tmp_path):
     res = _plan(tmp_path, "--with-wheel", str(tmp_path / "abstractcore-1-py3-none-any.whl"))
     assert res.returncode == 2 and "no such file" in res.stderr
+
+
+def test_a_relative_wheel_path_is_made_absolute(tmp_path):
+    """Review: the install runs from the data dir; a relative path must survive."""
+    core = _wheel(tmp_path, "abstractcore")
+    env_cwd = core.parent
+    home = tmp_path / "home"
+    home.mkdir(exist_ok=True)
+    env = {k: v for k, v in os.environ.items() if not k.startswith("AF_")}
+    env["HOME"] = str(home)
+    res = subprocess.run(["sh", str(SH), "--print", "--yes", "--profile", "light", "--port", "18831",
+                          "--with-wheel", f"./{core.name}"], capture_output=True, text=True, env=env, cwd=env_cwd, timeout=300)
+    assert res.returncode == 0, res.stdout + res.stderr
+    cmd = next(l for l in res.stdout.splitlines() if "tool install" in l)
+    assert str(core) in cmd, cmd
