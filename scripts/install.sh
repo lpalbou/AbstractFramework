@@ -41,6 +41,9 @@
 #   --pin VERSION|latest     abstractgateway version (default: install manifest) [AF_PIN]
 #   --from PATH|REQUIREMENT  install the gateway from a checkout, wheel or
 #                            requirement instead of the pinned release      [AF_FROM]
+#   --with-wheel PATH        also install this local wheel of a framework package
+#                            (abstractcore, AbstractRuntime, ...) into the gateway's
+#                            tool, in place of its release pin; repeatable  [AF_WITH_WHEEL]
 #   --manifest PATH          read the pin from this install-manifest.json
 #   --data-dir DIR           gateway data dir (default: per-OS user data dir) [AF_DATA_DIR] [kept]
 #   --with-apps              make sure Node.js >= 18 exists for the npx apps
@@ -292,9 +295,49 @@ af_uv_overrides() {  # $1 = 1 when llama-cpp-python comes from the prebuilt whee
 # af_uv_constraints GGUF: the release matrix (when this run installs the release) and the
 # llama.cpp wheel pin (GGUF=1), one requirement per line; empty when neither applies.
 af_uv_constraints() {
-    if [ "$IS_RELEASE" = 1 ]; then for _c in $AF_PY_MATRIX; do echo "$_c"; done; fi
+    if [ "$IS_RELEASE" = 1 ]; then
+        _wd="$(af_with_wheel_dists)"
+        for _c in $AF_PY_MATRIX; do
+            _n="$(af_dist_norm "${_c%%==*}")"
+            case " $_wd " in *" $_n "*) continue ;; esac  # a --with-wheel replaces this pin
+            echo "$_c"
+        done
+    fi
     [ "$1" = 1 ] && echo "llama-cpp-python==$GGUF_PIN"
     return 0
+}
+# af_dist_norm NAME: a distribution name in normalized form (PEP 503: lower case, runs of -_. as -).
+af_dist_norm() { printf '%s' "$1" | tr 'A-Z' 'a-z' | sed 's/[-_.][-_.]*/-/g'; }
+# af_with_wheel_dists: the normalized distribution names of the --with-wheel files, one line.
+af_with_wheel_dists() {
+    [ -n "$WITH_WHEELS" ] || return 0
+    _ifs=$IFS; IFS='
+'
+    for _w in $WITH_WHEELS; do _b="${_w##*/}"; printf '%s ' "$(af_dist_norm "${_b%%-*}")"; done
+    IFS=$_ifs
+}
+# af_check_with_wheels: every --with-wheel is an existing .whl of a framework package the
+# matrix pins (the gateway itself is --from; abstractvoice rides with its extras, --from-less).
+af_check_with_wheels() {
+    [ -n "$WITH_WHEELS" ] || return 0
+    _ifs=$IFS; IFS='
+'
+    for _w in $WITH_WHEELS; do
+        IFS=$_ifs
+        case "$_w" in *.whl) ;; *) echo "ERROR: --with-wheel $_w is not a wheel (.whl) file" >&2; exit 2 ;; esac
+        [ -f "$_w" ] || { echo "ERROR: --with-wheel $_w: no such file" >&2; exit 2; }
+        _b="${_w##*/}"; _n="$(af_dist_norm "${_b%%-*}")"
+        case "$_n" in
+            abstractgateway) echo "ERROR: install the gateway wheel with --from $_w, not --with-wheel" >&2; exit 2 ;;
+            abstractvoice) echo "ERROR: --with-wheel does not take abstractvoice (it installs with its voice extras); use --no-voice and install it yourself, or a release" >&2; exit 2 ;;
+        esac
+        _known=0
+        for _c in $AF_PY_MATRIX; do [ "$(af_dist_norm "${_c%%==*}")" = "$_n" ] && _known=1; done
+        [ "$_known" = 1 ] || { echo "ERROR: --with-wheel $_w: $_n is not a package of the AbstractFramework release matrix" >&2; exit 2; }
+        IFS='
+'
+    done
+    IFS=$_ifs
 }
 # af_refresh_packages: the packages whose index pages uv revalidates on every install (root backlog
 # 0987): uv caches PyPI's simple pages as PyPI's headers allow (10 minutes), so right after a release
@@ -476,6 +519,13 @@ PROFILE="${AF_PROFILE:-auto}"
 PORT="${AF_PORT:-}"
 PIN="${AF_PIN:-}"
 FROM="${AF_FROM:-}"
+# WITH_WHEELS: local framework wheels (--with-wheel, one per line). Each replaces its package's
+# release pin: the wheel goes into `uv tool install --with` and its name leaves uv-constraints.txt,
+# so the tool's receipt records what is really installed. Found on the Linux test server
+# (2026-10-29): wheels side-loaded with `uv pip install` while the receipt and uv-constraints.txt
+# still pinned abstractcore==2.31.0 / AbstractRuntime==0.15.0, which any later `uv tool upgrade`
+# or installer re-run put back.
+WITH_WHEELS="${AF_WITH_WHEEL:-}"
 MANIFEST=""
 DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
 # The choices that change what is installed are remembered (bootstrap.env) and kept by a plain
@@ -530,6 +580,10 @@ while [ $# -gt 0 ]; do
         --pin=*) PIN="${1#*=}" ;;
         --from) need_arg "$@"; FROM="$2"; shift ;;
         --from=*) FROM="${1#*=}" ;;
+        --with-wheel) need_arg "$@"; WITH_WHEELS="$WITH_WHEELS${WITH_WHEELS:+
+}$2"; shift ;;
+        --with-wheel=*) WITH_WHEELS="$WITH_WHEELS${WITH_WHEELS:+
+}${1#*=}" ;;
         --manifest) need_arg "$@"; MANIFEST="$2"; shift ;;
         --manifest=*) MANIFEST="${1#*=}" ;;
         --data-dir) need_arg "$@"; DATA_DIR="$2"; shift ;;
@@ -2266,6 +2320,7 @@ printf '%sAbstractFramework bootstrap%s  %s%s%s\n' "$C_B" "$C_0" "$C_D" \
 # IS_RELEASE: this run installs the release these pins are (not --pin, --from or --manifest
 # with another gateway), so the release matrix applies and bootstrap.env records its version.
 IS_RELEASE=0; { [ -z "$FROM" ] && [ "$PIN" = "$AF_GATEWAY_PIN_DEFAULT" ]; } && IS_RELEASE=1
+af_check_with_wheels
 find_uv >/dev/null 2>&1 || true; tool_bin; tool_venv; console_bin
 PREV_GW=""
 [ -n "$UV" ] && PREV_GW="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"
@@ -2891,6 +2946,12 @@ install_gateway() {
     fi
     set -- "$UV" tool install --python "$AF_PYTHON" --with "$AF_WITH_WHEELS"
     [ -n "$VOICE_SPEC" ] && set -- "$@" --with "$(af_voice_req "$VOICE_SPEC")"
+    if [ -n "$WITH_WHEELS" ]; then
+        _ifs=$IFS; IFS='
+'
+        for _w in $WITH_WHEELS; do set -- "$@" --with "$_w"; done
+        IFS=$_ifs
+    fi
     if [ "$_gguf" = 1 ]; then set -- "$@" --with "llama-cpp-python==$GGUF_PIN"
     elif [ "$FULL" = 1 ]; then set -- "$@" --with llama-cpp-python; fi
     [ -n "$(af_uv_constraints "$_gguf")" ] && set -- "$@" --constraints uv-constraints.txt
