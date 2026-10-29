@@ -1,6 +1,11 @@
-# 1075 — Note routes are gateway-owned; no package brings its own API or server
+# 1075 — All note routes live in the gateway, nicely organised, accessible to any app dealing with notes
 
-> Status: proposed (operator preference, 2026-10-29) · Priority: P1 · Owner: gateway + AbstractNote
+**The goal (operator, 2026-10-29):** every note operation is a gateway route under `/api/gateway/note/...`, organised
+there with the rest of the gateway's API, callable by any app that deals with notes — the watch, the phone, the desktop
+Assistant, the web apps, an automation — with the gateway's sign-in, authorization, audit and limits. No package brings
+its own API or server.
+
+> Status: planned (operator confirmed the direction, 2026-10-29) · Priority: P1 · Owner: gateway + AbstractNote
 > Related: AbstractGateway ADR 0001 (AbstractCore access goes through AbstractRuntime facades), AbstractRuntime ADR 0008
 > (runtime integration facades are the complete host surface), AbstractNote ADR 0001 (the one explicit seam),
 > gateway backlog 0972 (CI installs the seam packages), gateway security incident 2026-10-29 (14 note write routes
@@ -36,8 +41,8 @@ authorization decision for every route, the audit line and the limits.
 
 ## What the gateway and AbstractNote look like afterwards
 
-- `abstractgateway/routes/note.py` (gateway-owned) serves `/api/gateway/note/...` with the same paths as today, so
-  the note web app and any client keep working unchanged. Each route carries an explicit authorization decision in
+- `abstractgateway/routes/note.py` (gateway-owned) serves `/api/gateway/note/...`. Compatibility note, not the goal:
+  keeping today's paths means the note web app and any client keep working unchanged during the move. Each route carries an explicit authorization decision in
   `security/authorization.py` (admin row or user-level row with its reason), like every other gateway route; the
   two plane-wide routes (`PUT /settings`, `POST /processor/ensure`) get their shared-plane rule here (AbstractNote
   backlog 0040 moves into the gateway).
