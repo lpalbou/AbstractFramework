@@ -1,4 +1,4 @@
-# 1073: The installer installs a second gateway on the same host as an instance
+# 1074: The installer installs a second gateway on the same host as an instance
 
 **Status**: completed 2026-10-29 (scripts/install.sh, scripts/uninstall.sh, docs/deploy-linux.md section 9;
 ships with the next root release; needs the gateway's instances, AbstractGateway PR #37).

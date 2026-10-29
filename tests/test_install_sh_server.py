@@ -124,7 +124,7 @@ def test_apt_runs_non_interactive(tmp_path: Path) -> None:
     assert "sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get" in proc.stdout
 
 
-# --- instances: a second gateway on the same host (root backlog 1073) -------------------------
+# --- instances: a second gateway on the same host (root backlog 1074) -------------------------
 
 
 def test_an_instance_is_self_contained_its_unit_data_tool_dir_and_funnel_port(tmp_path: Path) -> None:
