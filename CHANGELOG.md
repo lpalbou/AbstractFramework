@@ -6,6 +6,13 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ### Fixed
 
+- **`install.sh --with-wheel PATH`: test a fix wheel without it being rolled back.** On the Linux test server,
+  wheels of abstractcore / AbstractRuntime side-loaded with `uv pip install` sat under a uv tool receipt and an
+  `uv-constraints.txt` that still pinned the release (abstractcore==2.31.0, AbstractRuntime==0.15.0), so the next
+  `uv tool upgrade` or installer run put the old versions back. Each `--with-wheel` goes into `uv tool install --with`
+  and its package leaves the constraints, so both record what is installed. Refused with a What-to-do line: a non-wheel, a
+  missing file, the gateway (use `--from`), abstractvoice (installs with its extras), a package outside the matrix. The
+  flag is per run: a later run without it installs the release versions again (by design).
 - **The installer never leaves a gateway running outside systemd** (backlog 1072): a background start on Linux first
   turns off a systemd user unit of the same gateway (it would start at the next login and fight for the port), and
   `--server` stops with the cause when the gateway service cannot be registered instead of starting the gateway in
