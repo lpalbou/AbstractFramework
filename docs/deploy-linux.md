@@ -85,7 +85,9 @@ sudo reboot
 
 Do not skip the second line: without lingering, a systemd user service stops when your last SSH
 session ends and does not start at boot (`loginctl show-user "$USER" -p Linger` answers
-`Linger=no`). After the reboot, `systemctl --user is-active abstractgateway` answers `active`.
+`Linger=no`). `abstractgateway service enable` (AbstractGateway 0.18.0 and later) and `service status` say so
+while it is off: "On a server, this service stops when you log out and does not start at boot until you run
+once: sudo loginctl enable-linger ubuntu". `install.sh --server` turns lingering on for you. After the reboot, `systemctl --user is-active abstractgateway` answers `active`.
 
 ## 5. Open the console from your computer
 
