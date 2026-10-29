@@ -43,7 +43,7 @@
 #                            requirement instead of the pinned release      [AF_FROM]
 #   --with-wheel PATH        also install this local wheel of a framework package
 #                            (abstractcore, AbstractRuntime, ...) into the gateway's
-#                            tool, in place of its release pin; repeatable  [AF_WITH_WHEEL]
+#                            tool, in place of its release pin; repeatable  [AF_LOCAL_WHEEL]
 #   --manifest PATH          read the pin from this install-manifest.json
 #   --data-dir DIR           gateway data dir (default: per-OS user data dir) [AF_DATA_DIR] [kept]
 #   --with-apps              make sure Node.js >= 18 exists for the npx apps
@@ -324,16 +324,21 @@ af_check_with_wheels() {
 '; set -f
     for _w in $WITH_WHEELS; do
         IFS=$_ifs
-        case "$_w" in *.whl) ;; *) echo "ERROR: --with-wheel $_w is not a wheel (.whl) file" >&2; exit 2 ;; esac
-        [ -f "$_w" ] || { echo "ERROR: --with-wheel $_w: no such file" >&2; exit 2; }
+        case "$_w" in *.whl) ;; *) die "--with-wheel $_w is not a wheel (.whl) file.
+What to do: build one (\`uv build --wheel\` in the package's checkout) and pass the .whl path." ;; esac
+        [ -f "$_w" ] || die "--with-wheel $_w: no such file.
+What to do: check the path (relative paths are read from the folder you ran the installer in)."
         _b="${_w##*/}"; _n="$(af_dist_norm "${_b%%-*}")"
         case "$_n" in
-            abstractgateway) echo "ERROR: install the gateway wheel with --from $_w, not --with-wheel" >&2; exit 2 ;;
-            abstractvoice) echo "ERROR: --with-wheel does not take abstractvoice (it installs with its voice extras); use --no-voice and install it yourself, or a release" >&2; exit 2 ;;
+            abstractgateway) die "--with-wheel takes framework packages, not the gateway.
+What to do: install the gateway wheel with --from $_w." ;;
+            abstractvoice) die "--with-wheel does not take abstractvoice (it installs with its voice extras).
+What to do: install a release, or run with --no-voice and install that wheel into the gateway's tool yourself." ;;
         esac
         _known=0
         for _c in $AF_PY_MATRIX; do [ "$(af_dist_norm "${_c%%==*}")" = "$_n" ] && _known=1; done
-        [ "$_known" = 1 ] || { echo "ERROR: --with-wheel $_w: $_n is not a package of the AbstractFramework release matrix" >&2; exit 2; }
+        [ "$_known" = 1 ] || die "--with-wheel $_w: $_n is not a package of the AbstractFramework release matrix.
+What to do: pass only wheels of: $(for _c in $AF_PY_MATRIX; do printf '%s ' "${_c%%==*}"; done)"
         IFS='
 '
     done
@@ -527,7 +532,8 @@ FROM="${AF_FROM:-}"
 # or installer re-run put back.
 # af_abs_path PATH: PATH made absolute (the install runs from the data dir).
 af_abs_path() { case "$1" in /*) printf '%s' "$1" ;; *) printf '%s/%s' "$(pwd)" "${1#./}" ;; esac; }
-WITH_WHEELS="${AF_WITH_WHEEL:+$(af_abs_path "$AF_WITH_WHEEL")}"
+# (AF_LOCAL_WHEEL, not AF_WITH_WHEEL: AF_WITH_WHEELS already names the --with wheels below)
+WITH_WHEELS="${AF_LOCAL_WHEEL:+$(af_abs_path "$AF_LOCAL_WHEEL")}"
 MANIFEST=""
 DATA_DIR="${AF_DATA_DIR:-${ABSTRACTGATEWAY_DATA_DIR:-}}"
 # The choices that change what is installed are remembered (bootstrap.env) and kept by a plain
@@ -2323,6 +2329,7 @@ printf '%sAbstractFramework bootstrap%s  %s%s%s\n' "$C_B" "$C_0" "$C_D" \
 # with another gateway), so the release matrix applies and bootstrap.env records its version.
 IS_RELEASE=0; { [ -z "$FROM" ] && [ "$PIN" = "$AF_GATEWAY_PIN_DEFAULT" ]; } && IS_RELEASE=1
 af_check_with_wheels
+[ -n "$WITH_WHEELS" ] && info "--with-wheel: $(af_with_wheel_dists)replace their release pins for this run only; the next run without --with-wheel installs the release versions again"
 find_uv >/dev/null 2>&1 || true; tool_bin; tool_venv; console_bin
 PREV_GW=""
 [ -n "$UV" ] && PREV_GW="$("$UV" tool list 2>/dev/null | sed -n 's/^abstractgateway v\([^ ]*\).*/\1/p' | head -n 1)"
@@ -2951,7 +2958,9 @@ install_gateway() {
     if [ -n "$WITH_WHEELS" ]; then
         _ifs=$IFS; IFS='
 '; set -f
-        for _w in $WITH_WHEELS; do set -- "$@" --with "$_w"; done
+        # --reinstall-package: a wheel with the SAME version as the installed release would
+        # otherwise be kept as "already satisfied" and the fix never lands.
+        for _w in $WITH_WHEELS; do _b="${_w##*/}"; set -- "$@" --with "$_w" --reinstall-package "$(af_dist_norm "${_b%%-*}")"; done
         set +f; IFS=$_ifs
     fi
     if [ "$_gguf" = 1 ]; then set -- "$@" --with "llama-cpp-python==$GGUF_PIN"

@@ -64,6 +64,20 @@ def test_a_wheel_replaces_its_release_pin(tmp_path):
         f"MUTANT: the wheel's package kept its release pin -> uv-constraints.txt rolls it back: {pins}")
     cmd = next(l for l in res.stdout.splitlines() if "tool install" in l)
     assert str(core) in cmd and str(runtime) in cmd, cmd
+    # a wheel of the SAME version as the installed release must still land (worker A review)
+    assert "--reinstall-package abstractcore" in cmd and "--reinstall-package abstractruntime" in cmd, cmd
+    assert "for this run only; the next run without --with-wheel installs the release versions again" in res.stdout
+
+
+def test_the_environment_twin_is_af_local_wheel(tmp_path):
+    core = _wheel(tmp_path, "abstractcore")
+    home = tmp_path / "home"
+    home.mkdir(exist_ok=True)
+    env = {k: v for k, v in os.environ.items() if not k.startswith("AF_")}
+    env.update(HOME=str(home), AF_LOCAL_WHEEL=str(core))
+    res = subprocess.run(["sh", str(SH), "--print", "--yes", "--profile", "light", "--port", "18831"],
+                         capture_output=True, text=True, env=env, timeout=300)
+    assert res.returncode == 0 and str(core) in res.stdout, res.stdout + res.stderr
 
 
 def test_without_wheels_the_release_matrix_is_whole(tmp_path):
@@ -79,12 +93,12 @@ def test_without_wheels_the_release_matrix_is_whole(tmp_path):
 ])
 def test_wheels_it_cannot_take_are_refused(tmp_path, name, why):
     res = _plan(tmp_path, "--with-wheel", str(_wheel(tmp_path, name)))
-    assert res.returncode == 2 and why in res.stderr, res.stdout + res.stderr
+    assert res.returncode == 1 and why in res.stderr and "What to do:" in res.stderr, res.stdout + res.stderr
 
 
 def test_a_missing_wheel_is_refused(tmp_path):
     res = _plan(tmp_path, "--with-wheel", str(tmp_path / "abstractcore-1-py3-none-any.whl"))
-    assert res.returncode == 2 and "no such file" in res.stderr
+    assert res.returncode == 1 and "no such file" in res.stderr and "What to do:" in res.stderr
 
 
 def test_a_relative_wheel_path_is_made_absolute(tmp_path):
