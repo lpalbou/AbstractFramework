@@ -172,3 +172,22 @@ def test_no_launcher_exports_the_backlog_variables():
             if "export" in code and ("ABSTRACTGATEWAY_TRIAGE_REPO_ROOT" in code or "ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER" in code):
                 offenders.append(f"{path.relative_to(ROOT)}:{n}")
     assert offenders == []
+
+
+@pytest.mark.parametrize("launcher", ["gateway.sh", "gateway-local.sh"])
+@pytest.mark.parametrize("version,tray", [("0.17.2", False), ("0.13.0", False), ("", False),
+                                          ("0.18.0", True), ("0.18.1", True), ("1.0.0", True)])
+def test_the_operator_launchers_ask_for_the_tray_from_gateway_0_18(sandbox, launcher, version, tray):
+    """Gateway 0.18.0 shows the icon only for the machine's service or `serve --tray` (gateway #40);
+    an older gateway would refuse the unknown flag, so it gets none."""
+    argv, _err = _print(launcher, sandbox, FAKE_GATEWAY_VERSION=version)
+    assert ("--tray" in _after_serve(argv)) is tray, argv
+
+
+def test_the_flow_launchers_never_ask_for_the_tray(sandbox):
+    """A Flow gateway runs next to the operator's own: it must not put a second icon up."""
+    for launcher in ("gateway-flow.sh", "gateway-flow-local.sh"):
+        if not (SCRIPTS / launcher).exists():
+            continue
+        text = (SCRIPTS / launcher).read_text(encoding="utf-8")
+        assert "gateway_tray_flag" not in text, launcher
