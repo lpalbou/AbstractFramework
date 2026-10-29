@@ -170,6 +170,20 @@ jobs:
           $toolBin = & (Join-Path $uvBin 'uv.exe') tool dir --bin
           if (-not (Test-Path -LiteralPath (Join-Path $toolBin 'abstractgateway.exe'))) { throw 'abstractgateway was not installed' }
 
+      # The llama.cpp pin must resolve AND import on a fresh Windows install (a version bump can never break a fresh
+      # install silently; the Unix twin is "GGUF from the prebuilt llama.cpp wheel (Unix)").
+      - name: GGUF from the prebuilt llama.cpp wheel (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $want = (Select-String -Path scripts/install.ps1 -Pattern "^\`$AfLlamaCpuPin = '([^']+)'").Matches[0].Groups[1].Value
+          if (-not $want) { throw 'no $AfLlamaCpuPin in install.ps1' }
+          $uv = Join-Path (Join-Path $env:USERPROFILE '.local\bin') 'uv.exe'
+          $py = Join-Path (Join-Path (& $uv tool dir) 'abstractgateway') 'Scripts\python.exe'
+          $out = & $py -c "import llama_cpp; print(llama_cpp.__version__)"
+          Write-Host "llama_cpp: $out (expected version $want)"
+          if ("$out".Trim() -ne $want) { throw "llama-cpp-python $out installed, the pin is $want" }
+
       - name: Health (Windows)
         if: runner.os == 'Windows'
         shell: pwsh

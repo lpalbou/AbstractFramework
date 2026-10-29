@@ -25,6 +25,10 @@ All notable changes to AbstractFramework will be documented in this file.
   refused by 0.3.35) and every architecture of the catalog's 86 GGUF repos. cpu and cu125 0.3.36 wheels pass their zip
   CRC. Apple Silicon stays on Metal 0.3.28: the 0.3.36 Metal wheel fails its CRC (`lib/cmake/ggml/ggml-config.cmake`)
   like 0.3.32-0.3.35, so a Mac gets the newest architectures only through a source build (`--full`).
+- **CI checks that a fresh Windows install resolves and imports the pinned llama.cpp** (`$AfLlamaCpuPin`, like the
+  existing Unix step for `AF_LLAMA_CPU_PIN` / `AF_LLAMA_METAL_PIN`), so a version bump can never break a fresh install
+  silently. Checked by hand on this Mac (clean venv): llama-cpp-python 0.3.28 from the Metal index installs, imports,
+  GPU offload on. Backlog 1076 (proposed): model scheduling and memory management, the options and trade-offs.
 
 ## [0.11.18] - 2026-10-28
 
