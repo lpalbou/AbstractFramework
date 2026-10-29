@@ -128,3 +128,25 @@ def test_uninstall_removes_only_its_own_entry_when_another_gateway_has_the_unit(
     assert f"$ rm -f {unit}" not in out
     assert "$ systemctl --user disable" not in out
     assert f"kept: {unit} starts a gateway this installer did not install" in out
+
+
+def test_a_background_start_turns_off_a_login_service_of_this_gateway_first(tmp_path: Path) -> None:
+    """OVH 2026-10-28: an install started the gateway in the background while a systemd unit of the
+    same gateway stayed enabled; at the next login the unit could not bind the port, exited, and the
+    gateway that answered was supervised by nothing. Before a background start, a unit that starts
+    THIS gateway is turned off; another gateway's unit is left alone."""
+    _background_install(tmp_path, "%h/.local/share/uv/tools/abstractgateway/bin/abstractgateway")
+    proc = _run(tmp_path, _linux_stubs(tmp_path, linger="yes"), "--no-service", "--print", "--yes")
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    out = proc.stdout
+    off = out.find("$ systemctl --user disable --now abstractgateway.service")
+    start = out.find("nohup ")
+    assert off != -1 and start != -1 and off < start, out[-3000:]
+
+
+def test_a_background_start_keeps_another_gateways_login_service(tmp_path: Path) -> None:
+    _background_install(tmp_path, "/opt/other/bin/abstractgateway")
+    proc = _run(tmp_path, _linux_stubs(tmp_path, linger="yes"), "--no-service", "--print", "--yes")
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    assert "nohup " in proc.stdout
+    assert "$ systemctl --user disable --now abstractgateway.service" not in proc.stdout

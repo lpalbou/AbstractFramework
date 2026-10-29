@@ -3391,6 +3391,14 @@ SERVICE_FALLBACK=0   # 1 = the login item failed to register, so the gateway run
 AF_SYSTEMD_UNIT="abstractgateway.service"
 # start_background: (re)start the gateway as a background process of this user, pid in gateway.pid.
 start_background() {
+    # A systemd login service that starts THIS install's gateway (an earlier install's, or one
+    # turned on later) would start at the next login or boot and fight this background gateway
+    # for the port: the unit then fails to bind and the gateway that answers is supervised by
+    # nothing (OVH 2026-10-28). It is turned off first; one that starts another gateway is left.
+    _bg_unit="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/abstractgateway.service"
+    if [ "$OS_ID" = linux ] && [ -f "$_bg_unit" ] && unit_runs_this_gateway "$_bg_unit"; then
+        RUN_SOFT=1 run "turn off the login service (this gateway runs in the background instead; both would fight for port $PORT)" systemctl --user disable --now abstractgateway.service
+    fi
     stop_background_gateway
     # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
     # flags on the command line would override it forever (a restart replays them).
@@ -3462,6 +3470,11 @@ elif [ "$USE_SERVICE" = 1 ]; then
             run "restart the gateway service (it was running the previous version)" systemctl --user restart "$AF_SYSTEMD_UNIT"
         fi
         [ "$PRINT" = 1 ] && [ "$OS_ID" = linux ] && info "$(show_cmd systemctl --user restart "$AF_SYSTEMD_UNIT")   (when the unit was running and anything changed)"
+    fi
+    if [ "$SERVICE_FAILED" = 1 ] && [ "$SERVER" = 1 ]; then
+        # A server's gateway is supervised by systemd or not started: a background process
+        # restarts after nothing (a crash, a reboot) and holds the port the unit needs.
+        die "the gateway service could not be registered (details above and in $LOG_FILE); --server never runs the gateway outside systemd. Fix the cause and run the installer again."
     fi
     if [ "$SERVICE_FAILED" = 1 ]; then
         # Never leave the gateway stopped: it runs now, in the background, and the summary
