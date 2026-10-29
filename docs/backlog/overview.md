@@ -333,7 +333,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0189 | [Runtime artifact catalog and access stats](completed/runtime-artifact-observability/0189_runtime_artifact_catalog_and_access_stats.md) | Completed | Added descriptor-compatible Runtime metadata, explicit update/access APIs, exact counts/facets, filters, paging, and a repairable SQLite file-store catalog. |
 
 ## Active Proposed Work
-| [1075_note_routes_are_gateway_owned_no_package_brings_its_own_api.md](proposed/1075_note_routes_are_gateway_owned_no_package_brings_its_own_api.md) | P1. Operator rule 2026-10-29: note functionality is gateway-owned routes callable by every app; no package brings its own API or server. Gateway owns `/api/gateway/note/...` over a runtime facade; the AbstractNote seam shrinks to registration; every route in the authorization table. |
+| [1075_note_routes_are_gateway_owned_no_package_brings_its_own_api.md](planned/1075_note_routes_are_gateway_owned_no_package_brings_its_own_api.md) | P1 (planned; operator confirmed 2026-10-29). All note routes live in the gateway, nicely organised, accessible to any app dealing with notes; no package brings its own API or server. Gateway owns `/api/gateway/note/...` over a runtime facade; the AbstractNote seam shrinks to registration; every route in the authorization table. |
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
