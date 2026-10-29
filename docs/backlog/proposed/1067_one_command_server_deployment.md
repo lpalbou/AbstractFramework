@@ -2,7 +2,7 @@
 
 > Package: abstractframework (root installers, docs/deploy-linux.md), abstractgateway (`service enable`, network settings)
 > Type: task
-> Status: proposed (operator request, 2026-10-28 closing pass; not implemented)
+> Status: implemented, acceptance pending (2026-10-28: `install.sh --server [--gpu] [--tailscale-funnel]`, tests/test_install_sh_server.py, docs/deploy-linux.md#one-command; with gateway 0.18.0 it prints the setup code instead of a claim link; the fresh-VM acceptance run on the OVH box waits for the respawned instance. Deviation: after a driver install the run continues and ends with "reboot, then run the same command again" rather than refusing; a FAILED driver step warns and continues on CPU)
 > Created: 2026-10-28
 > Priority: normal
 > Labels: installer, linux, server, tailscale, deployment, first-run

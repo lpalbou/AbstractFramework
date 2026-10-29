@@ -4,6 +4,42 @@ The sequence below was run end to end on a fresh Ubuntu 24.04 cloud instance (4 
 NVIDIA Quadro RTX 5000) with AbstractFramework 0.11.17. Each step shows the line to expect. Run the
 commands as your normal user (here `ubuntu`), not as root. `<server>` is the server's address.
 
+## One command
+
+On a fresh Ubuntu server, as your normal user with `sudo`:
+
+```bash
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --server --gpu --tailscale-funnel
+```
+
+- `--server` installs the same matrix as below, asks nothing, runs the gateway as a systemd user
+  service, turns lingering on (`sudo loginctl enable-linger`), and ends with the address, the
+  **setup code** and the next steps.
+- `--gpu` (GPU servers) installs the NVIDIA driver first when `nvidia-smi` is missing and `lspci`
+  sees an NVIDIA GPU (step 2 below, done for you). Then reboot and run the same command again: it
+  keeps everything and adds the CUDA build of llama.cpp.
+- `--tailscale-funnel` installs Tailscale when missing, prints its login URL and waits while you
+  authorize the server, publishes the gateway with `tailscale funnel --bg <port>` and allows its
+  https address as a browser origin. Funnel and HTTPS must be allowed for your tailnet (Tailscale
+  prints the link to allow them when they are not).
+
+The command is idempotent: run it again to repair or upgrade; each part is checked first. The end of
+its output:
+
+```text
+  This server
+    Public address: https://<server>.<tailnet>.ts.net/console
+    Setup code: moose bicycle honey camel ankle agent
+    Next: open the address, choose the admin password and give the setup code ("Set up your gateway");
+          the setup guide then opens (engines, default models, apps). Again: abstractgateway claim --code
+```
+
+Open the public address from any browser: the console asks for the admin password and the setup code,
+signs you in and opens the setup guide (gateway 0.18.0 and later; see the gateway's
+`docs/first-run.md`). Without `--tailscale-funnel`, use the SSH tunnel of step 5.
+
+The steps below are the same install by hand.
+
 ## 1. Prerequisites
 
 - Ubuntu 22.04 or 24.04, x86_64, a user with `sudo`, SSH access with a key.

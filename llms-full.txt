@@ -4579,6 +4579,9 @@ models (above), for Ollama, LM Studio or other endpoint engines, or for cloud pr
 | `--no-tray` | `-NoTray` | Leave out the menu-bar icon (`tray` extra) |
 | `--with-console`, `--with-code-cli`, `--with-core-cli`, `--with-tray`, `--no-full` | `-WithConsole`, `-WithCodeCli`, `-WithCoreCli`, `-WithTray`, `-NoFull` | Turn back what an earlier `--no-console`, `--no-code-cli`, `--no-core-cli`, `--no-tray` or `--full` changed (a re-run keeps those choices otherwise) |
 | `--no-service` | `-NoService` | Do not start at login (asks nothing; starts the gateway in the background) |
+| `--server` | (Linux only) | A Linux server in one command, idempotent: asks nothing, starts at login as a systemd user service, turns lingering on (`sudo loginctl enable-linger`), opens no browser, and ends with the address, the setup code and the next steps ([deploy-linux.md](./deploy-linux.md#one-command)) |
+| `--gpu` with `--server`, or `--gpu-driver` | (Linux only) | Install the NVIDIA driver first when `nvidia-smi` is missing and `lspci` sees an NVIDIA GPU (`ubuntu-drivers`), then say to reboot and run the command again. `--gpu` alone is the gpu profile |
+| `--tailscale-funnel` | (Linux only, with `--server`) | Install and sign in Tailscale (prints the login URL and waits), publish the gateway with `tailscale funnel --bg <port>`, allow its https address as a browser origin; the summary's public address is that URL |
 | `--no-start` | `-NoStart` | Install or upgrade only; do not start or restart the gateway, and say when a restart is due (the gateway's **Update** uses it) |
 | `--no-open` | `-NoOpen` | Do not open the browser (remote or headless session: do not offer the terminal console) |
 | `--ask-wait SECONDS` | `-AskWait SECONDS` | How long a timed question waits for an answer: start at login, and the terminal console offer at the end of a remote or headless install (default 25, at most 25; `--console-wait` is an alias) |
@@ -5063,6 +5066,42 @@ as an account the admin picks (a restricted guest by default, never an admin). `
 The sequence below was run end to end on a fresh Ubuntu 24.04 cloud instance (4 vCPU, 26 GB RAM, one
 NVIDIA Quadro RTX 5000) with AbstractFramework 0.11.17. Each step shows the line to expect. Run the
 commands as your normal user (here `ubuntu`), not as root. `<server>` is the server's address.
+
+## One command
+
+On a fresh Ubuntu server, as your normal user with `sudo`:
+
+```bash
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --server --gpu --tailscale-funnel
+```
+
+- `--server` installs the same matrix as below, asks nothing, runs the gateway as a systemd user
+  service, turns lingering on (`sudo loginctl enable-linger`), and ends with the address, the
+  **setup code** and the next steps.
+- `--gpu` (GPU servers) installs the NVIDIA driver first when `nvidia-smi` is missing and `lspci`
+  sees an NVIDIA GPU (step 2 below, done for you). Then reboot and run the same command again: it
+  keeps everything and adds the CUDA build of llama.cpp.
+- `--tailscale-funnel` installs Tailscale when missing, prints its login URL and waits while you
+  authorize the server, publishes the gateway with `tailscale funnel --bg <port>` and allows its
+  https address as a browser origin. Funnel and HTTPS must be allowed for your tailnet (Tailscale
+  prints the link to allow them when they are not).
+
+The command is idempotent: run it again to repair or upgrade; each part is checked first. The end of
+its output:
+
+```text
+  This server
+    Public address: https://<server>.<tailnet>.ts.net/console
+    Setup code: moose bicycle honey camel ankle agent
+    Next: open the address, choose the admin password and give the setup code ("Set up your gateway");
+          the setup guide then opens (engines, default models, apps). Again: abstractgateway claim --code
+```
+
+Open the public address from any browser: the console asks for the admin password and the setup code,
+signs you in and opens the setup guide (gateway 0.18.0 and later; see the gateway's
+`docs/first-run.md`). Without `--tailscale-funnel`, use the SSH tunnel of step 5.
+
+The steps below are the same install by hand.
 
 ## 1. Prerequisites
 
