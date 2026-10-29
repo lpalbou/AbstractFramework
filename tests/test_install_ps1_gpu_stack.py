@@ -222,7 +222,7 @@ build=$(echo "$*" | sed -n 's#.*/whl/\\([a-z0-9]*\\)/llama-cpp-python/.*#\\1#p')
 for f in {fails}; do [ "$f" = "$build" ] && {{ echo "error: no matching distribution for $build" >&2; exit 1; }}; done
 echo " Downloading llama-cpp-python ($build)" >&2
 echo "$build" > '{state}'
-echo " + llama-cpp-python==0.3.35" >&2
+echo " + llama-cpp-python==0.3.36" >&2
 exit 0
 """)
     answers = "\n".join(
@@ -245,7 +245,7 @@ $script:LogFile = '{log}'
 $uv = '{fake / "uv"}'; $py = '{fake / "python"}'
 $r = Resolve-LlamaBuild -Variants @({", ".join(repr(v) for v in variants)}) -Installed '{installed}' -Install {{
     param($v)
-    $code = Invoke-LiveProcess -Exe $uv -Arguments @('pip', 'install', '--python', $py, '--no-index', '--find-links', "https://abetlen.github.io/llama-cpp-python/whl/$v/llama-cpp-python/", 'llama-cpp-python==0.3.35') -Log $script:LogFile
+    $code = Invoke-LiveProcess -Exe $uv -Arguments @('pip', 'install', '--python', $py, '--no-index', '--find-links', "https://abetlen.github.io/llama-cpp-python/whl/$v/llama-cpp-python/", 'llama-cpp-python==0.3.36') -Log $script:LogFile
     $code -eq 0
 }} -Check {{ param($v) Invoke-Smoke $py $AfLlamaSmoke $script:LogFile }} -Remove {{
     Invoke-LiveProcess -Exe $uv -Arguments @('pip', 'uninstall', '--python', $py, 'llama-cpp-python') -Log $script:LogFile | Out-Null
@@ -257,8 +257,8 @@ $r = Resolve-LlamaBuild -Variants @({", ".join(repr(v) for v in variants)}) -Ins
     return json.loads(line[7:]), out
 
 
-GPU_OK = {"import": True, "offload": True, "version": "0.3.35"}
-CPU_ONLY = {"import": True, "offload": False, "version": "0.3.35"}
+GPU_OK = {"import": True, "offload": True, "version": "0.3.36"}
+CPU_ONLY = {"import": True, "offload": False, "version": "0.3.36"}
 NO_DLL = {"import": False, "offload": False, "error": "FileNotFoundError: Could not find module llama.dll (or one of its dependencies)"}
 
 
@@ -268,7 +268,7 @@ def test_cuda_build_that_offloads_is_kept(tmp_path: Path) -> None:
     got, out = _resolve(tmp_path, fake, ["cu130", "vulkan", "cpu"], "cu130")
     assert got == {"kept": "cu130", "where": "GPU offload", "why": []}
     assert not calls.exists(), "nothing is reinstalled when the included build works"
-    assert "llama.cpp 0.3.35 (cu130 build): loads, GPU offload" in out
+    assert "llama.cpp 0.3.36 (cu130 build): loads, GPU offload" in out
 
 
 def test_cuda_build_without_its_dlls_falls_back_to_vulkan(tmp_path: Path) -> None:
