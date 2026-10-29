@@ -91,8 +91,9 @@
 #                            --remove-uv also removes uv, its Pythons and its
 #                            download cache when this installer put uv there)
 #   --server                 a Linux server in one command (idempotent: run it again to
-#                            repair or upgrade): asks nothing, starts at login (the systemd
-#                            user service), turns lingering on (sudo loginctl enable-linger,
+#                            repair or upgrade): asks nothing, installs libatomic1 and zstd
+#                            (LM Studio's and Ollama's Linux builds need them), starts at login
+#                            (the systemd user service), turns lingering on (sudo loginctl enable-linger,
 #                            so it runs without an SSH session and starts at boot), opens no
 #                            browser, and ends with the address, the setup code for the
 #                            console's "Set up your gateway" page, and the next steps
@@ -104,8 +105,16 @@
 #                            the reboot, re-run with --profile gpu; prefer --server --gpu)
 #   --tailscale-funnel       with --server: install Tailscale when missing, sign this server
 #                            in (prints the login URL and waits), publish the gateway with
-#                            `tailscale funnel --bg <port>` and allow its https address as a
+#                            `tailscale funnel --bg --https=443 http://127.0.0.1:<port>` and allow its https address as a
 #                            browser origin; the summary's public address is that URL
+#   --instance NAME          a SECOND, self-contained gateway on this machine (a gateway released
+#                            after 0.18.0; an older one is refused): its own uv tool dir, commands, data folder
+#                            (`<default>-NAME`), AbstractCore config, app port block, login
+#                            service (abstractgateway-NAME.service) and Funnel port; it never
+#                            touches the default gateway, PATH or the gateway pointer. Needs
+#                            --port. Its commands: <data folder>/bin/abstractgateway --instance NAME
+#   --funnel-https-port N    with --tailscale-funnel: the public https port (443 for the default
+#                            gateway, 8443 for an instance; Funnel allows 443, 8443 and 10000)
 #   -y, --yes                ask nothing, not even start at login (it stays as it was)
 #   -v, --verbose            show the full output of every command
 #   -h, --help               this help
@@ -542,6 +551,7 @@ WITH_APPS=0; OPT_CONSOLE=""; OPT_CODE_CLI=""; OPT_CORE_CLI=""; OPT_TRAY=""; OPT_
 WITH_OLLAMA=0; WITH_LMSTUDIO=0
 NO_SERVICE=0; NO_START=0; NO_OPEN=0; NO_MODIFY_PATH=0
 SERVER=0; GPU_DRIVER=0; TS_FUNNEL=0; PUBLIC_URL=""; REBOOT_NEEDED=0; SERVER_NOTES=""
+INSTANCE="${AF_INSTANCE:-}"; FUNNEL_HTTPS=""
 PRINT=0; UNINSTALL=0; PURGE=0; VERBOSE=0; REMOVE_UV=0; ASK_WAIT=25; ASK_NOTHING=0
 INTERACTIVE="${AF_INTERACTIVE:-0}"
 
@@ -611,6 +621,10 @@ while [ $# -gt 0 ]; do
         --with-tray) OPT_TRAY=1 ;;
         --no-service) NO_SERVICE=1 ;;
         --server) SERVER=1 ;;
+        --instance) need_arg "$@"; INSTANCE="$2"; shift ;;
+        --instance=*) INSTANCE="${1#*=}" ;;
+        --funnel-https-port) need_arg "$@"; FUNNEL_HTTPS="$2"; shift ;;
+        --funnel-https-port=*) FUNNEL_HTTPS="${1#*=}" ;;
         --gpu-driver) GPU_DRIVER=1 ;;
         --tailscale-funnel) TS_FUNNEL=1 ;;
         --no-start) NO_START=1 ;;
@@ -1243,12 +1257,25 @@ pointer_data_dir() {
         | sed -nE 's/.*"data_dir"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' | head -n 1 \
         | sed 's/\\"/"/g; s/\\\\/\\/g'
 }
+# --instance NAME (gateway instances.py): one name drives the data folder, the tool and command
+# folders, AbstractCore's config, the login service names and the Funnel port. The default instance
+# (no --instance) is exactly the install it always was.
+INSTANCE="$(printf '%s' "$INSTANCE" | tr '[:upper:]' '[:lower:]')"
+[ "$INSTANCE" = default ] && INSTANCE=""
+if [ -n "$INSTANCE" ]; then
+    printf '%s\n' "$INSTANCE" | grep -Eq '^[a-z]([a-z0-9-]{0,30}[a-z0-9])?$' \
+        || die "--instance $INSTANCE: use 1-32 lower-case letters, digits and dashes, starting with a letter"
+fi
+AF_SFX="${INSTANCE:+-$INSTANCE}"
+AF_UNIT="abstractgateway${AF_SFX}.service"
+AF_LABEL="ai.abstractframework.gateway${INSTANCE:+.$INSTANCE}"
 DATA_DIR_CUSTOM=0; [ -n "$DATA_DIR" ] && DATA_DIR_CUSTOM=1
 DATA_DIR_KEPT=0
 if [ -z "$DATA_DIR" ]; then
-    if [ "$OS_ID" = macos ]; then DATA_DIR="$HOME/Library/Application Support/AbstractGateway"
-    else DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/abstractgateway"; fi
-    _pd="$(pointer_data_dir)"
+    if [ "$OS_ID" = macos ]; then DATA_DIR="$HOME/Library/Application Support/AbstractGateway${AF_SFX}"
+    else DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/abstractgateway${AF_SFX}"; fi
+    # The pointer names the DEFAULT gateway: an instance never adopts its data folder.
+    _pd=""; [ -z "$INSTANCE" ] && _pd="$(pointer_data_dir)"
     _def_real="$(CDPATH='' cd -- "$DATA_DIR" 2>/dev/null && pwd -P || echo "$DATA_DIR")"
     if [ -n "$_pd" ] && [ "$_pd" != "$DATA_DIR" ] && [ "$_pd" != "$_def_real" ] && [ -f "$_pd/bootstrap.env" ]; then
         DATA_DIR="$_pd"; DATA_DIR_CUSTOM=1; DATA_DIR_KEPT=1
@@ -1276,6 +1303,15 @@ abs_path() {
 DATA_DIR_GIVEN="$DATA_DIR"
 case "$DATA_DIR" in /*) DATA_DIR_ABS_GIVEN="${DATA_DIR%/}" ;; *) DATA_DIR_ABS_GIVEN="$PWD/${DATA_DIR%/}" ;; esac
 DATA_DIR="$(abs_path "$DATA_DIR")"
+if [ -n "$INSTANCE" ]; then
+    # Its own uv tool environment and commands (never on PATH: `abstractgateway` stays the default
+    # gateway's), its own AbstractCore config, and the instance name for every gateway command run here.
+    export ABSTRACTGATEWAY_INSTANCE="$INSTANCE"
+    export UV_TOOL_DIR="${UV_TOOL_DIR:-$DATA_DIR/tool}"
+    export UV_TOOL_BIN_DIR="${UV_TOOL_BIN_DIR:-$DATA_DIR/bin}"
+    [ -n "${ABSTRACTCORE_CONFIG_DIR:-}${ABSTRACTCORE_CONFIG_FILE:-}" ] || export ABSTRACTCORE_CONFIG_DIR="$DATA_DIR/core-config"
+    NO_MODIFY_PATH=1
+fi
 # Never the root, the home folder or a folder that contains it (an uninstall --purge
 # deletes the data dir). Exit 2: a usage error, nothing was changed.
 _home_p="$(CDPATH='' cd -- "$HOME" 2>/dev/null && pwd -P || echo "$HOME")"
@@ -1487,6 +1523,8 @@ gateway_supports() {  # gateway_supports service|claim-url
         # gateway >= 0.18.0: the six-word setup code a fresh gateway asks for from another machine.
         setup-code) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" claim --help 2>/dev/null | grep -q -- '--code' ;;
         network) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" network --help >/dev/null 2>&1 ;;
+        # An instance-aware gateway takes `--instance NAME` before its command (an older one exits 2).
+        instance) [ -x "$TOOL_BIN/abstractgateway" ] && "$TOOL_BIN/abstractgateway" --instance "$INSTANCE" service --help >/dev/null 2>&1 ;;
     esac
 }
 
@@ -1733,10 +1771,10 @@ own_gateway_on_port() {
 service_main_pid() {
     if [ "$OS_ID" = linux ]; then
         have systemctl || return 0
-        _smp="$(systemctl --user show -p MainPID --value abstractgateway.service 2>/dev/null | head -n 1)"
+        _smp="$(systemctl --user show -p MainPID --value "$AF_UNIT" 2>/dev/null | head -n 1)"
     else
         have launchctl || return 0
-        _sml="$(launchctl print "gui/$(id -u)/ai.abstractframework.gateway" 2>/dev/null)" || return 0
+        _sml="$(launchctl print "gui/$(id -u)/$AF_LABEL" 2>/dev/null)" || return 0
         _smp="$(printf '%s\n' "$_sml" | sed -n 's/.*[{;[:space:]]pid = \([0-9][0-9]*\).*/\1/p' | head -n 1)"
         [ -n "$_smp" ] || _smp=0
     fi
@@ -2023,6 +2061,9 @@ purge_path() {
 # own dirs) are not in it.
 purge_targets() {
     echo "the gateway data (settings, users, chats, run history, artifacts, memory)|$DATA_DIR"
+    # An instance (--instance) owns its data dir only: the caches, the Assistant's and AbstractCode's
+    # folders belong to the user (and the default gateway).
+    [ -n "$INSTANCE" ] && return 0
     if [ "$OS_ID" = macos ]; then
         echo "the login item's logs|$HOME/Library/Logs/AbstractGateway"
         echo "the gateway's download cache (engine installers)|$HOME/Library/Caches/AbstractGateway"
@@ -2074,8 +2115,8 @@ service_leftovers() {
             info "kept: $_u starts a gateway this installer did not install"
         fi
         case "$(unit_kind "$_u")" in
-            mac) info "  to remove it: launchctl bootout gui/$(id -u)/ai.abstractframework.gateway; rm -f $(q "$_u")" ;;
-            linux) info "  to remove it: systemctl --user disable --now abstractgateway.service; rm -f $(q "$_u"); systemctl --user daemon-reload" ;;
+            mac) info "  to remove it: launchctl bootout gui/$(id -u)/$AF_LABEL; rm -f $(q "$_u")" ;;
+            linux) info "  to remove it: systemctl --user disable --now $AF_UNIT; rm -f $(q "$_u"); systemctl --user daemon-reload" ;;
             *) info "  to remove it: rm -f $(q "$_u")" ;;
         esac
     done
@@ -2086,7 +2127,7 @@ service_leftovers() {
     fi
 }
 _uninst_mac=""; [ -e "$HOME/Library/Application Support/AbstractFramework/Installer/Uninstall AbstractFramework.command" ] && _uninst_mac=", or double-click Uninstall AbstractFramework.command"
-UNINSTALL_AGAIN="run the uninstaller again (curl -LsSf $AF_UNINSTALL_URL | sh -s -- --yes$_uninst_mac); it skips what is already gone."
+UNINSTALL_AGAIN="run the uninstaller again (curl -LsSf $AF_UNINSTALL_URL | sh -s -- --yes$_uninst_mac${INSTANCE:+ --instance $INSTANCE}); it skips what is already gone."
 
 # ---------------------------------------------------------------------------
 # Uninstall
@@ -2111,12 +2152,18 @@ if [ "$UNINSTALL" = 1 ]; then
         IFS="$_oifs"; set +f
         if [ "$_there" = 1 ]; then
             _size="$(echo "$_kb" | awk '{ if ($1 >= 1048576) printf "%.1fG", $1/1048576; else if ($1 >= 1024) printf "%.0fM", $1/1024; else printf "%dK", $1 }')"
-            if ask_yes "Also delete your AbstractFramework data (${_size:-?}): the gateway's settings, users, chats, run history and artifacts ($DATA_DIR), its logs and download cache, the Assistant's sessions and preferences (~/.abstractassistant) and AbstractCode's login and preferences (~/.abstractcode)? Model weights are kept. This cannot be undone." n; then
+            if [ -n "$INSTANCE" ]; then
+                ask_yes "Also delete the data of gateway instance $INSTANCE (${_size:-?}): its settings, users, chats, run history and artifacts ($DATA_DIR)? The default gateway and model weights are kept. This cannot be undone." n && PURGE=1
+            elif ask_yes "Also delete your AbstractFramework data (${_size:-?}): the gateway's settings, users, chats, run history and artifacts ($DATA_DIR), its logs and download cache, the Assistant's sessions and preferences (~/.abstractassistant) and AbstractCode's login and preferences (~/.abstractcode)? Model weights are kept. This cannot be undone." n; then
                 PURGE=1
             fi
         fi
     fi
-    if [ "$ST_UV_BY_US" = 1 ] && [ "$REMOVE_UV" = 0 ] && [ -n "$UV" ]; then
+    if [ -n "$INSTANCE" ] && [ "$REMOVE_UV" = 1 ]; then
+        warn "--remove-uv with --instance $INSTANCE: uv is shared with the default gateway; kept"
+        REMOVE_UV=0
+    fi
+    if [ -z "$INSTANCE" ] && [ "$ST_UV_BY_US" = 1 ] && [ "$REMOVE_UV" = 0 ] && [ -n "$UV" ]; then
         _uvsize="$(du -sch "$("$UV" cache dir 2>/dev/null)" "$("$UV" python dir 2>/dev/null)" 2>/dev/null | tail -n 1 | awk '{print $1}')"
         if ask_yes "Also remove uv, its Python and its download cache (${_uvsize:-?})? The installer added uv; anything else you installed with uv would stop working." n; then
             REMOVE_UV=1
@@ -2131,13 +2178,13 @@ if [ "$UNINSTALL" = 1 ]; then
         printf 'What to do: check --data-dir (it must be the gateway'"'"'s own folder). Nothing was changed.\n' >&2
         exit 2
     fi
-    [ "$PURGE" = 1 ] && UNINSTALL_AGAIN="run the uninstaller again with --purge (curl -LsSf $AF_UNINSTALL_URL | sh -s -- --yes --purge); it skips what is already gone."
+    [ "$PURGE" = 1 ] && UNINSTALL_AGAIN="run the uninstaller again with --purge (curl -LsSf $AF_UNINSTALL_URL | sh -s -- --yes --purge${INSTANCE:+ --instance $INSTANCE}); it skips what is already gone."
     step "Gateway service and processes"
     # Only touch the login service when this install registered it (or when no state says
     # otherwise): a --no-service install must not unregister a service set up separately.
-    UNIT_MAC="$HOME/Library/LaunchAgents/ai.abstractframework.gateway.plist"
-    UNIT_LINUX="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/abstractgateway.service"
-    UNIT_XDG="${XDG_CONFIG_HOME:-$HOME/.config}/autostart/abstractgateway.desktop"
+    UNIT_MAC="$HOME/Library/LaunchAgents/$AF_LABEL.plist"
+    UNIT_LINUX="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/$AF_UNIT"
+    UNIT_XDG="${XDG_CONFIG_HOME:-$HOME/.config}/autostart/abstractgateway${AF_SFX}.desktop"
     # A login item turned on AFTER the install (`abstractgateway service enable`, which the
     # summary suggests, or the consoles' Start at login switch) is not in the state file: each one
     # that starts this install's gateway is removed too (it would point at a deleted program), file
@@ -2154,9 +2201,9 @@ if [ "$UNINSTALL" = 1 ]; then
             info "a login service was turned on after the install (it starts this install's gateway): removing it"
             for _k in $UNITS_OURS; do
                 case "$_k" in
-                    mac) RUN_SOFT=1 run "stop the login item" launchctl bootout "gui/$(id -u)/ai.abstractframework.gateway"
+                    mac) RUN_SOFT=1 run "stop the login item" launchctl bootout "gui/$(id -u)/$AF_LABEL"
                          run "remove the login item" rm -f "$UNIT_MAC" ;;
-                    linux) RUN_SOFT=1 run "stop the login service" systemctl --user disable --now abstractgateway.service
+                    linux) RUN_SOFT=1 run "stop the login service" systemctl --user disable --now "$AF_UNIT"
                            run "remove the login service" rm -f "$UNIT_LINUX"
                            RUN_SOFT=1 run "reload systemd's user units" systemctl --user daemon-reload ;;
                     xdg) run "remove the login entry" rm -f "$UNIT_XDG" ;;
@@ -2170,10 +2217,10 @@ if [ "$UNINSTALL" = 1 ]; then
         elif [ "$OS_ID" = macos ] && [ -f "$UNIT_MAC" ]; then
             # A half-removed install (the tool is gone, the login item is not): the
             # same two steps `abstractgateway service uninstall` runs.
-            RUN_SOFT=1 run "stop the login item" launchctl bootout "gui/$(id -u)/ai.abstractframework.gateway"
+            RUN_SOFT=1 run "stop the login item" launchctl bootout "gui/$(id -u)/$AF_LABEL"
             run "remove the login item" rm -f "$UNIT_MAC"
         elif [ "$OS_ID" = linux ] && [ -f "$UNIT_LINUX" ]; then
-            RUN_SOFT=1 run "stop the login service" systemctl --user disable --now abstractgateway.service
+            RUN_SOFT=1 run "stop the login service" systemctl --user disable --now "$AF_UNIT"
             run "remove the login service" rm -f "$UNIT_LINUX"
             RUN_SOFT=1 run "reload systemd's user units" systemctl --user daemon-reload
         elif [ "$OS_ID" = linux ] && [ -f "$UNIT_XDG" ]; then
@@ -2231,7 +2278,7 @@ if [ "$UNINSTALL" = 1 ]; then
     # Before the data dir goes (--purge): the pointer is matched against its resolved path.
     remove_pointer
     _inst="$HOME/Library/Application Support/AbstractFramework/Installer"
-    if [ "$OS_ID" = macos ] && [ -e "$_inst" ]; then
+    if [ -z "$INSTANCE" ] && [ "$OS_ID" = macos ] && [ -e "$_inst" ]; then
         purge_path "the copy of the installer left by the .pkg" "$_inst"
         [ "$PRINT" = 1 ] || rmdir "$HOME/Library/Application Support/AbstractFramework" 2>/dev/null || true
     fi
@@ -2260,6 +2307,7 @@ if [ "$UNINSTALL" = 1 ]; then
         fi
         recheck_purged
         if [ "$OS_ID" = macos ] && [ "$PRINT" = 0 ]; then rmdir "$HOME/Library/Logs/Assistant" 2>/dev/null || true; fi
+        [ -n "$INSTANCE" ] && info "kept: the default gateway, uv, and this instance's registered slot (~/.config/abstractgateway/instances.json: the same name gets the same app ports again)"
         info "kept: model weights and shared caches (~/.cache/huggingface, ~/.abstractcore, ~/.abstractframework apart from its gateway.json, ~/.cache/abstractvoice, LM Studio and Ollama models)"
         if [ -n "$PURGE_FAILED" ]; then
             die "the uninstaller could not delete:$PURGE_FAILED
@@ -2270,7 +2318,7 @@ sudo chown -R $(id -un) <folder>. Then $UNINSTALL_AGAIN"
         fi
     else
         info "kept the gateway data dir: $DATA_DIR (delete it with --uninstall --purge)"
-        info "kept: the Assistant's sessions (~/.abstractassistant) and AbstractCode's settings (~/.abstractcode); --purge deletes them"
+        [ -n "$INSTANCE" ] || info "kept: the Assistant's sessions (~/.abstractassistant) and AbstractCode's settings (~/.abstractcode); --purge deletes them"
     fi
     if [ "$REMOVE_UV" = 1 ] && [ -n "$UV" ]; then
         step "uv, its Python and its download cache"
@@ -2550,14 +2598,19 @@ server_funnel() {
     if [ "$PRINT" = 1 ]; then _ts_host="${_ts_host:-<this-server>.<tailnet>.ts.net}"; fi
     [ -n "$_ts_host" ] || { warn "Tailscale gave no DNS name for this machine (MagicDNS off?): turn MagicDNS and HTTPS on in the Tailscale admin console, then run the installer again"; return 0; }
     # On only when Funnel (public) is allowed for <host>:443 AND / proxies to this gateway's port.
-    _fun="$(tailscale funnel status --json 2>/dev/null | json_field "bool((d.get('AllowFunnel') or {}).get('$_ts_host:443')) and str((((d.get('Web') or {}).get('$_ts_host:443') or {}).get('Handlers') or {}).get('/', {}).get('Proxy','')).rstrip('/') in ('http://127.0.0.1:$PORT','127.0.0.1:$PORT','http://localhost:$PORT')" | json_value)"
+    # The public https port: 443 for the default gateway, 8443 for an instance (Funnel allows 443,
+    # 8443 and 10000), so two gateways of one machine never share one public address.
+    _fh="${FUNNEL_HTTPS:-$([ -n "$INSTANCE" ] && echo 8443 || echo 443)}"
+    case "$_fh" in 443|8443|10000) ;; *) warn "--funnel-https-port $_fh: Funnel allows 443, 8443 and 10000 only; the gateway stays on this machine only"; return 0 ;; esac
+    _fh_url=""; [ "$_fh" = 443 ] || _fh_url=":$_fh"
+    _fun="$(tailscale funnel status --json 2>/dev/null | json_field "bool((d.get('AllowFunnel') or {}).get('$_ts_host:$_fh')) and str((((d.get('Web') or {}).get('$_ts_host:$_fh') or {}).get('Handlers') or {}).get('/', {}).get('Proxy','')).rstrip('/') in ('http://127.0.0.1:$PORT','127.0.0.1:$PORT','http://localhost:$PORT')" | json_value)"
     if [ "$_fun" = True ]; then
-        ok "Funnel: https://$_ts_host already serves 127.0.0.1:$PORT"
+        ok "Funnel: https://$_ts_host$_fh_url already serves 127.0.0.1:$PORT"
     else
         # Live: when Funnel is not allowed on the tailnet yet, Tailscale prints the URL that enables it.
-        RUN_LIVE=1 RUN_SOFT=1 run "publish the gateway on https://$_ts_host" tailscale funnel --bg "$PORT"
+        RUN_LIVE=1 RUN_SOFT=1 run "publish the gateway on https://$_ts_host$_fh_url" tailscale funnel --bg "--https=$_fh" "http://127.0.0.1:$PORT"
         if [ "$PRINT" = 0 ] && [ "$RUN_RC" != 0 ]; then
-            RUN_LIVE=1 RUN_SOFT=1 server_sudo "publish the gateway on https://$_ts_host (as root)" tailscale funnel --bg "$PORT"
+            RUN_LIVE=1 RUN_SOFT=1 server_sudo "publish the gateway on https://$_ts_host$_fh_url (as root)" tailscale funnel --bg "--https=$_fh" "http://127.0.0.1:$PORT"
             if [ "$RUN_RC" != 0 ]; then
                 warn "Tailscale Funnel did not start (see above: Funnel must be allowed for this tailnet, and HTTPS certificates on)"
                 SERVER_NOTES="${SERVER_NOTES}    Funnel is NOT on: allow Funnel and HTTPS for your tailnet, then run the same command again
@@ -2566,7 +2619,7 @@ server_funnel() {
             fi
         fi
     fi
-    PUBLIC_URL="https://$_ts_host"
+    PUBLIC_URL="https://$_ts_host${_fh_url}"
     # The gateway accepts its own https name already when it detects Tailscale; the stored
     # origin makes it explicit (and survives a detection miss). Appended, never replaced.
     if [ "$PRINT" = 0 ] && ! gateway_supports network; then
@@ -2763,6 +2816,9 @@ if [ -z "$PORT" ]; then
             ST_PORT="$PORT"
         fi
     fi
+    if [ -z "$PORT" ] && [ -z "${ST_PORT:-}" ] && [ -n "$INSTANCE" ]; then
+        die "--instance $INSTANCE needs --port N (its own port; the default gateway keeps 8080). Its app ports come from the instance."
+    fi
     [ -n "$PORT" ] || PORT="${ST_PORT:-8080}"
 else PORT_EXPLICIT=1; fi
 case "$PORT" in ''|*[!0-9]*) die "--port must be a number (got '$PORT')" ;; esac
@@ -2871,7 +2927,7 @@ if [ "$NO_START" = 0 ] && [ "$NO_SERVICE" = 0 ] && [ "$SERVICE_POSSIBLE" = 1 ]; 
     elif [ "$PRINT" = 1 ]; then _lans=y; _lwhy="--print: the install asks on this terminal, Enter = yes"
     else _lans=n; _lwhy="no answer within $ASK_WAIT s, so a first install leaves it off"; fi
     if [ "$_lans" = y ]; then
-        ok "start at login: yes ($_lwhy; $([ "$OS_ID" = macos ] && echo "LaunchAgent ~/Library/LaunchAgents/ai.abstractframework.gateway.plist" || echo "systemd --user unit abstractgateway.service"); turn it off with the Start at login switch in either console, or re-run with --no-service)"
+        ok "start at login: yes ($_lwhy; $([ "$OS_ID" = macos ] && echo "LaunchAgent ~/Library/LaunchAgents/$AF_LABEL.plist" || echo "systemd --user unit $AF_UNIT"); turn it off with the Start at login switch in either console, or re-run with --no-service)"
     else
         NO_SERVICE=1
         ok "start at login: no ($_lwhy; the gateway starts now in the background; the summary says how to turn it on)"
@@ -2886,6 +2942,46 @@ if [ "$PRINT" = 0 ]; then
     lock_take
     LOG_FILE="$LOG_DIR/install-$(date +%Y%m%d-%H%M%S).log"
     ( umask 077; : >"$LOG_FILE" )
+fi
+
+# --server: the system libraries the console's engine installers need, installed now while this
+# run may use sudo, so the console never needs an administrator afterwards: libatomic1 (LM Studio's
+# Linux daemon links it; minimal server images lack it) and zstd (Ollama's Linux build is a
+# .tar.zst). Debian/Ubuntu (apt) and Fedora/RHEL (dnf); already present = nothing to do.
+SERVER_PKGS_APT="libatomic1 zstd"
+SERVER_PKGS_DNF="libatomic zstd"
+server_missing_pkgs() {  # prints the missing package names of this machine's package manager
+    if have dpkg-query && have apt-get; then
+        for _p in $SERVER_PKGS_APT; do
+            dpkg-query -W -f='${Status}' "$_p" 2>/dev/null | grep -q 'install ok installed' || printf '%s ' "$_p"
+        done
+    elif have rpm && have dnf; then
+        for _p in $SERVER_PKGS_DNF; do rpm -q "$_p" >/dev/null 2>&1 || printf '%s ' "$_p"; done
+    fi
+}
+if [ "$SERVER" = 1 ]; then
+    step "Server prerequisites (libatomic1 for LM Studio, zstd for Ollama)"
+    _missing="$(server_missing_pkgs)"
+    if [ -z "$_missing" ] && { have apt-get || have dnf; }; then
+        ok "already installed: $(have apt-get && echo "$SERVER_PKGS_APT" || echo "$SERVER_PKGS_DNF")"
+    elif [ -z "$_missing" ]; then
+        warn "no apt-get or dnf here: install libatomic and zstd with this system's package manager, so the console can install LM Studio and Ollama"
+    elif have apt-get; then
+        # shellcheck disable=SC2086
+        RUN_SOFT=1 server_sudo "install $_missing" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600 install -y $_missing
+        if [ "$RUN_RC" != 0 ]; then
+            RUN_SOFT=1 server_sudo "refresh the package lists" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600 update
+            # shellcheck disable=SC2086
+            RUN_SOFT=1 server_sudo "install $_missing (after refreshing the lists)" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600 install -y $_missing
+        fi
+        [ "$RUN_RC" = 0 ] || SERVER_NOTES="${SERVER_NOTES}    NOT installed: $_missing (sudo apt-get install -y $_missing): the console cannot install LM Studio or Ollama without them
+"
+    else
+        # shellcheck disable=SC2086
+        RUN_SOFT=1 server_sudo "install $_missing" dnf install -y $_missing
+        [ "$RUN_RC" = 0 ] || SERVER_NOTES="${SERVER_NOTES}    NOT installed: $_missing (sudo dnf install -y $_missing)
+"
+    fi
 fi
 
 if [ "$DRIVER_ACTION" = install ]; then
@@ -3246,6 +3342,12 @@ if [ "$BEFORE" != "$AFTER" ] || [ -n "$FROM" ] || [ "$REINSTALL" = 1 ] || { [ -n
     || { [ -n "$BEFORE" ] && [ "$ST_VOICE" != "$VOICE_SPEC" ]; } || [ "$ENV_BEFORE" != "$ENV_AFTER" ]; then CHANGED=1; fi
 GW="$TOOL_BIN/abstractgateway"
 GWCFG="$TOOL_BIN/abstractgateway-config"
+# An older gateway ignores ABSTRACTGATEWAY_INSTANCE: its `service install` would write the DEFAULT
+# gateway's login service over the other gateway's. Refuse before any gateway command runs.
+if [ -n "$INSTANCE" ] && [ "$PRINT" = 0 ] && ! gateway_supports instance; then
+    die "--instance $INSTANCE: $GW_SPEC does not know gateway instances (it would take over the default gateway's login service)
+What to do: install a gateway that has them (--pin latest, or --from a newer wheel); nothing outside $DATA_DIR was changed."
+fi
 
 case ":$PATH:" in
     *":$TOOL_BIN:"*) ;;
@@ -3460,16 +3562,18 @@ export ABSTRACTGATEWAY_USER_AUTH=1
 MODE=none
 NET_SETTING=0   # 1 = the background gateway starts plain `serve` (the Network setting binds it)
 SERVICE_FALLBACK=0   # 1 = the login item failed to register, so the gateway runs in the background
-AF_SYSTEMD_UNIT="abstractgateway.service"
+AF_SYSTEMD_UNIT="$AF_UNIT"
+# The command that addresses THIS install's gateway (an instance's commands are not on PATH).
+if [ -n "$INSTANCE" ]; then AF_GW_CMD="$(q "$TOOL_BIN/abstractgateway") --instance $INSTANCE"; else AF_GW_CMD="abstractgateway"; fi
 # start_background: (re)start the gateway as a background process of this user, pid in gateway.pid.
 start_background() {
     # A systemd login service that starts THIS install's gateway (an earlier install's, or one
     # turned on later) would start at the next login or boot and fight this background gateway
     # for the port: the unit then fails to bind and the gateway that answers is supervised by
     # nothing (OVH 2026-10-28). It is turned off first; one that starts another gateway is left.
-    _bg_unit="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/abstractgateway.service"
+    _bg_unit="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/$AF_UNIT"
     if [ "$OS_ID" = linux ] && [ -f "$_bg_unit" ] && unit_runs_this_gateway "$_bg_unit"; then
-        RUN_SOFT=1 run "turn off the login service (this gateway runs in the background instead; both would fight for port $PORT)" systemctl --user disable --now abstractgateway.service
+        RUN_SOFT=1 run "turn off the login service (this gateway runs in the background instead; both would fight for port $PORT)" systemctl --user disable --now "$AF_UNIT"
     fi
     stop_background_gateway
     # Plain `serve` when the gateway has the Network setting (`abstractgateway network`):
@@ -3631,7 +3735,7 @@ What to do: restart the computer (the login item starts it again) or run the ins
             sleep 1
         done
         ok "gateway healthy at $BASE_URL (${_i}s)"
-        write_pointer
+        [ -n "$INSTANCE" ] || write_pointer  # the pointer names the default gateway only
     fi
     [ "$PRINT" = 1 ] && info "then write the gateway pointer $POINTER_FILE -> $BASE_URL (this install's address and data dir; no token)"
 
@@ -3732,7 +3836,7 @@ TUI_CMD="$_tui_exe --gateway-url $BASE_URL $_tok_arg"
 # machine `abstractgateway apps tui-command code` opens it signed in without handling a token (it
 # finds the gateway through its data dir: a custom one is passed on).
 CODE_LOGIN="$_code_exe login $_tok_arg"
-TUI_COMMAND="abstractgateway apps tui-command code"; [ "$DATA_DIR_CUSTOM" = 1 ] && TUI_COMMAND="$TUI_COMMAND --data-dir $(q "$DATA_DIR")"
+TUI_COMMAND="$AF_GW_CMD apps tui-command code"; [ "$DATA_DIR_CUSTOM" = 1 ] && TUI_COMMAND="$TUI_COMMAND --data-dir $(q "$DATA_DIR")"
 # Linux: a systemd user service stops with the user's last session (an SSH logout) and does not
 # start at boot unless lingering is on. Said wherever start at login is on or suggested.
 LINGER_LINE=""
@@ -3777,10 +3881,14 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     fi
     if [ "$OPENED" = 0 ] && [ -n "$SETUP_CODE" ] && [ "$SERVER" = 0 ]; then
         echo "               from another computer (a proxy, Tailscale, the LAN): open the console there, choose the admin password,"
-        echo "               and give this setup code: $SETUP_CODE   (again: abstractgateway claim --code)"
+        echo "               and give this setup code: $SETUP_CODE   (again: $AF_GW_CMD claim --code)"
     fi
     if [ "$SERVER" = 1 ]; then
         printf '\n  %sThis server%s\n' "$C_B" "$C_0"
+        if [ -n "$INSTANCE" ]; then
+            echo "    Instance: $INSTANCE (port $PORT, data $DATA_DIR, service $AF_UNIT)"
+            echo "    Its commands: $AF_GW_CMD ...   (abstractgateway on PATH stays the default gateway)"
+        fi
         if [ -n "$PUBLIC_URL" ]; then
             echo "    Public address: $PUBLIC_URL/console"
         else
@@ -3789,10 +3897,10 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
         if [ -n "$SETUP_CODE" ]; then
             echo "    Setup code: $SETUP_CODE"
             echo "    Next: open the address, choose the admin password and give the setup code (\"Set up your gateway\");"
-            echo "          the setup guide then opens (engines, default models, apps). Again: abstractgateway claim --code"
+            echo "          the setup guide then opens (engines, default models, apps). Again: $AF_GW_CMD claim --code"
         elif gateway_supports setup-code; then
             echo "    Next: open the address and sign in with your account and password (this gateway is already set up;"
-            echo "          abstractgateway claim --code says so, or why there is no code)."
+            echo "          $AF_GW_CMD claim --code says so, or why there is no code)."
         else
             echo "    Next: open the address and sign in as admin with the token in $TOKEN_FILE"
             echo "          (this gateway is older than 0.18.0, which adds \"Set up your gateway\" and passwords)."
@@ -3802,7 +3910,7 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
             echo "    (it keeps everything and adds the CUDA build of llama.cpp). The gateway starts by itself after the reboot."
         fi
         [ -n "$SERVER_NOTES" ] && printf '%s' "$SERVER_NOTES"
-        [ "$MODE" = service ] && echo "    Status: systemctl --user status abstractgateway   Logs: journalctl --user -u abstractgateway"
+        [ "$MODE" = service ] && echo "    Status: systemctl --user status $AF_UNIT   Logs: journalctl --user -u $AF_UNIT"
     fi
     [ "$OPENED" = 1 ] || [ -n "$PUBLIC_URL" ] || echo "               from another computer, tunnel it first: ssh -L $PORT:127.0.0.1:$PORT <this-host>"
     if [ "$CONSOLE_OK" = 1 ]; then
@@ -3891,16 +3999,21 @@ cmd_line abstractgateway-config "the gateway's admin command: status, claim-url 
 for _p in $CLI_FROM; do cmd_line "$_p" "$(af_cli_about "$_p")"; done
 [ -z "$CLI_TAKEN" ] || echo "  Not exposed (a command name is taken, see the warning above): $CLI_TAKEN"
 echo ""
-echo "  Status:     $([ "$MODE" = service ] && echo "abstractgateway service status" || echo "curl $BASE_URL/api/health")"
-echo "  Stop:       $([ "$MODE" = service ] && echo "abstractgateway service uninstall   (stops it and removes the login entry; data is kept)" || echo "kill \$(cat $(q "$PID_FILE"))")"
+echo "  Status:     $([ "$MODE" = service ] && echo "$AF_GW_CMD service status" || echo "curl $BASE_URL/api/health")"
+echo "  Stop:       $([ "$MODE" = service ] && echo "$AF_GW_CMD service uninstall   (stops it and removes the login entry; data is kept)" || echo "kill \$(cat $(q "$PID_FILE"))")"
 # Launch flags, not environment variables (gateways before 0.3, reachable with --pin, need the environment).
 _start_bind="$([ "$NET_SETTING" = 1 ] || echo " --host 127.0.0.1 --port $PORT")"
 if [ "$_old_pin" = 1 ]; then _start_hint="ABSTRACTGATEWAY_USER_AUTH=1 ABSTRACTGATEWAY_DATA_DIR=$(q "$DATA_DIR") abstractgateway serve$_start_bind"
 else _start_hint="abstractgateway serve --data-dir $(q "$DATA_DIR")$_start_bind"; fi
-echo "  Start:      $([ "$MODE" = service ] && echo "abstractgateway service install --port $PORT" || echo "re-run this installer, or: $_start_hint")"
-echo "  Upgrade:    curl -LsSf $AF_SCRIPT_URL | sh   (the latest AbstractFramework release; keeps your settings and data)"
-echo "              curl -LsSf $AF_SCRIPT_URL | sh -s -- --pin latest   (the newest abstractgateway on PyPI; see $AF_DOCS#upgrade)"
-echo "  Uninstall:  curl -LsSf $AF_UNINSTALL_URL | sh   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
+_ia="${INSTANCE:+ --instance $INSTANCE}"; [ -n "$_ia" ] && [ "$SERVER" = 1 ] && _ia="$_ia --server"
+echo "  Start:      $([ "$MODE" = service ] && echo "$AF_GW_CMD service install --port $PORT" || echo "re-run this installer, or: $_start_hint")"
+echo "  Upgrade:    curl -LsSf $AF_SCRIPT_URL | sh${_ia:+ -s --$_ia}   (the latest AbstractFramework release; keeps your settings and data)"
+echo "              curl -LsSf $AF_SCRIPT_URL | sh -s --$_ia --pin latest   (the newest abstractgateway on PyPI; see $AF_DOCS#upgrade)"
+if [ -n "$INSTANCE" ]; then
+    echo "  Uninstall:  curl -LsSf $AF_UNINSTALL_URL | sh -s --$_ia   (this instance only; the default gateway stays)"
+else
+    echo "  Uninstall:  curl -LsSf $AF_UNINSTALL_URL | sh   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
+fi
 echo "  Check:      uvx abstractframework doctor"
 [ -z "$TORCH_RESULT" ] || echo "  PyTorch:    $TORCH_RESULT"
 echo "  GGUF:       $GGUF_RESULT"
@@ -3915,6 +4028,8 @@ echo "  Docs:       $AF_DOCS"
 if [ -n "$TWINS" ]; then
     echo ""
     echo "  The same steps by hand:"
+    # An instance's steps only stay off the default gateway with its environment set first.
+    [ -n "$INSTANCE" ] && echo "    export ABSTRACTGATEWAY_INSTANCE=$INSTANCE UV_TOOL_DIR=$(q "$UV_TOOL_DIR") UV_TOOL_BIN_DIR=$(q "$UV_TOOL_BIN_DIR") ABSTRACTCORE_CONFIG_DIR=$(q "$ABSTRACTCORE_CONFIG_DIR")"
     printf '%s' "$TWINS"
 fi
 [ -n "$LOG_FILE" ] && printf '\n  %sFull log: %s%s\n' "$C_D" "$LOG_FILE" "$C_0"

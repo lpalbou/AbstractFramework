@@ -51,6 +51,7 @@ On the operator's gateway (11,500 runs, 106k artifacts, 13 automations, 23 mail 
 ## Planned (structural)
 1. SQLite run store as the default (`config.py:322` still `store_backend="file"`): 61 call sites scan every run file today; an index is the only fix that scales.
 2. The runner (and the in-process model) in their own process by default (`serve --no-runner` + `abstractgateway runner` exist); the API process must never share the GIL with ticks and model calls.
+   - 2026-10-29, settled by gateway ADR 0002 (`abstractgateway/docs/adr/0002_inference_and_public_endpoints_run_outside_the_gateway_process.md`): **the model half is delivered** by gateway 0967 (PR #28): `serve --model-host process` puts every model call and load in a supervised child, the default on Linux now; macOS and Windows follow in the release that ships gateway 0968 (after the tray machines are measured with the child). **The tick half stays open**: run ticking remains in the gateway process unless split mode is used; making split mode the default is what is left of this item, its runner supervised under ADR 0002's rules.
 3. Bounded pools per kind of work (API reads, scans, watchers) with cancel-on-disconnect; no file work inside `async def`.
 4. A load test in CI: 10k runs / 100k artifacts fixture; `/me` < 50 ms p99 under the periodic jobs; CPU at rest < 5%.
 
