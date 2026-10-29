@@ -162,12 +162,14 @@ def test_an_instance_is_self_contained_its_unit_data_tool_dir_and_funnel_port(tm
         f"export ABSTRACTGATEWAY_INSTANCE=fresh UV_TOOL_DIR={data}/tool UV_TOOL_BIN_DIR={data}/bin",
         "tailscale funnel --bg --https=8443 http://127.0.0.1:8443",
         "network set --allowed-origins https://af-server.tail1234.ts.net:8443",
-        "uninstall.sh | sh -s -- --instance fresh",
+        "uninstall.sh | sh -s -- --instance fresh   (this instance only",
     ):
         assert want in out, want
     # The default gateway's unit, PATH and pointer are never touched by an instance.
     assert "abstractgateway.service" not in out.replace("abstractgateway-fresh.service", "")
     assert "update-shell" not in out
+    # uninstall.sh takes --instance but not --server (it refuses an unknown argument).
+    assert "uninstall.sh | sh -s -- --instance fresh --server" not in out
     assert not (tmp_path / ".abstractframework" / "gateway.json").exists()
 
 

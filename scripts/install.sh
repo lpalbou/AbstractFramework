@@ -3938,7 +3938,7 @@ echo "  Start:      $([ "$MODE" = service ] && echo "$AF_GW_CMD service install 
 echo "  Upgrade:    curl -LsSf $AF_SCRIPT_URL | sh${_ia:+ -s --$_ia}   (the latest AbstractFramework release; keeps your settings and data)"
 echo "              curl -LsSf $AF_SCRIPT_URL | sh -s --$_ia --pin latest   (the newest abstractgateway on PyPI; see $AF_DOCS#upgrade)"
 if [ -n "$INSTANCE" ]; then
-    echo "  Uninstall:  curl -LsSf $AF_UNINSTALL_URL | sh -s --$_ia   (this instance only; the default gateway stays)"
+    echo "  Uninstall:  curl -LsSf $AF_UNINSTALL_URL | sh -s -- --instance $INSTANCE   (this instance only; the default gateway stays)"
 else
     echo "  Uninstall:  curl -LsSf $AF_UNINSTALL_URL | sh   (or: $([ "$MODE" = service ] && echo 'abstractgateway service uninstall && ')uv tool uninstall abstractgateway)"
 fi
