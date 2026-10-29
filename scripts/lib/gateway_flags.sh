@@ -70,3 +70,17 @@ gateway_backlog_flags() {
         echo "note: abstractgateway ${ver:-(version unknown)} is older than ${GATEWAY_FLAGS_MIN_VERSION}: backlog folder and exec runner passed as environment variables (upgrade for --backlog-root / --exec-runner)" >&2
     fi
 }
+
+# Gateway 0.18.0 shows the tray icon only for the machine's gateway service (launchd job, systemd
+# unit, login entry) or a `serve --tray` (gateway PR #40, operator ruling 2026-10-29). These two
+# launchers start the operator's own gateway from a terminal, so they ask for the icon.
+GATEWAY_TRAY_MIN_VERSION="0.18.0"
+
+# gateway_tray_flag PY: appends --tray to GATEWAY_SERVE_FLAGS when the gateway PY runs takes it.
+gateway_tray_flag() {
+    local ver
+    ver="$(gateway_version "$1")"
+    if [[ -n "$ver" ]] && version_at_least "$ver" "$GATEWAY_TRAY_MIN_VERSION"; then
+        GATEWAY_SERVE_FLAGS=(${GATEWAY_SERVE_FLAGS[@]+"${GATEWAY_SERVE_FLAGS[@]}"} --tray)
+    fi
+}

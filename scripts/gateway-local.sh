@@ -11,6 +11,7 @@ PY="$(resolve_local_python)"
 # The checkout's packages first (the version check below reads the checkout's gateway).
 export PYTHONPATH="$(local_pythonpath)${PYTHONPATH:+:$PYTHONPATH}"
 gateway_backlog_flags "$PY" "$ROOT_DIR"
+gateway_tray_flag "$PY"
 # -P (safe path, Python 3.11+): never put the launch cwd on sys.path — a repo
 # folder named like an installed package (abstractvoice/) otherwise shadows it
 # as a namespace package and pkgutil.get_data returns None (2026-07-17 piper
