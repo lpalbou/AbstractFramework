@@ -1,8 +1,10 @@
-# ADR 0044: The ledger and its replay are the one signal every client consumes
+# ADR-0044: The Ledger and Its Replay Are the One Signal Every Client Consumes
 
-Status: Proposed (for the operator's review). Date: 2026-10-29.
-Scope: every package that shows or drives work — the gateway, AbstractRuntime, and every client (panel-chat and the web
-apps, the desktop Assistant, the iPhone and watch apps, the AbstractCode terminal client, both gateway consoles).
+- Status: Proposed (for the operator's review)
+- Date: 2026-10-29
+- Scope: every package that shows or drives work — the gateway's replay view, AbstractRuntime, and every client
+  (panel-chat and the web apps, the desktop Assistant, the iPhone and watch apps, the AbstractCode terminal client,
+  both gateway consoles)
 
 ## Context
 
