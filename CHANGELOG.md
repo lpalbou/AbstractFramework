@@ -4,6 +4,13 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The installer never leaves a gateway running outside systemd** (backlog 1072): a background start on Linux first
+  turns off a systemd user unit of the same gateway (it would start at the next login and fight for the port), and
+  `--server` stops with the cause when the gateway service cannot be registered instead of starting the gateway in
+  the background (OVH 2026-10-28: the unit gave up and the gateway that answered was supervised by nothing).
+
 ## [0.11.18] - 2026-10-28
 
 Pins the fix releases of the closing pass: **AbstractGateway 0.17.2** (app manager installs the release

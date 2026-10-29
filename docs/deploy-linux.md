@@ -22,7 +22,8 @@ curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --server --gpu --t
   sees an NVIDIA GPU (step 2 below, done for you). Then reboot and run the same command again: it
   keeps everything and adds the CUDA build of llama.cpp.
 - `--tailscale-funnel` installs Tailscale when missing, prints its login URL and waits while you
-  authorize the server, publishes the gateway with `tailscale funnel --bg <port>` and allows its
+  authorize the server, publishes the gateway with
+  `tailscale funnel --bg --https=443 http://127.0.0.1:<port>` and allows its
   https address as a browser origin. Funnel and HTTPS must be allowed for your tailnet (Tailscale
   prints the link to allow them when they are not).
 
@@ -87,7 +88,9 @@ sudo reboot
 
 Do not skip the second line: without lingering, a systemd user service stops when your last SSH
 session ends and does not start at boot (`loginctl show-user "$USER" -p Linger` answers
-`Linger=no`). After the reboot, `systemctl --user is-active abstractgateway` answers `active`.
+`Linger=no`). `abstractgateway service enable` (AbstractGateway 0.18.0 and later) and `service status` say so
+while it is off: "On a server, this service stops when you log out and does not start at boot until you run
+once: sudo loginctl enable-linger ubuntu". `install.sh --server` turns lingering on for you. After the reboot, `systemctl --user is-active abstractgateway` answers `active`.
 
 ## 5. Open the console from your computer
 
@@ -156,6 +159,50 @@ abstractgateway` then answers `not-found`). It never runs `sudo`, so it prints t
 instead of running it. Kept on purpose: `~/.local/share/abstractgateway` (your data; add
 `--purge` to delete it), `~/.cache/huggingface` (models), `~/.cache/uv` (about 14 GB with the gpu
 profile; `--remove-uv` removes uv and its cache).
+
+## 9. A second gateway on the same host
+
+A second gateway, for a test release next to the one in use for example, is an **instance**: a
+self-contained gateway with its own name. Install it with `--instance NAME` and its own `--port`:
+
+```bash
+curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --server --instance fresh --port 8443 --tailscale-funnel
+# test a wheel the release has not published yet: add --from /path/to/abstractgateway-<version>-py3-none-any.whl
+```
+
+The instance name gives everything its own copy; nothing is chosen by hand and nothing is shared with
+the default gateway:
+
+| | default gateway | instance `fresh` |
+| --- | --- | --- |
+| Program (uv tool environment) | `~/.local/share/uv/tools/abstractgateway` | `~/.local/share/abstractgateway-fresh/tool/abstractgateway` |
+| Commands | `~/.local/bin/abstractgateway` (on PATH) | `~/.local/share/abstractgateway-fresh/bin/abstractgateway --instance fresh` (not on PATH) |
+| Data dir | `~/.local/share/abstractgateway` | `~/.local/share/abstractgateway-fresh` |
+| AbstractCore config (model routes, provider keys) | `~/.abstractcore/config` | `~/.local/share/abstractgateway-fresh/core-config` |
+| Port | 8080 | the `--port` given (required) |
+| App ports | 3001-3006, fallback 3100-3199 | 3001+200N-3006+200N, fallback 3100+200N-3199+200N (N = the instance's slot, 1 for the first one) |
+| systemd user unit | `abstractgateway.service` | `abstractgateway-fresh.service` |
+| Funnel | `https://<server>.<tailnet>.ts.net` (https 443) | `https://<server>.<tailnet>.ts.net:8443` (`--funnel-https-port`: 443, 8443 or 10000) |
+
+The slot is assigned once in `~/.config/abstractgateway/instances.json` and kept, so the same name
+always gets the same app ports. The console shows the instance name in its title and sidebar, and
+`GET /api/gateway/about` returns it (`instance`). The installer refuses a gateway too old to know
+instances: it would write the default gateway's login service.
+
+Address the instance with its command and `--instance`:
+
+```bash
+G="$HOME/.local/share/abstractgateway-fresh/bin/abstractgateway --instance fresh"
+$G service status           # the unit abstractgateway-fresh.service
+$G claim --code             # its setup code
+journalctl --user -u abstractgateway-fresh.service -f
+```
+
+Upgrade it with the same command (the port is remembered). Remove it, and only it, with
+`curl -LsSf https://abstractframework.ai/uninstall.sh | sh -s -- --instance fresh` (`--purge` also
+deletes its data dir; the caches, `~/.abstractassistant`, `~/.abstractcode` and uv stay). To rebuild an
+instance and keep its accounts, copy `<data dir>/auth` aside first and put it back before the
+instance's first start: `users.json` holds the accounts and their password hashes.
 
 ## FAQ
 
