@@ -88,8 +88,9 @@
 #                            --remove-uv also removes uv, its Pythons and its
 #                            download cache when this installer put uv there)
 #   --server                 a Linux server in one command (idempotent: run it again to
-#                            repair or upgrade): asks nothing, starts at login (the systemd
-#                            user service), turns lingering on (sudo loginctl enable-linger,
+#                            repair or upgrade): asks nothing, installs libatomic1 and zstd
+#                            (LM Studio's and Ollama's Linux builds need them), starts at login
+#                            (the systemd user service), turns lingering on (sudo loginctl enable-linger,
 #                            so it runs without an SSH session and starts at boot), opens no
 #                            browser, and ends with the address, the setup code for the
 #                            console's "Set up your gateway" page, and the next steps
@@ -2822,6 +2823,46 @@ if [ "$PRINT" = 0 ]; then
     lock_take
     LOG_FILE="$LOG_DIR/install-$(date +%Y%m%d-%H%M%S).log"
     ( umask 077; : >"$LOG_FILE" )
+fi
+
+# --server: the system libraries the console's engine installers need, installed now while this
+# run may use sudo, so the console never needs an administrator afterwards: libatomic1 (LM Studio's
+# Linux daemon links it; minimal server images lack it) and zstd (Ollama's Linux build is a
+# .tar.zst). Debian/Ubuntu (apt) and Fedora/RHEL (dnf); already present = nothing to do.
+SERVER_PKGS_APT="libatomic1 zstd"
+SERVER_PKGS_DNF="libatomic zstd"
+server_missing_pkgs() {  # prints the missing package names of this machine's package manager
+    if have dpkg-query && have apt-get; then
+        for _p in $SERVER_PKGS_APT; do
+            dpkg-query -W -f='${Status}' "$_p" 2>/dev/null | grep -q 'install ok installed' || printf '%s ' "$_p"
+        done
+    elif have rpm && have dnf; then
+        for _p in $SERVER_PKGS_DNF; do rpm -q "$_p" >/dev/null 2>&1 || printf '%s ' "$_p"; done
+    fi
+}
+if [ "$SERVER" = 1 ]; then
+    step "Server prerequisites (libatomic1 for LM Studio, zstd for Ollama)"
+    _missing="$(server_missing_pkgs)"
+    if [ -z "$_missing" ] && { have apt-get || have dnf; }; then
+        ok "already installed: $(have apt-get && echo "$SERVER_PKGS_APT" || echo "$SERVER_PKGS_DNF")"
+    elif [ -z "$_missing" ]; then
+        warn "no apt-get or dnf here: install libatomic and zstd with this system's package manager, so the console can install LM Studio and Ollama"
+    elif have apt-get; then
+        # shellcheck disable=SC2086
+        RUN_SOFT=1 server_sudo "install $_missing" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600 install -y $_missing
+        if [ "$RUN_RC" != 0 ]; then
+            RUN_SOFT=1 server_sudo "refresh the package lists" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600 update
+            # shellcheck disable=SC2086
+            RUN_SOFT=1 server_sudo "install $_missing (after refreshing the lists)" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600 install -y $_missing
+        fi
+        [ "$RUN_RC" = 0 ] || SERVER_NOTES="${SERVER_NOTES}    NOT installed: $_missing (sudo apt-get install -y $_missing): the console cannot install LM Studio or Ollama without them
+"
+    else
+        # shellcheck disable=SC2086
+        RUN_SOFT=1 server_sudo "install $_missing" dnf install -y $_missing
+        [ "$RUN_RC" = 0 ] || SERVER_NOTES="${SERVER_NOTES}    NOT installed: $_missing (sudo dnf install -y $_missing)
+"
+    fi
 fi
 
 if [ "$DRIVER_ACTION" = install ]; then

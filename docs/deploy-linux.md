@@ -12,9 +12,12 @@ On a fresh Ubuntu server, as your normal user with `sudo`:
 curl -LsSf https://abstractframework.ai/install.sh | sh -s -- --server --gpu --tailscale-funnel
 ```
 
-- `--server` installs the same matrix as below, asks nothing, runs the gateway as a systemd user
-  service, turns lingering on (`sudo loginctl enable-linger`), and ends with the address, the
-  **setup code** and the next steps.
+- `--server` installs the same matrix as below, asks nothing, installs the system libraries the
+  console's engine installers need while it may use `sudo` (`libatomic1`, which LM Studio's Linux
+  daemon links, and `zstd`, which unpacks Ollama's Linux build; `libatomic` and `zstd` with dnf), runs
+  the gateway as a systemd user service, turns lingering on (`sudo loginctl enable-linger`), and ends
+  with the address, the **setup code** and the next steps. The console then installs LM Studio or
+  Ollama without an administrator.
 - `--gpu` (GPU servers) installs the NVIDIA driver first when `nvidia-smi` is missing and `lspci`
   sees an NVIDIA GPU (step 2 below, done for you). Then reboot and run the same command again: it
   keeps everything and adds the CUDA build of llama.cpp.

@@ -15,7 +15,8 @@ INSTALL_SH = ROOT / "scripts" / "install.sh"
 
 def _stubs(tmp_path: Path, *, os_name: str = "Linux", linger: str = "no", nvidia: bool = False,
            lspci_nvidia: bool = True, tailscale: bool = False, funnel_on: bool = False,
-           tailnet_only: bool = False, driver_package: bool = False, port: int = 18999) -> Path:
+           tailnet_only: bool = False, driver_package: bool = False, port: int = 18999,
+           system_pkgs: tuple = ()) -> Path:
     fake = tmp_path / "fakebin"
     fake.mkdir(parents=True, exist_ok=True)
     stubs = {
@@ -25,7 +26,12 @@ def _stubs(tmp_path: Path, *, os_name: str = "Linux", linger: str = "no", nvidia
         "cc": "#!/bin/sh\nexit 0\n",
         "lspci": "#!/bin/sh\n" + ("echo '01:00.0 VGA compatible controller: NVIDIA Corporation TU104GL [Quadro RTX 5000]'\n" if lspci_nvidia else "echo '00:02.0 VGA compatible controller: Cirrus Logic'\n"),
         # No driver package unless asked (a Mac or CI host may have no dpkg at all).
-        "dpkg-query": "#!/bin/sh\n" + ("echo 'install ok installed nvidia-driver-595-open'\n" if driver_package else "exit 1\n"),
+        # dpkg-query answers per package: the NVIDIA driver, and the server prerequisites in `system_pkgs`.
+        "dpkg-query": "#!/bin/sh\nfor last; do :; done\ncase \"$last\" in\n"
+                      + ("  nvidia-driver-*) echo 'install ok installed nvidia-driver-595-open' ;;\n" if driver_package else "")
+                      + "".join(f"  {p}) printf 'install ok installed' ;;\n" for p in system_pkgs)
+                      + "  *) exit 1 ;;\nesac\n",
+        "apt-get": "#!/bin/sh\nexit 0\n",
     }
     if nvidia:
         stubs["nvidia-smi"] = '#!/bin/sh\ncase "$*" in *query-gpu*) echo "595.99.02, 7.5, Quadro RTX 5000" ;; *) echo "GPU 0: Quadro RTX 5000" ;; esac\n'
@@ -75,11 +81,11 @@ def test_a_fresh_gpu_server_plans_the_driver_linger_tailscale_and_funnel(tmp_pat
 
 
 def test_a_server_where_everything_is_in_place_runs_no_administrator_step(tmp_path: Path) -> None:
-    fake = _stubs(tmp_path, linger="yes", nvidia=True, tailscale=True, funnel_on=True)
+    fake = _stubs(tmp_path, linger="yes", nvidia=True, tailscale=True, funnel_on=True, system_pkgs=("libatomic1", "zstd"))
     proc = _run(tmp_path, fake, "--server", "--gpu", "--tailscale-funnel", "--port", "18999", "--print")
     out = proc.stdout
     assert proc.returncode == 0, proc.stderr + out[-3000:]
-    for gone in ("ubuntu-drivers", "enable-linger", "tailscale.com/install.sh", "tailscale up", "funnel --bg"):
+    for gone in ("ubuntu-drivers", "enable-linger", "tailscale.com/install.sh", "tailscale up", "funnel --bg", "install -y libatomic1", "install -y zstd"):
         assert gone not in out, gone
     for want in ("NVIDIA driver: present", "lingering is already on", "Tailscale: signed in",
                  "Funnel: https://af-server.tail1234.ts.net already serves 127.0.0.1:18999"):
@@ -122,3 +128,19 @@ def test_server_cannot_skip_the_start(tmp_path: Path) -> None:
 def test_apt_runs_non_interactive(tmp_path: Path) -> None:
     proc = _run(tmp_path, _stubs(tmp_path), "--server", "--gpu", "--port", "18999", "--print")
     assert "sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get" in proc.stdout
+
+
+def test_a_fresh_server_installs_libatomic1_and_zstd_while_it_has_sudo(tmp_path: Path) -> None:
+    # LM Studio's Linux daemon links libatomic.so.1 and Ollama's Linux build is a .tar.zst: installed
+    # by --server so the console never needs an administrator for them (gateway PRs #31/#32).
+    proc = _run(tmp_path, _stubs(tmp_path), "--server", "--port", "18999", "--print")
+    assert proc.returncode == 0, proc.stderr
+    assert "sudo env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -o DPkg::Lock::Timeout=600 install -y libatomic1 zstd" in proc.stdout
+
+
+def test_server_prerequisites_already_there_are_not_installed_again(tmp_path: Path) -> None:
+    proc = _run(tmp_path, _stubs(tmp_path, system_pkgs=("libatomic1",)), "--server", "--port", "18999", "--print")
+    assert proc.returncode == 0, proc.stderr
+    assert "install -y zstd" in proc.stdout and "install -y libatomic1" not in proc.stdout
+    proc = _run(tmp_path, _stubs(tmp_path, system_pkgs=("libatomic1", "zstd")), "--server", "--port", "18999", "--print")
+    assert "already installed: libatomic1 zstd" in proc.stdout and "install -y" not in proc.stdout.split("Server prerequisites")[1].split("\n\n")[0]
