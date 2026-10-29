@@ -2,7 +2,7 @@
 
 > Package: abstractgateway (web console, abstractgateway-console)
 > Type: task
-> Status: completed 2026-10-29 (AbstractGateway PR #49, unreleased)
+> Status: planned (in a PR: AbstractGateway #49, not merged). Done when #49 is on main and verified on the operator's instance (8443 or 8080) at a stated sha.
 > Created: 2026-09-23
 > Priority: normal
 > Labels: console, engines, security
@@ -17,10 +17,10 @@ audited switch in the console (web and terminal) that shows the effective value 
 
 ## Acceptance criteria
 
-- [x] Admin-only toggle in the web console Engines tab and the terminal console, with the CLI twin
+- [ ] Admin-only toggle in the web console Engines tab and the terminal console, with the CLI twin
       shown.
-- [x] Effective value and source displayed; change recorded in the audit log.
-- [x] Non-admin users see the value read-only.
+- [ ] Effective value and source displayed; change recorded in the audit log.
+- [ ] Non-admin users see the value read-only.
 
 ## Status update 2026-09-25 (post-release trace)
 
@@ -33,9 +33,9 @@ network warning says "Settings → allow_engine_install" (`network_exposure.py` 
 settings form in the web console or `abstractgateway-console` exposes the key. The text points
 users at a switch that does not exist in the UI.
 
-## Completion 2026-10-29
+## In a PR (2026-10-29): AbstractGateway #49, not merged
 
-Done in AbstractGateway PR #49 (unreleased):
+What #49 does, once merged and verified:
 
 - Web console, Engines tab: an admin switch "Allow engine installs from the console" showing the value and
   where it comes from (your setting, or which default: on the gateway's own computer, a gateway only this
