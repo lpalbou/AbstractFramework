@@ -26,7 +26,7 @@
 # pass --remove-uv): other tools may use them. Ollama and LM Studio are kept
 # (they have their own uninstallers).
 #
-# Options: --yes/-y, --purge (delete data), --remove-uv, --data-dir DIR,
+# Options: --yes/-y, --purge (delete data), --remove-uv, --data-dir DIR, --instance NAME,
 #          --print (show, change nothing), -h/--help
 # =============================================================================
 
@@ -45,6 +45,9 @@ while [ $# -gt 0 ]; do
         --data-dir) [ $# -ge 2 ] || { echo "ERROR: --data-dir needs a value" >&2; exit 2; }
             AF_DATA_DIR="$2"; export AF_DATA_DIR; shift ;;
         --data-dir=*) AF_DATA_DIR="${1#*=}"; export AF_DATA_DIR ;;
+        --instance) [ $# -ge 2 ] || { echo "ERROR: --instance needs a value" >&2; exit 2; }
+            AF_INSTANCE="$2"; export AF_INSTANCE; shift ;;
+        --instance=*) AF_INSTANCE="${1#*=}"; export AF_INSTANCE ;;
         -h|--help) sed -n '2,30p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "ERROR: unknown argument: $1 (see --help)" >&2; exit 2 ;;
     esac
