@@ -2,7 +2,7 @@
 
 > Package: abstractgateway (web console, abstractgateway-console)
 > Type: task
-> Status: planned (in a PR: AbstractGateway #49, not merged). Done when #49 is on main and verified on the operator's instance (8443 or 8080) at a stated sha.
+> Status: deprecated 2026-10-29 (operator ruling: engines are installed once per computer by the gateway's administrator and shared by every user; nobody else installs engines, so there is no console switch). AbstractGateway #49 added the switch; AbstractGateway #73 removes it.
 > Created: 2026-09-23
 > Priority: normal
 > Labels: console, engines, security
@@ -49,3 +49,10 @@ What #49 does, once merged and verified:
   that never existed.
 - Tests: 3 node tests (`tests/test_gateway_console_engine_install_setting.py`) and 4 cargo tests in
   `console-tui/src/ui/providers_engines.rs`, all mutation-checked.
+
+## Withdrawn 2026-10-29
+
+Operator ruling: engines are installed ONCE per computer by the gateway's administrator and shared by every user, and
+nobody else installs engines. The switch #49 added (web Engines tab, terminal console) is removed by AbstractGateway
+#73. An account that is not an admin reads "An administrator installs engines for this computer." The runtime knob
+stays, for the operator, behind `abstractgateway-config set allow_engine_install on`.
