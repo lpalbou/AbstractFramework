@@ -206,8 +206,8 @@ AF_UNINSTALL_URL="https://abstractframework.ai/uninstall.sh"
 #   it comes from upstream's prebuilt wheels: --find-links on the package page of
 #   abetlen's wheel index (one flat page, not a second index for every package),
 #   pinned through --constraints uv-constraints.txt, with --no-build-package so
-#   the sdist is never built. Metal 0.3.28 on Apple Silicon (the 0.3.32-0.3.35
-#   Metal wheels fail zip CRC checks and uv refuses them), CPU 0.3.35 on glibc
+#   the sdist is never built. Metal 0.3.28 on Apple Silicon (the 0.3.32-0.3.36
+#   Metal wheels fail zip CRC checks and uv refuses them), CPU 0.3.36 on glibc
 #   Linux x86_64/aarch64. No wheel for Intel Macs (newest is 0.3.2, below
 #   abstractcore's floor) or musl Linux: there, and whenever the wheel install
 #   fails, llama-cpp-python is dropped like the other extras and the summary
@@ -227,7 +227,7 @@ AF_COMPILED_EXTRAS="stable-diffusion-cpp-python aec-audio-processing"
 AF_SKIPPED_LINE="Skipped compiled extras (stable-diffusion.cpp, echo cancellation): re-run with --full after installing a C compiler."
 AF_LLAMA_INDEX="https://abetlen.github.io/llama-cpp-python/whl"
 AF_LLAMA_METAL_PIN="0.3.28"
-AF_LLAMA_CPU_PIN="0.3.35"
+AF_LLAMA_CPU_PIN="0.3.36"
 AF_GGUF_SKIPPED="GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with --full after installing a C compiler"
 # Linux + NVIDIA, gpu profile (root backlog 0989): abetlen also publishes manylinux CUDA builds
 # (cu124/cu125/cu130/cu132). They link libcudart/libcublas without bundling them; the NVIDIA wheels

@@ -18,6 +18,14 @@ All notable changes to AbstractFramework will be documented in this file.
   `--server` stops with the cause when the gateway service cannot be registered instead of starting the gateway in
   the background (OVH 2026-10-28: the unit gave up and the gateway that answered was supervised by nothing).
 
+### Changed
+
+- **llama.cpp 0.3.36 on Linux and Windows** (`AF_LLAMA_CPU_PIN` / `$AfLlamaCpuPin`, every profile; the CUDA and Vulkan
+  builds of the gpu profile follow the same pin): its llama.cpp (0c1e5709) knows `spark2_5` (XHToken/Spark-X2.6-4B,
+  refused by 0.3.35) and every architecture of the catalog's 86 GGUF repos. cpu and cu125 0.3.36 wheels pass their zip
+  CRC. Apple Silicon stays on Metal 0.3.28: the 0.3.36 Metal wheel fails its CRC (`lib/cmake/ggml/ggml-config.cmake`)
+  like 0.3.32-0.3.35, so a Mac gets the newest architectures only through a source build (`--full`).
+
 ## [0.11.18] - 2026-10-28
 
 Pins the fix releases of the closing pass: **AbstractGateway 0.17.2** (app manager installs the release

@@ -159,7 +159,7 @@ $AfWithVoiceArm64 = 'abstractvoice[supertonic]'
 $AfCompiledExtras = @('stable-diffusion-cpp-python')
 $AfSkippedLine = 'Skipped compiled extras (stable-diffusion.cpp): re-run with -Full after installing a C compiler.'
 $AfLlamaIndex = 'https://abetlen.github.io/llama-cpp-python/whl'
-$AfLlamaCpuPin = '0.3.35'
+$AfLlamaCpuPin = '0.3.36'
 $AfGgufSkipped = 'GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with -Full after installing a C compiler'
 function Get-UvOverrides([bool]$WithCompiledExtras, [bool]$Gguf) {
     $lines = @("webrtcvad; sys_platform == 'never'", "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'")
