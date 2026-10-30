@@ -8,10 +8,17 @@
 
 ## Summary
 
-Today push is Apple-only: `abstractgateway.push` (root 1049; gateway 0940 fixes "phone first") turns
-`attention.raised` events of the caller's stream (root 1046, `/api/gateway/me/events`) into APNs requests
-through the publisher-hosted relay. Desktop apps, Windows, Linux and other systems get nothing, and an
-automation's `notify` (runtime `automations/models.py`) reaches only email (root 0992) or the tray.
+Background remote notification delivery is implemented for Apple: `abstractgateway.push`
+(root 1049; Gateway 0940 fixes "phone first") turns `attention.raised` events from
+`/api/gateway/me/events` into APNs through the publisher relay. Foreground account
+SSE already serves native, desktop and web clients; it is not Apple-specific.
+Other OS notification transports and outbound systems remain this proposal's scope.
+An automation's `notify` also has email/tray paths.
+
+Selected-session observation is a separate concern: it must discover later turns
+and replay their authoritative views even after an earlier run finished. The
+2026-10-30 cross-client audit and proposed [1077](1077_reactive_session_subscriptions_for_thin_clients.md)
+track that work. Expanding OS push delivery alone does not fix stale open chats.
 
 Build ONE push system: typed events (CloudEvents-shaped, the same records the replayable ledger holds:
 messages, events, artifacts, gates) are published once by the gateway and delivered by pluggable

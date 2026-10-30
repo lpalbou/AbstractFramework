@@ -6,23 +6,30 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files recounted on 2026-10-28 (recursive, topic tracks included; README,
-overview, template and `evidence/` files excluded). Legacy duplicate IDs remain tracked by
-[0889](planned/0889_normalize_the_legacy_root_backlog.md); counts are files, not unique IDs.
-Before adding 1027, disk counts were 175 planned / 56 proposed / 266 completed / 1 deprecated /
-2 recurrent; the previous recorded snapshot was 176 / 55 / 264 / 1 / 2 respectively.
+On-disk item files recounted on 2026-10-30 for the session-subscription investigation:
+recursive lifecycle Markdown files, excluding README/overview/template and evidence
+files. Counts are files, not unique IDs; legacy duplicates remain tracked by [0889](planned/0889_normalize_the_legacy_root_backlog.md).
+The prior overview drifted from the checked-in files; the figures below are the current inventory.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 189 | 137 flat + 52 in topic tracks (recount 2026-10-28 before this pass: 185 on disk vs 181 recorded, the +4 in topic tracks; then +4: 1063 typed runs and sessions, 1064 concurrency correctness and benchmark, 1065 replay view client migrations, 1066 environment variables become config settings). 1061 session tool policy (2026-10-27; runtime, gateway, panel-chat and desktop Assistant released, live check and iPhone/AbstractCode follow-ups open). 1055 moved to completed (root 0.11.15). 1049 Apple push, 1052 folder trigger (2026-10-25), 1054 gateway load (P0, 2026-10-26). Includes 1027: local media resolver repair committed; exact deployment combination, remote update and live images still open. |
-| Proposed | 64 | 56 flat + 8 in topic tracks (1050 events follow-ups, 1051 shipped workflows loadable in Flow, 1053 cloud drive triggers, 2026-10-25; 1056 workflows as the central primitive, 1057 AbstractDesigner, 1058 unified push, 1059 queryable runtime holdings, 2026-10-27). Recurrent: 1060 gateway security, resilience and latency standing duty. |
-| Completed | 288 | 267 flat + 21 in topic tracks (11 in [events-and-attention](completed/events-and-attention/README.md), 2026-10-25; 1055 release wave, 2026-10-28); implementation and release history remain in the ledgers below. |
-| Deprecated | 1 | 0851: operator ruling that the temporary local Agora hub required no rotation. |
-| Recurrent | 3 | [recurrent/](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage, and 1060 gateway security, resilience and latency standing duty. |
+| Planned | 185 | Existing cross-package implementation work, including 1063–1066. |
+| Proposed | 72 | Added 1077 selected-session observation plan; 1058 OS notification delivery remains separate. |
+| Completed | 290 | Existing implementation/release history, including events-and-attention. |
+| Deprecated | 2 | Existing deprecated records. |
+| Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
 
 ## Next Recommended Work
+
+**2026-10-30 selected-session subscriptions investigated, implementation proposed:**
+[1077](proposed/1077_reactive_session_subscriptions_for_thin_clients.md) confirms Code's
+five-vs-four turn mismatch and defines reusable session observation over existing
+account SSE and canonical run views. Includes start publication timing, concurrent
+root/approval preservation, cursor recovery and clean unsubscribe. Four worker
+investigations; no subscription code or live user state changed. [1058](proposed/1058_unified_typed_push_system_across_os.md)
+is background notification delivery, a separate concern.
 
 **2026-10-25 events and attention track COMPLETED** ([README](completed/events-and-attention/README.md), items 1038–1048 built, tested and deployed locally, nothing published; proposed 1049 push relay and [1050](proposed/1050_events_and_attention_follow_ups.md) follow-ups incl. the release prerequisites): run origin, CloudEvents trigger envelope, per-user trigger connections and the console Triggers page,
 signed webhook ingress, RSS/Atom feed source, N mailboxes per user, the `SCHEDULE_RUN` effect, the per-user event
