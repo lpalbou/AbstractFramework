@@ -208,3 +208,17 @@ provider, model pool, OS push dependency, release or Gateway restart in this pas
 - Four read-only worker reports in this session: Gateway 65-test contract audit and empty-ledger initial-prompt probe; Code live 5-vs-4 verification; Swift/Python/web inventory; adversarial A/B architecture review.
 - Source anchors: Gateway events_stream.py398/406/445, routes/me_events.py116, runner.py3053, hosts/bundle_host.py3458–3544, replay_view.py104, routes/replay_view.py85; Runtime replay/view.py148/1102 and core/runtime.py1737/5044.
 - Client anchors: Code gateway/me_events.rs98/106, runner.rs2409, transcript.rs824, ui/mod.rs2055; systray app.py6711/7950/8068; Swift GatewayClient.swift328/334/356, RunLedgerStream.swift51; phone AttentionFeed.swift203, AssistantStore.swift581/781; watch AskView.swift816/1011; Assistant web useConversations.ts77, App.tsx64/103; Code web workspace/app.tsx747.
+
+## Related watch validation, 2026-10-30
+
+Assistant commit `619e0b4` repairs the blank Watch Needs you page with explicit
+waits-read state and source-revision guards. Seven new UI cases and 198 shared
+client package tests pass; the new equal-empty case detects the original defect.
+This is a UI/read-lifecycle repair, not selected-session subscription adoption.
+`ApprovalSyncUITests/testNewerListGateWinsOverAnOlderRunSnapshot` is intermittent
+on unchanged baseline as well as the patched tree; retain it as an explicit
+ordering gate for the Swift migration rather than claiming all approval flows
+are validated by the empty-page cases. Preserve exact notification-to-gate
+identity as a separate acceptance concern when a notification's original gate
+resolves but another unrelated gate is pending. Physical-device deployment was
+not part of this read-only incident investigation and isolated simulator repair.
