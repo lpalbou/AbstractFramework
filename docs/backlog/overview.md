@@ -14,7 +14,7 @@ The prior overview drifted from the checked-in files; the figures below are the 
 | State | Files | Notes |
 |---|---|---|
 | Planned | 189 | Existing cross-package implementation work, including 1063–1066; no new item added by the 0991 update. |
-| Proposed | 72 | Added 1077 selected-session observation plan; 1058 OS notification delivery remains separate. |
+| Proposed | 73 | Adds 1087 cross-device read receipts; 1077 selected-session observation and 1058 OS notification delivery remain separate. |
 | Completed | 290 | Existing implementation/release history, including events-and-attention. |
 | Deprecated | 2 | Existing deprecated records. |
 | Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
@@ -22,6 +22,10 @@ The prior overview drifted from the checked-in files; the figures below are the 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
 
 ## Next Recommended Work
+
+[1087 cross-device session read receipts](proposed/1087_cross_device_session_read_receipts.md)
+tracks server-backed read scope and native client adoption after the shared Watch-style web
+cards. Current receipts are browser-local; reading does not resolve human attention.
 
 **2026-10-31 machine-resource orchestration reaffirmed as important:**
 [0991](planned/0991_model_residency_and_gpu_memory_management.md) is the existing cross-engine
