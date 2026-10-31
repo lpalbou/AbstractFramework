@@ -117,3 +117,25 @@ The real-controller browser regression holds earlier history while an already-re
 is shown, then verifies one receipt batch clears the card after release. Full panel-chat tests,
 Code 501 tests and Assistant web 63 tests pass. This is an implementation correction within the
 existing contract; no new read semantics, transport, authority or ADR change.
+
+## Follow-up delivery — native tray cards, 2026-11-01
+
+The requested tray redesign adds conversation unread UI, superseding the earlier scope note
+that Qt had automation unread only. Conversation and automation rows now share regular two-line
+titles, compact facts, darker inset cards, semantic unread/attention markers and small archive
+actions on hover or keyboard focus. Archive requires inline confirmation and a Gateway ACK;
+automation scheduling controls remain in the detail view. Search, arrows/Enter, rename and folder
+access are preserved.
+
+Qt conversation reads use the same per-principal Gateway API and personal `session.read` events.
+Only loaded transcript revisions captured before restore can be consumed, after the correct
+conversation is visible and active without a covering popup/modal. Writes run off the GUI thread;
+failed or incomplete ACKs preserve unread state and retry. Account/client guards reject stale work.
+Listing cards never consumes conversations or automation results. Canonical chat wakes count as
+turn roots; execution descendants and automation controllers remain excluded.
+
+Validation: 80 conversation/read/fold/widget regression tests and 99 automation tests passed.
+All 21 shared themes passed card/header luminance and normal-text contrast checks. Rendered dark
+and light previews were inspected; evidence is in `untracked/tray-cards/REVIEW.md` and the adjacent
+PNG previews. Assistant commit: `7633fb5`. The running tray uses this source checkout and requires
+a restart; no live session was archived or consumed by the checks.
