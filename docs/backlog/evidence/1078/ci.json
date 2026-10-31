@@ -1,0 +1,677 @@
+{
+  "conclusion": "success",
+  "headSha": "346d8f410fef42c7230442839b5dc646dc3b1204",
+  "jobs": [
+    {
+      "completedAt": "2026-10-31T03:52:28Z",
+      "conclusion": "success",
+      "databaseId": 124434161005,
+      "name": "portable",
+      "startedAt": "2026-10-31T03:52:13Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-31T03:52:14Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-31T03:52:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:15Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 2,
+          "startedAt": "2026-10-31T03:52:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:18Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "startedAt": "2026-10-31T03:52:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:18Z",
+          "conclusion": "success",
+          "name": "Run cargo fmt --check",
+          "number": 4,
+          "startedAt": "2026-10-31T03:52:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:24Z",
+          "conclusion": "success",
+          "name": "Run cargo clippy --locked --all-features --all-targets -- -D warnings",
+          "number": 5,
+          "startedAt": "2026-10-31T03:52:18Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:26Z",
+          "conclusion": "success",
+          "name": "Run cargo build --locked --release --features ffi --target wasm32-unknown-unknown",
+          "number": 6,
+          "startedAt": "2026-10-31T03:52:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:26Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 12,
+          "startedAt": "2026-10-31T03:52:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:26Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 13,
+          "startedAt": "2026-10-31T03:52:26Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/lpalbou/AbstractAvatar/actions/runs/41166189618/job/124434161005"
+    },
+    {
+      "completedAt": "2026-10-31T03:53:30Z",
+      "conclusion": "success",
+      "databaseId": 124434161050,
+      "name": "native (windows-latest, 3.13)",
+      "startedAt": "2026-10-31T03:52:13Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-31T03:52:16Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-31T03:52:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:24Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 2,
+          "startedAt": "2026-10-31T03:52:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:40Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "startedAt": "2026-10-31T03:52:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:40Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 4,
+          "startedAt": "2026-10-31T03:52:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:10Z",
+          "conclusion": "success",
+          "name": "Run cargo test --locked --all-features",
+          "number": 5,
+          "startedAt": "2026-10-31T03:52:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:23Z",
+          "conclusion": "success",
+          "name": "Run python -m pip install . pytest",
+          "number": 6,
+          "startedAt": "2026-10-31T03:53:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:25Z",
+          "conclusion": "success",
+          "name": "Run python -m pytest -q tests",
+          "number": 7,
+          "startedAt": "2026-10-31T03:53:23Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:25Z",
+          "conclusion": "success",
+          "name": "Run python scripts/docs.py --check",
+          "number": 8,
+          "startedAt": "2026-10-31T03:53:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:25Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 15,
+          "startedAt": "2026-10-31T03:53:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:28Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 16,
+          "startedAt": "2026-10-31T03:53:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:28Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "startedAt": "2026-10-31T03:53:28Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/lpalbou/AbstractAvatar/actions/runs/41166189618/job/124434161050"
+    },
+    {
+      "completedAt": "2026-10-31T03:52:55Z",
+      "conclusion": "success",
+      "databaseId": 124434161062,
+      "name": "native (macos-latest, 3.13)",
+      "startedAt": "2026-10-31T03:52:14Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-31T03:52:17Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-31T03:52:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:20Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 2,
+          "startedAt": "2026-10-31T03:52:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:31Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "startedAt": "2026-10-31T03:52:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:32Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 4,
+          "startedAt": "2026-10-31T03:52:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:44Z",
+          "conclusion": "success",
+          "name": "Run cargo test --locked --all-features",
+          "number": 5,
+          "startedAt": "2026-10-31T03:52:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:50Z",
+          "conclusion": "success",
+          "name": "Run python -m pip install . pytest",
+          "number": 6,
+          "startedAt": "2026-10-31T03:52:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:51Z",
+          "conclusion": "success",
+          "name": "Run python -m pytest -q tests",
+          "number": 7,
+          "startedAt": "2026-10-31T03:52:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:51Z",
+          "conclusion": "success",
+          "name": "Run python scripts/docs.py --check",
+          "number": 8,
+          "startedAt": "2026-10-31T03:52:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:52Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 15,
+          "startedAt": "2026-10-31T03:52:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:52Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 16,
+          "startedAt": "2026-10-31T03:52:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:53Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "startedAt": "2026-10-31T03:52:52Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/lpalbou/AbstractAvatar/actions/runs/41166189618/job/124434161062"
+    },
+    {
+      "completedAt": "2026-10-31T03:52:41Z",
+      "conclusion": "success",
+      "databaseId": 124434161097,
+      "name": "native (ubuntu-latest, 3.10)",
+      "startedAt": "2026-10-31T03:52:12Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-31T03:52:15Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-31T03:52:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:16Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 2,
+          "startedAt": "2026-10-31T03:52:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:20Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "startedAt": "2026-10-31T03:52:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:20Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 4,
+          "startedAt": "2026-10-31T03:52:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:33Z",
+          "conclusion": "success",
+          "name": "Run cargo test --locked --all-features",
+          "number": 5,
+          "startedAt": "2026-10-31T03:52:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:39Z",
+          "conclusion": "success",
+          "name": "Run python -m pip install . pytest",
+          "number": 6,
+          "startedAt": "2026-10-31T03:52:33Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:40Z",
+          "conclusion": "success",
+          "name": "Run python -m pytest -q tests",
+          "number": 7,
+          "startedAt": "2026-10-31T03:52:39Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:40Z",
+          "conclusion": "success",
+          "name": "Run python scripts/docs.py --check",
+          "number": 8,
+          "startedAt": "2026-10-31T03:52:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:40Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 15,
+          "startedAt": "2026-10-31T03:52:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:40Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 16,
+          "startedAt": "2026-10-31T03:52:40Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:40Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "startedAt": "2026-10-31T03:52:40Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/lpalbou/AbstractAvatar/actions/runs/41166189618/job/124434161097"
+    },
+    {
+      "completedAt": "2026-10-31T03:52:34Z",
+      "conclusion": "success",
+      "databaseId": 124434161115,
+      "name": "native (ubuntu-latest, 3.13)",
+      "startedAt": "2026-10-31T03:52:13Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-31T03:52:14Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-31T03:52:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:15Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 2,
+          "startedAt": "2026-10-31T03:52:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:16Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "startedAt": "2026-10-31T03:52:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:16Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 4,
+          "startedAt": "2026-10-31T03:52:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:24Z",
+          "conclusion": "success",
+          "name": "Run cargo test --locked --all-features",
+          "number": 5,
+          "startedAt": "2026-10-31T03:52:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:31Z",
+          "conclusion": "success",
+          "name": "Run python -m pip install . pytest",
+          "number": 6,
+          "startedAt": "2026-10-31T03:52:24Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:32Z",
+          "conclusion": "success",
+          "name": "Run python -m pytest -q tests",
+          "number": 7,
+          "startedAt": "2026-10-31T03:52:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:32Z",
+          "conclusion": "success",
+          "name": "Run python scripts/docs.py --check",
+          "number": 8,
+          "startedAt": "2026-10-31T03:52:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:32Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 15,
+          "startedAt": "2026-10-31T03:52:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:33Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 16,
+          "startedAt": "2026-10-31T03:52:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:33Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "startedAt": "2026-10-31T03:52:33Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/lpalbou/AbstractAvatar/actions/runs/41166189618/job/124434161115"
+    },
+    {
+      "completedAt": "2026-10-31T03:53:54Z",
+      "conclusion": "success",
+      "databaseId": 124434161138,
+      "name": "native (windows-latest, 3.10)",
+      "startedAt": "2026-10-31T03:52:13Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-31T03:52:15Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-31T03:52:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:20Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 2,
+          "startedAt": "2026-10-31T03:52:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:26Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "startedAt": "2026-10-31T03:52:20Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:09Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 4,
+          "startedAt": "2026-10-31T03:52:26Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:35Z",
+          "conclusion": "success",
+          "name": "Run cargo test --locked --all-features",
+          "number": 5,
+          "startedAt": "2026-10-31T03:53:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:47Z",
+          "conclusion": "success",
+          "name": "Run python -m pip install . pytest",
+          "number": 6,
+          "startedAt": "2026-10-31T03:53:35Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:48Z",
+          "conclusion": "success",
+          "name": "Run python -m pytest -q tests",
+          "number": 7,
+          "startedAt": "2026-10-31T03:53:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:49Z",
+          "conclusion": "success",
+          "name": "Run python scripts/docs.py --check",
+          "number": 8,
+          "startedAt": "2026-10-31T03:53:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:49Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 15,
+          "startedAt": "2026-10-31T03:53:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:52Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 16,
+          "startedAt": "2026-10-31T03:53:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:53:52Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "startedAt": "2026-10-31T03:53:52Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/lpalbou/AbstractAvatar/actions/runs/41166189618/job/124434161138"
+    },
+    {
+      "completedAt": "2026-10-31T03:52:55Z",
+      "conclusion": "success",
+      "databaseId": 124434161146,
+      "name": "native (macos-latest, 3.10)",
+      "startedAt": "2026-10-31T03:52:12Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-31T03:52:14Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-31T03:52:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:15Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 2,
+          "startedAt": "2026-10-31T03:52:14Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:22Z",
+          "conclusion": "success",
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "number": 3,
+          "startedAt": "2026-10-31T03:52:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:38Z",
+          "conclusion": "success",
+          "name": "Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 4,
+          "startedAt": "2026-10-31T03:52:22Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:47Z",
+          "conclusion": "success",
+          "name": "Run cargo test --locked --all-features",
+          "number": 5,
+          "startedAt": "2026-10-31T03:52:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:51Z",
+          "conclusion": "success",
+          "name": "Run python -m pip install . pytest",
+          "number": 6,
+          "startedAt": "2026-10-31T03:52:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:52Z",
+          "conclusion": "success",
+          "name": "Run python -m pytest -q tests",
+          "number": 7,
+          "startedAt": "2026-10-31T03:52:51Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:52Z",
+          "conclusion": "success",
+          "name": "Run python scripts/docs.py --check",
+          "number": 8,
+          "startedAt": "2026-10-31T03:52:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:52Z",
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+          "number": 15,
+          "startedAt": "2026-10-31T03:52:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:53Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+          "number": 16,
+          "startedAt": "2026-10-31T03:52:52Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-31T03:52:53Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 17,
+          "startedAt": "2026-10-31T03:52:53Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/lpalbou/AbstractAvatar/actions/runs/41166189618/job/124434161146"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/lpalbou/AbstractAvatar/actions/runs/41166189618"
+}

@@ -34,3 +34,4 @@ Doing the follow-up work.
   `untracked/release-2026-09-24/STATUS.md`, `untracked/coredoc-2026-09-25/STATUS.md` → 0868–0888.
 - 2026-09-26: `untracked/missions-2026-09-25/` (PLAN, CONTRACTS, S-DESIGN, track reports,
   REVIEW/00–15) → 0890–0904.
+- 2026-10-31: 1081/1082 reports triaged into planned 1083, proposed 1084–1086 and existing proposed 1079; CPU/high-quality limits and Assistant-only restart are documentation notes. No additional urgent implementation or release authorized.

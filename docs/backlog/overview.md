@@ -6,16 +6,18 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files recounted on 2026-10-31 while updating machine-resource orchestration item 0991:
+On-disk item files recounted on 2026-10-31 after rendering/context completion, session-read completion 1087,
+and confirmation-gated avatar-conversation revision/intake 1088–1095:
 recursive lifecycle Markdown files, excluding README/overview/template and evidence
 files. Counts are files, not unique IDs; legacy duplicates remain tracked by [0889](planned/0889_normalize_the_legacy_root_backlog.md).
-The prior overview drifted from the checked-in files; the figures below are the current inventory.
+The prior overview included four governance evidence receipts as planned items; those are now
+excluded consistently. The figures below are the current item-file inventory.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 189 | Existing cross-package implementation work, including 1063–1066; no new item added by the 0991 update. |
-| Proposed | 72 | 1087 shared reads completed; 1077 selected-session observation and 1058 OS notification delivery remain separate. |
-| Completed | 291 | Includes 1087 shared session reads. Existing implementation/release history, including events-and-attention. |
+| Planned | 186 | Rendering/context 1081/1082 completed; future composable activity contract 1083 remains planned. |
+| Proposed | 84 | Includes eight confirmation-gated conversation/evidence proposals 1088–1095; includes Avatar release prerequisites 1079. |
+| Completed | 295 | Includes 1087 shared session reads, AbstractAvatar 1078, voice repair 1080, rendering 1081 and contextual interaction 1082. |
 | Deprecated | 2 | Existing deprecated records. |
 | Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
@@ -23,9 +25,66 @@ Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis
 
 ## Next Recommended Work
 
+**2026-10-31 avatar conversation — revised proposals awaiting explicit user confirmation:**
+the [roadmap](proposed/accumulated-evidence/README.md) now makes the first useful delivery
+[1088 full-screen avatar/subtitles](proposed/accumulated-evidence/1088_readable_accumulated_observations_for_avatar_surfaces.md)
++ [1089 authored public brèves/local pilot](proposed/accumulated-evidence/1089_optional_findings_deltas_and_local_kv_evaluation.md)
++ [1092 live replies](proposed/accumulated-evidence/1092_reply_to_breves_during_active_work.md).
+Scroll to history/final; keep technical mode separate. Follow with
+[1093 explicit questions and clarification deadlines](proposed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md),
+[1094 configurable approval/question/completion cues](proposed/accumulated-evidence/1094_customizable_approval_question_and_completion_cues.md),
+and [1095 Watch adoption/user validation](proposed/accumulated-evidence/1095_watch_conversation_adoption_and_user_validation.md).
+Essential questions wait; clarifications may wait 2–5 minutes with a declared safe fallback.
+[Proposed ADR 0045](../adr/0045-conversational-questions-and-clarification-deadlines.md) records the
+durable question policy; no permission by silence. All items remain proposed `decision-gate`
+records. This supersedes passive tool cards as the first product milestone.
+[1090 optional session knowledge](proposed/accumulated-evidence/1090_session_evidence_collections_and_optional_knowledge_projection.md)
+is deferred and [1091 warning/retrieval audit](proposed/accumulated-evidence/1091_tool_observation_preview_warning_and_retrieval_audit.md)
+remains separately gated. The [exact-run and council record](evidence/1088/README.md) is retained;
+no graph, new scheduler or framework-wide refactor is required for the first experience.
+The supplied Koine PDF was copied into AbstractSemantics and recorded as
+[Semantics 0004](../../abstractsemantics/docs/backlog/proposed/0004_review_koine_general_vocabulary_and_modeling_contract.md),
+also awaiting confirmation before review/adoption. No runtime/UI implementation has begun.
+
 [1087 cross-device session read receipts](completed/1087_cross_device_session_read_receipts.md)
 is completed: Gateway-owned immutable reads synchronize Code/Assistant web and updated Apple
 clients without resolving human attention. Native apps require rebuild/install.
+
+**2026-10-31 avatar rendering and contextual interaction completed locally:**
+[1081 rendering](completed/1081_avatar_rendering_fidelity_and_platform_quality.md) improves
+Watch Halo/Wave/Hover/Rings/Eye with shared material compositing, bounded browser quality and
+cached terminal rasters. [Rendering evidence/try guide](evidence/1081/README.md).
+[1082 contextual selection](completed/1082_contextual_content_selection_and_agent_steering.md)
+delivers click gaze, mapped highlights and explicit Explain/Context/Change draft actions through
+the normal Send/steer path. [Interaction guide/evidence](evidence/1082/README.md).
+Independent review approved; local builds/tests and coredoc pass. No package publication or
+production/Gateway restart; Watch/iPhone remain unchanged read-only references.
+
+Next: review the future [1083 composable activity](planned/1083_composable_entity_activity_and_avatar_state_contract.md)
+and [1084 expression/personality](proposed/1084_entity_expression_and_personality_grounded_visual_behavior.md)
+contracts under [proposed ADR 0044](../adr/0044-composable-activity-and-expression-presentation.md),
+preserving canonical visit/work/personal/sleep and separate sleep stages/activity/expression/persona.
+[1085](proposed/1085_widget_owned_terminal_images_with_clipping_and_occlusion.md) tracks image
+placement ownership needed before terminal avatar widgets can safely adopt floating pixel protocols.
+[1086](proposed/1086_logical_source_geometry_for_custom_transcript_blocks.md) preserves the
+producer-authored geometry needed for semantic hits on custom user/tool/JSON draw blocks.
+Registry distribution/floors remain [1079](proposed/1079_abstractavatar_registry_release_and_consumer_distribution.md)
+for the next explicitly authorized release wave.
+
+**2026-10-31 streamed voice output repair verified:**
+[1080](completed/1080_streamed_voice_output_drain_and_recovery.md) corrects pause/cancellation and
+stale-completion handling, adds output-only recovery and responsive Stop, and records 299 passing
+tests plus a real macOS output recovery check. Sources remain local; the running tray still needs
+an Assistant-only restart. Publish matching Voice/player support before an eventual Assistant
+release and propagate floors in that authorized wave. The original hardware/pause trigger is unknown.
+
+**2026-10-31 AbstractAvatar implementation completed:**
+[1078](completed/1078_abstractavatar_shared_procedural_generation_and_platform_players.md) delivered
+the 44-design shared procedural generator, generic/opt-in TUI player, UIC and web/desktop Assistant
+adoption, coredoc and adversarial approval. Source is on GitHub; seven core CI jobs are green on
+Linux/macOS/Windows and Wasm. All 569 watched Apple files are unchanged. Packages remain unpublished;
+[1079](proposed/1079_abstractavatar_registry_release_and_consumer_distribution.md) preserves release
+prerequisites for the next authorized wave. [Evidence](evidence/1078/README.md).
 
 **2026-10-31 machine-resource orchestration reaffirmed as important:**
 [0991](planned/0991_model_residency_and_gpu_memory_management.md) is the existing cross-engine
@@ -552,6 +611,8 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 1082 | [Contextual selection and explicit Code steering](completed/1082_contextual_content_selection_and_agent_steering.md) | 2026-10-31 | Created 2026-10-31; moved from `planned/1082_contextual_content_selection_and_agent_steering.md`. UTF-8 source geometry, click/drag/table/code highlight, responsive keyboard actions, preserved draft and explicit normal Send. Full local TUI/Code checks and independent review pass; unreleased. [Evidence](evidence/1082/README.md). |
+| 1081 | [Avatar rendering fidelity and platform quality](completed/1081_avatar_rendering_fidelity_and_platform_quality.md) | 2026-10-31 | Created 2026-10-31; moved from `planned/1081_avatar_rendering_fidelity_and_platform_quality.md`. Five Watch reference procedures, shared RGBA materials, quality tiers, cached terminal raster; native/Wasm/browser/Qt evidence and independent approval. All 569 Apple files unchanged; unreleased. [Evidence](evidence/1081/README.md). |
 | 1055 | [Release wave 2026-10-27: voice library, replay, memory graph, UI primitives](completed/1055_release_wave_2026_10_27_voice_library_replay_memory.md) | 2026-10-28 | Moved from `planned/`. Root 0.11.15 pins abstractcore 2.31.0, AbstractRuntime 0.15.0, abstractagent 0.4.0, abstractgateway 0.17.0, AbstractMemory 0.4.0 (one-way vector/graph migration), abstractvoice 0.19.2, abstractassistant 0.15.0, abstractskill 0.3.3; npm Code 0.12.0, Observer 0.9.0, Entity 0.8.0, Continuum 0.7.1. Open: `@abstractframework/note` 0.2.0 npm publish failed; Flow 0.11.0 and the abstractcode 0.11.0 crate unreleased. |
 | 1037 | [iPhone rich sharing with original files](completed/1037_iphone_rich_conversation_sharing_with_original_files.md) | 2026-10-18 | Moved from `planned/1037_iphone_rich_conversation_sharing_with_original_files.md`; created/completed 2026-10-18. Mint New, rich ordered transcript and original artifacts/recorded writes, owned cleanup and context guards. 235 package + five native + one physical export test passed; screenshot/adversary approved. Normal 0.6.18 (26) installed/launched. Actual Mail/Notes destination rendering unverified; uncommitted. [Evidence](evidence/1037/README.md). |
 | 1036 | [iPhone three-island navigation and conversation sharing](completed/1036_iphone_three_island_navigation_and_conversation_share.md) | 2026-10-18 | Moved from `planned/1036_iphone_three_island_navigation_and_conversation_share.md`; created/completed 2026-10-18. Conversations / Share-Files-Tools / Settings islands, responder below, New preserves responder; explicit loaded-text export. 230 package + three native tests passed, screenshots/adversary approved. Guard yielded to Watch; normal 0.6.17 (25) installed/launched; uncommitted. [Evidence](evidence/1036/README.md). |
@@ -682,6 +743,14 @@ Scan of 2026-09-26 (after the release, 0921):
   disk. The 2026-09-25 patch-wave gap above is unchanged.
 
 ## Planning Notes
+
+- 2026-10-31: completed 1081/1082 after rendering/selection test matrices and independent approval;
+  preserved original planned paths and completion reports, updated coredoc/agent skills/indexes,
+  retained native/browser/Qt evidence and interaction guide. Recount: planned 186, proposed 76,
+  completed 294, deprecated 2, recurrent 3. Intake IDs 1081–1086 are unique. Follow-up triage:
+  planned 1083 activity/sleep/long-uptime contract; proposed 1084 expression/persona, 1085 terminal
+  image ownership, 1086 custom source geometry; existing 1079 publication/floors. No release or
+  Apple edits. Older legacy naming/duplicate defects remain in 0889.
 
 - 2026-10-18: created 1028 before code changes for the iPhone compact actions and session file-browser repair; planned count 176 → 177.
 

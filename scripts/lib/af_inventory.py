@@ -437,9 +437,10 @@ def declared_edges(p: Package, by_name: dict[str, Package]) -> set[tuple[str, st
         if not cargo.is_file():
             return None
         data = _load_toml(cargo)
-        for name in data.get("dependencies", {}):
+        for name, requirement in data.get("dependencies", {}).items():
             if name.lower() in by_name and by_name[name.lower()].kind == "rust" and name.lower() != p.name.lower():
-                edges.add((by_name[name.lower()].id, "dep"))
+                edge_kind = "extra" if isinstance(requirement, dict) and requirement.get("optional") else "dep"
+                edges.add((by_name[name.lower()].id, edge_kind))
         return edges
     return None
 
@@ -457,7 +458,6 @@ def _origin(repo_dir: Path) -> str | None:
 def cmd_check(packages: list[Package], args) -> int:
     problems: list[str] = []
     notes: list[str] = []
-    by_name = {p.name.lower(): p for p in packages}
     problems += tier_mismatches(packages)
     repos: dict[str, Package] = {}
     for p in packages:
@@ -476,6 +476,13 @@ def cmd_check(packages: list[Package], args) -> int:
     for p in packages:
         if not (p.repo_dir / ".git").exists():
             continue
+        # Registry names are independent namespaces: a Python distribution and
+        # a Rust crate can legitimately share a name. Root app pins additionally
+        # refer to npm, but ordinary dependencies stay in their own registry.
+        by_name = {
+            q.name.lower(): q for q in packages
+            if q.registry == p.registry or (p.kind == "meta" and q.registry == "npm")
+        }
         declared = declared_edges(p, by_name)
         if declared is None:
             problems.append(f"{p.id}: no package file at {p.location}")

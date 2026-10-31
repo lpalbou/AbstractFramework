@@ -38,3 +38,4 @@ Implementing items; rewriting history.
   findings unchanged (four-digit reuse 0212–0214, 24 planned/completed duplicates, 230 non-`NNNN_`
   files → 0889). Drift flagged in the overview: 0872, 0874, 0884, 0888 look fixed by the unrecorded
   2026-09-25 patch wave.
+- 2026-10-31: rendering/context completion 1081/1082 and intake 1083–1086; all six new IDs unique, moved links repaired, current counts verified (186/76/294/2/3). Accepted Avatar 0002 and TUI 0007 documented; root 0044 remains proposed. Legacy issues stay in 0889.

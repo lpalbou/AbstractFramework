@@ -68,3 +68,14 @@ report." So this item is no longer a decision gate. The work, in order:
    2026-08-01 ledger shape and proves the request stays bounded without any character cap.
 
 Until 1–2 land, the clamp stays as the documented ADR-0026 exception (this file is the record).
+
+## Related observation audit intake (2026-10-31)
+
+Proposed [1091](../proposed/accumulated-evidence/1091_tool_observation_preview_warning_and_retrieval_audit.md)
+records the operator's concern about command previews (20k stdout/5k stderr), warning propagation,
+and discoverable full-output references. Those producers already emit truncation prose/flags;
+their end-to-end model-visible retrieval path still needs validation. Unlike this item's existing
+2026-10-08 ruling, new 1091 requires explicit operator confirmation before undertaking work.
+It does not revoke, broaden or replace this source-fix/removal mandate. Coordinate overlapping
+evidence instead of creating two independent truncation repairs. See the
+[exact-run/council record](../evidence/1088/README.md); its command outputs were not truncated.

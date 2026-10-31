@@ -298,6 +298,7 @@ dialogs and touch-sized controls on phones.
 | Package | What it is |
 |---|---|
 | [abstracttui](https://github.com/lpalbou/AbstractTUI) | Rust terminal-UI engine built on fine-grained reactive signals |
+| [AbstractAvatar](https://github.com/lpalbou/AbstractAvatar) | Shared procedural avatar generation with native and WebAssembly rendering; platforms own frame presentation and activity input |
 | [abstractuic](https://github.com/lpalbou/AbstractUIC) | Reusable UI kit for framework clients (React components + Web Components): chat panel with live replies, the shared About dialog, the app-server proxy |
 | [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) and the curated skill shelf the gateway serves |
 

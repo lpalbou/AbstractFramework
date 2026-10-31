@@ -148,6 +148,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | Package | What it is |
 |---|---|
 | [abstracttui](https://github.com/lpalbou/AbstractTUI) | Reactive Rust terminal UI engine |
+| [AbstractAvatar](https://github.com/lpalbou/AbstractAvatar) | Shared procedural avatar catalog and native/WebAssembly generator, with platform frame presenters |
 | [abstractuic](https://github.com/lpalbou/AbstractUIC) | Shared React/Web Components UI kit: chat panel with live replies, the About dialog, the app-server proxy |
 | [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared Agent Skills (`SKILL.md`) loader, trust gate, and the curated skill shelf the gateway serves |
 

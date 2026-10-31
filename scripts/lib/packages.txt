@@ -37,6 +37,8 @@
 #
 # id                    | repo              | github                      | kind   | path                  | registry | name                                   | tier | deps
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+avatarcore              | abstractavatar    | lpalbou/AbstractAvatar      | rust   | .                     | crates   | abstractavatar                         | 0    | -
+abstractavatar          | abstractavatar    | lpalbou/AbstractAvatar      | python | .                     | pypi     | abstractavatar                         | 0    | -
 abstractskill           | abstractskill     | lpalbou/AbstractSkill       | python | .                     | pypi     | abstractskill                          | 0    | -
 abstractsemantics       | abstractsemantics | lpalbou/AbstractSemantics   | python | .                     | pypi     | abstractsemantics                      | 0    | -
 abstractmemory          | abstractmemory    | lpalbou/AbstractMemory      | python | .                     | pypi     | AbstractMemory                         | 0    | -
@@ -46,12 +48,12 @@ abstractmusic           | abstractmusic     | lpalbou/AbstractMusic       | pyth
 abstractcamera          | abstractcamera    | lpalbou/AbstractCamera      | python | .                     | pypi     | abstractcamera                         | 0    | -
 abstract3d              | abstract3d        | lpalbou/Abstract3D          | python | .                     | pypi     | abstract3d                             | 1    | abstractvision:dep
 abstractcore            | abstractcore      | lpalbou/AbstractCore        | python | .                     | pypi     | abstractcore                           | 2    | abstractvision:dep,abstractvoice:dep,abstractmusic:dep,abstract3d:dep
-core-console            | abstractcore      | lpalbou/AbstractCore        | rust   | console-tui           | crates   | abstractcore-console                   | 1    | abstracttui:dep
+core-console            | abstractcore      | lpalbou/AbstractCore        | rust   | console-tui           | crates   | abstractcore-console                   | 2    | abstracttui:dep
 abstractruntime         | abstractruntime   | lpalbou/AbstractRuntime     | python | .                     | pypi     | AbstractRuntime                        | 3    | abstractcore:dep,abstractmemory:dep,abstractsemantics:dep
 abstractagent           | abstractagent     | lpalbou/AbstractAgent       | python | .                     | pypi     | abstractagent                          | 4    | abstractcore:dep,abstractruntime:dep
-abstractassistant       | abstractassistant | lpalbou/AbstractAssistant   | python | .                     | pypi     | abstractassistant                      | 4    | abstractcore:dep,abstractruntime:dep,abstractvoice:dep
+abstractassistant       | abstractassistant | lpalbou/AbstractAssistant   | python | .                     | pypi     | abstractassistant                      | 4    | abstractcore:dep,abstractruntime:dep,abstractvoice:dep,abstractavatar:extra
 abstractgateway         | abstractgateway   | lpalbou/AbstractGateway     | python | .                     | pypi     | abstractgateway                        | 5    | abstractruntime:dep,abstractagent:dep,abstractmemory:dep,abstractcore:dep,abstractskill:dep,abstractvoice:dep
-gateway-console         | abstractgateway   | lpalbou/AbstractGateway     | rust   | console-tui           | crates   | abstractgateway-console                | 2    | abstracttui:dep,core-console:dep
+gateway-console         | abstractgateway   | lpalbou/AbstractGateway     | rust   | console-tui           | crates   | abstractgateway-console                | 3    | abstracttui:dep,core-console:dep
 # AbstractNote: notes app on the gateway. Its graph logic lives in AbstractMemory; it reaches the
 # gateway through its `gateway` extra, and the gateway imports `abstractnote` lazily (optional seam).
 abstractnote            | abstractnote      | lpalbou/AbstractNote        | python | .                     | pypi     | abstractnote                           | 6    | abstractmemory:dep,abstractsemantics:dep,abstractruntime:dep,abstractcore:dep,abstractgateway:extra
@@ -68,8 +70,8 @@ observer                | abstractobserver  | lpalbou/AbstractObserver    | npm 
 continuum               | abstractcontinuum | lpalbou/AbstractContinuum   | npm    | .                     | npm      | @abstractframework/continuum           | 2    | app-server:dep,ui-kit:dep,panel-chat:dep
 entity                  | abstractentity    | lpalbou/AbstractEntity      | npm    | .                     | npm      | @abstractframework/entity              | 2    | app-server:dep,ui-kit:dep,panel-chat:dep
 code-web                | abstractcode      | lpalbou/AbstractCode        | npm    | web                   | npm      | @abstractframework/code                | 2    | app-server:dep,ui-kit:dev,panel-chat:dev,monitor-flow:dev,monitor-gpu:dev
-code-cli                | abstractcode      | lpalbou/AbstractCode        | rust   | tui                   | crates   | abstractcode                           | 1    | abstracttui:dep
-abstracttui             | abstracttui       | lpalbou/AbstractTUI         | rust   | .                     | crates   | abstracttui                            | 0    | -
-tui-graph               | abstracttui       | lpalbou/AbstractTUI         | rust   | extensions/graph      | crates   | abstracttui-graph                      | 1    | abstracttui:dep
-tui-mermaid             | abstracttui       | lpalbou/AbstractTUI         | rust   | extensions/mermaid    | crates   | abstracttui-mermaid                    | 2    | abstracttui:dep,tui-graph:dep
+code-cli                | abstractcode      | lpalbou/AbstractCode        | rust   | tui                   | crates   | abstractcode                           | 2    | abstracttui:dep
+abstracttui             | abstracttui       | lpalbou/AbstractTUI         | rust   | .                     | crates   | abstracttui                            | 1    | avatarcore:extra
+tui-graph               | abstracttui       | lpalbou/AbstractTUI         | rust   | extensions/graph      | crates   | abstracttui-graph                      | 2    | abstracttui:dep
+tui-mermaid             | abstracttui       | lpalbou/AbstractTUI         | rust   | extensions/mermaid    | crates   | abstracttui-mermaid                    | 3    | abstracttui:dep,tui-graph:dep
 abstractframework       | .                 | lpalbou/AbstractFramework   | meta   | .                     | pypi     | abstractframework                      | 6    | abstractgateway:pin,abstractassistant:pin,abstractcore:pin,abstractruntime:pin,abstractagent:pin,abstractskill:pin,abstractmemory:pin,abstractsemantics:pin,abstractvoice:pin,abstractvision:pin,abstractmusic:pin,abstract3d:pin,flow:app,code-web:app,observer:app,continuum:app,entity:app
