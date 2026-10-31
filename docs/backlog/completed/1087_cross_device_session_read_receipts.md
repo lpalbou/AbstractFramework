@@ -102,3 +102,18 @@ untracked/shared-reads-scope-note.txt and corresponding local build/test logs.
 ADR impact: no new cross-task policy; applies accepted ADR 0018's Gateway ownership through a
 feature-scoped documented read API. Follow-up: native device installation and package release
 remain deployment/release operations, not claims of completed device rollout.
+
+## Follow-up validation — progressive history consumption
+
+A six-turn live conversation exposed a progressive restore race: the latest answer was already
+read, its marker completed while the earlier views were loading, and four unread older outcomes
+arrived after that marker's captured batch. The shared controller now exposes `historyLoading`
+independently from current-answer `loading`; Code/Assistant gate their receipt markers until
+history restoration finishes. Read evidence still uses the immutable loaded revisions.
+
+Verified the exact live conversation: one successful Gateway POST committed its four remaining
+receipts; the highlight cleared without scroll/resize, and the ledger retained all six turn reads.
+The real-controller browser regression holds earlier history while an already-read latest answer
+is shown, then verifies one receipt batch clears the card after release. Full panel-chat tests,
+Code 501 tests and Assistant web 63 tests pass. This is an implementation correction within the
+existing contract; no new read semantics, transport, authority or ADR change.
