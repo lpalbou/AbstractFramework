@@ -14,8 +14,8 @@ The prior overview drifted from the checked-in files; the figures below are the 
 | State | Files | Notes |
 |---|---|---|
 | Planned | 189 | Existing cross-package implementation work, including 1063–1066; no new item added by the 0991 update. |
-| Proposed | 73 | Adds 1087 cross-device read receipts; 1077 selected-session observation and 1058 OS notification delivery remain separate. |
-| Completed | 290 | Existing implementation/release history, including events-and-attention. |
+| Proposed | 72 | 1087 shared reads completed; 1077 selected-session observation and 1058 OS notification delivery remain separate. |
+| Completed | 291 | Includes 1087 shared session reads. Existing implementation/release history, including events-and-attention. |
 | Deprecated | 2 | Existing deprecated records. |
 | Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
@@ -23,9 +23,9 @@ Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis
 
 ## Next Recommended Work
 
-[1087 cross-device session read receipts](proposed/1087_cross_device_session_read_receipts.md)
-tracks server-backed read scope and native client adoption after the shared Watch-style web
-cards. Current receipts are browser-local; reading does not resolve human attention.
+[1087 cross-device session read receipts](completed/1087_cross_device_session_read_receipts.md)
+is completed: Gateway-owned immutable reads synchronize Code/Assistant web and updated Apple
+clients without resolving human attention. Native apps require rebuild/install.
 
 **2026-10-31 machine-resource orchestration reaffirmed as important:**
 [0991](planned/0991_model_residency_and_gpu_memory_management.md) is the existing cross-engine
@@ -719,6 +719,8 @@ Scan of 2026-09-26 (after the release, 0921):
   are unchanged (the next phases). Package records are completed in runtime (0847), gateway (0928), abstractuic (0029),
   flow (0158), observer (0002) and assistant (0852). abstractagent 0034 and abstractcode 0001 stay planned with notes.
   Counts recounted on disk: planned 120 → 124, completed 244 → 245.
+
+- 2026-10-31: completed 1087 (created/completed 2026-10-31), moved `proposed/1087_cross_device_session_read_receipts.md` to `completed/1087_cross_device_session_read_receipts.md`. Durable account reads, shared web/native clients and fitted previews verified; native device rollout and registry release remain separate.
 
 ## Operating Notes
 
