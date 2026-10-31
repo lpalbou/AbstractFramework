@@ -6,14 +6,14 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files recounted on 2026-10-30 for the session-subscription investigation:
+On-disk item files recounted on 2026-10-31 while updating machine-resource orchestration item 0991:
 recursive lifecycle Markdown files, excluding README/overview/template and evidence
 files. Counts are files, not unique IDs; legacy duplicates remain tracked by [0889](planned/0889_normalize_the_legacy_root_backlog.md).
 The prior overview drifted from the checked-in files; the figures below are the current inventory.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 185 | Existing cross-package implementation work, including 1063–1066. |
+| Planned | 189 | Existing cross-package implementation work, including 1063–1066; no new item added by the 0991 update. |
 | Proposed | 72 | Added 1077 selected-session observation plan; 1058 OS notification delivery remains separate. |
 | Completed | 290 | Existing implementation/release history, including events-and-attention. |
 | Deprecated | 2 | Existing deprecated records. |
@@ -22,6 +22,16 @@ The prior overview drifted from the checked-in files; the figures below are the 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
 
 ## Next Recommended Work
+
+**2026-10-31 machine-resource orchestration reaffirmed as important:**
+[0991](planned/0991_model_residency_and_gpu_memory_management.md) is the existing cross-engine
+umbrella. Its current-code update links Core 0870/0872, Runtime 0866, Gateway 0978 and the
+[1064 concurrency proof](planned/1064_concurrency_correctness_and_benchmark.md). Shared GGUF
+weights/slots and Gateway pool borrowing already exist; queue controls/replay, text/embedding
+reservation order and the integrated multi-user/session plus real-hardware proof remain open.
+Core owns allocation/scheduling under its ADRs 0010/0011; avoid a competing host scheduler or a
+duplicate umbrella. The older September implementation notes are historical, not the current
+release matrix.
 
 **2026-10-30 selected-session subscriptions investigated, implementation proposed:**
 [1077](proposed/1077_reactive_session_subscriptions_for_thin_clients.md) confirms Code's
@@ -154,7 +164,7 @@ Longer-running architecture work (unchanged since before the waves):
 | 0994 | [Follow-ups after the 0.7.2 release](planned/0994_follow_ups_after_0_7_2_release.md) | Planned | Items 29–54 after root 0.7.2. Completed in 0.8.0 (close on publication): installer never-fail (29), stored port (30, D-A), old-install options (31, D-C), unknown core keys (32, D-B), resume nudge (33), Node install race (34), startup stop (35), flakes (37), Docker tags (38), pause during backoff (40), kit type scale (41), secure context (43), manifest (44), proxy sign-in 403 (45), `/files/read` (49). Open: 36, 39, 42, 46, 47, 48, 50, 51 (Assistant test segfault), 52 (Telegram bridge setting), 53 (llms copies), 54 (site screenshots); round 3 (2026-10-01): 67 thin-client principle (→ 0993), 68 no env settings + shared kit pickers, 69 contract tests never probe remote providers, 70 Code web 0.9.1 + gateway 0.10.1 session-bleed patches (no fix claim before publication), 71 future 0997/0998. |
 | 0993 | [One ledger replay, many views](planned/0993_one_ledger_replay_many_views.md) | Planned (high) | Clients rebuild run state their own way (live SSE vs. history bundle vs. snapshots); the 2026-09-29 approval gate showed only in the originating client. One replay contract + conformance suite for every client. Use case 2026-10-01: thin clients hold no run-input state (the Code web 0.9.0 cross-session attachment bleed); clients to audit listed. |
 | 0992 | [Per-user email accounts and notifications](planned/0992_per_user_email_accounts_and_notifications.md) | Planned (high) | Design + plan, no code: typed mail library and encrypted account store in Core; one mailbox per principal in its gateway plane (`/me/email`, web console + TUI); `email.received@1` trigger on the 0929 inbox; notification dispatcher with durable outbox and rate limits. Found: TLS unverified on every IMAP/SMTP connection, the default automation grant lets an agent email any address, the email bridge never starts under multi-user auth. 12 operator decisions open. |
-| 0991 | [Model residency and GPU memory management](planned/0991_model_residency_and_gpu_memory_management.md) | Planned (high) | One registry of loaded models across engines (in-process text/media, LM Studio/Ollama/vLLM, one-shot subprocesses), resident/protected/ejectable reusing the text lock, NVML/Metal memory budget naming holders, LRU eviction of ejectable models before a load, typed progress, honest errors. Fixed 2026-09-29 (unreleased): resident image models now serve generation (VM 17–19 s vs 54–59 s), a Diffusers unload frees its 18.8 GB. |
+| 0991 | [Model residency and GPU memory management](planned/0991_model_residency_and_gpu_memory_management.md) | Planned (high) | Machine-resource orchestration umbrella, refreshed 2026-10-31: Core-owned admission/scheduling and Runtime/Gateway relay; shared weights and pool borrowing implemented. Remaining queue controls/replay, embedding/text reservation order, cross-engine memory coverage and integrated proof link Core 0870/0872, Runtime 0866, Gateway 0978 and root 1064. September fixes retained as history. |
 | 0990 | [Seamless vLLM Engines card](planned/0990_seamless_vllm_engine_card.md) | Planned | No-sudo toolchain (ziglang wheel as Triton `CC`, `-l:` rewrite, hermetic glibc target), gateway-supervised `vllm serve` on a free loopback port, per-cc flags (TRITON_ATTN < 8.0, FlashInfer sampler off), NVML memory budget; measured on Turing: 75 s first start, 35 s warm, 85 tok/s (Qwen3-1.7B). |
 | 0989 | [NVIDIA test machines for the Linux and Windows installs](planned/0989_nvidia_test_machines_for_linux_and_windows_installs.md) | Planned (high) | No NVIDIA hardware: one-off AWS g4dn.xlarge session (~$5–10) vs OVHcloud GPU vs GitHub GPU runners (needs an org on Team). |
 | 0988 | [The `gpu` setting on Windows + NVIDIA](planned/0988_gpu_setting_on_windows_nvidia.md) | Planned (high) | Windows gpu installs CPU torch today and `abstractcore[gpu]` does not resolve (vLLM, llama.cpp, sd.cpp); CUDA stack choice from the driver, prebuilt llama wheels, markers, live progress. |

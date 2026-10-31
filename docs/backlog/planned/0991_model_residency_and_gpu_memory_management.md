@@ -24,7 +24,54 @@ measured from the device that names the holders, automatic eviction of ejectable
 load that would not fit, typed load progress, honest errors that name the cause and the fix, and
 one console/TUI view and API over it.
 
-## What was fixed on 2026-09-29 (unreleased, local commits)
+## Current code reality and linked execution work (2026-10-31)
+
+The operator reaffirmed this as a machine-resource orchestration problem on 2026-10-31:
+text, embeddings, speech and image/video requests share a machine's RAM, accelerator memory and
+execution capacity. This existing item remains the cross-engine umbrella; do not create a duplicate
+umbrella or reduce the problem to a queue counter in the UI.
+
+The September implementation descriptions below are historical snapshots, not a claim that all
+listed limitations still exist or that those commits remain unpublished. Newer accepted Core
+[ADR 0010](../../../abstractcore/docs/adr/0010-model-residency-fit-and-eviction.md) and
+[ADR 0011](../../../abstractcore/docs/adr/0011-shared-weights-and-concurrent-requests.md) govern
+allocation, eviction and scheduling. Core owns those decisions where the weights execute; Runtime
+relays their contracts and durable progress; Gateway exposes control and diagnostics. Reconcile the
+older Design section with those ADRs before implementing it, rather than adding a competing Runtime
+or Gateway scheduler. This update records execution scope under existing ADRs; it introduces no new
+architecture decision.
+
+Current implementation and remaining work, checked during the release review:
+
+| Slice | Current reality | Owning work item |
+|---|---|---|
+| Shared weights and per-model execution slots | GGUF shared weights/slot pool exist (`abstractcore/providers/gguf_shared.py`, `gguf_slots.py`); targeted tests pass. Full lane coverage and acceptance still need checking. | [Core 0870](../../../abstractcore/docs/backlog/planned/0870_per_model_slot_scheduler_and_shared_gguf_weights.md) |
+| Reuse of the principal's generation pool | Implemented in Gateway `src/abstractgateway/generation_pool.py` and `_gateway_llm_client`; the fallback constructor alone is not evidence of duplicate weights. | [Runtime 0866](../../../abstractruntime/docs/backlog/planned/0866_queued_state_in_the_ledger_and_pools_lend_never_build.md), [Gateway 0978](../../../abstractgateway/docs/backlog/planned/0978_one_weights_copy_and_the_visible_model_queue.md) |
+| Queue state and controls | Residency counters exist; concurrency setters, queue/error ledger/replay and client/control acceptance remain incomplete. Inspect current source before assigning missing pieces. | Runtime 0866, Gateway 0978 |
+| Memory reservation across workloads | Embedding fit still uses currently free memory (`abstractcore/embeddings/manager.py::_embedding_fit`); the configured text-default reservation and both-startup-order proof remain open. | [Core 0872](../../../abstractcore/docs/backlog/planned/0872_reservation_order_embedder_leaves_room_for_the_text_default.md) |
+| Integrated contention/isolation proof | The named many-user/session harness and concurrency benchmark are absent. Unit tests and earlier individual model runs do not establish the full machine behavior. | [Root 1064](1064_concurrency_correctness_and_benchmark.md), [Gateway 0952](../../../abstractgateway/docs/backlog/planned/0952_concurrency_correctness_suite_and_benchmark.md) |
+
+### Completion evidence for the linked orchestration work
+
+- Fit/admission accounts for weights, per-request contexts/slots and host/device memory across the
+  managed text/embedding/media workloads. Protected or in-flight work follows the accepted ADRs;
+  a refusal explains the holder and the resource needed rather than allocating until OOM.
+- Queued work is visible, bounded and cancellable; changing concurrency is explicit or refused.
+  Runtime/Gateway/client views expose the same authoritative state, without a second scheduler.
+- Constrained-memory tests exercise embedding-first and text-first startup, concurrent text with
+  embeddings/speech/media where supported, model-host restart, and cancellation of one queued job
+  without disrupting the others. Record unsupported combinations explicitly.
+- Root 1064 supplies multi-user/session isolation and both-store tests. Complement that harness
+  with opt-in real-model CUDA and Apple unified-memory measurements: one weights copy, no
+  double-counted memory, peak RAM/VRAM, latency, queue time and a current stability receipt.
+- Record which controls and clients actually consume the contract. Do not close the umbrella on
+  scheduler unit tests alone; do not reimplement already-landed sharing/pool borrowing.
+
+Evidence: [2026-10-31 release review](../../../untracked/release-review-2026-10-31/REPORT.md)
+(local audit artifact; exact-head hardware certification was not performed). Existing package cards
+carry the implementation slices; this umbrella and root 1064 carry cross-package scope and proof.
+
+## What was fixed on 2026-09-29 (historical local-commit report)
 
 1. **Resident image/video models serve generation** — abstractruntime `a96460a`.
    Root cause: `load_model_residency(task="image_generation")` (the Gateway's `/models/load`, the
