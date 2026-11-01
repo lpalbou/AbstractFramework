@@ -58,6 +58,14 @@ state. for the moment, i am not pleased by the experience, so we have room to ev
   residual) and must not require 1090's graph.
 - Phone (390 px) and Watch layouts verified; technical view untouched.
 
+## Design rule from the operator (2026-11-01)
+
+The avatar view is an incarnation, a personification of the AI, not a dashboard around it. Nothing
+in that view is a setting or a control panel: no cue toggles, no technical counters, no labels like
+"Observation/Finding". Settings live in the host's settings menu; the view holds the avatar, what it
+says (subtitles), what it has found (evidence bubbles), its questions and the way to answer. Keep
+this rule when designing the rolling captions and the evidence rail.
+
 ## Open decisions for the operator
 
 - How many caption lines on desktop vs phone vs Watch, and whether older captions fade or stay.

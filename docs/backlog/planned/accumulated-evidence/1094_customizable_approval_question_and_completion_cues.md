@@ -78,3 +78,17 @@ See the [shared implementation/test record](../../evidence/1088/implementation.m
 [public conversation ADR0046](../../../adr/0046-optional-public-conversation-view.md).
 Default chat/technical views remain available. Physical Watch and human usability validation,
 and quantitative backend KV/memory comparisons, remain separate from automated/source delivery.
+
+## Operator ruling 2026-11-01 (after seeing the in-view "Conversation cues" panel)
+
+"we should always have both and this should not be customizable here, we have a settings menu. and
+if you want here, make it simpler and 3 categories: visual, audio, both... but in general, you are
+missing the point, this is an incarnation, a personification of the AI..."
+
+Applied in AbstractUIC panel-chat (uncommitted at the time of writing, see 1096's follow-up
+commits): the cue settings panel is removed from the avatar view; visual and audio cues are both
+on by default for permission requests, questions and completion; stored preferences only turn a
+channel off when explicitly saved as false. Remaining scope of this item: one entry in each
+host's settings menu with three choices, Visual / Audio / Both (Both default), applied to all
+three attention kinds; haptics stay a device capability, not a user toggle. Nothing about cues is
+shown inside the avatar view.
