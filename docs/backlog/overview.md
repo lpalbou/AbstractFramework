@@ -7,7 +7,7 @@ the lifecycle folders described by the backlog process.
 ## Current Counts
 
 On-disk item files recounted on 2026-11-01 after rendering/context completion, session-read completion 1087,
-and authorized avatar-conversation promotion 1088/1089/1092–1095:
+authorized avatar-conversation promotion 1088/1089/1092–1095, and the 2026-11-01 composer-default 1096 / subtitle 1097 intake:
 recursive lifecycle Markdown files, excluding README/overview/template and evidence
 files. Counts are files, not unique IDs; legacy duplicates remain tracked by [0889](planned/0889_normalize_the_legacy_root_backlog.md).
 The prior overview included four governance evidence receipts as planned items; those are now
@@ -16,8 +16,8 @@ excluded consistently. The figures below are the current item-file inventory.
 | State | Files | Notes |
 |---|---|---|
 | Planned | 190 | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
-| Proposed | 78 | Only 1090 knowledge and 1091 broad audit remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
-| Completed | 297 | Includes conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
+| Proposed | 79 | 1090 knowledge, 1091 broad audit and 1097 rolling subtitles/evidence bubbles (operator gate) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Completed | 298 | Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 2 | Existing deprecated records. |
 | Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
