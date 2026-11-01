@@ -184,3 +184,20 @@ Playwright as explicitly reported fallback when live artifacts are ready.
 - Final audit: all eight package worktrees clean; source manifest hashes match; root documentation
   links/counts checked; own disposable Code/Gateway test sessions stopped successfully. Root
   checkpoint advanced concurrently to a60d0e8 for unrelated tray work, which was preserved.
+
+## Request/composer follow-up — 2026-11-01
+
+- User requested the actual permission request in Avatar view and a shared compact multiline
+  composer option. Reused authoritative interaction controls; no backend/control changes.
+- UIC `d5e54d8` follows `efb78ab` / `356a123` / `5340142`: optional compact API, actual request
+  identity, 48px avatar/status header during a request, bounded scrolling tool details, outer
+  focus ring. Code `dfc0f4d` follows `882589e`: compact only in Avatar mode, original chat
+  composer retained. Assistant `4a46ab3`, Entity `3fa93bd` sync canonical presenter artifacts.
+- Full UIC suite, compact native/fallback Chrome checks, Code501 units, two built Code/real
+  disposable Gateway Chrome tests, Assistant/Entity built browser regressions and host builds
+  pass. Code checks1280x800/1000x650/390x844 actual prompt/approval visibility and no permission
+  before explicit decision. Independent adversary approved after deep-history and last-target
+  inspection. Canonical producer/artifact hashes match all three web consumers.
+- Final screenshots and API notes are in delivery.md. Remaining manual/physical/performance
+  work stays planned. No publication or production restart; only own disposable19081/19082
+  test services were used.

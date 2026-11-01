@@ -88,3 +88,33 @@ local stack was left running.
 - [Watch question and late-reply history](watch-question-history.png)
 
 [Mission and implementation handoff](implementation.md). [Roadmap](../../proposed/accumulated-evidence/README.md).
+
+## 2026-11-01 follow-up: visible requests and compact composer
+
+The Avatar view shows the actual pending question or approval ahead of subtitles and
+history. While a request is open, a small avatar sits beside its status; long tool
+details scroll inside the request. The existing decision controls and permission
+callbacks are reused. An empty subtitle placeholder no longer competes with a request.
+
+AbstractUIC exposes `ChatComposer variant="compact"` and
+`WorkflowChat composerVariant="compact"`. This rounded multiline composer grows with
+the draft, retains attachment/voice/Stop actions, and uses a circular Send button.
+Code selects it in Avatar mode; Conversation mode retains the original composer.
+The focused compact field uses the outer composer's focus ring.
+
+Validation: full panel-chat suite and compact native/fallback input browser checks
+passed; Code's 501 unit tests and two built-Chrome tests against a disposable real
+Gateway passed. Request geometry was checked at 1280×800, 1000×650 and 390×844, with
+an actionable approval and the real prompt visible. Shared checks cover a six-tool
+batch, actual question submission, and no permission before an explicit click.
+Independent adversarial checks also covered deep history and scrolling to the last
+target. Assistant/Entity built browser regressions and all three host builds passed.
+Canonical source and artifact hashes match all three consumers.
+
+- [Request in a short desktop window](code-avatar-request-desktop.png)
+- [Request on a phone](code-avatar-request-phone.png)
+- [Compact composer with three text lines](code-compact-multiline.png)
+
+This follow-up preserves the remaining manual accessibility, physical-device and
+quantitative performance validation listed above. No publication or production
+service restart was performed.

@@ -3,7 +3,7 @@
 > Package: abstractassistant, abstractcode, abstractuic, abstracttui
 > Type: feature
 > Created: 2026-10-31
-> Revised: 2026-10-31
+> Revised: 2026-11-01
 > Status: planned
 > Priority: P2
 > Labels: avatar, subtitles, conversation, accessibility
@@ -96,3 +96,8 @@ See the [shared implementation/test record](../../evidence/1088/implementation.m
 [public conversation ADR0046](../../../adr/0046-optional-public-conversation-view.md).
 Default chat/technical views remain available. Physical Watch and human usability validation,
 and quantitative backend KV/memory comparisons, remain separate from automated/source delivery.
+
+Follow-up source delivery: actual pending questions/approvals take priority in the Avatar
+view; AbstractUIC exposes an optional rounded multiline composer, selected by Code's Avatar
+mode. Desktop/short-window/phone browser checks and screenshots are in the
+[delivery record](../../evidence/1088/delivery.md#2026-11-01-follow-up-visible-requests-and-compact-composer).
