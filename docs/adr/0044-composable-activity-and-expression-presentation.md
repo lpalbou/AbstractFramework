@@ -31,7 +31,7 @@ Future refinements may include working/collaborating, thinking/planning, thinkin
 speaking/questioning. The conversational experience explicitly needs a semantic question purpose:
 asking the person something and awaiting an answer must remain distinct from tool approval,
 microphone listening and generic working. Host state/labels may project this to legacy waiting
-without a new v1 pose code. Proposed ADR 0045 owns critical versus timed clarification behavior.
+without a new v1 pose code. Accepted ADR 0045 owns critical versus timed clarification behavior.
 These examples do not reserve final persisted names. `personal` remains
 the existing entity phase; “own time” is its human-facing wording, not a new autonomy grant.
 

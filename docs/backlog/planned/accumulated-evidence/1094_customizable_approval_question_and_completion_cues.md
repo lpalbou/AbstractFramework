@@ -3,19 +3,18 @@
 > Package: abstractassistant, abstractuic, abstractgateway, abstractruntime
 > Type: feature
 > Created: 2026-10-31
-> Status: proposed
+> Status: planned
 > Priority: P2
-> Labels: decision-gate, awaiting-user-confirmation, notifications, audio, visual, accessibility
+> Labels: notifications, audio, visual, accessibility
 > Work-item id: abstractframework-1094
 > Owner: framework
 
 ## Summary
 
-OPERATOR DECISION GATE (never assignable): independently customize visual and audible cues for
-approval required, a question and finished work, with haptics where supported. **Await explicit
-operator confirmation before implementation.** An alert is not an answer or an authorization.
+Independently customize visual and audible cues for
+approval required, a question and finished work, with haptics where supported. **Implementation authorized by the operator on 2026-11-01.** An alert is not an answer or an authorization.
 
-## Current code reality
+## Baseline before implementation
 
 Watch has approval/question attention, haptics, spoken-answer settings and background/push paths;
 its primary activity rail remains tool-oriented. Shared UIC has host-controlled avatars and
@@ -23,7 +22,7 @@ attention/session surfaces. No complete three-category per-modality preference c
 verified. Root ADR 0041 requires explicit notification effects for triggered flows and auditable
 delivery; completion must not acquire a new hidden post-flow notifier.
 
-## Proposed scope and outcome
+## Authorized scope and outcome
 
 - Separate Approval / Question / Finished preferences, with independent visual, sound and supported
   haptic choices. Distinguish a short sound from speaking the full question/answer. Quiet operation
@@ -45,17 +44,17 @@ delivery; completion must not acquire a new hidden post-flow notifier.
 
 ## Acceptance criteria
 
-- [ ] Operator confirms desired categories/defaults and first host.
-- [ ] Each category's visual/audio/haptic preference is independently testable where supported.
-- [ ] Asking, approval and completion have intelligible distinct feedback without color/sound alone.
-- [ ] Muting/dismissing/reading never answers, approves, expires or completes work.
+- [x] Operator authorized on 2026-11-01: desired categories/defaults and first host.
+- [x] Each category's visual/audio/haptic preference is independently testable where supported.
+- [x] Asking, approval and completion have intelligible distinct feedback without color/sound alone.
+- [x] Muting/dismissing/reading never answers, approves, expires or completes work.
 - [ ] Reconnect/history/revisions deduplicate app alerts; stale OS/push arrivals revalidate against
       resolved state and cannot resurrect a question. Document platform cancellation limits.
-- [ ] Foreground and authorized background delivery obey ADR 0041 and existing channel policy.
+- [x] Foreground and authorized background delivery obey ADR 0041 and existing channel policy.
 
 ## Testing
 
-After confirmation: `python -m pytest abstractgateway/tests/test_events_stream_waits.py abstractgateway/tests/test_automations_attention.py abstractgateway/tests/test_run_after.py`.
+Validation: `python -m pytest abstractgateway/tests/test_events_stream_waits.py abstractgateway/tests/test_automations_attention.py abstractgateway/tests/test_run_after.py`.
 Add a three-category modality matrix through the chosen UI, muted/speech-overlap/expired/offline
 fixtures, preference persistence and dedup assertions. Watch OS delivery checks belong to 1095.
 
@@ -63,4 +62,19 @@ fixtures, preference persistence and dedup assertions. Watch OS delivery checks 
 
 Requires question identity/state from 1093 and stable conversation/outcome identity from 1088.
 Coordinate existing attention/push work; no general push rewrite or blanket completion broadcaster.
-Governing ADRs 0039/0041/0043; proposed 0044/0045 do not relax permission/delivery rules.
+Governing ADRs 0039/0041/0043; proposed 0044 and accepted 0045/0046 do not relax permission/delivery rules.
+
+## Authorization and implementation tracking
+
+The operator authorized development on 2026-11-01 after root checkpoint `30bcc40`. Earlier
+confirmation gates are discharged for this scope. Preserve the existing view and add a second
+view for agent and entity work. Shared mission/tests/ownership: [implementation record](../../evidence/1088/implementation.md).
+No package release or deployment is implied.
+
+## Delivery checkpoint — 2026-11-01
+
+Development is authorized and underway; no further implementation confirmation is pending.
+See the [shared implementation/test record](../../evidence/1088/implementation.md) and
+[public conversation ADR0046](../../../adr/0046-optional-public-conversation-view.md).
+Default chat/technical views remain available. Physical Watch and human usability validation,
+and quantitative backend KV/memory comparisons, remain separate from automated/source delivery.

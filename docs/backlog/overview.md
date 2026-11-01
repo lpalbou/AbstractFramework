@@ -6,8 +6,8 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files recounted on 2026-10-31 after rendering/context completion, session-read completion 1087,
-and confirmation-gated avatar-conversation revision/intake 1088–1095:
+On-disk item files recounted on 2026-11-01 after rendering/context completion, session-read completion 1087,
+and authorized avatar-conversation promotion 1088/1089/1092–1095:
 recursive lifecycle Markdown files, excluding README/overview/template and evidence
 files. Counts are files, not unique IDs; legacy duplicates remain tracked by [0889](planned/0889_normalize_the_legacy_root_backlog.md).
 The prior overview included four governance evidence receipts as planned items; those are now
@@ -15,9 +15,9 @@ excluded consistently. The figures below are the current item-file inventory.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 186 | Rendering/context 1081/1082 completed; future composable activity contract 1083 remains planned. |
-| Proposed | 84 | Includes eight confirmation-gated conversation/evidence proposals 1088–1095; includes Avatar release prerequisites 1079. |
-| Completed | 295 | Includes 1087 shared session reads, AbstractAvatar 1078, voice repair 1080, rendering 1081 and contextual interaction 1082. |
+| Planned | 190 | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
+| Proposed | 78 | Only 1090 knowledge and 1091 broad audit remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Completed | 297 | Includes conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 2 | Existing deprecated records. |
 | Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
@@ -25,26 +25,20 @@ Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis
 
 ## Next Recommended Work
 
-**2026-10-31 avatar conversation — revised proposals awaiting explicit user confirmation:**
-the [roadmap](proposed/accumulated-evidence/README.md) now makes the first useful delivery
-[1088 full-screen avatar/subtitles](proposed/accumulated-evidence/1088_readable_accumulated_observations_for_avatar_surfaces.md)
-+ [1089 authored public brèves/local pilot](proposed/accumulated-evidence/1089_optional_findings_deltas_and_local_kv_evaluation.md)
-+ [1092 live replies](proposed/accumulated-evidence/1092_reply_to_breves_during_active_work.md).
-Scroll to history/final; keep technical mode separate. Follow with
-[1093 explicit questions and clarification deadlines](proposed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md),
-[1094 configurable approval/question/completion cues](proposed/accumulated-evidence/1094_customizable_approval_question_and_completion_cues.md),
-and [1095 Watch adoption/user validation](proposed/accumulated-evidence/1095_watch_conversation_adoption_and_user_validation.md).
-Essential questions wait; clarifications may wait 2–5 minutes with a declared safe fallback.
-[Proposed ADR 0045](../adr/0045-conversational-questions-and-clarification-deadlines.md) records the
-durable question policy; no permission by silence. All items remain proposed `decision-gate`
-records. This supersedes passive tool cards as the first product milestone.
-[1090 optional session knowledge](proposed/accumulated-evidence/1090_session_evidence_collections_and_optional_knowledge_projection.md)
-is deferred and [1091 warning/retrieval audit](proposed/accumulated-evidence/1091_tool_observation_preview_warning_and_retrieval_audit.md)
-remains separately gated. The [exact-run and council record](evidence/1088/README.md) is retained;
-no graph, new scheduler or framework-wide refactor is required for the first experience.
-The supplied Koine PDF was copied into AbstractSemantics and recorded as
-[Semantics 0004](../../abstractsemantics/docs/backlog/proposed/0004_review_koine_general_vocabulary_and_modeling_contract.md),
-also awaiting confirmation before review/adoption. No runtime/UI implementation has begun.
+**2026-11-01 optional avatar conversation — implemented and locally validated:**
+[1092 live participation](completed/accumulated-evidence/1092_reply_to_breves_during_active_work.md)
+and [1093 durable questions](completed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md)
+are completed. Code/Assistant web, Entity driver/Flow and Watch have a second public view;
+ordinary chat and technical views remain the default. The [delivery receipt](evidence/1088/delivery.md)
+records real local-model correction, browser/native tests and limitations.
+[1088/1089/1094/1095](planned/accumulated-evidence/README.md) retain manual accessibility,
+quantitative KV and physical Watch/human validation. The [roadmap](proposed/accumulated-evidence/README.md)
+distinguishes source delivery from these checks. ADRs [0045](../adr/0045-conversational-questions-and-clarification-deadlines.md)
+and [0046](../adr/0046-optional-public-conversation-view.md) are accepted; 0044 remains proposed.
+[1090 optional structured knowledge](proposed/accumulated-evidence/1090_session_evidence_collections_and_optional_knowledge_projection.md)
+and [1091 broad warning/retrieval audit](proposed/accumulated-evidence/1091_tool_observation_preview_warning_and_retrieval_audit.md)
+remain separately gated. The [Koine PDF intake](../../abstractsemantics/docs/backlog/proposed/0004_review_koine_general_vocabulary_and_modeling_contract.md)
+is preserved; review/adoption is unstarted. No package publication or production restart.
 
 [1087 cross-device session read receipts](completed/1087_cross_device_session_read_receipts.md)
 is completed: Gateway-owned immutable reads synchronize Code/Assistant web and updated Apple
@@ -611,6 +605,8 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 1093 | [1093 — Question state and durable clarification deadlines](completed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md) | 2026-11-01 | Created 2026-10-31; moved through authorized planned/ from proposed/. Source, real-model and browser/native validation; [delivery receipt](evidence/1088/delivery.md). Physical/KV validation stays separate. |
+| 1092 | [1092 — Reply to brèves during active work](completed/accumulated-evidence/1092_reply_to_breves_during_active_work.md) | 2026-11-01 | Created 2026-10-31; moved through authorized planned/ from proposed/. Source, real-model and browser/native validation; [delivery receipt](evidence/1088/delivery.md). Physical/KV validation stays separate. |
 | 1082 | [Contextual selection and explicit Code steering](completed/1082_contextual_content_selection_and_agent_steering.md) | 2026-10-31 | Created 2026-10-31; moved from `planned/1082_contextual_content_selection_and_agent_steering.md`. UTF-8 source geometry, click/drag/table/code highlight, responsive keyboard actions, preserved draft and explicit normal Send. Full local TUI/Code checks and independent review pass; unreleased. [Evidence](evidence/1082/README.md). |
 | 1081 | [Avatar rendering fidelity and platform quality](completed/1081_avatar_rendering_fidelity_and_platform_quality.md) | 2026-10-31 | Created 2026-10-31; moved from `planned/1081_avatar_rendering_fidelity_and_platform_quality.md`. Five Watch reference procedures, shared RGBA materials, quality tiers, cached terminal raster; native/Wasm/browser/Qt evidence and independent approval. All 569 Apple files unchanged; unreleased. [Evidence](evidence/1081/README.md). |
 | 1055 | [Release wave 2026-10-27: voice library, replay, memory graph, UI primitives](completed/1055_release_wave_2026_10_27_voice_library_replay_memory.md) | 2026-10-28 | Moved from `planned/`. Root 0.11.15 pins abstractcore 2.31.0, AbstractRuntime 0.15.0, abstractagent 0.4.0, abstractgateway 0.17.0, AbstractMemory 0.4.0 (one-way vector/graph migration), abstractvoice 0.19.2, abstractassistant 0.15.0, abstractskill 0.3.3; npm Code 0.12.0, Observer 0.9.0, Entity 0.8.0, Continuum 0.7.1. Open: `@abstractframework/note` 0.2.0 npm publish failed; Flow 0.11.0 and the abstractcode 0.11.0 crate unreleased. |
@@ -798,3 +794,5 @@ Scan of 2026-09-26 (after the release, 0921):
 - New backlog item filenames should use `NNNN_<slug>.md`; date-prefixed legacy files should not be copied for new work.
 - Run the [recurrent passes](recurrent/README.md) after every release wave; the `abstract-release`
   process expects a backlog trace (release record in `completed/`, follow-ups as items).
+
+- 2026-11-01: authorized 1088/1089/1092–1095; completed 1092/1093 after source, real-model, browser/native checks and independent adversary. Four planned validation items remain; 1090/1091 proposals unchanged. Counts planned 190/proposed 78/completed 297.

@@ -1,6 +1,7 @@
 # Conversational questions and clarification deadlines
 
-Status: Proposed — awaits operator confirmation; no implementation policy is adopted yet.
+Status: Accepted (operator authorization 2026-11-01). Implementation is tracked separately; existing
+ASK_USER callers remain compatible until the new optional question policy is requested.
 
 ## Context
 
@@ -15,7 +16,7 @@ A timer in a browser would fail across restarts, multiple devices and offline pe
 
 ## Decision
 
-The proposed contract is:
+The approved opt-in contract is:
 
 1. Distinguish conversational questions, tool/action approvals and ordinary nonblocking brèves.
    Asking/awaiting an answer is an explicit host-owned state, distinct from microphone listening.
@@ -48,10 +49,11 @@ The first experience needs no KG and can preserve legacy avatar poses with a hos
 
 ## Enforcement
 
-If adopted, reject client-only TTL execution, implicit permission-by-silence, indefinite questions
+Reject client-only TTL execution, implicit permission-by-silence, indefinite questions
 silently given deadlines, and read/dismiss actions treated as answers. Review any public wire
 fields before their first durable write. Reuse existing per-run locks and notification authority.
-Keep this ADR proposed until the operator confirms it; backlog descriptions alone cannot adopt it.
+Operator confirmation was given on 2026-11-01. Completion requires implementation and validation;
+acceptance of this contract does not assert that every caller already conforms.
 
 ## Validation
 
@@ -62,13 +64,14 @@ what will happen without a reply and how to change it later.
 
 ## Backlog links
 
-- [1093 question behavior](../backlog/proposed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md).
-- [1092 live replies](../backlog/proposed/accumulated-evidence/1092_reply_to_breves_during_active_work.md).
-- [1094 cues](../backlog/proposed/accumulated-evidence/1094_customizable_approval_question_and_completion_cues.md).
-- [1095 Watch adoption](../backlog/proposed/accumulated-evidence/1095_watch_conversation_adoption_and_user_validation.md).
+- [1093 question behavior](../backlog/completed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md).
+- [1092 live replies](../backlog/completed/accumulated-evidence/1092_reply_to_breves_during_active_work.md).
+- [1094 cues](../backlog/planned/accumulated-evidence/1094_customizable_approval_question_and_completion_cues.md).
+- [1095 Watch adoption](../backlog/planned/accumulated-evidence/1095_watch_conversation_adoption_and_user_validation.md).
 
 ## Related
 
 Root ADRs 0002 (effects), 0027 (explicit timeouts), 0041 (explicit notification effects),
 0043 (readable labels) and proposed 0044 (host-owned activity and expression).
-Code verification: 2026-10-31, current source tree; no running deployment behavior inferred.
+Code verification: 2026-11-01; implementation and tests are recorded in the completed 1093 card.
+Physical-device/user validation remains in 1095; no running production deployment inferred.

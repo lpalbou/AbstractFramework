@@ -1,8 +1,8 @@
 # Avatar conversation: subtitles, questions and participation
 
-Status: proposed. **Every item requires explicit operator confirmation before implementation.**
-`decision-gate` labels prevent these proposals becoming accidental execution commitments.
-Planning, code investigation and the Koine document intake were authorized; product work is not.
+Status: mixed completed/planned/proposed. **The operator authorized development of 1088/1089/1092–1095
+on 2026-11-01 after checkpoint `30bcc40`.** Live participation 1092 and questions 1093 are completed; 1088/1089/1094/1095 remain planned for their residual validation. 1090 structured knowledge
+and 1091 broad audit remain separately proposed. No package publication or deployment is implied.
 
 ## Experience and first delivery
 
@@ -21,29 +21,32 @@ adopts the same behavior afterward.
 
 ## Roadmap and estimates
 
-All estimates are person-days for one developer after confirmation, including focused validation.
+All estimates are person-days for one developer after authorization, including focused validation.
 They are planning ranges, not calendar commitments; publishing/store approval is excluded.
 Dependency order is explicit so the early experience can ship without every later capability.
 
-| Task | Description | Dependencies | Expected benefit | Status | Effort |
+| Task | Description | Dependencies | Expected benefit | Status | ETA / remaining work |
 |---|---|---|---|---|---|
-| [1088 avatar/subtitles](1088_readable_accumulated_observations_for_avatar_surfaces.md) | Dominant avatar, 2–3 subtitle lines, scrollable conversation/final, separate technical mode | Existing avatar/host; 1089 for meaningful messages | Calm, readable primary view | Proposed; confirmation required | 1–2 days |
-| [1089 authored brèves](1089_optional_findings_deltas_and_local_kv_evaluation.md) | Public discoveries/choices/reasons through ordinary continuations; one local pilot | Existing actor; pair with 1088 | Understand what is unfolding and why, with low inference overhead | Proposed; confirmation required | 2–4 days |
-| [1092 live participation](1092_reply_to_breves_during_active_work.md) | Speak/type while working; contextual replies and actual change of course | 1088/1089; existing guidance | First complete collaborative loop | Proposed; confirmation required | 2–3 days |
-| [1093 questions](1093_question_state_and_durable_clarification_deadlines.md) | Explicit asking/waiting state; essential indefinite waits, timed clarification and declared fallback | Existing waits/runner, 1092; proposed ADR 0045 review | Ask for missing details without either blocking forever or guessing silently | Proposed; confirmation required | 4–6 days |
-| [1094 cues](1094_customizable_approval_question_and_completion_cues.md) | Separate visual/audio/haptic preferences for approval, question and completion | Stable identities, 1093, current notification policy | Notice what needs attention in a personally comfortable way | Proposed; confirmation required | 1–2 days |
-| [1095 Watch adoption](1095_watch_conversation_adoption_and_user_validation.md) | Native subtitle/reply/question/cue integration and real-device/user checks | Working first-host experience, 1093/1094 | Same conversation on the wrist | Proposed; confirmation required | 3–5 days |
-| [1090 optional structured knowledge](1090_session_evidence_collections_and_optional_knowledge_projection.md) | Selected triples, session collection/view and optional Note adapter | Proven value from 1089; Memory facade/vocabulary review | Reusable/queryable accumulated knowledge | Deferred proposal; separate confirmation | 3–5 days, re-estimate after pilot |
+| [1088 avatar/subtitles](../../planned/accumulated-evidence/1088_readable_accumulated_observations_for_avatar_surfaces.md) | Optional dominant avatar, 2–3 subtitle lines, public history/final; original view preserved | Shared UIC; existing hosts | Understand progress in ordinary language | Source implemented; web browser checks pass | Available in checkout; manual accessibility/usability remains |
+| [1089 authored brèves](../../planned/accumulated-evidence/1089_optional_findings_deltas_and_local_kv_evaluation.md) | Actor communicates through its ordinary continuation with durable provenance | Agent + Runtime/Gateway | Meaningful discoveries/choices without a per-tool extraction call | Implemented; real local GGUF correction pilot passed | Available; quantitative KV/token/memory comparison remains a separate 1–2 day validation estimate |
+| [1092 live participation](../../completed/accumulated-evidence/1092_reply_to_breves_during_active_work.md) | Typed/voice guidance, fixed public referent, durable original words and chronological history | 1088/1089; owned control routes | Correct the actual work while it unfolds | Completed; source and integration tested | Available from source after stack reload; no publication performed |
+| [1093 questions](../../completed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md) | Essential waits; 120–300s clarification with declared fallback and durable identity | Existing Runtime waits/runner; ADR0045 | Ask without silently guessing or treating silence as consent | Completed; deadline/restart/race/late-reply tests pass | Available from source; physical-device behavior checked under 1095 |
+| [1094 cues](../../planned/accumulated-evidence/1094_customizable_approval_question_and_completion_cues.md) | Independent foreground visual/audio/haptic preferences by category | Stable identities and existing notification policy | Notice questions, permission requests and completion comfortably | Implemented; web/simulator coverage | Physical sound/haptic/background checks need a device session |
+| [1095 Watch adoption](../../planned/accumulated-evidence/1095_watch_conversation_adoption_and_user_validation.md) | Native optional face, live replies, questions, safe durable history | Shared public semantics; existing Watch transport | Same conversation on the wrist | Source/simulator implementation; hardware/usability open | One device session plus one user session; no calendar date promised |
+| [1090 optional structured knowledge](1090_session_evidence_collections_and_optional_knowledge_projection.md) | Selected triples and optional Note/session collection adapter | Pilot value; Memory/vocabulary review | Reusable/queryable accumulated knowledge | Deferred proposal; separate confirmation | Original estimate 3–5 days; re-estimate before authorization |
 
-First end-to-end checkpoint (1088/1089/1092): **5–9 person-days**. Questions and cues add **5–8**;
-Watch adds **3–5**. Local-backend coverage beyond the first pilot is a later validation increment,
-not a requirement to claim untested MLX/HF/GGUF parity. Re-estimate after the first checkpoint.
+The original estimates were 5–9 person-days for the first conversation loop, 5–8 for questions/cues,
+and 3–5 for Watch adoption. Source delivery and automated validation are recorded separately from
+physical hardware, human usability, package publication and performance measurement. See the
+[implementation/test record](../../evidence/1088/implementation.md) and
+[real-model public evidence](../../evidence/1088/local-model.json). No MLX/HF/GGUF-wide cache claim
+is inferred from one GGUF model or stable request-prefix tests.
 
 [1091 warning/full-output audit](1091_tool_observation_preview_warning_and_retrieval_audit.md)
 remains separately confirmation-gated and coordinates existing 0961. Preserve warnings/evidence
 while building this view; a broad audit is not required to create the first prototype.
 
-## Question behavior to confirm
+## Authorized question behavior
 
 | Situation | What happens |
 |---|---|
@@ -75,7 +78,7 @@ No current deployment or live user usability has been validated by this planning
 
 - Root ADRs 0007/0009/0026/0027/0041/0043 apply. Proposed 0044 preserves renderer/host ownership;
   [proposed 0045](../../../adr/0045-conversational-questions-and-clarification-deadlines.md)
-  records the question/deadline contract, pending confirmation.
+  records the approved question/deadline contract.
 - Planned 1083 now explicitly includes question/awaiting-answer purpose. Completed 1082 provides
   source-aware interaction; proposed 1086 covers custom preview geometry.
 - Memory ADR 0003 and Runtime ADR 0011 own any later graph/provenance integration.
@@ -83,3 +86,9 @@ No current deployment or live user usability has been validated by this planning
   stays separate and does not block the conversation experience.
 - Do not encode a permanent new wire format, pose enum or vocabulary without its contract review.
 - Hub is unavailable (`[Errno 61] Connection refused`); no thread/mirror receipt was fabricated.
+
+## Implementation
+
+[Shared mission, contracts and test scenarios](../../evidence/1088/implementation.md) preserves the
+goal across context changes. The first delivery must support both agents and entities without
+replacing existing chat/technical interfaces. Independent adversarial review is required.
