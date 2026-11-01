@@ -101,3 +101,9 @@ Follow-up source delivery: actual pending questions/approvals take priority in t
 view; AbstractUIC exposes an optional rounded multiline composer, selected by Code's Avatar
 mode. Desktop/short-window/phone browser checks and screenshots are in the
 [delivery record](../../evidence/1088/delivery.md#2026-11-01-follow-up-visible-requests-and-compact-composer).
+
+The operator’s subsequent review rejected reusing the technical approval panel in the
+public view. Implemented ordinary next-action/target language, labeled decision icons
+and a same-request actor-authored public reason, with a separate detailed-review switch.
+Missing reasons remain explicit; unknown or data-sending website requests require
+detailed review. See the [public permission correction and validation](../../evidence/1088/delivery.md#public-permission-language--2026-11-01).

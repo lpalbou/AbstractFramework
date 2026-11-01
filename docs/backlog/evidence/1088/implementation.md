@@ -201,3 +201,25 @@ Playwright as explicitly reported fallback when live artifacts are ready.
 - Final screenshots and API notes are in delivery.md. Remaining manual/physical/performance
   work stays planned. No publication or production restart; only own disposable19081/19082
   test services were used.
+
+## Public permission correction — 2026-11-01
+
+- Preserve the goal: a second public conversation over the same authority, not a
+  technical tool panel moved beneath the avatar. Plain next action, actor-stated reason,
+  targets and labeled decision icons; detailed view keeps JSON/tools/standing policies.
+- Agent80cb719 binds only accepted same-cycle public_update to exact unchanged calls.
+  Runtime0f29e09 exposes approval_public_action for canonical and early host gates;
+  Gateway77a41223 preserves/narrows it through the Entity session gate. Five-field
+  public_action carries text/update_id/run_id/iteration/call_ids; never private reasoning.
+- UIC36210cd adds publicApprovalRequest and conversation panel variant, unknown review-only
+  behavior, safe GET/HEAD classification, exact context/private-fence guards and short-window
+  layout. Code4fdcd74 supplies public status text and technical-review switch; Assistant00d1904
+  and Entity0de365e use the same producer. Existing default technical panels stay available.
+- Full UIC suite, 96 selected Agent/Runtime checks, Gateway22, Code502, Assistant63,
+  Entity601 source tests pass. Built Code3tests + Assistant/Entity browser regressions pass.
+  Code geometry covers1280x800/1000x650/390x844 full reason/2URLs/controls. Independent
+  adversary APPROVED after HTTP send/mutation guard was fixed and real artifacts inspected.
+- Final screenshots, fixture scope and operating limits: delivery.md. Metadata is optional;
+  old requests show unavailable reason. New purpose authoring needs updated backend processes
+  and a new Avatar task. No extra inference, publication or production restart. Canonical hashes
+  match, own19181/19182 fixture services stopped, unrelated production stack preserved.

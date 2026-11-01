@@ -118,3 +118,57 @@ Canonical source and artifact hashes match all three consumers.
 This follow-up preserves the remaining manual accessibility, physical-device and
 quantitative performance validation listed above. No publication or production
 service restart was performed.
+
+## Public permission language — 2026-11-01
+
+The operator rejected a technical permission panel embedded in Avatar mode. The
+public request now presents an ordinary action question, “Why I’m asking”, concrete
+destinations, and labeled icons for Deny/Allow once. “Review details” opens the
+existing detailed conversation. Tool names, JSON and standing permission settings
+remain in that detailed view. Code’s public status strip also omits technical
+execution details and counters. The same public presenter is used in Assistant
+web and Entity; unknown requests require detailed review before approval.
+
+The reason is the actor’s explicit public update from the same ordinary continuation
+that proposed the batch. Agent binds its identity/text to unchanged proposed calls;
+Runtime validates that binding and narrows it to the actual approval subset. Gateway’s
+entity gate preserves the same contract. No extra inference is introduced. Nothing
+is derived from private thought, a tool description, or the latest unrelated brève.
+Missing reasons remain explicitly unavailable. Lineage does not prove the reason is
+true, the action is necessary, or execution has occurred.
+
+Known page-reading labels accept ordinary GET/HEAD requests. Requests with another
+method, custom headers/body or unsupported arguments require detailed review. This
+avoids describing a data-sending operation as merely reading a webpage. File writes
+state that they can replace contents. All decisions retain the existing exact wait
+target, authority, policy enforcement and retry/double-click guards.
+
+| Verification | Result |
+|---|---|
+| Agent/Runtime | 96 selected checks including persisted public update→actual approval wait→resume, stale/cross-run/private context rejection, batching/subsets and disabled-mode prefix compatibility; no extra inference |
+| Gateway entity gate | 22 checks, including bound reason projection/narrowing and denial without execution |
+| UIC | Full panel-chat suite and public-request Chrome harness: safe/unsupported requests, two pages, six-file batch, questions, no technical/private leakage, retry/inflight/single-use |
+| Code | 502 source tests; 3 built-browser tests covering real Gateway question/write approval plus an explicitly doubled two-page public explanation |
+| Assistant/Entity | 63/601 source tests, built browser regressions, host builds |
+| Independent adversary | Approved after inspecting actual Code screenshots at all three sizes, rerunning request checks and requiring the HTTP method/body/header classification fix |
+
+Geometry checks require the full reason, both URLs and the decision controls visible
+at 1280×800, 1000×650 and 390×844. Screenshot content below is a deterministic frontend
+fixture, not a claim that a live model authored that example. The separate backend
+integration exercises the real Agent→Runtime permission path with scripted actor replies.
+
+- [Desktop public request](code-avatar-public-request-desktop.png)
+- [Short-window public request](code-avatar-public-request-short.png)
+- [Phone public request](code-avatar-public-request-phone.png)
+
+Source checkpoints: Agent `80cb719`, Runtime `0f29e09`, Gateway `77a41223`,
+UIC `36210cd` (browser tests `9190118`/`9155207`), Code `4fdcd74` (browser tests
+`defcc37`), Assistant `00d1904`, Entity `0de365e`. Canonical source/artifact hashes
+match all three web consumers. Own disposable servers on 19181/19182 were stopped.
+
+Updated backend processes and a new Avatar task are required to author/bind new
+reasons; old pending requests cannot acquire them retrospectively. No production
+restart or publication occurred. Human/model-compliance, physical Watch and quantified
+cache/performance validation remain separate planned work. A transient disk-full test
+setup passed after removing only this task’s completed temporary fixtures; the machine
+still has very little free disk space.
