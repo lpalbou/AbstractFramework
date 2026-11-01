@@ -172,3 +172,25 @@ restart or publication occurred. Human/model-compliance, physical Watch and quan
 cache/performance validation remain separate planned work. A transient disk-full test
 setup passed after removing only this task’s completed temporary fixtures; the machine
 still has very little free disk space.
+
+## Managed local deployment — 2026-11-01
+
+At the operator’s explicit request, deployed the checked-out builds into the existing
+Gateway-managed app installation: Code0.13.3 on3003, Assistant web0.0.1 on3008, and
+Entity0.9.3 on3004. Local-preview receipts retain the source commits and tarball integrity;
+the old Code/Entity versions and replaced Assistant installation remain available for rollback.
+Backup state, packages and deployment manifest are in
+`untracked/avatar-redeploy-wo_ykuhh/` in this workspace. No registry publication occurred.
+
+Gracefully stopped and restarted the existing `ai.abstractframework.gateway` service
+using its existing launch configuration. The new process40447 serves the same runtime
+directory and editable Agent/Runtime/Gateway sources; no service was installed and no
+conversation/authentication/model configuration was changed. Enabled apps restarted under
+the gateway. The gateway health check is healthy; each app’s direct HTTP page and script
+are available, and the served script bytes match the fresh build with public request/purpose
+support. The gateway-mounted URLs retain their normal authentication requirement.
+Live managed Code also booted in a clean Chrome context with Avatar mode present and no
+JavaScript errors. Browser sign-in remains required; a new Avatar task authors new reasons.
+
+Usual Code addresses: `http://127.0.0.1:8080/apps/code/` and `http://127.0.0.1:3003/`.
+Hard refresh replaces cached frontend code. Free disk space at deployment was approximately95GiB.
