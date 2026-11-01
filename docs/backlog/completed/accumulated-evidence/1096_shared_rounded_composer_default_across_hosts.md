@@ -140,3 +140,24 @@ Residual follow-ups (not blockers), to triage into their repos' backlogs:
 - AbstractNote phone top bar: the account button is cut off at 390 px (pre-existing).
 - UIC browser check measures ≥36 px on a 390 px viewport without touch emulation, so the 44 px
   coarse-pointer rule is only covered by SSR/CSS checks.
+
+## Follow-up round and local deployment (2026-11-01 afternoon)
+
+Operator findings while using the live apps, all fixed at AbstractUIC level and committed:
+
+| Repository | Commits | What |
+|---|---|---|
+| abstractuic | `efb5d2d`, `71c2d9e` | docs assistant footer "Powered by <app>’s documentation."; no cue settings inside the avatar view; visual + audio cues both on by default |
+| abstractgateway | `e434d74f`, `310d972f` | islands bundle re-synced |
+| abstractcode | `d87bb1a`, `1df6d49` | docs drawer vendored from the shared component (`npm run sync:docs`) instead of the npm package |
+| abstractassistant | `b096341`, `c7418f2` | shared conversation + docs re-synced |
+| abstractentity | `307f260`, `7553dc8` | docs drawer vendored from the shared component; test pin updated |
+
+Managed local deployment (operator was reviewing the live apps): Code 0.13.3, Assistant web 0.0.1
+and Entity 0.9.3 reinstalled from the committed sources into `runtime/apps/<id>/<version>` with
+rollback copies under `untracked/composer-redeploy-151300/`, `-152625/` and `-152843/`; the
+`ai.abstractframework.gateway` service restarted (last pid 38253). Clean-Chrome smoke of the four live
+surfaces (Code, Assistant, Entity, Console): shared rounded composer present, no legacy composer, no
+cue panel, docs footer "Powered by", no JavaScript errors. Entity's docs drawer no longer depends on
+the npm package; the remaining npm-dependent repos (Flow, Note, Continuum, Observer) still wait for
+the publish.
