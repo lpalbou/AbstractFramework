@@ -27,7 +27,7 @@ behavior should be replicated across all thin clients / apps that shows sessions
 ### In scope
 
 - Gateway: `GET /automations` order (active by `last_activity_at`, then paused), `section`,
-  `last_activity_at`, `paused_automations`; the tray menus; a test pinning the session order.
+  `last_activity_at`, `paused_automations_count`; the tray menus; a test pinning the session order.
 - Clients: watch, iPhone, desktop Assistant, Assistant web, Observer, Code web and terminal, Entity
   (where they list automations or sessions): the served order, a folded Paused section with its
   count, Archived unchanged, today's view when the gateway serves no `section`.

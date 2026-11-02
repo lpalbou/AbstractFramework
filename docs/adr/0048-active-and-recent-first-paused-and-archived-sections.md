@@ -34,15 +34,21 @@ and archive hides, it never deletes (round 5, 2026-10-04: `Archived · N` footer
      broken by `automation_id`, descending, so the order is total and stable.
    - Every `AutomationSummary` (the listing and `GET /automations/{id}`) carries
      `section: "active" | "paused" | "archived"` and `last_activity_at`: the automation's last
-     change as its controller run recorded it (`updated_at`: an occurrence admitted or finished, a
-     pause or resume, a revision, an archive). It is defined once, in the gateway; widening it
-     later (attention, waits) changes no client.
-   - Every page carries `paused_automations` beside `archived_automations` (how many of the
-     caller's automations are paused and archived, whatever the filter), so a folded section can
-     show its count before its rows are read.
+     change as its controller run recorded it (`updated_at`). The unit is a controller tick: it
+     moves on every one (an occurrence admitted, retried or finished, a pause, resume, cancel,
+     steer or revision, an archive) and never on a read or a "seen" mark, which live outside the
+     controller. A future trigger that wakes its controller to check rather than on a real event
+     must be reviewed against this rule, or it would move its row on every check. The value is
+     defined once, in the gateway; widening it later (attention, waits) changes no client.
+   - Every page carries `paused_automations_count` and `archived_automations_count` (how many
+     of the caller's automations are paused and archived, whatever the filter), so a folded
+     section can show its count before its rows are read. The `_count` suffix keeps them apart
+     from the bundle route's `paused_automations`, a list of ids; `archived_automations` stays on
+     the listing as the same count for the clients that read it.
    - Archived automations stay their own listing (`archived_only=true`), in the same order.
    - The keyset cursor pages that same order. The key follows activity, so a row that changes
-     between two page reads can move; a client that reads several pages keeps one row per id.
+     between two page reads may be served twice or not at all in that walk; the next refresh
+     shows it. Clients refresh from the first page and never resume an old walk.
 3. **Sessions** (`GET /api/gateway/runs?root_only=true`): turns come most recently updated first,
    so a client folding rows by `session_id` lists the session with the latest activity first, and a
    new turn moves its session to the top. Archived sessions stay their own listing
@@ -63,8 +69,10 @@ and archive hides, it never deletes (round 5, 2026-10-04: `Archived · N` footer
   away, never lost; the rule lives in one gateway function and every client is a renderer of it.
 - Positive: the gateway answers a listing with one controller load per automation (it already
   loaded them all for the archived count) and projects only the page's rows.
-- Negative: the order is mutable, so keyset paging is exact only for a stable snapshot; a client
-  that pages dedupes by id. Cursors issued before this change (`auto1:`) are refused with 422
+- Negative: the order is mutable, so keyset paging is exact only for a stable snapshot: a row
+  that changes between two page reads may be served twice or not at all in that walk, and the
+  next refresh shows it. Clients refresh from the first page (keeping one row per id) and never
+  resume an old walk. Cursors issued before this change (`auto1:`) are refused with 422
   `invalid_request`; the client restarts from the first page.
 - Negative: an automation that completed or failed (it can never run again but nobody archived it)
   is drawn among the active rows, where its status pill says what it is. A separate "Ended"
@@ -78,7 +86,7 @@ and archive hides, it never deletes (round 5, 2026-10-04: `Archived · N` footer
   order asks the gateway for it.
 - The gateway's order lives only in `abstractgateway/automation_order.py` (`automation_section`,
   `order_key`, `ordered`, `page`); the tray and every in-repo consumer import it.
-- Search `section`, `paused_automations`, `last_activity_at` and `ADR 0048` to find the
+- Search `section`, `paused_automations_count`, `last_activity_at` and `ADR 0048` to find the
   enforcement points in each client.
 
 ## Validation
