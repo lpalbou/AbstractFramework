@@ -4,14 +4,11 @@ How work starts on its own, how the framework tells you when something needs you
 reaches every device you use: trigger connections, your event stream, notifications on the Mac,
 the watch and the iPhone, and what a flow may do once it ends.
 
-> **Availability: the next release, not yet published.** Everything on this page ships with
-> AbstractRuntime 0.12.0, AbstractGateway 0.16.0, AbstractFlow 0.11.0, AbstractObserver,
-> AbstractAssistant 0.15.0 (desktop) and 0.16.0 (iPhone and Apple Watch), and AbstractCode 0.11.0
-> (web 0.12.0);
-> those versions are built and tested locally and are not on PyPI or npm yet. The published
-> releases run the automations described in [Automations](automations.md): schedules (fixed
-> intervals, and daily, weekly or monthly rules in a time zone), new mail in your own mailbox and
-> **Run now**. The release order is in the [changelog](../CHANGELOG.md#unreleased).
+> **Availability.** Everything on this page needs AbstractRuntime 0.12.0, AbstractGateway 0.16.0,
+> AbstractFlow 0.11.0, AbstractAssistant 0.15.0 (desktop) and 0.16.0 (iPhone and Apple Watch,
+> pre-release through TestFlight), and AbstractCode 0.11.0 (web 0.12.0) or later: every
+> `abstractframework` release from 0.11.16 installs them (0.12.0 pins AbstractRuntime 0.16.0 and
+> AbstractGateway 0.19.0).
 
 The package pages hold the full references:
 

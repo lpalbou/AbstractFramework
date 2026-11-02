@@ -4,6 +4,79 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-02
+
+Pins the 2026-11-02 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.19.0**,
+**AbstractCore 2.32.0**, **AbstractRuntime 0.16.0**, **AbstractAgent 0.5.0**, **AbstractAssistant 0.17.0**,
+**AbstractSkill 0.3.4** and **AbstractVoice 0.19.5** (AbstractMemory 0.4.0, AbstractSemantics 0.0.5,
+AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers and the install
+manifest install gateway 0.19.0 and the npm apps **Flow 0.13.0**, **AbstractCode web 0.14.0**,
+**Observer 0.11.0**, **Continuum 0.8.0** and **Entity 0.10.0**, and build **abstractgateway-console 0.17.0** and
+**abstractcode 0.13.1** (crates.io). `CRATE_RELEASE_VERSIONS` also lists **abstractcore-console 0.8.1**,
+**abstracttui 0.7.1** and, new, **abstractavatar 0.1.0**. Container images: `ghcr.io/lpalbou/abstractgateway:0.19.0`
+and `ghcr.io/lpalbou/abstractcore-server:2.32.0`.
+
+### Added
+
+- **Decision models** (AbstractCore 2.32.0): text in, calibrated typed decisions out. `generate(text,
+  output="decision", questions=...)` answers `choice`, `noul` (the probability a statement is true) and `score`
+  questions with calibrated probabilities, over one abstraction: the Kev family, Lev and Laya locally (MLX,
+  transformers or GGUF), OpenJev-style checkpoints through the same engine, hosted Jev through the `typesafe`
+  provider and any System One-compatible host through `systemone`. `POST /v1/decisions` serves them from
+  `abstractcore serve` and from the gateway (also `POST /api/gateway/runs/{run_id}/decisions`), AbstractRuntime
+  0.16.0 runs a decision as a durable child run, and AbstractFlow 0.13.0 has a **Decision** node. The gateway's
+  model library and the terminal console list decision models.
+- **AbstractGateway 0.19.0** (it also ships the changes prepared as 0.18.0, which was not published): a fresh
+  gateway is set up from a browser on any machine with an admin password and the six-word setup code
+  (`abstractgateway claim --code`; the installer's summary prints it), and accounts sign in with a password or a
+  token; the models run in a supervised model host process on every OS; voice streams send keep-alive lines during
+  silence and record what they did in the audit log; dictation recordings stay out of conversation attachments;
+  shared read receipts for conversations (`/api/gateway/me/session-reads`); the redesigned Models library,
+  Resources page and tray menu; several self-contained gateway instances on one machine.
+- **AbstractAssistant 0.17.0**: an optional activity avatar in the desktop app
+  (`pip install "abstractassistant[avatar]"`), automations that open as the chat with a sectioned editor, tool
+  approvals written as sentences, Off / Ask / Auto tool settings and named session tool grants; conversations and
+  read marks stay synchronized across the desktop, web, iPhone and Apple Watch clients. Its web client (redesigned
+  around the voice orb, with the Avatar conversation view) is built from source and is not on npm yet. The iPhone
+  and Apple Watch app (pre-release through TestFlight) is delivered separately and stays at 0.16.0 in this release.
+- **The browser apps share one look** (AbstractUIC: ui-kit 0.9.12, panel-chat 0.7.0): the rounded multiline
+  composer, one account widget in the top bar, tool calls and approvals in words, and the Watch-style session and
+  automation cards. **AbstractCode web 0.14.0** and **AbstractEntity 0.10.0** add the optional **Avatar**
+  conversation view (public updates, corrections and question answers beside the chat; needs gateway 0.19.0);
+  AbstractCode web also gets compact settings, shared unread markers and session cards. **Observer 0.11.0** and
+  **Continuum 0.8.0** take the shared composer and account widget; the Observer, Entity and AbstractCode web no
+  longer read a conversation's existing messages aloud when it opens. **Flow 0.13.0** adds the Decision node, the Ask User question policy and the flow's
+  inputs on the Run window.
+- **AbstractAvatar 0.1.0**, a new package: one Rust generator of procedural activity avatars (44 designs, seven
+  activity states, audio level and gaze), published as the `abstractavatar` crate and a Python package, and
+  compiled to WebAssembly for the browser apps. **abstracttui 0.7.1** gains a default-off `avatar` feature over it,
+  plus host-owned chat components, live frame playback and a compact session card; the AbstractCode terminal
+  client (**abstractcode 0.13.1**) uses it for six companion designs and groups Tools, Skills and MCP under one
+  Tools menu.
+- Released alongside, not part of the profiles: **AbstractNote 0.3.0** (`abstractnote` on PyPI and
+  `@abstractframework/note` on npm; the web app follows runs through the replay view and has the Docs assistant,
+  the account widget and the shared composer), `abstractavatar` 0.1.0 on PyPI (the `avatar` extra of
+  AbstractAssistant), and `abstracttui-graph` / `abstracttui-mermaid` 0.6.0 and `abstractcamera` 0.2.1 (unchanged).
+  `NPM_RELEASE_VERSIONS` lists the apps the installers and the gateway's Apps page install, so it does not list
+  the notes app.
+
+### Upgrade notes
+
+- **A new gateway data folder starts unclaimed.** The first visit shows **Set up your gateway** (admin password +
+  six-word setup code) instead of the sign-in form; the one-time link printed on the gateway's machine still signs
+  you in without the code. A data folder that already has accounts keeps its sign-in form.
+- **The model host runs as a child process on every OS** (gateway 0.19.0); `abstractgateway serve --model-host
+  in-process` keeps the models in the gateway process.
+- **Engine installs are admin-only**; there is no per-user switch any more.
+- **Clients of the gateway's HTTP API** (your own apps): voice streams carry `keepalive` lines every 10 s of
+  silence, the replay view has new message kinds (`public_update`, `guidance`, `question_outcome`,
+  `retained_reply`) and recorded dictation is hidden from default artifact listings (`include_voice=true` shows
+  it). Ignore unknown line and message kinds.
+- **AbstractGateway 0.19.0 requires AbstractAgent 0.5.0**; mixing it with AbstractAgent 0.4.0 makes entity visits
+  ignore their conversation settings without an error. Install the matrix together (the profiles pin it).
+- **Apps on panel-chat 0.7.0** get the rounded multiline composer by default; `variant="legacy"`
+  (`composerVariant="legacy"` on `WorkflowChat`) keeps the flat layout.
+
 ### Fixed
 
 - **`install.sh --with-wheel PATH`: test a fix wheel without it being rolled back.** On the Linux test server,

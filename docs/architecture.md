@@ -197,6 +197,14 @@ readers believe it only for schema 1, a loopback URL and a file owned by the rea
 uninstaller deletes it when it names the uninstalled data directory. An explicit
 `--gateway-url` always wins.
 
+**Activity avatars** are drawn by one Rust generator, AbstractAvatar (44 procedural designs and
+seven activity states: ready, thinking, working, listening, speaking, waiting and error, rendered
+to RGBA pixels). The browser apps get it compiled to WebAssembly through the ui-kit
+(`ActivityAvatar`, the Avatar conversation view of the AbstractCode web client and AbstractEntity),
+the terminal clients through `abstracttui`'s `avatar` feature (crates.io), and the AbstractAssistant
+desktop app through the Python binding (`pip install "abstractassistant[avatar]"`). Each host only
+presents the frames and supplies the activity, time, audio level and gaze.
+
 The Models and Engines features are implemented once, in AbstractCore, and inherited by the
 gateway:
 
@@ -398,7 +406,7 @@ Contributors change the identity in one place; see
 
 ## Events, attention and push
 
-*Next release (AbstractRuntime 0.12.0, AbstractGateway 0.16.0; not yet published).* The runtime
+*AbstractRuntime 0.12.0 and AbstractGateway 0.16.0 and later.* The runtime
 owns trigger sources and connections (a mailbox, a feed, a webhook), the CloudEvents envelope a
 triggered run receives and the `schedule_run` wake; the gateway owns each person's event stream
 (`/api/gateway/me/events`), the attention model (what waits for you until it is seen), the push

@@ -10,23 +10,23 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.11.18"
+__version__ = "0.12.0"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.31.0",
-    "abstractruntime": "0.15.1",
-    "abstractagent": "0.4.0",
-    "abstractgateway": "0.17.2",
-    "abstractskill": "0.3.3",
+    "abstractcore": "2.32.0",
+    "abstractruntime": "0.16.0",
+    "abstractagent": "0.5.0",
+    "abstractgateway": "0.19.0",
+    "abstractskill": "0.3.4",
     "abstractmemory": "0.4.0",
     "abstractsemantics": "0.0.5",
-    "abstractvoice": "0.19.3",
+    "abstractvoice": "0.19.5",
     "abstractvision": "0.3.34",
     "abstractmusic": "0.1.17",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.16.5",
+    "abstractassistant": "0.17.0",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -45,23 +45,26 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.12.1",
-    "@abstractframework/code": "0.13.2",
-    "@abstractframework/observer": "0.10.2",
-    "@abstractframework/continuum": "0.7.5",
-    "@abstractframework/entity": "0.9.2",
+    "@abstractframework/flow": "0.13.0",
+    "@abstractframework/code": "0.14.0",
+    "@abstractframework/observer": "0.11.0",
+    "@abstractframework/continuum": "0.8.0",
+    "@abstractframework/entity": "0.10.0",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
 # or by the bootstrap scripts: the gateway console and abstractcode by default). The installers
 # never build `abstractcore-console` (0.7.1 decision): it is the console of a standalone
 # `abstractcore serve`, and the gateway's terminal console already carries its Models and
-# Engines screens; it is listed here as a release version only.
+# Engines screens; it is listed here as a release version only. `abstracttui` and `abstractavatar`
+# are the libraries these tools build on (`abstracttui`'s `avatar` feature resolves
+# `abstractavatar` from crates.io); they are release versions, not installed tools.
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
-    "abstractgateway-console": "0.16.0",
-    "abstractcore-console": "0.8.0",
-    "abstractcode": "0.12.0",
-    "abstracttui": "0.7.0",
+    "abstractgateway-console": "0.17.0",
+    "abstractcore-console": "0.8.1",
+    "abstractcode": "0.13.1",
+    "abstracttui": "0.7.1",
+    "abstractavatar": "0.1.0",
 }
 
 # The light profile installs plain `abstractcore` (no extra): AbstractCore's light setting already

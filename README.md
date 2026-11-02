@@ -13,6 +13,14 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
+**What's new in 0.12.0** ([CHANGELOG](CHANGELOG.md#0120---2026-11-02)): decision models in AbstractCore
+(`output="decision"`, `POST /v1/decisions`: calibrated typed answers from Kev, Lev, Laya, OpenJev-style
+checkpoints or hosted Jev), a Decision node in AbstractFlow, the Avatar conversation view in the AbstractCode
+web client and AbstractEntity, an optional activity avatar in the AbstractAssistant desktop app, AbstractAvatar as a new package (procedural activity avatars
+for terminal, native and browser apps), the shared composer and account widget across the browser apps, and
+AbstractGateway 0.19.0: a fresh gateway is set up from the browser with an admin password and a six-word
+setup code, models run in a supervised model host process on every OS, and voice streams send keep-alive lines.
+
 > **Prerequisites**: none for the one-line install below (it provisions Python and, optionally, Node.js). For a manual install: Python 3.10–3.13, Node.js 18+ for browser UIs, and an LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
 
 ---
@@ -180,7 +188,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.17.2` and `ghcr.io/lpalbou/abstractcore-server:2.31.0`.
+`ghcr.io/lpalbou/abstractgateway:0.19.0` and `ghcr.io/lpalbou/abstractcore-server:2.32.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -288,6 +296,7 @@ dialogs and touch-sized controls on phones.
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | the gateway console's **Apps** page (served at `/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | the gateway console's **Apps** page (served at `/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | the gateway console's **Apps** page (served at `/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` |
+| [AbstractNote](https://github.com/lpalbou/AbstractNote) | Notes on the gateway (alpha): capture text, files, photos and recordings, filed into a temporal knowledge graph you search by effort. Not part of the `abstractframework` profiles | `pip install "abstractnote[gateway]"` next to the gateway, and `npx @abstractframework/note --gateway-url <url>` |
 | **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (sidebar groups Accounts, Work, Models and System; the **Setup** button; one Accounts table of users and entities), terminal via `abstractgateway-console` (the same setup guide and screens, Network and Apps included, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | the gateway console's **Apps** page (served at `/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` |
@@ -334,7 +343,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.11.0)
+### Release matrix (abstractframework 0.12.0)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -343,34 +352,37 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.17.2 |
-| PyPI | `abstractassistant` | 0.16.5 |
-| PyPI | `abstractcore` | 2.31.0 |
-| PyPI | `AbstractRuntime` | 0.15.1 |
-| PyPI | `abstractagent` | 0.4.0 |
-| PyPI | `abstractskill` | 0.3.3 |
+| PyPI | `abstractgateway` | 0.19.0 |
+| PyPI | `abstractassistant` | 0.17.0 |
+| PyPI | `abstractcore` | 2.32.0 |
+| PyPI | `AbstractRuntime` | 0.16.0 |
+| PyPI | `abstractagent` | 0.5.0 |
+| PyPI | `abstractskill` | 0.3.4 |
 | PyPI | `AbstractMemory` | 0.4.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.19.3 |
+| PyPI | `abstractvoice` | 0.19.5 |
 | PyPI | `abstractvision` | 0.3.34 |
 | PyPI | `abstractmusic` | 0.1.17 |
 | PyPI | `abstract3d` | 0.3.2 |
-| npm | `@abstractframework/flow` | 0.12.1 |
-| npm | `@abstractframework/code` | 0.13.2 |
-| npm | `@abstractframework/observer` | 0.10.2 |
-| npm | `@abstractframework/continuum` | 0.7.5 |
-| npm | `@abstractframework/entity` | 0.9.2 |
-| crates.io | `abstractcode` | 0.12.0 |
-| crates.io | `abstractgateway-console` | 0.16.0 |
-| crates.io | `abstractcore-console` | 0.8.0 |
-| crates.io | `abstracttui` | 0.7.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.17.2 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.31.0 |
+| npm | `@abstractframework/flow` | 0.13.0 |
+| npm | `@abstractframework/code` | 0.14.0 |
+| npm | `@abstractframework/observer` | 0.11.0 |
+| npm | `@abstractframework/continuum` | 0.8.0 |
+| npm | `@abstractframework/entity` | 0.10.0 |
+| crates.io | `abstractcode` | 0.13.1 |
+| crates.io | `abstractgateway-console` | 0.17.0 |
+| crates.io | `abstractcore-console` | 0.8.1 |
+| crates.io | `abstracttui` | 0.7.1 |
+| crates.io | `abstractavatar` | 0.1.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.19.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.32.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
 not part of any profile installs separately: `pip install abstractcamera` (0.2.1). `abstractskill` (pinned above)
 comes with the gateway, which carries its curated skill shelf; install it on its own with
-`pip install abstractskill`.
+`pip install abstractskill`. AbstractNote (`abstractnote` 0.3.0 on PyPI, `@abstractframework/note` 0.3.0 on
+npm) and the Python binding of AbstractAvatar (`pip install "abstractassistant[avatar]"` adds `abstractavatar`
+0.1.0 for the desktop activity avatar) are released with this matrix and install separately.
 
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
 `abstractframework doctor`, and the generated installer manifest contract.
@@ -386,7 +398,7 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/getting-started.md](docs/getting-started.md) | Two entry points + first end-to-end run |
 | [docs/agent-sessions.md](docs/agent-sessions.md) | Default agent workflow, the conversation workspace and its protection, skills, live replies, the Assistant hand-over |
 | [docs/automations.md](docs/automations.md) | Automations: how they work (controller run, occurrences, independent vs growing context), creating and managing them from the Assistant, the Observer or a workflow, notifications, limits |
-| [docs/events-and-attention.md](docs/events-and-attention.md) | Next release (not yet published): trigger connections (mailboxes, feeds, webhooks), your event stream, push to the watch and the iPhone, the Flow library and After the run |
+| [docs/events-and-attention.md](docs/events-and-attention.md) | Trigger connections (mailboxes, feeds, webhooks), your event stream, push to the watch and the iPhone, the Flow library and After the run |
 | [docs/architecture.md](docs/architecture.md) | Component diagram, how a turn flows, the live-reply lane, app proxies, model eject, framework identity, durable execution primitives |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |

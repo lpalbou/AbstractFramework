@@ -198,6 +198,25 @@ for chunk in llm.generate("Write a poem.", stream=True):
     print(chunk.content or "", end="", flush=True)
 ```
 
+Decision models answer typed questions about a text with calibrated probabilities instead of
+generated prose: the Kev family, Lev and Laya run locally (MLX, transformers or GGUF), and hosted
+Jev through the `typesafe` provider. Download the model once, then ask:
+
+```python
+decider = create_llm("mlx", model="jaredpalmer/kev-4b")   # after: abstractcore models download mlx jaredpalmer/kev-4b
+result = decider.generate("Two charges on my card for one order.", output="decision", questions={
+    "department": {"type": "choice", "instructions": "Which team should handle this?",
+                   "criteria": {"billing": "Charges and payments", "shipping": "Delivery problems"}},
+    "escalate": {"type": "noul", "instructions": "Does this need urgent human attention?"},
+})
+result.decisions["department"].choice    # "billing"
+result.decisions["escalate"].noul        # the probability that the statement is true
+```
+
+The gateway serves the same decisions at `POST /v1/decisions`, and AbstractFlow has a Decision node.
+See [Decision models](https://github.com/lpalbou/AbstractCore/blob/main/docs/decision-models.md)
+(the base model download for MLX and the GGUF alternative are listed there).
+
 ---
 
 ## Gateway-first: durable runs + monitoring + scheduling
@@ -303,8 +322,8 @@ arrives**, **Email me the result** and the recipients the automation may email w
 and your agents get the email tools only when you switch **Agent email tools** on
 ([Email integration](guide/email-integration.md)).
 
-The next release (not yet published) adds feeds and webhooks as triggers, one event stream that
-every client follows, and push to the Assistant on your watch and iPhone: see
+Feeds and webhooks can start work as triggers too, one event stream tells every client what
+waits for you, and push reaches the Assistant on your watch and iPhone: see
 [Triggers, attention and push](events-and-attention.md).
 
 ---
@@ -406,6 +425,8 @@ assistant run --prompt "Summarize today's news"   # one turn in the terminal
 
 Each turn runs the gateway's default workflow for the Assistant, or the workflow you pick in
 Settings → Models → **Workflow**. See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
+`pip install "abstractassistant[avatar]"` adds an optional activity avatar beside the conversation
+(AbstractAvatar's procedural designs, following what the assistant is doing).
 
 On iPhone and Apple Watch, AbstractAssistant is one app (pre-release through TestFlight): the iPhone
 app carries the watch app, you sign in once on the iPhone with your gateway's address and an
@@ -419,7 +440,7 @@ and [for Apple Watch](https://github.com/lpalbou/AbstractAssistant/blob/main/wat
 ## Next steps
 
 - **[Agent sessions](agent-sessions.md)** — default agent workflow, workspace, skills, live replies
-- **[Triggers, attention and push](events-and-attention.md)** — feeds, webhooks, your event stream, push to the watch and the iPhone (next release)
+- **[Triggers, attention and push](events-and-attention.md)** — feeds, webhooks, your event stream, push to the watch and the iPhone
 - **[Architecture](architecture.md)** — the layered model (Core / Runtime / Agent / Gateway / Flow / Observer)
 - **[Configuration](configuration.md)** — where defaults live and how to configure them
 - **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)
