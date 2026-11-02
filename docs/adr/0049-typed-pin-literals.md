@@ -46,7 +46,14 @@ of the value.
 6. **Compatibility.** A flow saved by Flow 0.13.0 with such a value stored as text is converted
    when it is opened in the editor, with a notice naming the values; the returned document stays
    the flow as stored, so the flow shows unsaved changes until it is saved. A flow run without
-   being opened and saved again executes what it stored (the runtime does not convert).
+   being opened and saved again executes what it stored: the runtime does not convert (a second
+   resolver in Python would duplicate the editor's rule and the node templates, and drift). It
+   refuses instead: Compare meeting a number or true/false on one side and text on the other
+   (every operator), or an order between values Python cannot order, stops the run with an error
+   that names the node and pins and says "One side is a number and the other is text. Open the
+   flow in the editor and save it to store typed values." It never answers False silently.
+   true/false compares with numbers as Python's booleans do (`True == 1`, `False < 1`); equality
+   of any other pair is Python's.
 7. **Declared-type exceptions are explicit.** A node whose own setting changes what an input holds
    says so in the resolver: Wait Until's `duration` is text when the node waits for a timestamp.
 
@@ -59,7 +66,10 @@ executor of stored values.
 Negative: a typed value can change type when the wiring changes, and a value that cannot follow
 blocks the run until it is edited. Two typed values on an unwired Compare are both text, so
 `"10" > "9"` compares text; the tag says so. A flow published to a gateway keeps its stored text
-until it is opened and saved in the editor.
+until it is opened and saved in the editor, and its Compare on a number and a text fails the run
+until then. A Compare that ordered an unset value against a number (`None > 3`), which used to
+answer False, now fails the run too. A whole number beyond 2^53 typed on a number input stays text
+and is flagged (the browser cannot store it exactly).
 
 Neutral: the authoring assistant's `pin_defaults` go through the same store path and are converted
 or flagged like typed values. The node catalog marks shared-type pins `[type T]`.
@@ -83,16 +93,23 @@ or flagged like typed values. The node catalog marks shared-type pins `[type T]`
   Flow 0.13.0 fixture converts it to exactly the typed fixture, with the notice.
 - AbstractFlow `src/components/nodes/typedLiteral.test.tsx`: the card shows the tag and the
   problem line.
-- AbstractFlow `scripts/typed_literals_smoke.py` (CI smokes, real AbstractRuntime): the typed
-  fixture runs `5 == 5` and `10 > 9` as true; the 0.13.0 fixture runs as stored.
+- AbstractFlow `scripts/typed_literals_smoke.py` (CI smokes, AbstractRuntime from PyPI): the
+  typed fixture runs `5 == 5` and `10 > 9` as true.
+- AbstractRuntime `tests/test_visual_compare_typed_values.py` (same fixtures): the typed flow is
+  true; the 0.13.0 flow fails with the error naming `'Is five' (node same)`; number against text
+  is refused for all six operators, true/false against text too; same-type and Python equality
+  unchanged; unorderable pairs refused.
 - The shipped example and bundled flows load with no value converted and none flagged.
 
 ## Backlog links
 
 - Originating work: the 2026-11-02 operator ruling on Flow `any` inputs (open decision recorded in
   the 0.12.0 release wave), AbstractFlow PR `fix/typed-pin-literals`.
-- Follow-up: the runtime's Compare returns false when Python refuses a comparison (`10 > "9"`);
-  making that a visible run error is a separate runtime decision.
+- Runtime half: AbstractRuntime PR `fix/typed-pin-literals` (Compare refuses number against text
+  and unorderable pairs, naming the node). Follow-up: once that runtime is published, raise the
+  AbstractFlow CI floor and re-add the 0.13.0 fixture's loud failure to its smoke.
+- Optional follow-up: a one-shot command that re-types a gateway's stored flows with the editor's
+  own module (no second resolver).
 
 ## Related
 
