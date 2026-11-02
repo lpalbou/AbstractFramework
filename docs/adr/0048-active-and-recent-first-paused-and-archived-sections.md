@@ -25,7 +25,9 @@ and archive hides, it never deletes (round 5, 2026-10-04: `Archived · N` footer
 
 1. **The gateway owns the order and the grouping.** Lists are served already ordered, and each row
    says which section it belongs to. Clients render the order as served; they never re-sort by a
-   rule of their own and never infer a section from anything but the served fields.
+   rule of their own and never infer a section from anything but the served fields. A client that
+   merges pages or live updates into a list it holds may re-apply the served key
+   (`last_activity_at` for automations, `updated_at` for sessions), newest first, and nothing else.
 2. **Automations** (`GET /api/gateway/automations`, AbstractGateway `automation_order.py`):
    - Order: automations that are neither paused nor archived (status `active`, `completed` or
      `failed`) by `last_activity_at`, newest first; then paused automations the same way. Ties are
@@ -71,9 +73,9 @@ and archive hides, it never deletes (round 5, 2026-10-04: `Archived · N` footer
 
 ## Enforcement
 
-- Code review: a client list of sessions or automations that calls `sort`/`sorted` on the served
-  rows, or derives a section from `status`, is rejected; a client that needs another order asks the
-  gateway for it.
+- Code review: a client list of sessions or automations that sorts the served rows by anything but
+  the served key, or derives a section from `status`, is rejected; a client that needs another
+  order asks the gateway for it.
 - The gateway's order lives only in `abstractgateway/automation_order.py` (`automation_section`,
   `order_key`, `ordered`, `page`); the tray and every in-repo consumer import it.
 - Search `section`, `paused_automations`, `last_activity_at` and `ADR 0048` to find the
