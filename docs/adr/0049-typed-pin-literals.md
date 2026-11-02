@@ -108,6 +108,9 @@ or flagged like typed values. The node catalog marks shared-type pins `[type T]`
 - Runtime half: AbstractRuntime PR `fix/typed-pin-literals` (Compare refuses number against text
   and unorderable pairs, naming the node). Follow-up: once that runtime is published, raise the
   AbstractFlow CI floor and re-add the 0.13.0 fixture's loud failure to its smoke.
+- Follow-up: Filter Array (`data_array_filter` in AbstractRuntime `visual/builtins.py`) matches
+  items with plain `==`, so a number item against a text `value` (`5 == "5"`) is silently not
+  matched; it should take the same typed rule as Compare.
 - Optional follow-up: a one-shot command that re-types a gateway's stored flows with the editor's
   own module (no second resolver).
 
