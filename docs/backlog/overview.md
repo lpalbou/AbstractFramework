@@ -16,7 +16,7 @@ excluded consistently. The figures below are the current item-file inventory.
 | State | Files | Notes |
 |---|---|---|
 | Planned | 190 | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
-| Proposed | 80 | 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (rolling captions delivered on branch 2026-11-02; evidence rail remains, operator gate) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Proposed | 81 | 1100 keep-awake residuals (Linux, Windows, terminal console; 2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (rolling captions delivered on branch 2026-11-02; evidence rail remains, operator gate) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
 | Completed | 298 | Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 2 | Existing deprecated records. |
 | Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
@@ -412,6 +412,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 1100 | [Keep the machine awake for remote access: Linux, Windows and the terminal console](proposed/1100_keep_awake_for_remote_access_linux_windows_and_tui.md) | Proposed (2026-11-02) | macOS shipped in AbstractGateway `keep_awake.py` (IOKit idle-sleep assertion held by the gateway while remote access is on; operator ruling 2026-11-02). Residuals: logind `Inhibit("idle")` on Linux, `SetThreadExecutionState` on Windows, and the console-tui Stay awake row. |
 | 1098 | [Typed voice block in the replay projection](proposed/1098_typed_voice_block_in_replay_projection.md) | Proposed (deferred by the operator 2026-11-02) | One conversation projection for every client: a typed per-turn `voice` block (dictation ref, playback refs from the TTS child runs) instead of erased facts, dictation provenance validated at `runs/start`, one runtime predicate re-exported by the gateway, client guards retired. ADR 0047. Reports under `untracked/voice-stall/`. |
 | 1067 | [One-command server deployment](proposed/1067_one_command_server_deployment.md) | Proposed | `install.sh --server [--tailscale-funnel] [--gpu]`: the proven fresh-Linux sequence (installer, lingering, service enable, NVIDIA step, Tailscale + Funnel, gateway origins/proxy, first claim link) as one idempotent command that ends by printing the public address and the one-time sign-in link; docs/deploy-linux.md stays the manual baseline. |
 | 1000 | [Named per-user API keys for the OpenAI API](proposed/1000_named_per_user_openai_api_keys.md) | Proposed | Endpoint-only keys per account (label, last used, fingerprint, revoke one by one) instead of the gateway token as the `/v1` key; removes the need to keep the token in browser storage. Build decision: gate 1001. |
