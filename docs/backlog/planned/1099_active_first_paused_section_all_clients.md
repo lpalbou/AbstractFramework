@@ -39,11 +39,37 @@ behavior should be replicated across all thin clients / apps that shows sessions
 
 ## Acceptance criteria
 
-- [ ] AbstractGateway PR merged on all-green CI (order, ties, paging, pause/resume moving a row).
-- [ ] Each client: served order drawn as-is, Paused folded with its count, Archived unchanged,
-      older-gateway payload draws today's view; desktop and 400 px screenshots; watch in simulator.
+- [x] AbstractGateway PR merged on all-green CI (order, ties, paging, pause/resume moving a row).
+- [x] Each client: served order drawn as-is, Paused folded with the gateway's count, Archived after
+      it, older-gateway payload draws today's view; desktop and 400 px screenshots; watch in simulator.
 - [ ] Packages released by the coordinator after the operator's go.
 
 ## Receipts
 
-- Gateway PR: https://github.com/lpalbou/AbstractGateway/pull/90
+- ADR 0048: https://github.com/lpalbou/AbstractFramework/pull/35 (merge b0c56fb).
+- Gateway: https://github.com/lpalbou/AbstractGateway/pull/90 (merge 92454d12): `automation_order.py`,
+  `section`, `last_activity_at`, `paused_automations_count` / `archived_automations_count`, tray
+  `Paused (N)` submenus. Tests: `test_automations_list_order.py` (15), `test_sessions_list_order.py`
+  (1); reviewer's clean comparison 405 passed vs 389 on main, 0 failed. Scratch gateway over HTTP on a
+  copy of the operator's 16 automations: 5 active then 5 paused, paged walk (limit 3) = unpaged order.
+- AbstractUIC: https://github.com/lpalbou/AbstractUIC/pull/50 (merge 721150a): `AutomationSummary.section`,
+  `last_activity_at`, `AutomationsPage` counts (types only).
+- Observer: https://github.com/lpalbou/AbstractObserver/pull/17 (merge 0eec679): Paused disclosure,
+  served count; 690 passed.
+- Code web + terminal: https://github.com/lpalbou/AbstractCode/pull/34 (merge d79160d): `Paused · N`
+  footer / line, served count; web 503 passed, terminal 1256 passed, clippy clean.
+- Assistant watch + iPhone + desktop: https://github.com/lpalbou/AbstractAssistant/pull/41 (merge
+  fcafee6): `AutomationSections` (shared Swift client), Paused screens, desktop switcher
+  `Paused · N` / `Archived · N` sections (the filter finds folded rows; "Show archived" removed); Swift
+  238 + AssistantKit 231, desktop 1558 passed, watch and iPhone Paused UI tests pass.
+- Screenshots: `abstractassistant/untracked/w5-shots/` (watch, phone, desktop),
+  `abstractobserver/untracked/w5-shots/`, `abstractcode/untracked/w5-shots/` (web PNGs, terminal text).
+
+## Follow-ups
+
+- Observer and Code web read `section` / `paused_automations_count` through a local cast until their
+  next `@abstractframework/ui-kit` bump (types landed in AbstractUIC#50); drop the casts then.
+- Assistant web lists sessions only (already newest first by the served `updated_at`); its
+  automations surface is lane W10.
+- `PhoneUITests.testAutomationFailureShowsCauseAttemptsTimesAndExpandableActivity` fails on main
+  (`automation.run.occ-39` not found), unrelated to this item and outside CI's critical set.
