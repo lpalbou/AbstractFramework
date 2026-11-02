@@ -78,8 +78,8 @@ Assumptions taken for this round (state them back to the operator):
   the answer) after the person's latest message; accepted mid-run guidance does not start a new
   turn; the person's own words are not captions.
 - Visible lines: 4 on desktop, 3 below 480 px, 2 while a question or approval is open
-  (`--pc-avatar-caption-lines`). Older captions move up, dim and fade at the top edge; the area
-  scrolls (wheel, touch, keyboard) to reread the turn. Nothing is scheduled, so nothing cycles and
+  (`--pc-avatar-caption-lines`). Older captions move up and dim; an edge fades where text
+  continues; the area scrolls (wheel, touch, keyboard) to reread the whole turn. Nothing is scheduled, so nothing cycles and
   nothing needs pausing.
 - The final answer is one caption rendered once (never paginated); a long answer is shown from its
   first line and scrolls in place; the full exchange stays in the Conversation view and in
@@ -94,6 +94,12 @@ Assumptions taken for this round (state them back to the operator):
   in the panel-chat harness and in the three apps.
 - `conversationCaptions(messages)` in `conversation_model.ts` is pure and unit-tested; the
   component only renders it.
+- Adversarial review fixes (`untracked/council-2026-11-02/review-W2.md`, MERGE-AFTER-FIXES): the
+  caption area shows whole lines only (1.5em grid) and fades at an edge where text continues;
+  every caption of a turn is kept (the earlier 12-caption window was an unmarked bound); an open
+  question appears once, pinned above the captions (`pinnedRequest`); unchanged captions are
+  reused and their cards memoized; the reply-scope errors name the surviving control (Clear
+  reply context).
 - Coordinator rulings applied the same evening: the Assistant's in-view "Assistant settings" button
   is removed (Settings stays in the conversations sidebar, behind Open Conversations on a phone);
   the history beside the avatar uses plain labels (You, Update, Question, Answer via
