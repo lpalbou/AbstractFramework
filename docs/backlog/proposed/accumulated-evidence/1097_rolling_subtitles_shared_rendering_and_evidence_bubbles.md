@@ -3,7 +3,7 @@
 > Package: abstractuic, abstractcode, abstractassistant, abstractentity, abstractagent
 > Type: feature
 > Created: 2026-11-01
-> Status: Proposed
+> Status: Proposed (rolling captions delivered 2026-11-02; evidence rail remains, decision-gated)
 > Priority: P2
 > Labels: conversation, avatar, subtitles, evidence, decision-gate
 > Work-item id: abstractframework-1097
@@ -66,9 +66,48 @@ in that view is a setting or a control panel: no cue toggles, no technical count
 says (subtitles), what it has found (evidence bubbles), its questions and the way to answer. Keep
 this rule when designing the rolling captions and the evidence rail.
 
+## Progress
+
+2026-11-02, rolling captions and layout (operator approval the same evening to fix the Avatar view;
+council findings C1 and A8). Delivered on branch `feat/avatar-rolling-captions` in AbstractUIC
+(panel-chat), AbstractAssistant (web), AbstractCode (web) and AbstractEntity; not published.
+
+Assumptions taken for this round (state them back to the operator):
+
+- Captions are the CURRENT turn's public messages (public updates, questions, question outcomes,
+  the answer) after the person's latest message; accepted mid-run guidance does not start a new
+  turn; the person's own words are not captions.
+- Visible lines: 4 on desktop, 3 below 480 px, 2 while a question or approval is open
+  (`--pc-avatar-caption-lines`). Older captions move up, dim and fade at the top edge; the area
+  scrolls (wheel, touch, keyboard) to reread the turn. Nothing is scheduled, so nothing cycles and
+  nothing needs pausing.
+- The final answer is one caption rendered once (never paginated); a long answer is shown from its
+  first line and scrolls in place; the full exchange stays in the Conversation view and in
+  Conversation history. The completion cue is shown on the answer itself.
+- Every caption goes through the shared renderer: `ChatMessageCard` with the new
+  `variant: "caption"` (Markdown, links, media, files, structured results; no card chrome).
+- Removed: Previous / Next subtitle, Pause subtitles, Return to latest, hover/focus freezing, and
+  `conversationPages`. Kept: Conversation history (now shown in place of the captions, with a
+  small avatar), Reply to this, the host's Talk and read-aloud controls.
+- Layout: one column that fits its container above the composer; the avatar scales to the space
+  left; action targets are at least 44 px. Checked in Chrome at 1440 and 400 px, light and dark,
+  in the panel-chat harness and in the three apps.
+- `conversationCaptions(messages)` in `conversation_model.ts` is pure and unit-tested; the
+  component only renders it.
+
+## Remaining
+
+- The evidence rail (bubbles or cards of findings beside the avatar), which needs the typed
+  public-update vocabulary (1089 residual) and the operator decisions below.
+- Watch-like layout and a real local-model run producing at least 3 captions (the validation
+  expectation below; this round used deterministic fixtures and the gateway e2e fixture).
+- Operator questions raised by this round: the Assistant's in-view "Assistant settings" button
+  (kept; the design rule says settings live in the host's settings menu), and the history
+  panel's technical words ("Public update", raw source call ids under "Sources").
+
 ## Open decisions for the operator
 
-- How many caption lines on desktop vs phone vs Watch, and whether older captions fade or stay.
+- Caption lines: delivered as 4 desktop / 3 phone / 2 with a request, older captions fading; confirm or change (Watch still open).
 - Whether the evidence rail is on by default in Avatar mode or a toggle.
 - The typed-update vocabulary (evidence/finding/decision/question) versus waiting for the 1090
   discussion (pure semantic extraction vs AbstractNote vs AbstractMemory).
