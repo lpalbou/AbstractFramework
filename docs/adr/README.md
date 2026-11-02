@@ -72,6 +72,7 @@ The Abstract Framework is a multi-package ecosystem where architectural decision
 | 0045 | [Conversational Questions and Clarification Deadlines](0045-conversational-questions-and-clarification-deadlines.md) | Accepted | 2026-10-31 | Agent, Flow, Runtime, Gateway, UIC, Assistant | Essential questions wait; clarifications may expire with a declared safe fallback; durable identity and resolution; no consent by silence. |
 
 | 0046 | [Optional Public Conversation View](0046-optional-public-conversation-view.md) | Accepted | 2026-11-01 | Agent, Runtime, Gateway, UIC, Code, Assistant, Entity | Second public avatar/subtitle view, durable attributable replies, existing authority and technical view preserved; no mandatory graph. |
+| 0047 | [Voice Transport Is Never an Attachment](0047-voice-transport-is-never-an-attachment.md) | Accepted | 2026-11-02 | Gateway, Runtime, Assistant, Code, Observer, Entity | Spoken-question recordings and read-aloud audio are tagged transport (`voice_dictation`/`voice_playback`), hidden by every conversation projection and client, never by file name. |
 
 ### Package-Specific Decisions
 
