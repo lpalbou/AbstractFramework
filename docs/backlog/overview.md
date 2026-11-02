@@ -16,7 +16,7 @@ excluded consistently. The figures below are the current item-file inventory.
 | State | Files | Notes |
 |---|---|---|
 | Planned | 190 | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
-| Proposed | 81 | 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (rolling captions delivered on branch 2026-11-02; evidence rail remains, operator gate) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Proposed | 82 | 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (rolling captions delivered on branch 2026-11-02; evidence rail remains, operator gate) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
 | Completed | 298 | Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 2 | Existing deprecated records. |
 | Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
@@ -412,6 +412,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 1101 | [Keep the computer awake while the gateway runs on Linux and Windows](proposed/1101_keep_awake_while_the_gateway_runs_linux_windows.md) | Proposed (2026-11-02) | macOS ships in AbstractGateway PR #91 (idle-sleep assertion while `serve` runs). Linux logind idle inhibitor, Windows `SetThreadExecutionState`. |
 | 1100 | [Request logo permission from providers](proposed/1100_request_logo_permission_from_providers.md) | Proposed | Operator ruling 2026-11-02: logos only with permission, text badges meanwhile. Contacts, ready request text and acceptance for Anthropic, OVHcloud, Portkey, Ollama, DeepSeek, NVIDIA (and Google/Meta/Microsoft). |
 | 1098 | [Typed voice block in the replay projection](proposed/1098_typed_voice_block_in_replay_projection.md) | Proposed (deferred by the operator 2026-11-02) | One conversation projection for every client: a typed per-turn `voice` block (dictation ref, playback refs from the TTS child runs) instead of erased facts, dictation provenance validated at `runs/start`, one runtime predicate re-exported by the gateway, client guards retired. ADR 0047. Reports under `untracked/voice-stall/`. |
 | 1067 | [One-command server deployment](proposed/1067_one_command_server_deployment.md) | Proposed | `install.sh --server [--tailscale-funnel] [--gpu]`: the proven fresh-Linux sequence (installer, lingering, service enable, NVIDIA step, Tailscale + Funnel, gateway origins/proxy, first claim link) as one idempotent command that ends by printing the public address and the one-time sign-in link; docs/deploy-linux.md stays the manual baseline. |
