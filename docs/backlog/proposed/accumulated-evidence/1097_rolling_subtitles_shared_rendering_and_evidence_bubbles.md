@@ -94,6 +94,10 @@ Assumptions taken for this round (state them back to the operator):
   in the panel-chat harness and in the three apps.
 - `conversationCaptions(messages)` in `conversation_model.ts` is pure and unit-tested; the
   component only renders it.
+- Coordinator rulings applied the same evening: the Assistant's in-view "Assistant settings" button
+  is removed (Settings stays in the conversations sidebar, behind Open Conversations on a phone);
+  the history beside the avatar uses plain labels (You, Update, Question, Answer via
+  `conversationLabel`) and no longer lists raw source call ids (technical view only).
 
 ## Remaining
 
@@ -101,9 +105,9 @@ Assumptions taken for this round (state them back to the operator):
   public-update vocabulary (1089 residual) and the operator decisions below.
 - Watch-like layout and a real local-model run producing at least 3 captions (the validation
   expectation below; this round used deterministic fixtures and the gateway e2e fixture).
-- Operator questions raised by this round: the Assistant's in-view "Assistant settings" button
-  (kept; the design rule says settings live in the host's settings menu), and the history
-  panel's technical words ("Public update", raw source call ids under "Sources").
+- Follow-up for abstractgateway (no gateway change in this round): the console bundles embed
+  panel-chat's `panel_chat.css` (`console_islands.py`), so they carry the old Avatar view rules
+  until `console_islands_sync` runs at the next gateway release.
 
 ## Open decisions for the operator
 
