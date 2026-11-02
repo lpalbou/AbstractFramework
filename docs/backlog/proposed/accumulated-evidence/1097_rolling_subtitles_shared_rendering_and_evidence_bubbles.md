@@ -3,7 +3,7 @@
 > Package: abstractuic, abstractcode, abstractassistant, abstractentity, abstractagent
 > Type: feature
 > Created: 2026-11-01
-> Status: Proposed (rolling captions delivered 2026-11-02; evidence rail remains, decision-gated)
+> Status: Proposed (2026-11-03: rolling captions replaced by one live line + Findings panel on branches, unmerged)
 > Priority: P2
 > Labels: conversation, avatar, subtitles, evidence, decision-gate
 > Work-item id: abstractframework-1097
@@ -66,6 +66,48 @@ in that view is a setting or a control panel: no cue toggles, no technical count
 says (subtitles), what it has found (evidence bubbles), its questions and the way to answer. Keep
 this rule when designing the rolling captions and the evidence rail.
 
+## Operator direction, 2026-11-03 (supersedes the rolling captions)
+
+Operator, 2026-11-03 00:12, looking at the rolling captions: "whatever this is, this is horrible and
+not what i want. again, the apple watch assistant design is much closer. your subtitle things
+doesn't make any sense. the goal is to report evidences / things happening while they happen, and
+also to have another floating panel with the accumulated evidences/findings so far".
+
+Target, modelled on the Apple Watch Ask view (`abstractassistant/watch/apple/Sources/App/Ask/AskView.swift`:
+one live line under the orb, tap to read and reply, "Latest" to follow again):
+
+1. The avatar and ONE live line: the latest public update of the current turn, replaced in real
+   time, rendered with the shared message renderer. Clicking it holds it open with "Reply to this"
+   and "Latest". Questions and approvals stay pinned above. The answer appears once, as a message.
+   No subtitles, paging, pager controls, history pane or counters.
+2. A floating "Findings" panel that accumulates the findings reported during the conversation's
+   runs, newest last, each a compact card opening to its full text and the results it cited.
+   Beside the avatar on a wide view, a bottom sheet (Findings / Close) on a narrow one; no
+   findings, no panel.
+
+Rule (no ADR; recorded here): **a finding is typed by its producer, never inferred.** The model
+types each public update in its `<public_update>` block as `"kind": "finding"` (a fact or piece of
+evidence it established) or `"progress"` (what it is doing); the agent validates it
+(`invalid_kind`), persists it in the `public_update` event, and every reader passes it unchanged:
+replay view `update_kind`, entity visit state `update_kind`, panel-chat `PublicUpdate.kind`. An
+update without a kind is progress. No client derives a kind from text.
+
+Delivered 2026-11-03 on branches `feat/avatar-live-findings` (worker W11), not merged or published:
+
+- AbstractAgent: `kind` in the block, one instruction line, `invalid_kind`, event and cycle record.
+- AbstractRuntime: replay `public_update` messages carry `update_kind`; replayed tool-call rows keyed
+  by a runtime call id also carry the model's `call_id`, which `source_call_ids` cite (conformance
+  goldens regenerated, only that field added).
+- AbstractGateway: entity visit state `public_updates[].update_kind`.
+- AbstractUIC panel-chat: `conversationLive` (live line, answer, person key) and
+  `conversationFindings` (findings with their cited tool activities), both pure; the Avatar view
+  rebuilt around them; rolling captions, in-view history, `conversationLabel` and Clear reply
+  context removed. Checked with unit checks, an agent -> replay -> panel-chat seam script, and the
+  browser harness at 1440 and 400 px, light and dark (screenshots in
+  `untracked/w11-avatar/shots/`).
+
+Superseded below: the 2026-11-02 rolling-captions round (kept for history).
+
 ## Progress
 
 2026-11-02, rolling captions and layout (operator approval the same evening to fix the Avatar view;
@@ -107,6 +149,17 @@ Assumptions taken for this round (state them back to the operator):
 
 ## Remaining
 
+2026-11-03:
+
+- Merge the four PRs after review, then re-sync the shared bundle into AbstractAssistant web,
+  AbstractCode web and AbstractEntity (after the avatar gaze PR AbstractAssistant #45 merges), and
+  run `console_islands_sync` at the next gateway release.
+- A real local-model run producing progress updates and at least two findings, checked in the
+  Assistant's Avatar view (fixtures and the seam script only so far).
+- Watch: show findings the same way (the Watch decodes `public_update` but ignores `kind` today).
+
+Earlier (2026-11-02, superseded by the above where they conflict):
+
 - The evidence rail (bubbles or cards of findings beside the avatar), which needs the typed
   public-update vocabulary (1089 residual) and the operator decisions below.
 - Watch-like layout and a real local-model run producing at least 3 captions (the validation
@@ -117,10 +170,9 @@ Assumptions taken for this round (state them back to the operator):
 
 ## Open decisions for the operator
 
-- Caption lines: delivered as 4 desktop / 3 phone / 2 with a request, older captions fading; confirm or change (Watch still open).
-- Whether the evidence rail is on by default in Avatar mode or a toggle.
-- The typed-update vocabulary (evidence/finding/decision/question) versus waiting for the 1090
-  discussion (pure semantic extraction vs AbstractNote vs AbstractMemory).
+- Settled 2026-11-03: no caption lines (one live line); the Findings panel is shown whenever there
+  are findings (no toggle on a wide view); the vocabulary is `progress | finding` (questions keep
+  their own type; 1090 stays separate).
 
 ## Dependencies
 
@@ -129,5 +181,6 @@ Assumptions taken for this round (state them back to the operator):
 
 ## Validation expectations
 
-- Browser checks: rolling order, no cycling, Markdown/media rendering, request pinning, phone
-  geometry; a real local-model run producing ≥3 captions and ≥2 evidence bubbles.
+- Browser checks: one live line replaced in real time, hold / Reply to this / Latest, no cycling,
+  Markdown/media rendering, request pinning, Findings panel (floating) and sheet (phone),
+  geometry at 1440 and 400 px; a real local-model run producing progress updates and ≥2 findings.
