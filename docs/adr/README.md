@@ -73,6 +73,7 @@ The Abstract Framework is a multi-package ecosystem where architectural decision
 
 | 0046 | [Optional Public Conversation View](0046-optional-public-conversation-view.md) | Accepted | 2026-11-01 | Agent, Runtime, Gateway, UIC, Code, Assistant, Entity | Second public avatar/subtitle view, durable attributable replies, existing authority and technical view preserved; no mandatory graph. |
 | 0047 | [Voice Transport Is Never an Attachment](0047-voice-transport-is-never-an-attachment.md) | Accepted | 2026-11-02 | Gateway, Runtime, Assistant, Code, Observer, Entity | Spoken-question recordings and read-aloud audio are tagged transport (`voice_dictation`/`voice_playback`), hidden by every conversation projection and client, never by file name. |
+| 0048 | [Lists Show What Is Active and Recent First; Paused and Archived Live Behind Their Own Sections](0048-active-and-recent-first-paused-and-archived-sections.md) | Accepted | 2026-11-02 | Gateway, Assistant, UIC, Observer, Code, Entity | The gateway serves sessions and automations already ordered (active by last activity, then paused) with `section`, `last_activity_at` and `paused_automations_count`; clients draw active rows, a folded Paused section and Archived as served, never re-sorting; no `section` = today's view. |
 
 ### Package-Specific Decisions
 

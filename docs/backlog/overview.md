@@ -204,6 +204,7 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 1099 | [Active and recent first, a folded Paused section, in every app](planned/1099_active_first_paused_section_all_clients.md) | Planned (in progress 2026-11-02) | The gateway serves automations active-first by last activity, then paused, with `section`/`last_activity_at`/`paused_automations_count`; every app that lists automations or sessions draws that order with a folded Paused section. ADR 0048. Gateway PR #90. |
 | 1033 | [Hamlet voice routing and chat isolation](completed/1033_hamlet_voice_route_and_chat_isolation.md) | Completed 2026-10-18 | Router context leak fixed; corrected .15 deployed for this account, exact Hamlet WAV and ordinary-start selection verified. |
 | 1032 | [iPhone timed expandable activity and voice incident trace](completed/1032_iphone_timed_expandable_activity.md) | Completed 2026-10-18 | Expandable public results, chronology and elapsed times; normal 0.6.14 (22) installed. |
 | 1027 | [Restore media endpoint resolution and verify remote iPhone images](planned/1027_restore_media_endpoint_resolution_and_verify_remote_iphone_images.md) | Planned | P1. Runtime fix committed; published-version probe 6 red → 6 green, real remote voice passes. Release/deployment, exact selected dependency combination and live images/edit/reload proof remain open. |
