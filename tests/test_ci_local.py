@@ -247,14 +247,71 @@ def _job_id(job_id):
     return ci.Job("CI", "ci.yml", {}, job_id, {}, {}, f"ci/{job_id}")
 
 
-def test_light_tier_selects_the_changed_files_tests():
-    files = ["src/pkg/model_host.py", "src/pkg/cli.py", "tests/test_model_host.py", "tests/test_model_host_portable.py",
-             "tests/test_cli.py", "tests/test_other.py", "docs/a.md"]
-    assert ci.light_tests(["docs/a.md"], files) == []
-    assert ci.light_tests(["src/pkg/model_host.py"], files) == ["tests/test_model_host.py", "tests/test_model_host_portable.py"]
-    assert ci.light_tests(["tests/test_other.py"], files) == ["tests/test_other.py"]
-    assert ci.light_tests(["tests/conftest.py"], files) is None
-    assert ci.light_tests(["pyproject.toml"], files) is None
+def test_light_tier_selects_tests_that_change_name_or_import_the_changed_modules():
+    files = ["src/pkg/model_host.py", "src/pkg/cli.py", "src/pkg/util.py", "tests/test_model_host.py",
+             "tests/test_model_host_portable.py", "tests/test_entry.py", "tests/test_other.py", "tests/fakes.py",
+             "tests/test_uses_fakes.py", "docs/a.md"]
+    texts = {
+        "tests/test_entry.py": "from pkg import (\n    cli,\n    other,\n)\n",
+        "tests/test_other.py": "import pkg.util as u\n",
+        "tests/test_uses_fakes.py": "from fakes import FakeHost\n",
+    }
+    read = lambda path: texts.get(path, "")
+    keep, uncovered = ci.light_tests(["docs/a.md"], files, read)
+    assert keep == {} and uncovered == []
+    keep, uncovered = ci.light_tests(["src/pkg/model_host.py"], files, read)
+    assert sorted(keep) == ["tests/test_model_host.py", "tests/test_model_host_portable.py"]
+    assert keep["tests/test_model_host.py"] == ["named after src/pkg/model_host.py"]
+    keep, _ = ci.light_tests(["src/pkg/cli.py", "src/pkg/util.py"], files, read)
+    assert keep == {"tests/test_entry.py": ["imports pkg.cli"], "tests/test_other.py": ["imports pkg.util"]}
+    keep, _ = ci.light_tests(["tests/test_other.py"], files, read)
+    assert keep == {"tests/test_other.py": ["changed"]}
+    keep, uncovered = ci.light_tests(["tests/fakes.py"], files, read)
+    assert list(keep) == ["tests/test_uses_fakes.py"] and uncovered == []
+    assert ci.light_tests(["tests/conftest.py"], files, read) == (None, [])
+    assert ci.light_tests(["pyproject.toml"], files, read) == (None, [])
+
+
+def test_light_tier_fails_loud_when_a_changed_module_has_no_test():
+    files = ["src/pkg/lonely.py", "tests/test_x.py"]
+    keep, uncovered = ci.light_tests(["src/pkg/lonely.py"], files, lambda p: "import os\n")
+    assert keep == {} and uncovered == ["src/pkg/lonely.py"]
+
+
+def test_module_names_and_imports():
+    assert ci.module_name("src/abstractgateway/model_host.py") == "abstractgateway.model_host"
+    assert ci.module_name("abstractcore/providers/__init__.py") == "abstractcore.providers"
+    assert ci.imports_module("from abstractcore.providers.mlx import X\n", "abstractcore.providers.mlx")
+    assert not ci.imports_module("from abstractcore.providers.mlx_native import X\n", "abstractcore.providers.mlx")
+    assert ci.imports_module("    from abstractcore.providers import mlx, hf\n", "abstractcore.providers.mlx")
+
+
+def test_light_steps_narrow_npm_and_cargo(tmp_path):
+    import json
+
+    web = tmp_path / "web"
+    (web / "src").mkdir(parents=True)
+    (web / "src" / "a.ts").write_text("", encoding="utf-8")
+    (web / "package.json").write_text(json.dumps({"scripts": {"test": "vitest run"}}), encoding="utf-8")
+    script, note = ci.light_step("npm test", "web", web, ["web/src/a.ts", "README.md"])
+    assert script == f"npx vitest related --run {web / 'src' / 'a.ts'}" and "vitest related" in note
+    assert ci.light_step("npm test", "web", web, ["README.md"])[0] is None
+
+    mono = tmp_path / "mono"
+    mono.mkdir()
+    (mono / "package.json").write_text(json.dumps({"workspaces": ["ui-kit", "panel-chat"],
+                                                   "scripts": {"test": "npm --workspaces run test"}}), encoding="utf-8")
+    assert ci.light_step("npm test", ".", mono, ["ui-kit/src/x.ts"])[0] == "npm --workspace ui-kit --if-present run test"
+    assert ci.light_step("npm test", ".", mono, ["scripts/check.mjs"])[0] == "npm test"
+
+    ws = tmp_path / "rust"
+    (ws / "tui").mkdir(parents=True)
+    (ws / "Cargo.toml").write_text('[workspace]\nmembers = ["tui", "core"]\n', encoding="utf-8")
+    (ws / "tui" / "Cargo.toml").write_text('[package]\nname = "abstractcode"\n', encoding="utf-8")
+    assert ci.light_step("cargo test --workspace --locked", ".", ws, ["tui/src/main.rs"])[0] == \
+        "cargo test -p abstractcode --locked"
+    assert ci.light_step("cargo test --locked", "console-tui", tmp_path, ["src/x.py"])[0] is None
+    assert ci.light_step("python -m pytest", ".", tmp_path, ["a.py"]) == ("python -m pytest", "")
 
 
 def test_light_tier_keeps_one_python_per_matrix():

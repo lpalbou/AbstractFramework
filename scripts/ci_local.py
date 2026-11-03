@@ -855,19 +855,72 @@ LIGHT_DROPPED = "tier light: one Python per matrix"
 _WHOLE_SUITE = {"conftest.py", "pyproject.toml", "setup.py", "setup.cfg", "pytest.ini", "tox.ini"}
 
 
-def light_tests(changed: list[str], all_files: list[str]) -> list[str] | None:
-    """The test files a light run keeps: changed test files, and the tests named after a changed
-    module (`src/pkg/model_host.py` -> `tests/test_model_host*.py`). None = the whole suite (a test
-    configuration or the package's dependencies changed)."""
-    if any(Path(f).name in _WHOLE_SUITE for f in changed):
+def module_name(path: str) -> str | None:
+    """`src/pkg/sub/mod.py` and `pkg/sub/mod.py` -> `pkg.sub.mod`; a package's `__init__.py` -> `pkg.sub`."""
+    parts = Path(path).with_suffix("").parts
+    if parts and parts[0] == "src":
+        parts = parts[1:]
+    if parts and parts[-1] == "__init__":
+        parts = parts[:-1]
+    if not parts or not all(p.isidentifier() for p in parts):
         return None
-    tests = [f for f in all_files if re.search(r"(^|/)test_[^/]*\.py$", f)]
-    keep = {f for f in changed if f in tests}
+    return ".".join(parts)
+
+
+def is_test_file(path: str) -> bool:
+    return bool(re.search(r"(^|/)test_[^/]*\.py$", path))
+
+
+def imports_module(text: str, module: str) -> bool:
+    """`import pkg.mod`, `from pkg.mod import x`, `from pkg import mod` (also in parentheses)."""
+    if re.search(rf"^\s*(?:import|from)\s+{re.escape(module)}(?![\w])", text, re.M):
+        return True
+    parent, _, leaf = module.rpartition(".")
+    if not parent:
+        return False
+    for m in re.finditer(rf"^\s*from\s+{re.escape(parent)}\s+import\s+(\([^)]*\)|[^\n]*)", text, re.M):
+        if re.search(rf"\b{re.escape(leaf)}\b", m.group(1)):
+            return True
+    return False
+
+
+def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], str]) -> tuple[dict[str, list[str]] | None, list[str]]:
+    """Tier light's pytest selection: (test file -> why, changed source files no test covers).
+
+    A test file is kept when it changed, when its name holds a changed module's name
+    (`model_host.py` -> `test_model_host_portable.py`), or when it imports a changed module.
+    None instead of the mapping = the whole suite (a conftest.py or the package's configuration
+    changed). `read(path)` returns a file's text at the tested commit.
+    """
+    if any(Path(f).name in _WHOLE_SUITE for f in changed):
+        return None, []
+    tests = [f for f in all_files if is_test_file(f)]
+    keep: dict[str, list[str]] = {}
     for f in changed:
-        if f.endswith(".py") and f not in tests:
-            stem = Path(f).stem if Path(f).stem != "__init__" else Path(f).parent.name
-            keep |= {t for t in tests if stem in Path(t).stem}
-    return sorted(keep)
+        if f in tests:
+            keep.setdefault(f, []).append("changed")
+    texts: dict[str, str] = {}
+    uncovered = []
+    for f in changed:
+        if not f.endswith(".py") or is_test_file(f) or f not in all_files:
+            continue
+        module = module_name(f)
+        stem = Path(f).stem if Path(f).stem != "__init__" else Path(f).parent.name
+        hits = []
+        for t in tests:
+            if stem in Path(t).stem:
+                hits.append((t, f"named after {f}"))
+            elif module:
+                if t not in texts:
+                    texts[t] = read(t)
+                bare = stem if "tests" in Path(f).parts else None  # a test helper, imported by its name
+                if imports_module(texts[t], module) or (bare and imports_module(texts[t], bare)):
+                    hits.append((t, f"imports {module}"))
+        for t, why in hits:
+            keep.setdefault(t, []).append(why)
+        if not hits:
+            uncovered.append(f)
+    return keep, uncovered
 
 
 def light_matrix(group: list["Job"]) -> list["Job"]:
@@ -877,6 +930,65 @@ def light_matrix(group: list["Job"]) -> list["Job"]:
         return []
     keep = [j for j in group if j.python == PRIMARY_PYTHON] or group[:1]
     return [j for j in group if j not in keep]
+
+
+def light_step(script: str, cwd_rel: str, cwd: Path, changed: list[str]) -> tuple[str | None, str]:
+    """Tier light's narrowing of one `npm test` or `cargo test` step: (new script or None to skip it,
+    what was decided). Any other step is returned unchanged with an empty note."""
+    line = script.strip()
+    prefix = (cwd_rel.rstrip("/") + "/") if cwd_rel not in ("", ".") else ""
+    here = [f for f in changed if f.startswith(prefix)]
+    if line in ("npm test", "npm run test", "npm t"):
+        try:
+            pkg = json.loads((cwd / "package.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return script, "no package.json: npm test runs whole"
+        test = str((pkg.get("scripts") or {}).get("test") or "")
+        if not here:
+            return None, f"npm test skipped: no change under {prefix or 'the repository'}"
+        if re.fullmatch(r"vitest run(\s+--?[\w-]+)*", test):
+            files = " ".join(shlex.quote(str(cwd / f[len(prefix):])) for f in here if (cwd / f[len(prefix):]).exists())
+            if not files:
+                return None, "npm test skipped: the changed files were removed"
+            return f"npx vitest related --run {files}", f"vitest related to {len(here)} changed file(s)"
+        workspaces = pkg.get("workspaces")
+        if isinstance(workspaces, dict):
+            workspaces = workspaces.get("packages")
+        if isinstance(workspaces, list) and workspaces:
+            dirs = [str(w).rstrip("/") for w in workspaces]
+            touched = sorted({d for d in dirs for f in here if f[len(prefix):].startswith(d + "/")})
+            outside = [f for f in here if not any(f[len(prefix):].startswith(d + "/") for d in dirs)]
+            if outside:
+                return script, f"npm test runs whole: {outside[0]} is outside every workspace"
+            flags = " ".join(f"--workspace {shlex.quote(d)}" for d in touched)
+            return f"npm {flags} --if-present run test", "the workspaces with changed files: " + ", ".join(touched)
+        return script, "npm test runs whole (its test script is not vitest run)"
+    if line.startswith("cargo test"):
+        if not here:
+            return None, f"cargo test skipped: no change under {prefix or 'the repository'}"
+        manifest = cwd / "Cargo.toml"
+        try:
+            import tomllib
+
+            cargo = tomllib.loads(manifest.read_text(encoding="utf-8"))
+        except (OSError, ValueError, ImportError):
+            return script, "cargo test runs whole (Cargo.toml unreadable)"
+        members = (cargo.get("workspace") or {}).get("members") or []
+        if not members:
+            return script, "cargo test: the crate changed"
+        crates = []
+        for member in members:
+            mdir = str(member).rstrip("/")
+            if any(f[len(prefix):].startswith(mdir + "/") for f in here):
+                try:
+                    crates.append(tomllib.loads((cwd / mdir / "Cargo.toml").read_text(encoding="utf-8"))["package"]["name"])
+                except (OSError, ValueError, KeyError):
+                    return script, f"cargo test runs whole ({mdir}/Cargo.toml unreadable)"
+        if not crates:
+            return script, "cargo test runs whole: a change outside every workspace member"
+        args = [a for a in shlex.split(line)[2:] if a not in ("--workspace", "--all")]
+        return " ".join(["cargo", "test"] + [f"-p {c}" for c in crates] + args), "cargo test -p " + ", ".join(crates)
+    return script, ""
 
 
 # pytest plugin for tier light: keeps the selected files' tests in the top-level pytest only (it
@@ -1036,6 +1148,9 @@ class Runner:
     def say(self, text: str) -> None:
         with self.lock:
             print(text, flush=True)
+
+    def read_file(self, path: str) -> str:
+        return git("show", f"{self.tested}:{path}", cwd=self.src, check=False)
 
     @property
     def repo_name(self) -> str:
@@ -1474,6 +1589,19 @@ class Runner:
                 else:
                     shell = step.get("shell") or defaults.get("shell")
                     script = to_str(interpolate(step.get("run") or "", senv))
+                    wd = step.get("working-directory") or defaults.get("working-directory")
+                    cwd_rel = to_str(interpolate(wd, senv)) if wd else ""
+                    if a.tier == "light":
+                        here = (workspace / cwd_rel).resolve()
+                        root = next((d for d in [here, *here.parents] if (d / ".git").exists()), workspace)
+                        narrowed, note = light_step(script, os.path.relpath(here, root), here, self.changed)
+                        if note:
+                            log.write(f"ci_local: tier light: {note}\n")
+                            self.say(f"{'':<13} {'':>7}  {job.label}: tier light: {note}")
+                        if narrowed is None:
+                            steps_ctx[sid] = {"outcome": "skipped", "conclusion": "skipped", "outputs": {}}
+                            continue
+                        script = narrowed
                     if a.installer == "uv":
                         script = translate_pip(script, self.uv)
                     script_path = jobdir / "steps" / f"{n:02d}.sh"
@@ -1481,8 +1609,7 @@ class Runner:
                     argv = shell_command(shell, str(script_path))
                     if argv is None:
                         return "SKIPPED", f"step {name!r} needs {shell} (a Windows shell)"
-                    wd = step.get("working-directory") or defaults.get("working-directory")
-                    cwd = workspace / to_str(interpolate(wd, senv)) if wd else workspace
+                    cwd = workspace / cwd_rel if cwd_rel else workspace
                     files = {k: jobdir / "steps" / f"{n:02d}.{k.lower()}"
                              for k in ("GITHUB_ENV", "GITHUB_OUTPUT", "GITHUB_PATH", "GITHUB_STEP_SUMMARY")}
                     for f in files.values():
@@ -1761,13 +1888,18 @@ def main(argv: list[str] | None = None) -> int:
         for j in dropped:
             j.reason = LIGHT_DROPPED
         print("ci_local: tier light: skipped jobs " + (", ".join(j.label for j in dropped) or "none"), flush=True)
-        r.light_tests = light_tests(r.changed, r.all_files)
-        if r.light_tests is None:
-            print("ci_local: tier light: pytest runs whole (a test configuration or pyproject changed)", flush=True)
+        selection, uncovered = light_tests(r.changed, r.all_files, r.read_file)
+        if selection is None:
+            print("ci_local: tier light: pytest runs whole (a conftest.py or the package configuration changed)")
         else:
-            print(f"ci_local: tier light: pytest keeps {len(r.light_tests)} test file(s)"
-                  + (": " + ", ".join(r.light_tests[:12]) + (" ..." if len(r.light_tests) > 12 else "")
-                     if r.light_tests else ""), flush=True)
+            r.light_tests = sorted(selection)
+            print(f"ci_local: tier light: pytest keeps {len(selection)} test file(s)", flush=True)
+            for t, why in sorted(selection.items()):
+                print(f"    {t}: {'; '.join(why)}")
+        if uncovered:
+            print("ci_local: RED tier light: no test names or imports " + ", ".join(uncovered)
+                  + "; add a test, or run --tier full", flush=True)
+            return 1
     count = sum(len(g) for g in groups)
     if a.parallel is None:
         a.parallel, why = default_jobs(count, physical_cores(), available_memory())
