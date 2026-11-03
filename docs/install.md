@@ -588,7 +588,11 @@ The Mac package, the `.command` files and the one line all run the same script,
    open: `http://127.0.0.1:8080/apps/<app>/` (the console's **Apps** page installs and opens them).
    On a remote or headless session (SSH, or Linux without a display) it offers the terminal console
    instead ("Press Enter within 25 s", signed in); no answer skips it, and `--no-open` or `--yes`
-   skips the offer.
+   skips the offer. When it opened no browser, and always with `--server`, the summary also prints the
+   gateway's six-word setup code, for setting the gateway up from a browser on another machine
+   (**Set up your gateway**: admin password + setup code). On the gateway's machine,
+   `abstractgateway claim --code` shows it again (`abstractgateway service install` / `enable` print it
+   too; `abstractgateway serve` never does).
 
 Every command is printed as it runs, and the summary lists them all. Re-running the script
 upgrades or repairs the install in place (see [Upgrade](#upgrade)). The macOS package is payload-free: it copies the two

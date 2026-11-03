@@ -78,7 +78,8 @@ and `ghcr.io/lpalbou/abstractcore-server:2.32.0`.
   model library and the terminal console list decision models.
 - **AbstractGateway 0.19.0** (it also ships the changes prepared as 0.18.0, which was not published): a fresh
   gateway is set up from a browser on any machine with an admin password and the six-word setup code
-  (`abstractgateway claim --code`; the installer's summary prints it), and accounts sign in with a password or a
+  (`abstractgateway claim --code` on the gateway's machine, also printed by `abstractgateway service install` /
+  `enable`, and by the installer when it opened no browser or with `--server`; `serve` never prints it), and accounts sign in with a password or a
   token; the models run in a supervised model host process on every OS; voice streams send keep-alive lines during
   silence and record what they did in the audit log; dictation recordings stay out of conversation attachments;
   shared read receipts for conversations (`/api/gateway/me/session-reads`); the redesigned Models library,

@@ -250,7 +250,8 @@ On first local start, Gateway creates `default/admin`, keeps its token in
 `<data dir>/auth/bootstrap-admin-token` (readable by you only), and prints a one-time link:
 `First run: open http://127.0.0.1:8080/console#claim=…`. Open it to sign in to the web console and
 its first-run guide (engines, default model, apps); `abstractgateway claim --open` mints a new
-link. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCode Web or
+link. To set the gateway up from a browser on another machine instead, give the admin password and
+the six-word setup code that `abstractgateway claim --code` shows on the gateway's machine. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCode Web or
 AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operator bearer-token
 path; it does not sign in browsers.
 
