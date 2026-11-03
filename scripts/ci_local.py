@@ -937,7 +937,8 @@ def light_step(script: str, cwd_rel: str, cwd: Path, changed: list[str]) -> tupl
     what was decided). Any other step is returned unchanged with an empty note."""
     line = script.strip()
     prefix = (cwd_rel.rstrip("/") + "/") if cwd_rel not in ("", ".") else ""
-    here = [f for f in changed if f.startswith(prefix)]
+    # Documentation (README, CHANGELOG, llms*.txt) neither selects tests nor forces the whole run.
+    here = [f for f in changed if f.startswith(prefix) and not f.endswith((".md", ".txt"))]
     if line in ("npm test", "npm run test", "npm t"):
         try:
             pkg = json.loads((cwd / "package.json").read_text(encoding="utf-8"))

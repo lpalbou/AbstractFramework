@@ -303,6 +303,8 @@ def test_light_steps_narrow_npm_and_cargo(tmp_path):
                                                    "scripts": {"test": "npm --workspaces run test"}}), encoding="utf-8")
     assert ci.light_step("npm test", ".", mono, ["ui-kit/src/x.ts"])[0] == "npm --workspace ui-kit --if-present run test"
     assert ci.light_step("npm test", ".", mono, ["scripts/check.mjs"])[0] == "npm test"
+    assert ci.light_step("npm test", ".", mono, ["CHANGELOG.md", "llms-full.txt", "ui-kit/src/x.ts"])[0] == \
+        "npm --workspace ui-kit --if-present run test"
 
     ws = tmp_path / "rust"
     (ws / "tui").mkdir(parents=True)
