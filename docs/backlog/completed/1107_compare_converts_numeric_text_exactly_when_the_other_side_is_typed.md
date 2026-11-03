@@ -5,6 +5,8 @@
 > Created: 2026-11-03
 > Priority: high
 > Labels: flow, compare, typed-values, adr-0049
+> Status: Completed
+> Completed: 2026-11-03 (recorded; shipped in AbstractRuntime 0.17.0)
 
 ## Summary
 
@@ -26,8 +28,17 @@ Operator 2026-11-02: "that is stupid, we must have automatic conversion". 806 sa
 
 ## Acceptance criteria
 
-- [ ] `"10" == 10` true, `"abc" < 3` refused with the typed error, text-vs-text unchanged; tests red without the conversion.
+- [x] `"10" == 10` true, `"abc" < 3` refused with the typed error, text-vs-text unchanged; tests red without the conversion.
 
 ## Receipts
 
 - W3 queued 2026-11-03 03:00.
+
+## Completion report (2026-11-03)
+
+- `visual/builtins.py` `_exact_from_text` (AbstractRuntime `origin/main`, first in tag `v0.17.0`); the CHANGELOG
+  entry "Compare reads text next to a number or true/false exactly" names the fixture
+  `tests/fixtures/visualflow/compare_text_operands.json`.
+- `tests/test_visual_compare_typed_values.py`: conversion or refusal per fixture row, the refusal names the node,
+  text against text is never converted (`"10" > "9"` compares text).
+- Root ADR 0049 §6 (compatibility) is amended to say the runtime converts text exactly when the other side is typed.
