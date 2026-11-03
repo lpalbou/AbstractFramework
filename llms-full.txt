@@ -6335,9 +6335,26 @@ The pull request body states the tier and why; a reviewer may raise it.
   `localhost:8080`, writes under your home directory outside the run and the download caches (uv,
   pip, npm, cargo, Playwright), and `~/.abstractcore` and the workspace's `runtime/`; it is off by
   default because macOS cannot nest `sandbox-exec`, so AbstractCore's own macOS sandbox tests fail
-  under it. Rust jobs keep a target directory per job in the workspace's `untracked/ci-local/cargo-target/`,
-  as `Swatinem/rust-cache` does on GitHub. The gate deletes nothing: run directories stay for the
-  logs; remove old ones from `~/Library/Caches/ci-gate/runs/` by hand.
+  under it.
+
+## Disk: what a run keeps
+
+- **Rust builds share one folder per repository**: every job step gets
+  `CARGO_TARGET_DIR=~/Library/Caches/ci-gate/cargo-target/<repo>`, so a rebuild reuses the previous
+  compilation, as `Swatinem/rust-cache` does on GitHub. A workflow that sets its own
+  `CARGO_TARGET_DIR` (workflow, job or step `env:`) wins.
+- **A finished job keeps no Rust build output**: when a job ends, every cargo build folder inside its
+  run directory (one holding cargo's `CACHEDIR.TAG` or `.rustc_info.json`: a workflow's own
+  `CARGO_TARGET_DIR`, a tool that ignores it) is removed, and the executables at the top of its
+  profile folders (`release/<bin>`) are kept in `jobs/<job>/rust-binaries/`. The job log says what
+  was removed. The shared folder above is never cleaned; Python environments stay.
+- **Old run folders are deleted automatically**: after a run, the gate deletes the oldest run
+  folders of the same repository under `~/Library/Caches/ci-gate/runs/` so at most three remain,
+  this one included, and prints their names. `--keep-runs N` changes the number; `--keep-runs 0`
+  or `--keep-runs all` keeps everything. A folder another gate is still running in is skipped (its
+  lock is held; a folder from a gate older than the lock counts as running while a job log changed
+  in the last 30 minutes). With `--work` outside `~/Library/Caches/ci-gate`, nothing is deleted and
+  the gate says so.
 
 ## What it cannot run (SKIPPED, with the reason)
 

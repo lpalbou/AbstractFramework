@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
+import fcntl
 import itertools
 import json
 import math
@@ -822,6 +823,134 @@ exit 97
 """
 
 
+def cargo_target_dir(repo_name: str) -> Path:
+    """The Rust build folder every run of one repository shares (a job's own CARGO_TARGET_DIR wins):
+    a rebuild reuses the previous compilation, as Swatinem/rust-cache does on GitHub. One per
+    repository, so crates of different repositories never collide."""
+    return SCRATCH / "cargo-target" / repo_name
+
+
+def rust_target_dirs(root: Path) -> list[Path]:
+    """The cargo build folders under `root`: a directory holding the CACHEDIR.TAG cargo writes, or
+    its .rustc_info.json. Symlinks are not followed; a found folder is not searched further."""
+    found = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        here = Path(dirpath)
+        tag = here / "CACHEDIR.TAG"
+        is_cargo = ".rustc_info.json" in filenames or (
+            "CACHEDIR.TAG" in filenames and "cargo" in tag.read_text(encoding="utf-8", errors="replace").lower())
+        if is_cargo:
+            found.append(here)
+            dirnames[:] = []
+        else:
+            dirnames[:] = [d for d in dirnames if d != ".git"]
+    return found
+
+
+def _remove_tree(path: Path) -> None:
+    """shutil.rmtree that also removes read-only entries (cargo and Go mark some files read-only)."""
+    def retry(func, name, _exc):
+        os.chmod(name, 0o700)
+        func(name)
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(path, onexc=retry)
+    else:
+        shutil.rmtree(path, onerror=retry)
+
+
+def clean_rust_builds(jobdir: Path, run_dir: Path) -> list[str]:
+    """Remove the Rust build folders a finished job left inside its run directory (a workflow that
+    set its own CARGO_TARGET_DIR, or a tool that ignores it), keeping the executables cargo placed
+    at the top of each profile folder (`release/<bin>`) in `<job>/rust-binaries/`. Never touches
+    anything outside `run_dir`. Returns one line per folder for the job log."""
+    notes = []
+    inside = run_dir.resolve()
+    for target in rust_target_dirs(jobdir):
+        real = target.resolve()
+        if target.is_symlink() or inside not in real.parents:
+            notes.append(f"ci_local: kept Rust build folder {target}: not inside the run directory")
+            continue
+        kept = 0
+        # <target>/<profile>/<bin>, and <target>/<triple>/<profile>/<bin> for a cross build
+        tops = [d for d in target.iterdir() if d.is_dir() and not d.is_symlink()]
+        profiles = tops + [t / q for t in tops for q in ("debug", "release") if (t / q).is_dir()]
+        for profile in profiles:
+            for f in profile.iterdir():
+                if f.is_file() and not f.is_symlink() and os.access(f, os.X_OK) and f.suffix not in (".d", ".rlib", ".rmeta"):
+                    dest = jobdir / "rust-binaries" / f.relative_to(target)
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(f, dest)
+                    kept += 1
+        _remove_tree(target)
+        notes.append(f"ci_local: removed the Rust build folder {target}"
+                     + (f"; kept {kept} executable(s) in {jobdir / 'rust-binaries'}" if kept else ""))
+    return notes
+
+
+RUN_DIR_NAME = r"-\d{8}-\d{6}-[0-9a-f]{8}"  # <repo>-<YYYYmmdd>-<HHMMSS>-<sha8>, as prepare_source names it
+RUN_LOCK = ".ci-local-running"
+LEGACY_QUIET_SECONDS = 30 * 60  # a run folder without a lock (an older gate) counts as running this long
+
+
+def parse_keep_runs(text: str) -> int:
+    """--keep-runs: a count of run folders, or `all` (0) to keep every one."""
+    if text.strip().lower() == "all":
+        return 0
+    try:
+        n = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"--keep-runs takes a number or 'all', not {text!r}") from None
+    if n < 0:
+        raise argparse.ArgumentTypeError("--keep-runs takes 0 or more (0 or 'all' keeps every run folder)")
+    return n
+
+
+def _run_busy(run: Path, now: float) -> bool:
+    """A run folder still in use: its lock is held, or (no lock: a gate older than the lock) a job log
+    changed in the last LEGACY_QUIET_SECONDS."""
+    lock = run / RUN_LOCK
+    if lock.exists():
+        try:
+            with open(lock, "a", encoding="utf-8") as f:
+                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.flock(f, fcntl.LOCK_UN)
+            return False
+        except OSError:
+            return True
+    stamps = [run.stat().st_mtime] + [p.stat().st_mtime for p in run.glob("jobs/*/log.txt")]
+    return now - max(stamps) < LEGACY_QUIET_SECONDS
+
+
+def prune_runs(runs_root: Path, repo_name: str, current: Path, keep: int, allowed_root: Path) -> tuple[list[Path], str]:
+    """Delete the oldest run folders of `repo_name` directly under `runs_root` so at most `keep`
+    remain, `current` included and never deleted. keep 0 keeps everything. Refused (nothing
+    deleted, the reason returned) when `runs_root` is not under `allowed_root`. A folder another
+    gate is still running in is skipped. Returns (deleted folders, note)."""
+    if keep <= 0:
+        return [], ""
+    root, allowed = runs_root.resolve(), allowed_root.resolve()
+    if root != allowed and allowed not in root.parents:
+        return [], f"not deleting old run folders: {root} is not under {allowed}"
+    name = re.compile(re.escape(repo_name) + RUN_DIR_NAME)
+    current = current.resolve()
+    others = sorted((d for d in root.iterdir()
+                     if d.is_dir() and not d.is_symlink() and name.fullmatch(d.name) and d.resolve() != current),
+                    key=lambda d: d.name[len(repo_name) + 1:])  # the time stamp sorts oldest first
+    excess = others[:max(0, len(others) - (keep - 1))]
+    deleted, busy = [], []
+    now = time.time()
+    for d in excess:
+        if d.resolve().parent != root:
+            continue
+        if _run_busy(d, now):
+            busy.append(d.name)
+            continue
+        _remove_tree(d)
+        deleted.append(d)
+    note = f"still in use, kept: {', '.join(busy)}" if busy else ""
+    return deleted, note
+
+
 def git(*args: str, cwd: Path | None = None, check: bool = True, quiet: bool = False) -> str:
     cmd = ["git", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
            "-c", "user.name=ci-local", "-c", "user.email=ci-local@localhost", *args]
@@ -1208,6 +1337,9 @@ class Runner:
             f"{self.repo_name}-{stamp}-{self.head[:8]}"
         )
         self.run_dir.mkdir(parents=True, exist_ok=False)
+        # Held while this gate runs: --keep-runs in another gate never deletes a run in progress.
+        self._run_lock = open(self.run_dir / RUN_LOCK, "w", encoding="utf-8")
+        fcntl.flock(self._run_lock, fcntl.LOCK_EX)
         self.origin_url = git("remote", "get-url", "origin", cwd=self.repo, check=False)
         m = re.search(r"github\.com[:/]+([^/]+/[^/]+?)(?:\.git)?/?$", self.origin_url or "")
         self.repository = m.group(1) if m else f"local/{self.repo_name}"
@@ -1520,6 +1652,13 @@ class Runner:
             result, reason = self._steps(job, ctx, jobdir, workspace, home, tmp, rtemp)
         except (ExprError, RuntimeError, OSError) as exc:
             result, reason = "ERROR", f"{type(exc).__name__}: {exc}"
+        try:  # a finished job keeps its logs and executables, not its Rust build output
+            notes = clean_rust_builds(jobdir, self.run_dir)
+        except OSError as exc:
+            notes = [f"ci_local: could not remove a Rust build folder: {exc}"]
+        if notes:
+            with open(job.log, "a", encoding="utf-8") as log:
+                log.write("\n" + "\n".join(notes) + "\n")
         self.finish(job, result, reason, started)
 
     def _base_env(self, job: Job, jobdir: Path, workspace: Path, home: Path, tmp: Path, rtemp: Path,
@@ -1554,8 +1693,7 @@ class Runner:
     def _steps(self, job: Job, ctx: Context, jobdir: Path, workspace: Path, home: Path, tmp: Path, rtemp: Path) -> tuple[str, str]:
         a = self.args
         rh = self.real_home
-        # Rust target dirs live in the workspace's untracked/ (nothing walks up from them).
-        target = self.workspace / "untracked" / "ci-local" / "cargo-target" / self.repo_name / _slug(f"{job.wf_file}-{job.job_id}")
+        target = cargo_target_dir(self.repo_name)
         target.mkdir(parents=True, exist_ok=True)
         env = self._base_env(job, jobdir, workspace, home, tmp, rtemp, ctx.data["github"], target)
         shims = jobdir / "shims"
@@ -1892,6 +2030,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--workspace", help="the AbstractFramework workspace (default: this checkout's main worktree)")
     p.add_argument("--work", help="where run directories go (default ~/Library/Caches/ci-gate/runs, outside the workspace)")
     p.add_argument("--list", action="store_true", help="print the jobs that would run, and exit")
+    p.add_argument("--keep-runs", type=parse_keep_runs, default=3, metavar="N",
+                   help="after the run, delete this repository's oldest run folders under "
+                        "~/Library/Caches/ci-gate/runs so at most N remain, this run included (default 3; "
+                        "0 or 'all' keeps every one; refused when --work is outside ~/Library/Caches/ci-gate)")
     return p
 
 
@@ -1912,6 +2054,23 @@ def main(argv: list[str] | None = None) -> int:
     except RuntimeError as exc:
         print(f"ci_local: RED {exc}", file=sys.stderr)
         return 1
+    try:
+        return run_prepared(r, a, t0)
+    finally:
+        runs_root = Path(a.work or SCRATCH / "runs").expanduser()
+        try:
+            deleted, note = prune_runs(runs_root, r.repo_name, r.run_dir, a.keep_runs, SCRATCH)
+        except OSError as exc:
+            deleted, note = [], f"could not delete an old run folder: {exc}"
+        if deleted:
+            print(f"ci_local: --keep-runs {a.keep_runs}: deleted {len(deleted)} older run folder(s) of "
+                  f"{r.repo_name}: " + ", ".join(d.name for d in deleted), flush=True)
+        if note:
+            print(f"ci_local: --keep-runs {a.keep_runs}: {note}", flush=True)
+
+
+def run_prepared(r: "Runner", a: argparse.Namespace, t0: float) -> int:
+    """Everything after the tested commit is prepared: plan, select, run, report."""
     what = f"{r.head[:12]} merged into {a.base} {r.base_sha[:12]}" if r.merged else r.head[:12]
     print(f"ci_local: {r.repo_name} @ {what}; {len(r.changed)} changed files; run dir {r.run_dir}", flush=True)
     try:

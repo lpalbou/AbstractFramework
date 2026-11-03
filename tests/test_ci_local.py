@@ -387,3 +387,82 @@ def test_light_plugin_narrows_the_top_level_pytest_only(tmp_path):
     assert out.returncode == 0, out.stdout  # nothing selected is not "no tests collected"
     assert run(["tests/test_b.py"]).returncode == 1
     assert counts.read_text(encoding="utf-8").split() == ["1", "0", "1"]  # what the run-level check sums
+
+
+def _cargo_target(path: Path) -> Path:
+    (path / "release" / "deps").mkdir(parents=True)
+    (path / "CACHEDIR.TAG").write_text("Signature: 8a477f597d28d172789f06886806bc55\n"
+                                       "# This file is a cache directory tag created by cargo.\n", encoding="utf-8")
+    binary = path / "release" / "abstracttui"
+    binary.write_text("binary", encoding="utf-8")
+    binary.chmod(0o755)
+    (path / "release" / "abstracttui.d").write_text("deps", encoding="utf-8")
+    (path / "release" / "deps" / "libbig.rlib").write_text("x" * 1000, encoding="utf-8")
+    return path
+
+
+def test_a_finished_job_keeps_its_executables_not_its_rust_build_folder(tmp_path):
+    run = tmp_path / "run"
+    job = run / "jobs" / "01-ci-tui"
+    target = _cargo_target(job / "work" / "abstracttui" / "target")
+    other = job / "work" / "abstracttui" / "web" / "target"  # a folder named target that cargo did not make
+    other.mkdir(parents=True)
+    (other / "keep.txt").write_text("x", encoding="utf-8")
+    notes = ci.clean_rust_builds(job, run)
+    assert not target.exists() and other.exists()
+    assert (job / "rust-binaries" / "release" / "abstracttui").read_text(encoding="utf-8") == "binary"
+    assert not (job / "rust-binaries" / "release" / "abstracttui.d").exists()
+    assert len(notes) == 1 and "removed the Rust build folder" in notes[0]
+    assert ci.clean_rust_builds(job, run) == []  # nothing left to remove
+
+
+def test_rust_builds_share_one_folder_per_repository_outside_the_run():
+    assert ci.cargo_target_dir("abstractcore") == Path.home() / "Library" / "Caches" / "ci-gate" / "cargo-target" / "abstractcore"
+    assert ci.cargo_target_dir("abstractcore") != ci.cargo_target_dir("abstracttui")
+
+
+def _runs(root: Path, repo: str, stamps: list[str]) -> list[Path]:
+    out = []
+    for stamp in stamps:
+        d = root / f"{repo}-{stamp}-0123abcd"
+        (d / "jobs").mkdir(parents=True)
+        (d / ci.RUN_LOCK).write_text("", encoding="utf-8")
+        out.append(d)
+    return out
+
+
+def test_keep_runs_deletes_the_oldest_runs_of_the_same_repository_only(tmp_path):
+    root = tmp_path / "ci-gate" / "runs"
+    old1, old2, old3, mid, current = _runs(root, "abstractcore", [
+        "20261101-090000", "20261101-100000", "20261102-090000", "20261103-090000", "20261103-100000"])
+    (neighbour,) = _runs(root, "abstractcore-tui", ["20261101-080000"])  # another repository, same prefix
+    deleted, note = ci.prune_runs(root, "abstractcore", current, 3, tmp_path / "ci-gate")
+    assert sorted(deleted) == [old1, old2] and note == ""  # three remain, this run included
+    assert old3.exists() and mid.exists() and current.exists() and neighbour.exists()
+    # 0 (or 'all') keeps every run folder.
+    assert ci.prune_runs(root, "abstractcore", current, 0, tmp_path / "ci-gate") == ([], "")
+    assert ci.parse_keep_runs("all") == 0 and ci.parse_keep_runs("3") == 3
+    with pytest.raises(Exception):
+        ci.parse_keep_runs("-1")
+
+
+def test_keep_runs_never_deletes_a_run_in_progress_or_outside_the_gate_cache(tmp_path):
+    import fcntl
+
+    root = tmp_path / "ci-gate" / "runs"
+    busy, idle, current = _runs(root, "abstractcore", ["20261101-090000", "20261101-100000", "20261103-100000"])
+    with open(busy / ci.RUN_LOCK, "w", encoding="utf-8") as held:
+        fcntl.flock(held, fcntl.LOCK_EX)  # another gate is running in this folder
+        deleted, note = ci.prune_runs(root, "abstractcore", current, 1, tmp_path / "ci-gate")
+    assert deleted == [idle] and busy.exists() and busy.name in note
+    # An older gate's folder (no lock) whose job log just changed is still running.
+    legacy = root / "abstractcore-20261101-080000-0123abcd"
+    (legacy / "jobs" / "01-x").mkdir(parents=True)
+    (legacy / "jobs" / "01-x" / "log.txt").write_text("running", encoding="utf-8")
+    deleted, _ = ci.prune_runs(root, "abstractcore", current, 1, tmp_path / "ci-gate")
+    assert legacy.exists() and deleted == [busy]
+    # A runs root outside the gate's cache is refused: nothing deleted.
+    elsewhere = tmp_path / "scratch" / "runs"
+    a, b = _runs(elsewhere, "abstractcore", ["20261101-090000", "20261103-100000"])
+    deleted, note = ci.prune_runs(elsewhere, "abstractcore", b, 1, tmp_path / "ci-gate")
+    assert deleted == [] and a.exists() and "not under" in note
