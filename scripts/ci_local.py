@@ -884,31 +884,56 @@ def imports_module(text: str, module: str) -> bool:
     return False
 
 
-def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], str]) -> tuple[dict[str, list[str]] | None, list[str]]:
-    """Tier light's pytest selection: (test file -> why, changed source files no test covers).
+DOC_SUFFIXES = (".md", ".txt")  # README, CHANGELOG, llms*.txt: they neither select nor force tests
 
-    A test file is kept when it changed, when its name holds a changed module's name
-    (`model_host.py` -> `test_model_host_portable.py`), or when it imports a changed module.
-    None instead of the mapping = the whole suite (a conftest.py or the package's configuration
-    changed). `read(path)` returns a file's text at the tested commit.
+
+def owner_dir(path: str, all_files: list[str]) -> str | None:
+    """The nearest directory above `path` that holds a package.json or a Cargo.toml: an npm package
+    or a crate, whose tests tier light narrows in the npm / cargo steps instead of pytest."""
+    markers = {str(Path(f).parent) for f in all_files if Path(f).name in ("package.json", "Cargo.toml")}
+    for parent in Path(path).parents:
+        if str(parent) in markers:
+            return str(parent)
+    return None
+
+
+def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], str]
+                ) -> tuple[dict[str, list[str]] | None, list[str], list[str]]:
+    """Tier light's pytest selection: (test file -> why, changed files no test covers, changed files
+    an npm package or a crate owns).
+
+    A test file is kept when it changed, when its name holds the name of a changed file
+    (a substring match on the stem: `model_host.py` keeps `test_model_host_portable.py`, and
+    `catalog.yaml` keeps `test_model_catalog.py`), or, for a changed module, when it imports it.
+    Every changed file that is not documentation and not owned by an npm package or a crate must
+    keep at least one test, or it is listed as uncovered (a red light run). None instead of the
+    mapping = the whole suite: a conftest.py, the package configuration, or a non-Python file under
+    tests/ (a fixture) changed. `read(path)` returns a file's text at the tested commit.
     """
+    present = set(all_files)
+    live = [f for f in changed if f in present and not f.endswith(DOC_SUFFIXES)]
     if any(Path(f).name in _WHOLE_SUITE for f in changed):
-        return None, []
+        return None, [], []
+    if any("tests" in Path(f).parts[:-1] and not f.endswith(".py") for f in live):
+        return None, [], []
     tests = [f for f in all_files if is_test_file(f)]
     keep: dict[str, list[str]] = {}
-    for f in changed:
+    for f in live:
         if f in tests:
             keep.setdefault(f, []).append("changed")
     texts: dict[str, str] = {}
-    uncovered = []
-    for f in changed:
-        if not f.endswith(".py") or is_test_file(f) or f not in all_files:
+    uncovered, owned = [], []
+    for f in live:
+        if is_test_file(f):
             continue
-        module = module_name(f)
+        if owner_dir(f, all_files) is not None:
+            owned.append(f)
+            continue
         stem = Path(f).stem if Path(f).stem != "__init__" else Path(f).parent.name
+        module = module_name(f) if f.endswith(".py") else None
         hits = []
         for t in tests:
-            if stem in Path(t).stem:
+            if stem and stem in Path(t).stem:
                 hits.append((t, f"named after {f}"))
             elif module:
                 if t not in texts:
@@ -920,7 +945,15 @@ def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], 
             keep.setdefault(t, []).append(why)
         if not hits:
             uncovered.append(f)
-    return keep, uncovered
+    return keep, uncovered, owned
+
+
+def light_executed(counts_file: Path) -> int:
+    """How many tests a light run executed: the pytest plugin writes each run's kept count, a
+    narrowed npm / cargo test step writes 1. Zero makes a light run red, never green."""
+    if not counts_file.exists():
+        return 0
+    return sum(int(x) for x in counts_file.read_text(encoding="utf-8").split() if x.isdigit())
 
 
 def light_matrix(group: list["Job"]) -> list["Job"]:
@@ -938,7 +971,7 @@ def light_step(script: str, cwd_rel: str, cwd: Path, changed: list[str]) -> tupl
     line = script.strip()
     prefix = (cwd_rel.rstrip("/") + "/") if cwd_rel not in ("", ".") else ""
     # Documentation (README, CHANGELOG, llms*.txt) neither selects tests nor forces the whole run.
-    here = [f for f in changed if f.startswith(prefix) and not f.endswith((".md", ".txt"))]
+    here = [f for f in changed if f.startswith(prefix) and not f.endswith(DOC_SUFFIXES)]
     if line in ("npm test", "npm run test", "npm t"):
         try:
             pkg = json.loads((cwd / "package.json").read_text(encoding="utf-8"))
@@ -1017,6 +1050,10 @@ def pytest_collection_modifyitems(config, items):
     if drop:
         config.hook.pytest_deselected(items=drop)
         items[:] = keep
+    counts = os.environ.get("CI_LOCAL_LIGHT_COUNTS")
+    if counts:
+        with open(counts, "a", encoding="utf-8") as f:
+            f.write(str(len(keep)) + "\\n")
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -1602,6 +1639,9 @@ class Runner:
                         if narrowed is None:
                             steps_ctx[sid] = {"outcome": "skipped", "conclusion": "skipped", "outputs": {}}
                             continue
+                        if note:  # an npm / cargo test step that runs
+                            with self.lock, open(self.run_dir / "light-counts", "a", encoding="utf-8") as f:
+                                f.write("1\n")
                         script = narrowed
                     if a.installer == "uv":
                         script = translate_pip(script, self.uv)
@@ -1625,6 +1665,7 @@ class Runner:
                         step_env["PYTEST_ADDOPTS"] = " ".join(x for x in ("-p ci_local_light", step_env.get("PYTEST_ADDOPTS", "")) if x)
                         step_env["CI_LOCAL_LIGHT_TESTS"] = json.dumps(self.light_tests)
                         step_env["CI_LOCAL_LIGHT_ROOT"] = str(workspace)
+                        step_env["CI_LOCAL_LIGHT_COUNTS"] = str(self.run_dir / "light-counts")
                     limit = job_deadline - time.monotonic()
                     if step.get("timeout-minutes"):
                         limit = min(limit, 60 * _num(interpolate(step.get("timeout-minutes"), senv)))
@@ -1889,7 +1930,10 @@ def main(argv: list[str] | None = None) -> int:
         for j in dropped:
             j.reason = LIGHT_DROPPED
         print("ci_local: tier light: skipped jobs " + (", ".join(j.label for j in dropped) or "none"), flush=True)
-        selection, uncovered = light_tests(r.changed, r.all_files, r.read_file)
+        selection, uncovered, owned = light_tests(r.changed, r.all_files, r.read_file)
+        if owned:
+            print(f"ci_local: tier light: {len(owned)} changed file(s) belong to an npm package or a crate; "
+                  "their test steps are narrowed", flush=True)
         if selection is None:
             print("ci_local: tier light: pytest runs whole (a conftest.py or the package configuration changed)")
         else:
@@ -1898,8 +1942,8 @@ def main(argv: list[str] | None = None) -> int:
             for t, why in sorted(selection.items()):
                 print(f"    {t}: {'; '.join(why)}")
         if uncovered:
-            print("ci_local: RED tier light: no test names or imports " + ", ".join(uncovered)
-                  + "; add a test, or run --tier full", flush=True)
+            for f in uncovered:
+                print(f"ci_local: RED tier light: no test covers {f}; use --tier full or add a test", flush=True)
             return 1
     count = sum(len(g) for g in groups)
     if a.parallel is None:
@@ -1919,6 +1963,10 @@ def main(argv: list[str] | None = None) -> int:
     for j in jobs:
         counts[j.result] = counts.get(j.result, 0) + 1
     bad = counts.get("FAIL", 0) + counts.get("ERROR", 0)
+    if a.tier == "light" and r.light_tests is not None and light_executed(r.run_dir / "light-counts") == 0:
+        print("ci_local: RED tier light: the run executed no test; a light run may select few tests, never none "
+              "(use --tier full)")
+        bad += 1
     skipped = [j for j in jobs if j.result == "SKIPPED"]
     green = bad == 0 and (not skipped or a.allow_skipped)
     if skipped:

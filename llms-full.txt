@@ -6264,14 +6264,31 @@ for this repository, or a path.
 The pull request body states the tier and why; a reviewer may raise it.
 
 - **Light** (`--tier light`): docs, copy, icons, CSS, one dropdown, a catalog or model entry, a
-  changelog, or a pin bump with its pin tests. The gate runs one Python per matrix (3.12, the
-  version every repository's single-version jobs use; the first entry of a matrix without it) and
-  prints the entries it leaves out (`tier light: skipped jobs ...`); they do not count as skipped
-  jobs. pytest keeps the changed test files and the tests named after a changed module
-  (`src/pkg/model_host.py` keeps `tests/test_model_host*.py`), and runs whole when a `conftest.py`,
-  `pyproject.toml` or other test configuration changed; a change with no matching test runs none.
-  Every other step still runs: lint, type-check, build, and the npm and cargo jobs, which are whole
-  (they take a minute or two).
+  changelog, or a pin bump with its pin tests. A light run may select few tests, never none.
+  - One Python per matrix: 3.12, the version every repository's single-version jobs use (the
+    first entry of a matrix without it). The entries it leaves out are printed
+    (`tier light: skipped jobs ...`) and do not count as skipped jobs.
+  - pytest keeps a test file when it changed, when its name holds the name of a changed file, or
+    when it imports a changed module. The name rule is a substring match on the file stem:
+    `model_host.py` keeps `test_model_host_portable.py`, `model_catalog.yaml` keeps
+    `test_model_catalog.py`, and a short stem keeps more than it needs (`app.js` keeps
+    `test_console_app.py`). The kept files and the reason for each are printed.
+  - Every changed file that is not documentation (`.md`, `.txt`) and does not belong to an npm
+    package or a crate must keep at least one test: a module, a YAML/JSON catalog, a template, a
+    static JS/CSS file, a shell script. Otherwise the run is red before it starts:
+    `no test covers <path>; use --tier full or add a test`.
+  - A `conftest.py`, the package configuration (`pyproject.toml`, `setup.cfg`, `pytest.ini`,
+    ...) or any non-Python file under `tests/` (a fixture) runs the whole suite.
+  - Files in an npm package or a crate go to its own test step: `npm test` becomes
+    `npx vitest related --run <the changed files>` when the test script is `vitest run` (vitest
+    exits red when nothing relates), `npm --workspace <w> run test` for the workspaces with changed
+    files in a monorepo (whole when a changed file is outside every workspace, other scripts run
+    whole); `cargo test` becomes `cargo test -p <crate>` in a Cargo workspace, and is skipped when
+    the crate has no change.
+  - The run counts the tests it executed (pytest's kept tests, each npm / cargo test step that
+    ran). Zero makes it red: `the run executed no test`; a documentation-only change needs
+    `--tier full`.
+  - Every other step still runs: lint, type-check, build, pack.
 - **Full** (`--tier full`, the default): anything in a code path shared across features,
   concurrency or lifecycle, schemas and contracts, and every release branch. The whole pull request
   and main job set, every matrix entry. `--tier light` with `--release-tag` is refused, and the
@@ -6375,6 +6392,10 @@ runs them. Extra flags for one repository go in its git config, for example the 
 iPhone suite: `git config ci-local.args "--runner-label xcode-27 --input full_ui_suite=true"`.
 The only override is `git push --no-verify`; the red CI that follows is then yours to fix.
 
+The first push to an empty remote is refused: there is no `main` to fetch and merge into. Push that
+first commit with `git push --no-verify`, or run the gate by hand against a base you choose
+(`scripts/ci_local.sh <repo> --base-sha <commit>`) first.
+
 ## Rules
 
 - No push without `scripts/ci_local.sh <repo>` green for the commit being pushed.
@@ -6404,6 +6425,7 @@ Light against full, the same commit:
 |---|---|---|
 | AbstractCore `ebc86d7` (PR #42: `providers/base.py`, a test, docs) | 1m46s: Python 3.12 only, 85 test files kept (the changed test, and the tests named after or importing `abstractcore.providers.base`), `cargo test` skipped (no change under `console-tui/`) | 14m53s (`origin/main`, default `--jobs`) |
 | AbstractUIC `204bf84` (`ui-kit/` brand icons, CHANGELOG, docs) | 0m31s: `npm --workspace ui-kit run test` | 0m47s |
+| AbstractCore `fe66e12` (CHANGELOG and changelog fragments only), `--job test` | RED in 0m25s: `the run executed no test` | (needs full) |
 | AbstractUIC `67f867a` (`ui-kit/` and `ci.yml`) | 0m50s: whole (`ci.yml` is outside every workspace) | 0m51s |
 
 The red runs on `origin/main`, test by test:

@@ -257,25 +257,55 @@ def test_light_tier_selects_tests_that_change_name_or_import_the_changed_modules
         "tests/test_uses_fakes.py": "from fakes import FakeHost\n",
     }
     read = lambda path: texts.get(path, "")
-    keep, uncovered = ci.light_tests(["docs/a.md"], files, read)
+    keep, uncovered, _ = ci.light_tests(["docs/a.md"], files, read)
     assert keep == {} and uncovered == []
-    keep, uncovered = ci.light_tests(["src/pkg/model_host.py"], files, read)
+    keep, uncovered, _ = ci.light_tests(["src/pkg/model_host.py"], files, read)
     assert sorted(keep) == ["tests/test_model_host.py", "tests/test_model_host_portable.py"]
     assert keep["tests/test_model_host.py"] == ["named after src/pkg/model_host.py"]
-    keep, _ = ci.light_tests(["src/pkg/cli.py", "src/pkg/util.py"], files, read)
+    keep, _, _ = ci.light_tests(["src/pkg/cli.py", "src/pkg/util.py"], files, read)
     assert keep == {"tests/test_entry.py": ["imports pkg.cli"], "tests/test_other.py": ["imports pkg.util"]}
-    keep, _ = ci.light_tests(["tests/test_other.py"], files, read)
+    keep, _, _ = ci.light_tests(["tests/test_other.py"], files, read)
     assert keep == {"tests/test_other.py": ["changed"]}
-    keep, uncovered = ci.light_tests(["tests/fakes.py"], files, read)
+    keep, uncovered, _ = ci.light_tests(["tests/fakes.py"], files, read)
     assert list(keep) == ["tests/test_uses_fakes.py"] and uncovered == []
-    assert ci.light_tests(["tests/conftest.py"], files, read) == (None, [])
-    assert ci.light_tests(["pyproject.toml"], files, read) == (None, [])
+    assert ci.light_tests(["tests/conftest.py"], files, read) == (None, [], [])
+    assert ci.light_tests(["pyproject.toml"], files, read) == (None, [], [])
 
 
 def test_light_tier_fails_loud_when_a_changed_module_has_no_test():
     files = ["src/pkg/lonely.py", "tests/test_x.py"]
-    keep, uncovered = ci.light_tests(["src/pkg/lonely.py"], files, lambda p: "import os\n")
+    keep, uncovered, _ = ci.light_tests(["src/pkg/lonely.py"], files, lambda p: "import os\n")
     assert keep == {} and uncovered == ["src/pkg/lonely.py"]
+
+
+def test_light_tier_covers_every_changed_file_not_only_python():
+    files = ["src/pkg/assets/model_catalog.yaml", "src/pkg/console/static/app.js", "scripts/deploy.sh",
+             "tests/test_model_catalog.py", "tests/test_console_app.py", "tests/fixtures/rows.json",
+             "web/package.json", "web/src/view.ts", "README.md"]
+    read = lambda path: ""
+    # A catalog entry (ADR 0051's own light example) keeps the test named after it.
+    keep, uncovered, _ = ci.light_tests(["src/pkg/assets/model_catalog.yaml"], files, read)
+    assert keep == {"tests/test_model_catalog.py": ["named after src/pkg/assets/model_catalog.yaml"]}
+    # Static JS and a shell script with no test of that name are uncovered: a red light run.
+    keep, uncovered, _ = ci.light_tests(["src/pkg/console/static/app.js", "scripts/deploy.sh"], files, read)
+    assert "src/pkg/console/static/app.js" not in uncovered  # test_console_app holds "app"
+    assert uncovered == ["scripts/deploy.sh"]
+    # A fixture under tests/ runs the whole suite.
+    assert ci.light_tests(["tests/fixtures/rows.json"], files, read) == (None, [], [])
+    # A file an npm package owns is left to the narrowed npm step, not to pytest.
+    keep, uncovered, owned = ci.light_tests(["web/src/view.ts"], files, read)
+    assert keep == {} and uncovered == [] and owned == ["web/src/view.ts"]
+    # Documentation needs no test.
+    assert ci.light_tests(["README.md"], files, read) == ({}, [], [])
+
+
+def test_a_light_run_that_executed_no_test_is_red(tmp_path):
+    counts = tmp_path / "light-counts"
+    assert ci.light_executed(counts) == 0           # nothing ran at all
+    counts.write_text("0\n0\n", encoding="utf-8")
+    assert ci.light_executed(counts) == 0           # every pytest kept nothing
+    counts.write_text("0\n3\n", encoding="utf-8")
+    assert ci.light_executed(counts) == 3
 
 
 def test_module_names_and_imports():
@@ -336,9 +366,12 @@ def test_light_plugin_narrows_the_top_level_pytest_only(tmp_path):
     (tmp_path / "tests" / "test_a.py").write_text("def test_a():\n    pass\n", encoding="utf-8")
     (tmp_path / "tests" / "test_b.py").write_text("def test_b():\n    raise AssertionError\n", encoding="utf-8")
 
+    counts = tmp_path / "counts"
+
     def run(selected):
         env = {**os.environ, "PYTHONPATH": str(tmp_path / "plugin"), "PYTEST_ADDOPTS": "-p ci_local_light",
-               "CI_LOCAL_LIGHT_TESTS": json.dumps(selected), "CI_LOCAL_LIGHT_ROOT": str(tmp_path)}
+               "CI_LOCAL_LIGHT_TESTS": json.dumps(selected), "CI_LOCAL_LIGHT_ROOT": str(tmp_path),
+               "CI_LOCAL_LIGHT_COUNTS": str(counts)}
         return subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests"],
                               cwd=tmp_path, env=env, capture_output=True, text=True)
 
@@ -347,3 +380,4 @@ def test_light_plugin_narrows_the_top_level_pytest_only(tmp_path):
     out = run([])
     assert out.returncode == 0, out.stdout  # nothing selected is not "no tests collected"
     assert run(["tests/test_b.py"]).returncode == 1
+    assert counts.read_text(encoding="utf-8").split() == ["1", "0", "1"]  # what the run-level check sums
