@@ -6340,6 +6340,9 @@ The pull request body states the tier and why; a reviewer may raise it.
   there, one fresh base per job; a `--basetemp` in `PYTEST_ADDOPTS` is not used because nested
   pytest runs, such as the Assistant's offscreen harness test, would inherit it and wipe their
   parent's) and `RUNNER_TEMP`, under `~/Library/Caches/ci-gate/runs/<repo>-<time>-<sha>/jobs/<job>/`.
+  `<job>` is the job's number and name cut to 40 characters (`07-release-v2-34-0-Local-model-tests`; every character but letters, digits, `_` and `-` becomes `-`):
+  tests build cache file names out of their paths (Hugging Face's hub cache) and macOS refuses a
+  file name over 255 bytes. The full name heads the job's `log.txt` and the summary.
   That directory is outside the workspace on purpose: code that looks up its parents for sibling
   checkouts (AbstractCore's theme sync finds `../abstractuic`) must not find the live ones, as on
   GitHub. Its path holds no `local` either: AbstractCore's zig outline test checks that word
