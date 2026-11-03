@@ -12,6 +12,7 @@
 # Jobs this Mac cannot run (Windows, Linux root, Docker, secrets) are printed as SKIPPED and do not
 # block the push (--allow-skipped); GitHub still runs them.
 # Extra gate flags for one repository: git config ci-local.args "--runner-label xcode-27 --input full_ui_suite=true"
+# (or "--tier light" for a repository where the light tier is the norm; release branches stay full).
 set -u
 gate="__CI_LOCAL_SH__"
 repo=$(git rev-parse --show-toplevel)
@@ -31,7 +32,9 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   esac
   echo "pre-push: ci_local $repo $local_sha -> $remote_ref"
   # shellcheck disable=SC2086  # word splitting of the flag lists is intended
-  if ! "$gate" "$repo" --ref "$local_sha" --allow-skipped $args $extra </dev/null; then
+  # A release branch is always the full tier (ADR 0051), whatever ci-local.args says.
+  case "$remote_ref" in refs/heads/release/*) last="--tier full" ;; *) last="" ;; esac
+  if ! "$gate" "$repo" --ref "$local_sha" --allow-skipped $args $extra $last </dev/null; then
     status=1
   fi
 done

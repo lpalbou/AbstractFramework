@@ -37,6 +37,24 @@ for this repository, or a path.
 - The workflow files are the only source of truth. Nothing is copied from them: a new step, a new
   matrix entry or a new job is run the next time the gate runs.
 
+## Test tiers (`--tier light|full`, ADR 0051)
+
+The pull request body states the tier and why; a reviewer may raise it.
+
+- **Light** (`--tier light`): docs, copy, icons, CSS, one dropdown, a catalog or model entry, a
+  changelog, or a pin bump with its pin tests. The gate runs one Python per matrix (3.12, the
+  version every repository's single-version jobs use; the first entry of a matrix without it) and
+  prints the entries it leaves out (`tier light: skipped jobs ...`); they do not count as skipped
+  jobs. pytest keeps the changed test files and the tests named after a changed module
+  (`src/pkg/model_host.py` keeps `tests/test_model_host*.py`), and runs whole when a `conftest.py`,
+  `pyproject.toml` or other test configuration changed; a change with no matching test runs none.
+  Every other step still runs: lint, type-check, build, and the npm and cargo jobs, which are whole
+  (they take a minute or two).
+- **Full** (`--tier full`, the default): anything in a code path shared across features,
+  concurrency or lifecycle, schemas and contracts, and every release branch. The whole pull request
+  and main job set, every matrix entry. `--tier light` with `--release-tag` is refused, and the
+  pre-push hook always runs a `release/*` branch in full.
+
 ## What it runs
 
 - **The commit, merged into the base.** The base branch (`--base`, default `main`) is fetched from

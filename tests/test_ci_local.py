@@ -245,3 +245,46 @@ def test_default_jobs():
 
 def _job_id(job_id):
     return ci.Job("CI", "ci.yml", {}, job_id, {}, {}, f"ci/{job_id}")
+
+
+def test_light_tier_selects_the_changed_files_tests():
+    files = ["src/pkg/model_host.py", "src/pkg/cli.py", "tests/test_model_host.py", "tests/test_model_host_portable.py",
+             "tests/test_cli.py", "tests/test_other.py", "docs/a.md"]
+    assert ci.light_tests(["docs/a.md"], files) == []
+    assert ci.light_tests(["src/pkg/model_host.py"], files) == ["tests/test_model_host.py", "tests/test_model_host_portable.py"]
+    assert ci.light_tests(["tests/test_other.py"], files) == ["tests/test_other.py"]
+    assert ci.light_tests(["tests/conftest.py"], files) is None
+    assert ci.light_tests(["pyproject.toml"], files) is None
+
+
+def test_light_tier_keeps_one_python_per_matrix():
+    group = [ci.Job("CI", "ci.yml", {}, "test", {}, {"python-version": v}, f"ci/test ({v})", python=v)
+             for v in ("3.10", "3.11", "3.12", "3.13")]
+    assert [j.python for j in ci.light_matrix(group)] == ["3.10", "3.11", "3.13"]
+    os_matrix = [ci.Job("CI", "ci.yml", {}, "smoke", {}, {"os": o}, f"ci/smoke ({o})") for o in ("ubuntu", "macos")]
+    assert [j.matrix["os"] for j in ci.light_matrix(os_matrix)] == ["macos"]
+    assert ci.light_matrix(group[:1]) == []
+
+
+def test_light_plugin_narrows_the_top_level_pytest_only(tmp_path):
+    import json
+    import os
+    import subprocess
+
+    (tmp_path / "plugin").mkdir()
+    (tmp_path / "plugin" / "ci_local_light.py").write_text(ci.LIGHT_PLUGIN, encoding="utf-8")
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_a.py").write_text("def test_a():\n    pass\n", encoding="utf-8")
+    (tmp_path / "tests" / "test_b.py").write_text("def test_b():\n    raise AssertionError\n", encoding="utf-8")
+
+    def run(selected):
+        env = {**os.environ, "PYTHONPATH": str(tmp_path / "plugin"), "PYTEST_ADDOPTS": "-p ci_local_light",
+               "CI_LOCAL_LIGHT_TESTS": json.dumps(selected), "CI_LOCAL_LIGHT_ROOT": str(tmp_path)}
+        return subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests"],
+                              cwd=tmp_path, env=env, capture_output=True, text=True)
+
+    out = run(["tests/test_a.py"])
+    assert out.returncode == 0 and "1 passed, 1 deselected" in out.stdout, out.stdout
+    out = run([])
+    assert out.returncode == 0, out.stdout  # nothing selected is not "no tests collected"
+    assert run(["tests/test_b.py"]).returncode == 1

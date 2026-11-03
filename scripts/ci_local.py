@@ -661,6 +661,7 @@ class Job:
     log: Path | None = None
     event: str = "pull_request"
     git_ref: str = ""
+    python: str | None = None
     outputs: dict = field(default_factory=dict)
     host_note: str = ""
 
@@ -848,6 +849,69 @@ def sandbox_profile(home: Path, allow_write: list[Path], deny: list[Path]) -> st
     return "\n".join(lines) + "\n"
 
 
+# ---- tier light (ADR 0051): docs, copy, CSS, a catalog entry, a pin bump
+PRIMARY_PYTHON = "3.12"  # every repository's single-version jobs (build, docs, changelog) use it
+LIGHT_DROPPED = "tier light: one Python per matrix"
+_WHOLE_SUITE = {"conftest.py", "pyproject.toml", "setup.py", "setup.cfg", "pytest.ini", "tox.ini"}
+
+
+def light_tests(changed: list[str], all_files: list[str]) -> list[str] | None:
+    """The test files a light run keeps: changed test files, and the tests named after a changed
+    module (`src/pkg/model_host.py` -> `tests/test_model_host*.py`). None = the whole suite (a test
+    configuration or the package's dependencies changed)."""
+    if any(Path(f).name in _WHOLE_SUITE for f in changed):
+        return None
+    tests = [f for f in all_files if re.search(r"(^|/)test_[^/]*\.py$", f)]
+    keep = {f for f in changed if f in tests}
+    for f in changed:
+        if f.endswith(".py") and f not in tests:
+            stem = Path(f).stem if Path(f).stem != "__init__" else Path(f).parent.name
+            keep |= {t for t in tests if stem in Path(t).stem}
+    return sorted(keep)
+
+
+def light_matrix(group: list["Job"]) -> list["Job"]:
+    """The matrix entries a light run drops: all but the PRIMARY_PYTHON ones (all but the first
+    when no entry uses it)."""
+    if len(group) < 2:
+        return []
+    keep = [j for j in group if j.python == PRIMARY_PYTHON] or group[:1]
+    return [j for j in group if j not in keep]
+
+
+# pytest plugin for tier light: keeps the selected files' tests in the top-level pytest only (it
+# takes the list out of the environment, so a nested pytest runs whole), and a run with nothing
+# selected exits 0 instead of 5.
+LIGHT_PLUGIN = """import json, os
+_SELECTED = None
+_ROOT = None
+
+
+def pytest_configure(config):
+    global _SELECTED, _ROOT
+    raw = os.environ.pop("CI_LOCAL_LIGHT_TESTS", None)
+    if raw is not None:
+        _SELECTED, _ROOT = set(json.loads(raw)), os.environ.get("CI_LOCAL_LIGHT_ROOT", os.getcwd())
+
+
+def pytest_collection_modifyitems(config, items):
+    if _SELECTED is None:
+        return
+    keep, drop = [], []
+    for item in items:
+        rel = os.path.relpath(str(getattr(item, "path", None) or item.fspath), _ROOT)
+        (keep if rel in _SELECTED else drop).append(item)
+    if drop:
+        config.hook.pytest_deselected(items=drop)
+        items[:] = keep
+
+
+def pytest_sessionfinish(session, exitstatus):
+    if _SELECTED is not None and exitstatus == 5:
+        session.exitstatus = 0
+"""
+
+
 # Jobs that must run alone, after everything else (the operator's one-model-at-a-time GPU rule, and
 # gates that measure latency). Keyed by repository and job id; the reason is printed.
 SERIAL_JOBS = {
@@ -1021,6 +1085,7 @@ class Runner:
         self.src = src
         diff_from = a.before or git("merge-base", self.base_sha, self.head, cwd=src)
         self.changed = git("diff", "--name-only", diff_from, self.head, cwd=src).splitlines()
+        self.all_files = git("ls-tree", "-r", "--name-only", self.tested, cwd=src).splitlines()
         wf_dir = self.run_dir / "workflows"
         wf_dir.mkdir()
         listing = git("ls-tree", "--name-only", f"{self.tested}:.github/workflows", cwd=src, check=False)
@@ -1128,8 +1193,10 @@ class Runner:
                         if not spec.get("name") and combo:
                             label += " (" + ", ".join(to_str(v) for v in combo.values()) + ")"
                         prefix = f"{path.stem}@{tag}" if tag else path.stem
-                        group.append(Job(name, path.name, wf, job_id, spec, combo, f"{prefix}/{label}", i,
-                                         event=event_name, git_ref=ref))
+                        job = Job(name, path.name, wf, job_id, spec, combo, f"{prefix}/{label}", i,
+                                  event=event_name, git_ref=ref)
+                        job.python = setup_python_version(job, ctx)
+                        group.append(job)
                     groups.append(group)
         return groups
 
@@ -1206,7 +1273,7 @@ class Runner:
 
     @staticmethod
     def _aggregate(g: list[Job]) -> str:
-        results = [j.result for j in g]
+        results = [j.result for j in g if j.reason != LIGHT_DROPPED]
         if any(r in ("FAIL", "ERROR") for r in results):
             return "failure"
         if any(r in ("SKIPPED", "NOT-SELECTED") for r in results):
@@ -1282,6 +1349,8 @@ class Runner:
         skip = static_skip(job)
         if skip:
             return self.finish(job, *skip)
+        if job.reason == LIGHT_DROPPED:
+            return self.finish(job, "NOT-SELECTED", LIGHT_DROPPED)
         if a.python:
             want = setup_python_version(job, ctx)
             if want is not None and want not in a.python:
@@ -1420,6 +1489,14 @@ class Runner:
                         f.touch()
                     step_env.update({k: str(v) for k, v in files.items()})
                     step_env["PATH"] = ":".join([str(shims)] + prefix_path + [str(rust_bin)] + image_bin + SYSTEM_PATH)
+                    if a.tier == "light" and self.light_tests is not None:
+                        plugin_dir = jobdir / "light-plugin"
+                        plugin_dir.mkdir(exist_ok=True)
+                        (plugin_dir / "ci_local_light.py").write_text(LIGHT_PLUGIN, encoding="utf-8")
+                        step_env["PYTHONPATH"] = ":".join(x for x in (str(plugin_dir), step_env.get("PYTHONPATH", "")) if x)
+                        step_env["PYTEST_ADDOPTS"] = " ".join(x for x in ("-p ci_local_light", step_env.get("PYTEST_ADDOPTS", "")) if x)
+                        step_env["CI_LOCAL_LIGHT_TESTS"] = json.dumps(self.light_tests)
+                        step_env["CI_LOCAL_LIGHT_ROOT"] = str(workspace)
                     limit = job_deadline - time.monotonic()
                     if step.get("timeout-minutes"):
                         limit = min(limit, 60 * _num(interpolate(step.get("timeout-minutes"), senv)))
@@ -1625,6 +1702,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--python", action="append", help="run only the matrix entries for this Python (repeatable)")
     p.add_argument("--installer", choices=["uv", "pip"], default="uv",
                    help="run the workflow's pip commands as uv pip (default: linked from the uv cache) or as pip")
+    p.add_argument("--tier", choices=["light", "full"], default="full",
+                   help="full (default): every job and matrix entry. light (ADR 0051: docs, copy, a catalog entry, a "
+                        "pin bump): one Python per matrix, pytest narrowed to the changed files' tests; lint, "
+                        "type-check, build and the npm/cargo jobs still run whole. Never with --release-tag")
     p.add_argument("--allow-skipped", action="store_true", help="exit 0 even when some jobs could not run here")
     p.add_argument("--sandbox", action="store_true",
                    help="run every step under sandbox-exec (refuses localhost:8080, ~/.abstractcore, writes under your "
@@ -1644,6 +1725,9 @@ def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
     if sys.platform != "darwin":
         print("ci_local: this gate runs on macOS (the workflows' Linux jobs run on this Mac)", file=sys.stderr)
+        return 2
+    if a.tier == "light" and a.release_tag:
+        print("ci_local: a release is always --tier full (ADR 0051); drop --tier light", file=sys.stderr)
         return 2
     workspace = Path(a.workspace).resolve() if a.workspace else default_workspace()
     repo = resolve_repo(a.repo, workspace)
@@ -1671,6 +1755,19 @@ def main(argv: list[str] | None = None) -> int:
     if not groups:
         print("ci_local: GREEN, no workflow runs for this push")
         return 0
+    r.light_tests = None
+    if a.tier == "light":
+        dropped = [j for g in groups for j in light_matrix(g)]
+        for j in dropped:
+            j.reason = LIGHT_DROPPED
+        print("ci_local: tier light: skipped jobs " + (", ".join(j.label for j in dropped) or "none"), flush=True)
+        r.light_tests = light_tests(r.changed, r.all_files)
+        if r.light_tests is None:
+            print("ci_local: tier light: pytest runs whole (a test configuration or pyproject changed)", flush=True)
+        else:
+            print(f"ci_local: tier light: pytest keeps {len(r.light_tests)} test file(s)"
+                  + (": " + ", ".join(r.light_tests[:12]) + (" ..." if len(r.light_tests) > 12 else "")
+                     if r.light_tests else ""), flush=True)
     count = sum(len(g) for g in groups)
     if a.parallel is None:
         a.parallel, why = default_jobs(count, physical_cores(), available_memory())
