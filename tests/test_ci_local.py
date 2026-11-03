@@ -578,7 +578,8 @@ def test_job_folders_stay_short_whatever_the_job_name():
     assert ci.job_dir_name(12, "///") == "12-job"
     # A run folder with such a job: every component, and a cache file name a test derives from the
     # whole path (Hugging Face flattens paths into one name), stays under macOS's 255-byte limit.
-    run = ci.SCRATCH / "runs" / "abstractcore-20261103-214819-8ce8ce17"
+    # A fixed home: under the gate itself Path.home() is a job's own deep scratch home.
+    run = Path("/Users/someone/Library/Caches/ci-gate/runs/abstractcore-20261103-214819-8ce8ce17")
     hf_lock = (run / "jobs" / name / "home" / ".cache" / "huggingface" / "hub").as_posix().replace("/", "--")
     hf_lock += "--models--mlx-community--Qwen3-0.6B-4bit.lock"
     assert all(len(part.encode()) <= 255 for part in (run / "jobs" / name).parts)
