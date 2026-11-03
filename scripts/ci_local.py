@@ -765,6 +765,21 @@ def find_node(spec: str) -> tuple[Path, str] | None:
     return None
 
 
+def image_node() -> Path | None:
+    """GitHub's ubuntu and macOS images carry a Node; jobs without setup-node get the newest one here."""
+    best: tuple[tuple[int, ...], Path] | None = None
+    nvm = Path.home() / ".nvm" / "versions" / "node"
+    candidates = list(nvm.glob("v*/bin/node")) if nvm.is_dir() else []
+    candidates += list(Path("/opt/homebrew/opt").glob("node@*/bin/node")) + [Path("/opt/homebrew/bin/node")]
+    for binary in candidates:
+        version = _node_version(binary) if binary.exists() else None
+        if version and all(p.isdigit() for p in version.split(".")):
+            key = tuple(int(p) for p in version.split("."))
+            if best is None or key > best[0]:
+                best = (key, binary.parent)
+    return best[1] if best else None
+
+
 def rust_toolchain_ok(toolchain: str, components: list[str]) -> str | None:
     """None when the toolchain and components are installed; otherwise what is missing."""
     rustup = shutil.which("rustup") or str(Path.home() / ".cargo" / "bin" / "rustup")
@@ -790,6 +805,9 @@ def rust_toolchain_ok(toolchain: str, components: list[str]) -> str | None:
 # Run
 # --------------------------------------------------------------------------------------------
 
+# Outside the workspace on purpose: code that walks up its parents for sibling checkouts
+# (abstractcore's theme_sync finds ../abstractuic) must not find the live ones, as on GitHub.
+SCRATCH = Path.home() / "Library" / "Caches" / "ci-local"
 UV = shutil.which("uv") or str(Path.home() / ".local" / "bin" / "uv")
 SYSTEM_PATH = ["/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"]
 RUST_TOOLS = ["cargo", "cargo-clippy", "cargo-fmt", "clippy-driver", "rustc", "rustdoc", "rustfmt", "rustup"]
@@ -855,7 +873,7 @@ class Runner:
         a = self.args
         stamp = _dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         self.head = git("rev-parse", "--verify", f"{a.ref}^{{commit}}", cwd=self.repo)
-        self.run_dir = Path(a.work or self.workspace / "untracked" / "ci-local" / "runs").resolve() / (
+        self.run_dir = Path(a.work or SCRATCH / "runs").expanduser().resolve() / (
             f"{self.repo_name}-{stamp}-{self.head[:8]}"
         )
         self.run_dir.mkdir(parents=True, exist_ok=False)
@@ -1204,7 +1222,7 @@ class Runner:
     def _steps(self, job: Job, ctx: Context, jobdir: Path, workspace: Path, home: Path, tmp: Path, rtemp: Path) -> tuple[str, str]:
         a = self.args
         rh = self.real_home
-        target = self.workspace / "untracked" / "ci-local" / "cargo-target" / self.repo_name / _slug(f"{job.wf_file}-{job.job_id}")
+        target = SCRATCH / "cargo-target" / self.repo_name / _slug(f"{job.wf_file}-{job.job_id}")
         target.mkdir(parents=True, exist_ok=True)
         env = self._base_env(job, jobdir, workspace, home, tmp, rtemp, ctx.data["github"], target)
         shims = jobdir / "shims"
@@ -1218,6 +1236,8 @@ class Runner:
             if real.exists():
                 (rust_bin / tool).symlink_to(real)
         prefix_path: list[str] = []  # setup-python / setup-node / $GITHUB_PATH
+        node_dir = image_node()
+        image_bin = [str(node_dir)] if node_dir else []
         allow = [self.run_dir, target, rh / ".cache" / "uv", rh / "Library" / "Caches" / "pip", rh / ".npm",
                  rh / ".cargo" / "registry", rh / ".cargo" / "git", rh / ".rustup" / "tmp",
                  rh / "Library" / "Caches" / "ms-playwright"]
@@ -1293,11 +1313,12 @@ class Runner:
                     for f in files.values():
                         f.touch()
                     step_env.update({k: str(v) for k, v in files.items()})
-                    step_env["PATH"] = ":".join([str(shims)] + prefix_path + [str(rust_bin)] + SYSTEM_PATH)
+                    step_env["PATH"] = ":".join([str(shims)] + prefix_path + [str(rust_bin)] + image_bin + SYSTEM_PATH)
                     limit = job_deadline - time.monotonic()
                     if step.get("timeout-minutes"):
                         limit = min(limit, 60 * _num(interpolate(step.get("timeout-minutes"), senv)))
-                    code, why = self._exec(["sandbox-exec", "-f", str(profile), *argv], cwd, step_env, log, limit, pgids)
+                    wrap = ["sandbox-exec", "-f", str(profile)] if a.sandbox else []
+                    code, why = self._exec([*wrap, *argv], cwd, step_env, log, limit, pgids)
                     if (jobdir / "needs-root").exists():
                         cmd = (jobdir / "needs-root").read_text(encoding="utf-8").splitlines()[0]
                         return "SKIPPED", f"step {name!r} needs root on a Linux runner ({cmd})"
@@ -1499,10 +1520,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--installer", choices=["uv", "pip"], default="uv",
                    help="run the workflow's pip commands as uv pip (default: linked from the uv cache) or as pip")
     p.add_argument("--allow-skipped", action="store_true", help="exit 0 even when some jobs could not run here")
+    p.add_argument("--sandbox", action="store_true",
+                   help="run every step under sandbox-exec (refuses localhost:8080, ~/.abstractcore, writes under your "
+                        "home outside the run); off by default: macOS cannot nest it, so tests that sandbox commands "
+                        "themselves (AbstractCore's macOS sandbox) fail under it")
     p.add_argument("--parallel", type=int, default=1, help="jobs to run at once (default 1)")
     p.add_argument("--tail", type=int, default=40, help="log lines to print for a failed job (default 40)")
     p.add_argument("--workspace", help="the AbstractFramework workspace (default: this checkout's main worktree)")
-    p.add_argument("--work", help="where run directories go (default <workspace>/untracked/ci-local/runs)")
+    p.add_argument("--work", help="where run directories go (default ~/Library/Caches/ci-local/runs, outside the workspace)")
     p.add_argument("--list", action="store_true", help="print the jobs that would run, and exit")
     return p
 
@@ -1510,7 +1535,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     a = build_parser().parse_args(argv)
     if sys.platform != "darwin":
-        print("ci_local: this gate runs on macOS (every step runs under sandbox-exec)", file=sys.stderr)
+        print("ci_local: this gate runs on macOS (the workflows' Linux jobs run on this Mac)", file=sys.stderr)
         return 2
     workspace = Path(a.workspace).resolve() if a.workspace else default_workspace()
     repo = resolve_repo(a.repo, workspace)

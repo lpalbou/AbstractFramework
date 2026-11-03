@@ -153,7 +153,7 @@ Notes for LLMs working in this repo:
 - [docs/faq.md](docs/faq.md): Common questions, comparisons, limits.
 - [docs/troubleshooting.md](docs/troubleshooting.md): Symptoms, checks and fixes (installer blocked by macOS, PyPI index lag right after a release, sign-in links and sign-in by email, ports, network access, providers, email automations and agent email tools, logs).
 - [docs/glossary.md](docs/glossary.md): Shared terminology used across docs.
-- [docs/ci-local.md](docs/ci-local.md): Local CI gate: `scripts/ci_local.sh <repo> [--job <name>]` runs a repository's GitHub Actions jobs for a commit on a Mac, from the workflow files (merge into main, main's full matrix, fresh environments installing siblings from PyPI, scratch HOME, sandboxed); exit 0/1/2 contract, SKIPPED jobs, the opt-in pre-push hook (`scripts/install_hooks.sh`), the push rules.
+- [docs/ci-local.md](docs/ci-local.md): Local CI gate: `scripts/ci_local.sh <repo> [--job <name>]` runs a repository's GitHub Actions jobs for a commit on a Mac, from the workflow files (merge into main, main's full matrix, fresh environments installing siblings from PyPI, scratch HOME, clean environment); exit 0/1/2 contract, SKIPPED jobs, the opt-in pre-push hook (`scripts/install_hooks.sh`), the push rules.
 - [docs/workspace-scripts.md](docs/workspace-scripts.md): Working from source: package inventory (scripts/lib/packages.txt), dependency tiers, build/status/pull/commit/push scripts.
 - [docs/adr/README.md](docs/adr/README.md): Cross-package ADR index and accepted platform contracts.
 

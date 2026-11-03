@@ -56,13 +56,20 @@ for this repository, or a path.
   components. `actions/checkout` clones the tested commit with the step's `fetch-depth` and `path`,
   or clones another repository from GitHub (`repository:`, `ref:`).
 - **Isolated.** Each job has its own scratch `HOME`, `TMPDIR` (pytest's temporary directories live
-  there, one fresh base per job) and `RUNNER_TEMP`, under
-  `untracked/ci-local/runs/<repo>-<time>-<sha>/jobs/<job>/`. The environment is clean: no token, no
-  provider key, no `ABSTRACT*` variable from your shell. Every step runs under `sandbox-exec`, which
-  refuses connections to `localhost:8080` and writes under your home directory outside the run
-  directory and the download caches (uv, pip, npm, cargo, Playwright), and refuses
-  `~/.abstractcore` and the workspace's `runtime/` outright. Rust jobs keep a target directory per
-  job in `untracked/ci-local/cargo-target/`, as `Swatinem/rust-cache` does on GitHub.
+  there, one fresh base per job; a `--basetemp` in `PYTEST_ADDOPTS` is not used because nested
+  pytest runs, such as the Assistant's offscreen harness test, would inherit it and wipe their
+  parent's) and `RUNNER_TEMP`, under `~/Library/Caches/ci-local/runs/<repo>-<time>-<sha>/jobs/<job>/`.
+  That directory is outside the workspace on purpose: code that looks up its parents for sibling
+  checkouts (AbstractCore's theme sync finds `../abstractuic`) must not find the live ones, as on
+  GitHub. The environment is clean: no token, no provider key, no `ABSTRACT*` variable from your
+  shell, so nothing reaches the gateway you run on `:8080` or reads `~/.abstractcore`.
+  `--sandbox` also runs every step under `sandbox-exec`, which refuses connections to
+  `localhost:8080`, writes under your home directory outside the run and the download caches (uv,
+  pip, npm, cargo, Playwright), and `~/.abstractcore` and the workspace's `runtime/`; it is off by
+  default because macOS cannot nest `sandbox-exec`, so AbstractCore's own macOS sandbox tests fail
+  under it. Rust jobs keep a target directory per job in `~/Library/Caches/ci-local/cargo-target/`,
+  as `Swatinem/rust-cache` does on GitHub. The gate deletes nothing: run directories stay for the
+  logs; remove old ones from `~/Library/Caches/ci-local/runs/` by hand.
 
 ## What it cannot run (SKIPPED, with the reason)
 
@@ -82,8 +89,9 @@ rust-toolchain, cache, rust-cache, upload-artifact and the Docker actions) is an
 
 ## Differences from GitHub that remain
 
-- Ubuntu jobs run on macOS: `RUNNER_OS` is `macOS`, `/bin/bash` is bash 3.2, and Linux-only
-  behaviour is not exercised. Most checks are portable; the ones that are not are the SKIPPED
+- Ubuntu jobs run on macOS: `RUNNER_OS` is `macOS`, `/bin/bash` is bash 3.2, Linux-only
+  behaviour is not exercised and macOS-only tests (skipped on GitHub's Ubuntu) do run. A job without
+  `setup-node` finds the newest local Node on its `PATH`, as the runner images carry one. Most checks are portable; the ones that are not are the SKIPPED
   root/sandbox jobs.
 - `uv pip` resolves like pip (`UV_INDEX_STRATEGY=unsafe-best-match`), but it is not pip.
 - Toolchains are this machine's: the local `stable` Rust may be older than GitHub's (clippy lints
@@ -127,4 +135,25 @@ The only override is `git push --no-verify`; the red CI that follows is then you
 
 ## Proof runs (2026-11-03, this Mac)
 
-PROOF_TABLE
+Runs of the first version of the gate, before the free disk ran out (the Core and Gateway runs on
+`origin/main` were stopped at 1.9 GB free and are not complete). Each failure the gate itself
+caused was fixed in the gate, not in the repositories.
+
+| Run | Verdict | Time |
+|---|---|---|
+| AbstractUIC `origin/main` (e101804), all jobs: Test, build, and pack; Avatar browser check | GREEN, 2 pass | 1m47s |
+| AbstractCore `37b7913` (release/2.33.0, red on GitHub: run 41571723950), `--job changelog` | RED, the same message as GitHub: "Release 2.33.0: changelog.d/ still holds 8 fragment(s)" | 0m02s |
+| This repository, the gate's own branch, `--job test-build` | GREEN | 3m57s |
+| A scratch repository with the pre-push hook: a good commit, then a bad one | pushed, then refused (the remote kept the good commit) | 0m02s, 0m01s |
+| AbstractCore `origin/main` (de1f9c8), partial | changelog, build, docs, console-tui MSRV pass (1s, 12s, 16s, 37s); linux-sandbox SKIPPED (needs root) | stopped |
+| AbstractGateway `origin/main` (0109bcb), partial | changes, changelog, build, docs, console-tui pass (1s, 1s, 13s, 47s, 4m32s); model-host-windows and docker SKIPPED | stopped |
+
+What those partial runs found in the gate, and the fix: `ps` cannot run under `sandbox-exec` (now
+outside it, and the sandbox is opt-in), macOS cannot nest `sandbox-exec` (AbstractCore's macOS sandbox
+tests: `--sandbox` is now off by default), run directories inside the workspace let AbstractCore's
+theme sync find the live `../abstractuic` (they moved to `~/Library/Caches/ci-local`), Gateway jobs
+without `setup-node` had no Node (the newest local one is now on the `PATH`, as on the runner image),
+and `uv` refused llama.cpp's macOS CPU wheel that pip installs (`UV_INSECURE_NO_ZIP_VALIDATION`). Two
+failures are not explained yet: AbstractCore `test_zig_lists_imports_tests_and_only_top_level_constants`
+on Python 3.9, and the console-tui `download_w_polls_the_job_to_a_completion_toast` timing test (run
+while the Gateway suite loaded the machine).

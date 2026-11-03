@@ -84,7 +84,7 @@ The full component diagram, with memory, semantics and the consoles, is in
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway, email accounts |
 | **[Email integration](guide/email-integration.md)** | Your email address and your own mailbox on the gateway: the account page, connecting a mailbox, recipient rules and send limits, agent email tools (off by default), email automations, notifications, sign-in by email, what administrators decide |
 | **[Phones and tablets](guide/deployment-iphone.md)** | Opening the console and the browser apps on a phone through the gateway's one address, and what adapts on a small screen |
-| **[Local CI gate](ci-local.md)** | `scripts/ci_local.sh <repo>`: a repository's GitHub Actions jobs run on your Mac before a push (main's full matrix, fresh environments, sandboxed), its exit-code contract, what it cannot run, the opt-in pre-push hook, the push rules |
+| **[Local CI gate](ci-local.md)** | `scripts/ci_local.sh <repo>`: a repository's GitHub Actions jobs run on your Mac before a push (main's full matrix, fresh environments, scratch `HOME`), its exit-code contract, what it cannot run, the opt-in pre-push hook, the push rules |
 | **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
