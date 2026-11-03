@@ -1054,29 +1054,41 @@ class Runner:
 
     # ---- execution
     def run_all(self, groups: list[list[Job]]) -> list[Job]:
+        """Every job instance (each matrix entry) is one task; a job waits for all of what it needs."""
         selected = self._selection(groups)
         by_key = {self._key(g[0]): g for g in groups}
         done = {k: threading.Event() for k in by_key}
+        left = {k: len(g) for k, g in by_key.items()}
 
-        def run_group(g: list[Job]) -> None:
-            key = self._key(g[0])
+        def run_one(job: Job) -> None:
+            key = self._key(job)
             try:
-                for n in _as_list(g[0].spec.get("needs")):
-                    done[self._key(g[0], n)].wait()
-                for job in g:
-                    if key not in selected:
-                        job.result = "NOT-SELECTED"
-                        continue
+                for n in _as_list(job.spec.get("needs")):
+                    done[self._key(job, n)].wait()
+                if key not in selected:
+                    job.result = "NOT-SELECTED"
+                else:
                     self.run_job(job, by_key)
             finally:
-                done[key].set()
+                with self.lock:
+                    left[key] -= 1
+                    if left[key] == 0:
+                        done[key].set()
 
+        ordered = [j for g in groups for j in g]  # groups are in needs order
         if self.args.parallel <= 1:
-            for g in groups:
-                run_group(g)
+            for job in ordered:
+                run_one(job)
         else:
+            # A waiting task holds a worker. Queued by depth in the needs graph, every task a job waits
+            # for has already started when the job starts, so the pool never deadlocks.
+            depth: dict[tuple[str, str, str], int] = {}
+            for g in groups:  # needs order: a job's needs come first
+                needs = _as_list(g[0].spec.get("needs"))
+                depth[self._key(g[0])] = 1 + max((depth[self._key(g[0], n)] for n in needs), default=-1)
+            ordered.sort(key=lambda j: depth[self._key(j)])
             with ThreadPoolExecutor(max_workers=self.args.parallel) as pool:
-                for f in [pool.submit(run_group, g) for g in groups]:
+                for f in [pool.submit(run_one, j) for j in ordered]:
                     f.result()
         return [j for g in groups for j in g]
 
