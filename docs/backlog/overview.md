@@ -7,7 +7,7 @@ the lifecycle folders described by the backlog process.
 ## Current Counts
 
 Recounted on 2026-11-03 after the backlog repair (renumbered duplicates 1108–1112, 0.12.0 record 1113,
-1098 split into 1098 + 1114) and the model idle-unload item 1115 (0895 deprecated, superseded). Method, per state folder: `find <state> -name '*.md' ! -name README.md
+1098 split into 1098 + 1114) the model idle-unload item 1115 (0895 deprecated, superseded) and the decision gate 1117 (2026-11-04). Method, per state folder: `find <state> -name '*.md' ! -name README.md
 ! -name 'template*' ! -path '*/evidence/*'` (topic subfolders included, evidence folders excluded) for
 **Files**; the same with a four-digit `NNNN_` prefix for **Numbered**. Counts are files, not unique
 IDs: the legacy three-digit and hub-era names (the difference between the two columns) are tracked by
@@ -16,7 +16,7 @@ across all folders (checked with `uniq -d` over the prefixes).
 
 | State | Files (top level) | Numbered `NNNN_` (top level) | Notes |
 |---|---|---|---|
-| Planned | 199 (147) | 155 (103) | 1115 model idle unload (60 min default, Keep loaded never unloads and persists; next wave). Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
+| Planned | 200 (148) | 156 (104) | 1117 operator decision gate: does a gateway stop need `EffectInterrupted`, or does the runtime simply stop (2026-11-04). 1115 model idle unload (60 min default, Keep loaded never unloads and persists; next wave). Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
 | Proposed | 82 (71) | 79 (68) | 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
 | Completed | 299 (275) | 116 (92) | 1113 release record of root 0.12.0; 1108 and 1109 renumbered from 1028 and 1072. Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 3 (3) | 3 (3) | 0895 MLX idle/TTL unload (superseded by 1115, 2026-11-03); 0858 and the earlier record. |
