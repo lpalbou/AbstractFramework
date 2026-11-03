@@ -67,7 +67,7 @@ for this repository, or a path.
   `localhost:8080`, writes under your home directory outside the run and the download caches (uv,
   pip, npm, cargo, Playwright), and `~/.abstractcore` and the workspace's `runtime/`; it is off by
   default because macOS cannot nest `sandbox-exec`, so AbstractCore's own macOS sandbox tests fail
-  under it. Rust jobs keep a target directory per job in `~/Library/Caches/ci-local/cargo-target/`,
+  under it. Rust jobs keep a target directory per job in the workspace's `untracked/ci-local/cargo-target/`,
   as `Swatinem/rust-cache` does on GitHub. The gate deletes nothing: run directories stay for the
   logs; remove old ones from `~/Library/Caches/ci-local/runs/` by hand.
 
