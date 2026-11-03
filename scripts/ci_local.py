@@ -1222,7 +1222,8 @@ class Runner:
     def _steps(self, job: Job, ctx: Context, jobdir: Path, workspace: Path, home: Path, tmp: Path, rtemp: Path) -> tuple[str, str]:
         a = self.args
         rh = self.real_home
-        target = SCRATCH / "cargo-target" / self.repo_name / _slug(f"{job.wf_file}-{job.job_id}")
+        # Rust target dirs live in the workspace's untracked/ (nothing walks up from them).
+        target = self.workspace / "untracked" / "ci-local" / "cargo-target" / self.repo_name / _slug(f"{job.wf_file}-{job.job_id}")
         target.mkdir(parents=True, exist_ok=True)
         env = self._base_env(job, jobdir, workspace, home, tmp, rtemp, ctx.data["github"], target)
         shims = jobdir / "shims"
