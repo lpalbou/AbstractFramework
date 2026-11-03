@@ -14,7 +14,7 @@ Ask each provider that requires permission for written approval to show its logo
 
 Operator ruling 2026-11-02: show a provider's logo only with permission; text badges meanwhile. Research: `untracked/council-2026-11-02/provider-logos-brand-rules.md` (rules per provider, legal frame, attribution text). Anthropic's guidelines (https://www.anthropic.com/legal/trademark-guidelines) allow its marks "only in materials we approve beforehand"; OVHcloud's policy says "The use of OVHcloud Logos always require the written permission of OVHcloud". Not a legal opinion.
 
-Decision 2026-11-02: keep OpenAI, OpenRouter, Hugging Face, LM Studio and Mistral logos (their terms allow it); text badges for Anthropic, OVHcloud, Portkey, Ollama, DeepSeek, NVIDIA; site text-only; trademark footer line. Google, Meta and Microsoft marks also ship (model catalog, `brand_icons.tsx` ids `google`, `meta`, `microsoft`) and are listed below; no provider-specific "works with" page was found for them.
+Decision 2026-11-02: keep OpenAI, OpenRouter, Hugging Face, LM Studio and Mistral logos (their terms allow it; Mistral only from its official brand kit); text badges for Anthropic, OVHcloud, Portkey, Ollama, DeepSeek, NVIDIA; site text-only; trademark footer line. Google, Meta and Microsoft marks also ship (model catalog, `brand_icons.tsx` ids `google`, `meta`, `microsoft`) and are listed below; no provider-specific "works with" page was found for them.
 
 ## Contacts and process (sources retrieved 2026-11-02 unless stated)
 
@@ -48,7 +48,7 @@ For Google, Meta and Microsoft the catalog marks are small model-maker avatars; 
 ### Out of scope
 
 - Any logo on abstractframework.ai (decided text-only).
-- Providers whose terms already allow their logo (OpenAI, OpenRouter, Hugging Face, LM Studio, Mistral).
+- Providers whose terms already allow their logo (OpenAI, OpenRouter, Hugging Face, LM Studio). Mistral's terms allow it too, but only its official brand-kit file: on 2026-11-03 mistral.ai/brand's kit download (cms.globalaegis.net) returned 403, so Mistral shows the text badge "Mistral AI" until that file is fetched and recorded (then `logoPermitted: true`; no request needed).
 
 ## Acceptance criteria
 
