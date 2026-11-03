@@ -30,11 +30,14 @@ and installs exactly its pins.
    - **Tier F (full):** anything in a code path shared across features, concurrency or lifecycle,
      schemas and contracts, and every release branch. Run the whole PR + push-to-main job set
      (ADR 0050).
-   - The local gate takes `scripts/ci_local.sh <repo> --tier light|full`, with `full` as the default.
+   - Tier L runs by hand today: the changed files' tests, lint and type-check, and the package's build job
+     (`scripts/ci_local.sh <repo> --job <build job>`). A `--tier light|full` gate flag is planned
+     (backlog 1116) and does not exist yet.
 2. **Dependents re-release only when needed.** When a lower package is released, a dependent is
    re-released only if it needs the lower package's new API or behaviour, or if its install profile
    would otherwise be inconsistent. A compatible floor (`>=`) is left as is, and raised at the
-   dependent's next natural release. The wave plan states the decision for each dependent.
+   dependent's next natural release. The wave lead decides and records it in the wave plan for each
+   dependent; the operator may override.
 3. **The root is operator-validated.**
    - The wave never publishes the root `abstractframework`. It ends with a **candidate** for the
      operator, in four parts:
@@ -67,7 +70,8 @@ Negative:
 
 - `abstract-release` and `release` (abstractskill 0.3.8) carry the tiers, the dependent policy, and
   the root order: candidate matrix, then the operator's GO, then the root.
-- The gate implements `--tier`.
+- The gate's `--tier light|full` flag is planned (backlog 1116). Until it lands, tier L is the by-hand
+  list in Decision 1, and tier F is the gate's default run.
 - The root's pin tests (`tests/test_install_profiles.py`, `scripts/tests/test_inventory.sh`) keep root
   pins exact.
 
