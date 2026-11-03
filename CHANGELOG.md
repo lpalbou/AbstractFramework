@@ -93,7 +93,7 @@ and `ghcr.io/lpalbou/abstractcore-server:2.32.0`.
   and its package leaves the constraints, so both record what is installed. Refused with a What-to-do line: a non-wheel, a
   missing file, the gateway (use `--from`), abstractvoice (installs with its extras), a package outside the matrix. The
   flag is per run: a later run without it installs the release versions again (by design).
-- **The installer never leaves a gateway running outside systemd** (backlog 1072): a background start on Linux first
+- **The installer never leaves a gateway running outside systemd** (backlog 1109, numbered 1072 until 2026-11-03): a background start on Linux first
   turns off a systemd user unit of the same gateway (it would start at the next login and fight for the port), and
   `--server` stops with the cause when the gateway service cannot be registered instead of starting the gateway in
   the background (OVH 2026-10-28: the unit gave up and the gateway that answered was supervised by nothing).

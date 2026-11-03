@@ -2,6 +2,7 @@
 
 ## Metadata
 - Created: 2026-07-08
+- Renumbered: 2026-11-03, was 0213 (the id was shared with the agency-parity item 0213 in `planned/agency-parity/`)
 - Status: Proposed
 - Completed: N/A
 
@@ -45,7 +46,7 @@ network)".
 1. **@mention grammar in the chat drawer**: typing `@ariadne` in a turn (or a
    dedicated "invite" affordance) invites that entity into the CURRENT shared
    room. Resolution: same gateway first (slug match), else a full handle
-   (`@ariadne@athena.ovh` → 0214 federation).
+   (`@ariadne@athena.ovh` → 1112 federation).
 2. **The invite is a summon with consent semantics**: the invited entity's own
    loop/state gates apply (asleep stays asleep unless its wake rules say
    otherwise; paused always refuses). The room shows the refusal honestly.

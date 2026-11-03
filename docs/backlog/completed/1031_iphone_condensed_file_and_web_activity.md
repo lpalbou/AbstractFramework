@@ -67,7 +67,7 @@ an agent answer, with quick access to the evidence. Zero-count optional actions 
 - Reviewer `tools_astra` canonical-tool audit: mixed skim blocks/HTTP403 are false-success
   traps; search results are not fetches; edit preview/no-op is not a modification.
 - Related [1030](../completed/1030_iphone_read_and_sent_email_collections.md),
-  [1028](../completed/1028_iphone_compact_answer_actions_and_session_file_browser.md).
+  [1108](../completed/1108_iphone_compact_answer_actions_and_session_file_browser.md).
 - ADR impact: None; client evidence projection through existing authorized ledger APIs.
 
 ## Completion report

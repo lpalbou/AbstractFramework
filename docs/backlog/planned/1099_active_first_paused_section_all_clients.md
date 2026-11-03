@@ -5,6 +5,7 @@
 > Created: 2026-11-02
 > Priority: normal
 > Labels: lists, automations, sessions, thin-clients, adr-0048
+> Status: Planned — merged in every repo (gateway #90, UIC #50, Observer #17, Code #34, Assistant #41); release pending. It stays in `planned/` until root 0.12.1 publishes these merges, then moves to `completed/` with the published versions as evidence.
 
 ## Summary
 

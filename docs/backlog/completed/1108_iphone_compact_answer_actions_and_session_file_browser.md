@@ -1,10 +1,11 @@
-# 1028 — Compact iPhone answer actions and browse session files
+# 1108 — Compact iPhone answer actions and browse session files
 
 > Package: abstractassistant
 > Type: bug
 > Created: 2026-10-18
 > Status: Completed
 > Completed: 2026-10-18
+> Renumbered: 2026-11-03, was 1028 (the id was shared with [1028](../planned/1028_approval_emails_readable_with_actions.md), the approval emails item)
 > Priority: P1
 > Labels: iphone, files, workspace, observability, ux
 
@@ -138,7 +139,7 @@ currently uncommitted; no package release or remote Gateway update is implied.
 ### Documentation, limits and follow-up triage
 
 Updated phone README, BUILD and architecture docs, and regenerated Assistant `llms-full.txt`.
-Durable receipts: [evidence/1028](../evidence/1028/README.md).
+Durable receipts: [evidence/1108](../evidence/1108/README.md).
 
 ADR impact: **None**. Existing Gateway authorization/workspace/artifact contracts remain
 canonical; no new endpoints or server-owned policy changes were needed.

@@ -62,7 +62,7 @@ existing compact actions/approval regression; read-only saved-session replay on 
 ## Receipts
 
 - Intake recorded before implementation, 2026-10-18; baseline normal phone 0.6.10 (18).
-- Related completed work: [1028](../completed/1028_iphone_compact_answer_actions_and_session_file_browser.md).
+- Related completed work: [1108](../completed/1108_iphone_compact_answer_actions_and_session_file_browser.md).
 - ADR impact: None; this is a client projection of existing authorized ledger data.
 
 ## Completion report

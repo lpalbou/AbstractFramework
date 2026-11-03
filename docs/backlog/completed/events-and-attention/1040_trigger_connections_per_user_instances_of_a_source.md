@@ -47,7 +47,7 @@ The operator wants to register the events one can listen to once, in the gateway
 ## References
 
 - Round-2 finding 3.
-- [0929](../0929_automations_v2_external_triggers_durable_inbox.md)
+- [0929](../../planned/0929_automations_v2_external_triggers_durable_inbox.md)
 
 ## Receipts
 

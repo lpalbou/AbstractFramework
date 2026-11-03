@@ -6,20 +6,21 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files recounted on 2026-11-01 after rendering/context completion, session-read completion 1087,
-authorized avatar-conversation promotion 1088/1089/1092–1095, and the 2026-11-01 composer-default 1096 / subtitle 1097 intake:
-recursive lifecycle Markdown files, excluding README/overview/template and evidence
-files. Counts are files, not unique IDs; legacy duplicates remain tracked by [0889](planned/0889_normalize_the_legacy_root_backlog.md).
-The prior overview included four governance evidence receipts as planned items; those are now
-excluded consistently. The figures below are the current item-file inventory.
+Recounted on 2026-11-03 after the backlog repair (renumbered duplicates 1108–1112, 0.12.0 record 1113,
+1098 split into 1098 + 1114). Method, per state folder: `find <state> -name '*.md' ! -name README.md
+! -name 'template*' ! -path '*/evidence/*'` (topic subfolders included, evidence folders excluded) for
+**Files**; the same with a four-digit `NNNN_` prefix for **Numbered**. Counts are files, not unique
+IDs: the legacy three-digit and hub-era names (the difference between the two columns) are tracked by
+[0889](planned/0889_normalize_the_legacy_root_backlog.md). Every four-digit `NNNN_` prefix is now unique
+across all folders (checked with `uniq -d` over the prefixes).
 
-| State | Files | Notes |
-|---|---|---|
-| Planned | 153 (numbered items, topic subfolders included; 101 at the top level) | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
-| Proposed | 79 (topic subfolders included; 68 at the top level) | 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
-| Completed | 298 | Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
-| Deprecated | 2 | Existing deprecated records. |
-| Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
+| State | Files (top level) | Numbered `NNNN_` (top level) | Notes |
+|---|---|---|---|
+| Planned | 197 (145) | 153 (101) | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
+| Proposed | 83 (72) | 80 (69) | 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Completed | 299 (275) | 116 (92) | 1113 release record of root 0.12.0; 1108 and 1109 renumbered from 1028 and 1072. Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
+| Deprecated | 2 (2) | 2 (2) | Existing deprecated records. |
+| Recurrent | 3 (3) | 1 (1) | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
 
@@ -420,7 +421,8 @@ binding: no lossy truncation inside the loop. Source analysis:
 |----|------|--------|-------|
 | 1101 | [Keep the computer awake while the gateway runs on Linux and Windows](proposed/1101_keep_awake_while_the_gateway_runs_linux_windows.md) | Proposed (2026-11-02) | macOS ships in AbstractGateway PR #91 (idle-sleep assertion while `serve` runs). Linux logind idle inhibitor, Windows `SetThreadExecutionState`. |
 | 1100 | [Request logo permission from providers](proposed/1100_request_logo_permission_from_providers.md) | Proposed | Operator ruling 2026-11-02: logos only with permission, text badges meanwhile. Contacts, ready request text and acceptance for Anthropic, OVHcloud, Portkey, Ollama, DeepSeek, NVIDIA (and Google/Meta/Microsoft). |
-| 1098 | [Typed voice block in the replay projection](proposed/1098_typed_voice_block_in_replay_projection.md) | Proposed (deferred by the operator 2026-11-02) | One conversation projection for every client: a typed per-turn `voice` block (dictation ref, playback refs from the TTS child runs) instead of erased facts, dictation provenance validated at `runs/start`, one runtime predicate re-exported by the gateway, client guards retired. ADR 0047. Reports under `untracked/voice-stall/`. |
+| 1098 | [Typed voice block in the replay projection](proposed/1098_typed_voice_block_in_replay_projection.md) | Proposed (deferred by the operator 2026-11-02) | A typed per-turn `voice` block (dictation ref, playback refs from the TTS child runs) instead of erased facts, dictation provenance validated at `runs/start`, one runtime predicate re-exported by the gateway, client guards retired. ADR 0047. Reports under `untracked/voice-stall/`. Split 2026-11-03: which projection carries it is 1114. |
+| 1114 | [One conversation projection: the replay view or the history bundle](proposed/1114_one_conversation_projection_replay_view_or_history_bundle.md) | Proposed (operator decision gate) | Split from 1098 (2026-11-03): 1098 as written renders every client from bundle turns, 0993/1065 from the replay view; choose one, write the ADR, re-scope 1098 and 1065. Council B B1/B4/B6. |
 | 1067 | [One-command server deployment](proposed/1067_one_command_server_deployment.md) | Proposed | `install.sh --server [--tailscale-funnel] [--gpu]`: the proven fresh-Linux sequence (installer, lingering, service enable, NVIDIA step, Tailscale + Funnel, gateway origins/proxy, first claim link) as one idempotent command that ends by printing the public address and the one-time sign-in link; docs/deploy-linux.md stays the manual baseline. |
 | 1000 | [Named per-user API keys for the OpenAI API](proposed/1000_named_per_user_openai_api_keys.md) | Proposed | Endpoint-only keys per account (label, last used, fingerprint, revoke one by one) instead of the gateway token as the `/v1` key; removes the need to keep the token in browser storage. Build decision: gate 1001. |
 | 1025 | [Cross-user read as a principal privilege](proposed/1025_cross_user_read_as_principal_privilege.md) | Proposed (decision gate: 4 questions) | Keep the hard deny for run tools (confused deputy); cross-user READ through gateway `/study/*` APIs with an `auditor` role, purpose-logged, k-threshold aggregates, exports as artifacts, archived planes readable (R5). 51 references in the governance evidence folder. |
@@ -505,6 +507,15 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0176 | [Multimodal model acquisition guidance](proposed/multimodal-capabilities/0176_multimodal_model_acquisition_guidance.md) | Proposed | Explore CLI/doctor and later console guidance for downloading/loading configured local models without conflating acquisition with defaults. |
 
 ## Release Trace
+
+### Wave 0.12.0 (2026-11-02): RELEASED
+
+Root abstractframework 0.12.0 pins abstractgateway 0.19.0, abstractcore 2.32.0, AbstractRuntime 0.16.0,
+abstractagent 0.5.0, abstractassistant 0.17.0, abstractskill 0.3.4 and abstractvoice 0.19.5; npm flow 0.13.0,
+code 0.14.0, observer 0.11.0, continuum 0.8.0, entity 0.10.0 (AbstractUIC v0.9.0: ui-kit 0.9.12, panel-chat 0.7.0);
+crates abstractgateway-console 0.17.0, abstractcode 0.13.1, abstractcore-console 0.8.1, abstracttui 0.7.1 and the
+new abstractavatar 0.1.0. Tags, commits and the registry check: [1113](completed/1113_release_wave_0_12_0_2026_11_02.md).
+The root 0.12.1 wave: [1102](planned/1102_release_wave_2026_11_03_coordination.md).
 
 ### Wave 0.8.0 (2026-10-01): STAGED, not published
 
@@ -615,6 +626,8 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 1113 | [Release wave 0.12.0 (2026-11-02)](completed/1113_release_wave_0_12_0_2026_11_02.md) | 2026-11-02 | Created 2026-11-03 as the release record of root 0.12.0: matrix, tags → commits, registry check (PyPI, npm, crates.io). |
+| 1109 | [The installer never leaves a gateway running outside systemd](completed/1109_installer_never_leaves_an_unsupervised_gateway.md) | 2026-10-29 | Renumbered 2026-11-03 from 1072 (duplicate id; 1072 is the proposed core recommendation bands). Shipped in root 0.12.0. |
 | 1093 | [1093 — Question state and durable clarification deadlines](completed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md) | 2026-11-01 | Created 2026-10-31; moved through authorized planned/ from proposed/. Source, real-model and browser/native validation; [delivery receipt](evidence/1088/delivery.md). Physical/KV validation stays separate. |
 | 1092 | [1092 — Reply to brèves during active work](completed/accumulated-evidence/1092_reply_to_breves_during_active_work.md) | 2026-11-01 | Created 2026-10-31; moved through authorized planned/ from proposed/. Source, real-model and browser/native validation; [delivery receipt](evidence/1088/delivery.md). Physical/KV validation stays separate. |
 | 1082 | [Contextual selection and explicit Code steering](completed/1082_contextual_content_selection_and_agent_steering.md) | 2026-10-31 | Created 2026-10-31; moved from `planned/1082_contextual_content_selection_and_agent_steering.md`. UTF-8 source geometry, click/drag/table/code highlight, responsive keyboard actions, preserved draft and explicit normal Send. Full local TUI/Code checks and independent review pass; unreleased. [Evidence](evidence/1082/README.md). |
@@ -629,7 +642,7 @@ to the proposed versions. Completed records: 0906–0915 (below).
 | 1031 | [iPhone condensed file and web activity](completed/1031_iphone_condensed_file_and_web_activity.md) | 2026-10-18 | Moved from `planned/1031_iphone_condensed_file_and_web_activity.md`; created/completed 2026-10-18. Positive-only mail/file/web counters and source details, workspace handoff. 211 package tests, six native scenarios across corrected rerun, one physical proof; adversary approved. Actual changed file/sent email recognized. Normal 0.6.13 (21) installed/launched; uncommitted. [Evidence](evidence/1031/README.md). |
 | 1030 | [iPhone read and sent email collections](completed/1030_iphone_read_and_sent_email_collections.md) | 2026-10-18 | Moved from `planned/1030_iphone_read_and_sent_email_collections.md`; created/completed 2026-10-18. Directional read/sent counts; compact searchable multi-message lists and individual details. 201 package + 4 native UI + 1 physical history check passed. Demo verifies 3 reads/3 sends; actual saved history 0 reads/1 send. Normal iPhone 0.6.12 (20) installed/launched. Uncommitted; [evidence](evidence/1030/README.md). |
 | 1029 | [iPhone sent-email receipts](completed/1029_iphone_sent_email_receipts.md) | 2026-10-18 | Moved from `planned/1029_iphone_sent_email_receipts.md`; created/completed 2026-10-18. Envelope count and per-answer send/reply receipts. 195 package tests, 3 native UI checks plus final receipt recheck, 1 physical read-only replay passed. Actual existing send has complete fields; no test emails sent. iPhone 0.6.11 (19) installed/launched. Uncommitted; [evidence](evidence/1029/README.md). |
-| 1028 | [Compact iPhone answer actions and browse session files](completed/1028_iphone_compact_answer_actions_and_session_file_browser.md) | 2026-10-18 | Moved from `planned/1028_iphone_compact_answer_actions_and_session_file_browser.md`; created/completed 2026-10-18. Compact answer actions, workspace hierarchy/Markdown previews, audio toggle. 185 package + 17 native + 1 physical test passed; actual 769-byte summary retrieved, 20 conversation-audio artifacts hidden. Normal iPhone 0.6.10 (18) installed/launched. Uncommitted; [evidence](evidence/1028/README.md). |
+| 1108 | [Compact iPhone answer actions and browse session files](completed/1108_iphone_compact_answer_actions_and_session_file_browser.md) | 2026-10-18 | Moved from `planned/1028_iphone_compact_answer_actions_and_session_file_browser.md`; created/completed 2026-10-18. Compact answer actions, workspace hierarchy/Markdown previews, audio toggle. 185 package + 17 native + 1 physical test passed; actual 769-byte summary retrieved, 20 conversation-audio artifacts hidden. Normal iPhone 0.6.10 (18) installed/launched. Uncommitted; [evidence](evidence/1108/README.md). Renumbered 2026-11-03 from 1028 (duplicate id). |
 | 1010 | [Loop Limit node](completed/1010_loop_limit_node.md) | 2026-10-11 | Moved from `planned/`. A circle (↺3) on the path that repeats: `again` at most `max` times, then `limit reached`; `count` is the pass number. Counts per iteration of the enclosing loop, else per run. Operator decisions recorded. Uncommitted. |
 | 1008 | [Add to List Variable node](completed/1008_add_to_list_variable_node.md) | 2026-10-11 | Moved from `planned/`. `item` adds one element, `items` each element, in one step; null adds nothing. Also fixed: Set Variables wrote the previous step's output keys as variables. Uncommitted. |
 | 0982 | [Patch 0.6.2: one upgrade path](completed/0982_patch_0_6_2_one_upgrade_path.md) | 2026-09-28 | Root record of 0.6.2 (staged on `wave4/root`): the line, the `.command`, and Update in the consoles and tray run one installer; remembered options, release matrix, restart everywhere; `--no-start` keeps the recorded port; pins core 2.19.0, gateway 0.7.2, console 0.11.1. |
@@ -722,7 +735,9 @@ Scan of 2026-09-25 (details and fix plan in [0889](planned/0889_normalize_the_le
 - 231 item files lack a four-digit `NNNN_` prefix (three-digit legacy names, hub-era
   `NNN-<package>-…` names, `2026-05-08_*` date prefixes in `proposed/` and `completed/`).
 - Reused IDs, e.g. `001`–`018` (legacy and hub-era), `0212`–`0214` (`planned/agency-parity/` and
-  `proposed/`).
+  `proposed/`). 2026-11-03: the four-digit reuses are resolved: the proposed `0212`–`0214` became
+  1110–1112, completed `1028` (iPhone actions) became 1108 and completed `1072` (installer) became 1109;
+  the three-digit legacy reuses remain with 0889.
 - `planned/agency-parity/` holds items marked "Done (tested)" without completion moves.
 - `scripts/gen_llms_full.py` inlines this overview and ~30 backlog items into the root
   `llms-full.txt`, which therefore goes stale on every backlog edit (0883); it was not regenerated
@@ -750,6 +765,16 @@ Scan of 2026-09-26 (after the release, 0921):
 
 ## Planning Notes
 
+- 2026-11-03: backlog repair (release audit R9). Duplicate four-digit ids renumbered, the later item of each
+  pair moving: completed 1028 (iPhone actions, added 2026-10-21; 1028 approval emails added 2026-10-19) → 1108
+  with its evidence folder; completed 1072 (installer, committed after 1072 core bands) → 1109; proposed
+  0212–0214 (entity handles, @mention, federation; created 2026-07-08, after the agency-parity items of
+  2026-07-07) → 1110–1112. Links fixed in 0994, 0998, 1029, 1031, the overview and the root CHANGELOG; stale relative links
+  left by earlier moves fixed in 1032, 1038, 1040 and 1044 (0942's link to `completed/0853_…` has no target in
+  this repository and stays as is). New:
+  1113 (0.12.0 release record), 1114 (split from 1098). 1099 stays planned, release pending. Recount in
+  Current Counts.
+
 - 2026-10-31: completed 1081/1082 after rendering/selection test matrices and independent approval;
   preserved original planned paths and completion reports, updated coredoc/agent skills/indexes,
   retained native/browser/Qt evidence and interaction guide. Recount: planned 186, proposed 76,
@@ -758,7 +783,7 @@ Scan of 2026-09-26 (after the release, 0921):
   image ownership, 1086 custom source geometry; existing 1079 publication/floors. No release or
   Apple edits. Older legacy naming/duplicate defects remain in 0889.
 
-- 2026-10-18: created 1028 before code changes for the iPhone compact actions and session file-browser repair; planned count 176 → 177.
+- 2026-10-18: created 1028 before code changes for the iPhone compact actions and session file-browser repair; planned count 176 → 177. (Renumbered 1108 on 2026-11-03: 1028 was also the approval emails item.)
 
 - 2026-10-18: added retrospective item 1027 after the operator identified a missing backlog
   trace for already-committed Runtime/orchestrator/iPhone work. Kept it planned because the
