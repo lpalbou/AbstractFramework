@@ -6244,7 +6244,9 @@ local-model tests (one model process at a time), the Gateway load test (its p99 
 quiet machine) and the root bootstrap smoke (each entry starts a gateway on port 18080; on GitHub
 they are separate machines). The repository's name comes from its `origin` URL (`.../AbstractCore.git` is
 `abstractcore`), never from the folder, so a run on a worktree path (`untracked/wt-w3-ttl`) gets the
-main checkout's serial rules, shared Rust folder, `--keep-runs` count and run folder names.
+main checkout's serial rules, shared Rust folder, `--keep-runs` count and run folder names. A
+name that is not a plain file name (`..`) falls back to the folder name. Two forks with the same
+name share one count and one Rust folder.
 
 `<repo>` is a repository directory of the workspace (`abstractcore`, `AbstractGateway`, ...), `root`
 for this repository, or a path.
@@ -6272,17 +6274,24 @@ The pull request body states the tier and why; a reviewer may raise it.
     first entry of a matrix without it). The entries it leaves out are printed
     (`tier light: skipped jobs ...`) and do not count as skipped jobs.
   - pytest keeps a test file when it changed, when its name holds the name of a changed file, or
-    when it imports a changed module. The name rule is a substring match on the file stem:
+    when it imports a changed module. The name rule is a substring match on the file stem, with
+    `-` and `.` read as `_` (a test file is a Python module and cannot hold either):
     `model_host.py` keeps `test_model_host_portable.py`, `model_catalog.yaml` keeps
-    `test_model_catalog.py`, and a short stem keeps more than it needs (`app.js` keeps
+    `test_model_catalog.py`, `select-xcode.sh` keeps `test_select_xcode.py`, and a short stem
+    keeps more than it needs (`app.js` keeps
     `test_console_app.py`). The kept files and the reason for each are printed.
   - Every changed file that is not documentation (`.md`, `.txt`) and does not belong to an npm
-    package or a crate must keep at least one test: a module, a YAML/JSON catalog, a template, a
+    package or a crate (below) must keep at least one test: a module, a YAML/JSON catalog, a template, a
     static JS/CSS file, a shell script. Otherwise the run is red before it starts:
     `no test covers <path>; use --tier full or add a test`.
   - A `conftest.py`, the package configuration (`pyproject.toml`, `setup.cfg`, `pytest.ini`,
     ...) or any non-Python file under `tests/` (a fixture) runs the whole suite.
-  - Files in an npm package or a crate go to its own test step: `npm test` becomes
+  - Files in an npm package or a crate go to its own test step. Ownership is by file type: a Rust
+    file (`.rs`, `Cargo.toml`, `Cargo.lock`) belongs to the nearest folder holding a `Cargo.toml`,
+    a JS/TS/CSS file (or `package.json`, its lockfile, `tsconfig*.json`) to the nearest folder
+    holding a `package.json`. Any other file (Python, YAML, JSON, shell, templates) is never owned:
+    a `Cargo.toml` at the repository root (AbstractAvatar) does not excuse a Python change from its
+    pytest tests. `npm test` becomes
     `npx vitest related --run <the changed files>` when the test script is `vitest run` (vitest
     exits red when nothing relates), `npm --workspace <w> run test` for the workspaces with changed
     files in a monorepo (whole when a changed file is outside every workspace, other scripts run
@@ -6292,6 +6301,8 @@ The pull request body states the tier and why; a reviewer may raise it.
     ran). Zero makes it red: `the run executed no test`. The one exception is a change made of
     documentation alone: no test runs, and the gate prints
     `tier light: documentation only (<n> file(s)): no test runs, every other step still runs`.
+    A light run whose only pytest job could not run here (SKIPPED) also executed none: red, even
+    with `--allow-skipped`, since nothing was proved.
   - Every other step still runs: lint, type-check, build, pack.
 - **Full** (`--tier full`, the default): anything in a code path shared across features,
   concurrency or lifecycle, schemas and contracts, and every release branch. The whole pull request
@@ -6350,7 +6361,11 @@ The pull request body states the tier and why; a reviewer may raise it.
   run directory (one holding cargo's `CACHEDIR.TAG` or `.rustc_info.json`: a workflow's own
   `CARGO_TARGET_DIR`, a tool that ignores it) is removed, and the executables at the top of its
   profile folders (`release/<bin>`) are kept in `jobs/<job>/rust-binaries/`. The job log says what
-  was removed. The shared folder above is never cleaned; Python environments stay.
+  was removed. The shared folder above is never cleaned (free it by hand when it grows:
+  `~/Library/Caches/ci-gate/cargo-target/<repo>`); Python environments stay. Jobs of one
+  repository that build Rust at the same time wait for each other on cargo's own folder lock.
+- **Deletion never reaches outside the run**: a symlink is removed as a link, never followed or
+  chmod-ed; read-only folders (Go's module cache) are made writable first, folders only.
 - **Old run folders are deleted automatically**: after a run, the gate deletes the oldest run
   folders of the same repository under `~/Library/Caches/ci-gate/runs/` so at most three remain,
   this one included, and prints their names. `--keep-runs N` changes the number; `--keep-runs 0`

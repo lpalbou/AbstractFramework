@@ -488,3 +488,82 @@ def test_keep_runs_never_deletes_a_run_in_progress_or_outside_the_gate_cache(tmp
     a, b = _runs(elsewhere, "abstractcore", ["20261101-090000", "20261103-100000"])
     deleted, note = ci.prune_runs(elsewhere, "abstractcore", b, 1, tmp_path / "ci-gate")
     assert deleted == [] and a.exists() and "not under" in note
+
+
+def test_remove_tree_removes_read_only_folders_and_changes_nothing_outside(tmp_path):
+    import stat as st
+
+    outside = tmp_path / "outside.txt"
+    outside.write_text("keep", encoding="utf-8")
+    outside.chmod(0o644)
+    tree = tmp_path / "run" / "gomodcache"
+    locked = tree / "pkg@v1"
+    (locked / "deep").mkdir(parents=True)
+    (locked / "deep" / "file.go").write_text("package x", encoding="utf-8")
+    (locked / "link").symlink_to(outside)  # a symlink in a read-only folder, to a file outside the run
+    (locked / "deep").chmod(0o000)          # cannot even be listed
+    locked.chmod(0o500)                     # read-only, as Go leaves its module cache
+    ci._remove_tree(tree)
+    assert not tree.exists()
+    assert outside.read_text(encoding="utf-8") == "keep"
+    assert st.S_IMODE(outside.stat().st_mode) == 0o644  # never chmod-ed through the link
+    link = tmp_path / "link-to-dir"
+    link.symlink_to(tmp_path / "run")
+    with pytest.raises(OSError):
+        ci._remove_tree(link)  # a symlink is never removed as a tree
+    assert (tmp_path / "run").exists()
+
+
+def test_the_light_name_rule_reads_hyphens_and_dots_as_underscores():
+    files = ["phone/iphone/scripts/select-xcode.sh", "phone/iphone/scripts/tests/test_select_xcode.py",
+             "config/model.catalog.yaml", "tests/test_model_catalog.py"]
+    keep, uncovered, _ = ci.light_tests(["phone/iphone/scripts/select-xcode.sh"], files, lambda p: "")
+    assert uncovered == [] and list(keep) == ["phone/iphone/scripts/tests/test_select_xcode.py"]
+    keep, uncovered, _ = ci.light_tests(["config/model.catalog.yaml"], files, lambda p: "")
+    assert uncovered == [] and list(keep) == ["tests/test_model_catalog.py"]
+
+
+def test_a_root_cargo_toml_or_package_json_never_owns_python_files():
+    # AbstractAvatar's layout: a crate at the repository root, a Python package beside it, pytest tests.
+    files = ["Cargo.toml", "src/lib.rs", "package.json", "web/app.ts", "python/abstractavatar/scene.py",
+             "python/abstractavatar/settings.yaml", "tests/python/test_scene.py"]
+    keep, uncovered, owned = ci.light_tests(["python/abstractavatar/scene.py"], files, lambda p: "")
+    assert owned == [] and uncovered == [] and list(keep) == ["tests/python/test_scene.py"]
+    keep, uncovered, owned = ci.light_tests(["python/abstractavatar/settings.yaml"], files, lambda p: "")
+    assert owned == [] and uncovered == ["python/abstractavatar/settings.yaml"]  # no test named after it: red
+    _, _, owned = ci.light_tests(["src/lib.rs", "Cargo.toml", "web/app.ts"], files, lambda p: "")
+    assert owned == ["src/lib.rs", "Cargo.toml", "web/app.ts"]  # Rust to the crate, TS to the npm package
+    assert ci.owner_dir("python/abstractavatar/scene.py", files) is None
+    assert ci.owner_dir("src/lib.rs", files) == "."
+    assert ci.owner_dir("ui/kit/button.tsx", ["package.json", "ui/kit/package.json"]) == "ui/kit"  # the nearest
+
+
+def test_keep_runs_never_follows_a_symlinked_run_folder(tmp_path):
+    import os
+    import time
+
+    root = tmp_path / "ci-gate" / "runs"
+    (current,) = _runs(root, "abstractcore", ["20261103-100000"])
+    target = root / "someone-elses-folder"
+    target.mkdir()
+    (target / "data.txt").write_text("keep", encoding="utf-8")
+    old = time.time() - 3 * 3600  # quiet for hours: the legacy "still running" rule does not hold it
+    os.utime(target, (old, old))
+    (root / "abstractcore-20261101-090000-0123abcd").symlink_to(target)  # named like a run, inside the root
+    deleted, _ = ci.prune_runs(root, "abstractcore", current, 1, tmp_path / "ci-gate")
+    assert deleted == [] and (target / "data.txt").exists()
+
+
+def test_rust_cleanup_never_reaches_a_build_folder_outside_the_run(tmp_path):
+    run = tmp_path / "run"
+    outside_job = tmp_path / "elsewhere" / "job"
+    target = _cargo_target(outside_job / "work" / "target")
+    (run / "jobs").mkdir(parents=True)
+    (run / "jobs" / "01-ci-tui").symlink_to(outside_job)  # the job folder resolves outside the run
+    notes = ci.clean_rust_builds(run / "jobs" / "01-ci-tui", run)
+    assert target.exists() and notes and "not inside the run directory" in notes[0]
+
+
+def test_an_unusable_origin_name_falls_back_to_the_folder():
+    assert ci.repo_name_from("git@host:org/..", "wt-root") == "wt-root"
+    assert ci.repo_name_from("https://example.com/a/b c.git", "wt-root") == "wt-root"

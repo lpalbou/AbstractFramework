@@ -36,6 +36,7 @@ import re
 import shlex
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import threading
@@ -830,7 +831,9 @@ def repo_name_from(origin_url: str, fallback: str) -> str:
     there is no origin."""
     base = re.split(r"[/:]", (origin_url or "").strip().rstrip("/"))[-1]
     base = base[:-4] if base.endswith(".git") else base
-    return (base or fallback).lower()
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", base) or base in (".", ".."):
+        base = fallback  # `..` would make the shared Rust folder the gate's cache itself
+    return base.lower()
 
 
 def cargo_target_dir(repo_name: str) -> Path:
@@ -858,14 +861,26 @@ def rust_target_dirs(root: Path) -> list[Path]:
 
 
 def _remove_tree(path: Path) -> None:
-    """shutil.rmtree that also removes read-only entries (cargo and Go mark some files read-only)."""
-    def retry(func, name, _exc):
-        os.chmod(name, 0o700)
-        func(name)
-    if sys.version_info >= (3, 12):
-        shutil.rmtree(path, onexc=retry)
-    else:
-        shutil.rmtree(path, onerror=retry)
+    """shutil.rmtree of a real directory, read-only folders included (Go's module cache makes its
+    folders read-only). First every real directory in the tree gets u+rwx, so its entries can be
+    listed and unlinked; a symlink is never chmod-ed or followed (only the link itself is removed),
+    so nothing outside `path` changes mode. Raises OSError when `path` is a symlink."""
+    if path.is_symlink():
+        raise OSError(f"refusing to remove a symlink as a tree: {path}")
+    stack = [str(path)]
+    while stack:
+        d = stack.pop()
+        try:
+            mode = os.lstat(d).st_mode
+        except OSError:
+            continue
+        if not stat.S_ISDIR(mode):  # a symlink (to a folder or not) is S_ISLNK under lstat
+            continue
+        if mode & 0o700 != 0o700:
+            os.chmod(d, stat.S_IMODE(mode) | 0o700)
+        with os.scandir(d) as entries:
+            stack.extend(e.path for e in entries if e.is_dir(follow_symlinks=False))
+    shutil.rmtree(path)
 
 
 def clean_rust_builds(jobdir: Path, run_dir: Path) -> list[str]:
@@ -1026,14 +1041,35 @@ def imports_module(text: str, module: str) -> bool:
 DOC_SUFFIXES = (".md", ".txt")  # README, CHANGELOG, llms*.txt: they neither select nor force tests
 
 
+RUST_FILES = ((".rs",), ("Cargo.toml", "Cargo.lock"))
+JS_FILES = ((".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts", ".css", ".scss", ".sass", ".less",
+             ".vue", ".svelte"), ("package.json", "package-lock.json", "npm-shrinkwrap.json"))
+
+
 def owner_dir(path: str, all_files: list[str]) -> str | None:
-    """The nearest directory above `path` that holds a package.json or a Cargo.toml: an npm package
-    or a crate, whose tests tier light narrows in the npm / cargo steps instead of pytest."""
-    markers = {str(Path(f).parent) for f in all_files if Path(f).name in ("package.json", "Cargo.toml")}
-    for parent in Path(path).parents:
+    """The crate or npm package whose own test step covers `path`, decided by the file's type: a Rust
+    file (`.rs`, Cargo.toml/lock) belongs to the nearest directory holding a Cargo.toml, a JS/TS/CSS
+    file (or package.json, a lockfile, tsconfig*.json) to the nearest one holding a package.json.
+    Any other file (Python, YAML, JSON, shell, templates) is never owned, so a Cargo.toml or a
+    package.json at the repository root cannot excuse a Python change from its pytest tests."""
+    p = Path(path)
+    if p.suffix in RUST_FILES[0] or p.name in RUST_FILES[1]:
+        manifest = "Cargo.toml"
+    elif p.suffix in JS_FILES[0] or p.name in JS_FILES[1] or re.fullmatch(r"tsconfig.*\.json", p.name):
+        manifest = "package.json"
+    else:
+        return None
+    markers = {str(Path(f).parent) for f in all_files if Path(f).name == manifest}
+    for parent in p.parents:
         if str(parent) in markers:
             return str(parent)
     return None
+
+
+def _name_key(text: str) -> str:
+    """A file stem as the light name rule compares it: `-` and `.` read as `_` (test files are Python
+    modules and cannot hold either), so `select-xcode.sh` keeps `test_select_xcode.py`."""
+    return re.sub(r"[-.]", "_", text)
 
 
 def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], str]
@@ -1042,9 +1078,11 @@ def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], 
     an npm package or a crate owns).
 
     A test file is kept when it changed, when its name holds the name of a changed file
-    (a substring match on the stem: `model_host.py` keeps `test_model_host_portable.py`, and
-    `catalog.yaml` keeps `test_model_catalog.py`), or, for a changed module, when it imports it.
-    Every changed file that is not documentation and not owned by an npm package or a crate must
+    (a substring match on the stem, `-` and `.` read as `_`: `model_host.py` keeps
+    `test_model_host_portable.py`, `catalog.yaml` keeps `test_model_catalog.py`, `select-xcode.sh`
+    keeps `test_select_xcode.py`), or, for a changed module, when it imports it.
+    Every changed file that is not documentation and not owned by an npm package or a crate (see
+    owner_dir: by file type, never Python) must
     keep at least one test, or it is listed as uncovered (a red light run). None instead of the
     mapping = the whole suite: a conftest.py, the package configuration, or a non-Python file under
     tests/ (a fixture) changed. `read(path)` returns a file's text at the tested commit.
@@ -1072,7 +1110,7 @@ def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], 
         module = module_name(f) if f.endswith(".py") else None
         hits = []
         for t in tests:
-            if stem and stem in Path(t).stem:
+            if stem and _name_key(stem) in _name_key(Path(t).stem):
                 hits.append((t, f"named after {f}"))
             elif module:
                 if t not in texts:
