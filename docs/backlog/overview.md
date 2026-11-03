@@ -7,7 +7,7 @@ the lifecycle folders described by the backlog process.
 ## Current Counts
 
 Recounted on 2026-11-03 after the backlog repair (renumbered duplicates 1108–1112, 0.12.0 record 1113,
-1098 split into 1098 + 1114) the model idle-unload item 1115 (0895 deprecated, superseded), the decision gate 1117 (2026-11-04) and the hygiene pass that closed 0874, 0872, 1104, 1105 and 1107. Method, per state folder: `find <state> -name '*.md' ! -name README.md
+1098 split into 1098 + 1114) the model idle-unload item 1115 (0895 deprecated, superseded), the decision gate 1117 (2026-11-04) the hygiene pass that closed 0874, 0872, 1104, 1105 and 1107, then 0955/0969 (Core #49) and proposed 1118. Method, per state folder: `find <state> -name '*.md' ! -name README.md
 ! -name 'template*' ! -path '*/evidence/*'` (topic subfolders included, evidence folders excluded) for
 **Files**; the same with a four-digit `NNNN_` prefix for **Numbered**. Counts are files, not unique
 IDs: the legacy three-digit and hub-era names (the difference between the two columns) are tracked by
@@ -16,9 +16,9 @@ across all folders (checked with `uniq -d` over the prefixes).
 
 | State | Files (top level) | Numbered `NNNN_` (top level) | Notes |
 |---|---|---|---|
-| Planned | 195 (143) | 151 (99) | 1117 operator decision gate: does a gateway stop need `EffectInterrupted`, or does the runtime simply stop (2026-11-04). 1115 model idle unload (60 min default, Keep loaded never unloads and persists; next wave). Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
-| Proposed | 82 (71) | 79 (68) | 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
-| Completed | 304 (280) | 121 (97) | 0874, 0872, 1104, 1105, 1107 closed as done after a check against the code (2026-11-03 hygiene). 1113 release record of root 0.12.0; 1108 and 1109 renumbered from 1028 and 1072. Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
+| Planned | 193 (141) | 149 (97) | 1117 operator decision gate: does a gateway stop need `EffectInterrupted`, or does the runtime simply stop (2026-11-04). 1115 model idle unload (60 min default, Keep loaded never unloads and persists; next wave). Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
+| Proposed | 83 (72) | 80 (69) | 1118 Core console TUI engine-filter test waits on the request, not on the screen (flaky, 2026-11-03); 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Completed | 306 (282) | 123 (99) | 0955 and 0969 (abstractcore 2.34.0, PR #49). 0874, 0872, 1104, 1105, 1107 closed as done after a check against the code (2026-11-03 hygiene). 1113 release record of root 0.12.0; 1108 and 1109 renumbered from 1028 and 1072. Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 3 (3) | 3 (3) | 0895 MLX idle/TTL unload (superseded by 1115, 2026-11-03); 0858 and the earlier record. |
 | Recurrent | 3 (3) | 1 (1) | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
@@ -250,7 +250,7 @@ Longer-running architecture work (unchanged since before the waves):
 | 0952 | [npm trusted publisher for `@abstractframework/monitor-memory`](completed/0952_monitor_memory_npm_trusted_publisher.md) | Completed 2026-09-28 | Operator added the publisher; 0.1.10 published by re-running the v0.1.15 release job. Not a duplicate of monitor-active-memory. |
 | 0953 | [AbstractMusic says which backends are remote](planned/0953_abstractmusic_remote_backend_status_api.md) | Planned | Replaces Core 2.18.0's interim key-name music guard. |
 | 0954 | [Every-route key test from schemas, every POST](planned/0954_core_every_route_key_test_from_schemas.md) | Planned | Core test uses hand-written bodies on a subset of routes. |
-| 0955 | [Discovery sends the caller key to every checked provider](planned/0955_core_discovery_caller_key_fan_out.md) | Planned (security) | Scope the caller key to the named provider. |
+| 0955 | [Discovery sends the caller key to every checked provider](completed/0955_core_discovery_caller_key_fan_out.md) | Completed (abstractcore 2.34.0, PR #49) | Scope the caller key to the named provider. |
 | 0956 | [Config manager env restore across instances](planned/0956_core_config_manager_env_restore_across_instances.md) | Planned | Settings exported by one instance leak to the next. |
 | 0957 | [Run chat grounding: selection instead of fixed caps](planned/0957_gateway_run_chat_grounding_selection.md) | Planned (ADR-0026) | 180k context, 2,400 chars per prompt/response, 20 tool calls, first 30 / last 90 records. |
 | 0958 | [Gateway's remaining bounds under ADR-0026](planned/0958_gateway_remaining_bounds_under_adr_0026.md) | Planned | Skill 16k, search excerpt 240, `instruction_max_chars` 400, email clamps, batch 1.8M, report 80k, template 250k, draft 400k. |
@@ -266,7 +266,7 @@ Longer-running architecture work (unchanged since before the waves):
 | 0966 | [Apps CI pins the AbstractUIC ref](planned/0966_apps_ci_pins_the_abstractuic_ref.md) | Planned | Flow, Continuum, Entity clone the default branch. |
 | 0967 | [Assistant palette SIGSEGV flake](planned/0967_assistant_palette_sigsegv_flake.md) | Planned | Seen once under two parallel suites. |
 | 0968 | [Voice follow-ups after 0.13.0](planned/0968_voice_follow_ups_after_0_13_0.md) | Planned | openai-compatible/auto raise, `provider:model` message, Qwen3-TTS status vs Transformers, floors 5.4 vs 5.9, runtime `unavailable_reason`. |
-| 0969 | [Core doc: stale "unreleased" line](planned/0969_core_native_mlx_runtime_doc_stale_unreleased_line.md) | Planned | `docs/native-mlx-runtime.md:113`. |
+| 0969 | [Core doc: stale "unreleased" line](completed/0969_core_native_mlx_runtime_doc_stale_unreleased_line.md) | Completed (abstractcore 2.34.0, PR #49) | `docs/native-mlx-runtime.md:113`. |
 | 0970 | [Observer: Archive wraps at narrow widths](planned/0970_observer_narrow_width_archive_wrap.md) | Planned | Row action group layout. |
 | 0971 | [Gateway consoles: automations inventory](planned/0971_gateway_console_automations_inventory.md) | Planned (split from 0930) | Admin inventory with pause/resume/archive in both consoles. |
 | 0972 | [Continuum team page loads at most 200 messages](planned/0972_continuum_team_page_200_message_page.md) | Planned (ADR-0026) | `PAGE_LIMIT = 200` without load-earlier. |
