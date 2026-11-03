@@ -948,6 +948,11 @@ def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], 
     return keep, uncovered, owned
 
 
+def docs_only(changed: list[str]) -> bool:
+    """A change made of documentation alone (`.md`, `.txt`): tier light runs no test for it and says so."""
+    return bool(changed) and all(f.endswith(DOC_SUFFIXES) for f in changed)
+
+
 def light_executed(counts_file: Path) -> int:
     """How many tests a light run executed: the pytest plugin writes each run's kept count, a
     narrowed npm / cargo test step writes 1. Zero makes a light run red, never green."""
@@ -1934,6 +1939,9 @@ def main(argv: list[str] | None = None) -> int:
         if owned:
             print(f"ci_local: tier light: {len(owned)} changed file(s) belong to an npm package or a crate; "
                   "their test steps are narrowed", flush=True)
+        if docs_only(r.changed):
+            print(f"ci_local: tier light: documentation only ({len(r.changed)} file(s)): no test runs, "
+                  "every other step still runs", flush=True)
         if selection is None:
             print("ci_local: tier light: pytest runs whole (a conftest.py or the package configuration changed)")
         else:
@@ -1963,7 +1971,8 @@ def main(argv: list[str] | None = None) -> int:
     for j in jobs:
         counts[j.result] = counts.get(j.result, 0) + 1
     bad = counts.get("FAIL", 0) + counts.get("ERROR", 0)
-    if a.tier == "light" and r.light_tests is not None and light_executed(r.run_dir / "light-counts") == 0:
+    if (a.tier == "light" and r.light_tests is not None and not docs_only(r.changed)
+            and light_executed(r.run_dir / "light-counts") == 0):
         print("ci_local: RED tier light: the run executed no test; a light run may select few tests, never none "
               "(use --tier full)")
         bad += 1

@@ -6286,8 +6286,9 @@ The pull request body states the tier and why; a reviewer may raise it.
     whole); `cargo test` becomes `cargo test -p <crate>` in a Cargo workspace, and is skipped when
     the crate has no change.
   - The run counts the tests it executed (pytest's kept tests, each npm / cargo test step that
-    ran). Zero makes it red: `the run executed no test`; a documentation-only change needs
-    `--tier full`.
+    ran). Zero makes it red: `the run executed no test`. The one exception is a change made of
+    documentation alone: no test runs, and the gate prints
+    `tier light: documentation only (<n> file(s)): no test runs, every other step still runs`.
   - Every other step still runs: lint, type-check, build, pack.
 - **Full** (`--tier full`, the default): anything in a code path shared across features,
   concurrency or lifecycle, schemas and contracts, and every release branch. The whole pull request
@@ -6425,7 +6426,6 @@ Light against full, the same commit:
 |---|---|---|
 | AbstractCore `ebc86d7` (PR #42: `providers/base.py`, a test, docs) | 1m46s: Python 3.12 only, 85 test files kept (the changed test, and the tests named after or importing `abstractcore.providers.base`), `cargo test` skipped (no change under `console-tui/`) | 14m53s (`origin/main`, default `--jobs`) |
 | AbstractUIC `204bf84` (`ui-kit/` brand icons, CHANGELOG, docs) | 0m31s: `npm --workspace ui-kit run test` | 0m47s |
-| AbstractCore `fe66e12` (CHANGELOG and changelog fragments only), `--job test` | RED in 0m25s: `the run executed no test` | (needs full) |
 | AbstractUIC `67f867a` (`ui-kit/` and `ci.yml`) | 0m50s: whole (`ci.yml` is outside every workspace) | 0m51s |
 
 The red runs on `origin/main`, test by test:

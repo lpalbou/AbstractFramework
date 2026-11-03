@@ -299,6 +299,12 @@ def test_light_tier_covers_every_changed_file_not_only_python():
     assert ci.light_tests(["README.md"], files, read) == ({}, [], [])
 
 
+def test_a_documentation_only_change_is_the_one_light_run_without_tests():
+    assert ci.docs_only(["README.md", "CHANGELOG.md", "llms-full.txt"])
+    assert not ci.docs_only(["README.md", "src/pkg/catalog.json"])
+    assert not ci.docs_only([])  # no change at all is not a documentation change
+
+
 def test_a_light_run_that_executed_no_test_is_red(tmp_path):
     counts = tmp_path / "light-counts"
     assert ci.light_executed(counts) == 0           # nothing ran at all
