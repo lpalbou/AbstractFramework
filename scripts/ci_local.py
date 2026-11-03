@@ -1683,7 +1683,9 @@ class Runner:
             "CARGO_HOME": str(rh / ".cargo"), "RUSTUP_HOME": str(rh / ".rustup"), "CARGO_TARGET_DIR": str(target),
             # uv pip as pip: best match across indexes, and pip's tolerance of wheels whose zip headers
             # disagree with their contents (llama.cpp's macOS CPU wheel; pip installs it, uv refuses).
-            "UV_LINK_MODE": "clone", "UV_PYTHON_DOWNLOADS": "never", "UV_INDEX_STRATEGY": "unsafe-best-match",
+            # manual: uv never fetches a Python on its own, but an explicit `uv python install` (the
+            # one-line installer's own step, which bootstrap-smoke runs) works as on a GitHub runner.
+            "UV_LINK_MODE": "clone", "UV_PYTHON_DOWNLOADS": "manual", "UV_INDEX_STRATEGY": "unsafe-best-match",
             "UV_INSECURE_NO_ZIP_VALIDATION": "1",
             "CI_LOCAL_JOB_DIR": str(jobdir),
         }
