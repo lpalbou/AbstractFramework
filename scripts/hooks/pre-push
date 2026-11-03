@@ -1,0 +1,45 @@
+#!/bin/sh
+# AbstractFramework pre-push gate (docs/ci-local.md): runs scripts/ci_local.sh for every ref
+# being pushed and refuses the push when it is red. Installed per repository by
+# scripts/install_hooks.sh (opt-in). The only override is `git push --no-verify`.
+#
+# Per pushed ref:
+#   refs/heads/main          --event push --git-ref refs/heads/main (the commit itself, as main's CI runs it)
+#   refs/heads/release/X     the merge into main (--event auto) plus --release-tag vX (release.yml's jobs)
+#   refs/heads/<other>       the merge into main (--event auto: the full main matrix + the PR-only checks)
+#   refs/tags/<tag>          --event push --git-ref refs/tags/<tag> (the tag's workflows)
+#   a deletion               nothing to check
+# Jobs this Mac cannot run (Windows, Linux root, Docker, secrets) are printed as SKIPPED and do not
+# block the push (--allow-skipped); GitHub still runs them.
+# Extra gate flags for one repository: git config ci-local.args "--runner-label xcode-27 --input full_ui_suite=true"
+# (or "--tier light" for a repository where the light tier is the norm; release branches stay full).
+set -u
+gate="__CI_LOCAL_SH__"
+repo=$(git rev-parse --show-toplevel)
+zero=0000000000000000000000000000000000000000
+extra=$(git config --get ci-local.args || true)
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_sha" in "$zero"|"") continue ;; esac
+  before=""
+  case "$remote_sha" in "$zero"|"") ;; *) git cat-file -e "$remote_sha^{commit}" 2>/dev/null && before="--before $remote_sha" ;; esac
+  case "$remote_ref" in
+    refs/heads/main)      args="--event push --git-ref refs/heads/main $before" ;;
+    refs/heads/release/*) args="--event auto --branch ${remote_ref#refs/heads/} --release-tag v${remote_ref#refs/heads/release/}" ;;
+    refs/heads/*)         args="--event auto --branch ${remote_ref#refs/heads/}" ;;
+    refs/tags/*)          args="--event push --git-ref $remote_ref" ;;
+    *) echo "pre-push: $remote_ref is not a branch or a tag; nothing to check"; continue ;;
+  esac
+  echo "pre-push: ci_local $repo $local_sha -> $remote_ref"
+  # shellcheck disable=SC2086  # word splitting of the flag lists is intended
+  # A release branch is always the full tier (ADR 0051), whatever ci-local.args says.
+  case "$remote_ref" in refs/heads/release/*) last="--tier full" ;; *) last="" ;; esac
+  if ! "$gate" "$repo" --ref "$local_sha" --allow-skipped $args $extra $last </dev/null; then
+    status=1
+  fi
+done
+if [ "$status" -ne 0 ]; then
+  echo "pre-push: REFUSED. ci_local is red for this push (the log path is above). Fix it and push again."
+  echo "pre-push: the only override is git push --no-verify, and a red CI on GitHub is then yours to fix."
+fi
+exit "$status"

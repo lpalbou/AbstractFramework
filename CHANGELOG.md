@@ -4,6 +4,11 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/ci_local.sh <repo> [--job <name>]`: a repository's GitHub Actions jobs run on this Mac before a push, read from its own workflow files so the gate cannot drift from CI ([Local CI gate](docs/ci-local.md)). Each workflow runs as the push to main when it has one (main's full Python matrix and conditional jobs) and otherwise as the pull request (changelog check, load test), on the commit merged into the fetched base, every step, a fresh environment per job that installs sibling packages from PyPI, a scratch `HOME`/`TMPDIR` and a clean environment (no token, no `ABSTRACT*` variable) under `~/Library/Caches/ci-gate/`, outside the workspace; `--sandbox` adds `sandbox-exec` refusing `localhost:8080`, `~/.abstractcore` and the workspace's `runtime/`. Jobs it cannot run (Windows, Linux root, Docker, secrets, a missing toolchain) are printed as SKIPPED with the reason; exit 0 only when every runnable job passed and nothing was skipped (or `--allow-skipped`). `--release-tag` adds the release workflow's jobs, `--input` / `--runner-label` reach the Assistant's dispatch-only iPhone suite. `--jobs N` runs jobs in parallel (default from the physical cores and free memory; model-loading and latency-gated jobs run alone at the end), and `--tier light|full` follows ADR 0051's test tiers (light: one Python per matrix and the changed files' tests; release branches always full).
+- An opt-in pre-push hook (`scripts/install_hooks.sh <repo>...`, never installed automatically) runs the gate for every pushed ref and refuses a red push; `git push --no-verify` is the only override. [CONTRIBUTING.md](CONTRIBUTING.md) states the rules: no push without the gate green, no pull request that is red by design, a red main is reverted or fixed within the hour.
+
 ### Fixed
 
 - A hung gateway is restarted (2026-10-04: a text-to-speech stream blocked the gateway for 10+ minutes and nothing restarted it). The gateway now exits with code 75 when its event loop is blocked for 30 s (`serve --watchdog-seconds`, AbstractGateway [Unreleased]); every way the installers and scripts run it restarts that exit:
