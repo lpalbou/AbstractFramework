@@ -6280,10 +6280,11 @@ for this repository, or a path.
 - **Isolated.** Each job has its own scratch `HOME`, `TMPDIR` (pytest's temporary directories live
   there, one fresh base per job; a `--basetemp` in `PYTEST_ADDOPTS` is not used because nested
   pytest runs, such as the Assistant's offscreen harness test, would inherit it and wipe their
-  parent's) and `RUNNER_TEMP`, under `~/Library/Caches/ci-local/runs/<repo>-<time>-<sha>/jobs/<job>/`.
+  parent's) and `RUNNER_TEMP`, under `~/Library/Caches/ci-gate/runs/<repo>-<time>-<sha>/jobs/<job>/`.
   That directory is outside the workspace on purpose: code that looks up its parents for sibling
   checkouts (AbstractCore's theme sync finds `../abstractuic`) must not find the live ones, as on
-  GitHub. The environment is clean: no token, no provider key, no `ABSTRACT*` variable from your
+  GitHub. Its path holds no `local` either: AbstractCore's zig outline test checks that word
+  is absent from output that prints its temporary path. The environment is clean: no token, no provider key, no `ABSTRACT*` variable from your
   shell, so nothing reaches the gateway you run on `:8080` or reads `~/.abstractcore`.
   `--sandbox` also runs every step under `sandbox-exec`, which refuses connections to
   `localhost:8080`, writes under your home directory outside the run and the download caches (uv,
@@ -6291,7 +6292,7 @@ for this repository, or a path.
   default because macOS cannot nest `sandbox-exec`, so AbstractCore's own macOS sandbox tests fail
   under it. Rust jobs keep a target directory per job in the workspace's `untracked/ci-local/cargo-target/`,
   as `Swatinem/rust-cache` does on GitHub. The gate deletes nothing: run directories stay for the
-  logs; remove old ones from `~/Library/Caches/ci-local/runs/` by hand.
+  logs; remove old ones from `~/Library/Caches/ci-gate/runs/` by hand.
 
 ## What it cannot run (SKIPPED, with the reason)
 
@@ -6373,7 +6374,7 @@ caused was fixed in the gate, not in the repositories.
 What those partial runs found in the gate, and the fix: `ps` cannot run under `sandbox-exec` (now
 outside it, and the sandbox is opt-in), macOS cannot nest `sandbox-exec` (AbstractCore's macOS sandbox
 tests: `--sandbox` is now off by default), run directories inside the workspace let AbstractCore's
-theme sync find the live `../abstractuic` (they moved to `~/Library/Caches/ci-local`), Gateway jobs
+theme sync find the live `../abstractuic` (they moved to `~/Library/Caches/ci-gate`), Gateway jobs
 without `setup-node` had no Node (the newest local one is now on the `PATH`, as on the runner image),
 and `uv` refused llama.cpp's macOS CPU wheel that pip installs (`UV_INSECURE_NO_ZIP_VALIDATION`). Two
 failures are not explained yet: AbstractCore `test_zig_lists_imports_tests_and_only_top_level_constants`

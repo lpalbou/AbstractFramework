@@ -806,8 +806,10 @@ def rust_toolchain_ok(toolchain: str, components: list[str]) -> str | None:
 # --------------------------------------------------------------------------------------------
 
 # Outside the workspace on purpose: code that walks up its parents for sibling checkouts
-# (abstractcore's theme_sync finds ../abstractuic) must not find the live ones, as on GitHub.
-SCRATCH = Path.home() / "Library" / "Caches" / "ci-local"
+# (abstractcore's theme_sync finds ../abstractuic) must not find the live ones, as on GitHub. And no
+# "local" in the path: tests assert on output that contains their tmp paths (AbstractCore's zig
+# outline test checks that the word "local" is absent).
+SCRATCH = Path.home() / "Library" / "Caches" / "ci-gate"
 UV = shutil.which("uv") or str(Path.home() / ".local" / "bin" / "uv")
 SYSTEM_PATH = ["/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"]
 RUST_TOOLS = ["cargo", "cargo-clippy", "cargo-fmt", "clippy-driver", "rustc", "rustdoc", "rustfmt", "rustup"]
@@ -1528,7 +1530,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--parallel", type=int, default=1, help="jobs to run at once (default 1)")
     p.add_argument("--tail", type=int, default=40, help="log lines to print for a failed job (default 40)")
     p.add_argument("--workspace", help="the AbstractFramework workspace (default: this checkout's main worktree)")
-    p.add_argument("--work", help="where run directories go (default ~/Library/Caches/ci-local/runs, outside the workspace)")
+    p.add_argument("--work", help="where run directories go (default ~/Library/Caches/ci-gate/runs, outside the workspace)")
     p.add_argument("--list", action="store_true", help="print the jobs that would run, and exit")
     return p
 
