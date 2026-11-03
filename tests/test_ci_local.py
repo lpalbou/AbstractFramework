@@ -417,6 +417,27 @@ def test_a_finished_job_keeps_its_executables_not_its_rust_build_folder(tmp_path
     assert ci.clean_rust_builds(job, run) == []  # nothing left to remove
 
 
+def test_the_repository_name_comes_from_origin_not_the_folder():
+    for url in ("https://github.com/lpalbou/AbstractFramework.git", "git@github.com:lpalbou/AbstractFramework.git",
+                "https://github.com/lpalbou/AbstractFramework", "https://github.com/lpalbou/AbstractFramework/",
+                "ssh://git@github.com/lpalbou/AbstractFramework.git"):
+        assert ci.repo_name_from(url, "wt-root") == "abstractframework", url
+    assert ci.repo_name_from("/Users/me/src/AbstractGateway", "wt-w5-timing") == "abstractgateway"
+    assert ci.repo_name_from("", "wt-w3-ttl") == "wt-w3-ttl"  # no origin: the folder name
+
+
+def test_a_worktree_run_gets_the_main_checkouts_name(tmp_path):
+    import subprocess
+
+    wt = tmp_path / "untracked" / "wt-w3-ttl"
+    wt.mkdir(parents=True)
+    subprocess.run(["git", "init", "-q", str(wt)], check=True)
+    subprocess.run(["git", "-C", str(wt), "remote", "add", "origin", "https://github.com/lpalbou/AbstractCore.git"], check=True)
+    runner = ci.Runner(ci.build_parser().parse_args(["x"]), wt, tmp_path)
+    assert runner.repo_name == "abstractcore"
+    assert ci.serial_reason(runner.repo_name, _job_id("local-models"))  # the serial rule follows the name
+
+
 def test_rust_builds_share_one_folder_per_repository_outside_the_run():
     assert ci.cargo_target_dir("abstractcore") == Path.home() / "Library" / "Caches" / "ci-gate" / "cargo-target" / "abstractcore"
     assert ci.cargo_target_dir("abstractcore") != ci.cargo_target_dir("abstracttui")

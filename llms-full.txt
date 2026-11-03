@@ -6242,8 +6242,9 @@ finish and an ordered summary closes the run. Jobs listed in `SERIAL_JOBS` in `s
 run alone, one at a time, after everything else, with the jobs that need them: AbstractCore's
 local-model tests (one model process at a time), the Gateway load test (its p99 gates need a
 quiet machine) and the root bootstrap smoke (each entry starts a gateway on port 18080; on GitHub
-they are separate machines). The rule matches the repository name, so run the root as
-`scripts/ci_local.sh root --ref <commit>`, not by a worktree's path.
+they are separate machines). The repository's name comes from its `origin` URL (`.../AbstractCore.git` is
+`abstractcore`), never from the folder, so a run on a worktree path (`untracked/wt-w3-ttl`) gets the
+main checkout's serial rules, shared Rust folder, `--keep-runs` count and run folder names.
 
 `<repo>` is a repository directory of the workspace (`abstractcore`, `AbstractGateway`, ...), `root`
 for this repository, or a path.

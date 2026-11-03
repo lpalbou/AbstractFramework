@@ -823,6 +823,16 @@ exit 97
 """
 
 
+def repo_name_from(origin_url: str, fallback: str) -> str:
+    """The repository's name for serial rules, the shared Rust folder, --keep-runs and run folder
+    names: the last part of its origin URL without .git, lower case. A worktree at any path
+    (untracked/wt-w3-ttl) gets the main checkout's name. `fallback` (the folder name) only when
+    there is no origin."""
+    base = re.split(r"[/:]", (origin_url or "").strip().rstrip("/"))[-1]
+    base = base[:-4] if base.endswith(".git") else base
+    return (base or fallback).lower()
+
+
 def cargo_target_dir(repo_name: str) -> Path:
     """The Rust build folder every run of one repository shares (a job's own CARGO_TARGET_DIR wins):
     a rebuild reuses the previous compilation, as Swatinem/rust-cache does on GitHub. One per
@@ -1328,7 +1338,11 @@ class Runner:
 
     @property
     def repo_name(self) -> str:
-        return self.repo.name.lower() if self.repo != self.workspace else "abstractframework"
+        if not hasattr(self, "_repo_name"):
+            origin = git("remote", "get-url", "origin", cwd=self.repo, check=False)
+            fallback = self.repo.name if self.repo != self.workspace else "abstractframework"
+            self._repo_name = repo_name_from(origin, fallback)
+        return self._repo_name
 
     # ---- the commit under test: the head, merged into the base the way GitHub merges a pull request
     def prepare_source(self) -> None:
