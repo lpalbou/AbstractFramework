@@ -6,7 +6,11 @@ Status: Accepted — operator rulings 2026-11-04:
 - "when we release a lower level package, we maybe don't need to rebuild every packages on top";
 - "when I personally test a release and validate it, that's when the root framework gets released, never
   before, and it gets released with the specific versions i tested. root should be for people installing
-  the framework".
+  the framework";
+- "your job is to get us there, to make sure everything below works and redeploy what you think is
+  prepared for release locally, so i can fully test it PERSONALLY, and only *I* can declare if this is
+  something to release or not. this include the redeployment of the GH pages site LOCALLY, so i can test
+  it and a report of the changes for that global release".
 
 ## Context
 
@@ -32,11 +36,14 @@ and installs exactly its pins.
    would otherwise be inconsistent. A compatible floor (`>=`) is left as is, and raised at the
    dependent's next natural release. The wave plan states the decision for each dependent.
 3. **The root is operator-validated.**
-   - The wave never publishes the root `abstractframework`. It ends with a **candidate matrix**: the
-     exact version of every package, all visible on their registries. That matrix is deployed locally
-     in full for the operator.
-   - The operator tests it and says GO. Only then is the root released, pinning exactly the tested
-     versions.
+   - The wave never publishes the root `abstractframework`. It ends with a **candidate** for the
+     operator, in four parts:
+     1. every package below the root published and visible on its registry, with its exact version;
+     2. the whole stack redeployed on the operator's machine at those versions;
+     3. the website rebuilt LOCALLY and served for the operator to test (never pushed);
+     4. a written report of every change in that global release.
+   - The operator tests it personally, and only the operator declares it a release. After that GO the
+     root is released, pinning exactly the tested versions; the operator alone pushes the site.
    - Root pins are `==`, never floors. The one-command installer therefore always installs the last
      published root's matrix, whatever newer lower packages appear. Today root 0.12.0 pins
      `abstractgateway==0.19.0` and `abstractcore==2.32.0` and keeps installing them.
@@ -68,7 +75,8 @@ Negative:
 
 - A tier-L change shows its tier and checks in the PR body.
 - Each wave plan lists, per dependent, "re-released (needs X)" or "floor left (compatible)".
-- No root release exists without the operator's recorded GO on the exact candidate matrix.
+- No root release exists without the operator's recorded GO on the exact candidate (published packages,
+  local redeploy, local website, written report).
 
 ## Related
 
