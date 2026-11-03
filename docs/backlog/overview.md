@@ -7,7 +7,7 @@ the lifecycle folders described by the backlog process.
 ## Current Counts
 
 Recounted on 2026-11-03 after the backlog repair (renumbered duplicates 1108–1112, 0.12.0 record 1113,
-1098 split into 1098 + 1114). Method, per state folder: `find <state> -name '*.md' ! -name README.md
+1098 split into 1098 + 1114) and the model idle-unload item 1115 (0895 deprecated, superseded). Method, per state folder: `find <state> -name '*.md' ! -name README.md
 ! -name 'template*' ! -path '*/evidence/*'` (topic subfolders included, evidence folders excluded) for
 **Files**; the same with a four-digit `NNNN_` prefix for **Numbered**. Counts are files, not unique
 IDs: the legacy three-digit and hub-era names (the difference between the two columns) are tracked by
@@ -16,10 +16,10 @@ across all folders (checked with `uniq -d` over the prefixes).
 
 | State | Files (top level) | Numbered `NNNN_` (top level) | Notes |
 |---|---|---|---|
-| Planned | 197 (145) | 153 (101) | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
-| Proposed | 83 (72) | 80 (69) | 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Planned | 198 (146) | 154 (102) | 1115 model idle unload (60 min default, Keep loaded never unloads and persists; next wave). Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
+| Proposed | 82 (71) | 79 (68) | 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
 | Completed | 299 (275) | 116 (92) | 1113 release record of root 0.12.0; 1108 and 1109 renumbered from 1028 and 1072. Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
-| Deprecated | 2 (2) | 2 (2) | Existing deprecated records. |
+| Deprecated | 3 (3) | 3 (3) | 0895 MLX idle/TTL unload (superseded by 1115, 2026-11-03); 0858 and the earlier record. |
 | Recurrent | 3 (3) | 1 (1) | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
@@ -209,6 +209,7 @@ Longer-running architecture work (unchanged since before the waves):
 | 1103 | [A gateway pause or restart never fails a run](planned/1103_gateway_pause_or_restart_never_fails_a_run.md) | Planned (release blocker) | Regression since gateway f6601e2b (2026-10-29): a polite stop fails in-flight model calls and marks runs failed; fix = runtime `EffectInterrupted` + gateway raising it; ADR 0002 amendment. |
 | 1104 | [Decision capability end to end, Core to Flow](planned/1104_decision_capability_end_to_end_core_to_flow.md) | Planned (in progress) | Real-call pass/fail table from abstractcore generate through `/v1/decisions`, the runtime node and a Flow run; Core fixes. |
 | 1105 | [Decision providers are first-class families; unknown families never "corrupt"](planned/1105_decision_providers_are_first_class_families_and_unknown_families_never_corrupt.md) | Planned (in progress) | `typesafe` rejected by the 2.32.0 loader, which wrote `.corrupt-*.bak` copies of the operator's config. |
+| 1115 | [Idle unload of loaded models: 60 min by default, a kept-loaded model never unloads](planned/1115_model_idle_unload_default_60_min_lock_never.md) | Planned (next wave: Core 2.34 → Runtime 0.18 → Gateway 0.21) | Operator rulings 2026-11-03: default 60 min; `serve --model-idle-unload MINUTES` + stored `models.idle_unload_minutes` (flag > stored > default, 0 = never); Keep loaded never unloads and persists across restarts. Architect option C: Core reaper (ADR 0012), runtime setter, gateway setting/UI/lock persistence; open admission race U2; voice/image/music in phase 2. Supersedes 0895; answers 1076 Q2. |
 | 1106 | [Sessions vs automation runs: one tag, reused everywhere](planned/1106_sessions_vs_automations_tag_reused_in_tray_and_every_list.md) | Planned (in progress) | Tray Conversations → Running listed automation occurrences; every list reads the gateway's tag. |
 | 1107 | [Compare converts numeric text exactly when the other side is typed](planned/1107_compare_converts_numeric_text_exactly_when_the_other_side_is_typed.md) | Planned (in progress) | Option B of the architect report; ADR 0049 §6 amendment. |
 | 1099 | [Active and recent first, a folded Paused section, in every app](planned/1099_active_first_paused_section_all_clients.md) | Planned (merged everywhere 2026-11-02; release pending) | The gateway serves automations active-first by last activity, then paused, with `section`/`last_activity_at`/`paused_automations_count`; every app that lists automations or sessions draws that order with a folded Paused section. ADR 0048. Merged: gateway #90, UIC #50, Observer #17, Code #34, Assistant #41. |
@@ -465,7 +466,7 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0892 | [Gateway tool deny list gaps; launch-folder trust for remote non-admins](proposed/0892_gateway_tool_deny_list_gaps_and_launch_folder_trust_for_non_admins.md) | Proposed (operator ruling needed) | Snapshot and schedule gaps closed 2026-09-26 (prefix rule, one guard `288f29f`); still open: shell not confined (0232), `.netrc`/`.docker`, trust default on for non-admins (REVIEW/09 B2). |
 | 0893 | [Same-machine locality behind a reverse proxy](proposed/0893_same_machine_locality_behind_a_reverse_proxy.md) | Proposed | App-proxied requests are never local in trust-proxy mode; TUI treats a same-host LAN URL as remote until the first run; add a pre-run verdict route. |
 | 0894 | [Migrate Flow and Code web proxies onto app-server](proposed/0894_migrate_flow_and_code_web_proxies_onto_app_server.md) | Proposed | Needs WebSocket proxying, pre-login token check, status shape in app-server; Flow vite dev proxy lacks the forwarding headers. Realises 0155's trigger. |
-| 0895 | [MLX idle/TTL unload](proposed/0895_mlx_idle_ttl_unload.md) | Proposed (operator decision) | `ttl_s`/`keep_alive` now reported unsupported; no unloader exists. |
+| 0895 | [MLX idle/TTL unload](deprecated/0895_mlx_idle_ttl_unload.md) | Deprecated 2026-11-03 (superseded by 1115) | The operator decided: idle unload is wanted; designed and planned as 1115. |
 | 0896 | [Verify MTP drafter eject](proposed/0896_verify_mtp_drafter_eject_on_a_host_with_the_companion.md) | Proposed | Companion `mlx-community/Qwen3.8-27B-MTP-4bit` not cached on this host; eject with a loaded drafter unmeasured. |
 | 0897 | [Standalone Local LLM clients register residency claims](proposed/0897_standalone_local_llm_clients_register_residency_claims.md) | Proposed | Only `MultiLocalAbstractCoreLLMClient` registers; another client's switch can eject a standalone client's model. |
 | 0898 | [Token streaming: paths that still do not stream](proposed/0898_token_streaming_gaps_after_the_first_wave.md) | Proposed | Remote core, entity chat, entity own-time loop, `usage_unavailable` servers, raw-text servers with prompt-opened thinking; the ```json and MLX telemetry fixes are committed (status note 2026-09-26). |
@@ -764,6 +765,10 @@ Scan of 2026-09-26 (after the release, 0921):
   disk. The 2026-09-25 patch-wave gap above is unchanged.
 
 ## Planning Notes
+
+- 2026-11-03: 1115 filed (planned, next wave) from the operator's idle-unload rulings and the architect report
+  `untracked/release-2026-11-03/architect-model-ttl.md` (option C). 0895 moved to `deprecated/` (superseded), 1076
+  question 2 marked answered, 0991's slice table links 1115. Recount: planned 198/154, proposed 82/79, deprecated 3/3.
 
 - 2026-11-03: backlog repair (release audit R9). Duplicate four-digit ids renumbered, the later item of each
   pair moving: completed 1028 (iPhone actions, added 2026-10-21; 1028 approval emails added 2026-10-19) → 1108
