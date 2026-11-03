@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
 from pathlib import Path
 
@@ -567,3 +568,18 @@ def test_rust_cleanup_never_reaches_a_build_folder_outside_the_run(tmp_path):
 def test_an_unusable_origin_name_falls_back_to_the_folder():
     assert ci.repo_name_from("git@host:org/..", "wt-root") == "wt-root"
     assert ci.repo_name_from("https://example.com/a/b c.git", "wt-root") == "wt-root"
+
+
+def test_job_folders_stay_short_whatever_the_job_name():
+    label = "release@v2.34.0 / " + "Local model tests with a very long matrix name " * 6 + "(3.12, macos-latest)"
+    name = ci.job_dir_name(7, label)
+    assert len(name) <= ci.JOB_DIR_MAX and name.startswith("07-release-v2-34-0-Local")
+    assert re.fullmatch(r"[A-Za-z0-9_-]+", name) and not name.endswith("-")
+    assert ci.job_dir_name(12, "///") == "12-job"
+    # A run folder with such a job: every component, and a cache file name a test derives from the
+    # whole path (Hugging Face flattens paths into one name), stays under macOS's 255-byte limit.
+    run = ci.SCRATCH / "runs" / "abstractcore-20261103-214819-8ce8ce17"
+    hf_lock = (run / "jobs" / name / "home" / ".cache" / "huggingface" / "hub").as_posix().replace("/", "--")
+    hf_lock += "--models--mlx-community--Qwen3-0.6B-4bit.lock"
+    assert all(len(part.encode()) <= 255 for part in (run / "jobs" / name).parts)
+    assert len(hf_lock.encode()) <= 255, len(hf_lock.encode())

@@ -1662,7 +1662,7 @@ class Runner:
         with self.lock:
             self.job_counter += 1
             number = self.job_counter
-        jobdir = self.run_dir / "jobs" / f"{number:02d}-{_slug(job.label)}"
+        jobdir = self.run_dir / "jobs" / job_dir_name(number, job.label)
         jobdir.mkdir(parents=True)
         job.log = jobdir / "log.txt"
         home, tmp, rtemp = jobdir / "home", jobdir / "tmp", jobdir / "runner-temp"
@@ -1798,6 +1798,7 @@ class Runner:
         job_deadline = time.monotonic() + 60 * float(_num(interpolate(job.spec.get("timeout-minutes"), sctx)) or 360)
         first_failure = ""
         log = open(job.log, "w", encoding="utf-8")
+        log.write(f"ci_local: job {job.label} ({Path(job.wf_file).name}: {job.job_id}); folder {jobdir}\n")
         try:
             for n, step in enumerate(job.spec.get("steps") or [], 1):
                 name = step.get("name") or (f"Run {step['uses']}" if step.get("uses") else
@@ -2004,8 +2005,16 @@ class Runner:
         return "PASS", ""
 
 
-def _slug(text: str) -> str:
-    return re.sub(r"[^A-Za-z0-9._-]+", "-", text).strip("-")[:80] or "job"
+# A job folder's name stays short: tests build cache file names out of their paths (Hugging Face's
+# hub cache), and macOS refuses a file name over 255 bytes (Errno 63). The full job name heads the
+# job's log and the summary.
+JOB_DIR_MAX = 40
+
+
+def job_dir_name(number: int, label: str) -> str:
+    """`NN-<the job's name, made safe>`, at most JOB_DIR_MAX characters; the number keeps it unique."""
+    slug = re.sub(r"[^A-Za-z0-9_-]+", "-", label).strip("-") or "job"
+    return f"{number:02d}-{slug}"[:JOB_DIR_MAX].rstrip("-")
 
 
 def _fmt_seconds(s: float) -> str:
