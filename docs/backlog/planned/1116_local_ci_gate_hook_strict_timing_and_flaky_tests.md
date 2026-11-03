@@ -9,7 +9,7 @@
 ## Summary
 
 The enforcement and validation ADR 0050 names does not exist yet in the tree. This item delivers
-it: the root gate `scripts/ci_local.sh <repo> [--job <name>] [--fresh-venv] [--allow-skipped]`
+it: the root gate `scripts/ci_local.sh <repo> [--job <name>] [--allow-skipped] [--release-tag vX.Y.Z]`
 with `docs/ci-local.md`, the opt-in `pre-push` hook installed by `scripts/install_hooks.sh`, a
 strict-timing switch in AbstractCore's tests (the gateway has one in `tests/timing.py`), and the
 rewrite of the eight tests that produced every red `main` of 2026-11-03. Until the gate lands, the
@@ -33,12 +33,13 @@ have failed locally under the gate; the other 8 are timing flakes, all seven red
   version is printed as `SKIPPED <job> python X.Y not installed`, never silent), same extras and
   services where they can run on this machine, scratch `HOME`, per-run `--basetemp`; exit 0 only
   when every runnable job passed; `--allow-skipped` is the explicit acknowledgement of skipped
-  jobs; `--fresh-venv` installs from the registries' pins instead of editable siblings; release
-  workflows' validate/build/sdist-test steps included for release branches; dispatch-only suites
+  jobs; every job runs in a fresh venv from the registries' pins, never editable siblings; the
+  commit is merged into a freshly fetched `origin/main` first; release workflows'
+  validate/build/sdist-test steps included via `--release-tag`; dispatch-only suites
   (the Assistant's full iPhone UI suite) runnable when their paths change.
 - `docs/ci-local.md`: the contract, what cannot run locally per repository, the proof runs with
   timings (red on the Core release branch with fragments left in and on a gateway branch importing
-  an unreleased Core symbol under `--fresh-venv`; green on `origin/main` of Core, Gateway, UIC).
+  an unreleased Core symbol under a fresh venv per job; green on `origin/main` of Core, Gateway, UIC).
 - `scripts/install_hooks.sh` + the `pre-push` hook template (opt-in, never installed into shared
   checkouts without the operator; `--no-verify` the only override, noted in the PR).
 - AbstractCore: a strict-timing switch mirroring the gateway's; every wall-clock assertion in
@@ -67,8 +68,8 @@ have failed locally under the gate; the other 8 are timing flakes, all seven red
 
 - [ ] `scripts/ci_local.sh abstractcore` on `origin/main` exits 0; on the Core release branch with
       fragments left in it exits non-zero naming the `changelog` job; timings in `docs/ci-local.md`.
-- [ ] `scripts/ci_local.sh abstractgateway --fresh-venv` on a branch importing an unreleased Core
-      symbol exits non-zero at the install/import step.
+- [ ] `scripts/ci_local.sh abstractgateway` on a branch importing an unreleased Core symbol
+      exits non-zero at the install/import step.
 - [ ] A missing matrix Python prints `SKIPPED` and the gate exits non-zero without `--allow-skipped`.
 - [ ] The pre-push hook refuses a push whose gate fails (demonstrated in a scratch clone).
 - [ ] Core and gateway test suites contain no wall-clock assertion outside the strict switch; the

@@ -33,18 +33,19 @@ blocks everyone's next merge. The checks exist; they were not run where the chan
    PR workflow **and** the push-to-`main` workflow: the same Python versions the matrix lists that
    exist on the machine, the same extras, the same services where they can run here, under a
    scratch `HOME` and a per-run temp directory. The root workspace provides this as
-   `scripts/ci_local.sh <repo> [--job <name>] [--fresh-venv] [--allow-skipped]`
+   `scripts/ci_local.sh <repo> [--job <name>] [--allow-skipped]`
    (`docs/ci-local.md`): it reads the workflow files, so it cannot drift from CI; its exit code is
    the contract; a job it cannot run locally is printed as skipped with its reason, never silently.
    A matrix Python that is not installed locally is printed as skipped the same way. **Until the
    gate lands (backlog 1116), the by-hand procedure in the `abstract-release` skill
    (`references/release-process.md`, section 10) is the gate**: the author runs the job commands
    themselves. The pull request body lists the commands run and their results.
-2. **Release branches run with `--fresh-venv`.** A fresh venv installs the package and its
-   dependencies from the registries (`pip install -e ".[dev]"` from PyPI pins, `npm ci` from the
-   lockfile), not from editable sibling checkouts, so "needs an unpublished sibling" fails here
-   exactly as it fails on CI. Release workflows' own validate, build and sdist-test steps are part
-   of the local run for a release branch.
+2. **Every job runs in a fresh environment installed from the registries.** The gate creates a
+   fresh venv per job and runs the job's own install lines (PyPI pins, `npm ci` from the lockfile),
+   never the editable sibling checkouts of the workspace, so "needs an unpublished sibling" fails
+   here exactly as it fails on CI. It merges the commit into a freshly fetched `origin/main`, the
+   way GitHub tests a pull request. Release workflows' own validate, build and sdist-test steps
+   are part of the local run for a release branch (`--release-tag`).
 3. **No pull request is opened red by design.** A branch whose CI needs a version that is not yet
    on its registry (a raised dependency floor, a smoke test installing the next release, an import
    of a sibling's unreleased symbol) stays local until that version is visible. Converting an
@@ -67,7 +68,7 @@ blocks everyone's next merge. The checks exist; they were not run where the chan
   operator's inbox.
 - A branch waiting on an unpublished sibling has no visible pull request until the sibling is
   released; the release order (ADR 0032, the `abstract-release` skill) already requires the lower
-  package first, this makes the wait visible as "not pushed" rather than as "red".
+  package first; this makes the wait visible as "not pushed" rather than as "red".
 - Timing-sensitive tests lose their stopwatch; a real performance regression is caught by the
   strict-timing run, which is a deliberate check, not a side effect of the unit suite.
 - Jobs that genuinely cannot run on the developer's machine (Windows, Docker, GPU) remain CI-only
@@ -89,9 +90,9 @@ blocks everyone's next merge. The checks exist; they were not run where the chan
 ## Validation
 
 - Planned, backlog 1116: the gate goes red locally on a commit known to have failed CI (the Core
-  release branch with its changelog fragments left in; a gateway branch importing an unreleased
-  Core symbol under `--fresh-venv`), and green on `origin/main` of Core, Gateway and UIC —
-  recorded in `docs/ci-local.md` with timings.
+  release branch with its changelog fragments left in — reproduced: GitHub's exact message in 2 s;
+  a gateway branch importing an unreleased Core symbol), and green on `origin/main` of Core,
+  Gateway and UIC — recorded in `docs/ci-local.md` with timings.
 - Planned, backlog 1116: Core's three garbage-collection timing tests, the gateway's
   boot-readiness tests and the Assistant's playhead assertion are event-based; on the loaded
   CI jobs they no longer depend on the runner's speed. Until then, the timing flakes that produced
