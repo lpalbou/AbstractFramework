@@ -848,6 +848,113 @@ def sandbox_profile(home: Path, allow_write: list[Path], deny: list[Path]) -> st
     return "\n".join(lines) + "\n"
 
 
+# Jobs that must run alone, after everything else (the operator's one-model-at-a-time GPU rule, and
+# gates that measure latency). Keyed by repository and job id; the reason is printed.
+SERIAL_JOBS = {
+    ("abstractcore", "local-models"): "loads local model engines (one model process at a time)",
+    ("abstractgateway", "perf"): "its p99 latency gates need a quiet machine",
+}
+MEMORY_PER_JOB = 4 * 1024**3  # what one job may hold (a test suite with torch imported, a cargo build)
+
+
+def serial_reason(repo_name: str, job: "Job") -> str | None:
+    return SERIAL_JOBS.get((repo_name, job.job_id))
+
+
+def run_scheduled(items: list, key_of: Callable, needs_of: Callable, serial_of: Callable, workers: int,
+                  fn: Callable) -> None:
+    """Run fn(item) for every item, each after every item of the keys it needs.
+
+    Phase 1: the items outside any serial chain, on a pool of `workers`, queued by depth in the needs
+    graph (a waiting item holds a worker; FIFO by depth means what it waits for has already started,
+    so the pool cannot deadlock). Phase 2: the serial items and everything that needs them, one at a
+    time, alone, in needs order.
+    """
+    keys = list(dict.fromkeys(key_of(i) for i in items))
+    needs = {}
+    for i in items:
+        needs.setdefault(key_of(i), needs_of(i))
+    late = {key_of(i) for i in items if serial_of(i)}
+    grew = True
+    while grew:
+        grew = False
+        for k in keys:
+            if k not in late and any(n in late for n in needs[k]):
+                late.add(k)
+                grew = True
+    depth: dict = {}
+
+    def depth_of(k, seen=()):
+        if k not in depth:
+            if k in seen:
+                raise RuntimeError(f"needs cycle at {k}")
+            depth[k] = 1 + max((depth_of(n, seen + (k,)) for n in needs.get(k, [])), default=-1)
+        return depth[k]
+
+    left = {k: 0 for k in keys}
+    for i in items:
+        left[key_of(i)] += 1
+    done = {k: threading.Event() for k in keys}
+    lock = threading.Lock()
+
+    def one(item) -> None:
+        k = key_of(item)
+        try:
+            for n in needs[k]:
+                done[n].wait()
+            fn(item)
+        finally:
+            with lock:
+                left[k] -= 1
+                if left[k] == 0:
+                    done[k].set()
+
+    early = sorted((i for i in items if key_of(i) not in late), key=lambda i: depth_of(key_of(i)))
+    if workers <= 1:
+        for i in early:
+            one(i)
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            for f in [pool.submit(one, i) for i in early]:
+                f.result()
+    for i in sorted((i for i in items if key_of(i) in late), key=lambda i: depth_of(key_of(i))):
+        one(i)
+
+
+def available_memory() -> int | None:
+    """Free + inactive + speculative pages (what macOS can hand out without swapping)."""
+    try:
+        out = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=10).stdout
+    except OSError:
+        return None
+    m = re.search(r"page size of (\d+) bytes", out)
+    page = int(m.group(1)) if m else 16384
+    pages = 0
+    for name in ("Pages free", "Pages inactive", "Pages speculative"):
+        m = re.search(rf"{name}:\s+(\d+)", out)
+        pages += int(m.group(1)) if m else 0
+    return pages * page if pages else None
+
+
+def default_jobs(runnable: int, physical_cores: int | None, memory: int | None) -> tuple[int, str]:
+    """min(runnable jobs, max(1, physical cores // 4)), capped by free memory / MEMORY_PER_JOB."""
+    by_cores = max(1, (physical_cores or 4) // 4)
+    n = min(max(1, runnable), by_cores)
+    why = f"{physical_cores} physical cores // 4 = {by_cores}, {runnable} jobs"
+    if memory is not None:
+        by_memory = max(1, memory // MEMORY_PER_JOB)
+        n = min(n, by_memory)
+        why += f", {memory / 1024**3:.0f} GiB free / {MEMORY_PER_JOB // 1024**3} GiB per job = {by_memory}"
+    return n, why
+
+
+def physical_cores() -> int | None:
+    try:
+        return int(subprocess.run(["sysctl", "-n", "hw.physicalcpu"], capture_output=True, text=True).stdout.strip())
+    except (OSError, ValueError):
+        return None
+
+
 class Runner:
     def __init__(self, args: argparse.Namespace, repo: Path, workspace: Path):
         self.args = args
@@ -1054,43 +1161,27 @@ class Runner:
 
     # ---- execution
     def run_all(self, groups: list[list[Job]]) -> list[Job]:
-        """Every job instance (each matrix entry) is one task; a job waits for all of what it needs."""
+        """Every job instance (each matrix entry) is one task; see run_scheduled."""
         selected = self._selection(groups)
         by_key = {self._key(g[0]): g for g in groups}
-        done = {k: threading.Event() for k in by_key}
-        left = {k: len(g) for k, g in by_key.items()}
+        items = [j for g in groups for j in g]
+        workers = self.args.parallel
 
-        def run_one(job: Job) -> None:
-            key = self._key(job)
-            try:
-                for n in _as_list(job.spec.get("needs")):
-                    done[self._key(job, n)].wait()
-                if key not in selected:
-                    job.result = "NOT-SELECTED"
-                else:
-                    self.run_job(job, by_key)
-            finally:
-                with self.lock:
-                    left[key] -= 1
-                    if left[key] == 0:
-                        done[key].set()
+        def run(job: Job) -> None:
+            if self._key(job) not in selected:
+                job.result = "NOT-SELECTED"
+            else:
+                self.run_job(job, by_key)
 
-        ordered = [j for g in groups for j in g]  # groups are in needs order
-        if self.args.parallel <= 1:
-            for job in ordered:
-                run_one(job)
-        else:
-            # A waiting task holds a worker. Queued by depth in the needs graph, every task a job waits
-            # for has already started when the job starts, so the pool never deadlocks.
-            depth: dict[tuple[str, str, str], int] = {}
-            for g in groups:  # needs order: a job's needs come first
-                needs = _as_list(g[0].spec.get("needs"))
-                depth[self._key(g[0])] = 1 + max((depth[self._key(g[0], n)] for n in needs), default=-1)
-            ordered.sort(key=lambda j: depth[self._key(j)])
-            with ThreadPoolExecutor(max_workers=self.args.parallel) as pool:
-                for f in [pool.submit(run_one, j) for j in ordered]:
-                    f.result()
-        return [j for g in groups for j in g]
+        run_scheduled(
+            items,
+            key_of=self._key,
+            needs_of=lambda j: [self._key(j, n) for n in _as_list(j.spec.get("needs"))],
+            serial_of=lambda j: serial_reason(self.repo_name, j) is not None,
+            workers=workers,
+            fn=run,
+        )
+        return items
 
     def _selection(self, groups: list[list[Job]]) -> set[tuple[str, str, str]]:
         keys = {self._key(g[0]) for g in groups}
@@ -1539,7 +1630,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="run every step under sandbox-exec (refuses localhost:8080, ~/.abstractcore, writes under your "
                         "home outside the run); off by default: macOS cannot nest it, so tests that sandbox commands "
                         "themselves (AbstractCore's macOS sandbox) fail under it")
-    p.add_argument("--parallel", type=int, default=1, help="jobs to run at once (default 1)")
+    p.add_argument("--jobs", "--parallel", dest="parallel", type=int, default=None, metavar="N",
+                   help="jobs to run at once (default: min(jobs, physical cores // 4), capped by free memory at "
+                        "4 GiB a job; the serial jobs, such as Core's local-model tests, always run alone at the end)")
     p.add_argument("--tail", type=int, default=40, help="log lines to print for a failed job (default 40)")
     p.add_argument("--workspace", help="the AbstractFramework workspace (default: this checkout's main worktree)")
     p.add_argument("--work", help="where run directories go (default ~/Library/Caches/ci-gate/runs, outside the workspace)")
@@ -1578,7 +1671,20 @@ def main(argv: list[str] | None = None) -> int:
     if not groups:
         print("ci_local: GREEN, no workflow runs for this push")
         return 0
+    count = sum(len(g) for g in groups)
+    if a.parallel is None:
+        a.parallel, why = default_jobs(count, physical_cores(), available_memory())
+        print(f"ci_local: --jobs {a.parallel} ({why})", flush=True)
+    else:
+        print(f"ci_local: --jobs {a.parallel}", flush=True)
+    serial = sorted({f"{j.label}: {serial_reason(r.repo_name, j)}" for g in groups for j in g if serial_reason(r.repo_name, j)})
+    if serial:
+        print("ci_local: alone at the end: " + "; ".join(serial), flush=True)
     jobs = r.run_all(groups)
+    print("ci_local: summary")
+    for j in jobs:
+        if j.result != "NOT-SELECTED":
+            print("  " + verdict_line(j))
     counts: dict[str, int] = {}
     for j in jobs:
         counts[j.result] = counts.get(j.result, 0) + 1

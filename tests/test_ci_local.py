@@ -179,3 +179,69 @@ def test_the_root_shim_marks_the_job(tmp_path):
                          capture_output=True, text=True)
     assert out.returncode == 97
     assert (tmp_path / "needs-root").read_text(encoding="utf-8").strip() == "sudo apt-get update"
+
+
+def _schedule(items, needs, serial=(), workers=3, hold=0.05):
+    """Fake jobs: each records when it starts and ends; a job holds its worker for `hold` seconds."""
+    import threading
+    import time
+
+    log, running, peak, lock = [], [0], [0], threading.Lock()
+    seen_while_serial = []
+
+    def fn(item):
+        with lock:
+            running[0] += 1
+            peak[0] = max(peak[0], running[0])
+            log.append(("start", item))
+            if item[0] in serial and running[0] > 1:
+                seen_while_serial.append(item)
+        time.sleep(hold)
+        with lock:
+            running[0] -= 1
+            log.append(("end", item))
+
+    ci.run_scheduled(items, key_of=lambda i: i[0], needs_of=lambda i: needs.get(i[0], []),
+                     serial_of=lambda i: i[0] in serial, workers=workers, fn=fn)
+    return log, peak[0], seen_while_serial
+
+
+def test_scheduler_runs_matrix_entries_in_parallel_and_respects_needs():
+    items = [("test", 0), ("test", 1), ("test", 2), ("build", 0), ("tests", 0)]
+    log, peak, _ = _schedule(items, {"tests": ["test"]}, workers=3)
+    assert peak == 3
+    assert len([x for kind, x in log if kind == "start"]) == 5
+    # `tests` needs every `test` entry: it starts after all three ended.
+    start_tests = log.index(("start", ("tests", 0)))
+    assert all(log.index(("end", ("test", i))) < start_tests for i in range(3))
+
+
+def test_serial_jobs_run_alone_at_the_end_with_what_needs_them():
+    items = [("test", 0), ("test", 1), ("local-models", 0), ("after", 0), ("docs", 0)]
+    log, peak, overlapped = _schedule(items, {"after": ["local-models"]}, serial={"local-models"}, workers=4)
+    assert overlapped == []
+    starts = [x for kind, x in log if kind == "start"]
+    assert starts[-2:] == [("local-models", 0), ("after", 0)]
+    serial_start = log.index(("start", ("local-models", 0)))
+    assert all(log.index(("end", x)) < serial_start for x in [("test", 0), ("test", 1), ("docs", 0)])
+
+
+def test_a_deep_needs_chain_does_not_deadlock_a_small_pool():
+    items = [("c", 0), ("b", 0), ("a", 0), ("a", 1), ("a", 2)]
+    log, _, _ = _schedule(items, {"b": ["a"], "c": ["b"]}, workers=2, hold=0.01)
+    starts = [x[0] for kind, x in log if kind == "start"]
+    assert starts.index("c") > starts.index("b") > max(i for i, k in enumerate(starts) if k == "a")
+
+
+def test_default_jobs():
+    gib = 1024**3
+    assert ci.default_jobs(12, 18, 100 * gib)[0] == 4      # 18 cores // 4
+    assert ci.default_jobs(2, 18, 100 * gib)[0] == 2       # never more than the jobs
+    assert ci.default_jobs(12, 18, 9 * gib)[0] == 2        # 9 GiB free / 4 GiB a job
+    assert ci.default_jobs(12, 2, None)[0] == 1            # at least one
+    assert ci.serial_reason("abstractcore", _job_id("local-models"))
+    assert ci.serial_reason("abstractcore", _job_id("test")) is None
+
+
+def _job_id(job_id):
+    return ci.Job("CI", "ci.yml", {}, job_id, {}, {}, f"ci/{job_id}")

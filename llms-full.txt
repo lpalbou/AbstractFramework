@@ -6232,7 +6232,16 @@ scripts/ci_local.sh abstractcore                    # HEAD of ./abstractcore, ev
 scripts/ci_local.sh abstractgateway --job test      # one job (and the jobs it needs)
 scripts/ci_local.sh abstractuic --ref origin/main --list   # what would run, without running it
 scripts/ci_local.sh root                            # this repository
+scripts/ci_local.sh abstractcore --jobs 1           # one job at a time
 ```
+
+Jobs run in parallel: `--jobs N`, by default the smaller of the number of jobs and the physical
+cores divided by 4, capped by free memory at 4 GiB a job (the chosen N is printed). Each job has
+its own environment, `HOME`, `TMPDIR` and log, so they are independent; verdict lines print as jobs
+finish and an ordered summary closes the run. Jobs listed in `SERIAL_JOBS` in `scripts/ci_local.py`
+run alone, one at a time, after everything else, with the jobs that need them: AbstractCore's
+local-model tests (one model process at a time) and the Gateway load test (its p99 gates need a
+quiet machine).
 
 `<repo>` is a repository directory of the workspace (`abstractcore`, `AbstractGateway`, ...), `root`
 for this repository, or a path.
