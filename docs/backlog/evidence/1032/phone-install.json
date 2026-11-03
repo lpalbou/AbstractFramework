@@ -1,0 +1,8 @@
+{
+  "version": "0.6.14",
+  "build": 22,
+  "normal_app": true,
+  "test_plugins": false,
+  "install": "success",
+  "launch": "success"
+}

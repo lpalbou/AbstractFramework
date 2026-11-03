@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.9.6"
+version = "0.12.0"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -48,24 +48,24 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.12.0",
+    "abstractgateway==0.19.0",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.12.3",
+    "abstractassistant==0.17.0",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.24.0",
-    "AbstractRuntime==0.8.5",
-    "abstractagent==0.3.17",
-    "abstractskill==0.3.0",
-    "AbstractMemory==0.3.0",
+    "abstractcore==2.32.0",
+    "AbstractRuntime==0.16.0",
+    "abstractagent==0.5.0",
+    "abstractskill==0.3.4",
+    "AbstractMemory==0.4.0",
     "abstractsemantics==0.0.5",
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
-    "abstractvoice==0.13.2",
-    "abstractvision==0.3.33",
-    "abstractmusic==0.1.15",
+    "abstractvoice==0.19.5",
+    "abstractvision==0.3.34",
+    "abstractmusic==0.1.17",
     "abstract3d==0.3.2",
 ]
 
@@ -82,13 +82,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.12.0",
-    "abstractassistant[apple]==0.12.3; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.19.0",
+    "abstractassistant[apple]==0.17.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.12.0",
-    "abstractassistant[gpu]==0.12.3",
+    "abstractgateway[gpu]==0.19.0",
+    "abstractassistant[gpu]==0.17.0",
 ]
 
 [project.urls]
@@ -100,9 +100,11 @@ Issues = "https://github.com/lpalbou/AbstractFramework/issues"
 [project.scripts]
 abstractframework = "abstractframework.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["abstractframework*"]
+[tool.setuptools]
+# Explicit package list: setuptools' find() walks the WHOLE checkout (nested repos,
+# untracked/models, node_modules, runtime ledgers) before filtering — an editable
+# install sat >1 h in readdir on 2026-10-09. Never use packages.find here.
+packages = ["abstractframework"]
 
 [tool.setuptools.package-data]
 abstractframework = ["py.typed"]

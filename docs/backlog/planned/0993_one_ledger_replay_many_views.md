@@ -130,6 +130,35 @@ Additional acceptance for this use case:
       equivalents) with a test per input kind; references to other sessions only through the
       supervised grant of [0997](../proposed/0997_cross_session_references_under_user_supervision.md).
 
+## Use case: status derived from a timer wait without a resume record (2026-10-04)
+
+Code web's Activity showed "Start · Waiting for you" on a completed run: the run's `wait_until`
+timer had no resume record in the ledger, so a client deriving status from the last wait saw the run
+still waiting (182 of 3,278 runs on the operator's gateway). Code fixed it in its own reducer
+(`web/src/lib/activity_rows.ts`: a later step of the same run ends the wait; test red on removal), on
+branch `round4/2026-10-03`. The shared replay must derive the same answer for every client: a wait is
+over when a later step of the same run exists, whether or not a resume record was written. Add this
+case to the conformance fixtures.
+
+## Use case: the conversation list and its counts (operator, 2026-10-26)
+
+The iPhone's Conversations list shows "1+" on every row while the watch shows a plain number for
+the same conversations. Checked on 2026-10-26: no client gets a list of conversations from the
+gateway, because no route lists sessions. Every client pages `GET /runs?root_only=true` and folds
+the page by `session_id` itself: the desktop Assistant since 0853 ("the gateway's root runs folded
+by `session_id`, the same fold AbstractCode uses"), AbstractCode's `--resume` asking for the newest
+session, the watch over an 80-run window, the iPhone over a 60-run window. When the window is full,
+every count a row shows (turns, tool calls) is a lower bound: the iPhone says so with "+", the
+watch does not. Three folds, three results, one gateway.
+
+The replay contract should settle it the same way it settles a run's status: the list of
+conversations with its per-conversation figures is a view the gateway serves from one
+reconstruction (an index kept as runs end, backfilled once from the ledger), and no client folds
+run pages to make it. Filed as gateway backlog 0939 (a sessions index with exact counts, one
+request, draft-test sessions hidden like runs). Add to the conformance fixtures: a store with more
+root runs than any client's window, whose conversation rows must carry the same counts in every
+client.
+
 ## Acceptance criteria
 
 - [ ] Inventory document with every replay path and divergence risk (file:line).
@@ -145,3 +174,19 @@ Additional acceptance for this use case:
 Conformance suite in each repo's CI; a multi-client end-to-end (two browsers + terminal client +
 Assistant against one hermetic gateway); a manual cross-machine check on the operator's gateway
 (Tailscale) after upgrade.
+
+## Related (2026-10-11)
+
+- 1016 (proposed): step identity and status should come from the runtime; the approved-tool-call case (a new step id with the same idempotency key) was fixed client-side in AbstractFlow and Observer and is a rule this shared replay should own.
+- Case 2 (2026-10-11, run b683459f, flow `assist`): one Agent node execution is several root-ledger
+  steps with different step ids (`start_subworkflow` started/waiting, `resume`, the
+  `resp_schema` structured-output `llm_call`), and nothing in the records names the execution.
+  AbstractFlow's run window showed every Agent twice ("Reviewer 0ms" + "Reviewer 14.5s"; the real
+  run was 37 s). Fixed client-side (unreleased) by `executionIdFor` in AbstractFlow
+  `src/utils/ledgerEvents.ts`: five rules recognise the phases (same step; a resume joins the
+  execution whose wait key it answers; a repeated idempotency key; the structured-output result key
+  `_temp.agent.<node>.structured`; the terminal record). An adversarial scan of all 9,476 ledgers on
+  the operator's gateway: 1,668 duplicate rows removed, none added; "same node with nothing in
+  between" is NOT a valid rule (loops, If/Else and Set Variable write no records). Every client that
+  lists steps needs the same rules today (Observer, Code, panel-chat): the shared replay, or an
+  execution id written by the runtime (1016 option 2), should own them.

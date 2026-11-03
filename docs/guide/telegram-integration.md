@@ -203,7 +203,7 @@ TDLib requires:
 
 Because TDLib is platform-specific, keep your setup steps close to your deployment scripts. The gateway integration code
 and configuration surface live in:
-- https://github.com/lpalbou/abstractgateway
+- https://github.com/lpalbou/AbstractGateway
 
 ## Testing checklist
 

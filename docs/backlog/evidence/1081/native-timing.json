@@ -1,0 +1,42 @@
+{
+  "watch-halo": {
+    "median_ms": 2.9423540108837187,
+    "max_ms": 4.018750041723251,
+    "samples": 42
+  },
+  "watch-wave": {
+    "median_ms": 3.916104440577328,
+    "max_ms": 6.260374910198152,
+    "samples": 42
+  },
+  "watch-hover": {
+    "median_ms": 1.357437518890947,
+    "max_ms": 1.6658339882269502,
+    "samples": 42
+  },
+  "watch-rings": {
+    "median_ms": 1.96433300152421,
+    "max_ms": 2.2492919815704226,
+    "samples": 42
+  },
+  "watch-eye": {
+    "median_ms": 2.0872500026598573,
+    "max_ms": 2.542375004850328,
+    "samples": 42
+  },
+  "all44_all7_128px": {
+    "median_ms": 1.1815210455097258,
+    "max_ms": 3.697625012136996,
+    "samples": 308
+  },
+  "baseline_matched160px": {
+    "median_ms": 0.8388329879380763,
+    "max_ms": 1.2714579934254289,
+    "samples": 210
+  },
+  "final_matched160px": {
+    "median_ms": 1.8566459766589105,
+    "max_ms": 5.393417086452246,
+    "samples": 210
+  }
+}

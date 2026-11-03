@@ -6,13 +6,15 @@
 # local checkouts, tier by tier, in dependency order (scripts/lib/packages.txt;
 # see ./scripts/deps.sh for the tiers and the edges):
 #
-#   Python  editable installs (NOT from PyPI) of the 13 Python packages and the
+#   Python  editable installs (NOT from PyPI) of the 14 Python packages and the
 #           root meta-package, into one isolated virtualenv
 #   npm     the 7 AbstractUIC packages (ui-kit, app-server, monitor-*,
-#           panel-chat) then the apps flow, observer, continuum, entity and
-#           code/web — built from source, NOT from the npm registry
-#   Rust    abstracttui, abstractcore-console (abstractcore/console-tui),
-#           abstractcode (abstractcode/tui) and abstractgateway-console
+#           panel-chat) then the apps flow, observer, continuum, entity,
+#           code/web and note/web — built from source, NOT from the npm registry
+#   Rust    abstracttui and its extension crates abstracttui-graph and
+#           abstracttui-mermaid (abstracttui/extensions/*),
+#           abstractcore-console (abstractcore/console-tui), abstractcode
+#           (abstractcode/tui) and abstractgateway-console
 #           (abstractgateway/console-tui), `cargo build`
 #
 # Third-party dependencies (pydantic, react, torch, crates, …) are resolved
@@ -457,8 +459,8 @@ pack_sibling_kits() {
 # Build one npm package from packages.txt (index $1).
 # - A package inside an npm WORKSPACE repo (AbstractUIC) is installed once at
 #   the workspace root and built with `npm run build --workspace <path>`.
-# - Any other package (flow, observer, continuum, entity, abstractcode/web) is
-#   installed and built in its own directory.
+# - Any other package (flow, observer, continuum, entity, abstractcode/web,
+#   abstractnote/web) is installed and built in its own directory.
 build_npm_package() {
     local i="$1"
     local id="${AF_PKG_ID[$i]}" name="${AF_PKG_NAME[$i]}" rel_path="${AF_PKG_PATH[$i]}"

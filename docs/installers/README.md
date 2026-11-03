@@ -27,5 +27,5 @@ behind them. The decision is recorded in
 
 | OS | Script | One-liner |
 |---|---|---|
-| macOS, Linux | [`scripts/install.sh`](../../scripts/install.sh) | `curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh \| sh` |
-| Windows 10 22H2+ / 11 | [`scripts/install.ps1`](../../scripts/install.ps1) | `powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 \| iex"` |
+| macOS, Linux | [`scripts/install.sh`](../../scripts/install.sh) | `curl -LsSf https://abstractframework.ai/install.sh \| sh` |
+| Windows 10 22H2+ / 11 | [`scripts/install.ps1`](../../scripts/install.ps1) | `powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 \| iex"` |

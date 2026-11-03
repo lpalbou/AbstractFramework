@@ -109,7 +109,7 @@ def _stack(tmp_path: Path, fake: Path | None) -> dict:
 
 def test_driver_580_and_compute_75_pick_cuda_13(tmp_path: Path) -> None:
     s = _stack(tmp_path, _fake_smi(tmp_path, with_cc="581.29, 8.9, NVIDIA GeForce RTX 4090\n"))
-    assert (s["name"], s["torch"], s["llama"]) == ("cu130", "cu130", ["cu130", "vulkan", "cpu"])
+    assert (s["name"], s["torch"], s["llama"]) == ("cu130", "cu130", ["cu130", "cu132", "vulkan", "cpu"])
     assert s["why"] == "NVIDIA GeForce RTX 4090, driver 581.29 (580 or newer) and compute capability 8.9 (7.5 or newer)"
 
 
@@ -222,7 +222,7 @@ build=$(echo "$*" | sed -n 's#.*/whl/\\([a-z0-9]*\\)/llama-cpp-python/.*#\\1#p')
 for f in {fails}; do [ "$f" = "$build" ] && {{ echo "error: no matching distribution for $build" >&2; exit 1; }}; done
 echo " Downloading llama-cpp-python ($build)" >&2
 echo "$build" > '{state}'
-echo " + llama-cpp-python==0.3.35" >&2
+echo " + llama-cpp-python==0.3.36" >&2
 exit 0
 """)
     answers = "\n".join(
@@ -245,7 +245,7 @@ $script:LogFile = '{log}'
 $uv = '{fake / "uv"}'; $py = '{fake / "python"}'
 $r = Resolve-LlamaBuild -Variants @({", ".join(repr(v) for v in variants)}) -Installed '{installed}' -Install {{
     param($v)
-    $code = Invoke-LiveProcess -Exe $uv -Arguments @('pip', 'install', '--python', $py, '--no-index', '--find-links', "https://abetlen.github.io/llama-cpp-python/whl/$v/llama-cpp-python/", 'llama-cpp-python==0.3.35') -Log $script:LogFile
+    $code = Invoke-LiveProcess -Exe $uv -Arguments @('pip', 'install', '--python', $py, '--no-index', '--find-links', "https://abetlen.github.io/llama-cpp-python/whl/$v/llama-cpp-python/", 'llama-cpp-python==0.3.36') -Log $script:LogFile
     $code -eq 0
 }} -Check {{ param($v) Invoke-Smoke $py $AfLlamaSmoke $script:LogFile }} -Remove {{
     Invoke-LiveProcess -Exe $uv -Arguments @('pip', 'uninstall', '--python', $py, 'llama-cpp-python') -Log $script:LogFile | Out-Null
@@ -257,8 +257,8 @@ $r = Resolve-LlamaBuild -Variants @({", ".join(repr(v) for v in variants)}) -Ins
     return json.loads(line[7:]), out
 
 
-GPU_OK = {"import": True, "offload": True, "version": "0.3.35"}
-CPU_ONLY = {"import": True, "offload": False, "version": "0.3.35"}
+GPU_OK = {"import": True, "offload": True, "version": "0.3.36"}
+CPU_ONLY = {"import": True, "offload": False, "version": "0.3.36"}
 NO_DLL = {"import": False, "offload": False, "error": "FileNotFoundError: Could not find module llama.dll (or one of its dependencies)"}
 
 
@@ -268,7 +268,7 @@ def test_cuda_build_that_offloads_is_kept(tmp_path: Path) -> None:
     got, out = _resolve(tmp_path, fake, ["cu130", "vulkan", "cpu"], "cu130")
     assert got == {"kept": "cu130", "where": "GPU offload", "why": []}
     assert not calls.exists(), "nothing is reinstalled when the included build works"
-    assert "llama.cpp 0.3.35 (cu130 build): loads, GPU offload" in out
+    assert "llama.cpp 0.3.36 (cu130 build): loads, GPU offload" in out
 
 
 def test_cuda_build_without_its_dlls_falls_back_to_vulkan(tmp_path: Path) -> None:
@@ -281,6 +281,27 @@ def test_cuda_build_without_its_dlls_falls_back_to_vulkan(tmp_path: Path) -> Non
     assert "llama.cpp: installing its vulkan build (about 45 MB)" in out
     assert [l.split("/whl/")[1].split("/")[0] for l in calls.read_text().splitlines()] == ["vulkan"]
     assert "--no-index" in calls.read_text()
+
+
+def test_a_build_for_cpu_instructions_this_processor_lacks_is_not_kept(tmp_path: Path) -> None:
+    # llama.cpp's cu130 Windows build is compiled with AVX-512: on a CPU without it, it imports and
+    # reports GPU offload, then ends the process with an illegal instruction at its first model load.
+    needs_avx512 = {**GPU_OK, "cpu_missing": ["AVX512"]}
+    fake, state, calls = _llama_fakes(tmp_path, fail_install=set(), smoke={"cu130": needs_avx512, "cu132": {**GPU_OK, "cpu_missing": []}})
+    state.write_text("cu130\n")
+    got, out = _resolve(tmp_path, fake, ["cu130", "cu132", "vulkan", "cpu"], "cu130")
+    assert got == {"kept": "cu132", "where": "GPU offload",
+                   "why": ["cu130: is built for CPU instructions this processor lacks (AVX512)"]}
+    assert "llama.cpp cu130 build is built for CPU instructions this processor lacks (AVX512); trying the next build" in out
+    assert [l.split("/whl/")[1].split("/")[0] for l in calls.read_text().splitlines()] == ["cu132"]
+
+
+def test_the_llama_check_compares_the_builds_cpu_flags_with_the_processor() -> None:
+    from pathlib import Path as _P
+    src = (_P(__file__).resolve().parents[1] / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    smoke = src[src.index("$AfLlamaSmoke = @'"):]
+    smoke = smoke[:smoke.index("'@")]
+    assert "llama_print_system_info" in smoke and "IsProcessorFeaturePresent" in smoke and '"AVX512": 41' in smoke
 
 
 def test_order_is_cuda_then_vulkan_then_cpu(tmp_path: Path) -> None:
@@ -378,7 +399,7 @@ def test_print_cuda_13_plan(tmp_path: Path) -> None:
     install = _install_line(out)
     assert f"--find-links {LLAMA}/cu130/llama-cpp-python/ --torch-backend cu130 " in install
     assert "large downloads ahead: PyTorch CUDA 13 build (about 1.9 GB), llama.cpp cu130 build (about 220 MB)" in out
-    assert "llama.cpp builds tried in this order: cu130 (about 220 MB), then vulkan (about 45 MB), then cpu (about 7 MB)" in out
+    assert "llama.cpp builds tried in this order: cu130 (about 220 MB), then cu132 (about 220 MB), then vulkan (about 45 MB), then cpu (about 7 MB)" in out
     assert "  GPU stack:  CUDA 13 (" in out
     # aec-audio-processing has Windows wheels: not dropped any more (0988).
     assert "aec-audio-processing; sys_platform == 'never'" not in out and "--no-build-package aec-audio-processing" not in install

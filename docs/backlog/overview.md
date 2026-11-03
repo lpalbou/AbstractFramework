@@ -6,21 +6,109 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-On-disk item files on 2026-10-01 (recursive, topic tracks included; README, overview, template and
-`evidence/` files excluded). The legacy part of the backlog still breaks the one-ID-one-item rule,
-so these are file counts, not unique IDs: see [Hygiene Findings](#hygiene-findings) and 0889.
+On-disk item files recounted on 2026-11-01 after rendering/context completion, session-read completion 1087,
+authorized avatar-conversation promotion 1088/1089/1092–1095, and the 2026-11-01 composer-default 1096 / subtitle 1097 intake:
+recursive lifecycle Markdown files, excluding README/overview/template and evidence
+files. Counts are files, not unique IDs; legacy duplicates remain tracked by [0889](planned/0889_normalize_the_legacy_root_backlog.md).
+The prior overview included four governance evidence receipts as planned items; those are now
+excluded consistently. The figures below are the current item-file inventory.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 161 | 118 flat (0901, 0929, 0933, 0935, 0937–0940, 0942, 0944, 0945, 0951, 0953–0962, 0964–0975, 0977–0979, 0981, 0983, 0985–0994 included; 0869, 0952, 0963 completed 2026-09-28, 0984 completed 2026-09-29; 0890, 0930, 0941, 0943, 0946–0950 moved to completed 2026-09-28; 0901 promoted from proposed 2026-09-28) + tracks: agency-parity 11, app-surfaces 6, docs-hygiene 7, multimodal-capability-projection 8, gateway-control-plane 6, visualflow-recursion-budget 5. Includes 24 stale copies of completed items (0889). |
-| Proposed | 48 | 40 flat (0905, 0916, 0917, 0919, 0920, 0925–0927, 0931, 0976, 0995–0998 included; 0901 promoted to planned) + tracks installers 2, gateway-control-plane 3, runtime-artifact-observability 2, multimodal-capabilities 1. |
-| Completed | 260 | 250 flat + tracks runtime-artifact-observability 9, multimodal-capabilities 1. Includes 0906–0915, 0921, 0924, 0932 and the moves of 0875, 0900, 0857, 0899 (2026-09-26), 0918, 0922, 0923, 0928, 0934, 0936 (2026-09-27), 0869, 0890, 0930, 0941, 0943, 0946–0950, 0952, 0963, 0980, 0982 (2026-09-28), 0984 (2026-09-29; 0941 released 2026-09-27 with root 0.5.0, 0980 is the patch wave's root record, root 0.6.1; 0982 is root 0.6.2's record, and 0869 is closed by the operator's tier ruling, carried by abstractcore 2.19.0). |
-| Deprecated | 1 | 0851 (operator 2026-09-28: the agora hub was a temporary local server; nothing to rotate). |
-| Recurrent | 2 | [`recurrent/`](recurrent/README.md): backlog/ADR hygiene, post-completion follow-up triage. |
+| Planned | 190 | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
+| Proposed | 82 | 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Completed | 298 | Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
+| Deprecated | 2 | Existing deprecated records. |
+| Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
 
 ## Next Recommended Work
+
+**2026-11-01 optional avatar conversation — implemented and locally validated:**
+[1092 live participation](completed/accumulated-evidence/1092_reply_to_breves_during_active_work.md)
+and [1093 durable questions](completed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md)
+are completed. Code/Assistant web, Entity driver/Flow and Watch have a second public view;
+ordinary chat and technical views remain the default. The [delivery receipt](evidence/1088/delivery.md)
+records real local-model correction, browser/native tests and limitations.
+[1088/1089/1094/1095](planned/accumulated-evidence/README.md) retain manual accessibility,
+quantitative KV and physical Watch/human validation. The [roadmap](proposed/accumulated-evidence/README.md)
+distinguishes source delivery from these checks. ADRs [0045](../adr/0045-conversational-questions-and-clarification-deadlines.md)
+and [0046](../adr/0046-optional-public-conversation-view.md) are accepted; 0044 remains proposed.
+[1090 optional structured knowledge](proposed/accumulated-evidence/1090_session_evidence_collections_and_optional_knowledge_projection.md)
+and [1091 broad warning/retrieval audit](proposed/accumulated-evidence/1091_tool_observation_preview_warning_and_retrieval_audit.md)
+remain separately gated. The [Koine PDF intake](../../abstractsemantics/docs/backlog/proposed/0004_review_koine_general_vocabulary_and_modeling_contract.md)
+is preserved; review/adoption is unstarted. No package publication or production restart.
+
+[1087 cross-device session read receipts](completed/1087_cross_device_session_read_receipts.md)
+is completed: Gateway-owned immutable reads synchronize Code/Assistant web and updated Apple
+clients without resolving human attention. Native apps require rebuild/install.
+
+**2026-10-31 avatar rendering and contextual interaction completed locally:**
+[1081 rendering](completed/1081_avatar_rendering_fidelity_and_platform_quality.md) improves
+Watch Halo/Wave/Hover/Rings/Eye with shared material compositing, bounded browser quality and
+cached terminal rasters. [Rendering evidence/try guide](evidence/1081/README.md).
+[1082 contextual selection](completed/1082_contextual_content_selection_and_agent_steering.md)
+delivers click gaze, mapped highlights and explicit Explain/Context/Change draft actions through
+the normal Send/steer path. [Interaction guide/evidence](evidence/1082/README.md).
+Independent review approved; local builds/tests and coredoc pass. No package publication or
+production/Gateway restart; Watch/iPhone remain unchanged read-only references.
+
+Next: review the future [1083 composable activity](planned/1083_composable_entity_activity_and_avatar_state_contract.md)
+and [1084 expression/personality](proposed/1084_entity_expression_and_personality_grounded_visual_behavior.md)
+contracts under [proposed ADR 0044](../adr/0044-composable-activity-and-expression-presentation.md),
+preserving canonical visit/work/personal/sleep and separate sleep stages/activity/expression/persona.
+[1085](proposed/1085_widget_owned_terminal_images_with_clipping_and_occlusion.md) tracks image
+placement ownership needed before terminal avatar widgets can safely adopt floating pixel protocols.
+[1086](proposed/1086_logical_source_geometry_for_custom_transcript_blocks.md) preserves the
+producer-authored geometry needed for semantic hits on custom user/tool/JSON draw blocks.
+Registry distribution/floors remain [1079](proposed/1079_abstractavatar_registry_release_and_consumer_distribution.md)
+for the next explicitly authorized release wave.
+
+**2026-10-31 streamed voice output repair verified:**
+[1080](completed/1080_streamed_voice_output_drain_and_recovery.md) corrects pause/cancellation and
+stale-completion handling, adds output-only recovery and responsive Stop, and records 299 passing
+tests plus a real macOS output recovery check. Sources remain local; the running tray still needs
+an Assistant-only restart. Publish matching Voice/player support before an eventual Assistant
+release and propagate floors in that authorized wave. The original hardware/pause trigger is unknown.
+
+**2026-10-31 AbstractAvatar implementation completed:**
+[1078](completed/1078_abstractavatar_shared_procedural_generation_and_platform_players.md) delivered
+the 44-design shared procedural generator, generic/opt-in TUI player, UIC and web/desktop Assistant
+adoption, coredoc and adversarial approval. Source is on GitHub; seven core CI jobs are green on
+Linux/macOS/Windows and Wasm. All 569 watched Apple files are unchanged. Packages remain unpublished;
+[1079](proposed/1079_abstractavatar_registry_release_and_consumer_distribution.md) preserves release
+prerequisites for the next authorized wave. [Evidence](evidence/1078/README.md).
+
+**2026-10-31 machine-resource orchestration reaffirmed as important:**
+[0991](planned/0991_model_residency_and_gpu_memory_management.md) is the existing cross-engine
+umbrella. Its current-code update links Core 0870/0872, Runtime 0866, Gateway 0978 and the
+[1064 concurrency proof](planned/1064_concurrency_correctness_and_benchmark.md). Shared GGUF
+weights/slots and Gateway pool borrowing already exist; queue controls/replay, text/embedding
+reservation order and the integrated multi-user/session plus real-hardware proof remain open.
+Core owns allocation/scheduling under its ADRs 0010/0011; avoid a competing host scheduler or a
+duplicate umbrella. The older September implementation notes are historical, not the current
+release matrix.
+
+**2026-10-30 selected-session subscriptions investigated, implementation proposed:**
+[1077](proposed/1077_reactive_session_subscriptions_for_thin_clients.md) confirms Code's
+five-vs-four turn mismatch and defines reusable session observation over existing
+account SSE and canonical run views. Includes start publication timing, concurrent
+root/approval preservation, cursor recovery and clean unsubscribe. Four worker
+investigations; no subscription code or live user state changed. [1058](proposed/1058_unified_typed_push_system_across_os.md)
+is background notification delivery, a separate concern.
+
+**2026-10-25 events and attention track COMPLETED** ([README](completed/events-and-attention/README.md), items 1038–1048 built, tested and deployed locally, nothing published; proposed 1049 push relay and [1050](proposed/1050_events_and_attention_follow_ups.md) follow-ups incl. the release prerequisites): run origin, CloudEvents trigger envelope, per-user trigger connections and the console Triggers page,
+signed webhook ingress, RSS/Atom feed source, N mailboxes per user, the `SCHEDULE_RUN` effect, the per-user event
+stream (with the mailbox fan-out cap fix as prerequisite), app consumers and the Flow trigger interface, three E2E
+examples and the coredoc pass. Design record with two adversarial rounds: `untracked/design/attention-triggers-replay-2026-10-25.md`.
+
+**2026-10-18 media repair remains open:** [1027](planned/1027_restore_media_endpoint_resolution_and_verify_remote_iphone_images.md)
+records Runtime `80a1887`, the related orchestrator/iPhone commits and durable test/ledger
+[evidence](evidence/1027/README.md). Published-version reproduction is red before / green
+after the Runtime fix; real remote voice passes. Remote Runtime deployment/restart, the
+selected dependency combination and live t2i/i2i plus phone reload verification remain
+required. No remote deployment or package publication occurred in this task.
 
 **Release state (2026-09-26): the 2026-09-25/26 mission wave is RELEASED** (root `abstractframework`
 0.4.0; record [0921](completed/0921_release_wave_2026_09_26.md), ledger
@@ -88,8 +176,8 @@ Earlier release follow-ups (after the 2026-09-24 waves; still open unless noted)
 4. One-click completeness: console TUI release binaries
    ([0876](planned/app-surfaces/0876_gateway_console_tui_release_binaries.md)); the Assistant
    sign-in handover is done ([0875](completed/0875_assistant_one_time_sign_in_handover.md), 2026-09-26,
-   released in abstractassistant 0.6.0); the `allow_engine_install` switch the UI already points at
-   ([0858](planned/0858_console_toggle_for_allow_engine_install.md)), Linux `evdev`
+   released in abstractassistant 0.6.0); the `allow_engine_install` switch
+   ([0858](deprecated/0858_console_toggle_for_allow_engine_install.md), withdrawn 2026-10-29: the administrator installs engines), Linux `evdev`
    ([0881](planned/app-surfaces/0881_assistant_linux_input_dependency_with_wheels.md)), compiled
    packages out of the default extras ([0861](planned/0861_compiled_packages_out_of_the_default_extras.md)).
 5. Release tooling: planner scratch discovery ([0871](planned/0871_release_planner_must_skip_scratch_trees.md)),
@@ -116,10 +204,25 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 1099 | [Active and recent first, a folded Paused section, in every app](planned/1099_active_first_paused_section_all_clients.md) | Planned (merged everywhere 2026-11-02; release pending) | The gateway serves automations active-first by last activity, then paused, with `section`/`last_activity_at`/`paused_automations_count`; every app that lists automations or sessions draws that order with a folded Paused section. ADR 0048. Merged: gateway #90, UIC #50, Observer #17, Code #34, Assistant #41. |
+| 1033 | [Hamlet voice routing and chat isolation](completed/1033_hamlet_voice_route_and_chat_isolation.md) | Completed 2026-10-18 | Router context leak fixed; corrected .15 deployed for this account, exact Hamlet WAV and ordinary-start selection verified. |
+| 1032 | [iPhone timed expandable activity and voice incident trace](completed/1032_iphone_timed_expandable_activity.md) | Completed 2026-10-18 | Expandable public results, chronology and elapsed times; normal 0.6.14 (22) installed. |
+| 1027 | [Restore media endpoint resolution and verify remote iPhone images](planned/1027_restore_media_endpoint_resolution_and_verify_remote_iphone_images.md) | Planned | P1. Runtime fix committed; published-version probe 6 red → 6 green, real remote voice passes. Release/deployment, exact selected dependency combination and live images/edit/reload proof remain open. |
+| 1001 | [Operator decisions after the rounds 4–7 rework](planned/1001_operator_decisions_after_the_round_4_to_7_rework.md) | Planned (operator decision gate) | Apple STT default `large-v3-turbo` + Spoken language setting; mlx-whisper engine; build named per-user API keys (1000)?; admins reading API request bodies; token in browser storage; supervisor kill-on-probes default. |
+| 1002 | [Follow-ups after the 0.10.0 release](completed/1002_follow_ups_after_the_0_10_0_release.md) | Completed 2026-10-08 (root 0.10.1) | All ten items shipped in the 0.10.1 wave (Linux nested sandbox green in CI, Read aloud hang + incident surface, browser_probe loopback origin, per-account default workflow, launcher flags, Assistant harness, TUI parity 9–13, kit icons, lockfile guard, ReAct format repair); leftovers in 1003. |
+| 1003 | [Follow-ups after the 0.10.1 release](planned/1003_follow_ups_after_the_0_10_1_release.md) | Planned | Gateway console round-15 redesign (crate 0.16.0), Code TUI default workflow + /schedule Mailbox step, abstractcode-tui without origin, Flow run-window colours + late flow-start wiping the failed mark, runtime TMPDIR test, Windows coverage, cloning-probe tests skipped in CI, ACKNOWLEDGEMENTS gaps, upgrade re-run on 0.10.1, watchdog re-check under CPU load. |
+| 1004 | [Follow-ups after rounds 15 to 17](planned/1004_follow_ups_after_rounds_15_to_17.md) | Planned | One abstracttui engine line (consoles 0.3 → 0.6, widget layer lifted into the engine), Code TUI sidebar / mouse-first model / one-form `/schedule` / file preview / `/docs`, NVIDIA CUDA STT manual check, af_supervisor banner (0848), last "viewer" wording, API refusing a prompt-less email automation, kit 0.8.7 speech hint, W6 F1, 80x24 automation detail, abstracttui select-mode test gaps, console SHOULD notes. |
+| 1005 | [Web search failures lose their cause](planned/1005_web_search_failures_lose_their_cause.md) | Planned | Parallel search calls throttle themselves (runtime pool of 8 × ddgs metasearch), the HTML fallback reports DuckDuckGo's HTTP 202 bot challenge as "no results" with a wrong reinstall hint, and the runtime drops a JSON-string failure's payload so the agent sees only the bare error. A and B are small; C (throttling) needs an operator decision. |
+| 1006 | [Simple interface ids](planned/1006_simple_interface_ids.md) | Planned | Rename every app-named interface id (`abstractcode.agent.v1`, `abstractassistant.agent.v1`, `abstractcode.goal.v1`, ...) to a role name (`runnable.v1`, `assistant.v1`, `goal.v1`, ...) in one wave across 10 repos, with a one-time data fix under `untracked/`. |
+| 1007 | [Assistant (v1) interface follow-ups](planned/1007_assistant_interface_follow_ups.md) | Planned | The Assistant interface has optional per-modality provider/model pins since 2026-10-11; still open: voice (STT/TTS, language, voice), per-model settings, sound as provider/model pins, the generated media on On Flow End. |
+| 1011 | [Reasoning level on the Runnable and Assistant interfaces](planned/1011_reasoning_level_on_runnable_interfaces.md) | Planned | Optional On Flow Start pin `thinking` (label "reasoning"), seeded by the runtime from the caller's `_runtime.thinking` (what every host already sends), shown as a select in the Run window; lets a flow show and route the level. No host or gateway change. |
+| 1013 | [Flow-step records](planned/1013_flow_step_records.md) | Planned (2 adversarial reviews required) | Opt-in `abstract.flow_step` ledger records for VisualFlow control/state nodes (Sequence, loops, If/Else, Switch, Set Variable(s), Loop Limit, Add to List): branch, stack, item i/n, bounded summaries; also what the run spotlight trail needs (case 2, 2026-10-12: ForEach never lit); never an answer-shaped record; consumer guards in gateway metrics/excerpt, Observer, Code web. Dry run GO-with-changes (`untracked/flow-step-dry-run/`). |
+| 1014 | [Run window tree from flow-step records](planned/1014_run_window_tree_from_flow_steps.md) | Planned (after 1013; 2 adversarial reviews required) | AbstractFlow builds the run tree by replaying the control stack: real Sequence branches (no false "Pending…"), ForEach items "Item k/n", If/Else and Set Variable rows; old runs keep the current grouping. |
+| 0999 | [Follow-ups after the rounds 4–7 console and app rework](planned/0999_follow_ups_after_the_round_4_to_7_console_and_app_rework.md) | Planned | 19 non-blocking findings from the rounds 4–7 gates (e2e races, non-idempotent live tests, core structured-output validator test, kit touch label, TUI parity gaps) and the 0.10.0 release-prep checks (pre-tag version grep, app relock after the kit publish, supervisor branch, islands/theme re-sync). |
 | 0994 | [Follow-ups after the 0.7.2 release](planned/0994_follow_ups_after_0_7_2_release.md) | Planned | Items 29–54 after root 0.7.2. Completed in 0.8.0 (close on publication): installer never-fail (29), stored port (30, D-A), old-install options (31, D-C), unknown core keys (32, D-B), resume nudge (33), Node install race (34), startup stop (35), flakes (37), Docker tags (38), pause during backoff (40), kit type scale (41), secure context (43), manifest (44), proxy sign-in 403 (45), `/files/read` (49). Open: 36, 39, 42, 46, 47, 48, 50, 51 (Assistant test segfault), 52 (Telegram bridge setting), 53 (llms copies), 54 (site screenshots); round 3 (2026-10-01): 67 thin-client principle (→ 0993), 68 no env settings + shared kit pickers, 69 contract tests never probe remote providers, 70 Code web 0.9.1 + gateway 0.10.1 session-bleed patches (no fix claim before publication), 71 future 0997/0998. |
 | 0993 | [One ledger replay, many views](planned/0993_one_ledger_replay_many_views.md) | Planned (high) | Clients rebuild run state their own way (live SSE vs. history bundle vs. snapshots); the 2026-09-29 approval gate showed only in the originating client. One replay contract + conformance suite for every client. Use case 2026-10-01: thin clients hold no run-input state (the Code web 0.9.0 cross-session attachment bleed); clients to audit listed. |
 | 0992 | [Per-user email accounts and notifications](planned/0992_per_user_email_accounts_and_notifications.md) | Planned (high) | Design + plan, no code: typed mail library and encrypted account store in Core; one mailbox per principal in its gateway plane (`/me/email`, web console + TUI); `email.received@1` trigger on the 0929 inbox; notification dispatcher with durable outbox and rate limits. Found: TLS unverified on every IMAP/SMTP connection, the default automation grant lets an agent email any address, the email bridge never starts under multi-user auth. 12 operator decisions open. |
-| 0991 | [Model residency and GPU memory management](planned/0991_model_residency_and_gpu_memory_management.md) | Planned (high) | One registry of loaded models across engines (in-process text/media, LM Studio/Ollama/vLLM, one-shot subprocesses), resident/protected/ejectable reusing the text lock, NVML/Metal memory budget naming holders, LRU eviction of ejectable models before a load, typed progress, honest errors. Fixed 2026-09-29 (unreleased): resident image models now serve generation (VM 17–19 s vs 54–59 s), a Diffusers unload frees its 18.8 GB. |
+| 0991 | [Model residency and GPU memory management](planned/0991_model_residency_and_gpu_memory_management.md) | Planned (high) | Machine-resource orchestration umbrella, refreshed 2026-10-31: Core-owned admission/scheduling and Runtime/Gateway relay; shared weights and pool borrowing implemented. Remaining queue controls/replay, embedding/text reservation order, cross-engine memory coverage and integrated proof link Core 0870/0872, Runtime 0866, Gateway 0978 and root 1064. September fixes retained as history. |
 | 0990 | [Seamless vLLM Engines card](planned/0990_seamless_vllm_engine_card.md) | Planned | No-sudo toolchain (ziglang wheel as Triton `CC`, `-l:` rewrite, hermetic glibc target), gateway-supervised `vllm serve` on a free loopback port, per-cc flags (TRITON_ATTN < 8.0, FlashInfer sampler off), NVML memory budget; measured on Turing: 75 s first start, 35 s warm, 85 tok/s (Qwen3-1.7B). |
 | 0989 | [NVIDIA test machines for the Linux and Windows installs](planned/0989_nvidia_test_machines_for_linux_and_windows_installs.md) | Planned (high) | No NVIDIA hardware: one-off AWS g4dn.xlarge session (~$5–10) vs OVHcloud GPU vs GitHub GPU runners (needs an org on Team). |
 | 0988 | [The `gpu` setting on Windows + NVIDIA](planned/0988_gpu_setting_on_windows_nvidia.md) | Planned (high) | Windows gpu installs CPU torch today and `abstractcore[gpu]` does not resolve (vLLM, llama.cpp, sd.cpp); CUDA stack choice from the driver, prebuilt llama wheels, markers, live progress. |
@@ -165,7 +268,7 @@ Longer-running architecture work (unchanged since before the waves):
 | 0850 | [Redesign the unresolvable `abstractcore[all]` extra](planned/0850_abstractcore_all_extra_is_unresolvable.md) | Planned (not started; still open in abstractcore 2.15.1) | MLX (transformers>=5, llguidance>=1.7) and vLLM <=0.19 (transformers<5) cannot share one extra; vLLM 0.30 needs openai>=2.25 vs the `openai<2` pin. Root profiles unaffected. |
 | 0852 | [Harmonize install-profile extras on `apple` / `gpu`](planned/0852_harmonize_install_profile_extras_naming.md) | Planned (not started; the 0.2.0 wave kept the existing extras) | After 0.1.12: rename `all-apple`/`all-gpu` to `apple`/`gpu` in core, voice, vision, music, memory, 3d with one-release aliases; dependents and root move in the same wave. |
 | 0856 | [Validate the Windows bootstrap and gateway service on real machines](planned/0856_validate_windows_bootstrap_on_real_machines.md) | Planned (not started; 0.3.x changed `install.ps1` with read review only) | `install.ps1` has CI (`windows-latest`, `-NoService`) and container parse/dry-run evidence only; validate PS 5.1/7 on Windows 10 22H2 and 11 (x64/ARM64), the Startup service entry, winget installs, NTFS token permissions. |
-| 0858 | [Console toggle for `allow_engine_install`](planned/0858_console_toggle_for_allow_engine_install.md) | Planned (still open in gateway 0.4.2) | Only `POST /admin/runtime-config` changes it, yet console and network texts already point users at "Settings → allow_engine_install"; add the audited admin switch in the web and terminal consoles. |
+| 0858 | [Console toggle for `allow_engine_install`](deprecated/0858_console_toggle_for_allow_engine_install.md) | Deprecated 2026-10-29 (operator ruling) | Engines are installed once per computer by the administrator and shared by every user; no console switch (AbstractGateway #73 removes #49's). |
 | 0859 | [Launcher port defaults match the stack map](planned/0859_launcher_port_defaults_match_the_stack_map.md) | Planned | `apps_common.sh` / `gateway-flow*.sh` defaults differ from the stack map the gateway adopted in 0.4.1; `local_pythonpath` is stale; then retire the gateway's legacy probe ports 3000/3007. |
 | 0860 | [ADR-0034: release order from the inventory tiers](planned/0860_adr_0034_release_order_from_the_inventory_tiers.md) | Planned | The ADR's hand-written order is stale (core and runtime in one tier; the 2026-09-24 patch wave had to run core → runtime → gateway → root); `scripts/lib/packages.txt` + `deps.sh` are authoritative. |
 | 0861 | [Compiled packages out of the default `all-apple` / `all-gpu` extras](planned/0861_compiled_packages_out_of_the_default_extras.md) | Planned | `llama-cpp-python`, `stable-diffusion-cpp-python`, `aec-audio-processing` are source-only on PyPI; the pip route needs a compiler until they become opt-in (later wave, owner decision 2026-09-24). |
@@ -189,7 +292,7 @@ Longer-running architecture work (unchanged since before the waves):
 | 0870 | [Operator rulings for gateway roles (0862)](planned/0870_operator_rulings_for_gateway_roles_0862.md) | Planned (operator decision gate) | Viewer role? Members configure their own entities? Require or prompt for a member account off localhost? |
 | 0871 | [Release planner must skip scratch trees](planned/0871_release_planner_must_skip_scratch_trees.md) | Planned | `abstract_release_plan.py` walks `untracked/`, worktrees and runtime workspaces; scratch package copies can pollute a plan. |
 | 0872 | [Runtime `MODELS_ENGINES_MIN_ABSTRACTCORE` floor](planned/0872_runtime_models_engines_floor_matches_the_cancel_signature.md) | Planned | Constant says 2.14.0; the 0.4.34 cancel signature needs 2.15.1 (pyproject floor already 2.15.1). |
-| 0873 | [Root launchers stop exporting legacy backlog env](planned/0873_root_launchers_stop_exporting_legacy_backlog_env.md) | Planned | `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT` / `BACKLOG_EXEC_RUNNER` are stored settings since gateway 0.4.1; Continuum labels the exports "environment (legacy)". |
+| 0873 | [Root launchers stop exporting legacy backlog env](completed/0873_root_launchers_stop_exporting_legacy_backlog_env.md) | Completed (2026-10-07, round 14: serve flags) | `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT` / `BACKLOG_EXEC_RUNNER` are stored settings since gateway 0.4.1; Continuum labels the exports "environment (legacy)". |
 | 0874 | [Core default MLX model id names a missing repo](planned/0874_core_default_mlx_model_id_names_a_missing_repo.md) | Planned (fix committed on local core `main`, unreleased) | `mlx-community/Qwen3-4B` does not exist; `…-4bit` does. |
 | 0889 | [Normalize the legacy root backlog](planned/0889_normalize_the_legacy_root_backlog.md) | Planned | 24 stale planned copies of completed items, 231 non-`NNNN_` filenames, reused IDs; blocks reliable counts. |
 | 0876-0881 | [App surfaces track](planned/app-surfaces/README.md) | Planned | Seams between the gateway's apps manager and each app (console TUI binaries, Continuum flags/seat/dev port, Entity dead variable, Linux `evdev`). 0875 completed 2026-09-26. |
@@ -222,6 +325,18 @@ Track README: [planned/docs-hygiene/README.md](planned/docs-hygiene/README.md).
 | 0886 | [Docs sites redeploy on main](planned/docs-hygiene/0886_docs_sites_redeploy_on_main.md) | Planned | Core site stale since 2026-05-27 (no deploy job); runtime/gateway deploy on tags only. |
 | 0887 | [CHANGELOG histories without maintainer narrative](planned/docs-hygiene/0887_changelog_histories_without_maintainer_narrative.md) | Planned | ui-kit 0.1.9 history and Entity pre-release CHANGELOG. |
 | 0888 | [Runtime ROADMAP is stale](planned/docs-hygiene/0888_runtime_roadmap_is_stale.md) | Planned | Says v0.4.2; dead backlog link. |
+
+## Governance Planned Track
+
+Runtime as the owned isolation layer; admin = a power, not an identity; admins read-only outside their runtime; entities as digital users; authorizations per (run, workflow). Created 2026-10-15 from a read-only audit of abstractgateway/abstractruntime against the operator's model (the audit table with file:line evidence, the "do not touch" list and 12 operator rulings are in [planned/governance/README.md](planned/governance/README.md)). Every item is an operator decision gate plus buildable P0 rows; adversarial review required before build.
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| 1019 | [Admin identity and the gateway home](planned/governance/1019_admin_identity_and_gateway_home.md) | Planned (decision gate Q3/Q7/Q10/Q12) | Every admin owns a plane; the gateway home (users, sessions, audit, catalog, grants, MCP) holds no runs; admin views from the gateway home; one admin in single-user mode. Rows 1–5, 15. |
+| 1020 | [Admins are read-only outside their runtime](planned/governance/1020_admin_read_only_outside_own_runtime.md) | Planned (P0 rows; decision gate Q1/Q2/Q11) | No token return for other accounts, no plane adoption/rebind/transfer, availability enforced at admission (no writes into users' planes), session workspaces read-only for admins, a closed audited unlock list, read-only ledgers. Rows 6–12. |
+| 1021 | [Plane isolation that cannot be switched off](planned/governance/1021_plane_isolation_cannot_be_switched_off.md) | Planned (P0 conditional) | Other planes, auth and the audit log always denied whatever the switch/posture; prompt-cache key per plane and client keys stripped; shared KG path refused; MCP credentials per account + stdio sandboxed; no OS-login fallback; no unsandboxed mode in multi-user. Rows 13, 14, 16–18, 29. |
+| 1022 | [Entities are digital users](planned/governance/1022_entities_are_digital_users.md) | Planned (P0 rows; decision gate Q4/Q5/Q6) | Own plane per entity with an owner pointer; owner = read-only + operational control; mind writes closed (entity proposes, owner approves); visitor check on visit turns; entity acts under its own principal and policy. Rows 19–24. |
+| 1023 | [Authorization per (run, workflow)](planned/governance/1023_authorization_per_run_workflow.md) | Planned (decision gate Q8/Q9) | One signed authorization object per run = admin realm ∩ account default ∩ run request, folders AND tools; tool policy clamped; automation grants intersected (live: 64 tools auto-approved incl. execute_command); resolved workspace stored, never a placeholder; backlog runner inside the realm. Rows 25–28. |
 
 ## Gateway Control Plane Planned Track
 
@@ -293,9 +408,30 @@ binding: no lossy truncation inside the loop. Source analysis:
 | 0189 | [Runtime artifact catalog and access stats](completed/runtime-artifact-observability/0189_runtime_artifact_catalog_and_access_stats.md) | Completed | Added descriptor-compatible Runtime metadata, explicit update/access APIs, exact counts/facets, filters, paging, and a repairable SQLite file-store catalog. |
 
 ## Active Proposed Work
+| [1075_note_routes_are_gateway_owned_no_package_brings_its_own_api.md](planned/1075_note_routes_are_gateway_owned_no_package_brings_its_own_api.md) | P1 (planned; operator confirmed 2026-10-29). All note routes live in the gateway, nicely organised, accessible to any app dealing with notes; no package brings its own API or server. Gateway owns `/api/gateway/note/...` over a runtime facade; the AbstractNote seam shrinks to registration; every route in the authorization table. |
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 1101 | [Keep the computer awake while the gateway runs on Linux and Windows](proposed/1101_keep_awake_while_the_gateway_runs_linux_windows.md) | Proposed (2026-11-02) | macOS ships in AbstractGateway PR #91 (idle-sleep assertion while `serve` runs). Linux logind idle inhibitor, Windows `SetThreadExecutionState`. |
+| 1100 | [Request logo permission from providers](proposed/1100_request_logo_permission_from_providers.md) | Proposed | Operator ruling 2026-11-02: logos only with permission, text badges meanwhile. Contacts, ready request text and acceptance for Anthropic, OVHcloud, Portkey, Ollama, DeepSeek, NVIDIA (and Google/Meta/Microsoft). |
+| 1098 | [Typed voice block in the replay projection](proposed/1098_typed_voice_block_in_replay_projection.md) | Proposed (deferred by the operator 2026-11-02) | One conversation projection for every client: a typed per-turn `voice` block (dictation ref, playback refs from the TTS child runs) instead of erased facts, dictation provenance validated at `runs/start`, one runtime predicate re-exported by the gateway, client guards retired. ADR 0047. Reports under `untracked/voice-stall/`. |
+| 1067 | [One-command server deployment](proposed/1067_one_command_server_deployment.md) | Proposed | `install.sh --server [--tailscale-funnel] [--gpu]`: the proven fresh-Linux sequence (installer, lingering, service enable, NVIDIA step, Tailscale + Funnel, gateway origins/proxy, first claim link) as one idempotent command that ends by printing the public address and the one-time sign-in link; docs/deploy-linux.md stays the manual baseline. |
+| 1000 | [Named per-user API keys for the OpenAI API](proposed/1000_named_per_user_openai_api_keys.md) | Proposed | Endpoint-only keys per account (label, last used, fingerprint, revoke one by one) instead of the gateway token as the `/v1` key; removes the need to keep the token in browser storage. Build decision: gate 1001. |
+| 1025 | [Cross-user read as a principal privilege](proposed/1025_cross_user_read_as_principal_privilege.md) | Proposed (decision gate: 4 questions) | Keep the hard deny for run tools (confused deputy); cross-user READ through gateway `/study/*` APIs with an `auditor` role, purpose-logged, k-threshold aggregates, exports as artifacts, archived planes readable (R5). 51 references in the governance evidence folder. |
+| 1024 | [Requester attribution on every run](proposed/1024_requester_attribution.md) | Proposed (decision gate: 7 questions asked 2026-10-14) | `actor_id` is the runner selector, never the requester; a runtime-owned `_meta.requester` (user, tenant, source, fingerprint, server-derived `via`, `on_behalf_of`, deterministic `at`) stamped at the gateway's start funnel, inherited at all five child paths, indexed and projected; the Observer shows who asked; 7 % of existing runs back-fillable. Adversary: 2 P0 / 8 P1, GO-with-changes. |
+| 1018 | [Loop-back out of a loop body grows the control stack](completed/1018_loop_back_out_of_a_loop_body_grows_the_control_stack.md) | 2026-10-15 | Moved from `proposed/`. Operator ruling: refuse at compile time. AbstractRuntime 0.10.0 refuses an execution wire that loops back out of a ForEach/For/While body with a sentence naming the wire and the loop; AbstractFlow 0.9.0's run checks say the same before Run or Publish. Released with root 0.11.0. |
+| 1028 | [Approval emails a person can read and answer from the inbox](planned/1028_approval_emails_readable_with_actions.md) | Planned (high) | Branded, readable approval emails: context, time, the question or tool call with its arguments, Approve / Deny / Approve all or one button per choice as signed one-time links, one email per wait. Operator request 2026-10-18. |
+| 1061 | [Session tool policy: no approval gate flash](planned/1061_session_tool_policy_no_approval_flash.md) | Planned (high) | "Approve all" / "approve this kind" held server-side per conversation (`/api/gateway/sessions/{id}/tool-policy`), clamped to the account's authorized tools, read by the runtime before any wait; an `abstract.tool_policy_decision` record instead of a gate. Runtime 0853, gateway 0946, panel-chat 0039, Assistant desktop; iPhone/watch (Assistant 1062) and AbstractCode follow. Operator report 2026-10-27. |
+| 1063 | [Typed runs and sessions](planned/1063_typed_runs_and_sessions.md) | Planned (high) | One canonical `run_type` (conversation, docs, automation, occurrence, entity visit, scheduled, import, correction...) plus `origin.surface` (desktop, iPhone, watch, web...) stamped once at start, indexed, filterable on `/runs`, carried in `replay_view_v1`; replaces the three partial vocabularies (`session_kind`/`role`, gateway `session_kinds.json`, `_meta.origin.client`). Runtime 0858, gateway 0951; links 0993, 1059. |
+| 1064 | [Concurrency correctness and benchmark](planned/1064_concurrency_correctness_and_benchmark.md) | Planned (high) | N users x M sessions on a real server: no cross-talk, gap-free ledger `seq`, complete SSE delivery, tool-policy isolation; reproducible p50/p95/p99, throughput and memory benchmark from the r13 harness and `bench_replay_view.py`. Gateway 0952; links 1060. |
+| 1065 | [Replay view client migrations](planned/1065_replay_view_client_migrations.md) | Planned (high) | Every client and its state: panel-chat in progress (AbstractUIC 0040, worker branch); Code web, Assistant web, Observer, Entity, Continuum, Note web via panel-chat; Assistant desktop, iPhone/watch, Flow, Code terminal, Observer steps, consoles not started. Inventory: runtime 0854. |
+| 1066 | [Environment variables become config settings](planned/1066_env_vars_become_config_settings_env_only_as_override.md) | Planned (high) | 304 names read (gateway 188, core 94, runtime 22), 75 covered by a setting; each gets a key in runtime_config.json / abstractcore.json / host-filled RuntimeSettings, env only as a visible override; 8 findings (UAT gate reads env directly, DEV_PREFER_SIBLINGS on by default, ...); operator decision: env overrides vs dm#194. |
+| 1026 | [Installer app upgrade blind spots](completed/1026_installer_app_upgrade_blind_spots.md) | 2026-10-17 | `install.sh`/`install.ps1` apps step: wait for the gateway's boot and its starting apps, pass the data dir's token as `--token` (a shell `ABSTRACTGATEWAY_AUTH_TOKEN` got Unauthorized), update the gateway's install behind an outside copy and name that copy in the summary. Operator report: a remote upgrade moved the gateway, not Flow. Released with root 0.11.4. |
+| 1009 | [Typed list variables](proposed/1009_typed_list_variables.md) | Proposed | Declare what a list variable holds (`array of object`) so the editor shows it and writes can refuse a wrong-typed element; today lists are untyped and only a heuristic could check. Raised by 1008. |
+| 1012 | [Reasoning text as a workflow output](proposed/1012_reasoning_text_as_workflow_output.md) | Proposed | A `reasoning` output on LLM Call / Agent and optionally on On Flow End, instead of hosts reading the ledger's `result.reasoning`; open: which cycles, size/privacy, interface pin. |
+| 1015 | [Memory blocs](proposed/1015_memory_blocs.md) | Proposed (5 operator decisions; 2 adversarial reviews) | Many named memory blocs (records with text, metadata, embeddings): hybrid search across chosen blocs, deterministic select, attach chosen blocs to an agent/LLM context (text within budget or KV prefix, generalising `prompt_cache_binding`), an agent tool bound to its blocs, nodes and console. Builds on AbstractCore file blocs + gateway `/blocs`. |
+| 1016 | [Step state from the runtime](proposed/1016_step_state_from_the_runtime.md) | Proposed (2 adversarial reviews) | Clients group ledger records into steps themselves; an approved tool call's execution is a new step with the same idempotency key, so Flow and Observer showed it "waiting" forever (fixed client-side 2026-10-11). Options: one step id per effect, an explicit `resumes_step_id`, or 0993's shared replay. |
+| 1017 | [AIRelays usage dialect](proposed/1017_airelays_usage_dialect.md) | Proposed | AIRelays answers `chat.completion` with Responses-API usage names (`input_tokens`/`output_tokens`); AbstractCore reads only `prompt_tokens`/`completion_tokens`, so every call records 0/0 with a correct total. Fix the relay, make AbstractCore read both (AbstractAssistant 0011 A), then drop Flow's raw-response fallback. |
 | 0998 | [@-mentions of agents and entities from a session](proposed/0998_at_mentions_of_agents_and_entities_in_a_session.md) | Proposed (future) | Involve `@agent_1` / `@entity_1` from one session; participation recorded in the ledger; agora bridge vs gateway rooms; builds on 0212/0213/008 and the 0997 grant. |
 | 0997 | [Referencing other sessions and their attachments, under user supervision](proposed/0997_cross_session_references_under_user_supervision.md) | Proposed (future) | "consult session @id and attachment @img1.jpg" with a visible, revocable grant in the ledger; until then a session sees only its own (gateway `artifact_not_in_session`). |
 | 0996 | [Console and app UI follow-ups after the round-1 rework](proposed/0996_console_and_app_ui_follow_ups_after_the_round_1_rework.md) | Proposed | Entity blueprint phone layout, monitor-active-memory touch size republish, TUI sign-in status test, Observer landscape, console helper text re-measure, apps' https sentence. |
@@ -473,6 +609,23 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| 1093 | [1093 — Question state and durable clarification deadlines](completed/accumulated-evidence/1093_question_state_and_durable_clarification_deadlines.md) | 2026-11-01 | Created 2026-10-31; moved through authorized planned/ from proposed/. Source, real-model and browser/native validation; [delivery receipt](evidence/1088/delivery.md). Physical/KV validation stays separate. |
+| 1092 | [1092 — Reply to brèves during active work](completed/accumulated-evidence/1092_reply_to_breves_during_active_work.md) | 2026-11-01 | Created 2026-10-31; moved through authorized planned/ from proposed/. Source, real-model and browser/native validation; [delivery receipt](evidence/1088/delivery.md). Physical/KV validation stays separate. |
+| 1082 | [Contextual selection and explicit Code steering](completed/1082_contextual_content_selection_and_agent_steering.md) | 2026-10-31 | Created 2026-10-31; moved from `planned/1082_contextual_content_selection_and_agent_steering.md`. UTF-8 source geometry, click/drag/table/code highlight, responsive keyboard actions, preserved draft and explicit normal Send. Full local TUI/Code checks and independent review pass; unreleased. [Evidence](evidence/1082/README.md). |
+| 1081 | [Avatar rendering fidelity and platform quality](completed/1081_avatar_rendering_fidelity_and_platform_quality.md) | 2026-10-31 | Created 2026-10-31; moved from `planned/1081_avatar_rendering_fidelity_and_platform_quality.md`. Five Watch reference procedures, shared RGBA materials, quality tiers, cached terminal raster; native/Wasm/browser/Qt evidence and independent approval. All 569 Apple files unchanged; unreleased. [Evidence](evidence/1081/README.md). |
+| 1055 | [Release wave 2026-10-27: voice library, replay, memory graph, UI primitives](completed/1055_release_wave_2026_10_27_voice_library_replay_memory.md) | 2026-10-28 | Moved from `planned/`. Root 0.11.15 pins abstractcore 2.31.0, AbstractRuntime 0.15.0, abstractagent 0.4.0, abstractgateway 0.17.0, AbstractMemory 0.4.0 (one-way vector/graph migration), abstractvoice 0.19.2, abstractassistant 0.15.0, abstractskill 0.3.3; npm Code 0.12.0, Observer 0.9.0, Entity 0.8.0, Continuum 0.7.1. Open: `@abstractframework/note` 0.2.0 npm publish failed; Flow 0.11.0 and the abstractcode 0.11.0 crate unreleased. |
+| 1037 | [iPhone rich sharing with original files](completed/1037_iphone_rich_conversation_sharing_with_original_files.md) | 2026-10-18 | Moved from `planned/1037_iphone_rich_conversation_sharing_with_original_files.md`; created/completed 2026-10-18. Mint New, rich ordered transcript and original artifacts/recorded writes, owned cleanup and context guards. 235 package + five native + one physical export test passed; screenshot/adversary approved. Normal 0.6.18 (26) installed/launched. Actual Mail/Notes destination rendering unverified; uncommitted. [Evidence](evidence/1037/README.md). |
+| 1036 | [iPhone three-island navigation and conversation sharing](completed/1036_iphone_three_island_navigation_and_conversation_share.md) | 2026-10-18 | Moved from `planned/1036_iphone_three_island_navigation_and_conversation_share.md`; created/completed 2026-10-18. Conversations / Share-Files-Tools / Settings islands, responder below, New preserves responder; explicit loaded-text export. 230 package + three native tests passed, screenshots/adversary approved. Guard yielded to Watch; normal 0.6.17 (25) installed/launched; uncommitted. [Evidence](evidence/1036/README.md). |
+| 1035 | [iPhone cycle graph and separate tool call details](completed/1035_iphone_cycle_graph_and_tool_call_details.md) | 2026-10-18 | Moved from `planned/1035_iphone_cycle_graph_and_tool_call_details.md`; created/completed 2026-10-18. Separate per-agent cycle graph and searchable calls with input/output; amber approvals/lavender tools. 228 package + three native tests passed, physical saved history 12 cycles/four calls/four approvals, zero issues; adversary approved. Normal 0.6.16 (24) installed/launched; uncommitted. [Evidence](evidence/1035/README.md). |
+| 1034 | [iPhone direct toolbar and reliable activity counts](completed/1034_iphone_direct_toolbar_and_reliable_activity_counts.md) | 2026-10-18 | Moved from `planned/1034_iphone_direct_toolbar_and_reliable_activity_counts.md`; created/completed 2026-10-18. Direct Files/New/gear, bounded long title, store-owned coalesced loads and positive-only counters. 223 package tests, native visual checks, nine physical saved answers with zero issues; adversary approved. Normal 0.6.15 (23) installed/launched; uncommitted. [Evidence](evidence/1034/README.md). |
+| 1033 | [Hamlet voice routing and chat isolation](completed/1033_hamlet_voice_route_and_chat_isolation.md) | 2026-10-18 | Moved from `planned/1033_hamlet_voice_route_and_chat_isolation.md`; created/completed 2026-10-18. Exact incident traced; router history leak reproduced/fixed, immutable .15 uploaded. 17+6 source and 41 HTTP tests; real 8 MB WAV decoded on iPhone, regular start uses corrected account selection. Uncommitted. [Evidence](evidence/1033/README.md). |
+| 1032 | [iPhone timed expandable activity](completed/1032_iphone_timed_expandable_activity.md) | 2026-10-18 | Moved from `planned/1032_iphone_timed_expandable_activity.md`; created/completed 2026-10-18. Public model/routing/media outputs, usage, start/end/elapsed, chronological child/root history and resolved wait timing. 218 package tests, native visual/regression and physical proof; adversary approved. Normal 0.6.14 (22) installed/launched, uncommitted. [Evidence](evidence/1032/README.md). |
+| 1031 | [iPhone condensed file and web activity](completed/1031_iphone_condensed_file_and_web_activity.md) | 2026-10-18 | Moved from `planned/1031_iphone_condensed_file_and_web_activity.md`; created/completed 2026-10-18. Positive-only mail/file/web counters and source details, workspace handoff. 211 package tests, six native scenarios across corrected rerun, one physical proof; adversary approved. Actual changed file/sent email recognized. Normal 0.6.13 (21) installed/launched; uncommitted. [Evidence](evidence/1031/README.md). |
+| 1030 | [iPhone read and sent email collections](completed/1030_iphone_read_and_sent_email_collections.md) | 2026-10-18 | Moved from `planned/1030_iphone_read_and_sent_email_collections.md`; created/completed 2026-10-18. Directional read/sent counts; compact searchable multi-message lists and individual details. 201 package + 4 native UI + 1 physical history check passed. Demo verifies 3 reads/3 sends; actual saved history 0 reads/1 send. Normal iPhone 0.6.12 (20) installed/launched. Uncommitted; [evidence](evidence/1030/README.md). |
+| 1029 | [iPhone sent-email receipts](completed/1029_iphone_sent_email_receipts.md) | 2026-10-18 | Moved from `planned/1029_iphone_sent_email_receipts.md`; created/completed 2026-10-18. Envelope count and per-answer send/reply receipts. 195 package tests, 3 native UI checks plus final receipt recheck, 1 physical read-only replay passed. Actual existing send has complete fields; no test emails sent. iPhone 0.6.11 (19) installed/launched. Uncommitted; [evidence](evidence/1029/README.md). |
+| 1028 | [Compact iPhone answer actions and browse session files](completed/1028_iphone_compact_answer_actions_and_session_file_browser.md) | 2026-10-18 | Moved from `planned/1028_iphone_compact_answer_actions_and_session_file_browser.md`; created/completed 2026-10-18. Compact answer actions, workspace hierarchy/Markdown previews, audio toggle. 185 package + 17 native + 1 physical test passed; actual 769-byte summary retrieved, 20 conversation-audio artifacts hidden. Normal iPhone 0.6.10 (18) installed/launched. Uncommitted; [evidence](evidence/1028/README.md). |
+| 1010 | [Loop Limit node](completed/1010_loop_limit_node.md) | 2026-10-11 | Moved from `planned/`. A circle (↺3) on the path that repeats: `again` at most `max` times, then `limit reached`; `count` is the pass number. Counts per iteration of the enclosing loop, else per run. Operator decisions recorded. Uncommitted. |
+| 1008 | [Add to List Variable node](completed/1008_add_to_list_variable_node.md) | 2026-10-11 | Moved from `planned/`. `item` adds one element, `items` each element, in one step; null adds nothing. Also fixed: Set Variables wrote the previous step's output keys as variables. Uncommitted. |
 | 0982 | [Patch 0.6.2: one upgrade path](completed/0982_patch_0_6_2_one_upgrade_path.md) | 2026-09-28 | Root record of 0.6.2 (staged on `wave4/root`): the line, the `.command`, and Update in the consoles and tray run one installer; remembered options, release matrix, restart everywhere; `--no-start` keeps the recorded port; pins core 2.19.0, gateway 0.7.2, console 0.11.1. |
 | 0983 | [Follow-ups after root 0.6.2](planned/0983_follow_ups_after_0_6_2.md) | Planned | GitHub API rate limit of the update check, core's stored image route on 8 GB Macs (done in core 2.19.0), hand-started gateway on the recorded port without `--no-start`, pwsh coverage, update log length. |
 | 0869 | [Apple text tier boundaries vs the fit budget](completed/0869_apple_text_tier_boundaries_vs_the_fit_budget.md) | 2026-09-28 | Moved from `planned/`. Operator ruling: tiers unchanged (9B below 24 GiB, 27B 24–128, Flash-Next 128+); abstractcore 2.19.0 aligns the fit estimate with the 24 GB measurement (sysctl 20480 on 24 GB, 114688 on 128 GB, printed, never run); root 0.6.2 pins it. |
@@ -591,6 +744,23 @@ Scan of 2026-09-26 (after the release, 0921):
 
 ## Planning Notes
 
+- 2026-10-31: completed 1081/1082 after rendering/selection test matrices and independent approval;
+  preserved original planned paths and completion reports, updated coredoc/agent skills/indexes,
+  retained native/browser/Qt evidence and interaction guide. Recount: planned 186, proposed 76,
+  completed 294, deprecated 2, recurrent 3. Intake IDs 1081–1086 are unique. Follow-up triage:
+  planned 1083 activity/sleep/long-uptime contract; proposed 1084 expression/persona, 1085 terminal
+  image ownership, 1086 custom source geometry; existing 1079 publication/floors. No release or
+  Apple edits. Older legacy naming/duplicate defects remain in 0889.
+
+- 2026-10-18: created 1028 before code changes for the iPhone compact actions and session file-browser repair; planned count 176 → 177.
+
+- 2026-10-18: added retrospective item 1027 after the operator identified a missing backlog
+  trace for already-committed Runtime/orchestrator/iPhone work. Kept it planned because the
+  remote image repair is not deployed/verified. Copied temporary evidence into the repository,
+  recorded test limits and mixed-workspace failures, reconciled current file counts, and
+  checked that 1027 is unused across all lifecycle/topic folders. Legacy numbering defects
+  are unchanged and remain tracked by 0889.
+
 - 2026-09-25 post-release trace: closed 0233 (shipped 2026-09-23, never moved); recorded 0863–0867
   for the 2026-09-24 waves; created 0868–0889 (two topic tracks: app-surfaces, docs-hygiene);
   refreshed 0849, 0850, 0855, 0856, 0857, 0858, 0859, 0860, 0861, 0862, 0162 with dated status
@@ -619,6 +789,8 @@ Scan of 2026-09-26 (after the release, 0921):
   flow (0158), observer (0002) and assistant (0852). abstractagent 0034 and abstractcode 0001 stay planned with notes.
   Counts recounted on disk: planned 120 → 124, completed 244 → 245.
 
+- 2026-10-31: completed 1087 (created/completed 2026-10-31), moved `proposed/1087_cross_device_session_read_receipts.md` to `completed/1087_cross_device_session_read_receipts.md`. Durable account reads, shared web/native clients and fitted previews verified; native device rollout and registry release remain separate.
+
 ## Operating Notes
 
 - Use `docs/adr/` for durable architecture policy.
@@ -626,3 +798,5 @@ Scan of 2026-09-26 (after the release, 0921):
 - New backlog item filenames should use `NNNN_<slug>.md`; date-prefixed legacy files should not be copied for new work.
 - Run the [recurrent passes](recurrent/README.md) after every release wave; the `abstract-release`
   process expects a backlog trace (release record in `completed/`, follow-ups as items).
+
+- 2026-11-01: authorized 1088/1089/1092–1095; completed 1092/1093 after source, real-model, browser/native checks and independent adversary. Four planned validation items remain; 1090/1091 proposals unchanged. Counts planned 190/proposed 78/completed 297.

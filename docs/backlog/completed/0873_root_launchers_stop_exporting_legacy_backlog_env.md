@@ -42,3 +42,15 @@ and `ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER=1`; the stack works, but Continuum labe
 ## Receipts
 
 - `untracked/missions-2026-09-22/SUMMARY.md` (fourth wave, operator item 9); mission II.
+
+## Completion report (2026-10-07, round 14 R14-W6, with backlog 1002 item 5)
+
+- Done with launch FLAGS rather than a stored setting: gateway 0.13.0 has `serve --backlog-root
+  PATH --exec-runner on|off` (for the run only; the saved setting is untouched). New
+  `scripts/lib/gateway_flags.sh` builds them when `abstractgateway --version` >= 0.13.0; an older
+  gateway still gets the two variables with one printed note. `apps_common.sh` and
+  `gateway-flow-local.sh` no longer export them; `gateway.sh`/`gateway-local.sh` also pass
+  `--data-dir` instead of exporting `ABSTRACTGATEWAY_DATA_DIR`, and take `--print`.
+- `docs/workspace-scripts.md` says how the dev stack sets the backlog folder.
+- Tests: `tests/test_gateway_launch_flags.py` (21, stub python; covers the no-export guard over
+  `scripts/`); mutation 12/12 red (`untracked/round14/w6/mutate-root.txt`).

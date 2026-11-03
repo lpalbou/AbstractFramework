@@ -1,0 +1,27 @@
+{
+  "account_workflow" : "abstractassistant-orchestrator:c53b1579",
+  "bundle_uploaded" : true,
+  "bundle_version" : "0.0.15",
+  "gateway" : "https:\/\/gateway.abstractframework.ai",
+  "gateway_reloaded" : true,
+  "outcome" : "passed",
+  "public_model_details" : 2,
+  "regular_start" : {
+    "bundle_version" : "0.0.15",
+    "run_id" : "d1638008-5b70-4851-ad18-051bc78318e0",
+    "source" : "client",
+    "status" : "completed",
+    "workflow_id" : "abstractassistant-orchestrator@0.0.15:c53b1579"
+  },
+  "session_id" : "iphone-media-verification-6b70419a-1950-41f3-b15a-f7da175feded",
+  "stage" : "voice",
+  "timed_steps" : 2,
+  "voice" : {
+    "artifact_id" : "62ac78c44dbe4a57fdad27164344dace",
+    "bytes" : 8008930,
+    "content_type" : "audio\/wav",
+    "decoded_on_iphone" : true,
+    "run_id" : "e405c223-0e35-4404-ac6f-6c34c55eb5b6",
+    "status" : "completed"
+  }
+}

@@ -13,13 +13,13 @@ This guide helps you build a correct mental model quickly, then run something en
 - **macOS / Linux, one line** in Terminal:
 
   ```bash
-  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  curl -LsSf https://abstractframework.ai/install.sh | sh
   ```
 
 - **Windows 10 22H2+ / 11** (PowerShell):
 
   ```powershell
-  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
   ```
 
 To upgrade later, run the same line again, or, on macOS and Linux, press **Update** in a
@@ -30,8 +30,8 @@ your user account (no admin password), asks whether to start it at login (Enter 
 unattended install leaves it off and its summary says how to turn it on), starts it on
 `127.0.0.1:8080`, and opens its console in your browser already signed in. The console's first-run
 guide sets up a local engine or a cloud key and a default model (the **Models** tab lists the
-models that fit your machine and downloads them), and its **Apps** page installs and opens the
-browser apps, which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The **Setup** button
+models that fit your machine and downloads them), and its **Apps** page installs, opens and updates
+the browser apps (**Update to x.y.z** when a newer release exists), which the gateway serves at `http://127.0.0.1:8080/apps/<app>/`. The **Setup** button
 at the bottom of the sidebar runs the guide again; it keeps your choices unless you replace them. The
 console's sidebar groups its pages: **Accounts**; **Work** (Workflows, Runtimes, Apps); **Models**
 (Providers, Models, Engines, Multimodal); **System** (Resources, Sandbox, Network). The installer also
@@ -198,6 +198,25 @@ for chunk in llm.generate("Write a poem.", stream=True):
     print(chunk.content or "", end="", flush=True)
 ```
 
+Decision models answer typed questions about a text with calibrated probabilities instead of
+generated prose: the Kev family, Lev and Laya run locally (MLX, transformers or GGUF), and hosted
+Jev through the `typesafe` provider. Download the model once, then ask:
+
+```python
+decider = create_llm("mlx", model="jaredpalmer/kev-4b")   # after: abstractcore models download mlx jaredpalmer/kev-4b
+result = decider.generate("Two charges on my card for one order.", output="decision", questions={
+    "department": {"type": "choice", "instructions": "Which team should handle this?",
+                   "criteria": {"billing": "Charges and payments", "shipping": "Delivery problems"}},
+    "escalate": {"type": "noul", "instructions": "Does this need urgent human attention?"},
+})
+result.decisions["department"].choice    # "billing"
+result.decisions["escalate"].noul        # the probability that the statement is true
+```
+
+The gateway serves the same decisions at `POST /v1/decisions`, and AbstractFlow has a Decision node.
+See [Decision models](https://github.com/lpalbou/AbstractCore/blob/main/docs/decision-models.md)
+(the base model download for MLX and the GGUF alternative are listed there).
+
 ---
 
 ## Gateway-first: durable runs + monitoring + scheduling
@@ -272,7 +291,8 @@ voice and camera in the browser need https
 
 ### 5. Automate recurring work
 
-An automation runs a workflow on a fixed interval and keeps every run as a conversation. Create
+An automation runs a workflow on a schedule (an interval, or a daily, weekly or monthly rule in your
+time zone), when mail arrives or when you ask, and keeps every run as a conversation. Create
 one from the Observer (**Launch → Automate**), from an Assistant conversation (**Schedule this
 conversation…**), or through the gateway API on a gateway that advertises the Automations API.
 `<admin token>` is the gateway's admin token: `abstractgateway serve` prints it when it starts
@@ -301,6 +321,10 @@ arrives**, **Email me the result** and the recipients the automation may email w
 [Email automations](automations.md#email-automations). The same account gives you sign-in by email,
 and your agents get the email tools only when you switch **Agent email tools** on
 ([Email integration](guide/email-integration.md)).
+
+Feeds and webhooks can start work as triggers too, one event stream tells every client what
+waits for you, and push reaches the Assistant on your watch and iPhone: see
+[Triggers, attention and push](events-and-attention.md).
 
 ---
 
@@ -401,12 +425,22 @@ assistant run --prompt "Summarize today's news"   # one turn in the terminal
 
 Each turn runs the gateway's default workflow for the Assistant, or the workflow you pick in
 Settings → Models → **Workflow**. See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
+`pip install "abstractassistant[avatar]"` adds an optional activity avatar beside the conversation
+(AbstractAvatar's procedural designs, following what the assistant is doing).
+
+On iPhone and Apple Watch, AbstractAssistant is one app (pre-release through TestFlight): the iPhone
+app carries the watch app, you sign in once on the iPhone with your gateway's address and an
+account token or an emailed code, and the watch takes the same sign-in. Your gateway must be
+reachable over HTTPS from the phone. See
+[AbstractAssistant for iPhone](https://github.com/lpalbou/AbstractAssistant/blob/main/phone/iphone/README.md)
+and [for Apple Watch](https://github.com/lpalbou/AbstractAssistant/blob/main/watch/apple/README.md).
 
 ---
 
 ## Next steps
 
 - **[Agent sessions](agent-sessions.md)** — default agent workflow, workspace, skills, live replies
+- **[Triggers, attention and push](events-and-attention.md)** — feeds, webhooks, your event stream, push to the watch and the iPhone
 - **[Architecture](architecture.md)** — the layered model (Core / Runtime / Agent / Gateway / Flow / Observer)
 - **[Configuration](configuration.md)** — where defaults live and how to configure them
 - **[Glossary](glossary.md)** — shared terms (run, ledger, effect, wait, bundle, interface contract)

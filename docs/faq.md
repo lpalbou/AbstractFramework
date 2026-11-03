@@ -34,7 +34,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity> --gateway-url <url>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.12.0` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.14.0` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -147,8 +147,10 @@ starts one **occurrence**, a run of your workflow that clients show as a questio
   `notify`, when a run fails after its last retry, or when a run waits for you.
 - Creating an automation is the consent for the framework tools its workflow uses; choose **Ask
   each time** to approve every tool batch. MCP tools always ask.
-- Triggers are fixed UTC intervals (`5m`, `8h`, `7d`), new mail in your own mailbox
-  (`email.received@1`) and **Run now**; there is no cron, time of day, webhook or file trigger.
+- Triggers are intervals (`5m`, `8h`, `7d`), calendar rules in your time zone (daily at a time,
+  weekly, monthly), new mail in your own mailbox (`email.received@1`) and **Run now**. Feeds and
+  webhooks come with the next release ([Triggers, attention and push](events-and-attention.md));
+  there is no cron expression and no file trigger.
 
 The full guide, with two worked examples and troubleshooting, is **[Automations](automations.md)**.
 
@@ -160,8 +162,9 @@ Only with an account you connect yourself, and only as far as you allow. Each ga
 their own mailbox on their account page in the web console (**Email** on their row of
 **Accounts**) or the terminal console
 (`@` on the Accounts screen); AbstractCore on its own uses `abstractcore email connect`. Credentials are encrypted at
-rest and every connection verifies TLS. The mailbox is read-only: nothing is marked, moved or
-deleted. Every send passes your recipient rules (an allowlist or a denylist of addresses and
+rest and every connection verifies TLS. Reading never changes the mailbox: nothing is marked,
+moved or deleted. In the next release each mailbox's access is your choice, **Read only** (the
+default) or **Read and write**, which lets your flows mark, label, move or delete mail and send. Every send passes your recipient rules (an allowlist or a denylist of addresses and
 domains; a new account allows only your own email address) and your send limits (100 per hour, 1000 per
 day by default), and a send to anyone but you (or the recipients an automation lists) waits for
 your approval. Agents get the email tools only when you switch **Agent email tools** on (off by
@@ -169,6 +172,23 @@ default); administrators never read users' mail. An email-triggered automation t
 mail as untrusted data and never follows its links unless you allow those tools, and mail the
 framework sends automatically through your account never triggers an automation. See
 [Email integration](guide/email-integration.md) and [Email automations](automations.md#email-automations).
+
+## How do notifications reach my watch and iPhone?
+
+Through the AbstractAssistant app (iPhone and Apple Watch, one app, in pre-release through
+TestFlight) and, in the next release, Apple push. On the devices there is nothing to configure:
+sign in and allow notifications. The gateway needs a push forwarder, set once by an admin in the
+console (My email → Notifications → Push forwarder); the built-in forwarder is not live yet, so
+until it is you run your own or the apps catch up when they open. See
+[Triggers, attention and push](events-and-attention.md#push-to-the-watch-and-the-iphone).
+
+## Can an agent publish a workflow for me?
+
+No. A workflow that runs for you is a visual flow in the Flow library that you can open and change;
+an agent may draft one there for your review, and only you publish it
+([ADR-0040](adr/0040-critical-workflows-live-in-the-flow-library.md)). Everything a flow does to
+reach you is a node on its canvas, and **After the run** shows what happened
+([ADR-0041](adr/0041-no-hidden-effects-after-a-flow.md)).
 
 ## Can I use the console and the apps on my phone?
 
@@ -191,9 +211,13 @@ turn. See [Agent sessions](agent-sessions.md#the-default-agent-workflow).
 
 ## Where does the agent work, and can it read my credentials?
 
-In a folder on the gateway's computer: the conversation's own folder under the gateway's data
-folder, or the folder you started the AbstractCode terminal client from. AbstractCode's **Files**
-tab and `/files` show its absolute path and preview its files. Credential folders (`~/.ssh`,
+In a folder on the gateway's computer: the conversation's own private folder under the gateway's
+data folder, or a workspace the client names (such as the folder you started the AbstractCode
+terminal client from) when the gateway's workspace policy reaches it. A file written without a full
+path lands there, not in the shared workspace. Beyond that folder the agent may use the **Shared
+workspace** and the workspaces the admin's posture allows, each Read-only or Read & write; it is
+told their paths and modes. AbstractCode's **Files** tab and `/files` show its absolute path and
+preview its files. Credential folders (`~/.ssh`,
 `~/.aws`, `~/.gnupg`, `~/.config/gcloud`, `~/.kube`, `~/Library/Keychains`), the framework's own
 settings folders and the gateway's data folder are denied to every run's file tools and never
 shown by the workspace browser. Shell commands a run may execute are not confined by that list,
@@ -304,6 +328,16 @@ llama.cpp on machines without a prebuilt wheel ([Compiled extras](install.md#com
 On Linux with the gpu profile, vLLM also needs a C compiler (`build-essential`) the first time it
 starts a model ([GPU on Linux (NVIDIA)](install.md#gpu-on-linux-nvidia)).
 
+### Does it work on macOS 13?
+
+Yes, with the light profile (remote and endpoint engines). `[apple]` needs macOS 14 or newer:
+MLX publishes no wheels for macOS 13, so the installer picks the light profile on 13 (it prints
+"the Apple Silicon engines (MLX) need macOS 14 or later") and refuses `--profile apple`, and
+`pip install "abstractframework[apple]"` on macOS 13 fails to resolve. After updating macOS to 14 or
+later, run the installer again to add the local engines (an install made by 0.10.0 or older keeps
+light on a re-run: add `--profile apple`)
+([Requirements per profile](install.md#requirements-per-profile)).
+
 ### Does the installer use my NVIDIA GPU?
 
 Yes, on Linux and Windows x64: when `nvidia-smi` works, the installer picks the `gpu` profile
@@ -349,8 +383,8 @@ login on with the **Start at login** switch in either console or `abstractgatewa
 
 ### How do I download a model or install Ollama later?
 
-Open the console's **Engines** tab (detect, install with the exact command shown first) and
-**Models** tab (models that fit this machine, download, delete). From a terminal:
+Open the gateway console's **Providers** page (local engines: detect, install with the exact command
+shown first, start, stop) and **Models** page (models that fit this machine, download, delete). From a terminal:
 `abstractgateway engines status|install` and `abstractgateway models catalog|download|delete`.
 Engine installs from the console run on the gateway host and are enabled by default only when the
 gateway listens on loopback.

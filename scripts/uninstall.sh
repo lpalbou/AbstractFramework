@@ -16,7 +16,7 @@
 #   sh uninstall.sh                 # asks before removing, and about your data
 #   sh uninstall.sh --yes           # no questions; keeps your data
 #   sh uninstall.sh --yes --purge   # no questions; deletes your data too
-#   curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh
+#   curl -LsSf https://abstractframework.ai/uninstall.sh | sh
 #
 # It is a thin front end: the removal itself is `install.sh --uninstall`, run
 # from next to this file or downloaded from the same place, so the two can
@@ -26,14 +26,14 @@
 # pass --remove-uv): other tools may use them. Ollama and LM Studio are kept
 # (they have their own uninstallers).
 #
-# Options: --yes/-y, --purge (delete data), --remove-uv, --data-dir DIR,
+# Options: --yes/-y, --purge (delete data), --remove-uv, --data-dir DIR, --instance NAME,
 #          --print (show, change nothing), -h/--help
 # =============================================================================
 
 if [ -n "${ZSH_VERSION:-}" ]; then emulate sh; fi
 set -eu
 
-AF_INSTALL_URL="https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh"
+AF_INSTALL_URL="https://abstractframework.ai/install.sh"
 YES=0
 PASS=""
 while [ $# -gt 0 ]; do
@@ -45,6 +45,9 @@ while [ $# -gt 0 ]; do
         --data-dir) [ $# -ge 2 ] || { echo "ERROR: --data-dir needs a value" >&2; exit 2; }
             AF_DATA_DIR="$2"; export AF_DATA_DIR; shift ;;
         --data-dir=*) AF_DATA_DIR="${1#*=}"; export AF_DATA_DIR ;;
+        --instance) [ $# -ge 2 ] || { echo "ERROR: --instance needs a value" >&2; exit 2; }
+            AF_INSTANCE="$2"; export AF_INSTANCE; shift ;;
+        --instance=*) AF_INSTANCE="${1#*=}"; export AF_INSTANCE ;;
         -h|--help) sed -n '2,30p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "ERROR: unknown argument: $1 (see --help)" >&2; exit 2 ;;
     esac

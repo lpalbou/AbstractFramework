@@ -11,6 +11,670 @@ All notable changes to AbstractFramework will be documented in this file.
   - `install.sh` background mode (`--no-service`, or when the login item cannot be registered) runs the gateway under a restart loop: a non-zero exit after 30 s of running is restarted 10 s later; a clean exit, a stop by signal, a start failure, or a removed `gateway.pid` is not. `gateway.pid` still names the gateway itself.
   - The LaunchAgent (`KeepAlive` with `SuccessfulExit: false`) and the systemd user unit (`Restart=on-failure`) written by `abstractgateway service install` already restart any non-zero exit; `scripts/install_gateway_launchd.sh` uses `KeepAlive: true`.
 
+## [0.12.0] - 2026-11-02
+
+Pins the 2026-11-02 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.19.0**,
+**AbstractCore 2.32.0**, **AbstractRuntime 0.16.0**, **AbstractAgent 0.5.0**, **AbstractAssistant 0.17.0**,
+**AbstractSkill 0.3.4** and **AbstractVoice 0.19.5** (AbstractMemory 0.4.0, AbstractSemantics 0.0.5,
+AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers and the install
+manifest install gateway 0.19.0 and the npm apps **Flow 0.13.0**, **AbstractCode web 0.14.0**,
+**Observer 0.11.0**, **Continuum 0.8.0** and **Entity 0.10.0**, and build **abstractgateway-console 0.17.0** and
+**abstractcode 0.13.1** (crates.io). `CRATE_RELEASE_VERSIONS` also lists **abstractcore-console 0.8.1**,
+**abstracttui 0.7.1** and, new, **abstractavatar 0.1.0**. Container images: `ghcr.io/lpalbou/abstractgateway:0.19.0`
+and `ghcr.io/lpalbou/abstractcore-server:2.32.0`.
+
+### Added
+
+- **Decision models** (AbstractCore 2.32.0): text in, calibrated typed decisions out. `generate(text,
+  output="decision", questions=...)` answers `choice`, `noul` (the probability a statement is true) and `score`
+  questions with calibrated probabilities, over one abstraction: the Kev family, Lev and Laya locally (MLX,
+  transformers or GGUF), OpenJev-style checkpoints through the same engine, hosted Jev through the `typesafe`
+  provider and any System One-compatible host through `systemone`. `POST /v1/decisions` serves them from
+  `abstractcore serve` and from the gateway (also `POST /api/gateway/runs/{run_id}/decisions`), AbstractRuntime
+  0.16.0 runs a decision as a durable child run, and AbstractFlow 0.13.0 has a **Decision** node. The gateway's
+  model library and the terminal console list decision models.
+- **AbstractGateway 0.19.0** (it also ships the changes prepared as 0.18.0, which was not published): a fresh
+  gateway is set up from a browser on any machine with an admin password and the six-word setup code
+  (`abstractgateway claim --code`; the installer's summary prints it), and accounts sign in with a password or a
+  token; the models run in a supervised model host process on every OS; voice streams send keep-alive lines during
+  silence and record what they did in the audit log; dictation recordings stay out of conversation attachments;
+  shared read receipts for conversations (`/api/gateway/me/session-reads`); the redesigned Models library,
+  Resources page and tray menu; several self-contained gateway instances on one machine.
+- **AbstractAssistant 0.17.0**: an optional activity avatar in the desktop app
+  (`pip install "abstractassistant[avatar]"`), automations that open as the chat with a sectioned editor, tool
+  approvals written as sentences, Off / Ask / Auto tool settings and named session tool grants; conversations and
+  read marks stay synchronized across the desktop, web, iPhone and Apple Watch clients. Its web client (redesigned
+  around the voice orb, with the Avatar conversation view) is built from source and is not on npm yet. The iPhone
+  and Apple Watch app (pre-release through TestFlight) is delivered separately and stays at 0.16.0 in this release.
+- **The browser apps share one look** (AbstractUIC: ui-kit 0.9.12, panel-chat 0.7.0): the rounded multiline
+  composer, one account widget in the top bar, tool calls and approvals in words, and the Watch-style session and
+  automation cards. **AbstractCode web 0.14.0** and **AbstractEntity 0.10.0** add the optional **Avatar**
+  conversation view (public updates, corrections and question answers beside the chat; needs gateway 0.19.0);
+  AbstractCode web also gets compact settings, shared unread markers and session cards. **Observer 0.11.0** and
+  **Continuum 0.8.0** take the shared composer and account widget; the Observer, Entity and AbstractCode web no
+  longer read a conversation's existing messages aloud when it opens. **Flow 0.13.0** adds the Decision node, the Ask User question policy and the flow's
+  inputs on the Run window.
+- **AbstractAvatar 0.1.0**, a new package: one Rust generator of procedural activity avatars (44 designs, seven
+  activity states, audio level and gaze), published as the `abstractavatar` crate and a Python package, and
+  compiled to WebAssembly for the browser apps. **abstracttui 0.7.1** gains a default-off `avatar` feature over it,
+  plus host-owned chat components, live frame playback and a compact session card; the AbstractCode terminal
+  client (**abstractcode 0.13.1**) uses it for six companion designs and groups Tools, Skills and MCP under one
+  Tools menu.
+- Released alongside, not part of the profiles: **AbstractNote 0.3.0** (`abstractnote` on PyPI and
+  `@abstractframework/note` on npm; the web app follows runs through the replay view and has the Docs assistant,
+  the account widget and the shared composer), `abstractavatar` 0.1.0 on PyPI (the `avatar` extra of
+  AbstractAssistant), and `abstracttui-graph` / `abstracttui-mermaid` 0.6.0 and `abstractcamera` 0.2.1 (unchanged).
+  `NPM_RELEASE_VERSIONS` lists the apps the installers and the gateway's Apps page install, so it does not list
+  the notes app.
+
+### Upgrade notes
+
+- **A new gateway data folder starts unclaimed.** The first visit shows **Set up your gateway** (admin password +
+  six-word setup code) instead of the sign-in form; the one-time link printed on the gateway's machine still signs
+  you in without the code. A data folder that already has accounts keeps its sign-in form.
+- **The model host runs as a child process on every OS** (gateway 0.19.0); `abstractgateway serve --model-host
+  in-process` keeps the models in the gateway process.
+- **Engine installs are admin-only**; there is no per-user switch any more.
+- **Clients of the gateway's HTTP API** (your own apps): voice streams carry `keepalive` lines every 10 s of
+  silence, the replay view has new message kinds (`public_update`, `guidance`, `question_outcome`,
+  `retained_reply`) and recorded dictation is hidden from default artifact listings (`include_voice=true` shows
+  it). Ignore unknown line and message kinds.
+- **AbstractGateway 0.19.0 requires AbstractAgent 0.5.0**; mixing it with AbstractAgent 0.4.0 makes entity visits
+  ignore their conversation settings without an error. Install the matrix together (the profiles pin it).
+- **Apps on panel-chat 0.7.0** get the rounded multiline composer by default; `variant="legacy"`
+  (`composerVariant="legacy"` on `WorkflowChat`) keeps the flat layout.
+
+### Fixed
+
+- **`install.sh --with-wheel PATH`: test a fix wheel without it being rolled back.** On the Linux test server,
+  wheels of abstractcore / AbstractRuntime side-loaded with `uv pip install` sat under a uv tool receipt and an
+  `uv-constraints.txt` that still pinned the release (abstractcore==2.31.0, AbstractRuntime==0.15.0), so the next
+  `uv tool upgrade` or installer run put the old versions back. Each `--with-wheel` goes into `uv tool install --with`
+  and its package leaves the constraints, so both record what is installed. Refused with a What-to-do line: a non-wheel, a
+  missing file, the gateway (use `--from`), abstractvoice (installs with its extras), a package outside the matrix. The
+  flag is per run: a later run without it installs the release versions again (by design).
+- **The installer never leaves a gateway running outside systemd** (backlog 1072): a background start on Linux first
+  turns off a systemd user unit of the same gateway (it would start at the next login and fight for the port), and
+  `--server` stops with the cause when the gateway service cannot be registered instead of starting the gateway in
+  the background (OVH 2026-10-28: the unit gave up and the gateway that answered was supervised by nothing).
+
+### Changed
+
+- **llama.cpp 0.3.36 on Linux and Windows** (`AF_LLAMA_CPU_PIN` / `$AfLlamaCpuPin`, every profile; the CUDA and Vulkan
+  builds of the gpu profile follow the same pin): its llama.cpp (0c1e5709) knows `spark2_5` (XHToken/Spark-X2.6-4B,
+  refused by 0.3.35) and every architecture of the catalog's 86 GGUF repos. cpu and cu125 0.3.36 wheels pass their zip
+  CRC. Apple Silicon stays on Metal 0.3.28: the 0.3.36 Metal wheel fails its CRC (`lib/cmake/ggml/ggml-config.cmake`)
+  like 0.3.32-0.3.35, so a Mac gets the newest architectures only through a source build (`--full`).
+- **CI checks that a fresh Windows install resolves and imports the pinned llama.cpp** (`$AfLlamaCpuPin`, like the
+  existing Unix step for `AF_LLAMA_CPU_PIN` / `AF_LLAMA_METAL_PIN`), so a version bump can never break a fresh install
+  silently. Checked by hand on this Mac (clean venv): llama-cpp-python 0.3.28 from the Metal index installs, imports,
+  GPU offload on. Backlog 1076 (proposed): model scheduling and memory management, the options and trade-offs.
+
+## [0.11.18] - 2026-10-28
+
+Pins the fix releases of the closing pass: **AbstractGateway 0.17.2** (app manager installs the release
+matrix's app versions, `network status` auth wording, llama.cpp card copy, a typed answer when the default voice
+weights are missing; 0.17.1 before it), **AbstractAssistant 0.16.5** (desktop voice override honoured, readable
+attachment labels, automations as a conversation, voice playback states, web assistant on the replay view),
+**AbstractRuntime 0.15.1**, **AbstractVoice 0.19.3**, and the apps on ui-kit 0.9.5 / panel-chat 0.6.3:
+**Flow 0.12.1**, **AbstractCode web 0.13.2**, **Observer 0.10.2**, **Entity 0.9.2**, **Continuum 0.7.5**. Also:
+ADR-0043 (readable labels in end-user interfaces), the Linux server deployment guide (`docs/deploy-linux.md`)
+and the installer fixes from the fresh-Linux test (uninstaller removes the service it enabled, lingering and
+driver prerequisites, skipped parts named). Every other pin is unchanged from 0.11.17.
+
+## [0.11.17] - 2026-10-28
+
+Thin clients render from the replay view: **Observer 0.10.0**, **AbstractCode web 0.13.0**, **Entity 0.9.0**,
+and AbstractAssistant desktop and web (**AbstractAssistant 0.16.1**, in place of 0.15.0) read the gateway's
+reconstruction of a run (`GET /runs/{id}/view`, AbstractGateway 0.17.0) instead of folding ledgers themselves;
+**Continuum 0.7.2**. The AbstractCode terminal client (crates.io `abstractcode` **0.12.0**) draws its chrome with
+**abstracttui 0.7.0** (was 0.6.0). The installers, the install manifest, `NPM_RELEASE_VERSIONS` and
+`CRATE_RELEASE_VERSIONS` install them; every other Python pin is unchanged from 0.11.16. AbstractNote web is
+unchanged here: its 0.3.0 is merged but not yet on npm (the publish is blocked), and the root does not pin it.
+
+## [0.11.16] - 2026-10-28
+
+Pins **AbstractFlow 0.11.0** (npm `@abstractframework/flow`; the automations-first editor, triggers, mail nodes,
+*After the run*) and the **AbstractCode terminal crate 0.11.0** (crates.io `abstractcode`) in place of 0.10.1 and
+0.10.0: the installers, the install manifest, `NPM_RELEASE_VERSIONS` and `CRATE_RELEASE_VERSIONS` install them.
+Every Python pin is unchanged from 0.11.15.
+
+## [0.11.15] - 2026-10-28
+
+Pins the 2026-10-27/28 release wave (backlog 1055) across the light, Apple and GPU profiles:
+**AbstractCore 2.31.0**, **AbstractRuntime 0.15.0**, **AbstractAgent 0.4.0**, **AbstractGateway 0.17.0**,
+**AbstractMemory 0.4.0**, **AbstractVoice 0.19.2**, **AbstractAssistant 0.15.0** and **AbstractSkill 0.3.3**
+(AbstractSemantics 0.0.5, AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers
+and the install manifest install gateway 0.17.0 and the npm apps **AbstractCode web 0.12.0**, **Observer 0.9.0**,
+**Entity 0.8.0** and **Continuum 0.7.1**; container images `ghcr.io/lpalbou/abstractgateway:0.17.0` and
+`ghcr.io/lpalbou/abstractcore-server:2.31.0`. AbstractAgent moves to 0.4.0 because gateway 0.17.0 requires it.
+
+### Upgrade notes (one-way)
+
+- **AbstractMemory 0.4.0 migrates a memory home on first write**: a SQLite home's JSON-text vectors are rewritten as
+  float32 BLOBs, and graph homes gain four tables (`memg_revisions`, `memg_provenance`, `memg_derivations`,
+  `memg_history`). A 0.3.x reader then finds no vectors. Back up the data folder before upgrading if you may need to
+  roll back to 0.11.14.
+- **AbstractRuntime 0.15.0** writes a `ledger_<run_id>.idx` row index beside each JSON-file ledger; older readers
+  ignore it.
+- **`/kg/query` is owner-scoped for non-admins** (gateway 0.17.0): a client that read another principal's
+  `owner_id` or `all_owners` now gets only its own owners.
+
+### The wave
+
+- **Voice library and personal voices**: the gateway lists the languages each voice engine accepts and the cloned
+  voices, and with user accounts each account keeps the voices it clones or designs in its own store; the shared
+  voice picker and Create a voice reach the console, Code, Entity and the desktop Assistant (voices grouped by whose
+  they are). AbstractVoice 0.19.2 keeps clones listed when a TTS model is selected and lists the cloning checkpoints;
+  AbstractCore 2.31.0 takes the clone language over HTTP.
+- **Session tool policy** (backlog 1061): "approve all" / "approve this kind" / "deny" for a conversation is held by
+  the gateway (`/api/gateway/sessions/{session_id}/tool-policy`), clamped to the account's authorized tools and read
+  by the runtime before any wait: an approved call runs with no approval gate flashing in any app, and each decision
+  is an `abstract.tool_policy_decision` ledger record. Runtime 0.14.0+, gateway 0.16.0+, panel-chat 0.5.0, desktop
+  Assistant 0.15.0; the iPhone/watch and AbstractCode still use their local grants.
+- **Replay view**: one replayable ledger (runtime reducer, durable per-run `seq`, `LedgerStore.get_record`) and the
+  gateway's replay view routes that every thin client builds on.
+- **Memory graph consolidation**: `abstractmemory.graph` is the one write path of a mind (revisions, provenance,
+  history, `narrow_assertion`, the `merged` closure kind); the runtime reaches it through its memory facade
+  (`MEMORY_REVISE`, provenance stamping) and the gateway through new memory graph routes. AbstractNote 0.2.0 (statements
+  that say where they came from) builds on it; it is not pinned by the root (an optional gateway seam).
+- **Prefix-cache reuse**: AbstractCore 2.31.0 places the MLX prefix-cache snapshot before per-call system riders, so a
+  tool loop with attachments restores the cached prefix instead of re-prefilling the conversation at every call;
+  AbstractAgent 0.4.0 keeps the loop prompts' prefix byte-stable (iteration counters and scratchpad out of the cached
+  system prompt, byte-stable turn grounding).
+- **UI kit consolidation**: ui-kit 0.9.2 and panel-chat 0.5.0 (AbstractUIC 0.7.x) carry the shared chat, approvals,
+  voice and session-policy primitives the apps now compose.
+- **App releases**: AbstractCode web 0.12.0, Observer 0.9.0, Entity 0.8.0, Continuum 0.7.1, desktop Assistant 0.15.0.
+- **Events, triggers and attention** (2026-10-25/26 rounds, built before this wave and first pinned here). User
+  guide: [Triggers, attention and push](docs/events-and-attention.md).
+
+Not in this release: `@abstractframework/note` 0.2.0 (its npm publish failed; the Python package is on PyPI),
+`@abstractframework/flow` 0.11.0 and the `abstractcode` 0.11.0 crate (not published; the root keeps Flow 0.10.1 and
+the crate 0.10.0). The iPhone and Apple Watch app 0.16.0 ships separately through TestFlight.
+
+- **Triggers native to the runtime**: per-user connections (a mailbox, a feed, a webhook) registered once
+  on the gateway's Triggers page and reused by name; CloudEvents-shaped envelopes; feed (RSS/Atom) and
+  signed webhook sources beside schedules and mail; several read-only mailboxes per user with Google or
+  Microsoft sign-in and address-first autodiscovery; a connection fetches only while an automation uses it.
+- **Attention stream**: one per-user event stream (run pointers, trigger events, wakes, attention items,
+  human waits, notifications) with catch-up and SSE routes and named channels; the gateway tray, the
+  Assistant desktop, the watch, the iPhone and Code follow it, with one notification per Mac.
+- **Reminders and wakes**: an agent schedules a later run in its own session (`schedule_run`), with at
+  most its own tools; a reminder notifies by default.
+- **Flow**: "+" asks what starts the flow; triggered flows open with typed start and end pins only; Turn it
+  on; Run as if triggered with real sampled data; an Email type with deterministic Mail nodes (search,
+  get, mark, flag, label, move, delete, send, reply, forward, attachment) and Publish to channel.
+- **Observer and console**: triggers in words everywhere; My email as tabs; a one-field Add-mailbox form.
+- **Evening round (2026-10-25)**: a mailbox's access is an explicit choice, Read only (default) or Read and
+  write (change and send; sending also needs the outgoing server), with a switch on each mailbox row and a
+  `PUT /me/email/accounts/{id}/access` route, two plain refusals in the mail verbs, web and terminal console
+  parity; Flow warns when a loop's body ends at On Flow End (the run would stop after the first item) with a
+  one-click "Fix the loop", offers Break Email from an Email pin drop and ForEach from a list pin drop.
+- **Late round (2026-10-25)**: Flow Library by what starts a flow (Chat / Triggered / Other; schedules are set
+  in Observer and the Assistant, not in Flow), folded nodes show only their wired pins, New/Open/Save in colour
+  with a readable Save state; a catalogue of well-known open feeds (27, verified live, editable copy in the
+  data dir) in the console's New connection; RSS 1.0 (RDF) feeds parse; Apple push for the watch and the
+  phone on the gateway side (device routes, dispatcher with a SQLite outbox,
+  `abstractgateway push-relay` with fixed localized messages; backlog 1049); ADR-0040 (critical workflows
+  live in the Flow library, agents draft, the operator publishes); backlog 1051–1053.
+- **2026-10-26 round**: ADR-0041 (no hidden effects after a flow): On Flow End records `response`,
+  `success` and `note`, **Notify me** chooses whom and where (tray, watch, phone, email, console), the
+  older `notify` pin is a labelled compatibility path, and every run answers **After the run**
+  (`GET /api/gateway/runs/{run_id}/after`, in Flow and the Observer). Push: the forwarder is one admin
+  setting (Built-in, Off or Your own forwarder; the built-in one is not live yet), the console lists
+  your devices, a recently registered watch takes an alert before the iPhone, and the packaged topics
+  are the merged app's ids. AbstractAssistant for iPhone and Apple Watch is one app (0.16.0): the
+  iPhone app carries the watch app, one sign-in in the Keychain shared through the app group,
+  notification service extensions that read each push's event from your gateway. The gateway under
+  load (backlog 1054): run listings from an in-memory index (shadow-checked by default), bounded work
+  pools, account services built off the event loop, garbage-collector tuning, a CI load test on
+  10,000 runs and 100,000 artifacts, and the API and the runs in two processes as an opt-in (split
+  mode).
+- Live test on the operator's gateway: a Gmail message → inbox → automation → local-model judgement →
+  attention → tray, console and email (`untracked/roadmap/FINAL.md`).
+
+## [0.11.6] - 2026-10-18
+
+Pins **AbstractGateway 0.15.4** across the light, Apple and GPU profiles: a cold first start no longer
+exits on the gateway's event-loop watchdog while a signed-in caller's service is built (a fresh
+install's first minute; a background-started gateway stayed down), on top of 0.15.3's Windows fixes
+(local engines, console windows, the desktop Assistant without a console window) and vision catalog
+entries for OpenAI-compatible endpoints that serve image models. With it, **AbstractRuntime 0.10.3**
+(endpoint image routes run in process), **AbstractCore 2.26.3** and **AbstractVision 0.3.34**. Other
+package pins are unchanged.
+
+## [0.11.14] - 2026-10-19
+
+Pins **AbstractGateway 0.15.11** and **AbstractMemory 0.3.1** across the light, Apple and GPU
+profiles. Other package pins are unchanged from 0.11.13.
+
+- The gateway carries an optional seam for AbstractNote (a notebook of your own notes as a temporal
+  knowledge graph, a separate package): when `abstractnote` is installed in the gateway's environment,
+  its tools are bound per plane next to the skills, its `/api/gateway/note` routes answer behind the
+  gateway sign-in and its workflows load in every plane; the console's Apps page lists the Note app.
+  Without the package the gateway behaves as before.
+- AbstractMemory's SQLite and in-memory stores can close an assertion in place (`close_assertion`),
+  which a superseded claim needs; nothing else changes for callers.
+- The `abstractnote` checkout is ignored by the root repository like the other sibling packages.
+- Who is affected: everyone upgrading; `abstractgateway update` shows this and runs it.
+
+## [0.11.13] - 2026-10-19
+
+Pins **AbstractGateway 0.15.10** and **abstractassistant 0.14.3** across the light, Apple and GPU
+profiles. Other package pins are unchanged from 0.11.12.
+
+- The built-in Assistant orchestrator (revision 8, shipped in the gateway as bundle 0.0.15 and
+  republished by the desktop Assistant on its next launch): the routing decision no longer reads or
+  appends the conversation's turns, and a request for a spoken reading of a named passage or scene
+  routes to the voice route, never to audio generation.
+- ADR-0039: loading states in the clients (a spinner until a read answers, an error only once every
+  try has failed).
+- Who is affected: everyone upgrading; `abstractgateway update` shows this and runs it.
+
+## [0.11.12] - 2026-10-19
+
+Pins **AbstractGateway 0.15.9** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.11.
+
+- Notification emails are written for the person who receives them: one AbstractFramework layout for
+  every notice, a subject that names the workflow or entity (never a node id), the context (who
+  started it and when), what is asked (each tool call with its label and its whole arguments, or the
+  question and its choices), an **Open in the console** button to the exact run and an **Open in
+  AbstractCode** button when the run has a session, a plain-text twin, and one email per wait instead
+  of one per retry. Answering from the email itself is backlog 1028.
+- Who is affected: everyone with email notifications on; `abstractgateway update` shows this and runs it.
+
+## [0.11.11] - 2026-10-18
+
+Pins **AbstractGateway 0.15.8** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.10.
+
+- Web console: a connected mailbox can be reconfigured in place (**Configure** next to Test and
+  Disconnect; a failed update keeps the existing connection; passwords and secrets are never shown).
+  A Google or Microsoft sign-in cancelled while its approval was pending can no longer replace the
+  mailbox afterwards. The test notification carries a console link, a security notice and an HTML
+  part. Sign-in pages accept the account's registered email in place of the account id.
+- Entities carry an appearance for client apps (orb colour and shape), set at creation or through
+  `PUT /api/gateway/entities/{name}/appearance` by an admin or the entity's creator.
+- Who is affected: everyone upgrading; `abstractgateway update` shows exactly this and runs it.
+
+## [0.11.10] - 2026-10-18
+
+Pins **AbstractGateway 0.15.7**, **AbstractRuntime 0.10.6**, **abstractassistant 0.14.2**,
+**abstractskill 0.3.1** and the npm app **flow 0.10.1** across the light, Apple and GPU profiles.
+Other package pins are unchanged from 0.11.9.
+
+- Conversation search: `GET /api/gateway/sessions/search` finds your own conversations by words in
+  the question, the answer or the media they produced or received (a per-plane index the gateway
+  builds on first search and keeps current; exact matches first, a fuzzy pass when nothing matches).
+  The Apple Watch and the consoles use it.
+- Automations keep durable named tool policies; conversations record tool approvals and answer
+  metrics; the built-in Assistant orchestrator ships as bundle 0.0.13 with a voice mode (ask for a
+  spoken answer and get a recording) and a router that follows the run's text route. The desktop
+  Assistant 0.14.2 carries the same workflow.
+- Flow: releasing a wire dragged from a boolean output on empty canvas offers If/Else first.
+- Who is affected: everyone upgrading; `abstractgateway update` (0.15.6 and later) shows exactly this
+  and runs the upgrade.
+
+## [0.11.9] - 2026-10-18
+
+Pins **AbstractGateway 0.15.6** across the light, Apple and GPU profiles. Other package pins are
+unchanged from 0.11.8.
+
+- `abstractgateway update` upgrades an installer install from a terminal: it previews every package
+  whose version changes and the release notes in between, asks once, then runs the same installer as
+  the one-line command and restarts the gateway; `--check` only reports (exit 10 when an update
+  exists). `abstractgateway console` opens the terminal console signed in. Both also work as
+  `--update` and `--console`. See [Upgrade](docs/install.md#upgrade).
+- Who is affected: anyone running a gateway installed by the one-line installer; a gateway run from a
+  source checkout or a container is told how to upgrade instead.
+
+## [0.11.8] - 2026-10-18
+
+Pins **AbstractGateway 0.15.5** and **AbstractRuntime 0.10.5** across the light, Apple and GPU
+profiles (0.10.5 is 0.10.4's fix with the pooled client's wiring done in one place, after an
+adversarial review). Other package pins are unchanged from 0.11.7.
+
+- Image generation routed to a provider endpoint profile (an OpenAI-compatible relay chosen as the
+  image route, in the console's sandbox or a workflow) reaches that endpoint with its stored
+  credential, in process. Before this, the runtime's call handler rewrote the route's `endpoint:<id>`
+  provider into a bare provider family before the media client saw it, and the generation failed
+  asking for a base URL the gateway already held. Nothing in the gateway asks for a URL or key that
+  is already configured.
+- Who is affected: anyone whose image (or video, or voice) route is set to a gateway endpoint
+  profile. Upgrade with the one-line installer; a gateway started from a checkout must be restarted
+  on the new packages.
+
+## [0.11.7] - 2026-10-18
+
+Pins **AbstractGateway 0.15.4** across the light, Apple and GPU profiles: a cold first start no longer
+exits on the gateway's event-loop watchdog while a signed-in caller's service is built (a fresh
+install's first minute; a background-started gateway stayed down). Other package pins are unchanged
+from 0.11.6.
+
+- The browser-apps step of `install.sh` and `install.ps1` no longer decides on one health request. A
+  gateway that is slow to answer right after its start (it loads its engines) or still says it is
+  starting is waited for, up to 60 s, before the apps are brought to this release's versions; only
+  a port with nothing listening (`--no-start` with the gateway stopped) sends the versions to
+  `<data dir>/apps-upgrade.pending` for the gateway's next start. Before this, a slow first answer
+  deferred the app updates to the next gateway restart without saying so in red.
+- The installers check that the gateway is still answering before the closing summary: a gateway
+  that stopped after its health check is reported in red with its log and incident folder, never as
+  "ready".
+- Who is affected: anyone running the one-line installers; most visibly fresh installs on machines
+  where the gateway's first start is slow.
+
+## [0.11.5] - 2026-10-18
+
+Pins **AbstractGateway 0.15.2** across the light, Apple and GPU profiles: the gateway stops browser apps
+left running by a previous gateway run and starts the installed version, at start and on every launch or
+update, and its systemd user unit stops its children with it. Pins **AbstractVoice 0.15.2**: read aloud
+speaks whole sentences in one language per reply, without a pause after the first words (0.15.1: the
+voice command-line tools write piped output on Windows). Other package pins are unchanged.
+
+Installer fix: an app left running by a previous gateway run no longer keeps an older version on its
+port across upgrades.
+
+- `install.sh` and `install.ps1` tell a leftover of a previous gateway run — an "external" copy whose
+  process runs a program under `<data dir>/apps/`, which only the gateway puts there — from a copy
+  started elsewhere. The leftover is stopped (its command line checked before each signal; SIGTERM,
+  then SIGKILL after 20 s) and the updated install is started with `abstractgateway apps launch`;
+  the summary's Apps line says `leftover of a previous gateway run (<version>, pid <pid>) stopped;
+  <app> <version> started`. A copy that is not provably this install's is left alone and listed as
+  `a copy not started by this gateway` with what was checked, never as "started outside the gateway".
+- The summary's closing line for app failures now says what to do for the apps (run the command on
+  their line, then `abstractgateway apps list`), instead of advising a re-run once the network has
+  caught up. See [Upgrade the apps](docs/install.md#upgrade-the-apps).
+- Who is affected: anyone upgrading with the one-line installers whose gateway runs the browser apps;
+  most visibly Linux servers where the gateway runs as a `systemd --user` service. Gateways from
+  0.15.2 on stop such leftovers themselves at start and on every launch or update; the installer's
+  stop covers earlier gateways.
+
+## [0.11.4] - 2026-10-17
+
+Installer fix: upgrades keep the browser apps on the release. Package pins are unchanged from 0.11.3
+(AbstractGateway 0.15.1 across the light, Apple and GPU profiles).
+
+- Re-running `install.sh` or `install.ps1` brings every browser app the gateway has installed (Flow,
+  Code, Observer, Continuum, Entity) to this release's version in every case the step covers: it
+  starts once the gateway's boot is over, waits up to 90 s for an app the gateway is still starting,
+  and signs its `abstractgateway apps` calls with the data dir's token passed as a parameter, so an
+  `ABSTRACTGATEWAY_AUTH_TOKEN` set in your shell for another gateway no longer makes the step fail.
+- A copy of an app running outside the gateway on the app's port no longer hides the gateway's own
+  install: the install is updated, the summary's Apps line names the outside copy (`RUNNING: a copy
+  started outside the gateway, <version> on port <port> (pid <pid>)`), and a copy not at this release's
+  version is listed in red with the pid to stop. See [Upgrade the apps](docs/install.md#upgrade-the-apps).
+- Who is affected: anyone upgrading with the one-line installers (`curl -LsSf https://abstractframework.ai/install.sh | sh`,
+  `powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"`). A fresh
+  `pip install abstractframework==0.11.4` resolves the same packages as 0.11.3.
+
+## [0.11.3] - 2026-10-17
+
+Pins **AbstractGateway 0.15.1** across the light, Apple and GPU profiles. Other package pins are unchanged.
+
+- Admin-configured provider endpoints are shared by default with human users and entities. New accounts can run workflows using the gateway's default endpoint without supplying their own provider URL or key. Existing root connections are inherited automatically.
+- Bootstrap installers and the generated install manifest select Gateway 0.15.1.
+
+## [0.11.2] - 2026-10-17
+
+Hold to talk in the Assistant — pins abstractassistant 0.14.0; every other package unchanged from 0.11.1.
+
+- **AbstractAssistant 0.14.0**: the composer has one microphone button. Hold it while you speak and release it: the gateway transcribes the recording and the words are sent as your next message. A short tap records nothing. The hands-free voice conversation starts from ⌘⇧V, the microphone's right-click menu or the tray menu.
+
+## [0.11.1] - 2026-10-16
+
+Fast listings, task cards, standard-library imports in Code nodes and the Code assistant — pins AbstractRuntime 0.10.2, abstractgateway 0.15.0, the npm observer 0.8.0 and the npm flow 0.10.0; every other package unchanged from 0.11.0.
+
+### Changed
+
+- **AbstractFlow 0.10.0** (npm): the Code node editor gains a **Code assistant** — a chat with the gateway's default text model that knows the node (variables, current body, test input, the sandbox's import rule) and answers in Python with **Insert into editor**; a Code node body returning a value JSON cannot carry (a module, a set…) is reported by the sandbox with its place instead of an HTTP 500.
+- **AbstractRuntime 0.10.2**: Code nodes in the `sandbox` permission can import Python's standard library (`json`, `re`, `datetime`, `math`, `collections`, `itertools`, `urllib.parse`…); the modules that reach the machine (processes, files, the network, code loading or evaluation), third-party packages and `__import__` stay refused, each refusal naming the reason. `full_access` is unchanged.
+- **AbstractRuntime 0.10.1**: the JSON run store answers "which runs are running or waiting" from an in-memory index that re-verifies every candidate against disk, instead of globbing and stat()ing every run file on every poll; the rows are exactly the scan's (differential proof in the runtime's changelog). A store with ten thousand runs answers in milliseconds beside a generating model instead of minutes.
+- **abstractgateway 0.15.0**: `GET /runs` shares one computation among identical concurrent asks (1.5 s TTL per plane and query) and answers an archived-only page at once when nothing is archived; the desktop tray gains a Sessions menu with per-session actions, shows the gateway's own memory share next to the machine's, and reports an eject as a measured before → after.
+- **Observer 0.8.0**: the board shows one card per task with the chain of subruns inside (each with its own words, stop control and ask), a lane-level cancel-all that cancels task roots, stuck runs named by the step whose subrun ended, the last known board painted at once on reload, and app-level fetch failures reported as one connection notice instead of among a run's steps; the run header counts failed steps of every kind.
+
+## [0.11.0] - 2026-10-15
+
+Workflows without code, and round 16 — pins abstractcore 2.26.0, AbstractRuntime 0.10.0, abstractgateway 0.14.0
+(console crate 0.16.0), abstractvoice 0.15.0, abstractassistant 0.13.2; npm flow 0.9.0, code 0.11.2 (crate
+abstractcode 0.10.0), observer 0.7.1, entity 0.7.1, ui-kit 0.8.7; continuum 0.7.0, abstractagent 0.3.19,
+abstractmusic 0.1.16 unchanged.
+
+### Added
+- Flow editor (AbstractFlow 0.9.0, AbstractRuntime 0.10.0): workflows without code. **String Template** is a text
+  written on the node with variable chips (type `@` to pick a run variable or one of the node's inputs);
+  **Set Variables** has one row per variable (name, type, value), and **Get Variables**, **Add to List Variable**
+  and **Loop Limit** are nodes. A **limit on a repeating wire**: the editor finds the execution wires that make a
+  path repeat (an If/Else wired back to a ForEach), shows a ↺ badge halfway along each, and a click sets "repeat
+  at most N times"; at the limit the flow goes on through the If/Else's other branch, with no exit pin to wire.
+  Relay dots route one output to several inputs; dropping a wire on empty canvas opens a small menu; If/Else
+  branches can be swapped on the canvas; per-path wires can be drawn.
+- Flow editor: the execution view has bigger nodes, straight wires and a card on hover for every node (model,
+  inputs, outputs and system prompt for LLM calls and Agents; what Set Variables sets; what a ForEach loops
+  over; a wire's limit); a run pulse (time so far, estimate, model calls, tokens) and an optional run spotlight;
+  Publish is a labelled green button; a start screen with Create Flow and Open Flow; a New flow dialog with an
+  interface picker.
+- AbstractCode terminal 0.10.0: a user card, folded reasoning cycle panels, hold Space to talk, a JSON view, a
+  theme menu; sessions, the prompt queue and `/goal` live on the gateway (nothing kept in local files).
+- Automations: calendar schedules (`schedule@2`: daily at HH:MM, weekly on chosen days, monthly on day N) in the
+  owner's time zone (account preference `time_zone`), DST-correct next run; the gateway serves `next_run_at`,
+  `schedule_text` and a schedule preview, and every client shows the served words (kit dialog, Code, Observer,
+  Assistant, both consoles).
+- Named, endpoint-only API keys for the OpenAI-compatible endpoint (`/api/gateway/me/openai-keys`): shown once,
+  valid only at `/v1`, revocable one by one, admin view per account; the console offers named keys as the key.
+- Speech-to-text on the GPU: a new `mlx-whisper` engine (Apple Silicon, Metal) behind the same voice engine
+  interface; large-v3 recommended everywhere (Apple → mlx-whisper, NVIDIA → faster-whisper on CUDA with cuDNN 9);
+  a served hint on stored faster-whisper routes; fresh Apple installs default to mlx-whisper/large-v3.
+- Entities: the creator configures their entity (mind, voice, instructions, skills, preferences, workspaces,
+  archive/unarchive, Active) within what the admin offers; admins always; roles are exactly admin and member.
+- Gateway terminal console 0.16.0: the mouse-first redesign (clickable tabs and row actions, form modals,
+  confirmations with buttons) on every screen, incl. the new Preferences time zone, OpenAI keys and entity pages.
+
+### Changed
+- AbstractRuntime 0.10.0: an execution wire that loops back out of a ForEach / For / While body (from inside the
+  body to the loop node itself or to anything before it) is refused when the flow compiles: "… goes back out of
+  <loop>'s loop body: the run would never end. A path inside a loop body can only repeat within the body; to
+  repeat the whole loop, wire the loop-back after the loop's done." The editor's run checks say the same before
+  Run or Publish (backlog 1018).
+- Publishing a workflow no longer rebuilds every service: bundle-only changes swap the workflow registry on the
+  running runtime (prompt caches survive, `/api/health` keeps answering); runs in flight finish on the version they
+  started with; every publish response says what it reloaded.
+
+### Fixed
+- AbstractCode terminal: the answer is no longer shown twice when the last reasoning cycle is the answer.
+- AbstractAssistant 0.13.2: no empty reply bubble while a sub-agent thinks; the live card appears with the first
+  words of the reply, the thinking folded under a small toggle.
+- Set Variables writes only what its own pins carry; keys of the previous step's output are no longer written as
+  variables.
+- Admins can manage entities that live in a member's runtime (no silent 404).
+
+## [0.10.1] - 2026-10-08
+
+A patch release: the gateway no longer hangs on Read aloud, upgrades from 0.9.x keep every allowed
+folder, and the Linux sandbox, the browser probe, the terminal clients and the Flow editor catch up
+with 0.10.0.
+
+### Fixed
+
+- **A gateway no longer restarts when the computer wakes from sleep** (AbstractGateway 0.13.1). The
+  watchdog decides that the gateway hung from whether its event loop makes progress, not from how
+  much time passed, so the clock jump of a wake is not mistaken for a hang.
+- **The gateway no longer hangs on Read aloud** (AbstractGateway 0.13.1, AbstractRuntime 0.9.1).
+  Streamed speech is never a wait of the run: nothing durable exists while audio plays, and the child
+  run is recorded completed when the stream ends, so a conversation no longer shows "Waiting for an
+  event" during Read aloud. A Read aloud left unfinished by a restart is closed at the next start
+  ("Read aloud was interrupted because the gateway restarted …"). Each stream runs off the event loop
+  within the voice synthesis limit; past it a request gets "Read aloud is busy", and a busy engine is
+  announced with a `queued` line ("Waiting for the voice engine: …"). Buffered request bodies are
+  replayed through one helper, which removes a second busy loop in the core endpoint.
+- **Upgrading from 0.9.x keeps every allowed folder** (AbstractGateway 0.13.1). The 0.13.0 workspace
+  migration hid allowed folders under the folder the gateway was started in (usually your home
+  folder): they were missing from Accounts → Workspaces and were not listed as dropped. The
+  migration no longer guesses that folder, and a store 0.13.0 already migrated is repaired once at
+  the next start (the lost rows come back, a path already listed keeps its mode, each restored row is
+  in the audit log).
+- **Linux command sandbox: an allowed workspace inside a refused folder is reachable** (AbstractCore
+  2.25.1). Under bubblewrap every command in such a workspace failed; the most specific workspace now
+  wins on Linux as on macOS.
+- **The agent repairs a rejected tool-call format** (AbstractAgent 0.3.19). When the model's tool
+  call is refused (invalid syntax or an unavailable tool) and no call was accepted, ReAct asks again
+  with the available tools, at most twice per turn.
+- **Console pages read cleanly** (AbstractGateway 0.13.1, AbstractCore 2.25.1). Multimodal shows
+  each route and capability in its own column, and its Weights cell says whether the model's weights
+  are on this computer (a pill, one sentence and a tooltip) for every provider a route can name. No
+  settings hide behind "Advanced" any more: the Email settings show **Sign-in app** and **Recipients
+  and limits** as sections. Tables keep their columns and come back from cards when the window grows.
+- macOS 13: the installer already picks the light profile there (MLX publishes no wheels below
+  macOS 14). It now records why, so running it again after a macOS update adds the apple profile
+  instead of keeping light. An explicit `--profile light` is still kept. The install guide and the
+  FAQ say that `[apple]` needs macOS 14 or newer and that `pip install "abstractframework[apple]"`
+  does not resolve on macOS 13.
+
+### Added
+
+- **Default workflow per account** (AbstractGateway 0.13.1, AbstractAssistant 0.13.1, Code Web
+  0.11.1). The gateway keeps each account's default workflow per app (`GET`/`PUT
+  /api/gateway/accounts/{me|account}/preferences`); the admin's setting stays the gateway default.
+  The console's Accounts page has a **Preferences** action on every row, the Assistant's Settings →
+  Workflow and Code's Workflow → **Default for new conversations** read and write it (a choice kept
+  on the device is uploaded once, then the gateway's value is used everywhere).
+- **Last restart after a hang** (AbstractGateway 0.13.1). Before the watchdog restarts a hung gateway
+  it writes `<data dir>/incidents/watchdog-<stamp>.json` and a stack dump; the console's Resources
+  page and the terminal console's F3 show **Last restart** with the reason and the files.
+- **The gateway terminal console matches the web console** (`abstractgateway-console` 0.15.1):
+  workspaces on Accounts (`E` Eligible workspaces, `w` on every row) with the web's words,
+  **Preferences** (`p`), the memory and compute line in the title bar, **Last restart** in F3; the
+  separate Workspaces page is gone (`W` opens Accounts).
+- **AbstractCode's terminal client has workspaces and the sandbox line** (`abstractcode` 0.9.1):
+  `/workspace` opens this conversation's workspace chooser (and **My default workspaces**),
+  `/schedule` has Workspaces and Title and limits steps, tool cards show the command sandbox state and
+  every command shows its `Sandbox:` line.
+- **Flow uses dedicated icons** (Flow 0.8.1, UI Kit 0.8.6): image, video, camera, music, database,
+  branch, loop, variable, minus, divide, function, zoom in, zoom out, fit view and lock, in the
+  palette, the canvas cards and the canvas controls.
+- **Flow reads at a glance** (Flow 0.8.1): one colour per node category in the palette and on the
+  canvas (light and dark), run status icons on the node cards, and a tap on a node opens its
+  properties while a drag only moves it.
+
+### Security
+
+- **`browser_probe` keeps local pages inside the run's workspaces** (AbstractCore 2.25.1,
+  AbstractRuntime 0.9.1). A local page is served to the headless browser from a private loopback
+  address limited to the files the run may read, never as `file://`, so a page in an allowed
+  workspace cannot show a refused folder's files (`<img src="file:///…">`, `../` links, symlinks);
+  refused loads are listed in the report.
+- **macOS command sandbox: the shared temp folders are denied** (AbstractCore 2.25.1). Under "Deny
+  everything, allow listed workspaces", `/private/tmp` and `/private/var/folders` are now unreadable
+  and unwritable like user data (an unlisted file there was readable before); system folders stay
+  readable and unwritable, and the run's private temporary folder keeps working.
+
+### Changed
+
+- The gateway launchers (`scripts/gateway.sh`, `gateway-local.sh`, `gateway-flow-local.sh`, and the
+  `af.sh`/`start.sh` stacks that run them) pass the backlog folder and the backlog exec runner as
+  `serve --backlog-root <folder> --exec-runner on|off`, and the data dir as `serve --data-dir`,
+  instead of exporting `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT` / `ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER` /
+  `ABSTRACTGATEWAY_DATA_DIR`. A gateway older than 0.13.0 still gets the variables, with one printed
+  note. `gateway.sh --print` and `gateway-local.sh --print` show the serve command and change nothing.
+- Repository links use the canonical GitHub names (`lpalbou/AbstractCore`, `lpalbou/Abstract3D`, …);
+  `scripts/clone.sh` clones `lpalbou/Abstract3D`.
+- The browser apps' CI fails when `package-lock.json` lags `package.json` or resolves a shared UI
+  package below its floor (`npm run check:lock` in Code Web, Flow, Observer, Continuum and Entity).
+- Pin AbstractGateway 0.13.1, AbstractCore 2.25.1, AbstractRuntime 0.9.1, AbstractAgent 0.3.19 and
+  AbstractAssistant 0.13.1; the installers install Code Web 0.11.1 and Flow 0.8.1 (UI Kit 0.8.6 from
+  AbstractUIC 0.6.1), Observer 0.7.0, Continuum 0.7.0 and Entity 0.7.0 (unchanged), the gateway
+  terminal console 0.15.1 and AbstractCode 0.9.1. AbstractVoice 0.14.0, AbstractMusic 0.1.16 and the
+  other pins are unchanged.
+
+## [0.10.0] - 2026-10-05
+
+### Added
+
+- The gateway serves its OpenAI-compatible API at `http://<host>:<port>/v1` with its own console page,
+  **Models → OpenAI API**: status and base URL, your API key (your gateway token, masked with reveal
+  and copy), access settings for admins (Protected or Open, and who can connect: this machine, your
+  network, your tailnet or anywhere), a per-account **OpenAI API** switch, example requests, and a log
+  of recent requests that opens to the recorded request and response. Structured outputs
+  (`response_format` `json_object` and `json_schema`) work for every provider the gateway routes to.
+- The gateway web and terminal consoles share one layout: Accounts (users and entities in one list,
+  archive and unarchive), Workflows, Skills & MCP, Runtimes, Apps, Providers (local engines included),
+  OpenAI API, Models (one list with downloads not in the catalog; delete a downloaded model), Multimodal,
+  Resources, Sandbox, Network (every detected address, Tailscale included) and About.
+- Code Web: Automations and Conversations drawers with compact cards, archive and unarchive for
+  conversations and automations (`Archived · N`), and a right-hand rail (Activity, Files, Model,
+  Workflow, Workspace, Tools, Skills, Voice) whose settings follow the selected conversation or
+  automation. The Code terminal client offers the same panels, cards, archive and voice.
+- Voice everywhere through the gateway: the shared Voice settings show the gateway's own default
+  engines, let you pick the output device and the microphone, and test both; Code (web and terminal),
+  Observer and Entity speak replies and take dictation through the gateway.
+- One About card in every app and console (app, AbstractFramework and gateway versions, links), and a
+  shared audio player for audio files.
+- A hung gateway restarts: when its event loop has not run for `--watchdog-seconds` (default 30, `0`
+  turns it off), `abstractgateway serve` exits with code 75 and its supervisor starts it again;
+  `/api/health` reports the watchdog.
+- Workspaces in two dimensions (AbstractGateway 0.13.0, AbstractRuntime 0.9.0, UI Kit 0.8.1): the
+  admin chooses a posture, **Deny everything, allow listed workspaces** (the default) or **Allow
+  everything, refuse listed workspaces** (with a Read-only or Read & write default for everything
+  else), one **Shared workspace** (always Read & write) and workspaces that are Read-only, Read &
+  write or Refused, in one modal at the top of **Accounts**. Each account can only narrow them, from
+  its **Workspace** row action or the Workspace settings of AbstractCode, Observer, Flow and the
+  Assistant, which share one chooser and one wording with the gateway's one-line summary.
+- The agent is told its workspaces: every tool-using call lists its working directory, the shared
+  workspace and each allowed workspace with its mode. A file it writes without a full path lands in
+  the conversation's private folder, never in the shared workspace.
+- Shell commands are held to the run's workspaces by the operating system (AbstractCore 2.25.0,
+  AbstractRuntime 0.9.0, AbstractAgent 0.3.18, AbstractGateway 0.13.0): `execute_command`, the
+  persistent shell session, local helpers and `execute_python` run inside an OS sandbox built from the
+  same workspaces the file tools get (macOS `sandbox-exec`; Linux bubblewrap, or Landlock for **Deny
+  everything, allow listed workspaces**), with the gateway's environment stripped of tokens and keys.
+  A host with no sandbox refuses commands with one sentence and the run continues;
+  `abstractgateway serve --unsandboxed-commands` allows them again (audited). The run ledger records
+  the sandbox and the enforced paths of every command; the Assistant and Code tool settings show the
+  state (**Sandboxed to this run's workspaces**), and the Observer and Code run views show one
+  `Sandbox: …` line per command. The Linux sandbox is verified in CI (bubblewrap on Ubuntu).
+- The console's top bar shows memory used, GPU load and the number of loaded models (refreshed every
+  5 seconds, a click opens **Resources**); every address, with **Copy**, is on **Network**.
+- The tray's Workflows submenu lists running runs first, then runs waiting for a person or an event,
+  then the runs finished in the last 24 hours, each opening in Observer.
+- Themed tooltips on every icon button of the consoles and apps (UI Kit 0.8.1).
+- Sound effects and music take a length in seconds: AbstractCore's `/v1/audio/music` `seconds`, the
+  gateway Sandbox's **Length (seconds)** field and the Assistant's media requests ("a 3 s laser
+  sound"); a sound effect runs the Stable Audio 3 SFX checkpoint and lasts 5 seconds by default,
+  music 30.
+- AbstractAssistant 0.13.0: **New automation** opens the same schedule form as AbstractCode and
+  Observer; Settings → **Workflow** is its own page (**Gateway default** first, **Open in
+  AbstractFlow**); Settings → Tools groups tools in collapsible categories; Settings → Appearance
+  shows the Accessibility permission with **Configure**; the Voice page shows the gateway's engines
+  read-only with **Change under Models**.
+
+### Changed
+
+- A gateway upgraded from 0.12 converts its workspace settings once at its first start: the old access
+  modes, per-user allow and deny lists, launch-folder trust and "Any folder (old clients)" become the
+  posture and rows above; the old settings keys and routes are refused afterwards. A fresh gateway's
+  shared workspace is `<data dir>/workspace`; an existing install keeps its current one.
+- The gateway terminal console's **Workspaces** page says workspaces are managed from Accounts in the
+  web console for this release.
+- **Apps → Assistant** reports, opens and watches the same Assistant: the installed package, else the
+  app bundle. When the other one is running, the card and the tray say so.
+- **Apps** shows an available update on every row: the browser apps and the Assistant offer **Update
+  to x.y.z** (the Assistant is quit and opened again on the new version when the gateway started it);
+  an app started elsewhere or installed from a source checkout shows **Latest x.y.z** with where to
+  update it. An update whose version did not land fails and restarts nothing. The web and terminal
+  consoles (`u`) show the same labels; new releases appear within 10 minutes without a restart.
+- Workspace nesting: the most specific workspace wins. Refusing a folder and allowing a folder inside
+  it is valid (the inner folder is reachable, the rest stays refused); a refused folder inside an
+  allowed one refuses its subtree; built-in protected folders stay refused whatever is listed inside.
+  The gateway, the agent's file tools and the command sandbox apply the same rule.
+- `/core/v1` answers with a 308 redirect to `/v1` for this release and is deprecated: point clients at
+  `/v1`.
+- Pin AbstractGateway 0.13.0, AbstractCore 2.25.0, AbstractRuntime 0.9.0, AbstractAgent 0.3.18
+  (`execute_python` inside the command sandbox), AbstractVoice 0.14.0, AbstractMusic 0.1.16 (the
+  sound-effect checkpoint and length fix) and AbstractAssistant 0.13.0;
+  the installers install Code Web 0.11.0, Observer 0.7.0, Flow 0.8.0, Continuum 0.7.0 and Entity
+  0.7.0 (built with UI Kit 0.8.1 and Panel Chat 0.4.0 from AbstractUIC), the gateway terminal
+  console 0.15.0 and AbstractCode 0.9.0.
+
 ## [0.9.6] - 2026-10-03
 
 - Assistant, Code Web and Observer include workflow and tool selection when creating or editing automations, alongside the growing-context budget and Email result recipients.

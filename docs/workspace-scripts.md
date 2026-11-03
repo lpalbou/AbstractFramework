@@ -11,7 +11,7 @@ If you only want to *use* the framework, install the published packages instead:
 ## The package inventory
 
 `scripts/lib/packages.txt` is the single list every script reads. It has one row per published
-package (30 packages in 21 repositories):
+package (34 packages in 22 repositories):
 
 | Column | Meaning |
 |---|---|
@@ -47,12 +47,12 @@ difference. Run it after you add a dependency between two packages, then update 
 | Tier | Python (PyPI) | npm | Rust (crates.io) |
 |---|---|---|---|
 | 0 | abstractskill, abstractsemantics, AbstractMemory, abstractvision, abstractvoice, abstractmusic, abstractcamera | ui-kit, app-server, monitor-flow, monitor-gpu, monitor-memory, monitor-active-memory | abstracttui |
-| 1 | abstract3d | panel-chat, flow | abstractcore-console, abstractcode |
-| 2 | abstractcore | observer, continuum, entity, code (web) | abstractgateway-console |
+| 1 | abstract3d | panel-chat | abstracttui-graph, abstractcore-console, abstractcode |
+| 2 | abstractcore | flow, observer, continuum, entity, code (web), note (web) | abstracttui-mermaid, abstractgateway-console |
 | 3 | AbstractRuntime | | |
 | 4 | abstractagent, abstractassistant | | |
 | 5 | abstractgateway | | |
-| 6 | abstractframework (meta-package) | | |
+| 6 | abstractnote, abstractframework (meta-package) | | |
 
 Install, build and release tier by tier: a package is only built or published after everything it
 depends on. To see what has to follow a change to one package, ask for its reverse dependencies:
@@ -96,12 +96,15 @@ source ./scripts/build.sh        # rebuild what you work on
 
 `build.sh` builds the three ecosystems in dependency order:
 
-- **Python**: editable installs (`pip install -e`) of the 13 Python packages and the root
+- **Python**: editable installs (`pip install -e`) of the 14 Python packages and the root
   meta-package into one virtualenv. Third-party dependencies still come from PyPI.
 - **npm**: the seven AbstractUIC packages (installed once at the `abstractuic` workspace root, built
-  per package), then the apps `flow`, `observer`, `continuum`, `entity` and `code` (web).
-- **Rust**: `cargo build` of `abstracttui`, `abstractcore-console` (`abstractcore/console-tui`),
-  `abstractcode` (`abstractcode/tui`) and `abstractgateway-console` (`abstractgateway/console-tui`).
+  per package), then the apps `flow`, `observer`, `continuum`, `entity`, `code` (web) and `note`
+  (web).
+- **Rust**: `cargo build` of `abstracttui` and its extension crates `abstracttui-graph` and
+  `abstracttui-mermaid` (`abstracttui/extensions/*`), `abstractcore-console`
+  (`abstractcore/console-tui`), `abstractcode` (`abstractcode/tui`) and `abstractgateway-console`
+  (`abstractgateway/console-tui`).
 
 | Option | Effect |
 |---|---|
@@ -133,6 +136,15 @@ The stack launchers use one port map: gateway 8080, observer 3001, continuum 300
 entity 3004, flow 3005 (each overridable with `ABSTRACT<APP>_PORT`). `start-local.sh --build`
 runs `build.sh` first.
 
+`gateway.sh` and `gateway-local.sh` start `abstractgateway serve` with `--data-dir <data dir>`,
+`--backlog-root <checkout root>` (Continuum's Board and Backlog read its `docs/backlog`) and
+`--exec-runner on`. The flags hold for that run only; the gateway's saved settings stay as they
+are. `ABSTRACTGATEWAY_TRIAGE_REPO_ROOT=<folder>` and `ABSTRACTGATEWAY_BACKLOG_EXEC_RUNNER=0` choose
+other values. The launcher reads them and passes them as flags, and does not hand them on to the
+gateway. A gateway older than 0.13.0 gets them as variables instead, with one printed note.
+`gateway.sh --print` shows the serve command and exits without stopping, starting or creating
+anything.
+
 The supervisor restarts a service that exits. A gateway that hangs exits on its own: its event-loop
 watchdog (`abstractgateway serve --watchdog-seconds`, default 30) writes the blocked code's stack to
 `gateway.log` and exits with code 75, and the supervisor restarts it (the incident banner in
@@ -147,6 +159,7 @@ it is reported again instead of killed.
 bash scripts/tests/test_inventory.sh      # inventory vs package files, install pins vs manifest
 bash scripts/tests/test_repo_scripts.sh   # clone/status/commit/push/pull/build in an offline sandbox
 bash scripts/tests/test_af_supervisor.sh  # stack supervisor semantics with stub services
+python -m pytest -q tests/test_gateway_launch_flags.py  # the gateway launchers' serve flags (stub python)
 bash scripts/tests/test_install_gateway_loop.sh  # install.sh background-gateway restart loop
 ```
 

@@ -81,6 +81,21 @@ run the installer again: it continues where it stopped.
 - **Fix**: paste the one-liner from [Install](install.md#windows), which runs a command rather than
   a script file, or ask your administrator.
 
+### Windows: the installer stops at `[4] AbstractGateway` with `ERROR: No tools installed`
+
+- **Cause**: the installer of AbstractFramework 0.11.3 stopped when it ran through the one-liner
+  on Windows PowerShell 5.1 and found no uv tool installed yet.
+- **Fix**: paste the one-liner from [Install](install.md#windows) again. It always fetches the
+  current installer, which resumes from the uv and Python already in place.
+- **Verify**: `abstractgateway --version` in a new terminal.
+
+### Windows: console windows flash on the desktop every few seconds
+
+- **Cause**: an AbstractGateway older than 0.15.3 started at login (through `pythonw.exe`) opens a
+  console window for each program it runs, such as `nvidia-smi` for the GPU meter.
+- **Fix**: paste the one-liner from [Install](install.md#windows) again, then sign out and back
+  in, or restart the gateway from its tray icon.
+
 ## Starting and signing in
 
 ### The browser page asks for a token, or the sign-in link expired
@@ -157,13 +172,30 @@ run the installer again: it continues where it stopped.
   `abstractgateway network set --allowed-origins https://gateway.example.com`. See
   [Phones and tablets: Reached through Tailscale](guide/deployment-iphone.md#reached-through-tailscale-https).
 
+### The watch or iPhone gets no notification while the app is closed
+
+Push needs the next release of the gateway (not yet published) and a push forwarder: an admin sets
+it in the console (My email → Notifications → Push forwarder). The built-in forwarder is not live
+yet; without your own, the apps catch up when they open (the watch also about every 15 minutes in
+the background). On the devices, allow notifications for AbstractAssistant; the app registers
+itself at sign-in, and **Devices** on the same console page lists each registered device with its
+last error. See [Triggers, attention and push](events-and-attention.md#push-to-the-watch-and-the-iphone).
+
 ## Models and providers
+
+### Windows: a model download stops with "the Hugging Face download process exited 75"
+
+- **Cause**: with AbstractCore older than 2.26.3, Hugging Face downloads started from the gateway
+  console on Windows (for example faster-whisper `large-v3`, the default speech-to-text model)
+  stop a second after they start.
+- **Fix**: paste the one-liner from [Install](install.md#windows) again, then start the download
+  again from the console. Files that already finished are kept.
 
 ### Provider calls fail
 
 - **Check**: `abstractcore --status` for the persisted configuration, and whether a local server
-  (Ollama, LM Studio) is running. The console's **Engines** tab and `abstractframework doctor` show
-  which engines answer.
+  (Ollama, LM Studio) is running. The gateway console's **Providers** page (the Core console's
+  **Engines** tab) and `abstractframework doctor` show which engines answer.
 - **Fix**: set the provider's environment variables or configure it in a console
   ([Configuration](configuration.md)); start the local server.
 

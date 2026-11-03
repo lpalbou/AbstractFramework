@@ -337,7 +337,7 @@ Email is configured as settings, never through environment variables:
   **Email** tab or the core terminal console's Email screen. From a script, `--password-stdin` (and
   `--client-secret-stdin` for an OAuth client secret) reads the secret from stdin so it never
   appears on a command line. See
-  [AbstractCore: Email](https://github.com/lpalbou/abstractcore/blob/main/docs/email.md).
+  [AbstractCore: Email](https://github.com/lpalbou/AbstractCore/blob/main/docs/email.md).
 
 The `ABSTRACT_EMAIL_*` environment variables and the email accounts file are no longer read: a
 gateway or a core install that still has them imports that account once into the new settings, then
@@ -451,10 +451,10 @@ Modalities are optional and become available when installed:
 
 This repo covers the overview. Each component repo owns its detailed configuration surface:
 
-- **AbstractCore**: [centralized config](https://github.com/lpalbou/abstractcore/blob/main/docs/centralized-config.md), [prerequisites](https://github.com/lpalbou/abstractcore/blob/main/docs/prerequisites.md)
+- **AbstractCore**: [centralized config](https://github.com/lpalbou/AbstractCore/blob/main/docs/centralized-config.md), [prerequisites](https://github.com/lpalbou/AbstractCore/blob/main/docs/prerequisites.md)
 - **AbstractGateway**: [configuration](https://github.com/lpalbou/AbstractGateway/blob/main/docs/configuration.md), [security](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md)
-- **AbstractVoice**: [installation](https://github.com/lpalbou/abstractvoice/blob/main/docs/installation.md), [model management](https://github.com/lpalbou/abstractvoice/blob/main/docs/model-management.md)
-- **AbstractVision**: [configuration](https://github.com/lpalbou/abstractvision/blob/main/docs/reference/configuration.md), [backends](https://github.com/lpalbou/abstractvision/blob/main/docs/reference/backends.md)
+- **AbstractVoice**: [installation](https://github.com/lpalbou/AbstractVoice/blob/main/docs/installation.md), [model management](https://github.com/lpalbou/AbstractVoice/blob/main/docs/model-management.md)
+- **AbstractVision**: [configuration](https://github.com/lpalbou/AbstractVision/blob/main/docs/reference/configuration.md), [backends](https://github.com/lpalbou/AbstractVision/blob/main/docs/reference/backends.md)
 
 ---
 

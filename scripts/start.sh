@@ -9,6 +9,8 @@
 #   code/web  3003
 #   entity    3004
 #   flow      3005
+#   note      3006   (gateway-managed when enabled)
+#   assistant-web 3008 (gateway-managed when enabled)
 #
 # Uses the packages as published (pip/npm registries) via the per-app
 # launchers (gateway.sh, observer.sh, console.sh, code.sh, entity.sh,

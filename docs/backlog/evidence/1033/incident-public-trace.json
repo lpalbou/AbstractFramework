@@ -1,0 +1,788 @@
+{
+  "outcome" : "inspected",
+  "root" : "75341816-9c6d-43bd-bd9e-817440752a22",
+  "traces" : [
+    {
+      "children" : [
+        "10dde901-5a24-4fcb-9111-16cb715b7e4d",
+        "fb02ea4e-5017-43b2-8bda-37c1206a126a"
+      ],
+      "events" : [
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : "gpt-5.6-terra",
+          "node" : "route_call",
+          "output" : null,
+          "provider" : "endpoint:airelays",
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:24:54.351569+00:00",
+          "status" : "started",
+          "step" : "a7c87eb2-8328-44cb-add5-d79c11e41857",
+          "type" : "llm_call"
+        },
+        {
+          "content" : null,
+          "data" : {
+            "assistant_message" : "",
+            "media_prompt" : "",
+            "mode" : "chat",
+            "prompt" : null,
+            "seconds" : null
+          },
+          "ended_at" : "2026-10-18T17:24:56.730989+00:00",
+          "model" : null,
+          "node" : "route_call",
+          "output" : null,
+          "provider" : "openai-compatible",
+          "requested_output" : null,
+          "result_keys" : [
+            "content",
+            "data",
+            "finish_reason",
+            "metadata",
+            "model",
+            "route",
+            "tool_calls",
+            "trace_id",
+            "usage"
+          ],
+          "started_at" : "2026-10-18T17:24:54.351569+00:00",
+          "status" : "completed",
+          "step" : "a7c87eb2-8328-44cb-add5-d79c11e41857",
+          "type" : "llm_call"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : null,
+          "node" : "assistant_agent",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:24:56.759408+00:00",
+          "status" : "started",
+          "step" : "c7005701-8e90-4f49-9a9a-fd8e0b82ad7f",
+          "type" : "start_subworkflow"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:24:56.779358+00:00",
+          "model" : null,
+          "node" : "assistant_agent",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "wait"
+          ],
+          "started_at" : "2026-10-18T17:24:56.759408+00:00",
+          "status" : "waiting",
+          "step" : "c7005701-8e90-4f49-9a9a-fd8e0b82ad7f",
+          "type" : "start_subworkflow"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.120469+00:00",
+          "model" : null,
+          "node" : "assistant_agent",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "resumed"
+          ],
+          "started_at" : "2026-10-18T17:25:01.120429+00:00",
+          "status" : "completed",
+          "step" : "f4865d00-c2f0-47d8-9fe7-d48de324c1d0",
+          "type" : "resume"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.262542+00:00",
+          "model" : null,
+          "node" : "end_chat",
+          "output" : {
+            "response" : "{\n  \"assistant_message\": \"\",\n  \"media_prompt\": \"A dramatic, clear theatrical voice reciting Hamlet's soliloquy from Act III, Scene I, with a contemplative, melancholy tone and subtle pauses.\",\n  \"mode\": \"audio\",\n  \"prompt\": \"To be, or not to be: that is the question:\\nWhether 'tis nobler in the mind to suffer\\nThe slings and arrows of outrageous fortune,\\nOr to take arms against a sea of troubles\\nAnd by opposing end them.\",\n  \"seconds\": 28\n}"
+          },
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "completed",
+            "output"
+          ],
+          "started_at" : "2026-10-18T17:25:01.262505+00:00",
+          "status" : "completed",
+          "step" : "40c64ecd-968c-4a7f-955f-43c524cc0b2d",
+          "type" : ""
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.550939+00:00",
+          "model" : null,
+          "node" : "end_chat",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "emitted",
+            "name",
+            "payload"
+          ],
+          "started_at" : "2026-10-18T17:25:01.550911+00:00",
+          "status" : "completed",
+          "step" : "e9155d47-2553-455d-a728-afe22bfbb069",
+          "type" : "emit_event"
+        }
+      ],
+      "output" : {
+        "response" : "{\n  \"assistant_message\": \"\",\n  \"media_prompt\": \"A dramatic, clear theatrical voice reciting Hamlet's soliloquy from Act III, Scene I, with a contemplative, melancholy tone and subtle pauses.\",\n  \"mode\": \"audio\",\n  \"prompt\": \"To be, or not to be: that is the question:\\nWhether 'tis nobler in the mind to suffer\\nThe slings and arrows of outrageous fortune,\\nOr to take arms against a sea of troubles\\nAnd by opposing end them.\",\n  \"seconds\": 28\n}"
+      },
+      "run_id" : "75341816-9c6d-43bd-bd9e-817440752a22",
+      "selection" : {
+        "bundle_id" : "abstractassistant-orchestrator",
+        "bundle_version" : "0.0.13",
+        "flow_id" : "c53b1579",
+        "registry_scope" : "private",
+        "source" : "gateway_default"
+      },
+      "status" : "completed",
+      "workflow_id" : "abstractassistant-orchestrator@0.0.13:c53b1579"
+    },
+    {
+      "children" : [
+        "710d525e-1bb3-4389-988a-e21a19140424",
+        "d7b92191-6bce-4eb7-982e-832efae28e30",
+        "ebd9306e-97b1-4fe0-8fdb-e6f0eb59572d"
+      ],
+      "events" : [
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : null,
+          "node" : "node-4",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:24:56.803772+00:00",
+          "status" : "started",
+          "step" : "9e8d4d6b-b2a3-4139-8f12-f7ff1a6ce5b4",
+          "type" : "start_subworkflow"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:24:56.825876+00:00",
+          "model" : null,
+          "node" : "node-4",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "wait"
+          ],
+          "started_at" : "2026-10-18T17:24:56.803772+00:00",
+          "status" : "waiting",
+          "step" : "9e8d4d6b-b2a3-4139-8f12-f7ff1a6ce5b4",
+          "type" : "start_subworkflow"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:24:56.924242+00:00",
+          "model" : null,
+          "node" : "node-4",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "resumed"
+          ],
+          "started_at" : "2026-10-18T17:24:56.924211+00:00",
+          "status" : "completed",
+          "step" : "7a74a073-88d1-485f-a04c-c54bbef25a34",
+          "type" : "resume"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : null,
+          "node" : "node-2",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:24:57.073715+00:00",
+          "status" : "started",
+          "step" : "704f8bcd-902f-4e6e-a1d7-b1729830e92d",
+          "type" : "start_subworkflow"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:24:57.119070+00:00",
+          "model" : null,
+          "node" : "node-2",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "wait"
+          ],
+          "started_at" : "2026-10-18T17:24:57.073715+00:00",
+          "status" : "waiting",
+          "step" : "704f8bcd-902f-4e6e-a1d7-b1729830e92d",
+          "type" : "start_subworkflow"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:00.950743+00:00",
+          "model" : null,
+          "node" : "node-2",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "resumed"
+          ],
+          "started_at" : "2026-10-18T17:25:00.950718+00:00",
+          "status" : "completed",
+          "step" : "7b07c1e6-6f93-4a45-8023-71fb46864c1c",
+          "type" : "resume"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : null,
+          "node" : "node-5",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:25:00.975184+00:00",
+          "status" : "started",
+          "step" : "0fb25192-c539-475e-9955-77e7182b0e10",
+          "type" : "start_subworkflow"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:00.983075+00:00",
+          "model" : null,
+          "node" : "node-5",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "wait"
+          ],
+          "started_at" : "2026-10-18T17:25:00.975184+00:00",
+          "status" : "waiting",
+          "step" : "0fb25192-c539-475e-9955-77e7182b0e10",
+          "type" : "start_subworkflow"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.010324+00:00",
+          "model" : null,
+          "node" : "node-5",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "resumed"
+          ],
+          "started_at" : "2026-10-18T17:25:01.010309+00:00",
+          "status" : "completed",
+          "step" : "01fe6776-e560-49d8-b174-94c2f3e4d784",
+          "type" : "resume"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.019870+00:00",
+          "model" : null,
+          "node" : "end",
+          "output" : {
+            "response" : "{\n  \"assistant_message\": \"\",\n  \"media_prompt\": \"A dramatic, clear theatrical voice reciting Hamlet's soliloquy from Act III, Scene I, with a contemplative, melancholy tone and subtle pauses.\",\n  \"mode\": \"audio\",\n  \"prompt\": \"To be, or not to be: that is the question:\\nWhether 'tis nobler in the mind to suffer\\nThe slings and arrows of outrageous fortune,\\nOr to take arms against a sea of troubles\\nAnd by opposing end them.\",\n  \"seconds\": 28\n}"
+          },
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "completed",
+            "output"
+          ],
+          "started_at" : "2026-10-18T17:25:01.019848+00:00",
+          "status" : "completed",
+          "step" : "b19382ca-3b14-42d4-935b-d11510b9642e",
+          "type" : ""
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.108925+00:00",
+          "model" : null,
+          "node" : "end",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "emitted",
+            "name",
+            "payload"
+          ],
+          "started_at" : "2026-10-18T17:25:01.108899+00:00",
+          "status" : "completed",
+          "step" : "f6c6479b-268d-48fa-9a30-2dad97a15089",
+          "type" : "emit_event"
+        }
+      ],
+      "output" : {
+        "response" : "{\n  \"assistant_message\": \"\",\n  \"media_prompt\": \"A dramatic, clear theatrical voice reciting Hamlet's soliloquy from Act III, Scene I, with a contemplative, melancholy tone and subtle pauses.\",\n  \"mode\": \"audio\",\n  \"prompt\": \"To be, or not to be: that is the question:\\nWhether 'tis nobler in the mind to suffer\\nThe slings and arrows of outrageous fortune,\\nOr to take arms against a sea of troubles\\nAnd by opposing end them.\",\n  \"seconds\": 28\n}"
+      },
+      "run_id" : "10dde901-5a24-4fcb-9111-16cb715b7e4d",
+      "selection" : {
+
+      },
+      "status" : "completed",
+      "workflow_id" : "abstractassistant-orchestrator@0.0.13:81795ea9"
+    },
+    {
+      "children" : [
+
+      ],
+      "events" : [
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:15.376815+00:00",
+          "model" : null,
+          "node" : "done",
+          "output" : {
+
+          },
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "completed",
+            "output"
+          ],
+          "started_at" : "2026-10-18T17:25:15.376784+00:00",
+          "status" : "completed",
+          "step" : "97b50c16-e337-47fb-9cb6-756b5552da7e",
+          "type" : ""
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:15.476266+00:00",
+          "model" : null,
+          "node" : "done",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "emitted",
+            "name",
+            "payload"
+          ],
+          "started_at" : "2026-10-18T17:25:15.476229+00:00",
+          "status" : "completed",
+          "step" : "141aeaea-bbda-49d3-9f73-9a407e447af9",
+          "type" : "emit_event"
+        }
+      ],
+      "output" : {
+
+      },
+      "run_id" : "fb02ea4e-5017-43b2-8bda-37c1206a126a",
+      "selection" : {
+
+      },
+      "status" : "completed",
+      "workflow_id" : "wf_abstractcore_run_facade_tts_stream"
+    },
+    {
+      "children" : [
+
+      ],
+      "events" : [
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : null,
+          "node" : "node-4",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:24:56.838835+00:00",
+          "status" : "started",
+          "step" : "8a63c8a8-5101-4945-b347-6f8737b0cdcf",
+          "type" : "emit_event"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:24:56.890368+00:00",
+          "model" : null,
+          "node" : "node-4",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "delivered",
+            "delivered_to",
+            "name",
+            "resumed",
+            "scope",
+            "wait_key"
+          ],
+          "started_at" : "2026-10-18T17:24:56.838835+00:00",
+          "status" : "completed",
+          "step" : "8a63c8a8-5101-4945-b347-6f8737b0cdcf",
+          "type" : "emit_event"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : null,
+          "node" : "node-9",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:24:56.899865+00:00",
+          "status" : "started",
+          "step" : "05a7ec5b-d512-4977-8ac1-efa3150eb0f3",
+          "type" : "wait_until"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:24:56.900698+00:00",
+          "model" : null,
+          "node" : "node-9",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "ready",
+            "until"
+          ],
+          "started_at" : "2026-10-18T17:24:56.899865+00:00",
+          "status" : "completed",
+          "step" : "05a7ec5b-d512-4977-8ac1-efa3150eb0f3",
+          "type" : "wait_until"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:24:56.905838+00:00",
+          "model" : null,
+          "node" : "end",
+          "output" : {
+
+          },
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "completed",
+            "output"
+          ],
+          "started_at" : "2026-10-18T17:24:56.905825+00:00",
+          "status" : "completed",
+          "step" : "189fcf60-e6e5-4001-8f75-7d6c1f87fdcc",
+          "type" : ""
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:24:56.918143+00:00",
+          "model" : null,
+          "node" : "end",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "emitted",
+            "name",
+            "payload"
+          ],
+          "started_at" : "2026-10-18T17:24:56.918109+00:00",
+          "status" : "completed",
+          "step" : "0148d3e7-a6e2-40d6-8887-5efbcd8a4786",
+          "type" : "emit_event"
+        }
+      ],
+      "output" : {
+
+      },
+      "run_id" : "710d525e-1bb3-4389-988a-e21a19140424",
+      "selection" : {
+
+      },
+      "status" : "completed",
+      "workflow_id" : "abstractassistant-orchestrator@0.0.13:15f19f7f"
+    },
+    {
+      "children" : [
+
+      ],
+      "events" : [
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : "gpt-5.6-terra",
+          "node" : "reason",
+          "output" : null,
+          "provider" : "openai-compatible",
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:24:57.203937+00:00",
+          "status" : "started",
+          "step" : "5ee167e3-63b2-45b0-a441-598036518e08",
+          "type" : "llm_call"
+        },
+        {
+          "content" : "{\n  \"assistant_message\": \"\",\n  \"media_prompt\": \"A dramatic, clear theatrical voice reciting Hamlet's soliloquy from Act III, Scene I, with a contemplative, melancholy tone and subtle pauses.\",\n  \"mode\": \"audio\",\n  \"prompt\": \"To be, or not to be: that is the question:\\nWhether 'tis nobler in the mind to suffer\\nThe slings and arrows of outrageous fortune,\\nOr to take arms against a sea of troubles\\nAnd by opposing end them.\",\n  \"seconds\": 28\n}",
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:00.827513+00:00",
+          "model" : "gpt-5.6-terra",
+          "node" : "reason",
+          "output" : null,
+          "provider" : "openai-compatible",
+          "requested_output" : null,
+          "result_keys" : [
+            "content",
+            "data",
+            "finish_reason",
+            "gen_time",
+            "metadata",
+            "model",
+            "raw_response",
+            "reasoning",
+            "route",
+            "tool_calls",
+            "trace_id",
+            "usage"
+          ],
+          "started_at" : "2026-10-18T17:24:57.203937+00:00",
+          "status" : "completed",
+          "step" : "5ee167e3-63b2-45b0-a441-598036518e08",
+          "type" : "llm_call"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:00.911279+00:00",
+          "model" : null,
+          "node" : "done",
+          "output" : {
+
+          },
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "completed",
+            "output"
+          ],
+          "started_at" : "2026-10-18T17:25:00.911267+00:00",
+          "status" : "completed",
+          "step" : "b2377cff-323b-418d-ad9e-7d7240a92801",
+          "type" : ""
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:00.942598+00:00",
+          "model" : null,
+          "node" : "done",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "emitted",
+            "name",
+            "payload"
+          ],
+          "started_at" : "2026-10-18T17:25:00.942570+00:00",
+          "status" : "completed",
+          "step" : "59f282d4-659c-4b2e-b0bf-16fb16899f8d",
+          "type" : "emit_event"
+        }
+      ],
+      "output" : {
+
+      },
+      "run_id" : "d7b92191-6bce-4eb7-982e-832efae28e30",
+      "selection" : {
+
+      },
+      "status" : "completed",
+      "workflow_id" : "visual_react_agent_abstractassistant-orchestrator_0_0_13_81795ea9_node-2"
+    },
+    {
+      "children" : [
+
+      ],
+      "events" : [
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : null,
+          "node" : "node-4",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:25:01.000534+00:00",
+          "status" : "started",
+          "step" : "8fcf35a2-a80e-4738-8a0a-4359a0fd307a",
+          "type" : "emit_event"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.001215+00:00",
+          "model" : null,
+          "node" : "node-4",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "delivered",
+            "delivered_to",
+            "name",
+            "resumed",
+            "scope",
+            "wait_key"
+          ],
+          "started_at" : "2026-10-18T17:25:01.000534+00:00",
+          "status" : "completed",
+          "step" : "8fcf35a2-a80e-4738-8a0a-4359a0fd307a",
+          "type" : "emit_event"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "",
+          "model" : null,
+          "node" : "node-9",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+
+          ],
+          "started_at" : "2026-10-18T17:25:01.003245+00:00",
+          "status" : "started",
+          "step" : "2d561223-368e-4aac-a74b-716dc4097521",
+          "type" : "wait_until"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.003710+00:00",
+          "model" : null,
+          "node" : "node-9",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "ready",
+            "until"
+          ],
+          "started_at" : "2026-10-18T17:25:01.003245+00:00",
+          "status" : "completed",
+          "step" : "2d561223-368e-4aac-a74b-716dc4097521",
+          "type" : "wait_until"
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.005355+00:00",
+          "model" : null,
+          "node" : "end",
+          "output" : {
+
+          },
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "completed",
+            "output"
+          ],
+          "started_at" : "2026-10-18T17:25:01.005344+00:00",
+          "status" : "completed",
+          "step" : "1b36b622-9045-467f-9e53-ab79b8b6fe00",
+          "type" : ""
+        },
+        {
+          "content" : null,
+          "data" : null,
+          "ended_at" : "2026-10-18T17:25:01.008416+00:00",
+          "model" : null,
+          "node" : "end",
+          "output" : null,
+          "provider" : null,
+          "requested_output" : null,
+          "result_keys" : [
+            "emitted",
+            "name",
+            "payload"
+          ],
+          "started_at" : "2026-10-18T17:25:01.008381+00:00",
+          "status" : "completed",
+          "step" : "136a4572-0d90-4cc8-94c1-5185e1707345",
+          "type" : "emit_event"
+        }
+      ],
+      "output" : {
+
+      },
+      "run_id" : "ebd9306e-97b1-4fe0-8fdb-e6f0eb59572d",
+      "selection" : {
+
+      },
+      "status" : "completed",
+      "workflow_id" : "abstractassistant-orchestrator@0.0.13:15f19f7f"
+    }
+  ]
+}

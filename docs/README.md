@@ -75,9 +75,11 @@ The full component diagram, with memory, semantics and the consoles, is in
 | Page | What it covers |
 |---|---|
 | **[Install](install.md)** | Mac installer, one-line install (`install.sh` / `install.ps1`), start at login, headless or remote install, the local gateway pointer, options, Network setting and uninstall; Light / Apple / GPU chooser, `abstractframework doctor`, installer manifest contract |
+| **[Deploy on a Linux server](deploy-linux.md)** | A fresh Linux server, copy-paste: NVIDIA driver, the one-line install, the gateway as a systemd user service (linger), sign-in through an SSH tunnel, a first GGUF model, apps, uninstall, FAQ |
 | **[Getting Started](getting-started.md)** | The two entry points + first end-to-end run |
 | **[Agent sessions](agent-sessions.md)** | What every client shares when it chats with an agent: the gateway's default agent workflow, the conversation workspace and its built-in protection, skills, live replies, opening the Assistant signed in |
 | **[Automations](automations.md)** | How automations work in practice and how to manage them: an automation is a durable run, each tick a turn; independent vs growing context; creating one from the Assistant, the Observer, AbstractCode or a workflow's defaults; email triggers and email notifications; two worked examples; reading results in every client; pause, run now, resume, edit, archive, discuss; notifications, typed waits, restart safety, limits, troubleshooting |
+| **[Triggers, attention and push](events-and-attention.md)** | Trigger connections (mailboxes with Read only or Read and write access, feeds, webhooks), `schedule_run` wakes, your event stream and what waits for you, one notification per Mac, push to the Assistant on the watch and the iPhone through a push forwarder, the Flow library as the register (ADR-0040), no hidden effects after a flow and After the run (ADR-0041), the gateway under load |
 | **[Architecture](architecture.md)** | Component diagram, distribution by registry, how a turn flows and the live-reply lane, app proxies, model eject, framework identity, durable execution primitives, comparisons |
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway, email accounts |
 | **[Email integration](guide/email-integration.md)** | Your email address and your own mailbox on the gateway: the account page, connecting a mailbox, recipient rules and send limits, agent email tools (off by default), email automations, notifications, sign-in by email, what administrators decide |
@@ -127,7 +129,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
 | [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic image generation |
 | [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio capability plugin |
-| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstract3d](https://github.com/lpalbou/Abstract3D) | Local-first 3D generation |
 | [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
 
 ### Apps and clients
@@ -135,7 +137,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | Package | What it is |
 |---|---|
 | [abstractcode](https://github.com/lpalbou/AbstractCode) | Coding client with durable sessions and tool approvals: Rust terminal client (`cargo install abstractcode`) and browser client (`npx @abstractframework/code`) |
-| [abstractassistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client for gateway-native chat and voice |
+| [abstractassistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client for gateway-native chat and voice, and one app for iPhone and Apple Watch (pre-release through TestFlight) |
 | [abstractobserver](https://github.com/lpalbou/AbstractObserver) | Browser UI for monitoring, control, and scheduling |
 | [abstractentity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager and chat/replay UI |
 | [abstractcontinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console |
@@ -146,6 +148,7 @@ keeps the docs hub cross-linked to the package owners' entrypoints.
 | Package | What it is |
 |---|---|
 | [abstracttui](https://github.com/lpalbou/AbstractTUI) | Reactive Rust terminal UI engine |
+| [AbstractAvatar](https://github.com/lpalbou/AbstractAvatar) | Shared procedural avatar catalog and native/WebAssembly generator, with platform frame presenters |
 | [abstractuic](https://github.com/lpalbou/AbstractUIC) | Shared React/Web Components UI kit: chat panel with live replies, the About dialog, the app-server proxy |
 | [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared Agent Skills (`SKILL.md`) loader, trust gate, and the curated skill shelf the gateway serves |
 

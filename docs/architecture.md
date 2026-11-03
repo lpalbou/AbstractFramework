@@ -53,6 +53,7 @@ flowchart TB
     subgraph CLIENTS["Native clients"]
         CODET["AbstractCode terminal<br/>(Rust)"]
         ASSIST["AbstractAssistant<br/>desktop menu-bar app"]
+        APPLE["AbstractAssistant<br/>iPhone + Apple Watch<br/>(pre-release, TestFlight)"]
         GCON["abstractgateway-console<br/>terminal operator console"]
         APP["Your app"]
     end
@@ -196,6 +197,14 @@ readers believe it only for schema 1, a loopback URL and a file owned by the rea
 uninstaller deletes it when it names the uninstalled data directory. An explicit
 `--gateway-url` always wins.
 
+**Activity avatars** are drawn by one Rust generator, AbstractAvatar (44 procedural designs and
+seven activity states: ready, thinking, working, listening, speaking, waiting and error, rendered
+to RGBA pixels). The browser apps get it compiled to WebAssembly through the ui-kit
+(`ActivityAvatar`, the Avatar conversation view of the AbstractCode web client and AbstractEntity),
+the terminal clients through `abstracttui`'s `avatar` feature (crates.io), and the AbstractAssistant
+desktop app through the Python binding (`pip install "abstractassistant[avatar]"`). Each host only
+presents the frames and supplies the activity, time, audio level and gaze.
+
 The Models and Engines features are implemented once, in AbstractCore, and inherited by the
 gateway:
 
@@ -241,7 +250,7 @@ flowchart LR
     START["POST /runs/start<br/>flow_id @default + interface<br/>_runtime.stream · skills"]
     subgraph GW["AbstractGateway"]
         WF["default agent workflow<br/>agents.default_workflow.*"]
-        WS["workspace guard<br/>conversation folder + built-in deny list"]
+        WS["workspace guard<br/>private conversation folder · account's workspace policy<br/>(posture, Shared workspace, allowed / refused) · built-in deny list"]
         SK["skill selection<br/>shelf + trust gate"]
         STR["stream switch<br/>run value, else agents.streaming_default"]
     end
@@ -254,10 +263,13 @@ flowchart LR
   setting's name and value; it never falls back silently. The response's `resolved_workflow`
   names what ran.
 - **Workspace guard.** One guard runs at every run start, whatever started the run (HTTP routes,
-  schedules, bridges, entity summons): it assigns the conversation's folder when none was named,
-  refuses a folder inside the gateway's data folder (other than the caller's own conversation
-  folder), and adds the built-in deny list for credential folders and the data folder. The file
-  tools enforce the list without writing it into the prompt.
+  schedules, bridges, entity summons): it assigns the conversation's private folder when none was
+  named, refuses a folder the account's workspace policy does not reach or one inside the gateway's
+  data folder (other than the caller's own conversation folder), applies the account's policy (the
+  posture, the Shared workspace, allowed workspaces Read-only or Read & write, refused workspaces;
+  an account narrows only) and adds the built-in deny list for credential folders and the data
+  folder. The agent's context lists the shared and allowed workspaces with their modes; the deny
+  list is enforced without being written into the prompt.
 - **Skills.** Names in `input_data.skills` pass through the same trust gate as the skill listing;
   validated skills reach the run as a stable index plus a `read_skill` tool, and every decision is
   recorded on the run.
@@ -392,6 +404,35 @@ Contributors change the identity in one place; see
 
 ---
 
+## Events, attention and push
+
+*AbstractRuntime 0.12.0 and AbstractGateway 0.16.0 and later.* The runtime
+owns trigger sources and connections (a mailbox, a feed, a webhook), the CloudEvents envelope a
+triggered run receives and the `schedule_run` wake; the gateway owns each person's event stream
+(`/api/gateway/me/events`), the attention model (what waits for you until it is seen), the push
+dispatcher and its outbox, and After the run (`GET /api/gateway/runs/{run_id}/after`). Clients only
+follow the stream and report what they showed. A push carries no content: the device reads the
+event back from your own gateway.
+
+```mermaid
+sequenceDiagram
+  participant R as Run (runtime)
+  participant G as Gateway: event stream + push dispatcher
+  participant F as Push forwarder
+  participant A as Apple push
+  participant X as Watch / iPhone extension
+  R->>G: waits on you / Notify me / result or failure
+  G->>G: attention.raised (sequence n)
+  G->>F: kind + sequence + sign-in handle (no content)
+  F->>A: signed with the publisher's Apple key
+  A->>X: alert with generic words
+  X->>G: GET /me/events?after=n-1&limit=1 (your sign-in)
+  X-->>X: shows the item, and the app never shows it twice
+```
+
+Triggers, the stream, push, ADR-0040 and ADR-0041 are described for users in
+[Triggers, attention and push](events-and-attention.md).
+
 ## Durable execution primitives
 
 These are the "why" behind the design — the properties that make the framework operationally useful.
@@ -437,7 +478,12 @@ Tool **schemas** are durable (stored in the ledger). Tool **callables** are not 
 
 ### 1) Author with AbstractFlow
 
-Build a workflow graph in the Flow Editor and export it as a `.flow` bundle.
+Build a workflow graph in the Flow Editor and export it as a `.flow` bundle. The Flow library is the
+register of every workflow that runs for a person: anything an automation, a trigger or an app runs
+is a visual flow you can open there, agents only draft, and the operator publishes
+([ADR-0040](adr/0040-critical-workflows-live-in-the-flow-library.md)). On Flow End records a run's
+outcome; whatever reaches a person is an explicit node such as Notify me
+([ADR-0041](adr/0041-no-hidden-effects-after-a-flow.md)).
 
 ### 2) Deploy the bundle
 
@@ -529,4 +575,5 @@ AbstractGateway is architecturally closer to these systems, but specialized for 
   [install profiles](adr/0033-install-profiles-config-entrypoints-and-server-boundaries.md) and
   [the script bootstrap install](adr/0038-script-bootstrap-and-gateway-console-install.md)
 - **[Runtime artifacts and retrieval](guide/runtime-artifacts.md)** — who owns artifacts, ledger and retrieval
+- **[Triggers, attention and push](events-and-attention.md)** — trigger connections, your event stream, push to the watch and the iPhone, ADR-0040 and ADR-0041
 - Per-project architecture docs live in the component repositories

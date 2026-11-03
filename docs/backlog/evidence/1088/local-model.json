@@ -1,0 +1,25 @@
+{
+  "status": "completed",
+  "steered": true,
+  "seconds": 19.49,
+  "tool_checks": [
+    "Park Cafe",
+    "Riverside"
+  ],
+  "public_updates": [
+    {
+      "id": "e051302f-51be-46b8-984d-340993d8f9ca:public_update:2",
+      "run_id": "e051302f-51be-46b8-984d-340993d8f9ca",
+      "session_id": "avatar-local-acceptance",
+      "iteration": 2,
+      "text": "I'm leaning toward Park Cafe \u2014 it's the only quiet option on the list. Let me double-check its lunch hours before recommending.",
+      "source_call_ids": []
+    }
+  ],
+  "public_human_receipts": 1,
+  "model": "qwen3.6-35b-a3b-uncensored-hauhaucs-aggressive",
+  "backend": "LM Studio; already-loaded GGUF Q4_K_M",
+  "fixture": "Fictional restaurants; deterministic local tools, real model continuations",
+  "answer": "Both restaurants are confirmed open for lunch. Here's the comparison:\n\n**Park Cafe** \u2014 Quiet atmosphere \u2705, but no wheelchair access \u274c. Open 11:00\u201315:00.\n\n**Riverside** \u2014 Wheelchair accessible \u2705 (essential for your mother), though not quiet \u274c. Open 11:30\u201315:30.\n\nSince wheelchair access is essential and only Riverside offers it, **I recommend Riverside**. It's the only option that accommodates your mother, even if the atmosphere isn't as peaceful. Park Cafe would be ideal for quiet but rules out due to lack of accessibility.",
+  "limits": "One real model run; no physical audio, no measured KV hit rate, no general model-quality claim."
+}

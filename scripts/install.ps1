@@ -95,15 +95,15 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.12.0'
+$AfGatewayPinDefault = '0.19.0'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.9.6'
-$AfPyMatrix = @('abstractcore==2.24.0', 'AbstractRuntime==0.8.5', 'abstractagent==0.3.17', 'abstractskill==0.3.0', 'AbstractMemory==0.3.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.13.2', 'abstractvision==0.3.33', 'abstractmusic==0.1.15', 'abstract3d==0.3.2')
+$AfFrameworkVersion = '0.12.0'
+$AfPyMatrix = @('abstractcore==2.32.0', 'AbstractRuntime==0.16.0', 'abstractagent==0.5.0', 'abstractskill==0.3.4', 'AbstractMemory==0.4.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.19.5', 'abstractvision==0.3.34', 'abstractmusic==0.1.17', 'abstract3d==0.3.2')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.7.0', '@abstractframework/code@0.10.3', '@abstractframework/observer@0.6.2', '@abstractframework/continuum@0.6.0', '@abstractframework/entity@0.6.0')
-$AfCrateConsole = 'abstractgateway-console@0.14.0'
-$AfCrateCodeCli = 'abstractcode@0.8.0'
+$AfNpmApps = @('@abstractframework/flow@0.13.0', '@abstractframework/code@0.14.0', '@abstractframework/observer@0.11.0', '@abstractframework/continuum@0.8.0', '@abstractframework/entity@0.10.0')
+$AfCrateConsole = 'abstractgateway-console@0.17.0'
+$AfCrateCodeCli = 'abstractcode@0.13.1'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
 # the parent of the uv tool bin folder, so they land next to abstractgateway.exe (the folder the
 # gateway's Apps page also updates abstractcode in); cargo's own root when that folder is not
@@ -159,7 +159,7 @@ $AfWithVoiceArm64 = 'abstractvoice[supertonic]'
 $AfCompiledExtras = @('stable-diffusion-cpp-python')
 $AfSkippedLine = 'Skipped compiled extras (stable-diffusion.cpp): re-run with -Full after installing a C compiler.'
 $AfLlamaIndex = 'https://abetlen.github.io/llama-cpp-python/whl'
-$AfLlamaCpuPin = '0.3.35'
+$AfLlamaCpuPin = '0.3.36'
 $AfGgufSkipped = 'GGUF (llama.cpp) skipped: no prebuilt wheel for this machine; re-run with -Full after installing a C compiler'
 function Get-UvOverrides([bool]$WithCompiledExtras, [bool]$Gguf) {
     $lines = @("webrtcvad; sys_platform == 'never'", "vllm>=0.6.0,<1.0.0; sys_platform == 'linux'")
@@ -330,11 +330,20 @@ function Test-GatewayCommandLine([string]$CommandLine) {
     return ($CommandLine -match '(?i)abstractgateway' -and $CommandLine -match '(?i)(^|[\s"])serve(\s|"|$)')
 }
 # Test-OurBackgroundListener: the listener is the installer's background gateway (gateway.pid), or
-# its child (the launcher's python.exe). No listener named: the gateway.pid process counts.
+# a process it started. No listener named: the gateway.pid process counts. The listener can sit
+# two levels below gateway.pid: uv's abstractgateway.exe launcher starts the tool venv's python.exe,
+# which on Windows is itself a redirector that starts the base interpreter, and that one listens.
+# Checking only the direct parent took the installer's own gateway for one "started by hand".
 function Test-OurBackgroundListener([int]$Listener, [int]$OurPid) {
     if (-not $OurPid) { return $false }
     if (-not $Listener -or $Listener -eq $OurPid) { return $true }
-    return ((Get-ParentProcessId $Listener) -eq $OurPid)
+    $p = $Listener
+    for ($depth = 0; $depth -lt 3; $depth++) {
+        $p = Get-ParentProcessId $p
+        if (-not $p -or $p -le 4) { return $false }
+        if ($p -eq $OurPid) { return $true }
+    }
+    return $false
 }
 # Get-DeclaredDataDir: the --data-dir on a command line (quoted or not, or --data-dir=), '' when none.
 function Get-DeclaredDataDir([string]$CommandLine) {
@@ -424,7 +433,8 @@ function Find-OwnGateway([int]$Port, [string]$DataDir) {
 # ---------------------------------------------------------------------------
 # The gpu setting on Windows + NVIDIA (root backlog 0988). PyPI's Windows torch is a CPU build;
 # the CUDA builds live on download.pytorch.org. The stack follows the NVIDIA driver:
-#   driver >= 580 and compute capability >= 7.5 -> CUDA 13: torch cu130, llama.cpp cu130
+#   driver >= 580 and compute capability >= 7.5 -> CUDA 13: torch cu130, llama.cpp cu130, then cu132
+#                                                  (cu130 is built with AVX-512, cu132 is not)
 #   driver >= 525                               -> CUDA 12: torch cu126, llama.cpp cu125
 #   anything else (no NVIDIA, older driver)     -> PyTorch's CPU build, llama.cpp vulkan, else cpu
 # `uv tool install --torch-backend <cuXXX>` routes only the PyTorch packages to that index (uv
@@ -438,7 +448,7 @@ function Find-OwnGateway([int]$Port, [string]$DataDir) {
 $AfTorchIndex = 'https://download.pytorch.org/whl'
 # PyTorch versions of the release (uv resolves them; the explicit-index fallback pins them +cuXXX).
 $AfTorchPins = [ordered]@{ 'torch' = '2.14.0'; 'torchvision' = '0.29.0'; 'torchaudio' = '2.11.0' }
-$AfLlamaSizes = @{ 'cu130' = 'about 220 MB'; 'cu125' = 'about 480 MB'; 'vulkan' = 'about 45 MB'; 'cpu' = 'about 7 MB' }
+$AfLlamaSizes = @{ 'cu130' = 'about 220 MB'; 'cu132' = 'about 220 MB'; 'cu125' = 'about 480 MB'; 'vulkan' = 'about 45 MB'; 'cpu' = 'about 7 MB' }
 $script:HeartbeatSeconds = 15
 
 # What nvidia-smi says: Ok, Driver, DriverMajor, Cc (the lowest compute capability, or $null when
@@ -494,7 +504,7 @@ function Select-GpuStack($Info) {
             Why = "no working NVIDIA GPU ($($Info.Error)): PyTorch's CPU build; llama.cpp tries its Vulkan build, then its CPU build" }
     }
     if ($Info.DriverMajor -ge 580 -and $null -ne $Info.Cc -and $Info.Cc -ge 7.5) {
-        return @{ Name = 'cu130'; Torch = 'cu130'; Llama = @('cu130', 'vulkan', 'cpu'); Label = 'CUDA 13'; TorchSize = 'about 1.9 GB'
+        return @{ Name = 'cu130'; Torch = 'cu130'; Llama = @('cu130', 'cu132', 'vulkan', 'cpu'); Label = 'CUDA 13'; TorchSize = 'about 1.9 GB'
             Why = "${gpu}driver $($Info.Driver) (580 or newer) and compute capability $ccText (7.5 or newer)" }
     }
     if ($Info.DriverMajor -ge 525) {
@@ -614,6 +624,16 @@ try:
     if callable(init):
         init()
     r["offload"] = bool(llama_cpp.llama_supports_gpu_offload())
+    # The CPU instructions this build was compiled for, against this processor's: a build made
+    # with AVX-512 imports here but ends the process with an illegal instruction (0xc000001d)
+    # at its first model load on a CPU without it (most desktop Intel CPUs).
+    info = llama_cpp.llama_print_system_info()
+    info = info.decode("utf-8", "replace") if isinstance(info, bytes) else str(info or "")
+    built = [k.strip() for k, _, v in (p.partition("=") for p in info.split("|")) if v.strip() == "1"]
+    import ctypes
+    pf = {"AVX": 39, "AVX2": 40, "AVX512": 41}
+    have = ctypes.windll.kernel32.IsProcessorFeaturePresent
+    r["cpu_missing"] = [k for k in built if k in pf and not have(pf[k])]
 except BaseException as e:
     r["error"] = "%s: %s" % (type(e).__name__, e)
 print("AFSMOKE " + json.dumps(r))
@@ -674,12 +694,13 @@ function Resolve-LlamaBuild([string[]]$Variants, [string]$Installed, [scriptbloc
             $current = $v
         }
         $r = & $Check $v
-        if ($r -and $r.import -and ($v -eq 'cpu' -or $r.offload)) {
+        $cpuMissing = @(if ($r -and $r.cpu_missing) { $r.cpu_missing })
+        if ($r -and $r.import -and -not $cpuMissing.Count -and ($v -eq 'cpu' -or $r.offload)) {
             $where = if ($r.offload) { 'GPU offload' } else { 'CPU' }
             Write-Ok "llama.cpp $($r.version) ($v build): loads, $where"
             return @{ Kept = $v; Where = $where; Why = $why }
         }
-        $reason = if (-not $r) { 'no answer from the check' } elseif (-not $r.import) { "does not load: $($r.error)" } else { 'loads, but reports no GPU offload' }
+        $reason = if (-not $r) { 'no answer from the check' } elseif (-not $r.import) { "does not load: $($r.error)" } elseif ($cpuMissing.Count) { "is built for CPU instructions this processor lacks ($($cpuMissing -join ', '))" } else { 'loads, but reports no GPU offload' }
         Write-Warn2 "llama.cpp $v build $reason$(if ($v -ne $Variants[-1]) { '; trying the next build' })"
         $why += "${v}: $reason"
     }
@@ -699,13 +720,17 @@ function Write-Info([string]$Text) { Write-Host '  . ' -ForegroundColor Cyan -No
 function Write-Warn2([string]$Text) { Write-Host '  ! ' -ForegroundColor Yellow -NoNewline; Write-Host $Text }
 function Stop-Install([string]$Text) { throw "AFBOOT: $Text" }
 # What this run could not install (same rule as install.sh's incomplete_add): the summary and the last
-# lines say it in red; -Fail (a part a re-run installs once the network or crates.io caught up) also
-# makes the exit status 1.
+# lines say it in red; -Fail also makes the exit status 1. -Kind says what the closing "What to do"
+# line advises: 'retry' (default: a part a re-run installs once the network or crates.io caught up)
+# or 'apps' (a browser app that needs the command listed, not a re-run).
 $script:Incomplete = New-Object System.Collections.Generic.List[string]
-$script:AfExit = 0
-function Add-Incomplete([string]$Label, [string]$Why, [switch]$Fail) {
+$script:AfExit = 0; $script:AfRetryFails = $false; $script:AfAppFails = $false
+function Add-Incomplete([string]$Label, [string]$Why, [switch]$Fail, [string]$Kind = 'retry') {
     $script:Incomplete.Add("  ${Label}: $Why")
-    if ($Fail) { $script:AfExit = 1 }
+    if ($Fail) {
+        $script:AfExit = 1
+        if ($Kind -eq 'apps') { $script:AfAppFails = $true } else { $script:AfRetryFails = $true }
+    }
 }
 # The browser apps follow the release (install.sh's apps-upgrade block, same rule): every app the
 # gateway has installed is brought to its $AfNpmApps version through the gateway's own
@@ -722,18 +747,150 @@ function Get-AppPin([string]$Id) {
     }
     return $null
 }
+# Why the apps step is more than "update what the list shows" (root backlog 1026; a remote upgrade
+# on 2026-10-17 moved the gateway and left Flow where it was, with nothing in red): a gateway
+# answers /api/health with "status": "starting" while it boots and starts its enabled apps
+# (Test-GwBooted, Get-AppsSettled); the shell's ABSTRACTGATEWAY_AUTH_TOKEN (set for another
+# gateway, or stale) wins over the data dir's bootstrap token in `abstractgateway apps`
+# (Get-AppsToken: passed as a parameter); and a copy of an app this gateway did not start holds
+# the app's port, so the gateway lists THAT copy as "external" with its own install hidden behind
+# it. The install is updated all the same. When that copy is this install's own — its command line
+# runs a program under <data dir>\apps\, which only the gateway puts there: an app a previous
+# gateway run left behind, found by gateways before 0.15.2 as "external" — the installer stops it
+# (its command line is checked again before each signal: Test-AppLeftover, Stop-AppLeftover) and
+# starts the updated install in its place (Start-AppLaunch); the summary says so. A copy that is
+# not provably this install's is left alone, and the summary says in red what runs and what was
+# checked.
+function Test-GwBooted([string]$Body) {
+    # $true when $Body is a gateway's /api/health answer and its boot is over (gateways 0.15 and
+    # later answer "status": "starting" while they load and start their apps).
+    if (-not $Body -or $Body -notmatch 'abstractgateway') { return $false }
+    if ($Body -match '"status":\s*"starting"') { return $false }
+    return $true
+}
+if (-not (Get-Variable -Scope Script -Name AppsUpWait -ErrorAction SilentlyContinue)) { $script:AppsUpWait = 60 }   # seconds to wait for a gateway that answers late or is still booting
+function Test-GatewayUp([string]$BaseUrl) {
+    # One GET is not a verdict: right after its start a gateway loads its engines and can answer
+    # late, and a gateway 0.15 says "starting" while it boots. Nothing listening is a verdict at once.
+    $w = 0
+    while ($true) {
+        $body = Get-Http "$BaseUrl/api/health" 5
+        if (Test-GwBooted $body) { return $true }
+        if ($null -eq $body -and -not (Test-PortListening $BaseUrl)) { return $false }
+        if ($w -ge $script:AppsUpWait) { return $false }
+        if ($w -eq 0) { Write-Info "the gateway at $BaseUrl is $(if ($body) { 'still starting' } else { 'slow to answer' }): waiting for it" }
+        Start-Sleep -Seconds 2; $w += 2
+    }
+}
+function Test-PortListening([string]$BaseUrl) {
+    try {
+        $u = [uri]$BaseUrl; $c = New-Object System.Net.Sockets.TcpClient
+        $ok = $c.ConnectAsync($u.Host, $u.Port).Wait(2000) -and $c.Connected; $c.Dispose(); return [bool]$ok
+    } catch { return $false }
+}
+function Get-AppsToken([string]$DataDir) {
+    # the data dir's admin token, for `abstractgateway apps` as a direct parameter
+    try { return ([string](Get-Content -Raw -LiteralPath (Join-Path $DataDir 'auth\bootstrap-admin-token') -ErrorAction Stop)).Trim() } catch { return '' }
+}
 function Get-AppsInstalled([string]$Gw, [string]$BaseUrl, [string]$DataDir) {
-    # -> @{id; version} per app the running gateway installed; $null when the list cannot be read
+    # -> @{id; version; source; status; extVersion; extPort; extPid} per app the gateway knows (version
+    # $null when it installed none: a copy outside it only); $null when the list cannot be read
     $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
     try {
-        $raw = (& $Gw apps list --json --no-latest --url $BaseUrl --data-dir $DataDir 2>$null) -join "`n"
+        $cmdArgs = @('apps', 'list', '--json', '--no-latest', '--url', $BaseUrl, '--data-dir', $DataDir)
+        $tok = Get-AppsToken $DataDir; if ($tok) { $cmdArgs += @('--token', $tok) }
+        $raw = ''
+        for ($try = 1; $try -le 3; $try++) {
+            $raw = (& $Gw @cmdArgs 2>$null) -join "`n"
+            if ($LASTEXITCODE -eq 0 -and $raw) { break }
+            if ($try -lt 3) { Start-Sleep -Seconds 2 }
+        }
         if ($LASTEXITCODE -ne 0 -or -not $raw) { return $null }
         $rows = @()
         foreach ($a in @(($raw | ConvertFrom-Json).apps)) {
-            if ($a.version -and $a.source -ne 'external') { $rows += [pscustomobject]@{ id = [string]$a.id; version = [string]$a.version } }
+            $ext = $null; if ($a.PSObject.Properties['external'] -and $a.external) { $ext = $a.external }
+            # An "external" row describes the copy running outside the gateway; what the gateway
+            # itself installed is its managed_version ($null when it installed nothing).
+            $version = if ($a.source -eq 'external') { $a.managed_version } else { $a.version }
+            if (-not $version -and -not $ext) { continue }
+            $rows += [pscustomobject]@{
+                id = [string]$a.id; version = $(if ($version) { [string]$version } else { $null })
+                source = [string]$a.source; status = [string]$a.status
+                extVersion = $(if ($ext) { [string]$ext.version } else { '' }); extPort = $(if ($ext) { [string]$ext.port } else { '' }); extPid = $(if ($ext) { [string]$ext.pid } else { '' })
+            }
         }
         return ,$rows
     } catch { return $null } finally { $ErrorActionPreference = $old }
+}
+if (-not (Get-Variable -Scope Script -Name AppsStartWait -ErrorAction SilentlyContinue)) { $script:AppsStartWait = 90 }   # seconds to wait for apps the gateway is starting
+function Get-AppsSettled([string]$Gw, [string]$BaseUrl, [string]$DataDir) {
+    # -> Get-AppsInstalled's rows once no app of this release is still "starting"
+    $w = 0
+    while ($true) {
+        $rows = Get-AppsInstalled $Gw $BaseUrl $DataDir
+        if ($null -eq $rows) { return $null }
+        $starting = @($rows | Where-Object { $_.status -eq 'starting' -and (Get-AppPin $_.id) } | ForEach-Object { $_.id })
+        if (-not $starting.Count) { break }
+        if ($w -ge $script:AppsStartWait) { Write-Warn2 "still starting after $($script:AppsStartWait) s: $($starting -join ' ') (updated as it is)"; break }
+        if ($w -eq 0) { Write-Info "the gateway is still starting $($starting -join ' '): waiting for it" }
+        Start-Sleep -Seconds 2; $w += 2
+    }
+    return ,$rows
+}
+function Get-PidArgs([string]$ProcId) {
+    # -> the command line of a process ('' when gone, or when this system cannot show it)
+    if (-not ($ProcId -match '^\d+$')) { return '' }
+    try {
+        if ($IsWindows -or $env:OS -eq 'Windows_NT') {
+            $w = Get-CimInstance Win32_Process -Filter "ProcessId=$ProcId" -ErrorAction Stop
+            if ($w) { return [string]$w.CommandLine }
+            return ''
+        }
+        $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+        try { $line = (& ps -ww -o args= -p $ProcId 2>$null) -join ' ' } finally { $ErrorActionPreference = $old }
+        return [string]$line
+    } catch { return '' }
+}
+function Test-AppLeftover([string]$ProcId, [string]$DataDir) {
+    # $true when the process runs a program under this install's <data dir>\apps\ (a leftover of
+    # a previous gateway run); the path is matched with either separator.
+    $args = Get-PidArgs $ProcId
+    if (-not $args) { return $false }
+    $root = $DataDir.TrimEnd('\', '/')
+    return ($args.Contains("$root\apps\") -or $args.Contains("$root/apps/"))
+}
+function Stop-AppLeftover([string]$Id, [string]$ProcId, [string]$DataDir) {
+    # Stop a leftover of a previous gateway run: its command line is checked again before each
+    # signal; a pid that now runs another program is left alone. $true once it is gone.
+    if (-not (Test-AppLeftover $ProcId $DataDir)) { return $true }
+    $shown = if ($IsWindows -or $env:OS -eq 'Windows_NT') { "Stop-Process -Id $ProcId" } else { "kill $ProcId" }
+    Write-Host "  `$ $shown" -ForegroundColor DarkGray
+    $script:Twins.Add($shown)
+    $win = ($IsWindows -or $env:OS -eq 'Windows_NT')
+    try {
+        if ($win) { Stop-Process -Id ([int]$ProcId) -Force -ErrorAction Stop } else { & kill $ProcId 2>$null }
+    } catch { }
+    $wait = if (Get-Variable -Scope Script -Name StopTimeout -ErrorAction SilentlyContinue) { [int]$script:StopTimeout } else { 20 }
+    $i = 0
+    while ((Get-Process -Id ([int]$ProcId) -ErrorAction SilentlyContinue) -and $i -lt ($wait * 2)) { Start-Sleep -Milliseconds 500; $i++ }
+    if (Get-Process -Id ([int]$ProcId) -ErrorAction SilentlyContinue) {
+        if (-not (Test-AppLeftover $ProcId $DataDir)) { return $true }
+        Write-Warn2 "pid $ProcId did not exit within $wait s: stopping it hard"
+        try { if ($win) { Stop-Process -Id ([int]$ProcId) -Force -ErrorAction Stop } else { & kill -9 $ProcId 2>$null } } catch { }
+        $i = 0
+        while ((Get-Process -Id ([int]$ProcId) -ErrorAction SilentlyContinue) -and $i -lt 10) { Start-Sleep -Milliseconds 500; $i++ }
+    }
+    return -not (Get-Process -Id ([int]$ProcId) -ErrorAction SilentlyContinue)
+}
+function Start-AppLaunch([string]$Gw, [string]$Id, [string]$BaseUrl, [string]$DataDir) {
+    # start the gateway's install of $Id (abstractgateway apps launch); $true when it answered ok
+    $shown = "abstractgateway apps launch $Id"
+    Write-Host "  `$ $shown" -ForegroundColor DarkGray
+    $script:Twins.Add($shown)
+    $cmdArgs = @('apps', 'launch', $Id, '--url', $BaseUrl, '--data-dir', $DataDir)
+    $tok = Get-AppsToken $DataDir; if ($tok) { $cmdArgs += @('--token', $tok) }
+    $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try { & $Gw @cmdArgs *> $null; return ($LASTEXITCODE -eq 0) } catch { return $false } finally { $ErrorActionPreference = $old }
 }
 function Write-AppsMarker([string]$DataDir) {
     try {
@@ -765,30 +922,34 @@ function Invoke-AppsStep([bool]$Up, [string]$Gw, [string]$BaseUrl, [string]$Data
         }
         return
     }
-    $before = Get-AppsInstalled $Gw $BaseUrl $DataDir
+    $before = Get-AppsSettled $Gw $BaseUrl $DataDir
     if ($null -eq $before) {
         Write-Warn2 "could not read the gateway's apps (abstractgateway apps list)"
         if ($script:DryRun) { return }
-        Add-Incomplete 'browser apps' 'their versions could not be read from the gateway; check with: abstractgateway apps list' -Fail
+        Add-Incomplete 'browser apps' "their versions could not be read from the gateway; check with: abstractgateway apps list --url $BaseUrl --data-dir $DataDir" -Fail
         $script:AppsLines = @('unknown: abstractgateway apps list failed')
         return
     }
-    $did = $false
+    $did = $false; $any = $false
     foreach ($r in $before) {
         $pin = Get-AppPin $r.id
         if (-not $pin) { continue }
-        if ($r.version -eq $pin) { Write-Ok "$($r.id) $($r.version) (this release's version)" }
+        $any = $true
+        if (-not $r.version) { Write-Info "$($r.id): a copy not started by this gateway runs on port $($r.extPort) (version $($r.extVersion)); the gateway installed none, so there is nothing to update" }
+        elseif ($r.version -eq $pin) { Write-Ok "$($r.id) $($r.version) (this release's version)" }
         elseif ($script:DryRun) { Write-Info "would update $($r.id) $($r.version) -> $pin (restarted if running): abstractgateway apps update $($r.id) --version $pin" }
         else {
             $shown = "abstractgateway apps update $($r.id) --version $pin"
             Write-Host "  `$ $shown" -ForegroundColor DarkGray
             $script:Twins.Add($shown)
+            $cmdArgs = @('apps', 'update', $r.id, '--version', $pin, '--url', $BaseUrl, '--data-dir', $DataDir)
+            $tok = Get-AppsToken $DataDir; if ($tok) { $cmdArgs += @('--token', $tok) }
             $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-            try { & $Gw apps update $r.id --version $pin --url $BaseUrl --data-dir $DataDir *> $null } catch { } finally { $ErrorActionPreference = $old }
+            try { & $Gw @cmdArgs *> $null } catch { } finally { $ErrorActionPreference = $old }
             $did = $true
         }
     }
-    if (-not $before.Count) { Write-Info "no browser app installed yet: the console's Apps page installs them ($pins)" }
+    if (-not $any) { Write-Info "no browser app installed yet: the console's Apps page installs them ($pins)" }
     if ($script:DryRun) { return }
     # What the gateway reports now is what the summary says: a failed update is never silent.
     $after = $before
@@ -804,16 +965,50 @@ function Invoke-AppsStep([bool]$Up, [string]$Gw, [string]$BaseUrl, [string]$Data
         $pin = Get-AppPin $r.id
         if (-not $pin) { continue }
         $prev = @($before | Where-Object { $_.id -eq $r.id } | ForEach-Object { $_.version }) | Select-Object -First 1
-        if ($r.version -ne $pin) {
+        if (-not $r.version) { $line = "$($r.id): not installed by the gateway; a copy not started by it runs on port $($r.extPort) ($($r.extVersion))" }
+        elseif ($r.version -ne $pin) {
             Write-Warn2 "the $($r.id) app is still $($r.version), not $pin"
-            Add-Incomplete "the $($r.id) app" "still $($r.version), not this release's $pin; retry: abstractgateway apps update $($r.id) --version $pin" -Fail
-            $script:AppsLines += "$($r.id) $($r.version) (NOT ${pin}: update failed)"
+            Add-Incomplete "the $($r.id) app" "still $($r.version), not this release's $pin; retry: abstractgateway apps update $($r.id) --version $pin" -Fail -Kind apps
+            $line = "$($r.id) $($r.version) (NOT ${pin}: update failed)"
         } elseif ($prev -and $prev -ne $r.version) {
             Write-Ok "the $($r.id) app is now $($r.version)"
-            $script:AppsLines += "$($r.id) $prev -> $($r.version)"
-        } else { $script:AppsLines += "$($r.id) $($r.version)" }
+            $line = "$($r.id) $prev -> $($r.version)"
+        } else { $line = "$($r.id) $($r.version)" }
+        if ($r.source -eq 'external' -and $r.version -and (Test-AppLeftover $r.extPid $DataDir)) {
+            # The copy on the port runs a program under this install's <data dir>\apps\: an app a
+            # previous gateway run left behind (gateways before 0.15.2 list it as "external" and do
+            # not replace it). It is stopped, and the gateway's install starts instead.
+            Write-Info "$($r.id): the copy on port $($r.extPort) ($($r.extVersion), pid $($r.extPid)) is a leftover of a previous gateway run (it runs $DataDir\apps\): stopping it, then starting $($r.version)"
+            if (-not (Stop-AppLeftover $r.id $r.extPid $DataDir)) {
+                Write-Warn2 "the $($r.id) app that runs is a leftover of a previous gateway run ($($r.extVersion) on port $($r.extPort), pid $($r.extPid)) that could not be stopped"
+                Add-Incomplete "the $($r.id) app" "a leftover of a previous gateway run ($($r.extVersion) on port $($r.extPort), pid $($r.extPid)) could not be stopped; stop it (Stop-Process -Id $($r.extPid) -Force), then: abstractgateway apps launch $($r.id)" -Fail -Kind apps
+                $line += "; RUNNING: a leftover of a previous gateway run, $($r.extVersion) on port $($r.extPort) (pid $($r.extPid)), not stopped"
+            } else {
+                $now = $null
+                if (Start-AppLaunch $Gw $r.id $BaseUrl $DataDir) { $now = @(Get-AppsInstalled $Gw $BaseUrl $DataDir | Where-Object { $_.id -eq $r.id }) | Select-Object -First 1 }
+                if ($now -and $now.source -eq 'gateway' -and $now.version -eq $r.version) {
+                    Write-Ok "the $($r.id) app that runs is now the gateway's $($r.version) (a leftover of a previous gateway run, $($r.extVersion) pid $($r.extPid), stopped)"
+                    $line += "; leftover of a previous gateway run ($($r.extVersion), pid $($r.extPid)) stopped; $($r.id) $($r.version) started"
+                } else {
+                    Write-Warn2 "the $($r.id) app's leftover ($($r.extVersion), pid $($r.extPid)) was stopped, but $($r.id) $($r.version) did not start"
+                    Add-Incomplete "the $($r.id) app" "a leftover of a previous gateway run ($($r.extVersion), pid $($r.extPid)) was stopped, but $($r.id) $($r.version) did not start; retry: abstractgateway apps launch $($r.id)" -Fail -Kind apps
+                    $line += "; leftover of a previous gateway run ($($r.extVersion), pid $($r.extPid)) stopped; $($r.id) $($r.version) NOT started"
+                }
+            }
+        } elseif ($r.source -eq 'external' -and $r.version) {
+            # The gateway's install is at $r.version, but the copy on the port is not provably this
+            # install's (its command line runs something else, or cannot be read): the gateway
+            # cannot restart it, so that copy is what people get until it is stopped.
+            $checked = if (Get-PidArgs $r.extPid) { "its command line does not run $DataDir\apps\" } else { "its process (pid $($r.extPid)) could not be inspected" }
+            $line += "; RUNNING: a copy not started by this gateway, $($r.extVersion) on port $($r.extPort) (pid $($r.extPid))"
+            if ($r.extVersion -ne $pin) {
+                Write-Warn2 "the $($r.id) app that runs is a copy not started by this gateway ($($r.extVersion) on port $($r.extPort), pid $($r.extPid); $checked), not the gateway's $($r.version)"
+                Add-Incomplete "the $($r.id) app" "what runs is a copy not started by this gateway ($($r.extVersion) on port $($r.extPort), pid $($r.extPid); $checked), not this release's $pin; stop it where it was started (or Stop-Process -Id $($r.extPid)), then: abstractgateway apps launch $($r.id)" -Fail -Kind apps
+            } else { Write-Info "$($r.id): the copy running on port $($r.extPort) was not started by this gateway (pid $($r.extPid); $checked); it is at $($r.extVersion) too" }
+        }
+        $script:AppsLines += $line
     }
-    if (-not $after.Count) { $script:AppsLines = @("none installed (the console's Apps page installs them)") }
+    if (-not $any) { $script:AppsLines = @("none installed (the console's Apps page installs them)") }
 }
 # One installer at a time per data dir (same rule as install.sh): a re-run and the gateway's Update
 # must never install over each other. The lock is <data dir>\update\install.lock, a directory
@@ -2218,7 +2413,7 @@ function Main {
         if ($script:DryRun) { Write-Info "would wait up to 60 s for $baseUrl/api/health" }
         else {
             $i = 0
-            while (-not ((Get-Http "$baseUrl/api/health" 3) -match 'abstractgateway')) {
+            while (-not (Test-GwBooted (Get-Http "$baseUrl/api/health" 3))) {
                 $i++
                 if ($mode -eq 'background' -and -not (Get-OurPid)) {
                     if (Test-Path -LiteralPath $gatewayErr) { Get-Content -LiteralPath $gatewayErr -Tail 30 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray } }
@@ -2236,9 +2431,11 @@ function Main {
             try {
                 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $pointerFile) | Out-Null
                 $body = [ordered]@{ data_dir = $mine; port = $Port; schema = 1; updated_at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); url = $baseUrl; written_by = 'installer' }
+                # [NullString]::Value, not $null: PowerShell passes $null to a .NET string parameter as "", and
+                # File.Replace refuses "" as the backup path, so a pointer the gateway already wrote was never updated.
                 $tmp = "$pointerFile.$PID.tmp"
                 [System.IO.File]::WriteAllText($tmp, ($body | ConvertTo-Json) + "`n", (New-Object System.Text.UTF8Encoding($false)))
-                if (Test-Path -LiteralPath $pointerFile) { [System.IO.File]::Replace($tmp, $pointerFile, $null) } else { [System.IO.File]::Move($tmp, $pointerFile) }
+                if (Test-Path -LiteralPath $pointerFile) { [System.IO.File]::Replace($tmp, $pointerFile, [NullString]::Value) } else { [System.IO.File]::Move($tmp, $pointerFile) }
                 Write-Ok "gateway pointer: $pointerFile -> $baseUrl (the consoles and apps on this computer find the gateway there)"
             } catch {
                 Remove-Item -LiteralPath "$pointerFile.$PID.tmp" -Force -ErrorAction SilentlyContinue
@@ -2267,7 +2464,10 @@ function Main {
     }
 
     Write-Step "Browser apps (this release's versions)"
-    $appsUp = (Test-Path -LiteralPath $gw) -and ((Get-Http "$baseUrl/api/health" 3) -match 'abstractgateway')
+    # The gateway answered the health check above, but it may still be finishing its start (runners,
+    # rehydration, its apps: "status": "starting") or answer late while it loads its engines:
+    # Test-GatewayUp waits for it (up to 60 s); a port with nothing listening is a verdict at once.
+    $appsUp = (Test-Path -LiteralPath $gw) -and (Test-GatewayUp $baseUrl)
     Invoke-AppsStep -Up $appsUp -Gw $gw -BaseUrl $baseUrl -DataDir $DataDir
 
     # --- summary -------------------------------------------------------------------------------------
@@ -2294,6 +2494,11 @@ function Main {
     }
     # Local voice not installed: never a silent green (same rule as install.sh).
     if (-not $script:DryRun -and -not $voice.Spec) { Add-Incomplete 'local voice (Supertonic, Whisper)' $voice.Result }
+    # The gateway must still be there at the end: one that stopped after its health check (its
+    # event-loop watchdog, a crash) is never reported green (same rule as install.sh).
+    if (-not $script:DryRun -and -not $NoStart -and -not (Test-GatewayUp $baseUrl)) {
+        Add-Incomplete 'the gateway' "stopped after it started: see $gatewayErr and $(Join-Path $DataDir 'incidents') (a watchdog incident); run this installer again to start it" -Fail
+    }
     Write-Host ''
     if ($script:DryRun) { Write-Host 'Plan printed (-Print): nothing was changed.' -ForegroundColor White }
     elseif ($script:Incomplete.Count) {
@@ -2392,6 +2597,9 @@ function Main {
     if ($voice.Spec) { Write-Host "  Voice:      $($voice.Result)" } else { Write-Host "  Voice:      $($voice.Result)" -ForegroundColor Red }
     if ($whisperResult) { Write-Host "  Whisper:    $whisperResult" }
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
+    if ($onWindows) {
+        Write-Host "  Shell:      agents' shell commands are refused on Windows (no command sandbox); every other tool works ($AfDocs#windows)"
+    }
     Write-Host "  Apps:       $baseUrl/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
     Write-Host "  Standalone: npx -y @abstractframework/flow --gateway-url $baseUrl   (advanced; also code, observer, continuum, entity)"
     Write-Host "  Docs:       $AfDocs"
@@ -2406,13 +2614,25 @@ function Main {
         Write-Host ''
         Write-Host 'NOT installed:' -ForegroundColor Red
         foreach ($l in $script:Incomplete) { Write-Host $l -ForegroundColor Red }
-        if ($script:AfExit) {
+        if ($script:AfRetryFails) {
             Write-Host 'What to do: run the installer again once the network (or crates.io) has caught up; it installs what is missing:' -ForegroundColor Red
             Write-Host "    $($script:RerunCmd)"
+        }
+        if ($script:AfAppFails) {
+            Write-Host 'What to do for the apps: run the command given on their line above, then check them with:' -ForegroundColor Red
+            Write-Host "    abstractgateway apps list --url $BaseUrl --data-dir $DataDir"
         }
     }
 }
 
+# The caller's $ErrorActionPreference is not ours: the short address (abstractframework.ai/install.ps1)
+# sets 'Stop' before it runs this script with Invoke-Expression, which shares the caller's scope. Under
+# 'Stop', Windows PowerShell 5.1 turns any line a native program writes to stderr into a terminating
+# error, even with 2>$null (`uv tool list` printing "No tools installed" on a first install aborted
+# step [4]). The installer checks exit codes itself and passes -ErrorAction Stop where it wants a
+# throw, so it runs under the default 'Continue', as `-File` does; the caller's value comes back after.
+$AfCallerErrorAction = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
 try {
     Main
 } catch {
@@ -2425,6 +2645,7 @@ try {
     if ($script:RanAsFile) { exit 1 }
 } finally {
     Unlock-Install
+    $ErrorActionPreference = $AfCallerErrorAction
 }
 # 1 when a part a re-run can install is missing (crates.io lag or the network after the retries).
 if ($script:AfExit -and $script:RanAsFile) { exit 1 }

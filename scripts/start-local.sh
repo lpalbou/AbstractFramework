@@ -27,6 +27,8 @@
 #   code/web  3003
 #   entity    3004
 #   flow      3005
+#   note      3006   (gateway-managed when enabled)
+#   assistant-web 3008 (gateway-managed when enabled)
 #
 # Uses the per-app -local launchers (gateway-local.sh, observer-local.sh,
 # console-local.sh, code-local.sh, entity-local.sh, flow-local.sh); each

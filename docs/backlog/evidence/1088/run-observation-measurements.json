@@ -1,0 +1,139 @@
+{
+  "verified_at": "2026-10-31",
+  "run_id": "b59a77eb-37e7-4e6d-9e31-6cd1337867ef",
+  "parent_run_id": "4a4daaa7-5959-4315-af9d-5aecd7c1ea82",
+  "session_id": "acode-dc162823ab03",
+  "status": "cancelled",
+  "provider": "endpoint:airelay",
+  "model": "gpt-5.6-terra",
+  "ledger_sha256": "2641be72e3d36a6803c0f4f8e24c6a96f2a6e9c0e8a587d36b56b672b078fb99",
+  "source": "Runtime ledger, authenticated Gateway lookup followed by local source verification",
+  "metric": "Unicode characters in recorded role=tool content; not bytes, tokenization or proof of provider processing",
+  "calls": [
+    {
+      "position": 1,
+      "tool_name": "execute_command",
+      "call_id": "call_bc30e940ddcb48ee8deecdff8fef760f",
+      "rendered_observation_chars": 349,
+      "tool_result_seq": 4
+    },
+    {
+      "position": 2,
+      "tool_name": "skim_folders",
+      "call_id": "call_349a2b7f830d4e7db0b11b2bcf7edb90",
+      "rendered_observation_chars": 23006,
+      "tool_result_seq": 8
+    },
+    {
+      "position": 3,
+      "tool_name": "list_files",
+      "call_id": "call_f3ca18cb66c9412f914b6f7c348e565e",
+      "rendered_observation_chars": 2928,
+      "tool_result_seq": 8
+    },
+    {
+      "position": 4,
+      "tool_name": "search_files",
+      "call_id": "call_f99fb9f61be74d66a8c1259f5591a6ef",
+      "rendered_observation_chars": 41768,
+      "tool_result_seq": 12
+    },
+    {
+      "position": 5,
+      "tool_name": "search_files",
+      "call_id": "call_73312473588849e8923e4302ec627a40",
+      "rendered_observation_chars": 56501,
+      "tool_result_seq": 12
+    },
+    {
+      "position": 6,
+      "tool_name": "skim_websearch",
+      "call_id": "call_f9cde33b3eb740a4a5c8060d0fef1975",
+      "rendered_observation_chars": 2589,
+      "tool_result_seq": 12
+    },
+    {
+      "position": 7,
+      "tool_name": "execute_command",
+      "call_id": "call_c5ef21c8ea08478db261421a47681800",
+      "rendered_observation_chars": 479,
+      "tool_result_seq": 16
+    }
+  ],
+  "requests": [
+    {
+      "seq": 1,
+      "tool_messages": 0,
+      "tool_observation_chars": 0
+    },
+    {
+      "seq": 5,
+      "tool_messages": 1,
+      "tool_observation_chars": 349
+    },
+    {
+      "seq": 9,
+      "tool_messages": 3,
+      "tool_observation_chars": 26283
+    },
+    {
+      "seq": 13,
+      "tool_messages": 6,
+      "tool_observation_chars": 127141
+    },
+    {
+      "seq": 17,
+      "tool_messages": 7,
+      "tool_observation_chars": 127620
+    }
+  ],
+  "completed_model_calls": [
+    {
+      "seq": 2,
+      "usage": {
+        "input_tokens": 7583,
+        "output_tokens": 303,
+        "total_tokens": 7886,
+        "prompt_tokens": 7583,
+        "completion_tokens": 303,
+        "cached_input_tokens": 2560
+      }
+    },
+    {
+      "seq": 6,
+      "usage": {
+        "input_tokens": 7759,
+        "output_tokens": 278,
+        "total_tokens": 8037,
+        "prompt_tokens": 7759,
+        "completion_tokens": 278,
+        "cached_input_tokens": 0
+      }
+    },
+    {
+      "seq": 10,
+      "usage": {
+        "input_tokens": 16230,
+        "output_tokens": 411,
+        "total_tokens": 16641,
+        "prompt_tokens": 16230,
+        "completion_tokens": 411,
+        "cached_input_tokens": 0
+      }
+    },
+    {
+      "seq": 14,
+      "usage": {
+        "input_tokens": 45240,
+        "output_tokens": 169,
+        "total_tokens": 45409,
+        "prompt_tokens": 45240,
+        "completion_tokens": 169,
+        "cached_input_tokens": 2560
+      }
+    }
+  ],
+  "last_request_provider_consumption_verified": false,
+  "approval_wait_records": 0,
+  "local_kv_performance_verified": false
+}

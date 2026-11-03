@@ -13,6 +13,14 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
+**What's new in 0.12.0** ([CHANGELOG](CHANGELOG.md#0120---2026-11-02)): decision models in AbstractCore
+(`output="decision"`, `POST /v1/decisions`: calibrated typed answers from Kev, Lev, Laya, OpenJev-style
+checkpoints or hosted Jev), a Decision node in AbstractFlow, the Avatar conversation view in the AbstractCode
+web client and AbstractEntity, an optional activity avatar in the AbstractAssistant desktop app, AbstractAvatar as a new package (procedural activity avatars
+for terminal, native and browser apps), the shared composer and account widget across the browser apps, and
+AbstractGateway 0.19.0: a fresh gateway is set up from the browser with an admin password and a six-word
+setup code, models run in a supervised model host process on every OS, and voice streams send keep-alive lines.
+
 > **Prerequisites**: none for the one-line install below (it provisions Python and, optionally, Node.js). For a manual install: Python 3.10–3.13, Node.js 18+ for browser UIs, and an LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
 
 ---
@@ -27,13 +35,13 @@ Think of it as an **agentic OS**: durable runs + replay-first observability + mu
 - **macOS / Linux, one line:**
 
   ```bash
-  curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.sh | sh
+  curl -LsSf https://abstractframework.ai/install.sh | sh
   ```
 
 - **Windows 10 22H2+ / 11** (PowerShell):
 
   ```powershell
-  powershell -ExecutionPolicy ByPass -c "irm https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/install.ps1 | iex"
+  powershell -ExecutionPolicy ByPass -c "irm https://abstractframework.ai/install.ps1 | iex"
   ```
 
 To upgrade, run the same line again (on a Mac, double-clicking **Install AbstractFramework.command**
@@ -52,20 +60,22 @@ real NVIDIA hardware. See [GPU on Linux](docs/install.md#gpu-on-linux-nvidia) an
 [GPU on Windows](docs/install.md#gpu-on-windows-nvidia).
 
 The installer sets up the gateway in your user account (no admin password, no system Python),
-with local voice (Supertonic text-to-speech and Whisper speech-to-text), asks whether to start it
+with local voice (Supertonic text-to-speech and Whisper speech-to-text; the default voice downloads
+once: `abstractgateway models download supertonic supertonic-3`), asks whether to start it
 at login (Enter = yes; an unattended install leaves it off and says how to turn it on), starts it
 on `127.0.0.1:8080`, and opens its web console in your browser already signed in. A first-run guide
 then sets up a local engine (Ollama, LM Studio, MLX, llama.cpp), downloads a model that fits your
 machine, and lists the apps; the gateway serves them on its own address at `/apps/<app>/`. The
 **Setup** button at the bottom of the console's sidebar runs the guide again, keeping your choices
-unless you replace them. The installer also builds the terminal console, `abstractgateway-console`, which runs the same guide on
+unless you replace them. The installer also builds the terminal console, `abstractgateway-console` (it needs a C compiler;
+without one the installer says it skipped it and how to add one), which runs the same guide on
 a server without a browser and offers itself at the end of an install over SSH
 ([Headless or remote machine](docs/install.md#headless-or-remote-machine)).
 
 Every failure says what to do next; running the installer again repairs the install in place. To
-remove it, double-click `Uninstall AbstractFramework.command` (in
-`~/Library/Application Support/AbstractFramework/Installer` after a package install), or run
-`curl -LsSf https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/scripts/uninstall.sh | sh`.
+remove it, run `curl -LsSf https://abstractframework.ai/uninstall.sh | sh` (macOS: or double-click
+`Uninstall AbstractFramework.command`, in `~/Library/Application Support/AbstractFramework/Installer`
+after a package install). On a Linux server, see [Deploy on a Linux server](docs/deploy-linux.md).
 Step by step, the failure table, options (`--with-apps`, `--with-ollama`, `--print`, …):
 [Install](docs/install.md). Something not working: [Troubleshooting](docs/troubleshooting.md).
 
@@ -76,8 +86,9 @@ pip install abstractcore && abstractcore serve        # http://127.0.0.1:8000/co
 pip install abstractgateway && abstractgateway serve  # http://127.0.0.1:8080/console#claim=…
 ```
 
-Both consoles have **Models** (browse models that fit this machine, download, delete) and
-**Engines** (detect and install local engines) tabs; every action also shows its command-line
+Both consoles let you browse models that fit this machine, download and delete them (**Models**),
+and detect and install local engines (**Engines** in the Core console, **Providers** in the gateway
+console); every action also shows its command-line
 equivalent (`abstractcore models …`, `abstractcore engines …`, `abstractgateway models …`).
 
 ---
@@ -163,18 +174,21 @@ AbstractFlow, AbstractCode Web or AbstractObserver, or to the console without a 
 sign-in token.
 
 Monitor runs from a browser, or from a terminal with the gateway console. The console's **Apps**
-page installs and opens the browser apps, served by the gateway at `/apps/<app>/`
+page installs, opens and updates the browser apps and the Assistant (**Update to x.y.z** when a newer
+release exists); the browser apps are served by the gateway at `/apps/<app>/`
 (`http://127.0.0.1:8080/apps/observer/`), so one address (and one SSH tunnel) reaches them all:
 
 ```bash
 npx @abstractframework/observer --gateway-url http://127.0.0.1:8080   # or run one on its own
 
 cargo install abstractgateway-console   # Rust 1.87+; the installer builds it for you
+abstractgateway console                 # opens it signed in (gateway 0.15.6+); or by hand:
 abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>   # <data dir>/auth/bootstrap-admin-token
+abstractgateway update --check          # what the next upgrade changes; `abstractgateway update` runs it (gateway 0.15.6+)
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.12.0` and `ghcr.io/lpalbou/abstractcore-server:2.24.0`.
+`ghcr.io/lpalbou/abstractgateway:0.19.0` and `ghcr.io/lpalbou/abstractcore-server:2.32.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -187,10 +201,13 @@ chats with agents through the same gateway rules:
 - **One default agent workflow.** The gateway decides which workflow answers each agent interface
   (`agents.default_workflow.<interface>`; the shipped `basic-agent` for AbstractCode until you
   choose another). Clients list **Gateway default** first and follow a change at the next turn.
-- **A workspace you can see, with built-in protection.** An agent works in a folder on the
-  gateway's computer; AbstractCode's **Files** tab and `/files` show its absolute path and
-  preview its files. Credential folders (`~/.ssh`, `~/.aws`, …) and the gateway's data folder are
-  denied to every run.
+- **A workspace you can see, with built-in protection.** An agent works in its conversation's
+  private folder on the gateway's computer; AbstractCode's **Files** tab and `/files` show its
+  absolute path and preview its files. The admin chooses a posture (**Deny everything, allow
+  listed workspaces** or **Allow everything, refuse listed workspaces**), one **Shared workspace**
+  (always Read & write) and workspaces that are Read-only, Read & write or Refused; each account
+  can only narrow them. Credential folders (`~/.ssh`, `~/.aws`, …) and the gateway's data folder
+  are denied to every run.
 - **Curated skills.** The skill shelf that ships with `abstractskill` is copied into the gateway's
   data folder at each start, without overwriting your edits (`skills.shelf` points elsewhere).
 - **Live replies.** Watch answers as the model writes them: the gateway's
@@ -262,7 +279,7 @@ The ecosystem, grouped by layer. Each name links to the package's repository.
 | [abstractvoice](https://github.com/lpalbou/AbstractVoice) | Voice I/O (TTS / STT), local and remote backends |
 | [abstractvision](https://github.com/lpalbou/AbstractVision) | Model-agnostic generative vision (images, optional video) |
 | [abstractmusic](https://github.com/lpalbou/AbstractMusic) | Text-to-music / text-to-audio (Core capability plugin) |
-| [abstract3d](https://github.com/lpalbou/abstract3d) | Local-first 3D generation |
+| [abstract3d](https://github.com/lpalbou/Abstract3D) | Local-first 3D generation |
 | [abstractcamera](https://github.com/lpalbou/AbstractCamera) | Camera control and capture tools |
 | `abstractsound`, `abstractvideo`, `abstractspatial`, `abstractgeometry`, `abstractcognition` | Reserved capability packages (namespaces held; APIs landing incrementally) |
 
@@ -275,10 +292,11 @@ dialogs and touch-sized controls on phones.
 | App | What it does | Install |
 |---|---|---|
 | [AbstractCode](https://github.com/lpalbou/AbstractCode) | Terminal agentic dev client (Rust, on the AbstractTUI engine) — durable sessions, tool approvals, the gateway's default workflow, workspace files, live replies | `cargo install abstractcode`, or a prebuilt binary from the [GitHub release](https://github.com/lpalbou/AbstractCode/releases) |
-| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client — gateway-native, follows the gateway's default workflow or your pick, live replies, voice support | `pip install abstractassistant`, or **Open** in the gateway console (starts it signed in) |
+| [AbstractAssistant](https://github.com/lpalbou/AbstractAssistant) | macOS tray client, and one app for iPhone and Apple Watch (pre-release through TestFlight) — gateway-native, follows the gateway's default workflow or your pick, live replies, voice support | `pip install abstractassistant`, or **Open** in the gateway console (starts it signed in) |
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | the gateway console's **Apps** page (served at `/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | the gateway console's **Apps** page (served at `/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | the gateway console's **Apps** page (served at `/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` |
+| [AbstractNote](https://github.com/lpalbou/AbstractNote) | Notes on the gateway (alpha): capture text, files, photos and recordings, filed into a temporal knowledge graph you search by effort. Not part of the `abstractframework` profiles | `pip install "abstractnote[gateway]"` next to the gateway, and `npx @abstractframework/note --gateway-url <url>` |
 | **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (sidebar groups Accounts, Work, Models and System; the **Setup** button; one Accounts table of users and entities), terminal via `abstractgateway-console` (the same setup guide and screens, Network and Apps included, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | the gateway console's **Apps** page (served at `/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` |
@@ -289,6 +307,7 @@ dialogs and touch-sized controls on phones.
 | Package | What it is |
 |---|---|
 | [abstracttui](https://github.com/lpalbou/AbstractTUI) | Rust terminal-UI engine built on fine-grained reactive signals |
+| [AbstractAvatar](https://github.com/lpalbou/AbstractAvatar) | Shared procedural avatar generation with native and WebAssembly rendering; platforms own frame presentation and activity input |
 | [abstractuic](https://github.com/lpalbou/AbstractUIC) | Reusable UI kit for framework clients (React components + Web Components): chat panel with live replies, the shared About dialog, the app-server proxy |
 | [abstractskill](https://github.com/lpalbou/AbstractSkill) | Shared library for Agent Skills (`SKILL.md` folders: load, trust-gate, activate) and the curated skill shelf the gateway serves |
 
@@ -324,7 +343,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.9.6)
+### Release matrix (abstractframework 0.12.0)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -333,34 +352,37 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.12.0 |
-| PyPI | `abstractassistant` | 0.12.3 |
-| PyPI | `abstractcore` | 2.24.0 |
-| PyPI | `AbstractRuntime` | 0.8.5 |
-| PyPI | `abstractagent` | 0.3.17 |
-| PyPI | `abstractskill` | 0.3.0 |
-| PyPI | `AbstractMemory` | 0.3.0 |
+| PyPI | `abstractgateway` | 0.19.0 |
+| PyPI | `abstractassistant` | 0.17.0 |
+| PyPI | `abstractcore` | 2.32.0 |
+| PyPI | `AbstractRuntime` | 0.16.0 |
+| PyPI | `abstractagent` | 0.5.0 |
+| PyPI | `abstractskill` | 0.3.4 |
+| PyPI | `AbstractMemory` | 0.4.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.13.2 |
-| PyPI | `abstractvision` | 0.3.33 |
-| PyPI | `abstractmusic` | 0.1.15 |
+| PyPI | `abstractvoice` | 0.19.5 |
+| PyPI | `abstractvision` | 0.3.34 |
+| PyPI | `abstractmusic` | 0.1.17 |
 | PyPI | `abstract3d` | 0.3.2 |
-| npm | `@abstractframework/flow` | 0.7.0 |
-| npm | `@abstractframework/code` | 0.10.3 |
-| npm | `@abstractframework/observer` | 0.6.2 |
-| npm | `@abstractframework/continuum` | 0.6.0 |
-| npm | `@abstractframework/entity` | 0.6.0 |
-| crates.io | `abstractcode` | 0.8.0 |
-| crates.io | `abstractgateway-console` | 0.14.0 |
-| crates.io | `abstractcore-console` | 0.7.0 |
-| crates.io | `abstracttui` | 0.6.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.12.0 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.24.0 |
+| npm | `@abstractframework/flow` | 0.13.0 |
+| npm | `@abstractframework/code` | 0.14.0 |
+| npm | `@abstractframework/observer` | 0.11.0 |
+| npm | `@abstractframework/continuum` | 0.8.0 |
+| npm | `@abstractframework/entity` | 0.10.0 |
+| crates.io | `abstractcode` | 0.13.1 |
+| crates.io | `abstractgateway-console` | 0.17.0 |
+| crates.io | `abstractcore-console` | 0.8.1 |
+| crates.io | `abstracttui` | 0.7.1 |
+| crates.io | `abstractavatar` | 0.1.0 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.19.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.32.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
 not part of any profile installs separately: `pip install abstractcamera` (0.2.1). `abstractskill` (pinned above)
 comes with the gateway, which carries its curated skill shelf; install it on its own with
-`pip install abstractskill`.
+`pip install abstractskill`. AbstractNote (`abstractnote` 0.3.0 on PyPI, `@abstractframework/note` 0.3.0 on
+npm) and the Python binding of AbstractAvatar (`pip install "abstractassistant[avatar]"` adds `abstractavatar`
+0.1.0 for the desktop activity avatar) are released with this matrix and install separately.
 
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
 `abstractframework doctor`, and the generated installer manifest contract.
@@ -376,6 +398,7 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/getting-started.md](docs/getting-started.md) | Two entry points + first end-to-end run |
 | [docs/agent-sessions.md](docs/agent-sessions.md) | Default agent workflow, the conversation workspace and its protection, skills, live replies, the Assistant hand-over |
 | [docs/automations.md](docs/automations.md) | Automations: how they work (controller run, occurrences, independent vs growing context), creating and managing them from the Assistant, the Observer or a workflow, notifications, limits |
+| [docs/events-and-attention.md](docs/events-and-attention.md) | Trigger connections (mailboxes, feeds, webhooks), your event stream, push to the watch and the iPhone, the Flow library and After the run |
 | [docs/architecture.md](docs/architecture.md) | Component diagram, how a turn flows, the live-reply lane, app proxies, model eject, framework identity, durable execution primitives |
 | [docs/configuration.md](docs/configuration.md) | Minimal config, where defaults live, Core vs Gateway |
 | [docs/glossary.md](docs/glossary.md) | Shared terminology (run, ledger, effect, wait, bundle, …) |

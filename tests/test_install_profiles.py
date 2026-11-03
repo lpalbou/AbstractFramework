@@ -435,7 +435,7 @@ def _host() -> tuple[str, str, str]:
     if sys.platform == "darwin" and machine == "arm64":
         return "apple", "0.3.28", "metal"
     if sys.platform.startswith("linux") and machine in ("x86_64", "aarch64"):
-        return "gpu", "0.3.35", "cpu"
+        return "gpu", "0.3.36", "cpu"
     pytest.skip("install.sh wheel selection is tested on Apple Silicon and glibc Linux")
 
 
@@ -991,15 +991,15 @@ def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_pa
     argv = ["pwsh", "-NoProfile", "-File", str(script), "-Print", "-Profile", "gpu", "-Port", "18999"]
     out = subprocess.run(argv, check=True, capture_output=True, text=True, env=env).stdout
     assert _printed_overrides(out) == _PS1_DEFAULT_OVERRIDES
-    assert _printed_block(out, "uv-constraints.txt:") == [*_release_matrix(), "llama-cpp-python==0.3.35"]
+    assert _printed_block(out, "uv-constraints.txt:") == [*_release_matrix(), "llama-cpp-python==0.3.36"]
     install = _install_line(out)
     assert (
-        f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --with llama-cpp-python==0.3.35 --constraints uv-constraints.txt "
+        f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --with llama-cpp-python==0.3.36 --constraints uv-constraints.txt "
         f"--find-links {_LLAMA}/vulkan/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
     assert " ".join(f"--no-build-package {p}" for p in _PS1_NO_BUILD) in install
     assert _PS1_SKIPPED.format(flag="-Full") in out
-    assert f"GGUF:       llama-cpp-python 0.3.35 (vulkan wheel from {_LLAMA}/vulkan/llama-cpp-python/)" in out
+    assert f"GGUF:       llama-cpp-python 0.3.36 (vulkan wheel from {_LLAMA}/vulkan/llama-cpp-python/)" in out
     assert not (tmp_path / "lad").exists(), "-Print must not write anything"
     if __import__("shutil").which("cl.exe") is None:
         full = subprocess.run(argv + ["-Full"], capture_output=True, text=True, env=env)
@@ -1229,7 +1229,7 @@ def test_install_ps1_keeps_a_custom_data_dir_through_the_pointer(tmp_path: Path)
 def test_install_ps1_pin_latest_has_no_release_matrix(tmp_path: Path) -> None:
     out = _ps1_print(tmp_path, "-Pin", "latest")
     assert "installing the newest abstractgateway (-Pin latest)" in out
-    assert _printed_block(out, "uv-constraints.txt:") == ["llama-cpp-python==0.3.35"]
+    assert _printed_block(out, "uv-constraints.txt:") == ["llama-cpp-python==0.3.36"]
 
 
 def _pre_062_install(tmp_path: Path, *, everything: bool, gateway: str = "0.7.1") -> Path:

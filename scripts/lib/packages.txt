@@ -4,8 +4,9 @@
 # One row per PUBLISHED PACKAGE (not per repository): a repository can hold
 # several packages (AbstractUIC holds 7 npm packages; abstractgateway holds a
 # Python package and a Rust crate; abstractcode holds a Rust crate and an npm
-# app). Rows are grouped by repository; the scripts derive the repository list
-# from the `repo` column.
+# app; abstractnote holds a Python package and an npm app; abstracttui holds the
+# core crate and its extension crates). Rows are grouped by
+# repository; the scripts derive the repository list from the `repo` column.
 #
 # Format: pipe-separated columns, surrounding spaces ignored, `#` starts a
 # comment line. Loaded by scripts/lib/repo_groups.sh (bash 3.2 / zsh safe) and
@@ -36,6 +37,8 @@
 #
 # id                    | repo              | github                      | kind   | path                  | registry | name                                   | tier | deps
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+avatarcore              | abstractavatar    | lpalbou/AbstractAvatar      | rust   | .                     | crates   | abstractavatar                         | 0    | -
+abstractavatar          | abstractavatar    | lpalbou/AbstractAvatar      | python | .                     | pypi     | abstractavatar                         | 0    | -
 abstractskill           | abstractskill     | lpalbou/AbstractSkill       | python | .                     | pypi     | abstractskill                          | 0    | -
 abstractsemantics       | abstractsemantics | lpalbou/AbstractSemantics   | python | .                     | pypi     | abstractsemantics                      | 0    | -
 abstractmemory          | abstractmemory    | lpalbou/AbstractMemory      | python | .                     | pypi     | AbstractMemory                         | 0    | -
@@ -43,14 +46,18 @@ abstractvision          | abstractvision    | lpalbou/AbstractVision      | pyth
 abstractvoice           | abstractvoice     | lpalbou/AbstractVoice       | python | .                     | pypi     | abstractvoice                          | 0    | -
 abstractmusic           | abstractmusic     | lpalbou/AbstractMusic       | python | .                     | pypi     | abstractmusic                          | 0    | -
 abstractcamera          | abstractcamera    | lpalbou/AbstractCamera      | python | .                     | pypi     | abstractcamera                         | 0    | -
-abstract3d              | abstract3d        | lpalbou/abstract3d          | python | .                     | pypi     | abstract3d                             | 1    | abstractvision:dep
+abstract3d              | abstract3d        | lpalbou/Abstract3D          | python | .                     | pypi     | abstract3d                             | 1    | abstractvision:dep
 abstractcore            | abstractcore      | lpalbou/AbstractCore        | python | .                     | pypi     | abstractcore                           | 2    | abstractvision:dep,abstractvoice:dep,abstractmusic:dep,abstract3d:dep
-core-console            | abstractcore      | lpalbou/AbstractCore        | rust   | console-tui           | crates   | abstractcore-console                   | 1    | abstracttui:dep
+core-console            | abstractcore      | lpalbou/AbstractCore        | rust   | console-tui           | crates   | abstractcore-console                   | 2    | abstracttui:dep
 abstractruntime         | abstractruntime   | lpalbou/AbstractRuntime     | python | .                     | pypi     | AbstractRuntime                        | 3    | abstractcore:dep,abstractmemory:dep,abstractsemantics:dep
 abstractagent           | abstractagent     | lpalbou/AbstractAgent       | python | .                     | pypi     | abstractagent                          | 4    | abstractcore:dep,abstractruntime:dep
-abstractassistant       | abstractassistant | lpalbou/AbstractAssistant   | python | .                     | pypi     | abstractassistant                      | 4    | abstractcore:dep,abstractruntime:dep,abstractvoice:dep
+abstractassistant       | abstractassistant | lpalbou/AbstractAssistant   | python | .                     | pypi     | abstractassistant                      | 4    | abstractcore:dep,abstractruntime:dep,abstractvoice:dep,abstractavatar:extra
 abstractgateway         | abstractgateway   | lpalbou/AbstractGateway     | python | .                     | pypi     | abstractgateway                        | 5    | abstractruntime:dep,abstractagent:dep,abstractmemory:dep,abstractcore:dep,abstractskill:dep,abstractvoice:dep
-gateway-console         | abstractgateway   | lpalbou/AbstractGateway     | rust   | console-tui           | crates   | abstractgateway-console                | 2    | abstracttui:dep,core-console:dep
+gateway-console         | abstractgateway   | lpalbou/AbstractGateway     | rust   | console-tui           | crates   | abstractgateway-console                | 3    | abstracttui:dep,core-console:dep
+# AbstractNote: notes app on the gateway. Its graph logic lives in AbstractMemory; it reaches the
+# gateway through its `gateway` extra, and the gateway imports `abstractnote` lazily (optional seam).
+abstractnote            | abstractnote      | lpalbou/AbstractNote        | python | .                     | pypi     | abstractnote                           | 6    | abstractmemory:dep,abstractsemantics:dep,abstractruntime:dep,abstractcore:dep,abstractgateway:extra
+note-web                | abstractnote      | lpalbou/AbstractNote        | npm    | web                   | npm      | @abstractframework/note                | 2    | app-server:dep,ui-kit:dep,panel-chat:dep
 ui-kit                  | abstractuic       | lpalbou/AbstractUIC         | npm    | ui-kit                | npm      | @abstractframework/ui-kit              | 0    | -
 app-server              | abstractuic       | lpalbou/AbstractUIC         | npm    | app-server            | npm      | @abstractframework/app-server          | 0    | -
 monitor-flow            | abstractuic       | lpalbou/AbstractUIC         | npm    | monitor-flow          | npm      | @abstractframework/monitor-flow        | 0    | -
@@ -58,11 +65,13 @@ monitor-gpu             | abstractuic       | lpalbou/AbstractUIC         | npm 
 monitor-memory          | abstractuic       | lpalbou/AbstractUIC         | npm    | monitor-memory        | npm      | @abstractframework/monitor-memory      | 0    | -
 monitor-active-memory   | abstractuic       | lpalbou/AbstractUIC         | npm    | monitor-active-memory | npm      | @abstractframework/monitor-active-memory | 0  | -
 panel-chat              | abstractuic       | lpalbou/AbstractUIC         | npm    | panel-chat            | npm      | @abstractframework/panel-chat          | 1    | ui-kit:peer
-flow                    | abstractflow      | lpalbou/AbstractFlow        | npm    | .                     | npm      | @abstractframework/flow                | 1    | app-server:dep,ui-kit:dep,monitor-flow:alias,monitor-gpu:alias,monitor-memory:alias,monitor-active-memory:alias
+flow                    | abstractflow      | lpalbou/AbstractFlow        | npm    | .                     | npm      | @abstractframework/flow                | 2    | app-server:dep,ui-kit:dep,panel-chat:dep,monitor-flow:alias,monitor-gpu:alias,monitor-memory:alias,monitor-active-memory:alias
 observer                | abstractobserver  | lpalbou/AbstractObserver    | npm    | .                     | npm      | @abstractframework/observer            | 2    | app-server:dep,ui-kit:dep,panel-chat:dep,monitor-flow:alias,monitor-gpu:alias,monitor-active-memory:alias
 continuum               | abstractcontinuum | lpalbou/AbstractContinuum   | npm    | .                     | npm      | @abstractframework/continuum           | 2    | app-server:dep,ui-kit:dep,panel-chat:dep
 entity                  | abstractentity    | lpalbou/AbstractEntity      | npm    | .                     | npm      | @abstractframework/entity              | 2    | app-server:dep,ui-kit:dep,panel-chat:dep
 code-web                | abstractcode      | lpalbou/AbstractCode        | npm    | web                   | npm      | @abstractframework/code                | 2    | app-server:dep,ui-kit:dev,panel-chat:dev,monitor-flow:dev,monitor-gpu:dev
-code-cli                | abstractcode      | lpalbou/AbstractCode        | rust   | tui                   | crates   | abstractcode                           | 1    | abstracttui:dep
-abstracttui             | abstracttui       | lpalbou/AbstractTUI         | rust   | .                     | crates   | abstracttui                            | 0    | -
+code-cli                | abstractcode      | lpalbou/AbstractCode        | rust   | tui                   | crates   | abstractcode                           | 2    | abstracttui:dep
+abstracttui             | abstracttui       | lpalbou/AbstractTUI         | rust   | .                     | crates   | abstracttui                            | 1    | avatarcore:extra
+tui-graph               | abstracttui       | lpalbou/AbstractTUI         | rust   | extensions/graph      | crates   | abstracttui-graph                      | 2    | abstracttui:dep
+tui-mermaid             | abstracttui       | lpalbou/AbstractTUI         | rust   | extensions/mermaid    | crates   | abstracttui-mermaid                    | 3    | abstracttui:dep,tui-graph:dep
 abstractframework       | .                 | lpalbou/AbstractFramework   | meta   | .                     | pypi     | abstractframework                      | 6    | abstractgateway:pin,abstractassistant:pin,abstractcore:pin,abstractruntime:pin,abstractagent:pin,abstractskill:pin,abstractmemory:pin,abstractsemantics:pin,abstractvoice:pin,abstractvision:pin,abstractmusic:pin,abstract3d:pin,flow:app,code-web:app,observer:app,continuum:app,entity:app

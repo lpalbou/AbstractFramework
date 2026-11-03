@@ -50,3 +50,16 @@ missions BB and Z). The rulings are the only thing blocking promotion.
 ## Receipts
 
 - `untracked/missionAA/REPORT.md`, `untracked/missionBB/REPORT.md`, `untracked/missionZ/REPORT.md`.
+
+## Operator rulings (2026-10-08, verbatim)
+
+1. Viewer role: "nobody as for a viewer role, cancel that. we have admin and member. member can be a
+   human user or a digital user (entity)". → No viewer role. Two roles: admin and member; a member is
+   a human account or an entity account.
+2. Members configuring their own entities: "Yes: the creator configures their entity" — mind, voice,
+   workspaces, preferences, archive, within what the admin authorised (eligible workspaces, models,
+   tools); admins always can. → Work item: round 16 (R16.5), gateway authorization + consoles/apps.
+3. Prompt for a daily-use member account when the network mode becomes lan/internet: "cancel, put
+   back in backlog" → stays open in 0862, not ruled.
+
+Related ruling the same day: the signed/notarized Mac installer (0868) is "LATER" — not now.
