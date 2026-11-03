@@ -6383,30 +6383,44 @@ The only override is `git push --no-verify`; the red CI that follows is then you
   visible on its registry.
 - A red main is an incident: whoever merged reverts or fixes it within the hour.
 
-## Proof runs (2026-11-03, this Mac)
+## Proof runs (2026-11-03, this Mac: 18 physical cores, 128 GB)
 
-Runs of the first version of the gate, before the free disk ran out (the Core and Gateway runs on
-`origin/main` were stopped at 1.9 GB free and are not complete). Each failure the gate itself
-caused was fixed in the gate, not in the repositories.
-
-| Run | Verdict | Time |
+| Run | Verdict | Wall time |
 |---|---|---|
-| AbstractUIC `origin/main` (e101804), all jobs: Test, build, and pack; Avatar browser check | GREEN, 2 pass | 1m47s |
-| AbstractCore `37b7913` (release/2.33.0, red on GitHub: run 41571723950), `--job changelog` | RED, the same message as GitHub: "Release 2.33.0: changelog.d/ still holds 8 fragment(s)" | 0m02s |
-| This repository, the gate's own branch, `--job test-build` | GREEN | 3m57s |
-| A scratch repository with the pre-push hook: a good commit, then a bad one | pushed, then refused (the remote kept the good commit) | 0m02s, 0m01s |
-| AbstractCore `origin/main` (de1f9c8), partial | changelog, build, docs, console-tui MSRV pass (1s, 12s, 16s, 37s); linux-sandbox SKIPPED (needs root) | stopped |
-| AbstractGateway `origin/main` (0109bcb), partial | changes, changelog, build, docs, console-tui pass (1s, 1s, 13s, 47s, 4m32s); model-host-windows and docker SKIPPED | stopped |
+| AbstractUIC `origin/main` (e101804), all jobs | GREEN, 2 pass | 1m47s |
+| AbstractCore `37b7913` (release/2.33.0, red on GitHub: run 41571723950), `--job changelog` | RED, GitHub's own message: "Release 2.33.0: changelog.d/ still holds 8 fragment(s)" | 0m02s |
+| AbstractGateway `21c1f27` (fix/host-stop-interrupts-runs, red on GitHub: run 41563765646), `--event pull_request` | RED: the 4 shards fail on GitHub's `ImportError: cannot import name 'EffectInterrupted' from 'abstractruntime'` (PyPI holds 0.16.0) | 6m17s |
+| This repository, this branch, `--job test-build` | GREEN | 8m40s (under load) |
+| AbstractCore `origin/main` (447530e), full, default `--jobs 4` | RED: 10 pass, 1 skipped (linux-sandbox, needs root), 1 fail (below) | 14m53s |
+| AbstractGateway `origin/main` (0109bcb), full, `--jobs 4`, 16 shards (3.10 to 3.13) | RED: 16 pass, 2 skipped (Windows, Docker), 5 shard failures (below) | 62m30s (beside a Core run) |
+| Pre-push hook in a scratch repository: a good commit, then a bad one | the first pushed, the second refused (the remote kept the good commit) | 0m02s, 0m01s |
 
-What those partial runs found in the gate, and the fix: `ps` cannot run under `sandbox-exec` (now
-outside it, and the sandbox is opt-in), macOS cannot nest `sandbox-exec` (AbstractCore's macOS sandbox
-tests: `--sandbox` is now off by default), run directories inside the workspace let AbstractCore's
-theme sync find the live `../abstractuic` (they moved to `~/Library/Caches/ci-gate`), Gateway jobs
-without `setup-node` had no Node (the newest local one is now on the `PATH`, as on the runner image),
-and `uv` refused llama.cpp's macOS CPU wheel that pip installs (`UV_INSECURE_NO_ZIP_VALIDATION`). Two
-failures are not explained yet: AbstractCore `test_zig_lists_imports_tests_and_only_top_level_constants`
-on Python 3.9, and the console-tui `download_w_polls_the_job_to_a_completion_toast` timing test (run
-while the Gateway suite loaded the machine).
+`--jobs`: AbstractCore's full run takes 14m53s with the default `--jobs 4` on a quiet machine. Its
+jobs add up to about 34 minutes run one at a time; `--jobs 2` beside a Gateway run took 45m30s.
+
+Light against full, the same commit:
+
+| Commit | `--tier light` | `--tier full` |
+|---|---|---|
+| AbstractCore `ebc86d7` (PR #42: `providers/base.py`, a test, docs) | 1m46s: Python 3.12 only, 85 test files kept (the changed test, and the tests named after or importing `abstractcore.providers.base`), `cargo test` skipped (no change under `console-tui/`) | 14m53s (`origin/main`, default `--jobs`) |
+| AbstractUIC `204bf84` (`ui-kit/` brand icons, CHANGELOG, docs) | 0m31s: `npm --workspace ui-kit run test` | 0m47s |
+| AbstractUIC `67f867a` (`ui-kit/` and `ci.yml`) | 0m50s: whole (`ci.yml` is outside every workspace) | 0m51s |
+
+The red runs on `origin/main`, test by test:
+
+| Failure | Cause | Gate-caused? |
+|---|---|---|
+| Gateway `test_gateway_workflow_ownership_isolation.py::test_the_first_line_refuses_the_non_admin_at_sign_in`, shard 3 on every Python | the gateway finds `/Applications/Ollama.app` on this Mac and starts it; the suite's subprocess guard refuses the launch. GitHub's runner has no Ollama | No: the test is not hermetic on a Mac with Ollama installed (a Gateway fix) |
+| Gateway `test_r12w2_command_sandbox.py::test_a_real_serve_audits_the_flag_at_boot`, 3.10 shard 2 | the readiness race already seen on GitHub (G9 of the failure catalogue: the audit line is written before the port is bound), more frequent under load | No, an existing flake |
+| Core `test_shell_session.py::test_reopen_after_death_does_not_leak_master_fd` (3.9, 3.10 or the local-model job, one per run) | asserts `is_alive()` is false right after `kill -9`, before the shell is reaped | No, an existing race |
+| Core `test_host_jobs_and_engines.py::test_cancel_kills_the_whole_process_tree_not_just_the_child` (once, under load) | reads the grandchild's pid file between its creation and its write | No, an existing race |
+| Core `test_zig_lists_imports_tests_and_only_top_level_constants` (3.9, first version of the gate) | the test asserts the word `local` is absent from output that prints its temporary path, and the run directory was `untracked/ci-local/...` | Yes, fixed: runs live in `~/Library/Caches/ci-gate/`; it passes on every Python since |
+| Core console-tui `download_w_polls_the_job_to_a_completion_toast` (once, while the Gateway suite loaded the machine) | the poll thread reached 100% before a frame showed 42% | No, a load-sensitive race; it passed in both later runs |
+
+Fixed in the gate along the way: `ps` cannot run under `sandbox-exec` (the sandbox is now opt-in),
+macOS cannot nest `sandbox-exec`, run directories inside the workspace let AbstractCore's theme sync
+find the live `../abstractuic`, jobs without `setup-node` had no Node, uv refused a wheel pip
+installs, and matrix entries of one job did not run in parallel.
 
 --- docs/workspace-scripts.md ---
 # Workspace scripts (working from source)
