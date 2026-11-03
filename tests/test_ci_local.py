@@ -241,6 +241,7 @@ def test_default_jobs():
     assert ci.default_jobs(12, 2, None)[0] == 1            # at least one
     assert ci.serial_reason("abstractcore", _job_id("local-models"))
     assert ci.serial_reason("abstractcore", _job_id("test")) is None
+    assert ci.serial_reason("abstractframework", _job_id("bootstrap-smoke"))  # one port 18080 on this Mac
 
 
 def _job_id(job_id):

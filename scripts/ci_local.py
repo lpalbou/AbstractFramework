@@ -1201,6 +1201,8 @@ def pytest_sessionfinish(session, exitstatus):
 SERIAL_JOBS = {
     ("abstractcore", "local-models"): "loads local model engines (one model process at a time)",
     ("abstractgateway", "perf"): "its p99 latency gates need a quiet machine",
+    # Each matrix entry starts a gateway on the fixed port 18080: separate machines on GitHub, one Mac here.
+    ("abstractframework", "bootstrap-smoke"): "starts a gateway on the fixed port 18080",
 }
 MEMORY_PER_JOB = 4 * 1024**3  # what one job may hold (a test suite with torch imported, a cargo build)
 
