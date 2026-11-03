@@ -4,7 +4,8 @@ Status: Accepted — operator ruling 2026-11-03 ("it must succeed here before ev
 on GH"; "CI/CD fail should be the exception, not the normal path").
 
 Amended 2026-11-04 by ADR 0051: which jobs a push must pass locally depends on its test tier (L light or F
-full; a `--tier` gate flag is planned, backlog 1116); release branches are always F.
+full, `scripts/ci_local.sh --tier light|full`, delivered with the gate by backlog 1116); release
+branches are always F.
 
 ## Context
 
