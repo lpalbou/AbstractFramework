@@ -10,23 +10,24 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.12.0"
+__version__ = "0.12.1"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.32.0",
-    "abstractruntime": "0.16.0",
-    "abstractagent": "0.5.0",
-    "abstractgateway": "0.19.0",
+    "abstractcore": "2.33.0",
+    "abstractruntime": "0.17.0",
+    "abstractagent": "0.6.0",
+    "abstractgateway": "0.20.0",
     "abstractskill": "0.3.4",
     "abstractmemory": "0.4.0",
     "abstractsemantics": "0.0.5",
-    "abstractvoice": "0.19.5",
+    "abstractvoice": "0.20.0",
     "abstractvision": "0.3.34",
     "abstractmusic": "0.1.17",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.17.0",
+    "abstractassistant": "0.18.0",
+    "abstractavatar": "0.1.1",
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -42,14 +43,29 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
     "abstractmusic": "abstractmusic",
     "abstract3d": "abstract3d",
     "abstractassistant": "abstractassistant",
+    "abstractavatar": "abstractavatar",
 }
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
-    "@abstractframework/flow": "0.13.0",
-    "@abstractframework/code": "0.14.0",
-    "@abstractframework/observer": "0.11.0",
+    "@abstractframework/flow": "0.14.0",
+    "@abstractframework/code": "0.15.0",
+    "@abstractframework/observer": "0.12.0",
     "@abstractframework/continuum": "0.8.0",
-    "@abstractframework/entity": "0.10.0",
+    "@abstractframework/entity": "0.11.0",
+    "@abstractframework/assistant": "0.1.0",
+}
+
+# The gateway's app id of each npm app (its Apps page, `abstractgateway apps ...`): the package's
+# last name segment, except where the gateway names the app otherwise.
+NPM_APP_IDS: dict[str, str] = {
+    "@abstractframework/assistant": "assistant-web",
+}
+
+# The AbstractUIC libraries the npm apps of this release are built on: release versions only,
+# never installed by the installers (each app resolves them from npm through its own lockfile).
+NPM_LIBRARY_VERSIONS: dict[str, str] = {
+    "@abstractframework/ui-kit": "0.9.13",
+    "@abstractframework/panel-chat": "0.8.0",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,
@@ -62,9 +78,9 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstractgateway-console": "0.17.0",
     "abstractcore-console": "0.8.1",
-    "abstractcode": "0.13.1",
+    "abstractcode": "0.14.0",
     "abstracttui": "0.7.1",
-    "abstractavatar": "0.1.0",
+    "abstractavatar": "0.1.1",
 }
 
 # The light profile installs plain `abstractcore` (no extra): AbstractCore's light setting already

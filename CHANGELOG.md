@@ -4,6 +4,49 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-11-03
+
+Pins the 2026-11-03 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.20.0**,
+**AbstractCore 2.33.0**, **AbstractRuntime 0.17.0**, **AbstractAgent 0.6.0**, **AbstractAssistant 0.18.0**,
+**AbstractVoice 0.20.0** and, new in every profile, **AbstractAvatar 0.1.1** (AbstractSkill 0.3.4, AbstractMemory 0.4.0,
+AbstractSemantics 0.0.5, AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers
+and the install manifest install gateway 0.20.0 and bring the npm apps to **Flow 0.14.0**, **AbstractCode web 0.15.0**,
+**Observer 0.12.0**, **Continuum 0.8.0**, **Entity 0.11.0** and, new, the web Assistant
+**`@abstractframework/assistant` 0.1.0** (gateway app id `assistant-web`), and build **abstractgateway-console 0.17.0**
+and **abstractcode 0.14.0** (crates.io). `CRATE_RELEASE_VERSIONS` also lists abstractcore-console 0.8.1, abstracttui
+0.7.1 and **abstractavatar 0.1.1**; the new `NPM_LIBRARY_VERSIONS` records `@abstractframework/ui-kit` 0.9.13 and
+`@abstractframework/panel-chat` 0.8.0. Container images: `ghcr.io/lpalbou/abstractgateway:0.20.0` and
+`ghcr.io/lpalbou/abstractcore-server:2.33.0`.
+
+### Added
+
+- **Activity avatars in every profile.** `abstractavatar` 0.1.1 is a dependency of `abstractframework`, so the light,
+  Apple and GPU profiles all carry it and the Assistant's desktop activity avatar works without an extra. In
+  AbstractAvatar 0.1.1 only the eyes follow the pointer, and the catalog says which designs have eyes (`gaze`).
+- **The web Assistant on npm** (`@abstractframework/assistant` 0.1.0): install it from the console's **Apps** page
+  (**Assistant (web)**), or run `npx @abstractframework/assistant --gateway-url <url>`. Web automations (list, page,
+  Run/Stop, Edit, New) as on the Apple Watch.
+- **The Avatar view is one live line and a Findings panel** (AbstractCode web, AbstractEntity, the web Assistant):
+  the latest public update, replaced as the next one arrives (click to hold it, Reply to this, Latest), and the
+  findings the assistant reported, collected beside the avatar. Gateway 0.20.0 types public updates (`progress` |
+  `finding`).
+- **Read-aloud resumes exactly** (AbstractVoice 0.20.0): a streamed reading names the text segment of every audio
+  line, so a reading cut by a dropped connection resumes after the last whole segment, with no word repeated or
+  missed at that boundary.
+- **The gateway keeps the Mac awake while it runs** (closing the lid or choosing Sleep still sleeps it), and a
+  gateway stop or restart suspends runs at their last durable step instead of failing them.
+- **Automations are listed active first**, the paused ones folded under **Paused · N**, the same in every app.
+- **Typed values on AbstractFlow inputs** (ADR 0049): a value typed on an unwired input takes the input's type, and
+  AbstractRuntime 0.17.0's Compare reads text next to a number or true/false exactly by the editor's grammar.
+- **Hosted decision models are decision models everywhere** (AbstractCore 2.33.0): `typesafe` / `systemone` models are
+  listed with the decision capability, only under a decision filter, and an `output.decision` default on the hosted
+  Jev runs the hosted Jev.
+
+### Changed
+
+- The installers and the install manifest name each browser app by the gateway's app id (`NPM_APP_IDS`): the web
+  Assistant is `assistant-web`, never `assistant` (the desktop app), so an upgrade brings it to its own version.
+
 ### Fixed
 
 - A hung gateway is restarted (2026-10-04: a text-to-speech stream blocked the gateway for 10+ minutes and nothing restarted it). The gateway now exits with code 75 when its event loop is blocked for 30 s (`serve --watchdog-seconds`, AbstractGateway [Unreleased]); every way the installers and scripts run it restarts that exit:
