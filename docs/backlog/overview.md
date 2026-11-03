@@ -16,7 +16,7 @@ across all folders (checked with `uniq -d` over the prefixes).
 
 | State | Files (top level) | Numbered `NNNN_` (top level) | Notes |
 |---|---|---|---|
-| Planned | 197 (145) | 153 (101) | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
+| Planned | 198 (146) | 154 (102) | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
 | Proposed | 83 (72) | 80 (69) | 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
 | Completed | 299 (275) | 116 (92) | 1113 release record of root 0.12.0; 1108 and 1109 renumbered from 1028 and 1072. Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 2 (2) | 2 (2) | Existing deprecated records. |
@@ -205,6 +205,7 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 1116 | [Local CI gate, pre-push hook, strict-timing switches, and the eight flaky tests](planned/1116_local_ci_gate_hook_strict_timing_and_flaky_tests.md) | Planned (high) | ADR 0050 enforcement: `scripts/ci_local.sh` + `docs/ci-local.md`, opt-in pre-push hook, Core strict-timing switch, the eight timing tests behind every red main of 2026-11-03 rewritten; until then the skill's by-hand procedure is the gate. |
 | 1102 | [Release wave 2026-11-03: coordination record](planned/1102_release_wave_2026_11_03_coordination.md) | Planned (in progress) | The swarm's memory for the root 0.12.1 wave: lanes, PRs, gates, state; updated at every milestone. |
 | 1103 | [A gateway pause or restart never fails a run](planned/1103_gateway_pause_or_restart_never_fails_a_run.md) | Planned (release blocker) | Regression since gateway f6601e2b (2026-10-29): a polite stop fails in-flight model calls and marks runs failed; fix = runtime `EffectInterrupted` + gateway raising it; ADR 0002 amendment. |
 | 1104 | [Decision capability end to end, Core to Flow](planned/1104_decision_capability_end_to_end_core_to_flow.md) | Planned (in progress) | Real-call pass/fail table from abstractcore generate through `/v1/decisions`, the runtime node and a Flow run; Core fixes. |

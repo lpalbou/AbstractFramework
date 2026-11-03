@@ -36,8 +36,10 @@ blocks everyone's next merge. The checks exist; they were not run where the chan
    `scripts/ci_local.sh <repo> [--job <name>] [--fresh-venv] [--allow-skipped]`
    (`docs/ci-local.md`): it reads the workflow files, so it cannot drift from CI; its exit code is
    the contract; a job it cannot run locally is printed as skipped with its reason, never silently.
-   Until the gate exists in a repository, the author runs the job commands by hand. The pull
-   request body lists the commands run and their results.
+   A matrix Python that is not installed locally is printed as skipped the same way. **Until the
+   gate lands (backlog 1116), the by-hand procedure in the `abstract-release` skill
+   (`references/release-process.md`, section 10) is the gate**: the author runs the job commands
+   themselves. The pull request body lists the commands run and their results.
 2. **Release branches run with `--fresh-venv`.** A fresh venv installs the package and its
    dependencies from the registries (`pip install -e ".[dev]"` from PyPI pins, `npm ci` from the
    lockfile), not from editable sibling checkouts, so "needs an unpublished sibling" fails here
@@ -73,8 +75,10 @@ blocks everyone's next merge. The checks exist; they were not run where the chan
 
 ## Enforcement
 
-- `scripts/ci_local.sh` and the opt-in `pre-push` hook (`scripts/install_hooks.sh`) refuse a push
-  when a runnable job fails; `--no-verify` is the only override and is noted in the pull request.
+- Planned, backlog 1116: `scripts/ci_local.sh` and the opt-in `pre-push` hook
+  (`scripts/install_hooks.sh`) refuse a push when a runnable job fails; `--no-verify` is the only
+  override and is noted in the pull request. Until they land, the skill's by-hand procedure
+  applies and the pull request body is the evidence.
 - The `abstract-release` and `release` skills (AbstractSkill) carry the gate as a mandatory step
   before any push and the "no red-by-design pull request" rule in the per-package loop.
 - Review: a pull request whose body does not list the local run is sent back; a pull request
@@ -84,13 +88,15 @@ blocks everyone's next merge. The checks exist; they were not run where the chan
 
 ## Validation
 
-- The gate goes red locally on a commit known to have failed CI (the Core release branch with its
-  changelog fragments left in; a gateway branch importing an unreleased Core symbol under
-  `--fresh-venv`), and green on `origin/main` of Core, Gateway and UIC — recorded in
-  `docs/ci-local.md` with timings.
-- Core's three garbage-collection timing tests and the gateway's boot-readiness tests are
-  event-based after this ADR; running them on the loaded Local-model job no longer depends on
-  the runner's speed.
+- Planned, backlog 1116: the gate goes red locally on a commit known to have failed CI (the Core
+  release branch with its changelog fragments left in; a gateway branch importing an unreleased
+  Core symbol under `--fresh-venv`), and green on `origin/main` of Core, Gateway and UIC —
+  recorded in `docs/ci-local.md` with timings.
+- Planned, backlog 1116: Core's three garbage-collection timing tests, the gateway's
+  boot-readiness tests and the Assistant's playhead assertion are event-based; on the loaded
+  CI jobs they no longer depend on the runner's speed. Until then, the timing flakes that produced
+  the seven red mains of 2026-11-03 are not caught by the gate on day one; only the flaky-test
+  policy (rule 5) removes them.
 - The operator's failure-email rate after a release wave is the measure: a failed run is an
   exception that names its cause, not a step of the process.
 
