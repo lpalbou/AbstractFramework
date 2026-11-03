@@ -45,7 +45,7 @@ The operator wants to listen to several mailboxes (v0: read for X configured ema
 ## References
 
 - Round-2 finding 5.
-- [0992](../0992_per_user_email_accounts_and_notifications.md)
+- [0992](../../planned/0992_per_user_email_accounts_and_notifications.md)
 
 ## Receipts
 

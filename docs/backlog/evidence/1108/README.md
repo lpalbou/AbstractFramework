@@ -1,4 +1,4 @@
-# Evidence for backlog 1028
+# Evidence for backlog 1108 (numbered 1028 until 2026-11-03)
 
 Captured 2026-10-18. Screenshots use deterministic demo fixtures; they prove native
 layout and interaction, not remote media generation. The live report separately verifies

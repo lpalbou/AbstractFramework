@@ -1,21 +1,23 @@
-# 1098 — Typed voice block in the replay projection (one conversation projection for every client)
+# 1098 — Typed voice block in the replay projection
 
 > Package: AbstractRuntime, AbstractGateway, AbstractAssistant (watch, phone, web), AbstractUIC (panel-chat), AbstractCode
 > Type: task
 > Created: 2026-11-02
 > Priority: normal
 > Labels: voice, history-bundle, adr-0047, deferred
+> Split: 2026-11-03 (backlog hygiene). This item keeps the typed `voice` block. Which projection clients render a
+> conversation from (replay view or history bundle) is [1114](1114_one_conversation_projection_replay_view_or_history_bundle.md).
 
 ## Summary
 
-Make the history bundle's session turns the ONE conversation projection every client renders from, and
-make voice transport a typed fact on each turn instead of an erased one. Today (ADR 0047, 2026-11-02)
-the runtime drops a spoken question's recording and an answer's read-aloud audio from a turn's
+Make voice transport a typed fact on each conversation turn instead of an erased one. Today
+(ADR 0047, 2026-11-02) the runtime drops a spoken question's recording and an answer's read-aloud audio from a turn's
 `attachments`/`artifacts`; the gateway listing hides them by default; the shared Swift client re-applies
 the rule. Nothing left in the projection says the question was spoken or the answer read aloud, so no
-view can show a mic glyph or replay what was heard, and seven client lanes still read three different
-sources (bundle turns; the replay view with artifacts found by ledger path; the Code TUI's ledger folds).
-Operator principle: every client receives the same data and only interprets it differently.
+view can show a mic glyph or replay what was heard. Operator principle: every client receives the same
+data and only interprets it differently. The scope below was written against the history bundle's
+session turns; which projection carries the block is decided in
+[1114](1114_one_conversation_projection_replay_view_or_history_bundle.md).
 
 ## Why
 
@@ -45,10 +47,10 @@ Deferred by the operator on 2026-11-02 ("we can't afford to do it now").
   The transcribe route tags its transcript artifact as transport (today it is an untagged `derived_text`
   that only a phone-side inference hides).
 - Clients: watch and phone pass the dictation reference at run start (`transcribe` keeps the artifact
-  ref); every client renders from bundle turns only (messages, attachments, generated media, `voice`);
-  the watch switches its media source from the session listing to the turn rows; panel-chat ingests
-  turn rows (removing its per-turn run fan-out); the Code TUI and desktop follow. UI: hide by default,
-  mic glyph on a spoken question, replay through the existing speaker control.
+  ref); every client reads the `voice` block from the projection chosen in 1114. UI: hide by default,
+  mic glyph on a spoken question, replay through the existing speaker control. Moving every client onto
+  one projection (the watch's media source, panel-chat's per-turn run fan-out, the Code TUI and desktop
+  lanes) is 1114's scope.
 - Retire the client guards (`SessionTurn.isVoiceTransport`, `sessionHistoryByTurns`, the watch listing
   fallback) in the same release, one release after the apps' CHANGELOG names the gateway floor.
 - ADR 0047: add "the projection types voice transport, it does not erase it" and the provenance clause.
@@ -74,6 +76,9 @@ Deferred by the operator on 2026-11-02 ("we can't afford to do it now").
 ## Dependencies
 
 - ADR 0047 (accepted). Release order: runtime → gateway → clients (watch, phone, web/panel-chat, TUI).
+- [1114](1114_one_conversation_projection_replay_view_or_history_bundle.md): which projection carries the
+  block; [1065](../planned/1065_replay_view_client_migrations.md) and
+  [0993](../planned/0993_one_ledger_replay_many_views.md) are the replay-view plans it must agree with.
 - A check that flows validating `context` strictly accept `context.voice`.
 
 ## Acceptance criteria

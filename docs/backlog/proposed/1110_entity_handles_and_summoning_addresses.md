@@ -2,6 +2,7 @@
 
 ## Metadata
 - Created: 2026-07-08
+- Renumbered: 2026-11-03, was 0212 (the id was shared with the agency-parity item 0212 in `planned/agency-parity/`)
 - Status: Proposed
 - Completed: N/A
 
@@ -73,4 +74,4 @@ link (`?gateway=…&entity=…`) is a folk version of exactly this.
 
 ## First cut
 Resolution endpoint + observer rendering + copy affordance. No federation in
-this item (see 0213/0214) — a handle that is merely LOCAL is already useful.
+this item (see 1111/1112) — a handle that is merely LOCAL is already useful.
