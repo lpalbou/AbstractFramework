@@ -818,6 +818,10 @@ def sandbox_profile(home: Path, allow_write: list[Path], deny: list[Path]) -> st
         "(allow default)",
         '(deny network-outbound (remote ip "localhost:8080"))',
         f"(deny file-write* (subpath {q(home)}))",
+        # A sandboxed process cannot exec a setuid binary. The two read-only process inspectors run
+        # outside the sandbox; the other setuid tools (su, login, crontab, at) stay refused.
+        '(allow process-exec (literal "/bin/ps") (with no-sandbox))',
+        '(allow process-exec (literal "/usr/bin/top") (with no-sandbox))',
     ]
     lines += [f"(allow file-write* (subpath {q(p)}))" for p in allow_write]
     lines += [f"(deny file-read* file-write* (subpath {q(p)}))" for p in deny]
