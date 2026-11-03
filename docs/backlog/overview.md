@@ -15,8 +15,8 @@ excluded consistently. The figures below are the current item-file inventory.
 
 | State | Files | Notes |
 |---|---|---|
-| Planned | 190 | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
-| Proposed | 82 | 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Planned | 153 (numbered items, topic subfolders included; 101 at the top level) | Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
+| Proposed | 79 (topic subfolders included; 68 at the top level) | 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
 | Completed | 298 | Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 2 | Existing deprecated records. |
 | Recurrent | 3 | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
@@ -204,6 +204,12 @@ Longer-running architecture work (unchanged since before the waves):
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
+| 1102 | [Release wave 2026-11-03: coordination record](planned/1102_release_wave_2026_11_03_coordination.md) | Planned (in progress) | The swarm's memory for the root 0.12.1 wave: lanes, PRs, gates, state; updated at every milestone. |
+| 1103 | [A gateway pause or restart never fails a run](planned/1103_gateway_pause_or_restart_never_fails_a_run.md) | Planned (release blocker) | Regression since gateway f6601e2b (2026-10-29): a polite stop fails in-flight model calls and marks runs failed; fix = runtime `EffectInterrupted` + gateway raising it; ADR 0002 amendment. |
+| 1104 | [Decision capability end to end, Core to Flow](planned/1104_decision_capability_end_to_end_core_to_flow.md) | Planned (in progress) | Real-call pass/fail table from abstractcore generate through `/v1/decisions`, the runtime node and a Flow run; Core fixes. |
+| 1105 | [Decision providers are first-class families; unknown families never "corrupt"](planned/1105_decision_providers_are_first_class_families_and_unknown_families_never_corrupt.md) | Planned (in progress) | `typesafe` rejected by the 2.32.0 loader, which wrote `.corrupt-*.bak` copies of the operator's config. |
+| 1106 | [Sessions vs automation runs: one tag, reused everywhere](planned/1106_sessions_vs_automations_tag_reused_in_tray_and_every_list.md) | Planned (in progress) | Tray Conversations → Running listed automation occurrences; every list reads the gateway's tag. |
+| 1107 | [Compare converts numeric text exactly when the other side is typed](planned/1107_compare_converts_numeric_text_exactly_when_the_other_side_is_typed.md) | Planned (in progress) | Option B of the architect report; ADR 0049 §6 amendment. |
 | 1099 | [Active and recent first, a folded Paused section, in every app](planned/1099_active_first_paused_section_all_clients.md) | Planned (merged everywhere 2026-11-02; release pending) | The gateway serves automations active-first by last activity, then paused, with `section`/`last_activity_at`/`paused_automations_count`; every app that lists automations or sessions draws that order with a folded Paused section. ADR 0048. Merged: gateway #90, UIC #50, Observer #17, Code #34, Assistant #41. |
 | 1033 | [Hamlet voice routing and chat isolation](completed/1033_hamlet_voice_route_and_chat_isolation.md) | Completed 2026-10-18 | Router context leak fixed; corrected .15 deployed for this account, exact Hamlet WAV and ordinary-start selection verified. |
 | 1032 | [iPhone timed expandable activity and voice incident trace](completed/1032_iphone_timed_expandable_activity.md) | Completed 2026-10-18 | Expandable public results, chronology and elapsed times; normal 0.6.14 (22) installed. |
