@@ -5,6 +5,8 @@
 > Created: 2026-09-25
 > Priority: normal
 > Labels: models, mlx, defaults
+> Status: Completed
+> Completed: 2026-11-03 (recorded; shipped in abstractcore 2.15.2)
 
 ## Summary
 
@@ -30,9 +32,9 @@ the default gets a download/load failure. The published repository is
 
 ## Acceptance criteria
 
-- [ ] `git -C abstractcore show v<next>:abstractcore/providers/registry.py | grep Qwen3-4B-4bit`.
-- [ ] The test asserts the default id exists in the catalog seed (no network needed).
-- [ ] CHANGELOG entry under the released version.
+- [x] `git -C abstractcore show v<next>:abstractcore/providers/registry.py | grep Qwen3-4B-4bit`.
+- [x] The test asserts the default id exists in the catalog seed (no network needed).
+- [x] CHANGELOG entry under the released version.
 
 ## Testing
 
@@ -45,3 +47,11 @@ the default gets a download/load failure. The published repository is
 ## Receipts
 
 - `untracked/coredoc-2026-09-25/STATUS.md` (abstractcore row); abstractcore commit `cb2c160`.
+
+## Completion report (2026-11-03)
+
+- Fix `cb2c1600` "fix(mlx): the default MLX model id names a published repo", first in tag `v2.15.2`
+  (`git tag --contains cb2c1600`). On `origin/main` today: `providers/registry.py` l.280 and `endpoint/app.py`
+  l.1167 default to `mlx-community/Qwen3-4B-4bit`.
+- `tests/providers/test_mlx_default_model_id.py` pins the id and cross-checks it against the catalog seed (offline).
+- CHANGELOG `[2.15.2] - 2026-09-25` says the default is now `mlx-community/Qwen3-4B-4bit`.

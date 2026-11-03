@@ -5,6 +5,8 @@
 > Created: 2026-11-03
 > Priority: high
 > Labels: decision, jev, kev, e2e
+> Status: Completed
+> Completed: 2026-11-03 (recorded; shipped in abstractcore 2.33.0)
 
 ## Summary
 
@@ -27,8 +29,20 @@ Operator 2026-11-03: "one of the key modification of abstractcore recently was t
 
 ## Acceptance criteria
 
-- [ ] Local Kev and hosted Jev decisions succeed through generate, `/v1/decisions`, the runtime node and a Flow run; `/v1/models` carries `capabilities` + `decision.endpoint`; chat on a decision model → 400 decision_model.
+- [x] Local Kev and hosted Jev decisions succeed through generate, `/v1/decisions`, the runtime node and a Flow run; `/v1/models` carries `capabilities` + `decision.endpoint`; chat on a decision model → 400 decision_model.
 
 ## Receipts
 
 - W4 running 2026-11-03 03:10.
+
+## Completion report (2026-11-03)
+
+- AbstractCore PR #41 (`fix/decision-e2e`, merged 2026-11-03 as `57081f51`, in tag `v2.33.0`).
+- Two Core defects found by real calls and fixed: hosted decision models were listed as text models under every
+  filter; a `typesafe` + `jev-latest` decision default ran the most recently loaded local Kev instead.
+- Per-level proof in the PR body (scratch HOME and gateway, Kev-0.8B MLX 8-bit + hosted Jev): Core
+  `generate(output="decision")`; gateway `POST /v1/decisions`, `/v1/models` decision rows, chat on a decision
+  model -> 400 `decision_model`; AbstractRuntime `decision-triage.json` run COMPLETED; AbstractFlow Decision node
+  saved, loaded and run from the Run dialog.
+- Tests: `tests/server/test_decisions_endpoint.py`, `tests/decision/test_decision_generate.py` (each red with its fix
+  removed, per the PR).

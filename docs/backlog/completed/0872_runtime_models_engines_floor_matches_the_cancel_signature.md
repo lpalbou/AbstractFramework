@@ -5,6 +5,8 @@
 > Created: 2026-09-25
 > Priority: low
 > Labels: packaging, version-floor
+> Status: Completed
+> Completed: 2026-11-03 (recorded; defect fixed in AbstractRuntime; the test clause was not adopted, see below)
 
 ## Summary
 
@@ -43,3 +45,15 @@ pyproject) prevents the mismatch in a resolved install, but the in-code floor an
 ## Receipts
 
 - `untracked/coredoc-2026-09-25/STATUS.md` (abstractruntime row).
+
+## Completion report (2026-11-03)
+
+- The defect is fixed: `MODELS_ENGINES_MIN_ABSTRACTCORE` is `"2.16.0"` on AbstractRuntime `origin/main`
+  (`config_facade.py` l.659), above the 2.15.1 the `host_job_cancel(by=, user=)` signature needs, so the message
+  no longer names a Core that lacks it.
+- Not met as written: "constant >= the `abstractcore` floor in `pyproject.toml`, enforced by a test". The package
+  floor is now `abstractcore>=2.33.0` and `tests/test_config_facade_models_engines.py` pins
+  `MODELS_ENGINES_MIN_ABSTRACTCORE == "2.16.0"`. The facade moved to feature detection ("FEATURE DETECTION, NOT
+  VERSION PARSING": each passthrough imports the Core module it needs and raises `AbstractCoreTooOld` when the
+  import fails), so the constant only words the message; a resolved install is held by the package floor.
+- Closed as done on the coordinator's ruling (2026-11-03) with this note; the acceptance boxes stay unticked.
