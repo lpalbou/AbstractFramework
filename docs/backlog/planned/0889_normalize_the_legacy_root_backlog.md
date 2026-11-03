@@ -13,7 +13,7 @@ The 2026-09-25 hygiene scan found the root backlog cannot be counted or searched
 043, 102–120: the stale planned copies were never removed); 231 item files lack a four-digit
 `NNNN_` prefix (three-digit legacy names, `NNN-<package>-…` hub-era names, two date-prefixed
 `2026-05-08_*` files); ~70 numeric IDs are reused (e.g. `001`–`018` by both legacy and hub-era
-items; `0212`–`0214` by `planned/agency-parity/` and `proposed/`); `planned/agency-parity/` holds
+items; `0212`–`0214` by `planned/agency-parity/` and `proposed/`, resolved 2026-11-03: the proposed ones became 1110–1112); `planned/agency-parity/` holds
 items whose status is "Done (tested)"; `docs/backlog/fable-opinions/` is an unindexed folder.
 
 ## Current code reality (root at the 2026-09-25 trace)

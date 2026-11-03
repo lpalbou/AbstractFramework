@@ -65,7 +65,7 @@ as the assistant reply, not the requested generated spoken file.
 - One adversarial reviewer `tools_astra`: schema excludes audio but unknown switch is
   connected; exact run trace required rather than speculative switch changes.
 - Related [1031](../completed/1031_iphone_condensed_file_and_web_activity.md),
-  [1027](1027_restore_media_endpoint_resolution_and_verify_remote_iphone_images.md).
+  [1027](../planned/1027_restore_media_endpoint_resolution_and_verify_remote_iphone_images.md).
 - ADR impact: None intended; authorized durable public ledger remains source of truth.
 
 ## Completion report

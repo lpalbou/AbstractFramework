@@ -1,5 +1,6 @@
-# 1072: The installer never leaves a gateway running outside systemd
+# 1109: The installer never leaves a gateway running outside systemd
 
+**Renumbered**: 2026-11-03, was 1072 (the id was shared with [1072](../proposed/1072_core_recommendation_bands.md), the core recommendation bands item).
 **Status**: completed 2026-10-29 (scripts/install.sh; ships with the next root release).
 **Found by**: the OVH release-test server (2026-10-28). At 17:37 an install started the gateway in the background
 (`MODE=background`) while the systemd user unit of the same gateway, from the 14:04 install, stayed enabled. At

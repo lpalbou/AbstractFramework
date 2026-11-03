@@ -49,7 +49,7 @@ The operator asked for an explicit distinction between chat sessions, automation
 ## References
 
 - Round-2 finding 1 in the design note.
-- [0993](../0993_one_ledger_replay_many_views.md)
+- [0993](../../planned/0993_one_ledger_replay_many_views.md)
 
 ## Receipts
 

@@ -247,7 +247,7 @@ of the round-1 rework are
     [0997](../proposed/0997_cross_session_references_under_user_supervision.md) (reference other
     sessions and their attachments under a ledger-recorded user grant; today a session sees only
     its own) and [0998](../proposed/0998_at_mentions_of_agents_and_entities_in_a_session.md)
-    (@-mentions of agents and entities; agora/collaborative workspaces, with 0212/0213/008).
+    (@-mentions of agents and entities; agora/collaborative workspaces, with 1110/1111/008).
 
 **Recorded during the 0.9.0 release (round 3, 2026-10-01/02)**
 67. MCP tools in entity (AI user) runs and plain `llm_call` nodes: an entity run and an `llm_call` node can call `mcp::<server>::<tool>` under the same Ask gate; red-first tests. Owner: runtime + gateway.

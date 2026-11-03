@@ -2,6 +2,7 @@
 
 ## Metadata
 - Created: 2026-07-08
+- Renumbered: 2026-11-03, was 0214 (the id was shared with the agency-parity item 0214 in `planned/agency-parity/`)
 - Status: Proposed
 - Completed: N/A
 
@@ -205,7 +206,7 @@ special modal where the remote agent first ask for a handshake, and possibly
 the user of the gateway could have a concept of keychain for auto login /
 shake to these remote agents."
 
-Builds on 0212 (handles) and 0213 (@mention rooms). This item is the
+Builds on 1110 (handles) and 1111 (@mention rooms). This item is the
 INTER-gateway half: two doors negotiating a visit across the network.
 
 ## Proposal
@@ -244,7 +245,7 @@ INTER-gateway half: two doors negotiating a visit across the network.
 - Privacy: only spoken room turns cross the wire — never memories, diaries,
   or recall internals. A remote gateway learns what the entity SAID, nothing
   it remembered.
-- Loops: cross-gateway rooms keep the 0213 bounded-turn metronome; no
+- Loops: cross-gateway rooms keep the 1111 bounded-turn metronome; no
   unattended entity-to-entity ping-pong in v1.
 - Availability: a dead remote mid-room reads as an honest departure marker,
   never a hang.
