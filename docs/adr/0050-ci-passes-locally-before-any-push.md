@@ -3,6 +3,9 @@
 Status: Accepted — operator ruling 2026-11-03 ("it must succeed here before even attempting a push
 on GH"; "CI/CD fail should be the exception, not the normal path").
 
+Amended 2026-11-04 by ADR 0051: which jobs a push must pass locally depends on its test tier (L light or F
+full, `scripts/ci_local.sh --tier light|full`); release branches are always F.
+
 ## Context
 
 In the 24 hours of the 2026-11-03 release wave, 22 workflow runs failed across six repositories
