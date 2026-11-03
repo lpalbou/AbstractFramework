@@ -100,10 +100,27 @@ terminal console) and AbstractCore's console fixtures copied into the gateway te
 Each copy ships with its own package release, so an identity change reaches users as those
 packages are released.
 
+## Before you push
+
+Every repository of the workspace (this one, AbstractCore, AbstractGateway, AbstractRuntime,
+AbstractAgent, AbstractFlow, AbstractUIC, AbstractCode, AbstractEntity, AbstractObserver,
+AbstractAssistant) follows three rules ([Local CI gate](docs/ci-local.md)):
+
+- **No push without `scripts/ci_local.sh <repo>` green** for the commit you push. It runs the
+  repository's GitHub Actions jobs on your Mac from the workflow files (main's full matrix, every
+  step, fresh environments that install sibling packages from PyPI) and exits non-zero when CI
+  would fail. The opt-in pre-push hook runs it for you: `scripts/install_hooks.sh <repo>`;
+  `git push --no-verify` is the only override.
+- **A pull request whose CI is red by design is not opened.** When a branch needs a dependency
+  floor that is not on PyPI yet, or a smoke that needs an unreleased version, the branch stays
+  local until the dependency is visible on its registry.
+- **A red main is an incident.** Whoever merged reverts it or fixes it within the hour.
+
 ## Pull requests
 
 - Keep a pull request focused on one change and describe what a user sees differently.
-- Add or update tests for behaviour changes; run the commands above before you push.
+- Add or update tests for behaviour changes; run the commands above and `scripts/ci_local.sh`
+  before you push.
 - Record user-visible changes in [CHANGELOG.md](CHANGELOG.md).
 - For decisions that span packages, read the [ADR index](docs/adr/README.md) first; a new
   cross-package rule needs an ADR.
