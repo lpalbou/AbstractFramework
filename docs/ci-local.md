@@ -19,8 +19,12 @@ its own environment, `HOME`, `TMPDIR` and log, so they are independent; verdict 
 finish and an ordered summary closes the run. Jobs listed in `SERIAL_JOBS` in `scripts/ci_local.py`
 run alone, one at a time, after everything else, with the jobs that need them: AbstractCore's
 local-model tests (one model process at a time), the Gateway load test (its p99 gates need a
-quiet machine) and the root bootstrap smoke (each entry starts a gateway on port 18080; on GitHub
-they are separate machines). The repository's name comes from its `origin` URL (`.../AbstractCore.git` is
+quiet machine) and the root bootstrap smoke (each entry installs and starts a whole gateway; on
+GitHub they are separate machines). A job that binds a fixed port (listed in `JOB_PORTS`: the root
+bootstrap smoke's `18080`) gets a free port of its own from 28000-28999 when it starts, reserved
+by a lock under `~/Library/Caches/ci-gate/ports/` so two gates never share it, and the fixed
+number is rewritten in its scripts and env (`--port 18080`, `http://127.0.0.1:18080`). The job's
+log says which port it got. The repository's name comes from its `origin` URL (`.../AbstractCore.git` is
 `abstractcore`), never from the folder, so a run on a worktree path (`untracked/wt-w3-ttl`) gets the
 main checkout's serial rules, shared Rust folder, `--keep-runs` count and run folder names. A
 name that is not a plain file name (`..`) falls back to the folder name. Two forks with the same
@@ -132,6 +136,28 @@ The pull request body states the tier and why; a reviewer may raise it.
   GitHub. Its path holds no `local` either: AbstractCore's zig outline test checks that word
   is absent from output that prints its temporary path. The environment is clean: no token, no provider key, no `ABSTRACT*` variable from your
   shell, so nothing reaches the gateway you run on `:8080` or reads `~/.abstractcore`.
+- **Nothing is written outside this machine.**
+  - A step that pushes or publishes never runs: `git push`, `gh release create/upload/edit/delete`,
+    `gh api` with a write method or fields, `gh pr merge` and the like, `twine upload`,
+    `npm publish`, `cargo publish`, `uv publish`, `docker push`, or `curl` posting to GitHub, PyPI,
+    npm or crates.io. The job stops there as SKIPPED with the reason
+    (`writes outside this machine (git push); GitHub runs it`), so the run reports it under "could
+    not run here".
+  - Every job also runs without credentials, so a command those patterns miss has nothing to
+    publish with:
+    - no `GH_TOKEN`, `GITHUB_TOKEN`, `NPM_TOKEN`, `NODE_AUTH_TOKEN`, `TWINE_*`,
+      `CARGO_REGISTRY_TOKEN`, `SSH_AUTH_SOCK` or npm's env-style auth (an `npm_config_*` key whose
+      name or value holds `_auth` or `authToken`), whatever your shell, the workflow or
+      `$GITHUB_ENV` sets;
+    - a `HOME` of its own (no `~/.netrc`, `~/.config/gh`, `~/.npmrc`, `~/.pypirc`, `~/.docker`);
+    - a `CARGO_HOME` of its own, with the download caches linked in but not
+      `~/.cargo/credentials.toml`;
+    - git without system config (Xcode's Keychain helper), a credential helper or a prompt;
+    - `ssh` refused (it reads your real `~/.ssh` whatever `HOME` says). A legitimate job that needs
+      ssh (a clone over `git@github.com:`, an `ssh` to a host) therefore reads as FAIL here; on
+      GitHub it would lack the key too unless a secret provides it, and a job reading `secrets.*`
+      is skipped here anyway.
+    - Python's keyring with no Keychain.
   `--sandbox` also runs every step under `sandbox-exec`, which refuses connections to
   `localhost:8080`, writes under your home directory outside the run and the download caches (uv,
   pip, npm, cargo, Playwright), and `~/.abstractcore` and the workspace's `runtime/`; it is off by
