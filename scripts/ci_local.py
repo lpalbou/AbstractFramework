@@ -976,6 +976,58 @@ def prune_runs(runs_root: Path, repo_name: str, current: Path, keep: int, allowe
     return deleted, note
 
 
+# A step that writes outside this machine (pushes, publishes, releases, posts to GitHub or a
+# registry) never runs here: GitHub runs it. The job stops at that step as SKIPPED ("could not run
+# here"). Credentials are stripped from every job as well (credential_free_env), so a command these
+# patterns miss still has nothing to publish with.
+_HOSTS = r"(?:api\.github\.com|uploads\.github\.com|github\.com|upload\.pypi\.org|pypi\.org|test\.pypi\.org|registry\.npmjs\.org|crates\.io)"
+OUTSIDE_WRITES = [
+    ("git push", r"\bgit(?:\s+-[Cc]\s+\S+|\s+-\S+)*\s+push\b"),
+    ("gh release", r"\bgh\s+release\s+(?:create|upload|edit|delete)\b"),
+    ("gh api write", r"\bgh\s+api\b[^\n;|&]*(?:\s(?:-X|--method)\s*(?:POST|PUT|PATCH|DELETE)\b|\s(?:-f|-F|--field|--raw-field|--input)\b)"),
+    ("gh write", r"\bgh\s+(?:pr\s+(?:create|merge|comment|edit|close|review)|issue\s+(?:create|comment|edit|close)|workflow\s+run|repo\s+(?:create|edit|delete)|secret\s+set|variable\s+set)\b"),
+    ("twine upload", r"\btwine\s+upload\b"),
+    ("npm publish", r"\b(?:npm|pnpm|yarn)\s+(?:\S+\s+)*?publish\b"),
+    ("cargo publish", r"\bcargo\s+(?:\+\S+\s+)?publish\b"),
+    ("uv publish", r"\b(?:uv|poetry|maturin|flit|hatch)\s+publish\b"),
+    ("docker push", r"\b(?:docker|podman)\s+(?:image\s+)?push\b"),
+    ("curl write", r"\bcurl\b[^\n;|&]*(?:\s(?:-X|--request)\s*(?:POST|PUT|PATCH|DELETE)\b|\s(?:-d|--data\S*|-F|--form|-T|--upload-file)\s)[^\n;|&]*" + _HOSTS),
+]
+# Never passed to a step, whatever the workflow, $GITHUB_ENV or your shell says.
+CREDENTIAL_ENV = {"GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN", "NPM_TOKEN",
+                  "NODE_AUTH_TOKEN", "CARGO_REGISTRY_TOKEN", "UV_PUBLISH_TOKEN", "UV_PUBLISH_PASSWORD",
+                  "PYPI_TOKEN", "PYPI_API_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_URL",
+                  "ACTIONS_RUNTIME_TOKEN", "DOCKER_PASSWORD", "SSH_AUTH_SOCK"}
+SSH_REFUSED = """#!/bin/sh
+echo "ci_local: ssh is refused in a job here (nothing leaves this machine with your keys)" >&2
+exit 1
+"""
+
+
+def outside_write(script: str) -> str | None:
+    """The kind of write outside this machine a step's script makes (`git push`, `npm publish`, ...),
+    or None."""
+    for kind, pattern in OUTSIDE_WRITES:
+        if re.search(pattern, script):
+            return kind
+    return None
+
+
+def _npm_auth(key: str, value: str) -> bool:
+    """npm's env-style auth: an npm_config_* / NPM_CONFIG_* key whose name or value carries `_auth`
+    or `authToken` (`NPM_CONFIG__AUTH`, `npm_config_//registry.npmjs.org/:_authToken`)."""
+    k = key.lower()
+    return k.startswith("npm_config_") and any(m in text for text in (k, value.lower()) for m in ("_auth", "authtoken"))
+
+
+def credential_free_env(env: dict[str, str]) -> dict[str, str]:
+    """`env` without a publishing credential: the names in CREDENTIAL_ENV, TWINE_*, the
+    per-registry cargo tokens, and npm's env-style auth."""
+    return {k: v for k, v in env.items()
+            if k not in CREDENTIAL_ENV and not k.startswith("TWINE_")
+            and not (k.startswith("CARGO_REGISTRIES_") and k.endswith("_TOKEN")) and not _npm_auth(k, v)}
+
+
 def git(*args: str, cwd: Path | None = None, check: bool = True, quiet: bool = False) -> str:
     cmd = ["git", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
            "-c", "user.name=ci-local", "-c", "user.email=ci-local@localhost", *args]
@@ -1778,7 +1830,16 @@ class Runner:
             # Download caches shared across runs (actions/cache plays this part on GitHub).
             "UV_CACHE_DIR": str(rh / ".cache" / "uv"), "PIP_CACHE_DIR": str(rh / "Library" / "Caches" / "pip"),
             "npm_config_cache": str(rh / ".npm"), "PLAYWRIGHT_BROWSERS_PATH": str(rh / "Library" / "Caches" / "ms-playwright"),
-            "CARGO_HOME": str(rh / ".cargo"), "RUSTUP_HOME": str(rh / ".rustup"), "CARGO_TARGET_DIR": str(target),
+            # A CARGO_HOME of the job's own: the download caches are linked in, ~/.cargo/credentials.toml is not.
+            "CARGO_HOME": str(jobdir / "cargo-home"), "RUSTUP_HOME": str(rh / ".rustup"), "CARGO_TARGET_DIR": str(target),
+            # No credential reaches a step: HOME is the job's own (no ~/.netrc, ~/.config/gh, ~/.npmrc,
+            # ~/.pypirc, ~/.docker); git reads no system config (Xcode's osxkeychain helper) and asks no
+            # helper or terminal; ssh is refused (it reads your real ~/.ssh whatever HOME says);
+            # Python's keyring (twine) sees no Keychain.
+            "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "credential.helper",
+            "GIT_CONFIG_VALUE_0": "", "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never",
+            "GIT_SSH_COMMAND": str(jobdir / "shims" / "ssh-refused"),
+            "PYTHON_KEYRING_BACKEND": "keyring.backends.null.Keyring",
             # uv pip as pip: best match across indexes, and pip's tolerance of wheels whose zip headers
             # disagree with their contents (llama.cpp's macOS CPU wheel; pip installs it, uv refuses).
             # manual: uv never fetches a Python on its own, but an explicit `uv python install` (the
@@ -1800,6 +1861,14 @@ class Runner:
         for tool in ("sudo", "apt-get", "apt"):
             (shims / tool).write_text(ROOT_SHIM, encoding="utf-8")
             (shims / tool).chmod(0o755)
+        for tool in ("ssh", "ssh-refused"):
+            (shims / tool).write_text(SSH_REFUSED, encoding="utf-8")
+            (shims / tool).chmod(0o755)
+        cargo_home = jobdir / "cargo-home"
+        cargo_home.mkdir()
+        for part in ("registry", "git", "bin"):  # caches and installed tools; never credentials or config
+            (rh / ".cargo" / part).mkdir(parents=True, exist_ok=True)
+            (cargo_home / part).symlink_to(rh / ".cargo" / part)
         rust_bin = jobdir / "rust-bin"
         rust_bin.mkdir()
         for tool in RUST_TOOLS:
@@ -1887,6 +1956,10 @@ class Runner:
                             with self.lock, open(self.run_dir / "light-counts", "a", encoding="utf-8") as f:
                                 f.write("1\n")
                         script = narrowed
+                    write = outside_write(script)
+                    if write:
+                        log.write(f"ci_local: not run: the step writes outside this machine ({write})\n")
+                        return "SKIPPED", f"step {name!r} writes outside this machine ({write}); GitHub runs it"
                     if a.installer == "uv":
                         script = translate_pip(script, self.uv)
                     script_path = jobdir / "steps" / f"{n:02d}.sh"
@@ -1914,7 +1987,7 @@ class Runner:
                     if step.get("timeout-minutes"):
                         limit = min(limit, 60 * _num(interpolate(step.get("timeout-minutes"), senv)))
                     wrap = ["sandbox-exec", "-f", str(profile)] if a.sandbox else []
-                    code, why = self._exec([*wrap, *argv], cwd, step_env, log, limit, pgids)
+                    code, why = self._exec([*wrap, *argv], cwd, credential_free_env(step_env), log, limit, pgids)
                     if (jobdir / "needs-root").exists():
                         cmd = (jobdir / "needs-root").read_text(encoding="utf-8").splitlines()[0]
                         return "SKIPPED", f"step {name!r} needs root on a Linux runner ({cmd})"
