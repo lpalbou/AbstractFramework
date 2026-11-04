@@ -655,6 +655,132 @@ def test_an_interrupted_run_deletes_nothing(tmp_path, monkeypatch):
     assert all(d.exists() for d in old)
 
 
+def test_steps_that_write_outside_this_machine_are_recognised():
+    writes = {
+        "git push origin v0.18.0": "git push",
+        'git -C "$repo" push --tags': "git push",
+        "git -c user.name=x push": "git push",
+        "gh release create v1 dist/*": "gh release",
+        "gh api -X POST repos/o/r/git/refs -f ref=refs/tags/v1": "gh api write",
+        "gh api repos/o/r/releases -f tag_name=v1": "gh api write",
+        "gh pr merge 12 --squash": "gh write",
+        "python -m twine upload dist/*": "twine upload",
+        "npm publish --access public": "npm publish",
+        "npm --workspace ui-kit publish": "npm publish",
+        "cargo publish -p abstracttui": "cargo publish",
+        "uv publish dist/*": "uv publish",
+        "docker push ghcr.io/o/i:1": "docker push",
+        "curl -X POST -H 'Authorization: x' https://api.github.com/repos/o/r/releases": "curl write",
+        "curl -fsS --data @body.json https://upload.pypi.org/legacy/": "curl write",
+    }
+    for script, kind in writes.items():
+        assert ci.outside_write(f"set -e\necho start\n{script}\n") == kind, script
+    for script in ("npm test", "npm run build", "gh release view v1", "gh api repos/o/r", "git status",
+                   "git fetch origin main", "cargo test --workspace", "curl -fsS http://127.0.0.1:18080/api/health",
+                   "curl -X POST http://127.0.0.1:18080/api/runs", "pip install twine", "echo pushed"):
+        assert ci.outside_write(script) is None, script
+
+
+def test_npm_env_style_auth_never_reaches_a_step():
+    env = {"NPM_CONFIG__AUTH": "dXNlcjpwYXNz", "npm_config_//registry.npmjs.org/:_authToken": "npm_x",
+           "NPM_CONFIG_USERCONFIG": "/tmp/npmrc-with-//registry.npmjs.org/:_authToken", "npm_config__authtoken": "y",
+           "npm_config_cache": "/Users/me/.npm", "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/", "PATH": "/usr/bin"}
+    assert ci.credential_free_env(env) == {"npm_config_cache": "/Users/me/.npm",
+                                           "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/", "PATH": "/usr/bin"}
+
+
+def _one_job_repo(path: Path, steps: list, env: dict | None = None) -> Path:
+    import subprocess
+
+    repo = _tiny_repo(path)
+    job = {"runs-on": "macos-latest", "steps": steps, **({"env": env} if env else {})}
+    workflow = {"name": "CI", "on": {"push": {"branches": ["main"]}}, "jobs": {"ok": job}}
+    (repo / ".github" / "workflows" / "ci.yml").write_text(json.dumps(workflow), encoding="utf-8")
+    git_env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+               "GIT_COMMITTER_EMAIL": "t@t"}
+    subprocess.run(["git", "-c", "commit.gpgsign=false", "commit", "-qam", "job"], cwd=repo, check=True, env=git_env)
+    return repo
+
+
+def _run_tiny(repo: Path, tmp_path: Path, monkeypatch, *extra: str) -> int:
+    import types
+
+    try:
+        import yaml  # noqa: F401
+    except ImportError:
+        monkeypatch.setitem(sys.modules, "yaml", types.SimpleNamespace(safe_load=json.loads))
+    monkeypatch.setattr(ci, "SCRATCH", tmp_path / "ci-gate")
+    return ci.main([str(repo), "--base-sha", "HEAD", "--no-merge", "--branch", "main", "--event", "push",
+                    "--workspace", str(tmp_path), "--work", str(tmp_path / "ci-gate" / "runs"),
+                    "--keep-runs", "all", "--jobs", "1", *extra])
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_a_step_that_pushes_never_runs(tmp_path, monkeypatch, capsys):
+    marker = tmp_path / "pushed"
+    repo = _one_job_repo(tmp_path / "tinyrepo", [
+        {"name": "Ensure release tag", "run": f"touch '{marker}'; git push origin v0.18.0"}])
+    assert _run_tiny(repo, tmp_path, monkeypatch, "--allow-skipped") == 0
+    out = capsys.readouterr().out
+    assert "SKIPPED" in out and "writes outside this machine (git push)" in out
+    assert not marker.exists()  # the step never started
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_a_job_has_no_credential_whatever_the_shell_and_the_workflow_hold(tmp_path, monkeypatch):
+    import shutil
+
+    for name in ("GH_TOKEN", "GITHUB_TOKEN", "NPM_TOKEN", "TWINE_PASSWORD", "CARGO_REGISTRY_TOKEN"):
+        monkeypatch.setenv(name, "secret-from-your-shell")
+    probe = "\n".join([
+        "env | grep -E '^(GH_TOKEN|GITHUB_TOKEN|NPM_TOKEN|TWINE_|CARGO_REGISTRY_TOKEN|SSH_AUTH_SOCK)=' || echo no-token",
+        'for f in "$HOME/.netrc" "$HOME/.config/gh" "$HOME/.npmrc" "$HOME/.pypirc" "$CARGO_HOME/credentials.toml"'
+        ' "$CARGO_HOME/credentials"; do [ -e "$f" ] && echo "found $f"; done; echo files-checked',
+        "printf 'protocol=https\\nhost=github.com\\n\\n' | GIT_TRACE=1 git credential fill 2>&1"
+        " | grep -q 'credential-' && echo git-helper-ran || echo no-git-helper",
+        "ssh -V 2>/dev/null && echo ssh-ok || echo ssh-refused",  # no network: the shim refuses even -V
+        # git refuses ssh even when a step puts the real ssh first on PATH (GIT_SSH_COMMAND)
+        "PATH=/usr/bin:$PATH git ls-remote git@github.com:o/r.git 2>&1 | grep -q 'ssh is refused'"
+        " && echo git-ssh-refused || echo git-ssh-ran",
+        "echo GITHUB_TOKEN=x >> \"$GITHUB_ENV\"",  # a step hands a token to the next one
+        *(["gh auth status >/dev/null 2>&1 && echo gh-logged-in || echo gh-not-logged-in"] if shutil.which("gh") else []),
+    ])
+    repo = _one_job_repo(tmp_path / "tinyrepo", [{"run": probe}, {"run": "echo next=${GITHUB_TOKEN:-none}"}],
+                         env={"GITHUB_TOKEN": "from-the-workflow"})
+    assert _run_tiny(repo, tmp_path, monkeypatch) == 0
+    log = next((tmp_path / "ci-gate" / "runs").glob("*/jobs/*/log.txt")).read_text(encoding="utf-8")
+    assert "no-token" in log and "secret" not in log and "from-the-workflow" not in log
+    assert "found " not in log and "files-checked" in log
+    assert "no-git-helper" in log and "ssh-refused" in log and "git-ssh-refused" in log and "next=none" in log
+    if shutil.which("gh"):
+        assert "gh-not-logged-in" in log
+
+
+def test_test_material_is_never_uncovered_and_runs_its_packages_suite(tmp_path):
+    # Observer's layout: an npm package at the root, saved gateway answers under src/ui/__fixtures__/.
+    fixtures = [f"src/ui/__fixtures__/gateway-answer-{i}.json" for i in range(6)]
+    files = ["package.json", "src/ui/board.ts", "src/ui/board.test.ts", *fixtures]
+    keep, uncovered, owned = ci.light_tests(fixtures, files, lambda p: "")
+    assert uncovered == [] and owned == fixtures and keep == {}
+    (tmp_path / "package.json").write_text('{"scripts": {"test": "vitest run"}}', encoding="utf-8")
+    script, note = ci.light_step("npm test", ".", tmp_path, fixtures)
+    assert script == "npm test" and "runs whole: test material changed" in note  # vitest related would find none
+    # A JS test under __tests__ still goes to vitest related.
+    (tmp_path / "src" / "__tests__").mkdir(parents=True)
+    (tmp_path / "src" / "__tests__" / "a.test.ts").write_text("", encoding="utf-8")
+    script, _ = ci.light_step("npm test", ".", tmp_path, ["src/__tests__/a.test.ts"])
+    assert script.startswith("npx vitest related --run")
+    # A Python package: a fixture, a *.fixture.* file, or a helper no test imports runs the whole suite.
+    py = ["pyproject.toml", "src/pkg/core.py", "tests/test_core.py", "test/data/answer.json",
+          "src/pkg/sample.fixture.yaml", "tests/helpers/builders.py"]
+    for changed in (["test/data/answer.json"], ["src/pkg/sample.fixture.yaml"], ["tests/helpers/builders.py"]):
+        assert ci.light_tests(changed, py, lambda p: "") == (None, [], []), changed
+    # AbstractAvatar: a crate and a Python package at the root; a Python fixture belongs to pytest.
+    avatar = ["Cargo.toml", "pyproject.toml", "src/lib.rs", "tests/python/fixtures/scene.json"]
+    assert ci.light_tests(["tests/python/fixtures/scene.json"], avatar, lambda p: "") == (None, [], [])
+    assert ci.is_test_material("web/x.fixture.json") and not ci.is_test_material("src/testing.py")
+
+
 def test_fixed_ports_are_rewritten_as_whole_numbers():
     ports = {18080: 28003}
     assert ci.rewrite_ports("install.sh --port 18080 && curl http://127.0.0.1:18080/api/health", ports) == \
@@ -727,28 +853,3 @@ def test_a_job_with_a_fixed_port_runs_on_a_port_of_its_own(tmp_path, monkeypatch
     assert int(port) in ci.PORT_RANGE
     output = log.split("=== step 1:", 1)[1].splitlines()[1:]  # what the step printed (its title keeps the source)
     assert output == [f"serve --port {port}; health http://127.0.0.1:{port}"]
-
-
-def test_test_material_is_never_uncovered_and_runs_its_packages_suite(tmp_path):
-    # Observer's layout: an npm package at the root, saved gateway answers under src/ui/__fixtures__/.
-    fixtures = [f"src/ui/__fixtures__/gateway-answer-{i}.json" for i in range(6)]
-    files = ["package.json", "src/ui/board.ts", "src/ui/board.test.ts", *fixtures]
-    keep, uncovered, owned = ci.light_tests(fixtures, files, lambda p: "")
-    assert uncovered == [] and owned == fixtures and keep == {}
-    (tmp_path / "package.json").write_text('{"scripts": {"test": "vitest run"}}', encoding="utf-8")
-    script, note = ci.light_step("npm test", ".", tmp_path, fixtures)
-    assert script == "npm test" and "runs whole: test material changed" in note  # vitest related would find none
-    # A JS test under __tests__ still goes to vitest related.
-    (tmp_path / "src" / "__tests__").mkdir(parents=True)
-    (tmp_path / "src" / "__tests__" / "a.test.ts").write_text("", encoding="utf-8")
-    script, _ = ci.light_step("npm test", ".", tmp_path, ["src/__tests__/a.test.ts"])
-    assert script.startswith("npx vitest related --run")
-    # A Python package: a fixture, a *.fixture.* file, or a helper no test imports runs the whole suite.
-    py = ["pyproject.toml", "src/pkg/core.py", "tests/test_core.py", "test/data/answer.json",
-          "src/pkg/sample.fixture.yaml", "tests/helpers/builders.py"]
-    for changed in (["test/data/answer.json"], ["src/pkg/sample.fixture.yaml"], ["tests/helpers/builders.py"]):
-        assert ci.light_tests(changed, py, lambda p: "") == (None, [], []), changed
-    # AbstractAvatar: a crate and a Python package at the root; a Python fixture belongs to pytest.
-    avatar = ["Cargo.toml", "pyproject.toml", "src/lib.rs", "tests/python/fixtures/scene.json"]
-    assert ci.light_tests(["tests/python/fixtures/scene.json"], avatar, lambda p: "") == (None, [], [])
-    assert ci.is_test_material("web/x.fixture.json") and not ci.is_test_material("src/testing.py")
