@@ -24,8 +24,8 @@ packaged macOS .app, which copies the file in, and for checkouts.
 
 ## Why
 
-The app's 0.18.0 notes carry a known limitation: its palettes are older than ui-kit 0.9.14, and a refresh is planned.
-That refresh needs a command that works and leaves the file in place, not a hand copy.
+The 0.18.0 palette refresh (the desktop palettes are now ui-kit 0.9.14's) was a hand copy, because the command does
+not work. The next refresh should be one command that copies the file and says what it copied.
 
 ## Scope
 
