@@ -111,8 +111,9 @@ rendered with their support ("trust 0.83 over 12 outcomes"). No weighting by rec
 as a follow-up with the assessment signal).
 
 ### 7. Remembered in the home, told at the next summon
-Each identity write appends BEFORE the file moves: `{"marker": "identity_changed", "rev", "from", "to", "by", "at",
-"provenance"}` to `<home>/state_history.jsonl` (the `phase_changed` file and shape); the gateway also records a host
+Each identity write appends BEFORE the file moves: `{"marker": "identity_changed", "rev", "from", "to", "cause",
+"written_by", "at", "provenance"}` to `<home>/state_history.jsonl`, with the same field names as `phase_changed`
+(`abstractruntime.identity.life.append_phase_changed`: `written_by` is who wrote it, `cause` why), plus `rev`; the gateway also records a host
 marker `identity_changed`. The diary stays the entity's elected record: the host never writes a diary entry. The
 summon prelude carries ONE sentence from the newest `identity_changed` row newer than the previous summon
 ("Your voice changed on 4 November (by Laurent): now fr-male-rene." / "You were given your look and voice today.").
