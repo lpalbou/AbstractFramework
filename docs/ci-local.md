@@ -126,6 +126,24 @@ The pull request body states the tier and why; a reviewer may raise it.
   GitHub. Its path holds no `local` either: AbstractCore's zig outline test checks that word
   is absent from output that prints its temporary path. The environment is clean: no token, no provider key, no `ABSTRACT*` variable from your
   shell, so nothing reaches the gateway you run on `:8080` or reads `~/.abstractcore`.
+- **Nothing is written outside this machine.**
+  - A step that pushes or publishes never runs: `git push`, `gh release create/upload/edit/delete`,
+    `gh api` with a write method or fields, `gh pr merge` and the like, `twine upload`,
+    `npm publish`, `cargo publish`, `uv publish`, `docker push`, or `curl` posting to GitHub, PyPI,
+    npm or crates.io. The job stops there as SKIPPED with the reason
+    (`writes outside this machine (git push); GitHub runs it`), so the run reports it under "could
+    not run here".
+  - Every job also runs without credentials, so a command those patterns miss has nothing to
+    publish with:
+    - no `GH_TOKEN`, `GITHUB_TOKEN`, `NPM_TOKEN`, `NODE_AUTH_TOKEN`, `TWINE_*`,
+      `CARGO_REGISTRY_TOKEN` or `SSH_AUTH_SOCK`, whatever your shell, the workflow or `$GITHUB_ENV`
+      sets;
+    - a `HOME` of its own (no `~/.netrc`, `~/.config/gh`, `~/.npmrc`, `~/.pypirc`, `~/.docker`);
+    - a `CARGO_HOME` of its own, with the download caches linked in but not
+      `~/.cargo/credentials.toml`;
+    - git without system config (Xcode's Keychain helper), a credential helper or a prompt;
+    - `ssh` refused (it reads your real `~/.ssh` whatever `HOME` says);
+    - Python's keyring with no Keychain.
   `--sandbox` also runs every step under `sandbox-exec`, which refuses connections to
   `localhost:8080`, writes under your home directory outside the run and the download caches (uv,
   pip, npm, cargo, Playwright), and `~/.abstractcore` and the workspace's `runtime/`; it is off by
