@@ -6369,9 +6369,11 @@ The pull request body states the tier and why; a reviewer may raise it.
   repository that build Rust at the same time wait for each other on cargo's own folder lock.
 - **Deletion never reaches outside the run**: a symlink is removed as a link, never followed or
   chmod-ed; read-only folders (Go's module cache) are made writable first, folders only.
-- **Old run folders are deleted automatically**: after a run, the gate deletes the oldest run
-  folders of the same repository under `~/Library/Caches/ci-gate/runs/` so at most three remain,
-  this one included, and prints their names. `--keep-runs N` changes the number; `--keep-runs 0`
+- **Old run folders are deleted automatically**: after a run whose jobs ran to the end, the gate
+  deletes the oldest run folders of the same repository under `~/Library/Caches/ci-gate/runs/` so
+  at most three remain, this one included, and prints their names. Nothing is deleted by `--list`,
+  `--help`, a push that triggers no workflow, a light run refused before it starts, or an
+  interrupted run. `--keep-runs N` changes the number; `--keep-runs 0`
   or `--keep-runs all` keeps everything. A folder another gate is still running in is skipped (its
   lock is held; a folder from a gate older than the lock counts as running while a job log changed
   in the last 30 minutes). With `--work` outside `~/Library/Caches/ci-gate`, nothing is deleted and

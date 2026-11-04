@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import re
 import sys
 from pathlib import Path
@@ -584,3 +585,37 @@ def test_job_folders_stay_short_whatever_the_job_name():
     hf_lock += "--models--mlx-community--Qwen3-0.6B-4bit.lock"
     assert all(len(part.encode()) <= 255 for part in (run / "jobs" / name).parts)
     assert len(hf_lock.encode()) <= 255, len(hf_lock.encode())
+
+
+def _tiny_repo(path: Path) -> Path:
+    import subprocess
+
+    (path / ".github" / "workflows").mkdir(parents=True)
+    (path / ".github" / "workflows" / "ci.yml").write_text(
+        "name: CI\non:\n  push:\n    branches: [main]\njobs:\n  ok:\n    runs-on: macos-latest\n"
+        "    steps:\n      - run: 'true'\n", encoding="utf-8")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t"}
+    for cmd in (["init", "-q", "-b", "main"], ["add", "-A"], ["-c", "commit.gpgsign=false", "commit", "-q", "-m", "c"]):
+        subprocess.run(["git", *cmd], cwd=path, check=True, env=env)
+    return path
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_keep_runs_deletes_only_after_a_completed_run_never_on_list(tmp_path, monkeypatch, capsys):
+    import time
+
+    monkeypatch.setattr(ci, "SCRATCH", tmp_path / "ci-gate")
+    runs = tmp_path / "ci-gate" / "runs"
+    repo = _tiny_repo(tmp_path / "tinyrepo")
+    old = _runs(runs, "tinyrepo", ["20261101-090000", "20261101-100000"])
+    argv = [str(repo), "--base-sha", "HEAD", "--no-merge", "--branch", "main", "--event", "push",
+            "--workspace", str(tmp_path), "--work", str(runs), "--keep-runs", "1"]
+    assert ci.main(argv + ["--list"]) == 0
+    assert all(d.exists() for d in old)  # a listing deletes nothing
+    assert "--keep-runs" not in capsys.readouterr().out
+    time.sleep(1.1)  # run folders are named to the second
+    assert ci.main(argv + ["--jobs", "1"]) == 0
+    assert not any(d.exists() for d in old)  # a completed run prunes down to itself
+    assert len([d for d in runs.iterdir()]) == 1
+    assert "--keep-runs 1: deleted 3 older run folder(s) of tinyrepo" in capsys.readouterr().out  # 2 old + the listing's

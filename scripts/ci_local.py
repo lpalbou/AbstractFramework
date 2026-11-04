@@ -1362,6 +1362,7 @@ class Runner:
         self.uv = UV
         self.real_home = Path.home()
         self.job_counter = 0
+        self.jobs_completed = False  # set once run_all returns: the one point --keep-runs may delete
         self.inputs: dict[str, Any] = {}
         for item in args.input or []:
             key, _, value = item.partition("=")
@@ -2122,16 +2123,24 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return run_prepared(r, a, t0)
     finally:
-        runs_root = Path(a.work or SCRATCH / "runs").expanduser()
-        try:
-            deleted, note = prune_runs(runs_root, r.repo_name, r.run_dir, a.keep_runs, SCRATCH)
-        except OSError as exc:
-            deleted, note = [], f"could not delete an old run folder: {exc}"
-        if deleted:
-            print(f"ci_local: --keep-runs {a.keep_runs}: deleted {len(deleted)} older run folder(s) of "
-                  f"{r.repo_name}: " + ", ".join(d.name for d in deleted), flush=True)
-        if note:
-            print(f"ci_local: --keep-runs {a.keep_runs}: {note}", flush=True)
+        # Only after the jobs ran to the end: --list, a push with no workflow run, a light run refused
+        # before it starts, or an interrupted run never delete anyone's run folders.
+        if r.jobs_completed:
+            prune_after_run(r, a)
+
+
+def prune_after_run(r: "Runner", a: argparse.Namespace) -> None:
+    """--keep-runs: delete this repository's oldest run folders once a run has completed."""
+    runs_root = Path(a.work or SCRATCH / "runs").expanduser()
+    try:
+        deleted, note = prune_runs(runs_root, r.repo_name, r.run_dir, a.keep_runs, SCRATCH)
+    except OSError as exc:
+        deleted, note = [], f"could not delete an old run folder: {exc}"
+    if deleted:
+        print(f"ci_local: --keep-runs {a.keep_runs}: deleted {len(deleted)} older run folder(s) of "
+              f"{r.repo_name}: " + ", ".join(d.name for d in deleted), flush=True)
+    if note:
+        print(f"ci_local: --keep-runs {a.keep_runs}: {note}", flush=True)
 
 
 def run_prepared(r: "Runner", a: argparse.Namespace, t0: float) -> int:
@@ -2187,6 +2196,7 @@ def run_prepared(r: "Runner", a: argparse.Namespace, t0: float) -> int:
     if serial:
         print("ci_local: alone at the end: " + "; ".join(serial), flush=True)
     jobs = r.run_all(groups)
+    r.jobs_completed = True
     print("ci_local: summary")
     for j in jobs:
         if j.result != "NOT-SELECTED":
