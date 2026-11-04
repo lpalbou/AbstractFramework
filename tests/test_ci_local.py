@@ -853,3 +853,39 @@ def test_a_job_with_a_fixed_port_runs_on_a_port_of_its_own(tmp_path, monkeypatch
     assert int(port) in ci.PORT_RANGE
     output = log.split("=== step 1:", 1)[1].splitlines()[1:]  # what the step printed (its title keeps the source)
     assert output == [f"serve --port {port}; health http://127.0.0.1:{port}"]
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_the_port_rewrite_never_touches_the_gates_own_env(tmp_path, monkeypatch):
+    import subprocess
+    import types
+
+    try:
+        import yaml  # noqa: F401
+    except ImportError:
+        monkeypatch.setitem(sys.modules, "yaml", types.SimpleNamespace(safe_load=json.loads))
+    monkeypatch.setattr(ci, "SCRATCH", tmp_path / "ci-gate")
+    monkeypatch.setitem(ci.JOB_PORTS, ("tinyrepo", "ok"), (18080,))
+    fake_sha = "ab18080cd" + "0" * 31  # a commit whose hex holds a letter-bounded 18080
+    real_ctx = ci.Runner.github_ctx
+
+    def github_ctx(self, *args, **kwargs):
+        ctx = real_ctx(self, *args, **kwargs)
+        ctx["sha"] = fake_sha
+        return ctx
+
+    monkeypatch.setattr(ci.Runner, "github_ctx", github_ctx)
+    repo = _tiny_repo(tmp_path / "tinyrepo")
+    workflow = {"name": "CI", "on": {"push": {"branches": ["main"]}},
+                "jobs": {"ok": {"runs-on": "macos-latest", "env": {"URL": "http://127.0.0.1:18080"},
+                                "steps": [{"run": 'echo "sha=$GITHUB_SHA url=$URL"'}]}}}
+    (repo / ".github" / "workflows" / "ci.yml").write_text(json.dumps(workflow), encoding="utf-8")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t"}
+    subprocess.run(["git", "-c", "commit.gpgsign=false", "commit", "-qam", "sha"], cwd=repo, check=True, env=env)
+    runs = tmp_path / "ci-gate" / "runs"
+    assert ci.main([str(repo), "--base-sha", "HEAD", "--no-merge", "--branch", "main", "--event", "push",
+                    "--workspace", str(tmp_path), "--work", str(runs), "--keep-runs", "all", "--jobs", "1"]) == 0
+    log = next(runs.glob("*/jobs/*/log.txt")).read_text(encoding="utf-8")
+    port = re.search(r"port 18080 is (\d+) in this job", log).group(1)
+    assert f"sha={fake_sha} url=http://127.0.0.1:{port}" in log  # the workflow's env rewritten, the SHA intact

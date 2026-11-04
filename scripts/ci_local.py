@@ -1936,8 +1936,9 @@ class Runner:
             port, lease = lease_port(SCRATCH / "ports")
             leases.append(lease)
             ports[fixed] = port
-        if ports:
-            env.update({k: rewrite_ports(v, ports) for k, v in env.items()})
+        if ports:  # the workflow's and the job's env only: the gate's own (GITHUB_SHA, HOME, ...) never
+            for k in {**wf_env, **job_env}:
+                env[k] = rewrite_ports(env[k], ports)
             ctx.data["env"] = {k: rewrite_ports(v, ports) for k, v in ctx.data["env"].items()}
         steps_ctx: dict[str, dict] = {}
         ctx.data["steps"] = steps_ctx
