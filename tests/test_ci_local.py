@@ -627,3 +627,29 @@ def test_keep_runs_deletes_only_after_a_completed_run_never_on_list(tmp_path, mo
     assert not any(d.exists() for d in old)  # a completed run prunes down to itself
     assert len([d for d in runs.iterdir()]) == 1
     assert "--keep-runs 1: deleted 3 older run folder(s) of tinyrepo" in capsys.readouterr().out  # 2 old + the listing's
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_an_interrupted_run_deletes_nothing(tmp_path, monkeypatch):
+    import types
+
+    try:
+        import yaml  # noqa: F401
+    except ImportError:
+        monkeypatch.setitem(sys.modules, "yaml", types.SimpleNamespace(safe_load=json.loads))
+    monkeypatch.setattr(ci, "SCRATCH", tmp_path / "ci-gate")
+    runs = tmp_path / "ci-gate" / "runs"
+    repo = _tiny_repo(tmp_path / "tinyrepo")
+    old = _runs(runs, "tinyrepo", ["20261101-090000", "20261101-100000"])
+    seen = []
+
+    def interrupted(self, groups):  # Ctrl-C while the jobs run
+        seen.append(self)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(ci.Runner, "run_all", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        ci.main([str(repo), "--base-sha", "HEAD", "--no-merge", "--branch", "main", "--event", "push",
+                 "--workspace", str(tmp_path), "--work", str(runs), "--keep-runs", "1", "--jobs", "1"])
+    assert seen and seen[0].jobs_completed is False
+    assert all(d.exists() for d in old)
