@@ -1025,6 +1025,34 @@ def is_test_file(path: str) -> bool:
     return bool(re.search(r"(^|/)test_[^/]*\.py$", path))
 
 
+TEST_DIRS = {"tests", "test", "__tests__", "__fixtures__", "fixtures"}
+
+
+def is_test_material(path: str) -> bool:
+    """A file under a test directory (tests/, test/, __tests__/, __fixtures__/, fixtures/) or named
+    *.fixture.*: saved answers, fixtures, helpers. Tier light never asks a test to be named after it."""
+    p = Path(path)
+    return any(part in TEST_DIRS for part in p.parts[:-1]) or ".fixture." in p.name
+
+
+def material_home(path: str, all_files: list[str]) -> str:
+    """Whose suite a piece of test material belongs to, by location: the nearest folder holding a
+    package manifest decides (`python` for pyproject.toml/setup.py/setup.cfg or none at all, `npm`
+    for package.json, `cargo` for Cargo.toml; Python first when one folder holds several)."""
+    kinds_at: dict[str, set[str]] = {}
+    for f in all_files:
+        q = Path(f)
+        kind = {"pyproject.toml": "python", "setup.py": "python", "setup.cfg": "python",
+                "package.json": "npm", "Cargo.toml": "cargo"}.get(q.name)
+        if kind:
+            kinds_at.setdefault(str(q.parent), set()).add(kind)
+    for parent in Path(path).parents:
+        kinds = kinds_at.get(str(parent))
+        if kinds:
+            return next(k for k in ("python", "npm", "cargo") if k in kinds)
+    return "python"
+
+
 def imports_module(text: str, module: str) -> bool:
     """`import pkg.mod`, `from pkg.mod import x`, `from pkg import mod` (also in parentheses)."""
     if re.search(rf"^\s*(?:import|from)\s+{re.escape(module)}(?![\w])", text, re.M):
@@ -1084,14 +1112,14 @@ def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], 
     Every changed file that is not documentation and not owned by an npm package or a crate (see
     owner_dir: by file type, never Python) must
     keep at least one test, or it is listed as uncovered (a red light run). None instead of the
-    mapping = the whole suite: a conftest.py, the package configuration, or a non-Python file under
-    tests/ (a fixture) changed. `read(path)` returns a file's text at the tested commit.
+    mapping = the whole suite: a conftest.py or the package configuration changed, or test material
+    (is_test_material: a fixture, a saved answer, a helper no test imports) of a Python package
+    changed. Test material of an npm package or a crate is owned: its own test step runs whole.
+    Test material is never uncovered. `read(path)` returns a file's text at the tested commit.
     """
     present = set(all_files)
     live = [f for f in changed if f in present and not f.endswith(DOC_SUFFIXES)]
     if any(Path(f).name in _WHOLE_SUITE for f in changed):
-        return None, [], []
-    if any("tests" in Path(f).parts[:-1] and not f.endswith(".py") for f in live):
         return None, [], []
     tests = [f for f in all_files if is_test_file(f)]
     keep: dict[str, list[str]] = {}
@@ -1100,10 +1128,18 @@ def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], 
             keep.setdefault(f, []).append("changed")
     texts: dict[str, str] = {}
     uncovered, owned = [], []
+    whole = False
     for f in live:
         if is_test_file(f):
             continue
-        if owner_dir(f, all_files) is not None:
+        material = is_test_material(f)
+        if material and material_home(f, all_files) != "python":
+            owned.append(f)
+            continue
+        if material and not f.endswith(".py"):
+            whole = True  # like a changed test file: its package's suite runs
+            continue
+        if not material and owner_dir(f, all_files) is not None:
             owned.append(f)
             continue
         stem = Path(f).stem if Path(f).stem != "__init__" else Path(f).parent.name
@@ -1120,8 +1156,12 @@ def light_tests(changed: list[str], all_files: list[str], read: Callable[[str], 
                     hits.append((t, f"imports {module}"))
         for t, why in hits:
             keep.setdefault(t, []).append(why)
-        if not hits:
+        if not hits and material:
+            whole = True  # a test helper no test imports by name: the whole suite, never uncovered
+        elif not hits:
             uncovered.append(f)
+    if whole:
+        return None, [], owned
     return keep, uncovered, owned
 
 
@@ -1162,6 +1202,9 @@ def light_step(script: str, cwd_rel: str, cwd: Path, changed: list[str]) -> tupl
         test = str((pkg.get("scripts") or {}).get("test") or "")
         if not here:
             return None, f"npm test skipped: no change under {prefix or 'the repository'}"
+        material = [f for f in here if is_test_material(f) and not f.endswith(JS_FILES[0])]
+        if material:  # a fixture no import graph reaches: the package's whole suite
+            return script, f"npm test runs whole: test material changed ({material[0]})"
         if re.fullmatch(r"vitest run(\s+--?[\w-]+)*", test):
             files = " ".join(shlex.quote(str(cwd / f[len(prefix):])) for f in here if (cwd / f[len(prefix):]).exists())
             if not files:

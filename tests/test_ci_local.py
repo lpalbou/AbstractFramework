@@ -653,3 +653,28 @@ def test_an_interrupted_run_deletes_nothing(tmp_path, monkeypatch):
                  "--workspace", str(tmp_path), "--work", str(runs), "--keep-runs", "1", "--jobs", "1"])
     assert seen and seen[0].jobs_completed is False
     assert all(d.exists() for d in old)
+
+
+def test_test_material_is_never_uncovered_and_runs_its_packages_suite(tmp_path):
+    # Observer's layout: an npm package at the root, saved gateway answers under src/ui/__fixtures__/.
+    fixtures = [f"src/ui/__fixtures__/gateway-answer-{i}.json" for i in range(6)]
+    files = ["package.json", "src/ui/board.ts", "src/ui/board.test.ts", *fixtures]
+    keep, uncovered, owned = ci.light_tests(fixtures, files, lambda p: "")
+    assert uncovered == [] and owned == fixtures and keep == {}
+    (tmp_path / "package.json").write_text('{"scripts": {"test": "vitest run"}}', encoding="utf-8")
+    script, note = ci.light_step("npm test", ".", tmp_path, fixtures)
+    assert script == "npm test" and "runs whole: test material changed" in note  # vitest related would find none
+    # A JS test under __tests__ still goes to vitest related.
+    (tmp_path / "src" / "__tests__").mkdir(parents=True)
+    (tmp_path / "src" / "__tests__" / "a.test.ts").write_text("", encoding="utf-8")
+    script, _ = ci.light_step("npm test", ".", tmp_path, ["src/__tests__/a.test.ts"])
+    assert script.startswith("npx vitest related --run")
+    # A Python package: a fixture, a *.fixture.* file, or a helper no test imports runs the whole suite.
+    py = ["pyproject.toml", "src/pkg/core.py", "tests/test_core.py", "test/data/answer.json",
+          "src/pkg/sample.fixture.yaml", "tests/helpers/builders.py"]
+    for changed in (["test/data/answer.json"], ["src/pkg/sample.fixture.yaml"], ["tests/helpers/builders.py"]):
+        assert ci.light_tests(changed, py, lambda p: "") == (None, [], []), changed
+    # AbstractAvatar: a crate and a Python package at the root; a Python fixture belongs to pytest.
+    avatar = ["Cargo.toml", "pyproject.toml", "src/lib.rs", "tests/python/fixtures/scene.json"]
+    assert ci.light_tests(["tests/python/fixtures/scene.json"], avatar, lambda p: "") == (None, [], [])
+    assert ci.is_test_material("web/x.fixture.json") and not ci.is_test_material("src/testing.py")
