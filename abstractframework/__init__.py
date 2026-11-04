@@ -15,11 +15,11 @@ __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.33.0",
-    "abstractruntime": "0.17.0",
+    "abstractcore": "2.34.0",
+    "abstractruntime": "0.18.1",
     "abstractagent": "0.6.0",
     "abstractgateway": "0.20.0",
-    "abstractskill": "0.3.4",
+    "abstractskill": "0.3.8",
     "abstractmemory": "0.4.0",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.20.0",
@@ -64,8 +64,8 @@ NPM_APP_IDS: dict[str, str] = {
 # The AbstractUIC libraries the npm apps of this release are built on: release versions only,
 # never installed by the installers (each app resolves them from npm through its own lockfile).
 NPM_LIBRARY_VERSIONS: dict[str, str] = {
-    "@abstractframework/ui-kit": "0.9.13",
-    "@abstractframework/panel-chat": "0.8.0",
+    "@abstractframework/ui-kit": "0.9.14",
+    "@abstractframework/panel-chat": "0.8.1",
 }
 
 # Terminal tools published on crates.io alongside this release (installed with `cargo install`,

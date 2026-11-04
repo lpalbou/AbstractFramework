@@ -426,8 +426,8 @@ assistant run --prompt "Summarize today's news"   # one turn in the terminal
 
 Each turn runs the gateway's default workflow for the Assistant, or the workflow you pick in
 Settings → Models → **Workflow**. See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
-`pip install "abstractassistant[avatar]"` adds an optional activity avatar beside the conversation
-(AbstractAvatar's procedural designs, following what the assistant is doing).
+The activity avatar beside the conversation (AbstractAvatar's procedural designs, following what the assistant is
+doing) comes with every install setting.
 
 On iPhone and Apple Watch, AbstractAssistant is one app (pre-release through TestFlight): the iPhone
 app carries the watch app, you sign in once on the iPhone with your gateway's address and an

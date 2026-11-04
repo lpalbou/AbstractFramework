@@ -1074,7 +1074,7 @@ installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
 `abstractframework` 0.12.1 pins `abstractgateway==0.20.0`, `abstractassistant==0.18.0`,
-`abstractcore==2.33.0`, `AbstractRuntime==0.17.0`, `abstractagent==0.6.0`, `abstractskill==0.3.4`,
+`abstractcore==2.34.0`, `AbstractRuntime==0.18.1`, `abstractagent==0.6.0`, `abstractskill==0.3.8`,
 `AbstractMemory==0.4.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.20.0`,
 `abstractvision==0.3.34`, `abstractmusic==0.1.17`, `abstract3d==0.3.2` and `abstractavatar==0.1.1` (activity avatars
 in every profile). The `apple` and `gpu` extras select
@@ -1166,7 +1166,7 @@ Run or install them next to the Python stack:
 | Tool | Command | Version released with 0.12.1 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.20.0 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.33.0 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.34.0 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.8.1 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.17.0 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.14.0 |
@@ -1226,7 +1226,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.33.0`.
+`ghcr.io/lpalbou/abstractcore-server:2.34.0`.
 
 ## How installs are designed
 

@@ -365,13 +365,13 @@
       "distribution": "abstractcore",
       "id": "abstractcore",
       "registry": "pypi",
-      "version": "2.33.0"
+      "version": "2.34.0"
     },
     {
       "distribution": "AbstractRuntime",
       "id": "abstractruntime",
       "registry": "pypi",
-      "version": "0.17.0"
+      "version": "0.18.1"
     },
     {
       "distribution": "abstractagent",
@@ -389,7 +389,7 @@
       "distribution": "abstractskill",
       "id": "abstractskill",
       "registry": "pypi",
-      "version": "0.3.4"
+      "version": "0.3.8"
     },
     {
       "distribution": "AbstractMemory",

@@ -4,19 +4,19 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-## [0.12.1] - 2026-11-03
+## [0.12.1] - 2026-11-04
 
 Pins the 2026-11-03 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.20.0**,
-**AbstractCore 2.33.0**, **AbstractRuntime 0.17.0**, **AbstractAgent 0.6.0**, **AbstractAssistant 0.18.0**,
-**AbstractVoice 0.20.0** and, new in every profile, **AbstractAvatar 0.1.1** (AbstractSkill 0.3.4, AbstractMemory 0.4.0,
+**AbstractCore 2.34.0**, **AbstractRuntime 0.18.1**, **AbstractAgent 0.6.0**, **AbstractAssistant 0.18.0**,
+**AbstractVoice 0.20.0** and, new in every profile, **AbstractAvatar 0.1.1** (**AbstractSkill 0.3.8**; AbstractMemory 0.4.0,
 AbstractSemantics 0.0.5, AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers
 and the install manifest install gateway 0.20.0 and bring the npm apps to **Flow 0.14.0**, **AbstractCode web 0.15.0**,
 **Observer 0.12.0**, **Continuum 0.8.0**, **Entity 0.11.0** and, new, the web Assistant
 **`@abstractframework/assistant` 0.1.0** (gateway app id `assistant-web`), and build **abstractgateway-console 0.17.0**
 and **abstractcode 0.14.0** (crates.io). `CRATE_RELEASE_VERSIONS` also lists abstractcore-console 0.8.1, abstracttui
-0.7.1 and **abstractavatar 0.1.1**; the new `NPM_LIBRARY_VERSIONS` records `@abstractframework/ui-kit` 0.9.13 and
-`@abstractframework/panel-chat` 0.8.0. Container images: `ghcr.io/lpalbou/abstractgateway:0.20.0` and
-`ghcr.io/lpalbou/abstractcore-server:2.33.0`.
+0.7.1 and **abstractavatar 0.1.1**; the new `NPM_LIBRARY_VERSIONS` records `@abstractframework/ui-kit` 0.9.14 and
+`@abstractframework/panel-chat` 0.8.1. Container images: `ghcr.io/lpalbou/abstractgateway:0.20.0` and
+`ghcr.io/lpalbou/abstractcore-server:2.34.0`.
 
 ### Added
 
@@ -43,6 +43,10 @@ and **abstractcode 0.14.0** (crates.io). `CRATE_RELEASE_VERSIONS` also lists abs
   Jev runs the hosted Jev.
 - `scripts/ci_local.sh <repo> [--job <name>]`: a repository's GitHub Actions jobs run on this Mac before a push, read from its own workflow files so the gate cannot drift from CI ([Local CI gate](docs/ci-local.md)). Each workflow runs as the push to main when it has one (main's full Python matrix and conditional jobs) and otherwise as the pull request (changelog check, load test), on the commit merged into the fetched base, every step, a fresh environment per job that installs sibling packages from PyPI, a scratch `HOME`/`TMPDIR` and a clean environment (no token, no `ABSTRACT*` variable) under `~/Library/Caches/ci-gate/`, outside the workspace; `--sandbox` adds `sandbox-exec` refusing `localhost:8080`, `~/.abstractcore` and the workspace's `runtime/`. Jobs it cannot run (Windows, Linux root, Docker, secrets, a missing toolchain) are printed as SKIPPED with the reason; exit 0 only when every runnable job passed and nothing was skipped (or `--allow-skipped`). `--release-tag` adds the release workflow's jobs, `--input` / `--runner-label` reach the Assistant's dispatch-only iPhone suite. `--jobs N` runs jobs in parallel (default from the physical cores and free memory; model-loading and latency-gated jobs run alone at the end), and `--tier light|full` follows ADR 0051's test tiers (light: one Python per matrix and the changed files' tests; release branches always full).
 - An opt-in pre-push hook (`scripts/install_hooks.sh <repo>...`, never installed automatically) runs the gate for every pushed ref and refuses a red push; `git push --no-verify` is the only override. [CONTRIBUTING.md](CONTRIBUTING.md) states the rules: no push without the gate green, no pull request that is red by design, a red main is reverted or fixed within the hour.
+- **A local model unused for 60 minutes is unloaded** (AbstractCore 2.34.0): it loads again on its next call; a model
+  kept loaded (Keep loaded) never is, and no running call is interrupted.
+- **A provider key sent to the AbstractCore server's discovery routes reaches only the provider it names**
+  (AbstractCore 2.34.0, security).
 
 ### Changed
 

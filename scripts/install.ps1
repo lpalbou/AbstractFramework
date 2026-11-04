@@ -99,7 +99,7 @@ $AfGatewayPinDefault = '0.20.0'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
 $AfFrameworkVersion = '0.12.1'
-$AfPyMatrix = @('abstractcore==2.33.0', 'AbstractRuntime==0.17.0', 'abstractagent==0.6.0', 'abstractskill==0.3.4', 'AbstractMemory==0.4.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.20.0', 'abstractvision==0.3.34', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractavatar==0.1.1')
+$AfPyMatrix = @('abstractcore==2.34.0', 'AbstractRuntime==0.18.1', 'abstractagent==0.6.0', 'abstractskill==0.3.8', 'AbstractMemory==0.4.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.20.0', 'abstractvision==0.3.34', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractavatar==0.1.1')
 $AfPython = '3.12'
 $AfNpmApps = @('@abstractframework/flow@0.14.0', '@abstractframework/code@0.15.0', '@abstractframework/observer@0.12.0', '@abstractframework/continuum@0.8.0', '@abstractframework/entity@0.11.0', '@abstractframework/assistant@0.1.0')
 $AfCrateConsole = 'abstractgateway-console@0.17.0'

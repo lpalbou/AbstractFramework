@@ -187,7 +187,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.20.0` and `ghcr.io/lpalbou/abstractcore-server:2.33.0`.
+`ghcr.io/lpalbou/abstractgateway:0.20.0` and `ghcr.io/lpalbou/abstractcore-server:2.34.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -353,10 +353,10 @@ and tested together.
 |---|---|---|
 | PyPI | `abstractgateway` | 0.20.0 |
 | PyPI | `abstractassistant` | 0.18.0 |
-| PyPI | `abstractcore` | 2.33.0 |
-| PyPI | `AbstractRuntime` | 0.17.0 |
+| PyPI | `abstractcore` | 2.34.0 |
+| PyPI | `AbstractRuntime` | 0.18.1 |
 | PyPI | `abstractagent` | 0.6.0 |
-| PyPI | `abstractskill` | 0.3.4 |
+| PyPI | `abstractskill` | 0.3.8 |
 | PyPI | `AbstractMemory` | 0.4.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
 | PyPI | `abstractvoice` | 0.20.0 |
@@ -376,7 +376,7 @@ and tested together.
 | crates.io | `abstracttui` | 0.7.1 |
 | crates.io | `abstractavatar` | 0.1.1 |
 | GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.20.0 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.33.0 |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.34.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
 not part of any profile installs separately: `pip install abstractcamera` (0.2.1). `abstractskill` (pinned above)
@@ -384,7 +384,7 @@ comes with the gateway, which carries its curated skill shelf; install it on its
 `pip install abstractskill`. `abstractavatar` (pinned above) comes with every profile: the Assistant's desktop activity avatar works
 out of the box. AbstractNote (`abstractnote` 0.3.0 on PyPI, `@abstractframework/note` 0.3.0 on npm) is released
 with this matrix and installs separately. The browser apps are built on AbstractUIC (`@abstractframework/ui-kit`
-0.9.13, `@abstractframework/panel-chat` 0.8.0; `NPM_LIBRARY_VERSIONS`).
+0.9.14, `@abstractframework/panel-chat` 0.8.1; `NPM_LIBRARY_VERSIONS`).
 
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
 `abstractframework doctor`, and the generated installer manifest contract.
