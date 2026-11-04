@@ -63,7 +63,7 @@ the same sentence.
 - [ ] Replaying a message that was read within the TTL makes zero synthesis calls (a fake engine counts calls); a
       resume after a stop reuses the pieces already synthesised.
 - [ ] After the TTL, or after a change of voice, speed or language, the same message is synthesised again.
-- [ ] The same sentence read in two different sessions with the same voice is synthesised once.
+- [ ] The same sentence read in two different sessions of one account, with the same voice, is synthesised once.
 - [ ] The cache never exceeds its size cap: a test fills it past the cap and checks the bytes held and the LRU order.
 - [ ] Two accounts on one gateway never read each other's audio; the store lives under the gateway data dir.
 - [ ] `0` turns the cache off; hits and misses are reported.
