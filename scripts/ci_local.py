@@ -36,6 +36,7 @@ import re
 import shlex
 import shutil
 import signal
+import socket
 import stat
 import subprocess
 import sys
@@ -1249,9 +1250,46 @@ def pytest_sessionfinish(session, exitstatus):
 SERIAL_JOBS = {
     ("abstractcore", "local-models"): "loads local model engines (one model process at a time)",
     ("abstractgateway", "perf"): "its p99 latency gates need a quiet machine",
-    # Each matrix entry starts a gateway on the fixed port 18080: separate machines on GitHub, one Mac here.
-    ("abstractframework", "bootstrap-smoke"): "starts a gateway on the fixed port 18080",
+    # Each matrix entry installs and starts a whole gateway: separate machines on GitHub, one Mac here.
+    ("abstractframework", "bootstrap-smoke"): "installs and starts a whole gateway",
 }
+# The fixed ports a job binds, written as literals in its steps and env (`--port 18080`,
+# `http://127.0.0.1:18080`). On GitHub every job has a machine of its own; here every such job
+# leases a free port of its own and the literal is rewritten in its scripts and env, so two gates
+# (or two jobs) never fight over one port.
+JOB_PORTS = {
+    ("abstractframework", "bootstrap-smoke"): (18080,),
+}
+PORT_RANGE = range(28000, 29000)  # clear of the live gateway (8080) and the scratch deploys (18080, 18850)
+
+
+def lease_port(lock_dir: Path, ports: range = PORT_RANGE):
+    """A free TCP port on 127.0.0.1, reserved for as long as the returned file stays open: its lock
+    (flock on <lock_dir>/<port>.lock) keeps every other gate and job off it, and the OS releases it
+    when this process ends. A port something already listens on is skipped. Returns (port, file)."""
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    for port in ports:
+        f = open(lock_dir / f"{port}.lock", "a", encoding="utf-8")
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            f.close()
+            continue
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            try:
+                probe.bind(("127.0.0.1", port))
+            except OSError:
+                f.close()
+                continue
+        return port, f
+    raise RuntimeError(f"no free port in {ports.start}-{ports.stop - 1}")
+
+
+def rewrite_ports(text: str, ports: dict[int, int]) -> str:
+    """The job's fixed ports replaced by its leased ones, as whole numbers only (18080, not 180800)."""
+    for fixed, leased in ports.items():
+        text = re.sub(rf"(?<!\d){fixed}(?!\d)", str(leased), text)
+    return text
 MEMORY_PER_JOB = 4 * 1024**3  # what one job may hold (a test suite with torch imported, a cargo build)
 
 
@@ -1781,6 +1819,14 @@ class Runner:
         job_env = {k: to_str(interpolate(v, ctx)) for k, v in (job.spec.get("env") or {}).items()}
         env.update(job_env)
         ctx.data["env"].update(job_env)
+        leases, ports = [], {}
+        for fixed in JOB_PORTS.get((self.repo_name, job.job_id), ()):
+            port, lease = lease_port(SCRATCH / "ports")
+            leases.append(lease)
+            ports[fixed] = port
+        if ports:
+            env.update({k: rewrite_ports(v, ports) for k, v in env.items()})
+            ctx.data["env"] = {k: rewrite_ports(v, ports) for k, v in ctx.data["env"].items()}
         steps_ctx: dict[str, dict] = {}
         ctx.data["steps"] = steps_ctx
         failed = [False]
@@ -1800,6 +1846,8 @@ class Runner:
         first_failure = ""
         log = open(job.log, "w", encoding="utf-8")
         log.write(f"ci_local: job {job.label} ({Path(job.wf_file).name}: {job.job_id}); folder {jobdir}\n")
+        for fixed, port in ports.items():
+            log.write(f"ci_local: port {fixed} is {port} in this job (its own, as on a GitHub machine)\n")
         try:
             for n, step in enumerate(job.spec.get("steps") or [], 1):
                 name = step.get("name") or (f"Run {step['uses']}" if step.get("uses") else
@@ -1813,7 +1861,7 @@ class Runner:
                 senv = sctx.child(env=dict(ctx.data["env"]))
                 step_env = dict(env)
                 for k, v in (step.get("env") or {}).items():
-                    step_env[k] = to_str(interpolate(v, senv))
+                    step_env[k] = rewrite_ports(to_str(interpolate(v, senv)), ports)
                     senv.data["env"][k] = step_env[k]
                 log.write(f"\n=== step {n}: {name}\n")
                 log.flush()
@@ -1827,7 +1875,7 @@ class Runner:
                         first_failure = first_failure or f"step {name!r}: {res[1]}"
                 else:
                     shell = step.get("shell") or defaults.get("shell")
-                    script = to_str(interpolate(step.get("run") or "", senv))
+                    script = rewrite_ports(to_str(interpolate(step.get("run") or "", senv)), ports)
                     wd = step.get("working-directory") or defaults.get("working-directory")
                     cwd_rel = to_str(interpolate(wd, senv)) if wd else ""
                     if a.tier == "light":
@@ -1897,6 +1945,8 @@ class Runner:
                     os.killpg(pg, signal.SIGTERM)
                 except (ProcessLookupError, PermissionError):
                     pass
+            for lease in leases:  # the job's ports go back to the pool
+                lease.close()
             log.close()
         for k, v in (job.spec.get("outputs") or {}).items():
             job.outputs[k] = to_str(interpolate(v, sctx))
