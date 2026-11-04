@@ -142,13 +142,17 @@ The pull request body states the tier and why; a reviewer may raise it.
   - Every job also runs without credentials, so a command those patterns miss has nothing to
     publish with:
     - no `GH_TOKEN`, `GITHUB_TOKEN`, `NPM_TOKEN`, `NODE_AUTH_TOKEN`, `TWINE_*`,
-      `CARGO_REGISTRY_TOKEN` or `SSH_AUTH_SOCK`, whatever your shell, the workflow or `$GITHUB_ENV`
-      sets;
+      `CARGO_REGISTRY_TOKEN`, `SSH_AUTH_SOCK` or npm's env-style auth (an `npm_config_*` key whose
+      name or value holds `_auth` or `authToken`), whatever your shell, the workflow or
+      `$GITHUB_ENV` sets;
     - a `HOME` of its own (no `~/.netrc`, `~/.config/gh`, `~/.npmrc`, `~/.pypirc`, `~/.docker`);
     - a `CARGO_HOME` of its own, with the download caches linked in but not
       `~/.cargo/credentials.toml`;
     - git without system config (Xcode's Keychain helper), a credential helper or a prompt;
-    - `ssh` refused (it reads your real `~/.ssh` whatever `HOME` says);
+    - `ssh` refused (it reads your real `~/.ssh` whatever `HOME` says). A legitimate job that needs
+      ssh (a clone over `git@github.com:`, an `ssh` to a host) therefore reads as FAIL here; on
+      GitHub it would lack the key too unless a secret provides it, and a job reading `secrets.*`
+      is skipped here anyway.
     - Python's keyring with no Keychain.
   `--sandbox` also runs every step under `sandbox-exec`, which refuses connections to
   `localhost:8080`, writes under your home directory outside the run and the download caches (uv,

@@ -681,6 +681,14 @@ def test_steps_that_write_outside_this_machine_are_recognised():
         assert ci.outside_write(script) is None, script
 
 
+def test_npm_env_style_auth_never_reaches_a_step():
+    env = {"NPM_CONFIG__AUTH": "dXNlcjpwYXNz", "npm_config_//registry.npmjs.org/:_authToken": "npm_x",
+           "NPM_CONFIG_USERCONFIG": "/tmp/npmrc-with-//registry.npmjs.org/:_authToken", "npm_config__authtoken": "y",
+           "npm_config_cache": "/Users/me/.npm", "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/", "PATH": "/usr/bin"}
+    assert ci.credential_free_env(env) == {"npm_config_cache": "/Users/me/.npm",
+                                           "NPM_CONFIG_REGISTRY": "https://registry.npmjs.org/", "PATH": "/usr/bin"}
+
+
 def _one_job_repo(path: Path, steps: list, env: dict | None = None) -> Path:
     import subprocess
 

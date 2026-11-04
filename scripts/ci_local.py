@@ -1013,12 +1013,19 @@ def outside_write(script: str) -> str | None:
     return None
 
 
+def _npm_auth(key: str, value: str) -> bool:
+    """npm's env-style auth: an npm_config_* / NPM_CONFIG_* key whose name or value carries `_auth`
+    or `authToken` (`NPM_CONFIG__AUTH`, `npm_config_//registry.npmjs.org/:_authToken`)."""
+    k = key.lower()
+    return k.startswith("npm_config_") and any(m in text for text in (k, value.lower()) for m in ("_auth", "authtoken"))
+
+
 def credential_free_env(env: dict[str, str]) -> dict[str, str]:
-    """`env` without a publishing credential: the names in CREDENTIAL_ENV, TWINE_*, and the
-    per-registry cargo tokens."""
+    """`env` without a publishing credential: the names in CREDENTIAL_ENV, TWINE_*, the
+    per-registry cargo tokens, and npm's env-style auth."""
     return {k: v for k, v in env.items()
             if k not in CREDENTIAL_ENV and not k.startswith("TWINE_")
-            and not (k.startswith("CARGO_REGISTRIES_") and k.endswith("_TOKEN"))}
+            and not (k.startswith("CARGO_REGISTRIES_") and k.endswith("_TOKEN")) and not _npm_auth(k, v)}
 
 
 def git(*args: str, cwd: Path | None = None, check: bool = True, quiet: bool = False) -> str:
