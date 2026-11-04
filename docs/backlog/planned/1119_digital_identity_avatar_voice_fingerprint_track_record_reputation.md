@@ -132,8 +132,11 @@ Real check (operator's machine, `untracked/gpu.lock`, scratch data dir and port,
       `X-Identity-Ref: entity:castor#2`; a meet relay shows two refs; `entity record castor` shows the counts.
 
 ## Follow-ups (named, not built)
-- [1120](../proposed/1120_identity_assessment_signal_recency_and_cross_gateway_reputation.md): the assessment signal (`POST /runs/{id}/assessment`, `_meta.assessment`), recency weighting, colleague notes
-  on entities; cross-gateway reputation with 1112.
+- [1120](../proposed/1120_digital_identity_feeding_and_evolution_external_feedback.md): how the digital identity is fed and evolves over
+  time (operator, 2026-11-04: "reputation requires external feedback, provided by users or other agents"): external
+  feedback from users and other agents, colleague notes, the assessment signal (`POST /runs/{id}/assessment`,
+  `_meta.assessment`), recency weighting, the task-kind taxonomy; cross-gateway reputation with 1112. Until then the
+  computed numbers are completion rates only, and every surface says so.
 
 ## Receipts
 

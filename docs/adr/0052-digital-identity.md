@@ -175,6 +175,6 @@ ADR [0043](0043-readable-labels-never-computer-ids.md), [0044](0044-composable-a
 [1083](../backlog/planned/1083_composable_entity_activity_and_avatar_state_contract.md),
 [1110](../backlog/proposed/1110_entity_handles_and_summoning_addresses.md), [1112](../backlog/proposed/1112_cross_gateway_entity_federation_handshake_keychain.md),
 [1119](../backlog/planned/1119_digital_identity_avatar_voice_fingerprint_track_record_reputation.md) (this),
-[1120](../backlog/proposed/1120_identity_assessment_signal_recency_and_cross_gateway_reputation.md) (assessment
-follow-up); the operator's article; agora hub reputation (`abstractcontinuum/vendor/hub/openapi.json`, `/reputation`,
+[1120](../backlog/proposed/1120_digital_identity_feeding_and_evolution_external_feedback.md) (how
+the identity is fed and evolves: external feedback, the assessment signal, recency); the operator's article; agora hub reputation (`abstractcontinuum/vendor/hub/openapi.json`, `/reputation`,
 `/colleagues`).
