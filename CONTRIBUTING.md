@@ -66,7 +66,10 @@ and Windows.
 - Internal build/test/release process pages are not mirrored into `llms*.txt`: those files are for
   people and agents who use the framework. The local CI gate, the workspace scripts, the installer
   delivery plan and the release steps stay in `docs/` but are listed in `INTERNAL_PAGES`
-  (`scripts/gen_llms_full.py`) and never linked from `llms.txt`; add a new process page there.
+  (`scripts/gen_llms_full.py`) and never linked from `llms.txt` or the docs hub (contributors reach them from this
+  file); add a new process page there. Known hole: `docs/api.md` and `docs/install.md` still link
+  `docs/installers/release-and-manifest.md` as the install manifest's field reference, until its Fields table moves
+  to `docs/api.md` (backlog 1126).
 - After a pin change, regenerate and check the install manifest:
 
   ```bash

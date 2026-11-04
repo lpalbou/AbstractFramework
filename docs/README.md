@@ -84,7 +84,6 @@ The full component diagram, with memory, semantics and the consoles, is in
 | **[Configuration](configuration.md)** | Minimal config, where defaults live, Core vs Gateway, email accounts |
 | **[Email integration](guide/email-integration.md)** | Your email address and your own mailbox on the gateway: the account page, connecting a mailbox, recipient rules and send limits, agent email tools (off by default), email automations, notifications, sign-in by email, what administrators decide |
 | **[Phones and tablets](guide/deployment-iphone.md)** | Opening the console and the browser apps on a phone through the gateway's one address, and what adapts on a small screen |
-| **[Workspace scripts](workspace-scripts.md)** | Working from source: package inventory and tiers, `build.sh`, `status.sh`, `pull.sh`, `commit.sh`, `push.sh`, launchers |
 | **[Glossary](glossary.md)** | Shared terminology (run, ledger, effect, wait, bundle, …) |
 | **[ADR index](adr/README.md)** | Cross-package architectural decisions and accepted platform contracts |
 | **[FAQ](faq.md)** | Common questions, comparisons, limits |

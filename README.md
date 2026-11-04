@@ -405,7 +405,6 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 | [docs/faq.md](docs/faq.md) | Common questions, comparisons, limits |
 | [docs/troubleshooting.md](docs/troubleshooting.md) | Symptoms, checks and fixes for install, sign-in, network and provider problems |
 | [docs/api.md](docs/api.md) | Meta-package API (pins, helpers, re-exports, `abstractframework doctor`) |
-| [docs/workspace-scripts.md](docs/workspace-scripts.md) | Working from source: package tiers, build, status, pull/commit/push scripts |
 | [CHANGELOG.md](CHANGELOG.md) | Release history of the meta-package and its pins |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to work on this repository and propose changes |
 | [SECURITY.md](SECURITY.md) | How to report a vulnerability |
@@ -425,7 +424,7 @@ source ./scripts/build.sh    # Python (editable, into .venv), npm and Rust build
 Keep the whole workspace in sync with `./scripts/status.sh` (git overview per tier; `--registry`
 compares local versions with PyPI, npm and crates.io), `./scripts/pull.sh`, `./scripts/commit.sh`
 and `./scripts/push.sh` (a dry run until you add `--yes`). See
-[docs/workspace-scripts.md](docs/workspace-scripts.md) for every script and option.
+[CONTRIBUTING.md](CONTRIBUTING.md) for every script and option.
 
 Then configure providers and models in a console (`abstractcore serve` or
 `abstractgateway serve`, then open the printed link), or from the terminal:
