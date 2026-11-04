@@ -62,8 +62,14 @@ The pull request body states the tier and why; a reviewer may raise it.
     package or a crate (below) must keep at least one test: a module, a YAML/JSON catalog, a template, a
     static JS/CSS file, a shell script. Otherwise the run is red before it starts:
     `no test covers <path>; use --tier full or add a test`.
-  - A `conftest.py`, the package configuration (`pyproject.toml`, `setup.cfg`, `pytest.ini`,
-    ...) or any non-Python file under `tests/` (a fixture) runs the whole suite.
+  - A `conftest.py` or the package configuration (`pyproject.toml`, `setup.cfg`, `pytest.ini`,
+    ...) runs the whole suite.
+  - Test material is any file under `tests/`, `test/`, `__tests__/`, `__fixtures__/` or
+    `fixtures/`, or named `*.fixture.*` (saved gateway answers, fixtures, helpers). It never needs
+    a test named after it. Like a changed test file, it runs the suite of its package, found by
+    location: the nearest folder with a `package.json` runs that package's `npm test` whole, with a
+    `Cargo.toml` its crate's tests, with a `pyproject.toml` (or none at all) the whole pytest suite.
+    A Python helper that a test imports keeps just that test.
   - Files in an npm package or a crate go to its own test step. Ownership is by file type: a Rust
     file (`.rs`, `Cargo.toml`, `Cargo.lock`) belongs to the nearest folder holding a `Cargo.toml`,
     a JS/TS/CSS file (or `package.json`, its lockfile, `tsconfig*.json`) to the nearest folder
