@@ -21,12 +21,23 @@ INDEX = "docs/README.md"
 # Folders under docs/ that are not user documentation (decisions, planning,
 # engineering notes, research); their pages never enter llms-full.txt.
 NON_USER_DIRS = ("adr", "backlog", "claude", "prompts", "reports", "research", "skills")
+# Pages about how the framework itself is built, tested and released (the local CI gate, the
+# workspace scripts for contributors, the installer delivery plan and release steps). llms*.txt are
+# for people and agents who USE the framework: these pages stay in docs/ but are never mirrored.
+INTERNAL_PAGES = (
+    "docs/ci-local.md",
+    "docs/workspace-scripts.md",
+    "docs/installers/implementation-plan.md",
+    "docs/installers/release-and-manifest.md",
+)
 
 _LINK = re.compile(r"\]\(([^\s)#]+)(?:#[^\s)]*)?\)")
 
 
 def _is_user_page(rel: str) -> bool:
     parts = rel.split("/")
+    if rel in INTERNAL_PAGES:
+        return False
     return parts[0] == "docs" and not (len(parts) > 2 and parts[1] in NON_USER_DIRS)
 
 
@@ -36,7 +47,8 @@ def docs_pages(repo_root: Path) -> list[str]:
     The index is followed from `docs/README.md`: a linked page is included; a
     linked folder, or a folder's `README.md`, is a sub-index whose own links
     are followed the same way. Every top-level `docs/*.md` page must be
-    reachable, so a new page cannot be left out silently.
+    reachable (internal process pages excepted, `INTERNAL_PAGES`), so a new page cannot be left
+    out silently.
     """
 
     pages: list[str] = []
@@ -62,7 +74,9 @@ def docs_pages(repo_root: Path) -> list[str]:
 
     visit(INDEX)
     unlisted = sorted(
-        f"docs/{p.name}" for p in (repo_root / "docs").glob("*.md") if f"docs/{p.name}" not in pages
+        f"docs/{p.name}"
+        for p in (repo_root / "docs").glob("*.md")
+        if f"docs/{p.name}" not in pages and f"docs/{p.name}" not in INTERNAL_PAGES
     )
     if unlisted:
         raise SystemExit(f"{INDEX} does not link these pages: {', '.join(unlisted)}")

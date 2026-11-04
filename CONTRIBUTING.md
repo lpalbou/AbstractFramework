@@ -63,6 +63,10 @@ and Windows.
 
   The generator follows the links of `docs/README.md` and refuses a top-level `docs/*.md` page
   the index does not link. `llms.txt` is edited by hand; keep its links in line with the docs.
+- Internal build/test/release process pages are not mirrored into `llms*.txt`: those files are for
+  people and agents who use the framework. The local CI gate, the workspace scripts, the installer
+  delivery plan and the release steps stay in `docs/` but are listed in `INTERNAL_PAGES`
+  (`scripts/gen_llms_full.py`) and never linked from `llms.txt`; add a new process page there.
 - After a pin change, regenerate and check the install manifest:
 
   ```bash
