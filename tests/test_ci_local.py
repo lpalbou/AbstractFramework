@@ -779,3 +779,113 @@ def test_test_material_is_never_uncovered_and_runs_its_packages_suite(tmp_path):
     avatar = ["Cargo.toml", "pyproject.toml", "src/lib.rs", "tests/python/fixtures/scene.json"]
     assert ci.light_tests(["tests/python/fixtures/scene.json"], avatar, lambda p: "") == (None, [], [])
     assert ci.is_test_material("web/x.fixture.json") and not ci.is_test_material("src/testing.py")
+
+
+def test_fixed_ports_are_rewritten_as_whole_numbers():
+    ports = {18080: 28003}
+    assert ci.rewrite_ports("install.sh --port 18080 && curl http://127.0.0.1:18080/api/health", ports) == \
+        "install.sh --port 28003 && curl http://127.0.0.1:28003/api/health"
+    assert ci.rewrite_ports("180800 118080 18081", ports) == "180800 118080 18081"
+
+
+_LEASE_SCRIPT = """
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("ci_local", sys.argv[1])
+ci = importlib.util.module_from_spec(spec); sys.modules["ci_local"] = ci; spec.loader.exec_module(ci)
+from pathlib import Path
+held = [ci.lease_port(Path(sys.argv[2]), range(int(sys.argv[3]), int(sys.argv[3]) + 20)) for _ in range(3)]
+print(" ".join(str(p) for p, _ in held), flush=True)
+sys.stdin.read()  # hold the leases until told to finish, as a running gate does
+"""
+
+
+def test_two_concurrent_gates_never_share_a_port(tmp_path):
+    import socket
+    import subprocess
+
+    script = [sys.executable, "-c", _LEASE_SCRIPT, str(ROOT / "scripts" / "ci_local.py"), str(tmp_path / "ports")]
+    start = 28900
+    first = subprocess.Popen(script + [str(start)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    second = None
+    try:
+        a = set(first.stdout.readline().split())  # the first gate holds three ports
+        second = subprocess.Popen(script + [str(start)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        b = set(second.stdout.readline().split())
+        assert len(a) == len(b) == 3 and not a & b, (a, b)
+    finally:
+        for proc in (first, second):
+            if proc:
+                proc.communicate("")
+    # A port something already listens on is never leased.
+    with socket.socket() as busy:
+        busy.bind(("127.0.0.1", 0))
+        busy.listen()
+        taken = busy.getsockname()[1]
+        port, lease = ci.lease_port(tmp_path / "ports", range(taken, taken + 50))
+        lease.close()
+        assert port != taken
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_a_job_with_a_fixed_port_runs_on_a_port_of_its_own(tmp_path, monkeypatch):
+    import subprocess
+    import types
+
+    try:
+        import yaml  # noqa: F401
+    except ImportError:
+        monkeypatch.setitem(sys.modules, "yaml", types.SimpleNamespace(safe_load=json.loads))
+    monkeypatch.setattr(ci, "SCRATCH", tmp_path / "ci-gate")
+    monkeypatch.setitem(ci.JOB_PORTS, ("tinyrepo", "ok"), (18080,))
+    repo = _tiny_repo(tmp_path / "tinyrepo")
+    workflow = {"name": "CI", "on": {"push": {"branches": ["main"]}},
+                "jobs": {"ok": {"runs-on": "macos-latest", "env": {"URL": "http://127.0.0.1:18080"},
+                                "steps": [{"run": 'echo "serve --port 18080; health $URL"'}]}}}
+    (repo / ".github" / "workflows" / "ci.yml").write_text(json.dumps(workflow), encoding="utf-8")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t"}
+    subprocess.run(["git", "-c", "commit.gpgsign=false", "commit", "-qam", "port"], cwd=repo, check=True, env=env)
+    runs = tmp_path / "ci-gate" / "runs"
+    assert ci.main([str(repo), "--base-sha", "HEAD", "--no-merge", "--branch", "main", "--event", "push",
+                    "--workspace", str(tmp_path), "--work", str(runs), "--keep-runs", "all", "--jobs", "1"]) == 0
+    log = next(runs.glob("*/jobs/*/log.txt")).read_text(encoding="utf-8")
+    port = re.search(r"port 18080 is (\d+) in this job", log).group(1)
+    assert int(port) in ci.PORT_RANGE
+    output = log.split("=== step 1:", 1)[1].splitlines()[1:]  # what the step printed (its title keeps the source)
+    assert output == [f"serve --port {port}; health http://127.0.0.1:{port}"]
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_the_port_rewrite_never_touches_the_gates_own_env(tmp_path, monkeypatch):
+    import subprocess
+    import types
+
+    try:
+        import yaml  # noqa: F401
+    except ImportError:
+        monkeypatch.setitem(sys.modules, "yaml", types.SimpleNamespace(safe_load=json.loads))
+    monkeypatch.setattr(ci, "SCRATCH", tmp_path / "ci-gate")
+    monkeypatch.setitem(ci.JOB_PORTS, ("tinyrepo", "ok"), (18080,))
+    fake_sha = "ab18080cd" + "0" * 31  # a commit whose hex holds a letter-bounded 18080
+    real_ctx = ci.Runner.github_ctx
+
+    def github_ctx(self, *args, **kwargs):
+        ctx = real_ctx(self, *args, **kwargs)
+        ctx["sha"] = fake_sha
+        return ctx
+
+    monkeypatch.setattr(ci.Runner, "github_ctx", github_ctx)
+    repo = _tiny_repo(tmp_path / "tinyrepo")
+    workflow = {"name": "CI", "on": {"push": {"branches": ["main"]}},
+                "jobs": {"ok": {"runs-on": "macos-latest", "env": {"URL": "http://127.0.0.1:18080"},
+                                "steps": [{"run": 'echo "sha=$GITHUB_SHA url=$URL"'}]}}}
+    (repo / ".github" / "workflows" / "ci.yml").write_text(json.dumps(workflow), encoding="utf-8")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t"}
+    subprocess.run(["git", "-c", "commit.gpgsign=false", "commit", "-qam", "sha"], cwd=repo, check=True, env=env)
+    runs = tmp_path / "ci-gate" / "runs"
+    assert ci.main([str(repo), "--base-sha", "HEAD", "--no-merge", "--branch", "main", "--event", "push",
+                    "--workspace", str(tmp_path), "--work", str(runs), "--keep-runs", "all", "--jobs", "1"]) == 0
+    log = next(runs.glob("*/jobs/*/log.txt")).read_text(encoding="utf-8")
+    port = re.search(r"port 18080 is (\d+) in this job", log).group(1)
+    assert f"sha={fake_sha} url=http://127.0.0.1:{port}" in log  # the workflow's env rewritten, the SHA intact
