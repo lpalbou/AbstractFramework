@@ -5,6 +5,8 @@
 > Created: 2026-09-28
 > Priority: low
 > Labels: docs, coredoc
+> Status: Completed
+> Completed: 2026-11-03 (merged in AbstractCore #49, ships in abstractcore 2.34.0)
 
 ## Summary
 
@@ -30,7 +32,7 @@ Ledger: "Follow-up: core docs/native-mlx-runtime.md:113 stale 'unreleased'."
 
 ## Acceptance criteria
 
-- [ ] No "unreleased" wording for shipped features in that page.
+- [x] No "unreleased" wording for shipped features in that page.
 
 ## Validation
 
@@ -39,3 +41,9 @@ Ledger: "Follow-up: core docs/native-mlx-runtime.md:113 stale 'unreleased'."
 ## Receipts
 
 - Source: `untracked/wave2/PLAN.md` (wave-2 ledger); root staging note `untracked/wave2/stage-root.md`.
+
+## Completion report (2026-11-03)
+
+- AbstractCore PR #49 (merged as `dcde7ccc`): the sentence "These integration changes are unreleased; update both
+  Core and Runtime together." is removed from `docs/native-mlx-runtime.md`; `llms-full.txt` regenerated.
+  `grep -n unreleased docs/native-mlx-runtime.md` returns nothing.

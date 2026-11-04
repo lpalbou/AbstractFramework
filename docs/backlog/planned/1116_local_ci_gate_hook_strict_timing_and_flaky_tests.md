@@ -37,6 +37,10 @@ have failed locally under the gate; the other 8 are timing flakes, all seven red
   commit is merged into a freshly fetched `origin/main` first; release workflows'
   validate/build/sdist-test steps included via `--release-tag`; dispatch-only suites
   (the Assistant's full iPhone UI suite) runnable when their paths change.
+- Test tiers (ADR 0051): `scripts/ci_local.sh <repo> --tier light|full`, with `full` as the default.
+  `light` runs the tests of the changed files (mapped to their test files), lint and type-check, and
+  the package's build job. `full` runs the whole PR + push-to-main job set. A release branch is always
+  `full`. The run prints which tier ran.
 - `docs/ci-local.md`: the contract, what cannot run locally per repository, the proof runs with
   timings (red on the Core release branch with fragments left in and on a gateway branch importing
   an unreleased Core symbol under a fresh venv per job; green on `origin/main` of Core, Gateway, UIC).
@@ -68,6 +72,8 @@ have failed locally under the gate; the other 8 are timing flakes, all seven red
 
 - [ ] `scripts/ci_local.sh abstractcore` on `origin/main` exits 0; on the Core release branch with
       fragments left in it exits non-zero naming the `changelog` job; timings in `docs/ci-local.md`.
+- [ ] `scripts/ci_local.sh <repo> --tier light` on a docs-only change runs only the changed files'
+      tests, lint/type-check and the build job; `--tier full` (the default) runs every job.
 - [ ] `scripts/ci_local.sh abstractgateway` on a branch importing an unreleased Core symbol
       exits non-zero at the install/import step.
 - [ ] A missing matrix Python prints `SKIPPED` and the gate exits non-zero without `--allow-skipped`.
