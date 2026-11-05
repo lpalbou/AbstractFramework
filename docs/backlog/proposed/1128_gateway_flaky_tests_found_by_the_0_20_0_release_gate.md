@@ -1,4 +1,4 @@
-# 1128 — AbstractGateway: four tests that pass or fail by timing or coincidence, and two checks that check nothing
+# 1128 — AbstractGateway: tests that pass or fail by timing or coincidence, and two checks that check nothing
 
 > Package: abstractgateway
 > Type: bug
@@ -44,6 +44,21 @@ Two more from the review of AbstractGateway #106 (checks that pass without check
    live checkout when its version happens to match, or skips. Fix: resolve the ui-kit version to the abstractuic tag
    whose `ui-kit/package.json` carries it, and fail loudly when no tag does.
 
+Two more from the red AbstractGateway `main` of 2026-11-05 (CI run 41965788929 on `8a12518`, the merge of #108). The
+gateway lane is fixing both tests now (PR pending):
+
+7. **`test_automations_list_order.py::test_the_listing_is_active_by_last_activity_then_paused_and_pausing_moves_a_row`
+   again** (ci 3.13, shard 0/4), now as an ORDER mismatch: `assert ['ea652577-cd…'] == ['8166dd56-3a…']`. The
+   `a86ddab9` wait (item 1) was not enough: the listing orders by activity stamps that move while the test reads it.
+   Fix: inject or freeze the stamps the test orders by, so the expected order is fixed before the read.
+8. **`test_gateway_live_delta_stream.py::test_scheduled_runs_carry_the_builtin_tool_deny_list`** (ci 3.10, shard 1/4):
+   `AssertionError: timeout` from a wall-clock wait. Fix: wait on the recorded event (the run's record carrying the deny
+   list), not on elapsed time.
+
+Item 2 also cost a release: the `v0.20.1` publish run failed on the process-wide `os.stat` count, fixed in #108, and
+was re-run once. That re-run is the post-cut exception: the rule is to fix a known-flaky test before the cut, never to
+re-run to green.
+
 ## Why
 
 ADR 0050: CI fails only by exception, and a test that flaked once is fixed before the next merge. All four turned a
@@ -55,6 +70,7 @@ release gate red at random; re-running until green is not a fix.
 
 - The four test fixes above (test code and the perf workflow's install step), plus the product decision in item 1.
 - The floor assertion (5) and the tag resolution (6).
+- The order test with injected stamps (7) and the deny-list test waiting on the recorded event (8).
 
 ### Out of scope
 
@@ -66,9 +82,9 @@ release gate red at random; re-running until green is not a fix.
       cached or separately bounded install (3), field-level address checks (4).
 - [ ] Each goes red with its rule removed: a paused row whose activity did not move (1), a stat by the probe beyond
       one per pass (2), an address written into the manifest (4), a floor below 0.1.1 (5), a ui-kit version no
-      abstractuic tag carries (6). The perf item (3) has no mutant: it is a timeout and caching change, proved by an
+      abstractuic tag carries (6), a listing out of activity order (7), a scheduled run without the deny list (8). The perf item (3) has no mutant: it is a timeout and caching change, proved by an
       install that no longer times out.
-- [ ] Items 1, 2 and 4 pass 5 times in a row on a loaded Mac (beside another test job), recorded in the PR; item 6
+- [ ] Items 1, 2, 4, 7 and 8 pass 5 times in a row on a loaded Mac (beside another test job), recorded in the PR; item 6
       runs against the real released kit, never the live checkout.
 - [ ] `a86ddab9` reaches `main`; the `automation.pause` question is answered on the record.
 
@@ -76,3 +92,4 @@ release gate red at random; re-running until green is not a fix.
 
 - `untracked/release-2026-11-03/w5-identity/flaky-order-test.md` (root, untracked): the four failures with their
   assertions and the gate runs.
+- AbstractGateway CI run 41965788929 (`main` at `8a12518`, 2026-11-05): items 7 and 8.
