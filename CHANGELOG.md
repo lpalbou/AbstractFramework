@@ -6,16 +6,16 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [0.12.1] - 2026-11-04
 
-Pins the 2026-11-03 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.20.0**,
+Pins the 2026-11-03 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.20.1**,
 **AbstractCore 2.34.0**, **AbstractRuntime 0.18.1**, **AbstractAgent 0.6.0**, **AbstractAssistant 0.18.0**,
 **AbstractVoice 0.20.0** and, new in every profile, **AbstractAvatar 0.1.1** (**AbstractSkill 0.3.9**; AbstractMemory 0.4.0,
 AbstractSemantics 0.0.5, AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers
-and the install manifest install gateway 0.20.0 and bring the npm apps to **Flow 0.14.0**, **AbstractCode web 0.15.0**,
+and the install manifest install gateway 0.20.1 and bring the npm apps to **Flow 0.14.0**, **AbstractCode web 0.15.0**,
 **Observer 0.12.0**, **Continuum 0.8.0**, **Entity 0.11.0** and, new, the web Assistant
 **`@abstractframework/assistant` 0.1.0** (gateway app id `assistant-web`), and build **abstractgateway-console 0.17.0**
 and **abstractcode 0.14.0** (crates.io). `CRATE_RELEASE_VERSIONS` also lists abstractcore-console 0.8.1, abstracttui
 0.7.1 and **abstractavatar 0.1.1**; the new `NPM_LIBRARY_VERSIONS` records `@abstractframework/ui-kit` 0.9.14 and
-`@abstractframework/panel-chat` 0.8.1. Container images: `ghcr.io/lpalbou/abstractgateway:0.20.0` and
+`@abstractframework/panel-chat` 0.8.1. Container images: `ghcr.io/lpalbou/abstractgateway:0.20.1` and
 `ghcr.io/lpalbou/abstractcore-server:2.34.0`.
 
 ### Added
@@ -28,7 +28,7 @@ and **abstractcode 0.14.0** (crates.io). `CRATE_RELEASE_VERSIONS` also lists abs
   Run/Stop, Edit, New) as on the Apple Watch.
 - **The Avatar view is one live line and a Findings panel** (AbstractCode web, AbstractEntity, the web Assistant):
   the latest public update, replaced as the next one arrives (click to hold it, Reply to this, Latest), and the
-  findings the assistant reported, collected beside the avatar. Gateway 0.20.0 types public updates (`progress` |
+  findings the assistant reported, collected beside the avatar. Gateway 0.20.1 types public updates (`progress` |
   `finding`).
 - **Read-aloud resumes exactly** (AbstractVoice 0.20.0): a streamed reading names the text segment of every audio
   line, so a reading cut by a dropped connection resumes after the last whole segment, with no word repeated or

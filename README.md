@@ -187,7 +187,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.20.0` and `ghcr.io/lpalbou/abstractcore-server:2.34.0`.
+`ghcr.io/lpalbou/abstractgateway:0.20.1` and `ghcr.io/lpalbou/abstractcore-server:2.34.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -351,7 +351,7 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.20.0 |
+| PyPI | `abstractgateway` | 0.20.1 |
 | PyPI | `abstractassistant` | 0.18.0 |
 | PyPI | `abstractcore` | 2.34.0 |
 | PyPI | `AbstractRuntime` | 0.18.1 |
@@ -375,7 +375,7 @@ and tested together.
 | crates.io | `abstractcore-console` | 0.8.1 |
 | crates.io | `abstracttui` | 0.7.1 |
 | crates.io | `abstractavatar` | 0.1.1 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.20.0 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.20.1 (`gpu-latest` / `<version>-gpu` experimental) |
 | GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.34.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is

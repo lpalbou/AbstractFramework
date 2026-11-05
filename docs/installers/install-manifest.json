@@ -105,7 +105,7 @@
         "summary": "Remove the service and uv tools (purge also deletes the data dir)."
       }
     ],
-    "gateway_version": "0.20.0",
+    "gateway_version": "0.20.1",
     "optional_extras": [
       "tray"
     ],
@@ -148,7 +148,7 @@
       "wait for GET /api/health",
       "abstractgateway-config claim-url (when supported) and open /console"
     ],
-    "tool_requirement": "abstractgateway[{extras}]==0.20.0",
+    "tool_requirement": "abstractgateway[{extras}]==0.20.1",
     "uninstall": [
       [
         "abstractgateway",
@@ -383,7 +383,7 @@
       "distribution": "abstractgateway",
       "id": "abstractgateway",
       "registry": "pypi",
-      "version": "0.20.0"
+      "version": "0.20.1"
     },
     {
       "distribution": "abstractskill",
