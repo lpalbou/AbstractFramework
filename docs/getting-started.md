@@ -250,7 +250,8 @@ On first local start, Gateway creates `default/admin`, keeps its token in
 `<data dir>/auth/bootstrap-admin-token` (readable by you only), and prints a one-time link:
 `First run: open http://127.0.0.1:8080/console#claim=…`. Open it to sign in to the web console and
 its first-run guide (engines, default model, apps); `abstractgateway claim --open` mints a new
-link. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCode Web or
+link. To set the gateway up from a browser on another machine instead, give the admin password and
+the six-word setup code that `abstractgateway claim --code` shows on the gateway's machine. Use the `admin` token from the file to sign in to AbstractFlow, AbstractCode Web or
 AbstractObserver. `ABSTRACTGATEWAY_AUTH_TOKEN` is only the legacy server/operator bearer-token
 path; it does not sign in browsers.
 
@@ -425,8 +426,8 @@ assistant run --prompt "Summarize today's news"   # one turn in the terminal
 
 Each turn runs the gateway's default workflow for the Assistant, or the workflow you pick in
 Settings → Models → **Workflow**. See [Agent sessions](agent-sessions.md#opening-the-assistant-from-the-gateway).
-`pip install "abstractassistant[avatar]"` adds an optional activity avatar beside the conversation
-(AbstractAvatar's procedural designs, following what the assistant is doing).
+The activity avatar beside the conversation (AbstractAvatar's procedural designs, following what the assistant is
+doing) comes with every install setting.
 
 On iPhone and Apple Watch, AbstractAssistant is one app (pre-release through TestFlight): the iPhone
 app carries the watch app, you sign in once on the iPhone with your gateway's address and an

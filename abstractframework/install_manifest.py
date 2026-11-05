@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from . import NPM_RELEASE_VERSIONS, PACKAGE_DISTRIBUTIONS, RELEASE_VERSIONS, __version__
+from . import NPM_APP_IDS, NPM_RELEASE_VERSIONS, PACKAGE_DISTRIBUTIONS, RELEASE_VERSIONS, __version__
 
 MANIFEST_SCHEMA_VERSION = 2
 MINIMUM_INSTALLER_VERSION = "0.2.0"
@@ -78,7 +78,7 @@ def _python_packages() -> list[dict[str, str]]:
 def _npm_apps() -> list[dict[str, str]]:
     return [
         {
-            "id": package_name.rsplit("/", 1)[-1],
+            "id": NPM_APP_IDS.get(package_name, package_name.rsplit("/", 1)[-1]),
             "package": package_name,
             "version": version,
             "registry": "npm",

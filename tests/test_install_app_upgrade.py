@@ -100,13 +100,14 @@ esac
 """
 
 PINS = ("@abstractframework/flow@0.7.0 @abstractframework/code@0.10.0 @abstractframework/observer@0.6.0 "
-        "@abstractframework/continuum@0.6.0 @abstractframework/entity@0.6.0")
+        "@abstractframework/continuum@0.6.0 @abstractframework/entity@0.6.0 @abstractframework/assistant@0.1.0")
 INSTALLED = [
     {"id": "code", "version": "0.9.0", "running": True},
     {"id": "flow", "version": "0.7.0", "running": False},
     {"id": "entity", "version": "0.5.2", "running": False},
     {"id": "observer", "version": None, "running": False},
     {"id": "assistant", "version": "0.12.0", "running": False},
+    {"id": "assistant-web", "version": "0.0.9", "running": False},
 ]
 
 
@@ -215,7 +216,7 @@ printf 'APPS<<%s>>\\nINCOMPLETE<<%s>>\\n' "$APPS_LINES" "$INCOMPLETE"
 
 
 def _ps(tmp_path: Path, env: dict, up: int, print_mode: int = 0) -> str:
-    names = ["Get-AppPin", "Test-GwBooted", "Test-GatewayUp", "Test-PortListening", "Get-AppsToken", "Get-AppsInstalled", "Get-AppsSettled", "Write-AppsMarker", "Invoke-AppsStep",
+    names = ["Get-AppId", "Get-AppPin", "Test-GwBooted", "Test-GatewayUp", "Test-PortListening", "Get-AppsToken", "Get-AppsInstalled", "Get-AppsSettled", "Write-AppsMarker", "Invoke-AppsStep",
              "Get-PidArgs", "Test-AppLeftover", "Stop-AppLeftover", "Start-AppLaunch"]
     loader = f"""
 $ast = [System.Management.Automation.Language.Parser]::ParseFile('{PS1}', [ref]$null, [ref]$null)
@@ -517,3 +518,18 @@ if (Test-GatewayUp 'http://127.0.0.1:18999') {{ "UP after $($script:n) calls" }}
     proc = subprocess.run([PWSH, "-NoProfile", "-Command", loader], capture_output=True, text=True, timeout=120)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "UP after 3 calls" in proc.stdout and "slow to answer" in proc.stdout and "DOWN after 1 calls" in proc.stdout, proc.stdout
+
+
+@pytest.mark.parametrize("runner", RUNNERS)
+def test_the_web_assistant_package_is_the_assistant_web_app_never_the_desktop_one(runner, tmp_path: Path) -> None:
+    # @abstractframework/assistant is the gateway's "assistant-web" app; "assistant" is the desktop app (pip).
+    runner(tmp_path, _env(tmp_path, INSTALLED), up=1)
+    calls = _calls(tmp_path)
+    assert any(c.startswith("apps update assistant-web --version 0.1.0") for c in calls), calls
+    assert not any(c.startswith("apps update assistant ") for c in calls), calls
+
+
+def test_the_pending_marker_names_the_web_assistant_by_its_app_id(tmp_path: Path) -> None:
+    _sh(tmp_path, _env(tmp_path, INSTALLED), up=0)
+    lines = (tmp_path / "data" / "apps-upgrade.pending").read_text().split("\n")
+    assert "assistant-web 0.1.0" in lines and not any(l.startswith("assistant ") for l in lines)

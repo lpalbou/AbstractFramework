@@ -95,15 +95,15 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.19.0'
+$AfGatewayPinDefault = '0.20.1'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.12.0'
-$AfPyMatrix = @('abstractcore==2.32.0', 'AbstractRuntime==0.16.0', 'abstractagent==0.5.0', 'abstractskill==0.3.4', 'AbstractMemory==0.4.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.19.5', 'abstractvision==0.3.34', 'abstractmusic==0.1.17', 'abstract3d==0.3.2')
+$AfFrameworkVersion = '0.12.1'
+$AfPyMatrix = @('abstractcore==2.34.0', 'AbstractRuntime==0.18.1', 'abstractagent==0.6.0', 'abstractskill==0.3.9', 'AbstractMemory==0.4.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.20.0', 'abstractvision==0.3.34', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractavatar==0.1.1')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.13.0', '@abstractframework/code@0.14.0', '@abstractframework/observer@0.11.0', '@abstractframework/continuum@0.8.0', '@abstractframework/entity@0.10.0')
-$AfCrateConsole = 'abstractgateway-console@0.17.0'
-$AfCrateCodeCli = 'abstractcode@0.13.1'
+$AfNpmApps = @('@abstractframework/flow@0.14.0', '@abstractframework/code@0.15.0', '@abstractframework/observer@0.12.0', '@abstractframework/continuum@0.8.0', '@abstractframework/entity@0.11.0', '@abstractframework/assistant@0.1.0')
+$AfCrateConsole = 'abstractgateway-console@0.18.0'
+$AfCrateCodeCli = 'abstractcode@0.14.0'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
 # the parent of the uv tool bin folder, so they land next to abstractgateway.exe (the folder the
 # gateway's Apps page also updates abstractcode in); cargo's own root when that folder is not
@@ -740,10 +740,14 @@ function Add-Incomplete([string]$Label, [string]$Why, [switch]$Fail, [string]$Ki
 # versions go to <data dir>\apps-upgrade.pending, which the gateway applies at its next start.
 # tests/test_install_app_upgrade.py loads these four functions on their own.
 $script:AppsLines = @()
+function Get-AppId([string]$Package) {  # the gateway's id of a browser app (install-manifest.json npm_apps[].id)
+    if ($Package -eq '@abstractframework/assistant') { return 'assistant-web' }  # "assistant" is the desktop app
+    return ($Package -replace '^@abstractframework/', '')
+}
 function Get-AppPin([string]$Id) {
     foreach ($s in $AfNpmApps) {
-        $n = $s -replace '^@abstractframework/', ''; $i = $n.LastIndexOf('@')
-        if ($n.Substring(0, $i) -eq $Id) { return $n.Substring($i + 1) }
+        $i = $s.LastIndexOf('@')
+        if ((Get-AppId $s.Substring(0, $i)) -eq $Id) { return $s.Substring($i + 1) }
     }
     return $null
 }
@@ -895,7 +899,7 @@ function Start-AppLaunch([string]$Gw, [string]$Id, [string]$BaseUrl, [string]$Da
 function Write-AppsMarker([string]$DataDir) {
     try {
         New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
-        $lines = foreach ($s in $AfNpmApps) { $n = $s -replace '^@abstractframework/', ''; $i = $n.LastIndexOf('@'); "$($n.Substring(0, $i)) $($n.Substring($i + 1))" }
+        $lines = foreach ($s in $AfNpmApps) { $i = $s.LastIndexOf('@'); "$(Get-AppId $s.Substring(0, $i)) $($s.Substring($i + 1))" }
         $tmp = Join-Path $DataDir 'apps-upgrade.pending.tmp'
         [System.IO.File]::WriteAllText($tmp, (($lines -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
         Move-Item -LiteralPath $tmp -Destination (Join-Path $DataDir 'apps-upgrade.pending') -Force
@@ -904,7 +908,7 @@ function Write-AppsMarker([string]$DataDir) {
 }
 function Invoke-AppsStep([bool]$Up, [string]$Gw, [string]$BaseUrl, [string]$DataDir) {
     $script:AppsLines = @()
-    $pins = (@($AfNpmApps | ForEach-Object { $n = $_ -replace '^@abstractframework/', ''; $i = $n.LastIndexOf('@'); "$($n.Substring(0, $i)) $($n.Substring($i + 1))" }) -join ', ')
+    $pins = (@($AfNpmApps | ForEach-Object { $i = $_.LastIndexOf('@'); "$(Get-AppId $_.Substring(0, $i)) $($_.Substring($i + 1))" }) -join ', ')
     if (-not $Up) {
         if ($script:DryRun) {
             Write-Info "would bring every browser app the gateway has installed to this release's version ($pins), restarting the running ones:"

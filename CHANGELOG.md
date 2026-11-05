@@ -4,10 +4,71 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-11-05
+
+Pins the 2026-11-03 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.20.1**,
+**AbstractCore 2.34.0**, **AbstractRuntime 0.18.1**, **AbstractAgent 0.6.0**, **AbstractAssistant 0.18.0**,
+**AbstractVoice 0.20.0** and, new in every profile, **AbstractAvatar 0.1.1** (**AbstractSkill 0.3.9**; AbstractMemory 0.4.0,
+AbstractSemantics 0.0.5, AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers
+and the install manifest install gateway 0.20.1 and bring the npm apps to **Flow 0.14.0**, **AbstractCode web 0.15.0**,
+**Observer 0.12.0**, **Continuum 0.8.0**, **Entity 0.11.0** and, new, the web Assistant
+**`@abstractframework/assistant` 0.1.0** (gateway app id `assistant-web`), and build **abstractgateway-console 0.18.0**
+and **abstractcode 0.14.0** (crates.io). `CRATE_RELEASE_VERSIONS` also lists abstractcore-console 0.8.1, abstracttui
+0.7.1 and **abstractavatar 0.1.1**; the new `NPM_LIBRARY_VERSIONS` records `@abstractframework/ui-kit` 0.9.14 and
+`@abstractframework/panel-chat` 0.8.1. Container images: `ghcr.io/lpalbou/abstractgateway:0.20.1` and
+`ghcr.io/lpalbou/abstractcore-server:2.34.0`.
+
 ### Added
 
+- **Every entity has a digital identity** (framework ADR 0052; AbstractRuntime 0.18, AbstractGateway 0.20, AbstractEntity
+  0.11, AbstractObserver 0.12, the Watch app). Each entity has a recorded look (an avatar design and a colour) and a voice
+  from birth; existing entities get theirs once, when the gateway starts. Every change is remembered in the entity's own
+  history, and the entity is told about it at its next visit. A design the Watch cannot draw, or a voice the gateway
+  does not offer or has not downloaded, is refused when it is set: the entity never borrows another look or voice.
+  - The Entity app has an Identity page (design, colour, voice, one save) and shows each entity's track record:
+    sessions, runs, successes, failures and tokens, and trust per kind of task. These numbers are completion rates only
+    (a run that finished, not a judgement of its quality), and the screens say so.
+  - Entities that have met are listed as acquaintances.
+  - A conversation can carry a temporary identity (a look and a voice for that session only); a session without one has
+    none.
+  - The Observer's entity page shows the look, the voice and the overall trust; the Watch draws each entity in its own
+    design and colour.
+  - `abstractgateway entity identity get|set <name>` and `abstractgateway entity record <name>` print the same from
+    the command line.
+- **Keep loaded survives restarts** (AbstractGateway 0.20): a model you keep loaded stays loaded after a gateway or
+  model-host restart, and is the only kind that never unloads when unused.
+- **Activity avatars in every profile.** `abstractavatar` 0.1.1 is a dependency of `abstractframework`, so the light,
+  Apple and GPU profiles all carry it and the Assistant's desktop activity avatar works without an extra. In
+  AbstractAvatar 0.1.1 only the eyes follow the pointer, and the catalog says which designs have eyes (`gaze`).
+- **The web Assistant on npm** (`@abstractframework/assistant` 0.1.0): install it from the console's **Apps** page
+  (**Assistant (web)**), or run `npx @abstractframework/assistant --gateway-url <url>`. Web automations (list, page,
+  Run/Stop, Edit, New) as on the Apple Watch.
+- **The Avatar view is one live line and a Findings panel** (AbstractCode web, AbstractEntity, the web Assistant):
+  the latest public update, replaced as the next one arrives (click to hold it, Reply to this, Latest), and the
+  findings the assistant reported, collected beside the avatar. Gateway 0.20.1 types public updates (`progress` |
+  `finding`).
+- **Read-aloud resumes exactly** (AbstractVoice 0.20.0): a streamed reading names the text segment of every audio
+  line, so a reading cut by a dropped connection resumes after the last whole segment, with no word repeated or
+  missed at that boundary.
+- **The gateway keeps the Mac awake while it runs** (closing the lid or choosing Sleep still sleeps it), and a
+  gateway stop or restart suspends runs at their last durable step instead of failing them.
+- **Automations are listed active first**, the paused ones folded under **Paused · N**, the same in every app.
+- **Typed values on AbstractFlow inputs** (ADR 0049): a value typed on an unwired input takes the input's type, and
+  AbstractRuntime 0.17.0's Compare reads text next to a number or true/false exactly by the editor's grammar.
+- **Hosted decision models are decision models everywhere** (AbstractCore 2.33.0): `typesafe` / `systemone` models are
+  listed with the decision capability, only under a decision filter, and an `output.decision` default on the hosted
+  Jev runs the hosted Jev.
 - `scripts/ci_local.sh <repo> [--job <name>]`: a repository's GitHub Actions jobs run on this Mac before a push, read from its own workflow files so the gate cannot drift from CI ([Local CI gate](docs/ci-local.md)). Each workflow runs as the push to main when it has one (main's full Python matrix and conditional jobs) and otherwise as the pull request (changelog check, load test), on the commit merged into the fetched base, every step, a fresh environment per job that installs sibling packages from PyPI, a scratch `HOME`/`TMPDIR` and a clean environment (no token, no `ABSTRACT*` variable) under `~/Library/Caches/ci-gate/`, outside the workspace; `--sandbox` adds `sandbox-exec` refusing `localhost:8080`, `~/.abstractcore` and the workspace's `runtime/`. Jobs it cannot run (Windows, Linux root, Docker, secrets, a missing toolchain) are printed as SKIPPED with the reason; exit 0 only when every runnable job passed and nothing was skipped (or `--allow-skipped`). `--release-tag` adds the release workflow's jobs, `--input` / `--runner-label` reach the Assistant's dispatch-only iPhone suite. `--jobs N` runs jobs in parallel (default from the physical cores and free memory; model-loading and latency-gated jobs run alone at the end), and `--tier light|full` follows ADR 0051's test tiers (light: one Python per matrix and the changed files' tests; release branches always full).
 - An opt-in pre-push hook (`scripts/install_hooks.sh <repo>...`, never installed automatically) runs the gate for every pushed ref and refuses a red push; `git push --no-verify` is the only override. [CONTRIBUTING.md](CONTRIBUTING.md) states the rules: no push without the gate green, no pull request that is red by design, a red main is reverted or fixed within the hour.
+- **A local model unused for 60 minutes is unloaded** (AbstractCore 2.34.0): it loads again on its next call; a model
+  kept loaded (Keep loaded) never is, and no running call is interrupted.
+- **A provider key sent to the AbstractCore server's discovery routes reaches only the provider it names**
+  (AbstractCore 2.34.0, security).
+
+### Changed
+
+- The installers and the install manifest name each browser app by the gateway's app id (`NPM_APP_IDS`): the web
+  Assistant is `assistant-web`, never `assistant` (the desktop app), so an upgrade brings it to its own version.
 
 ### Fixed
 
@@ -40,7 +101,8 @@ and `ghcr.io/lpalbou/abstractcore-server:2.32.0`.
   model library and the terminal console list decision models.
 - **AbstractGateway 0.19.0** (it also ships the changes prepared as 0.18.0, which was not published): a fresh
   gateway is set up from a browser on any machine with an admin password and the six-word setup code
-  (`abstractgateway claim --code`; the installer's summary prints it), and accounts sign in with a password or a
+  (`abstractgateway claim --code` on the gateway's machine, also printed by `abstractgateway service install` /
+  `enable`, and by the installer when it opened no browser or with `--server`; `serve` never prints it), and accounts sign in with a password or a
   token; the models run in a supervised model host process on every OS; voice streams send keep-alive lines during
   silence and record what they did in the audit log; dictation recordings stay out of conversation attachments;
   shared read receipts for conversations (`/api/gateway/me/session-reads`); the redesigned Models library,

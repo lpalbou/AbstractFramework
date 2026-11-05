@@ -13,13 +13,15 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-**What's new in 0.12.0** ([CHANGELOG](CHANGELOG.md#0120---2026-11-02)): decision models in AbstractCore
-(`output="decision"`, `POST /v1/decisions`: calibrated typed answers from Kev, Lev, Laya, OpenJev-style
-checkpoints or hosted Jev), a Decision node in AbstractFlow, the Avatar conversation view in the AbstractCode
-web client and AbstractEntity, an optional activity avatar in the AbstractAssistant desktop app, AbstractAvatar as a new package (procedural activity avatars
-for terminal, native and browser apps), the shared composer and account widget across the browser apps, and
-AbstractGateway 0.19.0: a fresh gateway is set up from the browser with an admin password and a six-word
-setup code, models run in a supervised model host process on every OS, and voice streams send keep-alive lines.
+**What's new in 0.12.1** ([CHANGELOG](CHANGELOG.md#0121---2026-11-05)): every entity has a digital identity, a
+recorded look and voice from birth that apps show and speak with, with its changes remembered and a track record
+(completion rates only); a model you keep loaded stays loaded across restarts while unused ones unload after 60
+minutes; activity avatars in every profile
+(AbstractAvatar 0.1.1; only the eyes follow the pointer), the web Assistant on npm (`@abstractframework/assistant`
+0.1.0, installed from the console's Apps page), the Avatar view as one live line plus a Findings panel, read-aloud
+that resumes exactly after a dropped connection (AbstractVoice 0.20.0), a gateway that keeps the Mac awake while it
+runs and suspends runs instead of failing them when it stops, automations listed active first with the paused ones
+folded, typed values on AbstractFlow's inputs, and hosted decision models listed and routed as decision models.
 
 > **Prerequisites**: none for the one-line install below (it provisions Python and, optionally, Node.js). For a manual install: Python 3.10–3.13, Node.js 18+ for browser UIs, and an LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
 
@@ -188,7 +190,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.19.0` and `ghcr.io/lpalbou/abstractcore-server:2.32.0`.
+`ghcr.io/lpalbou/abstractgateway:0.20.1` and `ghcr.io/lpalbou/abstractcore-server:2.34.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -343,7 +345,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.12.0)
+### Release matrix (abstractframework 0.12.1)
 
 `abstractframework` pins every Python package with `==`, so one version of the
 meta-package always installs the same stack. The browser apps and Rust tools are
@@ -352,37 +354,40 @@ and tested together.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractgateway` | 0.19.0 |
-| PyPI | `abstractassistant` | 0.17.0 |
-| PyPI | `abstractcore` | 2.32.0 |
-| PyPI | `AbstractRuntime` | 0.16.0 |
-| PyPI | `abstractagent` | 0.5.0 |
-| PyPI | `abstractskill` | 0.3.4 |
+| PyPI | `abstractgateway` | 0.20.1 |
+| PyPI | `abstractassistant` | 0.18.0 |
+| PyPI | `abstractcore` | 2.34.0 |
+| PyPI | `AbstractRuntime` | 0.18.1 |
+| PyPI | `abstractagent` | 0.6.0 |
+| PyPI | `abstractskill` | 0.3.9 |
 | PyPI | `AbstractMemory` | 0.4.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.19.5 |
+| PyPI | `abstractvoice` | 0.20.0 |
 | PyPI | `abstractvision` | 0.3.34 |
 | PyPI | `abstractmusic` | 0.1.17 |
 | PyPI | `abstract3d` | 0.3.2 |
-| npm | `@abstractframework/flow` | 0.13.0 |
-| npm | `@abstractframework/code` | 0.14.0 |
-| npm | `@abstractframework/observer` | 0.11.0 |
+| PyPI | `abstractavatar` | 0.1.1 |
+| npm | `@abstractframework/flow` | 0.14.0 |
+| npm | `@abstractframework/code` | 0.15.0 |
+| npm | `@abstractframework/observer` | 0.12.0 |
 | npm | `@abstractframework/continuum` | 0.8.0 |
-| npm | `@abstractframework/entity` | 0.10.0 |
-| crates.io | `abstractcode` | 0.13.1 |
-| crates.io | `abstractgateway-console` | 0.17.0 |
+| npm | `@abstractframework/entity` | 0.11.0 |
+| npm | `@abstractframework/assistant` | 0.1.0 |
+| crates.io | `abstractcode` | 0.14.0 |
+| crates.io | `abstractgateway-console` | 0.18.0 |
 | crates.io | `abstractcore-console` | 0.8.1 |
 | crates.io | `abstracttui` | 0.7.1 |
-| crates.io | `abstractavatar` | 0.1.0 |
-| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.19.0 (`gpu-latest` / `<version>-gpu` experimental) |
-| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.32.0 |
+| crates.io | `abstractavatar` | 0.1.1 |
+| GHCR | `ghcr.io/lpalbou/abstractgateway` | 0.20.1 (`gpu-latest` / `<version>-gpu` experimental) |
+| GHCR | `ghcr.io/lpalbou/abstractcore-server` | 2.34.0 |
 
 `abstract3d` (pinned above) comes with AbstractCore in every profile. The optional add-on that is
 not part of any profile installs separately: `pip install abstractcamera` (0.2.1). `abstractskill` (pinned above)
 comes with the gateway, which carries its curated skill shelf; install it on its own with
-`pip install abstractskill`. AbstractNote (`abstractnote` 0.3.0 on PyPI, `@abstractframework/note` 0.3.0 on
-npm) and the Python binding of AbstractAvatar (`pip install "abstractassistant[avatar]"` adds `abstractavatar`
-0.1.0 for the desktop activity avatar) are released with this matrix and install separately.
+`pip install abstractskill`. `abstractavatar` (pinned above) comes with every profile: the Assistant's desktop activity avatar works
+out of the box. AbstractNote (`abstractnote` 0.3.0 on PyPI, `@abstractframework/note` 0.3.0 on npm) is released
+with this matrix and installs separately. The browser apps are built on AbstractUIC (`@abstractframework/ui-kit`
+0.9.14, `@abstractframework/panel-chat` 0.8.1; `NPM_LIBRARY_VERSIONS`).
 
 See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv guidance,
 `abstractframework doctor`, and the generated installer manifest contract.

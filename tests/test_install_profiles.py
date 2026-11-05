@@ -62,6 +62,8 @@ def test_framework_profile_pins_match_release_versions() -> None:
     assert _dependency_version(deps, "abstractvoice") == release_versions["abstractvoice"]
     assert _dependency_version(deps, "abstractvision") == release_versions["abstractvision"]
     assert _dependency_version(deps, "abstractmusic") == release_versions["abstractmusic"]
+    # Avatars in every profile (operator ruling 2026-11-03): a base dependency, so light, apple and gpu all carry it.
+    assert _dependency_version(deps, "abstractavatar") == release_versions["abstractavatar"]
 
     assert f"abstractgateway[apple]=={release_versions['abstractgateway']}" in opt["apple"]
     assert any(
@@ -224,6 +226,9 @@ def test_install_manifest_profiles_are_generated_from_root_pins() -> None:
 
     for package_name, version in NPM_RELEASE_VERSIONS.items():
         assert npm_apps[package_name]["version"] == version
+    # The gateway's app id: "assistant" is the desktop app, the web Assistant is "assistant-web".
+    assert npm_apps["@abstractframework/assistant"]["id"] == "assistant-web"
+    assert npm_apps["@abstractframework/flow"]["id"] == "flow"
 
 
 def test_cli_manifest_check_and_doctor_report() -> None:
