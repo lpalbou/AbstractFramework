@@ -14,7 +14,9 @@ Two changes to `scripts/ci_local.py`, both operator-ordered with the release-ski
    again with `--release-tag`, which today runs every `ci` job a second time beside the release workflow's own jobs.
    The release-tag pass reads the summary of the last completed run for the same commit (merged into the same base),
    skips the `ci` jobs that passed there (printed `SKIPPED (green on <run dir>)`, not counted as skipped for
-   `--allow-skipped`), and runs only the release workflow's jobs and any `ci` job that did not pass.
+   `--allow-skipped`), and runs only the release workflow's jobs and any `ci` job that did not pass. Only the `ci`
+   duplicates are skipped: a `release.yml` job that runs the same steps as a `ci` job (AbstractCore's `release.yml`
+   re-runs its whole test suite, console-tui crate and local-model tests as its own jobs) still runs under this item.
 2. **One gate at a time per machine.** A machine-wide lock, taken with the same `fcntl.flock` mechanism the gate already
    uses for leased ports (`lease_port`, `<lock_dir>/<port>.lock`) and for the run in progress (`RUN_LOCK`), held for the
    whole run. A second gate waits (printing who holds the lock: repository, commit, start time) or exits with
@@ -41,6 +43,9 @@ per Mac.
 ### Out of scope
 
 - Locking out Xcode builds or model-loading jobs that are not gate runs (the skill rule covers them by hand).
+- AbstractCore's `release.yml` test jobs. Follow-up for AbstractCore: let `release.yml` rely on the green `ci` run of the
+  tagged commit instead of re-running the suite. On 2026-11-03 the Core 2.34.0 release-tag run's two failures were
+  those jobs (Test console-tui crate, Local-model tests) while their `ci.yml` twins passed on the same head.
 
 ## Acceptance criteria
 
