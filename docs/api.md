@@ -86,7 +86,7 @@ installers): `@abstractframework/ui-kit` 0.9.14 and `@abstractframework/panel-ch
 ### `CRATE_RELEASE_VERSIONS`
 
 The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.17.0, `abstractcore-console` 0.8.1 and `abstractcode` 0.14.0, plus the
+`abstractgateway-console` 0.18.0, `abstractcore-console` 0.8.1 and `abstractcode` 0.14.0, plus the
 libraries they build on: the `abstracttui` engine 0.7.1 and `abstractavatar` 0.1.1 (the procedural
 avatars of `abstracttui`'s `avatar` feature). The bootstrap scripts build `abstractgateway-console` at this version by default
 (`--no-console` skips it) and `abstractcode` next to it (`--no-code-cli` skips it).

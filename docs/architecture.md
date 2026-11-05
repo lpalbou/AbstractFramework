@@ -202,7 +202,7 @@ seven activity states: ready, thinking, working, listening, speaking, waiting an
 to RGBA pixels). The browser apps get it compiled to WebAssembly through the ui-kit
 (`ActivityAvatar`, the Avatar conversation view of the AbstractCode web client and AbstractEntity),
 the terminal clients through `abstracttui`'s `avatar` feature (crates.io), and the AbstractAssistant
-desktop app through the Python binding (`pip install "abstractassistant[avatar]"`). Each host only
+desktop app through the Python binding, which comes with every install setting (plain, `[apple]` and `[gpu]`). Each host only
 presents the frames and supplies the activity, time, audio level and gaze.
 
 The Models and Engines features are implemented once, in AbstractCore, and inherited by the

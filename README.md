@@ -13,7 +13,10 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-**What's new in 0.12.1** ([CHANGELOG](CHANGELOG.md#0121---2026-11-03)): activity avatars in every profile
+**What's new in 0.12.1** ([CHANGELOG](CHANGELOG.md#0121---2026-11-05)): every entity has a digital identity, a
+recorded look and voice from birth that apps show and speak with, with its changes remembered and a track record
+(completion rates only); a model you keep loaded stays loaded across restarts while unused ones unload after 60
+minutes; activity avatars in every profile
 (AbstractAvatar 0.1.1; only the eyes follow the pointer), the web Assistant on npm (`@abstractframework/assistant`
 0.1.0, installed from the console's Apps page), the Avatar view as one live line plus a Findings panel, read-aloud
 that resumes exactly after a dropped connection (AbstractVoice 0.20.0), a gateway that keeps the Mac awake while it
@@ -371,7 +374,7 @@ and tested together.
 | npm | `@abstractframework/entity` | 0.11.0 |
 | npm | `@abstractframework/assistant` | 0.1.0 |
 | crates.io | `abstractcode` | 0.14.0 |
-| crates.io | `abstractgateway-console` | 0.17.0 |
+| crates.io | `abstractgateway-console` | 0.18.0 |
 | crates.io | `abstractcore-console` | 0.8.1 |
 | crates.io | `abstracttui` | 0.7.1 |
 | crates.io | `abstractavatar` | 0.1.1 |

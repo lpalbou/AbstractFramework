@@ -76,7 +76,7 @@ NPM_LIBRARY_VERSIONS: dict[str, str] = {
 # are the libraries these tools build on (`abstracttui`'s `avatar` feature resolves
 # `abstractavatar` from crates.io); they are release versions, not installed tools.
 CRATE_RELEASE_VERSIONS: dict[str, str] = {
-    "abstractgateway-console": "0.17.0",
+    "abstractgateway-console": "0.18.0",
     "abstractcore-console": "0.8.1",
     "abstractcode": "0.14.0",
     "abstracttui": "0.7.1",

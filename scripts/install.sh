@@ -159,7 +159,7 @@ AF_FRAMEWORK_VERSION="0.12.1"
 AF_PY_MATRIX="abstractcore==2.34.0 AbstractRuntime==0.18.1 abstractagent==0.6.0 abstractskill==0.3.9 AbstractMemory==0.4.0 abstractsemantics==0.0.5 abstractvoice==0.20.0 abstractvision==0.3.34 abstractmusic==0.1.17 abstract3d==0.3.2 abstractavatar==0.1.1"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.14.0 @abstractframework/code@0.15.0 @abstractframework/observer@0.12.0 @abstractframework/continuum@0.8.0 @abstractframework/entity@0.11.0 @abstractframework/assistant@0.1.0"
-AF_CRATE_CONSOLE="abstractgateway-console@0.17.0"
+AF_CRATE_CONSOLE="abstractgateway-console@0.18.0"
 AF_CRATE_CODE_CLI="abstractcode@0.14.0"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
 # `abstractgateway-config` (uv tool install --with-executables-from; --no-core-cli leaves them

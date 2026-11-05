@@ -4,7 +4,7 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
-## [0.12.1] - 2026-11-04
+## [0.12.1] - 2026-11-05
 
 Pins the 2026-11-03 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.20.1**,
 **AbstractCore 2.34.0**, **AbstractRuntime 0.18.1**, **AbstractAgent 0.6.0**, **AbstractAssistant 0.18.0**,
@@ -12,7 +12,7 @@ Pins the 2026-11-03 release wave across the light, Apple and GPU profiles: **Abs
 AbstractSemantics 0.0.5, AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers
 and the install manifest install gateway 0.20.1 and bring the npm apps to **Flow 0.14.0**, **AbstractCode web 0.15.0**,
 **Observer 0.12.0**, **Continuum 0.8.0**, **Entity 0.11.0** and, new, the web Assistant
-**`@abstractframework/assistant` 0.1.0** (gateway app id `assistant-web`), and build **abstractgateway-console 0.17.0**
+**`@abstractframework/assistant` 0.1.0** (gateway app id `assistant-web`), and build **abstractgateway-console 0.18.0**
 and **abstractcode 0.14.0** (crates.io). `CRATE_RELEASE_VERSIONS` also lists abstractcore-console 0.8.1, abstracttui
 0.7.1 and **abstractavatar 0.1.1**; the new `NPM_LIBRARY_VERSIONS` records `@abstractframework/ui-kit` 0.9.14 and
 `@abstractframework/panel-chat` 0.8.1. Container images: `ghcr.io/lpalbou/abstractgateway:0.20.1` and
@@ -20,6 +20,23 @@ and **abstractcode 0.14.0** (crates.io). `CRATE_RELEASE_VERSIONS` also lists abs
 
 ### Added
 
+- **Every entity has a digital identity** (framework ADR 0052; AbstractRuntime 0.18, AbstractGateway 0.20, AbstractEntity
+  0.11, AbstractObserver 0.12, the Watch app). Each entity has a recorded look (an avatar design and a colour) and a voice
+  from birth; existing entities get theirs once, when the gateway starts. Every change is remembered in the entity's own
+  history, and the entity is told about it at its next visit. A design the Watch cannot draw, or a voice the gateway
+  does not offer or has not downloaded, is refused when it is set: the entity never borrows another look or voice.
+  - The Entity app has an Identity page (design, colour, voice, one save) and shows each entity's track record:
+    sessions, runs, successes, failures and tokens, and trust per kind of task. These numbers are completion rates only
+    (a run that finished, not a judgement of its quality), and the screens say so.
+  - Entities that have met are listed as acquaintances.
+  - A conversation can carry a temporary identity (a look and a voice for that session only); a session without one has
+    none.
+  - The Observer's entity page shows the look, the voice and the overall trust; the Watch draws each entity in its own
+    design and colour.
+  - `abstractgateway entity identity get|set <name>` and `abstractgateway entity record <name>` print the same from
+    the command line.
+- **Keep loaded survives restarts** (AbstractGateway 0.20): a model you keep loaded stays loaded after a gateway or
+  model-host restart, and is the only kind that never unloads when unused.
 - **Activity avatars in every profile.** `abstractavatar` 0.1.1 is a dependency of `abstractframework`, so the light,
   Apple and GPU profiles all carry it and the Assistant's desktop activity avatar works without an extra. In
   AbstractAvatar 0.1.1 only the eyes follow the pointer, and the catalog says which designs have eyes (`gaze`).
