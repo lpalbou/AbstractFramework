@@ -360,7 +360,7 @@ and tested together.
 | PyPI | `abstractcore` | 2.34.0 |
 | PyPI | `AbstractRuntime` | 0.18.1 |
 | PyPI | `abstractagent` | 0.6.0 |
-| PyPI | `abstractskill` | 0.3.8 |
+| PyPI | `abstractskill` | 0.3.9 |
 | PyPI | `AbstractMemory` | 0.4.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
 | PyPI | `abstractvoice` | 0.20.0 |
@@ -635,7 +635,7 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.12.1 pins (PyPI, `==`): abstractgateway 0.20.0, abstractassistant 0.18.0, abstractcore 2.34.0, AbstractRuntime 0.18.1, abstractagent 0.6.0, abstractskill 0.3.8, AbstractMemory 0.4.0, abstractsemantics 0.0.5, abstractvoice 0.20.0, abstractvision 0.3.34, abstractmusic 0.1.17, abstract3d 0.3.2, abstractavatar 0.1.1 (activity avatars in every profile).
+- abstractframework 0.12.1 pins (PyPI, `==`): abstractgateway 0.20.0, abstractassistant 0.18.0, abstractcore 2.34.0, AbstractRuntime 0.18.1, abstractagent 0.6.0, abstractskill 0.3.9, AbstractMemory 0.4.0, abstractsemantics 0.0.5, abstractvoice 0.20.0, abstractvision 0.3.34, abstractmusic 0.1.17, abstract3d 0.3.2, abstractavatar 0.1.1 (activity avatars in every profile).
 - Released with it: npm `@abstractframework/flow` 0.14.0, `code` 0.15.0, `observer` 0.12.0, `continuum` 0.8.0, `entity` 0.11.0, `assistant` 0.1.0 (the web Assistant, gateway app id `assistant-web`) (opened through the gateway at `/apps/<app>/`, or run with `npx`), built on `@abstractframework/ui-kit` 0.9.14 and `panel-chat` 0.8.1; crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.17.0 (built by the installer by default), `abstractcore-console` 0.8.1, `abstractcode` 0.14.0, and the libraries `abstracttui` 0.7.1 and `abstractavatar` 0.1.1; images `ghcr.io/lpalbou/abstractgateway:0.20.0`, `ghcr.io/lpalbou/abstractcore-server:2.33.0`. Released alongside, outside the profiles: AbstractNote (`abstractnote` 0.3.0 on PyPI, `@abstractframework/note` 0.3.0 on npm).
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
@@ -717,7 +717,7 @@ dependencies = [
     "abstractcore==2.34.0",
     "AbstractRuntime==0.18.1",
     "abstractagent==0.6.0",
-    "abstractskill==0.3.8",
+    "abstractskill==0.3.9",
     "AbstractMemory==0.4.0",
     "abstractsemantics==0.0.5",
 
@@ -813,7 +813,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractruntime": "0.18.1",
     "abstractagent": "0.6.0",
     "abstractgateway": "0.20.0",
-    "abstractskill": "0.3.8",
+    "abstractskill": "0.3.9",
     "abstractmemory": "0.4.0",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.20.0",
@@ -4953,7 +4953,7 @@ installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
 `abstractframework` 0.12.1 pins `abstractgateway==0.20.0`, `abstractassistant==0.18.0`,
-`abstractcore==2.34.0`, `AbstractRuntime==0.18.1`, `abstractagent==0.6.0`, `abstractskill==0.3.8`,
+`abstractcore==2.34.0`, `AbstractRuntime==0.18.1`, `abstractagent==0.6.0`, `abstractskill==0.3.9`,
 `AbstractMemory==0.4.0`, `abstractsemantics==0.0.5`, `abstractvoice==0.20.0`,
 `abstractvision==0.3.34`, `abstractmusic==0.1.17`, `abstract3d==0.3.2` and `abstractavatar==0.1.1` (activity avatars
 in every profile). The `apple` and `gpu` extras select
@@ -7494,7 +7494,7 @@ The meta-package version (`0.12.1` for this release).
 
 Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.12.1:
 `abstractcore` 2.34.0, `abstractruntime` 0.18.1, `abstractagent` 0.6.0, `abstractgateway` 0.20.0,
-`abstractskill` 0.3.8, `abstractmemory` 0.4.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.20.0, `abstractvision` 0.3.34,
+`abstractskill` 0.3.9, `abstractmemory` 0.4.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.20.0, `abstractvision` 0.3.34,
 `abstractmusic` 0.1.17, `abstract3d` 0.3.2, `abstractassistant` 0.18.0, `abstractavatar` 0.1.1.
 
 ### `PACKAGE_DISTRIBUTIONS`

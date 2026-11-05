@@ -389,7 +389,7 @@
       "distribution": "abstractskill",
       "id": "abstractskill",
       "registry": "pypi",
-      "version": "0.3.8"
+      "version": "0.3.9"
     },
     {
       "distribution": "AbstractMemory",

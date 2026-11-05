@@ -8,7 +8,7 @@ All notable changes to AbstractFramework will be documented in this file.
 
 Pins the 2026-11-03 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.20.0**,
 **AbstractCore 2.34.0**, **AbstractRuntime 0.18.1**, **AbstractAgent 0.6.0**, **AbstractAssistant 0.18.0**,
-**AbstractVoice 0.20.0** and, new in every profile, **AbstractAvatar 0.1.1** (**AbstractSkill 0.3.8**; AbstractMemory 0.4.0,
+**AbstractVoice 0.20.0** and, new in every profile, **AbstractAvatar 0.1.1** (**AbstractSkill 0.3.9**; AbstractMemory 0.4.0,
 AbstractSemantics 0.0.5, AbstractVision 0.3.34, AbstractMusic 0.1.17 and Abstract3D 0.3.2 unchanged). The installers
 and the install manifest install gateway 0.20.0 and bring the npm apps to **Flow 0.14.0**, **AbstractCode web 0.15.0**,
 **Observer 0.12.0**, **Continuum 0.8.0**, **Entity 0.11.0** and, new, the web Assistant

@@ -19,7 +19,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractruntime": "0.18.1",
     "abstractagent": "0.6.0",
     "abstractgateway": "0.20.0",
-    "abstractskill": "0.3.8",
+    "abstractskill": "0.3.9",
     "abstractmemory": "0.4.0",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.20.0",
