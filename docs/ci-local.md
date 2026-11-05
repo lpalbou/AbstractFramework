@@ -41,8 +41,9 @@ for this repository, or a path.
   `--allow-skipped`. **Exit 2**: a usage error.
 - One line per job: `PASS`, `FAIL` (the failing step, the log path and the log's last lines),
   `ERROR` (counts as a failure), `SKIPPED` (with the reason; GitHub still runs that job),
-  `NOT-TRIGGERED` (the job's own `if:` is false, as on GitHub), `NOT-SELECTED` (left out by
-  `--job` / `--python`). A last line gives the verdict, the time and the run directory.
+  `NOT-TRIGGERED` (the job's own `if:` is false, as on GitHub), `SKIPPED-BY-NEEDS` (it never
+  started because a job it needs failed; named with those jobs, and the run is red: what it checks
+  went unchecked), `NOT-SELECTED` (left out by `--job` / `--python`). A last line gives the verdict, the time and the run directory.
 - The workflow files are the only source of truth. Nothing is copied from them: a new step, a new
   matrix entry or a new job is run the next time the gate runs.
 
@@ -110,7 +111,11 @@ The pull request body states the tier and why; a reviewer may raise it.
   workflow that runs only on pull requests (the changelog check, the Gateway load test) runs as the
   pull request, with its branch and path filters. `--event pull_request` or `--event push` runs one
   event only. `--release-tag v2.33.0` also runs the workflows that pushing that tag would run
-  (release.yml's build and verify jobs; its publishing jobs need secrets and are skipped).
+  (release.yml's build and verify jobs; its publishing jobs need secrets and are skipped). Each
+  release job's pure checks (a `run:` step named like a validation of the tag, version or
+  changelog that writes nothing outside this machine) also run as a `pre-check: <job>` of their
+  own, with the steps before them and without the job's `needs`: a failing test job cannot hide
+  the version check, and a `--job` selection always keeps the pre-checks.
 - **Every step of every job**, with the workflow's `env`, `defaults`, `if:` conditions, `needs`,
   job outputs, `$GITHUB_ENV` / `$GITHUB_OUTPUT` / `$GITHUB_PATH`, `continue-on-error` and
   `timeout-minutes`. `${{ }}` expressions are evaluated as GitHub evaluates them.
