@@ -696,17 +696,28 @@ def pure_check_steps(steps: list) -> list[int]:
     return found
 
 
-def precheck_spec(spec: dict) -> dict | None:
+_NEEDS_REF = re.compile(r"\$\{\{[^}]*\bneeds\.[^}]*\}\}")
+
+
+def precheck_spec(spec: dict) -> tuple[dict | None, str]:
     """A job reduced to its pure checks: the steps up to the last one, minus any step that writes
-    outside this machine; no needs, no if, no matrix, no outputs. None when the job has none."""
+    outside this machine; no needs, no if, no matrix, no outputs, no deployment environment (its
+    steps are read-only by rule). (None, "") when the job has no pure check; (None, why) when a kept
+    step reads `${{ needs.* }}`: without its needs the expression is empty and the pre-check would be
+    red on a healthy release, so none is made (resolving needs from the real jobs is a later item)."""
     steps = spec.get("steps") or []
     checks = pure_check_steps(steps)
     if not checks:
-        return None
+        return None, ""
     kept = [st for st in steps[: checks[-1] + 1] if not (st.get("run") and outside_write(str(st["run"])))]
-    reduced = {k: v for k, v in spec.items() if k not in ("needs", "if", "strategy", "outputs", "steps")}
+    reduced = {k: v for k, v in spec.items() if k not in ("needs", "if", "strategy", "outputs", "steps", "environment")}
+    for where, part in [("the job's env", reduced.get("env")), ("the job's defaults", reduced.get("defaults"))] + [
+            (f"step {st.get('name') or st.get('uses') or st.get('run', '')[:40]!r}", st) for st in kept]:
+        m = _NEEDS_REF.search(json.dumps(part)) if part else None
+        if m:
+            return None, f"{where} reads {m.group(0)}, which only the real job has"
     reduced["steps"] = kept
-    return reduced
+    return reduced, ""
 
 
 def action_name(uses: str) -> str:
@@ -1683,6 +1694,7 @@ class Runner:
         groups: list[list[Job]] = []
         self.untriggered: list[str] = []
         self.triggered: list[str] = []
+        self.prechecks, self.precheck_notes = 0, []
         for path in self.workflow_files:
             wf = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
             if True in wf and "on" not in wf:  # YAML 1.1 reads `on:` as true
@@ -1716,8 +1728,11 @@ class Runner:
                         job.python = setup_python_version(job, ctx)
                         group.append(job)
                     groups.append(group)
-                    reduced = precheck_spec(spec) if tag else None
+                    reduced, refused = precheck_spec(spec) if tag else (None, "")
+                    if refused:
+                        self.precheck_notes.append(f"no pre-check for {group[0].label}: {refused}")
                     if reduced is not None:
+                        self.prechecks += 1
                         first = group[0]
                         pre = Job(name, path.name, wf, job_id + PRECHECK_SUFFIX, reduced, first.matrix,
                                   f"{first.label.split('/', 1)[0]}/pre-check: {first.label.split('/', 1)[-1]}", 0,
@@ -2375,6 +2390,11 @@ def run_prepared(r: "Runner", a: argparse.Namespace, t0: float) -> int:
         return 1
     print("ci_local: runs " + "; ".join(r.triggered) + ("" if not r.untriggered else
           "; not triggered: " + ", ".join(r.untriggered)), flush=True)
+    for note in r.precheck_notes:
+        print(f"ci_local: --release-tag: {note}", flush=True)
+    if a.release_tag and not r.prechecks and not r.precheck_notes:
+        print("ci_local: --release-tag: no pre-checks: no release job has a validation step (tag, version or "
+              "changelog); the version check is not covered unless the release jobs run in full", flush=True)
     if a.list:
         for g in groups:
             for j in g:

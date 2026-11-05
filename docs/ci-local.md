@@ -115,7 +115,12 @@ The pull request body states the tier and why; a reviewer may raise it.
   release job's pure checks (a `run:` step named like a validation of the tag, version or
   changelog that writes nothing outside this machine) also run as a `pre-check: <job>` of their
   own, with the steps before them and without the job's `needs`: a failing test job cannot hide
-  the version check, and a `--job` selection always keeps the pre-checks.
+  the version check, and a `--job` selection always keeps the pre-checks. A check that reads
+  another job's output (`${{ needs.<job>.outputs.* }}`) gets no pre-check, and the gate says which
+  step and reference; a release with no such step says `no pre-checks`. A pre-check runs once, with
+  the first matrix entry, and without the job's deployment environment. Like the rule against
+  writing outside this machine, it reads commands, not code: an upload written inside a Python
+  script is invisible to it, which makes that step the workflow's fault, not the gate's.
 - **Every step of every job**, with the workflow's `env`, `defaults`, `if:` conditions, `needs`,
   job outputs, `$GITHUB_ENV` / `$GITHUB_OUTPUT` / `$GITHUB_PATH`, `continue-on-error` and
   `timeout-minutes`. `${{ }}` expressions are evaluated as GitHub evaluates them.
