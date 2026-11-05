@@ -1,4 +1,4 @@
-# 1128 — AbstractGateway: four tests that pass or fail by timing or coincidence, and two checks that check nothing
+# 1128 — AbstractGateway: tests that pass or fail by timing or coincidence, and two checks that check nothing
 
 > Package: abstractgateway
 > Type: bug
