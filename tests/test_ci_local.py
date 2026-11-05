@@ -889,3 +889,116 @@ def test_the_port_rewrite_never_touches_the_gates_own_env(tmp_path, monkeypatch)
     log = next(runs.glob("*/jobs/*/log.txt")).read_text(encoding="utf-8")
     port = re.search(r"port 18080 is (\d+) in this job", log).group(1)
     assert f"sha={fake_sha} url=http://127.0.0.1:{port}" in log  # the workflow's env rewritten, the SHA intact
+
+
+def test_a_job_skipped_because_its_needs_failed_counts_red():
+    assert ci.red_count({"PASS": 3, "SKIPPED-BY-NEEDS": 1}) == 1
+    assert ci.red_count({"PASS": 2, "FAIL": 1, "ERROR": 1, "NOT-TRIGGERED": 2, "SKIPPED": 1}) == 2
+
+
+def test_a_release_jobs_pure_checks_are_found_and_kept_without_its_needs():
+    spec = {"name": "Build distributions", "needs": ["test", "docs"], "if": "success()", "outputs": {"v": "x"},
+            "runs-on": "ubuntu-latest", "steps": [
+                {"uses": "actions/checkout@v4"},
+                {"name": "Install build tools", "run": "pip install build twine"},
+                {"name": "Push a scratch tag", "run": "git push origin scratch"},
+                {"name": "Validate tag, version, and changelog", "run": "python check.py"},
+                {"name": "Build", "run": "python -m build"},
+                {"name": "Publish", "run": "twine upload dist/*"}]}
+    assert ci.pure_check_steps(spec["steps"]) == [3]
+    reduced, refused = ci.precheck_spec(spec)
+    assert refused == ""
+    assert [st.get("name") or st.get("uses") for st in reduced["steps"]] == [
+        "actions/checkout@v4", "Install build tools", "Validate tag, version, and changelog"]
+    assert "needs" not in reduced and "if" not in reduced and "outputs" not in reduced
+    assert ci.precheck_spec({"steps": [{"name": "Test", "run": "pytest"}]}) == (None, "")
+    # A deployment environment is dropped: the pre-check's steps write nothing outside.
+    reduced, _ = ci.precheck_spec({**spec, "environment": "pypi"})
+    assert "environment" not in reduced and ci.static_skip(ci.Job("R", "r.yml", {}, "build--pre-check", reduced,
+                                                                   {}, "x")) is None
+    # A check that reads another job's output cannot run without it: refused, with the step named.
+    needs_spec = {**spec, "steps": [*spec["steps"][:3],
+                                    {"name": "Validate version", "run": 'test "${{ needs.test.outputs.v }}" = 1'}]}
+    assert ci.precheck_spec(needs_spec) == (
+        None, "step 'Validate version' reads ${{ needs.test.outputs.v }}, which only the real job has")
+    # A step named like a check that writes outside this machine is not a pure check.
+    assert ci.pure_check_steps([{"name": "Publish version", "run": "npm publish"}]) == []
+
+
+def _release_repo(path: Path, marker: Path) -> Path:
+    import subprocess
+
+    repo = _tiny_repo(path)
+    workflow = {"name": "Release", "on": {"push": {"tags": ["v*"]}}, "jobs": {
+        "test": {"name": "Test", "runs-on": "macos-latest", "steps": [{"run": "exit 1"}]},
+        "build": {"name": "Build distributions", "runs-on": "macos-latest", "needs": ["test"], "steps": [
+            {"uses": "actions/checkout@v4"},
+            {"name": "Validate tag, version, and changelog", "run": f'echo "$GITHUB_REF_NAME" > "{marker}"'},
+            {"name": "Publish", "run": "twine upload dist/*"}]},
+        "publish": {"name": "Publish", "runs-on": "macos-latest", "needs": ["build"], "steps": [{"run": "true"}]}}}
+    (repo / ".github" / "workflows" / "ci.yml").write_text(json.dumps(workflow), encoding="utf-8")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t"}
+    subprocess.run(["git", "-c", "commit.gpgsign=false", "commit", "-qam", "release"], cwd=repo, check=True, env=env)
+    return repo
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_a_release_tag_runs_its_pure_checks_even_when_a_test_job_failed(tmp_path, monkeypatch, capsys):
+    marker = tmp_path / "validated"
+    repo = _release_repo(tmp_path / "tinyrepo", marker)
+    assert _run_tiny(repo, tmp_path, monkeypatch, "--release-tag", "v1.2.3") == 1
+    out = capsys.readouterr().out
+    summary = out.split("ci_local: summary", 1)[1]
+    # The build job never started (its test need failed): named in the summary, counted red.
+    assert re.search(r"SKIPPED-BY-NEEDS\s+ci@v1.2.3/Build distributions\s+did not run: its needs failed \(test\)", summary)
+    assert re.search(r"SKIPPED-BY-NEEDS\s+ci@v1.2.3/Publish\s+did not run: its needs failed \(build\)", summary)
+    # Its validation step ran anyway, as a pre-check of its own, without the publish step.
+    assert re.search(r"PASS\s+\S+\s+ci@v1.2.3/pre-check: Build distributions", summary)
+    assert marker.read_text(encoding="utf-8").strip() == "v1.2.3"
+    assert "2 skipped-by-needs" in out
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_a_job_selection_for_a_release_tag_keeps_its_pure_checks(tmp_path, monkeypatch, capsys):
+    marker = tmp_path / "validated"
+    repo = _release_repo(tmp_path / "tinyrepo", marker)
+    assert _run_tiny(repo, tmp_path, monkeypatch, "--release-tag", "v1.2.3", "--job", "test") == 1
+    summary = capsys.readouterr().out.split("ci_local: summary", 1)[1]
+    assert "ci@v1.2.3/pre-check: Build distributions" in summary and marker.exists()
+
+
+def _workflow_repo(path: Path, workflow: dict) -> Path:
+    import subprocess
+
+    repo = _tiny_repo(path)
+    (repo / ".github" / "workflows" / "ci.yml").write_text(json.dumps(workflow), encoding="utf-8")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+           "GIT_COMMITTER_EMAIL": "t@t"}
+    subprocess.run(["git", "-c", "commit.gpgsign=false", "commit", "-qam", "wf"], cwd=repo, check=True, env=env)
+    return repo
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_a_release_check_that_reads_needs_gets_no_pre_check_and_says_why(tmp_path, monkeypatch, capsys):
+    # The real build passes with test's output; a pre-check without needs would read "" and turn red.
+    workflow = {"name": "Release", "on": {"push": {"tags": ["v*"]}}, "jobs": {
+        "test": {"runs-on": "macos-latest", "outputs": {"v": "${{ steps.s.outputs.v }}"},
+                 "steps": [{"id": "s", "run": 'echo "v=1" >> "$GITHUB_OUTPUT"'}]},
+        "build": {"name": "Build", "runs-on": "macos-latest", "needs": ["test"], "steps": [
+            {"name": "Validate version", "run": 'test "${{ needs.test.outputs.v }}" = "1"'}]}}}
+    repo = _workflow_repo(tmp_path / "tinyrepo", workflow)
+    assert _run_tiny(repo, tmp_path, monkeypatch, "--release-tag", "v1.2.3") == 0  # a healthy release stays green
+    out = capsys.readouterr().out
+    assert ("--release-tag: no pre-check for ci@v1.2.3/Build: step 'Validate version' reads "
+            "${{ needs.test.outputs.v }}, which only the real job has") in out
+    assert "pre-check: Build" not in out
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="the gate runs on macOS only")
+def test_a_release_with_no_validation_step_says_so(tmp_path, monkeypatch, capsys):
+    workflow = {"name": "Release", "on": {"push": {"tags": ["v*"]}}, "jobs": {
+        "build": {"name": "Build", "runs-on": "macos-latest", "steps": [{"name": "Build", "run": "true"}]}}}
+    repo = _workflow_repo(tmp_path / "tinyrepo", workflow)
+    assert _run_tiny(repo, tmp_path, monkeypatch, "--release-tag", "v1.2.3") == 0
+    assert "--release-tag: no pre-checks: no release job has a validation step" in capsys.readouterr().out
