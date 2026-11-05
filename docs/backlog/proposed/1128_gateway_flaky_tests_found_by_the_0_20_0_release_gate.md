@@ -1,4 +1,4 @@
-# 1128 — AbstractGateway: four tests that pass or fail by timing or coincidence (found by the 0.20.0 release gate)
+# 1128 — AbstractGateway: four tests that pass or fail by timing or coincidence, and two checks that check nothing
 
 > Package: abstractgateway
 > Type: bug
@@ -33,6 +33,17 @@ not on the code under test. Each needs a test-only fix that makes it determinist
    timestamp and a SHA-256. Fix: check the fields that could carry an address (no handle, URL or address field
    equals or embeds the declared `host:port`), not a substring of the whole document.
 
+Two more from the review of AbstractGateway #106 (checks that pass without checking):
+
+5. **The `abstractavatar>=0.1.1` floor is not asserted.** `pyproject.toml` (l.127) requires `abstractavatar>=0.1.1`
+   (the avatar design catalog, framework ADR 0052), but no test pins it: `tests/test_gateway_install_profiles.py`
+   asserts the other floors. Fix: add it to that floor test.
+6. **The kit-islands drift pin can silently test the live checkout.** `tests/kit_release.py::released_ui_kit` looks
+   for an abstractuic tag `v<ui-kit version>` (`v0.9.14`), which does not exist: abstractuic is tagged by its repository
+   version (`v0.10.1`). It returns None, and `test_vendored_islands_match_the_kit_sources` then compares against the
+   live checkout when its version happens to match, or skips. Fix: resolve the ui-kit version to the abstractuic tag
+   whose `ui-kit/package.json` carries it, and fail loudly when no tag does.
+
 ## Why
 
 ADR 0050: CI fails only by exception, and a test that flaked once is fixed before the next merge. All four turned a
@@ -43,6 +54,7 @@ release gate red at random; re-running until green is not a fix.
 ### In scope
 
 - The four test fixes above (test code and the perf workflow's install step), plus the product decision in item 1.
+- The floor assertion (5) and the tag resolution (6).
 
 ### Out of scope
 
@@ -52,9 +64,12 @@ release gate red at random; re-running until green is not a fix.
 
 - [ ] Each test is deterministic: a frozen or waited-for clock (1), a counter scoped to the probing thread (2), a
       cached or separately bounded install (3), field-level address checks (4).
-- [ ] Each of the four goes red with its rule removed: a paused row whose activity did not move (1), a stat by the
-      probe beyond one per pass (2), an address written into the manifest (4).
-- [ ] Each passes 5 times in a row on a loaded Mac (beside another test job), recorded in the PR.
+- [ ] Each goes red with its rule removed: a paused row whose activity did not move (1), a stat by the probe beyond
+      one per pass (2), an address written into the manifest (4), a floor below 0.1.1 (5), a ui-kit version no
+      abstractuic tag carries (6). The perf item (3) has no mutant: it is a timeout and caching change, proved by an
+      install that no longer times out.
+- [ ] Items 1, 2 and 4 pass 5 times in a row on a loaded Mac (beside another test job), recorded in the PR; item 6
+      runs against the real released kit, never the live checkout.
 - [ ] `a86ddab9` reaches `main`; the `automation.pause` question is answered on the record.
 
 ## Receipts
