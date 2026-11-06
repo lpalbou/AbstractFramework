@@ -31,3 +31,4 @@ Only AbstractSkill and the root release. Component release preparations were arc
 
 - All 35 component versions verified on their registries; fresh Python 3.12 installation resolved all 15 Python pins and passed `uv pip check` (136 packages).
 - Independent root review approved the release diff; publication remains gated by local and GitHub CI.
+- Local full gate found an existing fixed-PID test assumption (PID 4242 belonged to a real shell); the test now explicitly simulates unavailable inspection. Installer command assertions also allow the newly explicit component requirements. Both are root-only test changes.

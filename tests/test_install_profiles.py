@@ -476,8 +476,9 @@ def test_install_sh_default_takes_llama_cpp_from_the_prebuilt_wheel(tmp_path: Pa
     # uv splits --overrides/--constraints values at whitespace (macOS "Application
     # Support"), so the install runs from the data dir with relative file names
     assert install.lstrip().startswith("$ cd ")
+    assert "--with 'webrtcvad-wheels>=2.0.14'" in install
     assert (
-        f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --with llama-cpp-python=={pin} --constraints uv-constraints.txt "
+        f"--with '{_voice_req()}' --with llama-cpp-python=={pin} --constraints uv-constraints.txt "
         f"--find-links {_LLAMA}/{kind}/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
     assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
@@ -499,7 +500,8 @@ def test_install_sh_skips_gguf_where_no_wheel_exists(tmp_path: Path) -> None:
     assert "--find-links" not in install
     # No llama.cpp pin: the constraints are the release matrix alone.
     assert _printed_block(out, "uv-constraints.txt:") == _release_matrix()
-    assert f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --constraints uv-constraints.txt --overrides uv-overrides.txt " in install
+    assert "--with 'webrtcvad-wheels>=2.0.14'" in install
+    assert f"--with '{_voice_req()}' --constraints uv-constraints.txt --overrides uv-overrides.txt " in install
     assert "GGUF:       skipped (no prebuilt wheel for " in out
 
 
