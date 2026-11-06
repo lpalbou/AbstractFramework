@@ -185,12 +185,12 @@ sup_register "code"     0 "$(launcher_cmd code)"     "$CODE_LOG"     "$CODE_URL"
 sup_register "console"  0 "$(launcher_cmd console)"  "$CONSOLE_LOG"  "$CONSOLE_URL"  "" ""
 sup_register "entity"   0 "$(launcher_cmd entity)"   "$ENTITY_LOG"   "$ENTITY_URL"   "" ""
 
-# The desktop assistant: same bounded self-restart as the other apps, but no
-# ready URL — it serves no port, so the supervisor treats "process alive" as
-# ready (see sup_probe_ready).
+# The desktop assistant: bounded crash recovery; an intentional Quit stays
+# stopped. It serves no port, so readiness means "process alive"
+# (see sup_probe_ready).
 ASSISTANT_IDX=""
 if [[ "$AF_STACK_ASSISTANT" != "0" ]]; then
-    sup_register "assistant" 0 "$(launcher_cmd assistant)" "$ASSISTANT_LOG" "" "" ""
+    sup_register "assistant" 0 "$(launcher_cmd assistant)" "$ASSISTANT_LOG" "" "" "" on-failure
     ASSISTANT_IDX="$SUP_LAST_INDEX"
 fi
 

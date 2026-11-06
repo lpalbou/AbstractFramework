@@ -21,6 +21,7 @@
 #       locks free) hold on the restart path too.
 #
 #   APP services (everything else):
+#     - desktop apps may select on-failure: clean exit stays stopped;
 #     - restarted on death with a BOUNDED budget (max N restarts per rolling
 #       window) so a crash-looping app converges to FAILED instead of flapping
 #       forever — and the rest of the stack keeps serving;
@@ -47,7 +48,7 @@
 #   running   readiness confirmed; health-probed if a health URL is declared
 #   waiting   scheduled to (re)start at SUP_NEXT_START_AT (backoff / parked)
 #   failed    restart budget exhausted (apps only) — operator attention
-#   stopped   deliberately stopped (shutdown)
+#   stopped   deliberately stopped (shutdown or clean desktop-app exit)
 #
 # Portability: macOS ships bash 3.2 — parallel indexed arrays only (no
 # associative arrays), no ${var,,}, no readarray. `set -u` safe.
@@ -98,7 +99,7 @@ SUP_STARTING_ALIVE_MAX_S="${SUP_STARTING_ALIVE_MAX_S:-600}" # alive-not-ready ha
 
 # --- registry + runtime state (parallel arrays, index = service id) ----------
 SUP_NAME=(); SUP_CMD=(); SUP_LOG=(); SUP_READY_URL=(); SUP_HEALTH_URL=()
-SUP_CRITICAL=(); SUP_PRESTART=()
+SUP_CRITICAL=(); SUP_PRESTART=(); SUP_RESTART_POLICY=()
 SUP_PID=(); SUP_STATE=(); SUP_STARTED_AT=(); SUP_READY_DEADLINE=()
 SUP_NEXT_START_AT=(); SUP_RESTART_LOG=(); SUP_BACKOFF_N=()
 SUP_HEALTH_FAILS=(); SUP_LAST_PROBE=(); SUP_EXIT_STATUS=(); SUP_HANG_LOG=()
@@ -322,12 +323,17 @@ sup_kill_pid() {
 }
 
 # --- registration -------------------------------------------------------------
-# sup_register <name> <critical 0|1> <command> <log> <ready_url> [health_url] [prestart_fn]
+# sup_register <name> <critical 0|1> <command> <log> <ready_url> [health_url] [prestart_fn] [restart_policy: always|on-failure]
 # The command runs via `bash -c`; the resulting pid is the service (launchers
 # exec into their server process, so killing the pid kills the service).
 # Sets SUP_LAST_INDEX to the new service id.
 sup_register() {
-    local i="$SUP_COUNT"
+    local i="$SUP_COUNT" policy="${8:-always}"
+    case "$policy" in
+        always|on-failure) ;;
+        *) sup_log "ERROR: invalid restart policy: $policy"; return 1 ;;
+    esac
+    SUP_RESTART_POLICY[$i]="$policy"
     SUP_NAME[$i]="$1"
     SUP_CRITICAL[$i]="$2"
     SUP_CMD[$i]="$3"
@@ -440,7 +446,8 @@ sup_start_service() {
     # asynchronous "Terminated: 15" job notice. It is deliberate noise: it
     # names the pid and signal, and suppressing it would cost either exit-
     # status capture (disown) or child reaping (subshell spawn).
-    bash -c "${SUP_CMD[$i]}" >"${SUP_LOG[$i]}" 2>&1 &
+    AF_SUPERVISOR_RESTART_POLICY="${SUP_RESTART_POLICY[$i]}" \
+        bash -c "${SUP_CMD[$i]}" >"${SUP_LOG[$i]}" 2>&1 &
     if [[ "$!" == "$prev_bang" ]]; then
         sup_log "ERROR: ${SUP_NAME[$i]}: spawn failed (fork pressure?); retrying in ${SUP_CRIT_BACKOFF_CAP_S}s"
         SUP_PID[$i]=""
@@ -472,6 +479,16 @@ sup_handle_death() {
     fi
     SUP_EXIT_STATUS[$i]="$status"
     SUP_PID[$i]=""
+
+    # A desktop Quit is final, even during a gateway outage. It is not an
+    # incident, does not consume crash budget, and recovery must not revive it.
+    if [[ "${SUP_CRITICAL[$i]}" != "1" && "${SUP_RESTART_POLICY[$i]}" == "on-failure" \
+          && "$reason" == "exited" && "$status" == "0" ]]; then
+        SUP_STATE[$i]="stopped"
+        SUP_NEXT_START_AT[$i]=0
+        sup_log "${SUP_NAME[$i]}: clean exit — stopped; reopen explicitly to start again"
+        return 0
+    fi
 
     sup_log_incident "${SUP_NAME[$i]} ${reason} (status ${status:-?})" "${SUP_LOG[$i]}" "$status" "$reason"
 
