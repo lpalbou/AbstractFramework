@@ -76,7 +76,7 @@ row() {
 }
 
 pull_repo() {
-    local spec="$1" name repo_dir current upstream remote ahead behind
+    local spec="$1" name repo_dir current upstream remote ahead behind before
     name="$(repo_display_name "$spec")"
     repo_dir="$(repo_dir_for "$spec")"
     total=$((total + 1))
@@ -122,6 +122,7 @@ pull_repo() {
         failed=$((failed + 1))
         return 0
     fi
+    before="$(git -C "$repo_dir" rev-parse "$BRANCH")"
     if $DRY_RUN; then
         row "$C_YELLOW" "$name" "$current" "${C_YELLOW}would fast-forward $BRANCH ↓${behind} from $upstream${C_RESET}"
         would=$((would + 1))
@@ -142,7 +143,9 @@ pull_repo() {
             return 0
         fi
     fi
-    git -C "$repo_dir" log --format="      %h %s" "$BRANCH..$upstream" | head -10 | while IFS= read -r line; do
+    # Limit git itself: head can close the pipe early and abort the entire
+    # sweep under pipefail. Keep the old SHA so applied pulls show their log.
+    git -C "$repo_dir" log -10 --format="      %h %s" "$before..$upstream" | while IFS= read -r line; do
         printf "${C_DIM}%s${C_RESET}\n" "$line"
     done
 }
