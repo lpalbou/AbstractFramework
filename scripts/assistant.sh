@@ -17,6 +17,14 @@ stop_processes "AbstractAssistant" "abstractassistant\.cli" "bin/assistant($| )"
     "AbstractAssistant\.app/Contents/MacOS/"
 
 export ABSTRACTGATEWAY_URL="${ABSTRACTGATEWAY_URL:-$GATEWAY_URL}"
+# Older supervisors already running in memory do not understand clean Quit.
+# Only that exact parent needs the compatibility guard; standalone launches
+# and current supervisors exec the app directly as usual.
+source "$APPS_LIB_DIR/assistant_lifecycle.sh"
+if assistant_needs_legacy_guard; then
+    exec "$PY" "$APPS_LIB_DIR/assistant_legacy_supervisor.py" "$@"
+fi
+
 info "Starting AbstractAssistant (published), gateway ${ABSTRACTGATEWAY_URL}"
 # The console entry point is `assistant` (pyproject [project.scripts]); fall
 # back to the module if the script shim is not on PATH.

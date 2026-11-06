@@ -184,8 +184,32 @@ bash "$WS/scripts/pull.sh" >"$WORK/pull.out" 2>&1
 check "pull.sh exits 1 while beta is diverged" "$?"
 [[ "$(git -C "$WS/alpha" rev-parse main)" == "$(git -C "$WORK/remotes/lpalbou/Alpha.git" rev-parse main)" ]]
 check "pull.sh fast-forwarded alpha" "$?"
+grep -q "upstream alpha change" "$WORK/pull.out"
+check "pull.sh reports the commits it actually applied" "$?"
 [[ "$(git -C "$WS/beta" log -1 --format=%s)" == "local beta change" ]]
 check "pull.sh left the diverged beta untouched" "$?"
+
+# A long incoming history must not abort the sweep when its log is capped.
+# Large subjects force git to keep writing after a head -10 reader exits,
+# reproducing the SIGPIPE / exit 141 seen in the real workspace.
+printf 'long upstream subject %08192d\n' 0 >"$WORK/long-subject.txt"
+for i in {1..24}; do
+    q git -C "$WORK/other-alpha" -c commit.gpgsign=false commit --allow-empty -F "$WORK/long-subject.txt"
+done
+q git -C "$WORK/other-alpha" push origin main
+ALPHA_LOCAL_BEFORE="$(git -C "$WS/alpha" rev-parse main)"
+"$WS/scripts/pull.sh" --dry-run --only alpha,abstractframework >"$WORK/pull-long-dry.out" 2>&1
+check "pull.sh is executable and completes a long-history dry run" "$?"
+grep -q '2 repos:.*0 need attention' "$WORK/pull-long-dry.out"
+check "pull.sh continues to later repositories after a capped log" "$?"
+[[ "$(grep -c 'long upstream subject' "$WORK/pull-long-dry.out")" == "10" ]]
+check "pull.sh limits the incoming history to ten commits" "$?"
+[[ "$(git -C "$WS/alpha" rev-parse main)" == "$ALPHA_LOCAL_BEFORE" ]]
+check "pull.sh long-history dry run moved nothing" "$?"
+"$WS/scripts/pull.sh" --no-fetch --only alpha,abstractframework >"$WORK/pull-long.out" 2>&1
+check "pull.sh applies a long-history fast-forward and finishes the sweep" "$?"
+[[ "$(git -C "$WS/alpha" rev-parse main)" == "$(git -C "$WORK/remotes/lpalbou/Alpha.git" rev-parse main)" ]]
+check "pull.sh long-history fast-forward reaches the remote commit" "$?"
 
 # --- build.sh --npm (tier order, failure propagates) ----------------------------------------
 if command -v npm >/dev/null 2>&1; then

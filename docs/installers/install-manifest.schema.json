@@ -86,6 +86,12 @@
         }
       },
       "additionalProperties": false
+    },
+    "npm_libraries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/npm_library"
+      }
     }
   },
   "$defs": {
@@ -405,6 +411,28 @@
         },
         "notes": {
           "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "npm_library": {
+      "type": "object",
+      "required": [
+        "package",
+        "version",
+        "registry"
+      ],
+      "properties": {
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "registry": {
+          "const": "npm"
         }
       },
       "additionalProperties": false

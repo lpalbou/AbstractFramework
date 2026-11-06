@@ -55,14 +55,13 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.12.0` for this release).
+The meta-package version (`0.13.0` for this release).
 
 ### `RELEASE_VERSIONS`
 
-Dictionary mapping each ecosystem package name to the pinned version for this release. In 0.12.0:
-`abstractcore` 2.32.0, `abstractruntime` 0.16.0, `abstractagent` 0.5.0, `abstractgateway` 0.19.0,
-`abstractskill` 0.3.4, `abstractmemory` 0.4.0, `abstractsemantics` 0.0.5, `abstractvoice` 0.19.5, `abstractvision` 0.3.34,
-`abstractmusic` 0.1.17, `abstract3d` 0.3.2, `abstractassistant` 0.17.0.
+Dictionary mapping each Python component to its exact pinned version. The
+[release matrix](../README.md#release-matrix-abstractframework-0130) lists all 15 distributions,
+including Notes, Camera and the Python Avatar binding.
 
 ### `PACKAGE_DISTRIBUTIONS`
 
@@ -71,18 +70,21 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 
 ### `NPM_RELEASE_VERSIONS`
 
-The npm apps released with this version, each runnable with `npx <package>`:
-`@abstractframework/flow` 0.13.0, `@abstractframework/code` 0.14.0,
-`@abstractframework/observer` 0.11.0, `@abstractframework/continuum` 0.8.0 and
-`@abstractframework/entity` 0.10.0. They also appear as `npm_apps` in the install manifest.
+The six launchable browser apps, including Notes, each runnable with `npx <package>@<version>`.
+They appear as `npm_apps` in the install manifest. See the
+[release matrix](../README.md#release-matrix-abstractframework-0130) for exact versions.
+
+### `NPM_LIBRARY_RELEASE_VERSIONS`
+
+The seven shared npm libraries released with this matrix. These are library dependencies,
+not launchable apps. They appear as `npm_libraries` in the profile and install manifest.
 
 ### `CRATE_RELEASE_VERSIONS`
 
-The Rust terminal tools released with this version, installed with `cargo install <crate>`:
-`abstractgateway-console` 0.17.0, `abstractcore-console` 0.8.1 and `abstractcode` 0.13.1, plus the
-libraries they build on: the `abstracttui` engine 0.7.1 and `abstractavatar` 0.1.0 (the procedural
-avatars of `abstracttui`'s `avatar` feature). The bootstrap scripts build `abstractgateway-console` at this version by default
-(`--no-console` skips it) and `abstractcode` next to it (`--no-code-cli` skips it).
+The three Rust terminal tools and four library crates, including `abstracttui-graph` and
+`abstracttui-mermaid`. The installers build Gateway console 0.18.0 and AbstractCode 0.14.0
+unless skipped. Published tools retain their own dependency lockfiles; listing a library
+version here does not replace dependencies embedded in a previously published tool.
 
 ### `CORE_DEFAULT_EXTRAS`
 

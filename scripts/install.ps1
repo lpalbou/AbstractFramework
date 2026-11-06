@@ -95,15 +95,15 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.19.0'
+$AfGatewayPinDefault = '0.20.1'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.12.0'
-$AfPyMatrix = @('abstractcore==2.32.0', 'AbstractRuntime==0.16.0', 'abstractagent==0.5.0', 'abstractskill==0.3.4', 'AbstractMemory==0.4.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.19.5', 'abstractvision==0.3.34', 'abstractmusic==0.1.17', 'abstract3d==0.3.2')
+$AfFrameworkVersion = '0.13.0'
+$AfPyMatrix = @('abstractcore==2.34.0', 'AbstractRuntime==0.18.1', 'abstractagent==0.6.0', 'abstractskill==0.3.10', 'AbstractMemory==0.4.0', 'abstractsemantics==0.0.5', 'abstractvoice==0.20.0', 'abstractvision==0.3.34', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.1.1', 'abstractnote==0.3.0')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.13.0', '@abstractframework/code@0.14.0', '@abstractframework/observer@0.11.0', '@abstractframework/continuum@0.8.0', '@abstractframework/entity@0.10.0')
-$AfCrateConsole = 'abstractgateway-console@0.17.0'
-$AfCrateCodeCli = 'abstractcode@0.13.1'
+$AfNpmApps = @('@abstractframework/flow@0.14.0', '@abstractframework/code@0.15.0', '@abstractframework/observer@0.12.0', '@abstractframework/continuum@0.8.0', '@abstractframework/entity@0.11.0', '@abstractframework/note@0.3.0')
+$AfCrateConsole = 'abstractgateway-console@0.18.0'
+$AfCrateCodeCli = 'abstractcode@0.14.0'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
 # the parent of the uv tool bin folder, so they land next to abstractgateway.exe (the folder the
 # gateway's Apps page also updates abstractcode in); cargo's own root when that folder is not
@@ -1953,6 +1953,10 @@ function Main {
             [System.IO.File]::WriteAllText((Join-Path $DataDir 'uv-constraints.txt'), ($constraints -join "`n") + "`n")
         }
         $argv = @($uv, 'tool', 'install', '--python', $AfPython, '--with', $AfWithWheels)
+        # Constraints select versions but do not install a component by themselves.
+        if ($isRelease) {
+            foreach ($spec in $AfPyMatrix) { $argv += @('--with', ($spec -split '==')[0]) }
+        }
         if ($voice.Spec) { $argv += @('--with', (Get-VoiceRequirement $voice.Spec $isRelease)) }
         if ($Gguf) { $argv += @('--with', "llama-cpp-python==$ggufPin") }
         elseif ($Full) { $argv += @('--with', 'llama-cpp-python') }

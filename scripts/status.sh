@@ -17,6 +17,7 @@
 # Usage:
 #   ./scripts/status.sh              # git overview, grouped by tier
 #   ./scripts/status.sh --short      # only repos with pending work
+#   ./scripts/status.sh --check      # strict live-remote handoff gate (nonzero on failure)
 #   ./scripts/status.sh --versions   # + local version of every package
 #   ./scripts/status.sh --registry   # + local vs latest on PyPI / npm / crates.io (network)
 #   ./scripts/status.sh --tiers      # + install/release order per tier with dependency edges
@@ -39,10 +40,12 @@ SHOW_GIT=true
 SHOW_VERSIONS=false
 SHOW_REGISTRY=false
 SHOW_TIERS=false
+CHECK_WORKSPACE=false
 usage() {
-    echo "Usage: $0 [--short|-s] [--versions] [--registry] [--tiers] [--no-git] [--help|-h]"
+    echo "Usage: $0 [--short|-s] [--check] [--versions] [--registry] [--tiers] [--no-git] [--help|-h]"
     echo ""
     echo "  --short, -s   Only show repos with pending changes or unpushed commits"
+    echo "  --check       Run the strict live-remote handoff gate instead of the cached overview"
     echo "  --versions    Also print the local version of every package (no network)"
     echo "  --registry    Also compare local versions with PyPI / npm / crates.io (network)"
     echo "  --tiers       Also print the install/release order per tier with dependency edges"
@@ -52,6 +55,7 @@ usage() {
 for arg in "$@"; do
     case "$arg" in
         --short|-s) SHORT_MODE=true ;;
+        --check) CHECK_WORKSPACE=true ;;
         --versions) SHOW_VERSIONS=true ;;
         --registry) SHOW_REGISTRY=true ;;
         --tiers|--deps) SHOW_TIERS=true ;;
@@ -66,6 +70,10 @@ done
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+
+if $CHECK_WORKSPACE; then
+    exec python3 "$SCRIPT_DIR/check_workspace.py" --root "$ROOT_DIR"
+fi
 
 # Shared package inventory (scripts/lib/packages.txt) and tier traversal.
 # shellcheck source=./lib/repo_groups.sh
@@ -220,6 +228,11 @@ report_group() {
 # Main
 # ---------------------------------------------------------------------------
 banner
+
+if $SHOW_GIT; then
+    echo "  Git overview uses cached refs. --check verifies live remotes and fails on pending work."
+    echo ""
+fi
 
 total=0
 dirty=0

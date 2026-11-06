@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from . import NPM_RELEASE_VERSIONS, PACKAGE_DISTRIBUTIONS, RELEASE_VERSIONS, __version__
+from . import NPM_LIBRARY_RELEASE_VERSIONS, NPM_RELEASE_VERSIONS, PACKAGE_DISTRIBUTIONS, RELEASE_VERSIONS, __version__
 
 MANIFEST_SCHEMA_VERSION = 2
 MINIMUM_INSTALLER_VERSION = "0.2.0"
@@ -157,6 +157,10 @@ def build_install_manifest() -> dict[str, Any]:
         ],
         "python_packages": _python_packages(),
         "npm_apps": _npm_apps(),
+        "npm_libraries": [
+            {"package": name, "version": version, "registry": "npm"}
+            for name, version in NPM_LIBRARY_RELEASE_VERSIONS.items()
+        ],
         "bootstrap": _bootstrap(),
         "post_install": _post_install(),
         "security": {

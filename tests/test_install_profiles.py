@@ -52,16 +52,11 @@ def test_framework_profile_pins_match_release_versions() -> None:
     opt = pyproject["project"]["optional-dependencies"]
     release_versions = _release_versions()
 
-    assert _dependency_version(deps, "abstractcore") == release_versions["abstractcore"]
-    assert _dependency_version(deps, "AbstractRuntime") == release_versions["abstractruntime"]
-    assert _dependency_version(deps, "abstractagent") == release_versions["abstractagent"]
-    assert _dependency_version(deps, "abstractgateway") == release_versions["abstractgateway"]
-    assert _dependency_version(deps, "abstractassistant") == release_versions["abstractassistant"]
-    assert _dependency_version(deps, "AbstractMemory") == release_versions["abstractmemory"]
-    assert _dependency_version(deps, "abstractsemantics") == release_versions["abstractsemantics"]
-    assert _dependency_version(deps, "abstractvoice") == release_versions["abstractvoice"]
-    assert _dependency_version(deps, "abstractvision") == release_versions["abstractvision"]
-    assert _dependency_version(deps, "abstractmusic") == release_versions["abstractmusic"]
+    from abstractframework import PACKAGE_DISTRIBUTIONS
+
+    assert set(PACKAGE_DISTRIBUTIONS) == set(release_versions)
+    for name, version in release_versions.items():
+        assert _dependency_version(deps, PACKAGE_DISTRIBUTIONS[name]) == version
 
     assert f"abstractgateway[apple]=={release_versions['abstractgateway']}" in opt["apple"]
     assert any(
@@ -481,8 +476,9 @@ def test_install_sh_default_takes_llama_cpp_from_the_prebuilt_wheel(tmp_path: Pa
     # uv splits --overrides/--constraints values at whitespace (macOS "Application
     # Support"), so the install runs from the data dir with relative file names
     assert install.lstrip().startswith("$ cd ")
+    assert "--with 'webrtcvad-wheels>=2.0.14'" in install
     assert (
-        f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --with llama-cpp-python=={pin} --constraints uv-constraints.txt "
+        f"--with '{_voice_req()}' --with llama-cpp-python=={pin} --constraints uv-constraints.txt "
         f"--find-links {_LLAMA}/{kind}/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
     assert " ".join(f"--no-build-package {p}" for p in _NO_BUILD) in install
@@ -504,7 +500,8 @@ def test_install_sh_skips_gguf_where_no_wheel_exists(tmp_path: Path) -> None:
     assert "--find-links" not in install
     # No llama.cpp pin: the constraints are the release matrix alone.
     assert _printed_block(out, "uv-constraints.txt:") == _release_matrix()
-    assert f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --constraints uv-constraints.txt --overrides uv-overrides.txt " in install
+    assert "--with 'webrtcvad-wheels>=2.0.14'" in install
+    assert f"--with '{_voice_req()}' --constraints uv-constraints.txt --overrides uv-overrides.txt " in install
     assert "GGUF:       skipped (no prebuilt wheel for " in out
 
 
@@ -993,8 +990,9 @@ def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_pa
     assert _printed_overrides(out) == _PS1_DEFAULT_OVERRIDES
     assert _printed_block(out, "uv-constraints.txt:") == [*_release_matrix(), "llama-cpp-python==0.3.36"]
     install = _install_line(out)
+    assert "--with 'webrtcvad-wheels>=2.0.14'" in install
     assert (
-        f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --with llama-cpp-python==0.3.36 --constraints uv-constraints.txt "
+        f"--with '{_voice_req()}' --with llama-cpp-python==0.3.36 --constraints uv-constraints.txt "
         f"--find-links {_LLAMA}/vulkan/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
     assert " ".join(f"--no-build-package {p}" for p in _PS1_NO_BUILD) in install
@@ -1420,3 +1418,35 @@ def test_release_profile_names_no_core_extra() -> None:
 
     assert abstractframework.CORE_DEFAULT_EXTRAS == []
     assert abstractframework.get_release_profile()["core_extras"] == []
+
+
+def test_shared_npm_libraries_are_not_launchable_apps() -> None:
+    from abstractframework import NPM_LIBRARY_RELEASE_VERSIONS, NPM_RELEASE_VERSIONS, get_release_profile
+    from abstractframework.install_manifest import build_install_manifest
+
+    assert not (set(NPM_LIBRARY_RELEASE_VERSIONS) & set(NPM_RELEASE_VERSIONS))
+    assert "@abstractframework/note" in NPM_RELEASE_VERSIONS
+    manifest = build_install_manifest()
+    assert {row["package"]: row["version"] for row in manifest["npm_libraries"]} == NPM_LIBRARY_RELEASE_VERSIONS
+    launched = {command[2] for command in manifest["post_install"]["apps"]}
+    assert launched == set(NPM_RELEASE_VERSIONS)
+    assert get_release_profile()["npm_libraries"] == NPM_LIBRARY_RELEASE_VERSIONS
+
+
+def test_release_installer_requests_notes_and_camera_not_only_constraints(tmp_path: Path) -> None:
+    result = _install_sh_print(tmp_path, profile="light")
+    assert result.returncode == 0, result.stderr
+    command = next(line for line in result.stdout.splitlines() if "tool install" in line)
+    assert "--with abstractnote" in command
+    assert "--with abstractcamera" in command
+    assert "--with abstractavatar" in command
+    assert "--constraints uv-constraints.txt" in command
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_windows_release_installer_requests_notes_and_camera(tmp_path: Path) -> None:
+    output = _ps1_print(tmp_path)
+    command = next(line for line in output.splitlines() if "tool install" in line)
+    assert "--with abstractnote" in command
+    assert "--with abstractcamera" in command
+    assert "--with abstractavatar" in command

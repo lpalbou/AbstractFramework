@@ -52,6 +52,30 @@ and installs exactly its pins.
    - Root pins are `==`, never floors. The one-command installer therefore always installs the last
      published root's matrix, whatever newer lower packages appear. Today root 0.12.0 pins
      `abstractgateway==0.19.0` and `abstractcore==2.32.0` and keeps installing them.
+4. **Pull before edits, branches and PRs** (operator, 2026-11-05).
+   - Synchronization is work the agent performs automatically as task preparation. A stale-source
+     check or an instruction for the operator to pull is not a substitute for doing the pull.
+   - Before editing code or release metadata, fetch and pull the affected normal main checkout:
+     `git fetch origin` then `git pull --ff-only origin main` while on main. Cross-package work
+     starts with `bash scripts/pull.sh`, covering Python, browser apps and Rust source checkouts.
+   - Repeat the fetch/pull immediately before creating a branch or worktree, and create it from
+     freshly fetched `origin/main`.
+   - Before submitting/updating a PR, pull normal main again. Fetch the feature branch's upstream,
+     merge any upstream feature commits and `origin/main` it lacks, resolve conflicts, then validate
+     the integrated code and push/create/update the PR. Refresh if upstream moves during validation.
+   - Existing feature worktrees need the same upstream/main integration before edits. Pulling main
+     elsewhere does not update their source. Ordinary merges preserve published commit identities.
+   - Immediately after a GitHub merge, pull the corresponding normal main checkout. The coordinator
+     owns this step for worker merges too, using the worker's repository and merge SHA.
+   - Before final handoff, perform the all-repository pull sweep, then inspect status. If sources
+     moved, refresh affected tests/builds/deployment before claiming the candidate is ready.
+   - Preserve existing work; never reset, force-push or automatically stash someone else's edits.
+     Resolve routine integration within the task and ask only for a real conflict/ownership decision.
+     Read-only audits remain read-only unless synchronization was also authorized.
+   - Build/start commands do not acquire a freshness gate or mandatory receipt workflow. The optional
+     `check_workspace.py`/`status.sh --check` checks provide fresh-remote confirmation; they do not
+     replace pulling. Source identity, publication, installed artifacts and operator acceptance
+     remain distinct facts. Root/site publication stays held for the operator.
 
 ## Consequences
 
@@ -76,6 +100,11 @@ Negative:
   A repository with no test mapping yet falls back to the by-hand list in Decision 1.
 - The root's pin tests (`tests/test_install_profiles.py`, `scripts/tests/test_inventory.sh`) keep root
   pins exact.
+- Local AGENTS.md and installed/bundled `abstract-release` and `release` skills specify all
+  preparation points in Decision 4. `scripts/pull.sh` performs the main-checkout synchronization;
+  ordinary Git commands integrate active feature worktrees (backlog 1131).
+- `scripts/status.sh --check` exposes optional live-remote confirmation; the default overview
+  explicitly labels cached refs. Neither command replaces the actual preparation pull.
 
 ## Validation
 

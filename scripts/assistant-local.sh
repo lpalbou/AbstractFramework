@@ -22,6 +22,14 @@ export ABSTRACTGATEWAY_URL="${ABSTRACTGATEWAY_URL:-$GATEWAY_URL}"
 # Run straight from the checkout: put the assistant (and its sibling src-layout
 # deps) on PYTHONPATH so no install is needed.
 export PYTHONPATH="$ASSISTANT_DIR:$(local_pythonpath)${PYTHONPATH:+:$PYTHONPATH}"
+# Older supervisors already running in memory do not understand clean Quit.
+# Only that exact parent needs the compatibility guard; standalone launches
+# and current supervisors exec the app directly as usual.
+source "$APPS_LIB_DIR/assistant_lifecycle.sh"
+if assistant_needs_legacy_guard; then
+    exec "$PY" "$APPS_LIB_DIR/assistant_legacy_supervisor.py" "$@"
+fi
+
 info "Starting AbstractAssistant (local checkout), gateway ${ABSTRACTGATEWAY_URL}"
 info "  python: ${PY}"
 exec "$PY" -m abstractassistant.cli "$@"

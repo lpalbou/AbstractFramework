@@ -206,6 +206,7 @@ AF_NPM_APPS="{PINS}"; GW="{tmp_path}/abstractgateway"; APPS_PY="{sys.executable}
 BASE_URL="http://127.0.0.1:18999"; DATA_DIR="{tmp_path}/data"; LOG_FILE=""; PRINT={print_mode}
 AF_APPS_START_WAIT=6; AF_STOP_TIMEOUT=1
 {block.group(0)}
+if [ "$FAKE_UNINSPECTABLE" = 1 ]; then af_pid_args() {{ :; }}; fi
 af_apps_step {up}
 printf 'APPS<<%s>>\\nINCOMPLETE<<%s>>\\n' "$APPS_LINES" "$INCOMPLETE"
 """
@@ -225,6 +226,7 @@ if ($found.Count -ne $names.Count) {{ throw "install.ps1 lost an apps-upgrade fu
 $script:AppsStartWait = 6
 $script:StopTimeout = 1
 foreach ($f in $found) {{ Invoke-Expression $f.Extent.Text }}
+if ($env:FAKE_UNINSPECTABLE -eq '1') {{ function Get-PidArgs([string]$ProcId) {{ return '' }} }}
 # Write-Host, like the installer's own: a message must never join a function's return value.
 function Write-Info([string]$Text) {{ Write-Host "INFO $Text" }}
 function Write-Ok([string]$Text) {{ Write-Host "OK $Text" }}
@@ -322,7 +324,7 @@ def test_an_app_that_never_finishes_starting_is_updated_anyway(runner, tmp_path:
 
 @pytest.mark.parametrize("runner", RUNNERS)
 def test_an_outside_copy_does_not_hide_the_gateways_install(runner, tmp_path: Path) -> None:
-    out = runner(tmp_path, _env(tmp_path, EXTERNAL), up=1)
+    out = runner(tmp_path, _env(tmp_path, EXTERNAL, FAKE_UNINSPECTABLE="1"), up=1)
     calls = _calls(tmp_path)
     assert any(c.startswith("apps update flow --version 0.7.0") for c in calls), calls
     assert any(c.startswith("apps update entity --version 0.6.0") for c in calls), calls
@@ -334,7 +336,7 @@ def test_an_outside_copy_does_not_hide_the_gateways_install(runner, tmp_path: Pa
     assert "code: not installed by the gateway; a copy not started by it runs on port 3003 (0.10.0)" in apps
     inc = out.split("INCOMPLETE<<", 1)[1]
     assert "the flow app" in inc and "4242" in inc and "apps launch flow" in inc, inc
-    # pid 4242 is nobody's: what was checked is said, and nothing is called "started outside".
+    # Process inspection is explicitly unavailable; never assume a fixed PID is unused.
     assert "could not be inspected" in inc and "started outside" not in out, out
     assert "the code app" not in inc, "an outside copy at the pin is a note, not a failure"
     assert not any(c.startswith("apps launch") for c in _all_calls(tmp_path)), "a copy that is not provably ours is never replaced"
