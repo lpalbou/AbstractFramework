@@ -990,8 +990,9 @@ def test_install_ps1_parses_and_prints_the_prebuilt_wheel_install_command(tmp_pa
     assert _printed_overrides(out) == _PS1_DEFAULT_OVERRIDES
     assert _printed_block(out, "uv-constraints.txt:") == [*_release_matrix(), "llama-cpp-python==0.3.36"]
     install = _install_line(out)
+    assert "--with 'webrtcvad-wheels>=2.0.14'" in install
     assert (
-        f"--with 'webrtcvad-wheels>=2.0.14' --with '{_voice_req()}' --with llama-cpp-python==0.3.36 --constraints uv-constraints.txt "
+        f"--with '{_voice_req()}' --with llama-cpp-python==0.3.36 --constraints uv-constraints.txt "
         f"--find-links {_LLAMA}/vulkan/llama-cpp-python/ --overrides uv-overrides.txt "
     ) in install
     assert " ".join(f"--no-build-package {p}" for p in _PS1_NO_BUILD) in install
