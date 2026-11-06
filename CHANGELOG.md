@@ -2,19 +2,28 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
-## [Unreleased]
+## [0.13.0] - 2026-11-06
+
+Pins the existing published component versions across the light, Apple and GPU profiles:
+AbstractCore 2.34.0, AbstractRuntime 0.18.1, AbstractAgent 0.6.0, AbstractGateway 0.20.1,
+AbstractAssistant 0.18.0, AbstractVoice 0.20.0 and AbstractSkill 0.3.10. The complete
+Python, npm and Rust matrix is in the [README](README.md#release-matrix-abstractframework-0130).
 
 ### Added
 
-- `scripts/ci_local.sh <repo> [--job <name>]`: a repository's GitHub Actions jobs run on this Mac before a push, read from its own workflow files so the gate cannot drift from CI ([Local CI gate](docs/ci-local.md)). Each workflow runs as the push to main when it has one (main's full Python matrix and conditional jobs) and otherwise as the pull request (changelog check, load test), on the commit merged into the fetched base, every step, a fresh environment per job that installs sibling packages from PyPI, a scratch `HOME`/`TMPDIR` and a clean environment (no token, no `ABSTRACT*` variable) under `~/Library/Caches/ci-gate/`, outside the workspace; `--sandbox` adds `sandbox-exec` refusing `localhost:8080`, `~/.abstractcore` and the workspace's `runtime/`. Jobs it cannot run (Windows, Linux root, Docker, secrets, a missing toolchain) are printed as SKIPPED with the reason; exit 0 only when every runnable job passed and nothing was skipped (or `--allow-skipped`). `--release-tag` adds the release workflow's jobs, `--input` / `--runner-label` reach the Assistant's dispatch-only iPhone suite. `--jobs N` runs jobs in parallel (default from the physical cores and free memory; model-loading and latency-gated jobs run alone at the end), and `--tier light|full` follows ADR 0051's test tiers (light: one Python per matrix and the changed files' tests; release branches always full).
-- An opt-in pre-push hook (`scripts/install_hooks.sh <repo>...`, never installed automatically) runs the gate for every pushed ref and refuses a red push; `git push --no-verify` is the only override. [CONTRIBUTING.md](CONTRIBUTING.md) states the rules: no push without the gate green, no pull request that is red by design, a red main is reverted or fixed within the hour.
+- Exact Python pins for Notes 0.3.0, Camera 0.2.1 and Avatar 0.1.1.
+- Notes in the browser app release list; shared npm libraries are recorded separately from launchable apps, alongside both TUI extension crates.
+- Local CI commands and optional workspace freshness checks for contributors.
+
+### Changed
+
+- Both installers and the generated manifest use the same published component matrix.
 
 ### Fixed
 
-- A hung gateway is restarted (2026-10-04: a text-to-speech stream blocked the gateway for 10+ minutes and nothing restarted it). The gateway now exits with code 75 when its event loop is blocked for 30 s (`serve --watchdog-seconds`, AbstractGateway [Unreleased]); every way the installers and scripts run it restarts that exit:
-  - `scripts/start-local.sh` (af-stack supervisor) restarts the watchdog's exit like any death (restart on death only stays the default) and its incident banner names exit 75 as the watchdog. New flag `--restart-on-hang`: also restart a gateway that is alive but failed 6 consecutive health probes, with a log line saying so, at most 3 times an hour (then it reports instead of killing).
-  - `install.sh` background mode (`--no-service`, or when the login item cannot be registered) runs the gateway under a restart loop: a non-zero exit after 30 s of running is restarted 10 s later; a clean exit, a stop by signal, a start failure, or a removed `gateway.pid` is not. `gateway.pid` still names the gateway itself.
-  - The LaunchAgent (`KeepAlive` with `SuccessfulExit: false`) and the systemd user unit (`Restart=on-failure`) written by `abstractgateway service install` already restart any non-zero exit; `scripts/install_gateway_launchd.sh` uses `KeepAlive: true`.
+- Choosing Quit in the desktop assistant leaves it stopped until explicitly reopened.
+- Gateway supervision restarts a failed or watchdog-terminated process.
+- Workspace pull summaries remain reliable for large updates and show the commits actually applied.
 
 ## [0.12.0] - 2026-11-02
 

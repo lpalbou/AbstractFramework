@@ -855,3 +855,7 @@ Scan of 2026-09-26 (after the release, 0921):
   process expects a backlog trace (release record in `completed/`, follow-ups as items).
 
 - 2026-11-01: authorized 1088/1089/1092–1095; completed 1092/1093 after source, real-model, browser/native checks and independent adversary. Four planned validation items remain; 1090/1091 proposals unchanged. Counts planned 190/proposed 78/completed 297.
+
+## Active release
+
+- [1132 — Final stable AbstractFramework release](planned/1132_final_stable_release.md): AbstractSkill 0.3.10 and root 0.13.0 only; existing published component versions.

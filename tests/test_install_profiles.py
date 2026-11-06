@@ -52,16 +52,11 @@ def test_framework_profile_pins_match_release_versions() -> None:
     opt = pyproject["project"]["optional-dependencies"]
     release_versions = _release_versions()
 
-    assert _dependency_version(deps, "abstractcore") == release_versions["abstractcore"]
-    assert _dependency_version(deps, "AbstractRuntime") == release_versions["abstractruntime"]
-    assert _dependency_version(deps, "abstractagent") == release_versions["abstractagent"]
-    assert _dependency_version(deps, "abstractgateway") == release_versions["abstractgateway"]
-    assert _dependency_version(deps, "abstractassistant") == release_versions["abstractassistant"]
-    assert _dependency_version(deps, "AbstractMemory") == release_versions["abstractmemory"]
-    assert _dependency_version(deps, "abstractsemantics") == release_versions["abstractsemantics"]
-    assert _dependency_version(deps, "abstractvoice") == release_versions["abstractvoice"]
-    assert _dependency_version(deps, "abstractvision") == release_versions["abstractvision"]
-    assert _dependency_version(deps, "abstractmusic") == release_versions["abstractmusic"]
+    from abstractframework import PACKAGE_DISTRIBUTIONS
+
+    assert set(PACKAGE_DISTRIBUTIONS) == set(release_versions)
+    for name, version in release_versions.items():
+        assert _dependency_version(deps, PACKAGE_DISTRIBUTIONS[name]) == version
 
     assert f"abstractgateway[apple]=={release_versions['abstractgateway']}" in opt["apple"]
     assert any(
@@ -1420,3 +1415,35 @@ def test_release_profile_names_no_core_extra() -> None:
 
     assert abstractframework.CORE_DEFAULT_EXTRAS == []
     assert abstractframework.get_release_profile()["core_extras"] == []
+
+
+def test_shared_npm_libraries_are_not_launchable_apps() -> None:
+    from abstractframework import NPM_LIBRARY_RELEASE_VERSIONS, NPM_RELEASE_VERSIONS, get_release_profile
+    from abstractframework.install_manifest import build_install_manifest
+
+    assert not (set(NPM_LIBRARY_RELEASE_VERSIONS) & set(NPM_RELEASE_VERSIONS))
+    assert "@abstractframework/note" in NPM_RELEASE_VERSIONS
+    manifest = build_install_manifest()
+    assert {row["package"]: row["version"] for row in manifest["npm_libraries"]} == NPM_LIBRARY_RELEASE_VERSIONS
+    launched = {command[2] for command in manifest["post_install"]["apps"]}
+    assert launched == set(NPM_RELEASE_VERSIONS)
+    assert get_release_profile()["npm_libraries"] == NPM_LIBRARY_RELEASE_VERSIONS
+
+
+def test_release_installer_requests_notes_and_camera_not_only_constraints(tmp_path: Path) -> None:
+    result = _install_sh_print(tmp_path, profile="light")
+    assert result.returncode == 0, result.stderr
+    command = next(line for line in result.stdout.splitlines() if "tool install" in line)
+    assert "--with abstractnote" in command
+    assert "--with abstractcamera" in command
+    assert "--with abstractavatar" in command
+    assert "--constraints uv-constraints.txt" in command
+
+
+@pytest.mark.skipif(__import__("shutil").which("pwsh") is None, reason="needs PowerShell 7 (pwsh)")
+def test_windows_release_installer_requests_notes_and_camera(tmp_path: Path) -> None:
+    output = _ps1_print(tmp_path)
+    command = next(line for line in output.splitlines() if "tool install" in line)
+    assert "--with abstractnote" in command
+    assert "--with abstractcamera" in command
+    assert "--with abstractavatar" in command

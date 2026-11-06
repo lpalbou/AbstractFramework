@@ -182,11 +182,11 @@ Notes for LLMs working in this repo:
 ## Release Profile (Pinned Versions)
 
 - [pyproject.toml](pyproject.toml): Single source of truth for pinned ecosystem versions and extras.
-- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
+- [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `NPM_LIBRARY_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- abstractframework 0.12.0 pins (PyPI, `==`): abstractgateway 0.19.0, abstractassistant 0.17.0, abstractcore 2.32.0, AbstractRuntime 0.16.0, abstractagent 0.5.0, abstractskill 0.3.4, AbstractMemory 0.4.0, abstractsemantics 0.0.5, abstractvoice 0.19.5, abstractvision 0.3.34, abstractmusic 0.1.17, abstract3d 0.3.2.
-- Released with it: npm `@abstractframework/flow` 0.13.0, `code` 0.14.0, `observer` 0.11.0, `continuum` 0.8.0, `entity` 0.10.0 (opened through the gateway at `/apps/<app>/`, or run with `npx`); crates (`CRATE_RELEASE_VERSIONS`) `abstractgateway-console` 0.17.0 (built by the installer by default), `abstractcore-console` 0.8.1, `abstractcode` 0.13.1, and the libraries `abstracttui` 0.7.1 and `abstractavatar` 0.1.0; images `ghcr.io/lpalbou/abstractgateway:0.19.0`, `ghcr.io/lpalbou/abstractcore-server:2.32.0`. Released alongside, outside the profiles: AbstractNote (`abstractnote` 0.3.0 on PyPI, `@abstractframework/note` 0.3.0 on npm) and `abstractavatar` 0.1.0 on PyPI (the `avatar` extra of AbstractAssistant).
+- AbstractFramework 0.13.0 pins 15 published Python components with `==`, including AbstractSkill 0.3.10, AbstractGateway 0.20.1, AbstractCore 2.34.0, AbstractRuntime 0.18.1, Assistant 0.18.0, Notes 0.3.0, Camera 0.2.1 and Avatar 0.1.1. See the [complete matrix](README.md#release-matrix-abstractframework-0130).
+- Six npm apps and seven shared npm libraries are recorded separately; libraries are never launched. Seven crate versions are recorded, including both TUI extensions. Published terminal tools retain their own dependency lockfiles.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context
