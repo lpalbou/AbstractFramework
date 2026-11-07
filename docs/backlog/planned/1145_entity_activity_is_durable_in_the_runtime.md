@@ -45,10 +45,20 @@ images) becomes part of its runtime."
 
 - The understanding pass itself (1146). The Entity app's screens (other agent; coordinated through 1145's gateway contract).
 
-## Coordination
+## Coordination (settled with the AbstractEntity session, 2026-11-08 ~02:00)
 
-Split proposed to the AbstractEntity session 2026-11-08: framework owns runtime + gateway; the Entity owner owns the app
-side; abstractmemory verbs to whoever is free first. Their answer is appended here when it arrives.
+The AbstractEntity owner (another Claude session on this machine) holds the full design and 12 draft items:
+`untracked/understanding-pass-2026-11-07/DESIGN.md` and `drafts/{abstractmemory,abstractruntime,abstractgateway,
+abstractentity,abstractframework}/`. Agreed split: **framework owns abstractruntime + abstractgateway** (this item, plus
+drafts runtime 0867–0870 and gateway 1012–1013, which belong to 1146); **the Entity owner owns abstractmemory
+(0059 versions, 0060 task queue, 0061 ripple v1), the app (0001–0002) and the one-time backfill (1137)**. Whoever starts
+a repo says so first; nothing in a base package starts before the operator's go on DESIGN.md §16 (8 open decisions).
+Rules for all: one checkout per repo (main), small commits, adversarial review with screenshots before the operator
+tests, no publish without their go.
+
+Facts corrected by the Entity owner: theforge-nvidia (`compat-theforge-nvidia`, 192.168.1.7:1234) runs
+`qwen/qwen3.8-27b` at 62,464 tokens of context (not 140k); inputs are capped at 56k (longest verbatim ≈ 24k); the whole
+understanding plan is ≈82 h in 15 steps (not 26 h).
 
 ## Acceptance criteria
 

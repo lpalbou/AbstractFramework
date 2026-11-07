@@ -27,7 +27,24 @@ night narrator reads `signals` that `dream_pass` never returns (0 narrations in 
 digest / digest_method / authored_by / card target. 0 authored cards anywhere; castor's 29/34 "entity-authored" digests
 are leaked model reasoning from a manual pass on 2026-07-13, still live.
 
-## Plan (from the report; ~26 h + ~3 h app; order matters)
+## Plan — superseded by the Entity owner's DESIGN.md (≈82.5 h in 15 steps, 2026-11-08)
+
+The authoritative plan is `untracked/understanding-pass-2026-11-07/DESIGN.md` §15 and its drafts; the outline below is
+the earlier estimate and stays only as history. Adjustments ruled the same evening: the persistent task queue lives in
+**abstractmemory** (a higher-level queue of memory tasks, per home DB) and the runtime drains it (runtime 0869: N tasks
+per turn, the rest in idle windows, every call a ledgered LLM_CALL in a durable run, oversize tasks skipped as
+`over_context`, never truncated); rewrites are IN PLACE with versions (memory 0059); a cognition profile per capability
+in `cognition.yaml` beside `substrate.yaml` with a Mind setting `memories_rebuilt_per_turn` (default 1; runtime 0867,
+gateway 1013); a host-wide generation gate so background work never competes with a foreground generation on the same
+engine (runtime 0868, decision-gate); the ripple is first-class: the entity's own ```revise``` election triggers it,
+the existing spreading-activation threshold spreads it, sleep consolidates it as a "what this changes" note (runtime
+0870, memory 0061); `dream_pass` returning its signals is a one-line memory fix; the night voice's 20 h throttle retires
+in favour of the queue's budgets. Build order: gateway serve-stored-fields first (3 h, can ship alone) → memory
+(signals 0.5 h; versions 9 h; queue 7 h) → runtime (profile 4 h; gate 6 h; drain 10 h; loop hooks 5 h) → gateway routes
+7 h → backfill preflight 3 h → entity app 8 h → ripple 12 h → entity strip 2 h → live backfill (hypnos pilot first) →
+docs 3 h. Framework owns the runtime and gateway steps; the Entity owner the memory, app and backfill steps.
+
+### Earlier outline (history, ~26 h)
 
 1. **Memory (~8 h, first):** `understanding_debt()` (lists rewrite candidates, mechanical cards, un-narrated dreams);
    additive `narrate_dream()`; `dream_pass` returns its signals; display block adds digest, digest_method, authored_by,
@@ -45,10 +62,16 @@ are leaked model reasoning from a manual pass on 2026-07-13, still live.
 Open point (1 h+): nothing checks whether the GPU/model is idle; a host-wide one-model gate for local engines needs a
 decision (GPU lock rule of 2026-09-29).
 
-## Coordination
+## Coordination (settled 2026-11-08 ~02:00)
 
-Same split as 1145 (framework: memory verbs if free, runtime, gateway; Entity owner: app). Their answer, and whether they
-have already started the memory verbs, is appended here.
+Same split as 1145: framework = runtime (0867–0870) + gateway (1012–1013); Entity owner = abstractmemory (0059–0061),
+app (0001–0002), backfill (1137). They have started the app only (25 local commits, operator-tested); no base-package
+code yet. Blocked on the operator's 8 decisions (DESIGN.md §16): in-place rewrite accepted (amends ADR 0003)? may a
+capability model write in the entity's first person with the badge naming the model? `memories_rebuilt_per_turn`
+default 1 / max 5, visits too or loop ticks only? steady-state rebuilds on paid relays or on theforge? build the
+generation gate now (6 h) and refuse a second local model in v1? backfill castor's 34 "entity-authored" digests (29 with
+leaked reasoning) and keep candidates/dedup groups out? `extraction` has no consumer: disabled or hidden? retire the
+night voice's 20 h throttle, and record surprise as a feeling (default: words only)?
 
 ## Acceptance criteria
 
