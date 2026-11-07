@@ -10,26 +10,26 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.13.0"
+__version__ = "0.13.1"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.34.0",
-    "abstractruntime": "0.18.1",
+    "abstractruntime": "0.18.2",
     "abstractagent": "0.6.0",
-    "abstractgateway": "0.20.1",
+    "abstractgateway": "0.20.2",
     "abstractskill": "0.3.10",
     "abstractmemory": "0.4.0",
     "abstractsemantics": "0.0.5",
-    "abstractvoice": "0.20.0",
+    "abstractvoice": "0.20.1",
     "abstractvision": "0.3.34",
     "abstractmusic": "0.1.17",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.18.0",
+    "abstractassistant": "0.18.1",
     "abstractcamera": "0.2.1",
     "abstractavatar": "0.1.1",
-    "abstractnote": "0.3.0"
+    "abstractnote": "0.3.1"
 }
 
 PACKAGE_DISTRIBUTIONS: dict[str, str] = {
@@ -52,18 +52,18 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.14.0",
-    "@abstractframework/code": "0.15.0",
-    "@abstractframework/observer": "0.12.0",
+    "@abstractframework/code": "0.15.1",
+    "@abstractframework/observer": "0.12.1",
     "@abstractframework/continuum": "0.8.0",
-    "@abstractframework/entity": "0.11.0",
-    "@abstractframework/note": "0.3.0"
+    "@abstractframework/entity": "0.11.1",
+    "@abstractframework/note": "0.3.1"
 }
 
 # Shared npm libraries are recorded separately from launchable browser apps.
 NPM_LIBRARY_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/app-server": "0.1.13",
-    "@abstractframework/ui-kit": "0.9.14",
-    "@abstractframework/panel-chat": "0.8.1",
+    "@abstractframework/ui-kit": "0.9.15",
+    "@abstractframework/panel-chat": "0.8.2",
     "@abstractframework/monitor-active-memory": "0.2.2",
     "@abstractframework/monitor-flow": "0.1.10",
     "@abstractframework/monitor-gpu": "0.1.10",

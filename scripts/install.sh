@@ -149,16 +149,16 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.20.1"
+AF_GATEWAY_PIN_DEFAULT="0.20.2"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.13.0"
-AF_PY_MATRIX="abstractcore==2.34.0 AbstractRuntime==0.18.1 abstractagent==0.6.0 abstractskill==0.3.10 AbstractMemory==0.4.0 abstractsemantics==0.0.5 abstractvoice==0.20.0 abstractvision==0.3.34 abstractmusic==0.1.17 abstract3d==0.3.2 abstractcamera==0.2.1 abstractavatar==0.1.1 abstractnote==0.3.0"
+AF_FRAMEWORK_VERSION="0.13.1"
+AF_PY_MATRIX="abstractcore==2.34.0 AbstractRuntime==0.18.2 abstractagent==0.6.0 abstractskill==0.3.10 AbstractMemory==0.4.0 abstractsemantics==0.0.5 abstractvoice==0.20.1 abstractvision==0.3.34 abstractmusic==0.1.17 abstract3d==0.3.2 abstractcamera==0.2.1 abstractavatar==0.1.1 abstractnote==0.3.1"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.14.0 @abstractframework/code@0.15.0 @abstractframework/observer@0.12.0 @abstractframework/continuum@0.8.0 @abstractframework/entity@0.11.0 @abstractframework/note@0.3.0"
+AF_NPM_APPS="@abstractframework/flow@0.14.0 @abstractframework/code@0.15.1 @abstractframework/observer@0.12.1 @abstractframework/continuum@0.8.0 @abstractframework/entity@0.11.1 @abstractframework/note@0.3.1"
 AF_CRATE_CONSOLE="abstractgateway-console@0.18.0"
 AF_CRATE_CODE_CLI="abstractcode@0.14.0"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
