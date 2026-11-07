@@ -11,8 +11,8 @@ its 0.13.0 version. The complete matrix is in the [README](README.md#release-mat
 
 ### What changes for you
 
-- **Read aloud tells the truth.** In every browser app and the web console, an answer shows as speaking
-  only while you can hear it. When the browser holds the sound back, the app says so, and Play resumes
+- **Read aloud tells the truth.** In Code, Entity, Observer and the web console's Sandbox chat, an answer
+  shows as speaking only while you can hear it. When the browser holds the sound back, the app says so, and Play resumes
   the same audio instead of preparing it again.
 - **The desktop Assistant talks through its avatar.** The animated orb beside the message box is the voice
   control; its menu has checkable **Voice conversation**, **Microphone** and **Dictate into the message

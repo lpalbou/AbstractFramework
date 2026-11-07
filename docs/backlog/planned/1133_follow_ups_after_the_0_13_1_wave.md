@@ -31,6 +31,12 @@ release-mechanics problems that bit. Each line is small; split into package item
   fails with E404 PUT (run for tag `web-v0.1.2`). The owner configures trusted publishing (repo
   lpalbou/AbstractAssistant, workflow `release-web.yml`, environment `npm`) and re-runs, or publishes 0.1.2 by hand.
   `web-v0.1.1` is tagged and never published (tarball path bug, fixed in 0.1.2).
+- **Entity 0.11.1** — the Avatar view still draws a border on a finished answer, although its changelog says the
+  border was removed (site review 2026-11-07); find the Entity-side style.
+- **Assistant docs** — `docs/voice.md:4-6` at v0.18.1 says dictation needs the `voice` extra; the base install already
+  captures the microphone.
+- **Flow, Continuum, Assistant web** — still bundle ui-kit before 0.9.15 (no audible-only speaking state); pick it up at
+  their next release.
 - **Note** — `web/scripts/check_dictation.mjs` runs in no CI; user docs do not explain dictation.
 - **Local gate (`scripts/ci_local.py`)** — on this Mac: AbstractNote's wheel check uses a fixed `/tmp/wheel-check`
   shared across runs and `pip` resolving to the uv shim; AbstractAssistant's path tests fail because the job TMPDIR
