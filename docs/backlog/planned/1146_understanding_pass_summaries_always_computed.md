@@ -73,6 +73,16 @@ generation gate now (6 h) and refuse a second local model in v1? backfill castor
 leaked reasoning) and keep candidates/dedup groups out? `extraction` has no consumer: disabled or hidden? retire the
 night voice's 20 h throttle, and record surprise as a feeling (default: words only)?
 
+## Related runtime fix (Entity owner's finding, 2026-11-08, not urgent; framework's side)
+
+30 of nerin's 292 record titles arrive from the runtime's mechanical title builder (`identity/digest.py` ~171, the
+14-word title of `mechanical_digest_v2`) with Markdown markers left mid-line ("… ### United States HUD's…", an unpaired
+"**"), so they render raw everywhere; the app applies no heuristics to model text, by rule. Fix where the title is made:
+derive it from the Markdown rendered to plain text (a parser, not a regex on prose) or from the first sentence before
+any heading marker; never cut a Markdown line mid-marker. The understanding pass's rewrites replace such titles over time;
+this keeps new mechanical titles clean meanwhile. Test: a verbatim whose 14th word sits inside a heading yields a
+marker-free title.
+
 ## Acceptance criteria
 
 - [ ] After one night, every episode and summary node of a test home has a model-written digest with `authored_by`.
