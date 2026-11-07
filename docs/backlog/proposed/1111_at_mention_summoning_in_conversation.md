@@ -73,3 +73,7 @@ network)".
 ## First cut
 Same-gateway @mention → invite → round-robin reply offer → stamped turns,
 all through the existing shared-room endpoints.
+
+## Operator direction (2026-11-07)
+
+The product goal these mechanisms serve is recorded in [1134](1134_talk_to_entities_from_code_assistant_and_notes.md): talk to entities from Code, the Assistant and Notes (`@castor …`); AbstractEntity stays the sandbox to understand them.
