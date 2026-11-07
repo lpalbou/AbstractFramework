@@ -5,7 +5,7 @@
 > Created: 2026-09-26
 > Priority: low
 > Labels: memory, mlx, residency
-> Status: deprecated 2026-11-03, superseded by [1115](../planned/1115_model_idle_unload_default_60_min_lock_never.md) (operator ruling: idle unload is wanted, 60 min by default, Keep loaded never unloads and persists across restarts)
+> Status: deprecated 2026-11-03, superseded by [1115](../completed/1115_model_idle_unload_default_60_min_lock_never.md) (operator ruling: idle unload is wanted, 60 min by default, Keep loaded never unloads and persists across restarts)
 
 ## Summary
 
@@ -79,7 +79,7 @@ the console says OK, and the model stays pinned forever") — fixed as reporting
 The operator decided this item's open question on 2026-11-03: idle unload is wanted for every model the framework
 loads, 60 minutes by default, customizable (`serve --model-idle-unload MINUTES`, stored `models.idle_unload_minutes`),
 and a model kept loaded never unloads, with its lock persisting across restarts. The design moved to planned item
-[1115](../planned/1115_model_idle_unload_default_60_min_lock_never.md), architect option C
+[1115](../completed/1115_model_idle_unload_default_60_min_lock_never.md), architect option C
 (`untracked/release-2026-11-03/architect-model-ttl.md`). Its one technical suggestion here, the existing
 `eject_unclaimed`, cannot be the idle path: every pooled model carries a pool claim, so the reaper uses ADR 0010's
 rule (locks and in-use only) instead. Nothing in this item was built.

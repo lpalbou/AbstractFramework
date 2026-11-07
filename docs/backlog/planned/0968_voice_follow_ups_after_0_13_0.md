@@ -44,3 +44,9 @@ Per point, a unit test.
 ## Receipts
 
 - Source: `untracked/wave2/PLAN.md` (wave-2 ledger); root staging note `untracked/wave2/stage-root.md`.
+- Runtime point done (2026-11-07). AbstractRuntime 0.7.0 (`5256988`) copied the catalog's `unavailable_reason` into the
+  error of an unavailable listing; AbstractRuntime 0.18.3 (`release/0.18.3`, `a84998f`) covers the case that remained,
+  an engine that RAISES while the listing is built: the error is then the catalog's reason, or the engine-free
+  providers-only catalog's, and only else the exception worded for a person ("the text-to-speech engine could not list
+  its models: ..."). Tests: `tests/test_discovery_tts_unavailable_reason.py` (four new tests red without the fix). The
+  four AbstractVoice points were not re-checked here; the item stays planned for them.
