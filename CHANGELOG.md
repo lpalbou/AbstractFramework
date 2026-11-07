@@ -2,6 +2,34 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.13.1] - 2026-11-07
+
+Pins AbstractGateway 0.20.2, AbstractAssistant 0.18.1, AbstractRuntime 0.18.2, AbstractVoice 0.20.1
+and AbstractNote 0.3.1, and the browser apps Code 0.15.1, Entity 0.11.1, Observer 0.12.1 and Note 0.3.1
+on the shared kit `@abstractframework/ui-kit` 0.9.15 / `panel-chat` 0.8.2. Every other component keeps
+its 0.13.0 version. The complete matrix is in the [README](README.md#release-matrix-abstractframework-0131).
+
+### What changes for you
+
+- **Read aloud tells the truth.** In every browser app and the web console, an answer shows as speaking
+  only while you can hear it. When the browser holds the sound back, the app says so, and Play resumes
+  the same audio instead of preparing it again.
+- **The desktop Assistant talks through its avatar.** The animated orb beside the message box is the voice
+  control; its menu has checkable **Voice conversation**, **Microphone** and **Dictate into the message
+  box** items that show their state. Transcription starts after about a second of silence, and a quiet
+  microphone now moves the orb.
+- **Notes takes dictation.** The Capture screen has a microphone when your gateway can transcribe speech,
+  and says plainly when it cannot.
+- **Code and Entity Avatar views:** talking stops a reply that is being read aloud; each reply and the live
+  line have their own read-aloud button; Entity's cognitive readings stay with the reply on screen.
+- **The gateway** answers voice-support checks without waiting for the other media checks, and its model
+  worker no longer imports folders from the data directory.
+
+### Fixed
+
+- The README no longer says AbstractNote is outside the install profiles (it has been in every profile
+  since 0.13.0).
+
 ## [0.13.0] - 2026-11-06
 
 Pins the existing published component versions across the light, Apple and GPU profiles:

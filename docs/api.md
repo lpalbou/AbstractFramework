@@ -55,12 +55,12 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.13.0` for this release).
+The meta-package version (`0.13.1` for this release).
 
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each Python component to its exact pinned version. The
-[release matrix](../README.md#release-matrix-abstractframework-0130) lists all 15 distributions,
+[release matrix](../README.md#release-matrix-abstractframework-0131) lists all 15 distributions,
 including Notes, Camera and the Python Avatar binding.
 
 ### `PACKAGE_DISTRIBUTIONS`
@@ -72,7 +72,7 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 
 The six launchable browser apps, including Notes, each runnable with `npx <package>@<version>`.
 They appear as `npm_apps` in the install manifest. See the
-[release matrix](../README.md#release-matrix-abstractframework-0130) for exact versions.
+[release matrix](../README.md#release-matrix-abstractframework-0131) for exact versions.
 
 ### `NPM_LIBRARY_RELEASE_VERSIONS`
 
