@@ -32,6 +32,10 @@ supervisor in `scripts/start-local.sh` on `main` restarts the gateway on death o
 1. **Speech-to-text default on Apple.** Make faster-whisper `large-v3-turbo` the default on Apple
    Silicon instead of `large-v3` (faster, close in quality), and add a **Spoken language** setting
    (auto-detect, or a fixed language that skips detection and avoids wrong-language transcripts)?
+   Record 2026-11-07: the Spoken-language half was ORDERED on 2026-10-10 (round 18; built in 7 repos, lost by
+   accident) and ruled again 2026-11-07: "detected by default, unless changed by the user". Voice/core/runtime halves
+   are on main; the rest is proposed as [1144](../proposed/1144_spoken_language_setting_lean_path.md) (lean path,
+   deprioritized). Only the turbo default remains open here.
 2. **mlx-whisper engine.** Add an mlx-whisper speech-to-text engine to AbstractVoice for Apple
    Silicon (Metal), selectable as a route next to faster-whisper (CPU on macOS)?
 3. **Named per-user API keys.** Build [1000](../proposed/1000_named_per_user_openai_api_keys.md)
