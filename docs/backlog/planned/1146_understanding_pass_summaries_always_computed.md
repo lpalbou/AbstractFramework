@@ -73,6 +73,17 @@ generation gate now (6 h) and refuse a second local model in v1? backfill castor
 leaked reasoning) and keep candidates/dedup groups out? `extraction` has no consumer: disabled or hidden? retire the
 night voice's 20 h throttle, and record surprise as a feeling (default: words only)?
 
+## Design change after the operator's answers (2026-11-08 ~04:10)
+
+Decision 3 is settled as "no fixed per-turn count": the memory task queue exposes an activation per task and a
+`select_for_window(budget_seconds, sensitivity)` read (the AbstractNote ripple/activation function, sigmoid-like: the
+strength of the incoming change decides how far it propagates); the Mind setting becomes a sensitivity plus a hard
+safety cap. Decisions 1, 2, 4, 6, 7 answered yes (7: keep `extraction`, point it at theforge, same model); 5 (generation
+gate) and 8 (retire the 20 h night-voice throttle) explained to the operator, his yes pending. The Entity owner started
+abstractmemory (0059 versions in place, 0060 queue, 0061 ripple) on its main on 2026-11-08 ~04:10 with the operator's
+go; the runtime drain is written against the committed verb signatures they send, never against a guess; the gateway
+"serve stored fields" step (gateway draft 1012) is the framework's first step once the operator says go to this seat.
+
 ## Related runtime fix (Entity owner's finding, 2026-11-08, not urgent; framework's side)
 
 30 of nerin's 292 record titles arrive from the runtime's mechanical title builder (`identity/digest.py` ~171, the
