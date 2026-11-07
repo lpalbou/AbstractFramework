@@ -94,6 +94,16 @@ any heading marker; never cut a Markdown line mid-marker. The understanding pass
 this keeps new mechanical titles clean meanwhile. Test: a verbatim whose 14th word sits inside a heading yields a
 marker-free title.
 
+## Related runtime fix 2 (Entity owner, operator-ruled 2026-11-08: "if that's the summary, DO NOT TRUNCATE IT")
+
+`abstractruntime/src/abstractruntime/integrations/abstractmemory/identity_support.py:180` stores a diary entry's digest as
+`first_line[:120]` when no gist was elected (the comment calls the ≤120-char fallback a ruled act-only ledger contract).
+The stored record (e.g. nerin `ex:diary-28c738204d7ca12dce756591b1`, seq 81218) holds 120 chars + "…", the gateway serves
+that, and the app cannot show more without a recorded diary-door read. The operator's rule overrides: store the whole
+first line (or the elected gist) uncut; the private-plane rules stay as they are. Same family as the title builder above;
+existing records are repaired by the understanding pass's rewrite. Test: a diary entry whose first line is 300 chars
+stores a 300-char digest.
+
 ## Acceptance criteria
 
 - [ ] After one night, every episode and summary node of a test home has a model-written digest with `authored_by`.
