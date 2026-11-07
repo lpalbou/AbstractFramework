@@ -78,8 +78,7 @@ night voice's 20 h throttle, and record surprise as a feeling (default: words on
 Decision 3 is settled as "no fixed per-turn count": the memory task queue exposes an activation per task and a
 `select_for_window(budget_seconds, sensitivity)` read (the AbstractNote ripple/activation function, sigmoid-like: the
 strength of the incoming change decides how far it propagates); the Mind setting becomes a sensitivity plus a hard
-safety cap. Decisions 1, 2, 4, 6, 7 answered yes (7: keep `extraction`, point it at theforge, same model); 5 (generation
-gate) and 8 (retire the 20 h night-voice throttle) explained to the operator, his yes pending. The Entity owner started
+safety cap. Decisions 1, 2, 4, 6, 7 answered yes (7: keep `extraction`, point it at theforge, same model); 5 (generation gate): NOT in this release, design first (root 1152; at most a very simple local-only gate); 8 (20 h throttle): NOT retired now, sleep/dream phases redesigned later on request or accumulation (root 1150); both ruled 2026-11-08 ~05:00. Truncation of stored text is an ADR violation (root ADR 0054). The Entity owner started
 abstractmemory (0059 versions in place, 0060 queue, 0061 ripple) on its main on 2026-11-08 ~04:10 with the operator's
 go; the runtime drain is written against the committed verb signatures they send, never against a guess; the gateway
 "serve stored fields" step (gateway draft 1012) is the framework's first step once the operator says go to this seat.
