@@ -1,4 +1,4 @@
-# 1134 — Talk to entities from Code, the Assistant and Notes (`@castor …`)
+# 1138 — Talk to entities from Code, the Assistant and Notes (`@castor …`)
 
 > Package: AbstractCode, AbstractAssistant, AbstractNote, AbstractGateway, AbstractUIC (panel-chat composer), AbstractEntity
 > Type: feature (direction recorded, not scheduled)

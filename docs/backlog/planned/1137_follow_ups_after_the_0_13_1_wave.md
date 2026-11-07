@@ -1,4 +1,4 @@
-# 1133 — Follow-ups after the 0.13.1 wave (2026-11-07)
+# 1137 — Follow-ups after the 0.13.1 wave (2026-11-07)
 
 > Package: AbstractGateway, AbstractVoice, AbstractUIC, AbstractAssistant, AbstractNote, AbstractCode, AbstractFramework
 > Type: task

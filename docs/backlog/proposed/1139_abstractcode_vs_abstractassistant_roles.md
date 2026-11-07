@@ -1,4 +1,4 @@
-# 1135 — Make the difference between AbstractCode and AbstractAssistant clear
+# 1139 — Make the difference between AbstractCode and AbstractAssistant clear
 
 > Package: AbstractCode, AbstractAssistant, AbstractFramework (docs, site)
 > Type: product / documentation (direction recorded, not scheduled)
@@ -29,4 +29,4 @@ client. A person cannot tell from the apps or the site which one to use for what
 
 ## Related
 
-1134 (talking to entities from both apps), feedback ruling "one session pool for all clients".
+1138 (talking to entities from both apps), feedback ruling "one session pool for all clients".
