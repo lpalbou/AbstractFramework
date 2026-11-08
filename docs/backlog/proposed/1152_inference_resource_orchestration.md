@@ -60,6 +60,6 @@ model process at a time, `untracked/gpu.lock`); the GPU memory rulings of 2026-0
   Night narration and ripple consolidation go through the memory-task queue (see the 2026-11-08 note in
   [1150](1150_sleep_and_dream_phases_on_request_or_accumulation.md)).
 - First measured data for per-engine admission, from the backfill on theforge
-  ([1180](../completed/1180_one_time_understanding_backfill_on_theforge.md)): 4 requests in flight was the best point
+  ([1181](../completed/1181_one_time_understanding_backfill_on_theforge.md)): 4 requests in flight was the best point
   (overall 31.6 calls/min, 916 prompt tok/s, 66 completion tok/s); at 5, completion throughput fell and median latency
   rose 47%.

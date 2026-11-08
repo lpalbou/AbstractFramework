@@ -55,7 +55,7 @@ the Entity app's Revisiting strip (Entity owner's draft 0001).
 ## Promotion criteria
 
 1171 merged and live; the ripple's distance threshold calibrated from the backfill's repeated rewrites (memory ADR
-0001 d1; [1180](../../completed/1180_one_time_understanding_backfill_on_theforge.md) holds the material); the
+0001 d1; [1181](../completed/1181_one_time_understanding_backfill_on_theforge.md) holds the material); the
 operator's go.
 
 ## Acceptance criteria

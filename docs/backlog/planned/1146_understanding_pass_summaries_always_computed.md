@@ -129,4 +129,4 @@ Paused by operator ruling 2026-11-08 (pause all dev); resume = explicit go. The 
 [1172](../proposed/understanding-pass/1172_ripple_revise_election_and_wake_cue.md) and the extraction consumer
 [1173](../proposed/understanding-pass/1173_extraction_capability_gets_its_consumer.md) (proposed), and the release
 wave [1179](1179_release_wave_understanding_pass.md). The backfill called "1137" above was done on 2026-11-08 and is
-filed as [1180](../completed/1180_one_time_understanding_backfill_on_theforge.md) (root 1137 is another item).
+filed as [1181](../completed/1181_one_time_understanding_backfill_on_theforge.md) (root 1137 is another item).

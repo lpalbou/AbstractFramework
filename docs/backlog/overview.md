@@ -67,7 +67,7 @@ receipt recovery are promotion gates. All four remain proposed; counts unchanged
 | [1172](proposed/understanding-pass/1172_ripple_revise_election_and_wake_cue.md) | proposed | `revise` election, ripple kinds drained, wake cue (runtime draft 0870 over memory 0061) |
 | [1173](proposed/understanding-pass/1173_extraction_capability_gets_its_consumer.md) | proposed | The `extraction` capability's consumer (memory 0050/0051) |
 | [1179](planned/1179_release_wave_understanding_pass.md) | planned, paused | Release order memory → runtime (voice in parallel) → gateway → apps → root; unpublished inventory; gates |
-| [1180](completed/1180_one_time_understanding_backfill_on_theforge.md) | completed 2026-11-08 | 2,176 texts rewritten/narrated in nerin, castor, hypnos, ephemeral; 4 concurrent best; backups kept |
+| [1181](completed/1181_one_time_understanding_backfill_on_theforge.md) | completed 2026-11-08 | 2,176 texts rewritten/narrated in nerin, castor, hypnos, ephemeral; 4 concurrent best; backups kept |
 
 Sleep/dream redesign [1150](proposed/1150_sleep_and_dream_phases_on_request_or_accumulation.md) and the generation
 gate as a design item [1152](proposed/1152_inference_resource_orchestration.md) carry 2026-11-08 notes linking the
@@ -711,7 +711,7 @@ to the proposed versions. Completed records: 0906–0915 (below).
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
-| 1180 | [One-time understanding backfill on theforge](completed/1180_one_time_understanding_backfill_on_theforge.md) | 2026-11-08 | Original planned path: `untracked/understanding-pass-2026-11-07/drafts/abstractframework/1137_one_time_understanding_backfill_on_theforge.md` (never filed; root 1137 is another item); final path `completed/1180_…`; created 2026-11-07. 2,176 texts (hypnos 53, castor 454, ephemeral 1,409, nerin 260) through memory's verbs; verify ok in every home (usage unchanged, integrity ok) except one ephemeral recall probe; 4 concurrent best; backups under `untracked/understanding-backfill/backups/`. |
+| 1181 | [One-time understanding backfill on theforge](completed/1181_one_time_understanding_backfill_on_theforge.md) | 2026-11-08 | Original planned path: `untracked/understanding-pass-2026-11-07/drafts/abstractframework/1137_one_time_understanding_backfill_on_theforge.md` (never filed; root 1137 is another item); final path `completed/1180_…`; created 2026-11-07. 2,176 texts (hypnos 53, castor 454, ephemeral 1,409, nerin 260) through memory's verbs; verify ok in every home (usage unchanged, integrity ok) except one ephemeral recall probe; 4 concurrent best; backups under `untracked/understanding-backfill/backups/`. |
 | 1115 | [Idle unload of loaded models: 60 min by default, a kept-loaded model never unloads](completed/1115_model_idle_unload_default_60_min_lock_never.md) | 2026-11-07 | Shipped in AbstractCore 2.34.0, AbstractRuntime 0.18.0 and AbstractGateway 0.20.0; real-weights e2e (unload, kept-loaded persistence across restart). Follow-up: the `vmmap` back-to-baseline sample. |
 | 1103 | [A gateway pause or restart never fails a run](completed/1103_gateway_pause_or_restart_never_fails_a_run.md) | 2026-11-07 | Shipped in AbstractRuntime 0.17.0 (#33) and AbstractGateway 0.20.0 (#98); e2e red before, green after; approved on real weights. The `EffectInterrupted` question stays with decision 1117. |
 | 1132 | [Final stable AbstractFramework release](completed/1132_final_stable_release.md) | 2026-11-06 | AbstractSkill 0.3.10 and root 0.13.0 only; pins the published component matrix; PyPI release run 42305102886. |
