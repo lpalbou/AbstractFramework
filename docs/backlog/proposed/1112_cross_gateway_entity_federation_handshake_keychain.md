@@ -254,3 +254,14 @@ INTER-gateway half: two doors negotiating a visit across the network.
 Handshake endpoint pair (`POST /api/gateway/federation/handshake`, `ask`
 decision surfaced as a modal in the observer) + visit tokens + TOFU keychain
 with standing grants; one remote voice in one room, round-robin.
+
+## Framework seat view on auth (2026-11-08)
+
+Gateway-to-gateway, never the person's token on the wire beyond the operator's own-account case: a one-time pairing by
+handover code (the 1143 pattern) mints a scoped credential "may summon entity X on gateway B as principal P", sealed like
+provider keys (no OS keychain), revocable and listed on both consoles; every request carries the calling gateway's
+identity (ADR 0052 fingerprint, signed; the remote pins the key); the remote door keeps its own seat, tool policy and
+limits; the remote run's ledger stays remote and the local session records the reply turn plus a provenance stub
+{remote gateway id, run id, identity_ref}, the remote view fetched read-only for replay when authorised (one ledger per
+home, mirrored views); discovery = handle convention + `GET /api/gateway/about`; the "may visit" permission is the
+prerequisite for anyone but the operator. Next release.

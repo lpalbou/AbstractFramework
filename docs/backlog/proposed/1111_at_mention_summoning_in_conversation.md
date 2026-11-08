@@ -77,3 +77,13 @@ all through the existing shared-room endpoints.
 ## Operator direction (2026-11-07)
 
 The product goal these mechanisms serve is recorded in [1138](1138_talk_to_entities_from_code_assistant_and_notes.md): talk to entities from Code, the Assistant and Notes (`@castor …`); AbstractEntity stays the sandbox to understand them.
+
+## Framework seat view (2026-11-08, for the Entity owner's analysis `untracked/entity-mentions-2026-11-08/ANALYSIS.md`)
+
+This release (Assistant only, client-only slice, gated on the 30-minute probe): a structured mention chip fed by
+`GET /entities` (never parsed out of free text), `POST /entities/{name}/summon` with the chat's `session_id`, so the
+entity's answer is a turn of that session on the same ledger and every client shows it from the view; the label comes
+from the identity route; the three conflicts are shown, never hidden (409 while a visit holds the seat; member scope; the
+history window reaches the entity's mind — stated in the chip's confirmation). Durability check before shipping: a
+summon is a run in the caller's workspace; the entity's HOME must also receive the episode (its own ledger and
+artifacts, root 1145) — if a summon leaves no trace in the home, close that gap first.
