@@ -1,0 +1,43 @@
+# 1164 — A generation that fails in 0.01 ms is reported as "timed out after 7200.0s"; the breaker then blocks the endpoint
+
+> Package: AbstractCore (`abstractcore/providers/base.py` ~1218-1290 `_timeout_message` / `_looks_like_timeout`, `core/retry.py` circuit breaker; the core agent's package, filed here for the owner), AbstractGateway (model-host log carries no traceback for a provider failure)
+> Type: defect (ADR-0027 §1: the surfaced duration and the responsible knob must be accurate)
+> Status: planned
+> Created: 2026-11-08
+> Priority: P1 (the operator watched his inference machine idle while the ledger said a two-hour timeout)
+> Labels: providers, timeouts, observability, circuit-breaker
+
+## What happened (2026-11-08, Code web conversation run `c00883d1…`, react child `d03dc6d9…`, mind `endpoint:compat-theforge-nvidia` / `qwen/qwen3.8-27b` on LM Studio at 192.168.1.7:1234)
+
+- 10:44:46 the operator approved an `execute_command` from the tray; the run resumed and issued a `reason` call.
+- model-host.log: `10:48:32 [ERROR] OpenAICompatibleProvider: Generation failed for qwen/qwen3.8-27b: openai-compatible
+  API error: timed out after 7200.0s (configured timeout; set timeout=None …) (latency: 0.01ms)`; again at 10:49:18
+  (0.00 ms); 10:49:21 `Circuit breaker open for OpenAICompatibleProvider:qwen/qwen3.8-27b`; three more generations
+  refused on the open breaker at 10:50:10-13. The run failed. The ledger says the same.
+- Nothing reached the inference machine (the operator: "I have the inference machine in front of me, it's not thinking
+  at all"); `GET http://192.168.1.7:1234/v1/models` answered at 11:30.
+
+So the request failed before any network I/O, and the message blamed a two-hour timeout that never elapsed.
+`_looks_like_timeout` falls back to a string match ("timeout"/"timed out" in the exception text), and
+`_timeout_message` then prints the CONFIGURED total as if it had been spent. The real exception type is not logged
+anywhere (model-host.log prints the mapped message only).
+
+## Scope
+
+1. Never print a duration that did not elapse: the message states the measured latency and the exception class
+   (`openai-compatible API error before the request was sent (0.01 ms): <ExceptionType>: <text>`); the configured
+   bound is named only when the measured latency is within 5 % of it.
+2. The string fallback in `_looks_like_timeout` does not classify a failure as a timeout when the measured latency is
+   under 1 s; such failures are surfaced as what they are.
+3. The model host logs the exception class and the first frames of the traceback for every provider failure (one
+   line each, bounded), so the next instant failure is diagnosable without a reproduction.
+4. The circuit breaker (5 failures / 60 s recovery by default) is reported to the client with the time left and the
+   failures that opened it, and the gateway's Models page shows an open breaker per endpoint.
+5. Find and fix the instant-failure cause itself: reproduce with the same provider path (the model host's provider
+   pool for an `endpoint:` profile, prompt of 57 messages with large tool outputs) — candidates: the request body
+   exceeding a client-side limit, the pool handing out a closed client, the profile's `timeout` kwarg rejected.
+
+## Related
+
+Root 1158 (scalability, observability of the model host), the 2026-08-02 LM Studio incident recorded in the same code
+(the misattribution hid it for weeks), root 1160.
