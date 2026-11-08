@@ -66,3 +66,9 @@ browser connection per origin), root 1152 (inference resource orchestration), ga
 - [ ] At the target load, list routes stay under 300 ms p99, no route blocks the loop, `watchers` never queues more
       than its size, RSS is flat over 6 h, and a stalled TTS stream ends within its watchdog without holding a thread.
 - [ ] Health shows the pool/stream/loop figures; the perf job runs the harness at a fraction of the target.
+
+## Resilience half added 2026-11-08 (operator ruling via the 10:44 incident)
+
+An unreachable model endpoint parks the step and the run continues when the endpoint is back (root 1168: durable wait,
+one reachability probe per endpoint with backoff, no breaker on connect failures, the status bar names the endpoint).
+The remote-lane measurement (a remote call never waits behind local GPU work) belongs to this item's harness.

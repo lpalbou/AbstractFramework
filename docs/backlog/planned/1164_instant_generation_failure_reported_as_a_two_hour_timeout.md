@@ -63,3 +63,9 @@ start time), and the 226 s matches three macOS TCP connect timeouts (75 s each) 
 Core's patch: connect failures classified NETWORK with the measured duration and the target base_url; type-first
 classification; exception class logged; true elapsed on failure lines; the same tightening in `core/retry.py:289`.
 
+## Closed on the cause (2026-11-08 13:00)
+
+The operator confirmed the inference machine was switched off around 03:00-04:00 and stayed off through 10:44-10:49.
+His ruling for the gateway/runtime half: an unreachable endpoint is a transient condition, the step waits and resumes
+when the endpoint is back instead of failing the run and opening the breaker — root 1168. Core publishes a typed
+network error (base_url, exception class, measured duration) that the runtime consumes for that park.
