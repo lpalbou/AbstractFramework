@@ -51,3 +51,24 @@
 
 - Hermetic model host with a fake slow local load and a fake remote endpoint: the remote call returns during the
   load; the ledger shows no timeout; an MTP default on a remote run yields one notice and a reply.
+
+## Refined after reading the code with the core owner (2026-11-08 12:30)
+
+- The 3 min 46 s between the runtime's `llm_call started` (10:44:46) and the logged failure (10:48:32) is best
+  explained by core's retry loop (`core/retry.py:289` classifies any exception whose text contains "timeout" as a
+  retryable TIMEOUT and backs off between attempts), wrapping an exception that fired at the provider's first
+  statement (0.01 ms) on every attempt; the second runtime attempt (10:48:33 → 10:49:18) had fewer retries before the
+  breaker opened. So the wait was not admission: the runtime's local generate lock is MLX-only
+  (`llm_client.py:690-706`), the model-host child executes requests sequentially per connection but the gateway hands
+  each request an idle connection (`model_host.py:1409-1432`, pool of 16), and the child's host lock guards only the
+  client registry (`model_host_child.py:61,342,353`).
+- The exception type is still unknown; nothing logs it. Core's patch (exception class and module logged at WARNING;
+  type-first classification; no configured duration printed for a 0 ms failure; the retry classifier tightened the
+  same way) is what names it the next time. Until then, a retry in Code after the breaker's 60 s shows whether it
+  recurs; if it does, the model-host log carries the class.
+- Scope of this item therefore: (1) the gateway capability default never attaches `native_mtp` to a provider family
+  without an adapter (core degrades default-sourced requests, 2026-11-08 agreement); (2) the runtime surfaces core's
+  `speculation.applied=false` as a ledger notice; (3) remote endpoint calls keep their own lane in the model host as
+  designed above, verified by the hermetic test, even though this incident did not prove a queue; (4) health shows the
+  model host's lanes.
+
