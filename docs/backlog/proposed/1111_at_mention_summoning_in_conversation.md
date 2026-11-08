@@ -87,3 +87,9 @@ from the identity route; the three conflicts are shown, never hidden (409 while 
 history window reaches the entity's mind — stated in the chip's confirmation). Durability check before shipping: a
 summon is a run in the caller's workspace; the entity's HOME must also receive the episode (its own ledger and
 artifacts, root 1145) — if a summon leaves no trace in the home, close that gap first.
+
+## Filed 2026-11-08
+
+The this-release slice above is filed as [1174](../planned/1174_at_entity_in_the_desktop_assistant_via_summon_into_session.md)
+(planned, paused by operator ruling 2026-11-08, pause all dev; resume = explicit go), with the operator's group-chat
+rules as its acceptance criteria; the slice table is in [1138](1138_talk_to_entities_from_code_assistant_and_notes.md).

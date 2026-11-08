@@ -120,3 +120,13 @@ stores a 300-char digest.
 - [ ] A disruptive present fact re-opens the connected earlier memories (ripple) and the dream consolidates them.
 - [ ] Rewrites keep the record id and carry the previous text + provenance.
 - [ ] The queue survives a gateway restart (persistent) and resumes.
+
+## Track and pause (2026-11-08 ~15:00)
+
+Paused by operator ruling 2026-11-08 (pause all dev); resume = explicit go. The remaining work is the topic track
+[`understanding-pass/`](understanding-pass/README.md): the drain [1171](understanding-pass/1171_understanding_drain_in_turns_and_idle_windows.md)
+(runtime draft 0869 + the drain parts of gateway draft 1013, planned, state at pause recorded), the ripple
+[1172](../proposed/understanding-pass/1172_ripple_revise_election_and_wake_cue.md) and the extraction consumer
+[1173](../proposed/understanding-pass/1173_extraction_capability_gets_its_consumer.md) (proposed), and the release
+wave [1179](1179_release_wave_understanding_pass.md). The backfill called "1137" above was done on 2026-11-08 and is
+filed as [1180](../completed/1180_one_time_understanding_backfill_on_theforge.md) (root 1137 is another item).

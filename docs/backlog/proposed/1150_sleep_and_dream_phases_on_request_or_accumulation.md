@@ -39,3 +39,19 @@ understanding-pass queue (root 1146) must not depend on its removal.
 - [ ] No clock-based sleep remains; a quiet entity never sleeps, a busy one sleeps when its debt crosses the threshold.
 - [ ] A requested sleep starts within one tick and is a run with a ledger.
 - [ ] The narration exists after each sleep (signals returned, narrator run).
+
+## Note 2026-11-08 (understanding-pass track; paused by operator ruling 2026-11-08, pause all dev; resume = explicit go)
+
+- Design links: `untracked/understanding-pass-2026-11-07/DESIGN.md` §6 (the drain's windows: rest nap and cycle
+  window, dreams and consolidation only in sleep) and §8 (a ripple consolidates in nightly sleep); the host-wide
+  generation gate of runtime draft 0868 is a design item under [1152](1152_inference_resource_orchestration.md), not a
+  prerequisite here.
+- Night narration now goes through the memory-task queue: memory 0060 enqueues one `dream.narrate` per formed dream
+  (windows night/nap only) and the drain [1171](../planned/understanding-pass/1171_understanding_drain_in_turns_and_idle_windows.md)
+  narrates it; while the 20 h throttle holds, the drain leaves `dream.narrate` out of its selection (`filtered`) and a
+  narration it writes stamps `night_voice.json` like the night voice. `ripple.consolidate`
+  ([1172](understanding-pass/1172_ripple_revise_election_and_wake_cue.md)) runs only in nightly sleep. A redesigned
+  sleep (this item) is therefore one run that drains the night kinds; its accumulation trigger reads
+  `understanding_debt()` (abstractmemory `memory_tasks.py`).
+- The one-time backfill [1180](../completed/1180_one_time_understanding_backfill_on_theforge.md) narrated all 90 formed
+  dreams of the four live homes on 2026-11-08 (narration version 1); "0 narrations" above is history for those homes.

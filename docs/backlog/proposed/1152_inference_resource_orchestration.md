@@ -47,3 +47,19 @@ will queue; background work can slow a conversation or exhaust a pool.
 
 Root 1146 (understanding pass) and runtime draft 0868 (the gate; now a decision-gate item); ruling 2026-09-29 (one
 model process at a time, `untracked/gpu.lock`); the GPU memory rulings of 2026-09-28.
+
+## Note 2026-11-08 (understanding-pass track; paused by operator ruling 2026-11-08, pause all dev; resume = explicit go)
+
+- The generation gate is this item's design question, not a build of the understanding pass: DESIGN §6 "Host-wide
+  generation gate" (`untracked/understanding-pass-2026-11-07/DESIGN.md`) and runtime draft 0868
+  (`untracked/understanding-pass-2026-11-07/drafts/abstractruntime/0868_host_wide_generation_gate.md`: foreground
+  in-flight files per engine key under `<data>/gates/<key>/`, one background slot taken only when nothing is in flight,
+  `cancel_event` on a foreground arrival, a local second-model refusal) are the candidate for proposal 1 (v0).
+- The drain v1 ([1171](../planned/understanding-pass/1171_understanding_drain_in_turns_and_idle_windows.md)) ships
+  without a gate: it relies on the home lease, the window checks and the capability model being remote (theforge).
+  Night narration and ripple consolidation go through the memory-task queue (see the 2026-11-08 note in
+  [1150](1150_sleep_and_dream_phases_on_request_or_accumulation.md)).
+- First measured data for per-engine admission, from the backfill on theforge
+  ([1180](../completed/1180_one_time_understanding_backfill_on_theforge.md)): 4 requests in flight was the best point
+  (overall 31.6 calls/min, 916 prompt tok/s, 66 completion tok/s); at 5, completion throughput fell and median latency
+  rose 47%.

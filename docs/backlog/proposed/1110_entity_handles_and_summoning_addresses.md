@@ -75,3 +75,16 @@ link (`?gateway=…&entity=…`) is a folk version of exactly this.
 ## First cut
 Resolution endpoint + observer rendering + copy affordance. No federation in
 this item (see 1111/1112) — a handle that is merely LOCAL is already useful.
+
+## Current code reality and discovery (2026-11-08; paused by operator ruling 2026-11-08, pause all dev; resume = explicit go)
+
+- Each `GET /entities` row already carries a handle `<name>@<gateway LAN IP>` (or `ABSTRACTGATEWAY_DECLARED_ADDRESS`,
+  abstractgateway `config.py`): no scheme, no port; the Entity app treats it as "reachability, NOT identity — display
+  only" (`abstractentity/src/stream_source.ts`). `GET /api/gateway/about` exists (`routes/gateway.py`, readable without
+  sign-in) and names the instance. No signed `/handle` route and no per-home keypair exist.
+- Discovery for `name@host` (framework seat view, recorded in
+  [1112](1112_cross_gateway_entity_federation_handshake_keychain.md) on 2026-11-08): the handle convention (default
+  port `:8080`, https for `*.ts.net`) plus `GET /api/gateway/about`; the calling gateway proves itself with its signed
+  identity (ADR 0052 fingerprint, the remote pins the key); someone other than the operator needs the "may visit"
+  permission ([1175](1175_may_visit_permission_for_entities.md)). The mention design that uses the handle is
+  [1138](1138_talk_to_entities_from_code_assistant_and_notes.md).

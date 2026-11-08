@@ -143,7 +143,9 @@ Contract learnings from the paused build (runtime NOTES, 14:10):
 - [ ] A window that claims nothing starts no run (`run_id: None` in the report).
 - [ ] On `EndpointUnreachableError` the `LLM_CALL` handler parks the drain run WAITING
       (`endpoint_unreachable:<base_url>`): the drain releases `defer`, excludes that capability for the window and
-      resumes with `resume(payload={}, max_steps=0)`.
+      resumes with `resume(payload={}, max_steps=0)`. Root 1168's scope revision (operator 2026-11-08 14:40, next
+      release) turns that wait into a person-facing decision card; a drain run is background memory work and must
+      keep this defer path and never raise a "needs you" card — reconcile with 1168 when either lands.
 - [ ] `enqueue_card` stamps `basis_version=0` on every revision: cards are stale-checked by evidence fingerprint and
       standing card, never by version.
 - [ ] The hermetic `find -newer` check allows `memory.sqlite3`, `runtime_<slug>.sqlite3`, `loop_spend.json`, the

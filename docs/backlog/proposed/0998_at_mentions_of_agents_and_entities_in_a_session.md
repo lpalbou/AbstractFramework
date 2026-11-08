@@ -64,3 +64,13 @@ agora collaboration runs through the hub, outside gateway sessions.
 ## Operator direction (2026-11-07)
 
 The product goal these mechanisms serve is recorded in [1138](1138_talk_to_entities_from_code_assistant_and_notes.md): talk to entities from Code, the Assistant and Notes (`@castor …`); AbstractEntity stays the sandbox to understand them.
+
+## Update 2026-11-08 (paused by operator ruling 2026-11-08, pause all dev; resume = explicit go)
+
+For entities the session-level design is now concrete in [1138](1138_talk_to_entities_from_code_assistant_and_notes.md)
+(summon into the chat's own session; structured chip from `GET /entities`, never free-text parsing; sequential answers
+in mention order; one answer per mention; the room is the channel) and its first slice
+[1174](../planned/1174_at_entity_in_the_desktop_assistant_via_summon_into_session.md). For agents the operator's rule
+for this phase is: the session's agent orchestrates by reading the answers, and agents get no mention tool; the agora
+bridge decision in this item stays open. Cross-gateway: [1112](1112_cross_gateway_entity_federation_handshake_keychain.md)
+(framework seat auth view), [1175](1175_may_visit_permission_for_entities.md) ("may visit").

@@ -265,3 +265,10 @@ limits; the remote run's ledger stays remote and the local session records the r
 {remote gateway id, run id, identity_ref}, the remote view fetched read-only for replay when authorised (one ledger per
 home, mirrored views); discovery = handle convention + `GET /api/gateway/about`; the "may visit" permission is the
 prerequisite for anyone but the operator. Next release.
+
+## Filed 2026-11-08
+
+The "may visit" prerequisite named above is [1175](1175_may_visit_permission_for_entities.md); the discovery half is
+recorded in [1110](1110_entity_handles_and_summoning_addresses.md); the next-release slices are tabled in
+[1138](1138_talk_to_entities_from_code_assistant_and_notes.md). Paused by operator ruling 2026-11-08 (pause all dev);
+resume = explicit go.
