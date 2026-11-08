@@ -47,3 +47,18 @@ skill under a scratch worktree because the prompt names skills without their pat
 - [ ] With a `.abstractignore` that refuses the shelf path, `read_file` on an activated skill's SKILL.md returns the whole file.
 - [ ] The prompt carries the path for every offered skill.
 - [ ] A fresh data dir lists `abstractcore` and `abstractframework-gateway` on the Skills page after the first start.
+
+## Built 2026-11-08 16:40 (awaiting the next restart)
+
+- abstractruntime b22c901: `integrations/abstractcore/skill_roots.py` + the read_file interception serve any file under
+  the run's skill folders whole (core's line-numbered shape, ranges honoured, symlink escapes refused); roots derived from
+  the run record only (`vars.skills` mapping or names + `_runtime.skills_resolution`, or the `<path>` of
+  `_runtime.skills_block`). 7 tests red-without.
+- abstractskill bf6b982 = 0.3.11: `registry/skills/abstractcore/` (verbatim from abstractcore main cac85276, first-party
+  validation record), registry 2026.11.10 with 17 skills; `format_available_skills_xml` renders `<path>` per skill and
+  the hint "read the SKILL.md at its <path> with read_file; do not search the workspace for another copy".
+- No gateway change: the shelf seed adds `abstractcore` at the next start; abstractskill is an editable install on this
+  machine, so the restart carries 0.3.11. Follow-up (one line, next release): `resolve_run_skills` records
+  `resolution["shelf"]` so the runtime has a second root source when a prompt carries no `<path>`. Only `read_file` is
+  intercepted (not list/search), by design.
+
