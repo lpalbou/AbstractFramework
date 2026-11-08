@@ -6,7 +6,7 @@ the lifecycle folders described by the backlog process.
 
 ## Current Counts
 
-Recounted on 2026-11-03 after the backlog repair (renumbered duplicates 1108–1112, 0.12.0 record 1113,
+Recounted on 2026-11-07 after adding proposed 1133–1136 (including nested topic items). Historical changes: on 2026-11-03 after the backlog repair (renumbered duplicates 1108–1112, 0.12.0 record 1113,
 1098 split into 1098 + 1114) the model idle-unload item 1115 (0895 deprecated, superseded), the decision gate 1117 (2026-11-04) the hygiene pass that closed 0874, 0872, 1104, 1105 and 1107, then 0955/0969 (Core #49) and proposed 1118, and the digital identity items 1119 (planned) / 1120 (proposed) with ADR 0052 (2026-11-04). Method, per state folder: `find <state> -name '*.md' ! -name README.md
 ! -name 'template*' ! -path '*/evidence/*'` (topic subfolders included, evidence folders excluded) for
 **Files**; the same with a four-digit `NNNN_` prefix for **Numbered**. Counts are files, not unique
@@ -17,12 +17,36 @@ across all folders (checked with `uniq -d` over the prefixes).
 | State | Files (top level) | Numbered `NNNN_` (top level) | Notes |
 |---|---|---|---|
 | Planned | 194 (142) | 150 (98) | 1119 digital identity: avatar, voice, fingerprint, track record and reputation per entity, by reference (ADR 0052, 2026-11-04). 1117 operator decision gate: does a gateway stop need `EffectInterrupted`, or does the runtime simply stop (2026-11-04). 1115 model idle unload (60 min default, Keep loaded never unloads and persists; next wave). Includes residual conversation accessibility/KV/device validation 1088/1089/1094/1095; composable activity 1083 remains planned. |
-| Proposed | 94 (83) | 91 (80) | 1130 Context7 serves each package's current docs after every release (refresh API after publish, 2026-11-05); 1129 the avatar style the Watch cannot draw (`iphone-weave`): a Watch code or a phone-only mark (2026-11-05); 1128 gateway tests that fail by timing or coincidence, and two checks that check nothing (0.20.0 release gate, #106 review, 2026-11-05); 1127 local gate: `--release-tag` skips ci jobs green on the same head; one gate per machine (2026-11-05); 1126 install manifest field reference moves to api.md (llms scope follow-up, 2026-11-04); 1124 read-aloud replay cache per segment, 120 min (later release, 2026-11-04); 1125 Assistant theme refresh command runs and copies the kit palette (2026-11-04); 1123 Watch UI tests: one depends on the clock, four fail on 42 mm (2026-11-04); 1122 Observer board end-user copy in plain words (seven findings from the #19 review, 2026-11-04); 1121 kit voice picker: "Create a voice" folds below the picker, plain labels (Entity #17 review, 2026-11-04); 1120 how the digital identity is fed and evolves: external feedback from users and agents first (operator ruling 2026-11-04); 1118 Core console TUI engine-filter test waits on the request, not on the screen (flaky, 2026-11-03); 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
+| Proposed | 98 (83) | 95 (80) | 1130 Context7 serves each package's current docs after every release (refresh API after publish, 2026-11-05); 1129 the avatar style the Watch cannot draw (`iphone-weave`): a Watch code or a phone-only mark (2026-11-05); 1128 gateway tests that fail by timing or coincidence, and two checks that check nothing (0.20.0 release gate, #106 review, 2026-11-05); 1127 local gate: `--release-tag` skips ci jobs green on the same head; one gate per machine (2026-11-05); 1126 install manifest field reference moves to api.md (llms scope follow-up, 2026-11-04); 1124 read-aloud replay cache per segment, 120 min (later release, 2026-11-04); 1125 Assistant theme refresh command runs and copies the kit palette (2026-11-04); 1123 Watch UI tests: one depends on the clock, four fail on 42 mm (2026-11-04); 1122 Observer board end-user copy in plain words (seven findings from the #19 review, 2026-11-04); 1121 kit voice picker: "Create a voice" folds below the picker, plain labels (Entity #17 review, 2026-11-04); 1120 how the digital identity is fed and evolves: external feedback from users and agents first (operator ruling 2026-11-04); 1118 Core console TUI engine-filter test waits on the request, not on the screen (flaky, 2026-11-03); 1114 one conversation projection (split from 1098, 2026-11-03), 1110–1112 entity handles / @mention / federation (renumbered from 0212–0214), 1101 keep-awake on Linux/Windows (2026-11-02), 1098 typed voice block (deferred 2026-11-02), 1090 knowledge, 1091 broad audit and 1097 (2026-11-03: one live line + Findings panel on branches, typed `progress | finding` updates; merge and app re-sync remain) remain proposed in the conversation track; includes Avatar release prerequisites 1079. |
 | Completed | 308 (284) | 125 (101) | 1132 release record of root 0.13.0 (2026-11-06). 0955 and 0969 (abstractcore 2.34.0, PR #49). 0874, 0872, 1104, 1105, 1107 closed as done after a check against the code (2026-11-03 hygiene). 1113 release record of root 0.12.0; 1108 and 1109 renumbered from 1028 and 1072. Includes the shared composer default 1096, conversational control/questions 1092/1093, shared reads 1087 and avatar/rendering/context 1078/1081/1082. |
 | Deprecated | 3 (3) | 3 (3) | 0895 MLX idle/TTL unload (superseded by 1115, 2026-11-03); 0858 and the earlier record. |
 | Recurrent | 3 (3) | 1 (1) | Backlog/ADR hygiene, follow-up triage and 1060 security/resilience/latency duty. |
 
 Not counted: `fable-opinions/agency_deep_dive_and_codex_comparison.md` (analysis, unindexed; 0889).
+
+## Client-device and Gateway-host Tool Execution (proposed)
+
+[Track audit and reading order](proposed/tool-execution-placement/README.md), created 2026-11-07:
+
+| Item | Proposed scope | Promotion condition |
+|---|---|---|
+| [1133](proposed/tool-execution-placement/1133_explicit_tool_execution_targets_and_per_call_routing.md) | Explicit admitted bindings before resource rewriting; one optional read-only client adapter | Agree adapter owner, authority and compatibility contract |
+| [1134](proposed/tool-execution-placement/1134_durable_client_tool_jobs_and_uncertain_outcome_recovery.md) | Validated client completions, durable applied receipts and reconnect | 1133 plus commit/recovery contract and bounded delivery |
+| [1135](proposed/tool-execution-placement/1135_server_owned_runtime_and_artifact_tool_capabilities.md) | Existing scoped read-only ledger/artifact capabilities | Independent initial inventory; mixed execution later; align with 1059 |
+| [1136](proposed/tool-execution-placement/1136_execution_provenance_and_agent_topology_grounding.md) | Minimal attributed provenance and resource/data-destination clarity | Current-topology truth independent; binding/recovery views later |
+
+All four are P2 proposals. Gateway currently runs on the operator's laptop; theforge-nvidia is
+inference-only. Moving Gateway would move default host tools. The proposals explicitly distinguish
+Gateway host from client device even when colocated. Durable JOB waits exist, but reconnect delivery
+and safe recovery of uncertain client side effects need a complete contract. No implementation or
+agora coordination in this pass, per operator instruction.
+
+**2026-11-07 refinement:** one architect and one adversarial reviewer independently inspected
+Core/Runtime/Gateway and compared three alternatives. [Review and dispositions](evidence/1133/architecture-review.md)
+recommend a narrow adapter inside existing Runtime effects/waits, with reservations. Added dated
+VS Code, Temporal, LangGraph, MCP Tasks and Claude examples with explicit differences. No second
+scheduler/ledger or forced Core binding schema; exact client-completion authority and applied
+receipt recovery are promotion gates. All four remain proposed; counts unchanged.
 
 ## Next Recommended Work
 
