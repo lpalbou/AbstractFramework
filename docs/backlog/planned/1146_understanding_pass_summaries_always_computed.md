@@ -130,3 +130,13 @@ Paused by operator ruling 2026-11-08 (pause all dev); resume = explicit go. The 
 [1173](../proposed/understanding-pass/1173_extraction_capability_gets_its_consumer.md) (proposed), and the release
 wave [1179](1179_release_wave_understanding_pass.md). The backfill called "1137" above was done on 2026-11-08 and is
 filed as [1181](../completed/1181_one_time_understanding_backfill_on_theforge.md) (root 1137 is another item).
+
+## Operator ruling 2026-11-08 17:15 (titles and summaries of every memory type)
+
+"Every memory type should have a clean informative title and summary. This should help (a) the discoverability and
+(b) the actionability of such memory." Consequences: a title is asked of the author (the entity's `title:` line, the
+capability model's `title` field), never derived by cutting; without one the first complete sentence of the body;
+stored whole; the summary (digest) says what the memory is and what one can do with it; folds happen only at display.
+Runtime formation sites: abstractframework untracked/titles-2026-11-08/PROPOSAL.md (in work); memory side abstractmemory
+20cd1f4; repair of the ~500 already-cut titles: the Entity owner's proposal to the operator.
+
