@@ -26,7 +26,7 @@ Operator rulings 2026-11-07/08 (root [1146](../1146_understanding_pass_summaries
 metadata are ALWAYS computed, in the background, when the entity is idle, from a persistent queue; a capability model
 may write in the entity's first person ("a passive memory process, part of me"); no fixed count per turn — the
 drain is activation-driven (sensitivity + a hard safety cap); stored text is never cut (ADR 0054). Today the queue
-exists and nothing drains it, so after the one-time backfill ([1181](../completed/1181_one_time_understanding_backfill_on_theforge.md))
+exists and nothing drains it, so after the one-time backfill ([1181](../../completed/1181_one_time_understanding_backfill_on_theforge.md))
 every new memory is mechanical again.
 
 ## Current code reality (2026-11-08, read on the mains)

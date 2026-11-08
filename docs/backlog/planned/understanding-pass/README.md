@@ -23,7 +23,7 @@ and its per-package drafts under `untracked/understanding-pass-2026-11-07/drafts
 | [1172](../../proposed/understanding-pass/1172_ripple_revise_election_and_wake_cue.md) | proposed | The entity names what a fact changes (`revise`), the ripple is drained, the wake cue says what sleep made of it (runtime draft 0870 over memory 0061) | framework seat |
 | [1173](../../proposed/understanding-pass/1173_extraction_capability_gets_its_consumer.md) | proposed | The `extraction` capability gets its consumer (memory 0050/0051) | memory owner + framework seat |
 | [1179](../1179_release_wave_understanding_pass.md) | planned, paused | Release wave: memory → runtime (voice in parallel) → gateway → apps → root | framework seat (release sequence) |
-| [1181](../completed/1181_one_time_understanding_backfill_on_theforge.md) | completed 2026-11-08 | One-time backfill of 2,176 texts in four homes on theforge (drafted as "1137", filed under a free id) | Entity owner |
+| [1181](../../completed/1181_one_time_understanding_backfill_on_theforge.md) | completed 2026-11-08 | One-time backfill of 2,176 texts in four homes on theforge (drafted as "1137", filed under a free id) | Entity owner |
 
 Related, outside this folder: sleep/dream redesign [1150](../../proposed/1150_sleep_and_dream_phases_on_request_or_accumulation.md)
 and the generation gate as a design item [1152](../../proposed/1152_inference_resource_orchestration.md) (both carry a
