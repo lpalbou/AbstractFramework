@@ -47,3 +47,10 @@ TypeScript client sends `capabilities: {}` and adds a key only for a capability 
 
 - Add `https://mcp.context7.com/mcp` from the web console with no key: Test lists its tools (`resolve-library-id`,
   `get-library-docs`); Enable for agents works.
+
+## Exchange with the core owner (2026-11-08 12:05)
+
+Confirmed at core HEAD 492e210f (`mcp/client.py:58-72`). Agreed fix: `capabilities: {}`; a test in
+`tests/test_mcp_handshake.py` walking `initialize_params` recursively (no `None` anywhere) and a fake server that
+rejects `None` records the way zod does. The core owner ships it in one core patch with 1164 and the embeddings race
+once the operator says go; the gateway raises its AbstractCore floor at its next cut.

@@ -41,3 +41,16 @@ anywhere (model-host.log prints the mapped message only).
 
 Root 1158 (scalability, observability of the model host), the 2026-08-02 LM Studio incident recorded in the same code
 (the misattribution hid it for weeks), root 1160.
+
+## Exchange with the core owner (2026-11-08 12:05)
+
+Confirmed in `providers/base.py` (`_looks_like_timeout` ~1274 string fallback; `_timeout_message` prints the configured
+total). Agreed fix: a duration is printed only for a real timeout type or a measured elapsed time; otherwise
+`<provider> API error: <ExceptionClass>: <message> (failed after X ms, before the Ys timeout)`; the exception class and
+module are logged at WARNING on the normalisation path. Facts handed over: no original exception text exists in any
+log; the runtime issued the call at 10:44:46 and saw the failure at 10:48:32 while core measured 0.01 ms, so the wait
+happened in the model-host child before the provider timer (an MLX snapshot fetch ran in the same minutes); the
+admission half is root 1167 (gateway). Also agreed: the `embeddings.manager` "partially initialized" error is a race in
+`process_residency.py:421-424` (module in sys.modules while another thread still executes it), fixed by a getattr
+check for `registered_embedding_managers`. Retracted by the framework seat: the "tools import cycle" was the
+workspace-root namespace-package pitfall, not a cycle.

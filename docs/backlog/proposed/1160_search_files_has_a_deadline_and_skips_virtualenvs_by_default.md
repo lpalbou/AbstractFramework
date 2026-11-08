@@ -38,3 +38,13 @@ and still ground through `untracked/review-gateway-100/venv-f65d/lib/python3.12/
 - UIC 1161 (the tool row shows the elapsed time while a call runs).
 - The workspace `.abstractignore` added at the framework root on 2026-11-08 (prunes `untracked/`, `venv*/`,
   `.venv*/`, `site-packages/`, `/runtime`, `/outputs`) — the per-machine relief; this item is the fix.
+
+## Exchange with the core owner (2026-11-08 12:05)
+
+Confirmed as a defaults gap, not a pattern bug. Agreed design: honour every `.gitignore` between the search root and
+the file (ripgrep semantics, a .gitignore applies to its own subtree) plus the workspace `.abstractignore`, nothing
+else (no global excludesfile, no `.git/info/exclude`); widen the defaults with `venv*/ .venv*/ site-packages/ .tox/
+.nox/`; a footer "scanned N files in M s; heaviest dirs: …"; no deadline, no interrupt; an `rg` backend only if the
+Python fallback is byte-identical. The core owner implements it in tools when scheduled. The "missing tool
+descriptions" the operator recalled are most likely Context7's tools never reaching the model after the refused
+initialize (1162), after which the model fell back to a whole-workspace search.
