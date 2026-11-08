@@ -60,3 +60,8 @@ Speculation degrade: `response.metadata["speculation"] = {requested, mode, used:
 "native_mtp_backend_unavailable", degraded_from_default: true, message, num_draft_tokens?, drafter?}`. Runtime half
 started the same hour (park with `wait_key=endpoint_unreachable:<base_url>`, resume re-issues the identical call).
 
+## Status 2026-11-08 14:10
+
+Runtime half DONE and live since 13:30 (runtime da03304 + ed7d605): the park, the resume, the 503 rebuild, the pickle
+contract. Until the gateway prober exists the resume is manual (Send event on the waiting run). The gateway and kit
+halves moved to root 1169, PROPOSED, not for this release (operator 2026-11-08).

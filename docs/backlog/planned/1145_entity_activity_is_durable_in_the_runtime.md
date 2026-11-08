@@ -77,3 +77,10 @@ search output, images) stored whole as an artifact in the entity's home and refe
 gateway serves entity runs read-only (`/runs/{id}/view`, `/ledger`, artifacts) so the Entity app, Observer and the
 entity itself can open them; (3) the probe tool "what happened around <time>"; (4) personal ticks as real runtime
 runs (the principle above makes this mandatory, not optional; it is the largest step and comes last).
+
+## Status 2026-11-08 14:10 (operator: steps 3–4 are a planned item for the NEXT release)
+
+Done and live since 13:30: step 1 (runtime d217d93: every tool result during entity activity rests whole as a home
+artifact, visits and personal time) and step 2 (gateway d1d9656f: `GET /entities/{name}/artifacts`, `/{id}/meta`,
+`/{id}`; visit tool results wired). Remaining for the next release: step 3 (the "what happened around <time>" probe
+tool) and step 4 (personal ticks as real runtime runs). The Entity app's artifact chip is root 1170.
