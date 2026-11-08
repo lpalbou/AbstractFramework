@@ -54,3 +54,12 @@ admission half is root 1167 (gateway). Also agreed: the `embeddings.manager` "pa
 `process_residency.py:421-424` (module in sys.modules while another thread still executes it), fixed by a getattr
 check for `registered_embedding_managers`. Retracted by the framework seat: the "tools import cycle" was the
 workspace-root namespace-package pitfall, not a cycle.
+
+## Corrected (2026-11-08 12:45)
+
+Not instant: the ~0 ms is a measurement bug on core's failure path (`base.py:5766-5771` uses the current time as the
+start time), and the 226 s matches three macOS TCP connect timeouts (75 s each) against an unreachable
+192.168.1.7, i.e. `httpx.ConnectError` / `OSError errno 60 "Operation timed out"` mis-classified by the string fallback.
+Core's patch: connect failures classified NETWORK with the measured duration and the target base_url; type-first
+classification; exception class logged; true elapsed on failure lines; the same tightening in `core/retry.py:289`.
+

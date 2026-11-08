@@ -72,3 +72,24 @@
   designed above, verified by the hermetic test, even though this incident did not prove a queue; (4) health shows the
   model host's lanes.
 
+## Corrected by the core owner (2026-11-08 12:45): a connect timeout, not a queue and not a retry loop
+
+- core's `generate_with_telemetry` logs ~0 ms on EVERY failure (`providers/base.py:5766-5771` passes the current time
+  as start time on the failure path), so "latency: 0.01ms" says nothing; core's retry backoff is at most ~3 s in total
+  (3 attempts, 1 s initial, cap 60 s, jitter).
+- What matches the 226 s exactly: macOS's kernel TCP connect timeout of 75 s × 3 attempts = 225 s (+ ≤3 s backoff).
+  The exception is `httpx.ConnectError` wrapping `OSError` errno 60 "[Errno 60] Operation timed out": the string
+  fallback classified it as a timeout, the message printed the configured 7200 s, the retry classifier retried it, and
+  the breaker opened on the accumulated failures. The 45 s second attempt fits a host coming back. The inference
+  machine (192.168.1.7) was therefore unreachable from this Mac between about 10:44 and 10:49; this Mac did not sleep
+  (its power assertions were held throughout) and no network event of its own was found in its logs, so the cause is
+  on the inference machine's side or the path to it — the operator can say whether it was asleep or off the network.
+- Consequence: the admission theory is withdrawn for THIS incident (a remote-lane design remains part of 1158's
+  measurements, not a defect here). Core's patch adds: connect failures (errno 60/61/64/65, `httpx.ConnectError`)
+  classified NETWORK with "could not connect to <base_url> (<ExceptionClass>: <text>) after <measured> s"; the string
+  fallback only when no type information exists; the exception class logged on every normalisation; the true elapsed
+  time on the failure line (root 1164).
+- This item keeps: the gateway capability default never attaches `native_mtp` to a provider family without an adapter;
+  the runtime surfaces core's `speculation.applied=false` as a ledger notice. The hermetic remote-lane test moves to
+  1158.
+
