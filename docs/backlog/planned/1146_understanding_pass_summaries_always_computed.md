@@ -103,6 +103,17 @@ first line (or the elected gist) uncut; the private-plane rules stay as they are
 existing records are repaired by the understanding pass's rewrite. Test: a diary entry whose first line is 300 chars
 stores a 300-char digest.
 
+## Remaining stored cuts on the look-back path (found 2026-11-08 06:10; ADR 0054; runtime, framework's side)
+
+- Interest and lesson TITLES are stored as the first 8 words ("interest: …") in both the look-back and the in-reply lane
+  (identity/chat.py); store the whole title line, derive the short form at read time.
+- A look-back whose reply has no prose of its own stores a digest that quotes up to three session-sheet moments, each
+  cut to 160 characters with a marker; quote them whole or store a reference to the moments.
+- Diary drive titles come from the projection writer as "Diary entry (question) — <date>: <text>" cut at 60 chars with
+  "…" (so the desk shows a machine title, not the entity's words, until the writer stores whole titles).
+- The gateway's `visit_workflow.py` sends its own base system prompt for the visit look-back (no prefix reuse): align
+  it with the in-process sessions' prompt when the gateway cut is prepared.
+
 ## Acceptance criteria
 
 - [ ] After one night, every episode and summary node of a test home has a model-written digest with `authored_by`.
