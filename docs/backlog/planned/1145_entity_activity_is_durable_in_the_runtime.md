@@ -66,3 +66,14 @@ understanding plan is ≈82 h in 15 steps (not 26 h).
 - [ ] A fetched page is readable as an artifact a week later.
 - [ ] AbstractEntity's "Now" line and ledger show personal-time tool calls live (today impossible).
 - [ ] No duplicate loops, no change to the 1800 s patience or the heartbeat contract (runtime 0.18.4 tests stay green).
+
+## Operator ruling (2026-11-08 11:45) and the order of work
+
+"Do your best. But there should be no activity, either by human or by entities, that does not go through the
+runtime. One of the reasons is to enable retrospective analysis / search, including to rehydrate context/memory."
+
+Order, settled with the operator the same morning: (1) every tool result during entity activity (pages, files,
+search output, images) stored whole as an artifact in the entity's home and referenced from the verbatim; (2) the
+gateway serves entity runs read-only (`/runs/{id}/view`, `/ledger`, artifacts) so the Entity app, Observer and the
+entity itself can open them; (3) the probe tool "what happened around <time>"; (4) personal ticks as real runtime
+runs (the principle above makes this mandatory, not optional; it is the largest step and comes last).
