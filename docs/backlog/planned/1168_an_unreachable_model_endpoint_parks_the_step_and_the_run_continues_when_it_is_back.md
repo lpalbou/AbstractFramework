@@ -12,8 +12,8 @@
 "The gateway should be resilient to that sort of failure and just consider it as a step not done, that needs to
 continue when possible."
 
-Context: the inference machine at 192.168.1.7 had been switched off around 03:00-04:00; at 10:44 the Code run's model
-call hit three TCP connect timeouts (226 s), the error was mis-classified as a configured timeout, the run failed and
+Context: at 10:44 the Code run's model call could not open a connection to the inference machine at 192.168.1.7:1234
+for about four minutes (three TCP connect timeouts, 226 s; the machine runs only LM Studio and is on again), the error was mis-classified as a configured timeout, the run failed and
 the circuit breaker refused the endpoint for 60 s (root 1164, 1167). The operator's reading: an unreachable endpoint is
 a transient condition for the run, not a failure of the run.
 

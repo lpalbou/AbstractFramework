@@ -65,7 +65,7 @@ classification; exception class logged; true elapsed on failure lines; the same 
 
 ## Closed on the cause (2026-11-08 13:00)
 
-The operator confirmed the inference machine was switched off around 03:00-04:00 and stayed off through 10:44-10:49.
+The core session relayed that the operator had switched the inference machine off around 03:00-04:00; to the framework session the operator said at 12:55 that forge is on and runs only LM Studio (nothing of ours runs there). What the evidence shows on its own: this Mac could not open a TCP connection to 192.168.1.7:1234 for about four minutes from 10:44 (three 75 s kernel connect timeouts); the reason on the path or on that machine is not recorded anywhere and needs nothing from forge.
 His ruling for the gateway/runtime half: an unreachable endpoint is a transient condition, the step waits and resumes
 when the endpoint is back instead of failing the run and opening the breaker — root 1168. Core publishes a typed
 network error (base_url, exception class, measured duration) that the runtime consumes for that park.
