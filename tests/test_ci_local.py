@@ -136,6 +136,24 @@ def test_pip_commands_run_through_uv_pip():
     ]
 
 
+def test_pip_network_options_are_dropped_for_uv():
+    # pip's --timeout/--retries have no uv spelling; a workflow that passes them must still run.
+    script = 'python -m pip install --timeout 60 --retries 5 -e .\npip install --timeout=30 x\necho --timeout 5 kept'
+    out = ci.translate_pip(script, "/u/uv")
+    assert out.splitlines() == ["/u/uv pip install -e .", "/u/uv pip install x", "echo --timeout 5 kept"]
+
+
+def test_jobs_that_run_cargo_are_serial():
+    job = ci.Job.__new__(ci.Job)
+    job.job_id = "console-tui"
+    job.spec = {"steps": [{"uses": "actions/checkout@v4"}, {"run": "cargo test --locked"}]}
+    assert ci.serial_reason("abstractgateway", job) == "runs cargo in the repository's shared Rust build folder"
+    job.spec = {"steps": [{"uses": "dtolnay/rust-toolchain@1.87"}, {"run": "echo hi"}]}
+    assert ci.serial_reason("abstractgateway", job) is not None
+    job.spec = {"steps": [{"run": "python -m pytest\necho cargocult"}]}
+    assert ci.serial_reason("abstractgateway", job) is None
+
+
 def test_shells():
     assert ci.shell_command(None, "s.sh") == ["bash", "-e", "s.sh"]
     assert ci.shell_command("bash", "s.sh") == ["bash", "--noprofile", "--norc", "-eo", "pipefail", "s.sh"]

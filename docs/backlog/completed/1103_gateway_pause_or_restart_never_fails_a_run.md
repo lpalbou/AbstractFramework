@@ -5,6 +5,7 @@
 > Created: 2026-11-03
 > Priority: high
 > Labels: runs, restart, ledger, release-blocker
+> Status: completed 2026-11-07. Shipped in AbstractRuntime 0.17.0 (#33) and AbstractGateway 0.20.0 (#98).
 
 ## Summary
 
@@ -28,9 +29,24 @@ Operator 2026-11-03: "we can pause or interrupt the gateway, it doesn't mean in 
 
 ## Acceptance criteria
 
-- [ ] SIGTERM mid-step → ledger shows the run suspended, boot resumes it, final status completed; no retry consumed; no notification; test red on main.
-- [ ] Automation occurrence through the same path: not failed, no attention item.
+- [x] SIGTERM mid-step → ledger shows the run suspended, boot resumes it, final status completed; no retry consumed; no notification; test red on main.
+- [x] Automation occurrence through the same path: not failed, no attention item.
 
 ## Receipts
 
 - Investigation running 2026-11-03 03:05 (architect + Fable repro).
+- Fix: AbstractRuntime #33 (merged `a61ee08`, released 0.17.0; CHANGELOG `[0.17.0]` "`EffectInterrupted`: a host stop
+  interrupts an effect, it never fails it") and AbstractGateway #98 (merged `c7eb91b`, released 0.20.0; CHANGELOG
+  `[0.20.0]` "Stopping or restarting the gateway never fails a run").
+- Tests: gateway `tests/test_host_stop_interrupts_runs_e2e.py` (opt-in, real `serve --model-host process`): SIGTERM
+  mid-call on a plain run, a chat turn and an automation `run_now`. All three red on the pre-#98 gateway (`LLM_CALL failed
+  ... stopped while answering (exit code 0)`), green with it: run `running` after the stop, no FAILED record, no
+  incident; after the new start the call completes at attempt 1; the occurrence completes with `attempts: 1`, no
+  `automation.retry_scheduled`, no `email.notification_sent` (#98 PR body).
+- Real weights: approved 2026-11-03 06:40 (SIGTERM 5 s into a 6000-token Qwen3.5-4B answer, interrupted, restart,
+  completed at attempt 1; `untracked/release-2026-11-03/ROADMAP.md`, untracked).
+- Closed independently of the open decision [1117](../planned/1117_gateway_stop_the_runtime_simply_stops_is_effect_interrupted_needed.md):
+  both criteria above are outcomes, and 1117 keeps these e2e tests in every option. Whether `EffectInterrupted` stays,
+  is internalised or is removed, and the matching ADR 0002 wording, are 1117's to settle.
+- Accepted limits (#98): no configured email channel in the e2e (it asserts no notification was sent), entity-visit runs
+  and Flow's local runner not covered.

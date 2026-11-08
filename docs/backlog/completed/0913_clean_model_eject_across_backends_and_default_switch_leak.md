@@ -65,7 +65,7 @@ Metal held with no model loaded).
   repaired `46590e9`; REVIEW/20 (a) ACCEPT `5518da3`.
 - Latency regression (0900) discovered in `switch-v3` (33 s / 45 s vs 8.5 s / 6.5 s): not memory
   code; closed by the workspace fix recorded in 0910.
-- Follow-ups: MLX idle/TTL unload does not exist → [0895](../deprecated/0895_mlx_idle_ttl_unload.md) (superseded by [1115](../planned/1115_model_idle_unload_default_60_min_lock_never.md));
+- Follow-ups: MLX idle/TTL unload does not exist → [0895](../deprecated/0895_mlx_idle_ttl_unload.md) (superseded by [1115](1115_model_idle_unload_default_60_min_lock_never.md));
   drafter eject unmeasured → [0896](../proposed/0896_verify_mtp_drafter_eject_on_a_host_with_the_companion.md);
   standalone Local clients do not register claims →
   [0897](../proposed/0897_standalone_local_llm_clients_register_residency_claims.md). Release: the

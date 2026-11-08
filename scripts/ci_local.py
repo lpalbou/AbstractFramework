@@ -577,6 +577,9 @@ _PIP = re.compile(
 )
 
 
+_PIP_NET_OPTS = re.compile(r"\s--(?:timeout|retries)(?:=\S+|\s+\S+)")
+
+
 def translate_pip(script: str, uv: str) -> str:
     """`python -m pip <cmd>` / `pip <cmd>` -> `uv pip <cmd>` (the --installer uv mode).
 
@@ -584,7 +587,13 @@ def translate_pip(script: str, uv: str) -> str:
     costs seconds and no disk; `--installer pip` keeps the workflow's pip byte for byte.
     """
     script = _PIP.sub(f"{shlex.quote(uv)} pip", script)
-    return script.replace("--no-cache-dir", "--no-cache")
+    script = script.replace("--no-cache-dir", "--no-cache")
+    # pip's network knobs have no uv spelling (uv: UV_HTTP_TIMEOUT / UV_HTTP_RETRIES, set by the gate's
+    # environment): dropped from translated lines only, so a workflow's `pip install --timeout 60 --retries 5`
+    # runs instead of failing on "unexpected argument".
+    return "\n".join(
+        _PIP_NET_OPTS.sub("", line) if f"{shlex.quote(uv)} pip" in line else line for line in script.split("\n")
+    )
 
 
 def shell_command(shell: str | None, script_path: str) -> list[str] | None:
@@ -1439,8 +1448,29 @@ def rewrite_ports(text: str, ports: dict[int, int]) -> str:
 MEMORY_PER_JOB = 4 * 1024**3  # what one job may hold (a test suite with torch imported, a cargo build)
 
 
+def runs_cargo(job: "Job") -> bool:
+    """A job whose steps run cargo or install a Rust toolchain (dtolnay/rust-toolchain)."""
+    steps = job.spec.get("steps")
+    for step in (steps if isinstance(steps, list) else []):
+        if not isinstance(step, dict):
+            continue
+        if "rust-toolchain" in str(step.get("uses") or ""):
+            return True
+        if re.search(r"(?<![\w-])cargo\s", str(step.get("run") or "")):
+            return True
+    return False
+
+
 def serial_reason(repo_name: str, job: "Job") -> str | None:
-    return SERIAL_JOBS.get((repo_name, job.job_id))
+    listed = SERIAL_JOBS.get((repo_name, job.job_id))
+    if listed:
+        return listed
+    if runs_cargo(job):
+        # Every job of a repository builds into ONE Rust folder (cargo_target_dir): two cargo jobs at once
+        # made rustdoc lose its dependency rlibs ("can't find crate" in doctests) and once got a test
+        # process killed (2026-11-07, abstractgateway console-tui).
+        return "runs cargo in the repository's shared Rust build folder"
+    return None
 
 
 def run_scheduled(items: list, key_of: Callable, needs_of: Callable, serial_of: Callable, workers: int,

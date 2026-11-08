@@ -184,7 +184,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.20.1` and `ghcr.io/lpalbou/abstractcore-server:2.34.0`.
+`ghcr.io/lpalbou/abstractgateway:0.20.2` and `ghcr.io/lpalbou/abstractcore-server:2.34.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -292,7 +292,7 @@ dialogs and touch-sized controls on phones.
 | [AbstractObserver](https://github.com/lpalbou/AbstractObserver) | Browser UI — monitor, control, and schedule gateway runs | the gateway console's **Apps** page (served at `/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` |
 | [AbstractEntity](https://github.com/lpalbou/AbstractEntity) | Summoned-entity manager — roster, blueprint (cognition map + editing), chat drawer, live replay | the gateway console's **Apps** page (served at `/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` |
 | [AbstractContinuum](https://github.com/lpalbou/AbstractContinuum) | Continuous iterative development and deployment console | the gateway console's **Apps** page (served at `/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` |
-| [AbstractNote](https://github.com/lpalbou/AbstractNote) | Notes on the gateway (alpha): capture text, files, photos and recordings, filed into a temporal knowledge graph you search by effort. Not part of the `abstractframework` profiles | `pip install "abstractnote[gateway]"` next to the gateway, and `npx @abstractframework/note --gateway-url <url>` |
+| [AbstractNote](https://github.com/lpalbou/AbstractNote) | Notes on the gateway (alpha): capture text, files, photos and recordings, filed into a temporal knowledge graph you search by effort. Comes with every `abstractframework` profile; its web app installs from the console's **Apps** page | `pip install "abstractnote[gateway]"` next to a gateway installed without the framework, and `npx @abstractframework/note --gateway-url <url>` |
 | **Gateway consoles** | Operator consoles for a running gateway: web at `/console` (sidebar groups Accounts, Work, Models and System; the **Setup** button; one Accounts table of users and entities), terminal via `abstractgateway-console` (the same setup guide and screens, Network and Apps included, for headless hosts) | built into `abstractgateway`; built by the installer, or `cargo install abstractgateway-console` |
 | **Core consoles** | Consoles for AbstractCore: web at `/console` of `abstractcore serve`, terminal via `abstractcore-console` (config, Models, Engines) | built into `abstractcore`; `cargo install abstractcore-console` |
 | **Code Web UI** | Browser client of AbstractCode (gateway-backed): workflow selector, Files tab, live replies | the gateway console's **Apps** page (served at `/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` |
@@ -339,7 +339,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.13.0)
+### Release matrix (abstractframework 0.13.1)
 
 The Python meta-package pins its component distributions with `==`. Browser apps and
 shared npm libraries are listed separately; only apps are launchable. Rust tools retain
@@ -348,29 +348,29 @@ the dependency versions in their published lockfiles.
 | Registry | Package | Version |
 |---|---|---|
 | PyPI | `abstractcore` | 2.34.0 |
-| PyPI | `AbstractRuntime` | 0.18.1 |
+| PyPI | `AbstractRuntime` | 0.18.2 |
 | PyPI | `abstractagent` | 0.6.0 |
-| PyPI | `abstractgateway` | 0.20.1 |
+| PyPI | `abstractgateway` | 0.20.2 |
 | PyPI | `abstractskill` | 0.3.10 |
 | PyPI | `AbstractMemory` | 0.4.0 |
 | PyPI | `abstractsemantics` | 0.0.5 |
-| PyPI | `abstractvoice` | 0.20.0 |
+| PyPI | `abstractvoice` | 0.20.1 |
 | PyPI | `abstractvision` | 0.3.34 |
 | PyPI | `abstractmusic` | 0.1.17 |
 | PyPI | `abstract3d` | 0.3.2 |
-| PyPI | `abstractassistant` | 0.18.0 |
+| PyPI | `abstractassistant` | 0.18.1 |
 | PyPI | `abstractcamera` | 0.2.1 |
 | PyPI | `abstractavatar` | 0.1.1 |
-| PyPI | `abstractnote` | 0.3.0 |
+| PyPI | `abstractnote` | 0.3.1 |
 | npm app | `@abstractframework/flow` | 0.14.0 |
-| npm app | `@abstractframework/code` | 0.15.0 |
-| npm app | `@abstractframework/observer` | 0.12.0 |
+| npm app | `@abstractframework/code` | 0.15.1 |
+| npm app | `@abstractframework/observer` | 0.12.1 |
 | npm app | `@abstractframework/continuum` | 0.8.0 |
-| npm app | `@abstractframework/entity` | 0.11.0 |
-| npm app | `@abstractframework/note` | 0.3.0 |
+| npm app | `@abstractframework/entity` | 0.11.1 |
+| npm app | `@abstractframework/note` | 0.3.1 |
 | npm library | `@abstractframework/app-server` | 0.1.13 |
-| npm library | `@abstractframework/ui-kit` | 0.9.14 |
-| npm library | `@abstractframework/panel-chat` | 0.8.1 |
+| npm library | `@abstractframework/ui-kit` | 0.9.15 |
+| npm library | `@abstractframework/panel-chat` | 0.8.2 |
 | npm library | `@abstractframework/monitor-active-memory` | 0.2.2 |
 | npm library | `@abstractframework/monitor-flow` | 0.1.10 |
 | npm library | `@abstractframework/monitor-gpu` | 0.1.10 |

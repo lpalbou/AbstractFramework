@@ -34,7 +34,7 @@ anyway (fixed in AbstractCore #24).
      load (no shared process, a shared view; races remain).
 2. **Idle unload after a configurable time.** Answered by the operator on 2026-11-03: 60 minutes by default,
    customizable, Keep loaded exempt and persisted across restarts; planned as
-   [1115](../planned/1115_model_idle_unload_default_60_min_lock_never.md).
+   [1115](../completed/1115_model_idle_unload_default_60_min_lock_never.md).
    - Off (today): the first answer after a pause is fast; memory stays taken.
    - Per model idle timeout (e.g. 30 min), "Keep loaded" exempt: frees memory for automations and other users; the next
      interactive answer pays the load (seconds for small GGUFs, tens of seconds for large ones).

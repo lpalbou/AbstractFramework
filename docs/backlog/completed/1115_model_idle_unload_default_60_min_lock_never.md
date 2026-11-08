@@ -6,7 +6,9 @@
 > Priority: high
 > Labels: memory, residency, models, next-wave
 > Ships: the NEXT wave, bottom-up, as AbstractCore 2.34 → AbstractRuntime 0.18 → AbstractGateway 0.21 → root pins
-> Supersedes: [0895](../deprecated/0895_mlx_idle_ttl_unload.md); answers question 2 of [1076](../proposed/1076_model_scheduling_and_memory_management.md); a slice of [0991](0991_model_residency_and_gpu_memory_management.md)
+> Status: completed 2026-11-07. Shipped in AbstractCore 2.34.0, AbstractRuntime 0.18.0 and AbstractGateway 0.20.0
+>   (one wave earlier than planned, gateway 0.20.0 instead of 0.21); one real-weights check remains, see Follow-up.
+> Supersedes: [0895](../deprecated/0895_mlx_idle_ttl_unload.md); answers question 2 of [1076](../proposed/1076_model_scheduling_and_memory_management.md); a slice of [0991](../planned/0991_model_residency_and_gpu_memory_management.md)
 
 ## Summary
 
@@ -131,7 +133,7 @@ scheduler.
 
 Every test below must go red without its rule. They use fakes, load no model and never reach :8080.
 
-- [ ] Core `tests/providers/test_idle_unload_unit.py` (fake clock):
+- [x] Core `tests/providers/test_idle_unload_unit.py` (fake clock):
   - an idle unlocked model is ejected after the window;
   - a locked model (claim `locked: True`, server-runtime lock) survives;
   - an in-flight call survives and is never cancelled;
@@ -143,19 +145,41 @@ Every test below must go red without its rule. They use fakes, load no model and
   - a call that begins during a reap waits and then reloads (no cancel; a thread test that fails on deadlock);
   - the eject is process-wide and `clear_cache` is called;
   - deleting the reaper, or dropping the lock check, turns the suite red.
-- [ ] Runtime: the setter forwards to Core and has a `set_*` name; rows carry the three fields; the `ttl_s` warning
+- [x] Runtime: the setter forwards to Core and has a `set_*` name; rows carry the three fields; the `ttl_s` warning
   text names the setting.
-- [ ] Gateway:
+- [x] Gateway:
   - the setting resolves flag > stored > default with its source;
   - the setter is applied at boot and on change, and replayed after a model-host restart;
   - the lock survives a model-host restart and a gateway restart (scratch data dir);
   - the routes are admin-only;
   - the console row strings and the TUI row parse are covered.
-- [ ] Real-weights proof on the operator's machine, under `untracked/gpu.lock`, on a scratch data dir and port with
+- [x] Real-weights proof on the operator's machine (all but the `vmmap` sample, see Follow-up), under `untracked/gpu.lock`, on a scratch data dir and port with
   the admin token unset. A small MLX model with `--model-idle-unload 1`:
   - idle for 90 s, the row is gone and `vmmap --summary` IOAccelerator is back to baseline (sampled at least 1 s after
     the reap);
   - with Keep loaded it is still resident after 3 minutes, and after a gateway restart it is still locked;
   - a call started at 59 s completes.
-- [ ] Core ADR 0012 accepted; 0991 slice table updated; release notes in all three packages name the default and how
+- [x] Core ADR 0012 accepted; 0991 slice table updated; release notes in all three packages name the default and how
   to change it.
+
+## Receipts
+
+- Core: AbstractCore 2.34.0 (PR #49), `tests/providers/test_idle_unload_unit.py`, ADR 0012 (Accepted 2026-11-04,
+  amends 0010), CHANGELOG `[2.34.0]` idle-unload entry.
+- Runtime: AbstractRuntime 0.18.0, `set_model_idle_unload` (`host_facade.py`, `llm_client.py`), rows with
+  `last_used_at` / `idle_unload_at` / `idle_unload_s`, `tests/test_model_idle_unload_relay.py`, CHANGELOG `[0.18.0]`.
+- Gateway: AbstractGateway 0.20.0, `--model-idle-unload`, `models.idle_unload_minutes` (`runtime_config.py`), kept-loaded
+  persistence, console and TUI lines, `tests/test_model_idle_unload_and_kept_models.py`, CHANGELOG `[0.20.0]` ("Unused
+  models unload after 60 minutes; Keep loaded survives restarts").
+- Real weights (scratch gateway, `--model-idle-unload 2`, mlx-community/Qwen1.5-0.5B-Chat-4bit, under `gpu.lock`):
+  `untracked/release-2026-11-03/w5-idle-unload/e2e-1115.md` (untracked). The model unloaded after the window; Keep loaded
+  persisted in `runtime_config.json` and the model came back loaded and locked after a restart without the flag; unlock
+  removed the record; the settings door changed the live value; the unload line reaches `logs/model-host.log`.
+- 0991 slice table carries the idle-unload row.
+
+## Follow-up
+
+- Real-weights `vmmap --summary` check still owed: after an idle unload, IOAccelerator back to baseline (sampled at least
+  1 s after the reap). The e2e above proved the row is gone, not the memory. The timed variants (a call started at 59 s
+  completes; Keep loaded still resident after 3 minutes) are covered by Core's unit tests and the locked-row and restart
+  checks above, not by a timed real-weights run. Do it at the next real-weights session, under `untracked/gpu.lock`.

@@ -5,6 +5,7 @@
 > Created: 2026-10-28
 > Priority: high
 > Labels: config, env, settings, console, release-closing
+> Status: Planned; precedence decided by the operator 2026-10-28 (see Decision)
 > Links: AbstractGateway `src/abstractgateway/env_registry.py` (env-kill phase 0, operator dm#177/dm#194/dm#201) and
 > `tests/test_gateway_env_registry.py` (orphan pin); AbstractCore 0826 (`abstractcore/docs/backlog/proposed/0826_behavior_env_to_config_migration.md`,
 > behavior env -> config, vision/voice halves shipped); root [0992](0992_per_user_email_accounts_and_notifications.md) (email env retired), [032](../completed/032_gateway_default_model_from_config.md)
@@ -38,19 +39,27 @@ all: its `RuntimeConfig` (`core/config.py`) holds limits only.
 | `ABSTRACTGATEWAY_MODEL` | **nothing** (only `scripts/lib/af_stack.sh` strips it from child envs) | dead | Remove from the shell. The default model is Core's `abstractcore.json` default (root 032). The boot env scanner should name it as "retired, ignored". |
 | `ABSTRACTGATEWAY_PROVIDER` | **nothing** (same) | dead | Same. |
 
-## The rule (to confirm, see Decision)
+## The rule (operator ruling 2026-10-28, see Decision)
+
+> Restated by the operator 2026-11-07: "environment variables in general are prohibited except for some sensitive
+> credentials … delete this particular one and make it a customizable parameter instead." First application the same
+> day: AbstractVoice d0abd24 removed `ABSTRACTVOICE_QWEN3_TTS_SPEAKER_CHECK` / `_MIN_SPEAKER_SIMILARITY` in favour of
+> `VoiceManager` kwargs and plugin settings (no override variable kept: the ruling's "override" clause is for deployment
+> pins such as ports and paths, not for behaviour switches).
 
 1. **Setting first.** Every BEHAVIOR or DEPLOYMENT knob has a dotted key in its owner's file:
    - gateway: `<data_dir>/config/runtime_config.json`, through `abstractgateway-config get/set`, the console and the TUI;
    - core: `abstractcore.json`, through `abstractcore --config` and the gateway's Core config page;
    - runtime: a new `RuntimeSettings` filled by the host (the gateway's `runtime.*` section), never a file of its own.
-2. **Env is an override, never a silent one.** When set, the variable wins for that process. `get`/`status`, the
-   console field and the boot banner show `source: env (ABSTRACTX_Y)` next to the stored value. Today the precedence
-   is split, and this item unifies it:
-   - Core's `server.*`/`logging.*`: env wins.
-   - Core's capability routes: config wins and env is a warned fallback.
-   - Gateway rows: stored > env, except `ALLOWED_ORIGINS`.
-   - Gateway triage LLM: env > the Core `maintenance` store.
+2. **Env is an override, never a silent one.** The config file is the source of truth and the only place the
+   console and the CLI write. A variable set for a process wins over the file for that process only, is never
+   persisted, and is reported: `abstractgateway network status` and the console settings page show
+   `overridden by $NAME` next to the value, and the CLI prints a one-line notice at start listing the overrides in
+   effect. Today the precedence is split, and this item unifies it on that rule:
+   - Core's `server.*`/`logging.*`: env wins (already the rule; add the reporting).
+   - Core's capability routes: config wins and env is a warned fallback (flip to the rule).
+   - Gateway rows: stored > env, except `ALLOWED_ORIGINS` (flip to the rule).
+   - Gateway triage LLM: env > the Core `maintenance` store (already the rule; add the reporting).
 3. **Kept as env only:** secrets (15 gateway, 1 core, 1 runtime internal hand-off) as env or secret file. Bootstrap
    names that locate the config itself also stay env (`ABSTRACTGATEWAY_DATA_DIR`, `ABSTRACTCORE_CONFIG_DIR/FILE`,
    bind host/port, store backend). So do the internal parent-to-child hand-offs (`*_SOURCE`, `ABSTRACTCORE_SERVER_BIND_HOST`,
@@ -102,13 +111,32 @@ all: its `RuntimeConfig` (`core/config.py`) holds limits only.
 
 ## Decision (operator)
 
-QA (l) says "env var only as an override", meaning env wins when set. dm#194 says "console config supersedes
-everything", meaning config wins and env is a fallback. Recommended: **env overrides, shown loudly**. A deployment
-(systemd unit, container) must be able to pin a value, and the console must show that it is pinned and by which
-variable rather than silently ignore an edit. If the operator keeps dm#194, flip rule 2. Either way it is one rule
-for all three packages.
+Ruled 2026-10-28 (it settles QA (l) "env var only as an override" against dm#194 "console config supersedes
+everything"):
+
+> The config files of the gateway and Core are the source of truth and the only place the console/CLI write; an
+> environment variable is an explicit deployment override (containers, CI, a one-off shell) that wins over the file
+> for that process only, is never persisted, and is reported: `abstractgateway network status` / the console
+> settings page show 'overridden by $NAME' next to the value, and the CLI prints a one-line notice at start listing
+> the overrides in effect. Variables with no file setting yet get one (migration: a setting is added for each, the
+> env var kept as override). The precedence is documented in each package's docs/configuration.md.
+
+The same rule holds for all three packages (Runtime through the host's `runtime.*` section). The mapping table
+below is the migration list: each row without a setting gets the proposed key, and its variable stays as the
+override.
 
 ## Acceptance criteria
+
+- [ ] **Status display:** `abstractgateway network status` and the console settings page show `overridden by $NAME`
+      next to every value an environment variable overrides (Core's config page through the gateway likewise).
+- [ ] **Startup notice:** `abstractgateway serve` and `abstractcore serve` print one line at start listing the
+      overrides in effect (names only, never values), and nothing when there are none.
+- [ ] **Never persisted:** a console or CLI save while a variable overrides a key writes the file value and leaves
+      the override in place for that process; the variable's value is never written to the file (a test proves it).
+- [ ] **Migration table:** every row of the mapping table below without a setting gets its key, its variable kept as
+      the override; the table's `superseded_by` column is filled in each package's registry.
+- [ ] **Documentation:** each package's `docs/configuration.md` (gateway, Core, Runtime) states the precedence:
+      file is the source of truth, env overrides for the process only, reported.
 
 - [ ] Each package has a declared env registry and an orphan test that goes RED when a new `os.getenv` of the
       package's prefixes is added without a row. Mutation-checked.

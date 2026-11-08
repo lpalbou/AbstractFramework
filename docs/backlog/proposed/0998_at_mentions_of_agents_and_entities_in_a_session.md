@@ -60,3 +60,7 @@ agora collaboration runs through the hub, outside gateway sessions.
 ## Receipts
 
 - Operator statement 2026-10-01 (round 3).
+
+## Operator direction (2026-11-07)
+
+The product goal these mechanisms serve is recorded in [1138](1138_talk_to_entities_from_code_assistant_and_notes.md): talk to entities from Code, the Assistant and Notes (`@castor …`); AbstractEntity stays the sandbox to understand them.
