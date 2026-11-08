@@ -69,3 +69,6 @@ The core session relayed that the operator had switched the inference machine of
 His ruling for the gateway/runtime half: an unreachable endpoint is a transient condition, the step waits and resumes
 when the endpoint is back instead of failing the run and opening the breaker — root 1168. Core publishes a typed
 network error (base_url, exception class, measured duration) that the runtime consumes for that park.
+
+Operator, 13:05: "it is possible that indeed theforge was off during that time. probability 75%. but can't be certain." The
+connect-timeout diagnosis is consistent with that and needs no further proof; the fix is the message and the park (1168).
