@@ -29,3 +29,6 @@ back. This item makes it automatic and names the endpoint where the person looks
 ## Related
 
 Root 1168 (runtime half done 2026-11-08), 1164 (the typed error), 1158 (scalability; the harness).
+
+Note 2026-11-08 14:40: the park becomes a person-facing decision wait (root 1168, scope revised, next release); this item is the
+automatic side of its "keep waiting" choice.

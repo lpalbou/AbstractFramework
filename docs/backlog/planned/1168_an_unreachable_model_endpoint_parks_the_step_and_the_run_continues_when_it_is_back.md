@@ -65,3 +65,31 @@ started the same hour (park with `wait_key=endpoint_unreachable:<base_url>`, res
 Runtime half DONE and live since 13:30 (runtime da03304 + ed7d605): the park, the resume, the 503 rebuild, the pickle
 contract. Until the gateway prober exists the resume is manual (Send event on the waiting run). The gateway and kit
 halves moved to root 1169, PROPOSED, not for this release (operator 2026-11-08).
+
+## Scope revised by the operator (2026-11-08 14:40) — next release
+
+"That's an error (inferencer not available) that must be surfaced by the runtime through the replayable ledger,
+possibly as a sort of 'gated' what-do-I-do (cancel, pause, maybe even pick another inferencer). The goal is not to solve
+that at a client level only, but to have a durable exception that there was a problem, so that when we reconnect to
+the client, we see it and can decide what to do."
+
+What is live today (runtime da03304): the failure is already durable and replayable — the run parks as an EVENT wait
+`endpoint_unreachable:<base_url>` with {provider, base_url, cause, detail, errno, elapsed_s, attempt, since} on the
+ledger row, every client renders it from the replay view, and a `resume` re-issues the identical call. What is missing,
+and becomes the scope for the next release (this item stays planned; 1169 keeps the automatic prober as its companion):
+
+1. The wait is a person-facing DECISION, not a bare signal: `prompt` = "The model endpoint <base_url> did not answer
+   (<cause>, after <elapsed> s). What do you want to do?", `choices` = keep waiting (auto-retry when it answers; the
+   prober of 1169), retry now, pause the run, cancel the run, use another model (then the kit's model picker, scoped to
+   the models the gateway serves to this principal). The chosen answer rides the `resume` payload and is a ledger row
+   (`decision`, with who decided and when), so a client that reconnects later sees both the problem and the decision.
+2. "Use another model" re-issues the call with the chosen provider/model for THIS run (persisted on the run's vars so
+   later calls of the same run follow it), never silently; the ledger shows the switch.
+3. Attention: Observer, the tray badge and the Assistant switcher treat it as "needs you" like an approval; the kit's
+   standard decision card renders it in every app (one presentation, many clients); the status bar reads "Waiting for
+   you: the model endpoint … did not answer".
+4. Every other provider error class stays as today (fail with the whole error on the ledger).
+5. Tests (hermetic): a fake endpoint that refuses → the decision wait with the five choices on the ledger and in the
+   view; each choice does what it says and is recorded; a reconnecting client (view re-read) shows the card; the
+   runtime half of 1169's prober resolves "keep waiting" without a click when the endpoint answers.
+
