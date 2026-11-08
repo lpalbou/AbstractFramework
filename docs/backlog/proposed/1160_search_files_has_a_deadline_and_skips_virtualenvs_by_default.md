@@ -1,4 +1,4 @@
-# 1160 — `search_files` answers within a deadline and skips virtualenvs by default
+# 1160 — `search_files` skips virtualenvs by default and reports what it walked; the tools import order
 
 > Package: AbstractCore (`abstractcore/tools/common_tools.py` `search_files`, `abstractcore/tools/abstractignore.py` defaults; the core agent's package, filed here for the owner)
 > Type: defect + hardening
@@ -18,11 +18,10 @@ and still ground through `untracked/review-gateway-100/venv-f65d/lib/python3.12/
 
 ## Scope
 
-1. **A deadline** (`deadline_s`, default 20 s, caller-adjustable): when it expires the tool returns what it
-   found so far with a labelled footer (ADR-forbidden silent truncation):
-   `#TRUNCATION: stopped after 20 s, 48,211 files scanned under <path>; 2 directories were the bulk
-   (untracked/…, runtime/…); narrow the path, add file_patterns, or add a .abstractignore`. The bulk
-   directories come from a per-top-level-directory file counter kept during the walk.
+1. **No deadline, no interrupt** (operator 2026-11-08: "we don't want silly arbitrary interrupts"). Instead the
+   result FOOTER states what the walk cost when it was large: `scanned 48,211 files in 7m 52s; 2 directories were
+   the bulk (untracked/…, runtime/…); a .abstractignore or file_patterns would narrow it` — from a per-top-level
+   directory file counter kept during the walk. The search always finishes.
 2. **Defaults**: add `venv*/`, `.venv*/`, `site-packages/`, `.tox/`, `.nox/` to `_DEFAULT_IGNORE_LINES`
    (the walk already prunes by directory name, so these cost nothing).
 3. **Import order**: `from abstractcore.tools.abstractignore import AbstractIgnore` in a fresh interpreter
@@ -30,12 +29,12 @@ and still ground through `untracked/review-gateway-100/venv-f65d/lib/python3.12/
    'abstractcore.architectures'` (tools.__init__ → handler → architectures → utils → media → capabilities
    → architectures). Importing `abstractcore.architectures` first works. Found 2026-11-08 while testing the
    workspace `.abstractignore`; a small reorder of `tools/__init__.py` or a lazy import in `handler.py`.
-4. Tests: a decoy tree of 50k empty files under `venv-x/` is not walked; a deadline of 0.2 s over a large
-   tree returns the labelled partial result; the fresh-interpreter import works.
+4. Tests: a decoy tree of 50k empty files under `venv-x/` is not walked; a large walk's footer names the bulk
+   directories; the fresh-interpreter import works.
 
 ## Related
 
-- Runtime 1159 (a tool call has a wall-clock budget; elapsed time in the ledger and the view).
+- Runtime 1159 deprecated 2026-11-08 (no tool-call budget, operator ruling).
 - UIC 1161 (the tool row shows the elapsed time while a call runs).
 - The workspace `.abstractignore` added at the framework root on 2026-11-08 (prunes `untracked/`, `venv*/`,
   `.venv*/`, `site-packages/`, `/runtime`, `/outputs`) — the per-machine relief; this item is the fix.
