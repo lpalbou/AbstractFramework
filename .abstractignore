@@ -1,0 +1,21 @@
+# AbstractFramework workspace: keeps the file tools (search_files, list_files, read_file in
+# AbstractCore) out of scratch and data folders, so a search over the whole workspace answers in
+# seconds instead of walking 100 GB of review virtualenvs and 13,000 gateway ledgers.
+#
+# Syntax (abstractcore/tools/abstractignore.py, .gitignore-like, not full parity):
+#   "name/"  prunes every directory of that name at any depth (fnmatch patterns allowed);
+#   "/name"  matches only the entry at this workspace root.
+# The nearest .abstractignore above the searched path is the one applied, so a search started in a
+# sub-repository (abstractgateway/, abstractcore/, …) still honours this file.
+
+# Per-repository scratch (the workspace convention: never tracked, often holds venvs and copies of stores).
+untracked/
+
+# Virtualenvs with non-standard names (review workers create venv-<tag>); the defaults cover .venv/ and venv/.
+venv*/
+.venv*/
+site-packages/
+
+# The live gateway's data folder on this machine (run store, ledgers, entities) and the operator's outputs.
+/runtime
+/outputs

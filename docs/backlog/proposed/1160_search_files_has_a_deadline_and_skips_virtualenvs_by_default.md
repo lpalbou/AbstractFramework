@@ -1,0 +1,41 @@
+# 1160 — `search_files` answers within a deadline and skips virtualenvs by default
+
+> Package: AbstractCore (`abstractcore/tools/common_tools.py` `search_files`, `abstractcore/tools/abstractignore.py` defaults; the core agent's package, filed here for the owner)
+> Type: defect + hardening
+> Status: proposed
+> Created: 2026-11-08
+> Priority: P1 (operator incident 2026-11-08 03:31, Code web; runtime 1159 is the generic half)
+> Labels: tools, search, performance
+
+## Summary
+
+A `search_files` over a workspace root can run for many minutes with no answer: the operator watched two
+calls spin for eight minutes on 2026-11-08 while the gateway burned one core and the model waited. The
+walk honoured the default ignore set (`.git`, `node_modules`, `.venv`, `venv`, `dist`, `build`, `target`)
+and still ground through `untracked/review-gateway-100/venv-f65d/lib/python3.12/site-packages/pandas/tests/…`
+(a review virtualenv with a non-standard name) and 13,486 gateway ledger files. The tool has `max_hits`
+(stops when enough files match) but no deadline, so a pattern with few matches means a full walk.
+
+## Scope
+
+1. **A deadline** (`deadline_s`, default 20 s, caller-adjustable): when it expires the tool returns what it
+   found so far with a labelled footer (ADR-forbidden silent truncation):
+   `#TRUNCATION: stopped after 20 s, 48,211 files scanned under <path>; 2 directories were the bulk
+   (untracked/…, runtime/…); narrow the path, add file_patterns, or add a .abstractignore`. The bulk
+   directories come from a per-top-level-directory file counter kept during the walk.
+2. **Defaults**: add `venv*/`, `.venv*/`, `site-packages/`, `.tox/`, `.nox/` to `_DEFAULT_IGNORE_LINES`
+   (the walk already prunes by directory name, so these cost nothing).
+3. **Import order**: `from abstractcore.tools.abstractignore import AbstractIgnore` in a fresh interpreter
+   raises `ImportError: cannot import name 'get_model_capabilities' from partially initialized module
+   'abstractcore.architectures'` (tools.__init__ → handler → architectures → utils → media → capabilities
+   → architectures). Importing `abstractcore.architectures` first works. Found 2026-11-08 while testing the
+   workspace `.abstractignore`; a small reorder of `tools/__init__.py` or a lazy import in `handler.py`.
+4. Tests: a decoy tree of 50k empty files under `venv-x/` is not walked; a deadline of 0.2 s over a large
+   tree returns the labelled partial result; the fresh-interpreter import works.
+
+## Related
+
+- Runtime 1159 (a tool call has a wall-clock budget; elapsed time in the ledger and the view).
+- UIC 1161 (the tool row shows the elapsed time while a call runs).
+- The workspace `.abstractignore` added at the framework root on 2026-11-08 (prunes `untracked/`, `venv*/`,
+  `.venv*/`, `site-packages/`, `/runtime`, `/outputs`) — the per-machine relief; this item is the fix.
