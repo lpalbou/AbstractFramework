@@ -48,3 +48,15 @@ those), multi-endpoint failover (root 1152).
 
 Root 1158 (scalability; this is its resilience half for endpoints), 1164 (the message and the typed error), 1167 (MTP
 default degrade), ADR-0027 (timeouts), gateway 1012/1013 (entity waits use the same durable-wait machinery).
+
+## Contract from the core owner (2026-11-08 15:00, core main 44897db3…904272da, push pending its gate)
+
+`from abstractcore.exceptions import EndpointUnreachableError` (subclass of ProviderError): raised by every provider's
+generate path when no TCP connection could be made (refused, OS connect timeout, host/network unreachable, DNS),
+detected by TYPE over the cause chain. Fields: `provider`, `base_url`, `cause` (transport class path), `detail`
+(≤200 chars), `errno`, `elapsed_s`, `retryable` (False when the connect itself timed out); class attribute
+`counts_toward_breaker = False`; core does not retry when `retryable` is False and never records it in the breaker.
+Speculation degrade: `response.metadata["speculation"] = {requested, mode, used: false, applied: false, reason:
+"native_mtp_backend_unavailable", degraded_from_default: true, message, num_draft_tokens?, drafter?}`. Runtime half
+started the same hour (park with `wait_key=endpoint_unreachable:<base_url>`, resume re-issues the identical call).
+
