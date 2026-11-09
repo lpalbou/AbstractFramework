@@ -112,6 +112,26 @@ together: private diary entries get authored titles and summaries like every oth
   views; everyone else reaches the entity only through conversation, where the entity's recall skips private memories
   and its guardian's information.
 
+## Operator answers, 2026-11-09 18:55 (recorded as given; still a basis for discussion)
+
+- **Question 4 (private memories in conversation).** "it should be at the entity discretion i think, what they
+  divulgue. if only the owner/guardian is here, i don't think there should be restrictions. if other people are
+  connected to the same "room", maybe the entity should restrain from mentioning certain things?"
+- **A thought to discuss: back channels from the entity to its guardian.** "which also means we need to have more direct
+  back channels between an entity and its owner/guardian. there are emails and we started creating push mechanisms,
+  notifications... maybe during a sensitive discussion for instance, the entity could also write a private message in
+  parallel to its owner/guardian to warn him or give additional information. again, just record the thought as a
+  possibility to be discussed"
+- **Question 5 (a space sealed from the guardian).** "do you think it would have a genuine impact on an entity cognition
+  to have that "secret" space ? the goal is not to pry. but in general, for the reasons i mentioned before, i don't
+  think that's a good idea for now, especially not during the development phase. maybe later"
+- **Framework seat's answer to his question (given in the session).** Probably a small but real effect, in one place:
+  models write differently when they believe they are read. A diary the entity believes is "yours alone" tends to be
+  more candid and exploratory; one it knows its guardian reads may become more written-for-an-audience. There is no
+  evidence of a deeper effect on its reasoning, and the effect comes from what it is told, not from the storage. During
+  development, reading what it writes is worth more than that extra candour, provided its instructions say truthfully
+  who can read it.
+
 ## Non-goals
 
 - No change in the 0.13.1 wave (operator 2026-11-09): private entries stay content-free until this is rediscussed.
