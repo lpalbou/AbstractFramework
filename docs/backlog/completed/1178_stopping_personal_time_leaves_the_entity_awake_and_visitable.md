@@ -2,8 +2,9 @@
 
 > Package: AbstractRuntime (`identity/life.py` grant gate / day gate landing), AbstractGateway (`POST /entities/{name}/state` v17 composite, `entity_phases.json` edge `personal->sleep#operator`), AbstractEntity (phase radio)
 > Type: bug
-> Status: proposed
+> Status: completed
 > Created: 2026-11-08
+> Completed: 2026-11-10
 > Priority: P1
 > Labels: entities, life-loop, state-machine, personal-time, paused, decision-gate
 
@@ -73,7 +74,66 @@ Changing the explicit Sleep act; personal time without a grant.
 
 ## Related (2026-11-09)
 
-[1184](../completed/1184_a_visit_never_fails_on_a_busy_entity.md) (completed, operator review pending) removed every
+[1184](1184_a_visit_never_fails_on_a_busy_entity.md) (completed, operator review pending) removed every
 time limit between clicking visit and the open visit: the door no longer answers 409 `loop_busy` or `home_lease_held`,
 and the own-time loop yields within one step. It does not change the stop → 6 h sleep landing or the `life_state`
 floor that shows SLEEP when no loop runs; both stay with this item.
+
+## Completion report (2026-11-10)
+
+Moved from `proposed/1178_stopping_personal_time_leaves_the_entity_awake_and_visitable.md` to `completed/` by the
+backlog hygiene pass of 2026-11-10 (never promoted to `planned/`: it was built while still proposed). Committed on
+AbstractRuntime `main`, not released; ships with AbstractRuntime 0.19.0 in the next wave
+([1179](../planned/1179_release_wave_understanding_pass.md)).
+
+### Decision state (read this first)
+
+**The operator's explicit decision on this item's gate was never recorded on the item.** The gate asked him to amend
+the v17 edge `personal->sleep#operator`. It was overtaken by his wider phase rulings, which settle the same question:
+`untracked/entity-phases-2026-11-08/TARGET.md` (operator ruling 2026-11-08 19:02; its "Known gaps" calls the 6 h
+landing "wrong: turning the toggle off = no more own time; he stays awake and visitable") and the five-state life
+cycle (operator diagram 2026-11-09 15:38: visit · idle · work · personal · sleep, only `personal` a toggle), written
+into contract v2/v3 and the canonical phase spec v22–v25. The spec copy the gateway ships
+(`abstractgateway/src/abstractgateway/assets/entity_phases.json`, version 25) now reads: "personal off ends own time
+AWAKE (idle, visitable), never asleep", and supersedes v4 IDLE-IS-SLEEP. The build was done under that contract. The
+operator's live test of 2026-11-09 evening raised no finding on it; that is not an explicit acceptance of this item.
+
+### What was built (commit checked against the repo's log on 2026-11-10)
+
+- AbstractRuntime `3cafac9` (2026-11-09 15:07), "Entity phases runtime §10.1 (root 1178)": personal off ends own time
+  AWAKE in both modes (`stopped_by=personal_off`, was `personal_disarmed`), no grant-gate sleep, no 6 h wake; an
+  ending loop never writes a loop-exit sleep and wakes a sleep it wrote for itself; a new loop wakes one an earlier
+  loop left (`LOOP_OWN_SLEEP_WRITERS`: self, personal-cycle, grant-gate, day-gate, loop-exit); operator sleeps, visit
+  postures and `paused` are never touched; a supervised settled desk exits without a sleep. Files:
+  `identity/life.py`, `changelog.d/personal-off-ends-awake.md`, tests.
+- The doors around it came with phases v3 (other items, listed for the reader): gateway `8681a9be` (`PUT
+  /entities/{name}/life_state/toggles` `{personal}` — its docstring: "personal off ends own time at the loop's next
+  boundary and never puts him to sleep"), Entity app `0848c19` (phase bar on contract v3).
+
+### Tests
+
+- `tests/test_entity_phases_runtime.py` (new): 9 of its 10 tests red on the code before; 7 loop tests in
+  `tests/test_entity_life_loop.py` re-based from the v8/v13 sleep landings; one need-check obedience fixture now uses
+  an operator sleep (`tests/test_phase_graph_obedience.py`).
+- Live since restart #7 (2026-11-09 17:35, runtime `3f4ee09` contains `3cafac9`).
+
+### Against the proposed direction above
+
+1. Ruling: superseded by the phase rulings (above), not recorded as an answer to this gate.
+2. Runtime landing awake, no `wake_at`: **built** (`3cafac9`). The "one write per transition, never a write per
+   poll" check (the 643-write storm) is not named in the commit's tests; re-check it on a hermetic gateway.
+3. Gateway, a wake during a visit's auto-yield posture: not re-verified in this pass. Under v3 a visit never fails
+   except when stopped (1184 and gateway `1cd0004d`); "sleep now" during a visit stays 409 `in_visit` by design.
+4. App wording: the Entity app's phase bar is on contract v3 (`0848c19` and later); its exact sentence for personal
+   off was not re-read here.
+
+Non-goal drift to know: this item kept "the explicit Sleep act stays the v17 composite". Spec v22 changed that too:
+"Sleep now" no longer disarms the personal toggle and no longer clears the work order. That change is the operator's
+v22 ruling, not this item's.
+
+### Residual follow-ups
+
+- The storm check and the wake-during-visit check (items 2–3 above), on a hermetic gateway (never :8080).
+- ADR state: the phase contract lives in the canonical spec (`abstractentity` spec v25) and its contract files under
+  `untracked/entity-phases-2026-11-08/`; no root ADR. If the five-state life cycle is meant to outlive this wave, it
+  deserves one.

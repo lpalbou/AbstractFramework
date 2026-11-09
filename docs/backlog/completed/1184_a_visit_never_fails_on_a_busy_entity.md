@@ -22,6 +22,10 @@ released**. The operator has not yet checked it. What to review:
 
 Until the review passes, treat this record as "built, not accepted".
 
+Note 2026-11-10: the operator tested the live stack on 2026-11-09 evening (restart #10 at 20:03: gateway `2b6722c4`,
+runtime `baa401f`): visits waited for the busy entity and the hand-over worked (a second window joined the same
+visit; running log `untracked/release-2026-11-07/RESUME.md`, 20:40). The review flag above stays until he says so.
+
 ## Summary
 
 On 2026-11-09 the operator clicked visit on the entity aletheia twice while its personal time was running a tick, and
@@ -85,7 +89,7 @@ Full investigation: `untracked/entity-visit-2026-11-09/REPORT.md`.
 - The entity phase redesign (phase bar, toggles, Stop/Resume, `idle` floor): `untracked/entity-phases-2026-11-08/`
   (TARGET.md, CONTRACT-phases.md v1) and AbstractEntity `9ec60aa`, owned by the agents revisiting the state
   transitions.
-- "Stop personal time lands asleep for 6 h" and "Wake shows SLEEP when no loop runs": [1178](../proposed/1178_stopping_personal_time_leaves_the_entity_awake_and_visitable.md).
+- "Stop personal time lands asleep for 6 h" and "Wake shows SLEEP when no loop runs": [1178](1178_stopping_personal_time_leaves_the_entity_awake_and_visitable.md).
 - The top-bar visit pill (still disabled in the deployed build; the phase bar makes it a button).
 - Releases: nothing published.
 
@@ -223,7 +227,7 @@ amendment — left to the operator's review.
 
 ### Follow-ups
 
-- [1178](../proposed/1178_stopping_personal_time_leaves_the_entity_awake_and_visitable.md): Stop → awake and
+- [1178](1178_stopping_personal_time_leaves_the_entity_awake_and_visitable.md): Stop → awake and
   visitable; Wake showing SLEEP when no loop runs (still open; the phase contract covers it).
 - The phase contract (`untracked/entity-phases-2026-11-08/CONTRACT-phases.md` line 379) still refuses a visit during
   an operator sleep (`entity_asleep`): it conflicts with this rule and should be amended by the agents building it.
