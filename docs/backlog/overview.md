@@ -59,7 +59,7 @@ receipt recovery are promotion gates. All four remain proposed; counts unchanged
 
 [Track README and reading order](planned/understanding-pass/README.md) (proposed half:
 [README](proposed/understanding-pass/README.md)), created 2026-11-08; parent
-[1146](planned/1146_understanding_pass_summaries_always_computed.md). Paused by operator ruling 2026-11-08.
+[1146](completed/1146_understanding_pass_summaries_always_computed.md). Paused by operator ruling 2026-11-08.
 
 | Item | State | Scope |
 |---|---|---|

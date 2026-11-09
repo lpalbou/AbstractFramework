@@ -2,8 +2,9 @@
 
 > Package: AbstractCore (`abstractcore/mcp/client.py:57-70 initialize_params`, shared by the HTTP and stdio transports; the core agent's package, filed here for the owner). AbstractGateway's Skills & MCP page only shows the result.
 > Type: defect
-> Status: planned
+> Status: completed
 > Created: 2026-11-08
+> Completed: 2026-11-10
 > Priority: P1 (a normal user cannot add Context7, the one MCP server every coding assistant ships with)
 > Labels: mcp, tools, interop
 
@@ -54,3 +55,39 @@ Confirmed at core HEAD 492e210f (`mcp/client.py:58-72`). Agreed fix: `capabiliti
 `tests/test_mcp_handshake.py` walking `initialize_params` recursively (no `None` anywhere) and a fake server that
 rejects `None` records the way zod does. The core owner ships it in one core patch with 1164 and the embeddings race
 once the operator says go; the gateway raises its AbstractCore floor at its next cut.
+
+## Completion report (2026-11-10)
+
+Moved from `planned/1162_mcp_initialize_sends_null_capabilities_strict_servers_refuse.md` to `completed/` by the
+backlog hygiene pass of 2026-11-10. Fixed by the core owner in one patch with 1164's typed error and the embeddings
+race; committed and **pushed** on AbstractCore `main` (origin/main `523ca278`, 2026-11-08 14:45), not released: it
+ships in AbstractCore 2.35.0 (candidate `8b970550`, 1179's refresh).
+
+### What was built
+
+- AbstractCore `44897db3` (2026-11-08 12:27): `initialize_params` sends `"capabilities": {}` (the specification's
+  shape: a capability object is present when supported, absent otherwise; this client supports none), shared by the
+  HTTP and stdio transports; the client re-initializes on a 404 session; `McpHttpError.status_code`. Current code:
+  `abstractcore/abstractcore/mcp/client.py:65-80` (docstring: "No value in these params may be None").
+
+### Tests and validation
+
+- `tests/test_mcp_handshake.py` (+89 lines in `44897db3`): no `None` anywhere in the initialize params; a fake
+  strict server that rejects null records the way zod does accepts the handshake; the lenient-server tests still pass.
+- Core local gate on `4b339d64` (2026-11-08): 11 jobs green (test 3.9–3.13, local-models, crate, docs, build,
+  changelog); the Linux sandbox job runs on GitHub (`untracked/release-2026-11-07/audit-fable/CORE.md` section 1).
+- Live: "verified live against Context7" (core session, `CORE.md` section 1). The validation written above (add
+  `https://mcp.context7.com/mcp` from the gateway web console, Test lists `resolve-library-id` /
+  `get-library-docs`, Enable for agents) is not recorded separately; repeat it on the release candidate.
+
+### Acceptance
+
+- [x] `capabilities: {}`, no `None` value, both transports.
+- [x] A strict (zod-like) server accepts the handshake (test); Context7 accepts it live.
+- [ ] Released in AbstractCore 2.35.0, and the gateway's AbstractCore floor raised to `>=2.35.0` at its 0.21.0 cut
+      (HARD for the runtime anyway; root 1179).
+
+### Residual follow-ups
+
+- The web-console Context7 check on the release candidate (above).
+- ADR state: none needed (conformance to the MCP specification, no new policy).

@@ -46,7 +46,7 @@ operator's group-chat rules (2026-11-08) fix how a chat with mentions behaves; t
 
 1. The probe (0.5 h, gate): a summon with a chat's `session_id` shows in that session's history, the chat's next
    agent turn sees it, AND the entity's HOME keeps the episode (its own ledger and artifacts, root
-   [1145](1145_entity_activity_is_durable_in_the_runtime.md)). If any of the three fails, stop and close that gap
+   [1145](../completed/1145_entity_activity_is_durable_in_the_runtime.md)). If any of the three fails, stop and close that gap
    first (a base-package item, next release); this slice does not ship around it.
 2. Desktop Assistant (1–1.5 d + review and screenshots): `@` completer from `GET /entities` (only entities the
    person may summon), a structured chip, summon on send with `{session_id: <chat sid>, prompt: <text>, caller_kind:

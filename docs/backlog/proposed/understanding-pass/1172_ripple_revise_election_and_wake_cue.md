@@ -74,4 +74,4 @@ operator's go.
 
 ## Receipts
 
-- Design: `untracked/understanding-pass-2026-11-07/DESIGN.md` §8; parent [1146](../../planned/1146_understanding_pass_summaries_always_computed.md).
+- Design: `untracked/understanding-pass-2026-11-07/DESIGN.md` §8; parent [1146](../../completed/1146_understanding_pass_summaries_always_computed.md).

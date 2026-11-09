@@ -3,7 +3,9 @@
 > Package: AbstractRuntime (identity/life.py personal time, chat.py, artifacts), AbstractGateway (serving entity runs and
 > artifacts), AbstractEntity (reads them; other agent), AbstractMemory (verbatim/rehydration seam)
 > Type: architecture + implementation
+> Status: completed
 > Created: 2026-11-07
+> Completed: 2026-11-10
 > Priority: HIGH (operator 2026-11-08: "this needs to be prioritized")
 > Labels: entities, runtime, ledger, durability, memory
 
@@ -84,3 +86,52 @@ Done and live since 13:30: step 1 (runtime d217d93: every tool result during ent
 artifact, visits and personal time) and step 2 (gateway d1d9656f: `GET /entities/{name}/artifacts`, `/{id}/meta`,
 `/{id}`; visit tool results wired). Remaining for the next release: step 3 (the "what happened around <time>" probe
 tool) and step 4 (personal ticks as real runtime runs). The Entity app's artifact chip is root 1170.
+
+## Completion report (2026-11-10): steps 1–2 built; steps 3–4 continue as 1188
+
+Moved from `planned/1145_entity_activity_is_durable_in_the_runtime.md` to `completed/` by the backlog hygiene pass of
+2026-11-10. This record closes **steps 1 and 2** of the order settled on 2026-11-08 (tool results kept whole in the
+entity's home; the gateway serves them). **Steps 3 and 4** (the probe tool, personal ticks as real runtime runs) are
+the operator's planned item for the next release ("steps 3–4 are a planned item for the NEXT release", 2026-11-08
+14:10); they continue, with this item's rulings and the acceptance criteria not met here, as
+[1188](../planned/1188_the_entity_probes_its_own_runtime_and_personal_ticks_are_real_runtime_runs.md). Built and
+committed on `main`; not released (ships with [1179](../planned/1179_release_wave_understanding_pass.md)).
+
+### What was built (commits checked against each repo's log on 2026-11-10)
+
+| Repo | Commit | What |
+|---|---|---|
+| AbstractRuntime | `d217d93` (2026-11-08 12:20) | `execute_tool_elections(artifact_store=, artifact_context=)` stores every executed tool result whole through `keep_tool_result_artifact`: content-addressed, no size cut, metadata (tool, arguments, turn or tick id, record id, lane, run id, entity id, bytes); the result text ends with `[artifact: <id>]` so the verbatim and the records name it. `fetch_url` keeps the whole page past its 6,000-character view, `read_file` the whole bytes, `execute_command` the whole output. Wired on the effect lane (real run id) and on the home-direct `ChatSession` lane (visits and personal time) |
+| AbstractGateway | `d1d9656f` (2026-11-08 12:33) | the visit tool handler passes the home's artifact store; result rows and `tool_details` carry `artifact_id`; three read routes: `GET /entities/{name}/artifacts` (filters by run, tool, turn; newest first; bounded; cursor), `…/artifacts/{id}/meta`, `…/artifacts/{id}` (bytes with the stored content type); 404 for an unknown id; no host path in any answer |
+
+Live since restart #2 (2026-11-08 13:30, runtime `da03304`, gateway `2a68b105`). Release floor: the gateway needs the
+runtime that carries `keep_tool_result_artifact` / `tool_result_media`, i.e. AbstractRuntime 0.19.0 (HARD; 1179).
+
+### Tests
+
+- `d217d93`: effect lane with a search and a 30 KB `read_file` (two artifacts, byte for byte); a personal-time fetch
+  of a 20 KB page kept whole and named by the verbatim; a lane without a store unchanged; all red against the source
+  before the change.
+- `d1d9656f`: route tests for the list, meta and bytes reads and the 404; docs, changelog fragment, llms-full.
+- Hermetic suites at every HEAD, 2026-11-09 (`untracked/release-2026-11-07/audit-fable/VERIFY.md`): none of the
+  failures is in these files.
+
+### Acceptance (as written above)
+
+- [ ] Every entity activity has a run id and its ledger lists the tool calls: visits yes; personal time still runs
+      home-direct with a stand-in `_Run` (`identity/chat.py:630`, `identity/life.py:2394` "no run ledger") → 1188.
+- [x] A fetched page is kept whole as an artifact of the home and readable through the gateway route (the "a week
+      later" check has not been run; the store is durable and content-addressed).
+- [ ] AbstractEntity's "Now" line and ledger show personal-time tool calls live → 1188 (needs step 4); the app's
+      artifact chip is [1170](../planned/1170_session_kinds_client_halves.md).
+- [x] No duplicate loops, no change to the 1800 s patience or the heartbeat: steps 1–2 do not touch the loop.
+
+### Residual follow-ups
+
+- Steps 3–4 → 1188 (planned, next release).
+- The Entity app's artifact chip on tool lines → 1170 (planned, first in the next release).
+- The generic `/runs/{id}/view` (`routes/replay_view.py`) and `/runs/{id}/ledger` (`routes/gateway.py:11994`) still
+  read the gateway run store only; entity runs are served by the entity routes (`routes/entity_replay.py`: replay,
+  verbatim, artifacts). Whether the generic routes must also answer for entity runs is part of 1188.
+- ADR state: no new ADR; the rule "no activity, human or entity, outside the runtime" (operator 2026-11-08) is
+  recorded here and in 1188. An ADR is due when step 4 changes the loop's contract.

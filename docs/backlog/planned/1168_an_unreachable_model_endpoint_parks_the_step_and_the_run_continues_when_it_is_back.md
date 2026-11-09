@@ -2,7 +2,7 @@
 
 > Package: AbstractRuntime (the LLM_CALL handler and its retry/park contract; ledger event), AbstractGateway (endpoint reachability probe, the circuit breaker policy for connect failures, health and the console's "waiting for" state), AbstractUIC panel-chat (the run status says what it waits for), AbstractCore (supplies the typed network error: base_url, exception class, measured duration; the core owner's patch of 2026-11-08)
 > Type: feature (resilience)
-> Status: planned
+> Status: planned — next release: the decision wait (scope revised 2026-11-08 14:40); the park (Core + Runtime) is built, see the ledger of 2026-11-10
 > Created: 2026-11-08
 > Priority: P1 (operator ruling 2026-11-08, relayed by the core owner)
 > Labels: resilience, providers, endpoints, runs, breaker
@@ -93,3 +93,27 @@ and becomes the scope for the next release (this item stays planned; 1169 keeps 
    view; each choice does what it says and is recorded; a reconnecting client (view re-read) shows the card; the
    runtime half of 1169's prober resolves "keep waiting" without a click when the endpoint answers.
 
+## Built / not built ledger (2026-11-10)
+
+Hygiene pass of 2026-11-10. **This item stays planned.** Its first scope (the park) is built in Core and Runtime and
+ships with the next wave ([1179](1179_release_wave_understanding_pass.md)); its revised scope (the decision wait above)
+is the next release's work, and the automatic prober stays its companion
+[1169](../proposed/1169_endpoint_park_gateway_prober_and_kit_wording.md) (proposed, "not for this release"). Why not a
+completed record plus a new planned item: the gateway prober and the kit wording were already split out as 1169 on
+2026-11-08, the operator's 14:40 revision already names this item as the next release's, and the unbuilt part is the
+larger one (runtime, gateway, kit, Observer, tray, Assistant). A third file would spread one feature over three ids;
+one ledger here keeps one id per feature.
+
+Commits checked against each repo's log on 2026-11-10:
+
+| Part | State | Where |
+|---|---|---|
+| Core: typed `EndpointUnreachableError` (no breaker, measured elapsed, `retryable`) | **built, pushed, unreleased** (AbstractCore 2.35.0) | `44897db3` (2026-11-08 12:27), 503 envelope `9a5da772`, pickling `6c1e7a0e`, `detail` field `b8bcda1d`; origin/main `523ca278` |
+| Runtime: LLM_CALL parks as a durable EVENT wait `endpoint_unreachable:<base_url>` with the attempt on the ledger; `resume` re-issues the identical call | **built, unreleased** (AbstractRuntime 0.19.0) | `15e4a01` + `da03304` (2026-11-08 13:16/13:18; the second only adds to the test), `ed7d605` (13:33, `detail` from the 503 envelope); test `tests/test_llm_call_endpoint_unreachable_wait.py`; live since restart #2 (13:30, `da03304`) |
+| Scope 3: the gateway prober (one probe per endpoint, backoff 5 s → 60 s), "retry now", the breaker never opening on connect failures, health lists unreachable endpoints | **not built** | 1169 (proposed) |
+| Scope 4: the status bar names the endpoint; Observer and the tray treat it as an informational wait | **not built** | kit half of 1169; superseded in part by the decision card below |
+| Revised scope 1–5 (2026-11-08 14:40): the wait as a person-facing decision (keep waiting / retry now / pause / cancel / use another model), the choice on the ledger, "use another model" for this run, attention as "needs you", the kit's decision card in every app | **not built** | this item, next release |
+| Today's behaviour without the prober | manual resume: the kit shows "Waiting for an event"; Send event (empty JSON) resumes once the endpoint answers | — |
+
+Release floor consequence: AbstractRuntime imports `EndpointUnreachableError` by name (no fallback, by design), so
+Runtime 0.19.0 needs AbstractCore `>=2.35.0` (HARD; 1179).

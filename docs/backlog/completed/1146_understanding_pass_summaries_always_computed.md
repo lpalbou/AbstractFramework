@@ -3,7 +3,9 @@
 > Package: AbstractMemory (verbs, display block), AbstractRuntime (understanding pass, persistent queue, cognition
 > profile), AbstractGateway (digest fields served), AbstractEntity (provenance badge; other agent)
 > Type: architecture + implementation
+> Status: completed
 > Created: 2026-11-07
+> Completed: 2026-11-10
 > Priority: HIGH (operator 2026-11-07/08: "critical"; discuss with the AbstractEntity agent first, they may have started)
 > Labels: entities, memory, runtime, summaries
 
@@ -124,12 +126,12 @@ stores a 300-char digest.
 ## Track and pause (2026-11-08 ~15:00)
 
 Paused by operator ruling 2026-11-08 (pause all dev); resume = explicit go. The remaining work is the topic track
-[`understanding-pass/`](understanding-pass/README.md): the drain [1171](understanding-pass/1171_understanding_drain_in_turns_and_idle_windows.md)
+[`understanding-pass/`](../planned/understanding-pass/README.md): the drain [1171](../planned/understanding-pass/1171_understanding_drain_in_turns_and_idle_windows.md)
 (runtime draft 0869 + the drain parts of gateway draft 1013, planned, state at pause recorded), the ripple
 [1172](../proposed/understanding-pass/1172_ripple_revise_election_and_wake_cue.md) and the extraction consumer
 [1173](../proposed/understanding-pass/1173_extraction_capability_gets_its_consumer.md) (proposed), and the release
-wave [1179](1179_release_wave_understanding_pass.md). The backfill called "1137" above was done on 2026-11-08 and is
-filed as [1181](../completed/1181_one_time_understanding_backfill_on_theforge.md) (root 1137 is another item).
+wave [1179](../planned/1179_release_wave_understanding_pass.md). The backfill called "1137" above was done on 2026-11-08 and is
+filed as [1181](1181_one_time_understanding_backfill_on_theforge.md) (root 1137 is another item).
 
 ## Operator ruling 2026-11-08 17:15 (titles and summaries of every memory type)
 
@@ -165,3 +167,99 @@ does." So formation is the only normal path; pending exists only after a failed 
 bounded repair step among its existing work (leftover pending records, legacy records lacking a title or summary), with
 no priority over the rest.
 
+## Completion report (2026-11-10): the authored title and summary part is built; the rest stays with the track
+
+Moved from `planned/1146_understanding_pass_summaries_always_computed.md` to `completed/` by the backlog hygiene pass
+of 2026-11-10. The operator rulings above are kept as written; they are the standing rules. What this record closes
+is the part the 2026-11-08 17:15 and 2026-11-09 rulings asked for: **every memory carries a title and a summary,
+authored with the memory at formation**, a failure leaves the record pending with a task and a failure line (never a
+cut, a template or a fallback), and sleep repairs what is left. Built and committed on `main`; not released (ships
+with [1179](../planned/1179_release_wave_understanding_pass.md): AbstractMemory 0.5.0, AbstractRuntime 0.19.0,
+AbstractGateway 0.21.0).
+
+What is **not** closed here and where it lives: the memory-task drain in turns and idle windows
+([1171](../planned/understanding-pass/1171_understanding_drain_in_turns_and_idle_windows.md), planned, paused), the
+ripple ([1172](../proposed/understanding-pass/1172_ripple_revise_election_and_wake_cue.md)), the extraction consumer
+([1173](../proposed/understanding-pass/1173_extraction_capability_gets_its_consumer.md)), the titles and summaries of
+**private** diary entries with audience-aware recall
+([1186](../proposed/1186_private_means_private_from_others_not_from_the_owner.md), decision gate; private entries
+were left unchanged on 2026-11-09 until the operator rules), and folding or pruning empty memories in sleep
+([1185](../proposed/1185_every_interaction_forms_a_memory_and_sleep_may_fold_or_prune_the_empty_ones.md)).
+
+### What was built (commits checked against each repo's log on 2026-11-10)
+
+**AbstractMemory** (`c4ffc45` … `f310865`, then `8235daf`):
+
+- `155bf8f` untitled records (2026-11-09 ruling, no fallback); `c4ffc45` a title and a summary are mandatory, a
+  missing one is PENDING with its task; `4f3a77e` memory's own passes form pending, never a mechanical title or
+  summary; `11687df` `declare_pending` for stored records never authored; `8ceb511` `rearm_pending` +
+  `pending_records`; `39e479e` a formed record and its tasks commit together; `c46b4cd` passes author with the record;
+  `71de051` a public diary entry's summary is authored like any record's.
+- Codex review 3 fixes: `b403c0d` (one reentrant transaction lock for store and queue), `1cd854e` (a failed formation
+  undoes only its own rows), `15ef176` (identical authored words settle a pending field), `f310865` (`sleep_pass(…,
+  cancelled=)`: a night stopped in its final stage records no completion).
+- `8235daf` (2026-11-09 19:52): `declare_pending` also declares a legacy public diary projection's summary.
+- Earlier, from the 2026-11-08 17:15 ruling: `20cd1f4` titles whole, `d4fc7e4` `retitle` with versions, `6e4ca13`
+  `rekey_world_model`; underneath, the understanding versions `3fbaf10` (0059) and the persistent task queue `5997b68`
+  (0060).
+
+**AbstractRuntime** (`4eefddb` … `432f178`, then `baa401f`, `b6d50d3`):
+
+- `4eefddb` metadata authored with the memory (elected kinds keep the entity's `title:` line; the `summaries`
+  capability authors what a block lacks); `bb6d17a` the visit lane forms the episode WITH its authored title and
+  summary (new `VISIT_AUTHOR` node, a durable LLM_CALL); `9b3c510` every record a visit close forms carries its
+  authored metadata; `7dd32e1` diary records without a template; `1b5fbcc` memory's passes author through the
+  `summaries` capability; `cd9ae5c` tick look-back summaries authored; `432f178` public diary summaries authored,
+  never a first-line stand-in.
+- Failure path and repair: `a8fc341` failure lines say what failed and on which model; `21528d6` re-arm exhausted
+  authoring; `7d9b48b` every failed drainer attempt leaves its line; `43e0765` / `7d2419e` / `e597ff5` sleep repair
+  declares legacy records (cards, dreams) through memory's `declare_pending`; `baa401f` sleep repair authors a legacy
+  public diary entry's summary.
+- `b6d50d3` (2026-11-09 22:43, from the operator's live test): an authored summary is never stamped
+  `mechanical-v2`, so memory no longer queues it for repair.
+- Before these, the stored-cut removals of 2026-11-08 (root ADR 0054): `27beba0`, `79e0379`, `d419ec1`.
+
+**AbstractGateway**: `a749e4e5` (2026-11-09 16:51) the durable visit runtime routes capability-tagged LLM_CALLs to the
+summaries model and the idle sweep drains authoring tasks; `58b51667` (17:52, live-test blocker G) structured output
+through the shared model client (`response_model` / `response_schema` on the pool and the no-pool path, honest
+failure with the exception class and provider/model); `5c2f5db7` (23:26) `cut: true` on records whose words a retired
+writer cut when it saved them, derived from the writer stamp. Earlier: the stored understanding served (`1b3832b7`,
+2026-11-08).
+
+### Tests and validation
+
+- Three Codex reviews of runtime + memory (`untracked/entity-phases-2026-11-08/review/`); review 3's non-Stop
+  findings are fixed by the commits above (`ROADMAP-2026-11-09-2010.md` section B: "Codex 3: non-Stop findings fixed").
+  Its Stop findings belong to the Stop fence (1179's refresh), not to this item.
+- Hermetic suites at every HEAD, 2026-11-09 19:10–19:46 (`untracked/release-2026-11-07/audit-fable/VERIFY.md`):
+  memory 1934 passed / 0 failed, runtime 4775/3, gateway 5177/3; the three real breaks (runtime facade export,
+  voice-projection key set, gateway import boundary) were fixed the same evening (runtime `569d929`, `a4e65f7`,
+  gateway `2b6722c4`).
+- Live: the Entity session's G re-check after restart #8 (2026-11-09 18:30,
+  `untracked/finish-plan-2026-11-09/e2e-restart2/G2`) found visit records authored at formation, 7 older records
+  drained and zero failure lines after 17:57; the visit path was verified live on hypnos and castor (ROADMAP B).
+- The operator's live test (2026-11-09 evening, `untracked/finish-plan-2026-11-09/operator-test/FINDINGS.md`) found
+  the `mechanical-v2` stamp on an authored summary (fixed by `b6d50d3`) and `[#TRUNCATION]` from retired writers in a
+  user card (gateway `5c2f5db7` + the app's card wording; sleep repair re-authors those records).
+
+### Acceptance (as written above)
+
+- [x] Every new episode and summary node carries a model-written title and summary with its author (formation path);
+      legacy records are declared pending and repaired in sleep. Not yet observed over a full night on a test home.
+- [ ] A disruptive present fact re-opens the connected earlier memories (ripple) → 1172.
+- [x] Rewrites keep the record id and carry the previous text and provenance (memory 0059 `3fbaf10`, `retitle`
+      `d4fc7e4`).
+- [x] The task queue is persistent per home (memory 0060 `5997b68`) and authoring tasks re-arm (`8ceb511`,
+      runtime `21528d6`); no test named in the commits restarts the gateway mid-queue.
+
+### Residual follow-ups
+
+- **Code moved past 1171's text:** a narrower drain now exists and is tracked (runtime `identity/authoring.py`
+  `drain_authoring`, called at the loop's tick boundary, at a session's close, inside a sleep's maintenance and by the gateway's idle sweep,
+  `a749e4e5`). Reconcile 1171's contract with it before 1171 resumes (note added to 1171).
+- The stored-cut list "Remaining stored cuts on the look-back path" above was not re-verified line by line in this
+  pass; the 2026-11-08/09 commits named above address that family. Re-check before 1171 resumes.
+- Private diary entries → 1186; fold/prune → 1185; ripple → 1172; extraction → 1173.
+- ADR state: root ADR 0054 (stored text is never cut) governs; the "title and summary are mandatory, authored with
+  the memory, no fallback" rule lives in these rulings and in AbstractMemory's verbs. An ADR in AbstractMemory is the
+  right home if a second writer appears.

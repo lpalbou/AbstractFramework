@@ -22,7 +22,7 @@ after a visit turn has returned its reply and, for a home with no loop, after a 
 
 ## Why
 
-Operator rulings 2026-11-07/08 (root [1146](../1146_understanding_pass_summaries_always_computed.md)): summaries and
+Operator rulings 2026-11-07/08 (root [1146](../../completed/1146_understanding_pass_summaries_always_computed.md)): summaries and
 metadata are ALWAYS computed, in the background, when the entity is idle, from a persistent queue; a capability model
 may write in the entity's first person ("a passive memory process, part of me"); no fixed count per turn — the
 drain is activation-driven (sensitivity + a hard safety cap); stored text is never cut (ADR 0054). Today the queue
@@ -197,8 +197,18 @@ Shas: pending from the runtime/gateway owner for the final word; what the worker
 Resume order: runtime commit 1 (patch + the seven red tests) → gateway re-applies `e8170ff4` against the real drain →
 loop hooks + spawn profiles (both halves land together) → idle drain + lease wait → docs → gates.
 
+## Note 2026-11-10 (hygiene pass): the code moved past this item's text
+
+The parent [1146](../../completed/1146_understanding_pass_summaries_always_computed.md) was closed on 2026-11-10 for its
+title-and-summary part. That work added a narrower, tracked drain this item does not know about: runtime
+`identity/authoring.py` `drain_authoring` drains the pending `title.author` / `digest.author` tasks at the loop's tick
+boundary, at a session's close and inside a sleep's maintenance, and the gateway's idle sweep calls it (gateway `a749e4e5`, `entity_authoring.py`).
+The paused files of this item are no longer in the runtime tree (`git status` clean on 2026-11-09). Before this item
+resumes, reconcile its contract (one durable `memory_tasks.v1` run per window, the eleven corrections) with
+`drain_authoring`, so the framework has one drain, not two.
+
 ## Receipts
 
 - Design + corrections: `untracked/release-2026-11-07/understanding-drain/DESIGN-drain-v1.md` (operator go relayed
   by the Entity owner 2026-11-08 13:10).
-- Parent: [1146](../1146_understanding_pass_summaries_always_computed.md); release: [1179](../1179_release_wave_understanding_pass.md).
+- Parent: [1146](../../completed/1146_understanding_pass_summaries_always_computed.md); release: [1179](../1179_release_wave_understanding_pass.md).

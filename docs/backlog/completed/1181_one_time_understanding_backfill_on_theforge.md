@@ -13,7 +13,7 @@
 Drafted as "1137" in `untracked/understanding-pass-2026-11-07/drafts/abstractframework/1137_one_time_understanding_backfill_on_theforge.md`
 ("re-check the next free id on landing"). Root 1137 is
 [the 0.13.1 follow-ups](../planned/1137_follow_ups_after_the_0_13_1_wave.md), so this record takes the free id 1181 (renumbered from 1180 on 2026-11-08: the framework seat's planned 1180 was filed the same minute).
-References to "backfill (1137)" in [1146](../planned/1146_understanding_pass_summaries_always_computed.md) and in
+References to "backfill (1137)" in [1146](1146_understanding_pass_summaries_always_computed.md) and in
 DESIGN.md mean this item.
 
 ## Summary
@@ -136,4 +136,4 @@ and `verify-apply-20261108T031105Z.json`, `SAMPLE-for-operator.md`.
 
 - Original planned path: `untracked/understanding-pass-2026-11-07/drafts/abstractframework/1137_one_time_understanding_backfill_on_theforge.md`
   (never filed in the repo); final path: `docs/backlog/completed/1181_one_time_understanding_backfill_on_theforge.md`.
-- Parent: [1146](../planned/1146_understanding_pass_summaries_always_computed.md); track: [understanding-pass](../planned/understanding-pass/README.md).
+- Parent: [1146](1146_understanding_pass_summaries_always_computed.md); track: [understanding-pass](../planned/understanding-pass/README.md).

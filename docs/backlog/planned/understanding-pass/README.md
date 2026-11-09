@@ -11,7 +11,7 @@ Every memory of an entity (episode, session summary, card, dream) used to be mec
 makes the words model-written and keeps them current: rewritten in place with versions (memory 0059), queued as
 memory tasks (memory 0060), drained by the runtime in turns and idle windows (1171), rippled through connected
 memories when a fact changes what the entity held (1172), and released together (1179). The parent item is
-[1146](../1146_understanding_pass_summaries_always_computed.md) (operator rulings, root cause, coordination); the
+[1146](../../completed/1146_understanding_pass_summaries_always_computed.md) (operator rulings, root cause, coordination; completed 2026-11-10 for the authored title-and-summary part, the rest stays in this track); the
 authoritative design is `untracked/understanding-pass-2026-11-07/DESIGN.md` (§15 build plan, §17 operator decisions)
 and its per-package drafts under `untracked/understanding-pass-2026-11-07/drafts/<repo>/`.
 
@@ -27,7 +27,7 @@ and its per-package drafts under `untracked/understanding-pass-2026-11-07/drafts
 
 Related, outside this folder: sleep/dream redesign [1150](../../proposed/1150_sleep_and_dream_phases_on_request_or_accumulation.md)
 and the generation gate as a design item [1152](../../proposed/1152_inference_resource_orchestration.md) (both carry a
-2026-11-08 note on how they meet this track); durable entity activity [1145](../1145_entity_activity_is_durable_in_the_runtime.md).
+2026-11-08 note on how they meet this track); durable entity activity [1145](../../completed/1145_entity_activity_is_durable_in_the_runtime.md).
 
 ## What already landed (all local on main, nothing published; facts as of 2026-11-08 15:00 Paris)
 

@@ -68,7 +68,7 @@ second entity sees the first answer; one answer per mention; the session's agent
 tool for agents in this phase); no entity-to-entity messaging — the room is the channel; a held seat shows "<Name> is
 in another conversation" and that mention is skipped; member scope (only entities the person may visit); the chip's
 confirmation states that the chat's history window reaches the entity's mind; a 30-minute probe gates the first
-slice, including "the entity's HOME must keep the episode" ([1145](../planned/1145_entity_activity_is_durable_in_the_runtime.md)).
+slice, including "the entity's HOME must keep the episode" ([1145](../completed/1145_entity_activity_is_durable_in_the_runtime.md)).
 
 **Slices.**
 
