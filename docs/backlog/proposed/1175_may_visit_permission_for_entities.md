@@ -57,3 +57,22 @@ Public or anonymous visits; reputation-based access (1120).
 
 Re-read `entity_access.py` and the governance README findings 19–24 first; the visit-turn speaker check (finding 23)
 must hold for granted visitors too.
+
+## Addition 2026-11-10: the guardian's life-cycle rights
+
+A second permission question came out of the 2026-11-09 evening work (running log
+`untracked/release-2026-11-07/RESUME.md` 20:35: "guardian = creating account with life-cycle rights (root 1175 + 1186
+wording; today admins only)"). In the operator's 1186 wording the **guardian** of an entity is the account that
+created it. The guardian should hold the entity's life-cycle acts: give and take back own time (the `personal`
+toggle), **Stop** and **Resume** — not only an admin.
+
+Current code reality (checked 2026-11-10): every life-cycle write is admin-only.
+`abstractgateway/src/abstractgateway/security/authorization.py:284-297` puts `lifecycle` and `life_state/toggles`
+(the phase bar's kill switch and its personal permission) in the same `admin_required` row as `state` (sleep/wake),
+`loop/start|stop`, `personal-grant`, `work-order` and `tasks`; `entity_settings_access.py:28-31` says the same in
+words. Settings (mind, cognition profile, identity, voice, tools, prompt, skills) are already admin-or-creator.
+
+Direction: move `life_state/toggles` and `lifecycle` (stop, resume, retry) to admin-or-creator, through the same
+`entity_settings_guard` path the settings use, with the same audit record and refusal sentence. Which other acts
+follow (sleep/wake, work order, tasks) is the operator's call. Same promotion gate as above (his ruling), and note
+that homes without a recorded creator (`created_by: null`) stay admin-only, never guessed.
