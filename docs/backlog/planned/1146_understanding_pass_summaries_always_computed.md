@@ -140,3 +140,14 @@ stored whole; the summary (digest) says what the memory is and what one can do w
 Runtime formation sites: abstractframework untracked/titles-2026-11-08/PROPOSAL.md (in work); memory side abstractmemory
 20cd1f4; repair of the ~500 already-cut titles: the Entity owner's proposal to the operator.
 
+## Operator ruling 2026-11-09 (missing titles): no fallback
+
+"We shouldn't need a fallback. If it fails, it should add information to a temporary error file in untracked/ so we
+know what's failing and how to fix it at the source." The standing rule therefore reads: a title is asked of the author
+and stored verbatim; when the author's block carries no usable `title:` line, the record is stored with title null (body
+whole) and one JSON line is appended to `<workspace>/untracked/title-failures/<YYYY-MM-DD>.jsonl` (observed_at, entity,
+record id, kind, the raw block, prompt template id/version, provider/model, reason: missing | empty | multi_line |
+too_long | malformed); when that path cannot be resolved, the same line goes to the loop log with `#TITLE_FAILURE`. No
+first-line or first-sentence fallback, no repair heuristic. The apps show "untitled memory · title missing" for null.
+Supersedes the first-complete-sentence (9fe88e4) and whole-first-line (14eeb31) fallbacks.
+
