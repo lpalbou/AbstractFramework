@@ -159,6 +159,9 @@ block without a usable title/summary) authors both; never a cut or a placeholder
 `untracked/authoring-failures/<date>.jsonl` and stores the record PENDING with a `title.author` / `digest.author` task
 (abstractmemory c4ffc45), retried by a small drainer at the loop's tick boundary, at a visit's close and in a gateway idle
 sweep. And: "missing titles or summaries are part of the thing that could also be flagged for correction during the
-sleep/maintenance phase" — the maintenance pass drains pending authoring first and declares legacy records that lack a
-title or summary pending, so they get authored.
+sleep/maintenance phase". Correction the same afternoon: "the metadata of any newly generated memory must be generated
+along with the memory; the sleep phase is just to repair any issue that may still be there + all the rest it already
+does." So formation is the only normal path; pending exists only after a failed formation step; the sleep pass adds a
+bounded repair step among its existing work (leftover pending records, legacy records lacking a title or summary), with
+no priority over the rest.
 
