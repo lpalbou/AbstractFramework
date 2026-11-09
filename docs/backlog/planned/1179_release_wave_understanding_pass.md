@@ -2,7 +2,7 @@
 
 > Package: AbstractMemory, AbstractRuntime, AbstractVoice, AbstractGateway, AbstractEntity, AbstractCode (web + TUI), AbstractFramework (root pins)
 > Type: task
-> Status: planned — paused
+> Status: planned — in preparation (development resumed 2026-11-09 13:10; every publish waits for the operator's explicit go; refresh 2026-11-10)
 > Created: 2026-11-08
 > Priority: P1
 > Labels: release, understanding-pass, wave, paused, seat-framework
@@ -270,7 +270,120 @@ re-hashed against the published tarball; 0.9.27 / 0.9.10 would retire the ambigu
 | Raising the gateway's voice floor alone fails test line 108 | TRUE; line 86 likewise forces the gateway's Core floor to follow the runtime's |
 | Not in §C | Avatar 0.2.0, Agent 0.6.1, Skill 0.3.11, Observer 0.13.0, Flow 0.14.2, Assistant web 0.2.0 and gateway-console 0.18.1 belong to the wave; the Entity phase bar has no gateway route |
 
+## Refresh 2026-11-10 (supersedes the 2026-11-09 draft on the points below)
+
+Hygiene pass of 2026-11-10, built on the read-only audit `untracked/release-2026-11-07/audit-fable/PACKAGES.md`
+(observed 2026-11-09 19:10–19:38; its section (e) lists where the code contradicts the draft), the running log
+`untracked/release-2026-11-07/RESUME.md` (entries to 2026-11-10 00:25) and `ROADMAP-2026-11-09-2010.md` (sections
+F–H), each commit checked against its repo's log at about 00:05 on 2026-11-10. The sections above stay as the
+2026-11-09 record; where they disagree with this section, this section wins. The room was still committing while this
+was written (runtime `5ee8049` at 00:01, agent `5052f8a` at 23:59): re-run the planner
+(`abstract_release_plan.py --registry --backlog`) before the first cut. Status line refreshed: development resumed on
+2026-11-09 13:10 ("do your best to finish the current work"), so the 2026-11-08 pause no longer holds; every publish
+still waits for the operator's explicit go.
+
+### What changed since the draft
+
+| Draft said (2026-11-09 13:17) | Now | Evidence |
+|---|---|---|
+| Runtime → Memory floor "recommended" (no new memory API in tracked runtime code) | **HARD**, and the floor is now memory **`4074406`** or later | runtime `4eefddb` (16:23) calls `task_queue=True` and the authoring verbs (`declare_pending`, `retitle`, `rewrite_digest`); since the Stop fence, runtime `098cd4b` passes the fence to memory's `commit_guard` (memory `4074406`, 23:10). Memory 0.5.0 must contain `4074406` |
+| Blocker 3: Entity's phase bar has no backend | **closed in code** | gateway `GET /{name}/life_state`, `PUT /{name}/life_state/toggles`, `POST /{name}/lifecycle` (`routes/entities.py`, contract v3: gateway `8681a9be`, Entity `0848c19`, spec v25); the operator tested the live stack on 2026-11-09 evening; his findings were fixed in the app (Entity `b2d6207`, `a35e8f1`, `2c9a7ba`) and in runtime `b6d50d3` / gateway `5c2f5db7`, `26101378` |
+| Blocker 6: the paused drain is untracked inside the runtime tree | **gone** | runtime `git status` clean; a different, tracked drain (`identity/authoring.py` `drain_authoring`) ships and the gateway imports it (`entity_authoring.py:33`, gateway `a749e4e5`); 1171 carries the note |
+| Kit 0.9.26 / 0.9.9 (or 0.9.27 / 0.9.10) | **ui-kit 0.9.27, panel-chat 0.9.11** | AbstractUIC `7d557cd` (22:37) committed ui-kit 0.9.27 / panel-chat 0.9.10 / root `package.json` 0.10.18 and relocked; then `4bee00d` (23:28, reply notices as badges) changed panel-chat after its bump, so panel-chat ships as **0.9.11** (bump not committed yet; ui-kit unchanged by `4bee00d`). No AbstractUIC tag exists past v0.10.8; tag the cut that carries 0.9.11 |
+| Core 2.35.0 after voice is visible, voice floor 0.21.0 | **Core first and alone**, voice floor stays `>=0.20.0` | ROADMAP F/H D3 (R1: published 2.34.0 quarantines valid configs and runs on defaults; 187 copies on this machine) |
+| Memory in tier 0 | **Memory only after the Stop decision** | the fence touches `MemorySystem` (`4074406`); ROADMAP H D1 |
+| Apps after AbstractUIC is visible | **Apps after the gateway is visible** | their phase bar and mentions call 0.21.0 routes; publishing earlier breaks npx users (ROADMAP F step 6, G S2) |
+
+### Candidates and fences (heads as observed 2026-11-10 ~00:05)
+
+| Package | Candidate | State | Gate / open |
+|---|---|---|---|
+| abstractcore 2.35.0 | **`8b970550`** (pushed) | `7fe2aeaf` … `fe145749` config loader, then the operator's 22:15 decision ("NO quarantine logic at all"): `6c79e36b` an unparseable settings file stops the load with its path and error, `2084b646` the server refuses to start on it; `fdb5eeb3` console theme copy from ui-kit 0.9.27 (`KIT_THEME_FLOOR` 0.9.27: a vendored copy with a provenance test, `tests/test_console_web.py:183-190`, not a registry edge); `8b970550` fragments restored (5 in `changelog.d/`) | local gate green on `8b970550` (RESUME 23:40); cut = one changelog-assemble commit (no source), then tag `v2.35.0`; waits for the operator's go |
+| abstractvoice 0.21.0 | **`2b98d1e`** (pushed) | `26b5d8d` release prep (version, changelog, docs, llms), `721d31f` `aec-audio-processing` on macOS and Windows only (no Linux wheel; the `[gpu]` install failed on Ubuntu), `2b98d1e` `transformers<5.21` on the platform profiles and the `qwen3-tts` extra | local gate green (RESUME 23:15); tag waits for the operator's go. Next release: [voice backlog 0069](../../../abstractvoice/docs/backlog/proposed/0069_port_qwen3_tts_speech_tokenizer_to_transformers_5_21_mimi.md) (port the vendored Qwen3-TTS tokenizer to the 5.21 Mimi split). Open with the operator: the `[gpu]` profile runs Supertonic/Piper on CPU on NVIDIA |
+| Stop fence, runtime half | `66d3220` (fence primitive, required on every state writer), `86666af` (spawn reservation, boot refusal, fenced night), `098cd4b` (`open_home(fence=)`: memory `commit_guard`, diary, artifacts, effect table), `2c9b673` (`ChatSession.fence`); Fable review fixes `1573f8e` (F1), `0b7b9b5` (F2), `5ee8049` (F3) | built, not live | 36 tests, 47 mutants red, suite 4831 passed at `2c9b673` (RESUME 23:55); Fable review `untracked/entity-phases-2026-11-08/review/FABLE-REVIEW-fence-runtime.md` |
+| Stop fence, memory half | `4074406` `commit_guard` (one integer compare before every COMMIT) | built | sets the runtime's memory floor |
+| Stop fence, gateway half | in progress (W-gwfence: the 11 runtime signatures, Codex gateway-3 F2/F4/F5/F8/F12 and F3/F6/F7/F9) | **not landed** | **no gateway restart until it lands** (RESUME 23:55, 00:15). Already on gateway main: `34674984` (a Stop during a sleep's final stage records no completed night), `3be0f167` (idle sleep admitted atomically, one home per sweep), `dea1bcba` (only a full pass is the last maintenance) |
+| abstractagent 0.6.1 | 5 commits since v0.6.0, two new tonight: `ff1c4d1` (the agent stays out of a message addressed to entities, with gateway `c26d38a2`), `5052f8a` (tests open the home with its fence) | built | runtime `>=0.19.0` stays HARD (the tests need `open_entity_runtime(fence=)`) |
+
+Decisions the operator made after the draft and that are built (scope IN): fresh-install iteration limit 50 seeded once
+(gateway `fa8286e2`, D2); a gateway restart is not a Stop, own time resumes where the grant is armed (gateway
+`dddc0726`, D5); helper servers live until the conversation ends (runtime `85a536b`, gateway `00481f64`); the session
+agent stays silent for a message addressed to entities (gateway `c26d38a2`, agent `ff1c4d1`, runtime `f2d9628`);
+reply notices beside the reply (runtime `09cbad7`, gateway `f1e730ab`, kit `4bee00d`, Entity `d666337`).
+
+### Counts (since the last tag; "unpushed" = not on `origin/main`; counted 2026-11-10 ~00:05)
+
+| Package | Draft | 2026-11-09 19:38 (PACKAGES (a)) | Now |
+|---|---|---|---|
+| AbstractMemory (v0.4.0) | 12 | 26 | 28 (26 unpushed) |
+| AbstractRuntime (v0.18.4) | 50 | 94 | 108 at `5ee8049` (all unpushed); 67 changelog fragments |
+| abstractgateway (v0.20.2) | 92 | 134 | 150 (all unpushed); 42 fragments |
+| AbstractEntity (v0.11.2) | 82 | 90 | 96 (69 unpushed) |
+| Code web (web-v0.15.6, `web/` only) | 37 | 40 | 41 |
+| Assistant web (web-v0.1.3, `web/` only) | 3 | 5 | 8 |
+| abstractagent (v0.6.0) | 2 | 3 | 5 (all unpushed) |
+| AbstractUIC (v0.10.8) | 31 | 33 | 37 (all unpushed) |
+| abstractcore (v2.34.0) | 18 | 20 | 25 (all pushed); 5 fragments |
+| abstractvoice (v0.20.1) | 14 | 14 | 17 (all pushed) |
+| abstractskill (v0.3.10) | 1 | 1 | 2 (both unpushed) |
+| root (v0.13.0) | 46 | 55 | 56 + this pass |
+
+
+### Floors that changed against the table above
+
+- AbstractRuntime → AbstractMemory: **`>=0.5.0`, HARD**, and 0.5.0 must contain memory `4074406` (fence) — so memory
+  is cut after the fence lands, never before.
+- abstractgateway → AbstractMemory: `>=0.5.0`, HARD (unchanged), and 0.5.0 must contain `f310865` (`sleep_pass(…,
+  cancelled=)`, used by gateway `34674984`) and `26503e3` (`records_since_maintenance(after=)`).
+- abstractgateway → AbstractRuntime: `0.19.0` everywhere (unchanged); the gateway's new seams since the draft also
+  include the fence signatures (pending) and `read_job_queue`, `TurnCancelled`, `home_state_lock`. The friendly
+  `ABSTRACTRUNTIME_FLOOR` check cannot fire for 0.19.0 (`runtime_config.py:1702` imports `DEFAULT_MAX_ITERATIONS` at
+  module load, so an old runtime fails with an ImportError first): make it lazy or accept it (ROADMAP G S4).
+- abstractcore → abstractvoice: **stays `>=0.20.0`** (Core goes first and alone); the gateway's voice floor stays too.
+- Root `main` pins lag even the published registry (runtime 0.18.2 vs 0.18.4, assistant 0.18.1 vs 0.18.3, Code
+  0.15.1 vs 0.15.6; `abstractframework/__init__.py`): every pin moves at the root cut anyway.
+
+### Sequence (replaces "Sequence" above)
+
+0. **Scope freeze** (ROADMAP H D2) and the Stop decision (D1: wait for the fence, time-boxed to one day, or ship with
+   the known gaps in the notes).
+1. **abstractcore 2.35.0 alone, first** (`8b970550` + the changelog-assemble commit; voice floor stays 0.20.0).
+2. **Tier 0 in parallel, one visibility wait:** abstractskill 0.3.11 (re-read the `entity-self-knowledge` skill first:
+   it never mentions the v25 `idle` state), abstractvoice 0.21.0 (`2b98d1e`), AbstractUIC (ui-kit 0.9.27,
+   panel-chat 0.9.11), abstracttui 0.8.0 with graph/mermaid 0.7.0, abstractavatar 0.2.0 (the operator's local
+   `cargo publish` first), Flow 0.14.2.
+3. **AbstractMemory 0.5.0 after the fence** (it must contain `4074406`).
+4. **AbstractRuntime 0.19.0** (core `>=2.35.0`, memory `>=0.5.0`, both HARD).
+5. **abstractagent 0.6.1** (runtime `>=0.19.0`).
+6. **abstractgateway 0.21.0** + gateway-console 0.18.1, after the gateway fence half lands: runtime, memory, core,
+   avatar (HARD), agent and skill (recommended) floors, `ABSTRACTRUNTIME_FLOOR` and the pin tests in one drafted
+   commit.
+7. **Apps after the gateway is visible:** Entity 0.12.0 (drop the `file:` tarball and `bundleDependencies`), Code web
+   0.15.21 or 0.16.0 (D4), Code crate 0.15.0 (TEMP patch removed, abstracttui 0.8.0), Assistant web 0.2.0 (into the
+   root npm inventory, D4), Observer 0.13.0; each relocked from the registry.
+8. **Candidate:** the exact matrix redeployed locally, website preview, change report, the operator's user test and
+   GO; then **root 0.14.0** (`NPM_LIBRARY_RELEASE_VERSIONS`: ui-kit 0.9.27, panel-chat 0.9.11).
+
+### Records this wave closes (backlog state after the 2026-11-10 pass)
+
+| Item | State | Where |
+|---|---|---|
+| [1180](../completed/1180_an_activated_skill_is_always_reachable_and_the_core_and_gateway_skills_ship_by_default.md) skills reachable | completed (built, unreleased) | runtime `b22c901` `08ebf18`, gateway `134b90a4`, skill `bf6b982` |
+| [1145](../completed/1145_entity_activity_is_durable_in_the_runtime.md) steps 1–2 | completed; steps 3–4 → [1188](1188_the_entity_probes_its_own_runtime_and_personal_ticks_are_real_runtime_runs.md) (next release) | runtime `d217d93`, gateway `d1d9656f` |
+| [1146](../completed/1146_understanding_pass_summaries_always_computed.md) authored titles and summaries | completed; the drain, ripple, extraction, private entries stay in 1171–1173 / 1186 | memory `c4ffc45`…`f310865` `8235daf`, runtime `4eefddb`…`432f178` `baa401f` `b6d50d3`, gateway `a749e4e5` `58b51667` `5c2f5db7` |
+| [1162](../completed/1162_mcp_initialize_sends_null_capabilities_strict_servers_refuse.md) MCP `{}` handshake | completed | core `44897db3` |
+| [1178](../completed/1178_stopping_personal_time_leaves_the_entity_awake_and_visitable.md) personal off ends awake | completed (decision never recorded on the item; superseded by the phase rulings) | runtime `3cafac9` |
+| [1168](1168_an_unreachable_model_endpoint_parks_the_step_and_the_run_continues_when_it_is_back.md) endpoint park | planned (decision wait = next release); the park ships now | core `44897db3`…`b8bcda1d`, runtime `15e4a01` `da03304` `ed7d605` |
+| [1184](../completed/1184_a_visit_never_fails_on_a_busy_entity.md) a visit never fails | completed, operator review pending (tested live 2026-11-09 evening) | runtime `4978eda`, gateway `81a92233`, entity `e07f930` |
+| gateway 1166 session kinds | built; its file lives in `abstractgateway/docs/backlog/planned/` (not touched by this root pass) | gateway `514d6175` `e089fc05` `2a68b105`; client halves = [1170](1170_session_kinds_client_halves.md) (planned) |
+| Code 1163 reconnect | built; its file lives in `abstractcode/docs/backlog/planned/` (not touched by this root pass); one residual (400 px status bar) | kit `d67570f` `c197daf` `ca5720d` (0.10.16) `2a230fe` `2e6738e` (0.10.17), Code `8aca634` `94b5ae1` (0.15.18) `3ffa584` `2a5c432` (0.15.19) |
+
+Next wave (filed 2026-11-10, not in this cut): 1188, the inline-mentions composer, the whole-life access-count
+gradient, the bundle builders' baked iteration limit with the START_SUBWORKFLOW ceiling, 1187, 1170, 1168's decision
+wait, voice 0069.
+
 ## Receipts
 
 - Release mechanics: the `abstract-release` and `release` skills; previous record [1132](../completed/1132_final_stable_release.md).
 - Track: [understanding-pass](understanding-pass/README.md).
+- Refresh 2026-11-10: `untracked/release-2026-11-07/audit-fable/PACKAGES.md` (sections a, c, e), `RESUME.md`, `ROADMAP-2026-11-09-2010.md`.
