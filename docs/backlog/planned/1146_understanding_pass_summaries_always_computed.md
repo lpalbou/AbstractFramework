@@ -151,3 +151,14 @@ too_long | malformed); when that path cannot be resolved, the same line goes to 
 first-line or first-sentence fallback, no repair heuristic. The apps show "untitled memory · title missing" for null.
 Supersedes the first-complete-sentence (9fe88e4) and whole-first-line (14eeb31) fallbacks.
 
+## Operator rulings 2026-11-09 (afternoon): title and summary are mandatory; maintenance repairs them
+
+"The title + summary must ALWAYS exist for any memory; those are mandatory metadata of all memories." At formation the
+entity (elected kinds) or the `summaries` capability model (episodes, session summaries, cards, dreams, and any elected
+block without a usable title/summary) authors both; never a cut or a placeholder. A failure writes a line to
+`untracked/authoring-failures/<date>.jsonl` and stores the record PENDING with a `title.author` / `digest.author` task
+(abstractmemory c4ffc45), retried by a small drainer at the loop's tick boundary, at a visit's close and in a gateway idle
+sweep. And: "missing titles or summaries are part of the thing that could also be flagged for correction during the
+sleep/maintenance phase" — the maintenance pass drains pending authoring first and declares legacy records that lack a
+title or summary pending, so they get authored.
+
