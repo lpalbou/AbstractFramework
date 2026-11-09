@@ -325,3 +325,6 @@ abstractcode-export-*.md
 /.one_store_disk_probe.txt
 /scripts/install_*_launchd.sh
 /scripts/serve_8081_night_watch.sh
+
+# AbstractOffice is an independent repository.
+/office3d/
