@@ -70,3 +70,10 @@ The operator's amendment of the v17 edge (it is `locked-absolute` by his earlier
 ## Non-goals
 
 Changing the explicit Sleep act; personal time without a grant.
+
+## Related (2026-11-09)
+
+[1184](../completed/1184_a_visit_never_fails_on_a_busy_entity.md) (completed, operator review pending) removed every
+time limit between clicking visit and the open visit: the door no longer answers 409 `loop_busy` or `home_lease_held`,
+and the own-time loop yields within one step. It does not change the stop → 6 h sleep landing or the `life_state`
+floor that shows SLEEP when no loop runs; both stay with this item.
