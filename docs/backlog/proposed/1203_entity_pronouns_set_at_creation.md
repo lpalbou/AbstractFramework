@@ -2,7 +2,7 @@
 
 > Package: AbstractRuntime (identity: the entity's identity record), AbstractGateway (create-entity + identity routes serve `pronouns`), AbstractEntity, AbstractAssistant, AbstractCode, AbstractObserver, AbstractUIC (EntityCard, panel-chat author header), AbstractTUI (copy that names the entity)
 > Type: feature
-> Status: proposed
+> Status: proposed (operator 2026-11-11 00:40: "delay that, it's fine" — next wave; default for new entities still to decide then)
 > Created: 2026-11-10
 > Priority: P2
 > Labels: entities, copy, cross-seat, decision-gate

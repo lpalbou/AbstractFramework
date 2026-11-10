@@ -38,6 +38,14 @@ whether, and how, the sleep pass folds or prunes memories that carry no informat
    no-regex rule), never a length or keyword threshold.
 4. Does folding keep the originals' ledger provenance (the ledger stays the record; memory is reconstruction)?
 
+## Operator answers 2026-11-11 00:40
+
+- Q1 (zero-turn visit): "no and it should not even be remembered, fix it" — a visit opened and closed without a word
+  forms NO memory; fixed at the runtime level (visit close) as a 0.19.4 fix, not deferred. A one-line exchange shares
+  words and keeps forming a memory (the 2026-11-10 ruling).
+- Q2-Q4 (fold / prune / who judges / provenance): "let's leave that for a next release, create a backlog item to
+  discuss it" — this item IS that discussion; it stays proposed, decision gate, next release.
+
 ## Non-goals
 
 - No content gate at formation: every exchange forms its memory, however short.

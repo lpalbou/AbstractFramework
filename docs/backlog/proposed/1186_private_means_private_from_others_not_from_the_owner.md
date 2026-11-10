@@ -78,6 +78,11 @@ together: private diary entries get authored titles and summaries like every oth
   it will be complex if they can hide things from them." He asked for the framework seat's opinion during the
   discussion (below).
 
+## Operator answer 2026-11-11 00:40
+
+- Who is the guardian: "we already answered that, the creating account." Settled; open only: transfer/sharing of
+  guardianship (if ever).
+
 ## Questions, reformulated for the discussion
 
 1. **Who is the guardian:** the account that created the entity, the gateway admin, or both? Can guardianship be
