@@ -480,6 +480,14 @@ Gate finding 2026-11-10 (gateway shard 3, all Pythons): test_entity_idle_sleep's
 registered in the process-wide registry, so later /api/health answered degraded and two singleton-lock tests went red;
 fixed in gateway 56451ab5 (teardown unregister + a conftest guard that fails the leaving test by name). Not a code defect.
 
+CANDIDATE BLOCKER found 2026-11-10 20:00 on the GPU host (Core session, [gpu] matrix pass 1): resolution + imports green
+(twelve pins exact, runtime 0.19.1 pending 0.19.2), but the GPU smoke is RED: abstractcore[gpu] on Linux pulls vllm 0.32.0 →
+torch 2.13.0 → nvidia-cudnn-cu13 9.20, while abstractvoice[gpu] adds nvidia-cudnn-cu12 9.28 (CTranslate2); both unpack into
+the same nvidia/cudnn/lib, cuDNN refuses every convolution (CUDNN_STATUS_SUBLIBRARY_VERSION_MISMATCH): Qwen3-TTS and FLUX
+dead, Supertonic falls back to CPU, faster-whisper fine. Repair under test (drop nvidia-cudnn-cu12 from voice's [gpu]);
+if confirmed → abstractvoice 0.21.1 prepared, published on the operator's word, root pin moves. Also noted: a bare pip of
+abstractcore[gpu] gets the CPU llama-cpp-python wheel (the installer swaps it); vllm adds ~2 GB and a torch downgrade.
+
 ## Receipts
 
 - Release mechanics: the `abstract-release` and `release` skills; previous record [1132](../completed/1132_final_stable_release.md).

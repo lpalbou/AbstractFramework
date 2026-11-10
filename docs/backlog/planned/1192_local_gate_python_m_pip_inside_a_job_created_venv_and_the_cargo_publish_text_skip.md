@@ -45,7 +45,10 @@ untracked/release-2026-11-07/RESUME.md (04:45, 05:30 entries) and audit-fable/.
 
 ## Added 2026-11-10 19:45: the gate's parallelism starves the machine it runs on
 
-A full gateway gate runs 16 pytest shards in parallel; with the Entity session's lanes and three Playwright runs on the
-live gateway the load average reached 292 and the live dev gateway's event-loop watchdog killed it (30 s stall, exit 75,
-supervisor respawn; incident runtime/incidents/watchdog-20261110T183807Z). Add a default `--jobs` cap (cores / 2, or
-read the current load) and print the cap; keep `--jobs N` to override.
+A full gateway gate runs its jobs 4 at a time (cores // 4; each job = a uv-built venv + a pytest shard with real servers);
+with the Entity session's five lanes' suites, mutant runs and builds, three Playwright runs on the live gateway and a
+runtime full suite, the load average reached 292 and the live dev gateway's event-loop watchdog killed it (30 s stall, exit 75,
+supervisor respawn; incident runtime/incidents/watchdog-20261110T183807Z). DONE 2026-11-10 20:05 (root scripts/ci_local.py, operator: "be nicer; adjust to the capabilities of this mac"): the default
+also takes (cores - 1-minute load) // 4, never below 1, printed in the --jobs line; `--jobs N` overrides;
+tests/test_ci_local.py pins it. The cross-session rule (one full suite at a time, load < cores before starting) is
+in each session's hands.

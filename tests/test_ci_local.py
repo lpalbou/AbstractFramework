@@ -1020,3 +1020,16 @@ def test_a_release_with_no_validation_step_says_so(tmp_path, monkeypatch, capsys
     repo = _workflow_repo(tmp_path / "tinyrepo", workflow)
     assert _run_tiny(repo, tmp_path, monkeypatch, "--release-tag", "v1.2.3") == 0
     assert "--release-tag: no pre-checks: no release job has a validation step" in capsys.readouterr().out
+
+
+def test_default_jobs_takes_only_the_cores_the_machine_has_left():
+    """Operator 2026-11-10 (a load of 292 starved the live gateway): the gate sizes itself from the 1-minute load,
+    (cores - load) // 4, never below 1; without a load reading the rule is unchanged."""
+    from ci_local import default_jobs
+
+    gib = 1024**3
+    assert default_jobs(63, 18, 62 * gib, 0.5)[0] == 4
+    assert default_jobs(63, 18, 62 * gib, 10.0)[0] == 2
+    n, why = default_jobs(63, 18, 62 * gib, 292.0)
+    assert n == 1 and "load 292 on 18 cores leaves 1" in why
+    assert default_jobs(63, 18, 62 * gib)[0] == 4  # no reading: the cores rule alone

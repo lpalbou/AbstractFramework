@@ -1548,16 +1548,32 @@ def available_memory() -> int | None:
     return pages * page if pages else None
 
 
-def default_jobs(runnable: int, physical_cores: int | None, memory: int | None) -> tuple[int, str]:
-    """min(runnable jobs, max(1, physical cores // 4)), capped by free memory / MEMORY_PER_JOB."""
-    by_cores = max(1, (physical_cores or 4) // 4)
+def default_jobs(runnable: int, physical_cores: int | None, memory: int | None,
+                 load1: float | None = None) -> tuple[int, str]:
+    """min(runnable jobs, max(1, physical cores // 4)), capped by free memory / MEMORY_PER_JOB, and by the cores
+    the machine has LEFT: the 1-minute load average is work already queued (other suites, builds, browsers), so the
+    gate takes (cores - load) // 4 of them, never below 1 (operator 2026-11-10, after a load of 292 starved the live
+    gateway: "just be nicer for the release; adjust to the capabilities of this mac")."""
+    cores = physical_cores or 4
+    by_cores = max(1, cores // 4)
     n = min(max(1, runnable), by_cores)
     why = f"{physical_cores} physical cores // 4 = {by_cores}, {runnable} jobs"
     if memory is not None:
         by_memory = max(1, memory // MEMORY_PER_JOB)
         n = min(n, by_memory)
         why += f", {memory / 1024**3:.0f} GiB free / {MEMORY_PER_JOB // 1024**3} GiB per job = {by_memory}"
+    if load1 is not None:
+        by_load = max(1, int(cores - load1) // 4)
+        n = min(n, by_load)
+        why += f", load {load1:.0f} on {cores} cores leaves {by_load}"
     return n, why
+
+
+def load_average_1min() -> float | None:
+    try:
+        return float(os.getloadavg()[0])
+    except (OSError, AttributeError):
+        return None
 
 
 def physical_cores() -> int | None:
@@ -2459,7 +2475,7 @@ def run_prepared(r: "Runner", a: argparse.Namespace, t0: float) -> int:
             return 1
     count = sum(len(g) for g in groups)
     if a.parallel is None:
-        a.parallel, why = default_jobs(count, physical_cores(), available_memory())
+        a.parallel, why = default_jobs(count, physical_cores(), available_memory(), load_average_1min())
         print(f"ci_local: --jobs {a.parallel} ({why})", flush=True)
     else:
         print(f"ci_local: --jobs {a.parallel}", flush=True)
