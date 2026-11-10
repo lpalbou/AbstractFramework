@@ -2,7 +2,7 @@
 
 > Package: AbstractGateway (one host marker per finished step), AbstractCore (`file_effect` fact on tool definitions), AbstractEntity (the row glyphs; its backlog 0035)
 > Type: feature
-> Status: planned
+> Status: planned (gateway half DONE 2026-11-11, gateway 4fa309e5; core half + app glyphs pending)
 > Created: 2026-11-10
 > Priority: P2
 > Labels: entities, ledger, observability, next-wave
@@ -29,3 +29,16 @@ list in an app is forbidden (no heuristics on tool names).
 
 A visit with two reads and one write shows "⚙ 3 · 📄 2 · ✎ 1" on its row live and after a reload; a step with no tool
 shows no glyph; the marker is absent for a step without tool calls.
+
+## Gateway half delivered (2026-11-11 00:10, abstractgateway 4fa309e5, unpublished)
+
+Marker `{kind: "step_tools", session_id, run_id, turn_id, tools, tool_count, files_read, files_written}` right after the
+step's rows, in the replay export and the live stream, deduplicated on run_id + turn_id, not listed among the life's
+moments. Visits: the tool handler notes each call that ran under the turn id, a wrapper on ANSWER_USER writes the marker
+(one per step across tool rounds; refused calls not counted). Own time and work ticks run in the loop process with no
+run ledger: the gateway reads new episode records' `tools_used` since a per-home cursor (.host_stream/<slug>.step_tools_cursor.json)
+at each /replay read and live poll. Sleep passes run no tools: no marker. No backfill (a full one costs the square of the
+history). The one name table FILE_EFFECT_BY_TOOL (entity_step_tools.py) stands in for the core `file_effect` fact until
+the core half lands. Follow-ups: the live stream rereads the whole marker file per poll (read only the new tail); each
+marker invalidates the recent-moments cache; a turn waiting for tool approval and mention/person turns without a turn
+id are untested.
