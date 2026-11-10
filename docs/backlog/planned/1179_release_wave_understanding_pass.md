@@ -458,7 +458,10 @@ build on capabilities independently of providers or models changing their contra
 list. core.html's hero carries the rejected sentence; align it at the site cut. abstractcore.ai is PUBLISHED (AbstractCore
 gh-pages 0a1407d, 2026-11-10 ~12:00) and links to abstractframework.ai/core.html, /install.html and the /core/ installer
 files: those links are 404 until the site cut ships the back-links, the hero and the /core/ files from tag v2.35.0 — the
-site cut is therefore a visible gap, not only a candidate step.
+site cut is therefore a visible gap, not only a candidate step. CORRECTION 2026-11-10 18:10 (Core session, link check
+of the live page): /core.html and /install.html answer 200 today; only the /core/ installer files were missing. Fixed
+live on abstractcore.ai (gh-pages bdf0ecb): the five install lines now point at the raw files of tag v2.35.0 (both 200,
+the sh line run with --print); swap back to abstractframework.ai/core/ at the site cut (three HTML files).
 
 Candidate check, athena.ovh (Core session, 2026-11-10 ~14:45): with the host's own Python 3.14 the published set does not
 install (abstractcore 2.35.0 pins `lxml<6`, lxml 5.x has no cp314 wheels, pip builds from source and fails). Not a 0.14.0
