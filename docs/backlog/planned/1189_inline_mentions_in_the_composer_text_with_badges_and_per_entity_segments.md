@@ -82,3 +82,10 @@ the badge action and the job path are 1187's.
 Operator test of Code web 0.16.0: the @castor chip rendered ABOVE the text ("terrible visually and not the inline in text I
 was requesting. so do it all over again"). Moved INTO THE 0.14.0 WAVE, before the app tags: the mention is an inline styled
 chip in the text, no x, deleted in text; the two info lines stay; kit composer so Assistant web follows. Entity session.
+
+## Gateway gap found 2026-11-10 (Entity session, panel-chat 0.9.13 bubble chips)
+
+The stored user turn carries no `mentions` in the conversation history / replay, so after a reload the inline chips in
+message bubbles show only for turns still held in the session. Carry the send payload's `mentions`
+({id, name, kind, index, start}) on the stored user turn, in the history bloc and the replay view, when the mentions
+contract is next touched (the per-entity segments of this item). Next wave.
