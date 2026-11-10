@@ -53,7 +53,10 @@ Reassess the in-flight themes, shared dossier and kickoff changes first. No gove
 
 - Planning based on `office3d/static/app.js`, `engine.py`, and `server.py` inspected 2026-11-09.
 
-## Deployment state 2026-11-10 (handed to the framework seat; operator: later)
+## Deployment state 2026-11-10 (handed to the framework seat; operator: later; NOT part of release 0.14.0)
+
+Operator ruling 2026-11-10 ~13:00: office3d is an ongoing, still experimental project and an app; it is not part of the
+0.14.0 release and does not gate it.
 
 The athena.ovh install of the dev framework + office3d stopped mid-way; full state and the operator's decisions in
 `office3d/untracked/handoff-2026-11-10.md` (untracked, on purpose: hosts, ports, auth files). Resume from there: deploy both via
