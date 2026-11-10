@@ -57,6 +57,13 @@ gateway_backlog_flags() {
         # The gateway refuses to START on a --backlog-root without docs/backlog
         # (the old variable was not checked that strictly): skip the flag then,
         # and the gateway uses its saved setting or its own folder.
+        # The run listings' in-memory index: `trusted` answers from the index (about 1 ms), `verify`
+        # re-scans every run file per listing (130 ms idle, seconds under load; 16.8k files on the dev
+        # data dir, 0 differences in 2,344 shadow comparisons: profile 2026-11-10, root backlog 1195).
+        # GATEWAY_RUN_INDEX=verify restores the shadow mode for a run.
+        if version_at_least "$ver" "0.18.0"; then
+            GATEWAY_SERVE_FLAGS=(--run-index "${GATEWAY_RUN_INDEX:-trusted}" ${GATEWAY_SERVE_FLAGS[@]+"${GATEWAY_SERVE_FLAGS[@]}"})
+        fi
         if [[ -d "$root/docs/backlog" ]]; then
             GATEWAY_SERVE_FLAGS=(--backlog-root "$root" ${GATEWAY_SERVE_FLAGS[@]+"${GATEWAY_SERVE_FLAGS[@]}"})
         else
