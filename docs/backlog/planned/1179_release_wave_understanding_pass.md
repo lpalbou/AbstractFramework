@@ -460,6 +460,12 @@ gh-pages 0a1407d, 2026-11-10 ~12:00) and links to abstractframework.ai/core.html
 files: those links are 404 until the site cut ships the back-links, the hero and the /core/ files from tag v2.35.0 — the
 site cut is therefore a visible gap, not only a candidate step.
 
+Candidate check, athena.ovh (Core session, 2026-11-10 ~14:45): with the host's own Python 3.14 the published set does not
+install (abstractcore 2.35.0 pins `lxml<6`, lxml 5.x has no cp314 wheels, pip builds from source and fails). Not a 0.14.0
+defect: the root docs state Python 3.10–3.13 (README, docs/install.md platform table, getting-started) and the installers
+provision uv's Python 3.12. Core follow-up (next core release): lift the lxml ceiling to `<7` and test 3.14. The same set
+on Python 3.12 is being resolved; result below when it lands.
+
 ## Receipts
 
 - Release mechanics: the `abstract-release` and `release` skills; previous record [1132](../completed/1132_final_stable_release.md).
