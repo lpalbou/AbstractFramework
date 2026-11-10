@@ -188,6 +188,14 @@ def _gpu_block() -> str:
 
 
 _FAKE_PY = """#!/bin/sh
+if [ "$1" = -c ]; then
+  # The GPU voices check (ONNX Runtime's providers): the CPU build's answer until onnxruntime-gpu
+  # was written again (a `--reinstall-package onnxruntime-gpu` run), then FAKE_ORT_AFTER.
+  case "$2" in *get_available_providers*)
+    if grep -q 'reinstall-package onnxruntime-gpu' "$FAKE_RUNS" 2>/dev/null; then echo "$FAKE_ORT_AFTER"; else echo "$FAKE_ORT_BEFORE"; fi ;;
+  esac
+  exit 0
+fi
 f="$1"
 if grep -q 'import torch' "$f"; then
   echo "AFSMOKE version=2.11.0+cu130"; echo "AFSMOKE cuda_build=$FAKE_TORCH_CUDA"; echo "AFSMOKE cuda=$FAKE_TORCH_SEES"
@@ -200,13 +208,26 @@ exit 0
 """
 
 
+# A fake uv: `uv pip freeze` lists FAKE_FREEZE until AbstractVoice's onnx-cuda extra was installed
+# (a run naming it), then FAKE_FREEZE_EXTRA as well. Every other uv command is the run() stub's.
+_FAKE_UV = """#!/bin/sh
+if [ "$1 $2" = "pip freeze" ]; then
+  printf '%s\\n' "$FAKE_FREEZE"
+  if grep -q 'abstractvoice\\[onnx-cuda\\]' "$FAKE_RUNS" 2>/dev/null; then printf '%s\\n' "$FAKE_FREEZE_EXTRA"; fi
+fi
+exit 0
+"""
+
+
 def _run_gpu_block(tmp_path: Path, *, smi: str | None, torch_cuda: str = "13.0", torch_sees: str = "1",
-                   glibc: str = "2.39", cpu_missing: str = "") -> tuple[int, str, str]:
+                   glibc: str = "2.39", cpu_missing: str = "", freeze: str = "", freeze_extra: str = "",
+                   ort_before: str = "", ort_after: str = "") -> tuple[int, str, str]:
     bindir = tmp_path / "bin"
     bindir.mkdir(exist_ok=True)
     if smi is not None:
         _exe(bindir / "nvidia-smi", smi)
     _exe(bindir / "ldd", f'#!/bin/sh\necho "ldd (GNU libc) {glibc}"\n')
+    _exe(bindir / "uv", _FAKE_UV)
     venv = tmp_path / "venv"
     (venv / "bin").mkdir(parents=True, exist_ok=True)
     _exe(venv / "bin" / "python", _FAKE_PY)
@@ -229,10 +250,16 @@ def _run_gpu_block(tmp_path: Path, *, smi: str | None, torch_cuda: str = "13.0",
         'GGUF_PIN=0.3.35; GGUF_LINKS=https://example.invalid/cpu',
         'GGUF_RESULT="llama-cpp-python 0.3.35 (cpu wheel from https://example.invalid/cpu)"',
         'VOICE_SPEC=v; VOICE_RESULT="Supertonic and Whisper, local on CPU"',
+        _function("q"),
+        _function("show_cmd"),
+        'twin() { :; }',
     ])
-    body = _gpu_block() + '\necho "END GGUF_RESULT=$GGUF_RESULT"\necho "END TORCH_RESULT=$TORCH_RESULT"\n'
+    body = (_gpu_block() + '\necho "END GGUF_RESULT=$GGUF_RESULT"\necho "END TORCH_RESULT=$TORCH_RESULT"\n'
+            + 'echo "END ORT_RESULT=$ORT_RESULT"\n')
     env = {"PATH": f"{bindir}:/usr/bin:/bin", "HOME": str(tmp_path), "LC_ALL": "C",
-           "FAKE_TORCH_CUDA": torch_cuda, "FAKE_TORCH_SEES": torch_sees, "FAKE_LLAMA_CPU_MISSING": cpu_missing}
+           "FAKE_TORCH_CUDA": torch_cuda, "FAKE_TORCH_SEES": torch_sees, "FAKE_LLAMA_CPU_MISSING": cpu_missing,
+           "FAKE_RUNS": str(runs), "FAKE_FREEZE": freeze, "FAKE_FREEZE_EXTRA": freeze_extra,
+           "FAKE_ORT_BEFORE": ort_before, "FAKE_ORT_AFTER": ort_after}
     shell = shutil.which("dash") or "/bin/sh"
     proc = subprocess.run([shell, "-c", prelude + "\n" + body], capture_output=True, text=True, env=env, timeout=60)
     return proc.returncode, proc.stdout + proc.stderr, runs.read_text() if runs.exists() else ""
@@ -279,6 +306,101 @@ def test_gpu_block_driver_hint_only_when_the_driver_is_too_old(tmp_path):
     rc, out, _ = _run_gpu_block(tmp_path / "new", smi=_smi("595.91.07, 7.5, Quadro RTX 5000"), torch_sees="0")
     assert rc == 0, out
     assert "WARN PyTorch: torch 2.11.0+cu130 (CUDA 13.0) does not see the GPU" in out and "needs NVIDIA driver" not in out
+
+
+# --- the GPU voices: AbstractVoice's onnx-cuda extra (ONNX Runtime's CUDA build) --------------------
+
+_RTX = "595.91.07, 7.5, Quadro RTX 5000"
+_CPU_ORT = "['AzureExecutionProvider', 'CPUExecutionProvider']"
+_GPU_ORT = "['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider']"
+_VOICE = "abstractvoice==0.21.0"
+_ORT_GPU = "onnxruntime-gpu==1.27.0"
+
+
+def _ort_runs(runs: str) -> list[str]:
+    # By the requirement, not by "onnx": the test's tmp_path carries the test name.
+    return [line for line in runs.splitlines() if "abstractvoice[onnx-cuda]" in line or "onnxruntime-gpu==" in line]
+
+
+def test_gpu_voices_install_the_extra_and_stop_when_the_cuda_build_is_in_place(tmp_path):
+    rc, out, runs = _run_gpu_block(tmp_path, smi=_smi(_RTX), freeze=_VOICE, freeze_extra=_ORT_GPU, ort_before=_GPU_ORT)
+    assert rc == 0, out
+    ort = _ort_runs(runs)
+    assert len(ort) == 1 and "pip install --python" in ort[0] and ort[0].endswith("abstractvoice[onnx-cuda]==0.21.0"), ort
+    assert "OK GPU voices: onnxruntime-gpu 1.27.0: the CUDA build of ONNX Runtime is in place" in out
+    assert "import onnxruntime as o; print(o.get_available_providers())" in out  # the check is shown
+    assert "END ORT_RESULT=onnxruntime-gpu 1.27.0: the CUDA build" in out
+
+
+def test_gpu_voices_rewrite_onnxruntime_gpu_once_when_the_cpu_build_won(tmp_path):
+    rc, out, runs = _run_gpu_block(tmp_path, smi=_smi(_RTX), freeze=_VOICE, freeze_extra=_ORT_GPU,
+                                   ort_before=_CPU_ORT, ort_after=_GPU_ORT)
+    assert rc == 0, out
+    ort = _ort_runs(runs)
+    assert len(ort) == 2, ort
+    assert ort[1].endswith("--no-deps --reinstall-package onnxruntime-gpu onnxruntime-gpu==1.27.0"), ort[1]
+    assert "OK GPU voices: onnxruntime-gpu 1.27.0: the CUDA build of ONNX Runtime is in place" in out
+
+
+def test_gpu_voices_rewrite_once_only_and_say_the_cpu_build_stayed(tmp_path):
+    rc, out, runs = _run_gpu_block(tmp_path, smi=_smi(_RTX), freeze=_VOICE, freeze_extra=_ORT_GPU,
+                                   ort_before=_CPU_ORT, ort_after=_CPU_ORT)
+    assert rc == 0, out
+    assert sum("--reinstall-package onnxruntime-gpu" in line for line in _ort_runs(runs)) == 1
+    assert ("WARN GPU voices: onnxruntime-gpu 1.27.0 installed but the CPU build's files are in place "
+            f"(providers: {_CPU_ORT}; log: ") in out
+    assert "Supertonic and Piper run on the processor" in out
+
+
+def test_gpu_voices_name_an_abstractvoice_without_the_extra(tmp_path):
+    # AbstractVoice 0.20.1 (root 0.13.x's pin) has no onnx-cuda extra: uv installs nothing for it.
+    rc, out, runs = _run_gpu_block(tmp_path, smi=_smi(_RTX), freeze="abstractvoice==0.20.1", ort_before=_GPU_ORT)
+    assert rc == 0, out
+    assert _ort_runs(runs)[0].endswith("abstractvoice[onnx-cuda]==0.20.1")
+    assert not any("reinstall-package onnxruntime-gpu" in line for line in _ort_runs(runs))
+    # An expected state until the pin moves to 0.21.0: information, not a warning.
+    assert "INFO GPU voices: not installed: abstractvoice 0.20.1 has no onnx-cuda extra (AbstractVoice 0.21.0 adds it)" in out
+
+
+def test_gpu_voices_name_an_editable_abstractvoice(tmp_path):
+    rc, out, runs = _run_gpu_block(tmp_path, smi=_smi(_RTX), freeze="-e file:///src/abstractvoice", ort_before=_GPU_ORT)
+    assert rc == 0, out
+    assert _ort_runs(runs) == []
+    assert "INFO GPU voices: skipped: abstractvoice is an editable install here (a development checkout)" in out
+
+
+def test_gpu_voices_log_the_providers_answer(tmp_path):
+    rc, out, runs = _run_gpu_block(tmp_path, smi=_smi(_RTX), freeze=_VOICE, freeze_extra=_ORT_GPU,
+                                   ort_before=_CPU_ORT, ort_after=_CPU_ORT)
+    assert rc == 0, out
+    assert (tmp_path / "install.log").read_text().count(_CPU_ORT) == 2
+
+
+@pytest.mark.parametrize(
+    "smi, expected",
+    [
+        (None, "INFO GPU voices: skipped: no working NVIDIA GPU (nvidia-smi not found)"),
+        ("#!/bin/sh\nexit 9\n", "INFO GPU voices: skipped: no working NVIDIA GPU (nvidia-smi gave no answer)"),
+        (_smi("560.35, 8.6, RTX 3090"), "needs NVIDIA driver 580 or newer (this one is 560.35)"),
+        (_smi("581.10, 7.0, Tesla V100"), "INFO GPU voices: skipped: CUDA 13 needs compute capability 7.5 or newer"),
+    ],
+)
+def test_gpu_voices_skip_without_a_cuda_13_capable_driver(tmp_path, smi, expected):
+    rc, out, runs = _run_gpu_block(tmp_path, smi=smi, freeze=_VOICE, freeze_extra=_ORT_GPU, ort_before=_GPU_ORT)
+    assert rc == 0, out
+    assert expected in out, out
+    assert _ort_runs(runs) == []
+
+
+def test_gpu_voices_skip_when_local_voice_is_not_installed(tmp_path):
+    text = _gpu_block()
+    assert 'if [ -z "$VOICE_SPEC" ]; then ORT_RESULT="skipped: local voice is not installed"' in text
+
+
+def test_gpu_voices_line_is_in_the_summary():
+    text = SCRIPT.read_text()
+    assert text.count('GPU_RESULT=""; TORCH_RESULT=""; ORT_RESULT=""') == 1
+    assert '[ -z "$ORT_RESULT" ] || echo "  GPU voices: $ORT_RESULT"' in text
 
 
 def test_live_exec_ctrl_c_stops_the_background_command(tmp_path):

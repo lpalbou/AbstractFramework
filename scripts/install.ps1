@@ -708,6 +708,65 @@ function Resolve-LlamaBuild([string[]]$Variants, [string]$Installed, [scriptbloc
     return @{ Kept = ''; Where = ''; Why = $why }
 }
 
+# GPU voices (Supertonic, Piper) on NVIDIA: ONNX Runtime's CUDA build, by the sequence AbstractVoice's
+# own installer verified (abstractvoice/scripts/install.ps1 and install.sh, their headers):
+# AbstractVoice's onnx-cuda extra into the gateway's environment, then the providers check.
+# onnxruntime (the CPU build, which piper-tts and faster-whisper require) and onnxruntime-gpu write
+# the same files: when the CPU build's are still in place, onnxruntime-gpu alone is written again,
+# once, and checked again. onnxruntime-gpu 1.27+ is a CUDA 13 build (driver 580+, compute capability
+# 7.5+). The check proves the CUDA build is in place, not that its provider loads: Supertonic and
+# Piper report that at first use. Never fails the install.
+#   $Freeze    { } -> the gateway environment's `uv pip freeze` lines
+#   $Install   { param($PipArgs, $Description) } -> $true when `uv pip install --python <it> $PipArgs` succeeded
+#   $Providers { } -> the check's last line (print(o.get_available_providers()))
+# Prints one line (the result) and returns @{ Ok; Result }.
+$AfOrtCheck = 'import onnxruntime as o; print(o.get_available_providers())'
+function Resolve-VoiceOnnxCuda($Gpu, [bool]$Voice, [string]$Arch, [scriptblock]$Freeze, [scriptblock]$Install, [scriptblock]$Providers) {
+    $cpu = 'Supertonic and Piper run on the processor'
+    $result = ''
+    if (-not $Voice) { $result = 'skipped: local voice is not installed' }
+    elseif ($Arch -eq 'ARM64') { $result = "skipped: onnxruntime-gpu publishes no Windows on ARM build; $cpu" }
+    elseif (-not $Gpu.Ok) { $result = "skipped: no working NVIDIA GPU ($($Gpu.Error)); $cpu" }
+    elseif ($Gpu.DriverMajor -lt 580) { $result = "skipped: onnxruntime-gpu is a CUDA 13 build, which needs NVIDIA driver 580 or newer (this one is $($Gpu.Driver)); $cpu" }
+    elseif ($null -ne $Gpu.Cc -and $Gpu.Cc -lt 7.5) { $result = "skipped: CUDA 13 needs compute capability 7.5 or newer; $cpu" }
+    if ($result) { Write-Info "GPU voices: $result"; return @{ Ok = $false; Result = $result } }
+    $req = ''; $av = ''
+    foreach ($l in @(& $Freeze)) {
+        if ($l -match '^abstractvoice==(\S+)') { $av = $Matches[1]; $req = "abstractvoice[onnx-cuda]==$av" }
+        elseif (-not $req -and $l -match '^abstractvoice @ (.+)$') { $av = '(a local build)'; $req = "abstractvoice[onnx-cuda] @ $($Matches[1])" }
+    }
+    $ort = ''
+    if (-not $req -and @(& $Freeze | Where-Object { $_ -match '^-e .*abstractvoice' }).Count) {
+        $result = "skipped: abstractvoice is an editable install here (a development checkout): add its onnx-cuda extra by hand; $cpu"
+        Write-Info "GPU voices: $result"; return @{ Ok = $false; Result = $result }
+    }
+    if (-not $req) { $result = "not installed: abstractvoice is not in the gateway's environment; $cpu" }
+    elseif (-not (& $Install @($req) "install ONNX Runtime's CUDA build (AbstractVoice's onnx-cuda extra)")) {
+        $result = "not installed: $req did not install (log: $($script:LogFile)); $cpu"
+    } else {
+        foreach ($l in @(& $Freeze)) { if ($l -match '^onnxruntime-gpu==(\S+)') { $ort = $Matches[1] } }
+        if (-not $ort) {
+            # An AbstractVoice older than its onnx-cuda extra is an expected state, not a failure.
+            $result = "not installed: abstractvoice $av has no onnx-cuda extra (AbstractVoice 0.21.0 adds it); $cpu"
+            Write-Info "GPU voices: $result"; return @{ Ok = $false; Result = $result }
+        }
+    }
+    if ($ort) {
+        $prov = "$(& $Providers)"
+        if ($prov -notlike '*CUDAExecutionProvider*') {
+            if (& $Install @('--no-deps', '--reinstall-package', 'onnxruntime-gpu', "onnxruntime-gpu==$ort") "write onnxruntime-gpu's files over the CPU build's") { $prov = "$(& $Providers)" }
+        }
+        if ($prov -like '*CUDAExecutionProvider*') {
+            $result = "onnxruntime-gpu ${ort}: the CUDA build of ONNX Runtime is in place; Supertonic and Piper report the provider they run on at first use"
+            Write-Ok "GPU voices: $result"
+            return @{ Ok = $true; Result = $result }
+        }
+        $result = "onnxruntime-gpu $ort installed but the CPU build's files are in place (providers: $(if ($prov) { $prov } else { 'none' }); log: $($script:LogFile)); $cpu"
+    }
+    Write-Warn2 "GPU voices: $result"
+    return @{ Ok = $false; Result = $result }
+}
+
 $script:RanAsFile = [bool]$PSCommandPath
 $script:DryRun = [bool]($Print -or $WhatIfPreference)
 $script:Twins = New-Object System.Collections.Generic.List[string]
@@ -2163,6 +2222,34 @@ function Main {
             } else { Write-Ok "Whisper: $whisperResult" }
         } elseif ($w) { $whisperResult = "not checked ($($w.error))" }
     }
+    # GPU voices on NVIDIA (Supertonic, Piper): ONNX Runtime's CUDA build (Resolve-VoiceOnnxCuda).
+    $ortResult = ''
+    if ($profileName -eq 'gpu' -and $script:DryRun) {
+        if ($voice.Spec -and $cpuArchEarly -ne 'ARM64') {
+            $py = "<the gateway's tool environment>\Scripts\python.exe"
+            Write-Info "then the GPU voices (Supertonic, Piper; driver 580+ and compute capability 7.5+): AbstractVoice's onnx-cuda extra (ONNX Runtime's CUDA build), the providers check, and onnxruntime-gpu written again once when the CPU build's files are still in place"
+            $script:Twins.Add((Format-Cmd @($uv, 'pip', 'install', '--python', $py, (Get-VoiceRequirement 'abstractvoice[onnx-cuda]' $isRelease))))
+            $script:Twins.Add("$(Format-Cmd @($py, '-c', $AfOrtCheck))   # no CUDAExecutionProvider listed: the next line, then this check again")
+            $script:Twins.Add((Format-Cmd @($uv, 'pip', 'install', '--python', $py, '--no-deps', '--reinstall-package', 'onnxruntime-gpu', 'onnxruntime-gpu==<the version just installed>')))
+        }
+    } elseif ($profileName -eq 'gpu') {
+        $script:OrtTwin = $false
+        $ortResult = (Resolve-VoiceOnnxCuda -Gpu $gpuInfo -Voice ([bool]$voice.Spec) -Arch $cpuArchEarly -Freeze {
+            $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+            try { @(& $uv pip freeze --python $toolPy 2>$null | ForEach-Object { "$_" }) } catch { @() } finally { $ErrorActionPreference = $old }
+        } -Install {
+            param($PipArgs, $Description)
+            Invoke-Native -Description $Description -Argv (@($uv, 'pip', 'install', '--python', $toolPy) + $PipArgs) -Soft -Live
+        } -Providers {
+            $shown = Format-Cmd @($toolPy, '-c', $AfOrtCheck)
+            Write-Host "  `$ $shown" -ForegroundColor DarkGray
+            if (-not $script:OrtTwin) { $script:OrtTwin = $true; $script:Twins.Add($shown) }
+            $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+            try { $p = "$(& $toolPy -c $AfOrtCheck 2>$null | Select-Object -Last 1)" } catch { $p = '' } finally { $ErrorActionPreference = $old }
+            if ($script:LogFile) { Add-Content -Path $script:LogFile -Value @("`r`n`$ $shown", $p) -Encoding UTF8 }
+            $p
+        }).Result
+    }
     # Any package of the gateway's environment that moved counts (a library-only release keeps
     # the gateway's version).
     $envAfter = @(Get-EnvSnapshot)
@@ -2600,6 +2687,7 @@ function Main {
     Write-Host "  GGUF:       $ggufResult"
     if ($voice.Spec) { Write-Host "  Voice:      $($voice.Result)" } else { Write-Host "  Voice:      $($voice.Result)" -ForegroundColor Red }
     if ($whisperResult) { Write-Host "  Whisper:    $whisperResult" }
+    if ($ortResult) { Write-Host "  GPU voices: $ortResult" }
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     if ($onWindows) {
         Write-Host "  Shell:      agents' shell commands are refused on Windows (no command sandbox); every other tool works ($AfDocs#windows)"

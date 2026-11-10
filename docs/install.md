@@ -746,6 +746,26 @@ CUDA; Diffusers text-to-image (`stabilityai/sd-turbo`, fp16 on CUDA); Supertonic
 and faster-whisper `large-v3` speech-to-text on CUDA. The
 stack choice and its fallbacks for older drivers are tested with simulated drivers.
 
+### GPU voices on NVIDIA
+
+With the gpu profile on Linux or Windows and an NVIDIA driver that answers `nvidia-smi`, the
+installer adds ONNX Runtime's CUDA build for the local voices (Supertonic and Piper text-to-speech)
+after the profile install, in the gateway's own environment. It installs AbstractVoice's
+`onnx-cuda` extra at the release's AbstractVoice version (`uv pip install --python <the gateway's
+environment>/bin/python "abstractvoice[onnx-cuda]==<version>"`; Windows: `Scripts\python.exe`),
+then checks `python -c "import onnxruntime as o; print(o.get_available_providers())"`. The CPU
+build of ONNX Runtime (which piper-tts and faster-whisper need) and `onnxruntime-gpu` write the same
+files, so when `CUDAExecutionProvider` is missing it writes `onnxruntime-gpu` again, once
+(`uv pip install --python … --no-deps --reinstall-package onnxruntime-gpu "onnxruntime-gpu==<the
+version just installed>"`, uv's form of `pip install --force-reinstall --no-deps onnxruntime-gpu`)
+and checks again. `onnxruntime-gpu` 1.27 and later is a CUDA 13 build, so the step needs driver 580
+or newer and compute capability 7.5 or newer; on an older driver or GPU it is skipped. It asks
+nothing and never fails the install: one line during the install and the summary's `GPU voices:`
+line say whether the CUDA build is in place or why Supertonic and Piper stay on the processor. The
+check proves the CUDA build is in place, not that it loads: Supertonic and Piper report the provider
+they run on at first use. AbstractVoice 0.21.0 is the first release with the `onnx-cuda` extra; with
+an older AbstractVoice the line says so. On macOS nothing changes.
+
 ### Compiled extras
 
 Optional engines that publish no wheel on PyPI are skipped by default: stable-diffusion.cpp

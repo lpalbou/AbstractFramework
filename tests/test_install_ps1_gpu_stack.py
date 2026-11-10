@@ -13,7 +13,9 @@ What is covered here:
 - live progress: output streamed as it comes, a heartbeat with the elapsed time and the last
   Downloading line, package lines counted, every line in the log, the exit code kept, arguments with
   spaces and quotes passed intact;
-- the -Print plan for each stack.
+- the -Print plan for each stack;
+- the GPU voices (Resolve-VoiceOnnxCuda): AbstractVoice's onnx-cuda extra, the providers check,
+  onnxruntime-gpu written again once when the CPU build's files won, the driver/capability gates.
 
 What is not (needs real hardware): that the CUDA wheels really load and offload on an NVIDIA GPU.
 """
@@ -39,6 +41,7 @@ pytestmark = pytest.mark.skipif(shutil.which("pwsh") is None, reason="needs Powe
 FUNCTIONS = [
     "Write-Info", "Write-Ok", "Write-Warn2", "Get-NvidiaInfo", "Select-GpuStack", "Get-TorchSelection",
     "ConvertTo-WinArg", "Invoke-LiveProcess", "Invoke-Smoke", "Resolve-LlamaBuild", "Test-TorchReinstall",
+    "Resolve-VoiceOnnxCuda",
 ]
 VARIABLES = ["AfTorchIndex", "AfTorchPins", "AfLlamaSizes", "AfLlamaSmoke"]
 
@@ -375,12 +378,122 @@ def test_live_process_is_quiet_for_fast_commands(tmp_path: Path) -> None:
     assert "    | done" in out and "still working" not in out and "EXIT 0" in out
 
 
+# --- the GPU voices: AbstractVoice's onnx-cuda extra (ONNX Runtime's CUDA build) --------------------
+
+RTX = {"Ok": True, "Driver": "595.91", "DriverMajor": 595, "Cc": 7.5, "Name": "Quadro RTX 5000", "Error": ""}
+CPU_ORT = "['AzureExecutionProvider', 'CPUExecutionProvider']"
+GPU_ORT = "['CUDAExecutionProvider', 'CPUExecutionProvider']"
+
+
+def _q(s: str) -> str:
+    return "'" + s.replace("'", "''") + "'"
+
+
+def _gpu(info: dict) -> str:
+    def val(v):
+        if v is True or v is False:
+            return "$true" if v else "$false"
+        if v is None:
+            return "$null"
+        return str(v) if isinstance(v, (int, float)) else _q(v)
+    return "@{ " + "; ".join(f"{k} = {val(v)}" for k, v in info.items()) + " }"
+
+
+def _voices(tmp_path: Path, *, info: dict = RTX, voice: bool = True, arch: str = "AMD64",
+            freeze: tuple[str, ...] = ("abstractvoice==0.21.0",), extra: tuple[str, ...] = ("onnxruntime-gpu==1.27.0",),
+            before: str = GPU_ORT, after: str = GPU_ORT, install_ok: bool = True) -> tuple[dict, str]:
+    """Resolve-VoiceOnnxCuda with stand-ins: uv pip freeze lists `freeze` (+ `extra` once the onnx-cuda
+    extra was installed); the providers check answers `before` until onnxruntime-gpu was written again."""
+    ok = "$true" if install_ok else "$false"
+    body = f"""
+$script:LogFile = {_q(str(tmp_path / "install.log"))}
+$script:Calls = New-Object System.Collections.Generic.List[string]
+$script:Extra = $false; $script:Rewritten = $false
+$r = Resolve-VoiceOnnxCuda -Gpu ({_gpu(info)}) -Voice ${'true' if voice else 'false'} -Arch {_q(arch)} -Freeze {{
+    @({", ".join(_q(f) for f in freeze) or "@()"}) + $(if ($script:Extra) {{ @({", ".join(_q(e) for e in extra) or "@()"}) }} else {{ @() }})
+}} -Install {{
+    param($PipArgs, $Description)
+    $script:Calls.Add(($PipArgs -join ' '))
+    if ($PipArgs -contains '--reinstall-package') {{ $script:Rewritten = {ok} }} else {{ $script:Extra = {ok} }}
+    {ok}
+}} -Providers {{ if ($script:Rewritten) {{ {_q(after)} }} else {{ {_q(before)} }} }}
+"RESULT " + (@{{ ok = $r.Ok; result = $r.Result; calls = @($script:Calls) }} | ConvertTo-Json -Compress)
+"""
+    out = _pwsh(body, tmp_path)
+    line = [l for l in out.splitlines() if l.startswith("RESULT ")][-1]
+    return json.loads(line[7:]), out
+
+
+def test_gpu_voices_install_the_extra_and_stop_when_the_cuda_build_is_in_place(tmp_path: Path) -> None:
+    r, out = _voices(tmp_path)
+    assert r["ok"] is True and r["calls"] == ["abstractvoice[onnx-cuda]==0.21.0"], r
+    assert "+ GPU voices: onnxruntime-gpu 1.27.0: the CUDA build of ONNX Runtime is in place" in out
+
+
+def test_gpu_voices_rewrite_onnxruntime_gpu_once_when_the_cpu_build_won(tmp_path: Path) -> None:
+    r, out = _voices(tmp_path, before=CPU_ORT, after=GPU_ORT)
+    assert r["ok"] is True, r
+    assert r["calls"] == ["abstractvoice[onnx-cuda]==0.21.0",
+                          "--no-deps --reinstall-package onnxruntime-gpu onnxruntime-gpu==1.27.0"], r
+
+
+def test_gpu_voices_rewrite_once_only_and_say_the_cpu_build_stayed(tmp_path: Path) -> None:
+    r, out = _voices(tmp_path, before=CPU_ORT, after=CPU_ORT)
+    assert r["ok"] is False and len(r["calls"]) == 2, r
+    assert f"installed but the CPU build's files are in place (providers: {CPU_ORT}; log: " in r["result"]
+    assert "! GPU voices: onnxruntime-gpu 1.27.0 installed but the CPU build's files are in place" in out
+
+
+def test_gpu_voices_name_an_abstractvoice_without_the_extra(tmp_path: Path) -> None:
+    r, out = _voices(tmp_path, freeze=("abstractvoice==0.20.1",), extra=())
+    assert r["ok"] is False and r["calls"] == ["abstractvoice[onnx-cuda]==0.20.1"], r
+    assert r["result"].startswith("not installed: abstractvoice 0.20.1 has no onnx-cuda extra (AbstractVoice 0.21.0 adds it)")
+    assert f". GPU voices: {r['result']}" in out  # an expected state until the pin moves: information
+
+
+def test_gpu_voices_name_an_editable_abstractvoice(tmp_path: Path) -> None:
+    r, out = _voices(tmp_path, freeze=("-e file:///src/abstractvoice",), extra=())
+    assert r["ok"] is False and r["calls"] == [], r
+    assert r["result"].startswith("skipped: abstractvoice is an editable install here (a development checkout)")
+
+
+def test_gpu_voices_a_failed_install_never_fails_the_installer(tmp_path: Path) -> None:
+    r, out = _voices(tmp_path, install_ok=False)
+    assert r["ok"] is False and r["calls"] == ["abstractvoice[onnx-cuda]==0.21.0"], r
+    assert r["result"].startswith("not installed: abstractvoice[onnx-cuda]==0.21.0 did not install (log: ")
+
+
+@pytest.mark.parametrize(
+    "info, voice, arch, expected",
+    [
+        ({**RTX, "Ok": False, "Error": "nvidia-smi not found"}, True, "AMD64", "skipped: no working NVIDIA GPU (nvidia-smi not found)"),
+        ({**RTX, "Driver": "560.94", "DriverMajor": 560}, True, "AMD64", "needs NVIDIA driver 580 or newer (this one is 560.94)"),
+        ({**RTX, "Cc": 7.0}, True, "AMD64", "skipped: CUDA 13 needs compute capability 7.5 or newer"),
+        (RTX, True, "ARM64", "skipped: onnxruntime-gpu publishes no Windows on ARM build"),
+        (RTX, False, "AMD64", "skipped: local voice is not installed"),
+    ],
+)
+def test_gpu_voices_skip_without_a_cuda_13_capable_driver(tmp_path: Path, info, voice, arch, expected) -> None:
+    r, out = _voices(tmp_path, info=info, voice=voice, arch=arch)
+    assert r["ok"] is False and r["calls"] == [], r
+    assert expected in r["result"] and f". GPU voices: {r['result']}" in out
+
+
+def test_gpu_voices_are_wired_after_whisper_and_in_the_summary() -> None:
+    ps1 = SCRIPT.read_text(encoding="utf-8")
+    call = ps1.index("$ortResult = (Resolve-VoiceOnnxCuda -Gpu $gpuInfo -Voice ([bool]$voice.Spec) -Arch $cpuArchEarly")
+    assert ps1.index("$w = Invoke-Smoke $toolPy $AfWhisperSmoke") < call < ps1.index("$envAfter = @(Get-EnvSnapshot)")
+    assert "Invoke-Native -Description $Description -Argv (@($uv, 'pip', 'install', '--python', $toolPy) + $PipArgs) -Soft -Live" in ps1
+    assert 'if ($ortResult) { Write-Host "  GPU voices: $ortResult" }' in ps1
+
+
 # --- the -Print plan for each stack -----------------------------------------------------------------
 
-def _print(tmp_path: Path, fake: Path | None, profile: str = "gpu") -> str:
+def _print(tmp_path: Path, fake: Path | None, profile: str = "gpu", extra_env: dict | None = None) -> str:
     env = {k: v for k, v in os.environ.items() if not k.upper().endswith(("_KEY", "_TOKEN"))}
     env.update({"HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "LOCALAPPDATA": str(tmp_path / "lad"),
                 "PROCESSOR_ARCHITECTURE": "AMD64", "TERM": "dumb"})
+    env.update(extra_env or {})
     env["PATH"] = os.pathsep.join(([str(fake)] if fake else []) + [os.path.dirname(shutil.which("pwsh")), "/usr/bin", "/bin"])
     argv = ["pwsh", "-NoProfile", "-File", str(SCRIPT), "-Print", "-Profile", profile, "-Port", "18999"]
     proc = subprocess.run(argv, capture_output=True, text=True, env=env, timeout=120)
@@ -401,6 +514,12 @@ def test_print_cuda_13_plan(tmp_path: Path) -> None:
     assert "large downloads ahead: PyTorch CUDA 13 build (about 1.9 GB), llama.cpp cu130 build (about 220 MB)" in out
     assert "llama.cpp builds tried in this order: cu130 (about 220 MB), then cu132 (about 220 MB), then vulkan (about 45 MB), then cpu (about 7 MB)" in out
     assert "  GPU stack:  CUDA 13 (" in out
+    # The GPU voices, by hand: the onnx-cuda extra at the release's voice pin, the check, the rewrite.
+    voice_pin = next(c for c in re.search(r"\$AfPyMatrix = @\(([^)]*)\)", SCRIPT.read_text()).group(1).split(", ")
+                     if c.startswith("'abstractvoice==")).strip("'").split("==")[1]
+    assert f"'abstractvoice[onnx-cuda]=={voice_pin}'" in out
+    assert "--no-deps --reinstall-package onnxruntime-gpu 'onnxruntime-gpu==<the version just installed>'" in out
+    assert "-c 'import onnxruntime as o; print(o.get_available_providers())'" in out
     # aec-audio-processing has Windows wheels: not dropped any more (0988).
     assert "aec-audio-processing; sys_platform == 'never'" not in out and "--no-build-package aec-audio-processing" not in install
 
@@ -419,6 +538,13 @@ def test_print_no_nvidia_plan_uses_pypi_torch_and_vulkan_first(tmp_path: Path) -
     assert f"--find-links {LLAMA}/vulkan/llama-cpp-python/ " in install
     assert "+ GPU stack: CPU (no working NVIDIA GPU (nvidia-smi not found)" in out
     assert "llama.cpp builds tried in this order: vulkan (about 45 MB), then cpu (about 7 MB)" in out
+
+
+def test_print_windows_on_arm_lists_no_gpu_voices_steps(tmp_path: Path) -> None:
+    fake = _fake_smi(tmp_path, with_cc="581.29, 8.9, NVIDIA GeForce RTX 4090\n")
+    env_arch = {"PROCESSOR_ARCHITECTURE": "ARM64"}
+    out = _print(tmp_path, fake, extra_env=env_arch)
+    assert "abstractvoice[onnx-cuda]" not in out and "then the GPU voices" not in out
 
 
 def test_print_light_profile_is_unchanged(tmp_path: Path) -> None:

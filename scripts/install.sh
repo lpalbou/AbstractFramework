@@ -15,7 +15,9 @@
 #   3. `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==<pin>"`
 #      (isolated, user-scoped; commands land in ~/.local/bin, AbstractCore's
 #      and its voice/vision/music commands too; prebuilt wheels only, so no
-#      C compiler / Xcode tools are needed)
+#      C compiler / Xcode tools are needed); gpu profile on Linux + NVIDIA: then
+#      the GPU checks (PyTorch, llama.cpp's CUDA build, Whisper) and the GPU
+#      voices (AbstractVoice's onnx-cuda extra: ONNX Runtime's CUDA build)
 #   4. the terminal console (abstractgateway-console) and AbstractCode's terminal
 #      client (abstractcode), built with cargo into the same folder (Rust comes
 #      from rustup, user-scoped, when missing), then the optional parts: Node.js
@@ -3168,7 +3170,7 @@ fi
 # ---------------------------------------------------------------------------
 # NVIDIA (Linux, gpu profile): what the GPU engines really run on (root backlog 0989)
 # ---------------------------------------------------------------------------
-GPU_RESULT=""; TORCH_RESULT=""
+GPU_RESULT=""; TORCH_RESULT=""; ORT_RESULT=""
 if [ "$PROFILE" = gpu ] && [ "$OS_ID" = linux ]; then
     step "NVIDIA GPU check"
     nvidia_info
@@ -3184,6 +3186,13 @@ if [ "$PROFILE" = gpu ] && [ "$OS_ID" = linux ]; then
         [ -n "$GGUF_PIN" ] && twin "$(show_cmd "$UV" pip install --python "<the gateway's tool environment>/bin/python" --no-index \
             --find-links "$AF_LLAMA_INDEX/$AF_LLAMA_CUDA13/llama-cpp-python/" --no-deps --reinstall-package llama-cpp-python \
             --refresh-package llama-cpp-python "llama-cpp-python==$GGUF_PIN")   # PyTorch CUDA 13, driver 580+; CUDA 12: $AF_LLAMA_CUDA12 instead of $AF_LLAMA_CUDA13"
+        # The GPU voices step below, by hand (its check decides whether the third line runs).
+        if [ -n "$VOICE_SPEC" ]; then
+            info "then the GPU voices (Supertonic, Piper; driver 580+ and compute capability 7.5+): AbstractVoice's onnx-cuda extra (ONNX Runtime's CUDA build), the providers check, and onnxruntime-gpu written again once when the CPU build's files are still in place"
+            twin "$(show_cmd "$UV" pip install --python "<the gateway's tool environment>/bin/python" "$(af_voice_req "abstractvoice[onnx-cuda]")")"
+            twin "$(show_cmd "<the gateway's tool environment>/bin/python" -c 'import onnxruntime as o; print(o.get_available_providers())')   # no CUDAExecutionProvider listed: the next line, then this check again"
+            twin "$(show_cmd "$UV" pip install --python "<the gateway's tool environment>/bin/python" --no-deps --reinstall-package onnxruntime-gpu "onnxruntime-gpu==<the version just installed>")"
+        fi
     else
         tool_venv
         GPY="$TOOL_VENV/bin/python"
@@ -3326,6 +3335,68 @@ except BaseException as e:
             cpu) info "Whisper: processor (CTranslate2 found no usable CUDA 12 cuBLAS)" ;;
             *) [ -z "$VOICE_SPEC" ] || info "Whisper: device not determined ($(smoke_val "$_w" error))" ;;
         esac
+        # GPU voices (Supertonic, Piper) on NVIDIA: ONNX Runtime's CUDA build, by the sequence
+        # AbstractVoice's own installer verified (abstractvoice/scripts/install.sh, its header):
+        # AbstractVoice's onnx-cuda extra into this environment, then the providers check.
+        # onnxruntime (the CPU build, which piper-tts and faster-whisper require) and onnxruntime-gpu
+        # write the same files: when the CPU build's are still in place, onnxruntime-gpu alone is
+        # written again, once, and checked again. onnxruntime-gpu 1.27+ is a CUDA 13 build (driver
+        # 580+, compute capability 7.5+). The check proves the CUDA build is in place, not that its
+        # provider loads: Supertonic and Piper report that at first use. Never fails the install.
+        _ocpu="Supertonic and Piper run on the processor"
+        _ochk='import onnxruntime as o; print(o.get_available_providers())'
+        if [ -z "$VOICE_SPEC" ]; then ORT_RESULT="skipped: local voice is not installed"
+        elif [ "$NV_OK" != 1 ]; then ORT_RESULT="skipped: no working NVIDIA GPU ($NV_ERR); $_ocpu"
+        elif [ "$NV_MAJOR" -lt 580 ]; then ORT_RESULT="skipped: onnxruntime-gpu is a CUDA 13 build, which needs NVIDIA driver 580 or newer (this one is $NV_DRIVER); $_ocpu"
+        elif [ -n "$NV_CC10" ] && [ "$NV_CC10" -lt 75 ]; then ORT_RESULT="skipped: CUDA 13 needs compute capability 7.5 or newer; $_ocpu"
+        fi
+        if [ -n "$ORT_RESULT" ]; then info "GPU voices: $ORT_RESULT"
+        else
+            _ofz="$("$UV" pip freeze --python "$GPY" 2>/dev/null)" || _ofz=""
+            _oav="$(printf '%s\n' "$_ofz" | sed -n 's/^abstractvoice==//p' | head -n 1)"
+            _oreq=""; [ -z "$_oav" ] || _oreq="abstractvoice[onnx-cuda]==$_oav"
+            if [ -z "$_oreq" ] && printf '%s\n' "$_ofz" | grep -q '^abstractvoice @ '; then
+                _oav="(a local build)"; _oreq="$(printf '%s\n' "$_ofz" | sed -n 's/^abstractvoice @ /abstractvoice[onnx-cuda] @ /p' | head -n 1)"
+            fi
+            _ov=""
+            if [ -z "$_oreq" ] && printf '%s\n' "$_ofz" | grep -q '^-e .*abstractvoice'; then
+                ORT_RESULT="skipped: abstractvoice is an editable install here (a development checkout): add its onnx-cuda extra by hand; $_ocpu"
+            elif [ -z "$_oreq" ]; then ORT_RESULT="not installed: abstractvoice is not in the gateway's environment; $_ocpu"
+            else
+                RUN_LIVE=1 RUN_SOFT=1 run "install ONNX Runtime's CUDA build (AbstractVoice's onnx-cuda extra)" "$UV" pip install --python "$GPY" "$_oreq"
+                if [ "$RUN_RC" != 0 ]; then ORT_RESULT="not installed: $_oreq did not install (log: $LOG_FILE); $_ocpu"
+                else
+                    _ov="$("$UV" pip freeze --python "$GPY" 2>/dev/null | sed -n 's/^onnxruntime-gpu==//p' | head -n 1)" || _ov=""
+                    [ -n "$_ov" ] || ORT_RESULT="not installed: abstractvoice $_oav has no onnx-cuda extra (AbstractVoice 0.21.0 adds it); $_ocpu"
+                fi
+            fi
+            if [ -n "$_ov" ]; then
+                twin "$(show_cmd "$GPY" -c "$_ochk")"
+                _oprov=""; _otry=1
+                while :; do
+                    printf '  %s$ %s%s\n' "$C_D" "$(show_cmd "$GPY" -c "$_ochk")" "$C_0"
+                    printf '\n$ %s\n' "$(show_cmd "$GPY" -c "$_ochk")" >>"$LOG_FILE"
+                    _oprov="$("$GPY" -c "$_ochk" 2>>"$LOG_FILE" | tee -a "$LOG_FILE" | tail -n 1)" || _oprov=""
+                    case "$_oprov" in *CUDAExecutionProvider*) break ;; esac
+                    [ "$_otry" = 1 ] || break
+                    _otry=2
+                    RUN_SOFT=1 run "write onnxruntime-gpu's files over the CPU build's" "$UV" pip install --python "$GPY" \
+                        --no-deps --reinstall-package onnxruntime-gpu "onnxruntime-gpu==$_ov"
+                    [ "$RUN_RC" = 0 ] || break
+                done
+                case "$_oprov" in
+                    *CUDAExecutionProvider*) ORT_RESULT="onnxruntime-gpu $_ov: the CUDA build of ONNX Runtime is in place; Supertonic and Piper report the provider they run on at first use" ;;
+                    *) ORT_RESULT="onnxruntime-gpu $_ov installed but the CPU build's files are in place (providers: ${_oprov:-none}; log: $LOG_FILE); $_ocpu" ;;
+                esac
+            fi
+            # An AbstractVoice older than its onnx-cuda extra (0.21.0) or an editable checkout is an
+            # expected state, not a failure: said as information.
+            case "$ORT_RESULT" in
+                "onnxruntime-gpu $_ov: "*) ok "GPU voices: $ORT_RESULT" ;;
+                *"has no onnx-cuda extra"*|"skipped: "*) info "GPU voices: $ORT_RESULT" ;;
+                *) warn "GPU voices: $ORT_RESULT" ;;
+            esac
+        fi
         rm -f "$SMOKE_PY"
     fi
     # vLLM compiles GPU kernels at first use (Triton), which needs a C compiler; measured on a
@@ -4059,6 +4130,7 @@ echo "  Check:      uvx abstractframework doctor"
 [ -z "$TORCH_RESULT" ] || echo "  PyTorch:    $TORCH_RESULT"
 echo "  GGUF:       $GGUF_RESULT"
 if [ -n "$VOICE_SPEC" ]; then echo "  Voice:      $VOICE_RESULT"; echo "              its default voice downloads once: $VOICE_WEIGHTS"; else printf '  Voice:      %s%s%s\n' "$C_R" "$VOICE_RESULT" "$C_0"; fi
+[ -z "$ORT_RESULT" ] || echo "  GPU voices: $ORT_RESULT"
 [ -z "$GPU_RESULT" ] || echo "  vLLM:       $GPU_RESULT"
 if [ "$FULL" = 0 ] && { [ "$PROFILE" = apple ] || [ "$PROFILE" = gpu ]; }; then
     echo "  $AF_SKIPPED_LINE"
