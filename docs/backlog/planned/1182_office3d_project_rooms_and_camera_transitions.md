@@ -52,3 +52,10 @@ Reassess the in-flight themes, shared dossier and kickoff changes first. No gove
 ## Receipts
 
 - Planning based on `office3d/static/app.js`, `engine.py`, and `server.py` inspected 2026-11-09.
+
+## Deployment state 2026-11-10 (handed to the framework seat; operator: later)
+
+The athena.ovh install of the dev framework + office3d stopped mid-way; full state and the operator's decisions in
+`office3d/untracked/handoff-2026-11-10.md` (untracked, on purpose: hosts, ports, auth files). Resume from there: deploy both via
+the gateway and its managed apps, office over HTTPS + basic auth, keep `~/.local/share/abstractgateway` and the GitLab-nginx
+vhosts. Same host as the 0.14.0 candidate's Linux CPU clean-install check (1179).
