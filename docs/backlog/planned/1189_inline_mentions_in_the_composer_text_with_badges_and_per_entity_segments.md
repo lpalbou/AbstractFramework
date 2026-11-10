@@ -2,7 +2,7 @@
 
 > Package: AbstractUIC panel-chat (the composer's span model, overlay and mention list; the message card's badges), AbstractGateway (`MentionRequest` gains spans; `entity_mentions` builds each entity's turn), AbstractEntity / AbstractAssistant web / AbstractCode web (wiring)
 > Type: feature
-> Status: planned — next wave (sized 2026-11-09 21:00; not in the 0.14.0 cut)
+> Status: planned (IN PROGRESS 2026-11-10, this wave) — next wave (sized 2026-11-09 21:00; not in the 0.14.0 cut)
 > Created: 2026-11-10
 > Priority: P1
 > Labels: entities, mentions, composer, kit, next-wave
@@ -76,3 +76,9 @@ the badge action and the job path are 1187's.
 
 - Operator test findings and the Entity session's analysis: `untracked/finish-plan-2026-11-09/operator-test/FINDINGS.md`
   (7); running log `untracked/release-2026-11-07/RESUME.md` 20:40, 21:00, 21:25.
+
+## Scope change 2026-11-10 14:50
+
+Operator test of Code web 0.16.0: the @castor chip rendered ABOVE the text ("terrible visually and not the inline in text I
+was requesting. so do it all over again"). Moved INTO THE 0.14.0 WAVE, before the app tags: the mention is an inline styled
+chip in the text, no x, deleted in text; the two info lines stay; kit composer so Assistant web follows. Entity session.

@@ -2,7 +2,7 @@
 
 > Package: AbstractEntity (activity panel), AbstractGateway (ledger stream fields), AbstractUIC (shared activity row)
 > Type: feature
-> Status: planned
+> Status: planned (IN PROGRESS 2026-11-10, this wave)
 > Created: 2026-11-10
 > Priority: P2
 > Labels: entities, observability, ledger, next-wave
@@ -19,6 +19,12 @@ Replay of the run ledger (the ledger is the authority; every app shows the same)
 (thinking / tool / answer), passive recall (how many memories came to mind, which topics), active recall (search_memory
 / topics / read_memory calls with their key parameters), tools used with their key parameters, iteration n of max, time
 per step; each row opens the ledger event. Same component in Code web for agent runs (tool rows exist there already).
+
+## Scope change 2026-11-10 14:50
+
+Operator: "it seems you didn't improve yet the realtime feedback informative system". Moved INTO THE 0.14.0 WAVE, before
+the app tags: rows from the ledger stream (thinking / tool + key params / passive recall / active recall / iteration n of
+max); no new gateway field unless a hole is found. Entity session builds the panel.
 
 ## Related
 

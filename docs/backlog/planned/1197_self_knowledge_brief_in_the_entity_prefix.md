@@ -47,6 +47,13 @@ mention door answered 500 on this runtime (the gateway worker ran its tests agai
 runtime `9656cee` (195 characters; `tests/test_tool_descriptions_fit_core.py` pins every entity tool under the limit). The
 release sweep must include that test; a runtime cut from 0a8fc67 without it ships the 500.
 
+## Test note 2026-11-10 14:50
+
+The operator looked for self_brief.md in the Entity app's Files view and found none: (a) no real night had run since restart
+#15 (the two "sleeps" were visit-door restores); castor's first night started 14:51 (idle sweep, 26 % fragmented) and writes
+it; (b) the Files view lists the workspace, not the home root, so the brief needs its own place in the app (Entity session:
+Topics panel header or Identity page, with written_at).
+
 ## Related
 
 abstractentity backlog 0011 (the "what do you know" answer) and 0005 (members by type + last formed, the panel side of the refinement) point here.
