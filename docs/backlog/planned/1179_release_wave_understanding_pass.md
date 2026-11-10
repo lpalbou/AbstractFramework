@@ -473,6 +473,10 @@ assistant not in that set (0.21.0 pending). abstractagent, abstractsemantics and
 exact matrix runs on the operator's Linux GPU host (resumed on request, ~40 min) by the Core session's recipe once the
 gateway and apps are published.
 
+Gate finding 2026-11-10 (gateway shard 3, all Pythons): test_entity_idle_sleep's real repair sweeper left a dead worker
+registered in the process-wide registry, so later /api/health answered degraded and two singleton-lock tests went red;
+fixed in gateway 56451ab5 (teardown unregister + a conftest guard that fails the leaving test by name). Not a code defect.
+
 ## Receipts
 
 - Release mechanics: the `abstract-release` and `release` skills; previous record [1132](../completed/1132_final_stable_release.md).
