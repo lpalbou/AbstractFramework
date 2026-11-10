@@ -463,8 +463,15 @@ site cut is therefore a visible gap, not only a candidate step.
 Candidate check, athena.ovh (Core session, 2026-11-10 ~14:45): with the host's own Python 3.14 the published set does not
 install (abstractcore 2.35.0 pins `lxml<6`, lxml 5.x has no cp314 wheels, pip builds from source and fails). Not a 0.14.0
 defect: the root docs state Python 3.10–3.13 (README, docs/install.md platform table, getting-started) and the installers
-provision uv's Python 3.12. Core follow-up (next core release): lift the lxml ceiling to `<7` and test 3.14. The same set
-on Python 3.12 is being resolved; result below when it lands.
+provision uv's Python 3.12. Core follow-up (next core release): lift the lxml ceiling to `<7` and test 3.14. On uv's Python 3.12
+(scratch venv, CPU torch from the PyTorch index, one pip resolve): INSTALL OK, `pip check` clean, every package imports:
+core 2.35.0, voice 0.21.0, vision 0.3.35, music 0.1.17, skill 0.3.11, semantics 0.0.5, 3d 0.3.2, camera 0.2.1, memory
+0.5.0, note 0.3.1, runtime 0.19.0, lxml 5.4.0, torch 2.15.0+cpu; 1.8 GB. The run resolved abstractagent 0.6.0, not the
+0.6.1 pin (the draft the Core session read predates the agent row): the final matrix install must pin 0.6.1. Gateway and
+assistant not in that set (0.21.0 pending). abstractagent, abstractsemantics and AbstractMemory expose no `__version__`
+(cosmetic; next wave). Python 3.14/lxml filed as abstractcore backlog 0886 (proposed). The `[gpu]` profile install of the
+exact matrix runs on the operator's Linux GPU host (resumed on request, ~40 min) by the Core session's recipe once the
+gateway and apps are published.
 
 ## Receipts
 
