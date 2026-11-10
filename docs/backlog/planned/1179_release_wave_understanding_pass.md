@@ -485,7 +485,11 @@ CANDIDATE BLOCKER found 2026-11-10 20:00 on the GPU host (Core session, [gpu] ma
 torch 2.13.0 → nvidia-cudnn-cu13 9.20, while abstractvoice[gpu] adds nvidia-cudnn-cu12 9.28 (CTranslate2); both unpack into
 the same nvidia/cudnn/lib, cuDNN refuses every convolution (CUDNN_STATUS_SUBLIBRARY_VERSION_MISMATCH): Qwen3-TTS and FLUX
 dead, Supertonic falls back to CPU, faster-whisper fine. Repair under test (drop nvidia-cudnn-cu12 from voice's [gpu]);
-if confirmed → abstractvoice 0.21.1 prepared, published on the operator's word, root pin moves. Also noted: a bare pip of
+if confirmed → abstractvoice 0.21.1 prepared, published on the operator's word, root pin moves. OPERATOR RULING 2026-11-10
+20:15: the gateway and every app publish only after EVERY lower package is proven working in the three profiles ([gpu] on
+the GPU host, [apple] on the Mac, base on athena), real-weights smoke per capability, report
+untracked/release-2026-11-07/audit-fable/PROFILES-PROOF.md reviewed adversarially; the gateway tag and the app tags are
+HELD until then. Also noted: a bare pip of
 abstractcore[gpu] gets the CPU llama-cpp-python wheel (the installer swaps it); vllm adds ~2 GB and a torch downgrade.
 
 ## Receipts
