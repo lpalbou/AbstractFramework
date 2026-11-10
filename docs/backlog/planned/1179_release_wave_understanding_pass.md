@@ -439,7 +439,7 @@ abstractavatar 0.2.0 crate + Python (the operator's local `cargo publish --locke
 |---|---|---|---|
 | 6 | abstractgateway 0.21.0 + console 0.18.1 | draft `98bcda38` Fable-reviewed; the mentions-routing commit being finalized (tree dirty: entities, entity_mentions, entity_cognition_profile, replay_view, docs, CHANGELOG). Floor runtime `>=0.19.0` | commit → `scripts/ci_local.sh abstractgateway --release-tag v0.21.0` → push → tag → visibility |
 | 6b | AbstractRuntime 0.19.1 (self-knowledge brief, 1197) | committed `0a8fc67` + `340b61b` on main, full suite 4925 green, unpushed; optional for this wave | cut only if time allows; otherwise the gateway ships on 0.19.0 and the brief rides 0.21.1 |
-| 7 | Entity 0.12.0, Code web 0.16.0 (D4: 0.16.0) + crate 0.15.0, Assistant web 0.2.0 (in the inventory, D4: yes), Observer 0.13.0 | ready in the Entity session; :3004 at `820d0fe` | tag after the gateway is visible |
+| 7 | Entity 0.12.0, Code web 0.16.0 (D4: 0.16.0) + crate 0.15.0, Assistant web 0.2.0 (in the inventory, D4: yes), Observer 0.13.0 | ALL client halves committed: Entity 8b86d00/820d0fe/1ba47f7/d7a063f (:3004), Assistant web 3e37883/78a5eb6, Code web 4beb02f + TUI a602c4c (:3003, binary installed; tag `web-v0.16.0` on a602c4c, changelog heading "[web 0.16.0]", crate stays 0.15.0) | tag on "gateway 0.21.0 visible" |
 | 8 | candidate | not started | exact-matrix install Mac + Linux CPU host (Core session), website preview (`abstractframework-website`), pins draft, change report `docs/releases/0.14.0-changes.md` refresh |
 | 9 | abstractframework 0.14.0 | pins draft `docs/releases/0.14.0-pins-draft.md`; root main ~66 commits ahead, unpushed | the operator's explicit GO only |
 

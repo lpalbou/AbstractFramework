@@ -70,7 +70,10 @@ No heuristic deciding "this is a task"; no automatic job from every mention; no 
   answers 404 for it. Decision 2026-11-10: the route stays run-only; clients (Assistant web first) read the turn row's
   own fields on reload. The job queue of this item gives such turns a real record.
 - Messages sent mid-reply through steer/guidance reach the session agent regardless of mentions (they do not go through
-  `/runs/start`). Out of scope for 0.21.0; the job dispatch of this item must cover that path too.
+  `/runs/start`). Out of scope for 0.21.0; the job dispatch of this item must cover that path too. Client rule shipped with it: while a
+  reply is running, an entity-only message still steers the agent, so the clients hide the "stays out" hint then; and
+  every client (Code web 4beb02f, Code TUI a602c4c, Assistant web 78a5eb6, Entity 8b86d00) refuses a skipped start that
+  lacks `turn_id`: the gateway's `turn_id` on `agent:"not_addressed"` is a hard contract.
 
 ## Related
 
