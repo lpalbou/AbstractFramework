@@ -42,3 +42,10 @@ A fixture workflow with (a) a venv + `python -m pip` step and (b) a step whose e
 
 `scripts/ci_local.py` (read it): the pip rewrite and the "writes outside the machine" text filter. Evidence in
 untracked/release-2026-11-07/RESUME.md (04:45, 05:30 entries) and audit-fable/.
+
+## Added 2026-11-10 19:45: the gate's parallelism starves the machine it runs on
+
+A full gateway gate runs 16 pytest shards in parallel; with the Entity session's lanes and three Playwright runs on the
+live gateway the load average reached 292 and the live dev gateway's event-loop watchdog killed it (30 s stall, exit 75,
+supervisor respawn; incident runtime/incidents/watchdog-20261110T183807Z). Add a default `--jobs` cap (cores / 2, or
+read the current load) and print the cap; keep `--jobs N` to override.
