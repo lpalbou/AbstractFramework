@@ -41,6 +41,12 @@ Memory seam for the refinement: AbstractMemory serves no last-accessed date per 
 the last 7 days); "last accessed" needs a `facts.span`-like last-recall stamp in the communities payload (Entity session,
 memory backlog) before the runtime can print it.
 
+Blocker found and fixed 2026-11-10 ~11:40: 0a8fc67's `topics` tool description was 249 characters, over AbstractCore's
+200-character tool limit (`tools/core.py _MAX_TOOL_DESCRIPTION_CHARS`); AbstractCore refused the definition and the gateway's
+mention door answered 500 on this runtime (the gateway worker ran its tests against 8c8a731 for that reason). Fixed in
+runtime `9656cee` (195 characters; `tests/test_tool_descriptions_fit_core.py` pins every entity tool under the limit). The
+release sweep must include that test; a runtime cut from 0a8fc67 without it ships the 500.
+
 ## Related
 
 abstractentity backlog 0011 (the "what do you know" answer) and 0005 (members by type + last formed, the panel side of the refinement) point here.

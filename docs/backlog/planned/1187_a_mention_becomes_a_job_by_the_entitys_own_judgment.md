@@ -66,9 +66,9 @@ No heuristic deciding "this is a task"; no automatic job from every mention; no 
 
 ## Known limits shipped in AbstractGateway 0.21.0 (2026-11-10; this item absorbs them)
 
-- A turn the session agent did not answer (`agent:"not_addressed"`) carries a `turn_id`, not a run id: `GET /runs/{id}/input_data`
-  answers 404 for it. Decision 2026-11-10: the route stays run-only; clients (Assistant web first) read the turn row's
-  own fields on reload. The job queue of this item gives such turns a real record.
+- CORRECTED 2026-11-10 ~11:40 by the shipped code (gateway 649776c5): a not-addressed turn IS a run record (`turn_id` equals
+  `run_id`), so `GET /runs/{id}/input_data` answers 200 with its words (a test pins it). The 404 limit never existed; the
+  clients' row-based reload (Assistant 78a5eb6) stays, harmless.
 - Messages sent mid-reply through steer/guidance reach the session agent regardless of mentions (they do not go through
   `/runs/start`). Out of scope for 0.21.0; the job dispatch of this item must cover that path too. Client rule shipped with it: while a
   reply is running, an entity-only message still steers the agent, so the clients hide the "stays out" hint then; and
