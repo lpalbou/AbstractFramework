@@ -446,7 +446,11 @@ abstractavatar 0.2.0 crate + Python (the operator's local `cargo publish --locke
 Known limits shipped in 0.21.0 (recorded in [1187](1187_a_mention_becomes_a_job_by_the_entitys_own_judgment.md)):
 a not-addressed turn's `input_data` 404 (clients read the turn row); steer/guidance messages bypass the mentions rule.
 After the release, in the Entity session's packages: AbstractMemory 0.5.1 (bookkeeping writes), the console crates'
-modal fix at their next abstracttui relock, the abstractentity items from the operator's 12 UI findings of 2026-11-10.
+modal fix at their next abstracttui relock, the abstractentity items from the operator's 12 UI findings of 2026-11-10: abstractentity backlog 0001-0012 (68ec3af):
+0001 topics panel top-right, 0002 hover-highlight community + visibility, 0003 animated zoom, 0004 legend <= 2 lines +
+interactive, 0005 members by type + type stats + last formed, 0006 UI polish, 0010 live activity panel (= root 1196),
+0011 brief (= root 1197), 0012 slow Settings (= root 1195); 0007 green contrast, 0008 hovered-neighbourhood contrast and
+0009 ledger key lines are DONE (d7a063f, :3004 rebuilt). Assistant web 78a5eb6 reads the not-addressed turn's row on reload.
 
 Site note for the cut (operator on the abstractcore.ai preview, 2026-11-10 ~11:00): AbstractCore is presented as an
 abstraction over AI capabilities (write once; generate with multimodal input and output; closed and open models alike;

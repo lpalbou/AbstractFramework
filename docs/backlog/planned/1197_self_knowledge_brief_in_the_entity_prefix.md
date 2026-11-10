@@ -41,6 +41,10 @@ Memory seam for the refinement: AbstractMemory serves no last-accessed date per 
 the last 7 days); "last accessed" needs a `facts.span`-like last-recall stamp in the communities payload (Entity session,
 memory backlog) before the runtime can print it.
 
+## Related
+
+abstractentity backlog 0011 (the "what do you know" answer) and 0005 (members by type + last formed, the panel side of the refinement) point here.
+
 ## Validation
 
 Brief ≤ 400 tokens with every topic's title and the top trails; byte-identical prefix across turns without a sleep; a

@@ -24,6 +24,10 @@ Claude sessions, test suites, the dev stack). Measure first, then fix the real c
 - The gateway's /graph snapshot (0.21.0) made the Entity graph load 2 s then 5 ms; the same approach (one cached
   snapshot per session, folded server-side) is the candidate for the Code conversation restore.
 
+## Related
+
+abstractentity backlog 0012 (slow Settings load) points here.
+
 ## Validation
 
 Measure on an idle machine: Code web conversation restore < 1 s for a 100-turn conversation; Entity Settings < 500 ms;

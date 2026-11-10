@@ -20,6 +20,10 @@ Replay of the run ledger (the ledger is the authority; every app shows the same)
 / topics / read_memory calls with their key parameters), tools used with their key parameters, iteration n of max, time
 per step; each row opens the ledger event. Same component in Code web for agent runs (tool rows exist there already).
 
+## Related
+
+abstractentity backlog 0010 points here.
+
 ## Validation
 
 A visit with two tool calls and a topics lookup shows all rows live and identical after a reload; 400 px layout.
