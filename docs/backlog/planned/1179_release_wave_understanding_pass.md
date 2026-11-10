@@ -382,8 +382,53 @@ Next wave (filed 2026-11-10, not in this cut): 1188, the inline-mentions compose
 gradient, the bundle builders' baked iteration limit with the START_SUBWORKFLOW ceiling, 1187, 1170, 1168's decision
 wait, voice 0069.
 
+## Publish log 2026-11-10
+
+The record of what reached a registry. Each row was checked on its registry (PyPI JSON, the npm
+registry, the crates.io API) and with `gh run view` at about 03:45 Paris; each tag points at the same
+commit locally and on `origin`. Times are Paris (UTC+1). The sections above stay as they were.
+
+### Published
+
+| Package | Version | Tag (commit) | Release run | On its registry |
+|---|---|---|---|---|
+| abstractskill (PyPI) | 0.3.11 | `v0.3.11` (`628f329c`) | [42736585852](https://github.com/lpalbou/AbstractSkill/actions/runs/42736585852), green | 02:34 |
+| @abstractframework/flow (npm) | 0.14.2 | `v0.14.2` (`94e112c2`) | [42736595131](https://github.com/lpalbou/AbstractFlow/actions/runs/42736595131), green | 02:37 |
+| abstracttui, abstracttui-graph, abstracttui-mermaid (crates.io) | 0.8.0, 0.7.0, 0.7.0 | `v0.8.0` (`bd3a3973`) | [42736086771](https://github.com/lpalbou/AbstractTUI/actions/runs/42736086771), green | 02:32–02:33 |
+| @abstractframework/panel-chat, @abstractframework/ui-kit (npm, AbstractUIC) | 0.9.11, 0.9.27 | `v0.10.19` (`39c1189c`) | [42738434319](https://github.com/lpalbou/AbstractUIC/actions/runs/42738434319), green | 02:54, 03:01 |
+
+**Incident: AbstractTUI `main` is red.** The CI run of the `v0.8.0` commit on `main`
+([42736083911](https://github.com/lpalbou/AbstractTUI/actions/runs/42736083911)) failed in one job,
+`test (windows, lib only)`: three snapshot tests (`app::anchored::tests::mention::chat_panel_sends_text_and_mentions_in_order`,
+`widgets::chat::author_tests::a_row_without_author_renders_exactly_as_before`,
+`widgets::chat::author_tests::an_entity_row_shows_its_coloured_mark_name_and_kind`; panic at
+`src\testing\snapshot.rs:65`). The other seven jobs and the release run are green and the crates
+are published. A red `main` is an incident (ADR 0050): fixed or reverted in AbstractTUI, not in
+this root pass.
+
+### Pending, in the order of "Sequence" above
+
+| Step | Package | Version in its manifest | On its registry now | Note |
+|---|---|---|---|---|
+| 1 | abstractcore | 2.35.0 | 2.34.0 | `main` is `7d48ce5d`, 6 commits past the cached `origin/main` (the refresh's candidate was `8b970550`) |
+| 2 | abstractvoice | 0.21.0 | 0.20.1 | `main` is `38750f4`, pushed: the candidate moved from `2b98d1e` (12 commits since, among them the opt-in ONNX Runtime CUDA step and the standalone one-line installers `def3204`, `38750f4`) |
+| 2 | abstractavatar crate, then Python | 0.2.0, 0.2.0 | 0.1.1, 0.1.1 | the operator's local `cargo publish` first |
+| 3 | AbstractMemory | 0.5.0 | 0.4.0 | after the Stop fence; must contain `4074406` |
+| 4 | AbstractRuntime | 0.19.0 | 0.18.4 | core `>=2.35.0` and memory `>=0.5.0`, both HARD |
+| 5 | abstractagent | 0.6.1 | 0.6.0 | runtime `>=0.19.0` |
+| 6 | abstractgateway, abstractgateway-console | 0.21.0, 0.18.1 | 0.20.2, 0.18.0 | after the gateway half of the fence |
+| 7 | @abstractframework/entity | 0.12.0 | 0.11.2 | after the gateway is visible |
+| 7 | @abstractframework/code (web), abstractcode (crate) | 0.15.21 (or 0.16.0, D4), 0.15.0 | 0.15.6, 0.14.0 | crate: TEMP patch removed, `abstracttui = "0.8.0"` (now on crates.io) |
+| 7 | @abstractframework/assistant (web) | 0.2.0 | 0.1.3 | not in the root inventory (D4) |
+| 7 | @abstractframework/observer | 0.13.0 | 0.12.4 | |
+| 8 | abstractframework (root) | 0.14.0 | 0.13.0 | after the candidate and the operator's GO; the pin matrix with each pin's status: [docs/releases/0.14.0-pins-draft.md](../../releases/0.14.0-pins-draft.md) |
+
+Heads are the local checkouts' `main` (not fetched); "cached `origin/main`" is the last fetched
+tracking ref.
+
 ## Receipts
 
 - Release mechanics: the `abstract-release` and `release` skills; previous record [1132](../completed/1132_final_stable_release.md).
 - Track: [understanding-pass](understanding-pass/README.md).
 - Refresh 2026-11-10: `untracked/release-2026-11-07/audit-fable/PACKAGES.md` (sections a, c, e), `RESUME.md`, `ROADMAP-2026-11-09-2010.md`.
+- Publish log 2026-11-10: the registries, `gh run view` of each release run, `git ls-remote --tags origin`; root 0.14.0 pins draft: [docs/releases/0.14.0-pins-draft.md](../../releases/0.14.0-pins-draft.md).
