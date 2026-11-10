@@ -103,3 +103,7 @@ through Context7's documented refresh API. This item sets it up for every packag
   `/docs/library-updates`, `/docs/howto/claiming-libraries.md`, `/docs/api-reference/refresh/refresh-a-library`,
   `/docs/integrations/github-actions.md`, `/docs/api-reference/add-library/add-an-llmstxt-file.md`.
 - `context7.com/lpalbou/abstractcore` (state on 2026-11-05).
+
+## Note 2026-11-10
+
+Context7 allows one re-index per project every 10 days: the 2.35.0 release run (2026-11-10) got HTTP 400 "too-early" because the previous refresh was 2026-11-08. AbstractCore workflows now treat "too-early" as a notice (core 8f9a7bba + efd46b05); the index follows on Context7's schedule or `gh workflow run context7-refresh.yml -R lpalbou/AbstractCore` after 2026-11-18. Any release within 10 days of the previous refresh gets this notice.
