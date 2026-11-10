@@ -455,7 +455,10 @@ interactive, 0005 members by type + type stats + last formed, 0006 UI polish, 00
 Site note for the cut (operator on the abstractcore.ai preview, 2026-11-10 ~11:00): AbstractCore is presented as an
 abstraction over AI capabilities (write once; generate with multimodal input and output; closed and open models alike;
 build on capabilities independently of providers or models changing their contracts), never "for Python" or a provider
-list. core.html's hero carries the rejected sentence; align it at the site cut.
+list. core.html's hero carries the rejected sentence; align it at the site cut. abstractcore.ai is PUBLISHED (AbstractCore
+gh-pages 0a1407d, 2026-11-10 ~12:00) and links to abstractframework.ai/core.html, /install.html and the /core/ installer
+files: those links are 404 until the site cut ships the back-links, the hero and the /core/ files from tag v2.35.0 — the
+site cut is therefore a visible gap, not only a candidate step.
 
 ## Receipts
 
