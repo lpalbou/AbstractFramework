@@ -438,7 +438,7 @@ abstractavatar 0.2.0 crate + Python (the operator's local `cargo publish --locke
 | Step | Package | State at the handoff | Next action |
 |---|---|---|---|
 | 6 | abstractgateway 0.21.0 + console 0.18.1 | draft `98bcda38` Fable-reviewed; the mentions-routing commit being finalized (tree dirty: entities, entity_mentions, entity_cognition_profile, replay_view, docs, CHANGELOG). Floor runtime `>=0.19.0` | commit → `scripts/ci_local.sh abstractgateway --release-tag v0.21.0` → push → tag → visibility |
-| 6b | AbstractRuntime 0.19.1 (self-knowledge brief, 1197) | committed `0a8fc67` on main, full suite running; optional for this wave | cut only if time allows; otherwise the gateway ships on 0.19.0 and the brief rides 0.21.1 |
+| 6b | AbstractRuntime 0.19.1 (self-knowledge brief, 1197) | committed `0a8fc67` + `340b61b` on main, full suite 4925 green, unpushed; optional for this wave | cut only if time allows; otherwise the gateway ships on 0.19.0 and the brief rides 0.21.1 |
 | 7 | Entity 0.12.0, Code web 0.16.0 (D4: 0.16.0) + crate 0.15.0, Assistant web 0.2.0 (in the inventory, D4: yes), Observer 0.13.0 | ready in the Entity session; :3004 at `820d0fe` | tag after the gateway is visible |
 | 8 | candidate | not started | exact-matrix install Mac + Linux CPU host (Core session), website preview (`abstractframework-website`), pins draft, change report `docs/releases/0.14.0-changes.md` refresh |
 | 9 | abstractframework 0.14.0 | pins draft `docs/releases/0.14.0-pins-draft.md`; root main ~66 commits ahead, unpushed | the operator's explicit GO only |
@@ -447,6 +447,11 @@ Known limits shipped in 0.21.0 (recorded in [1187](1187_a_mention_becomes_a_job_
 a not-addressed turn's `input_data` 404 (clients read the turn row); steer/guidance messages bypass the mentions rule.
 After the release, in the Entity session's packages: AbstractMemory 0.5.1 (bookkeeping writes), the console crates'
 modal fix at their next abstracttui relock, the abstractentity items from the operator's 12 UI findings of 2026-11-10.
+
+Site note for the cut (operator on the abstractcore.ai preview, 2026-11-10 ~11:00): AbstractCore is presented as an
+abstraction over AI capabilities (write once; generate with multimodal input and output; closed and open models alike;
+build on capabilities independently of providers or models changing their contracts), never "for Python" or a provider
+list. core.html's hero carries the rejected sentence; align it at the site cut.
 
 ## Receipts
 

@@ -30,12 +30,16 @@ stays stable between sleeps; no brief → no section; the `topics` tool's teachi
 
 ## State 2026-11-10 ~11:00
 
-Runtime: committed on main as `0a8fc67` (identity/self_brief.py, `self_brief.md` in the home, prefix section, 14 tests, 487
-affected tests passed); full suite running; the refinement above is NOT built yet (next step, recorded in
+Runtime: committed on main as `0a8fc67` + `340b61b` (changelog note) (identity/self_brief.py, `self_brief.md` in the home,
+prefix section, 14 tests; FULL SUITE 4925 passed, 32 skipped, 3 xfailed at 0a8fc67; measured on castor's real 11-topic
+payload: 2384-token body, a 202-word brief = 348 tokens); NOT pushed; the refinement above is NOT built yet (next step, recorded in
 `changelog.d/self-knowledge-brief.md`). Not published: AbstractRuntime 0.19.1 is the cut that carries it; if the
 0.14.0 wave ships on 0.19.0, the brief waits for the next runtime patch and the gateway floor moves then. Gateway: no
 code change needed; its prompt-preview route composes without the brief (shows a prefix without the section) — fold into
 the gateway's next cut. Entity app: show the brief in the Topics panel header (not built).
+Memory seam for the refinement: AbstractMemory serves no last-accessed date per topic, only `facts.activity` (recalls over
+the last 7 days); "last accessed" needs a `facts.span`-like last-recall stamp in the communities payload (Entity session,
+memory backlog) before the runtime can print it.
 
 ## Validation
 
