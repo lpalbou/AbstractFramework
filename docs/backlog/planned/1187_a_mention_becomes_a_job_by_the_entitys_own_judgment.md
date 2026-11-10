@@ -64,6 +64,14 @@ No heuristic deciding "this is a task"; no automatic job from every mention; no 
 - "Leave as task" on a badge queues the job without a new answer; the job button does the same from the Entity app.
 - A mention the entity answers fully queues nothing. Tests red with each piece removed; one real-model E2E.
 
+## Known limits shipped in AbstractGateway 0.21.0 (2026-11-10; this item absorbs them)
+
+- A turn the session agent did not answer (`agent:"not_addressed"`) carries a `turn_id`, not a run id: `GET /runs/{id}/input_data`
+  answers 404 for it. Decision 2026-11-10: the route stays run-only; clients (Assistant web first) read the turn row's
+  own fields on reload. The job queue of this item gives such turns a real record.
+- Messages sent mid-reply through steer/guidance reach the session agent regardless of mentions (they do not go through
+  `/runs/start`). Out of scope for 0.21.0; the job dispatch of this item must cover that path too.
+
 ## Related
 
 1111/1112 (mentions), 1138, 1175 (guardian rights), 1186 (guardian, back channel), inline mentions composer (kit item to

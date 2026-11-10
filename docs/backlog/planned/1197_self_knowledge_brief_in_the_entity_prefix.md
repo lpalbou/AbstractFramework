@@ -28,6 +28,15 @@ plain-text brief stored in the home (`self_brief.md`, header with version_seq/wr
 placed in the system prefix of every lane right after the identity block and BEFORE anything per-turn, so the KV prefix
 stays stable between sleeps; no brief → no section; the `topics` tool's teaching points at it. Runtime 0.19.1.
 
+## State 2026-11-10 ~11:00
+
+Runtime: committed on main as `0a8fc67` (identity/self_brief.py, `self_brief.md` in the home, prefix section, 14 tests, 487
+affected tests passed); full suite running; the refinement above is NOT built yet (next step, recorded in
+`changelog.d/self-knowledge-brief.md`). Not published: AbstractRuntime 0.19.1 is the cut that carries it; if the
+0.14.0 wave ships on 0.19.0, the brief waits for the next runtime patch and the gateway floor moves then. Gateway: no
+code change needed; its prompt-preview route composes without the brief (shows a prefix without the section) — fold into
+the gateway's next cut. Entity app: show the brief in the Topics panel header (not built).
+
 ## Validation
 
 Brief ≤ 400 tokens with every topic's title and the top trails; byte-identical prefix across turns without a sleep; a
