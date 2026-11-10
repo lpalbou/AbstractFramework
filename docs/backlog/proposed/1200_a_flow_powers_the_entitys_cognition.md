@@ -23,6 +23,13 @@ operator's own workflows as visual flows).
    close), authored in AbstractFlow, bound per entity by the gateway, replayed in the ledger like today; the default flow
    reproduces the current lane exactly (parity test), and a custom flow changes the cognition without code.
 
+## Consequence of step 1 (2026-11-10 18:20, Entity session)
+
+The blueprint page carried the only editors of the operator dials (PUT /entities/spec/phases tunables) and of the
+phase-transition rules (edge_ops). After removal the runtime still applies them from spec/entity_phases.json; no screen
+edits them. If wanted back: Settings → Mind. Kept: spec/entity_phases.json and spec/cognition_graph.json (the gateway
+serves and vendors them), spec_sync.ts.
+
 ## Non-goals
 
 No change to the ledger contract; no second execution engine: Flow runs on the runtime as every workflow does.
