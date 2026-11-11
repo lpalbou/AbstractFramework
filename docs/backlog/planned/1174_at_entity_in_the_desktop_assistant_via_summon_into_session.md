@@ -38,7 +38,7 @@ Built in AbstractAssistant (main, unreleased):
 The acceptance criteria below keep their intent (structured chips, sequential answers in mention order, one
 answer per mention, "<Name> is in another conversation" and skip, member scope, no entity-to-entity messaging);
 the summon call, the 30-minute probe and the "first use" confirmation sentence are replaced by the contract (the
-first-use sentence was removed in every app, operator 2026-11-10 23:02).
+first-use sentence was removed from the web Assistant, AbstractAssistant aa68850, operator 2026-11-10 23:02).
 
 ## Summary
 
