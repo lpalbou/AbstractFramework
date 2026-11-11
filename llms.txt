@@ -185,8 +185,8 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `NPM_LIBRARY_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- AbstractFramework 0.13.1 pins 15 published Python components with `==`, including AbstractSkill 0.3.10, AbstractGateway 0.20.2, AbstractCore 2.34.0, AbstractRuntime 0.18.2, AbstractVoice 0.20.1, Assistant 0.18.1, Notes 0.3.1, Camera 0.2.1 and Avatar 0.1.1. See the [complete matrix](README.md#release-matrix-abstractframework-0131).
-- Six npm apps and seven shared npm libraries are recorded separately; libraries are never launched. Seven crate versions are recorded, including both TUI extensions. Published terminal tools retain their own dependency lockfiles.
+- AbstractFramework 0.14.0 pins 15 published Python components with `==`, including AbstractGateway 0.21.0, AbstractCore 2.35.1, AbstractRuntime 0.19.5, AbstractMemory 0.5.1, AbstractAgent 0.6.1, AbstractSkill 0.3.11, AbstractVoice 0.21.1, AbstractVision 0.3.36, Assistant 0.18.3, Notes 0.3.1, Camera 0.2.1 and Avatar 0.2.0. See the [complete matrix](README.md#release-matrix-abstractframework-0140).
+- Seven npm apps (the Assistant web app included; its manifest id is the gateway's `assistant-web`) and seven shared npm libraries are recorded separately; libraries are never launched. Seven crate versions are recorded, including both TUI extensions. Published terminal tools retain their own dependency lockfiles.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
 ## Full Context

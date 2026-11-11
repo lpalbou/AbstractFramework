@@ -151,18 +151,18 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.20.2"
+AF_GATEWAY_PIN_DEFAULT="0.21.0"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.13.1"
-AF_PY_MATRIX="abstractcore==2.34.0 AbstractRuntime==0.18.2 abstractagent==0.6.0 abstractskill==0.3.10 AbstractMemory==0.4.0 abstractsemantics==0.0.5 abstractvoice==0.20.1 abstractvision==0.3.34 abstractmusic==0.1.17 abstract3d==0.3.2 abstractcamera==0.2.1 abstractavatar==0.1.1 abstractnote==0.3.1"
+AF_FRAMEWORK_VERSION="0.14.0"
+AF_PY_MATRIX="abstractcore==2.35.1 AbstractRuntime==0.19.5 abstractagent==0.6.1 abstractskill==0.3.11 AbstractMemory==0.5.1 abstractsemantics==0.0.5 abstractvoice==0.21.1 abstractvision==0.3.36 abstractmusic==0.1.17 abstract3d==0.3.2 abstractcamera==0.2.1 abstractavatar==0.2.0 abstractnote==0.3.1"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.14.0 @abstractframework/code@0.15.1 @abstractframework/observer@0.12.1 @abstractframework/continuum@0.8.0 @abstractframework/entity@0.11.1 @abstractframework/note@0.3.1"
-AF_CRATE_CONSOLE="abstractgateway-console@0.18.0"
-AF_CRATE_CODE_CLI="abstractcode@0.14.0"
+AF_NPM_APPS="@abstractframework/flow@0.14.2 @abstractframework/code@0.16.0 @abstractframework/observer@0.13.0 @abstractframework/continuum@0.8.1 @abstractframework/entity@0.12.0 @abstractframework/note@0.3.1 @abstractframework/assistant@0.2.0"
+AF_CRATE_CONSOLE="abstractgateway-console@0.18.1"
+AF_CRATE_CODE_CLI="abstractcode@0.15.0"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
 # `abstractgateway-config` (uv tool install --with-executables-from; --no-core-cli leaves them
 # out): AbstractCore and its voice, vision and music packages. Not abstractruntime (its one
@@ -913,10 +913,16 @@ incomplete_add() {
 #     (`abstractgateway apps launch`); the summary says so. A copy that is not provably this
 #     install's (another command line, or a process this system cannot inspect) is left alone,
 #     and the summary says in red what runs and what was checked.
+af_app_id() {  # af_app_id NAME -> the gateway's app id of @abstractframework/NAME
+    # The short name, except the web Assistant: the gateway calls it "assistant-web", and
+    # "assistant" is its DESKTOP Assistant (abstractassistant on PyPI), which an update to the web
+    # app's version would reinstall at that version (install_manifest.GATEWAY_APP_IDS, same rule).
+    case "$1" in assistant) printf '%s\n' assistant-web ;; *) printf '%s\n' "$1" ;; esac
+}
 af_app_pin() {  # af_app_pin ID -> this release's version of that browser app; non-zero when none
     for _s in $AF_NPM_APPS; do
         _n="${_s#@abstractframework/}"
-        [ "${_n%@*}" = "$1" ] && { printf '%s\n' "${_n##*@}"; return 0; }
+        [ "$(af_app_id "${_n%@*}")" = "$1" ] && { printf '%s\n' "${_n##*@}"; return 0; }
     done
     return 1
 }
@@ -988,7 +994,7 @@ af_apps_settled() {  # -> af_apps_installed's rows once no app of this release i
 af_apps_marker() {  # the pins the gateway applies at its next start (one "ID VERSION" per line)
     mkdir -p "$DATA_DIR" && : >"$DATA_DIR/apps-upgrade.pending.tmp" || return 1
     for _s in $AF_NPM_APPS; do
-        _n="${_s#@abstractframework/}"; printf '%s %s\n' "${_n%@*}" "${_n##*@}" >>"$DATA_DIR/apps-upgrade.pending.tmp"
+        _n="${_s#@abstractframework/}"; printf '%s %s\n' "$(af_app_id "${_n%@*}")" "${_n##*@}" >>"$DATA_DIR/apps-upgrade.pending.tmp"
     done
     mv -f "$DATA_DIR/apps-upgrade.pending.tmp" "$DATA_DIR/apps-upgrade.pending"
 }
@@ -1044,7 +1050,7 @@ af_rows_source() {  # af_rows_source ROWS ID -> the SOURCE field of ID's row (""
 APPS_LINES=""
 af_apps_step() {  # af_apps_step UP (1 = a gateway answers at BASE_URL); sets APPS_LINES for the summary
     APPS_LINES=""; _up="$1"
-    _pins=""; for _s in $AF_NPM_APPS; do _n="${_s#@abstractframework/}"; _pins="$_pins ${_n%@*} ${_n##*@},"; done
+    _pins=""; for _s in $AF_NPM_APPS; do _n="${_s#@abstractframework/}"; _pins="$_pins $(af_app_id "${_n%@*}") ${_n##*@},"; done
     _pins="${_pins# }"; _pins="${_pins%,}"
     if [ "$_up" != 1 ]; then
         if [ "$PRINT" = 1 ]; then

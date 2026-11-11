@@ -2,7 +2,110 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [0.14.0] - 2026-11-11
+
+Pins the 2026-11-10/11 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.21.0**,
+**AbstractCore 2.35.1**, **AbstractRuntime 0.19.5**, **AbstractMemory 0.5.1**, **AbstractAgent 0.6.1**,
+**AbstractSkill 0.3.11**, **AbstractVoice 0.21.1**, **AbstractVision 0.3.36** and **AbstractAvatar 0.2.0**.
+It also carries everything prepared as 0.13.1, which was never published. The complete Python, npm and
+Rust matrix is in the [README](README.md#release-matrix-abstractframework-0140).
+
+### What this release is
+
+- **Entities get a clear life**: five states (idle, visit, work, own time, sleep), own time only when you
+  give it, a Stop that really stops, and visits that never fail.
+- **Every memory gets a title and a summary** written by a model when it forms, and sleep repairs the
+  older ones.
+- **Sleep groups an entity's memories into topics**, which the entity can browse with its `topics` tool
+  and the Entity app draws.
+- **Bring any entity into a conversation with `@`** from Code, the Assistant and the Entity app, and see
+  who answered.
+- **Voice and vision are proven on Linux** (NVIDIA and processor-only); agents get 50 steps by default
+  (was 20).
+
+### Added during the night of 10–11 November
+
+- **The GPU install works fully on a GPU machine.** A plain `pip install "abstractframework[gpu]"` runs
+  GGUF models on the card: AbstractCore 2.35.1 installs llama.cpp's CUDA build itself at the first model
+  load, once, with two console lines. A fresh Linux GPU install no longer breaks text-to-speech and image
+  generation (AbstractVoice 0.21.1: one cuDNN family). Proven on an NVIDIA host with every capability:
+  LLMs (GGUF and transformers), embeddings, speech both ways, image understanding and FLUX generation,
+  music, plus vLLM on a Turing card.
+- **Images run locally by default.** The vision command line defaults to FLUX.2 klein 4B in 8 bits on
+  every platform (AbstractVision 0.3.36).
+- **Withdrawing own time is final.** The turn in flight finishes, then nothing else runs; the app says
+  "Own time withdrawn: he finishes what he is doing, then goes idle".
+- **A visit without a word leaves nothing**: no memory, no count in the track record, no "met"; the app
+  says "Nothing to keep: no words were shared."
+- **The entity knows what it knows**: a short brief of its topics, written in its sleep, sits in its
+  prompt and on the Card tab.
+- **Watching an entity work**: the live activity panel shows each step, the memories recalled (with
+  their topics), the tools and their arguments, and "step n of max"; the activity rows count the tools
+  used and the files read and written per step.
+- **Mentions inside your sentence**: an `@` mention of an entity is a chip in the text in Code (web and
+  terminal), the Assistant and the Entity app, also in sent messages; a mentioned entity's pending
+  answer shows as its own bubble.
+- **Entity cards and the Topics panel**: Watch, Retry with the reason and Resume on every card; topics as
+  tinted cards, hovering one lights its community, animated zoom, members grouped by type, a floatable
+  panel.
+- **Faster Code web start**: the conversations show after the first answer instead of nine in series.
+- **A visit question you answer is marked resolved** in memory (AbstractRuntime 0.19.5).
+
+### Added
+
+- **The Assistant web app** (`@abstractframework/assistant` 0.2.0) joins the release's browser apps: the
+  console's **Apps** page serves it at `/apps/assistant-web/`, `npx @abstractframework/assistant
+  --gateway-url <url>` runs it on its own, and the installers bring an installed copy to this version
+  like the other apps. The release lists it under the gateway's app id `assistant-web`, so an upgrade
+  never touches the desktop Assistant (`abstractassistant`).
+- **GPU voices on NVIDIA** in the installers (gpu profile on Linux and Windows, driver 580 or newer):
+  AbstractVoice's `onnx-cuda` extra goes into the gateway's environment so Supertonic and Piper speak on
+  the card; the summary's `GPU voices:` line says whether it is in place
+  ([GPU voices on NVIDIA](docs/install.md#gpu-voices-on-nvidia)).
+
+### Changed
+
+- Both installers and the generated manifest use the 0.14.0 matrix below. Container images:
+  `ghcr.io/lpalbou/abstractgateway:0.21.0` and `ghcr.io/lpalbou/abstractcore-server:2.35.1`.
+
+| Package | 0.13.0 | 0.14.0 |
+|---|---|---|
+| `abstractgateway` (PyPI) | 0.20.1 | 0.21.0 |
+| `abstractcore` (PyPI) | 2.34.0 | 2.35.1 |
+| `AbstractRuntime` (PyPI) | 0.18.1 | 0.19.5 |
+| `AbstractMemory` (PyPI) | 0.4.0 | 0.5.1 |
+| `abstractagent` (PyPI) | 0.6.0 | 0.6.1 |
+| `abstractskill` (PyPI) | 0.3.10 | 0.3.11 |
+| `abstractvoice` (PyPI) | 0.20.0 | 0.21.1 |
+| `abstractvision` (PyPI) | 0.3.34 | 0.3.36 |
+| `abstractavatar` (PyPI and crates.io) | 0.1.1 | 0.2.0 |
+| `abstractassistant` (PyPI) | 0.18.0 | 0.18.3 |
+| `abstractnote` (PyPI) | 0.3.0 | 0.3.1 |
+| `@abstractframework/flow` | 0.14.0 | 0.14.2 |
+| `@abstractframework/code` | 0.15.0 | 0.16.0 |
+| `@abstractframework/observer` | 0.12.0 | 0.13.0 |
+| `@abstractframework/continuum` | 0.8.0 | 0.8.1 |
+| `@abstractframework/entity` | 0.11.0 | 0.12.0 |
+| `@abstractframework/note` | 0.3.0 | 0.3.1 |
+| `@abstractframework/assistant` | (not listed) | 0.2.0 |
+| `@abstractframework/ui-kit` | 0.9.14 | 0.9.28 |
+| `@abstractframework/panel-chat` | 0.8.1 | 0.9.13 |
+| `abstractgateway-console` (crates.io) | 0.18.0 | 0.18.1 |
+| `abstractcode` (crates.io) | 0.14.0 | 0.15.0 |
+| `abstracttui` (crates.io) | 0.7.1 | 0.8.0 |
+| `abstracttui-graph`, `abstracttui-mermaid` (crates.io) | 0.6.0 | 0.7.0 |
+
+Unchanged: `abstractsemantics` 0.0.5, `abstractmusic` 0.1.17, `abstract3d` 0.3.2, `abstractcamera` 0.2.1,
+`abstractcore-console` 0.8.1, `@abstractframework/app-server` 0.1.13 and the four monitor libraries.
+
+### Fixed
+
+- [Install](docs/install.md) states the free disk space the installer checks for (about 8 GB for the
+  apple profile, 12 GB for gpu, 1.5 GB for light) instead of "about 5 GB".
+
 ## [0.13.1] - 2026-11-07
+
+Prepared but never published on PyPI: everything below ships in 0.14.0.
 
 Pins AbstractGateway 0.20.2, AbstractAssistant 0.18.1, AbstractRuntime 0.18.2, AbstractVoice 0.20.1
 and AbstractNote 0.3.1, and the browser apps Code 0.15.1, Entity 0.11.1, Observer 0.12.1 and Note 0.3.1

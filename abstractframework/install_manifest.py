@@ -75,10 +75,23 @@ def _python_packages() -> list[dict[str, str]]:
     ]
 
 
+# A browser app's id is the gateway's app id (AbstractGateway `apps_manager.APPS`), which the
+# gateway reads from `npm_apps` (release pins, `abstractgateway update`) and the installers pass to
+# `abstractgateway apps update`. It is the package's short name, except for the web Assistant:
+# "assistant" is the gateway's DESKTOP Assistant (`abstractassistant` on PyPI), so an update of
+# "assistant" to the web app's version would reinstall the desktop app at that version.
+GATEWAY_APP_IDS: dict[str, str] = {"@abstractframework/assistant": "assistant-web"}
+
+
+def gateway_app_id(package_name: str) -> str:
+    """The gateway's app id of an npm browser app (see GATEWAY_APP_IDS)."""
+    return GATEWAY_APP_IDS.get(package_name, package_name.rsplit("/", 1)[-1])
+
+
 def _npm_apps() -> list[dict[str, str]]:
     return [
         {
-            "id": package_name.rsplit("/", 1)[-1],
+            "id": gateway_app_id(package_name),
             "package": package_name,
             "version": version,
             "registry": "npm",

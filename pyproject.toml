@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.13.1"
+version = "0.14.0"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -48,27 +48,27 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.20.2",
+    "abstractgateway==0.21.0",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.18.1",
+    "abstractassistant==0.18.3",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.34.0",
-    "AbstractRuntime==0.18.2",
-    "abstractagent==0.6.0",
-    "abstractskill==0.3.10",
-    "AbstractMemory==0.4.0",
+    "abstractcore==2.35.1",
+    "AbstractRuntime==0.19.5",
+    "abstractagent==0.6.1",
+    "abstractskill==0.3.11",
+    "AbstractMemory==0.5.1",
     "abstractsemantics==0.0.5",
 
     # Capability plugins are remote-first by default; local runtimes live behind
     # their package-specific `apple`/`gpu` (or `all-*`) extras.
-    "abstractvoice==0.20.1",
-    "abstractvision==0.3.34",
+    "abstractvoice==0.21.1",
+    "abstractvision==0.3.36",
     "abstractmusic==0.1.17",
     "abstract3d==0.3.2",
     "abstractcamera==0.2.1",
-    "abstractavatar==0.1.1",
+    "abstractavatar==0.2.0",
     "abstractnote==0.3.1",
 ]
 
@@ -85,13 +85,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.20.2",
-    "abstractassistant[apple]==0.18.1; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.21.0",
+    "abstractassistant[apple]==0.18.3; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.20.2",
-    "abstractassistant[gpu]==0.18.1",
+    "abstractgateway[gpu]==0.21.0",
+    "abstractassistant[gpu]==0.18.3",
 ]
 
 [project.urls]

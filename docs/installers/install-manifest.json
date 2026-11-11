@@ -105,7 +105,7 @@
         "summary": "Remove the service and uv tools (purge also deletes the data dir)."
       }
     ],
-    "gateway_version": "0.20.2",
+    "gateway_version": "0.21.0",
     "optional_extras": [
       "tray"
     ],
@@ -148,7 +148,7 @@
       "wait for GET /api/health",
       "abstractgateway-config claim-url (when supported) and open /console"
     ],
-    "tool_requirement": "abstractgateway[{extras}]==0.20.2",
+    "tool_requirement": "abstractgateway[{extras}]==0.21.0",
     "uninstall": [
       [
         "abstractgateway",
@@ -169,7 +169,7 @@
     "name": "AbstractFramework",
     "python_requires": ">=3.10",
     "registry": "pypi",
-    "version": "0.13.1"
+    "version": "0.14.0"
   },
   "minimum_installer_version": "0.2.0",
   "npm_apps": [
@@ -178,35 +178,35 @@
       "id": "flow",
       "package": "@abstractframework/flow",
       "registry": "npm",
-      "version": "0.14.0"
+      "version": "0.14.2"
     },
     {
       "command": "npx @abstractframework/code",
       "id": "code",
       "package": "@abstractframework/code",
       "registry": "npm",
-      "version": "0.15.1"
+      "version": "0.16.0"
     },
     {
       "command": "npx @abstractframework/observer",
       "id": "observer",
       "package": "@abstractframework/observer",
       "registry": "npm",
-      "version": "0.12.1"
+      "version": "0.13.0"
     },
     {
       "command": "npx @abstractframework/continuum",
       "id": "continuum",
       "package": "@abstractframework/continuum",
       "registry": "npm",
-      "version": "0.8.0"
+      "version": "0.8.1"
     },
     {
       "command": "npx @abstractframework/entity",
       "id": "entity",
       "package": "@abstractframework/entity",
       "registry": "npm",
-      "version": "0.11.1"
+      "version": "0.12.0"
     },
     {
       "command": "npx @abstractframework/note",
@@ -214,6 +214,13 @@
       "package": "@abstractframework/note",
       "registry": "npm",
       "version": "0.3.1"
+    },
+    {
+      "command": "npx @abstractframework/assistant",
+      "id": "assistant-web",
+      "package": "@abstractframework/assistant",
+      "registry": "npm",
+      "version": "0.2.0"
     }
   ],
   "npm_libraries": [
@@ -225,12 +232,12 @@
     {
       "package": "@abstractframework/ui-kit",
       "registry": "npm",
-      "version": "0.9.15"
+      "version": "0.9.28"
     },
     {
       "package": "@abstractframework/panel-chat",
       "registry": "npm",
-      "version": "0.8.2"
+      "version": "0.9.13"
     },
     {
       "package": "@abstractframework/monitor-active-memory",
@@ -284,6 +291,11 @@
         "npx",
         "-y",
         "@abstractframework/note"
+      ],
+      [
+        "npx",
+        "-y",
+        "@abstractframework/assistant"
       ]
     ],
     "claim": [
@@ -335,7 +347,7 @@
       "local_inference": false,
       "name": "Light",
       "pip_requirements": [
-        "abstractframework==0.13.1"
+        "abstractframework==0.14.0"
       ],
       "platforms": [
         "macos",
@@ -359,7 +371,7 @@
       "local_inference": true,
       "name": "Apple",
       "pip_requirements": [
-        "abstractframework[apple]==0.13.1"
+        "abstractframework[apple]==0.14.0"
       ],
       "platforms": [
         "macos"
@@ -383,7 +395,7 @@
       "local_inference": true,
       "name": "GPU",
       "pip_requirements": [
-        "abstractframework[gpu]==0.13.1"
+        "abstractframework[gpu]==0.14.0"
       ],
       "platforms": [
         "linux",
@@ -402,37 +414,37 @@
       "distribution": "abstractcore",
       "id": "abstractcore",
       "registry": "pypi",
-      "version": "2.34.0"
+      "version": "2.35.1"
     },
     {
       "distribution": "AbstractRuntime",
       "id": "abstractruntime",
       "registry": "pypi",
-      "version": "0.18.2"
+      "version": "0.19.5"
     },
     {
       "distribution": "abstractagent",
       "id": "abstractagent",
       "registry": "pypi",
-      "version": "0.6.0"
+      "version": "0.6.1"
     },
     {
       "distribution": "abstractgateway",
       "id": "abstractgateway",
       "registry": "pypi",
-      "version": "0.20.2"
+      "version": "0.21.0"
     },
     {
       "distribution": "abstractskill",
       "id": "abstractskill",
       "registry": "pypi",
-      "version": "0.3.10"
+      "version": "0.3.11"
     },
     {
       "distribution": "AbstractMemory",
       "id": "abstractmemory",
       "registry": "pypi",
-      "version": "0.4.0"
+      "version": "0.5.1"
     },
     {
       "distribution": "abstractsemantics",
@@ -444,13 +456,13 @@
       "distribution": "abstractvoice",
       "id": "abstractvoice",
       "registry": "pypi",
-      "version": "0.20.1"
+      "version": "0.21.1"
     },
     {
       "distribution": "abstractvision",
       "id": "abstractvision",
       "registry": "pypi",
-      "version": "0.3.34"
+      "version": "0.3.36"
     },
     {
       "distribution": "abstractmusic",
@@ -468,7 +480,7 @@
       "distribution": "abstractassistant",
       "id": "abstractassistant",
       "registry": "pypi",
-      "version": "0.18.1"
+      "version": "0.18.3"
     },
     {
       "distribution": "abstractcamera",
@@ -480,7 +492,7 @@
       "distribution": "abstractavatar",
       "id": "abstractavatar",
       "registry": "pypi",
-      "version": "0.1.1"
+      "version": "0.2.0"
     },
     {
       "distribution": "abstractnote",

@@ -55,12 +55,12 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.13.1` for this release).
+The meta-package version (`0.14.0` for this release).
 
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each Python component to its exact pinned version. The
-[release matrix](../README.md#release-matrix-abstractframework-0131) lists all 15 distributions,
+[release matrix](../README.md#release-matrix-abstractframework-0140) lists all 15 distributions,
 including Notes, Camera and the Python Avatar binding.
 
 ### `PACKAGE_DISTRIBUTIONS`
@@ -70,9 +70,10 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 
 ### `NPM_RELEASE_VERSIONS`
 
-The six launchable browser apps, including Notes, each runnable with `npx <package>@<version>`.
-They appear as `npm_apps` in the install manifest. See the
-[release matrix](../README.md#release-matrix-abstractframework-0131) for exact versions.
+The seven launchable browser apps, including Notes and the Assistant web app, each runnable with
+`npx <package>@<version>`. They appear as `npm_apps` in the install manifest, each with the
+gateway's app id (`assistant-web` for `@abstractframework/assistant`). See the
+[release matrix](../README.md#release-matrix-abstractframework-0140) for exact versions.
 
 ### `NPM_LIBRARY_RELEASE_VERSIONS`
 
@@ -82,7 +83,7 @@ not launchable apps. They appear as `npm_libraries` in the profile and install m
 ### `CRATE_RELEASE_VERSIONS`
 
 The three Rust terminal tools and four library crates, including `abstracttui-graph` and
-`abstracttui-mermaid`. The installers build Gateway console 0.18.0 and AbstractCode 0.14.0
+`abstracttui-mermaid`. The installers build Gateway console 0.18.1 and AbstractCode 0.15.0
 unless skipped. Published tools retain their own dependency lockfiles; listing a library
 version here does not replace dependencies embedded in a previously published tool.
 

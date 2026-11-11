@@ -192,7 +192,7 @@ EXTERNAL = [
 ]
 
 
-def _sh(tmp_path: Path, env: dict, up: int, print_mode: int = 0) -> str:
+def _sh(tmp_path: Path, env: dict, up: int, print_mode: int = 0, pins: str = PINS) -> str:
     text = SH.read_text()
     block = re.search(r"^# >>> apps-upgrade.*?^# <<< apps-upgrade$", text, re.S | re.M)
     assert block, "install.sh lost its apps-upgrade block"
@@ -202,7 +202,7 @@ show_cmd() {{ echo "$*"; }}
 run() {{ shift; RUN_RC=0; "$@" >/dev/null 2>&1 || RUN_RC=$?; return 0; }}
 INCOMPLETE=""; incomplete_add() {{ INCOMPLETE="${{INCOMPLETE}}$1: $2
 "; }}
-AF_NPM_APPS="{PINS}"; GW="{tmp_path}/abstractgateway"; APPS_PY="{sys.executable}"
+AF_NPM_APPS="{pins}"; GW="{tmp_path}/abstractgateway"; APPS_PY="{sys.executable}"
 BASE_URL="http://127.0.0.1:18999"; DATA_DIR="{tmp_path}/data"; LOG_FILE=""; PRINT={print_mode}
 AF_APPS_START_WAIT=6; AF_STOP_TIMEOUT=1
 {block.group(0)}
@@ -215,8 +215,8 @@ printf 'APPS<<%s>>\\nINCOMPLETE<<%s>>\\n' "$APPS_LINES" "$INCOMPLETE"
     return proc.stdout + proc.stderr
 
 
-def _ps(tmp_path: Path, env: dict, up: int, print_mode: int = 0) -> str:
-    names = ["Get-AppPin", "Test-GwBooted", "Test-GatewayUp", "Test-PortListening", "Get-AppsToken", "Get-AppsInstalled", "Get-AppsSettled", "Write-AppsMarker", "Invoke-AppsStep",
+def _ps(tmp_path: Path, env: dict, up: int, print_mode: int = 0, pins: str = PINS) -> str:
+    names = ["Get-AppId", "Get-AppPin", "Test-GwBooted", "Test-GatewayUp", "Test-PortListening", "Get-AppsToken", "Get-AppsInstalled", "Get-AppsSettled", "Write-AppsMarker", "Invoke-AppsStep",
              "Get-PidArgs", "Test-AppLeftover", "Stop-AppLeftover", "Start-AppLaunch"]
     loader = f"""
 $ast = [System.Management.Automation.Language.Parser]::ParseFile('{PS1}', [ref]$null, [ref]$null)
@@ -235,7 +235,7 @@ $script:Incomplete = New-Object System.Collections.Generic.List[string]
 function Add-Incomplete([string]$Label, [string]$Why, [switch]$Fail, [string]$Kind = 'retry') {{ $script:Incomplete.Add("${{Label}}: $Why") }}
 $script:Twins = New-Object System.Collections.Generic.List[string]
 $script:DryRun = ${'true' if print_mode else 'false'}
-$AfNpmApps = @({", ".join(repr(s) for s in PINS.split())})
+$AfNpmApps = @({", ".join(repr(s) for s in pins.split())})
 Invoke-AppsStep -Up ${'true' if up else 'false'} -Gw '{tmp_path}/abstractgateway' -BaseUrl 'http://127.0.0.1:18999' -DataDir '{tmp_path}/data'
 "APPS<<$($script:AppsLines -join "`n")>>"
 "INCOMPLETE<<$($script:Incomplete -join "`n")>>"
@@ -289,6 +289,36 @@ def test_no_gateway_writes_the_pending_marker(runner, tmp_path: Path) -> None:
     marker = tmp_path / "data" / "apps-upgrade.pending"
     assert marker.read_text().split("\n")[:2] == ["flow 0.7.0", "code 0.10.0"]
     assert _calls(tmp_path) == [] and "next start" in out
+
+
+# The web Assistant (@abstractframework/assistant, in the release since 0.14.0) is "assistant-web" on
+# the gateway; "assistant" is the gateway's DESKTOP Assistant, whose row carries abstractassistant's
+# version. Matched by its npm short name, the web app's pin would send `apps update assistant
+# --version 0.2.0`, which the gateway runs as a reinstall of the desktop app at 0.2.0.
+ASSISTANT_PINS = PINS + " @abstractframework/assistant@0.2.0"
+WITH_ASSISTANTS = [
+    {"id": "assistant-web", "version": "0.1.3", "running": False},
+    {"id": "assistant", "version": "0.18.3", "running": True},
+]
+
+
+@pytest.mark.parametrize("runner", RUNNERS)
+def test_the_web_assistant_follows_its_pin_and_the_desktop_assistant_is_left_alone(runner, tmp_path: Path) -> None:
+    runner(tmp_path, _env(tmp_path, WITH_ASSISTANTS), up=1, pins=ASSISTANT_PINS)
+    calls = _calls(tmp_path)
+    assert any(c.startswith("apps update assistant-web --version 0.2.0") for c in calls), calls
+    assert not any(c.startswith("apps update assistant ") for c in calls), calls
+    v = _versions(tmp_path)
+    assert (v["assistant-web"], v["assistant"]) == ("0.2.0", "0.18.3")
+
+
+@pytest.mark.parametrize("runner", RUNNERS)
+def test_the_pending_marker_names_the_web_assistant_by_its_gateway_id(runner, tmp_path: Path) -> None:
+    out = runner(tmp_path, _env(tmp_path, WITH_ASSISTANTS), up=0, pins=ASSISTANT_PINS)
+    lines = (tmp_path / "data" / "apps-upgrade.pending").read_text().splitlines()
+    assert "assistant-web 0.2.0" in lines, lines
+    assert not any(line.split()[0] == "assistant" for line in lines), lines
+    assert "assistant-web 0.2.0" in out
 
 
 @pytest.mark.parametrize("runner", RUNNERS)

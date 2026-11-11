@@ -25,7 +25,7 @@ abstractframework manifest --check docs/installers/install-manifest.json
 | `profiles` | `light`, `apple`, `gpu`: pip requirement, platforms, prerequisites, whether local inference is installed |
 | `python_packages` | Every pinned PyPI package: id, distribution name, version |
 | `npm_libraries` | Optional array of shared npm library names, versions and registry; no launch command |
-| `npm_apps` | Every npm app released with this version and its `npx` command |
+| `npm_apps` | Every npm app released with this version: its `id` (the gateway's app id, `assistant-web` for `@abstractframework/assistant`), package, version and `npx` command |
 | `bootstrap` | What the one-line scripts install: `gateway_version`, `python` (`3.12`), `tool_requirement`, `profile_extras`, `optional_extras`, `default_port`, script URLs and one-liners, the shared flag table (`sh`/`ps`/env names), the step list, and the uninstall commands |
 | `post_install` | Console-first next steps: `entrypoint: "console"`, the `serve` command on `127.0.0.1`, `health_url`, `console_url`, the `claim` command and its token-file fallback, the `service` command, `doctor`, and the `npx` app commands |
 | `security` | Whether secrets or signed native artifacts are present |

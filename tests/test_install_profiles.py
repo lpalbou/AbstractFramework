@@ -1433,6 +1433,29 @@ def test_shared_npm_libraries_are_not_launchable_apps() -> None:
     assert get_release_profile()["npm_libraries"] == NPM_LIBRARY_RELEASE_VERSIONS
 
 
+def test_manifest_app_ids_are_the_gateways_app_ids() -> None:
+    """`npm_apps[].id` is what the gateway reads (release pins, `abstractgateway update`) and what
+    the installers pass to `abstractgateway apps update`: the gateway's app id. The web Assistant
+    is "assistant-web"; "assistant" is the gateway's desktop Assistant (abstractassistant)."""
+    from abstractframework.install_manifest import build_install_manifest
+
+    apps = {row["package"]: row["id"] for row in build_install_manifest()["npm_apps"]}
+    assert apps["@abstractframework/assistant"] == "assistant-web"
+    assert "assistant" not in apps.values()
+
+
+def test_manifest_app_ids_match_the_sibling_gateway_catalog_when_available() -> None:
+    source = ROOT / "abstractgateway" / "src" / "abstractgateway" / "apps_manager.py"
+    if not source.exists():
+        pytest.skip("The AbstractGateway checkout is not present in this standalone checkout.")
+    from abstractframework.install_manifest import build_install_manifest
+
+    catalog = set(re.findall(r'AppSpec\(\s*"([a-z0-9-]+)",\s*"[^"]*",\s*"(@abstractframework/[a-z0-9-]+)"', source.read_text(encoding="utf-8")))
+    assert catalog, "no AppSpec rows found in the gateway's apps_manager.py"
+    for row in build_install_manifest()["npm_apps"]:
+        assert (row["id"], row["package"]) in catalog, (row, sorted(catalog))
+
+
 def test_release_installer_requests_notes_and_camera_not_only_constraints(tmp_path: Path) -> None:
     result = _install_sh_print(tmp_path, profile="light")
     assert result.returncode == 0, result.stderr
