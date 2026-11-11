@@ -47,3 +47,18 @@ the card. "it's important as if unresolved, this is probably looked back into it
 
 Runtime + gateway halves: framework seat. Memory, kit, app halves: Entity/memory seat (after the 0.12.0 tags; Entity
 0.12.1 + panel-chat 0.9.14 + memory 0.5.2).
+
+## State 2026-11-11 03:00 (framework session)
+
+- Runtime half DONE: abstractruntime 4501552, cut as 0.19.5 (afecffb, publishing): the visit look-back lists the open
+  questions the visit asked or touched, offers the ```resolve block, the diary records carry resolves / resolves_status /
+  resolved_record_id / resolved_title in the DIARY_WRITE result and election meta, and the `question_resolved` notice
+  {kind, record_id, title} rides the turn's notices (private: title "" + visibility private).
+- Memory half DONE for 0.5.2: abstractmemory b3d90c2 + cb91cde (replay diary block carries the four keys; records.py
+  accepts the three new attributes as non-empty strings).
+- SEAM left for runtime 0.19.6 (patch wave, floor AbstractMemory>=0.5.2): identity_support.py's projection onto the
+  memory record still stamps only `resolves`; it must stamp the three keys and OMIT resolved_title for a private target
+  (memory refuses an empty string). Chat lane too.
+- Gateway 0.21.1 (patch wave): close_notices reads the completed llm_call row with payload.turn_id == "t-reflect" and
+  applies question_resolved_notice to each item of result.diary_entries. panel-chat 0.9.14: ChatNoticeKind + badge.
+  Entity 0.12.1: Questions lens via resolves.
