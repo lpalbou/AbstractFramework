@@ -2,12 +2,43 @@
 
 > Package: AbstractAssistant (desktop composer, chip, summon on send, author label, refusal sentence); AbstractGateway read only (existing `GET /entities`, `POST /entities/{name}/summon`, identity route)
 > Type: feature
-> Status: planned — paused
+> Status: planned (IN PROGRESS 2026-11-11: contract client + send path built in AbstractAssistant 6ae96c6 + 0332713; the Qt UI is in progress) — the summon-based design below is SUPERSEDED, see the next section
 > Created: 2026-11-08
 > Priority: P1
-> Labels: entities, mentions, assistant, paused, seat-framework
+> Labels: entities, mentions, assistant, seat-framework
 
 Paused by operator ruling 2026-11-08 (pause all dev); resume = explicit go.
+
+## Superseded design (2026-11-11)
+
+Operator 2026-11-11: the desktop Assistant does `@entity_name` "following the same logic as other apps". The
+summon-based plan below (`POST /entities/{name}/summon` with the chat's session, the 30-minute probe) is
+SUPERSEDED by the mention contract every client now follows,
+`untracked/entity-mentions-2026-11-08/CONTRACT-mentions.md` and its Additions: the chips ride `POST runs/start` as
+`mentions` (a message naming entities and not `@agent` starts no agent run: `agent: "not_addressed"` + `turn_id`);
+each entity is asked through `POST /sessions/{sid}/mentions` (the visit door), in order, one after the other, with
+`repeat_of` (the person's turn) and `mention_id`; refusals 409 / 404 `entity_not_found` / 503 / 422
+`repeat_of_unknown` / an uncoded 404 (older gateway); every turn carries `author`. The reference implementation is
+the web Assistant (`abstractassistant/web/src/lib/mentions.ts`, `web/src/ui/Workspace.tsx`).
+
+Built in AbstractAssistant (main, unreleased):
+
+- `6ae96c6`: `abstractassistant/core/mentions.py` (the Qt-free port of `mentions.ts`: roster from `GET /entities`,
+  structured chips, the send plan, the refusal sentences, `MentionsSummary`) and the worker API the palette wires
+  (`GatewayWorker.set_mentions` + `mention_asked` / `mention_answered` / `mention_skipped` / `mentions_done`).
+- `0332713`: the gateway client (`list_entities`, `post_mention`, `start_run_with_mentions`, `GatewayCodedError`),
+  the worker's send path (no agent run for an entities-only message; entities asked in order beside the agent's run
+  otherwise; Stop; resend of the unsent chips), and the history (a reloaded chat labels each answer with its
+  `author`, shows the person's words once by `repeat_of`, orders the answers by `updated_at`). Tests
+  `tests/basic/test_mentions.py` + `test_mention_worker.py`, 20 of 20 mutants killed; the roster and an
+  `entity_not_found` refusal checked live on the hermetic gateway (:18851).
+- Still open: the Qt composer `@` picker, chips and the entity's answer bubble (second worker, `app.py` / `ui/`),
+  the docs, the operator's user test. This item moves to completed when those land.
+
+The acceptance criteria below keep their intent (structured chips, sequential answers in mention order, one
+answer per mention, "<Name> is in another conversation" and skip, member scope, no entity-to-entity messaging);
+the summon call, the 30-minute probe and the "first use" confirmation sentence are replaced by the contract (the
+first-use sentence was removed in every app, operator 2026-11-10 23:02).
 
 ## Summary
 
