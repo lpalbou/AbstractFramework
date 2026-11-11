@@ -2,7 +2,7 @@
 
 > Package: AbstractAssistant (desktop composer, chip, summon on send, author label, refusal sentence); AbstractGateway read only (existing `GET /entities`, `POST /entities/{name}/summon`, identity route)
 > Type: feature
-> Status: planned (IN PROGRESS 2026-11-11: contract client + send path built in AbstractAssistant 6ae96c6 + 0332713; the Qt UI is in progress) — the summon-based design below is SUPERSEDED, see the next section
+> Status: completed 2026-11-11 — built in AbstractAssistant 6ae96c6, 0332713, 54ed4fa, 2ca569e, 462aeda (main); adversarial review `abstractassistant/untracked/review-mentions-desktop/REVIEW.md` (F1, F2 fixed in 462aeda); documented as desktop 0.19.0 in AbstractAssistant 0680108 (not tagged, not published). The summon-based design below is SUPERSEDED, see the next section. The file stays in planned/ until the next backlog hygiene pass moves it.
 > Created: 2026-11-08
 > Priority: P1
 > Labels: entities, mentions, assistant, seat-framework
@@ -32,8 +32,41 @@ Built in AbstractAssistant (main, unreleased):
   `author`, shows the person's words once by `repeat_of`, orders the answers by `updated_at`). Tests
   `tests/basic/test_mentions.py` + `test_mention_worker.py`, 20 of 20 mutants killed; the roster and an
   `entity_not_found` refusal checked live on the hermetic gateway (:18851).
-- Still open: the Qt composer `@` picker, chips and the entity's answer bubble (second worker, `app.py` / `ui/`),
-  the docs, the operator's user test. This item moves to completed when those land.
+- `54ed4fa` + `2ca569e`: the Qt UI (`ui/mention_composer.py`, `ui/mention_picker.py`, `ui/mention_chip.py`,
+  `ui/mention_card.py`, `ui/pending_bubble.py`, `app.py`): `@` at the start or after a space opens the list
+  (agent first, then the entities), the pick is a chip object inside the sentence (orb + name; never parsed from
+  the words), the sent message keeps its chips, the entity's card after a short rest on a chip, one pending
+  bubble per entity (name + dots) replaced by its answer and removed at once on a refusal with its sentence, the
+  answer headed by its author, no thinking card / "no written reply" line for an entities-only message, no
+  informational line about who reads what; `tests/basic/test_mentions_desktop_ui.py`.
+- `462aeda`: the review's fixes: F1 (a follow-up typed while only entities answer waits and is sent after,
+  "Your message will send when the answers are in."; Stop ends the asking only, no `cancel_run` of the previous
+  run; pause/resume disabled), F2 (the entities-only mark is reset on reattach and when the worker ends), no
+  "Running assistant workflow…" flash, offsets in UTF-16 code units at every boundary (sent chips, clipboard,
+  sent-bubble placement, paste), the sent chip's card also on keyboard focus; 8 more UI tests, each red against
+  its mutant.
+
+## Completion (2026-11-11)
+
+- Behaviour delivered = the web Assistant's over the mention contract: structured chips from `GET /entities`,
+  entities asked one after the other in mention order with `repeat_of` + `mention_id`, a message naming only
+  entities starts no agent run, the person's words shown once, a reloaded chat names who wrote each answer,
+  409 "<Name> is in another conversation." and 404 `entity_not_found` skip, 503 / 422 / a failed call stop and
+  give the words back with the unsent chips (a resend asks only those), an uncoded 404/405 = "This gateway does
+  not offer mentions yet.", Stop ends the asking.
+- Acceptance criteria above, as rewritten by the superseded-design section: met (structured chips, sequential
+  answers in mention order, one answer per mention, the 409 sentence and skip, member scope from `GET /entities`,
+  no entity-to-entity messaging, adversarial review with real screenshots). The summon call, the 30-minute probe
+  and the first-use confirmation sentence are replaced by the contract and not built.
+- Review: `abstractassistant/untracked/review-mentions-desktop/REVIEW.md` (FIX-BEFORE-RELEASE F1, F2: fixed in
+  462aeda; 13/14 mutants killed at review time); screenshots `abstractassistant/untracked/mentions-desktop/`
+  (light, dark, narrow).
+- Docs and version (AbstractAssistant 0680108): desktop 0.19.0, CHANGELOG [0.19.0] - 2026-11-11, README "What's
+  new", `docs/getting-started.md` "Talk to your entities with `@`", `docs/api.md` (mention routes),
+  `docs/architecture.md` (mention modules), llms files regenerated; web/CHANGELOG [Unreleased] carries 985d57b.
+- Left for the release: the operator's user test, the tag and the publish (operator's decision). Open question
+  from the review (item 8), for the operator: after a 503 both apps stop asking (the contract's "keep the message
+  in the composer"), not "the next entity is still asked".
 
 The acceptance criteria below keep their intent (structured chips, sequential answers in mention order, one
 answer per mention, "<Name> is in another conversation" and skip, member scope, no entity-to-entity messaging);
