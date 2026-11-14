@@ -373,7 +373,7 @@ the dependency versions in their published lockfiles.
 | npm app | `@abstractframework/code` | 0.16.1 |
 | npm app | `@abstractframework/observer` | 0.13.1 |
 | npm app | `@abstractframework/continuum` | 0.8.1 |
-| npm app | `@abstractframework/entity` | 0.12.1 |
+| npm app | `@abstractframework/entity` | 0.12.2 |
 | npm app | `@abstractframework/note` | 0.3.1 |
 | npm app | `@abstractframework/assistant` | 0.2.1 |
 | npm library | `@abstractframework/app-server` | 0.1.13 |

@@ -62,7 +62,7 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/code": "0.16.1",
     "@abstractframework/observer": "0.13.1",
     "@abstractframework/continuum": "0.8.1",
-    "@abstractframework/entity": "0.12.1",
+    "@abstractframework/entity": "0.12.2",
     "@abstractframework/note": "0.3.1",
     "@abstractframework/assistant": "0.2.1"
 }

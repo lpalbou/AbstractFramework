@@ -10,7 +10,8 @@ Source candidate; the root package is not published until operator approval.
 
 - The 0.14.1 candidate aligns the light, Apple and GPU component matrix with bounded HF
   discovery, Windows startup registration, cancellation-safe runtime publication and shared
-  question-resolution notices. Browser apps use the released shared chat package.
+  question-resolution notices. Browser apps use the released shared chat package; Entity 0.12.2
+  also corrects its shipped guides to describe the current Detail and timeline controls.
 - Assistant attachment-bearing mention retries preserve the attachment as a fresh durable turn.
   Apple source includes selective sleeping-gateway hints and automation-history safeguards;
   native app distribution is separate from the Python and browser releases.

@@ -62,3 +62,12 @@ Runtime + gateway halves: framework seat. Memory, kit, app halves: Entity/memory
 - Gateway 0.21.1 (patch wave): close_notices reads the completed llm_call row with payload.turn_id == "t-reflect" and
   applies question_resolved_notice to each item of result.diary_entries. panel-chat 0.9.14: ChatNoticeKind + badge.
   Entity 0.12.1: Questions lens via resolves.
+
+## Validated release surface — 2026-11-14
+
+The current Entity app deliberately removed lens controls on 2026-11-10. Its public record
+Detail shows Resolved/Repaired and timeline scrubbing removes/restores that marker; pure lens
+helper tests are not proof of an exposed Questions view. Entity 0.12.2 corrects its shipped
+README and AI guides. Code and web Assistant show the shared resolution notice and open its
+local notice details; no original-record navigation is claimed without a host callback.
+Installed-artifact browser receipts are in the root release-recovery/site evidence folders.

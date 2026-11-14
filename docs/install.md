@@ -1195,7 +1195,7 @@ Run or install them next to the Python stack:
 | Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.16.1 |
 | Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.13.1 |
 | Continuum console | the console's **Apps** page (`/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` | 0.8.1 |
-| Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.12.1 |
+| Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.12.2 |
 | Notes | the console's **Apps** page (`/apps/note/`), or `npx @abstractframework/note@0.3.1 --gateway-url <url>` | 0.3.1 |
 | Assistant web app | the console's **Apps** page (on the Assistant card, served at `/apps/assistant-web/`), or `npx @abstractframework/assistant --gateway-url <url>` | 0.2.1 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.15.0 |

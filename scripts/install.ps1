@@ -101,7 +101,7 @@ $AfGatewayPinDefault = '0.21.1'
 $AfFrameworkVersion = '0.14.1'
 $AfPyMatrix = @('abstractcore==2.35.2', 'AbstractRuntime==0.19.6', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.1', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.1', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.1')
+$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.1', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.1')
 $AfCrateConsole = 'abstractgateway-console@0.18.1'
 $AfCrateCodeCli = 'abstractcode@0.15.0'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
