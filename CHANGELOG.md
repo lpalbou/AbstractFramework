@@ -30,7 +30,7 @@ Pins the 2026-11-10/11 release wave across the light, Apple and GPU profiles: **
 **AbstractCore 2.35.1**, **AbstractRuntime 0.19.5**, **AbstractMemory 0.5.1**, **AbstractAgent 0.6.1**,
 **AbstractSkill 0.3.11**, **AbstractVoice 0.21.1**, **AbstractVision 0.3.36** and **AbstractAvatar 0.2.0**.
 It also carries everything prepared as 0.13.1, which was never published. The complete Python, npm and
-Rust matrix is in the [README](README.md#release-matrix-abstractframework-0140).
+Rust matrix is in the [versioned README](https://github.com/lpalbou/AbstractFramework/blob/v0.14.0/README.md#release-matrix-abstractframework-0140).
 
 ### What this release is
 
