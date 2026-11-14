@@ -15,6 +15,7 @@ PREAMBLE: list[str] = [
     "abstractframework/__init__.py",
     "abstractframework/install_manifest.py",
     "abstractframework/cli.py",
+    "skills/abstractframework/SKILL.md",
 ]
 
 INDEX = "docs/README.md"

@@ -128,6 +128,10 @@ print_status()
 
 ### `abstractframework doctor`
 
+The command exits 1 when a check reports `error`. It exits 0 for `ok`, `info` or
+`warn`, so exit 0 alone does not mean every check is healthy. Read the report's
+`status` and individual `checks`, especially in automation using `--json`.
+
 Checks the Python version (3.10–3.13), pinned package versions, the Apple/GPU profile
 prerequisites (macOS 14+ on Apple Silicon, `nvidia-smi` / `rocminfo`), uv, Node.js 18+ (system or
 `nodejs-wheel`), free disk, and, over read-only GET requests, the gateway health

@@ -1,4 +1,7 @@
 # AbstractFramework
+
+Agent procedure: [AbstractFramework skill](https://github.com/lpalbou/AbstractFramework/blob/main/skills/abstractframework/SKILL.md)
+for profile selection, health checks and versioned component guides.
 > Meta-package + documentation hub for the AbstractFramework ecosystem (durable, observable agents/workflows).
 
 This repo pins ecosystem package versions and provides a tiny helper API in `abstractframework/`.

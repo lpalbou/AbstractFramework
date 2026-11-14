@@ -398,6 +398,13 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 
 ---
 
+## For AI agents
+
+Register the [AbstractFramework skill](https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/skills/abstractframework/SKILL.md)
+with your agent, or copy `skills/abstractframework/` into its skills directory
+(`~/.codex/skills/` for Codex). It teaches profile selection, health checks and
+routing to the pinned components' own guides. Load it before installing or diagnosing a profile.
+
 ## Documentation
 
 | Page | What it covers |

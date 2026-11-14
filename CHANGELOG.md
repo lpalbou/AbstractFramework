@@ -4,6 +4,8 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+- A package agent skill covers profile installation, doctor results, manifests and the pinned
+  components' own operational guides.
 - Gateway tray **Exit** stays stopped under the workspace supervisor. Crashes and watchdog
   failures still restart the gateway; a clean exit during startup cancels that launch.
 - Local Python builds select Runtime and Agent's supported Apple/GPU extras and verify the
