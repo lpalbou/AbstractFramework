@@ -256,23 +256,10 @@ build_profile_extras() {
         return 0
     fi
 
-    # abstractruntime and abstractagent publish `apple`/`gpu`, NOT `all-apple`,
-    # so the line below asks them for an extra they do not define: pip warns
-    # ("does not provide the extra 'all-apple'") and installs them bare. That
-    # looks like a bug and is deliberately left alone. Their `apple` extra is
-    # only `abstractcore[apple]`, which this script installs directly one
-    # line below -- so nothing is missed -- while ASKING for it re-resolves the
-    # environment, and the root meta-package (installed editable, with exact
-    # `==` pins) then drags every local editable install back to the pinned
-    # PyPI builds whenever a sibling checkout is ahead of the root pins. With
-    # the 0.1.11 pins (`abstractcore==2.13.38`, `abstractvision==0.3.26`) a
-    # dry-run showed [apple] here would downgrade abstractcore, abstractvision,
-    # abstractruntime, abstractgateway and abstractassistant at once. 0.2.0
-    # pins the released checkouts (core 2.14.0, runtime 0.4.33, agent 0.3.13,
-    # gateway 0.3.0, assistant 0.5.0), but the hazard returns with the next
-    # sibling bump, so the mapping stays as it is.
+    # Use each package's published profile names. The root meta-package's
+    # exact pins are removed before local installs and restored with --no-deps.
     case "$rel_dir" in
-        abstractgateway|abstractassistant)
+        abstractgateway|abstractassistant|abstractruntime|abstractagent)
             case "$profile" in
                 apple) printf '%s' "[apple]" ;;
                 gpu) printf '%s' "[gpu]" ;;
@@ -287,7 +274,7 @@ build_profile_extras() {
                 *) printf '%s' "" ;;
             esac
             ;;
-        abstractsemantics|abstractmemory|abstractvision|abstractvoice|abstractmusic|abstract3d|abstractruntime|abstractagent)
+        abstractsemantics|abstractmemory|abstractvision|abstractvoice|abstractmusic|abstract3d)
             case "$profile" in
                 apple) printf '%s' "[all-apple]" ;;
                 gpu) printf '%s' "[all-gpu]" ;;
@@ -370,7 +357,7 @@ install_editable() {
     echo ""
     package_line "$label" "install -e ${rel_dir}${extras}"
     [[ -n "$needs" ]] && dim_line "     needs: ${needs}"
-    if ! pip install --quiet --no-build-isolation -e "${pkg_path}${extras}"; then
+    if ! pip install --quiet --no-build-isolation --no-warn-conflicts -e "${pkg_path}${extras}"; then
         explain_resolution_failure "$rel_dir" "$extras" "$pkg_path"
         af_die "pip install -e ${rel_dir}${extras} failed"
     fi
@@ -749,7 +736,7 @@ PY
             # dependencies would drag the editable checkouts back to PyPI builds.
             echo ""
             package_line "pip t${_last_tier}" "install --no-deps -e . (AbstractFramework meta-package)"
-            pip install --quiet --no-build-isolation --no-deps -e "$ROOT_DIR"
+            pip install --quiet --no-build-isolation --no-warn-conflicts --no-deps -e "$ROOT_DIR"
             continue
         fi
         install_editable "$(af_pkg_location "$_i")" \
@@ -930,6 +917,13 @@ PY
     fi
 
     section "Python — Verification"
+    # Individual editable installs see stale sibling metadata until its tier
+    # is reached. Check the complete graph once every local package is installed.
+    _dependency_ok=true
+    if ! python -m pip check; then
+        _dependency_ok=false
+        warn_line "Python dependencies are incompatible — see pip check above"
+    fi
     echo ""
     echo "  Installed AbstractFramework packages:"
     pip list 2>/dev/null | grep -i "^abstract" || true
@@ -954,7 +948,10 @@ PY
         warn_line "Some imports failed or were shadowed (namespace package) — check the output above"
     fi
 
-    py_ok="$_import_ok"
+    py_ok=false
+    if $_import_ok && $_dependency_ok; then
+        py_ok=true
+    fi
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -993,7 +990,7 @@ if $BUILD_PYTHON; then
     if ${py_ok:-false}; then
         printf "  ${C_GREEN}✓ Python:${C_RESET}  all packages installed (editable mode)\n"
     else
-        printf "  ${C_RED}FAILED:${C_RESET}  Python imports failed or were shadowed (see above)\n"
+        printf "  ${C_RED}FAILED:${C_RESET}  Python dependency or import verification failed (see above)\n"
     fi
 fi
 if $BUILD_NPM; then

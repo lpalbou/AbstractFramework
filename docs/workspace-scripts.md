@@ -46,13 +46,14 @@ difference. Run it after you add a dependency between two packages, then update 
 
 | Tier | Python (PyPI) | npm | Rust (crates.io) |
 |---|---|---|---|
-| 0 | abstractskill, abstractsemantics, AbstractMemory, abstractvision, abstractvoice, abstractmusic, abstractcamera | ui-kit, app-server, monitor-flow, monitor-gpu, monitor-memory, monitor-active-memory | abstracttui |
-| 1 | abstract3d | panel-chat | abstracttui-graph, abstractcore-console, abstractcode |
-| 2 | abstractcore | flow, observer, continuum, entity, code (web), note (web) | abstracttui-mermaid, abstractgateway-console |
-| 3 | AbstractRuntime | | |
+| 0 | abstractavatar, abstractskill, abstractsemantics, AbstractMemory, abstractvision, abstractvoice, abstractmusic, abstractcamera | ui-kit, app-server, monitor-flow, monitor-gpu, monitor-memory, monitor-active-memory | abstractavatar |
+| 1 | abstract3d | panel-chat | abstracttui |
+| 2 | abstractcore | flow, observer, continuum, entity, code (web), note (web), assistant (web) | abstracttui-graph, abstractcore-console, abstractcode |
+| 3 | AbstractRuntime | | abstracttui-mermaid, abstractgateway-console |
 | 4 | abstractagent, abstractassistant | | |
 | 5 | abstractgateway | | |
-| 6 | abstractnote, abstractframework (meta-package) | | |
+| 6 | abstractnote | | |
+| 7 | abstractframework (meta-package) | | |
 
 Install, build and release tier by tier: a package is only built or published after everything it
 depends on. To see what has to follow a change to one package, ask for its reverse dependencies:
@@ -96,12 +97,14 @@ source ./scripts/build.sh        # rebuild what you work on
 
 `build.sh` builds the three ecosystems in dependency order:
 
-- **Python**: editable installs (`pip install -e`) of the 14 Python packages and the root
-  meta-package into one virtualenv. Third-party dependencies still come from PyPI.
+- **Python**: editable installs (`pip install -e`) of the inventoried Python packages and the root
+  meta-package into one virtualenv. Third-party dependencies still come from PyPI. The completed
+  environment must pass both `pip check` and import verification. Dependency conflicts reported
+  while sibling packages are still being updated are checked against the final environment.
 - **npm**: the seven AbstractUIC packages (installed once at the `abstractuic` workspace root, built
-  per package), then the apps `flow`, `observer`, `continuum`, `entity`, `code` (web) and `note`
-  (web).
-- **Rust**: `cargo build` of `abstracttui` and its extension crates `abstracttui-graph` and
+  per package), then the apps `flow`, `observer`, `continuum`, `entity`, `code` (web), `note`
+  (web) and `assistant` (web).
+- **Rust**: `cargo build` of `abstractavatar`, `abstracttui` and its extension crates `abstracttui-graph` and
   `abstracttui-mermaid` (`abstracttui/extensions/*`), `abstractcore-console`
   (`abstractcore/console-tui`), `abstractcode` (`abstractcode/tui`) and `abstractgateway-console`
   (`abstractgateway/console-tui`).
@@ -145,7 +148,9 @@ gateway. A gateway older than 0.13.0 gets them as variables instead, with one pr
 `gateway.sh --print` shows the serve command and exits without stopping, starting or creating
 anything.
 
-The supervisor restarts a service that exits. A gateway that hangs exits on its own: its event-loop
+The supervisor restarts the gateway after a crash or other nonzero exit. Choosing **Exit**
+from the gateway tray stops it until you start the stack again. A clean gateway exit during
+startup cancels that launch without reporting a failed service. A gateway that hangs exits on its own: its event-loop
 watchdog (`abstractgateway serve --watchdog-seconds`, default 30) writes the blocked code's stack to
 `gateway.log` and exits with code 75, and the supervisor restarts it (the incident banner in
 `af-stack.log` names the watchdog). A gateway that is alive but does not answer its health probe is

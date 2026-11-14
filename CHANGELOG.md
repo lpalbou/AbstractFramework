@@ -2,6 +2,14 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [Unreleased]
+
+- Gateway tray **Exit** stays stopped under the workspace supervisor. Crashes and watchdog
+  failures still restart the gateway; a clean exit during startup cancels that launch.
+- Local Python builds select Runtime and Agent's supported Apple/GPU extras and verify the
+  completed dependency graph with `pip check`, alongside import checks. Intermediate editable
+  updates no longer print conflicts against sibling packages still awaiting their update.
+
 ## [0.14.0] - 2026-11-11
 
 Pins the 2026-11-10/11 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.21.0**,
