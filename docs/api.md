@@ -60,12 +60,12 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.14.0` for this release).
+The meta-package version (`0.14.1` for this source candidate).
 
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each Python component to its exact pinned version. The
-[release matrix](../README.md#release-matrix-abstractframework-0140) lists all 15 distributions,
+[release matrix](../README.md#release-matrix-abstractframework-0141) lists all 15 distributions,
 including Notes, Camera and the Python Avatar binding.
 
 ### `PACKAGE_DISTRIBUTIONS`
@@ -78,7 +78,7 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 The seven launchable browser apps, including Notes and the Assistant web app, each runnable with
 `npx <package>@<version>`. They appear as `npm_apps` in the install manifest, each with the
 gateway's app id (`assistant-web` for `@abstractframework/assistant`). See the
-[release matrix](../README.md#release-matrix-abstractframework-0140) for exact versions.
+[release matrix](../README.md#release-matrix-abstractframework-0141) for exact versions.
 
 ### `NPM_LIBRARY_RELEASE_VERSIONS`
 

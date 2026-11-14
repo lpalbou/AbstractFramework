@@ -17,23 +17,23 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from abstractcore import GenerateResponse as GenerateResponse, create_llm as create_llm
 
-__version__ = "0.14.0"
+__version__ = "0.14.1"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.35.1",
-    "abstractruntime": "0.19.5",
+    "abstractcore": "2.35.2",
+    "abstractruntime": "0.19.6",
     "abstractagent": "0.6.1",
-    "abstractgateway": "0.21.0",
-    "abstractskill": "0.3.11",
-    "abstractmemory": "0.5.1",
+    "abstractgateway": "0.21.1",
+    "abstractskill": "0.3.12",
+    "abstractmemory": "0.5.2",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.21.1",
     "abstractvision": "0.3.36",
     "abstractmusic": "0.1.17",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.18.3",
+    "abstractassistant": "0.19.0",
     "abstractcamera": "0.2.1",
     "abstractavatar": "0.2.0",
     "abstractnote": "0.3.1"
@@ -59,19 +59,19 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.14.2",
-    "@abstractframework/code": "0.16.0",
-    "@abstractframework/observer": "0.13.0",
+    "@abstractframework/code": "0.16.1",
+    "@abstractframework/observer": "0.13.1",
     "@abstractframework/continuum": "0.8.1",
-    "@abstractframework/entity": "0.12.0",
+    "@abstractframework/entity": "0.12.1",
     "@abstractframework/note": "0.3.1",
-    "@abstractframework/assistant": "0.2.0"
+    "@abstractframework/assistant": "0.2.1"
 }
 
 # Shared npm libraries are recorded separately from launchable browser apps.
 NPM_LIBRARY_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/app-server": "0.1.13",
     "@abstractframework/ui-kit": "0.9.28",
-    "@abstractframework/panel-chat": "0.9.13",
+    "@abstractframework/panel-chat": "0.9.14",
     "@abstractframework/monitor-active-memory": "0.2.2",
     "@abstractframework/monitor-flow": "0.1.10",
     "@abstractframework/monitor-gpu": "0.1.10",

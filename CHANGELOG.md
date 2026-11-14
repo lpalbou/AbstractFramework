@@ -4,6 +4,12 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+- The 0.14.1 candidate aligns the light, Apple and GPU component matrix with bounded HF
+  discovery, Windows startup registration, cancellation-safe runtime publication and shared
+  question-resolution notices. Browser apps use the released shared chat package.
+- Assistant attachment-bearing mention retries preserve the attachment as a fresh durable turn.
+  Apple source includes selective sleeping-gateway hints and automation-history safeguards;
+  native app distribution is separate from the Python and browser releases.
 - Profile inspection, package version listings and root CLI initialization read metadata without
   loading component configuration. Convenience Core SDK exports load only when requested.
 - A package agent skill covers profile installation, doctor results, manifests and the pinned
