@@ -4,6 +4,10 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-11-14
+
+Source candidate; the root package is not published until operator approval.
+
 - The 0.14.1 candidate aligns the light, Apple and GPU component matrix with bounded HF
   discovery, Windows startup registration, cancellation-safe runtime publication and shared
   question-resolution notices. Browser apps use the released shared chat package.
