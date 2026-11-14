@@ -358,7 +358,7 @@ the dependency versions in their published lockfiles.
 | PyPI | `AbstractRuntime` | 0.19.6 |
 | PyPI | `abstractagent` | 0.6.1 |
 | PyPI | `abstractgateway` | 0.21.1 |
-| PyPI | `abstractskill` | 0.3.12 |
+| PyPI | `abstractskill` | 0.3.13 |
 | PyPI | `AbstractMemory` | 0.5.2 |
 | PyPI | `abstractsemantics` | 0.0.5 |
 | PyPI | `abstractvoice` | 0.21.1 |

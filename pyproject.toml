@@ -57,7 +57,7 @@ dependencies = [
     "abstractcore==2.35.2",
     "AbstractRuntime==0.19.6",
     "abstractagent==0.6.1",
-    "abstractskill==0.3.12",
+    "abstractskill==0.3.13",
     "AbstractMemory==0.5.2",
     "abstractsemantics==0.0.5",
 

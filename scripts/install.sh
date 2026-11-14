@@ -158,7 +158,7 @@ AF_GATEWAY_PIN_DEFAULT="0.21.1"
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
 AF_FRAMEWORK_VERSION="0.14.1"
-AF_PY_MATRIX="abstractcore==2.35.2 AbstractRuntime==0.19.6 abstractagent==0.6.1 abstractskill==0.3.12 AbstractMemory==0.5.2 abstractsemantics==0.0.5 abstractvoice==0.21.1 abstractvision==0.3.36 abstractmusic==0.1.17 abstract3d==0.3.2 abstractcamera==0.2.1 abstractavatar==0.2.0 abstractnote==0.3.1"
+AF_PY_MATRIX="abstractcore==2.35.2 AbstractRuntime==0.19.6 abstractagent==0.6.1 abstractskill==0.3.13 AbstractMemory==0.5.2 abstractsemantics==0.0.5 abstractvoice==0.21.1 abstractvision==0.3.36 abstractmusic==0.1.17 abstract3d==0.3.2 abstractcamera==0.2.1 abstractavatar==0.2.0 abstractnote==0.3.1"
 AF_PYTHON="3.12"
 AF_NPM_APPS="@abstractframework/flow@0.14.2 @abstractframework/code@0.16.1 @abstractframework/observer@0.13.1 @abstractframework/continuum@0.8.1 @abstractframework/entity@0.12.1 @abstractframework/note@0.3.1 @abstractframework/assistant@0.2.1"
 AF_CRATE_CONSOLE="abstractgateway-console@0.18.1"

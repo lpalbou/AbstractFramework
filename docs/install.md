@@ -1098,7 +1098,7 @@ The `abstractframework` 0.14.1 source candidate pins the Python matrix listed in
 [release matrix](../README.md#release-matrix-abstractframework-0141), including
 `abstractgateway==0.21.1`, `abstractcore==2.35.2`, `AbstractRuntime==0.19.6`, `AbstractMemory==0.5.2`,
 `abstractagent==0.6.1`, `abstractvoice==0.21.1`, `abstractvision==0.3.36`, `abstractassistant==0.19.0`,
-`abstractskill==0.3.12`, `abstractnote==0.3.1`, `abstractcamera==0.2.1` and `abstractavatar==0.2.0`. The `apple` and `gpu` extras
+`abstractskill==0.3.13`, `abstractnote==0.3.1`, `abstractcamera==0.2.1` and `abstractavatar==0.2.0`. The `apple` and `gpu` extras
 select local-engine dependencies at the same component versions.
 `abstractframework doctor` reports installed packages that differ from these pins.
 Avatar wheels cover macOS arm64/x86_64, manylinux glibc 2.28+ arm64/x86_64 and

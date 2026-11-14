@@ -94,7 +94,7 @@ to claim that a different set of versions is the pinned release.
 - [AbstractMemory 0.5.2](https://raw.githubusercontent.com/lpalbou/AbstractMemory/v0.5.2/skills/abstractmemory/SKILL.md): durable memory and the diary graph.
 - [AbstractAssistant 0.19.0](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/v0.19.0/skills/abstractassistant/SKILL.md): desktop, browser and Apple clients.
 - [AbstractAgent 0.6.1](https://raw.githubusercontent.com/lpalbou/AbstractAgent/v0.6.1/README.md): agent patterns.
-- [AbstractSkill 0.3.12](https://raw.githubusercontent.com/lpalbou/AbstractSkill/v0.3.12/skills/abstractskill/SKILL.md): curated skill installation and management.
+- [AbstractSkill 0.3.13](https://raw.githubusercontent.com/lpalbou/AbstractSkill/v0.3.13/skills/abstractskill/SKILL.md): curated skill installation and management.
 - [AbstractSemantics 0.0.5](https://raw.githubusercontent.com/lpalbou/AbstractSemantics/v0.0.5/README.md): semantic predicates and validation.
 - [AbstractVoice 0.21.1](https://raw.githubusercontent.com/lpalbou/AbstractVoice/v0.21.1/README.md): speech capabilities.
 - [AbstractVision 0.3.36](https://raw.githubusercontent.com/lpalbou/AbstractVision/v0.3.36/README.md): image and video capabilities.
