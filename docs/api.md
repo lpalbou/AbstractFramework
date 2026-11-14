@@ -33,6 +33,11 @@ See [Install AbstractFramework](install.md) for the profile chooser and first he
 
 ## Convenience re-exports
 
+SDK exports load Core only when requested. Importing the root profile, listing installed
+versions, printing a manifest or running `doctor --no-environment` does not initialize
+component configuration. If Core is missing, those inspection operations remain available;
+requesting a Core SDK export raises the dependency's import error.
+
 `abstractframework` re-exports two common AbstractCore entry points so simple scripts can `from abstractframework import ...` without a separate `abstractcore` import.
 
 ### `create_llm`
@@ -110,7 +115,9 @@ print(profile["crates"])                   # CRATE_RELEASE_VERSIONS
 
 ### `get_installed_packages()`
 
-Returns a dict of installed AbstractFramework package versions detected in the current environment.
+Returns a dict of installed AbstractFramework distribution versions from package metadata.
+It does not import components or load their configuration. Matching metadata does not verify
+that an optional inference engine can import or run.
 
 ```python
 from abstractframework import get_installed_packages

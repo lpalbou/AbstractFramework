@@ -10,6 +10,13 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
+from importlib import import_module
+from importlib.metadata import PackageNotFoundError, version
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from abstractcore import GenerateResponse as GenerateResponse, create_llm as create_llm
+
 __version__ = "0.14.0"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
@@ -93,28 +100,30 @@ CRATE_RELEASE_VERSIONS: dict[str, str] = {
 # profiles get AbstractCore's local engines through the gateway's profile.
 CORE_DEFAULT_EXTRAS: list[str] = []
 
-# Convenience re-exports (AbstractCore is a base dependency of this meta-package).
-# Keep this import lightweight: do not import optional tool/media deps here.
-try:
-    from abstractcore import GenerateResponse, create_llm  # type: ignore
+# Metadata and CLI inspection must not initialize Core's user configuration.
+# Resolve the convenience SDK exports only when the caller asks for them.
+_CORE_REEXPORTS = frozenset({"GenerateResponse", "create_llm"})
+__all__ = [
+    "CORE_DEFAULT_EXTRAS",
+    "RELEASE_VERSIONS",
+    "GenerateResponse",
+    "create_llm",
+    "get_installed_packages",
+    "get_release_profile",
+    "print_status",
+]
 
-    __all__ = [
-        "CORE_DEFAULT_EXTRAS",
-        "RELEASE_VERSIONS",
-        "GenerateResponse",
-        "create_llm",
-        "get_installed_packages",
-        "get_release_profile",
-        "print_status",
-    ]
-except Exception:  # pragma: no cover
-    __all__ = [
-        "CORE_DEFAULT_EXTRAS",
-        "RELEASE_VERSIONS",
-        "get_installed_packages",
-        "get_release_profile",
-        "print_status",
-    ]
+
+def __getattr__(name: str) -> Any:
+    if name in _CORE_REEXPORTS:
+        value = getattr(import_module("abstractcore"), name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | _CORE_REEXPORTS)
 
 
 def get_release_profile() -> dict[str, object]:
@@ -137,19 +146,15 @@ def get_release_profile() -> dict[str, object]:
 
 
 def get_installed_packages() -> dict[str, str]:
-    """Return a dict of installed AbstractFramework Python packages and versions."""
+    """Read installed distribution versions without importing component packages."""
 
     packages: dict[str, str] = {}
 
-    def _maybe_add(import_name: str) -> None:
+    for import_name, distribution in PACKAGE_DISTRIBUTIONS.items():
         try:
-            mod = __import__(import_name)
-            packages[import_name] = getattr(mod, "__version__", "installed")
-        except Exception:
-            return
-
-    for name in PACKAGE_DISTRIBUTIONS:
-        _maybe_add(name)
+            packages[import_name] = version(distribution)
+        except PackageNotFoundError:
+            continue
 
     return packages
 

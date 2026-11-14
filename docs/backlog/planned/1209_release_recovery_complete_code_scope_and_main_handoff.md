@@ -45,6 +45,9 @@ publication remain separate operator decisions after personal candidate testing.
 - Strengthen the bundled/installed release skills and the pending-release guard so a clean tree
   with local-only commits cannot be accepted as a finished release.
 - Diagnose and repair release-blocking CI; validate each integrated tree before pushing.
+- Keep root metadata/profile/manifest inspection independent of component initialization.
+  Lazy Core SDK exports preserve their original identity; installed version listings read
+  distribution metadata. Two import/network-guarded regressions fail against the eager import.
 - Local deployment, website preview and a report of the tested candidate for the operator.
 
 ### Decision boundaries

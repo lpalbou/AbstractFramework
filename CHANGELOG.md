@@ -4,6 +4,8 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+- Profile inspection, package version listings and root CLI initialization read metadata without
+  loading component configuration. Convenience Core SDK exports load only when requested.
 - A package agent skill covers profile installation, doctor results, manifests and the pinned
   components' own operational guides.
 - Gateway tray **Exit** stays stopped under the workspace supervisor. Crashes and watchdog
