@@ -91,17 +91,17 @@ to claim that a different set of versions is the pinned release.
 - [AbstractCore 2.35.2](https://raw.githubusercontent.com/lpalbou/AbstractCore/v2.35.2/skills/abstractcore/SKILL.md): providers, model discovery and inference.
 - [AbstractRuntime 0.19.6](https://raw.githubusercontent.com/lpalbou/AbstractRuntime/v0.19.6/skills/abstractruntime/SKILL.md): durable workflows, effects and replay.
 - [AbstractGateway 0.21.1](https://raw.githubusercontent.com/lpalbou/AbstractGateway/v0.21.1/skills/abstractgateway/SKILL.md): HTTP control plane, authentication, models and apps.
-- [AbstractMemory 0.5.2](https://raw.githubusercontent.com/lpalbou/AbstractMemory/v0.5.2/README.md): durable memory and the diary graph.
-- [AbstractAssistant 0.19.0](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/v0.19.0/README.md): desktop, browser and Apple clients.
+- [AbstractMemory 0.5.2](https://raw.githubusercontent.com/lpalbou/AbstractMemory/v0.5.2/skills/abstractmemory/SKILL.md): durable memory and the diary graph.
+- [AbstractAssistant 0.19.0](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/v0.19.0/skills/abstractassistant/SKILL.md): desktop, browser and Apple clients.
 - [AbstractAgent 0.6.1](https://raw.githubusercontent.com/lpalbou/AbstractAgent/v0.6.1/README.md): agent patterns.
-- [AbstractSkill 0.3.12](https://raw.githubusercontent.com/lpalbou/AbstractSkill/v0.3.12/README.md): curated skill installation and management.
+- [AbstractSkill 0.3.12](https://raw.githubusercontent.com/lpalbou/AbstractSkill/v0.3.12/skills/abstractskill/SKILL.md): curated skill installation and management.
 - [AbstractSemantics 0.0.5](https://raw.githubusercontent.com/lpalbou/AbstractSemantics/v0.0.5/README.md): semantic predicates and validation.
 - [AbstractVoice 0.21.1](https://raw.githubusercontent.com/lpalbou/AbstractVoice/v0.21.1/README.md): speech capabilities.
 - [AbstractVision 0.3.36](https://raw.githubusercontent.com/lpalbou/AbstractVision/v0.3.36/README.md): image and video capabilities.
 - [AbstractMusic 0.1.17](https://raw.githubusercontent.com/lpalbou/AbstractMusic/v0.1.17/README.md): music generation.
 - [Abstract3D 0.3.2](https://raw.githubusercontent.com/lpalbou/Abstract3D/v0.3.2/README.md): 3D capabilities.
-- [AbstractCamera 0.2.1](https://raw.githubusercontent.com/lpalbou/AbstractCamera/v0.2.1/README.md): camera capture tools.
-- [AbstractAvatar 0.2.0](https://raw.githubusercontent.com/lpalbou/AbstractAvatar/v0.2.0/README.md): avatar identity and rendering.
+- [AbstractCamera 0.2.1](https://raw.githubusercontent.com/lpalbou/AbstractCamera/v0.2.1/skills/camera-piloting/SKILL.md): camera capture tools.
+- [AbstractAvatar 0.2.0](https://raw.githubusercontent.com/lpalbou/AbstractAvatar/v0.2.0/skills/abstractavatar/SKILL.md): avatar identity and rendering.
 - [AbstractNote 0.3.1](https://raw.githubusercontent.com/lpalbou/AbstractNote/v0.3.1/README.md): note capture and durable ingestion.
 - [Full release matrix](https://github.com/lpalbou/AbstractFramework/blob/main/README.md#release-matrix-abstractframework-0141): every Python, npm and Rust version in this profile.
 
