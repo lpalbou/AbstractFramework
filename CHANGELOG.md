@@ -22,8 +22,13 @@ Source candidate; the root package is not published until operator approval.
 - Gateway tray **Exit** stays stopped under the workspace supervisor. Crashes and watchdog
   failures still restart the gateway; a clean exit during startup cancels that launch.
 - Local Python builds select Runtime and Agent's supported Apple/GPU extras and verify the
-  completed dependency graph with `pip check`, alongside import checks. Intermediate editable
-  updates no longer print conflicts against sibling packages still awaiting their update.
+  completed dependency graph alongside import checks. The check covers the local packages and
+  everything they depend on; a conflict between unrelated tools in the same virtualenv is shown
+  and no longer stops the build. Intermediate editable updates no longer print conflicts against
+  sibling packages still awaiting their update.
+- A first local build on a Mac no longer stops at AbstractVision. A dependency that PyPI ships
+  only as source is now built with its own build tools; before, the build worked only where pip
+  had already cached a prebuilt copy.
 
 ## [0.14.0] - 2026-11-11
 

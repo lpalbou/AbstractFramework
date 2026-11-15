@@ -98,9 +98,13 @@ source ./scripts/build.sh        # rebuild what you work on
 `build.sh` builds the three ecosystems in dependency order:
 
 - **Python**: editable installs (`pip install -e`) of the inventoried Python packages and the root
-  meta-package into one virtualenv. Third-party dependencies still come from PyPI. The completed
-  environment must pass both `pip check` and import verification. Dependency conflicts reported
-  while sibling packages are still being updated are checked against the final environment.
+  meta-package into one virtualenv. Third-party dependencies still come from PyPI, and one that
+  PyPI ships only as source is built with its own build tools, so a first build on a new machine
+  needs nothing prepared. The completed environment must pass a dependency check and import
+  verification. The dependency check covers the local packages, the extras of the chosen profile
+  and everything they depend on: an unmet requirement there fails the build and is repeated in the
+  final summary. A conflict between other tools installed in the same virtualenv is shown and does
+  not fail the build.
 - **npm**: the seven AbstractUIC packages (installed once at the `abstractuic` workspace root, built
   per package), then the apps `flow`, `observer`, `continuum`, `entity`, `code` (web), `note`
   (web) and `assistant` (web).

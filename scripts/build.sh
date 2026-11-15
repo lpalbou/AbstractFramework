@@ -339,8 +339,31 @@ explain_resolution_failure() {
     echo ""
     # --dry-run: resolve and report, install nothing. A uv failure here is the
     # POINT (it prints the conflict), so it must not abort this handler.
-    uv pip install --dry-run --no-build-isolation \
+    uv pip install --dry-run \
         --python "$VENV_DIR/bin/python" -e "${pkg_path}${extras}" 2>&1 | tail -40 || true
+}
+
+# The distribution name pip recorded for the editable install of a local directory.
+# packages.txt ids are import names; the published name can differ (abstractruntime is
+# AbstractRuntime), and pip needs the published name to install a package's extras.
+editable_dist_name() {
+    python - "$1" <<'PY'
+import json
+import sys
+from importlib.metadata import distributions
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+
+target = Path(sys.argv[1]).resolve()
+for dist in distributions():
+    raw = dist.read_text("direct_url.json")
+    if not raw:
+        continue
+    url = json.loads(raw).get("url", "")
+    if url.startswith("file:") and Path(unquote(urlparse(url).path)).resolve() == target:
+        print(dist.metadata["Name"])
+        break
+PY
 }
 
 # Editable-install a Python package from a local directory.
@@ -352,14 +375,28 @@ install_editable() {
     local label="${3:-pip}"
     local needs="${4:-}"
     local pkg_path="$ROOT_DIR/$rel_dir"
+    local dist_name
 
     require_repo "$rel_dir"
     echo ""
     package_line "$label" "install -e ${rel_dir}${extras}"
     [[ -n "$needs" ]] && dim_line "     needs: ${needs}"
-    if ! pip install --quiet --no-build-isolation --no-warn-conflicts -e "${pkg_path}${extras}"; then
+    # 1. The local package itself: editable, built with this venv's own build tools.
+    if ! pip install --quiet --no-build-isolation --no-warn-conflicts --no-deps -e "${pkg_path}"; then
+        af_die "pip install -e ${rel_dir} failed"
+    fi
+    # 2. Its dependencies, by name, with pip's normal build isolation. A dependency that
+    #    PyPI ships only as source (stable-diffusion-cpp-python, for Vision on a Mac) names
+    #    its own build backend. --no-build-isolation looks for that backend in this venv,
+    #    so one command for both steps failed on every machine whose pip cache held no
+    #    prebuilt wheel of it: any machine building for the first time.
+    dist_name="$(editable_dist_name "$pkg_path")"
+    if [[ -z "$dist_name" ]]; then
+        af_die "pip recorded no editable install for ${rel_dir}"
+    fi
+    if ! pip install --quiet --no-warn-conflicts "${dist_name}${extras}"; then
         explain_resolution_failure "$rel_dir" "$extras" "$pkg_path"
-        af_die "pip install -e ${rel_dir}${extras} failed"
+        af_die "pip install ${dist_name}${extras} (the dependencies of ${rel_dir}) failed"
     fi
 }
 
@@ -919,10 +956,79 @@ PY
     section "Python — Verification"
     # Individual editable installs see stale sibling metadata until its tier
     # is reached. Check the complete graph once every local package is installed.
+    #
+    # The check covers what this build installed: every local package with the
+    # profile's extras, and everything those depend on. An unmet requirement there
+    # fails the build. A conflict between other things that happen to live in this
+    # venv (a publishing tool, a notebook kernel) is shown and does not fail it:
+    # a machine building for the first time would not have it.
     _dependency_ok=true
-    if ! python -m pip check; then
+    _dependency_roots=""
+    while IFS= read -r _i; do
+        _dependency_roots+=" ${AF_PKG_ID[$_i]}$(build_profile_extras "${AF_PKG_ID[$_i]}" "${PYTHON_BUILD_PROFILE:-light}")"
+    done < <(af_pkg_indices python)
+    # shellcheck disable=SC2086  # one argument per package: ids and extras hold no spaces
+    if ! _dependency_report="$(python - $_dependency_roots <<'PY'
+import sys
+from importlib.metadata import PackageNotFoundError, distribution
+
+try:
+    from packaging.requirements import Requirement
+    from packaging.utils import canonicalize_name
+except ImportError:  # a venv with pip always has the copy that pip ships
+    from pip._vendor.packaging.requirements import Requirement
+    from pip._vendor.packaging.utils import canonicalize_name
+
+problems = set()
+seen = {}
+queue = [Requirement(argument) for argument in sys.argv[1:]]
+for root in queue:
+    try:
+        distribution(root.name)
+    except PackageNotFoundError:
+        problems.add(f"{root.name} is not installed")
+while queue:
+    requirement = queue.pop()
+    wanted = {canonicalize_name(extra) for extra in requirement.extras} | {""}
+    new = wanted - seen.setdefault(canonicalize_name(requirement.name), set())
+    if not new:
+        continue
+    seen[canonicalize_name(requirement.name)] |= new
+    try:
+        dist = distribution(requirement.name)
+    except PackageNotFoundError:
+        continue  # reported where it was required
+    owner = f"{dist.metadata['Name']} {dist.version}"
+    for raw in dist.requires or []:
+        child = Requirement(raw)
+        if child.marker is None:
+            if "" not in new:
+                continue
+        elif not any(child.marker.evaluate({"extra": extra}) for extra in new):
+            continue
+        try:
+            found = distribution(child.name)
+        except PackageNotFoundError:
+            problems.add(f"{owner} requires {child.name}, which is not installed")
+            continue
+        if not child.specifier.contains(found.version, prereleases=True):
+            problems.add(f"{owner} requires {child.name}{child.specifier}, but {child.name} {found.version} is installed")
+        queue.append(child)
+for line in sorted(problems):
+    print(line)
+sys.exit(1 if problems else 0)
+PY
+)"; then
         _dependency_ok=false
-        warn_line "Python dependencies are incompatible — see pip check above"
+        warn_line "Python dependencies of the framework are not satisfied:"
+        echo "$_dependency_report" | sed 's/^/       /'
+    else
+        _dependency_report=""
+        ok_line "Every dependency of the local packages is satisfied"
+        if ! _pip_check_report="$(python -m pip check 2>&1)"; then
+            info_line "Other packages in this environment disagree with each other. The framework does not depend on them, so the build continues:"
+            echo "$_pip_check_report" | sed 's/^/       /'
+        fi
     fi
     echo ""
     echo "  Installed AbstractFramework packages:"
@@ -991,6 +1097,9 @@ if $BUILD_PYTHON; then
         printf "  ${C_GREEN}✓ Python:${C_RESET}  all packages installed (editable mode)\n"
     else
         printf "  ${C_RED}FAILED:${C_RESET}  Python dependency or import verification failed (see above)\n"
+        if [[ -n "${_dependency_report:-}" ]]; then
+            echo "$_dependency_report" | sed 's/^/           /'
+        fi
     fi
 fi
 if $BUILD_NPM; then
