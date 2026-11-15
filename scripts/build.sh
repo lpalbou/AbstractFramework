@@ -359,10 +359,85 @@ for dist in distributions():
     raw = dist.read_text("direct_url.json")
     if not raw:
         continue
-    url = json.loads(raw).get("url", "")
+    try:
+        url = json.loads(raw).get("url", "")
+    except (ValueError, AttributeError):
+        continue  # another package's damaged record says nothing about this one
     if url.startswith("file:") and Path(unquote(urlparse(url).path)).resolve() == target:
         print(dist.metadata["Name"])
         break
+PY
+}
+
+# Unmet requirements of the given packages, one per line; exit 1 when there is one.
+# Usage: dependency_problems closure|pins "<name[extras] name[extras] ...>"
+#   closure  the packages, their requested extras, and everything those depend on
+#   pins     only what the packages themselves require (the root package's release pins)
+dependency_problems() {
+    python - "$1" "$2" <<'PY'
+import sys
+from importlib.metadata import PackageNotFoundError, distribution
+
+try:
+    from packaging.requirements import InvalidRequirement, Requirement
+    from packaging.utils import canonicalize_name
+    from packaging.version import InvalidVersion
+except ImportError:  # a venv with pip always has the copy that pip ships
+    from pip._vendor.packaging.requirements import InvalidRequirement, Requirement
+    from pip._vendor.packaging.utils import canonicalize_name
+    from pip._vendor.packaging.version import InvalidVersion
+
+transitive = sys.argv[1] == "closure"
+problems = set()
+seen = {}
+queue = []
+for argument in sys.argv[2].split():
+    root = Requirement(argument)
+    try:
+        dist = distribution(root.name)
+    except PackageNotFoundError:
+        problems.add(f"{root.name} is not installed")
+        continue
+    declared = {canonicalize_name(extra) for extra in dist.metadata.get_all("Provides-Extra") or []}
+    for extra in sorted(root.extras):
+        if canonicalize_name(extra) not in declared:
+            problems.add(f"{dist.metadata['Name']} {dist.version} does not declare the extra '{extra}' this build asks for")
+    queue.append(root)
+while queue:
+    requirement = queue.pop()
+    name = canonicalize_name(requirement.name)
+    wanted = {canonicalize_name(extra) for extra in requirement.extras} | {""}
+    new = wanted - seen.setdefault(name, set())
+    if not new:
+        continue
+    seen[name] |= new
+    try:
+        dist = distribution(requirement.name)
+    except PackageNotFoundError:
+        continue  # reported where it was required
+    owner = f"{dist.metadata['Name']} {dist.version}"
+    for raw in dist.requires or []:
+        try:
+            child = Requirement(raw)
+            if child.marker is None:
+                if "" not in new:
+                    continue
+            elif not any(child.marker.evaluate({"extra": extra}) for extra in new):
+                continue
+            found = distribution(child.name)
+            if not child.specifier.contains(found.version, prereleases=True):
+                problems.add(f"{owner} requires {child.name}{child.specifier}, but {child.name} {found.version} is installed")
+        except PackageNotFoundError:
+            problems.add(f"{owner} requires {child.name}, which is not installed")
+            continue
+        except (InvalidRequirement, InvalidVersion) as error:
+            problems.add(f"{owner} has a requirement that cannot be read ({raw}): {error}")
+            continue
+        if transitive:
+            queue.append(child)
+for line in sorted(problems):
+    print(line)
+sys.exit(1 if problems else 0)
 PY
 }
 
@@ -386,10 +461,11 @@ install_editable() {
         af_die "pip install -e ${rel_dir} failed"
     fi
     # 2. Its dependencies, by name, with pip's normal build isolation. A dependency that
-    #    PyPI ships only as source (stable-diffusion-cpp-python, for Vision on a Mac) names
-    #    its own build backend. --no-build-isolation looks for that backend in this venv,
-    #    so one command for both steps failed on every machine whose pip cache held no
-    #    prebuilt wheel of it: any machine building for the first time.
+    #    PyPI ships only as source (stable-diffusion-cpp-python and llama-cpp-python in the
+    #    Apple profile) names its own build backend. --no-build-isolation looks for that
+    #    backend in this venv, so one command for both steps failed on every machine whose
+    #    pip cache held no prebuilt wheel of it: any machine building for the first time.
+    #    Building them needs a C/C++ compiler.
     dist_name="$(editable_dist_name "$pkg_path")"
     if [[ -z "$dist_name" ]]; then
         af_die "pip recorded no editable install for ${rel_dir}"
@@ -964,71 +1040,36 @@ PY
     # a machine building for the first time would not have it.
     _dependency_ok=true
     _dependency_roots=""
+    _dependency_report=""
     while IFS= read -r _i; do
         _dependency_roots+=" ${AF_PKG_ID[$_i]}$(build_profile_extras "${AF_PKG_ID[$_i]}" "${PYTHON_BUILD_PROFILE:-light}")"
+        # pip replaces a checkout with a released version when another package requires a
+        # version the checkout is not at. The stack would then run released code while this
+        # build still said "editable".
+        if [[ -z "$(editable_dist_name "$ROOT_DIR/$(af_pkg_location "$_i")")" ]]; then
+            _dependency_report+="${AF_PKG_ID[$_i]} is not installed from its checkout ($(af_pkg_location "$_i")): pip replaced it with a released version"$'\n'
+        fi
     done < <(af_pkg_indices python)
-    # shellcheck disable=SC2086  # one argument per package: ids and extras hold no spaces
-    if ! _dependency_report="$(python - $_dependency_roots <<'PY'
-import sys
-from importlib.metadata import PackageNotFoundError, distribution
-
-try:
-    from packaging.requirements import Requirement
-    from packaging.utils import canonicalize_name
-except ImportError:  # a venv with pip always has the copy that pip ships
-    from pip._vendor.packaging.requirements import Requirement
-    from pip._vendor.packaging.utils import canonicalize_name
-
-problems = set()
-seen = {}
-queue = [Requirement(argument) for argument in sys.argv[1:]]
-for root in queue:
-    try:
-        distribution(root.name)
-    except PackageNotFoundError:
-        problems.add(f"{root.name} is not installed")
-while queue:
-    requirement = queue.pop()
-    wanted = {canonicalize_name(extra) for extra in requirement.extras} | {""}
-    new = wanted - seen.setdefault(canonicalize_name(requirement.name), set())
-    if not new:
-        continue
-    seen[canonicalize_name(requirement.name)] |= new
-    try:
-        dist = distribution(requirement.name)
-    except PackageNotFoundError:
-        continue  # reported where it was required
-    owner = f"{dist.metadata['Name']} {dist.version}"
-    for raw in dist.requires or []:
-        child = Requirement(raw)
-        if child.marker is None:
-            if "" not in new:
-                continue
-        elif not any(child.marker.evaluate({"extra": extra}) for extra in new):
-            continue
-        try:
-            found = distribution(child.name)
-        except PackageNotFoundError:
-            problems.add(f"{owner} requires {child.name}, which is not installed")
-            continue
-        if not child.specifier.contains(found.version, prereleases=True):
-            problems.add(f"{owner} requires {child.name}{child.specifier}, but {child.name} {found.version} is installed")
-        queue.append(child)
-for line in sorted(problems):
-    print(line)
-sys.exit(1 if problems else 0)
-PY
-)"; then
+    if ! _closure_report="$(dependency_problems closure "$_dependency_roots")"; then
+        _dependency_report+="$_closure_report"
+    fi
+    if [[ -n "$_dependency_report" ]]; then
         _dependency_ok=false
         warn_line "Python dependencies of the framework are not satisfied:"
         echo "$_dependency_report" | sed 's/^/       /'
     else
-        _dependency_report=""
         ok_line "Every dependency of the local packages is satisfied"
-        if ! _pip_check_report="$(python -m pip check 2>&1)"; then
-            info_line "Other packages in this environment disagree with each other. The framework does not depend on them, so the build continues:"
-            echo "$_pip_check_report" | sed 's/^/       /'
-        fi
+    fi
+    # The root package pins released versions. A checkout that moved past its pin is normal
+    # between two releases, so a difference is shown and does not fail the build.
+    _meta_roots="$(af_pkg_indices meta | while IFS= read -r _i; do printf ' %s' "${AF_PKG_ID[$_i]}"; done)"
+    if [[ -n "$_meta_roots" ]] && ! _pins_report="$(dependency_problems pins "$_meta_roots")"; then
+        info_line "The release profile pins versions these checkouts are not at. Normal while developing; the pins must match before a release:"
+        echo "$_pins_report" | sed 's/^/       /'
+    fi
+    if $_dependency_ok && ! _pip_check_report="$(python -m pip check 2>&1)"; then
+        info_line "pip check reports the following. The local packages do not depend on any of it (release pins are explained above), so the build continues:"
+        echo "$_pip_check_report" | sed 's/^/       /'
     fi
     echo ""
     echo "  Installed AbstractFramework packages:"

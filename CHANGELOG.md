@@ -23,12 +23,14 @@ Source candidate; the root package is not published until operator approval.
   failures still restart the gateway; a clean exit during startup cancels that launch.
 - Local Python builds select Runtime and Agent's supported Apple/GPU extras and verify the
   completed dependency graph alongside import checks. The check covers the local packages and
-  everything they depend on; a conflict between unrelated tools in the same virtualenv is shown
-  and no longer stops the build. Intermediate editable updates no longer print conflicts against
-  sibling packages still awaiting their update.
-- A first local build on a Mac no longer stops at AbstractVision. A dependency that PyPI ships
-  only as source is now built with its own build tools; before, the build worked only where pip
-  had already cached a prebuilt copy.
+  everything they depend on, and fails when pip replaced a checkout with a released version. A
+  release pin a checkout has moved past, or a conflict between unrelated tools in the same
+  virtualenv, is shown and does not stop the build. Intermediate editable updates no longer print
+  conflicts against sibling packages still awaiting their update.
+- A first local build with the Apple profile no longer stops at a dependency that PyPI ships only
+  as source (`stable-diffusion-cpp-python`, `llama-cpp-python`): each is compiled with its own
+  build tools, which needs a C/C++ compiler. Before, the build worked only where pip had already
+  cached a prebuilt copy.
 
 ## [0.14.0] - 2026-11-11
 
