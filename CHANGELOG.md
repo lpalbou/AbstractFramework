@@ -31,6 +31,11 @@ Source candidate; the root package is not published until operator approval.
   as source (`stable-diffusion-cpp-python`, `llama-cpp-python`): each is compiled with its own
   build tools, which needs a C/C++ compiler. Before, the build worked only where pip had already
   cached a prebuilt copy.
+- A local build resolves the dependencies of all the checkouts together, once every checkout is
+  installed. Installed package by package, the first packages took the newest pandas before pip
+  had seen AbstractCore's `pandas<3`, and on a new machine pip then spent three hours moving
+  versions and stopped with `resolution-too-deep`. `pip install "abstractframework[apple]"` was
+  not affected: it has always been one resolution.
 
 ## [0.14.0] - 2026-11-11
 

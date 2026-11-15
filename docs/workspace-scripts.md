@@ -98,7 +98,9 @@ source ./scripts/build.sh        # rebuild what you work on
 `build.sh` builds the three ecosystems in dependency order:
 
 - **Python**: editable installs (`pip install -e`) of the inventoried Python packages and the root
-  meta-package into one virtualenv. Third-party dependencies still come from PyPI. The ones PyPI
+  meta-package into one virtualenv. Third-party dependencies still come from PyPI: every checkout
+  is installed first, then pip resolves the dependencies of all of them together, as it does for
+  the released profile. The ones PyPI
   ships only as source (`stable-diffusion-cpp-python` and `llama-cpp-python` in the Apple profile)
   are compiled on the first build with their own build tools; this needs a C/C++ compiler (on a
   Mac, the Xcode command line tools) and takes several minutes. The completed environment must

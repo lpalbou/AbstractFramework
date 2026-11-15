@@ -234,32 +234,101 @@ _dependency_report="abstractcore 1.0 requires af-build-fixture-b>=2, but af-buil
     assert failed < repeated
 
 
-def test_dependencies_are_installed_with_build_isolation(tmp_path):
-    """A dependency PyPI ships only as source brings its own build backend.
-
-    The local package is installed without its dependencies and without build isolation;
-    its dependencies are then installed by name, WITH isolation. One command for both
-    failed on every machine whose pip cache held no prebuilt wheel of that dependency.
-    """
-    log = tmp_path / 'pip.log'
-    command = '''
+_INSTALL_STUBS = '''
+set -euo pipefail
 require_repo() { :; }
 package_line() { :; }
 dim_line() { :; }
-explain_resolution_failure() { :; }
+section() { :; }
 af_die() { echo "died: $*"; exit 1; }
-editable_dist_name() { echo "Fixture-Dist"; }
+explain_resolution_failure() { echo "explain: $*"; }
+editable_dist_name() { echo "Dist-${1##*/}"; }
 pip() { printf '%s\\n' "$*" >> "$PIP_LOG"; }
-''' + _function('install_editable') + '\ninstall_editable pkg "[apple]" "pip t0" ""\n'
+PY_DEPENDENCY_SPECS=()
+'''
+
+
+def _install_functions():
+    return _function('install_editable') + '\n' + _function('install_python_dependencies') + '\n'
+
+
+def _run_install(tmp_path, body, stubs=_INSTALL_STUBS, shell='bash'):
+    log = tmp_path / 'pip.log'
     env = dict(os.environ, ROOT_DIR=str(tmp_path), PIP_LOG=str(log))
-    result = subprocess.run(['bash', '-c', command], env=env, capture_output=True, text=True)
+    result = subprocess.run([shell, '-c', stubs + _install_functions() + body], env=env,
+                            capture_output=True, text=True)
+    return result, (log.read_text().splitlines() if log.exists() else [])
+
+
+def test_dependencies_are_installed_together_and_with_build_isolation(tmp_path):
+    """Each checkout goes in without its dependencies; those are then installed in ONE pip run.
+
+    One run, because package by package pip takes the newest pandas for the first packages
+    before it has seen the package that needs pandas<3, and on a new machine it then failed
+    with resolution-too-deep after three hours. By name and WITH build isolation, because a
+    dependency PyPI ships only as source brings its own build backend.
+    """
+    result, calls = _run_install(tmp_path, '''
+install_editable one "[apple]" "pip t0" ""
+install_editable two "" "pip t1" "one"
+install_python_dependencies
+''')
     assert result.returncode == 0, result.stdout + result.stderr
-    local, dependencies = log.read_text().splitlines()
-    assert '--no-build-isolation' in local.split() and '--no-deps' in local.split()
-    assert local.endswith(f'-e {tmp_path}/pkg'), local
-    assert dependencies.endswith(' Fixture-Dist[apple]'), dependencies
+    assert len(calls) == 3, calls  # two checkouts, then ONE run for the dependencies of both
+    first, second, dependencies = calls
+    for local, name in ((first, 'one'), (second, 'two')):
+        assert '--no-build-isolation' in local.split() and '--no-deps' in local.split()
+        assert local.endswith(f'-e {tmp_path}/{name}'), local
+    assert dependencies.endswith(' Dist-one[apple] Dist-two'), dependencies
     assert '--no-build-isolation' not in dependencies.split()
     assert '-e' not in dependencies.split() and '--no-deps' not in dependencies.split()
+
+
+def test_a_dependency_install_that_fails_stops_the_build_and_names_the_packages(tmp_path):
+    stubs = _INSTALL_STUBS.replace(
+        '''pip() { printf '%s\\n' "$*" >> "$PIP_LOG"; }''',
+        '''pip() { case " $* " in *" -e "*) return 0 ;; *) return 1 ;; esac; }''')
+    assert stubs != _INSTALL_STUBS
+    result, _ = _run_install(tmp_path, '''
+install_editable one "[apple]" "pip t0" ""
+install_editable two "" "pip t1" "one"
+install_python_dependencies
+echo "the build went on"
+''', stubs=stubs)
+    assert result.returncode == 1
+    assert 'explain: Dist-one[apple] Dist-two' in result.stdout
+    assert 'died: pip could not install the dependencies of the local packages (Dist-one[apple] Dist-two)' in result.stdout
+    assert 'the build went on' not in result.stdout
+
+
+def test_a_build_with_no_local_python_package_installs_no_dependencies(tmp_path):
+    """Under `set -u`, the bash that ships with macOS (3.2) rejects an empty array expansion."""
+    shell = '/bin/bash' if Path('/bin/bash').exists() else 'bash'
+    result, calls = _run_install(tmp_path, 'install_python_dependencies\necho reached\n', shell=shell)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert calls == [] and 'reached' in result.stdout
+
+
+def test_the_build_installs_checkouts_then_their_dependencies_then_the_meta_package(tmp_path):
+    """The order in the script itself: the dependencies of all checkouts before the root package."""
+    start = BUILD_SH.index('    # ── Every Python package, tier by tier (scripts/lib/packages.txt) ──')
+    marker = '    done < <(af_pkg_indices meta)\n'
+    end = BUILD_SH.index(marker, start) + len(marker)
+    result, calls = _run_install(tmp_path, '''
+AF_PKG_ID=(one two abstractframework)
+AF_PKG_TIER=(0 1 2)
+af_pkg_indices() { if [ "$1" = python ]; then echo 0; echo 1; else echo 2; fi; }
+af_tier_title() { echo "Tier $1"; }
+af_pkg_location() { echo "${AF_PKG_ID[$1]}"; }
+af_pkg_dep_ids() { echo ""; }
+build_profile_extras() { if [ "$1" = one ]; then printf '%s' "[$2]"; fi; }
+PYTHON_BUILD_PROFILE=apple
+''' + BUILD_SH[start:end])
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert len(calls) == 4, calls
+    assert calls[0].endswith(f'--no-deps -e {tmp_path}/one') and calls[1].endswith(f'--no-deps -e {tmp_path}/two')
+    assert calls[2].endswith(' Dist-one[apple] Dist-two') and '--no-deps' not in calls[2].split()
+    assert calls[3].endswith(f'--no-deps -e {tmp_path}'), calls[3]
 
 
 def test_an_editable_install_pip_did_not_record_stops_the_build(tmp_path):

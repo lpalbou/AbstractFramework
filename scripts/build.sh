@@ -322,11 +322,12 @@ require_repo() {
 # whole backtracking budget before it can prove which two requirements are
 # irreconcilable, so the operator is told the graph is "too complex" and
 # advised to add lower bounds — for what is really package A wanting X>=n and
-# package B wanting X<n. uv's resolver reports that pair in seconds. This is
-# DIAGNOSIS ONLY: the build still fails, it just stops lying about why.
+# package B wanting X<n. uv's resolver reports that pair in seconds. pip gives
+# the same answer for a graph that HAS a solution when it must first move many
+# versions that are already installed; uv then prints the solution instead.
+# This is DIAGNOSIS ONLY: the build still fails, it just stops lying about why.
+# Usage: explain_resolution_failure <name[extras]>...   (the requirements pip was given)
 explain_resolution_failure() {
-    local rel_dir="$1" extras="$2" pkg_path="$3"
-
     if ! command -v uv >/dev/null 2>&1; then
         echo ""
         printf "${C_YELLOW}hint:${C_RESET} install uv (https://docs.astral.sh/uv/) and re-run — its resolver\n"
@@ -335,12 +336,13 @@ explain_resolution_failure() {
     fi
 
     echo ""
-    printf "${C_YELLOW}Re-resolving %s%s with uv to name the actual conflict...${C_RESET}\n" "$rel_dir" "$extras"
+    printf "${C_YELLOW}Re-resolving the same requirements with uv to name the actual conflict...${C_RESET}\n"
     echo ""
     # --dry-run: resolve and report, install nothing. A uv failure here is the
     # POINT (it prints the conflict), so it must not abort this handler.
-    uv pip install --dry-run \
-        --python "$VENV_DIR/bin/python" -e "${pkg_path}${extras}" 2>&1 | tail -40 || true
+    # When uv prints a list of versions instead, no two requirements conflict:
+    # pip ran out of rounds on a graph that does have an answer.
+    uv pip install --dry-run --python "$VENV_DIR/bin/python" "$@" 2>&1 | tail -40 || true
 }
 
 # The distribution name pip recorded for the editable install of a local directory.
@@ -441,7 +443,12 @@ sys.exit(1 if problems else 0)
 PY
 }
 
-# Editable-install a Python package from a local directory.
+# The local packages whose dependencies install_python_dependencies installs: one
+# "name[extras]" per package, added by install_editable.
+PY_DEPENDENCY_SPECS=()
+
+# Editable-install a Python package from a local directory, WITHOUT its dependencies:
+# those are installed for all the local packages together (install_python_dependencies).
 # Usage: install_editable <relative_dir> [pip_extras] [label] [needs]
 # Example: install_editable abstractcore "[apple]" "pip t2" "abstractvision"
 install_editable() {
@@ -456,23 +463,40 @@ install_editable() {
     echo ""
     package_line "$label" "install -e ${rel_dir}${extras}"
     [[ -n "$needs" ]] && dim_line "     needs: ${needs}"
-    # 1. The local package itself: editable, built with this venv's own build tools.
+    # Editable, built with this venv's own build tools.
     if ! pip install --quiet --no-build-isolation --no-warn-conflicts --no-deps -e "${pkg_path}"; then
         af_die "pip install -e ${rel_dir} failed"
     fi
-    # 2. Its dependencies, by name, with pip's normal build isolation. A dependency that
-    #    PyPI ships only as source (stable-diffusion-cpp-python and llama-cpp-python in the
-    #    Apple profile) names its own build backend. --no-build-isolation looks for that
-    #    backend in this venv, so one command for both steps failed on every machine whose
-    #    pip cache held no prebuilt wheel of it: any machine building for the first time.
-    #    Building them needs a C/C++ compiler.
     dist_name="$(editable_dist_name "$pkg_path")"
     if [[ -z "$dist_name" ]]; then
         af_die "pip recorded no editable install for ${rel_dir}"
     fi
-    if ! pip install --quiet --no-warn-conflicts "${dist_name}${extras}"; then
-        explain_resolution_failure "$rel_dir" "$extras" "$pkg_path"
-        af_die "pip install ${dist_name}${extras} (the dependencies of ${rel_dir}) failed"
+    PY_DEPENDENCY_SPECS+=("${dist_name}${extras}")
+}
+
+# Install the dependencies of every local package, in ONE pip resolution.
+#
+# By name, with pip's normal build isolation: a dependency that PyPI ships only as source
+# (stable-diffusion-cpp-python and llama-cpp-python in the Apple profile) names its own
+# build backend, and --no-build-isolation would look for that backend in this venv.
+# Building them needs a C/C++ compiler.
+#
+# Together, not package by package: installed one package at a time, the first packages
+# take the newest version of a dependency they share with a later one (pandas 3) before
+# pip has seen the package that caps it (abstractcore needs pandas<3). pip then has to
+# move versions it already installed, and on a new machine with the Apple profile it used
+# its whole budget, 200,000 rounds in about three hours, without finding the answer that a
+# single resolution finds in under a minute. The released profile is installed the same
+# way: one set of requirements, one resolution.
+install_python_dependencies() {
+    if [[ ${#PY_DEPENDENCY_SPECS[@]} -eq 0 ]]; then
+        return 0
+    fi
+    echo ""
+    package_line "pip deps" "the dependencies of ${#PY_DEPENDENCY_SPECS[@]} local packages, resolved together"
+    if ! pip install --quiet --no-warn-conflicts "${PY_DEPENDENCY_SPECS[@]}"; then
+        explain_resolution_failure "${PY_DEPENDENCY_SPECS[@]}"
+        af_die "pip could not install the dependencies of the local packages (${PY_DEPENDENCY_SPECS[*]})"
     fi
 }
 
@@ -835,27 +859,32 @@ PY
     ok_line "Using Python dependency profile: ${PYTHON_BUILD_PROFILE}"
 
     # ── Every Python package, tier by tier (scripts/lib/packages.txt) ──
-    # A package is installed only after everything it depends on (tier =
-    # dependency depth; ./scripts/deps.sh --kind python shows the edges).
+    # 1. Each checkout, editable and without its dependencies, in dependency order
+    #    (tier = dependency depth; ./scripts/deps.sh --kind python shows the edges).
     _last_tier=""
     while IFS= read -r _i; do
         if [[ "${AF_PKG_TIER[$_i]}" != "$_last_tier" ]]; then
             _last_tier="${AF_PKG_TIER[$_i]}"
             section "Python — $(af_tier_title "$_last_tier")"
         fi
-        _deps="$(af_pkg_dep_ids "$_i")"
-        if [[ "${AF_PKG_KIND[$_i]}" == "meta" ]]; then
-            # The meta-package pins released versions with `==`; installing its
-            # dependencies would drag the editable checkouts back to PyPI builds.
-            echo ""
-            package_line "pip t${_last_tier}" "install --no-deps -e . (AbstractFramework meta-package)"
-            pip install --quiet --no-build-isolation --no-warn-conflicts --no-deps -e "$ROOT_DIR"
-            continue
-        fi
         install_editable "$(af_pkg_location "$_i")" \
             "$(build_profile_extras "${AF_PKG_ID[$_i]}" "$PYTHON_BUILD_PROFILE")" \
-            "pip t${_last_tier}" "$_deps"
-    done < <(af_pkg_indices python; af_pkg_indices meta)
+            "pip t${_last_tier}" "$(af_pkg_dep_ids "$_i")"
+    done < <(af_pkg_indices python)
+
+    # 2. What they depend on, for all of them in one resolution.
+    section "Python — Dependencies of the local packages"
+    install_python_dependencies
+
+    # 3. The meta-package, last and without dependencies: it pins released versions
+    #    with `==`, and installing those would drag the editable checkouts back to
+    #    PyPI builds.
+    while IFS= read -r _i; do
+        section "Python — $(af_tier_title "${AF_PKG_TIER[$_i]}")"
+        echo ""
+        package_line "pip t${AF_PKG_TIER[$_i]}" "install --no-deps -e . (AbstractFramework meta-package)"
+        pip install --quiet --no-build-isolation --no-warn-conflicts --no-deps -e "$ROOT_DIR"
+    done < <(af_pkg_indices meta)
 
     # ── Import safety: prevent workspace-root shadowing ─────────────────
     # Problem:
@@ -1030,8 +1059,8 @@ PY
     fi
 
     section "Python — Verification"
-    # Individual editable installs see stale sibling metadata until its tier
-    # is reached. Check the complete graph once every local package is installed.
+    # Check the complete graph once every local package and its dependencies
+    # are installed.
     #
     # The check covers what this build installed: every local package with the
     # profile's extras, and everything those depend on. An unmet requirement there
