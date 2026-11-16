@@ -1094,7 +1094,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-The `abstractframework` 0.14.1 source candidate pins the Python matrix listed in the
+`abstractframework` 0.14.1 pins the Python matrix listed in the
 [release matrix](../README.md#release-matrix-abstractframework-0141), including
 `abstractgateway==0.21.1`, `abstractcore==2.35.2`, `AbstractRuntime==0.19.6`, `AbstractMemory==0.5.2`,
 `abstractagent==0.6.1`, `abstractvoice==0.21.1`, `abstractvision==0.3.36`, `abstractassistant==0.19.0`,
@@ -1185,7 +1185,7 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version in the 0.14.1 candidate |
+| Tool | Command | Version in 0.14.1 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.21.1 |
 | Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.35.2 |

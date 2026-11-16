@@ -16,8 +16,7 @@ the owning component's documentation.
 
 ## Install and verify
 
-This guide describes the 0.14.1 source candidate. Until that root is published, unversioned
-installs select 0.14.0 and its component matrix. Follow the installed version's documentation
+This guide describes AbstractFramework 0.14.1. Follow the installed version's documentation
 when it differs from this guide.
 
 Use a virtual environment. Select one of the three supported profiles:

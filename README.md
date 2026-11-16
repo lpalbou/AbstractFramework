@@ -13,11 +13,7 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-**0.14.1 source candidate.** The published root remains 0.14.0 until this candidate is
-approved. Unversioned install commands below select the latest published root; the
-[component matrix](#release-matrix-abstractframework-0141) describes this source candidate.
-
-**What's new in 0.14.1** ([CHANGELOG](CHANGELOG.md#0141---2026-11-14)): Hugging Face searches use
+**What's new in 0.14.1** ([CHANGELOG](CHANGELOG.md#0141---2026-11-16)): Hugging Face searches use
 bounded requests and shared rate-limit cooldowns; Windows startup uses a compact launcher;
 Gateway tray Exit stays stopped under the local supervisor. Question-resolution notices and
 entity mentions remain consistent across shared chat and memory views, attachment retries keep

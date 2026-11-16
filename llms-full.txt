@@ -17,11 +17,7 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-**0.14.1 source candidate.** The published root remains 0.14.0 until this candidate is
-approved. Unversioned install commands below select the latest published root; the
-[component matrix](#release-matrix-abstractframework-0141) describes this source candidate.
-
-**What's new in 0.14.1** ([CHANGELOG](CHANGELOG.md#0141---2026-11-14)): Hugging Face searches use
+**What's new in 0.14.1** ([CHANGELOG](CHANGELOG.md#0141---2026-11-16)): Hugging Face searches use
 bounded requests and shared rate-limit cooldowns; Windows startup uses a compact launcher;
 Gateway tray Exit stays stopped under the local supervisor. Question-resolution notices and
 entity mentions remain consistent across shared chat and memory views, attachment retries keep
@@ -655,7 +651,7 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `NPM_LIBRARY_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- The AbstractFramework 0.14.1 source candidate pins 15 Python components with `==`, including AbstractGateway 0.21.1, AbstractCore 2.35.2, AbstractRuntime 0.19.6, AbstractMemory 0.5.2, AbstractAgent 0.6.1, AbstractSkill 0.3.13, AbstractVoice 0.21.1, AbstractVision 0.3.36, Assistant 0.19.0, Notes 0.3.1, Camera 0.2.1 and Avatar 0.2.0. See the [complete matrix](README.md#release-matrix-abstractframework-0141).
+- AbstractFramework 0.14.1 pins 15 Python components with `==`, including AbstractGateway 0.21.1, AbstractCore 2.35.2, AbstractRuntime 0.19.6, AbstractMemory 0.5.2, AbstractAgent 0.6.1, AbstractSkill 0.3.13, AbstractVoice 0.21.1, AbstractVision 0.3.36, Assistant 0.19.0, Notes 0.3.1, Camera 0.2.1 and Avatar 0.2.0. See the [complete matrix](README.md#release-matrix-abstractframework-0141).
 - Seven npm apps (the Assistant web app included; its manifest id is the gateway's `assistant-web`) and seven shared npm libraries are recorded separately; libraries are never launched. Seven crate versions are recorded, including both TUI extensions. Published terminal tools retain their own dependency lockfiles.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
@@ -1846,8 +1842,7 @@ the owning component's documentation.
 
 ## Install and verify
 
-This guide describes the 0.14.1 source candidate. Until that root is published, unversioned
-installs select 0.14.0 and its component matrix. Follow the installed version's documentation
+This guide describes AbstractFramework 0.14.1. Follow the installed version's documentation
 when it differs from this guide.
 
 Use a virtual environment. Select one of the three supported profiles:
@@ -5133,7 +5128,7 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-The `abstractframework` 0.14.1 source candidate pins the Python matrix listed in the
+`abstractframework` 0.14.1 pins the Python matrix listed in the
 [release matrix](../README.md#release-matrix-abstractframework-0141), including
 `abstractgateway==0.21.1`, `abstractcore==2.35.2`, `AbstractRuntime==0.19.6`, `AbstractMemory==0.5.2`,
 `abstractagent==0.6.1`, `abstractvoice==0.21.1`, `abstractvision==0.3.36`, `abstractassistant==0.19.0`,
@@ -5224,7 +5219,7 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version in the 0.14.1 candidate |
+| Tool | Command | Version in 0.14.1 |
 |---|---|---|
 | Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.21.1 |
 | Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.35.2 |
@@ -7676,7 +7671,7 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.14.1` for this source candidate).
+The meta-package version (`0.14.1` in this release).
 
 ### `RELEASE_VERSIONS`
 
