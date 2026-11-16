@@ -33,6 +33,11 @@ See [Install AbstractFramework](install.md) for the profile chooser and first he
 
 ## Convenience re-exports
 
+SDK exports load Core only when requested. Importing the root profile, listing installed
+versions, printing a manifest or running `doctor --no-environment` does not initialize
+component configuration. If Core is missing, those inspection operations remain available;
+requesting a Core SDK export raises the dependency's import error.
+
 `abstractframework` re-exports two common AbstractCore entry points so simple scripts can `from abstractframework import ...` without a separate `abstractcore` import.
 
 ### `create_llm`
@@ -55,12 +60,12 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.14.0` for this release).
+The meta-package version (`0.14.1` in this release).
 
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each Python component to its exact pinned version. The
-[release matrix](../README.md#release-matrix-abstractframework-0140) lists all 15 distributions,
+[release matrix](../README.md#release-matrix-abstractframework-0141) lists all 15 distributions,
 including Notes, Camera and the Python Avatar binding.
 
 ### `PACKAGE_DISTRIBUTIONS`
@@ -73,7 +78,7 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 The seven launchable browser apps, including Notes and the Assistant web app, each runnable with
 `npx <package>@<version>`. They appear as `npm_apps` in the install manifest, each with the
 gateway's app id (`assistant-web` for `@abstractframework/assistant`). See the
-[release matrix](../README.md#release-matrix-abstractframework-0140) for exact versions.
+[release matrix](../README.md#release-matrix-abstractframework-0141) for exact versions.
 
 ### `NPM_LIBRARY_RELEASE_VERSIONS`
 
@@ -110,7 +115,9 @@ print(profile["crates"])                   # CRATE_RELEASE_VERSIONS
 
 ### `get_installed_packages()`
 
-Returns a dict of installed AbstractFramework package versions detected in the current environment.
+Returns a dict of installed AbstractFramework distribution versions from package metadata.
+It does not import components or load their configuration. Matching metadata does not verify
+that an optional inference engine can import or run.
 
 ```python
 from abstractframework import get_installed_packages
@@ -127,6 +134,10 @@ print_status()
 ```
 
 ### `abstractframework doctor`
+
+The command exits 1 when a check reports `error`. It exits 0 for `ok`, `info` or
+`warn`, so exit 0 alone does not mean every check is healthy. Read the report's
+`status` and individual `checks`, especially in automation using `--json`.
 
 Checks the Python version (3.10–3.13), pinned package versions, the Apple/GPU profile
 prerequisites (macOS 14+ on Apple Silicon, `nvidia-smi` / `rocminfo`), uv, Node.js 18+ (system or

@@ -8,8 +8,8 @@
 #
 #   CRITICAL services (the gateway):
 #     - app failures never touch them;
-#     - restarted on death with UNLIMITED attempts and capped exponential
-#       backoff (a control plane is never abandoned);
+#     - restarted after failures with UNLIMITED attempts and capped exponential
+#       backoff; on-failure clean Quit stays stopped;
 #     - actively health-probed: a hung-but-alive process (serving nothing) is
 #       reported loudly (restart on death only, operator ruling 2026-08-20;
 #       the gateway's own event-loop watchdog turns a hang into a death, exit
@@ -48,7 +48,7 @@
 #   running   readiness confirmed; health-probed if a health URL is declared
 #   waiting   scheduled to (re)start at SUP_NEXT_START_AT (backoff / parked)
 #   failed    restart budget exhausted (apps only) — operator attention
-#   stopped   deliberately stopped (shutdown or clean desktop-app exit)
+#   stopped   deliberately stopped (shutdown or clean on-failure exit)
 #
 # Portability: macOS ships bash 3.2 — parallel indexed arrays only (no
 # associative arrays), no ${var,,}, no readarray. `set -u` safe.
@@ -480,9 +480,9 @@ sup_handle_death() {
     SUP_EXIT_STATUS[$i]="$status"
     SUP_PID[$i]=""
 
-    # A desktop Quit is final, even during a gateway outage. It is not an
+    # An explicit clean Quit is final, even during a gateway outage. It is not an
     # incident, does not consume crash budget, and recovery must not revive it.
-    if [[ "${SUP_CRITICAL[$i]}" != "1" && "${SUP_RESTART_POLICY[$i]}" == "on-failure" \
+    if [[ "${SUP_RESTART_POLICY[$i]}" == "on-failure" \
           && "$reason" == "exited" && "$status" == "0" ]]; then
         SUP_STATE[$i]="stopped"
         SUP_NEXT_START_AT[$i]=0
@@ -701,7 +701,7 @@ sup_await_state() {
     while [[ "$SECONDS" -lt "$deadline" ]]; do
         sup_tick
         [[ "${SUP_STATE[$i]}" == "$want" ]] && return 0
-        [[ "${SUP_STATE[$i]}" == "failed" ]] && return 1
+        [[ "${SUP_STATE[$i]}" == "failed" || "${SUP_STATE[$i]}" == "stopped" ]] && return 1
         [[ "$SUP_SHUTDOWN" == "1" ]] && return 1
         sleep 1
     done

@@ -57,7 +57,21 @@ CRITICAL=$SUP_LAST_INDEX
 sup_start_service "$CRITICAL"
 sleep 0.2
 sup_tick
-check 'critical recovery is unconditional' '[[ ${SUP_STATE[$CRITICAL]} == waiting ]]'
+check 'Gateway clean Quit is final even when critical' '[[ ${SUP_STATE[$CRITICAL]} == stopped ]]'
+check 'Gateway Quit is not an incident' '! grep -q "INCIDENT: critical" "$SUP_LOG_FILE"'
+sup_tick
+check 'Gateway Quit is not revived by the next tick' '[[ ${SUP_STATE[$CRITICAL]} == stopped && -z ${SUP_PID[$CRITICAL]} ]]'
+check 'startup wait stops immediately after Quit' '! sup_await_state "$CRITICAL" running 30'
+SUP_CMD[$CRITICAL]='exit 9'
+sup_start_service "$CRITICAL"
+sleep 0.2
+sup_tick
+check 'Gateway crash still schedules recovery' '[[ ${SUP_STATE[$CRITICAL]} == waiting && ${SUP_EXIT_STATUS[$CRITICAL]} == 9 ]]'
+SUP_CMD[$CRITICAL]='exec sleep 60'
+SUP_NEXT_START_AT[$CRITICAL]=0
+sup_tick
+sup_tick
+check 'Gateway crash recovery starts a new child' '[[ ${SUP_STATE[$CRITICAL]} == running ]]'
 
 # Recycling a service for failed readiness is not an explicit Quit, even if
 # its shutdown handler exits zero.

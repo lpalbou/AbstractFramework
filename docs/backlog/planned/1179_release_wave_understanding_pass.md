@@ -492,6 +492,14 @@ untracked/release-2026-11-07/audit-fable/PROFILES-PROOF.md reviewed adversariall
 HELD until then. Also noted: a bare pip of
 abstractcore[gpu] gets the CPU llama-cpp-python wheel (the installer swaps it); vllm adds ~2 GB and a torch downgrade.
 
+## Released 2026-11-11
+
+Root abstractframework 0.14.0 published (tag v0.14.0 on c146241, release run 43026433339 green, PyPI visible), pinning the
+matrix in docs/releases/0.14.0-changes.md §6. Root gate green; adversarial review PUSH
+(untracked/release-2026-11-07/audit-fable/REVIEW-root-0.14.0.md). The website stays on its local branch site-0.14.0
+(operator: release the root, not the website). Remaining follow-ups are filed (1185-1208, the next patch wave in the
+change report §4).
+
 ## Receipts
 
 - Release mechanics: the `abstract-release` and `release` skills; previous record [1132](../completed/1132_final_stable_release.md).

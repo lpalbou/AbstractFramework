@@ -208,6 +208,10 @@ The pull request body states the tier and why; a reviewer may raise it.
   `command -v lsof || sudo apt-get install lsof` never reaches the stub when the tool is present.
 - Docker build actions, `services:` and `container:` jobs, jobs that read `secrets.*` or use a
   deployment `environment:`, PowerShell / `cmd` steps that their `if:` does not exclude.
+- Steps that write to a remote, including an `ensure-tag` step containing `git push`. Select
+  nonpublishing validation jobs locally; perform tag mutations and publication through the
+  repository's documented release procedure. Preserve an overbroad run's raw skipped/red result and report its completed
+  validation separately from the pending deployment mutation.
 - A Python, Node or Rust toolchain this machine lacks (the reason names the install command).
 - A job that `needs` a job that did not run in full.
 
@@ -221,6 +225,25 @@ rust-toolchain, cache, rust-cache, upload-artifact and the Docker actions) is an
   behaviour is not exercised and macOS-only tests (skipped on GitHub's Ubuntu) do run. A job without
   `setup-node` finds the newest local Node on its `PATH`, as the runner images carry one. Most checks are portable; the ones that are not are the SKIPPED
   root/sandbox jobs.
+- **Local-file safety fixtures need a known local root.** The default cache run puts job `HOME`
+  and `TMPDIR` in sibling directories. A test that permits filesystem access only under `HOME`
+  or system temporary roots can correctly refuse that cache `TMPDIR`. For example, Assistant's
+  complete link/workspace-image suites reproduced 17 failures/errors there and passed all 103
+  cases in `/private/tmp` with identical source and assertions. Use the supported scratch-root
+  option for those jobs, then rerun every required matrix entry:
+
+  ```bash
+  AF_CI_WORK="$(mktemp -d /private/tmp/af-ci.XXXXXX)"
+  bash scripts/ci_local.sh abstractassistant --tier full --job ci:test \
+    --work "$AF_CI_WORK" --keep-runs all
+  ```
+
+  This selects the full `ci:test` Python matrix only; other required CI/release jobs still
+  need their own validation.
+
+  Keep the production path policy and negative mount/symlink checks intact. Retain the original
+  failure evidence; the focused comparison establishes the cause, while the complete matrix
+  establishes validation. A custom scratch run is retained for inspection and manual cleanup.
 - `uv pip` resolves like pip (`UV_INDEX_STRATEGY=unsafe-best-match`), but it is not pip.
 - Toolchains are this machine's: the local `stable` Rust may be older than GitHub's (clippy lints
   differ between releases); keep it current with `rustup update stable`.

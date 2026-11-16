@@ -2,13 +2,46 @@
 
 All notable changes to AbstractFramework will be documented in this file.
 
+## [Unreleased]
+
+## [0.14.1] - 2026-11-16
+
+- The 0.14.1 candidate aligns the light, Apple and GPU component matrix with bounded HF
+  discovery, Windows startup registration, cancellation-safe runtime publication and shared
+  question-resolution notices. Browser apps use the released shared chat package; Entity 0.12.2
+  also corrects its shipped guides to describe the current Detail and timeline controls.
+- Assistant attachment-bearing mention retries preserve the attachment as a fresh durable turn.
+  Apple source includes selective sleeping-gateway hints and automation-history safeguards;
+  native app distribution is separate from the Python and browser releases.
+- Profile inspection, package version listings and root CLI initialization read metadata without
+  loading component configuration. Convenience Core SDK exports load only when requested.
+- A package agent skill covers profile installation, doctor results, manifests and the pinned
+  components' own operational guides.
+- Gateway tray **Exit** stays stopped under the workspace supervisor. Crashes and watchdog
+  failures still restart the gateway; a clean exit during startup cancels that launch.
+- Local Python builds select Runtime and Agent's supported Apple/GPU extras and verify the
+  completed dependency graph alongside import checks. The check covers the local packages and
+  everything they depend on, and fails when pip replaced a checkout with a released version. A
+  release pin a checkout has moved past, or a conflict between unrelated tools in the same
+  virtualenv, is shown and does not stop the build. Intermediate editable updates no longer print
+  conflicts against sibling packages still awaiting their update.
+- A first local build with the Apple profile no longer stops at a dependency that PyPI ships only
+  as source (`stable-diffusion-cpp-python`, `llama-cpp-python`): each is compiled with its own
+  build tools, which needs a C/C++ compiler. Before, the build worked only where pip had already
+  cached a prebuilt copy.
+- A local build resolves the dependencies of all the checkouts together, once every checkout is
+  installed. Installed package by package, the first packages took the newest pandas before pip
+  had seen AbstractCore's `pandas<3`, and on a new machine pip then spent three hours moving
+  versions and stopped with `resolution-too-deep`. `pip install "abstractframework[apple]"` was
+  not affected: it has always been one resolution.
+
 ## [0.14.0] - 2026-11-11
 
 Pins the 2026-11-10/11 release wave across the light, Apple and GPU profiles: **AbstractGateway 0.21.0**,
 **AbstractCore 2.35.1**, **AbstractRuntime 0.19.5**, **AbstractMemory 0.5.1**, **AbstractAgent 0.6.1**,
 **AbstractSkill 0.3.11**, **AbstractVoice 0.21.1**, **AbstractVision 0.3.36** and **AbstractAvatar 0.2.0**.
 It also carries everything prepared as 0.13.1, which was never published. The complete Python, npm and
-Rust matrix is in the [README](README.md#release-matrix-abstractframework-0140).
+Rust matrix is in the [versioned README](https://github.com/lpalbou/AbstractFramework/blob/v0.14.0/README.md#release-matrix-abstractframework-0140).
 
 ### What this release is
 

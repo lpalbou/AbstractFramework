@@ -13,13 +13,12 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-**What's new in 0.14.0** ([CHANGELOG](CHANGELOG.md#0140---2026-11-11)): entities get a clear life
-(idle, visit, work, own time, sleep; own time only when you give it; a Stop that really stops; visits
-that never fail), every memory is titled and summarised when it forms, sleep groups memories into
-topics the entity can browse, and `@` brings any entity into a conversation from Code, the Assistant
-and the Entity app. Voice and vision are proven on Linux (NVIDIA and processor-only), a plain
-`pip install "abstractframework[gpu]"` runs GGUF models on the card, agents get 50 steps by default,
-and the Assistant web app joins the release's browser apps.
+**What's new in 0.14.1** ([CHANGELOG](CHANGELOG.md#0141---2026-11-16)): Hugging Face searches use
+bounded requests and shared rate-limit cooldowns; Windows startup uses a compact launcher;
+Gateway tray Exit stays stopped under the local supervisor. Question-resolution notices and
+entity mentions remain consistent across shared chat and memory views, attachment retries keep
+their files, and cancellation prevents late work from replacing a cancelled run. Metadata
+inspection reads installed versions without loading component configuration.
 
 > **Prerequisites**: none for the one-line install below (it provisions Python and, optionally, Node.js). For a manual install: Python 3.10–3.13, Node.js 18+ for browser UIs, and an LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
 
@@ -188,7 +187,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.21.0` and `ghcr.io/lpalbou/abstractcore-server:2.35.1`.
+`ghcr.io/lpalbou/abstractgateway:0.21.1` and `ghcr.io/lpalbou/abstractcore-server:2.35.2`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -343,7 +342,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.14.0)
+### Release matrix (abstractframework 0.14.1)
 
 The Python meta-package pins its component distributions with `==`. Browser apps and
 shared npm libraries are listed separately; only apps are launchable. Rust tools retain
@@ -351,31 +350,31 @@ the dependency versions in their published lockfiles.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractcore` | 2.35.1 |
-| PyPI | `AbstractRuntime` | 0.19.5 |
+| PyPI | `abstractcore` | 2.35.2 |
+| PyPI | `AbstractRuntime` | 0.19.6 |
 | PyPI | `abstractagent` | 0.6.1 |
-| PyPI | `abstractgateway` | 0.21.0 |
-| PyPI | `abstractskill` | 0.3.11 |
-| PyPI | `AbstractMemory` | 0.5.1 |
+| PyPI | `abstractgateway` | 0.21.1 |
+| PyPI | `abstractskill` | 0.3.13 |
+| PyPI | `AbstractMemory` | 0.5.2 |
 | PyPI | `abstractsemantics` | 0.0.5 |
 | PyPI | `abstractvoice` | 0.21.1 |
 | PyPI | `abstractvision` | 0.3.36 |
 | PyPI | `abstractmusic` | 0.1.17 |
 | PyPI | `abstract3d` | 0.3.2 |
-| PyPI | `abstractassistant` | 0.18.3 |
+| PyPI | `abstractassistant` | 0.19.0 |
 | PyPI | `abstractcamera` | 0.2.1 |
 | PyPI | `abstractavatar` | 0.2.0 |
 | PyPI | `abstractnote` | 0.3.1 |
 | npm app | `@abstractframework/flow` | 0.14.2 |
-| npm app | `@abstractframework/code` | 0.16.0 |
-| npm app | `@abstractframework/observer` | 0.13.0 |
+| npm app | `@abstractframework/code` | 0.16.1 |
+| npm app | `@abstractframework/observer` | 0.13.1 |
 | npm app | `@abstractframework/continuum` | 0.8.1 |
-| npm app | `@abstractframework/entity` | 0.12.0 |
+| npm app | `@abstractframework/entity` | 0.12.2 |
 | npm app | `@abstractframework/note` | 0.3.1 |
-| npm app | `@abstractframework/assistant` | 0.2.0 |
+| npm app | `@abstractframework/assistant` | 0.2.1 |
 | npm library | `@abstractframework/app-server` | 0.1.13 |
 | npm library | `@abstractframework/ui-kit` | 0.9.28 |
-| npm library | `@abstractframework/panel-chat` | 0.9.13 |
+| npm library | `@abstractframework/panel-chat` | 0.9.14 |
 | npm library | `@abstractframework/monitor-active-memory` | 0.2.2 |
 | npm library | `@abstractframework/monitor-flow` | 0.1.10 |
 | npm library | `@abstractframework/monitor-gpu` | 0.1.10 |
@@ -397,6 +396,13 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 `abstractframework doctor`, and the generated installer manifest contract.
 
 ---
+
+## For AI agents
+
+Register the [AbstractFramework skill](https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/skills/abstractframework/SKILL.md)
+with your agent, or copy `skills/abstractframework/` into its skills directory
+(`~/.codex/skills/` for Codex). It teaches profile selection, health checks and
+routing to the pinned components' own guides. Load it before installing or diagnosing a profile.
 
 ## Documentation
 

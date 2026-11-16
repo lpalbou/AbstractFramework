@@ -10,23 +10,30 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.14.0"
+from importlib import import_module
+from importlib.metadata import PackageNotFoundError, version
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from abstractcore import GenerateResponse as GenerateResponse, create_llm as create_llm
+
+__version__ = "0.14.1"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.35.1",
-    "abstractruntime": "0.19.5",
+    "abstractcore": "2.35.2",
+    "abstractruntime": "0.19.6",
     "abstractagent": "0.6.1",
-    "abstractgateway": "0.21.0",
-    "abstractskill": "0.3.11",
-    "abstractmemory": "0.5.1",
+    "abstractgateway": "0.21.1",
+    "abstractskill": "0.3.13",
+    "abstractmemory": "0.5.2",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.21.1",
     "abstractvision": "0.3.36",
     "abstractmusic": "0.1.17",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.18.3",
+    "abstractassistant": "0.19.0",
     "abstractcamera": "0.2.1",
     "abstractavatar": "0.2.0",
     "abstractnote": "0.3.1"
@@ -52,19 +59,19 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.14.2",
-    "@abstractframework/code": "0.16.0",
-    "@abstractframework/observer": "0.13.0",
+    "@abstractframework/code": "0.16.1",
+    "@abstractframework/observer": "0.13.1",
     "@abstractframework/continuum": "0.8.1",
-    "@abstractframework/entity": "0.12.0",
+    "@abstractframework/entity": "0.12.2",
     "@abstractframework/note": "0.3.1",
-    "@abstractframework/assistant": "0.2.0"
+    "@abstractframework/assistant": "0.2.1"
 }
 
 # Shared npm libraries are recorded separately from launchable browser apps.
 NPM_LIBRARY_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/app-server": "0.1.13",
     "@abstractframework/ui-kit": "0.9.28",
-    "@abstractframework/panel-chat": "0.9.13",
+    "@abstractframework/panel-chat": "0.9.14",
     "@abstractframework/monitor-active-memory": "0.2.2",
     "@abstractframework/monitor-flow": "0.1.10",
     "@abstractframework/monitor-gpu": "0.1.10",
@@ -93,28 +100,30 @@ CRATE_RELEASE_VERSIONS: dict[str, str] = {
 # profiles get AbstractCore's local engines through the gateway's profile.
 CORE_DEFAULT_EXTRAS: list[str] = []
 
-# Convenience re-exports (AbstractCore is a base dependency of this meta-package).
-# Keep this import lightweight: do not import optional tool/media deps here.
-try:
-    from abstractcore import GenerateResponse, create_llm  # type: ignore
+# Metadata and CLI inspection must not initialize Core's user configuration.
+# Resolve the convenience SDK exports only when the caller asks for them.
+_CORE_REEXPORTS = frozenset({"GenerateResponse", "create_llm"})
+__all__ = [
+    "CORE_DEFAULT_EXTRAS",
+    "RELEASE_VERSIONS",
+    "GenerateResponse",
+    "create_llm",
+    "get_installed_packages",
+    "get_release_profile",
+    "print_status",
+]
 
-    __all__ = [
-        "CORE_DEFAULT_EXTRAS",
-        "RELEASE_VERSIONS",
-        "GenerateResponse",
-        "create_llm",
-        "get_installed_packages",
-        "get_release_profile",
-        "print_status",
-    ]
-except Exception:  # pragma: no cover
-    __all__ = [
-        "CORE_DEFAULT_EXTRAS",
-        "RELEASE_VERSIONS",
-        "get_installed_packages",
-        "get_release_profile",
-        "print_status",
-    ]
+
+def __getattr__(name: str) -> Any:
+    if name in _CORE_REEXPORTS:
+        value = getattr(import_module("abstractcore"), name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | _CORE_REEXPORTS)
 
 
 def get_release_profile() -> dict[str, object]:
@@ -137,19 +146,15 @@ def get_release_profile() -> dict[str, object]:
 
 
 def get_installed_packages() -> dict[str, str]:
-    """Return a dict of installed AbstractFramework Python packages and versions."""
+    """Read installed distribution versions without importing component packages."""
 
     packages: dict[str, str] = {}
 
-    def _maybe_add(import_name: str) -> None:
+    for import_name, distribution in PACKAGE_DISTRIBUTIONS.items():
         try:
-            mod = __import__(import_name)
-            packages[import_name] = getattr(mod, "__version__", "installed")
-        except Exception:
-            return
-
-    for name in PACKAGE_DISTRIBUTIONS:
-        _maybe_add(name)
+            packages[import_name] = version(distribution)
+        except PackageNotFoundError:
+            continue
 
     return packages
 

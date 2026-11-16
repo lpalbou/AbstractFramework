@@ -11,6 +11,9 @@ This doc set focuses on two things:
 
 Most implementation lives in component repositories. This repo ships the `abstractframework` meta-package (a pinned install profile) and the cross-package docs you're reading now.
 
+AI agents can use the [package skill](https://github.com/lpalbou/AbstractFramework/blob/main/skills/abstractframework/SKILL.md)
+for profile installation, health checks and component-specific guides.
+
 ---
 
 ## Start here

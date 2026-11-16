@@ -17,13 +17,12 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-**What's new in 0.14.0** ([CHANGELOG](CHANGELOG.md#0140---2026-11-11)): entities get a clear life
-(idle, visit, work, own time, sleep; own time only when you give it; a Stop that really stops; visits
-that never fail), every memory is titled and summarised when it forms, sleep groups memories into
-topics the entity can browse, and `@` brings any entity into a conversation from Code, the Assistant
-and the Entity app. Voice and vision are proven on Linux (NVIDIA and processor-only), a plain
-`pip install "abstractframework[gpu]"` runs GGUF models on the card, agents get 50 steps by default,
-and the Assistant web app joins the release's browser apps.
+**What's new in 0.14.1** ([CHANGELOG](CHANGELOG.md#0141---2026-11-16)): Hugging Face searches use
+bounded requests and shared rate-limit cooldowns; Windows startup uses a compact launcher;
+Gateway tray Exit stays stopped under the local supervisor. Question-resolution notices and
+entity mentions remain consistent across shared chat and memory views, attachment retries keep
+their files, and cancellation prevents late work from replacing a cancelled run. Metadata
+inspection reads installed versions without loading component configuration.
 
 > **Prerequisites**: none for the one-line install below (it provisions Python and, optionally, Node.js). For a manual install: Python 3.10–3.13, Node.js 18+ for browser UIs, and an LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
 
@@ -192,7 +191,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.21.0` and `ghcr.io/lpalbou/abstractcore-server:2.35.1`.
+`ghcr.io/lpalbou/abstractgateway:0.21.1` and `ghcr.io/lpalbou/abstractcore-server:2.35.2`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -347,7 +346,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.14.0)
+### Release matrix (abstractframework 0.14.1)
 
 The Python meta-package pins its component distributions with `==`. Browser apps and
 shared npm libraries are listed separately; only apps are launchable. Rust tools retain
@@ -355,31 +354,31 @@ the dependency versions in their published lockfiles.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractcore` | 2.35.1 |
-| PyPI | `AbstractRuntime` | 0.19.5 |
+| PyPI | `abstractcore` | 2.35.2 |
+| PyPI | `AbstractRuntime` | 0.19.6 |
 | PyPI | `abstractagent` | 0.6.1 |
-| PyPI | `abstractgateway` | 0.21.0 |
-| PyPI | `abstractskill` | 0.3.11 |
-| PyPI | `AbstractMemory` | 0.5.1 |
+| PyPI | `abstractgateway` | 0.21.1 |
+| PyPI | `abstractskill` | 0.3.13 |
+| PyPI | `AbstractMemory` | 0.5.2 |
 | PyPI | `abstractsemantics` | 0.0.5 |
 | PyPI | `abstractvoice` | 0.21.1 |
 | PyPI | `abstractvision` | 0.3.36 |
 | PyPI | `abstractmusic` | 0.1.17 |
 | PyPI | `abstract3d` | 0.3.2 |
-| PyPI | `abstractassistant` | 0.18.3 |
+| PyPI | `abstractassistant` | 0.19.0 |
 | PyPI | `abstractcamera` | 0.2.1 |
 | PyPI | `abstractavatar` | 0.2.0 |
 | PyPI | `abstractnote` | 0.3.1 |
 | npm app | `@abstractframework/flow` | 0.14.2 |
-| npm app | `@abstractframework/code` | 0.16.0 |
-| npm app | `@abstractframework/observer` | 0.13.0 |
+| npm app | `@abstractframework/code` | 0.16.1 |
+| npm app | `@abstractframework/observer` | 0.13.1 |
 | npm app | `@abstractframework/continuum` | 0.8.1 |
-| npm app | `@abstractframework/entity` | 0.12.0 |
+| npm app | `@abstractframework/entity` | 0.12.2 |
 | npm app | `@abstractframework/note` | 0.3.1 |
-| npm app | `@abstractframework/assistant` | 0.2.0 |
+| npm app | `@abstractframework/assistant` | 0.2.1 |
 | npm library | `@abstractframework/app-server` | 0.1.13 |
 | npm library | `@abstractframework/ui-kit` | 0.9.28 |
-| npm library | `@abstractframework/panel-chat` | 0.9.13 |
+| npm library | `@abstractframework/panel-chat` | 0.9.14 |
 | npm library | `@abstractframework/monitor-active-memory` | 0.2.2 |
 | npm library | `@abstractframework/monitor-flow` | 0.1.10 |
 | npm library | `@abstractframework/monitor-gpu` | 0.1.10 |
@@ -401,6 +400,13 @@ See [docs/install.md](docs/install.md) for the full install chooser, `uv`/venv g
 `abstractframework doctor`, and the generated installer manifest contract.
 
 ---
+
+## For AI agents
+
+Register the [AbstractFramework skill](https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/skills/abstractframework/SKILL.md)
+with your agent, or copy `skills/abstractframework/` into its skills directory
+(`~/.codex/skills/` for Codex). It teaches profile selection, health checks and
+routing to the pinned components' own guides. Load it before installing or diagnosing a profile.
 
 ## Documentation
 
@@ -456,6 +462,9 @@ expectations: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 --- llms.txt ---
 # AbstractFramework
+
+Agent procedure: [AbstractFramework skill](https://github.com/lpalbou/AbstractFramework/blob/main/skills/abstractframework/SKILL.md)
+for profile selection, health checks and versioned component guides.
 > Meta-package + documentation hub for the AbstractFramework ecosystem (durable, observable agents/workflows).
 
 This repo pins ecosystem package versions and provides a tiny helper API in `abstractframework/`.
@@ -642,7 +651,7 @@ Notes for LLMs working in this repo:
 - [abstractframework/__init__.py](abstractframework/__init__.py): `RELEASE_VERSIONS`, `NPM_RELEASE_VERSIONS`, `NPM_LIBRARY_RELEASE_VERSIONS`, `CRATE_RELEASE_VERSIONS`, `get_release_profile()`, `print_status()`.
 - [docs/installers/install-manifest.json](docs/installers/install-manifest.json): Generated install manifest, schema v2 (pins, profiles, npm apps, `bootstrap` gateway pin/scripts/flags, console-first `post_install`).
 - [scripts/install.sh](scripts/install.sh) / [scripts/install.ps1](scripts/install.ps1): The bootstrap installers.
-- AbstractFramework 0.14.0 pins 15 published Python components with `==`, including AbstractGateway 0.21.0, AbstractCore 2.35.1, AbstractRuntime 0.19.5, AbstractMemory 0.5.1, AbstractAgent 0.6.1, AbstractSkill 0.3.11, AbstractVoice 0.21.1, AbstractVision 0.3.36, Assistant 0.18.3, Notes 0.3.1, Camera 0.2.1 and Avatar 0.2.0. See the [complete matrix](README.md#release-matrix-abstractframework-0140).
+- AbstractFramework 0.14.1 pins 15 Python components with `==`, including AbstractGateway 0.21.1, AbstractCore 2.35.2, AbstractRuntime 0.19.6, AbstractMemory 0.5.2, AbstractAgent 0.6.1, AbstractSkill 0.3.13, AbstractVoice 0.21.1, AbstractVision 0.3.36, Assistant 0.19.0, Notes 0.3.1, Camera 0.2.1 and Avatar 0.2.0. See the [complete matrix](README.md#release-matrix-abstractframework-0141).
 - Seven npm apps (the Assistant web app included; its manifest id is the gateway's `assistant-web`) and seven shared npm libraries are recorded separately; libraries are never launched. Seven crate versions are recorded, including both TUI extensions. Published terminal tools retain their own dependency lockfiles.
 - Profiles: light (remote-only), apple (`abstractframework[apple]`, macOS 14+ Apple Silicon), gpu (`abstractframework[gpu]`); Python 3.10-3.13 (F5-TTS voice cloning in apple/gpu needs 3.11+).
 
@@ -671,7 +680,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "abstractframework"
-version = "0.14.0"
+version = "0.14.1"
 description = "Unified installer and documentation hub for the AbstractFramework ecosystem"
 readme = "README.md"
 license = {text = "MIT"}
@@ -715,17 +724,17 @@ requires-python = ">=3.10"
 # - Keep the meta-package aligned with the real per-package profiles (especially `abstractgateway`).
 dependencies = [
     # Durable Gateway control plane (remote-light by default).
-    "abstractgateway==0.21.0",
+    "abstractgateway==0.21.1",
 
     # Workflow authoring UI is distributed through npm as @abstractframework/flow.
-    "abstractassistant==0.18.3",
+    "abstractassistant==0.19.0",
 
     # Pin the core Python stack for release determinism (also pulled transitively).
-    "abstractcore==2.35.1",
-    "AbstractRuntime==0.19.5",
+    "abstractcore==2.35.2",
+    "AbstractRuntime==0.19.6",
     "abstractagent==0.6.1",
-    "abstractskill==0.3.11",
-    "AbstractMemory==0.5.1",
+    "abstractskill==0.3.13",
+    "AbstractMemory==0.5.2",
     "abstractsemantics==0.0.5",
 
     # Capability plugins are remote-first by default; local runtimes live behind
@@ -752,13 +761,13 @@ dependencies = [
 # the stack by selecting the hardware-local dependency aggregates (owned by Gateway),
 # then adds user-facing apps.
 apple = [
-    "abstractgateway[apple]==0.21.0",
-    "abstractassistant[apple]==0.18.3; platform_system == \"Darwin\"",
+    "abstractgateway[apple]==0.21.1",
+    "abstractassistant[apple]==0.19.0; platform_system == \"Darwin\"",
 ]
 
 gpu = [
-    "abstractgateway[gpu]==0.21.0",
-    "abstractassistant[gpu]==0.18.3",
+    "abstractgateway[gpu]==0.21.1",
+    "abstractassistant[gpu]==0.19.0",
 ]
 
 [project.urls]
@@ -810,23 +819,30 @@ Most implementation functionality still lives in component projects.
 
 from __future__ import annotations
 
-__version__ = "0.14.0"
+from importlib import import_module
+from importlib.metadata import PackageNotFoundError, version
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from abstractcore import GenerateResponse as GenerateResponse, create_llm as create_llm
+
+__version__ = "0.14.1"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.35.1",
-    "abstractruntime": "0.19.5",
+    "abstractcore": "2.35.2",
+    "abstractruntime": "0.19.6",
     "abstractagent": "0.6.1",
-    "abstractgateway": "0.21.0",
-    "abstractskill": "0.3.11",
-    "abstractmemory": "0.5.1",
+    "abstractgateway": "0.21.1",
+    "abstractskill": "0.3.13",
+    "abstractmemory": "0.5.2",
     "abstractsemantics": "0.0.5",
     "abstractvoice": "0.21.1",
     "abstractvision": "0.3.36",
     "abstractmusic": "0.1.17",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.18.3",
+    "abstractassistant": "0.19.0",
     "abstractcamera": "0.2.1",
     "abstractavatar": "0.2.0",
     "abstractnote": "0.3.1"
@@ -852,19 +868,19 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.14.2",
-    "@abstractframework/code": "0.16.0",
-    "@abstractframework/observer": "0.13.0",
+    "@abstractframework/code": "0.16.1",
+    "@abstractframework/observer": "0.13.1",
     "@abstractframework/continuum": "0.8.1",
-    "@abstractframework/entity": "0.12.0",
+    "@abstractframework/entity": "0.12.2",
     "@abstractframework/note": "0.3.1",
-    "@abstractframework/assistant": "0.2.0"
+    "@abstractframework/assistant": "0.2.1"
 }
 
 # Shared npm libraries are recorded separately from launchable browser apps.
 NPM_LIBRARY_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/app-server": "0.1.13",
     "@abstractframework/ui-kit": "0.9.28",
-    "@abstractframework/panel-chat": "0.9.13",
+    "@abstractframework/panel-chat": "0.9.14",
     "@abstractframework/monitor-active-memory": "0.2.2",
     "@abstractframework/monitor-flow": "0.1.10",
     "@abstractframework/monitor-gpu": "0.1.10",
@@ -893,28 +909,30 @@ CRATE_RELEASE_VERSIONS: dict[str, str] = {
 # profiles get AbstractCore's local engines through the gateway's profile.
 CORE_DEFAULT_EXTRAS: list[str] = []
 
-# Convenience re-exports (AbstractCore is a base dependency of this meta-package).
-# Keep this import lightweight: do not import optional tool/media deps here.
-try:
-    from abstractcore import GenerateResponse, create_llm  # type: ignore
+# Metadata and CLI inspection must not initialize Core's user configuration.
+# Resolve the convenience SDK exports only when the caller asks for them.
+_CORE_REEXPORTS = frozenset({"GenerateResponse", "create_llm"})
+__all__ = [
+    "CORE_DEFAULT_EXTRAS",
+    "RELEASE_VERSIONS",
+    "GenerateResponse",
+    "create_llm",
+    "get_installed_packages",
+    "get_release_profile",
+    "print_status",
+]
 
-    __all__ = [
-        "CORE_DEFAULT_EXTRAS",
-        "RELEASE_VERSIONS",
-        "GenerateResponse",
-        "create_llm",
-        "get_installed_packages",
-        "get_release_profile",
-        "print_status",
-    ]
-except Exception:  # pragma: no cover
-    __all__ = [
-        "CORE_DEFAULT_EXTRAS",
-        "RELEASE_VERSIONS",
-        "get_installed_packages",
-        "get_release_profile",
-        "print_status",
-    ]
+
+def __getattr__(name: str) -> Any:
+    if name in _CORE_REEXPORTS:
+        value = getattr(import_module("abstractcore"), name)
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | _CORE_REEXPORTS)
 
 
 def get_release_profile() -> dict[str, object]:
@@ -937,19 +955,15 @@ def get_release_profile() -> dict[str, object]:
 
 
 def get_installed_packages() -> dict[str, str]:
-    """Return a dict of installed AbstractFramework Python packages and versions."""
+    """Read installed distribution versions without importing component packages."""
 
     packages: dict[str, str] = {}
 
-    def _maybe_add(import_name: str) -> None:
+    for import_name, distribution in PACKAGE_DISTRIBUTIONS.items():
         try:
-            mod = __import__(import_name)
-            packages[import_name] = getattr(mod, "__version__", "installed")
-        except Exception:
-            return
-
-    for name in PACKAGE_DISTRIBUTIONS:
-        _maybe_add(name)
+            packages[import_name] = version(distribution)
+        except PackageNotFoundError:
+            continue
 
     return packages
 
@@ -1809,6 +1823,116 @@ def main(argv: Sequence[str] | None = None) -> int:
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
 
+--- skills/abstractframework/SKILL.md ---
+---
+name: abstractframework
+description: Install the pinned AbstractFramework profile, inspect its component versions and installer manifest, and diagnose package or service health before using the component APIs. Use for choosing light, Apple or GPU installs and checking whether the intended Gateway and engines are reachable.
+license: MIT
+compatibility: Python 3.10–3.13. Apple local inference needs supported Apple Silicon/macOS; the GPU profile targets supported NVIDIA hosts. Browser apps need Node.js 18 or newer.
+metadata:
+  package-version: "0.14.1"
+---
+
+# AbstractFramework
+
+The meta-package pins a compatible Python stack and lists the matching npm apps and Rust
+consoles. It supplies installation inspection; the component packages own inference, durable
+runs, memory and application behavior. Choose a profile, inspect the installation, then follow
+the owning component's documentation.
+
+## Install and verify
+
+This guide describes AbstractFramework 0.14.1. Follow the installed version's documentation
+when it differs from this guide.
+
+Use a virtual environment. Select one of the three supported profiles:
+
+```bash
+python -m pip install abstractframework
+# Supported Apple Silicon local inference:
+python -m pip install 'abstractframework[apple]'
+# Supported NVIDIA local inference:
+python -m pip install 'abstractframework[gpu]'
+```
+
+The base profile supports remote inference without installing every local engine. Extras add
+hardware dependencies; they do not create credentials, download all model weights, start the
+Gateway or register a login item. Use the [installation guide](https://raw.githubusercontent.com/lpalbou/AbstractFramework/main/docs/install.md)
+when you want the complete application installer.
+
+Verify the installed version and inspect the supported commands:
+
+```bash
+python -c 'from importlib.metadata import version; print(version("abstractframework"))'
+abstractframework --help
+abstractframework doctor --no-environment --json
+```
+
+Compare the version with `metadata.package-version`. Use that installed version's documentation
+when they differ. `--no-environment` checks the Python release profile without host, tool or
+network probes. Read both `status` and individual `checks`: the command exits 1 for an error,
+and 0 can still include warnings. A source import alone does not prove installed metadata or
+all pinned distributions agree.
+
+## Expert workflow
+
+1. Choose the environment and profile for the machine that will run inference. A thin browser
+   client does not need the Gateway host's local model stack.
+2. Run `abstractframework doctor --no-environment --json` and inspect version mismatches or
+   missing distributions. For a release install, restore the chosen pinned profile instead of
+   independently upgrading arbitrary components.
+3. Run `abstractframework doctor --no-network --json` for host, disk and command availability
+   without HTTP probes. For service checks, run `abstractframework doctor --json`; it makes
+   read-only requests to the configured Gateway health, Ollama and LM Studio endpoints. Check
+   that these are the endpoints you intended. It does not start a missing service or load a model.
+4. Route the actual task to the owning component below. The root manifest describes the release
+   matrix; it is not a workflow submission API.
+
+The command uses `ABSTRACTGATEWAY_URL` for the Gateway (default `http://127.0.0.1:8080`),
+`OLLAMA_BASE_URL` for Ollama and `LMSTUDIO_BASE_URL` for LM Studio. A connection failure needs
+service or address diagnosis; repeatedly reinstalling a profile does not start a service.
+
+## Inspect the matrix
+
+```bash
+abstractframework manifest
+python -c 'from abstractframework import print_status; print_status()'
+```
+
+The manifest is JSON generated from the installed package's release pins. To keep a copy and
+verify that it still matches this installation:
+
+```bash
+abstractframework manifest --write install-manifest.json
+abstractframework manifest --check install-manifest.json
+```
+
+`--write` writes the named file. `--check` reads it and exits nonzero on a mismatch. Neither
+command installs packages or changes Gateway settings. Do not hand-edit a generated manifest
+to claim that a different set of versions is the pinned release.
+
+## Component routes for this profile
+
+- [AbstractCore 2.35.2](https://raw.githubusercontent.com/lpalbou/AbstractCore/v2.35.2/skills/abstractcore/SKILL.md): providers, model discovery and inference.
+- [AbstractRuntime 0.19.6](https://raw.githubusercontent.com/lpalbou/AbstractRuntime/v0.19.6/skills/abstractruntime/SKILL.md): durable workflows, effects and replay.
+- [AbstractGateway 0.21.1](https://raw.githubusercontent.com/lpalbou/AbstractGateway/v0.21.1/skills/abstractgateway/SKILL.md): HTTP control plane, authentication, models and apps.
+- [AbstractMemory 0.5.2](https://raw.githubusercontent.com/lpalbou/AbstractMemory/v0.5.2/skills/abstractmemory/SKILL.md): durable memory and the diary graph.
+- [AbstractAssistant 0.19.0](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/v0.19.0/skills/abstractassistant/SKILL.md): desktop, browser and Apple clients.
+- [AbstractAgent 0.6.1](https://raw.githubusercontent.com/lpalbou/AbstractAgent/v0.6.1/README.md): agent patterns.
+- [AbstractSkill 0.3.13](https://raw.githubusercontent.com/lpalbou/AbstractSkill/v0.3.13/skills/abstractskill/SKILL.md): curated skill installation and management.
+- [AbstractSemantics 0.0.5](https://raw.githubusercontent.com/lpalbou/AbstractSemantics/v0.0.5/README.md): semantic predicates and validation.
+- [AbstractVoice 0.21.1](https://raw.githubusercontent.com/lpalbou/AbstractVoice/v0.21.1/README.md): speech capabilities.
+- [AbstractVision 0.3.36](https://raw.githubusercontent.com/lpalbou/AbstractVision/v0.3.36/README.md): image and video capabilities.
+- [AbstractMusic 0.1.17](https://raw.githubusercontent.com/lpalbou/AbstractMusic/v0.1.17/README.md): music generation.
+- [Abstract3D 0.3.2](https://raw.githubusercontent.com/lpalbou/Abstract3D/v0.3.2/README.md): 3D capabilities.
+- [AbstractCamera 0.2.1](https://raw.githubusercontent.com/lpalbou/AbstractCamera/v0.2.1/skills/camera-piloting/SKILL.md): camera capture tools.
+- [AbstractAvatar 0.2.0](https://raw.githubusercontent.com/lpalbou/AbstractAvatar/v0.2.0/skills/abstractavatar/SKILL.md): avatar identity and rendering.
+- [AbstractNote 0.3.1](https://raw.githubusercontent.com/lpalbou/AbstractNote/v0.3.1/README.md): note capture and durable ingestion.
+- [Full release matrix](https://github.com/lpalbou/AbstractFramework/blob/main/README.md#release-matrix-abstractframework-0141): every Python, npm and Rust version in this profile.
+
+Use a component's own versioned guide for its API and operational limits. Keep credentials in
+that component's documented configuration; manifests and doctor output are not a secret store.
+
 --- docs/README.md ---
 # AbstractFramework documentation
 
@@ -1822,6 +1946,9 @@ This doc set focuses on two things:
 2. **How the pieces compose** (clients → Gateway → Agent / Runtime → Core → providers)
 
 Most implementation lives in component repositories. This repo ships the `abstractframework` meta-package (a pinned install profile) and the cross-package docs you're reading now.
+
+AI agents can use the [package skill](https://github.com/lpalbou/AbstractFramework/blob/main/skills/abstractframework/SKILL.md)
+for profile installation, health checks and component-specific guides.
 
 ---
 
@@ -4447,7 +4574,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.21.0"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.21.1"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]==0.21.1"` (the release's AbstractVoice): Supertonic
@@ -4858,7 +4985,7 @@ abstractgateway models download supertonic supertonic-3
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.21.0"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.21.1"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -5001,11 +5128,11 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.14.0 pins the published Python matrix listed in the
-[release matrix](../README.md#release-matrix-abstractframework-0140), including
-`abstractgateway==0.21.0`, `abstractcore==2.35.1`, `AbstractRuntime==0.19.5`, `AbstractMemory==0.5.1`,
-`abstractagent==0.6.1`, `abstractvoice==0.21.1`, `abstractvision==0.3.36`, `abstractassistant==0.18.3`,
-`abstractskill==0.3.11`, `abstractnote==0.3.1`, `abstractcamera==0.2.1` and `abstractavatar==0.2.0`. The `apple` and `gpu` extras
+`abstractframework` 0.14.1 pins the Python matrix listed in the
+[release matrix](../README.md#release-matrix-abstractframework-0141), including
+`abstractgateway==0.21.1`, `abstractcore==2.35.2`, `AbstractRuntime==0.19.6`, `AbstractMemory==0.5.2`,
+`abstractagent==0.6.1`, `abstractvoice==0.21.1`, `abstractvision==0.3.36`, `abstractassistant==0.19.0`,
+`abstractskill==0.3.13`, `abstractnote==0.3.1`, `abstractcamera==0.2.1` and `abstractavatar==0.2.0`. The `apple` and `gpu` extras
 select local-engine dependencies at the same component versions.
 `abstractframework doctor` reports installed packages that differ from these pins.
 Avatar wheels cover macOS arm64/x86_64, manylinux glibc 2.28+ arm64/x86_64 and
@@ -5092,19 +5219,19 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version released with 0.14.0 |
+| Tool | Command | Version in 0.14.1 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.21.0 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.35.1 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.21.1 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.35.2 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.8.1 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.18.1 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.14.2 |
-| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.16.0 |
-| Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.13.0 |
+| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.16.1 |
+| Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.13.1 |
 | Continuum console | the console's **Apps** page (`/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` | 0.8.1 |
-| Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.12.0 |
+| Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.12.2 |
 | Notes | the console's **Apps** page (`/apps/note/`), or `npx @abstractframework/note@0.3.1 --gateway-url <url>` | 0.3.1 |
-| Assistant web app | the console's **Apps** page (on the Assistant card, served at `/apps/assistant-web/`), or `npx @abstractframework/assistant --gateway-url <url>` | 0.2.0 |
+| Assistant web app | the console's **Apps** page (on the Assistant card, served at `/apps/assistant-web/`), or `npx @abstractframework/assistant --gateway-url <url>` | 0.2.1 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.15.0 |
 
 The browser apps need a running gateway. The gateway installs, starts and serves them itself, on
@@ -5148,7 +5275,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.21.0
+  ghcr.io/lpalbou/abstractgateway:0.21.1
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -5156,7 +5283,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.35.1`.
+`ghcr.io/lpalbou/abstractcore-server:2.35.2`.
 
 ## How installs are designed
 
@@ -6780,7 +6907,7 @@ No.
 | Everything at compatible versions | `pip install abstractframework` |
 | A browser app | the gateway console's **Apps** page (served at `/apps/<app>/` on the gateway), or on its own: `npx @abstractframework/<flow\|code\|observer\|continuum\|entity\|note\|assistant> --gateway-url <url>` |
 | A terminal client | `cargo install abstractcode`, `cargo install abstractgateway-console` or `cargo install abstractcore-console` |
-| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.21.0` |
+| A container deployment | `ghcr.io/lpalbou/abstractgateway:0.21.1` |
 
 See [Install AbstractFramework](install.md) for the Light / Apple / GPU chooser. Light is
 remote-first, not reduced-functionality: multimodal and embeddings still work through remote or
@@ -7517,6 +7644,11 @@ See [Install AbstractFramework](install.md) for the profile chooser and first he
 
 ## Convenience re-exports
 
+SDK exports load Core only when requested. Importing the root profile, listing installed
+versions, printing a manifest or running `doctor --no-environment` does not initialize
+component configuration. If Core is missing, those inspection operations remain available;
+requesting a Core SDK export raises the dependency's import error.
+
 `abstractframework` re-exports two common AbstractCore entry points so simple scripts can `from abstractframework import ...` without a separate `abstractcore` import.
 
 ### `create_llm`
@@ -7539,12 +7671,12 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.14.0` for this release).
+The meta-package version (`0.14.1` in this release).
 
 ### `RELEASE_VERSIONS`
 
 Dictionary mapping each Python component to its exact pinned version. The
-[release matrix](../README.md#release-matrix-abstractframework-0140) lists all 15 distributions,
+[release matrix](../README.md#release-matrix-abstractframework-0141) lists all 15 distributions,
 including Notes, Camera and the Python Avatar binding.
 
 ### `PACKAGE_DISTRIBUTIONS`
@@ -7557,7 +7689,7 @@ Maps each package name in `RELEASE_VERSIONS` to its PyPI distribution name (for 
 The seven launchable browser apps, including Notes and the Assistant web app, each runnable with
 `npx <package>@<version>`. They appear as `npm_apps` in the install manifest, each with the
 gateway's app id (`assistant-web` for `@abstractframework/assistant`). See the
-[release matrix](../README.md#release-matrix-abstractframework-0140) for exact versions.
+[release matrix](../README.md#release-matrix-abstractframework-0141) for exact versions.
 
 ### `NPM_LIBRARY_RELEASE_VERSIONS`
 
@@ -7594,7 +7726,9 @@ print(profile["crates"])                   # CRATE_RELEASE_VERSIONS
 
 ### `get_installed_packages()`
 
-Returns a dict of installed AbstractFramework package versions detected in the current environment.
+Returns a dict of installed AbstractFramework distribution versions from package metadata.
+It does not import components or load their configuration. Matching metadata does not verify
+that an optional inference engine can import or run.
 
 ```python
 from abstractframework import get_installed_packages
@@ -7611,6 +7745,10 @@ print_status()
 ```
 
 ### `abstractframework doctor`
+
+The command exits 1 when a check reports `error`. It exits 0 for `ok`, `info` or
+`warn`, so exit 0 alone does not mean every check is healthy. Read the report's
+`status` and individual `checks`, especially in automation using `--json`.
 
 Checks the Python version (3.10–3.13), pinned package versions, the Apple/GPU profile
 prerequisites (macOS 14+ on Apple Silicon, `nvidia-smi` / `rocminfo`), uv, Node.js 18+ (system or

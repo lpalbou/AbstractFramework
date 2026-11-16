@@ -19,7 +19,7 @@
 # RESILIENCE SEMANTICS (maintainer ruling 2026-07-21, dm#150 — supersedes the
 # old all-or-nothing teardown): services run under scripts/lib/af_supervisor.sh
 # with separated failure domains.
-#   - The GATEWAY is critical: app failures never touch it; if it DIES it is
+#   - The GATEWAY is critical: app failures never touch it; after a failure it is
 #     restarted with capped backoff, unlimited attempts, and a loud incident
 #     banner naming the cause. A hung-but-alive gateway is WARNED ABOUT, never
 #     killed (operator ruling 2026-08-20: restart on death only); since
@@ -171,7 +171,7 @@ launcher_cmd() {
 
 # The gateway: critical, actively health-probed, preflighted on every spawn.
 sup_register "gateway" 1 "$(launcher_cmd gateway)" "$GATEWAY_LOG" \
-    "$GATEWAY_HEALTH_URL" "$GATEWAY_HEALTH_URL" gateway_prestart
+    "$GATEWAY_HEALTH_URL" "$GATEWAY_HEALTH_URL" gateway_prestart on-failure
 GATEWAY_IDX="$SUP_LAST_INDEX"
 
 # The apps: bounded self-restart on DEATH only — no active health probing
@@ -244,6 +244,11 @@ if ! sup_await_state "$GATEWAY_IDX" "running" "$STARTUP_TIMEOUT_S"; then
         if sup_await_state "$GATEWAY_IDX" "running" "$SUP_STARTING_ALIVE_MAX_S"; then
             GATEWAY_LAUNCH_OK=1
         fi
+    fi
+    if [[ "$GATEWAY_LAUNCH_OK" != "1" && "${SUP_STATE[$GATEWAY_IDX]}" == "stopped" && "${SUP_EXIT_STATUS[$GATEWAY_IDX]}" == "0" ]]; then
+        sup_log "Gateway Quit cancelled startup"
+        sup_shutdown
+        exit 0
     fi
     if [[ "$GATEWAY_LAUNCH_OK" != "1" ]]; then
         sup_log_incident "Gateway did not become healthy at launch" "$GATEWAY_LOG" "" "failed launch"
