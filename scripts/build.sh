@@ -349,7 +349,9 @@ explain_resolution_failure() {
 # packages.txt ids are import names; the published name can differ (abstractruntime is
 # AbstractRuntime), and pip needs the published name to install a package's extras.
 editable_dist_name() {
-    python - "$1" <<'PY'
+    # -I: never read metadata from the current directory. A checkout's own
+    # abstractframework.egg-info there would otherwise shadow the installed one.
+    python -I - "$1" <<'PY'
 import json
 import sys
 from importlib.metadata import distributions
@@ -376,7 +378,9 @@ PY
 #   closure  the packages, their requested extras, and everything those depend on
 #   pins     only what the packages themselves require (the root package's release pins)
 dependency_problems() {
-    python - "$1" "$2" <<'PY'
+    # -I: never read metadata from the current directory. A checkout's own
+    # abstractframework.egg-info there would otherwise shadow the installed one.
+    python -I - "$1" "$2" <<'PY'
 import sys
 from importlib.metadata import PackageNotFoundError, distribution
 

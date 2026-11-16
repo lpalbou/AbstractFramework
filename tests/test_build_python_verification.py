@@ -47,7 +47,7 @@ def _function(name):
     return match.group(0)
 
 
-def _run_verification(bindir, extras='', roots=('abstractcore',), meta='', replaced=''):
+def _run_verification(bindir, extras='', roots=('abstractcore',), meta='', replaced='', cwd=None):
     """The script's own Verification block and checker, with the package inventory stubbed.
 
     roots: the local Python packages; meta: the root package; replaced: a root whose
@@ -81,7 +81,7 @@ if true; then
     env = dict(os.environ, PATH=str(bindir) + os.pathsep + os.environ.get('PATH', ''),
                PIP_DISABLE_PIP_VERSION_CHECK='1', FIXTURE_EXTRAS=extras, FIXTURE_META=meta,
                FIXTURE_REPLACED=replaced)
-    return subprocess.run(['bash', '-c', command], env=env, capture_output=True, text=True)
+    return subprocess.run(['bash', '-c', command], env=env, capture_output=True, text=True, cwd=cwd)
 
 
 def _framework_package(site, name='abstractcore', requires=('af-build-fixture-b>=2',), extras=(), imports_ok=True):
@@ -188,6 +188,26 @@ def test_a_release_pin_a_checkout_moved_past_is_shown_and_does_not_fail_the_buil
     assert result.returncode == 0, result.stdout + result.stderr
     assert 'the pins must match before a release' in result.stdout
     assert 'abstractframework 9.9 requires abstractcore==0.9, but abstractcore 1.0 is installed' in result.stdout
+
+
+def test_metadata_in_the_current_directory_does_not_shadow_the_installed_packages(isolated_python, tmp_path):
+    """`pip install -e .` can leave abstractframework.egg-info in the checkout, where the build runs.
+
+    The check must read the installed root package, not that folder (it did on CI, 2026-11-16).
+    """
+    bindir, site = isolated_python
+    _framework_package(site)
+    _dist(site, 'af-build-fixture-b', '2.0')
+    _dist(site, 'abstractframework', '9.9', requires=['abstractcore==0.9'])
+    checkout = tmp_path / 'checkout'
+    stray = checkout / 'abstractframework.egg-info'
+    stray.mkdir(parents=True)
+    (stray / 'PKG-INFO').write_text('Metadata-Version: 2.1\nName: abstractframework\nVersion: 0.14.1\n')
+    (stray / 'requires.txt').write_text('abstractgateway==0.21.1\n')
+    result = _run_verification(bindir, meta='abstractframework', cwd=checkout)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert 'abstractframework 9.9 requires abstractcore==0.9, but abstractcore 1.0 is installed' in result.stdout
+    assert '0.14.1' not in result.stdout
 
 
 def test_a_conflict_between_unrelated_tools_is_shown_and_does_not_fail_the_build(isolated_python):
