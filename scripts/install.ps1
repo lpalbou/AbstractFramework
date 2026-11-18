@@ -95,13 +95,13 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.21.1'
+$AfGatewayPinDefault = '0.22.0'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.14.1'
-$AfPyMatrix = @('abstractcore==2.35.2', 'AbstractRuntime==0.19.6', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
+$AfFrameworkVersion = '0.14.2'
+$AfPyMatrix = @('abstractcore==2.36.0', 'AbstractRuntime==0.19.7', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.1', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.1')
+$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.2', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.2')
 $AfCrateConsole = 'abstractgateway-console@0.18.1'
 $AfCrateCodeCli = 'abstractcode@0.15.0'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
@@ -866,10 +866,13 @@ function Get-AppsInstalled([string]$Gw, [string]$BaseUrl, [string]$DataDir) {
     try {
         $cmdArgs = @('apps', 'list', '--json', '--no-latest', '--url', $BaseUrl, '--data-dir', $DataDir)
         $tok = Get-AppsToken $DataDir; if ($tok) { $cmdArgs += @('--token', $tok) }
-        $raw = ''
+        $raw = ''; $script:AppsListError = ''
         for ($try = 1; $try -le 3; $try++) {
-            $raw = (& $Gw @cmdArgs 2>$null) -join "`n"
+            # stderr is kept: it says why the gateway refused (a 429 when it is overloaded, a 401, ...)
+            $out = @(& $Gw @cmdArgs 2>&1)
+            $raw = @($out | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }) -join "`n"
             if ($LASTEXITCODE -eq 0 -and $raw) { break }
+            $script:AppsListError = (@($out | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] } | ForEach-Object { "$_".Trim() } | Where-Object { $_ }) -join ' ')
             if ($try -lt 3) { Start-Sleep -Seconds 2 }
         }
         if ($LASTEXITCODE -ne 0 -or -not $raw) { return $null }
@@ -991,9 +994,10 @@ function Invoke-AppsStep([bool]$Up, [string]$Gw, [string]$BaseUrl, [string]$Data
     }
     $before = Get-AppsSettled $Gw $BaseUrl $DataDir
     if ($null -eq $before) {
-        Write-Warn2 "could not read the gateway's apps (abstractgateway apps list)"
+        $why = if ($script:AppsListError) { ": $($script:AppsListError)" } else { '' }
+        Write-Warn2 "could not read the gateway's apps (abstractgateway apps list)$why"
         if ($script:DryRun) { return }
-        Add-Incomplete 'browser apps' "their versions could not be read from the gateway; check with: abstractgateway apps list --url $BaseUrl --data-dir $DataDir" -Fail
+        Add-Incomplete 'browser apps' "their versions could not be read from the gateway$why; check with: abstractgateway apps list --url $BaseUrl --data-dir $DataDir" -Fail
         $script:AppsLines = @('unknown: abstractgateway apps list failed')
         return
     }
@@ -1471,18 +1475,6 @@ function Main {
         if (-not $script:StalePidSaid) { $script:StalePidSaid = $true; Write-Info "gateway.pid names pid $p, which is not this install's gateway: left alone" }
         return $null
     }
-    function Stop-OurGateway {
-        $p = Get-OurPid
-        if ($p) {
-            Write-Host "  `$ Stop-Process -Id $p" -ForegroundColor DarkGray
-            $script:Twins.Add("Stop-Process -Id $p")
-            if (-not $script:DryRun) {
-                Stop-Process -Id $p -Force -ErrorAction SilentlyContinue
-                Remove-Item -LiteralPath $pidFile -Force -ErrorAction SilentlyContinue
-            }
-        }
-    }
-
     # The gateway of this install that is running now, whoever started it: the installer's
     # background start (gateway.pid) or the login item (the serve record run\gateway-serve.json,
     # checked to be an abstractgateway process: a stale record may name a reused pid).
@@ -1521,6 +1513,18 @@ function Main {
         }
     }
 
+    # Every process whose program file lives in the tool's environment (the gateway, its model host,
+    # the tray): they are given 10 s to end by themselves once the gateway is stopped, then ended.
+    function Stop-ToolProcesses([string]$ToolVenv) {
+        $prefix = $ToolVenv.TrimEnd('\') + '\'
+        $running = { @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase) }) }
+        $i = 0; while ((& $running).Count -and $i++ -lt 20) { Start-Sleep -Milliseconds 500 }
+        foreach ($p in (& $running)) {
+            Write-Host "  `$ taskkill /PID $($p.ProcessId) /T /F   ($($p.Name), still running from $ToolVenv)" -ForegroundColor DarkGray
+            & taskkill.exe /PID $p.ProcessId /T /F *> $null
+        }
+    }
+
     if (-not $script:DryRun) {
         New-Item -ItemType Directory -Force -Path $logDir | Out-Null
         Lock-Install $DataDir
@@ -1539,15 +1543,26 @@ function Main {
         } elseif (Test-GatewaySupports 'service') {
             Invoke-Native -Description 'remove the gateway service' -Argv @($gw, 'service', 'uninstall') | Out-Null
         }
-        if ($shortcut -and (Test-Path -LiteralPath $shortcut)) {
-            Write-Host "  `$ Remove-Item '$shortcut'" -ForegroundColor DarkGray
-            if (-not $script:DryRun) { Remove-Item -LiteralPath $shortcut -Force }
+        # The Startup shortcut of older gateways, and the desktop and Start-menu icon
+        # (`abstractgateway shortcut install`): by path, so a broken tool still loses them.
+        foreach ($lnk in @($shortcut) + @('Desktop', 'Programs' | ForEach-Object { Join-Path ([Environment]::GetFolderPath($_)) 'AbstractGateway.lnk' })) {
+            if (-not $lnk -or -not (Test-Path -LiteralPath $lnk)) { continue }
+            Write-Host "  `$ Remove-Item '$lnk'" -ForegroundColor DarkGray
+            if (-not $script:DryRun) { Remove-Item -LiteralPath $lnk -Force }
         }
-        Stop-OurGateway
+        # The gateway however it was started (the login item too, which leaves no gateway.pid), then
+        # whatever still runs from its environment: Windows cannot delete a running program's files,
+        # and an uninstall that fails there leaves a half-removed tool.
+        Stop-RunningGateway
+        $toolVenv = ''
+        if ($uv) { try { $toolVenv = Join-Path "$(& $uv tool dir 2>$null | Select-Object -First 1)" 'abstractgateway' } catch { $toolVenv = '' } }
+        if ($toolVenv -and -not $script:DryRun) { Stop-ToolProcesses $toolVenv }
         Write-Step 'uv tools'
         if ($uv) {
             $tools = (& $uv tool list 2>$null) -join "`n"
-            if ($tools -match '(?m)^abstractgateway ') { Invoke-Native -Description 'uninstall abstractgateway' -Argv @($uv, 'tool', 'uninstall', 'abstractgateway') | Out-Null }
+            # The folder counts too: uv does not list a tool whose environment is broken (a removal
+            # that stopped halfway), and `uv tool uninstall` is what cleans it and its commands up.
+            if ($tools -match '(?m)^abstractgateway ' -or ($toolVenv -and (Test-Path -LiteralPath $toolVenv))) { Invoke-Native -Description 'uninstall abstractgateway' -Argv @($uv, 'tool', 'uninstall', 'abstractgateway') | Out-Null }
             else { Write-Info 'abstractgateway is not installed as a uv tool' }
             if ($state['NODE_WHEEL'] -eq '1' -and $tools -match '(?m)^nodejs-wheel ') {
                 Invoke-Native -Description 'uninstall nodejs-wheel' -Argv @($uv, 'tool', 'uninstall', 'nodejs-wheel') | Out-Null
@@ -2298,7 +2313,7 @@ function Main {
     $consoleName, $consolePin = $AfCrateConsole -split '@', 2
     $codeName, $codePin = $AfCrateCodeCli -split '@', 2
     $consoleOk = $false; $consoleWhy = 'skipped with -NoConsole'
-    $codeOk = $false; $codeWhy = 'skipped with -NoCodeCli'
+    $codeOk = $false; $codeWhy = 'skipped with -NoCodeCli'; $codeSignedIn = $false
     $cargoBin = Join-Path $(if ($env:CARGO_HOME) { $env:CARGO_HOME } else { Join-Path $homeDir '.cargo' }) 'bin'
     $cargo = if (Test-Command 'cargo') { 'cargo' } elseif (Test-Path -LiteralPath (Join-Path $cargoBin "cargo$exeSuffix")) { Join-Path $cargoBin "cargo$exeSuffix" } else { $null }
     $roots = Get-CrateRoots $toolBin
@@ -2488,6 +2503,17 @@ function Main {
         }
         $mode = 'background'
     }
+    # The AbstractGateway icon on the desktop and in the Start menu (gateways with `abstractgateway
+    # shortcut`): a double-click starts the gateway when it is not running and opens its console.
+    # Created once: a re-run does not bring back an icon the user deleted.
+    $iconMade = ($state['SHORTCUT'] -eq '1')
+    if (-not $iconMade -and $onWindows -and ($script:DryRun -or (Test-GatewaySupports 'shortcut'))) {
+        Write-Step 'Desktop icon'
+        if ($script:DryRun) { Write-Info "(only when the installed gateway has 'abstractgateway shortcut')" }
+        $iconMade = Invoke-Native -Description 'create the AbstractGateway icon' -Argv @($gw, 'shortcut', 'install', '--data-dir', $DataDir) -Soft
+        if ($iconMade -and -not $script:DryRun) { Write-Ok 'AbstractGateway icon: on the desktop and in the Start menu (it starts the gateway and opens its console)' }
+        elseif (-not $iconMade) { Write-Warn2 "the AbstractGateway icon could not be created (details in $($script:LogFile)); later: abstractgateway shortcut install" }
+    }
     if (-not $script:DryRun) {
         @(
             "# written by AbstractFramework install.ps1 on $((Get-Date).ToUniversalTime().ToString('s'))Z",
@@ -2499,6 +2525,7 @@ function Main {
             "FRAMEWORK_VERSION=$(if ($isRelease) { $AfFrameworkVersion })",
             "CONSOLE=$(if ($NoConsole) { 0 } else { 1 })", "CODE_CLI=$(if ($NoCodeCli) { 0 } else { 1 })",
             "CORE_CLI=$(if ($NoCoreCli) { 0 } else { 1 })", "TRAY=$(if ($NoTray) { 0 } else { 1 })", "FULL=$(if ($Full) { 1 } else { 0 })",
+            "SHORTCUT=$(if ($iconMade) { 1 } else { 0 })",
             # PyTorch's build (cu130, cu126; empty = PyPI's) and the llama.cpp build kept (0988).
             "TORCH=$(if ($script:TorchSel.Args.Count) { $stack.Torch })", "LLAMA=$llamaFinal"
         ) | Set-Content -LiteralPath $stateFile -Encoding ASCII
@@ -2543,15 +2570,38 @@ function Main {
         }
 
         Write-Step 'Console sign-in'
-        $claimed = $false; $opened = $false
+        $claimed = $false; $opened = $false; $newGateway = $false
         if (-not $script:DryRun -and (Test-GatewaySupports 'claim-url')) {
             $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
             try { $out = (& $gwCfg claim-url --base-url $baseUrl 2>$null) -join "`n" } finally { $ErrorActionPreference = $old }
             $url = ([regex]::Matches($out, 'https?://\S+') | Select-Object -Last 1).Value
-            if ($url) { $consoleUrl = $url; $claimed = $true; $script:Twins.Add("abstractgateway-config claim-url --base-url $baseUrl"); Write-Ok 'one-time sign-in link created (valid 10 minutes, this machine only)' }
+            # A new gateway (0.22 and later) answers with its "Set up your gateway" link instead: the
+            # admin password is chosen there, on every OS. Before, a sign-in link skipped that page.
+            $newGateway = $url -match '#setup='
+            if ($url) { $consoleUrl = $url; $claimed = $true; $script:Twins.Add("abstractgateway-config claim-url --base-url $baseUrl"); Write-Ok $(if ($newGateway) { 'this gateway is new: its console asks you to choose the admin password' } else { 'one-time sign-in link created (valid 10 minutes, this machine only)' }) }
             else { Write-Warn2 "'abstractgateway-config claim-url' is present but returned no URL; falling back to the admin token" }
         } elseif ($script:DryRun) { Write-Info "abstractgateway-config claim-url --base-url $baseUrl   (when supported)" }
         $tokenFile = Join-Path $DataDir 'auth\bootstrap-admin-token'
+        # AbstractCode's terminal client is signed in to this gateway, on this computer: typing
+        # `abstractcode` in a terminal works right after the install. The token goes through the
+        # environment (never the command line) into AbstractCode's own login store; the address
+        # is not saved, so the client keeps following the gateway pointer.
+        # The transcript names the token file, never the token.
+        $loginShown = "`$env:ABSTRACTCODE_GATEWAY_TOKEN = (Get-Content '$tokenFile'); $codeName login"
+        if ($script:DryRun -and -not $NoCodeCli) { Write-Info "$loginShown   (signs AbstractCode's terminal client in to this gateway)" }
+        if ($codeOk -and -not $script:DryRun -and (Test-Path -LiteralPath $tokenFile)) {
+            $script:Twins.Add($loginShown)
+            $oldTok = $env:ABSTRACTCODE_GATEWAY_TOKEN; $old = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+            try {
+                $env:ABSTRACTCODE_GATEWAY_TOKEN = (Get-Content -LiteralPath $tokenFile -Raw).Trim()
+                # The log is UTF-8 (Invoke-Native): a `>>` redirection would append UTF-16 in PowerShell 5.1.
+                Add-Content -Path $script:LogFile -Value "`r`n`$ $codeName login" -Encoding UTF8
+                & $codeExe login 2>&1 | ForEach-Object { "$_" } | Add-Content -Path $script:LogFile -Encoding UTF8
+                $codeSignedIn = ($LASTEXITCODE -eq 0)
+            } catch { $codeSignedIn = $false } finally { $env:ABSTRACTCODE_GATEWAY_TOKEN = $oldTok; $ErrorActionPreference = $old }
+            if ($codeSignedIn) { Write-Ok "AbstractCode's terminal client is signed in on this computer: run $codeName" }
+            else { Write-Warn2 "AbstractCode's terminal client could not be signed in (details in $($script:LogFile)); the summary says how to do it" }
+        }
         if (-not $claimed) {
             Write-Info "sign in as 'admin' with the token in: $tokenFile"
             Write-Info "    Get-Content '$tokenFile'"
@@ -2646,11 +2696,14 @@ function Main {
         Write-Host '  Configure it from either console (the same settings, both need this machine):'
         # An opened claim link is spent (the browser redeemed it): show the plain address then.
         Write-Host "    Web:       $(if ($opened) { "$baseUrl/console" } else { $consoleUrl })"
-        if ($claimed -and $opened) { Write-Host "               signed in already in this browser; another browser needs a new link: abstractgateway-config claim-url --base-url $baseUrl" }
+        if ($newGateway) { Write-Host "               $(if ($opened) { 'opened in your browser: ' })choose the admin password on `"Set up your gateway`"; you sign in with it from then on. The link again: abstractgateway-config claim-url --base-url $baseUrl" }
+        elseif ($claimed -and $opened) { Write-Host "               opened in your browser with a one-time sign-in link; another browser, or a sign-in that did not happen, needs a new link: abstractgateway-config claim-url --base-url $baseUrl" }
         elseif ($claimed) { Write-Host "               one-time sign-in link (10 minutes); a new one: abstractgateway-config claim-url --base-url $baseUrl" }
         else { Write-Host "               sign in as 'admin' with the token in $tokenPath" }
         if ($consoleOk) { Write-Host "    Terminal:  $tuiCmd" } else { Write-Host "    Terminal:  not installed: $consoleWhy" }
-        if ($codeOk) {
+        if ($codeOk -and $codeSignedIn) {
+            Write-Host "  AbstractCode, the coding client, in the terminal: run $codeShown   (signed in to this gateway on this computer)"
+        } elseif ($codeOk) {
             Write-Host '  AbstractCode, the coding client, in the terminal:'
             Write-Host "  Sign in (terminal, once): $codeShown login --token $codeTok"
             Write-Host "    then run: $codeShown"
@@ -2660,7 +2713,7 @@ function Main {
     }
     Write-Host "  Console:    $baseUrl/console"
     Write-Host "  Terminal:   $(if ($consoleOk) { $tuiCmd } else { "not installed ($consoleWhy)" })"
-    Write-Host "  Code:       $(if ($codeOk) { "$codeShown   (sign in once: $codeShown login --token $codeTok; or on this machine: $tuiCommand)" } else { "not installed ($codeWhy)" })"
+    Write-Host "  Code:       $(if ($codeOk -and $codeSignedIn) { "$codeShown   (signed in on this computer)" } elseif ($codeOk) { "$codeShown   (sign in once: $codeShown login --token $codeTok; or on this machine: $tuiCommand)" } else { "not installed ($codeWhy)" })"
     Write-Host "  Release:    $(if ($isRelease) { "AbstractFramework $AfFrameworkVersion" } else { "$target (not a recorded AbstractFramework release)" })"
     Write-Host "  Gateway:    $gwSpec ($profileName profile)"
     Write-Host "  Data dir:   $DataDir"
@@ -2683,7 +2736,7 @@ function Main {
         Write-Host "  Start:      abstractgateway service install --port $Port"
     } else {
         Write-Host "  Stop:       Stop-Process -Id (Get-Content '$pidFile')"
-        Write-Host "  Start:      re-run this installer$(if ($shortcut -and (Test-Path -LiteralPath $shortcut)) { ' (or sign out and in: the Startup shortcut starts it)' })"
+        Write-Host "  Start:      $(if ($iconMade) { 'the AbstractGateway icon (desktop, Start menu), or ' })re-run this installer$(if ($shortcut -and (Test-Path -LiteralPath $shortcut)) { ' (or sign out and in: the Startup shortcut starts it)' })"
         if ($serviceOk) { Write-Host '  At login:   off; turn it on with the Start at login switch in either console (web: the Gateway section; terminal: F3), or: abstractgateway service enable' }
     }
     Write-Host "  Upgrade:    powershell -ExecutionPolicy ByPass -c `"irm $AfScriptUrl | iex`"   (the latest AbstractFramework release; keeps your settings and data)"

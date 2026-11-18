@@ -17,15 +17,15 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from abstractcore import GenerateResponse as GenerateResponse, create_llm as create_llm
 
-__version__ = "0.14.1"
+__version__ = "0.14.2"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.35.2",
-    "abstractruntime": "0.19.6",
+    "abstractcore": "2.36.0",
+    "abstractruntime": "0.19.7",
     "abstractagent": "0.6.1",
-    "abstractgateway": "0.21.1",
+    "abstractgateway": "0.22.0",
     "abstractskill": "0.3.13",
     "abstractmemory": "0.5.2",
     "abstractsemantics": "0.0.5",
@@ -33,7 +33,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractvision": "0.3.36",
     "abstractmusic": "0.1.17",
     "abstract3d": "0.3.2",
-    "abstractassistant": "0.19.0",
+    "abstractassistant": "0.19.1",
     "abstractcamera": "0.2.1",
     "abstractavatar": "0.2.0",
     "abstractnote": "0.3.1"
@@ -59,19 +59,19 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.14.2",
-    "@abstractframework/code": "0.16.1",
+    "@abstractframework/code": "0.16.2",
     "@abstractframework/observer": "0.13.1",
     "@abstractframework/continuum": "0.8.1",
     "@abstractframework/entity": "0.12.2",
     "@abstractframework/note": "0.3.1",
-    "@abstractframework/assistant": "0.2.1"
+    "@abstractframework/assistant": "0.2.2"
 }
 
 # Shared npm libraries are recorded separately from launchable browser apps.
 NPM_LIBRARY_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/app-server": "0.1.13",
     "@abstractframework/ui-kit": "0.9.28",
-    "@abstractframework/panel-chat": "0.9.14",
+    "@abstractframework/panel-chat": "0.9.15",
     "@abstractframework/monitor-active-memory": "0.2.2",
     "@abstractframework/monitor-flow": "0.1.10",
     "@abstractframework/monitor-gpu": "0.1.10",
@@ -89,10 +89,10 @@ CRATE_RELEASE_VERSIONS: dict[str, str] = {
     "abstractgateway-console": "0.18.1",
     "abstractcore-console": "0.8.1",
     "abstractcode": "0.15.0",
-    "abstracttui": "0.8.0",
+    "abstracttui": "0.10.0",
     "abstractavatar": "0.2.0",
-    "abstracttui-graph": "0.7.0",
-    "abstracttui-mermaid": "0.7.0"
+    "abstracttui-graph": "0.9.0",
+    "abstracttui-mermaid": "0.9.0"
 }
 
 # The light profile installs plain `abstractcore` (no extra): AbstractCore's light setting already

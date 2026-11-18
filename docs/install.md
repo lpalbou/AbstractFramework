@@ -540,7 +540,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.21.1"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.22.0"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]==0.21.1"` (the release's AbstractVoice): Supertonic
@@ -586,8 +586,12 @@ The Mac package, the `.command` files and the one line all run the same script,
    replaces a pointer that names another data directory). `abstractgateway serve` keeps it current
    once bound, but only when the file is absent and it uses the default data directory, or when
    the file already names its data directory, so a test gateway never takes it over.
-8. Opens `http://127.0.0.1:8080/console` through a one-time sign-in link
-   (`abstractgateway-config claim-url`, valid 10 minutes, this machine only). If no link can be
+8. Opens `http://127.0.0.1:8080/console` (`abstractgateway-config claim-url`). A new gateway
+   shows **Set up your gateway**, where you choose the admin password (gateway 0.22 and later;
+   the same on macOS, Linux and Windows). A gateway that is already set up opens through a
+   one-time sign-in link (valid 10 minutes, this machine only). On Windows the installer also
+   puts an **AbstractGateway** icon on the desktop and in the Start menu, once: it starts the
+   gateway when it is not running and opens the console. If no link can be
    created, it shows where the admin token is. The summary shows both ways to configure the
    gateway (the web console link and the terminal console command) and where the browser apps
    open: `http://127.0.0.1:8080/apps/<app>/` (the console's **Apps** page installs and opens them).
@@ -951,7 +955,7 @@ abstractgateway models download supertonic supertonic-3
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.21.1"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.22.0"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -1094,10 +1098,10 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.14.1 pins the Python matrix listed in the
-[release matrix](../README.md#release-matrix-abstractframework-0141), including
-`abstractgateway==0.21.1`, `abstractcore==2.35.2`, `AbstractRuntime==0.19.6`, `AbstractMemory==0.5.2`,
-`abstractagent==0.6.1`, `abstractvoice==0.21.1`, `abstractvision==0.3.36`, `abstractassistant==0.19.0`,
+`abstractframework` 0.14.2 pins the Python matrix listed in the
+[release matrix](../README.md#release-matrix-abstractframework-0142), including
+`abstractgateway==0.22.0`, `abstractcore==2.36.0`, `AbstractRuntime==0.19.7`, `AbstractMemory==0.5.2`,
+`abstractagent==0.6.1`, `abstractvoice==0.21.1`, `abstractvision==0.3.36`, `abstractassistant==0.19.1`,
 `abstractskill==0.3.13`, `abstractnote==0.3.1`, `abstractcamera==0.2.1` and `abstractavatar==0.2.0`. The `apple` and `gpu` extras
 select local-engine dependencies at the same component versions.
 `abstractframework doctor` reports installed packages that differ from these pins.
@@ -1185,19 +1189,19 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version in 0.14.1 |
+| Tool | Command | Version in 0.14.2 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.21.1 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.35.2 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.22.0 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.36.0 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.8.1 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.18.1 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.14.2 |
-| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.16.1 |
+| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.16.2 |
 | Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.13.1 |
 | Continuum console | the console's **Apps** page (`/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` | 0.8.1 |
 | Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.12.2 |
 | Notes | the console's **Apps** page (`/apps/note/`), or `npx @abstractframework/note@0.3.1 --gateway-url <url>` | 0.3.1 |
-| Assistant web app | the console's **Apps** page (on the Assistant card, served at `/apps/assistant-web/`), or `npx @abstractframework/assistant --gateway-url <url>` | 0.2.1 |
+| Assistant web app | the console's **Apps** page (on the Assistant card, served at `/apps/assistant-web/`), or `npx @abstractframework/assistant --gateway-url <url>` | 0.2.2 |
 | AbstractCode terminal client | `cargo install abstractcode`, or a prebuilt binary from the [AbstractCode GitHub release](https://github.com/lpalbou/AbstractCode/releases) | 0.15.0 |
 
 The browser apps need a running gateway. The gateway installs, starts and serves them itself, on
@@ -1241,7 +1245,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.21.1
+  ghcr.io/lpalbou/abstractgateway:0.22.0
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -1249,7 +1253,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.35.2`.
+`ghcr.io/lpalbou/abstractcore-server:2.36.0`.
 
 ## How installs are designed
 

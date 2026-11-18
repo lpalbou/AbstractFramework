@@ -303,7 +303,7 @@ def test_install_ps1_checks_every_pid_before_stopping_it() -> None:
     ps1 = SCRIPT.read_text(encoding="utf-8")
     stop = ps1[ps1.index("    function Stop-RunningGateway {"):ps1.index("    if (-not $script:DryRun) {\n        New-Item -ItemType Directory -Force -Path $logDir")]
     assert stop.index("Test-GatewayPidStillOurs $p $pidFile $DataDir $Port $script:HandGatewayPid") < stop.index("Stop-Process -Id $p -Force")
-    our = ps1[ps1.index("    function Get-OurPid {"):ps1.index("    function Stop-OurGateway {")]
+    our = ps1[ps1.index("    function Get-OurPid {"):ps1.index("    function Get-RunningGatewayPids {")]
     assert "Test-PidFileGateway $p $pidFile $DataDir" in our
     port = ps1[ps1.index("    if (Test-PortBusy $Port) {"):ps1.index("    $baseUrl = \"http://127.0.0.1:$Port\"")]
     # the login item (service mode): a healthy gateway of THIS data dir, when the listener can be named

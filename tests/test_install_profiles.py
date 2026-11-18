@@ -169,11 +169,17 @@ def test_framework_profiles_inherit_runtime_pdf_stack() -> None:
     assert f"AbstractRuntime=={runtime_version}" in root_deps
     assert f"abstractgateway[apple]=={gateway_version}" in root_apple
     assert f"abstractgateway[gpu]=={gateway_version}" in root_gpu
-    # The pinned Gateway must accept the pinned Runtime in every profile: its floor is at or below
-    # the pin (a patch Runtime release does not force a Gateway release).
+    # The pinned Gateway must accept the pinned Runtime in every profile: an exact pin (gateway
+    # 0.22.0 and later) names the same version; a floor is at or below the pin.
     for deps, extra in ((gateway_deps, ""), (gateway_apple, "[apple]"), (gateway_gpu, "[gpu]")):
+        exact = re.search(rf"^AbstractRuntime{re.escape(extra)}==([0-9.]+)", deps, flags=re.M | re.I)
+        if exact:
+            assert exact.group(1) == runtime_version, (
+                f"gateway pins AbstractRuntime{extra}=={exact.group(1)}, the release pins {runtime_version}"
+            )
+            continue
         floor = re.search(rf"^AbstractRuntime{re.escape(extra)}>=([0-9.]+)", deps, flags=re.M | re.I)
-        assert floor, f"gateway declares no AbstractRuntime{extra}>= floor"
+        assert floor, f"gateway declares no AbstractRuntime{extra} pin or >= floor"
         assert _vtuple(floor.group(1)) <= _vtuple(runtime_version), (
             f"gateway AbstractRuntime{extra}>={floor.group(1)} refuses the pinned {runtime_version}"
         )
@@ -829,7 +835,7 @@ def test_install_ps1_carries_the_same_cli_lists_and_flags() -> None:
     for param in ("[switch]$NoCodeCli", "[switch]$NoCoreCli", "[switch]$WithCodeCli", "[switch]$WithCoreCli"):
         assert param in ps1
     assert "'--with-executables-from', $p" in ps1
-    assert "Code:       $(if ($codeOk)" in ps1
+    assert "Code:       $(if ($codeOk -and $codeSignedIn)" in ps1
     # Both crates go to the parent of the uv tool bin folder, like install.sh; $roots.Code is the
     # one place that decides where abstractcode goes (build, version check, summary, uninstall).
     assert "$roots = Get-CrateRoots $toolBin" in ps1
