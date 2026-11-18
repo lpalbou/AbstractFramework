@@ -4,6 +4,47 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-11-18
+
+Pins **AbstractGateway 0.22.0**, **AbstractCore 2.36.0**, **AbstractRuntime 0.19.7** and
+**AbstractAssistant 0.19.1**, with the npm apps **@abstractframework/code 0.16.2** and
+**@abstractframework/assistant 0.2.2** (built on **@abstractframework/panel-chat 0.9.15**). The other
+components keep their 0.14.1 versions; the crates.io record lists **abstracttui 0.10.0**,
+**abstracttui-graph 0.9.0** and **abstracttui-mermaid 0.9.0**. Every Python pin matches the exact
+pins of AbstractGateway 0.22.0, so the meta-package and the installers resolve to one set. The
+complete matrix is in the [README](README.md#release-matrix-abstractframework-0142).
+
+### Changed
+
+- **A new gateway asks for its admin password first, on every OS.** The one-line installers open
+  "Set up your gateway" for a gateway that has not been set up, and say so in the summary; a gateway
+  that is already set up opens through a one-time sign-in link, as before.
+- **AbstractCode's terminal client is signed in by the installers**: once the gateway is healthy,
+  `abstractcode` works in a new terminal without a separate `abstractcode login` (install.sh does not
+  do this for a named `--instance`). The admin token reaches AbstractCode through its environment,
+  never the command line or the install log.
+- Recommended NVIDIA text models follow the total GPU memory, text embeddings join the recommended
+  starter set, and a provider's open circuit breaker names its cause (AbstractCore 2.36.0).
+- Browser chat shows attached pictures as thumbnails (Code web 0.16.2, Assistant web 0.2.2).
+
+### Added
+
+- **Windows: an AbstractGateway icon on the desktop and in the Start menu.** `install.ps1` creates
+  it once (`abstractgateway shortcut install`); it starts the gateway when it is not running and
+  opens its console. A re-run does not bring back an icon you deleted.
+
+### Fixed
+
+- **Windows: uninstalling with `install.ps1` removes a gateway that is still running**, whether the
+  installer or the login item started it, ends processes still running from the gateway's
+  environment, finishes a removal that stopped halfway, and removes the desktop and Start-menu icons.
+- When the installer cannot read the gateway's apps list, it shows the gateway's reason.
+- Windows: the model host starts reliably, and a model host that does not answer no longer blocks
+  the gateway (AbstractGateway 0.22.0); files can be saved while another thread reads them, and local
+  image and video generation works (AbstractRuntime 0.19.7).
+- Generated pictures, video and audio show again when a conversation is reopened (AbstractAssistant
+  0.19.1).
+
 ## [0.14.1] - 2026-11-16
 
 - The 0.14.1 candidate aligns the light, Apple and GPU component matrix with bounded HF

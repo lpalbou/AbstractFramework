@@ -151,16 +151,16 @@ fi
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails
 # on drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-AF_GATEWAY_PIN_DEFAULT="0.21.1"
+AF_GATEWAY_PIN_DEFAULT="0.22.0"
 # The AbstractFramework release these pins are (install-manifest.json `framework.version`), and
 # the release's other Python packages in the gateway's environment (its `python_packages`,
 # minus the gateway itself and the Assistant, a separate app). They go to `uv tool install` as
 # constraints, so an install or an upgrade lands on exactly the tested matrix, never on
 # whatever newer library satisfies the gateway's floors. test_inventory.sh fails on drift.
-AF_FRAMEWORK_VERSION="0.14.1"
-AF_PY_MATRIX="abstractcore==2.35.2 AbstractRuntime==0.19.6 abstractagent==0.6.1 abstractskill==0.3.13 AbstractMemory==0.5.2 abstractsemantics==0.0.5 abstractvoice==0.21.1 abstractvision==0.3.36 abstractmusic==0.1.17 abstract3d==0.3.2 abstractcamera==0.2.1 abstractavatar==0.2.0 abstractnote==0.3.1"
+AF_FRAMEWORK_VERSION="0.14.2"
+AF_PY_MATRIX="abstractcore==2.36.0 AbstractRuntime==0.19.7 abstractagent==0.6.1 abstractskill==0.3.13 AbstractMemory==0.5.2 abstractsemantics==0.0.5 abstractvoice==0.21.1 abstractvision==0.3.36 abstractmusic==0.1.17 abstract3d==0.3.2 abstractcamera==0.2.1 abstractavatar==0.2.0 abstractnote==0.3.1"
 AF_PYTHON="3.12"
-AF_NPM_APPS="@abstractframework/flow@0.14.2 @abstractframework/code@0.16.1 @abstractframework/observer@0.13.1 @abstractframework/continuum@0.8.1 @abstractframework/entity@0.12.2 @abstractframework/note@0.3.1 @abstractframework/assistant@0.2.1"
+AF_NPM_APPS="@abstractframework/flow@0.14.2 @abstractframework/code@0.16.2 @abstractframework/observer@0.13.1 @abstractframework/continuum@0.8.1 @abstractframework/entity@0.12.2 @abstractframework/note@0.3.1 @abstractframework/assistant@0.2.2"
 AF_CRATE_CONSOLE="abstractgateway-console@0.18.1"
 AF_CRATE_CODE_CLI="abstractcode@0.15.0"
 # The user commands of the gateway's own environment exposed next to `abstractgateway` and
@@ -3817,7 +3817,7 @@ write_state
 # ---------------------------------------------------------------------------
 CONSOLE_URL="$BASE_URL/console"
 TOKEN_FILE="$DATA_DIR/auth/bootstrap-admin-token"
-CLAIMED=0; OPENED=0; SETUP_CODE=""
+CLAIMED=0; OPENED=0; SETUP_CODE=""; NEW_GATEWAY=0; CODE_SIGNED_IN=0
 # A remote or headless session: SSH, or Linux with no graphical display. The installer then
 # opens the terminal console at the end instead of a browser.
 REMOTE_SESSION=0
@@ -3863,7 +3863,12 @@ What to do: restart the computer (the login item starts it again) or run the ins
         if [ -n "$_claim" ]; then
             CONSOLE_URL="$_claim"; CLAIMED=1
             twin "$(show_cmd "$GWCFG" claim-url --base-url "$BASE_URL")"
-            ok "one-time sign-in link created (valid 10 minutes, this machine only)"
+            # A new gateway (0.22 and later) answers with its "Set up your gateway" link instead: the
+            # admin password is chosen there, on every OS. Before, a sign-in link skipped that page.
+            case "$_claim" in
+                *'#setup='*) NEW_GATEWAY=1; ok "this gateway is new: its console asks you to choose the admin password" ;;
+                *) ok "one-time sign-in link created (valid 10 minutes, this machine only)" ;;
+            esac
         else
             warn "'abstractgateway-config claim-url' is present but returned no URL (see $LOG_FILE); falling back to the admin token"
         fi
@@ -3876,6 +3881,26 @@ What to do: restart the computer (the login item starts it again) or run the ins
         SETUP_CODE="$("$GW" claim --code 2>>"$LOG_FILE" | tail -n 1)" || SETUP_CODE=""
     elif [ "$PRINT" = 1 ]; then
         info "$(show_cmd abstractgateway claim --code)   (gateway >= 0.18.0: the setup code for another machine)"
+    fi
+    # AbstractCode's terminal client is signed in to this gateway, on this computer: typing
+    # `abstractcode` in a terminal works right after the install. The token goes through the
+    # environment (never the command line) into AbstractCode's own login store; the address is
+    # not saved, so the client keeps following the gateway pointer (the default gateway's: a
+    # named instance is not what a bare `abstractcode` reaches, so it is left alone).
+    # The transcript names the token file, never the token.
+    _login_shown="ABSTRACTCODE_GATEWAY_TOKEN=\"\$(cat $(q "$TOKEN_FILE"))\" $CODE_NAME login"
+    if [ "$PRINT" = 1 ] && [ "$WITH_CODE_CLI" = 1 ] && [ -z "$INSTANCE" ]; then
+        info "$_login_shown   (signs AbstractCode's terminal client in to this gateway)"
+    fi
+    if [ "$PRINT" = 0 ] && [ "$CODE_OK" = 1 ] && [ -z "$INSTANCE" ] && [ -r "$TOKEN_FILE" ]; then
+        twin "$_login_shown"
+        printf '\n$ %s login\n' "$CODE_NAME" >>"$LOG_FILE"
+        if ABSTRACTCODE_GATEWAY_TOKEN="$(cat "$TOKEN_FILE")" "$CODE_BIN" login >>"$LOG_FILE" 2>&1; then
+            CODE_SIGNED_IN=1
+            ok "AbstractCode's terminal client is signed in on this computer: run $CODE_NAME"
+        else
+            warn "AbstractCode's terminal client could not be signed in (see $LOG_FILE); the summary says how to do it"
+        fi
     fi
     if [ "$TS_FUNNEL" = 1 ]; then server_funnel; fi
     if [ "$CLAIMED" = 0 ]; then
@@ -3990,8 +4015,10 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     echo "  Configure it from either console (the same settings, both need this machine):"
     # An opened claim link is spent (the browser redeemed it): show the plain address then.
     echo "    Web:       $([ "$OPENED" = 1 ] && echo "$BASE_URL/console" || echo "$CONSOLE_URL")"
-    if [ "$CLAIMED" = 1 ] && [ "$OPENED" = 1 ]; then
-        echo "               signed in already in this browser; another browser needs a new link: abstractgateway-config claim-url --base-url $BASE_URL"
+    if [ "$NEW_GATEWAY" = 1 ]; then
+        echo "               $([ "$OPENED" = 1 ] && echo 'opened in your browser: ')choose the admin password on \"Set up your gateway\"; you sign in with it from then on. The link again: abstractgateway-config claim-url --base-url $BASE_URL"
+    elif [ "$CLAIMED" = 1 ] && [ "$OPENED" = 1 ]; then
+        echo "               opened in your browser with a one-time sign-in link; another browser, or a sign-in that did not happen, needs a new link: abstractgateway-config claim-url --base-url $BASE_URL"
     elif [ "$CLAIMED" = 1 ]; then
         echo "               one-time sign-in link (10 minutes); a new one: abstractgateway-config claim-url --base-url $BASE_URL"
     else
@@ -4036,7 +4063,9 @@ if [ "$PRINT" = 0 ] && [ "$NO_START" = 0 ]; then
     else
         echo "    Terminal:  not installed: $CONSOLE_WHY"
     fi
-    if [ "$CODE_OK" = 1 ]; then
+    if [ "$CODE_OK" = 1 ] && [ "$CODE_SIGNED_IN" = 1 ]; then
+        echo "  AbstractCode, the coding client, in the terminal: run $_code_exe   (signed in to this gateway on this computer)"
+    elif [ "$CODE_OK" = 1 ]; then
         echo "  AbstractCode, the coding client, in the terminal:"
         echo "  Sign in (terminal, once): $CODE_LOGIN"
         echo "    then run: $_code_exe"
@@ -4103,7 +4132,7 @@ printf '  %-11s %s\n' "Console:" "$BASE_URL/console" \
     "Release:" "$([ "$IS_RELEASE" = 1 ] && echo "AbstractFramework $AF_FRAMEWORK_VERSION" || echo "$TARGET (not a recorded AbstractFramework release)")" \
     "Gateway:" "$GW_SPEC ($PROFILE profile)" \
     "Terminal:" "$([ "$CONSOLE_OK" = 1 ] && echo "$TUI_CMD" || echo "not installed ($CONSOLE_WHY)")" \
-    "Code:" "$([ "$CODE_OK" = 1 ] && echo "$_code_exe   (sign in once: $CODE_LOGIN; or on this machine: $TUI_COMMAND)" || echo "not installed ($CODE_WHY)")" \
+    "Code:" "$(if [ "$CODE_OK" = 1 ] && [ "$CODE_SIGNED_IN" = 1 ]; then echo "$_code_exe   (signed in on this computer)"; elif [ "$CODE_OK" = 1 ]; then echo "$_code_exe   (sign in once: $CODE_LOGIN; or on this machine: $TUI_COMMAND)"; else echo "not installed ($CODE_WHY)"; fi)" \
     "Data dir:" "$DATA_DIR" "Logs:" "$LOG_DIR" "Mode:" "$MODE"
 echo ""
 # What each command on PATH is, so a new user knows what abstractgateway-config and the others do.

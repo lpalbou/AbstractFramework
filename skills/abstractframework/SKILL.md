@@ -4,7 +4,7 @@ description: Install the pinned AbstractFramework profile, inspect its component
 license: MIT
 compatibility: Python 3.10–3.13. Apple local inference needs supported Apple Silicon/macOS; the GPU profile targets supported NVIDIA hosts. Browser apps need Node.js 18 or newer.
 metadata:
-  package-version: "0.14.1"
+  package-version: "0.14.2"
 ---
 
 # AbstractFramework
@@ -16,7 +16,7 @@ the owning component's documentation.
 
 ## Install and verify
 
-This guide describes AbstractFramework 0.14.1. Follow the installed version's documentation
+This guide describes AbstractFramework 0.14.2. Follow the installed version's documentation
 when it differs from this guide.
 
 Use a virtual environment. Select one of the three supported profiles:
@@ -87,11 +87,11 @@ to claim that a different set of versions is the pinned release.
 
 ## Component routes for this profile
 
-- [AbstractCore 2.35.2](https://raw.githubusercontent.com/lpalbou/AbstractCore/v2.35.2/skills/abstractcore/SKILL.md): providers, model discovery and inference.
-- [AbstractRuntime 0.19.6](https://raw.githubusercontent.com/lpalbou/AbstractRuntime/v0.19.6/skills/abstractruntime/SKILL.md): durable workflows, effects and replay.
-- [AbstractGateway 0.21.1](https://raw.githubusercontent.com/lpalbou/AbstractGateway/v0.21.1/skills/abstractgateway/SKILL.md): HTTP control plane, authentication, models and apps.
+- [AbstractCore 2.36.0](https://raw.githubusercontent.com/lpalbou/AbstractCore/v2.36.0/skills/abstractcore/SKILL.md): providers, model discovery and inference.
+- [AbstractRuntime 0.19.7](https://raw.githubusercontent.com/lpalbou/AbstractRuntime/v0.19.7/skills/abstractruntime/SKILL.md): durable workflows, effects and replay.
+- [AbstractGateway 0.22.0](https://raw.githubusercontent.com/lpalbou/AbstractGateway/v0.22.0/skills/abstractgateway/SKILL.md): HTTP control plane, authentication, models and apps.
 - [AbstractMemory 0.5.2](https://raw.githubusercontent.com/lpalbou/AbstractMemory/v0.5.2/skills/abstractmemory/SKILL.md): durable memory and the diary graph.
-- [AbstractAssistant 0.19.0](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/v0.19.0/skills/abstractassistant/SKILL.md): desktop, browser and Apple clients.
+- [AbstractAssistant 0.19.1](https://raw.githubusercontent.com/lpalbou/AbstractAssistant/v0.19.1/skills/abstractassistant/SKILL.md): desktop, browser and Apple clients.
 - [AbstractAgent 0.6.1](https://raw.githubusercontent.com/lpalbou/AbstractAgent/v0.6.1/README.md): agent patterns.
 - [AbstractSkill 0.3.13](https://raw.githubusercontent.com/lpalbou/AbstractSkill/v0.3.13/skills/abstractskill/SKILL.md): curated skill installation and management.
 - [AbstractSemantics 0.0.5](https://raw.githubusercontent.com/lpalbou/AbstractSemantics/v0.0.5/README.md): semantic predicates and validation.
