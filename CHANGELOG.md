@@ -12,6 +12,9 @@ All notable changes to AbstractFramework will be documented in this file.
   gateway and stopped with "port 8080 ... is already in use by another process", so the one-line
   upgrade could not run while the gateway was up. It recognises the launcher and identifies the gateway
   by its serve record, then stops, upgrades and restarts it as it does for a gateway started by `serve`.
+  A program that is not this install's gateway on that port still stops the installer, as before. When
+  start at login was turned on outside the installer, its messages say the gateway was started at
+  login, not by hand.
 
 ### Changed
 

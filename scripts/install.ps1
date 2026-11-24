@@ -281,7 +281,8 @@ function Read-LogFrom([string]$Path, [long]$Offset) {
 # install's data dir: a re-run must replace it on the same port, never move to the next port and
 # start a second gateway on the same data. Only typed signals decide, and all must agree: the pid
 # listening on the port (Get-NetTCPConnection) and /api/health there is a gateway's; that process runs
-# `abstractgateway serve` (its command line); it serves THIS data dir. A --data-dir on its command
+# `abstractgateway serve` or is the gateway's Windows login launcher (its command line, see
+# Test-GatewayCommandLine); it serves THIS data dir. A --data-dir on its command
 # line decides alone (another data dir, or a relative one this installer cannot resolve, makes it
 # foreign whatever the serve record says); without one, the serve record <data dir>\run\gateway-serve.json
 # must name its pid and this data dir, and the process must have started before the record was
@@ -330,9 +331,20 @@ function Test-SameUser([int]$ProcessId) {
 # arguments in the JSON file next to it (abstractgateway.os_service), so a gateway started at login
 # shows no `serve` on its command line. The launcher declares no data dir there either: its callers
 # then identify the gateway by the serve record (pid, data dir, start time), as for a plain `serve`.
+# A named instance's launcher is another <name>.pyw in the same folder; its serve record is in its own
+# data dir, so it is never taken for this install's gateway.
+function Test-LoginLauncherCommandLine([string]$CommandLine) {
+    return ($CommandLine -match '(?i)[\\/]AbstractGateway[\\/][^\\/"]+\.pyw("|\s|$)')
+}
 function Test-GatewayCommandLine([string]$CommandLine) {
-    if ($CommandLine -match '(?i)[\\/]AbstractGateway[\\/][^\\/"]+\.pyw("|\s|$)') { return $true }
+    if (Test-LoginLauncherCommandLine $CommandLine) { return $true }
     return ($CommandLine -match '(?i)abstractgateway' -and $CommandLine -match '(?i)(^|[\s"])serve(\s|"|$)')
+}
+# How this install's gateway found on the port was started, for the messages: the login launcher
+# ("started at login", when the installer's record does not say start at login is on) or a `serve`.
+function Get-GatewayStartedHow([int]$ProcessId) {
+    if (Test-LoginLauncherCommandLine (Get-ProcessCommandLine $ProcessId)) { return 'started at login' }
+    return 'started by hand'
 }
 # Test-OurBackgroundListener: the listener is the installer's background gateway (gateway.pid), or
 # a process it started. No listener named: the gateway.pid process counts. The listener can sit
@@ -1503,7 +1515,7 @@ function Main {
                 if ($p -eq $script:HandGatewayPid) { $script:HandGatewayPid = 0 }
                 continue
             }
-            if ($p -eq $script:HandGatewayPid) { Write-Info "stopping this install's gateway started by hand (pid $p); the installer's own start replaces it on port $Port" }
+            if ($p -eq $script:HandGatewayPid) { Write-Info "stopping this install's gateway $($script:HandGatewayHow) (pid $p); the installer's own start replaces it on port $Port" }
             Write-Host "  `$ Stop-Process -Id $p" -ForegroundColor DarkGray
             $script:Twins.Add("Stop-Process -Id $p")
             if (-not $script:DryRun) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }
@@ -1874,9 +1886,11 @@ function Main {
     # not recognise as its own (a gateway started by hand, or another program). Nothing starts, so the
     # recorded port is kept: moving it would point the next start at a different port.
     $portHeld = $false
-    # $script:HandGatewayPid: this install's gateway started by hand on this port (see Find-OwnGateway):
+    # $script:HandGatewayPid: this install's gateway started by hand on this port (see Find-OwnGateway),
+    # or by a login item this installer's record does not know about ($script:HandGatewayHow says which):
     # the port stays, and the installer's start replaces it (-NoStart leaves it running).
     $script:HandGatewayPid = 0
+    $script:HandGatewayHow = 'started by hand'
     if (Test-PortBusy $Port) {
         # The installer's own background gateway (gateway.pid) counts only when it is the listener
         # (when the listener can be named): a reused pid in gateway.pid is not the gateway.
@@ -1887,8 +1901,9 @@ function Main {
         $ours = ("$Port" -eq $state['PORT']) -and ((Test-OurBackgroundListener $listener ([int]$ourPid)) -or ($state['MODE'] -eq 'service' -and ((Get-Http "http://127.0.0.1:$Port/api/health") -match 'abstractgateway') -and (-not $listener -or (Find-OwnGateway $Port $DataDir) -eq $listener)))
         if ($ours) { $reuseRunning = $true; Write-Ok "port ${Port}: this install's gateway is already running (restarted if the package changes)" }
         elseif (($script:HandGatewayPid = Find-OwnGateway $Port $DataDir)) {
-            if ($NoStart) { Write-Info "port ${Port}: this install's gateway runs there, started by hand (pid $($script:HandGatewayPid), data dir $DataDir); kept (-NoStart restarts nothing)" }
-            else { Write-Ok "port ${Port}: this install's gateway runs there, started by hand (pid $($script:HandGatewayPid), data dir $DataDir); the installer's own start replaces it on this port" }
+            $script:HandGatewayHow = Get-GatewayStartedHow $script:HandGatewayPid
+            if ($NoStart) { Write-Info "port ${Port}: this install's gateway runs there, $($script:HandGatewayHow) (pid $($script:HandGatewayPid), data dir $DataDir); kept (-NoStart restarts nothing)" }
+            else { Write-Ok "port ${Port}: this install's gateway runs there, $($script:HandGatewayHow) (pid $($script:HandGatewayPid), data dir $DataDir); the installer's own start replaces it on this port" }
         }
         elseif ($NoStart -and $state['PORT'] -and "$Port" -eq $state['PORT']) {
             $portHeld = $true
@@ -2667,7 +2682,7 @@ function Main {
         Write-Host '  (web: the Gateway section), the tray''s Restart, or re-run this installer without -NoStart.'
     }
     if ($NoStart -and $script:HandGatewayPid -and -not $script:DryRun) {
-        Write-Host "  This install's gateway, started by hand (pid $($script:HandGatewayPid), port $Port), still runs the version it"
+        Write-Host "  This install's gateway, $($script:HandGatewayHow) (pid $($script:HandGatewayPid), port $Port), still runs the version it"
         Write-Host '  started with: re-run this installer without -NoStart to replace it with the installer''s own start.'
     }
     if ($portHeld -and -not $script:DryRun) {

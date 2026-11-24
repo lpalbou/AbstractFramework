@@ -122,6 +122,16 @@ jobs:
         shell: pwsh
         run: ./scripts/install.ps1 -Print -Profile light -Port 18080 -WithApps
 
+      # install.ps1 recognises its own gateway on real Windows paths (root backlog 1340): one started
+      # at login (`pythonw.exe ...\AbstractGateway\<name>.pyw`, no `serve` on its command line), one
+      # started with `serve`, and refuses another program on the port. The process probes are faked.
+      - name: Own-gateway detection (install.ps1 functions, PowerShell 7)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python -m pip install --quiet pytest
+          python -m pytest -q -p no:cacheprovider tests/test_install_ps1_own_gateway.py
+
       # The gpu profile's stack choice (root backlog 0988), with and without a (fake) NVIDIA GPU:
       # the runner has none, so a fake nvidia-smi.cmd stands in for the driver answers.
       - name: gpu stack dry runs (install.ps1 -Print, fake nvidia-smi)
