@@ -58,15 +58,21 @@ gateway 0.23.0. The default path must.
 
 ## Acceptance criteria
 
-- [ ] On a Windows machine with no AbstractFramework, the one-line installer (no flags) installs gateway 0.23.0
-      or newer, and its summary reads "agents' shell commands run inside a Windows sandbox".
-- [ ] In that install, with the default workspace policy, an agent's `execute_command` (`echo ok && cd`)
-      succeeds with `sandbox.kind: windows-restricted-token`, and the tool cards read "Sandboxed to this run's
-      workspaces (...)" in AbstractCode web, the terminal clients and the Assistant.
-- [ ] On an existing Windows install started at login, the one-line upgrade (no flags) completes and the
-      gateway is healthy afterwards with start at login still on (needs 1340).
-- [ ] The one-line install and upgrade still pass on macOS and Linux (root CI `bootstrap-smoke`).
-- [ ] Root pins, `RELEASE_VERSIONS`, the install manifest and both installers agree (`scripts/tests/test_inventory.sh`).
+- [x] On a Windows machine with no AbstractFramework, the one-line installer (no flags) installs gateway 0.23.0
+      or newer, and its summary reads "agents' shell commands run inside a Windows sandbox". (Root CI
+      `Bootstrap smoke (windows-latest)` on a clean runner, the script run as the one-liner runs it.)
+- [x] In that install, with the default workspace policy, an agent's `execute_command` succeeds with
+      `sandbox.kind: windows-restricted-token` while a refused folder stays closed, and the gateway reports the
+      sandbox line the tool cards render. (New CI step "Agents' commands run sandboxed (Windows)",
+      `scripts/tests/command_sandbox_smoke.py`. Checked at the gateway's API, which every client renders; the
+      card was not re-read by hand in AbstractCode web, the terminal clients and the Assistant.)
+- [x] On an existing Windows install started at login, the one-line upgrade completes and the gateway is
+      healthy afterwards with start at login still on (1340). (Real upgrade 0.22.0 -> 0.23.0 on the operator
+      machine with `-Pin latest`; with no flags, the public one-liner's dry run on the same machine recognises
+      the gateway and plans 0.14.3. The no-flags run itself was not repeated there: it restarts a gateway in
+      use.)
+- [x] The one-line install and upgrade still pass on macOS and Linux (root CI `bootstrap-smoke`).
+- [x] Root pins, `RELEASE_VERSIONS`, the install manifest and both installers agree (`scripts/tests/test_inventory.sh`).
 
 ## Testing
 
@@ -80,3 +86,14 @@ gateway 0.23.0. The default path must.
 - PRs: lpalbou/AbstractCore#53, lpalbou/AbstractRuntime#50, lpalbou/AbstractGateway#115, lpalbou/AbstractUIC#68,
   lpalbou/AbstractCode#49 (all merged and released 2026-11-24).
 - Install log of the operator machine's upgrade: `%LOCALAPPDATA%\AbstractGateway\logs\install-20261124-100322.log`.
+- Root PR lpalbou/AbstractFramework#77 (Test and build, Bootstrap smoke on Ubuntu, macOS and Windows green),
+  merge commit 999f9d6; `main` CI run 45489777851 green; tag v0.14.3; release run 45491351128 (test, build,
+  PyPI publish green); PyPI `abstractframework` 0.14.3 requires `abstractgateway==0.23.0`,
+  `abstractcore==2.38.0`, `AbstractRuntime==0.20.0`.
+- `scripts/install.ps1` and `scripts/install.sh` served from `main` pin gateway 0.23.0 and framework 0.14.3
+  (checked on raw.githubusercontent.com, 2026-11-24).
+- Root PR lpalbou/AbstractFramework#78 (CI run 45493386171): on the fresh Windows install the gateway reports
+  `kind: windows-restricted-token`, state `partial`; `echo sandbox-ok` succeeds inside it; the refused folder
+  is unreadable.
+- Not covered here: "Deny everything, allow listed workspaces" and a read-only default on Windows (1341), and
+  git inside a run's own workspace folder under the default policy (found 2026-11-24, fixed with 1341).

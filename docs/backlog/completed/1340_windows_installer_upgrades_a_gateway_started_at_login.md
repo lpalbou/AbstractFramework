@@ -55,20 +55,28 @@ users have. Found on 2026-11-24 while upgrading the operator's machine to gatewa
 
 ## Acceptance criteria
 
-- [ ] On Windows, with the gateway running from its login item, `install.ps1` (no flags, and with `-Pin latest`)
-      prints "this install's gateway is already running" at the preflight and completes; the gateway is healthy
-      afterwards and `abstractgateway service status` says start at login is on.
-- [ ] A process that is not this install's gateway on the same port still stops the installer with the
-      "already in use by another process" message.
-- [ ] The regression test fails on `main` at e3bc201 and passes with the fix, in root CI on Windows.
+- [x] On Windows, with the gateway running from its login item, `install.ps1` prints "this install's gateway
+      is already running" at the preflight and completes; the gateway is healthy afterwards and
+      `abstractgateway service status` says start at login is on. (Real run with `-Pin latest` on the operator
+      machine, 0.22.0 -> 0.23.0. With no flags: the public one-liner's dry run on the same machine prints the
+      line and plans the upgrade; the real no-flags run was not repeated there, it restarts a gateway in use.)
+- [x] A process that is not this install's gateway on the same port still stops the installer with the
+      "already in use by another process" message. (`tests/test_install_ps1_own_gateway.py`: another program,
+      a stale serve record, another instance's launcher.)
+- [x] The regression tests fail without the fix (the 4 new tests, with the launcher check removed) and pass
+      with it, in root CI on Windows (`bootstrap-smoke`, step "Own-gateway detection").
 
 ## Testing
 
 - `powershell -ExecutionPolicy ByPass -File scripts/install.ps1 -Pin latest -Print` on a machine whose gateway
   runs from the login item: the preflight line for port 8080 says "this install's gateway is already running".
-- `pwsh -File scripts/tests/test_install_own_gateway.ps1` (to be written by this item).
+- `python -m pytest -q tests/test_install_ps1_own_gateway.py` (Windows; the file already drove install.ps1's
+  functions through PowerShell, so the new cases went there instead of a separate `.ps1` test).
 
 ## Receipts
 
 - Commit 1195485 on local branch `windows-command-sandbox`.
 - Install log: `%LOCALAPPDATA%\AbstractGateway\logs\install-20261124-100322.log` (operator machine, 2026-11-24).
+- Shipped in AbstractFramework 0.14.3: root PR lpalbou/AbstractFramework#77, merge commit 999f9d6 (the fix is
+  commit e7b7f59 there, the tests dceb908). `Get-DeclaredDataDir` and `Test-GatewayPidStillOurs` needed no
+  change; the "started by hand" messages now say "started at login" for the launcher.
