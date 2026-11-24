@@ -4,6 +4,15 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Windows installer upgrades a gateway that was started at login.** With "start at login" on,
+  Windows starts the gateway through its login launcher (`pythonw.exe ...\AbstractGateway.pyw`), whose
+  command line does not contain `serve`. The installer did not recognise that process as this install's
+  gateway and stopped with "port 8080 ... is already in use by another process", so the one-line
+  upgrade could not run while the gateway was up. It recognises the launcher and identifies the gateway
+  by its serve record, then stops, upgrades and restarts it as it does for a gateway started by `serve`.
+
 ### Changed
 
 - **The Windows installer and the install guide describe the command sandbox by gateway version.**

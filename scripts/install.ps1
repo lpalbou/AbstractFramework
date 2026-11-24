@@ -325,8 +325,13 @@ function Test-SameUser([int]$ProcessId) {
     $owner = Get-ProcessOwner $ProcessId
     return [bool]($owner -and $owner -ieq [Environment]::UserName)
 }
-# Test-GatewayCommandLine: the command line runs abstractgateway's `serve`.
+# Test-GatewayCommandLine: the command line runs abstractgateway's `serve`, or is the gateway's Windows
+# login launcher: `pythonw.exe %LOCALAPPDATA%\AbstractGateway\<name>.pyw`, which keeps `serve` and its
+# arguments in the JSON file next to it (abstractgateway.os_service), so a gateway started at login
+# shows no `serve` on its command line. The launcher declares no data dir there either: its callers
+# then identify the gateway by the serve record (pid, data dir, start time), as for a plain `serve`.
 function Test-GatewayCommandLine([string]$CommandLine) {
+    if ($CommandLine -match '(?i)[\\/]AbstractGateway[\\/][^\\/"]+\.pyw("|\s|$)') { return $true }
     return ($CommandLine -match '(?i)abstractgateway' -and $CommandLine -match '(?i)(^|[\s"])serve(\s|"|$)')
 }
 # Test-OurBackgroundListener: the listener is the installer's background gateway (gateway.pid), or
