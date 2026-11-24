@@ -95,13 +95,13 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.22.0'
+$AfGatewayPinDefault = '0.23.0'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.14.2'
-$AfPyMatrix = @('abstractcore==2.36.0', 'AbstractRuntime==0.19.7', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
+$AfFrameworkVersion = '0.14.3'
+$AfPyMatrix = @('abstractcore==2.38.0', 'AbstractRuntime==0.20.0', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.2', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.2')
+$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.3', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.2')
 $AfCrateConsole = 'abstractgateway-console@0.18.1'
 $AfCrateCodeCli = 'abstractcode@0.15.0'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
@@ -2772,7 +2772,9 @@ function Main {
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     if ($onWindows) {
         # AbstractGateway 0.23.0 runs agents' commands inside a Windows sandbox; earlier ones refuse them.
-        $sandboxed = ($after -match '^\d+(\.\d+)+') -and ([version]$Matches[0] -ge [version]'0.23.0')
+        # -Print installs nothing ($after is empty): the plan's pinned version is the one it would install.
+        $shellVersion = if ($after) { $after } elseif ($script:DryRun -and -not $From) { $Pin } else { '' }
+        $sandboxed = ($shellVersion -match '^\d+(\.\d+)+') -and ([version]$Matches[0] -ge [version]'0.23.0')
         if ($sandboxed) {
             Write-Host "  Shell:      agents' shell commands run inside a Windows sandbox (runs that allow everything and refuse listed workspaces; $AfDocs#windows)"
         } else {

@@ -4,6 +4,42 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.14.3] - 2026-11-24
+
+Pins **AbstractGateway 0.23.0**, **AbstractCore 2.38.0** and **AbstractRuntime 0.20.0**, with the npm
+app **@abstractframework/code 0.16.3** (built on **@abstractframework/ui-kit 0.9.29**). The other
+components keep their 0.14.2 versions. Every Python pin matches the exact pins of AbstractGateway
+0.23.0, so the meta-package and the installers resolve to one set. The complete matrix is in the
+[README](README.md#release-matrix-abstractframework-0143).
+
+### Added
+
+- **Windows: agents' shell commands run inside a sandbox.** With the one-line installer's gateway,
+  `execute_command` and the local helpers were refused on Windows ("Refused: no command sandbox on this
+  host"). For runs set to "Allow everything, refuse listed workspaces" with read & write by default
+  (how a fresh gateway is set), they now run inside a Windows sandbox: refused workspaces, the
+  gateway's data folder and your credential folders are closed to the command, and a read-only
+  workspace cannot be written. A run set to "Deny everything, allow listed workspaces", or to read-only
+  by default, still has its commands refused on Windows, with that reason (AbstractGateway 0.23.0,
+  AbstractCore 2.38.0, AbstractRuntime 0.20.0). The installer's summary says which applies.
+
+### Changed
+
+- **Pause stops everything until Resume**: while the gateway is paused, no model work leaves it, the
+  entity sweeps, bridges and watchers wait, and an entity's own time freezes and continues the same
+  day at Resume. Work in flight waits at its next model call instead of failing (AbstractGateway
+  0.23.0, AbstractRuntime 0.20.0).
+- Streamed native tool calls arrive once and complete, and a tool call the model did not finish is
+  reported instead of being delivered with empty arguments (AbstractCore 2.37.0 and 2.38.0,
+  AbstractRuntime 0.20.0).
+- AbstractCode web says "Sign in to the gateway to manage automations." when your sign-in has ended,
+  instead of "The gateway gave an unexpected answer" (Code web 0.16.3, ui-kit 0.9.29).
+- **The Windows installer and the install guide describe the command sandbox by gateway version.**
+  AbstractGateway 0.23.0 runs agents' shell commands inside a Windows sandbox for runs that allow
+  everything and refuse listed workspaces; earlier versions refuse them on Windows. The installer's
+  summary line says which applies to the gateway it installed, and
+  [docs/install.md](docs/install.md#windows) explains both.
+
 ### Fixed
 
 - **The Windows installer upgrades a gateway that was started at login.** With "start at login" on,
@@ -15,14 +51,11 @@ All notable changes to AbstractFramework will be documented in this file.
   A program that is not this install's gateway on that port still stops the installer, as before. When
   start at login was turned on outside the installer, its messages say the gateway was started at
   login, not by hand.
-
-### Changed
-
-- **The Windows installer and the install guide describe the command sandbox by gateway version.**
-  AbstractGateway 0.23.0 runs agents' shell commands inside a Windows sandbox for runs that allow
-  everything and refuse listed workspaces; earlier versions refuse them on Windows. The installer's
-  summary line says which applies to the gateway it installed, and
-  [docs/install.md](docs/install.md#windows) explains both.
+- **An entity's own time runs on Windows**, and its Stop ends it there; an own-time status that cannot
+  be read is shown as such and nothing is started over it (AbstractRuntime 0.20.0, AbstractGateway
+  0.23.0).
+- An idle entity with nothing new is no longer put to sleep every 24 hours (AbstractGateway 0.23.0).
+- Windows: Quit from the tray stops the gateway at once and removes its icon (AbstractGateway 0.23.0).
 
 ## [0.14.2] - 2026-11-18
 

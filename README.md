@@ -13,12 +13,11 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
-**What's new in 0.14.2** ([CHANGELOG](CHANGELOG.md#0142---2026-11-18)): a new gateway asks you to
-choose its admin password first, on every OS. On Windows the installer adds an **AbstractGateway**
-icon to the desktop and the Start menu, local image and video generation works, and uninstalling
-removes a gateway that is still running. AbstractCode's terminal client is signed in to the
-gateway by the installer. Pictures show as thumbnails in chat, and generated pictures show again
-when a conversation is reopened.
+**What's new in 0.14.3** ([CHANGELOG](CHANGELOG.md#0143---2026-11-24)): on Windows, agents' shell
+commands run inside a sandbox instead of being refused, and the one-line installer upgrades a gateway
+that was started at login. Pausing the gateway stops everything, model work included, until you
+resume it. Streamed tool calls arrive once and complete, an idle entity is no longer put to sleep
+every day when nothing new happened, and an entity's own time runs on Windows.
 
 > **Prerequisites**: none for the one-line install below (it provisions Python and, optionally, Node.js). For a manual install: Python 3.10–3.13, Node.js 18+ for browser UIs, and an LLM backend (Ollama, LM Studio, vLLM, or a cloud API key).
 
@@ -187,7 +186,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.22.0` and `ghcr.io/lpalbou/abstractcore-server:2.36.0`.
+`ghcr.io/lpalbou/abstractgateway:0.23.0` and `ghcr.io/lpalbou/abstractcore-server:2.38.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -342,7 +341,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.14.2)
+### Release matrix (abstractframework 0.14.3)
 
 The Python meta-package pins its component distributions with `==`. Browser apps and
 shared npm libraries are listed separately; only apps are launchable. Rust tools retain
@@ -350,10 +349,10 @@ the dependency versions in their published lockfiles.
 
 | Registry | Package | Version |
 |---|---|---|
-| PyPI | `abstractcore` | 2.36.0 |
-| PyPI | `AbstractRuntime` | 0.19.7 |
+| PyPI | `abstractcore` | 2.38.0 |
+| PyPI | `AbstractRuntime` | 0.20.0 |
 | PyPI | `abstractagent` | 0.6.1 |
-| PyPI | `abstractgateway` | 0.22.0 |
+| PyPI | `abstractgateway` | 0.23.0 |
 | PyPI | `abstractskill` | 0.3.13 |
 | PyPI | `AbstractMemory` | 0.5.2 |
 | PyPI | `abstractsemantics` | 0.0.5 |
@@ -366,14 +365,14 @@ the dependency versions in their published lockfiles.
 | PyPI | `abstractavatar` | 0.2.0 |
 | PyPI | `abstractnote` | 0.3.1 |
 | npm app | `@abstractframework/flow` | 0.14.2 |
-| npm app | `@abstractframework/code` | 0.16.2 |
+| npm app | `@abstractframework/code` | 0.16.3 |
 | npm app | `@abstractframework/observer` | 0.13.1 |
 | npm app | `@abstractframework/continuum` | 0.8.1 |
 | npm app | `@abstractframework/entity` | 0.12.2 |
 | npm app | `@abstractframework/note` | 0.3.1 |
 | npm app | `@abstractframework/assistant` | 0.2.2 |
 | npm library | `@abstractframework/app-server` | 0.1.13 |
-| npm library | `@abstractframework/ui-kit` | 0.9.28 |
+| npm library | `@abstractframework/ui-kit` | 0.9.29 |
 | npm library | `@abstractframework/panel-chat` | 0.9.15 |
 | npm library | `@abstractframework/monitor-active-memory` | 0.2.2 |
 | npm library | `@abstractframework/monitor-flow` | 0.1.10 |
