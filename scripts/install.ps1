@@ -95,13 +95,13 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.22.0'
+$AfGatewayPinDefault = '0.23.0'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.14.2'
-$AfPyMatrix = @('abstractcore==2.36.0', 'AbstractRuntime==0.19.7', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
+$AfFrameworkVersion = '0.14.3'
+$AfPyMatrix = @('abstractcore==2.38.0', 'AbstractRuntime==0.20.0', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.2', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.2')
+$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.3', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.2')
 $AfCrateConsole = 'abstractgateway-console@0.18.1'
 $AfCrateCodeCli = 'abstractcode@0.15.0'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
@@ -281,7 +281,8 @@ function Read-LogFrom([string]$Path, [long]$Offset) {
 # install's data dir: a re-run must replace it on the same port, never move to the next port and
 # start a second gateway on the same data. Only typed signals decide, and all must agree: the pid
 # listening on the port (Get-NetTCPConnection) and /api/health there is a gateway's; that process runs
-# `abstractgateway serve` (its command line); it serves THIS data dir. A --data-dir on its command
+# `abstractgateway serve` or is the gateway's Windows login launcher (its command line, see
+# Test-GatewayCommandLine); it serves THIS data dir. A --data-dir on its command
 # line decides alone (another data dir, or a relative one this installer cannot resolve, makes it
 # foreign whatever the serve record says); without one, the serve record <data dir>\run\gateway-serve.json
 # must name its pid and this data dir, and the process must have started before the record was
@@ -325,9 +326,25 @@ function Test-SameUser([int]$ProcessId) {
     $owner = Get-ProcessOwner $ProcessId
     return [bool]($owner -and $owner -ieq [Environment]::UserName)
 }
-# Test-GatewayCommandLine: the command line runs abstractgateway's `serve`.
+# Test-GatewayCommandLine: the command line runs abstractgateway's `serve`, or is the gateway's Windows
+# login launcher: `pythonw.exe %LOCALAPPDATA%\AbstractGateway\<name>.pyw`, which keeps `serve` and its
+# arguments in the JSON file next to it (abstractgateway.os_service), so a gateway started at login
+# shows no `serve` on its command line. The launcher declares no data dir there either: its callers
+# then identify the gateway by the serve record (pid, data dir, start time), as for a plain `serve`.
+# A named instance's launcher is another <name>.pyw in the same folder; its serve record is in its own
+# data dir, so it is never taken for this install's gateway.
+function Test-LoginLauncherCommandLine([string]$CommandLine) {
+    return ($CommandLine -match '(?i)[\\/]AbstractGateway[\\/][^\\/"]+\.pyw("|\s|$)')
+}
 function Test-GatewayCommandLine([string]$CommandLine) {
+    if (Test-LoginLauncherCommandLine $CommandLine) { return $true }
     return ($CommandLine -match '(?i)abstractgateway' -and $CommandLine -match '(?i)(^|[\s"])serve(\s|"|$)')
+}
+# How this install's gateway found on the port was started, for the messages: the login launcher
+# ("started at login", when the installer's record does not say start at login is on) or a `serve`.
+function Get-GatewayStartedHow([int]$ProcessId) {
+    if (Test-LoginLauncherCommandLine (Get-ProcessCommandLine $ProcessId)) { return 'started at login' }
+    return 'started by hand'
 }
 # Test-OurBackgroundListener: the listener is the installer's background gateway (gateway.pid), or
 # a process it started. No listener named: the gateway.pid process counts. The listener can sit
@@ -1498,7 +1515,7 @@ function Main {
                 if ($p -eq $script:HandGatewayPid) { $script:HandGatewayPid = 0 }
                 continue
             }
-            if ($p -eq $script:HandGatewayPid) { Write-Info "stopping this install's gateway started by hand (pid $p); the installer's own start replaces it on port $Port" }
+            if ($p -eq $script:HandGatewayPid) { Write-Info "stopping this install's gateway $($script:HandGatewayHow) (pid $p); the installer's own start replaces it on port $Port" }
             Write-Host "  `$ Stop-Process -Id $p" -ForegroundColor DarkGray
             $script:Twins.Add("Stop-Process -Id $p")
             if (-not $script:DryRun) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }
@@ -1869,9 +1886,11 @@ function Main {
     # not recognise as its own (a gateway started by hand, or another program). Nothing starts, so the
     # recorded port is kept: moving it would point the next start at a different port.
     $portHeld = $false
-    # $script:HandGatewayPid: this install's gateway started by hand on this port (see Find-OwnGateway):
+    # $script:HandGatewayPid: this install's gateway started by hand on this port (see Find-OwnGateway),
+    # or by a login item this installer's record does not know about ($script:HandGatewayHow says which):
     # the port stays, and the installer's start replaces it (-NoStart leaves it running).
     $script:HandGatewayPid = 0
+    $script:HandGatewayHow = 'started by hand'
     if (Test-PortBusy $Port) {
         # The installer's own background gateway (gateway.pid) counts only when it is the listener
         # (when the listener can be named): a reused pid in gateway.pid is not the gateway.
@@ -1882,8 +1901,9 @@ function Main {
         $ours = ("$Port" -eq $state['PORT']) -and ((Test-OurBackgroundListener $listener ([int]$ourPid)) -or ($state['MODE'] -eq 'service' -and ((Get-Http "http://127.0.0.1:$Port/api/health") -match 'abstractgateway') -and (-not $listener -or (Find-OwnGateway $Port $DataDir) -eq $listener)))
         if ($ours) { $reuseRunning = $true; Write-Ok "port ${Port}: this install's gateway is already running (restarted if the package changes)" }
         elseif (($script:HandGatewayPid = Find-OwnGateway $Port $DataDir)) {
-            if ($NoStart) { Write-Info "port ${Port}: this install's gateway runs there, started by hand (pid $($script:HandGatewayPid), data dir $DataDir); kept (-NoStart restarts nothing)" }
-            else { Write-Ok "port ${Port}: this install's gateway runs there, started by hand (pid $($script:HandGatewayPid), data dir $DataDir); the installer's own start replaces it on this port" }
+            $script:HandGatewayHow = Get-GatewayStartedHow $script:HandGatewayPid
+            if ($NoStart) { Write-Info "port ${Port}: this install's gateway runs there, $($script:HandGatewayHow) (pid $($script:HandGatewayPid), data dir $DataDir); kept (-NoStart restarts nothing)" }
+            else { Write-Ok "port ${Port}: this install's gateway runs there, $($script:HandGatewayHow) (pid $($script:HandGatewayPid), data dir $DataDir); the installer's own start replaces it on this port" }
         }
         elseif ($NoStart -and $state['PORT'] -and "$Port" -eq $state['PORT']) {
             $portHeld = $true
@@ -2662,7 +2682,7 @@ function Main {
         Write-Host '  (web: the Gateway section), the tray''s Restart, or re-run this installer without -NoStart.'
     }
     if ($NoStart -and $script:HandGatewayPid -and -not $script:DryRun) {
-        Write-Host "  This install's gateway, started by hand (pid $($script:HandGatewayPid), port $Port), still runs the version it"
+        Write-Host "  This install's gateway, $($script:HandGatewayHow) (pid $($script:HandGatewayPid), port $Port), still runs the version it"
         Write-Host '  started with: re-run this installer without -NoStart to replace it with the installer''s own start.'
     }
     if ($portHeld -and -not $script:DryRun) {
@@ -2751,7 +2771,15 @@ function Main {
     if ($ortResult) { Write-Host "  GPU voices: $ortResult" }
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     if ($onWindows) {
-        Write-Host "  Shell:      agents' shell commands are refused on Windows (no command sandbox); every other tool works ($AfDocs#windows)"
+        # AbstractGateway 0.23.0 runs agents' commands inside a Windows sandbox; earlier ones refuse them.
+        # -Print installs nothing ($after is empty): the plan's pinned version is the one it would install.
+        $shellVersion = if ($after) { $after } elseif ($script:DryRun -and -not $From) { $Pin } else { '' }
+        $sandboxed = ($shellVersion -match '^\d+(\.\d+)+') -and ([version]$Matches[0] -ge [version]'0.23.0')
+        if ($sandboxed) {
+            Write-Host "  Shell:      agents' shell commands run inside a Windows sandbox (runs that allow everything and refuse listed workspaces; $AfDocs#windows)"
+        } else {
+            Write-Host "  Shell:      agents' shell commands are refused on Windows before AbstractGateway 0.23.0 (no command sandbox); every other tool works ($AfDocs#windows)"
+        }
     }
     Write-Host "  Apps:       $baseUrl/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
     Write-Host "  Standalone: npx -y @abstractframework/flow --gateway-url $baseUrl   (advanced; also code, observer, continuum, entity)"

@@ -1,5 +1,6 @@
-"""install.ps1: a re-run finds this install's gateway started by hand, and uv revalidates its pins
-(root backlog 0987, rehearsal 0.6.3 item 20 and the stale-index failure after the 0.7.4 release).
+"""install.ps1: a re-run finds this install's gateway started by hand or at login, and uv revalidates
+its pins (root backlog 0987, rehearsal 0.6.3 item 20 and the stale-index failure after the 0.7.4
+release; root backlog 1340 for the Windows login launcher).
 
 No Windows is needed: the installer's functions are loaded from the script's AST (running the script
 would install) and the Windows-only probes (Get-NetTCPConnection, Win32_Process, Get-Process) are
@@ -28,7 +29,8 @@ needs_pwsh = pytest.mark.skipif(shutil.which("pwsh") is None, reason="needs Powe
 
 REAL = ["Read-ServeRecord", "Test-CommandLineDataDir", "Get-DeclaredDataDir", "Test-OwnGatewayPid", "Find-OwnGateway",
         "Test-OurBackgroundListener", "Test-RecordNamesThisGateway", "Resolve-DirPath", "Get-RefreshPackages",
-        "Test-SameUser", "Test-GatewayCommandLine", "Test-PidFileGateway", "Test-GatewayPidStillOurs"]
+        "Test-SameUser", "Test-GatewayCommandLine", "Test-PidFileGateway", "Test-GatewayPidStillOurs",
+        "Test-LoginLauncherCommandLine", "Get-GatewayStartedHow"]
 STARTED = "2026-09-30T10:00:00Z"          # when the fake process started (UTC)
 WRITTEN = "2026-09-30T10:00:05.123456Z"   # the serve record's started_at, as the gateway writes it
 
@@ -308,3 +310,103 @@ def test_install_ps1_checks_every_pid_before_stopping_it() -> None:
     port = ps1[ps1.index("    if (Test-PortBusy $Port) {"):ps1.index("    $baseUrl = \"http://127.0.0.1:$Port\"")]
     # the login item (service mode): a healthy gateway of THIS data dir, when the listener can be named
     assert "(-not $listener -or (Find-OwnGateway $Port $DataDir) -eq $listener)" in port
+
+
+# --- The Windows login launcher (root backlog 1340) ---------------------------------------------
+# With start at login on, the Run entry starts `pythonw.exe %LOCALAPPDATA%\AbstractGateway\<name>.pyw`
+# (abstractgateway.os_service); `serve` and its arguments live in the JSON next to the .pyw, so the
+# gateway's command line has no `serve`. The uv tool's pythonw.exe is a redirector: the listener is the
+# base interpreter it starts, with the same arguments. %LOCALAPPDATA% is C:\Data\Local here.
+LOGIN = r'"C:\Tools\uv\tools\abstractgateway\Scripts\pythonw.exe" C:\Data\Local\AbstractGateway\AbstractGateway.pyw'
+LOGIN_BASE = r'"C:\Tools\uv\python\cpython-3.12-windows-x86_64-none\pythonw.exe" C:\Data\Local\AbstractGateway\AbstractGateway.pyw'
+LOGIN_SPACE = r'"C:\Tools\uv\tools\abstractgateway\Scripts\pythonw.exe" "C:\Data\Local Files\AbstractGateway\AbstractGateway.pyw"'
+LOGIN_NAMED = r'"C:\Tools\uv\tools\abstractgateway\Scripts\pythonw.exe" C:\Data\Local\AbstractGateway\AbstractGateway-work.pyw'
+
+
+@needs_pwsh
+def test_the_login_launcher_is_a_gateway_command_line(tmp_path: Path) -> None:
+    cases = [GW, LOGIN, LOGIN_BASE, LOGIN_SPACE, LOGIN_NAMED,
+             "python -m http.server 8080",
+             r"pythonw.exe C:\Data\Local\Other\AbstractGateway.pyw",               # not in the gateway's folder
+             r"notepad.exe C:\Data\Local\AbstractGateway\AbstractGateway.pyw.bak",  # not the launcher script
+             r"tail -f C:\Data\Local\AbstractGateway\logs\gateway.log"]
+    body = "@(" + ", ".join(f"(Test-GatewayCommandLine {_ps(c)})" for c in cases) + ") -join ' '"
+    assert _pwsh(body, tmp_path).splitlines()[-1] == "True True True True True False False False False"
+
+
+@needs_pwsh
+def test_a_gateway_started_at_login_is_ours_by_its_serve_record(tmp_path: Path) -> None:
+    rec = {"pid": 4242, "port": 8080, "data_dir": "SELF"}
+    for cmd in (LOGIN, LOGIN_BASE, LOGIN_SPACE):
+        assert _find(tmp_path, listener=4242, cmdline=cmd, record=rec) == 4242, cmd
+    # the plain `serve` form still is
+    assert _find(tmp_path, listener=4242, cmdline=GW, record=rec) == 4242
+    # the launcher declares no data dir: without a record here, or with one naming another pid, another
+    # data dir, or a process that started after it was written, it is not this install's gateway
+    assert _find(tmp_path, listener=4242, cmdline=LOGIN, record=None) == 0
+    assert _find(tmp_path, listener=4242, cmdline=LOGIN, record={**rec, "pid": 777}) == 0
+    assert _find(tmp_path, listener=4242, cmdline=LOGIN, record={**rec, "data_dir": r"C:\elsewhere\gw"}) == 0
+    assert _find(tmp_path, listener=4242, cmdline=LOGIN, record=rec, started="2026-09-30T11:00:00Z") == 0
+    assert _find(tmp_path, listener=4242, cmdline=LOGIN, record=rec, owner="someoneelse") == 0
+    assert _find(tmp_path, listener=4242, cmdline=LOGIN, record=rec, health=False) == 0
+
+
+@needs_pwsh
+def test_a_gateway_started_at_login_is_stopped_for_the_upgrade_only_while_it_is_still_that_gateway(tmp_path: Path) -> None:
+    kw = {"fn": "Test-GatewayPidStillOurs", "started": STARTED}
+    assert _pidfile_case(tmp_path, named=100, pid=300, cmd=LOGIN_BASE, record={"pid": 300, "port": 8080}, **kw) == "True"
+    assert _pidfile_case(tmp_path, named=100, pid=300, cmd=LOGIN_BASE, record={"pid": 301, "port": 8080}, **kw) == "False"
+    assert _pidfile_case(tmp_path, named=100, pid=300, cmd=LOGIN_BASE, record={"pid": 300, "port": 8080},
+                         fn="Test-GatewayPidStillOurs", started="2026-09-30T11:00:00Z") == "False"
+
+
+def _preflight(tmp_path: Path, *, cmdline: str, record: dict | None, mode: str = "service", listener: int = 4242) -> str:
+    """Run install.ps1's real port preflight (the `if (Test-PortBusy $Port)` block) for port 8080, the
+    port of the gateway's stored Network setting, with the process probes faked as in _find."""
+    ps1 = SCRIPT.read_text(encoding="utf-8")
+    block = ps1[ps1.index("    if (Test-PortBusy $Port) {"):ps1.index("    $baseUrl = \"http://127.0.0.1:$Port\"")]
+    data = tmp_path / "App Data" / "AbstractGateway"
+    (data / "run").mkdir(parents=True, exist_ok=True)
+    rec = data / "run" / "gateway-serve.json"
+    if record is not None:
+        rec.write_text(json.dumps({"started_at": WRITTEN, "data_dir": str(data), **record}), encoding="utf-8")
+    elif rec.exists():
+        rec.unlink()
+    body = f"""
+function Test-PortBusy([int]$Port) {{ return $true }}
+function Get-PortListenerPid([int]$Port) {{ return {listener} }}
+function Get-OurPid {{ return $null }}
+function Get-ProcessCommandLine([int]$ProcessId) {{ return {_ps(cmdline)} }}
+function Test-ProcessAlive([int]$ProcessId) {{ return $true }}
+function Get-ProcessOwner([int]$ProcessId) {{ return [Environment]::UserName }}
+function Get-ProcessStartUtc([int]$ProcessId) {{ return [DateTime]::Parse('{STARTED}', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::AdjustToUniversal) }}
+function Get-Http([string]$Url) {{ if ($Url -eq 'http://127.0.0.1:8080/api/health') {{ return '{{"status": "healthy", "service": "abstractgateway"}}' }}; return $null }}
+function Write-Ok([string]$m) {{ Write-Output "OK: $m" }}
+function Write-Info([string]$m) {{ Write-Output "INFO: $m" }}
+function Write-Warn2([string]$m) {{ Write-Output "WARN: $m" }}
+function Stop-Install([string]$m) {{ Write-Output "STOP: $m" }}
+$Port = 8080; $DataDir = {_ps(str(data))}; $state = @{{ PORT = '8080'; MODE = {_ps(mode)} }}
+$NoStart = $false; $explicitPort = $false; $portFromNet = $true; $script:RerunCmd = 'install.ps1'
+$reuseRunning = $false; $portHeld = $false; $script:HandGatewayPid = 0; $script:HandGatewayHow = 'started by hand'
+{block}
+"""
+    return _pwsh(body, tmp_path)
+
+
+@needs_pwsh
+def test_the_preflight_keeps_a_gateway_started_at_login_and_refuses_another_program(tmp_path: Path) -> None:
+    rec = {"pid": 4242, "port": 8080}
+    ours = "OK: port 8080: this install's gateway is already running"
+    # start at login on (the installer's record says service): the upgrade goes ahead
+    assert ours in _preflight(tmp_path, cmdline=LOGIN_BASE, record=rec)
+    assert ours in _preflight(tmp_path, cmdline=GW, record=rec)
+    # a login item the installer's record does not know about: replaced, and named for what it is
+    out = _preflight(tmp_path, cmdline=LOGIN_BASE, record=rec, mode="")
+    assert "this install's gateway runs there, started at login (pid 4242" in out, out
+    out = _preflight(tmp_path, cmdline=GW, record=rec, mode="")
+    assert "this install's gateway runs there, started by hand (pid 4242" in out, out
+    # another program on the port, even one a stale record names, or another instance's launcher
+    refused = "STOP: port 8080 (the gateway's Network setting) is already in use by another process"
+    for cmd, r in (("python -m http.server 8080", rec), (LOGIN_NAMED, None), (LOGIN_BASE, {"pid": 777, "port": 8080})):
+        out = _preflight(tmp_path, cmdline=cmd, record=r)
+        assert refused in out and ours not in out, (cmd, out)
