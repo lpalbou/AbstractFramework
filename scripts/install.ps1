@@ -2751,7 +2751,13 @@ function Main {
     if ($ortResult) { Write-Host "  GPU voices: $ortResult" }
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     if ($onWindows) {
-        Write-Host "  Shell:      agents' shell commands are refused on Windows (no command sandbox); every other tool works ($AfDocs#windows)"
+        # AbstractGateway 0.23.0 runs agents' commands inside a Windows sandbox; earlier ones refuse them.
+        $sandboxed = ($after -match '^\d+(\.\d+)+') -and ([version]$Matches[0] -ge [version]'0.23.0')
+        if ($sandboxed) {
+            Write-Host "  Shell:      agents' shell commands run inside a Windows sandbox (runs that allow everything and refuse listed workspaces; $AfDocs#windows)"
+        } else {
+            Write-Host "  Shell:      agents' shell commands are refused on Windows before AbstractGateway 0.23.0 (no command sandbox); every other tool works ($AfDocs#windows)"
+        }
     }
     Write-Host "  Apps:       $baseUrl/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
     Write-Host "  Standalone: npx -y @abstractframework/flow --gateway-url $baseUrl   (advanced; also code, observer, continuum, entity)"

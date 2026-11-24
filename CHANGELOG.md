@@ -4,6 +4,14 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **The Windows installer and the install guide describe the command sandbox by gateway version.**
+  AbstractGateway 0.23.0 runs agents' shell commands inside a Windows sandbox for runs that allow
+  everything and refuse listed workspaces; earlier versions refuse them on Windows. The installer's
+  summary line says which applies to the gateway it installed, and
+  [docs/install.md](docs/install.md#windows) explains both.
+
 ## [0.14.2] - 2026-11-18
 
 Pins **AbstractGateway 0.22.0**, **AbstractCore 2.36.0**, **AbstractRuntime 0.19.7** and

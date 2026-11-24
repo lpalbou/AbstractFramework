@@ -4127,10 +4127,15 @@ What runs locally on Windows with the gpu profile (x86_64, NVIDIA):
 | vLLM | No native Windows build: run it in WSL2 or on a Linux machine, and point the gateway at that server. |
 | MLX | Apple silicon Macs only. |
 
-Agents' shell commands need a sandbox, and Windows has none that the gateway supports, so the
-gateway refuses those commands on Windows; every other tool works. AbstractGateway's
-[security guide](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md) explains
-`abstractgateway serve --unsandboxed-commands`, which runs them with your account's own file
+Agents' shell commands run inside a sandbox. With AbstractGateway 0.23.0 or newer, Windows has one
+for runs that allow everything and refuse listed workspaces with read & write by default, which is
+how a fresh gateway is set: refused folders, the gateway's data and your credential folders are
+closed to the command. A run set to "Deny everything, allow listed workspaces", or to read-only by
+default, has its commands refused on Windows, and so does every run on an earlier AbstractGateway;
+every other tool works. AbstractGateway's
+[security guide](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md#on-windows)
+says what the Windows sandbox enforces and its limits, and explains
+`abstractgateway serve --unsandboxed-commands`, which runs commands with your account's own file
 access, for a gateway you start yourself.
 
 ## If something goes wrong
