@@ -92,7 +92,7 @@ refused on Windows with a sentence naming the posture, which is not "works on an
       `sandbox tests: 12 collected, 10 passed, 2 skipped, 0 failed`; the two skips are the older-Core refusal
       test, "this AbstractCore enforces every shape on Windows". Through the gateway: PENDING: AbstractGateway
       0.24.0 (`tests/test_r12w2_e2e_command_sandbox.py`, the "Deny everything" scenario, on the gateway's
-      Windows job of PR PENDING-GATEWAY-PR).)
+      Windows job of lpalbou/AbstractGateway#117).)
 - [x] On Windows, with "Allow everything, refuse listed workspaces" and read-only by default, `execute_command`
       runs; everything the user can read is readable except refused rows; only the read & write rows, the
       run's own folder and its temp folder are writable; a second run that lists a row read-only cannot write
@@ -128,9 +128,9 @@ refused on Windows with a sentence naming the posture, which is not "works on an
       a failure exits) and its real-host step fails unless its 3 shape cases pass. AbstractRuntime's job
       accepts exactly the skips the installed Core explains (with 2.39.0: only the older-Core refusal test) and
       fails on any other skip or on fewer than 8 tests. The gateway's `model-host-windows` job on
-      `release/0.24.0` runs `pytest tests/test_r12w2_command_sandbox.py tests/test_r12w2_e2e_command_sandbox.py`
+      `feat/session-title` (#117, head 1532e978) runs `pytest tests/test_r12w2_command_sandbox.py tests/test_r12w2_e2e_command_sandbox.py`
       with no skip gate: a skipped shape there does not fail it. PENDING: AbstractGateway 0.24.0 (gateway PR
-      PENDING-GATEWAY-PR: add the skip gate, or record that it is not added).
+      lpalbou/AbstractGateway#117: add the skip gate, or record that it is not added).
 
 ## Testing
 
@@ -147,9 +147,10 @@ refused on Windows with a sentence naming the posture, which is not "works on an
 - lpalbou/AbstractRuntime#51 (merged 2026-11-25, merge commit 52858eb, tag v0.21.0 on it, PyPI
   `AbstractRuntime` 0.21.0 uploaded 2026-11-25T01:28Z; PR run 45524750402 and `main` run 45525204097, Windows
   jobs 138905198873 and 138906708489: "abstractcore 2.39.0: every workspace shape sandboxed = True").
-- AbstractGateway 0.24.0: PENDING: AbstractGateway 0.24.0 (gateway PR PENDING-GATEWAY-PR; branch
-  `release/0.24.0`, head d1420f8 on 2026-11-25, pins `abstractcore==2.39.0`, `AbstractRuntime==0.21.0`; a CI
-  preview PR lpalbou/AbstractGateway#116 is marked "do not merge"). PyPI `abstractgateway` 0.24.0: PENDING.
+- AbstractGateway 0.24.0: lpalbou/AbstractGateway#117 (branch `feat/session-title`, which carries
+  `release/0.24.0`'s sandbox commits and the rename; head 1532e978 on 2026-11-25, CI running; pins
+  `abstractcore==2.39.0`, `AbstractRuntime==0.21.0`; the earlier CI preview lpalbou/AbstractGateway#116 is
+  marked "do not merge"). Merge, tag v0.24.0 and PyPI `abstractgateway` 0.24.0: PENDING: AbstractGateway 0.24.0.
 - Root: AbstractFramework 0.14.4 pins gateway 0.24.0, core 2.39.0, runtime 0.21.0 (branch `release/0.14.4`;
   root PR PENDING-ROOT-PR). The installer's "Shell:" line names the tier of the installed gateway, and
   `scripts/tests/command_sandbox_smoke.py` runs the three shapes when the gateway reports `sandboxed`.
