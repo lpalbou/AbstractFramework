@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from abstractcore import GenerateResponse as GenerateResponse, create_llm as create_llm
 
-__version__ = "0.14.4"
+__version__ = "0.14.5"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
@@ -25,7 +25,7 @@ RELEASE_VERSIONS: dict[str, str] = {
     "abstractcore": "2.39.0",
     "abstractruntime": "0.21.0",
     "abstractagent": "0.6.1",
-    "abstractgateway": "0.24.0",
+    "abstractgateway": "0.24.1",
     "abstractskill": "0.3.13",
     "abstractmemory": "0.5.2",
     "abstractsemantics": "0.0.5",
