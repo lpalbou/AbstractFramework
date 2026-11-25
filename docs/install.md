@@ -93,17 +93,31 @@ What runs locally on Windows with the gpu profile (x86_64, NVIDIA):
 | vLLM | No native Windows build: run it in WSL2 or on a Linux machine, and point the gateway at that server. |
 | MLX | Apple silicon Macs only. |
 
-Agents' shell commands run inside a sandbox. With AbstractGateway 0.23.0 or newer (what this
-installer installs since AbstractFramework 0.14.3), Windows has one for runs that allow everything
-and refuse listed workspaces with read & write by default, which is how a fresh gateway is set:
-refused folders, the gateway's data and your credential folders are closed to the command. A run
-set to "Deny everything, allow listed workspaces", or to read-only by default, has its commands
-refused on Windows, and so does every run on an earlier AbstractGateway; every other tool works.
-AbstractGateway's
+Agents' shell commands run inside a sandbox. What it covers on Windows depends on the AbstractGateway
+version installed (the installer's summary says it on its **Shell:** line):
+
+- **AbstractGateway 0.24.0 or newer** (what this installer installs since AbstractFramework 0.14.4):
+  every workspace setting. Refused folders, the gateway's data and your credential folders are closed
+  to the command, and a read-only workspace cannot be written. "Allow everything, refuse listed
+  workspaces" with read & write by default (how a fresh gateway is set) lets the command read and write
+  what your account can; with read-only by default it reads what your account can and writes only in
+  the read & write workspaces, the run's own folder and its temp folder; "Deny everything, allow listed
+  workspaces" also closes your user profile and the folders you own at the root of your drives outside
+  the listed workspaces, and writes nowhere else either. A drive that stores no permissions (exFAT, FAT,
+  many USB sticks and SD cards) and a network share cannot be protected: commands read and change them
+  as you can, each command's result names such a drive as not protected, and a refused or read-only
+  workspace there stops the command instead of running it unprotected.
+- **AbstractGateway 0.23.x** (AbstractFramework 0.14.3): only runs set to "Allow everything, refuse
+  listed workspaces" with read & write by default; a run set to "Deny everything, allow listed
+  workspaces", or to read-only by default, has its commands refused.
+- **Earlier versions**: agents' shell commands are refused on Windows.
+
+Every other tool works in each case. AbstractGateway's
 [security guide](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md#on-windows)
-says what the Windows sandbox enforces and its limits, and explains
-`abstractgateway serve --unsandboxed-commands`, which runs commands with your account's own file
-access, for a gateway you start yourself.
+says what the Windows sandbox enforces under each setting and its limits (among them Git Bash under
+the two stricter settings, Windows' own `ssh-keygen`, and Windows' built-in TLS used by `curl.exe` and
+`Invoke-WebRequest`), and explains `abstractgateway serve --unsandboxed-commands`, which runs commands
+with your account's own file access, for a gateway you start yourself.
 
 ## If something goes wrong
 
@@ -546,7 +560,7 @@ The Mac package, the `.command` files and the one line all run the same script,
    login** switch counts), a first install leaves it off.
 3. Installs [uv](https://docs.astral.sh/uv/) when it is missing, then Python 3.12 through uv.
 4. Installs the gateway as an isolated uv tool, pinned to this release:
-   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.23.0"`, from prebuilt wheels
+   `uv tool install --python 3.12 "abstractgateway[<profile>,tray]==0.24.0"`, from prebuilt wheels
    only (see [No compiler needed](#no-compiler-needed)), and checks that the command starts
    (reinstalling it in place when it does not). Every profile also gets local voice,
    `--with "abstractvoice[supertonic,stt]==0.21.1"` (the release's AbstractVoice): Supertonic
@@ -961,7 +975,7 @@ abstractgateway models download supertonic supertonic-3
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh             # Windows: irm https://astral.sh/uv/install.ps1 | iex
 uv python install 3.12
-uv tool install --python 3.12 "abstractgateway[tray]==0.23.0"    # [apple,tray] or [gpu,tray] for local engines
+uv tool install --python 3.12 "abstractgateway[tray]==0.24.0"    # [apple,tray] or [gpu,tray] for local engines
                        # (add --with and --overrides as shown by `install.sh --print` to avoid compiling)
 uv tool update-shell                                          # puts ~/.local/bin on PATH; open a new terminal
 abstractgateway service install --port 8080                   # or: abstractgateway serve
@@ -1104,9 +1118,9 @@ Python 3.11 to 3.13), but it gets PyPI's CPU-only PyTorch and no llama.cpp: use 
 installer, which adds PyTorch's CUDA build and llama.cpp's prebuilt GPU build
 ([GPU on Windows](#gpu-on-windows-nvidia)).
 
-`abstractframework` 0.14.3 pins the Python matrix listed in the
-[release matrix](../README.md#release-matrix-abstractframework-0143), including
-`abstractgateway==0.23.0`, `abstractcore==2.38.0`, `AbstractRuntime==0.20.0`, `AbstractMemory==0.5.2`,
+`abstractframework` 0.14.4 pins the Python matrix listed in the
+[release matrix](../README.md#release-matrix-abstractframework-0144), including
+`abstractgateway==0.24.0`, `abstractcore==2.39.0`, `AbstractRuntime==0.21.0`, `AbstractMemory==0.5.2`,
 `abstractagent==0.6.1`, `abstractvoice==0.21.1`, `abstractvision==0.3.36`, `abstractassistant==0.19.1`,
 `abstractskill==0.3.13`, `abstractnote==0.3.1`, `abstractcamera==0.2.1` and `abstractavatar==0.2.0`. The `apple` and `gpu` extras
 select local-engine dependencies at the same component versions.
@@ -1195,14 +1209,14 @@ Then run `abstractframework doctor`.
 The browser apps and the Rust terminal tools are not Python packages, so no profile installs them.
 Run or install them next to the Python stack:
 
-| Tool | Command | Version in 0.14.3 |
+| Tool | Command | Version in 0.14.4 |
 |---|---|---|
-| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.23.0 |
-| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.38.0 |
+| Gateway web console | built into `abstractgateway`: open the link `abstractgateway serve` prints (`http://127.0.0.1:8080/console#claim=…`) | 0.24.0 |
+| Core web console | built into `abstractcore`: open the link `abstractcore serve` prints (`http://127.0.0.1:8000/console#claim=…`) | 2.39.0 |
 | Core terminal console | `cargo install abstractcore-console` (Rust 1.87+), then `abstractcore-console` (uses the `abstractcore` command). The installers do not build it: it is the console of a standalone `abstractcore serve`, and the gateway's terminal console already has its Models and Engines screens | 0.8.1 |
 | Gateway terminal console | built by the installer (`--no-console` skips it), or `cargo install abstractgateway-console` (Rust 1.87+); then `abstractgateway-console --gateway-url http://127.0.0.1:8080 --token <admin token>` | 0.18.1 |
 | Flow Editor | the console's **Apps** page (opens at `/apps/flow/`), or on its own: `npx @abstractframework/flow --gateway-url <url>` | 0.14.2 |
-| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.16.3 |
+| Code Web UI | the console's **Apps** page (`/apps/code/`), or `npx @abstractframework/code --gateway-url <url>` | 0.16.4 |
 | Observer | the console's **Apps** page (`/apps/observer/`), or `npx @abstractframework/observer --gateway-url <url>` | 0.13.1 |
 | Continuum console | the console's **Apps** page (`/apps/continuum/`), or `npx @abstractframework/continuum --gateway-url <url>` | 0.8.1 |
 | Entity manager | the console's **Apps** page (`/apps/entity/`), or `npx @abstractframework/entity --gateway-url <url>` | 0.12.2 |
@@ -1251,7 +1265,7 @@ docker run \
   -v "$PWD/runtime:/data" \
   -e ABSTRACTGATEWAY_DATA_DIR=/data \
   -e ABSTRACTGATEWAY_USER_AUTH=1 \
-  ghcr.io/lpalbou/abstractgateway:0.23.0
+  ghcr.io/lpalbou/abstractgateway:0.24.0
 ```
 
 This is the Light container: full framework capabilities through remote/endpoint inference, without
@@ -1259,7 +1273,7 @@ local MLX/CUDA stacks. On first start it creates `default/admin` and writes the 
 `runtime/auth/bootstrap-admin-token`. Use `ghcr.io/lpalbou/abstractgateway:gpu-latest` only on an
 NVIDIA host when you explicitly want the local GPU profile (pinned tags are `<version>-gpu`, published on a best-effort basis; this image is
 experimental). The AbstractCore OpenAI-compatible server is also published as
-`ghcr.io/lpalbou/abstractcore-server:2.38.0`.
+`ghcr.io/lpalbou/abstractcore-server:2.39.0`.
 
 ## How installs are designed
 

@@ -17,15 +17,15 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from abstractcore import GenerateResponse as GenerateResponse, create_llm as create_llm
 
-__version__ = "0.14.3"
+__version__ = "0.14.4"
 __author__ = "Laurent-Philippe Albou"
 __license__ = "MIT"
 
 RELEASE_VERSIONS: dict[str, str] = {
-    "abstractcore": "2.38.0",
-    "abstractruntime": "0.20.0",
+    "abstractcore": "2.39.0",
+    "abstractruntime": "0.21.0",
     "abstractagent": "0.6.1",
-    "abstractgateway": "0.23.0",
+    "abstractgateway": "0.24.0",
     "abstractskill": "0.3.13",
     "abstractmemory": "0.5.2",
     "abstractsemantics": "0.0.5",
@@ -59,7 +59,7 @@ PACKAGE_DISTRIBUTIONS: dict[str, str] = {
 
 NPM_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/flow": "0.14.2",
-    "@abstractframework/code": "0.16.3",
+    "@abstractframework/code": "0.16.4",
     "@abstractframework/observer": "0.13.1",
     "@abstractframework/continuum": "0.8.1",
     "@abstractframework/entity": "0.12.2",
@@ -70,7 +70,7 @@ NPM_RELEASE_VERSIONS: dict[str, str] = {
 # Shared npm libraries are recorded separately from launchable browser apps.
 NPM_LIBRARY_RELEASE_VERSIONS: dict[str, str] = {
     "@abstractframework/app-server": "0.1.13",
-    "@abstractframework/ui-kit": "0.9.29",
+    "@abstractframework/ui-kit": "0.9.30",
     "@abstractframework/panel-chat": "0.9.15",
     "@abstractframework/monitor-active-memory": "0.2.2",
     "@abstractframework/monitor-flow": "0.1.10",

@@ -204,9 +204,11 @@ jobs:
           $c = Invoke-WebRequest http://127.0.0.1:18080/console -UseBasicParsing
           if ($c.StatusCode -ne 200) { throw "console answered $($c.StatusCode)" }
 
-      # What a new Windows user depends on (root backlog 1339): the installed gateway reports the
-      # Windows command sandbox, and a command run through the installed AbstractCore succeeds inside
-      # it while a refused folder stays closed. Run with the gateway's own Python.
+      # What a new Windows user depends on (root backlogs 1339 and 1341): the installed gateway reports
+      # the Windows command sandbox, and a command run through the installed AbstractCore succeeds
+      # inside it while a refused folder stays closed, under each workspace setting the gateway
+      # sandboxes (all three when it reports `sandboxed`, from AbstractGateway 0.24.0; under the two
+      # write-limited ones a write outside the workspace fails). Run with the gateway's own Python.
       - name: Agents' commands run sandboxed (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
