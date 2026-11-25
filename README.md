@@ -13,6 +13,11 @@ AbstractFramework is an ecosystem of composable packages for building AI systems
 
 Think of it as an **agentic OS**: durable runs + replay-first observability + multimodal capabilities — write once, run across providers and deployment modes.
 
+**What's new in 0.14.5** ([CHANGELOG](CHANGELOG.md#0145---2026-11-25)): on Windows, Update works from the gateway's tray,
+its web and terminal consoles and `abstractgateway update` (AbstractGateway 0.24.1): the installer runs in its own PowerShell
+window, stops the gateway, updates everything and starts it again. An install older than 0.14.5 still updates once with the
+one-line install.
+
 **What's new in 0.14.4** ([CHANGELOG](CHANGELOG.md#0144---2026-11-25)): on Windows, agents' shell
 commands run inside the command sandbox under every workspace setting, "Deny everything, allow
 listed workspaces" and a read-only default included, instead of being refused there; a drive the
@@ -187,7 +192,7 @@ abstractgateway update --check          # what the next upgrade changes; `abstra
 ```
 
 Container images are published for the gateway and the AbstractCore server:
-`ghcr.io/lpalbou/abstractgateway:0.24.0` and `ghcr.io/lpalbou/abstractcore-server:2.39.0`.
+`ghcr.io/lpalbou/abstractgateway:0.24.1` and `ghcr.io/lpalbou/abstractcore-server:2.39.0`.
 
 For artifact and runtime-resource investigation, see
 [Runtime artifacts and retrieval](docs/guide/runtime-artifacts.md).
@@ -342,7 +347,7 @@ pip install "abstractframework[gpu]"
 | Apple | `pip install "abstractframework[apple]"` | macOS 14+ on Apple Silicon | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 | GPU | `pip install "abstractframework[gpu]"` | Linux with a CUDA or ROCm GPU; on Windows, use the one-line installer (a plain pip install gets PyPI's CPU-only PyTorch and no llama.cpp) | 3.10–3.13 (F5-TTS voice cloning needs 3.11+) |
 
-### Release matrix (abstractframework 0.14.4)
+### Release matrix (abstractframework 0.14.5)
 
 The Python meta-package pins its component distributions with `==`. Browser apps and
 shared npm libraries are listed separately; only apps are launchable. Rust tools retain
@@ -353,7 +358,7 @@ the dependency versions in their published lockfiles.
 | PyPI | `abstractcore` | 2.39.0 |
 | PyPI | `AbstractRuntime` | 0.21.0 |
 | PyPI | `abstractagent` | 0.6.1 |
-| PyPI | `abstractgateway` | 0.24.0 |
+| PyPI | `abstractgateway` | 0.24.1 |
 | PyPI | `abstractskill` | 0.3.13 |
 | PyPI | `AbstractMemory` | 0.5.2 |
 | PyPI | `abstractsemantics` | 0.0.5 |

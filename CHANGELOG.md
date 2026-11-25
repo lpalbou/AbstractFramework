@@ -4,6 +4,22 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.14.5] - 2026-11-25
+
+Pins **AbstractGateway 0.24.1**; every other component keeps its 0.14.4 version.
+
+### Fixed
+
+- **Update works on Windows from the gateway's tray, its web console, its terminal console and
+  `abstractgateway update`.** Check for Updates answered "AbstractFramework X is available, but not from here"
+  and asked for the PowerShell line, because Windows keeps a running program's files locked. The gateway now
+  hands the update to its own PowerShell window: the checked `scripts/install.ps1` (sha256 shown in the
+  confirmation) runs outside the gateway's processes, stops the gateway, updates everything and starts it again
+  with start at login as it was, and the gateway that comes back says how it went. If the installer fails after
+  stopping the gateway, the window starts the gateway again. An install older than 0.14.5 runs the older
+  gateway, which still shows the PowerShell line: run the one-line install once, and later updates work from the
+  tray.
+
 ## [0.14.4] - 2026-11-25
 
 Pins **AbstractGateway 0.24.0**, **AbstractCore 2.39.0** and **AbstractRuntime 0.21.0**, with the npm

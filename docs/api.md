@@ -60,7 +60,7 @@ The response type returned by `llm.generate(...)`.
 
 ### `__version__`
 
-The meta-package version (`0.14.4` in this release).
+The meta-package version (`0.14.5` in this release).
 
 ### `RELEASE_VERSIONS`
 
