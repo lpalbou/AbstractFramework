@@ -39,8 +39,12 @@ components keep their 0.14.3 versions. Every Python pin matches the exact pins o
   search use it. A refusal brings the previous name back and is said under that card. The gateway
   serves it as `PUT /api/gateway/sessions/{session_id}/title` and `session_title` on
   `GET /api/gateway/runs`, and advertises `capabilities.session_titles`; with an older gateway no
-  rename is offered (AbstractGateway 0.24.0, Code web 0.16.4, ui-kit 0.9.30). The terminal client,
-  the Assistant and the Observer do not show the stored name yet.
+  rename is offered (AbstractGateway 0.24.0, Code web 0.16.4, ui-kit 0.9.30). Characters that hide
+  text or imitate another name (bidirectional controls, zero-width and other invisible characters) are
+  removed. A names file the gateway cannot read never takes the conversation list down: the list and
+  the search are served without names and say so (`session_titles_error`; the web app shows
+  "Conversation names could not be loaded" once), and a damaged file is set aside and started again by
+  the next rename. The terminal client, the Assistant and the Observer do not show the stored name yet.
 
 ### Changed
 
@@ -58,6 +62,11 @@ components keep their 0.14.3 versions. Every Python pin matches the exact pins o
   current working directory"; a folder can change its role between runs; a sandboxed command can no
   longer hold the launchers' lock and stop every later command; cloud file placeholders (OneDrive)
   inside a refused folder are refused (AbstractCore 2.39.0).
+- **Archiving a conversation, or an account's first conversation list, no longer hangs the whole
+  gateway when the account's data folder refuses new files** (a read-only folder, Windows Controlled
+  Folder Access): it answers with an error at once and every other request keeps being served; two
+  gateway processes on one data folder no longer lose each other's archive marks or names
+  (AbstractGateway 0.24.0).
 
 ## [0.14.3] - 2026-11-24
 
