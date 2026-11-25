@@ -90,9 +90,16 @@ refused on Windows with a sentence naming the posture, which is not "works on an
       refused, the row is writable). AbstractRuntime 0.21.0, lpalbou/AbstractRuntime#51: run 45525204097 on
       `main`, the same Windows job prints `abstractcore 2.39.0: every workspace shape sandboxed = True` and
       `sandbox tests: 12 collected, 10 passed, 2 skipped, 0 failed`; the two skips are the older-Core refusal
-      test, "this AbstractCore enforces every shape on Windows". Through the gateway: PENDING: AbstractGateway
-      0.24.0 (`tests/test_r12w2_e2e_command_sandbox.py`, the "Deny everything" scenario, on the gateway's
-      Windows job of lpalbou/AbstractGateway#117).)
+      test, "this AbstractCore enforces every shape on Windows". On a fresh install: root PR lpalbou/AbstractFramework#79, Windows bootstrap smoke after the one-line-style install of
+      AbstractFramework 0.14.4, step "Agents' commands run sandboxed (Windows)": `ok: commands run inside
+      windows-restricted-token under 3 workspace setting(s): any_except_denied/rw, any_except_denied/ro,
+      allowed_only/rw`; per setting the command succeeded and the refused folder stayed closed, and under the two
+      write-limited settings a write outside the workspace failed ("Access is denied.") while a write inside
+      succeeded. That step runs the installed gateway's own AbstractCore with a run's stamp; it is not a run
+      started through the gateway's API, and it does not read a file in the user profile. The gateway's
+      own end-to-end scenario (`tests/test_r12w2_e2e_command_sandbox.py`, "Deny everything") is in the
+      `model-host-windows` job of lpalbou/AbstractGateway#117, which passed; that job has no skip gate, so
+      whether the scenario ran or skipped there was not checked.)
 - [x] On Windows, with "Allow everything, refuse listed workspaces" and read-only by default, `execute_command`
       runs; everything the user can read is readable except refused rows; only the read & write rows, the
       run's own folder and its temp folder are writable; a second run that lists a row read-only cannot write
@@ -101,12 +108,16 @@ refused on Windows with a sentence naming the posture, which is not "works on an
       documented exceptions, each for about one pair of folders in 256: a command of the second run already
       running when the folder first became read & write, and a lost list of labelled folders
       (abstractcore `abstractcore/tools/README.md`, *Command sandbox* > Windows, "Two runs and one folder";
-      AbstractGateway `docs/security.md` "Two runs, one folder" on `release/0.24.0`). Through the gateway:
-      PENDING: AbstractGateway 0.24.0.)
-- [ ] `GET /api/gateway/discovery/tools` on Windows reports `command_sandbox.state: sandboxed`.
-      PENDING: AbstractGateway 0.24.0 (state `sandboxed` read on `/api/gateway/discovery/tools` of an installed
-      0.24.0 on Windows; root CI `scripts/tests/command_sandbox_smoke.py` then runs all three shapes, root PR
-      PENDING-ROOT-PR). Today's released 0.23.0 on this machine reports `partial`.
+      AbstractGateway `docs/security.md` "Two runs, one folder", released in 0.24.0). On a fresh install: the
+      same root CI step, setting `any_except_denied/ro`. The two-runs guarantee is covered by the AbstractCore
+      tests only, not by a run through the gateway.)
+- [x] `GET /api/gateway/discovery/tools` on Windows reports `command_sandbox.state: sandboxed`.
+      (Root PR lpalbou/AbstractFramework#79, Windows bootstrap smoke: `scripts/tests/command_sandbox_smoke.py`
+      read `/api/gateway/discovery/tools` of the freshly installed gateway 0.24.0 and printed `gateway:
+      {"state": "sandboxed", "kind": "windows-restricted-token", "kinds": {"allowed_only":
+      "windows-restricted-token", "any_except_denied": "windows-restricted-token"}, "line": "Commands
+      sandboxed: Windows restricted token"}`. The operator's own machine has not been updated yet: it still
+      runs gateway 0.23.0, state `partial`.)
 - [ ] `cmd`, PowerShell, python, git (including Git Bash) and node/npm behave under each shape as documented;
       every program that cannot run is named in `docs/security.md`. **Not met as written.** cmd, PowerShell,
       python (`venv`, `pip install`), node and git (`init`, `add`, `commit`, `status`, `diff`, `log`, `branch`,
@@ -129,8 +140,8 @@ refused on Windows with a sentence naming the posture, which is not "works on an
       accepts exactly the skips the installed Core explains (with 2.39.0: only the older-Core refusal test) and
       fails on any other skip or on fewer than 8 tests. The gateway's `model-host-windows` job on
       `feat/session-title` (#117, head 1532e978) runs `pytest tests/test_r12w2_command_sandbox.py tests/test_r12w2_e2e_command_sandbox.py`
-      with no skip gate: a skipped shape there does not fail it. PENDING: AbstractGateway 0.24.0 (gateway PR
-      lpalbou/AbstractGateway#117: add the skip gate, or record that it is not added).
+      with no skip gate: a skipped shape there does not fail it. Not added in lpalbou/AbstractGateway#117
+      (released as 0.24.0): the gateway half of this criterion is not met.
 
 ## Testing
 
@@ -148,11 +159,17 @@ refused on Windows with a sentence naming the posture, which is not "works on an
   `AbstractRuntime` 0.21.0 uploaded 2026-11-25T01:28Z; PR run 45524750402 and `main` run 45525204097, Windows
   jobs 138905198873 and 138906708489: "abstractcore 2.39.0: every workspace shape sandboxed = True").
 - AbstractGateway 0.24.0: lpalbou/AbstractGateway#117 (branch `feat/session-title`, which carries
-  `release/0.24.0`'s sandbox commits and the rename; head 1532e978 on 2026-11-25, CI running; pins
-  `abstractcore==2.39.0`, `AbstractRuntime==0.21.0`; the earlier CI preview lpalbou/AbstractGateway#116 is
-  marked "do not merge"). Merge, tag v0.24.0 and PyPI `abstractgateway` 0.24.0: PENDING: AbstractGateway 0.24.0.
-- Root: AbstractFramework 0.14.4 pins gateway 0.24.0, core 2.39.0, runtime 0.21.0 (branch `release/0.14.4`;
-  root PR PENDING-ROOT-PR). The installer's "Shell:" line names the tier of the installed gateway, and
-  `scripts/tests/command_sandbox_smoke.py` runs the three shapes when the gateway reports `sandboxed`.
+  `release/0.24.0`'s sandbox commits and the rename; head 1532e978, merged 2026-11-25 as be47c95e, every CI job
+  green including the four test shards, `model-host-windows` and `perf`; `main` CI green); tag v0.24.0; PyPI
+  `abstractgateway` 0.24.0 requires `abstractcore==2.39.0` and `abstractruntime==0.21.0`;
+  `ghcr.io/lpalbou/abstractgateway:0.24.0` published. The sandbox-only preview lpalbou/AbstractGateway#116 was
+  closed in favour of #117.
+- Root: lpalbou/AbstractFramework#79 (merged 2026-11-25 as 3e59cc70; "Test and build package" and "Bootstrap
+  smoke" on ubuntu, macos and windows green; `main` CI green); tag v0.14.4; PyPI `abstractframework` 0.14.4
+  requires `abstractgateway==0.24.0`, `abstractcore==2.39.0`, `AbstractRuntime==0.21.0`; `scripts/install.ps1`
+  on `main` pins gateway 0.24.0 / framework 0.14.4. The installer's "Shell:" line names the tier of the
+  installed gateway, and `scripts/tests/command_sandbox_smoke.py` ran the three shapes on the fresh Windows
+  install (gateway state `sandboxed`).
+- Not verified: the operator's own machine (still gateway 0.23.0, state `partial`, not yet upgraded).
 - Limits documented, not fixed: Git Bash/MSYS2 under the two stricter settings, Windows' own `ssh-keygen`
   (new proposed item 1345), Windows' TLS, Store app aliases.

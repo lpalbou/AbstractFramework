@@ -138,47 +138,50 @@ OpenAPI / discovery the app already reads, or the first 404 disables it with a p
 
 ## Acceptance criteria
 
-Gateway criteria are covered by `tests/test_session_titles.py` on AbstractGateway `feat/session-title` (head
-1532e978 on 2026-11-25), released through lpalbou/AbstractGateway#117; each stays open until that suite passes
-on #117 and 0.24.0 is published.
+Gateway evidence (2026-11-25): lpalbou/AbstractGateway#117 (head 1532e978, merged as be47c95e, released as
+0.24.0) with every CI job green; on Windows, on the final head, one file at a time: `tests/test_session_titles.py`
+36 passed, `tests/test_session_archive.py` 4 passed and 2 skipped (POSIX only), `test_conversation_search_route.py`
+7, `test_gateway_session_kind.py` 5, `test_gateway_notes_kind.py` 9, `test_gateway_draft_run_retention.py` 4; and a
+live check on a throwaway gateway built from the feature branch (set, repeat, 404, 422, the `/runs` field, search
+by title, persistence across a restart, clear, audit lines). Not verified: the same checks against the published
+0.24.0 package on a real install.
 
-- [ ] `PUT /api/gateway/sessions/{sid}/title {"title": "Snake game"}` by the owner answers
+- [x] `PUT /api/gateway/sessions/{sid}/title {"title": "Snake game"}` by the owner answers
       `{session_id, title: "Snake game", changed: true}`; a repeat answers `changed: false`.
-      PENDING: AbstractGateway 0.24.0 (`test_set_repeat_and_clear_and_the_runs_listing`,
-      `test_a_no_op_never_rewrites_the_file`; lpalbou/AbstractGateway#117).
-- [ ] Afterwards `GET /runs?root_only=true` carries `session_title: "Snake game"` for that session's rows
-      (or in `session_titles`), and the title survives a gateway restart. PENDING: AbstractGateway 0.24.0
-      (`test_set_repeat_and_clear_and_the_runs_listing`, `test_children_rows_carry_the_title`,
-      `test_titles_survive_a_restart`). Built as a `session_title` key on every row of a titled session, no
-      page-level map.
-- [ ] `{"title": ""}` (or whitespace) clears it; `/runs` then carries no title for the session. PENDING:
-      AbstractGateway 0.24.0 (same test). Built: `PUT` with an empty or blank title, a title with no visible
-      character, `"title": null` or no `title` clears; there is no DELETE route.
-- [ ] Another account's session, or an unknown id, answers 404 `session_not_found`; an over-long or
-      multi-line title is trimmed/capped (or 422), never stored raw. PENDING: AbstractGateway 0.24.0
-      (`test_an_unknown_session_is_404`, `test_the_owner_or_an_admin_titles_a_session_another_account_gets_404`,
+      (`test_set_repeat_and_clear_and_the_runs_listing`, `test_a_no_op_never_rewrites_the_file`; live check: set,
+      repeat.)
+- [x] Afterwards `GET /runs?root_only=true` carries `session_title: "Snake game"` for that session's rows
+      (or in `session_titles`), and the title survives a gateway restart. (`test_set_repeat_and_clear_and_the_runs_listing`,
+      `test_children_rows_carry_the_title`, `test_titles_survive_a_restart`; live check: the `/runs` field and
+      restart persistence. Built as a `session_title` key on every row of a titled session, no page-level map.)
+- [x] `{"title": ""}` (or whitespace) clears it; `/runs` then carries no title for the session. (Same test; live
+      check: clear. Built: `PUT` with an empty or blank title, a title with no visible character, `"title": null`
+      or no `title` clears; there is no DELETE route.)
+- [x] Another account's session, or an unknown id, answers 404 `session_not_found`; an over-long or
+      multi-line title is trimmed/capped (or 422), never stored raw. (`test_an_unknown_session_is_404`,
+      `test_the_owner_or_an_admin_titles_a_session_another_account_gets_404`,
       `test_two_accounts_titles_never_meet_and_who_renamed_is_recorded`,
       `test_normalisation_keeps_any_script_and_cuts_at_120_characters`,
       `test_hiding_characters_are_removed_joiners_and_marks_kept_and_input_is_bounded`,
-      `test_wrong_bodies_are_422_and_change_nothing`).
+      `test_wrong_bodies_are_422_and_change_nothing`; live check: 404 and 422.)
 - [ ] An unreadable `session_titles.json` makes `/runs` and the route answer 500, not drop titles.
-      **Built differently, by design**: a listing never fails because of the titles file. `GET /runs` (every
-      variant) and the search answer without titles and carry `session_titles_error` `{reason_code:
+      **Not met as written: replaced by design.** A listing never fails because of the titles file. `GET /runs`
+      (every variant) and the search answer without titles and carry `session_titles_error` `{reason_code:
       "session_titles_unreadable", message}` at the top level, so a client says names are missing rather than
       that there are none (AbstractCode web shows "Conversation names could not be loaded" once). A damaged
       file (text that is not JSON) is kept aside as `session_titles.damaged-<UTC>.json` by the next rename,
       which starts a new file and says so (`store_reset`); a file in another encoding or schema is never
       touched (a rename then answers 500 `session_titles_unreadable`); a rename that cannot be saved answers
       500 `session_titles_unwritable`, one that waits too long for another writer 503 `session_titles_busy`
-      (AbstractGateway `docs/api.md` "Rename a session" on `feat/session-title`). PENDING: AbstractGateway
-      0.24.0 (`test_a_damaged_titles_file_never_takes_the_list_down_and_heals_at_the_next_rename`,
+      (AbstractGateway 0.24.0 `docs/api.md` "Rename a session"). The replacement behaviour is covered by
+      `test_a_damaged_titles_file_never_takes_the_list_down_and_heals_at_the_next_rename`,
       `test_a_valid_file_of_another_schema_is_never_touched`,
       `test_search_with_an_unreadable_store_answers_without_title_hits`,
-      `test_a_folder_that_refuses_new_files_is_an_immediate_error_not_a_hang`,
-      `test_a_held_lock_answers_busy_within_the_deadline`).
-- [ ] Every change appends a `session.titled` audit line naming the session. PENDING: AbstractGateway 0.24.0
-      (`test_every_change_is_audited_without_the_title_text`: `action: "set"` or `"cleared"`, written after
-      the save; the title text is not written to the audit log).
+      `test_a_folder_that_refuses_new_files_is_an_immediate_error_not_a_hang` and
+      `test_a_held_lock_answers_busy_within_the_deadline` (in the 36 passed); not exercised in the live check.
+- [x] Every change appends a `session.titled` audit line naming the session.
+      (`test_every_change_is_audited_without_the_title_text`: `action: "set"` or `"cleared"`, written after the
+      save, the title text not written; live check: audit lines.)
 - [x] ui-kit `SessionCard` with `onRename`: the Rename action and F2 open an input prefilled with the
       title; Enter calls `onRename(trimmed)`, Escape restores the title without a call, focus returns to
       the row; without `onRename` the card renders exactly as before. (lpalbou/AbstractUIC#69, merged
@@ -186,18 +189,21 @@ on #117 and 0.24.0 is published.
       `ui-kit/scripts/check_session_cards.mjs` with the 0.9.29 markup fixture for "renders exactly as before",
       and `check_session_card_rename_browser.mjs`; behaviour in AbstractUIC `docs/session-cards.md` "Rename".
       Blur also cancels; focus returns to the row only when it is still in the editor.)
-- [ ] AbstractCode web: a renamed conversation shows its new name in the sidebar, search finds it by the
-      new name, the name persists after reload and is the same in a second browser. Web side built and
-      tested: lpalbou/AbstractCode#50 (branch `feat/rename-conversation`, web 0.16.4, all 5 checks green on
-      2026-11-25: `rename_conversation.test.tsx`, `rename_catalog.test.ts`, `sidebar_cards.test.tsx`,
-      `catalog.test.ts`). PENDING: the reload / second-browser check against a real AbstractGateway 0.24.0
-      (PENDING-WEB-CHECK) and the web PR's merge and npm publish of `@abstractframework/code` 0.16.4.
-- [ ] AbstractCode web against a gateway without the route: no rename action is offered and nothing
-      breaks. Built: the web offers Rename only when `GET /api/gateway/discovery/capabilities` carries
-      `capabilities.session_titles: true` (AbstractCode `docs/web.md` on `feat/rename-conversation`).
-      PENDING: the check against the released 0.23.0 gateway (PENDING-WEB-CHECK).
-- [ ] Clearing the name in the web app shows the first message again. Built (an empty name sends
-      `{"title": ""}`). PENDING: PENDING-WEB-CHECK.
+- [x] AbstractCode web: a renamed conversation shows its new name in the sidebar, search finds it by the
+      new name, the name persists after reload and is the same in a second browser. (lpalbou/AbstractCode#50,
+      merged as 9d8d2d25 with all five checks green, tag web-v0.16.4, npm `@abstractframework/code` 0.16.4; tests
+      `rename_conversation.test.tsx`, `rename_catalog.test.ts`, `sidebar_cards.test.tsx`, `catalog.test.ts`.
+      Reload and a second browser context exercised in a real browser (headless Chromium) against a throwaway
+      gateway built from the gateway's feature branch, and re-run by the adversarial reviewer against a scripted
+      fake gateway. Not verified: the published gateway 0.24.0 with the published web 0.16.4, and a real phone or
+      tablet.)
+- [x] AbstractCode web against a gateway without the route: no rename action is offered and nothing
+      breaks. (Exercised in headless Chromium against the released gateway 0.23.0, read-only: no
+      `session_titles` capability and no `session_title` field; no rename offered and no write sent. The web
+      offers Rename only when `GET /api/gateway/discovery/capabilities` carries `capabilities.session_titles: true`.)
+- [x] Clearing the name in the web app shows the first message again. (An empty name sends `{"title": ""}`;
+      exercised in headless Chromium against the throwaway gateway from the feature branch. Not verified against
+      the published 0.24.0 + 0.16.4 pair.)
 
 ## Built differently from the design above
 
@@ -245,14 +251,16 @@ on #117 and 0.24.0 is published.
 
 ## Receipts
 
-- Completed 2026-11-25 (pending the gateway). lpalbou/AbstractUIC#69 (merged 2026-11-25; tag v0.10.25; ui-kit
-  0.9.30, AbstractUIC 0.10.25; npm `@abstractframework/ui-kit` 0.9.30).
-- lpalbou/AbstractCode#50 (`feat/rename-conversation`, web 0.16.4, checks green: "Test and build the web
-  client", "Test the terminal client", "Build the terminal client on Windows", "Build at the declared MSRV",
-  "Tracked paths check out on every OS"). Merge and npm publish of `@abstractframework/code` 0.16.4: PENDING.
-- lpalbou/AbstractGateway#117 (release 0.24.0 with `feat/session-title`, head 1532e978 on 2026-11-25; CI
-  running on 2026-11-25). Merge, tag v0.24.0 and PyPI 0.24.0: PENDING: AbstractGateway 0.24.0.
-- Root: AbstractFramework 0.14.4 pins gateway 0.24.0 and `@abstractframework/code` 0.16.4 (branch
-  `release/0.14.4`, root PR PENDING-ROOT-PR).
+- Completed 2026-11-25. lpalbou/AbstractUIC#69 (merged as ccbb2033; tag v0.10.25; ui-kit 0.9.30, AbstractUIC
+  0.10.25; npm `@abstractframework/ui-kit` 0.9.30).
+- lpalbou/AbstractCode#50 (`feat/rename-conversation`, merged as 9d8d2d25, all five checks green: "Test and build
+  the web client", "Test the terminal client", "Build the terminal client on Windows", "Build at the declared
+  MSRV", "Tracked paths check out on every OS"); tag web-v0.16.4; npm `@abstractframework/code` 0.16.4.
+- lpalbou/AbstractGateway#117 (release 0.24.0 with `feat/session-title`, head 1532e978, merged as be47c95e, every
+  CI job green including the four test shards, `model-host-windows` and `perf`; `main` CI green); tag v0.24.0;
+  PyPI `abstractgateway` 0.24.0; `ghcr.io/lpalbou/abstractgateway:0.24.0`.
+- Root: lpalbou/AbstractFramework#79 (merged as 3e59cc70, CI green, tag v0.14.4); PyPI `abstractframework` 0.14.4
+  pins gateway 0.24.0 and npm `@abstractframework/code` 0.16.4, so the one-line installer delivers the rename.
+- Not verified: the operator's own machine (still gateway 0.23.0, not yet upgraded: no rename offered there).
 - Follow-ups: 1344 (the terminal client, the Assistant and the Observer show and set the stored name), 1346,
   1347, 1348.
