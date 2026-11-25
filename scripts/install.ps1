@@ -95,13 +95,13 @@ param(
 # docs/installers/install-manifest.json (scripts/tests/test_inventory.sh fails on
 # drift); a manifest next to this script wins at runtime.
 # ---------------------------------------------------------------------------
-$AfGatewayPinDefault = '0.23.0'
+$AfGatewayPinDefault = '0.24.0'
 # The AbstractFramework release these pins are, and its other Python packages in the gateway's
 # environment, exact: passed to uv as constraints (same as install.sh; test_inventory.sh checks).
-$AfFrameworkVersion = '0.14.3'
-$AfPyMatrix = @('abstractcore==2.38.0', 'AbstractRuntime==0.20.0', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
+$AfFrameworkVersion = '0.14.4'
+$AfPyMatrix = @('abstractcore==2.39.0', 'AbstractRuntime==0.21.0', 'abstractagent==0.6.1', 'abstractskill==0.3.13', 'AbstractMemory==0.5.2', 'abstractsemantics==0.0.5', 'abstractvoice==0.21.1', 'abstractvision==0.3.36', 'abstractmusic==0.1.17', 'abstract3d==0.3.2', 'abstractcamera==0.2.1', 'abstractavatar==0.2.0', 'abstractnote==0.3.1')
 $AfPython = '3.12'
-$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.3', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.2')
+$AfNpmApps = @('@abstractframework/flow@0.14.2', '@abstractframework/code@0.16.4', '@abstractframework/observer@0.13.1', '@abstractframework/continuum@0.8.1', '@abstractframework/entity@0.12.2', '@abstractframework/note@0.3.1', '@abstractframework/assistant@0.2.2')
 $AfCrateConsole = 'abstractgateway-console@0.18.1'
 $AfCrateCodeCli = 'abstractcode@0.15.0'
 # Where the terminal console and AbstractCode's terminal client go (cargo --root), like install.sh:
@@ -345,6 +345,26 @@ function Test-GatewayCommandLine([string]$CommandLine) {
 function Get-GatewayStartedHow([int]$ProcessId) {
     if (Test-LoginLauncherCommandLine (Get-ProcessCommandLine $ProcessId)) { return 'started at login' }
     return 'started by hand'
+}
+# The summary's "Shell:" line on Windows, by the gateway version it describes. AbstractGateway 0.24.0
+# runs agents' commands inside a Windows sandbox under every workspace setting; 0.23.x only for runs
+# that allow everything and refuse listed workspaces with read & write by default; earlier versions
+# refuse them. A real run describes the version it installed ($Installed). -Print installs nothing, and
+# $Installed is then the version already there: it describes the version the plan would install
+# ($Pin), or no version when the plan cannot name one (-Pin latest, -From).
+function Get-ShellSummaryLine([string]$Installed, [bool]$DryRun, [string]$Pin, [string]$From) {
+    $version = if (-not $DryRun) { $Installed } elseif (-not $From) { $Pin } else { '' }
+    if ($version -notmatch '^\d+(\.\d+)+') {
+        return "agents' shell commands run inside a Windows sandbox under every workspace setting from AbstractGateway 0.24.0 (0.23.x: one setting; earlier versions refuse them; $AfDocs#windows)"
+    }
+    $v = [version]$Matches[0]
+    if ($v -ge [version]'0.24.0') {
+        return "agents' shell commands run inside a Windows sandbox under every workspace setting ($AfDocs#windows)"
+    }
+    if ($v -ge [version]'0.23.0') {
+        return "agents' shell commands run inside a Windows sandbox for runs that allow everything and refuse listed workspaces with read & write by default; the other workspace settings refuse them until AbstractGateway 0.24.0 ($AfDocs#windows)"
+    }
+    return "agents' shell commands are refused on Windows before AbstractGateway 0.23.0 (no command sandbox); every other tool works ($AfDocs#windows)"
 }
 # Test-OurBackgroundListener: the listener is the installer's background gateway (gateway.pid), or
 # a process it started. No listener named: the gateway.pid process counts. The listener can sit
@@ -2771,15 +2791,8 @@ function Main {
     if ($ortResult) { Write-Host "  GPU voices: $ortResult" }
     if (-not $Full -and $profileName -eq 'gpu') { Write-Host "  $AfSkippedLine" }
     if ($onWindows) {
-        # AbstractGateway 0.23.0 runs agents' commands inside a Windows sandbox; earlier ones refuse them.
-        # -Print installs nothing ($after is empty): the plan's pinned version is the one it would install.
-        $shellVersion = if ($after) { $after } elseif ($script:DryRun -and -not $From) { $Pin } else { '' }
-        $sandboxed = ($shellVersion -match '^\d+(\.\d+)+') -and ([version]$Matches[0] -ge [version]'0.23.0')
-        if ($sandboxed) {
-            Write-Host "  Shell:      agents' shell commands run inside a Windows sandbox (runs that allow everything and refuse listed workspaces; $AfDocs#windows)"
-        } else {
-            Write-Host "  Shell:      agents' shell commands are refused on Windows before AbstractGateway 0.23.0 (no command sandbox); every other tool works ($AfDocs#windows)"
-        }
+        # By gateway version: see Get-ShellSummaryLine (-Print describes the version the plan installs).
+        Write-Host "  Shell:      $(Get-ShellSummaryLine $after ([bool]$script:DryRun) $Pin $From)"
     }
     Write-Host "  Apps:       $baseUrl/apps/<app>/   (console > Apps > Open; <app>: observer, code, flow, continuum, entity)"
     Write-Host "  Standalone: npx -y @abstractframework/flow --gateway-url $baseUrl   (advanced; also code, observer, continuum, entity)"

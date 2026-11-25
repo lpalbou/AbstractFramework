@@ -30,7 +30,7 @@ needs_pwsh = pytest.mark.skipif(shutil.which("pwsh") is None, reason="needs Powe
 REAL = ["Read-ServeRecord", "Test-CommandLineDataDir", "Get-DeclaredDataDir", "Test-OwnGatewayPid", "Find-OwnGateway",
         "Test-OurBackgroundListener", "Test-RecordNamesThisGateway", "Resolve-DirPath", "Get-RefreshPackages",
         "Test-SameUser", "Test-GatewayCommandLine", "Test-PidFileGateway", "Test-GatewayPidStillOurs",
-        "Test-LoginLauncherCommandLine", "Get-GatewayStartedHow"]
+        "Test-LoginLauncherCommandLine", "Get-GatewayStartedHow", "Get-ShellSummaryLine"]
 STARTED = "2026-09-30T10:00:00Z"          # when the fake process started (UTC)
 WRITTEN = "2026-09-30T10:00:05.123456Z"   # the serve record's started_at, as the gateway writes it
 
@@ -410,3 +410,44 @@ def test_the_preflight_keeps_a_gateway_started_at_login_and_refuses_another_prog
     for cmd, r in (("python -m http.server 8080", rec), (LOGIN_NAMED, None), (LOGIN_BASE, {"pid": 777, "port": 8080})):
         out = _preflight(tmp_path, cmdline=cmd, record=r)
         assert refused in out and ours not in out, (cmd, out)
+
+
+# The summary's "Shell:" line on Windows (root backlog 1341): three tiers by the gateway version it
+# describes, and -Print describes the version the plan would install, not the one already there.
+EVERY = "agents' shell commands run inside a Windows sandbox under every workspace setting (DOCS#windows)"
+ONE = ("agents' shell commands run inside a Windows sandbox for runs that allow everything and refuse listed workspaces "
+       "with read & write by default; the other workspace settings refuse them until AbstractGateway 0.24.0 (DOCS#windows)")
+REFUSED = "agents' shell commands are refused on Windows before AbstractGateway 0.23.0 (no command sandbox); every other tool works (DOCS#windows)"
+UNKNOWN = ("agents' shell commands run inside a Windows sandbox under every workspace setting from AbstractGateway 0.24.0 "
+           "(0.23.x: one setting; earlier versions refuse them; DOCS#windows)")
+
+
+def _shell_lines(tmp_path: Path, cases: list[tuple[str, bool, str, str]]) -> list[str]:
+    calls = "\n".join(f"Get-ShellSummaryLine {_ps(i)} ${'true' if d else 'false'} {_ps(p)} {_ps(f)}" for i, d, p, f in cases)
+    return _pwsh("$AfDocs = 'DOCS'\n" + calls, tmp_path).splitlines()
+
+
+@needs_pwsh
+def test_the_shell_line_names_what_the_installed_gateway_does(tmp_path: Path) -> None:
+    cases = [("0.24.0", False, "0.24.0", ""), ("0.25.3", False, "", ""), ("1.0.0", False, "", ""),
+             ("0.23.0", False, "0.23.0", ""), ("0.23.9", False, "", ""),
+             ("0.22.0", False, "0.22.0", ""), ("0.9.40", False, "", ""),
+             ("", False, "0.24.0", "")]  # a real run that could not read the installed version
+    assert _shell_lines(tmp_path, cases) == [EVERY, EVERY, EVERY, ONE, ONE, REFUSED, REFUSED, UNKNOWN]
+
+
+@needs_pwsh
+def test_the_print_plan_describes_the_version_it_would_install(tmp_path: Path) -> None:
+    cases = [("0.23.0", True, "0.24.0", ""),   # an existing 0.23.0 install, the plan upgrades it
+             ("", True, "0.24.0", ""),          # a new machine
+             ("0.24.0", True, "0.23.0", ""),    # -Pin 0.23.0 over a newer install
+             ("0.24.0", True, "0.22.0", ""),
+             ("0.23.0", True, "latest", ""),    # -Pin latest: the plan cannot name the version
+             ("0.23.0", True, "", r"C:\src\abstractgateway")]  # -From
+    assert _shell_lines(tmp_path, cases) == [EVERY, EVERY, ONE, REFUSED, UNKNOWN, UNKNOWN]
+
+
+def test_the_summary_prints_the_shell_line_from_its_function() -> None:
+    text = SCRIPT.read_text(encoding="utf-8")
+    assert 'Write-Host "  Shell:      $(Get-ShellSummaryLine $after ([bool]$script:DryRun) $Pin $From)"' in text
+    assert text.count("Shell:      ") == 1

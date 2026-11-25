@@ -79,18 +79,58 @@ refused on Windows with a sentence naming the posture, which is not "works on an
 
 ## Acceptance criteria
 
-- [ ] On Windows, with a run set to "Deny everything, allow listed workspaces", `execute_command` runs; a file
+- [x] On Windows, with a run set to "Deny everything, allow listed workspaces", `execute_command` runs; a file
       in the user profile outside the allowed rows is unreadable, a read-only row is unwritable, a read & write
       row and the run's own folder are writable; refused rows nested in allowed ones are unreadable.
-- [ ] On Windows, with "Allow everything, refuse listed workspaces" and read-only by default, `execute_command`
+      (AbstractCore 2.39.0, lpalbou/AbstractCore#54: on `main` after the merge, CI run 45520469800, job
+      "Windows command sandbox (restricted token)": `test_sandbox_windows: 592 collected, 592 passed, 0
+      skipped, 0 failed`, and the real-host smoke on the runner's own profile and drives `real host: 3
+      collected, 3 passed` (`tests/tools/test_sandbox_windows_real_host.py`, one case per shape, `allowed_only`
+      included: a file in the profile's Documents is unreadable, a write outside the rows and to `HKCU` is
+      refused, the row is writable). AbstractRuntime 0.21.0, lpalbou/AbstractRuntime#51: run 45525204097 on
+      `main`, the same Windows job prints `abstractcore 2.39.0: every workspace shape sandboxed = True` and
+      `sandbox tests: 12 collected, 10 passed, 2 skipped, 0 failed`; the two skips are the older-Core refusal
+      test, "this AbstractCore enforces every shape on Windows". Through the gateway: PENDING: AbstractGateway
+      0.24.0 (`tests/test_r12w2_e2e_command_sandbox.py`, the "Deny everything" scenario, on the gateway's
+      Windows job of lpalbou/AbstractGateway#117).)
+- [x] On Windows, with "Allow everything, refuse listed workspaces" and read-only by default, `execute_command`
       runs; everything the user can read is readable except refused rows; only the read & write rows, the
       run's own folder and its temp folder are writable; a second run that lists a row read-only cannot write
-      it while or after a first run had it read & write.
+      it while or after a first run had it read & write. (Same AbstractCore and AbstractRuntime jobs as above,
+      shape `any_except_denied/ro`. The second-run guarantee is enforced by 256 bucket identifiers, with two
+      documented exceptions, each for about one pair of folders in 256: a command of the second run already
+      running when the folder first became read & write, and a lost list of labelled folders
+      (abstractcore `abstractcore/tools/README.md`, *Command sandbox* > Windows, "Two runs and one folder";
+      AbstractGateway `docs/security.md` "Two runs, one folder" on `release/0.24.0`). Through the gateway:
+      PENDING: AbstractGateway 0.24.0.)
 - [ ] `GET /api/gateway/discovery/tools` on Windows reports `command_sandbox.state: sandboxed`.
+      PENDING: AbstractGateway 0.24.0 (state `sandboxed` read on `/api/gateway/discovery/tools` of an installed
+      0.24.0 on Windows; root CI `scripts/tests/command_sandbox_smoke.py` then runs all three shapes, root PR
+      PENDING-ROOT-PR). Today's released 0.23.0 on this machine reports `partial`.
 - [ ] `cmd`, PowerShell, python, git (including Git Bash) and node/npm behave under each shape as documented;
-      every program that cannot run is named in `docs/security.md`.
+      every program that cannot run is named in `docs/security.md`. **Not met as written.** cmd, PowerShell,
+      python (`venv`, `pip install`), node and git (`init`, `add`, `commit`, `status`, `diff`, `log`, `branch`,
+      `checkout`, https through its own TLS) are documented as working under every shape (abstractcore tools
+      README; the real-host smoke runs cmd, PowerShell, python and git under all three; node is documented,
+      not exercised by a test I could find). What does not run, as AbstractGateway `docs/security.md` "On
+      Windows" > Limits names it on `release/0.24.0`: Git Bash and other MSYS2/Cygwin programs (`bash`, `sh`,
+      Git's own `ssh-keygen`, and what git runs through its shell: `git clone` of a local folder or a
+      `file://` address, hooks, `!` aliases) stop at start under the two stricter settings when a Git Bash
+      window or another MSYS2 program is already running in the session (they start when none is); Windows'
+      own `ssh-keygen` (`%SystemRoot%\System32\OpenSSH\ssh-keygen.exe`) writes the private key and then fails
+      on the public one under every setting, the read & write default included, cause not identified (follow-up
+      1345); Windows' built-in TLS (`curl.exe`, `Invoke-WebRequest`, .NET programs) is unavailable under every
+      setting; Store app aliases under `WindowsApps` (the `python`, `pwsh`, `winget` stubs) do not start. So
+      Git Bash does not "behave" under the stricter settings while another MSYS2 program runs; the programs
+      that cannot run are named.
 - [ ] CI `windows-sandbox` (abstractcore, abstractruntime) and the gateway's Windows job run the three shapes
-      and fail on a skip.
+      and fail on a skip. **Partly met.** AbstractCore's job fails on any skip (fewer than 60 cases, a skip or
+      a failure exits) and its real-host step fails unless its 3 shape cases pass. AbstractRuntime's job
+      accepts exactly the skips the installed Core explains (with 2.39.0: only the older-Core refusal test) and
+      fails on any other skip or on fewer than 8 tests. The gateway's `model-host-windows` job on
+      `feat/session-title` (#117, head 1532e978) runs `pytest tests/test_r12w2_command_sandbox.py tests/test_r12w2_e2e_command_sandbox.py`
+      with no skip gate: a skipped shape there does not fail it. PENDING: AbstractGateway 0.24.0 (gateway PR
+      lpalbou/AbstractGateway#117: add the skip gate, or record that it is not added).
 
 ## Testing
 
@@ -102,3 +142,17 @@ refused on Windows with a sentence naming the posture, which is not "works on an
 
 - lpalbou/AbstractCore#53 (2.38.0: the first shape), lpalbou/AbstractGateway#115 (the `partial` state).
 - Prototypes: `docs/backlog/evidence/1341_windows_sandbox_remaining_postures/`.
+- Completed 2026-11-25. lpalbou/AbstractCore#54 (merged 2026-11-25, merge commit 3160eb5, tag v2.39.0 on it,
+  PyPI `abstractcore` 2.39.0 uploaded 2026-11-25T01:09Z; `main` CI run 45520469800, Windows job 138890733539).
+- lpalbou/AbstractRuntime#51 (merged 2026-11-25, merge commit 52858eb, tag v0.21.0 on it, PyPI
+  `AbstractRuntime` 0.21.0 uploaded 2026-11-25T01:28Z; PR run 45524750402 and `main` run 45525204097, Windows
+  jobs 138905198873 and 138906708489: "abstractcore 2.39.0: every workspace shape sandboxed = True").
+- AbstractGateway 0.24.0: lpalbou/AbstractGateway#117 (branch `feat/session-title`, which carries
+  `release/0.24.0`'s sandbox commits and the rename; head 1532e978 on 2026-11-25, CI running; pins
+  `abstractcore==2.39.0`, `AbstractRuntime==0.21.0`; the earlier CI preview lpalbou/AbstractGateway#116 is
+  marked "do not merge"). Merge, tag v0.24.0 and PyPI `abstractgateway` 0.24.0: PENDING: AbstractGateway 0.24.0.
+- Root: AbstractFramework 0.14.4 pins gateway 0.24.0, core 2.39.0, runtime 0.21.0 (branch `release/0.14.4`;
+  root PR PENDING-ROOT-PR). The installer's "Shell:" line names the tier of the installed gateway, and
+  `scripts/tests/command_sandbox_smoke.py` runs the three shapes when the gateway reports `sandboxed`.
+- Limits documented, not fixed: Git Bash/MSYS2 under the two stricter settings, Windows' own `ssh-keygen`
+  (new proposed item 1345), Windows' TLS, Store app aliases.

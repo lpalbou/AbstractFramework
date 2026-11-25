@@ -4,6 +4,70 @@ All notable changes to AbstractFramework will be documented in this file.
 
 ## [Unreleased]
 
+## [0.14.4] - 2026-11-25
+
+Pins **AbstractGateway 0.24.0**, **AbstractCore 2.39.0** and **AbstractRuntime 0.21.0**, with the npm
+app **@abstractframework/code 0.16.4** (built on **@abstractframework/ui-kit 0.9.30**). The other
+components keep their 0.14.3 versions. Every Python pin matches the exact pins of AbstractGateway
+0.24.0, so the meta-package and the installers resolve to one set. The complete matrix is in the
+[README](README.md#release-matrix-abstractframework-0144).
+
+### Added
+
+- **Windows: agents' shell commands run inside the command sandbox under every workspace setting.**
+  With AbstractFramework 0.14.3 they ran sandboxed only for runs set to "Allow everything, refuse
+  listed workspaces" with read & write by default; "Deny everything, allow listed workspaces" and a
+  read-only default had their commands refused on Windows. Both now run confined: writes are limited
+  to the read & write workspaces, the run's own folder and its temp folder (the registry included),
+  and "Deny everything" also closes your user profile and the folders you own at the root of your
+  drives outside the listed workspaces. Refused workspaces, the gateway's data folder and your
+  credential folders stay closed under every setting. The gateway's command-sandbox line reads
+  "Commands sandboxed: Windows restricted token" (state `sandboxed`, no longer `partial`). A drive that
+  stores no permissions (exFAT, FAT) or a network share cannot be protected: each command's result
+  and the console's tooltip name it as not protected, and a refused or read-only workspace there stops
+  the command. Limits are listed in AbstractGateway's
+  [security guide](https://github.com/lpalbou/AbstractGateway/blob/main/docs/security.md#on-windows):
+  among them, under the two stricter settings Git Bash and other MSYS2 programs stop at start when a
+  Git Bash window is already open in your session, and under every setting Windows' own `ssh-keygen`
+  fails on the public key and Windows' built-in TLS (`curl.exe`, `Invoke-WebRequest`) is unavailable
+  (AbstractGateway 0.24.0, AbstractCore 2.39.0, AbstractRuntime 0.21.0).
+- **Rename a conversation in AbstractCode web.** The pencil **Rename** next to a conversation card's
+  archive icon, or **F2** on a focused card, turns the name into a text box: **Enter** keeps the new
+  name (at most 120 characters, one line), **Escape** or a click elsewhere keeps the old one, and an
+  empty name brings back the first message. The gateway stores the name, so it is the same after a
+  reload, in another browser and on another device; the sidebar, the chat header, **Archived · N** and
+  search use it. A refusal brings the previous name back and is said under that card. The gateway
+  serves it as `PUT /api/gateway/sessions/{session_id}/title` and `session_title` on
+  `GET /api/gateway/runs`, and advertises `capabilities.session_titles`; with an older gateway no
+  rename is offered (AbstractGateway 0.24.0, Code web 0.16.4, ui-kit 0.9.30). Characters that hide
+  text or imitate another name (bidirectional controls, zero-width and other invisible characters) are
+  removed. A names file the gateway cannot read never takes the conversation list down: the list and
+  the search are served without names and say so (`session_titles_error`; the web app shows
+  "Conversation names could not be loaded" once), and a damaged file is set aside and started again by
+  the next rename. The terminal client, the Assistant and the Observer do not show the stored name yet.
+
+### Changed
+
+- **The Windows installer's summary describes the command sandbox in three tiers by gateway version**:
+  every workspace setting from AbstractGateway 0.24.0, one setting with 0.23.x, refused before. With
+  `-Print` on an existing install it now describes the version the plan would install, not the one
+  already there. [docs/install.md](docs/install.md#windows) explains each tier.
+- CI's Windows bootstrap smoke runs a command under each workspace setting the installed gateway
+  sandboxes (all three when it reports `sandboxed`): a refused folder stays closed in each, and under
+  the two write-limited settings a write outside the workspace fails while a write inside succeeds.
+
+### Fixed
+
+- **git runs in workspaces inside a refused folder on Windows**, where it stopped with "unable to get
+  current working directory"; a folder can change its role between runs; a sandboxed command can no
+  longer hold the launchers' lock and stop every later command; cloud file placeholders (OneDrive)
+  inside a refused folder are refused (AbstractCore 2.39.0).
+- **Archiving a conversation, or an account's first conversation list, no longer hangs the whole
+  gateway when the account's data folder refuses new files** (a read-only folder, Windows Controlled
+  Folder Access): it answers with an error at once and every other request keeps being served; two
+  gateway processes on one data folder no longer lose each other's archive marks or names
+  (AbstractGateway 0.24.0).
+
 ## [0.14.3] - 2026-11-24
 
 Pins **AbstractGateway 0.23.0**, **AbstractCore 2.38.0** and **AbstractRuntime 0.20.0**, with the npm
